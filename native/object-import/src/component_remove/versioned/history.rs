@@ -65,8 +65,13 @@ pub(super) fn validate(root: &Path, state: &HistoryState) -> io::Result<()> {
     let parent = state.path.parent().ok_or_else(|| invalid("history path"))?;
     validate_ancestors(root, parent.strip_prefix(root).map_err(|_| invalid("history path"))?)?;
     match &state.before {
-        Some(before) if fs::read(&state.path)? == *before => Ok(()),
-        Some(_) => Err(invalid("lane VersionHistory changed before removal")),
+        Some(before) => {
+            super::regular_file(root, &state.path)?;
+            if fs::read(&state.path)? != *before {
+                return Err(invalid("lane VersionHistory changed before removal"));
+            }
+            Ok(())
+        }
         None => ensure_absent(&state.path),
     }
 }
@@ -86,3 +91,47 @@ fn ensure_absent(path: &PathBuf) -> io::Result<()> {
         Err(error) => Err(error),
     }
 }
+
+impl super::VersionedPlan {
+    /// Keep the main-line history that the released CLI's clean-status check publishes.
+    pub fn with_status_history(mut self) -> io::Result<Self> {
+        let (scope, name) = self.workspace.identity
+            .split_once('/')
+            .ok_or_else(|| invalid("tagged component identity"))?;
+        let (_, model_hash) =
+            super::index_change(&self.workspace.root, scope, name, super::RowKind::Staged)?;
+        let model = outbound::read_object(
+            &self.workspace.root.join(".bit/objects"),
+            &model_hash,
+            "Component",
+        )?;
+        let head = model["head"].as_str().ok_or_else(|| invalid("tagged component head"))?;
+        let (hash, after) = outbound::prepare_version_history(
+            &self.workspace.root.join(".bit/objects"),
+            scope,
+            name,
+            head,
+        )?;
+        let path = self.workspace.root
+            .join(".bit/objects")
+            .join(&hash[..2])
+            .join(&hash[2..]);
+        let before = read_history(&self.workspace.root, &path)?;
+        self.history = Some(HistoryState { path, before, after: Some(after) });
+        Ok(self)
+    }
+}
+
+fn read_history(root: &Path, path: &Path) -> io::Result<Option<Vec<u8>>> {
+    match fs::symlink_metadata(path) {
+        Ok(_) => {
+            super::regular_file(root, path)?;
+            fs::read(path).map(Some)
+        }
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error),
+    }
+}
+
+#[cfg(all(test, unix))]
+mod tests;

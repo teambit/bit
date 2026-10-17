@@ -12,19 +12,25 @@ pub struct Options {
     pub all_history: bool,
     pub write: WriteOptions,
     pub lanes: bool,
-    /// `--skip-write-config-files`
-    pub skip_write_config_files: bool,
+    pub output: OutputOptions,
     /// `--include-deprecated`: wildcard patterns keep deprecated components.
     pub selection: SelectionOptions,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct WriteOptions {
+    pub skip_write_config_files: bool,
     pub skip_dependency_installation: bool,
     pub override_existing: bool,
     pub path: Option<String>,
     pub merge_strategy: Option<String>,
     pub dependencies: DependencyOptions,
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct OutputOptions {
+    pub json: bool,
+    pub verbose: bool,
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -35,6 +41,7 @@ pub struct SelectionOptions {
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct DependencyOptions {
+    pub fetch_deps: bool,
     pub import_dependencies: bool,
     pub import_head_dependencies: bool,
     pub depth: Option<usize>,
@@ -128,7 +135,7 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
         .iter()
         .any(|flag| !allowed.contains(flag))
         || components + lanes != 1
-        || (lanes == 1 && (ids.is_empty() || ids.len() > 32 || flags.contains(&"--all-history")))
+        || (lanes == 1 && ids.len() > 33)
     {
         return None;
     }
@@ -139,6 +146,7 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
         objects_only: true,
         all_history,
         write: WriteOptions {
+            skip_write_config_files: false,
             skip_dependency_installation: false,
             override_existing: false,
             path: None,
@@ -146,7 +154,7 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
             dependencies: DependencyOptions::default(),
         },
         lanes: lanes == 1,
-        skip_write_config_files: false,
+        output: OutputOptions::default(),
         selection: SelectionOptions::default(),
     })
 }
@@ -165,6 +173,7 @@ fn import(
     let objects_only = ids.is_empty() || has("--objects") || has("-o");
     let merge_strategy = merge_strategy(flags)?;
     let dependencies = DependencyOptions {
+        fetch_deps: has("--fetch-deps"),
         import_dependencies: has("--dependencies"),
         import_head_dependencies: has("--dependencies-head"),
         depth,
@@ -185,6 +194,7 @@ fn import(
         objects_only,
         all_history: has("--all-history"),
         write: WriteOptions {
+            skip_write_config_files: has("--skip-write-config-files"),
             skip_dependency_installation: has("--skip-dependency-installation") || has("-x"),
             override_existing: has("--override"),
             path,
@@ -192,11 +202,8 @@ fn import(
             dependencies,
         },
         lanes: false,
-        skip_write_config_files: has("--skip-write-config-files"),
-        selection: SelectionOptions {
-            include_deprecated: has("--include-deprecated"),
-            lane_only: has("--lane-only"),
-        },
+        output: import_output(flags),
+        selection: import_selection(flags),
     })
 }
 
@@ -259,6 +266,10 @@ fn valid_path(path: Option<&str>, ids: &[String], objects_only: bool) -> bool {
 
 fn valid_import_flags(flags: &[&str]) -> bool {
     let allowed = [
+        "--json",
+        "-j",
+        "--verbose",
+        "-v",
         "--objects",
         "-o",
         "--all-history",
@@ -267,6 +278,7 @@ fn valid_import_flags(flags: &[&str]) -> bool {
         "--skip-write-config-files",
         "--include-deprecated",
         "--override",
+        "--fetch-deps",
         "--dependencies",
         "--dependencies-head",
         "--lane-only",
@@ -329,6 +341,7 @@ impl Options {
             "objectsOnly": self.objects_only,
             "allHistory": self.all_history,
             "fromOriginalScope": false,
+            "fetchDeps": self.write.dependencies.fetch_deps,
             "skipDependencyInstallation": self.write.skip_dependency_installation,
             "overrideExisting": self.write.override_existing,
             "path": self.write.path,
@@ -344,3 +357,17 @@ impl Options {
 
 #[cfg(test)]
 mod options_tests;
+
+fn import_output(flags: &[&str]) -> OutputOptions {
+    OutputOptions {
+        json: flags.contains(&"--json") || flags.contains(&"-j"),
+        verbose: flags.contains(&"--verbose") || flags.contains(&"-v"),
+    }
+}
+
+fn import_selection(flags: &[&str]) -> SelectionOptions {
+    SelectionOptions {
+        include_deprecated: flags.contains(&"--include-deprecated"),
+        lane_only: flags.contains(&"--lane-only"),
+    }
+}

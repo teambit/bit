@@ -1,6 +1,6 @@
 //! Materialize a remote Version over an imported workspace component.
 use super::{
-    super::details, Replacement, Target, WorkspaceFiles, invalid, policy, safe_destination, version,
+    super::details, Replacement, Target, WorkspaceFiles, invalid, safe_destination, version,
 };
 use crate::{checkout, command_import::PreparedImport};
 use serde_json::{Map, Value};
@@ -12,7 +12,6 @@ pub(super) struct Input<'a> {
     pub(super) target: &'a Target,
     pub(super) imported: &'a PreparedImport,
     pub(super) row: &'a Value,
-    pub(super) policy: &'a HashMap<String, String>,
     pub(super) resolution: Resolution<'a>,
 }
 
@@ -39,38 +38,44 @@ pub(super) fn prepare(
             .ok_or_else(|| invalid("inbound existing Version"))?;
         &local
     };
-    let main = validate_new(input, new)?;
+    let main = validate_new(new)?;
     plan_files(input, &old, new, &name, changes)?;
     let bitmap =
         rows.get_mut(&input.target.name).ok_or_else(|| invalid("inbound existing bitmap"))?;
     bitmap["version"] = Value::String(name);
     bitmap["mainFile"] = Value::String(main.to_owned());
-    reorder_lane(bitmap)?;
+    reorder_bitmap(bitmap)?;
     Ok(())
 }
 
-fn reorder_lane(bitmap: &mut Value) -> io::Result<()> {
-    if bitmap.get("onLanesOnly").is_some() || bitmap.get("isAvailableOnCurrentLane").is_some() {
-        let old = bitmap.as_object().ok_or_else(|| invalid("inbound lane bitmap row"))?;
-        let mut reordered = Map::new();
-        for key in [
-            "name",
-            "scope",
-            "version",
-            "mainFile",
-            "rootDir",
-            "onLanesOnly",
-            "isAvailableOnCurrentLane",
-        ] {
-            if let Some(value) = old.get(key) {
-                reordered.insert(key.to_owned(), value.clone());
-            }
+// `ComponentMap.toPlainObject()` reconstructs every imported row, including authored rows.
+fn reorder_bitmap(bitmap: &mut Value) -> io::Result<()> {
+    let old = bitmap.as_object().ok_or_else(|| invalid("inbound bitmap row"))?;
+    let mut reordered = Map::new();
+    for key in [
+        "name",
+        "scope",
+        "version",
+        "files",
+        "defaultScope",
+        "mainFile",
+        "rootDir",
+        "wrapDir",
+        "exported",
+        "onLanesOnly",
+        "isAvailableOnCurrentLane",
+        "nextVersion",
+        "localOnly",
+        "config",
+    ] {
+        if let Some(value) = old.get(key) {
+            reordered.insert(key.to_owned(), value.clone());
         }
-        if reordered.len() != old.len() {
-            return Err(invalid("inbound lane bitmap row fields"));
-        }
-        *bitmap = Value::Object(reordered);
     }
+    if reordered.len() != old.len() {
+        return Err(invalid("inbound bitmap row fields"));
+    }
+    *bitmap = Value::Object(reordered);
     Ok(())
 }
 
@@ -104,9 +109,8 @@ fn versions(input: &Input<'_>, model: &Value) -> io::Result<(Value, String, Stri
     Ok((old, new_hash, new_name))
 }
 
-fn validate_new<'a>(input: &Input<'_>, new: &'a Value) -> io::Result<&'a str> {
+fn validate_new(new: &Value) -> io::Result<&str> {
     crate::history_query::validate_version(new)?;
-    policy::reject_update(new, input.policy)?;
     let main = new["mainFile"].as_str().ok_or_else(|| invalid("inbound existing main file"))?;
     checkout::plan::relative_path(main)?;
     Ok(main)
@@ -336,3 +340,6 @@ pub(super) fn check(root: &Path, path: &Path, before: &[u8]) -> io::Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests;

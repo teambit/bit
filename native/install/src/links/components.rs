@@ -1,5 +1,9 @@
 //! `NodeModuleLinker.link()`: workspace components as packages in `node_modules`.
 
+pub use prepared::{link_prepared_component, prepared_package_manifest};
+
+mod prepared;
+
 use super::{
     link_fs::{LinkKind, create_link_or_symlink, hard_link_directory, is_symlink, remove_path},
     package_json::{PackageJsonContext, SOURCE_DIR, finish, transformed},

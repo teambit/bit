@@ -2,6 +2,8 @@
 //! `ExportCmd.report` for the exports that run natively: components and lanes,
 //! without ejecting or ripple jobs.
 
+mod extra;
+
 use crate::commands::{
     color::Chalk,
     ids::Id,
@@ -14,6 +16,7 @@ use std::{collections::HashSet, io};
 /// `commandOutboundPrepare`'s receipt.
 pub(super) struct Prepared {
     pub token: String,
+    pub central_hub: bool,
     pub nothing_to_export: bool,
     pub count: usize,
     pub scopes: Vec<String>,
@@ -59,6 +62,7 @@ pub(super) fn prepared(value: &Value) -> io::Result<Prepared> {
     let fork_history = parse_fork_history(value.get("forkHistory"), count)?;
     Ok(Prepared {
         token: token.to_string(),
+        central_hub: value["centralHub"] == true,
         nothing_to_export,
         count,
         scopes: transfers.scopes,
@@ -126,21 +130,14 @@ pub(super) fn published(value: &Value, token: &str) -> io::Result<Value> {
     {
         return Err(decline("native outbound finalize receipt"));
     }
-    for field in [
-        "componentsIds",
-        "newIdsOnRemote",
-        "nonExistOnBitMap",
-        "removedIds",
-        "missingScope",
-        "laneUpdateIds",
-    ] {
+    for field in
+        ["componentsIds", "newIdsOnRemote", "nonExistOnBitMap", "removedIds", "laneUpdateIds"]
+    {
         scoped_ids(value, field)?;
     }
-    // `nonExistOnBitMap` and `missingScope` have sections the native report
-    // does not render; the engine reports neither.
-    for field in ["rippleJobUrls", "nonExistOnBitMap", "missingScope"] {
-        if !array(value.get(field), field)?.is_empty() {
-            return Err(decline("native outbound unsupported receipt"));
+    for field in ["rippleJobUrls", "missingScope"] {
+        for value in array(value.get(field), field)? {
+            text(Some(value))?;
         }
     }
     let lanes = array(value.get("exportedLanes"), "exported lanes")?;
@@ -207,31 +204,20 @@ fn remote_ids(value: &Value) -> io::Result<()> {
     Ok(())
 }
 
-/// `ExportCmd.report` without ejecting, ripple jobs or `--verbose`.
-/// The receipt is a validated one (`published`).
-pub(super) fn format(receipt: &Value, chalk: Chalk) -> String {
-    let ids = |field: &str| -> Vec<&str> {
-        receipt[field]
-            .as_array()
-            .into_iter()
-            .flatten()
-            .filter_map(Value::as_str)
-            .collect()
-    };
+pub(super) fn format_with(receipt: &Value, chalk: Chalk, verbose: bool) -> String {
+    let ids = |field: &str| extra::ids(receipt, field);
     let components = ids("componentsIds");
     let removed = ids("removedIds");
     let lane = ids("exportedLanes").first().copied();
-    if components.is_empty() {
-        return lane.map_or_else(
-            || chalk.yellow("nothing to export"),
-            |lane| {
-                Formatter::new(chalk)
-                    .section("exported lane", "", &[Formatter::new(chalk).item(&chalk.bold(lane))])
-            },
-        );
+    if components.is_empty()
+        && ids("nonExistOnBitMap").is_empty()
+        && ids("missingScope").is_empty()
+        && lane.is_none()
+    {
+        return chalk.yellow("nothing to export");
     }
     let format = Formatter::new(chalk);
-    let export_sections = export_sections(receipt, &components, lane, &format, chalk);
+    let export_sections = export_sections(receipt, &components, lane, &format, chalk, verbose);
     let removed: Vec<String> = removed
         .iter()
         .map(|id| Formatter::item_with(id, &format.warn_symbol()))
@@ -242,7 +228,17 @@ pub(super) fn format(receipt: &Value, chalk: Chalk) -> String {
         "components removed on the remote"
     };
     let removed = format.section(removed_title, "", &removed);
-    Formatter::join(&[export_sections, removed])
+    Formatter::join(&[
+        extra::untracked(receipt, &format),
+        extra::missing(receipt, &format),
+        export_sections,
+        receipt["ejectReport"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned(),
+        removed,
+        extra::cloud(receipt, chalk),
+    ])
 }
 
 fn export_sections(
@@ -251,17 +247,18 @@ fn export_sections(
     lane: Option<&str>,
     format: &Formatter,
     chalk: Chalk,
+    verbose: bool,
 ) -> String {
-    let update_ids: HashSet<_> = receipt["laneUpdateIds"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(Value::as_str)
-        .collect();
+    if components.is_empty() {
+        return lane.map_or_else(String::new, |lane| {
+            format.section("exported lane", "", &[format.item(&chalk.bold(lane))])
+        });
+    }
+    let update_ids = lane_update_ids(receipt);
     let items: Vec<String> = components
         .iter()
         .filter(|id| !update_ids.contains(*id))
-        .map(|id| format.item(&chalk.bold(id)))
+        .map(|id| render_item(receipt, id, format, chalk, verbose))
         .collect();
     let description = lane.map_or_else(
         || "exported the following component(s)".to_string(),
@@ -271,7 +268,7 @@ fn export_sections(
     let updates: Vec<String> = components
         .iter()
         .filter(|id| update_ids.contains(*id))
-        .map(|id| format.item(&chalk.bold(id)))
+        .map(|id| render_item(receipt, id, format, chalk, verbose))
         .collect();
     let updates = format.section(
         "exported updates",
@@ -283,6 +280,38 @@ fn export_sections(
         .filter(|section| !section.is_empty())
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+fn lane_update_ids(receipt: &Value) -> HashSet<&str> {
+    receipt["laneUpdateIds"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .collect()
+}
+
+fn render_item(
+    receipt: &Value,
+    id: &str,
+    format: &Formatter,
+    chalk: Chalk,
+    verbose: bool,
+) -> String {
+    if !verbose {
+        return format.item(&chalk.bold(id));
+    }
+    let versions = receipt["newIdsOnRemote"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .filter_map(|value| value.rsplit_once('@'))
+        .filter(|(identity, _)| *identity == id)
+        .map(|(_, version)| version)
+        .collect::<Vec<_>>();
+    let versions = if versions.is_empty() { "n/a".to_owned() } else { versions.join(", ") };
+    format.item(&format!("{} - {versions}", chalk.bold(id)))
 }
 
 #[cfg(test)]

@@ -13,6 +13,9 @@ pub(super) fn dispatch(
         Request::CommandInboundPrepare(input) => {
             pool.install(|| command::inbound::prepare(&input, &mut snapshots.command))
         }
+        Request::CommandInboundPolicyComplete(input) => {
+            command::inbound::policy::complete(input, &mut snapshots.command)
+        }
         Request::CommandInboundList(input) => pool.install(|| command::inbound::list(&input)),
         Request::CommandInboundApply(input) => {
             pool.install(|| command::inbound::apply(&input, &mut snapshots.command))
@@ -38,11 +41,27 @@ pub(super) fn dispatch(
         Request::StatusLaneUpdates(input) => {
             pool.install(|| command::inbound::lane_updates(&input, &snapshots.command, pool))
         }
+        request => outbound(request, snapshots, pool),
+    }
+}
+
+fn outbound(
+    request: Request,
+    snapshots: &mut snapshots::State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    match request {
+        Request::CommandOutboundCandidates(input) => {
+            command::outbound::candidates(&input).map(|value| (0, value))
+        }
         Request::CommandOutboundPrepare(input) => {
             pool.install(|| command::outbound::prepare(&input, &mut snapshots.command))
         }
         Request::CommandOutboundApply(input) => {
             pool.install(|| command::outbound::apply(&input, &mut snapshots.command))
+        }
+        Request::CommandOutboundStage(input) => {
+            pool.install(|| command::outbound::stage(&input, &mut snapshots.command))
         }
         Request::CommandOutboundFinalize(input) => {
             pool.install(|| command::outbound::finalize(&input, &mut snapshots.command))

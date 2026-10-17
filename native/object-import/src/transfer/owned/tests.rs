@@ -166,7 +166,7 @@ fn archive_unsupported_late_name_preserves_existing_private_candidate() {
         apply(
             "transferArchive",
             &json!({"token":plan["token"],"path":candidate,"mtimeSeconds":[1,1]}),
-            &mut state
+            &mut state,
         )
         .is_err(),
     );
@@ -238,5 +238,52 @@ fn graceful_mode_does_not_skip_invalid_objects_or_directory_errors() {
     fs::create_dir(path).unwrap();
     assert!(apply("transferCollect", &request, &mut State::default()).is_err());
     assert_eq!(fs::read_dir(staging).unwrap().count(), 0);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn release_keeps_shared_spools_until_last_owner_and_preserves_unowned_files() {
+    let root = directory();
+    let mut state = State::default();
+    let collection = fixture(&root, &mut state);
+    let plan = initialize(&mut state, &collection);
+    let spool = Path::new(collection["objects"][0]["compressedPath"].as_str().unwrap());
+    let unowned = spool.parent().unwrap().join("keep");
+    fs::write(&unowned, b"unowned").unwrap();
+    apply("transferRelease", &json!({"token":collection["token"]}), &mut state).unwrap();
+    assert!(spool.is_file());
+    apply("transferRelease", &json!({"token":plan["token"]}), &mut state).unwrap();
+    assert!(!spool.exists());
+    assert_eq!(fs::read(unowned).unwrap(), b"unowned");
+    assert!(state.spool_paths.is_empty());
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn cancellation_releases_owned_files_and_invalidates_all_retained_transfer_receipts() {
+    let root = directory();
+    let mut state = State::default();
+    let collection = fixture(&root, &mut state);
+    let plan = initialize(&mut state, &collection);
+    let transaction = apply(
+        "transferTransactionInitialize",
+        &json!({"scopes":["remote.scope"],"clientId":"client","resuming":false}),
+        &mut state,
+    )
+    .unwrap();
+    let spool = Path::new(collection["objects"][0]["compressedPath"].as_str().unwrap());
+    let result = apply("transferCancel", &json!({}), &mut state).unwrap();
+    assert_eq!(result, json!({"cancelled":true,"releasedCollections":1,"releasedPlans":1}));
+    assert!(!spool.exists());
+    assert!(apply("transferRelease", &json!({"token":plan["token"]}), &mut state).is_err());
+    assert!(
+        apply(
+            "transferTransactionReceipt",
+            &json!({"token":transaction["token"],"revision":0,"success":true}),
+            &mut state,
+        )
+        .is_err(),
+    );
+    assert!(state.spool_paths.is_empty());
     fs::remove_dir_all(root).unwrap();
 }

@@ -1,15 +1,13 @@
-//! Native `bit export` of the staged components on main (`ExportCmd` with
-//! `exportMany`): the engine selects the objects, pushes them to each
-//! configured remote, validates and persists them there, then publishes the
-//! local bookkeeping (`commandOutboundPrepare`, `commandOutboundApply`,
-//! `commandOutboundFinalize`).
-//!
-//! The remotes change only when they persist the objects. A failure before
-//! that leaves them as they were (the pushed objects are cleaned), so the
-//! command declines and the Node.js CLI exports and reports. Unconfigured
-//! bit.cloud (hub) remotes run on the Node.js CLI.
+//! Native export retains transfer ownership through remote persistence and local callbacks.
 
+mod cloud;
+mod interrupt;
+mod lifecycle;
+mod options;
+mod packages;
+mod progress;
 mod report;
+mod selection;
 
 use super::{
     color::Chalk,
@@ -24,118 +22,15 @@ use std::{
     env,
     ffi::OsString,
     fmt::Write,
-    io,
+    io::{self, Write as IoWrite},
     path::Path,
     time::{SystemTime, UNIX_EPOCH},
 };
 
 pub const COMMAND: Command = Command { name: "export", aliases: &["e"], run };
 
-struct Options {
-    ids: Vec<String>,
-    all: bool,
-    all_versions: bool,
-    head_only: bool,
-    origin_directly: bool,
-    fork_lane_new_scope: bool,
-    resume: Option<String>,
-}
-
-/// The same bounded, explicit export grammar as the production JS adapter.
-fn parse(args: &[&str]) -> Option<Options> {
-    let mut options = Options {
-        ids: Vec::new(),
-        all: false,
-        all_versions: false,
-        head_only: false,
-        origin_directly: false,
-        fork_lane_new_scope: false,
-        resume: None,
-    };
-    let mut args = args.iter().copied();
-    while let Some(arg) = args.next() {
-        if set_boolean_flag(&mut options, arg) {
-            continue;
-        }
-        match arg {
-            "--resume" if options.resume.is_none() => {
-                options.resume = Some(resume_id(&mut args)?);
-            }
-            pattern if valid_scope_wildcard(pattern) && options.ids.len() < 4096 => {
-                options.ids.push(pattern.to_owned());
-            }
-            id if valid_id(id) && options.ids.len() < 4096 => options.ids.push(id.to_owned()),
-            _ => return None,
-        }
-    }
-    valid_combination(&options).then_some(options)
-}
-
-fn valid_combination(options: &Options) -> bool {
-    !options.head_only
-        || !(options.all
-            || options.all_versions
-            || options.fork_lane_new_scope
-            || options.resume.is_some())
-}
-
-fn set_boolean_flag(options: &mut Options, arg: &str) -> bool {
-    let slot = match arg {
-        "--all" => &mut options.all,
-        "--all-versions" => &mut options.all_versions,
-        "--head-only" => &mut options.head_only,
-        "--origin-directly" => &mut options.origin_directly,
-        "--fork-lane-new-scope" => &mut options.fork_lane_new_scope,
-        _ => return false,
-    };
-    if *slot {
-        return false;
-    }
-    *slot = true;
-    true
-}
-
-fn valid_scope_wildcard(pattern: &str) -> bool {
-    pattern
-        .strip_suffix("/*")
-        .is_some_and(|scope| {
-            !scope.is_empty()
-                && scope
-                    .bytes()
-                    .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-' | b'.'))
-        })
-}
-
-fn resume_id<'a>(args: &mut impl Iterator<Item = &'a str>) -> Option<String> {
-    let client_id = args.next()?;
-    valid_client_id(client_id).then(|| client_id.to_owned())
-}
-
-fn valid_client_id(id: &str) -> bool {
-    !id.is_empty()
-        && id.len() <= 128
-        && id
-            .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-'))
-}
-
-fn valid_id(id: &str) -> bool {
-    if id.is_empty()
-        || id.len() > 4096
-        || id.contains(['*', '?', '\0'])
-        || id.chars().any(char::is_whitespace)
-        || id.starts_with(['-', '/', '@'])
-    {
-        return false;
-    }
-    let (identity, version) = id
-        .split_once('@')
-        .map_or((id, None), |(identity, version)| (identity, Some(version)));
-    !identity.is_empty()
-        && !identity.contains('@')
-        && !identity.ends_with('/')
-        && version.is_none_or(|version| !version.is_empty() && !version.contains('@'))
-}
+use lifecycle::Lifecycle;
+use options::{Options, parse};
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(arguments) = workspace_command::utf8_args(args) else {
@@ -147,23 +42,60 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
-    let exported = match export(&root, &options) {
-        Ok(exported) => exported,
-        Err(error) => return Ok(Outcome::Declined(format!("export: {error}"))),
+    match bootstrap(&root, &options) {
+        Ok((engine, lifecycle)) => run_started(&root, args, &options, engine, &lifecycle),
+        Err(error) => startup_failure(&root, args, error),
+    }
+}
+
+fn startup_failure(root: &Path, args: &[OsString], error: io::Error) -> io::Result<Outcome> {
+    if crate::commands::engine::is_canonical(&error)
+        || error
+            .get_ref()
+            .is_some_and(
+                <dyn std::error::Error + Send + Sync>::is::<
+                    crate::host::callback_error::CallbackError,
+                >,
+            )
+    {
+        workspace_command::checkout_lifecycle::failure(
+            root,
+            args,
+            "export",
+            &crate::commands::status::autosync::Startup::default(),
+            error,
+        )
+    } else {
+        Ok(Outcome::Declined(format!("export: {error}")))
+    }
+}
+
+fn run_started(
+    root: &Path,
+    args: &[OsString],
+    options: &Options,
+    mut engine: Engine,
+    lifecycle: &Lifecycle,
+) -> io::Result<Outcome> {
+    io::stdout().write_all(lifecycle.take_stdout().as_bytes())?;
+    let work = |output: &Output| {
+        let receipt = export(root, options, &mut engine, lifecycle, output)?;
+        let data = if options.json {
+            serde_json::to_string_pretty(
+                receipt
+                    .get("jsonResult")
+                    .ok_or_else(|| io::Error::other("native export JSON metadata receipt"))?,
+            )?
+        } else {
+            report::format_with(&receipt, Chalk::detect(args), options.verbose)
+        };
+        Ok(Report { data, code: 0, details: None })
     };
-    let chalk = Chalk::detect(args);
-    let data = match &exported.result {
-        Ok(receipt) => report::format(receipt, chalk),
-        Err(_) => String::new(),
-    };
-    let report = Report { data, code: 0, details: None };
-    workspace_command::execute_with(&root, args, "export", &report, |output| {
-        exported.progress(output);
-        exported.result
-            .as_ref()
-            .map(|_| ())
-            .map_err(|error| io::Error::other(error.clone()))
-    })
+    if options.json {
+        workspace_command::execute_json(root, args, "export", work)
+    } else {
+        workspace_command::execute_then(root, args, "export", work)
+    }
 }
 
 /// What the export did: the loader's lines and the receipt, or the error of
@@ -178,105 +110,182 @@ struct Exported {
     persisted: Vec<String>,
     fork_history: Option<report::ForkHistory>,
     result: Result<Value, String>,
+    output: CallbackOutput,
 }
 
-impl Exported {
-    /// `exportMany`'s status lines (`exportPendingComponents` without ids).
-    fn progress(&self, output: &Output) {
-        let candidates =
-            self.fork_history.as_ref().map_or(self.count, |history| history.candidate_count);
-        let exporting = if candidates > 1 { "exporting components" } else { "exporting component" };
-        if self.selected_ids {
-            output.status("exporting component");
-            output.status(&format!("loading {} component(s)", self.count));
-        } else {
-            output.status("loading components");
-            output.status(exporting);
-        }
-        if !self.pending {
-            return;
-        }
-        for (scope, objects) in &self.transfers {
-            output.status(&format!(r#"transferring {objects} objects to the remote "{scope}"..."#));
-        }
-        output.restart("verifying that objects can be merged on the remotes...");
-        if let Some(history) = &self.fork_history
-            && history.external_count > 0
-            && self.result.is_ok()
-        {
-            let reason =
-                format!("fetching version-history from forked-from lane {}", history.parent);
-            output.restart(&format!("importing {} components {reason}", history.external_count));
-            output.restart(&format!(
-                "successfully imported {} components {reason}",
-                history.external_count,
-            ));
-        }
-        for scope in &self.persisted {
-            output.restart(&format!(r#"persisting data on the remote "{scope}"..."#));
-        }
-        if self.result.is_ok() {
-            output.status("updating data locally...");
-        }
-    }
+struct CallbackOutput {
+    central_hub: bool,
+    messages: Vec<String>,
+    observed: bool,
+    last_hub_message: Option<String>,
+    failure_phase: Option<String>,
+    attempted_scopes: Vec<String>,
 }
 
-/// Prepare, transfer and publish. An error is a decline: nothing changed
-/// on the remotes.
-fn export(root: &Path, options: &Options) -> io::Result<Exported> {
+/// Prepare before providers, then retain ownership through transfer and publication.
+fn bootstrap(root: &Path, options: &Options) -> io::Result<(Engine, Lifecycle)> {
     let mut engine = Engine::new()?;
-    let prepared = prepare(&mut engine, root, options)?;
+    prepare(&mut engine, root, options, true, false)?;
+    let lifecycle = Lifecycle::bootstrap(
+        root,
+        &mut engine,
+        options.lifecycle.eject || options.lifecycle.open_browser || options.json,
+    )?;
+    Ok((engine, lifecycle))
+}
+
+fn export(
+    root: &Path,
+    options: &Options,
+    engine: &mut Engine,
+    lifecycle: &Lifecycle,
+    output: &Output,
+) -> io::Result<Value> {
+    let prepared = prepare(engine, root, options, false, lifecycle.native_packages())?;
     let token = prepared.token.clone();
     let mut exported = Exported {
         count: prepared.count,
-        selected_ids: !(options.ids.is_empty() || options.all || options.all_versions),
+        selected_ids: !options.ids.is_empty()
+            && !options.ids.iter().any(|id| options::is_pattern(id)),
         pending: !prepared.nothing_to_export,
-        transfers: prepared.transfers,
+        transfers: if options.resume.is_some() { Vec::new() } else { prepared.transfers },
         persisted: prepared.scopes.clone(),
         fork_history: prepared.fork_history,
         result: Err(String::new()),
+        output: CallbackOutput {
+            central_hub: prepared.central_hub,
+            messages: Vec::new(),
+            observed: false,
+            last_hub_message: None,
+            failure_phase: None,
+            attempted_scopes: Vec::new(),
+        },
     };
-    match engine.request::<Value>(&json!({"kind": "commandOutboundApply", "token": token})) {
-        // `commandOutboundApply` transfers exactly when something is exported.
-        Ok(applied)
-            if applied["token"] != token.as_str() || applied["pending"] != exported.pending =>
-        {
-            exported.result = Err("native outbound pending receipt".to_string());
-            return Ok(exported);
-        }
-        Ok(_) => {}
-        Err(error) => {
-            // A failed validation or persist has already touched the remotes.
-            let message = error.to_string();
-            if let Some((index, failure)) = persist_failure(&message, &prepared.scopes) {
-                exported.persisted.truncate(index + 1);
-                exported.result = Err(failure);
-            } else if let Some(failure) = validation_failure(&message, &prepared.scopes) {
-                // Validation already cleaned the pending objects. Delegating
-                // would push and validate a second time against the remotes.
-                exported.persisted.clear();
-                exported.result = Err(failure);
-            } else {
-                return Err(error);
-            }
-            return Ok(exported);
+    exported.progress_before(output);
+    let result = complete_export(
+        engine,
+        &token,
+        &prepared.scopes,
+        options,
+        lifecycle,
+        &mut exported,
+        output,
+    );
+    io::stdout().write_all(lifecycle.take_stdout().as_bytes())?;
+    result.map_err(io::Error::other)
+}
+
+fn complete_export(
+    engine: &mut Engine,
+    token: &str,
+    scopes: &[String],
+    options: &Options,
+    lifecycle: &Lifecycle,
+    exported: &mut Exported,
+    progress: &Output,
+) -> Result<Value, String> {
+    let protection = lifecycle.protect(options.json).map_err(|error| error.to_string())?;
+    bit_object_import::export_actions::scope(lifecycle.file_actions(), || {
+        transfer(engine, token, scopes, exported, progress)
+    })?;
+    let stage: Value = engine
+        .request(&json!({"kind":"commandOutboundStage","token":token}))
+        .map_err(|error| error.to_string())?;
+    protection.finish().map_err(|error| error.to_string())?;
+    lifecycle.packages(&stage).map_err(|error| error.to_string())?;
+    io::stdout()
+        .write_all(lifecycle.take_stdout().as_bytes())
+        .map_err(|error| error.to_string())?;
+    let finalized: Value = engine
+        .request(&json!({"kind":"commandOutboundFinalize","token":token}))
+        .map_err(|error| error.to_string())?;
+    let mut receipt = report::published(&finalized, token).map_err(|error| error.to_string())?;
+    let finished = lifecycle
+        .finish(&receipt, options.lifecycle.eject, options.lifecycle.open_browser && !options.json)
+        .map_err(|error| error.to_string())?;
+    if let Some(metadata) = finished.as_object() {
+        for (key, value) in metadata {
+            receipt[key] = value.clone();
         }
     }
-    let finalized =
-        engine.request::<Value>(&json!({"kind": "commandOutboundFinalize", "token": token}));
-    exported.result = finalized
-        .and_then(|finalized| report::published(&finalized, &token))
-        .map_err(|error| error.to_string());
-    Ok(exported)
+    Ok(receipt)
+}
+
+fn transfer(
+    engine: &mut Engine,
+    token: &str,
+    scopes: &[String],
+    exported: &mut Exported,
+    progress: &Output,
+) -> Result<(), String> {
+    let applied: Value = engine
+        .request_with_progress(&json!({"kind":"commandOutboundApply","token":token}), |event| {
+            exported.observe(event, progress);
+        })
+        .map_err(|error| error.to_string())?;
+    if applied["token"] != token || applied["effectsOwned"] != true {
+        return Err("native outbound ownership receipt".into());
+    }
+    exported.output.central_hub = applied["centralHub"] == true;
+    exported.output.failure_phase = applied["failurePhase"].as_str().map(str::to_owned);
+    exported.output.attempted_scopes = applied["attemptedScopes"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .map(str::to_owned)
+        .collect();
+    exported.output.messages = applied["hubMessages"]
+        .as_array()
+        .map_or_else(Vec::new, |messages| {
+            messages
+                .iter()
+                .filter_map(Value::as_str)
+                .map(str::to_owned)
+                .collect()
+        });
+    if let Some(error) = applied["failure"].as_str() {
+        let error = owned_failure(error, scopes, &mut exported.persisted);
+        exported.result = Err(error.clone());
+        exported.progress(progress);
+        return Err(error);
+    }
+    exported.result = Ok(Value::Null);
+    exported.progress(progress);
+    Ok(())
+}
+
+fn owned_failure(error: &str, scopes: &[String], persisted: &mut Vec<String>) -> String {
+    if let Some((index, message)) = persist_failure(error, scopes) {
+        persisted.truncate(index + 1);
+        message
+    } else if let Some(message) = validation_failure(error, scopes) {
+        persisted.clear();
+        message
+    } else {
+        persisted.clear();
+        let involved =
+            format!("the following scopes were used for this export: {}", scopes.join(", "));
+        if error.ends_with(&involved) { error.to_owned() } else { format!("{error}\n{involved}") }
+    }
 }
 
 /// `commandOutboundPrepare` of the staged components, as the Node.js CLI
 /// would send it.
-fn prepare(engine: &mut Engine, root: &Path, options: &Options) -> io::Result<report::Prepared> {
+fn prepare(
+    engine: &mut Engine,
+    root: &Path,
+    options: &Options,
+    preflight: bool,
+    native_packages: bool,
+) -> io::Result<report::Prepared> {
     let cli = NodeCli::find()?;
+    let ids = selection::ids(engine, root, options)?;
     let config = cache_root().join("config");
     let prepared: Value = engine.request(&json!({
         "kind": "commandOutboundPrepare",
+        "skipRemoteResolution": preflight,
+        "nativePackages": native_packages,
         "root": root,
         "home": workspace_command::home(),
         "globalRemotesFile": config.join("global-remotes.json"),
@@ -288,16 +297,21 @@ fn prepare(engine: &mut Engine, root: &Path, options: &Options) -> io::Result<re
         "clientId": options.resume.clone().map_or_else(client_id, Ok)?,
         "exportDate": now_ms().to_string(),
         "operation": "export",
-        "ids": options.ids,
+        "ids": ids,
         "options": {
             "originDirectly": options.origin_directly,
             "all": options.all,
             "allVersions": options.all_versions,
-            "headOnly": options.head_only,
-            "forkLaneNewScope": options.fork_lane_new_scope,
+            "headOnly": options.head_only && !options.json,
+            "forkLaneNewScope": options.fork_lane_new_scope && !options.json,
+            "ignoreMissingArtifacts": options.ignore_missing_artifacts,
             "resume": options.resume,
+            "patternSelection": options.ids.iter().any(|id| options::is_pattern(id)),
         },
     }))?;
+    if native_packages {
+        packages::validate(&prepared)?;
+    }
     report::prepared(&prepared)
 }
 

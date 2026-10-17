@@ -19,7 +19,13 @@ use std::{
     time::{Duration, Instant},
 };
 
-const SCRIPT: &str = concat!(include_str!("host/host.js"), "\n", include_str!("host/snapshot.js"));
+const SCRIPT: &str = concat!(
+    include_str!("host/host.js"),
+    "\n",
+    include_str!("host/snapshot.js"),
+    "\n",
+    include_str!("host/export.js"),
+);
 const EXIT_GRACE: Duration = Duration::from_secs(5);
 
 pub struct Host {
@@ -216,7 +222,7 @@ impl Session {
             if self.child.try_wait().map_or(true, |status| status.is_some()) {
                 return;
             }
-            thread::sleep(Duration::from_millis(20));
+            thread::sleep(Duration::from_millis(1));
         }
         let _ = self.child.kill();
         let _ = self.child.wait();

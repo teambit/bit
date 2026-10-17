@@ -7,10 +7,5 @@ use std::io;
 pub(super) fn select(model: &Value) -> io::Result<Staged> {
     let head = model["head"].as_str().ok_or_else(|| invalid("outbound head"))?;
     crate::merge_history::hash(head)?;
-    Ok(Staged {
-        version: head.to_owned(),
-        head: head.to_owned(),
-        hashes: Vec::new(),
-        labels: Vec::new(),
-    })
+    Ok(Staged { head: head.to_owned(), hashes: Vec::new(), labels: Vec::new() })
 }

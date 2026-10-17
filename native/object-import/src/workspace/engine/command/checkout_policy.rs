@@ -36,6 +36,19 @@ impl Prepared {
         Ok(prepared)
     }
 
+    pub(super) fn finish(&mut self, semver: Value) -> io::Result<Option<Value>> {
+        if self.ready {
+            return Err(invalid("command checkout policy already complete"));
+        }
+        let mut request = self.input.clone();
+        request["semver"] = semver;
+        let updates = crate::config_merge::apply("configWorkspaceUpdates", &request)?;
+        let report = self.publication.prepare(&updates)?;
+        self.ready = true;
+        self.validate()?;
+        Ok(report)
+    }
+
     pub(super) fn validate(&self) -> io::Result<()> {
         if !self.ready {
             return Err(invalid("command checkout policy incomplete"));
@@ -94,7 +107,7 @@ pub(super) fn receipt(
     )
 }
 
-fn receipt_versions<'a>(
+pub(super) fn receipt_versions<'a>(
     context: &Value,
     materials: impl IntoIterator<Item = (&'a Value, bool)>,
     strategy: Option<&str>,

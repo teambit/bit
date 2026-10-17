@@ -114,7 +114,7 @@ impl PreparedImport {
             Some("to import new components from the defaultScope"),
         )
     }
-    fn prepare_versions_with_reason(
+    pub(super) fn prepare_versions_with_reason(
         &mut self,
         targets: &[Target],
         reason: Option<&str>,

@@ -1,5 +1,5 @@
 //! The checkout report: `checkoutOutput` of `@teambit/checkout`.
-mod policy;
+pub(crate) mod policy;
 
 use super::options::Options;
 use crate::commands::{

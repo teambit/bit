@@ -48,6 +48,26 @@ impl Engine {
         result
     }
 
+    /// Deliver operation metadata while a native request retains its state and transfer ownership.
+    pub fn request_with_progress<Output: DeserializeOwned + Send>(
+        &mut self,
+        input: &Value,
+        mut observe: impl FnMut(bit_object_import::export_progress::Event),
+    ) -> io::Result<Output> {
+        let (sender, receiver) = std::sync::mpsc::sync_channel(32);
+        let actions = bit_object_import::export_actions::current();
+        thread::scope(|threads| {
+            let request = threads.spawn(move || {
+                let _actions = bit_object_import::export_actions::bind(actions);
+                bit_object_import::export_progress::scope(&sender, || self.request(input))
+            });
+            for event in receiver {
+                observe(event);
+            }
+            request.join().unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+        })
+    }
+
     fn request_owned<Output: DeserializeOwned>(&mut self, input: &Value) -> io::Result<Output> {
         let body = serde_json::to_vec(input)?;
         if body.len() > MAX_REQUEST {

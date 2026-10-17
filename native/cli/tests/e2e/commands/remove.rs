@@ -130,6 +130,12 @@ fn tagged_removal_matches_node_with_and_without_files() {
 fn removal_of_multiple_local_tags_matches_node() {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);
+    // These identities share the object-prefix directory, making the status history observable.
+    crate::helper::config::set_workspace_aspect_key(
+        &helper.scopes.local_path,
+        "defaultScope",
+        serde_json::json!("remove-scope-178"),
+    );
     helper.create_component_bar_foo("module.exports = 'first';");
     helper.add_component_bar_foo();
     helper.run("link");
@@ -176,6 +182,8 @@ fn removal_of_multiple_local_tags_matches_node() {
             let prefix = format!(".bit/objects/{}", &hash[..2]);
             assert_eq!(root.join(&prefix).exists(), node_root.join(&prefix).exists());
         }
+        let history = ".bit/objects/f5/54826d98f13cd7367a27793484ab385faa450e";
+        assert_eq!(fs::read(root.join(history)).ok(), fs::read(node_root.join(history)).ok());
         assert_eq!(root.join("bar/foo.js").exists(), node_root.join("bar/foo.js").exists());
     }
 }

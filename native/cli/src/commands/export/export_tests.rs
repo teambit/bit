@@ -12,6 +12,9 @@ fn parses_the_native_flags() {
             && !empty.fork_lane_new_scope
             && empty.resume.is_none(),
     );
+    assert!(parse(&["-e"]).unwrap().lifecycle.eject);
+    assert!(parse(&["--json", "--head-only", "--all"]).unwrap().json);
+    assert!(parse(&["--verbose", "--ignore-missing-artifacts"]).unwrap().verbose);
     let selected = parse(&[
         "s/a@1.0.0",
         "s/b",
@@ -40,7 +43,6 @@ fn parses_the_native_flags() {
         &["--head-only", "--all-versions"],
         &["--head-only", "--fork-lane-new-scope"],
         &["--head-only", "--resume", "client-1"],
-        &["-e"],
         &["s/a", "--origin-directly", "--origin-directly"],
         &["--fork-lane-new-scope", "--fork-lane-new-scope"],
     ] {

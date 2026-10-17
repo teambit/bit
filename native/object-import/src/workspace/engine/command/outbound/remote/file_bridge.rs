@@ -10,6 +10,8 @@ use std::{
 const MAX_REPLY_BYTES: usize = 4 * 1024 * 1024;
 const SCRIPT: &str = r"
 const readline = require('node:readline');
+// The parent owns ExportMain's protected communication phase and prints its Ctrl+C warning.
+process.on('SIGINT', () => {});
 const bitDir = process.argv[1];
 const protocolWrite = process.stdout.write.bind(process.stdout);
 process.stdout.write = (...args) => process.stderr.write(...args);

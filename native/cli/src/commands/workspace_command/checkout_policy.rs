@@ -7,13 +7,7 @@ use std::io;
 impl Steps<'_> {
     pub(super) fn checkout_policy(&mut self, plan: &mut Value) -> io::Result<()> {
         let Some(receipt) = plan.get("checkoutPolicyPreparation") else { return Ok(()) };
-        let mut inputs = vec![receipt.clone()];
-        let dependencies = array(receipt.get("componentDeps"), "checkout policy dependencies")?;
-        for entry in array(receipt.get("workspaceEntries"), "checkout workspace entries")? {
-            inputs.extend(prefixed_ranges(entry, dependencies)?);
-        }
-        let semver = grammar::config_inputs(&json!(inputs))
-            .ok_or_else(|| decline("checkout policy semver grammar"))?;
+        let semver = semver(receipt)?;
         let completed: Value = self.engine.request(
             &json!({"kind":"commandCheckoutPolicyComplete","token":self.token,"semver":semver}),
         )?;
@@ -23,6 +17,15 @@ impl Steps<'_> {
         plan["result"] = completed["result"].clone();
         Ok(())
     }
+}
+
+pub(crate) fn semver(receipt: &Value) -> io::Result<Value> {
+    let mut inputs = vec![receipt.clone()];
+    let dependencies = array(receipt.get("componentDeps"), "checkout policy dependencies")?;
+    for entry in array(receipt.get("workspaceEntries"), "checkout workspace entries")? {
+        inputs.extend(prefixed_ranges(entry, dependencies)?);
+    }
+    grammar::config_inputs(&json!(inputs)).ok_or_else(|| decline("checkout policy semver grammar"))
 }
 
 fn prefixed_ranges(entry: &Value, dependencies: &[Value]) -> io::Result<Vec<Value>> {

@@ -4,6 +4,7 @@
 //! unless `-x` is given.
 
 mod options;
+mod output;
 mod patterns;
 mod report;
 
@@ -42,22 +43,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Err(error) => return Ok(Outcome::Declined(format!("{}: {error}", options.operation))),
     };
     if selection.ids.is_empty() && !options.ids.is_empty() {
-        return workspace_command::execute_then(&root, args, options.operation, |output| {
-            let started = Instant::now();
-            render_selection(&options, &selection, output);
-            output.status("importing components");
-            output.status("import 0 components with their dependencies (if missing)");
-            output.success("importing components", Some(started));
-            Ok(Report { data: chalk.yellow("nothing to import"), code: 0, details: None })
-        });
+        return output::empty(&root, args, &options, &selection, chalk);
     }
     let mut planned = match Planned::plan(&root, &options, &selection.ids, chalk) {
         Ok(planned) => planned,
         Err(error) => return Ok(Outcome::Declined(format!("{}: {error}", options.operation))),
     };
-    workspace_command::execute_then(&root, args, options.operation, |output| {
+    output::execute(&root, args, &options, |output| {
         let started = Instant::now();
-        render_selection(&options, &selection, output);
+        output::selection(&options, &selection, output);
         planned.apply()?;
         render(&mut planned, &options, output, started, installer, &root)?;
         Ok(Report { data: planned.report.clone(), code: 0, details: None })
@@ -74,22 +68,6 @@ fn start_installer(
         return Ok(None);
     }
     installation::Installer::start(root, argv).map(Some)
-}
-
-/// `listing remote components` per pattern, then `NoIdMatchWildcard` warnings.
-fn render_selection(options: &options::Options, selection: &patterns::Selection, output: &Output) {
-    if options.wildcards().is_empty() {
-        return;
-    }
-    output.status("importing components");
-    if !options.selection.lane_only {
-        for _ in options.wildcards() {
-            output.status("listing remote components");
-        }
-    }
-    for warning in &selection.warnings {
-        output.warning(warning);
-    }
 }
 
 fn render(
@@ -110,16 +88,19 @@ fn render(
         planned.progress
             .as_ref()
             .ok_or_else(|| io::Error::other("native inbound progress"))?
-            .render_lane_groups(output, &counts, started)?;
+            .render_fetch_groups(output, &counts, planned.prepared["mainFetch"] == true, started)?;
         return Ok(());
     }
     render_progress(planned, options, output);
     if let Some(installer) = installer {
         let ids = planned.receipt.ids.clone();
-        if let Err(error) = installer.install(root, options.skip_write_config_files, &ids) {
+        if let Err(error) = installer.install(root, options.write.skip_write_config_files, &ids) {
             output.failure(&format!("installation failed with the following error: {error}"));
-            planned.report =
-                planned.receipt.import_report(planned.chalk, Some(&error.to_string()))?;
+            planned.report = if options.output.json {
+                output::json_report(&planned.prepared, true)?
+            } else {
+                planned.receipt.import_report(planned.chalk, Some(&error.to_string()))?
+            };
         }
     }
     output.success("importing components", Some(started));
@@ -178,15 +159,22 @@ impl Planned {
         ids: &[String],
         chalk: Chalk,
     ) -> io::Result<Self> {
-        let (engine, prepared) = prepare(root, options, ids)?;
+        let (mut engine, mut prepared) = prepare(root, options, ids)?;
+        if let Some(receipt) = prepared.get("checkoutPolicyPreparation") {
+            let semver = workspace_command::checkout_policy::semver(receipt)?;
+            prepared = engine.request(&json!({"kind":"commandInboundPolicyComplete",
+                "token":prepared["token"],"semver":semver}))?;
+        }
         if prepared["laneFetch"] == true && !options.lanes
             || prepared["laneFetch"] != true && options.lanes
         {
             return Err(io::Error::other("native inbound lane receipt"));
         }
         let receipt = report::validate(&prepared)?;
-        validate_lane_groups(&prepared, options)?;
-        let report = if options.operation == "fetch" {
+        output::validate_lane_groups(&prepared, options)?;
+        let report = if options.output.json {
+            output::json_report(&prepared, false)?
+        } else if options.operation == "fetch" {
             receipt.fetch_report(chalk)?
         } else {
             receipt.import_report(chalk, None)?
@@ -216,39 +204,6 @@ impl Planned {
     }
 }
 
-fn validate_lane_groups(prepared: &Value, options: &options::Options) -> io::Result<()> {
-    let Some(groups) = prepared.get("laneGroups") else {
-        if options.lanes && options.ids.len() > 1 {
-            return Err(io::Error::other("native inbound lane groups"));
-        }
-        return Ok(());
-    };
-    let rows = prepared["progress"]
-        .as_array()
-        .ok_or_else(|| io::Error::other("native inbound progress"))?;
-    let counts = groups.as_array().ok_or_else(|| io::Error::other("native inbound lane groups"))?;
-    if !options.lanes
-        || counts.len() != options.ids.len()
-        || counts.len() < 2
-        || counts.len() > 32
-        || counts
-            .iter()
-            .any(|count| {
-                count
-                    .as_u64()
-                    .is_none_or(|count| count == 0)
-            })
-        || counts
-            .iter()
-            .filter_map(Value::as_u64)
-            .sum::<u64>()
-            != rows.len() as u64
-    {
-        return Err(io::Error::other("native inbound lane groups"));
-    }
-    Ok(())
-}
-
 /// `commandInboundPrepare`: the engine fetches, and plans the writes.
 fn prepare(root: &Path, options: &options::Options, ids: &[String]) -> io::Result<(Engine, Value)> {
     let mut engine = Engine::new()?;
@@ -269,6 +224,7 @@ pub(super) fn prepare_status_refresh(
         objects_only: true,
         all_history: true,
         write: options::WriteOptions {
+            skip_write_config_files: false,
             skip_dependency_installation: false,
             override_existing: false,
             path: None,
@@ -276,7 +232,7 @@ pub(super) fn prepare_status_refresh(
             dependencies: options::DependencyOptions::default(),
         },
         lanes: false,
-        skip_write_config_files: false,
+        output: options::OutputOptions::default(),
         selection: options::SelectionOptions::default(),
     };
     prepare_into(engine, root, &options, ids)
@@ -293,6 +249,7 @@ pub(super) fn prepare_diff_refresh(
         objects_only: true,
         all_history: false,
         write: options::WriteOptions {
+            skip_write_config_files: false,
             skip_dependency_installation: false,
             override_existing: false,
             path: None,
@@ -300,7 +257,7 @@ pub(super) fn prepare_diff_refresh(
             dependencies: options::DependencyOptions::default(),
         },
         lanes: false,
-        skip_write_config_files: false,
+        output: options::OutputOptions::default(),
         selection: options::SelectionOptions::default(),
     };
     prepare_into(engine, root, &options, ids)
@@ -317,6 +274,7 @@ pub(super) fn prepare_status_forked_refresh(
         objects_only: true,
         all_history: false,
         write: options::WriteOptions {
+            skip_write_config_files: false,
             skip_dependency_installation: false,
             override_existing: false,
             path: None,
@@ -324,7 +282,7 @@ pub(super) fn prepare_status_forked_refresh(
             dependencies: options::DependencyOptions::default(),
         },
         lanes: true,
-        skip_write_config_files: false,
+        output: options::OutputOptions::default(),
         selection: options::SelectionOptions::default(),
     };
     prepare_into(engine, root, &options, &[lane.to_owned()])
@@ -342,6 +300,7 @@ pub(super) fn prepare_lane_import(
         objects_only: true,
         all_history: false,
         write: options::WriteOptions {
+            skip_write_config_files: false,
             skip_dependency_installation: false,
             override_existing: false,
             path: None,
@@ -349,7 +308,7 @@ pub(super) fn prepare_lane_import(
             dependencies: options::DependencyOptions::default(),
         },
         lanes: true,
-        skip_write_config_files: false,
+        output: options::OutputOptions::default(),
         selection: options::SelectionOptions::default(),
     };
     prepare_into(engine, root, &options, &[lane.to_owned()])

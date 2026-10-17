@@ -1,6 +1,7 @@
 //! Classify acknowledged lane exports for the command receipt.
 
 use super::super::{invalid, lane_model::LaneSelected};
+use serde_json::Value;
 use std::{collections::HashSet, io};
 
 pub(super) struct Reported {
@@ -43,4 +44,34 @@ fn selected_update_ids(selected: &LaneSelected) -> io::Result<Vec<String>> {
         })
         .collect::<io::Result<Vec<_>>>()
         .map(|rows| rows.into_iter().flatten().collect())
+}
+
+pub(super) fn missing(report: &Reported, bitmap: &Value, exported_ids: &[String]) -> Vec<String> {
+    let mut seen = HashSet::new();
+    exported_ids
+        .iter()
+        .filter_map(|id| {
+            let identity = id.rsplit_once('@').map_or(id.as_str(), |(identity, _)| identity);
+            if !seen.insert(identity)
+                || report.updates
+                    .iter()
+                    .chain(&report.removed)
+                    .any(|id| id == identity)
+            {
+                return None;
+            }
+            let (scope, name) = identity.split_once('/')?;
+            let present = bitmap
+                .as_object()
+                .is_some_and(|rows| {
+                    rows.values()
+                        .any(|row| {
+                            row["name"] == name
+                                && (row["scope"] == scope
+                                    || (row["scope"] == "" && row["defaultScope"] == scope))
+                        })
+                });
+            (!present).then(|| identity.to_owned())
+        })
+        .collect()
 }

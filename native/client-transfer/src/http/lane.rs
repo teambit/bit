@@ -12,15 +12,15 @@ impl Network {
     pub async fn list_lanes(&self, url: &str, id: Option<&str>) -> io::Result<Vec<Value>> {
         let body = json!({"query": LANES_QUERY, "variables": {"ids": id.map(|id| vec![id])}});
         let endpoint = format!("{url}/graphql");
-        let response = self.send(|| {
-            self.headers(self.client.post(&endpoint), "read")
-                .json(&body)
-        })
+        let response = self.send(
+            self.headers(self.client.post(&endpoint), "read")?
+                .json(&body),
+        )
         .await?;
-        let response = throw_for_status(response).await?;
+        let response = self.cancellation.run(throw_for_status(response)).await??;
         let mut stream = response.bytes_stream();
         let mut bytes = Vec::new();
-        while let Some(chunk) = stream.next().await {
+        while let Some(chunk) = self.cancellation.run(stream.next()).await? {
             let chunk = chunk.map_err(io::Error::other)?;
             if chunk.len() > MAX_LANE_BYTES.saturating_sub(bytes.len()) {
                 return Err(invalid("remote lane response budget"));

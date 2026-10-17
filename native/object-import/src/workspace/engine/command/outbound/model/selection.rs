@@ -36,7 +36,6 @@ fn head_only(model: &Value) -> io::Result<Staged> {
         _ => return Err(invalid("outbound ambiguous head-only tags")),
     };
     Ok(Staged {
-        version: version.to_owned(),
         head: head.to_owned(),
         hashes: vec![head.to_owned()],
         labels: vec![version.to_owned()],
@@ -54,7 +53,6 @@ pub(super) fn has_staged(model: &Value) -> bool {
 /// The local versions of a staged model: the head's version name, the head,
 /// and every local Version (the head among them).
 pub(super) struct Staged {
-    pub(super) version: String,
     pub(super) head: String,
     pub(super) hashes: Vec<String>,
     pub(super) labels: Vec<String>,
@@ -87,6 +85,6 @@ pub(super) fn staged(model: &Value) -> io::Result<Staged> {
         }
         labels.push(key.clone());
     }
-    let version = version.ok_or_else(|| invalid("outbound non-head local Version"))?;
-    Ok(Staged { version, head: head.to_owned(), hashes, labels })
+    version.ok_or_else(|| invalid("outbound non-head local Version"))?;
+    Ok(Staged { head: head.to_owned(), hashes, labels })
 }

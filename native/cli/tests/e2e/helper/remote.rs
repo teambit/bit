@@ -1,7 +1,7 @@
 //! Remote fixtures remain independent of the pinned Windows pending-object glob bug.
 use super::{Helper, config, setup};
 use serde_json::Value;
-use std::{collections::HashSet, ffi::OsStr, process::Command};
+use std::{collections::HashSet, ffi::OsStr, path::Path, process::Command};
 
 pub(crate) fn publish(helper: &Helper) {
     if cfg!(windows) {
@@ -17,18 +17,28 @@ pub(crate) fn publish(helper: &Helper) {
 /// Complete only the fixture's bitmap/staged-config promotion omitted with that empty ID list.
 pub(crate) fn seed_after_node_export(helper: &Helper) {
     node_export(helper);
-    let scope = bit_object_import::scope_path(&helper.scopes.local_path);
-    promote_workspace(helper, &scope);
+    seed_after_export_at(helper, &helper.scopes.local_path);
+}
+
+/// Publish a cloned fixture author without changing the importing workspace.
+pub(crate) fn publish_at(helper: &Helper, workspace: &Path) {
+    node_export_at(workspace);
+    if cfg!(windows) {
+        seed_after_export_at(helper, workspace);
+    }
+}
+
+/// Complete fixture publication after its caller has already executed the export lifecycle.
+pub(crate) fn seed_after_export_at(helper: &Helper, workspace: &Path) {
+    let scope = bit_object_import::scope_path(workspace);
+    promote_workspace(helper, &scope, workspace);
     let shared = setup::shared();
     let output = Command::new("node")
         .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/e2e/helper/publish_objects.js"))
         .arg(&shared.node_cli)
         .arg(&scope)
         .arg(&helper.scopes.remote_path)
-        .arg(
-            config::read_jsonc(&helper.scopes.local_path.join(".bitmap"))["_bit_lane"]["id"]
-                .to_string(),
-        )
+        .arg(config::read_jsonc(&workspace.join(".bitmap"))["_bit_lane"]["id"].to_string())
         .env("HOME", shared.root.join("home"))
         .env("USERPROFILE", shared.root.join("home"))
         .env("BIT_GLOBALS_DIR", shared.root.join("globals"))
@@ -38,18 +48,18 @@ pub(crate) fn seed_after_node_export(helper: &Helper) {
 }
 
 pub(crate) fn node_export(helper: &Helper) {
-    let exported = Helper::cmd_in_with(
-        &helper.scopes.local_path,
-        "export",
-        &[("BIT_NATIVE", OsStr::new("off"))],
-    );
+    node_export_at(&helper.scopes.local_path);
+}
+
+fn node_export_at(workspace: &Path) {
+    let exported = Helper::cmd_in_with(workspace, "export", &[("BIT_NATIVE", OsStr::new("off"))]);
     assert!(exported.status.success(), "{} {}", exported.stdout, exported.stderr);
-    let scope = bit_object_import::scope_path(&helper.scopes.local_path);
+    let scope = bit_object_import::scope_path(workspace);
     assert!(!scope.join("staged-snaps").exists());
 }
 
-fn promote_workspace(helper: &Helper, scope: &std::path::Path) {
-    let path = helper.scopes.local_path.join(".bitmap");
+fn promote_workspace(helper: &Helper, scope: &Path, workspace: &Path) {
+    let path = workspace.join(".bitmap");
     let mut bitmap = config::read_jsonc(&path);
     let mut identities = HashSet::new();
     for row in bitmap

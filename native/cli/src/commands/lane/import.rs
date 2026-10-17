@@ -38,13 +38,15 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
         Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("lane import: {error}"))),
     };
-    let Some((count, imported, objects)) = validate(&prepared, lane) else {
+    let Some(rows) = validate(&prepared, lane) else {
         return Ok(Outcome::Declined("lane import progress receipt".into()));
     };
     let report = report(lane, &current_id, Chalk::detect(args));
     workspace_command::execute_then(&root, args, "import", |output| {
         apply(&mut engine, &prepared)?;
-        progress(output, lane, count, imported, objects);
+        for row in &rows {
+            progress(output, row);
+        }
         Ok(Report { data: report, code: 0, details: None })
     })
 }
@@ -68,7 +70,7 @@ fn scoped_lane<'a>(argv: &[&'a str]) -> Option<&'a str> {
     Some(lane)
 }
 
-fn validate(prepared: &Value, lane: &str) -> Option<(u64, u64, u64)> {
+fn validate(prepared: &Value, lane: &str) -> Option<Vec<Value>> {
     if prepared["laneImport"] != true
         || prepared["laneFetch"] != true
         || prepared["token"].as_str().is_none()
@@ -76,13 +78,22 @@ fn validate(prepared: &Value, lane: &str) -> Option<(u64, u64, u64)> {
         return None;
     }
     let rows = prepared["progress"].as_array()?;
-    if rows.len() != 1 || rows[0]["reason"] != format!("for fetching lane {lane}") {
+    if rows.is_empty()
+        || rows.len() > 4096
+        || rows[0]["reason"] != format!("for fetching lane {lane}")
+    {
         return None;
     }
-    let count = rows[0]["ids"].as_array()?.len() as u64;
-    let imported = rows[0]["components"].as_u64()?;
-    let objects = rows[0]["objects"].as_u64()?;
-    (count <= 4096 && imported <= 16384 && objects <= 16384).then_some((count, imported, objects))
+    for row in rows {
+        row["reason"].as_str()?;
+        if row["ids"].as_array()?.len() > 4096
+            || row["components"].as_u64()? > 16384
+            || row["objects"].as_u64()? > 16384
+        {
+            return None;
+        }
+    }
+    Some(rows.clone())
 }
 
 fn apply(engine: &mut Engine, prepared: &Value) -> io::Result<()> {
@@ -98,10 +109,14 @@ fn apply(engine: &mut Engine, prepared: &Value) -> io::Result<()> {
     Ok(())
 }
 
-fn progress(output: &Output, lane: &str, count: u64, imported: u64, objects: u64) {
-    output.restart(&format!("importing {count} components for fetching lane {lane}"));
+fn progress(output: &Output, row: &Value) {
+    let reason = row["reason"].as_str().unwrap();
+    let count = row["ids"].as_array().unwrap().len();
+    let imported = row["components"].as_u64().unwrap();
+    let objects = row["objects"].as_u64().unwrap();
+    output.restart(&format!("importing {count} components {reason}"));
     let (number, kind) = if imported > 0 { (imported, "components") } else { (objects, "objects") };
-    output.restart(&format!("successfully imported {number} {kind} for fetching lane {lane}"));
+    output.restart(&format!("successfully imported {number} {kind} {reason}"));
 }
 
 fn report(lane: &str, current: &str, chalk: Chalk) -> String {

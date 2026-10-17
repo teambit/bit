@@ -2,6 +2,7 @@
 //! the complete import without touching the user's repository; Apply publishes.
 
 pub(in crate::workspace::engine) mod autosync;
+pub(in crate::workspace::engine) mod policy;
 
 use super::{
     super::{client_status::config, invalid},
@@ -87,6 +88,8 @@ struct Traversal {
     #[serde(default)]
     import_dependencies: bool,
     #[serde(default)]
+    fetch_deps: bool,
+    #[serde(default)]
     import_head_dependencies: bool,
     #[serde(default)]
     dependencies_depth: Option<usize>,
@@ -149,8 +152,8 @@ pub(in crate::workspace::engine) fn prepare(
         return lanes::prepare(input, state);
     }
     let roots = targets(input)?;
-    let (targets, import) = prepare_targets(input, &roots)?;
-    let workspace = prepare_workspace(input, &targets, &import)?;
+    let (targets, mut import) = prepare_targets(input, &roots)?;
+    let workspace = prepare_workspace(input, &targets, &mut import)?;
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("inbound-{}", state.sequence);
     let mut receipt = if matches!(input.operation.as_str(), "status" | "diff") {
@@ -174,6 +177,9 @@ pub(in crate::workspace::engine) fn prepare(
             &token,
         )?
     };
+    if let Some(policy) = workspace.as_ref().and_then(write::Prepared::policy_input) {
+        receipt["checkoutPolicyPreparation"] = policy.clone();
+    }
     if let Some(lane) = remote::active_lane(&input.root)? {
         receipt["currentLane"] = json!(format!("{}/{}", lane.scope, lane.name));
     }
@@ -205,7 +211,7 @@ fn prepare_targets(
 fn prepare_workspace(
     input: &Prepare,
     targets: &[Target],
-    import: &command_import::PreparedImport,
+    import: &mut command_import::PreparedImport,
 ) -> io::Result<Option<write::Prepared>> {
     if input.options.objects_only {
         return Ok(None);
@@ -247,11 +253,13 @@ fn prepare_import(
             virtual_remotes,
         )
     } else {
-        command_import::prepare_with_virtual(
+        command_import::prepare_inbound_with_virtual(
             &input.root,
             &input.global_remotes_file,
             targets,
             virtual_remotes,
+            input.options.all_history,
+            input.options.dependencies.fetch_deps,
         )
     }
 }
@@ -313,6 +321,9 @@ pub(in crate::workspace::engine) fn apply(
     let retained = state.inbound.take().ok_or_else(|| invalid("inbound owner missing"))?;
     if input.token != retained.token {
         return Err(invalid("inbound owner token"));
+    }
+    if let Some(workspace) = &retained.workspace {
+        workspace.validate_policy()?;
     }
     retained.import.commit()?;
     if let Some(workspace) = retained.workspace {

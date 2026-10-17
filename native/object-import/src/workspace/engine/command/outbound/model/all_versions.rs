@@ -1,5 +1,5 @@
 //! Select the complete local Version ancestry for `ExportCmd --all-versions`.
-use super::{Staged, invalid, parents};
+use super::{Staged, history::parents, invalid};
 use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};
 
@@ -38,9 +38,6 @@ pub(super) fn select(model: &Value, dir: &Path) -> io::Result<Staged> {
                 .map_or_else(|| hash.clone(), |(tag, _)| tag.clone())
         })
         .collect::<Vec<_>>();
-    let version = labels
-        .first()
-        .ok_or_else(|| invalid("outbound all-versions head"))?
-        .clone();
-    Ok(Staged { version, head: head.to_owned(), hashes, labels })
+    labels.first().ok_or_else(|| invalid("outbound all-versions head"))?;
+    Ok(Staged { head: head.to_owned(), hashes, labels })
 }

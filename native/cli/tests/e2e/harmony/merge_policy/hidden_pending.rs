@@ -21,7 +21,9 @@ fn workspace() -> Helper {
             .iter()
             .any(|parent| parent == previous),
     );
+    assert!(bit_object_import::scope_path(&helper.scopes.local_path).join("last-merged").is_dir());
     crate::helper::remote::publish(&helper);
+    assert!(!bit_object_import::scope_path(&helper.scopes.local_path).join("last-merged").exists());
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.run(&format!("lane import {}/hidden-policy -x", helper.scopes.remote));

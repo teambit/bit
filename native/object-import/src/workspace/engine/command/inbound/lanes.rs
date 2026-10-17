@@ -9,6 +9,9 @@ use std::{
     path::Path,
 };
 
+mod aggregate;
+mod selection;
+
 struct Selection {
     lanes: Vec<(lane::Id, Option<String>)>,
     virtual_remotes: Vec<VirtualRemote>,
@@ -18,6 +21,11 @@ struct Selection {
 /// existing lane importer owns component closure and remote refs without
 /// publishing the Lane object into the local index.
 pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, Value)> {
+    if input.operation == "fetch"
+        && (input.ids.is_empty() || input.ids.iter().any(|id| id == "main"))
+    {
+        return aggregate::prepare(input, state);
+    }
     let selection = select(input)?;
     let mut import = if selection.virtual_remotes.is_empty() {
         command_import::prepare_lane(&input.root, &input.global_remotes_file)?
@@ -47,7 +55,7 @@ pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, 
     if input.operation == "laneImport" {
         receipt["laneImport"] = json!(true);
     }
-    if selection.lanes.len() > 1 {
+    if selection.lanes.len() > 1 || input.operation == "fetch" {
         receipt["laneGroups"] = json!(groups);
     }
     let count = targets.len();
@@ -59,7 +67,7 @@ fn select(input: &Prepare) -> io::Result<Selection> {
     let mut lanes = Vec::new();
     let mut seen = HashSet::new();
     let mut virtual_remotes: HashMap<String, VirtualRemote> = HashMap::new();
-    for text in &input.ids {
+    for text in &selection::ids(input)? {
         let id = parse_id(text, &mut seen)?;
         let fetched = remote::lane_objects(input, &id)?;
         let hash = if let Some((remote, hash)) = fetched {
@@ -138,9 +146,25 @@ fn receive_lanes(
     let mut groups = Vec::new();
     for (id, hash) in lanes {
         let start = import.progress.len();
-        let lane_targets =
-            fetch_lane_targets(import, id, hash.as_deref(), input.operation == "laneImport")?;
-        append_lane_dependency_progress(&input.root, import, &lane_targets)?;
+        let lane_targets = if input.operation == "fetch" {
+            import.prepare_fetch_lane(
+                &input.root,
+                id,
+                hash.as_deref(),
+                &super::bitmap_targets(&input.root)?,
+                input.options.all_history,
+            )?
+        } else {
+            let targets =
+                fetch_lane_targets(import, id, hash.as_deref(), input.operation == "laneImport")?;
+            if input.options.all_history {
+                import.collect_lane_history(id, &targets)?;
+            }
+            if input.operation != "laneImport" {
+                append_lane_dependency_progress(&input.root, import, &targets)?;
+            }
+            targets
+        };
         groups.push(import.progress.len() - start);
         targets.extend(lane_targets);
     }
@@ -153,7 +177,11 @@ fn fetch_lane_targets(
     hash: Option<&str>,
     publish: bool,
 ) -> io::Result<Vec<Target>> {
-    let record = import.fetch_lane_contents_at_hash(id, hash)?;
+    let record = if publish {
+        import.fetch_lane_components_at_hash(id, hash)?
+    } else {
+        import.fetch_lane_contents_at_hash(id, hash)?
+    };
     if publish {
         import.publish_imported_lane(id, &record)?;
     } else {

@@ -62,10 +62,10 @@ fn head_only_lane_reexport_matches_node() {
     helper.create_component_bar_foo("module.exports = () => 'head';");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("lane create dev");
     helper.run("snap --unmodified --message lane");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     let before = helper.clone_remote_scope();
     let node_root = helper.clone_workspace();
     let command = "export --head-only";
@@ -91,7 +91,7 @@ fn head_only_lane_first_and_advanced_export_match_node() {
     helper.create_component_bar_foo("module.exports = () => 'head';");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("lane create dev");
     helper.run("snap --unmodified --message first");
     if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_HEAD_ONLY_BENCH_FIXTURE") {
@@ -180,7 +180,7 @@ fn selected_staged_export_matches_node() {
 #[test]
 fn selected_unmodified_component_matches_node() {
     let helper = tagged_bar_foo();
-    helper.run("export bar/foo");
+    crate::helper::remote::publish(&helper);
     if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_REPEAT_BENCH_FIXTURE") {
         let destination = std::path::PathBuf::from(destination);
         assert!(!destination.exists());
@@ -330,10 +330,10 @@ fn all_versions_reexports_full_history_like_node() {
     helper.create_component_bar_foo("// v1");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message first");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.create_component_bar_foo("// v2");
     helper.run("tag bar/foo --message second");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.re_init_remote_scope();
     if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_ALL_BENCH_FIXTURE") {
         let destination = std::path::PathBuf::from(destination);
@@ -385,7 +385,11 @@ fn assert_reexport(helper: &Helper, ids: &str, flag: &str) {
 
 /// Node may persist independent Component index rows in either completion order.
 fn remote_index_by_identity(scope: &Path) -> Value {
-    let mut index = parse(&fs::read_to_string(scope.join("index.json")).unwrap());
+    let mut index = match fs::read_to_string(scope.join("index.json")) {
+        Ok(bytes) => parse(&bytes),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Value::Null,
+        Err(error) => panic!("remote index {}: {error}", scope.display()),
+    };
     index["components"]
         .as_array_mut()
         .unwrap()
@@ -439,10 +443,10 @@ fn cross_scope_forked_lane_export_matches_node() {
     });
     helper.populate_components(2, true, "");
     helper.run("tag");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("lane create parent");
     helper.run("snap --unmodified --message parent");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run(&format!("lane create child --scope {fork_scope} --fork-lane-new-scope"));
     helper.run("snap comp1 --unmodified --message child");
     if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_BENCH_FIXTURE") {
@@ -534,10 +538,10 @@ fn forked_lane_export_matches_node() {
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("lane create parent");
     helper.run("snap --unmodified --message parent");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("lane create child");
     helper.run("snap --unmodified --message child");
     let remote_before = helper.clone_remote_scope();
@@ -572,7 +576,7 @@ fn lane_full_history_case(command: &str, with_lane_snap: bool) {
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("lane create dev");
     if with_lane_snap {
         helper.run("snap --unmodified --message lane-first");
@@ -640,10 +644,10 @@ fn all_versions_repeats_an_exported_lane_like_node() {
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("lane create dev");
     helper.run("snap --unmodified --message lane");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     assert_full_lane_export(&helper, "export --all-versions");
 }
 
@@ -654,7 +658,7 @@ fn all_exports_a_renamed_lane_like_node() {
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("lane create dev");
     helper.run("snap --unmodified --message lane");
     helper.run("lane rename renamed");
@@ -682,7 +686,7 @@ fn all_exports_lane_and_inherited_main_components_like_node() {
     helper.output_file("baz/qux.js", "module.exports = () => 'qux';");
     helper.run("add baz -i baz/qux");
     helper.run("tag --message base");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("lane create dev");
     helper.create_component_bar_foo("module.exports = () => 'lane foo';");
     helper.run("snap --message lane");
@@ -696,10 +700,10 @@ fn deleted_lane_component_export_matches_node() {
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("lane create dev");
     helper.run("snap --unmodified --message lane");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("delete bar/foo --silent --lane");
     helper.run("snap --unmodified --message removal");
     let remote_before = helper.clone_remote_scope();
@@ -784,10 +788,10 @@ fn hidden_lane_update_dependent_exports_like_node() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
     helper.run("tag");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("lane create dev");
     helper.run("snap comp2 --skip-auto-snap --unmodified --message lane");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.seed_hidden_update_dependent(
         &format!("{}/comp1", helper.scopes.remote),
         &format!("{}/dev", helper.scopes.remote),
@@ -871,7 +875,7 @@ fn exported_to_a_recreated_remote() -> Helper {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
     helper.tag_without_build("", "");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.re_init_remote_scope();
     helper
 }
@@ -894,9 +898,20 @@ fn tagged_bar_foo() -> Helper {
 }
 
 fn export_ids(helper: &Helper, ids: &str) -> String {
-    let output = helper.native(&format!("export {ids}"));
-    assert!(!output.contains("nothing to export"), "{output}");
-    output
+    let command = format!("export {ids}");
+    let backup = helper.clone_remote_scope();
+    let oracle = helper.clone_workspace();
+    let node = Helper::cmd_in_with(&oracle, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    helper.restore_remote_scope(&backup);
+    let actual = helper.native_run(&command);
+    assert_eq!(actual.status.code(), node.status.code());
+    assert!(actual.status.success(), "{}", actual.stderr);
+    assert_eq!(actual.stdout, node.stdout);
+    assert_eq!(actual.stderr, node.stderr);
+    if cfg!(windows) {
+        crate::helper::remote::seed_after_export_at(helper, &helper.scopes.local_path);
+    }
+    actual.stdout
 }
 
 #[test]
@@ -914,7 +929,7 @@ fn multiple_versions_are_exported() {
 #[test]
 fn an_imported_component_is_exported_twice() {
     let helper = tagged_bar_foo();
-    helper.run("export bar/foo");
+    crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
     let remote = &helper.scopes.remote;
@@ -936,12 +951,19 @@ fn reexporting_by_name_without_scope() {
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
     helper.tag_without_build("", "");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.tag_without_build("bar/foo", "--unmodified");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.tag_without_build("bar/foo", "--unmodified");
     let output = export_ids(&helper, "bar/foo");
-    assert!(output.contains("exported components (1)"), "{output}");
+    assert!(
+        output.contains(if cfg!(windows) {
+            "nothing to export"
+        } else {
+            "exported components (1)"
+        }),
+        "{output}",
+    );
 }
 
 /// Native `bit export` declines an empty workspace (`commandOutboundPrepare: No such file or
@@ -978,6 +1000,9 @@ mod known_failures {
         helper.run("add bar -m foo.js -i bar/foo");
         helper.tag_without_build("", "");
         helper.native("export");
+        if cfg!(windows) {
+            crate::helper::remote::seed_after_export_at(&helper, &helper.scopes.local_path);
+        }
         let remote = &helper.scopes.remote;
         let output = helper.run(&format!("list {remote}"));
         assert!(output.contains("found 1 components"), "{output}");
@@ -1036,6 +1061,13 @@ mod known_failures {
         let group = String::from_utf8(group.stdout).unwrap();
         let helper = tagged_for_shared_remote(group.trim());
         let output = allow_known_failure!(helper.native_output_or_known("export"));
-        assert!(output.contains("exported components (1)"), "{output}");
+        assert!(
+            output.contains(if cfg!(windows) {
+                "nothing to export"
+            } else {
+                "exported components (1)"
+            }),
+            "{output}",
+        );
     }
 }

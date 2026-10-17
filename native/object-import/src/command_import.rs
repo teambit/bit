@@ -4,8 +4,8 @@ pub(crate) mod lane;
 #[cfg(test)]
 pub(crate) mod tests;
 pub(crate) use prepare::{
-    VirtualRemote, prepare, prepare_cached, prepare_lane, prepare_lane_with_virtual,
-    prepare_status_with_virtual, prepare_with_virtual,
+    VirtualRemote, options::prepare_inbound_with_virtual, prepare, prepare_cached, prepare_lane,
+    prepare_lane_with_virtual, prepare_status_with_virtual,
 };
 mod capture;
 mod history;
@@ -86,6 +86,7 @@ impl Overlay {
 }
 #[derive(Default)]
 pub(crate) struct Progress {
+    pub(crate) requested: Option<usize>,
     pub(crate) object_request: bool,
     pub(crate) reason: Option<String>,
     pub(crate) ids: Vec<String>,
@@ -160,6 +161,7 @@ struct Environment {
 struct Cache {
     staged: String,
     only_if_built: bool,
+    fetch_all_dependencies: bool,
     unbuilt: std::collections::HashSet<String>,
     lane_sources: HashMap<String, String>,
     lane_reason: Option<String>,

@@ -153,6 +153,7 @@ pub fn global_remotes(dir: &Path) -> io::Result<IndexMap<String, String>> {
 /// `getSymphonyUrl()`.
 #[must_use]
 pub fn symphony_url(global: &GlobalConfig) -> String {
+    let global = crate::config::effective(global.clone(), &Value::Null, &Value::Null);
     if let Some(url) = global.get(CFG_SYMPHONY_URL).and_then(Value::as_str) {
         return if url.starts_with("http") { url.to_string() } else { format!("https://{url}") };
     }

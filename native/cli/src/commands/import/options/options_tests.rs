@@ -21,7 +21,7 @@ fn imports_that_install_and_wildcard_patterns() {
         parse(&["import", "s.org/**", "--include-deprecated", "--skip-write-config-files"])
             .unwrap();
     assert_eq!(patterns.wildcards(), ["s.org/**"]);
-    assert!(patterns.selection.include_deprecated && patterns.skip_write_config_files);
+    assert!(patterns.selection.include_deprecated && patterns.write.skip_write_config_files);
     assert!(!parse(&["import", "s/a", "-x"]).unwrap().installs());
 }
 
@@ -85,9 +85,19 @@ fn installing_imports_and_other_flags_are_left_to_node() {
         &["import", "s/a", "--merge", "-x"],
         &["import", "s/a", "-x", "--skip-dependency-installation"],
         &["fetch", "s/a"],
-        &["fetch", "--lanes"],
         &["export"],
     ] {
         assert!(parse(args).is_none(), "{args:?}");
+    }
+}
+
+#[test]
+fn implicit_and_main_lane_fetches_are_native_inputs() {
+    for args in [
+        &["fetch", "--lanes"][..],
+        &["fetch", "main", "--lanes"],
+        &["fetch", "main", "scope/dev", "--lanes"],
+    ] {
+        assert!(parse(args).is_some(), "{args:?}");
     }
 }

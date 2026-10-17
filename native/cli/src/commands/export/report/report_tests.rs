@@ -1,4 +1,4 @@
-use super::{format, prepared, published};
+use super::{format_with, prepared, published};
 use crate::commands::color::Chalk;
 use serde_json::json;
 
@@ -36,6 +36,12 @@ fn validates_the_published_ids() {
     assert!(published(&receipt(&["s/a"], &["s/b@0.0.1"]), "outbound-1").is_err());
     let mut missing = valid;
     missing["missingScope"] = json!(["s/c"]);
+    assert!(published(&missing, "outbound-1").is_ok());
+    assert!(
+        format_with(&missing, Chalk::new(false), false)
+            .contains("components not exported (no remote scope configured)"),
+    );
+    missing["missingScope"] = json!([2]);
     assert!(published(&missing, "outbound-1").is_err());
 }
 
@@ -43,10 +49,10 @@ fn validates_the_published_ids() {
 fn reports_the_exported_components() {
     let chalk = Chalk::new(false);
     assert_eq!(
-        format(&receipt(&["s/a", "s/b"], &[]), chalk),
+        format_with(&receipt(&["s/a", "s/b"], &[]), chalk, false),
         "exported components (2)\n  exported the following component(s)\n   \u{203A} s/a\n   \u{203A} s/b",
     );
-    assert_eq!(format(&receipt(&[], &[]), chalk), "nothing to export");
+    assert_eq!(format_with(&receipt(&[], &[]), chalk, false), "nothing to export");
 }
 
 #[test]
@@ -56,10 +62,21 @@ fn reports_an_exported_lane_with_and_without_new_versions() {
     one["exportedLanes"] = json!(["s/study"]);
     assert!(published(&one, "outbound-1").is_ok());
     assert_eq!(
-        format(&one, chalk),
+        format_with(&one, chalk, false),
         "exported components (1)\n  exported the lane s/study and the following component(s)\n   \u{203A} s/a",
     );
     let mut empty = receipt(&[], &[]);
     empty["exportedLanes"] = json!(["s/study"]);
-    assert_eq!(format(&empty, chalk), "exported lane (1)\n   \u{203A} s/study");
+    assert_eq!(format_with(&empty, chalk, false), "exported lane (1)\n   \u{203A} s/study");
+}
+
+#[test]
+fn empty_server_acknowledgement_keeps_lane_removal_report() {
+    let mut value = receipt(&[], &[]);
+    value["exportedLanes"] = json!(["s/study"]);
+    value["removedIds"] = json!(["s/a"]);
+    assert_eq!(
+        format_with(&value, Chalk::new(false), false),
+        "exported lane (1)\n   › s/study\n\ncomponents removed on the remote lane (1)\n   ⚠ s/a",
+    );
 }

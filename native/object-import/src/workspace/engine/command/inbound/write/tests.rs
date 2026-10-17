@@ -37,6 +37,8 @@ fn writer_rolls_back_partial_files_when_later_destination_conflicts() {
     let root = root();
     fs::write(root.join(".bitmap"), b"before").unwrap();
     let plan = Prepared {
+        policy: None,
+        policy_input: None,
         root: root.clone(),
         bitmap_before: b"before".to_vec(),
         bitmap_after: b"after".to_vec(),
@@ -59,6 +61,8 @@ fn bitmap_replacement_preserves_old_bytes_in_history() {
     let root = root();
     fs::write(root.join(".bitmap"), b"before").unwrap();
     let plan = Prepared {
+        policy: None,
+        policy_input: None,
         root: root.clone(),
         bitmap_before: b"before".to_vec(),
         bitmap_after: b"after".to_vec(),
@@ -85,6 +89,8 @@ fn writer_restores_an_existing_file_after_a_later_replacement_fails() {
     fs::write(root.join(".bitmap"), b"before").unwrap();
     fs::write(&file, b"original").unwrap();
     let plan = Prepared {
+        policy: None,
+        policy_input: None,
         root: root.clone(),
         bitmap_before: b"before".to_vec(),
         bitmap_after: b"after".to_vec(),
@@ -157,4 +163,29 @@ fn equal_directories_move_under_their_owner() {
     let mut directories = owned(&["ui/button", "ui/button"]);
     super::directories::fix_dirs_if_equal(&targets, &mut directories);
     assert_eq!(directories, ["org1/ui/button", "org2/ui/button"]);
+}
+
+#[test]
+fn incomplete_policy_prevents_any_workspace_publication() {
+    let root = root();
+    fs::write(root.join(".bitmap"), b"before").unwrap();
+    fs::write(root.join("workspace.jsonc"), b"{}").unwrap();
+    let input = json!({"workspaceEntries":[],"componentDeps":[],"strategy":null});
+    let policy = super::super::super::checkout_policy::Prepared::new(&root, input.clone()).unwrap();
+    let plan = Prepared {
+        policy: Some(policy),
+        policy_input: Some(input),
+        root: root.clone(),
+        bitmap_before: b"before".to_vec(),
+        bitmap_after: b"after".to_vec(),
+        changes: WorkspaceFiles {
+            additions: vec![(root.join("source.js"), b"new".to_vec())],
+            ..WorkspaceFiles::default()
+        },
+        history: history(&root),
+    };
+    assert!(plan.commit().is_err());
+    assert_eq!(fs::read(root.join(".bitmap")).unwrap(), b"before");
+    assert!(!root.join("source.js").exists());
+    fs::remove_dir_all(root).unwrap();
 }

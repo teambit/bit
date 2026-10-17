@@ -2,6 +2,8 @@
 //! prints while checkout runs. The receipt is validated before anything is
 //! printed or written.
 
+mod inbound;
+
 use crate::commands::status::js::{array, decline, text};
 use bit_install::output::Output;
 use serde_json::Value;
@@ -17,6 +19,7 @@ const REASONS: [&str; 5] = [
 
 /// One import the engine ran: why, which ids, and how much it fetched.
 struct Import {
+    requested: Option<u64>,
     reason: Option<String>,
     ids: Vec<String>,
     objects_only: bool,
@@ -133,88 +136,6 @@ impl Progress {
         }
     }
 
-    /// Print the lines of `bit import` and `bit fetch` (`importer`): the
-    /// latest heads, then the missing versions, which `importMany` fetches
-    /// only when components are missing.
-    pub fn render_inbound(
-        &self,
-        output: &Output,
-        fetch: bool,
-        with_ids: bool,
-        wildcard: bool,
-        prefetch: Option<usize>,
-        on_lane: bool,
-    ) {
-        if fetch {
-            output.status("fetching objects...");
-        }
-        if !on_lane {
-            output.status("importing components");
-        }
-        if with_ids {
-            output.status("importing components");
-        }
-        if let Some(count) = prefetch {
-            output.restart(&format!("importing {count} components"));
-            output.restart(&format!("successfully imported {count} components"));
-        }
-        self.render_inbound_rows(output, wildcard, on_lane);
-    }
-
-    fn render_inbound_rows(&self, output: &Output, wildcard: bool, on_lane: bool) {
-        // `importMany` is called with the ids the latest-heads import requested.
-        let requested = self.imports
-            .iter()
-            .find(|row| {
-                row.reason.as_deref() == Some(REASONS[0])
-                    || row.reason
-                        .as_deref()
-                        .is_some_and(|reason| reason.starts_with("of their latest on lane "))
-            });
-        for row in &self.imports {
-            if row.reason.as_deref() == Some(REASONS[1]) {
-                output.status(&format!(
-                    "import {} components with their dependencies (if missing)",
-                    requested.unwrap_or(row).ids.len(),
-                ));
-                if row.components == 0 && !((wildcard || on_lane) && row.objects > 0) {
-                    continue;
-                }
-            }
-            render_import(output, row);
-        }
-    }
-
-    /// Workspace lane fetch leaves the dependency result as its final loader
-    /// status after the command-level success line.
-    pub fn render_lane_fetch_tail(&self, output: &Output) {
-        render_lane_tail(self.imports.last(), output);
-    }
-
-    pub fn render_lane_groups(
-        &self,
-        output: &Output,
-        groups: &[usize],
-        started: Instant,
-    ) -> io::Result<()> {
-        if groups.iter().sum::<usize>() != self.imports.len() {
-            return Err(decline("native inbound lane groups"));
-        }
-        output.status("fetching objects...");
-        let mut offset = 0;
-        for &count in groups {
-            output.status("importing components");
-            output.status("importing components");
-            for row in &self.imports[offset..offset + count] {
-                render_import(output, row);
-            }
-            output.success("importing components", Some(started));
-            render_lane_tail(self.imports[offset..offset + count].last(), output);
-            offset += count;
-        }
-        Ok(())
-    }
-
     fn render_checkout_initial(&self, output: &Output) {
         let fetching = [REASONS[0], REASONS[1]];
         for row in self.imports
@@ -271,6 +192,16 @@ impl Progress {
 
 fn render_lane_tail(row: Option<&Import>, output: &Output) {
     if let Some(row) = row
+        && row.ids.is_empty()
+        && let Some(count) = row.requested
+    {
+        output.success(
+            &format!("import {count} components with their dependencies (if missing)"),
+            None,
+        );
+        return;
+    }
+    if let Some(row) = row
         && !row.ids.is_empty()
         && let Some(reason) = &row.reason
     {
@@ -321,11 +252,21 @@ fn import(row: &Value) -> io::Result<Import> {
     if ids.len() > 16384 || objects > 16384 {
         return Err(decline("native command import progress receipt"));
     }
-    Ok(Import { reason, ids, objects_only, components, objects })
+    let requested = row.get("requested").and_then(Value::as_u64);
+    if requested.is_some_and(|count| count > 16384) {
+        return Err(decline("native command import requested count"));
+    }
+    Ok(Import { requested, reason, ids, objects_only, components, objects })
 }
 
 /// `importReason`: the fixed reasons, and the lane and history templates.
 fn known_reason(reason: &str) -> bool {
+    if matches!(
+        reason,
+        "for getting all dependencies" | "for getting all dependencies - missing dependencies",
+    ) {
+        return true;
+    }
     REASONS.contains(&reason)
         || reason.strip_prefix("for fetching lane ").is_some_and(lane_name)
         || reason.strip_prefix("of their latest on lane ").is_some_and(lane_name)

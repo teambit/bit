@@ -1,6 +1,11 @@
 //! Select already-scoped main-lane components and freeze their compressed
 //! object closure, or a zero-object repeat export, before remote side effects.
+
+pub(super) mod prefilter;
+
 mod all_versions;
+mod candidates;
+mod history;
 mod repeat;
 mod selection;
 use selection::{Staged, has_staged, select_versions};
@@ -10,7 +15,6 @@ use crate::transfer::{self, Body, collection};
 use bit_client_transfer::tar::ObjectItem;
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};
-use sha1::{Digest, Sha1};
 use std::{
     fs,
     io::{self, Write},
@@ -25,7 +29,6 @@ pub(super) struct Selected {
     pub(super) model: ModelBytes,
     pub(super) history: HistoryBytes,
     pub(super) head: String,
-    pub(super) version: String,
     /// Each local version's tag or hash, the head's among them.
     pub(super) labels: Vec<String>,
     pub(super) objects: Vec<ObjectItem>,
@@ -37,6 +40,7 @@ pub(super) struct ModelBytes {
     pub(super) after: Vec<u8>,
 }
 
+#[derive(Clone)]
 pub(super) struct HistoryBytes {
     pub(super) hash: String,
     pub(super) bytes: Vec<u8>,
@@ -48,26 +52,39 @@ struct Identity {
     model_hash: String,
 }
 
+pub(super) fn selection_history(input: &Prepare) -> io::Result<prefilter::Prepared> {
+    if input.options.pattern_selection && !input.options.all && !input.options.all_versions {
+        prefilter::prepare(&input.root)
+    } else {
+        Ok(prefilter::Prepared::default())
+    }
+}
+
 pub(super) fn select(input: &Prepare) -> io::Result<Vec<Selected>> {
-    let root = &input.root;
-    let scope: Value = serde_json::from_slice(&fs::read(root.join(".bit/scope.json"))?)?;
+    let scope: Value =
+        serde_json::from_slice(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
     if scope["lanes"]["current"] != "main" {
         return Err(invalid("outbound lane export"));
     }
-    let index: Value = serde_json::from_slice(&fs::read(root.join(".bit/index.json"))?)?;
-    if !index["lanes"].as_array().is_some_and(Vec::is_empty) {
-        return Err(invalid("outbound lane index"));
-    }
+    let index_bytes = match fs::read(crate::scope_path(&input.root).join("index.json")) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(error) => return Err(error),
+    };
+    let index: Value = serde_json::from_slice(&index_bytes)?;
     let rows = index["components"].as_array().ok_or_else(|| invalid("outbound index"))?;
     let candidates = if input.options.all
         || input.options.all_versions
         || input.options.head_only
         || !input.ids.is_empty()
     {
-        all_rows(root, rows)?
+        all_rows(&input.root, rows)?
     } else {
-        staged_rows(root, rows)?
+        staged_rows(&input.root, rows)?
     };
+    if input.options.pattern_selection && input.ids.is_empty() {
+        return Ok(Vec::new());
+    }
     let selected = requested(
         &input.ids,
         candidates,
@@ -192,34 +209,35 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
 fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Selected> {
     let root = &input.root;
     let identity = identity(row, &model)?;
-    let objects_dir = root.join(".bit/objects");
+    let objects_dir = crate::scope_path(root).join("objects");
     let staged = select_versions(input, &model, &objects_dir)?;
     let model_before = transfer::object::repository(
         &objects_dir,
         crate::merge_history::hash(&identity.model_hash)?,
         MAX_BYTES,
     )?;
-    let history_hash = crate::validate::hexadecimal(&Sha1::digest(
-        format!("{}/{}:VersionHistory", identity.scope, identity.name).as_bytes(),
-    ));
-    let history =
-        history(&objects_dir, &identity.scope, &identity.name, &staged.hashes, &history_hash)?;
+    let history = prepare_history(&objects_dir, &identity.scope, &identity.name, &staged.head)?;
     let host = super::remote::configured_host(input, &identity.scope)?;
     let (model_after, objects) = if staged.hashes.is_empty() {
         (model_before.clone(), Vec::new())
     } else {
         clear_and_mark_exported(&mut model, &identity.scope, &host, &input.transport.export_date)?;
         let model_after = encode(&identity.model_hash, "Component", &model)?;
-        let objects = collect(&objects_dir, &identity.model_hash, &model_after, &staged.hashes)?;
+        let objects = collect(
+            &objects_dir,
+            &identity.model_hash,
+            &model_after,
+            &staged.hashes,
+            input.options.ignore_missing_artifacts,
+        )?;
         (model_after, objects)
     };
     Ok(Selected {
         scope: identity.scope,
         name: identity.name,
         model: ModelBytes { hash: identity.model_hash, before: model_before, after: model_after },
-        history: HistoryBytes { hash: history_hash, bytes: history },
+        history,
         head: staged.head,
-        version: staged.version,
         labels: staged.labels,
         objects,
     })
@@ -246,7 +264,7 @@ fn identity(row: &Value, model: &Value) -> io::Result<Identity> {
 
 fn load_model(root: &Path, row: &Value) -> io::Result<Value> {
     let hash = row["hash"].as_str().ok_or_else(|| invalid("outbound index hash"))?;
-    read_object(&root.join(".bit/objects"), hash, "Component")
+    read_object(&crate::scope_path(root).join("objects"), hash, "Component")
 }
 pub(crate) fn read_object(dir: &Path, hash: &str, kind: &str) -> io::Result<Value> {
     let parsed = crate::merge_history::hash(hash)?;
@@ -255,52 +273,15 @@ pub(crate) fn read_object(dir: &Path, hash: &str, kind: &str) -> io::Result<Valu
     let (_, body) = crate::checkout::repository::split(&raw, parsed, kind)?;
     serde_json::from_slice(body).map_err(io::Error::other)
 }
-fn history(
+pub(super) fn prepare_history(
     dir: &Path,
     scope: &str,
     name: &str,
-    hashes: &[String],
-    history_hash: &str,
-) -> io::Result<Vec<u8>> {
-    let path = dir
-        .join(&history_hash[..2])
-        .join(&history_hash[2..]);
-    let mut value = if path.try_exists()? {
-        read_object(dir, history_hash, "VersionHistory")?
-    } else {
-        json!({"name":name,"scope":scope,"versions":[],"graphCompleteRefs":[]})
-    };
-    if value["name"] != name || value["scope"] != scope {
-        return Err(invalid("outbound VersionHistory identity"));
-    }
-    let rows =
-        value["versions"].as_array_mut().ok_or_else(|| invalid("outbound VersionHistory rows"))?;
-    for hash in hashes {
-        let parents = parents(dir, hash)?;
-        if !rows
-            .iter()
-            .any(|row| row["hash"] == hash.as_str())
-        {
-            rows.push(json!({"hash":hash,"parents":parents}));
-        }
-    }
-    encode(history_hash, "VersionHistory", &value)
+    head: &str,
+) -> io::Result<HistoryBytes> {
+    history::prepare_history(dir, scope, name, head)
 }
-/// A local Version's parents; a rewritten history stays with Node.js.
-fn parents(dir: &Path, hash: &str) -> io::Result<Value> {
-    let version = read_object(dir, hash, "Version")?;
-    if version["unrelated"] == true || version["squashed"] == true {
-        return Err(invalid("outbound rewritten history requires canonical export"));
-    }
-    let parents =
-        version["parents"].as_array().ok_or_else(|| invalid("outbound Version parents"))?;
-    for parent in parents {
-        crate::merge_history::hash(
-            parent.as_str().ok_or_else(|| invalid("outbound Version parent"))?,
-        )?;
-    }
-    Ok(version["parents"].clone())
-}
+
 pub(super) fn clear_and_mark_exported(
     model: &mut Value,
     scope: &str,
@@ -334,6 +315,7 @@ pub(super) fn collect(
     model_hash: &str,
     model: &[u8],
     hashes: &[String],
+    ignore_missing_artifacts: bool,
 ) -> io::Result<Vec<ObjectItem>> {
     let versions = hashes
         .iter()
@@ -350,7 +332,7 @@ pub(super) fn collect(
         &versions,
         None,
         0,
-        &collection::Mode::Export { strict_local_artifacts: true },
+        &collection::Mode::Export { strict_local_artifacts: !ignore_missing_artifacts },
     )?;
     let mut objects =
         vec![ObjectItem { hash: model_hash.to_owned(), compressed: model.to_vec(), scope: None }];
@@ -376,3 +358,7 @@ pub(super) fn collect(
 
 #[cfg(test)]
 mod tests;
+
+pub(super) fn candidates(root: &Path, all: bool) -> io::Result<Value> {
+    candidates::read(root, all)
+}

@@ -2,7 +2,7 @@
 //! with the fixes `ComponentWriter` applies when directories collide.
 use super::super::{Target, invalid};
 use serde_json::{Map, Value};
-use std::io;
+use std::{io, path::Path};
 
 /// Each target's directory: the template, then `fixDirsIfEqual` and
 /// `fixDirsIfNested` against the bitmap's existing `rootDir`s.
@@ -151,4 +151,11 @@ fn directory(template: &str, scope: &str, name: &str) -> io::Result<String> {
     }
     crate::checkout::plan::relative_path(&path)?;
     Ok(path)
+}
+
+pub(super) fn default_directory(root: &Path) -> io::Result<String> {
+    super::super::config::configuration(root)?["defaultDirectory"]
+        .as_str()
+        .map(str::to_owned)
+        .ok_or_else(|| invalid("inbound workspace default directory"))
 }

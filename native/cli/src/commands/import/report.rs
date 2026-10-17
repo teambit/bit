@@ -27,6 +27,7 @@ pub struct Receipt {
     pub ids: Vec<String>,
     details: Vec<Details>,
     on_lane: bool,
+    workspace_policy: Option<Value>,
 }
 
 /// The engine's inbound receipt, validated.
@@ -60,7 +61,12 @@ pub fn validate(value: &Value) -> io::Result<Receipt> {
         })
         .collect::<io::Result<_>>()?;
     let on_lane = value.get("currentLane").is_some_and(Value::is_string);
-    Ok(Receipt { ids, details, on_lane })
+    Ok(Receipt {
+        ids,
+        details,
+        on_lane,
+        workspace_policy: value.get("workspaceConfigUpdateResult").cloned(),
+    })
 }
 
 /// Versioned ids, distinct without their versions.
@@ -157,18 +163,15 @@ impl Receipt {
             return Ok(chalk.yellow("nothing to import"));
         }
         let format = Formatter::new(chalk);
-        let ids = self.ids
-            .iter()
-            .map(|id| Id::parse(id))
-            .collect::<io::Result<Vec<_>>>()?;
         let mut up_to_date = 0;
         let mut items = Vec::new();
-        for id in &ids {
-            let details = self.details(id)?;
+        for id in &self.ids {
+            let id = Id::parse(id)?;
+            let details = self.details(&id)?;
             up_to_date += usize::from(details.status == "up to date");
-            items.extend(import_item(&format, id, details));
+            items.extend(import_item(&format, &id, details));
         }
-        let prefix = match ids.len() {
+        let prefix = match self.ids.len() {
             1 => "successfully imported one component".to_string(),
             count => format!("successfully imported {count} components"),
         };
@@ -183,7 +186,11 @@ impl Receipt {
         let imported = format.section("imported components", "", &items);
         let summary = format.success_summary(&format!("{prefix}{up_to_date}"));
         let installation = installation_error_output(&format, installation_error);
-        Ok(Formatter::join(&[imported, self.removed(&format), installation, summary]))
+        let (logs, policy) = crate::commands::checkout::report::policy::format(
+            self.workspace_policy.as_ref(),
+            chalk,
+        )?;
+        Ok(Formatter::join(&[logs, imported, self.removed(&format), policy, installation, summary]))
     }
 
     /// `getRemovedWarning`.

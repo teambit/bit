@@ -1,26 +1,26 @@
 //! Bounded scope acquisition and listing across HTTP and file remotes.
+mod connection;
 mod file_list;
 mod lane_list;
 #[cfg(test)]
 mod tests;
-use super::{List, Prepare, RemoteLog, Target, Transport, config, identity, invalid};
+use super::{List, Prepare, RemoteLog, Target, config, identity, invalid};
 use crate::{
     command_import::{VirtualRemote, lane},
     workspace::engine::status_models::component_log,
 };
 use bit_client_transfer::{
-    GlobalConfig,
     fetch::{self, FetchOptions},
     http::{Listed, Network},
     remotes::{Remote, Remotes},
-    resolver::Resolver,
     tar::ObjectItem,
 };
+use connection::{connect, global_config};
 use futures_util::{StreamExt, TryStreamExt, stream};
 use serde_json::{Value, json};
 use std::{
     collections::{BTreeMap, HashMap},
-    fs, io,
+    io,
     path::Path,
 };
 
@@ -36,45 +36,19 @@ pub(super) fn lane_objects(
     id: &lane::Id,
 ) -> io::Result<Option<(VirtualRemote, String)>> {
     id.validate()?;
-    let (remotes, network, _, _) = connection(input)?;
+    let (remotes, network, _, _) =
+        connection::with_home(&input.root, &input.transport, &input.home)?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     runtime.block_on(async {
         let Remote::Http(url) = remotes.resolve(&id.scope, &network).await? else {
             return Ok(None);
         };
-        let (items, hash) = fetch_lane(&network, &url, id).await?;
+        let (items, hash) = fetch_lane(&network, &url, id, input.options.all_history).await?;
         let (mut remotes, _) =
             collect((Vec::new(), 0), &input.root, id.scope.clone(), Some(items))?;
         let remote = remotes.pop().ok_or_else(|| invalid("inbound lane remote"))?;
         Ok(Some((remote, hash)))
     })
-}
-
-fn connection(input: &Prepare) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
-    connect(&input.root, &input.transport)
-}
-
-fn connect(
-    root: &Path,
-    transport: &Transport,
-) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
-    let scope: Value =
-        serde_json::from_slice(&fs::read(crate::scope_path(root).join("scope.json"))?)
-            .map_err(io::Error::other)?;
-    let local = scope["name"].as_str().ok_or_else(|| invalid("inbound local scope"))?;
-    let global = global_config(transport)?;
-    let resolver = Resolver::configured(
-        &scope,
-        transport.node_executable.clone(),
-        transport.bit_dir.clone(),
-        local,
-        &global,
-    );
-    let remotes =
-        Remotes::load(&scope, &transport.global_config_dir, &global)?.with_resolver(resolver);
-    let network =
-        Network::new(&global, &transport.bit_version, Some(local), transport.token.as_deref())?;
-    Ok((remotes, network, global, local.to_owned()))
 }
 
 /// `Lister.remoteList` for each pattern: the components of `<scope>` whose
@@ -212,6 +186,7 @@ async fn fetch_lane(
     network: &Network,
     url: &str,
     id: &lane::Id,
+    all_history: bool,
 ) -> io::Result<(Vec<ObjectItem>, String)> {
     let lane_id = format!("{}/{}", id.scope, id.name);
     let mut items = network.fetch_bounded(
@@ -223,13 +198,9 @@ async fn fetch_lane(
     .await?;
     let (hash, components) = lane_targets(id, &items)?;
     if !components.is_empty() {
-        let mut more = network.fetch_bounded(
-            url,
-            &components,
-            &FetchOptions::with_dependencies(Some(lane_id), false),
-            MAX_INBOUND_BYTES,
-        )
-        .await?;
+        let mut options = FetchOptions::with_dependencies(Some(lane_id), false);
+        options.traversal.collect_parents = all_history;
+        let mut more = network.fetch_bounded(url, &components, &options, MAX_INBOUND_BYTES).await?;
         items.append(&mut more);
     }
     Ok((items, hash))
@@ -287,7 +258,8 @@ pub(super) fn lane_entries(
 }
 
 pub(super) fn objects(input: &Prepare, targets: &[Target]) -> io::Result<Vec<VirtualRemote>> {
-    let (remotes, network, global, local) = connection(input)?;
+    let (remotes, network, global, local) =
+        connection::with_home(&input.root, &input.transport, &input.home)?;
     let groups = group_targets(targets, &local)?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     runtime.block_on(fetch_groups(
@@ -297,14 +269,6 @@ pub(super) fn objects(input: &Prepare, targets: &[Target]) -> io::Result<Vec<Vir
         &network,
         fetch::concurrency(&global).min(4),
     ))
-}
-
-fn global_config(transport: &Transport) -> io::Result<GlobalConfig> {
-    match fs::read(transport.global_config_dir.join("config.json")) {
-        Ok(bytes) => serde_json::from_slice(&bytes).map_err(io::Error::other),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(GlobalConfig::new()),
-        Err(error) => Err(error),
-    }
 }
 
 fn group_targets(targets: &[Target], local: &str) -> io::Result<BTreeMap<String, Vec<String>>> {
@@ -334,6 +298,7 @@ async fn fetch_groups(
                 scope,
                 ids,
                 input.options.all_history,
+                input.options.dependencies.fetch_deps,
                 input.operation == "diff",
                 remotes,
                 network,
@@ -351,6 +316,7 @@ async fn fetch_one(
     scope: String,
     ids: Vec<String>,
     all_history: bool,
+    fetch_dependencies: bool,
     without_dependencies: bool,
     remotes: &Remotes,
     network: &Network,
@@ -363,6 +329,7 @@ async fn fetch_one(
         FetchOptions::with_dependencies(None, false)
     };
     options.traversal.collect_parents = all_history;
+    options.traversal.prefer_dependency_graph = !fetch_dependencies;
     let items = network.fetch_bounded(&url, &ids, &options, MAX_INBOUND_BYTES).await?;
     Ok((scope, Some(items)))
 }

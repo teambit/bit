@@ -10,6 +10,7 @@ use std::{
 
 impl Prepared {
     pub(in super::super) fn commit(self) -> io::Result<()> {
+        self.validate_policy()?;
         self.check_bitmap("before publication")?;
         self.history.check(&self.root)?;
         for directory in &self.changes.empty_directories {
@@ -44,7 +45,11 @@ impl Prepared {
             self.rollback_replacements(replaced);
             rollback_files(written, created_dirs);
         }
-        result
+        result?;
+        if let Some(policy) = &self.policy {
+            policy.commit()?;
+        }
+        Ok(())
     }
 
     fn check_bitmap(&self, stage: &str) -> io::Result<()> {

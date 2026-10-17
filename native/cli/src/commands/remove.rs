@@ -74,7 +74,7 @@ fn prepare(
     }
     if let Ok(plan) = VersionedPlan::prepare(root, name, keep_files) {
         if status::clean_staged_component(root, plan.identity())? {
-            return Ok(Removal::Versioned(Box::new(plan)));
+            return Ok(Removal::Versioned(Box::new(plan.with_status_history()?)));
         }
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,

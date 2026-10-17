@@ -337,6 +337,7 @@ dependencies = [
  "diff",
  "flate2",
  "getrandom 0.3.4",
+ "libc",
  "node-semver",
  "pnpm-deps-path",
  "pnpm-diagnostics",
@@ -357,6 +358,7 @@ name = "bit-client-transfer"
 version = "0.1.0"
 dependencies = [
  "futures-util",
+ "getrandom 0.3.4",
  "indexmap",
  "reqwest",
  "serde",

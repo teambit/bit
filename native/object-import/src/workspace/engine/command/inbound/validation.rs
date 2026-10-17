@@ -27,9 +27,7 @@ pub(super) fn validate(input: &Prepare) -> io::Result<()> {
     Ok(())
 }
 fn validate_lane_ids(input: &Prepare) -> io::Result<()> {
-    if input.options.lanes
-        && (input.ids.is_empty() || input.ids.len() > 32 || input.options.all_history)
-    {
+    if input.options.lanes && input.ids.len() > 33 {
         return Err(invalid("inbound lanes require explicit IDs"));
     }
     if input.operation == "laneImport" && input.ids.len() != 1 {

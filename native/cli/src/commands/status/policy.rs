@@ -350,3 +350,16 @@ fn identity(value: Option<&Value>) -> io::Result<String> {
 
 #[cfg(test)]
 mod policy_tests;
+
+/// Merge captured configuration for native export package transformers.
+pub(in crate::commands) fn export_package_config(
+    context: &Value,
+    target: &Value,
+    version: &Value,
+) -> io::Result<Map<String, Value>> {
+    let rows = projection::extensions(context, target, Some(version))?;
+    Ok(bit_install::workspace::aspects::from_model(&rows)
+        .into_iter()
+        .map(|entry| (entry.id, entry.config))
+        .collect())
+}

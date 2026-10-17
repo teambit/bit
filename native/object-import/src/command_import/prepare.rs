@@ -1,5 +1,7 @@
+pub(super) mod options;
 use super::{Capture, Overlay, PreparedImport, Target, history, invalid, merge, object_hash};
 use dependencies::{closure, only_unbuilt_requests};
+use refresh_selection::refresh_all;
 use remote::remote;
 use serde_json::{Value, json};
 use std::{
@@ -8,9 +10,13 @@ use std::{
     path::Path,
 };
 use transfer::receive;
+mod ancestors;
 mod checkout;
 mod dependencies;
+mod forced;
 mod lane;
+mod policy;
+mod refresh_selection;
 mod remote;
 mod selected;
 mod transfer;
@@ -34,7 +40,15 @@ pub(crate) fn prepare_with_virtual(
     targets: &[Target],
     virtual_remotes: &[VirtualRemote],
 ) -> io::Result<PreparedImport> {
-    prepare_with_virtual_options(root, global_remotes_file, targets, virtual_remotes, false)
+    prepare_with_virtual_options(
+        root,
+        global_remotes_file,
+        targets,
+        virtual_remotes,
+        false,
+        false,
+        false,
+    )
 }
 
 /// `status --lanes` ignores a component that has never been exported to main.
@@ -44,7 +58,15 @@ pub(crate) fn prepare_status_with_virtual(
     targets: &[Target],
     virtual_remotes: &[VirtualRemote],
 ) -> io::Result<PreparedImport> {
-    prepare_with_virtual_options(root, global_remotes_file, targets, virtual_remotes, true)
+    prepare_with_virtual_options(
+        root,
+        global_remotes_file,
+        targets,
+        virtual_remotes,
+        true,
+        false,
+        false,
+    )
 }
 
 fn prepare_with_virtual_options(
@@ -53,11 +75,14 @@ fn prepare_with_virtual_options(
     targets: &[Target],
     virtual_remotes: &[VirtualRemote],
     ignore_missing: bool,
+    all_history: bool,
+    fetch_dependencies: bool,
 ) -> io::Result<PreparedImport> {
     if !root.is_absolute() || !global_remotes_file.is_absolute() || targets.len() > 4096 {
         return Err(invalid("import command bounds"));
     }
     let (mut plan, scope) = empty(root, false)?;
+    plan.cache.fetch_all_dependencies = fetch_dependencies;
     for remote in virtual_remotes {
         plan.virtual_remote(&remote.scope, remote.path.clone(), &remote.objects)?;
     }
@@ -79,7 +104,7 @@ fn prepare_with_virtual_options(
         remotes_map.extend(local.clone());
     }
     plan.environment.remotes = remotes.clone();
-    let available = refresh_all(&mut plan, &scoped, &remotes, ignore_missing)?;
+    let available = refresh_all(&mut plan, &scoped, &remotes, ignore_missing, all_history)?;
     prepare_dependencies(&mut plan, root, &available, &remotes)?;
     plan.validate()?;
     Ok(plan)
@@ -96,69 +121,25 @@ fn prepare_dependencies(
     let staged = std::str::from_utf8(&staged).map_err(io::Error::other)?;
     staged.clone_into(&mut plan.cache.staged);
     let name = plan.environment.local_scope.clone();
-    plan.cache.only_if_built = only_unbuilt_requests(plan, scoped, &name, staged)?;
+    plan.cache.only_if_built =
+        !plan.cache.fetch_all_dependencies && only_unbuilt_requests(plan, scoped, &name, staged)?;
     plan.progress.push(super::Progress {
-        reason: Some("for getting missing versions and dependencies".into()),
+        reason: Some(
+            if plan.cache.fetch_all_dependencies {
+                "for getting all dependencies"
+            } else {
+                "for getting missing versions and dependencies"
+            }
+            .into(),
+        ),
         ..Default::default()
     });
     let mut visited = HashSet::new();
     for target in scoped {
         closure(plan, target, &name, staged, remotes, &mut visited)?;
     }
-    Ok(())
-}
-fn refresh_all<'a>(
-    plan: &mut PreparedImport,
-    scoped: &[&'a Target],
-    remotes: &Value,
-    ignore_missing: bool,
-) -> io::Result<Vec<&'a Target>> {
-    let mut directories = HashMap::new();
-    let mut available = Vec::new();
-    for target in scoped {
-        let remote_name = target.scope.as_deref().ok_or_else(|| invalid("import scope"))?;
-        if remote_name == plan.environment.local_scope {
-            available.push(*target);
-            continue;
-        }
-        let directory = remote(plan, remotes, remote_name)?;
-        directories.insert(remote_name.to_owned(), directory);
-    }
-    plan.progress.push(super::Progress {
-        reason: Some("of their latest on main".into()),
-        ..Default::default()
-    });
-    for target in scoped {
-        let remote_name = target.scope.as_deref().ok_or_else(|| invalid("import scope"))?;
-        if remote_name == plan.environment.local_scope {
-            continue;
-        }
-        let directory = &directories[remote_name];
-        record_main_refresh(plan, directory, target, ignore_missing)?;
-        plan.progress
-            .last_mut()
-            .unwrap()
-            .ids
-            .push(identity(target)?);
-        plan.progress
-            .last_mut()
-            .unwrap()
-            .objects
-            .insert(object_hash(remote_name));
-        if refresh(plan, target, directory, ignore_missing)? {
-            available.push(*target);
-        }
-    }
-    Ok(available)
-}
-fn record_main_refresh(
-    plan: &mut PreparedImport,
-    directory: &Path,
-    target: &Target,
-    status: bool,
-) -> io::Result<()> {
-    if status && let Some(model) = read_model(plan, directory, target)? {
-        plan.main_refresh.observe(&model);
+    if plan.cache.fetch_all_dependencies {
+        forced::finish(plan, scoped)?;
     }
     Ok(())
 }

@@ -1,11 +1,15 @@
 //! Publish a persisted lane locally only after the remote acknowledges its heads.
+mod controls;
 mod report;
+mod state;
 
 use super::{
     Prepare, invalid,
     lane_model::{self, LaneSelected},
 };
 use crate::store::Store;
+use controls::{export_bitmap, export_scope, export_staged_config};
+use rayon::prelude::*;
 use report::Reported;
 use serde_json::{Value, json};
 use std::{
@@ -28,14 +32,15 @@ pub(super) struct Prepared {
 
 struct Acknowledgement {
     expected: HashSet<String>,
-    /// Exhaustive exports may resend versions that the remote already knows.
-    allow_subset: bool,
 }
 
 struct PublishedState {
     bitmap: Change,
     scope: Change,
     refs: Refs,
+    staged: bool,
+    updated_ids: Vec<String>,
+    non_existing_ids: Vec<String>,
 }
 
 struct Workspace {
@@ -54,6 +59,7 @@ struct Objects {
     history: Vec<u8>,
     lane_hash: String,
     history_hash: String,
+    version_histories: Vec<super::model::HistoryBytes>,
 }
 
 struct Change {
@@ -69,6 +75,7 @@ struct Refs {
 struct Staged {
     snaps: Option<Vec<u8>>,
     config: Option<Change>,
+    config_path: PathBuf,
 }
 
 struct Model {
@@ -98,12 +105,7 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
             file_id: input.transport.bitmap_history_file_id.clone(),
         },
         lane: Lane { scope: selected.scope.clone(), name: selected.name.clone() },
-        acknowledgement: Acknowledgement {
-            expected: expected_ids,
-            allow_subset: input.options.all
-                || input.options.all_versions
-                || input.options.head_only,
-        },
+        acknowledgement: Acknowledgement { expected: expected_ids },
         objects: prepare_objects(root, selected)?,
         models: selected.components.models
             .iter()
@@ -114,12 +116,24 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
             })
             .collect(),
         published: PublishedState::prepare(root, selected)?,
-        staged: prepare_staged(root, &selected.components.expected_ids)?,
+        staged: prepare_staged(root, selected)?,
         report: Reported::prepare(selected)?,
     })
 }
 
 impl Prepared {
+    pub(super) fn non_existing_ids(&self) -> &[String] {
+        &self.published.non_existing_ids
+    }
+
+    pub(super) fn stage_history(&self) -> io::Result<()> {
+        let store = Store::new(crate::scope_path(&self.workspace.root).join("objects"), None)?;
+        for history in &self.objects.version_histories {
+            store.write(&history.hash, &history.bytes)?;
+        }
+        Ok(())
+    }
+
     pub(super) fn update_ids(&self) -> &[String] {
         &self.report.updates
     }
@@ -135,17 +149,21 @@ impl PublishedState {
             bitmap: prepare_bitmap(root, selected)?,
             scope: prepare_scope(root, selected)?,
             refs: prepare_refs(root, selected)?,
+            staged: false,
+            updated_ids: Vec::new(),
+            non_existing_ids: Vec::new(),
         })
     }
 }
 
 fn prepare_objects(root: &Path, selected: &LaneSelected) -> io::Result<Objects> {
     Ok(Objects {
-        index: fs::read(root.join(".bit/index.json"))?,
+        index: fs::read(crate::scope_path(root).join("index.json"))?,
         lane: object_bytes(root, &selected.hashes.lane)?,
         history: object_bytes(root, &selected.hashes.history)?,
         lane_hash: selected.hashes.lane.clone(),
         history_hash: selected.hashes.history.clone(),
+        version_histories: selected.components.histories.clone(),
     })
 }
 
@@ -159,7 +177,7 @@ fn prepare_bitmap(root: &Path, selected: &LaneSelected) -> io::Result<Change> {
 }
 
 fn prepare_scope(root: &Path, selected: &LaneSelected) -> io::Result<Change> {
-    let before = fs::read(root.join(".bit/scope.json"))?;
+    let before = fs::read(crate::scope_path(root).join("scope.json"))?;
     if before.len() > 4 * 1024 * 1024 {
         return Err(invalid("outbound lane scope bounds"));
     }
@@ -184,16 +202,20 @@ fn prepare_refs(root: &Path, selected: &LaneSelected) -> io::Result<Refs> {
     Ok(Refs { before, after })
 }
 
-fn prepare_staged(root: &Path, expected_ids: &[String]) -> io::Result<Staged> {
-    let snaps = read_optional(&root.join(".bit/staged-snaps"))?;
+fn prepare_staged(root: &Path, selected: &LaneSelected) -> io::Result<Staged> {
+    let snaps = read_optional(&crate::scope_path(root).join("staged-snaps"))?;
     if snaps
         .as_ref()
         .is_some_and(|bytes| bytes.len() > 4 * 1024 * 1024)
     {
         return Err(invalid("outbound lane staged snap bounds"));
     }
-    let before = read_optional(&root.join(".bit/staged-config/main.json"))?;
-    let expected = expected_ids
+    let config_path = crate::scope_path(root)
+        .join("staged-config")
+        .join(&selected.scope)
+        .join(format!("{}.json", selected.name));
+    let before = read_optional(&config_path)?;
+    let expected = selected.components.expected_ids
         .iter()
         .cloned()
         .collect::<HashSet<_>>();
@@ -203,68 +225,59 @@ fn prepare_staged(root: &Path, expected_ids: &[String]) -> io::Result<Staged> {
             Ok(Change { before, after })
         })
         .transpose()?;
-    Ok(Staged { snaps, config })
+    Ok(Staged { snaps, config, config_path })
 }
 
 impl Prepared {
-    pub(super) fn commit(self, exported_ids: &[String]) -> io::Result<()> {
+    pub(super) fn commit(mut self, exported_ids: &[String]) -> io::Result<()> {
+        self.stage(exported_ids)?;
+        self.finish()
+    }
+
+    pub(super) fn stage(&mut self, exported_ids: &[String]) -> io::Result<Vec<String>> {
+        if self.published.staged {
+            return Ok(self.published.updated_ids.clone());
+        }
         self.acknowledgement.validate(exported_ids)?;
         self.validate()?;
-        self.publish()
-    }
-
-    fn validate(&self) -> io::Result<()> {
-        if !self.validate_files()? || !self.validate_objects()? {
-            return Err(invalid("outbound lane local state changed"));
-        }
-        for model in &self.models {
-            if model.hash.len() != 40 || !model.hash.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-                return Err(invalid("outbound lane model hash"));
-            }
-            let path = self.workspace.root
-                .join(".bit/objects")
-                .join(&model.hash[..2])
-                .join(&model.hash[2..]);
-            if fs::read(path)? != model.before {
-                return Err(invalid("outbound lane local model changed"));
-            }
-        }
-        Ok(())
-    }
-
-    fn validate_files(&self) -> io::Result<bool> {
-        let root = &self.workspace.root;
-        Ok(fs::read(root.join(".bitmap"))? == self.published.bitmap.before
-            && fs::read(root.join(".bit/scope.json"))? == self.published.scope.before
-            && read_optional(&refs_path(root, &self.lane.scope, &self.lane.name))?
-                == self.published.refs.before
-            && read_optional(&root.join(".bit/staged-snaps"))? == self.staged.snaps
-            && read_optional(&root.join(".bit/staged-config/main.json"))?
-                == self.staged.config.as_ref().map(|config| config.before.clone()))
-    }
-
-    fn validate_objects(&self) -> io::Result<bool> {
-        let root = &self.workspace.root;
-        Ok(fs::read(root.join(".bit/index.json"))? == self.objects.index
-            && object_bytes(root, &self.objects.lane_hash)? == self.objects.lane
-            && object_bytes(root, &self.objects.history_hash)? == self.objects.history)
-    }
-
-    fn publish(self) -> io::Result<()> {
-        let store = Store::new(self.workspace.root.join(".bit/objects"), None)?;
-        for model in &self.models {
-            store.write(&model.hash, &model.after)?;
+        self.reconcile(exported_ids)?;
+        let store = Store::new(crate::scope_path(&self.workspace.root).join("objects"), None)?;
+        self.models
+            .par_iter()
+            .try_for_each(|model| store.write(&model.hash, &model.after))?;
+        for model in &mut self.models {
+            model.before.clone_from(&model.after);
         }
         if let Some(refs) = &self.published.refs.after {
             write(&refs_path(&self.workspace.root, &self.lane.scope, &self.lane.name), refs)?;
+            self.published.refs.before = Some(refs.clone());
         }
+        fs::write(
+            crate::scope_path(&self.workspace.root).join("scope.json"),
+            &self.published.scope.after,
+        )?;
+        self.published.scope.before.clone_from(&self.published.scope.after);
+        self.published.staged = true;
+        Ok(self.published.updated_ids.clone())
+    }
+
+    pub(super) fn finish(self) -> io::Result<()> {
+        if !self.published.staged {
+            return Err(invalid("outbound lane scope publication not staged"));
+        }
+        self.validate()?;
+        self.publish_controls()
+    }
+
+    fn publish_controls(self) -> io::Result<()> {
         if let Some(config) = &self.staged.config {
-            fs::write(self.workspace.root.join(".bit/staged-config/main.json"), &config.after)?;
+            fs::write(&self.staged.config_path, &config.after)?;
         }
         if self.staged.snaps.is_some() {
-            fs::remove_file(self.workspace.root.join(".bit/staged-snaps"))?;
+            fs::remove_file(crate::scope_path(&self.workspace.root).join("staged-snaps"))?;
         }
-        fs::write(self.workspace.root.join(".bit/scope.json"), &self.published.scope.after)?;
+        let last_merged = crate::scope_path(&self.workspace.root).join("last-merged");
+        crate::workspace::actions::remove(&last_merged)?;
         if self.published.bitmap.after != self.published.bitmap.before {
             self.backup_bitmap()?;
             write(&self.workspace.root.join(".bitmap"), &self.published.bitmap.after)?;
@@ -273,7 +286,7 @@ impl Prepared {
     }
 
     fn backup_bitmap(&self) -> io::Result<()> {
-        let directory = self.workspace.root.join(".bit/bitmap-history");
+        let directory = crate::scope_path(&self.workspace.root).join("bitmap-history");
         fs::create_dir_all(&directory)?;
         fs::write(
             directory.join(format!(".bitmap-{}", self.workspace.file_id)),
@@ -282,7 +295,7 @@ impl Prepared {
         let mut metadata = fs::OpenOptions::new()
             .create(true)
             .append(true)
-            .open(self.workspace.root.join(".bit/bitmap-history-metadata.txt"))?;
+            .open(crate::scope_path(&self.workspace.root).join("bitmap-history-metadata.txt"))?;
         writeln!(metadata, "{} export", self.workspace.file_id)?;
         metadata.sync_all()
     }
@@ -294,85 +307,11 @@ impl Acknowledgement {
             .iter()
             .cloned()
             .collect::<HashSet<_>>();
-        if acknowledged.len() != exported_ids.len()
-            || !acknowledged.is_subset(&self.expected)
-            || (!self.allow_subset && acknowledged != self.expected)
-        {
+        if acknowledged.len() != exported_ids.len() || !acknowledged.is_subset(&self.expected) {
             return Err(invalid("outbound lane remote acknowledgement"));
         }
         Ok(())
     }
-}
-
-fn export_bitmap(before: &[u8], scope: &str, name: &str, lane: &Value) -> io::Result<Vec<u8>> {
-    let mut bitmap = crate::recovery::jsonc::parse(before)?;
-    let header =
-        bitmap.get_mut("_bit_lane").ok_or_else(|| invalid("outbound lane bitmap header"))?;
-    if header["id"]["name"] != name
-        || header["id"]["scope"] != scope
-        || header
-            .get("exported")
-            .is_some_and(|value| !value.is_boolean())
-    {
-        return Err(invalid("outbound lane bitmap identity"));
-    }
-    let mut changed = header["exported"] != true;
-    header["exported"] = Value::Bool(true);
-    let components =
-        lane["components"].as_array().ok_or_else(|| invalid("outbound lane bitmap components"))?;
-    for component in components {
-        let component_scope = component["id"]["scope"]
-            .as_str()
-            .ok_or_else(|| invalid("outbound lane bitmap scope"))?;
-        let component_name =
-            component["id"]["name"].as_str().ok_or_else(|| invalid("outbound lane bitmap name"))?;
-        if let Some(row) = bitmap.get_mut(component_name)
-            && row["scope"] == ""
-        {
-            row["scope"] = Value::String(component_scope.to_owned());
-            row.as_object_mut()
-                .ok_or_else(|| invalid("outbound lane bitmap row"))?
-                .remove("defaultScope");
-            changed = true;
-        }
-    }
-    if changed { crate::inspection::render_bitmap(&bitmap) } else { Ok(before.to_vec()) }
-}
-
-fn export_scope(before: &[u8], name: &str) -> io::Result<Vec<u8>> {
-    let mut scope: Value = serde_json::from_slice(before)?;
-    let new =
-        scope["lanes"]["new"].as_array_mut().ok_or_else(|| invalid("outbound lane scope state"))?;
-    if new.len() > 4096 {
-        return Err(invalid("outbound lane scope bounds"));
-    }
-    new.retain(|entry| entry != name);
-    let mut output = Vec::new();
-    let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
-    let mut serializer = serde_json::Serializer::with_formatter(&mut output, formatter);
-    serde::Serialize::serialize(&scope, &mut serializer)?;
-    Ok(output)
-}
-
-fn export_staged_config(before: &[u8], expected_ids: &HashSet<String>) -> io::Result<Vec<u8>> {
-    let mut rows: Vec<Value> = serde_json::from_slice(before)?;
-    if rows.len() > 4096 {
-        return Err(invalid("outbound lane staged configuration bounds"));
-    }
-    let old_len = rows.len();
-    rows.retain(|row| {
-        let (Some(scope), Some(name)) = (row["id"]["scope"].as_str(), row["id"]["name"].as_str())
-        else {
-            return true;
-        };
-        !expected_ids
-            .iter()
-            .any(|id| id.starts_with(&format!("{scope}/{name}@")))
-    });
-    if rows.len() == old_len {
-        return Ok(before.to_vec());
-    }
-    serde_json::to_vec_pretty(&rows).map_err(io::Error::other)
 }
 
 fn safe_segment(segment: &str) -> io::Result<()> {
@@ -389,7 +328,8 @@ fn safe_segment(segment: &str) -> io::Result<()> {
 }
 
 fn refs_path(root: &Path, scope: &str, name: &str) -> PathBuf {
-    root.join(".bit/refs/remotes")
+    crate::scope_path(root)
+        .join("refs/remotes")
         .join(scope)
         .join(name)
 }
@@ -399,7 +339,8 @@ fn object_bytes(root: &Path, hash: &str) -> io::Result<Vec<u8>> {
         return Err(invalid("outbound lane object hash"));
     }
     fs::read(
-        root.join(".bit/objects")
+        crate::scope_path(root)
+            .join("objects")
             .join(&hash[..2])
             .join(&hash[2..]),
     )

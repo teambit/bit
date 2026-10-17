@@ -1,6 +1,6 @@
 use super::{
     Object, Overlay, PreparedImport, Target, VirtualRemote, history, object_hash, prepare,
-    prepare_cached, prepare_with_virtual, publish,
+    prepare::prepare_with_virtual, prepare_cached, publish,
 };
 use flate2::{Compression, read::ZlibDecoder, write::ZlibEncoder};
 use serde_json::{Value, json};

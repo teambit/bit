@@ -27,7 +27,8 @@ const snapshotCommandName = cliArguments[0] === 't' ? 'tag' : cliArguments[0];
 let snapshotCommand = ['snap', 'tag'].includes(snapshotCommandName) || (cliArguments[0] === 'merge' && cliArguments.includes('--resolve'));
 const checkoutCommand = (cliArguments[0] === 'merge' && cliArguments.includes('--abort')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge-abort') || ['checkout', 'U', 'revert', 'switch'].includes(cliArguments[0]) || (cliArguments[0] === 'lane' && cliArguments[1] === 'import');
 const mergeCommand = (cliArguments[0] === 'merge' && !cliArguments.includes('--abort') && !cliArguments.includes('--resolve')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge');
-const bufferedCommand = snapshotCommand || checkoutCommand || mergeCommand;
+const exportCommand = ['export', 'e', 'resume-export'].includes(cliArguments[0]);
+const bufferedCommand = snapshotCommand || checkoutCommand || mergeCommand || exportCommand;
 process.argv = [process.execPath, entry, ...cliArguments];
 require(path.join(bitDir, 'dist', 'hook-require.js'));
 const bitRequire = createRequire(path.join(bitDir, 'package.json'));
@@ -104,6 +105,11 @@ async function handle(line) {
 }
 
 const handlers = {
+  exportBootstrap,
+  exportFileAction,
+  exportInterrupt,
+  exportPackages,
+  exportFinish,
   hostInfo,
   collationOrder: ({ ids }) => ids.map((_, index) => index).sort((left, right) => ids[left].localeCompare(ids[right])),
   envPolicy: ({ envId }) => envPolicy(envId),

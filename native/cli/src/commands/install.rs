@@ -130,12 +130,16 @@ pub(super) fn run_install(
         .stack_size(32 * 1024 * 1024)
         .spawn(move || {
             let runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
-            let sink: bit_install::output::Sink = Arc::new(|text: &str| {
+            let quiet = matches!(&input, Input::Options(_)) && info.non_interactive;
+            let sink: bit_install::output::Sink = Arc::new(move |text: &str| {
+                if quiet {
+                    return;
+                }
                 let mut stdout = io::stdout().lock();
                 let _ = stdout.write_all(text.as_bytes());
                 let _ = stdout.flush();
             });
-            let host = JsHost(host);
+            let host = JsHost(host, quiet);
             Ok(runtime.block_on(async {
                 match &input {
                     Input::Argv(argv) => bit_install::run(&cwd, argv, &info, &host, sink).await,
@@ -162,7 +166,9 @@ impl Terminal {
             color: color_enabled(tty),
             tty,
             loader: !env::var("BIT_DISABLE_SPINNER").is_ok_and(|value| yn(&value)),
-            non_interactive: argv.iter().any(|arg| arg == "--json"),
+            non_interactive: argv
+                .iter()
+                .any(|arg| matches!(arg.as_str(), "--json" | "-j")),
         }
     }
 
@@ -202,7 +208,7 @@ fn yn(value: &str) -> bool {
     )
 }
 
-struct JsHost(Arc<Host>);
+struct JsHost(Arc<Host>, bool);
 
 impl JsHost {
     async fn call<Response: DeserializeOwned>(
@@ -263,7 +269,7 @@ impl bit_install::Host for JsHost {
         let output = response["stdout"]
             .as_str()
             .ok_or_else(|| io::Error::other("JavaScript host afterInstall stdout"))?;
-        if !output.is_empty() {
+        if !self.1 && !output.is_empty() {
             let mut stdout = io::stdout().lock();
             stdout.write_all(output.as_bytes())?;
             stdout.flush()?;

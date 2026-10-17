@@ -33,16 +33,37 @@ impl PreparedImport {
         }
         self.checkout_off_lane(&targets, &remote_targets, &remotes)?;
         super::prepare_dependencies(self, root, &targets.iter().collect::<Vec<_>>(), &remotes)?;
-        self.checkout_lane_unchanged(id, &Record { hash, value, is_new: false })?;
+        self.checkout_lane_refresh(id, &Record { hash, value, is_new: false })?;
         self.validate()
     }
-    fn checkout_lane_unchanged(&mut self, id: &Id, incoming: &Record) -> io::Result<()> {
-        let before = self.load_lane(id)?.ok_or_else(|| invalid("checkout current Lane missing"))?;
-        self.publish_imported_lane(id, incoming)?;
-        let after = self.load_lane(id)?.ok_or_else(|| invalid("checkout merged Lane missing"))?;
-        if before.value != after.value {
-            return Err(invalid("historical checkout requires remote Lane publication"));
+    /// Fetch lane objects for both lane heads and distinct tracked workspace versions.
+    pub(crate) fn prepare_fetch_lane(
+        &mut self,
+        root: &Path,
+        id: &Id,
+        hash: Option<&str>,
+        bitmap: &[Target],
+        all_history: bool,
+    ) -> io::Result<Vec<Target>> {
+        let record = self.fetch_lane_contents_at_hash(id, hash)?;
+        let remote_targets = lane_targets(&record.value)?;
+        let targets = seeds(&remote_targets, bitmap);
+        let remotes = self.environment.remotes.clone();
+        self.checkout_off_lane(&targets, &remote_targets, &remotes)?;
+        self.retain_remote_lane_refs(&record)?;
+        if let Some(row) = self.progress.last_mut() {
+            row.reason = Some(format!("of their latest on lane {}/{}", id.scope, id.name));
         }
+        if all_history {
+            self.collect_lane_history(id, &remote_targets)?;
+        }
+        super::prepare_dependencies(self, root, &targets.iter().collect::<Vec<_>>(), &remotes)?;
+        self.progress.last_mut().unwrap().requested = Some(targets.len());
+        self.validate()?;
+        Ok(targets)
+    }
+    fn checkout_lane_refresh(&mut self, id: &Id, incoming: &Record) -> io::Result<()> {
+        self.publish_imported_lane(id, incoming)?;
         Ok(())
     }
 

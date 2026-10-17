@@ -1,7 +1,7 @@
 //! Retained workspace writes for new and clean existing components. Every
 //! Source and destination is checked during Prepare; publication happens after
 //! the object transaction succeeds.
-use super::{Target, config, invalid};
+use super::{Target, invalid};
 use crate::command_import::PreparedImport;
 use serde_json::{Map, Value, json};
 use std::{
@@ -19,6 +19,8 @@ pub(super) struct Prepared {
     bitmap_after: Vec<u8>,
     changes: WorkspaceFiles,
     history: History,
+    policy: Option<super::super::checkout_policy::Prepared>,
+    policy_input: Option<Value>,
 }
 #[derive(Clone, Copy)]
 pub(super) struct Options<'a> {
@@ -49,12 +51,12 @@ struct History {
 pub(super) fn prepare(
     root: &Path,
     targets: &[Target],
-    import: &PreparedImport,
+    import: &mut PreparedImport,
     file_id: Option<&str>,
     options: Options<'_>,
 ) -> io::Result<Prepared> {
     let history = prepare_history(root, file_id)?;
-    let template = default_directory(root)?;
+    let template = directories::default_directory(root)?;
     let bitmap_before = fs::read(root.join(".bitmap"))?;
     let mut bitmap = crate::recovery::jsonc::parse(&bitmap_before)?;
     let rows = bitmap.as_object_mut().ok_or_else(|| invalid("inbound bitmap object"))?;
@@ -67,20 +69,20 @@ pub(super) fn prepare(
         rows.insert("_bit_lane".into(), lane);
     }
     let bitmap_after = crate::inspection::render_bitmap(&bitmap)?;
-    Ok(Prepared { root: root.to_owned(), bitmap_before, bitmap_after, changes, history })
-}
-
-impl Prepared {
-    pub(super) fn conflicts(&self, id: &str) -> Option<&[String]> {
-        self.changes.conflicts.get(id).map(Vec::as_slice)
-    }
-}
-
-fn default_directory(root: &Path) -> io::Result<String> {
-    config::configuration(root)?["defaultDirectory"]
-        .as_str()
-        .map(str::to_owned)
-        .ok_or_else(|| invalid("inbound workspace default directory"))
+    let policy_input = policy::receipt(root, targets, import)?;
+    let policy = policy_input
+        .as_ref()
+        .map(|receipt| super::super::checkout_policy::Prepared::new(root, receipt.clone()))
+        .transpose()?;
+    Ok(Prepared {
+        root: root.to_owned(),
+        bitmap_before,
+        bitmap_after,
+        changes,
+        history,
+        policy,
+        policy_input,
+    })
 }
 
 /// Every target's files in its directory, bounded by [`MAX_WRITTEN_BYTES`].
@@ -92,11 +94,9 @@ fn prepare_targets(
     rows: &mut Map<String, Value>,
     options: Options<'_>,
 ) -> io::Result<WorkspaceFiles> {
-    let policy = policy::workspace_policy(root)?;
     let context = Planning {
         root,
         imported: import,
-        policy: &policy,
         override_existing: options.override_existing,
         install_requested: options.install_requested,
         merge_strategy: options.merge_strategy,
@@ -150,7 +150,6 @@ fn target_directories(
 struct Planning<'a> {
     root: &'a Path,
     imported: &'a PreparedImport,
-    policy: &'a HashMap<String, String>,
     override_existing: bool,
     install_requested: bool,
     merge_strategy: Option<&'a str>,
@@ -187,7 +186,6 @@ fn plan_target(
                 target,
                 imported: context.imported,
                 row: &row,
-                policy: context.policy,
                 resolution: existing::Resolution {
                     override_existing: context.override_existing,
                     install_requested: context.install_requested,
@@ -212,8 +210,7 @@ fn plan_new_target(
     if let Some(empty) = new_directory(context.root, directory, context.override_existing)? {
         changes.empty_directories.push(empty);
     }
-    let files =
-        prepare_target(context.root, directory, target, context.imported, rows, context.policy)?;
+    let files = prepare_target(context.root, directory, target, context.imported, rows)?;
     for (path, after) in files {
         match fs::symlink_metadata(&path) {
             Err(error) if error.kind() == io::ErrorKind::NotFound => {
@@ -258,7 +255,6 @@ fn prepare_target(
     target: &Target,
     import: &PreparedImport,
     rows: &mut Map<String, Value>,
-    policy: &HashMap<String, String>,
 ) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
     let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound workspace scope"))?;
     unique_name(rows, &target.name)?;
@@ -272,7 +268,6 @@ fn prepare_target(
         .read(&hash, "Version")?
         .ok_or_else(|| invalid("inbound imported Version"))?;
     crate::history_query::validate_version(version)?;
-    policy::reject_update(version, policy)?;
     let main = version["mainFile"].as_str().ok_or_else(|| invalid("inbound main file"))?;
     crate::checkout::plan::relative_path(main)?;
     let files = target_files(root, directory, version, main, import)?;

@@ -2,6 +2,7 @@
 //! Version closure before the export transaction starts.
 use super::{Prepare, invalid, model, remote};
 mod exhaustive;
+mod readme;
 mod staged;
 use crate::transfer;
 use bit_client_transfer::tar::ObjectItem;
@@ -30,6 +31,7 @@ pub(super) struct SelectedComponents {
     pub(super) ids: Vec<String>,
     pub(super) expected_ids: Vec<String>,
     pub(super) models: Vec<model::ModelBytes>,
+    pub(super) histories: Vec<model::HistoryBytes>,
 }
 
 #[derive(Clone)]
@@ -79,6 +81,7 @@ pub(super) fn select(input: &Prepare) -> io::Result<Option<LaneSelected>> {
             ids: selected.component_ids,
             expected_ids: selected.expected_ids,
             models: selected.models,
+            histories: selected.histories,
         },
         fork_history,
     }))
@@ -89,8 +92,8 @@ fn current_identity(input: &Prepare) -> io::Result<Option<(String, String)>> {
     let Some(current) = bitmap.get("_bit_lane") else {
         return Ok(None);
     };
-    if !input.ids.is_empty() || input.options.resume.is_some() {
-        return Err(invalid("outbound lane explicit ids or resume"));
+    if !input.ids.is_empty() {
+        return Err(invalid("outbound explicit lane IDs require canonical stack"));
     }
     let scope = current["id"]["scope"]
         .as_str()
@@ -115,7 +118,8 @@ struct Loaded {
 }
 
 fn load_lane(input: &Prepare, scope: &str, name: &str) -> io::Result<Loaded> {
-    let index: Value = serde_json::from_slice(&fs::read(input.root.join(".bit/index.json"))?)?;
+    let index: Value =
+        serde_json::from_slice(&fs::read(crate::scope_path(&input.root).join("index.json"))?)?;
     let lane_row = index["lanes"]
         .as_array()
         .ok_or_else(|| invalid("outbound lane index"))?
@@ -126,18 +130,13 @@ fn load_lane(input: &Prepare, scope: &str, name: &str) -> io::Result<Loaded> {
         .as_str()
         .ok_or_else(|| invalid("outbound lane hash"))?
         .to_owned();
-    let dir = input.root.join(".bit/objects");
+    let dir = crate::scope_path(&input.root).join("objects");
     let lane = model::read_object(&dir, &hash, "Lane")?;
     if lane["scope"] != scope || lane["name"] != name {
         return Err(invalid("outbound lane identity"));
     }
     let forked_from = forked_from(&lane, scope, input.options.fork_lane_new_scope)?;
-    if lane
-        .get("readmeComponent")
-        .is_some_and(|value| !value.is_null())
-    {
-        return Err(invalid("outbound complex lane export"));
-    }
+    readme::validate(&lane, name)?;
     let history_hash =
         crate::validate::hexadecimal(&Sha1::digest(format!("{hash}:LaneHistory").as_bytes()));
     let history = model::read_object(&dir, &history_hash, "LaneHistory")?;
@@ -181,6 +180,7 @@ struct Selection {
     component_ids: Vec<String>,
     expected_ids: Vec<String>,
     models: Vec<model::ModelBytes>,
+    histories: Vec<model::HistoryBytes>,
 }
 
 impl Selection {
@@ -192,6 +192,7 @@ impl Selection {
             component_ids: Vec::new(),
             expected_ids: Vec::new(),
             models: Vec::new(),
+            histories: Vec::new(),
         }
     }
     fn append(&mut self, item: ObjectItem) -> io::Result<()> {
@@ -232,7 +233,11 @@ fn select_components(
             .iter()
             .find(|row| component.matches(row))
             .and_then(|row| row["head"].as_str());
-        if (!exhaustive || input.options.head_only) && previous_head == Some(component.head) {
+        if (!exhaustive || input.options.head_only)
+            && previous_head == Some(component.head)
+            && !(input.options.fork_lane_new_scope
+                && staged::missing_remote_head(&host, component.head)?)
+        {
             continue;
         }
         let row = component_rows
@@ -248,7 +253,7 @@ fn selection_rows(input: &Prepare, loaded: &Loaded) -> io::Result<(Vec<Value>, b
     let mut rows = lane_entries(&loaded.lane)?;
     let exhaustive =
         input.options.all || input.options.all_versions || input.options.head_only;
-    if exhaustive {
+    if exhaustive || input.options.fork_lane_new_scope {
         let extra = exhaustive::workspace_entries(input, loaded, &rows)?;
         rows.extend(extra);
     }
@@ -340,19 +345,20 @@ fn select_component(
         &context.input.transport.export_date,
     )?;
     let after = model::encode(hash, "Component", &component)?;
-    let versions = if context.input.options.head_only {
-        vec![id.head.to_owned()]
-    } else if exhaustive {
-        exhaustive::all_lane_versions(dir, id.head, component["head"].as_str())?
-    } else {
-        staged::lane_versions(dir, id.head, previous_head, context.scope, context.name)?
-    };
+    let versions = staged::selected_versions(context, id, &component, previous_head, exhaustive)?;
+    selected.histories.push(model::prepare_history(dir, id.scope, id.name, id.head)?);
     selected.expected_ids.extend(
         versions
             .iter()
             .map(|version| format!("{}@{version}", id.id)),
     );
-    for object in model::collect(dir, hash, &after, &versions)? {
+    for object in model::collect(
+        dir,
+        hash,
+        &after,
+        &versions,
+        context.input.options.ignore_missing_artifacts,
+    )? {
         selected.append(object)?;
     }
     selected.models.push(model::ModelBytes { hash: hash.to_owned(), before, after });
@@ -364,8 +370,8 @@ fn remote_heads(root: &Path, scope: &str, name: &str) -> io::Result<Vec<Value>> 
     if scope.contains('/') || name.contains('/') || scope == ".." || name == ".." {
         return Err(invalid("outbound lane ref path"));
     }
-    let path = root
-        .join(".bit/refs/remotes")
+    let path = crate::scope_path(root)
+        .join("refs/remotes")
         .join(scope)
         .join(name);
     match fs::read(path) {

@@ -1,0 +1,43 @@
+{
+  "bit_reference_version": "2.2.94",
+  "node_version": "22.22.0",
+  "method": "Direct pinned Node CLI only, BIT_NATIVE=off; 10 fresh workspace copies and a restored empty file remote for each of two authored component orders. No native binary participates.",
+  "observations": [
+    {
+      "label": "transfer-explicit-node-proof",
+      "runs": 10,
+      "index_variants": 1,
+      "bar_foo_history_order_variants": [
+        [
+          "daf9c4d2697dfca30ac4f2f26fc9f5887bc367e8",
+          "87518209b0179aa11e98695293899e2ac73aed2c",
+          "18e7731fe24d5cc9a422472c6b737342c1057fe8"
+        ]
+      ],
+      "log_sha256": "1657f413975fb82d9fabb6282c9827e53c9948c9f033adec16a610756301fd00"
+    },
+    {
+      "label": "transfer-explicit-node-proof-reverse",
+      "runs": 10,
+      "index_variants": 1,
+      "bar_foo_history_order_variants": [
+        [
+          "e052cd877a5f7a879f7eb42f8fd8ce634be6bf4a",
+          "5b6b508eb76e9881c865342fafad52b979ccc729",
+          "93d8b23d99c4906d49f2db2802237451eca748de"
+        ],
+        [
+          "e052cd877a5f7a879f7eb42f8fd8ce634be6bf4a",
+          "93d8b23d99c4906d49f2db2802237451eca748de",
+          "5b6b508eb76e9881c865342fafad52b979ccc729"
+        ]
+      ],
+      "log_sha256": "42379fb4f42c6d431ef93e3fb1a94e7c6dbed90d15d9d91a83c4ee60bed85825"
+    }
+  ],
+  "normalization": "This evidence permits sorting only remote VersionHistory.versions array insertion order by row hash. Every full row, including parent order, remains compared; local VersionHistory arrays remain exact. Remote component-index row order has separate configured-fixture evidence in transfer-configured-index-order.json.",
+  "drivers_sha256": {
+    "transfer-node-proof.py": "d239debdcb8dec3c10d56da477a7649c0d1c7c8d3719b6e8d9267442b9bf2ad5",
+    "transfer-node-proof-reverse.py": "33b44b7b60f9e24dfb39728de00a119c3fb8dcb71016ae0df90b715c83bd84fe"
+  }
+}

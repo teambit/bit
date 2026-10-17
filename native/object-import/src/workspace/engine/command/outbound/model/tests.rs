@@ -46,13 +46,15 @@ fn every_local_version_is_exported_with_the_head() {
     let older = "dddddddddddddddddddddddddddddddddddddddd";
     let tag = json!({"head":head,"versions":{"1.0.0":head},"state":{"versions":{"1.0.0":{"local":true}}}});
     let staged_tag = staged_versions(&tag).unwrap();
-    assert_eq!((staged_tag.version.as_str(), staged_tag.head.as_str()), ("1.0.0", head));
+    assert_eq!(staged_tag.head, head);
+    assert_eq!(staged_tag.labels, ["1.0.0"]);
     assert_eq!(staged_tag.hashes, [head]);
     // A tag followed by a snap: both are exported, the snap is the head.
     let both = json!({"head":head,"versions":{"1.0.0":older},
         "state":{"versions":{"1.0.0":{"local":true},(head):{"local":true}}}});
     let staged_both = staged_versions(&both).unwrap();
-    assert_eq!(staged_both.version, head);
+    assert_eq!(staged_both.head, head);
+    assert_eq!(staged_both.labels, ["1.0.0", head]);
     assert_eq!(staged_both.hashes, [older, head]);
     let not_head = json!({"head":head,"versions":{},"state":{"versions":{(older):{"local":true}}}});
     assert!(staged_versions(&not_head).is_err(), "the head must be a local version");

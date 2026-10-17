@@ -7,7 +7,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::io;
 
-pub(super) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<(String, String)> {
+pub(crate) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<(String, String)> {
     let Some(value) = value.filter(|value| !value.is_null()) else {
         return Ok((String::new(), String::new()));
     };

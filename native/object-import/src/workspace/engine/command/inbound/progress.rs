@@ -14,7 +14,7 @@ pub(super) fn rows(
         .iter()
         .map(|row| {
             json!({
-                "reason":row.reason,"ids":row.ids,
+                "reason":row.reason,"ids":row.ids,"requested":row.requested,
                 "components":row.components.len(),"objects":row.objects.len(),
                 "objectRequest":row.object_request,
             })

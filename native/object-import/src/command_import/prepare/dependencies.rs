@@ -21,7 +21,7 @@ pub(super) fn closure(
     }
     let (model, version) = load(plan, target, scope, staged, remotes)?;
     crate::history_query::validate_version(&version)?;
-    if has_edges(plan, &version)? {
+    if !plan.cache.fetch_all_dependencies && has_edges(plan, &version)? {
         return Ok(());
     }
     let dependencies = version["flattenedDependencies"]
@@ -139,7 +139,7 @@ fn fetch(plan: &mut PreparedImport, target: &Target, remotes: &Value) -> io::Res
     }
     Ok(hash)
 }
-fn has_edges(plan: &mut PreparedImport, version: &Value) -> io::Result<bool> {
+pub(super) fn has_edges(plan: &mut PreparedImport, version: &Value) -> io::Result<bool> {
     // Canonical preferDependencyGraph stops dependency expansion at nonempty edges.
     if version["flattenedEdges"]
         .as_array()

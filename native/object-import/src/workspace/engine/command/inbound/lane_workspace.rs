@@ -8,7 +8,8 @@ pub(super) fn prepare(
     roots: &[Target],
     id: &lane::Id,
 ) -> io::Result<(Vec<Target>, PreparedImport)> {
-    if input.options.objects_only
+    if input.options.dependencies.fetch_deps
+        || input.options.objects_only
         || input.options.dependencies.import_dependencies
         || input.options.dependencies.import_head_dependencies
     {

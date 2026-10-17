@@ -20,7 +20,7 @@ mod known_failures {
         helper.add_component_bar_foo();
         helper.tag_component_bar_foo();
         if export {
-            helper.run("export bar/foo");
+            crate::helper::remote::publish(&helper);
         }
         let bitmap = fs::read(helper.scopes.local_path.join(".bitmap")).unwrap();
         helper.re_init_workspace();
