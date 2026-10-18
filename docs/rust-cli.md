@@ -193,6 +193,16 @@ Native commands append to the workspace's `command-history` file (in `.bit`,
 or `.git/bit`) as the Node.js CLI does. A declined command writes nothing, so
 the Node.js CLI's own lines are not duplicated.
 
+Scope-rename benchmark backups use second-resolution filenames, so independent
+live clocks can retain different intermediate snapshots even with identical
+writes. The preparation-only released-CLI oracle records disk preimages and
+reasons before each actual backup. The timed commands remain uninstrumented:
+every surviving backup, mode, timestamp group and metadata row must match its
+last corresponding oracle write, with all raw artifacts retained. Overwritten
+intermediate preimages are oracle-derived and are not claimed as observed timed
+bytes. The original failed comparison and host-invalid timing remain preserved;
+this method does not qualify those earlier samples.
+
 ### Component and scope fork qualification
 
 The [complete fork qualification](../scripts/rust/benchmarks/fork-planning-reuse-qualification.json)
