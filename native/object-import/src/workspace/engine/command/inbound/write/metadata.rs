@@ -29,3 +29,29 @@ pub(super) fn bitmap_metadata(rows: &mut Map<String, Value>) -> io::Result<(Valu
     }
     Ok((schema, lane))
 }
+
+/// The live `BitMap` keeps existing positions and appends new `ComponentMap` rows before disk sorting.
+pub(super) fn component_order(
+    root: &std::path::Path,
+    rows: &Map<String, Value>,
+) -> io::Result<Vec<String>> {
+    let workspace = super::super::config::configuration(root)?;
+    ordered_ids(rows, workspace["defaultScope"].as_str().unwrap_or_default())
+}
+fn ordered_ids(rows: &Map<String, Value>, default_scope: &str) -> io::Result<Vec<String>> {
+    rows.values()
+        .map(|row| {
+            let name =
+                row["name"].as_str().ok_or_else(|| invalid("inbound ordered component name"))?;
+            let scope = row["scope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+                .or_else(|| row["defaultScope"].as_str())
+                .unwrap_or(default_scope);
+            Ok(if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") })
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests;

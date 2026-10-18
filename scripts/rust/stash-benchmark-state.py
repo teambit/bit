@@ -210,7 +210,7 @@ def tree(root, mapping=None, workspace=False, globals_directory=False):
     return result
 
 
-def state(root, baseline_objects, baseline_history):
+def state(root, baseline_objects, baseline_history, *, history_projection=None):
     found = objects(root)
     mapping = detached_mapping(root, baseline_objects)
     projected = {}
@@ -243,7 +243,8 @@ def state(root, baseline_objects, baseline_history):
     return {'tree': tree(root, mapping, workspace=True), 'objects': projected,
             'objects_directory_mode': directory.stat().st_mode & 0o7777,
             'empty_object_prefixes': empty,
-            'bitmap_history': qualified_bitmap_history(root, baseline_history)}
+            'bitmap_history': (qualified_bitmap_history(root, baseline_history)
+                               if history_projection is None else history_projection)}
 
 
 def normalized(data):

@@ -154,8 +154,19 @@ fn directory(template: &str, scope: &str, name: &str) -> io::Result<String> {
 }
 
 pub(super) fn default_directory(root: &Path) -> io::Result<String> {
-    super::super::config::configuration(root)?["defaultDirectory"]
-        .as_str()
-        .map(str::to_owned)
-        .ok_or_else(|| invalid("inbound workspace default directory"))
+    let workspace = super::super::config::configuration(root)?;
+    let template = match workspace.get("defaultDirectory") {
+        None => "components/{name}",
+        Some(value) => {
+            value.as_str().ok_or_else(|| invalid("inbound workspace default directory"))?
+        }
+    };
+    Ok(if template.contains("{name}") {
+        template.to_owned()
+    } else {
+        format!("{template}/{{name}}")
+    })
 }
+
+#[cfg(test)]
+mod tests;

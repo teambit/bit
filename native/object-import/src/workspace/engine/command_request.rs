@@ -10,8 +10,15 @@ pub(super) fn dispatch(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     match request {
+        Request::CommandInboundLocalPreflight(input) => command::inbound::local_preflight(&input),
         Request::CommandInboundPrepare(input) => {
             pool.install(|| command::inbound::prepare(&input, &mut snapshots.command))
+        }
+        Request::CommandInboundCompleteDependents(input) => {
+            command::inbound::dependents::complete(input, &mut snapshots.command)
+        }
+        Request::CommandInboundWriteDependencies(input) => {
+            command::inbound::write_dependencies::complete(&input, &mut snapshots.command)
         }
         Request::CommandInboundPolicyComplete(input) => {
             command::inbound::policy::complete(input, &mut snapshots.command)
@@ -23,6 +30,16 @@ pub(super) fn dispatch(
         Request::CommandAutoSyncFinalize(input) => {
             command::inbound::autosync::finalize(&input, &snapshots.command)
         }
+        request => overlay_reads(request, snapshots, pool),
+    }
+}
+
+fn overlay_reads(
+    request: Request,
+    snapshots: &mut snapshots::State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    match request {
         Request::WorkspaceDiff(input) => super::status_models::workspace_diff::read_overlay(
             &input,
             pool,

@@ -98,7 +98,7 @@ fn by_depth(
     Ok(result)
 }
 
-fn graph(
+pub(super) fn graph(
     input: &Prepare,
     roots: &[Target],
     imported: &PreparedImport,
@@ -191,7 +191,7 @@ fn edges(input: &Prepare, imported: &PreparedImport, version: &Value) -> io::Res
     Ok(rows)
 }
 
-fn target(value: &Value) -> io::Result<Target> {
+pub(super) fn target(value: &Value) -> io::Result<Target> {
     let scope = value["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())
@@ -207,12 +207,12 @@ fn target(value: &Value) -> io::Result<Target> {
     Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: version.to_owned() })
 }
 
-fn identity(target: &Target) -> io::Result<String> {
+pub(super) fn identity(target: &Target) -> io::Result<String> {
     let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound dependency scope"))?;
     Ok(format!("{scope}/{}", target.name))
 }
 
-fn versioned(target: &Target) -> io::Result<String> {
+pub(super) fn versioned(target: &Target) -> io::Result<String> {
     Ok(format!("{}@{}", identity(target)?, target.version))
 }
 

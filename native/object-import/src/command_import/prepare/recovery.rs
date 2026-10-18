@@ -112,3 +112,10 @@ pub(super) fn retain_histories(plan: &mut PreparedImport, targets: &[&Target]) -
     }
     Ok(())
 }
+
+impl PreparedImport {
+    /// Workspace writes need unchanged cached Versions and Sources in the same retained overlay.
+    pub(crate) fn retain_workspace_versions(&mut self, targets: &[Target]) -> io::Result<()> {
+        retain_cached_versions(self, targets)
+    }
+}

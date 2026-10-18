@@ -1,3 +1,4 @@
+mod graph;
 use super::{
     Object, Overlay, PreparedImport, Target, VirtualRemote, history, object_hash, prepare,
     prepare::prepare_with_virtual, prepare_cached, publish,

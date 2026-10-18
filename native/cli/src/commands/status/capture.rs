@@ -236,6 +236,9 @@ fn capture_environment(
     if snapshot {
         order::snapshot(root, &mut captured)?;
     }
+    if environments.is_import() {
+        commit::publish_import_dependencies(engine, root, &mut captured)?;
+    }
     if behavior.callbacks {
         environments.callbacks(context, &mut captured, behavior.missing_status_invalid)?;
     }
@@ -266,6 +269,7 @@ fn initialize(
 ) -> io::Result<Capture> {
     let no_fs_cache = cache::no_fs_cache(root);
     let reset = !no_fs_cache
+        && !context["importCacheInitialized"].as_bool().unwrap_or(false)
         && has_targets
         && (capture_options.reset || needs_invalidation(root, &deps_dir(root))?);
     Ok(Capture {

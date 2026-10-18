@@ -32,6 +32,53 @@ pub(crate) fn compare(helper: &Helper, command: &str) -> Run {
     assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
     actual
 }
+/// Preserve the full remote invariant while allowing command-specific duration validation.
+pub(crate) fn compare_with_stdout(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+) -> Run {
+    let remote = tree(&helper.scopes.remote_path);
+    let actual = support::compare_with_stdout(helper, command, stdout);
+    assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
+    actual
+}
+/// Keep delegation explicit and preserve the real remote invariant.
+pub(crate) fn compare_declined(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
+    let remote = tree(&helper.scopes.remote_path);
+    let actual = support::compare_declined(helper, command, stdout);
+    assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
+    actual
+}
+/// JSON commands keep actual installation and strict state while suppressing the vendor reporter.
+pub(crate) fn compare_install(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
+    let remote = tree(&helper.scopes.remote_path);
+    let actual = support::compare_install(helper, command, stdout);
+    assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
+    actual
+}
+/// Recovery's independent write oracle retains the same immutable real remote contract.
+pub(crate) fn compare_with_history(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    observe: &support::HistoryProjection<'_>,
+) -> Run {
+    let remote = tree(&helper.scopes.remote_path);
+    let actual = support::compare_with_history(helper, command, stdout, observe);
+    assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
+    actual
+}
+/// The untimed released-CLI preparation must also leave its remote unchanged.
+pub(crate) fn prepare_history<Prepared>(
+    helper: &Helper,
+    action: impl FnOnce() -> Prepared,
+) -> Prepared {
+    let remote = tree(&helper.scopes.remote_path);
+    let result = support::prepare_history(helper, action);
+    assert!(tree(&helper.scopes.remote_path) == remote, "history preparation mutated the remote");
+    result
+}
 pub(crate) fn tag(helper: &Helper) {
     setup(helper, "tag --ignore-issues * --message identity-fixture");
 }

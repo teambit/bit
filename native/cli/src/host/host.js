@@ -31,6 +31,7 @@ const checkoutCommand = (cliArguments[0] === 'merge' && cliArguments.includes('-
 const mergeCommand = (cliArguments[0] === 'merge' && !cliArguments.includes('--abort') && !cliArguments.includes('--resolve')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge');
 const exportCommand = ['export', 'e', 'resume-export'].includes(cliArguments[0]);
 const bufferedCommand = snapshotCommand || checkoutCommand || mergeCommand || exportCommand || identityMutationCommand || ['stash', 'add', 'a'].includes(cliArguments[0]);
+const bufferedOutputCommand = bufferedCommand || cliArguments[0] === 'import';
 process.argv = [process.execPath, entry, ...cliArguments];
 require(path.join(bitDir, 'dist', 'hook-require.js'));
 const bitRequire = createRequire(path.join(bitDir, 'package.json'));
@@ -93,7 +94,7 @@ async function handle(line) {
     return;
   }
   try {
-    if (request.method === 'afterInstall' || readonlyStatus || bufferedCommand) capturedStdout = [];
+    if (request.method === 'afterInstall' || readonlyStatus || bufferedOutputCommand) capturedStdout = [];
     const result = await handler(request.params ?? {});
     const output = capturedStdout?.join('');
     capturedStdout = null;
@@ -101,9 +102,9 @@ async function handle(line) {
     respond(`${JSON.stringify({ id: request.id, result: value, stdout: ['afterInstall', 'statusLoadCallbacks', 'statusIssueCallbacks', 'snapshotPreSnap', 'snapshotEditor', 'snapshotBuild', 'registryPublished', 'snapshotPackageManifests'].includes(request.method) ? undefined : output })}\n`);
   } catch (error) {
     const output = capturedStdout?.join('');
-    if (output && !bufferedCommand) process.stderr.write(output);
+    if (output && !bufferedOutputCommand) process.stderr.write(output);
     capturedStdout = null;
-    respond(`${JSON.stringify({ id: request.id, error:error?.message??String(error), stdout:bufferedCommand?output:undefined })}\n`);
+    respond(`${JSON.stringify({ id: request.id, error:error?.message??String(error), stdout:bufferedOutputCommand?output:undefined })}\n`);
   }
 }
 
@@ -117,6 +118,11 @@ const handlers = {
   renameTooling,
   renameAst,
   renameSourceConfig,
+  importWriteDependencyFacts,
+  importGraphDependencyFacts,
+  importClassLoad,
+  importCompleteClassLoad,
+  importWorkspaceOrder,
   forkRemoteHydrate,
   forkSourceFacts,
   forkEnvironment,
@@ -154,10 +160,19 @@ const handlers = {
     const workspace = loaded.get('teambit.workspace/workspace');
     const loader = loaded.get('teambit.harmony/aspect-loader');
     const ids = loader.getNotLoadedConfiguredExtensions();
-    await loadWorkspaceAspects(ids);
-    const components = await workspace.resolveMultipleComponentIds(ids);
-    for (const id of components) workspace.clearComponentCache(id);
-    return true;
+    const previous = snapshotBootstrapProgress;
+    if (cliArguments[0] === 'import') {
+      captureBootstrapProgress(workspace);
+      snapshotBootstrapProgress = !cliArguments.some(argument => ['--json', '-j'].includes(argument));
+    }
+    try {
+      await loadWorkspaceAspects(ids);
+      const components = await workspace.resolveMultipleComponentIds(ids);
+      for (const id of components) workspace.clearComponentCache(id);
+      return true;
+    } finally {
+      snapshotBootstrapProgress = previous;
+    }
   },
   exportBootstrap,
   exportFileAction,
@@ -180,8 +195,8 @@ const handlers = {
   devPatterns: ({ envId }) => devPatterns(envId),
   prepareInstall: ({ aspectIds }) => prepareInstall(aspectIds),
   envFallsBack: ({ envId }) => envFallsBack(envId),
-  dependencyPolicies: ({ extensionIds, bootstrap, startupAspectIds, componentAspectIds }) =>
-    dependencyPolicies(extensionIds, bootstrap, startupAspectIds, componentAspectIds),
+  dependencyPolicies: ({ extensionIds, bootstrap, startupAspectIds, componentAspectIds, componentIdentities }) =>
+    dependencyPolicies(extensionIds, bootstrap, startupAspectIds, componentAspectIds, componentIdentities),
   detectDependencies: ({ envId, files, componentDir, aspectIds }) =>
     detectDependencies(envId, files, componentDir, aspectIds),
   parseDependencies,
@@ -495,6 +510,7 @@ async function loadInstallComponents() {
  * The dependency policies aspects registered (`registerDependenciesPolicies`), as
  * `[[registrar, policy], ...]`, once the aspects the components configure are loaded.
  */
+const importPrimedPolicies = new Set();
 const snapshotPrimedAspects=new Set();
 function snapshotFreshAspects(ids) {
   if(!bufferedCommand)return ids;
@@ -502,7 +518,7 @@ function snapshotFreshAspects(ids) {
 }
 
 let snapshotBootstrapProgress = false;
-async function dependencyPolicies(extensionIds, bootstrap, startupAspectIds = [], componentAspectIds = []) {
+async function dependencyPolicies(extensionIds, bootstrap, startupAspectIds = [], componentAspectIds = [], componentIdentities = []) {
   await loadInstallComponents();
   snapshotBootstrapProgress = bootstrap === true && (['tag', 'checkout', 'add', 'a'].includes(cliArguments[0]) || cliArguments[0] === 'merge');
   const loaded = await loadHarmony();
@@ -512,9 +528,20 @@ async function dependencyPolicies(extensionIds, bootstrap, startupAspectIds = []
     extensionIds = extensionIds.filter(id => !startupAspectIds.includes(id) || componentAspectIds.includes(id));
   }
   extensionIds=snapshotFreshAspects(extensionIds);
+  if (cliArguments[0] === 'import' && importClassMode === 'graph') {
+    // Graph seeds load serially. Root providers are already running; resolving an
+    // unrelated root aspect here would eagerly load its component before this seed.
+    const rootIds = new Set(startupAspectIds.map(id => id.split('@')[0]));
+    const required = new Set([...componentAspectIds, ...componentIdentities].map(id => id.split('@')[0]));
+    extensionIds = extensionIds.filter(id => !rootIds.has(id.split('@')[0]) || required.has(id.split('@')[0]));
+  }
+  if (cliArguments[0] === 'import') extensionIds = extensionIds.filter(id => !importPrimedPolicies.has(id));
   snapshotBootstrapProgress = bootstrap === true && (['tag', 'checkout', 'add', 'a'].includes(cliArguments[0]) || cliArguments[0] === 'merge');
   try {
-    if(!beforePackageManager && extensionIds.length) await workspace.loadAspects(extensionIds, false, undefined, { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+    if(!beforePackageManager && extensionIds.length) {
+      await workspace.loadAspects(extensionIds, false, undefined, { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+      if (cliArguments[0] === 'import') extensionIds.forEach(id => importPrimedPolicies.add(id));
+    }
   } finally {snapshotBootstrapProgress = false;}
   return loaded.get('teambit.dependencies/dependency-resolver').policiesRegistry.toArray();
 }
@@ -877,7 +904,7 @@ async function statusCallbackInfo({ coreIds, aspectIds }) {
   const loaded = await loadHarmony();
   const custom = (id) => !coreIds.includes(id.split('@')[0]);
   return {
-    onLoad: loaded.get('teambit.workspace/workspace').onComponentLoadSlot.toArray().some(([id]) => custom(id)),
+    onLoad: Boolean(importClassMode) || loaded.get('teambit.workspace/workspace').onComponentLoadSlot.toArray().some(([id]) => custom(id)),
     issues: loaded.get('teambit.component/issues').addComponentsIssuesSlot.toArray().some(([id]) => custom(id)),
   };
 }
@@ -950,6 +977,10 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout }
   statusComponents = [];
   const loadOutput = [];
   let outputStart = capturedStdout?.length ?? 0;
+  const importClasses = await importHydrateClasses(components);
+  if (importClasses) {
+    statusComponents = importClasses;
+  } else {
   const tracking=['add','a'].includes(cliArguments[0]);
   if(tracking && !snapshotContinuation) {
     for(const row of components) {
@@ -1007,6 +1038,7 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout }
     await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
   }
   if (snapshot) loadOutput.push(capturedStdout?.slice(outputStart).join('') ?? '');
+  }
   if (identityRenameCommand) {
     for (const component of statusComponents) identityLoadedComponents.set(component.id.toStringWithoutVersion(), component);
   }

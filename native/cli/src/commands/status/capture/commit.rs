@@ -20,7 +20,9 @@ pub fn commit(
             return Err(decline("status history changed"));
         }
     }
-    if !capture.cache.is_empty() {
+    if capture.environment_facts["importDependencyCachePublished"] != true
+        && !capture.cache.is_empty()
+    {
         let entries = capture.cache.entries();
         fresh::commit(engine, root, &entries, capture.cache.reset, !capture.cache.no_fs_cache)?;
     }
@@ -46,5 +48,22 @@ pub fn commit_checkout_dependencies(
         let entries = capture.cache.entries();
         fresh::commit(engine, root, &entries, capture.cache.reset, !capture.cache.no_fs_cache)?;
     }
+    Ok(())
+}
+
+/// Published `DependenciesLoader.load` saves eligible data before Harmony's onLoad slots.
+pub(super) fn publish_import_dependencies(
+    engine: &mut Engine,
+    root: &Path,
+    capture: &mut Capture,
+) -> io::Result<()> {
+    crate::commands::add::restrict_dependency_cache(root, capture);
+    engine.validate_read_set(&capture.dependency_read_set(), "import dependency facts changed")?;
+    if !capture.cache.is_empty() {
+        let entries = capture.cache.entries();
+        fresh::commit(engine, root, &entries, capture.cache.reset, !capture.cache.no_fs_cache)?;
+    }
+    // Keep every retained read proof and immutable pending entry, without publishing twice.
+    capture.environment_facts["importDependencyCachePublished"] = json!(true);
     Ok(())
 }

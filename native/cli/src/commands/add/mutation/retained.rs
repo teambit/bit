@@ -1,4 +1,5 @@
 //! Keep callback source spools alive until identity publication and tooling finish.
+mod import;
 #[cfg(test)]
 mod tests;
 
@@ -40,6 +41,9 @@ impl Retained {
             }
         }
         Ok(())
+    }
+    pub(super) const fn has_started(&self) -> bool {
+        self.started
     }
     pub(super) fn start(&mut self) -> bool {
         let first = !self.started;
@@ -88,9 +92,15 @@ impl Retained {
                 .map_or(Value::Bool(false), |row| row["modified"].clone());
         }
     }
+    pub(super) fn read_receipts(&self) -> Vec<Value> {
+        self.read_set
+            .iter()
+            .cloned()
+            .chain(self.controls.values().cloned())
+            .collect()
+    }
     pub(super) fn validate(&self) -> io::Result<()> {
-        let mut reads = self.read_set.clone();
-        reads.extend(self.controls.values().cloned());
+        let reads = self.read_receipts();
         crate::commands::engine::Engine::new()?
             .validate_read_set(&reads, "identity component facts changed before publication")
     }

@@ -32,6 +32,11 @@ impl Progress {
         self.render_inbound_rows(output, wildcard, on_lane);
     }
 
+    /// A dependents graph phase already emitted the command's initial import statuses.
+    pub(in crate::commands) fn render_inbound_continuation(&self, output: &Output, on_lane: bool) {
+        self.render_inbound_rows(output, true, on_lane);
+    }
+
     fn render_inbound_rows(&self, output: &Output, wildcard: bool, on_lane: bool) {
         // `importMany` is called with the ids the latest-heads import requested.
         render_rows(&self.imports, output, wildcard, on_lane);

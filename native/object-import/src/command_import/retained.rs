@@ -3,14 +3,33 @@
 #[cfg(test)]
 mod tests;
 use super::{PreparedImport, invalid, publish};
-use serde_json::Value;
+use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 use std::{
     collections::HashMap,
     fs, io,
     path::{Path, PathBuf},
 };
 
+type PublishedFiles = HashMap<PathBuf, Vec<u8>>;
+type Publication = (PublishedFiles, Vec<Value>);
+
 impl PreparedImport {
+    pub(crate) fn commit_with_receipts(&mut self) -> io::Result<Publication> {
+        let files = self.publication_files()?;
+        let mut receipts = Vec::with_capacity(files.len());
+        for (path, after) in &files {
+            let before = match fs::File::open(path) {
+                Ok(file) => Some(crate::read_budget::Budget::new(32 * 1024 * 1024).read(file)?),
+                Err(error) if error.kind() == io::ErrorKind::NotFound => None,
+                Err(error) => return Err(error),
+            };
+            receipts.push(write_receipt(path, before.as_deref(), after));
+        }
+        self.commit()?;
+        self.capture.accept_published(&files)?;
+        Ok((files, receipts))
+    }
     pub(crate) fn commit_retained(&mut self) -> io::Result<HashMap<PathBuf, Vec<u8>>> {
         let files = self.publication_files()?;
         self.commit()?;
@@ -100,4 +119,9 @@ fn pretty(value: &Value, newline: bool) -> io::Result<Vec<u8>> {
         bytes.push(b'\n');
     }
     Ok(bytes)
+}
+
+pub(crate) fn write_receipt(path: &Path, before: Option<&[u8]>, after: &[u8]) -> Value {
+    let hash = |bytes: &[u8]| crate::validate::hexadecimal(&Sha256::digest(bytes));
+    json!({"path":path,"beforeHash":before.map(hash),"afterHash":hash(after)})
 }

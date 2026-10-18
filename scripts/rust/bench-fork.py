@@ -30,6 +30,8 @@ def load(name, filename):
 COMMON = load('fork_common', 'bench-stash.py')
 PREPARE = load('fork_prepare', 'prepare-fork-benchmark.py')
 STATE = COMMON.STATE
+HISTORY = load('fork_bitmap_validator', 'bitmap-history-oracle.py')
+HISTORY_PREPARE = load('fork_bitmap_prepare', 'prepare-fork-bitmap-history-oracle.py')
 
 
 def host_snapshot():
@@ -92,9 +94,28 @@ def execute(args, stage, fixtures, workload, mode, run, implementation):
     prefix.with_suffix('.host.json').write_text(json.dumps({
         'before': host_before, 'after': host_after,
         'start_clock_phase': phase}, indent=2) + '\n')
+    history_projection = None
+    if workload in HISTORY_PREPARE.WORKLOADS:
+        oracle = HISTORY_PREPARE.frozen(fixtures, workload)
+        raw_path = prefix.with_suffix('.bitmap-history.json')
+        pending = {'validation_status': 'pending',
+                   'raw_history': HISTORY_PREPARE.CORE.raw_history(root),
+                   'baseline': baseline_history, 'oracle': oracle,
+                   'interval_start_ns': host_before['time_ns'],
+                   'interval_end_ns': host_after['time_ns']}
+        raw_path.write_text(json.dumps(pending, indent=2) + '\n')
+        try:
+            history_projection, raw = HISTORY.validate(
+                root, baseline_history, oracle, host_before['time_ns'], host_after['time_ns'],
+                expected_transitions=10)
+        except (ValueError, OSError) as error:
+            pending.update(validation_status='failed', error=str(error))
+            raw_path.write_text(json.dumps(pending, indent=2) + '\n')
+            raise
+        raw_path.write_text(json.dumps(raw, indent=2) + '\n')
     result = {'status': output.returncode, 'stdout': STATE.normalized(output.stdout),
               'stderr': STATE.normalized(output.stderr),
-              'workspace': STATE.state(root, baseline_objects, baseline_history),
+              'workspace': STATE.state(root, baseline_objects, baseline_history, history_projection=history_projection),
               'globals': STATE.tree(stage / 'globals', globals_directory=True),
               'home': STATE.tree(stage / 'home'),
               'remote': STATE.tree(stage / 'remote')}
@@ -142,16 +163,26 @@ def main():
         args, warm, fixtures, COMMON.environment(args, stage, 'timed'))
     manifest.write_text(json.dumps(fixtures, indent=2) + '\n')
     if args.prepare_only:
+        fixtures['fork_bitmap_history_oracles'] = HISTORY_PREPARE.prepare(
+            args, stage, fixtures, COMMON.environment(args, stage, 'timed'))
+        manifest.write_text(json.dumps(fixtures, indent=2) + '\n')
         print(manifest)
         return
+    for workload in args.workload or list(PREPARE.WORKLOADS):
+        if workload in HISTORY_PREPARE.WORKLOADS:
+            HISTORY_PREPARE.frozen(fixtures, workload)
     source = Path(__file__).resolve().parents[2]
     source_before = COMMON.native_source(source)
     fixture_before = {key: COMMON.fingerprint(Path(value)) for key, value in fixtures['workloads'].items()}
     common_before = {key: COMMON.fingerprint(Path(fixtures[key])) for key in ['home', 'globals']}
     remote_before = {key: COMMON.fingerprint(Path(value)) for key, value in fixtures['remotes'].items()}
     helpers = ['bench-fork.py', 'prepare-fork-benchmark.py', 'prepare-stash-benchmark.py',
-               'bench-stash.py', 'stash-benchmark-state.py']
+               'bench-stash.py', 'stash-benchmark-state.py',
+               'prepare-fork-bitmap-history-oracle.py', 'prepare-bitmap-history-oracle.py',
+               'scope-bitmap-history-oracle.cjs', 'bitmap-history-oracle.py']
     helper_before = {key: COMMON.sha(Path(__file__).with_name(key)) for key in helpers}
+    oracle_before = {key: COMMON.sha(Path(value['path']))
+                     for key, value in fixtures.get('fork_bitmap_history_oracles', {}).items()}
     binary_before = {key: COMMON.sha(getattr(args, key)) for key in ['rust', 'node_binary', 'node_cli']}
     measurements, verified = {}, []
     for workload in args.workload or list(PREPARE.WORKLOADS):
@@ -185,6 +216,9 @@ def main():
     for key, before in remote_before.items():
         if COMMON.fingerprint(Path(fixtures['remotes'][key])) != before:
             raise RuntimeError(f'remote fixture changed: {key}')
+    for key, before in oracle_before.items():
+        if COMMON.sha(Path(fixtures['fork_bitmap_history_oracles'][key]['path'])) != before:
+            raise RuntimeError(f'frozen fork bitmap oracle changed during measurement: {key}')
     monitor = None
     if args.host_monitor:
         data = args.host_monitor.read_bytes()
@@ -211,10 +245,11 @@ def main():
               'common_fixture_sha256': common_before, 'remote_fixture_sha256': remote_before,
               'host_monitor': monitor, 'host_command_samples': str(stage / 'evidence/*.host.json'),
               'reproduce': [sys.executable, *sys.argv],
-              'helper_sha256': helper_before,
+              'helper_sha256': helper_before, 'bitmap_history_oracle_sha256': oracle_before,
               'normalization': ['native trace', 'completed-in durations',
                                 'validated command-history ISO timestamps/PIDs',
-                                'validated bitmap/config history timestamps with full snapshots/reasons',
+                                'single/refactor bitmap/config histories retain strict snapshots/reasons',
+                                'batch bitmap histories: every surviving raw backup validated against independent last-writer preimages; overwritten preimages remain oracle-only',
                                 'checksum-validated cache-index receipt timestamps'],
               'excluded_implementation_state': ['exact workspace-root debug.log', 'exact globals/logs subtree'],
               'ownership_note': 'Every measured command must remain native in all three presentation modes.',
@@ -225,7 +260,8 @@ def main():
                   'start_phase_ms': [50, 100],
                   'outside_command_timing': True,
                   'method': 'Wait before launch for the same wall-clock phase on both implementations; clocks and commands are unchanged.',
-                  'reason': 'Published bitmap backup filenames have second precision; strict retained snapshot comparisons must not depend on crossing a clock boundary.'},
+                  'reason': 'Prelaunch phase remains unchanged; ten-write batch clock groups are independently validated rather than assumed equal.',
+                  'batch_oracle_raw_proofs': str(stage / 'evidence/*.bitmap-history.json')},
               'verified_pairs': len(verified), 'verified': verified, 'workloads': measurements}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + '\n')

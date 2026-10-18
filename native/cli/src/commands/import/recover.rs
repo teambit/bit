@@ -70,6 +70,7 @@ fn import_options(ids: &[String], skip_config: bool, skip_installation: bool) ->
             path: None,
             merge_strategy: None,
             dependencies: options::DependencyOptions::default(),
+            adoption: options::AdoptionOptions::default(),
         },
         lanes: false,
         output: options::OutputOptions::default(),

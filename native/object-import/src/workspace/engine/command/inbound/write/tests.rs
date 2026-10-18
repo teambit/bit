@@ -41,6 +41,7 @@ fn writer_rolls_back_partial_files_when_later_destination_conflicts() {
     let plan = Prepared {
         policy: None,
         policy_input: None,
+        write_deps: None,
         root: root.clone(),
         bitmap_before: b"before".to_vec(),
         bitmap_after: b"after".to_vec(),
@@ -65,6 +66,7 @@ fn bitmap_replacement_preserves_old_bytes_in_history() {
     let plan = Prepared {
         policy: None,
         policy_input: None,
+        write_deps: None,
         root: root.clone(),
         bitmap_before: b"before".to_vec(),
         bitmap_after: b"after".to_vec(),
@@ -93,6 +95,7 @@ fn writer_restores_an_existing_file_after_a_later_replacement_fails() {
     let plan = Prepared {
         policy: None,
         policy_input: None,
+        write_deps: None,
         root: root.clone(),
         bitmap_before: b"before".to_vec(),
         bitmap_after: b"after".to_vec(),
@@ -177,6 +180,7 @@ fn incomplete_policy_prevents_any_workspace_publication() {
     let plan = Prepared {
         policy: Some(policy),
         policy_input: Some(input),
+        write_deps: None,
         root: root.clone(),
         bitmap_before: b"before".to_vec(),
         bitmap_after: b"after".to_vec(),
@@ -308,5 +312,45 @@ fn empty_history_copy_keeps_the_source_modified_time() {
     let published = fs::metadata(&history.backup).unwrap();
     assert_eq!(published.modified().unwrap(), source_time);
     assert_eq!(published.accessed().unwrap(), source_time);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn acknowledged_workspace_writes_keep_the_original_preimage_and_reject_later_tampering() {
+    let root = root();
+    fs::write(root.join(".bitmap"), b"before").unwrap();
+    fs::write(root.join("existing.js"), b"original").unwrap();
+    let plan = Prepared {
+        policy: None,
+        policy_input: None,
+        write_deps: Some("package.json".into()),
+        root: root.clone(),
+        bitmap_before: b"before".to_vec(),
+        bitmap_after: b"after".to_vec(),
+        changes: WorkspaceFiles {
+            replacements: vec![Replacement {
+                path: root.join("existing.js"),
+                before: b"original".to_vec(),
+                after: b"incoming".to_vec(),
+            }],
+            ..WorkspaceFiles::default()
+        },
+        history: history(&root),
+    };
+    plan.commit().unwrap();
+    let receipts = plan.published_write_receipts().unwrap();
+    assert_eq!(
+        receipts,
+        [
+            crate::command_import::write_receipt(
+                &root.join("existing.js"),
+                Some(b"original"),
+                b"incoming"
+            ),
+            crate::command_import::write_receipt(&root.join(".bitmap"), Some(b"before"), b"after"),
+        ],
+    );
+    fs::write(root.join("existing.js"), b"raced").unwrap();
+    assert!(plan.published_write_receipts().is_err());
     fs::remove_dir_all(root).unwrap();
 }

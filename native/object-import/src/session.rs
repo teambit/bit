@@ -10,7 +10,7 @@ static POOLS: [OnceLock<Arc<rayon::ThreadPool>>; 8] = [const { OnceLock::new() }
 pub struct WorkspaceSession {
     pool: Arc<rayon::ThreadPool>,
     checkout: crate::checkout::cache::State,
-    merge: crate::merge_state::State,
+    merge: Box<crate::merge_state::State>,
     cancellation: bit_client_transfer::Cancellation,
 }
 
@@ -19,7 +19,7 @@ impl WorkspaceSession {
         if !(1..=8).contains(&threads) {
             return Err(io::Error::other("thread count must be between 1 and 8"));
         }
-        let mut merge = crate::merge_state::State::default();
+        let mut merge = Box::<crate::merge_state::State>::default();
         merge.inspection.enable_memory_snapshots();
         Ok(Self {
             pool: shared_pool(threads)?,
@@ -87,3 +87,6 @@ pub(crate) fn shared_pool(threads: usize) -> io::Result<Arc<rayon::ThreadPool>> 
     );
     Ok(Arc::clone(entry.get_or_init(|| pool)))
 }
+
+#[cfg(test)]
+mod tests;

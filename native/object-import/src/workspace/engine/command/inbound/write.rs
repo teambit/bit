@@ -1,6 +1,8 @@
 //! Retained workspace writes for new and clean existing components. Every
 //! Source and destination is checked during Prepare; publication happens after
 //! the object transaction succeeds.
+pub(super) use preflight::check as preflight;
+
 use super::{Target, invalid};
 use crate::command_import::PreparedImport;
 use serde_json::{Map, Value, json};
@@ -21,6 +23,7 @@ pub(super) struct Prepared {
     history: History,
     policy: Option<super::super::checkout_policy::Prepared>,
     policy_input: Option<Value>,
+    write_deps: Option<String>,
 }
 #[derive(Clone, Copy)]
 pub(super) struct Options<'a> {
@@ -28,6 +31,9 @@ pub(super) struct Options<'a> {
     pub(super) path: Option<&'a str>,
     pub(super) install_requested: bool,
     pub(super) merge_strategy: Option<&'a str>,
+    pub(super) track_only: bool,
+    pub(super) write_to_empty_dir: bool,
+    pub(super) write_deps: Option<&'a str>,
 }
 #[derive(Default)]
 struct WorkspaceFiles {
@@ -35,6 +41,8 @@ struct WorkspaceFiles {
     replacements: Vec<Replacement>,
     empty_directories: Vec<PathBuf>,
     conflicts: HashMap<String, Vec<String>>,
+    relocation: relocation::Retained,
+    component_order: Vec<String>,
 }
 struct Replacement {
     path: PathBuf,
@@ -57,6 +65,7 @@ pub(super) fn prepare(
     file_id: Option<&str>,
     options: Options<'_>,
 ) -> io::Result<Prepared> {
+    import.retain_workspace_versions(targets)?;
     let history = history::prepare(root, file_id)?;
     let template = directories::default_directory(root)?;
     let bitmap_before = fs::read(root.join(".bitmap"))?;
@@ -71,7 +80,8 @@ pub(super) fn prepare(
         rows.insert("_bit_lane".into(), lane);
     }
     let bitmap_after = crate::inspection::render_bitmap(&bitmap)?;
-    let policy_input = policy::receipt(root, targets, import)?;
+    let policy_input =
+        if options.write_deps.is_some() { None } else { policy::receipt(root, targets, import)? };
     let policy = policy_input
         .as_ref()
         .map(|receipt| super::super::checkout_policy::Prepared::new(root, receipt.clone()))
@@ -84,6 +94,7 @@ pub(super) fn prepare(
         history,
         policy,
         policy_input,
+        write_deps: options.write_deps.map(str::to_owned),
     })
 }
 
@@ -102,9 +113,14 @@ fn prepare_targets(
         override_existing: options.override_existing,
         install_requested: options.install_requested,
         merge_strategy: options.merge_strategy,
+        track_only: options.track_only,
     };
-    let mut directories = target_directories(template, targets, rows, options.path)?.into_iter();
+    let mut directories = target_directories(template, targets, rows, options.path)?;
     let mut changes = WorkspaceFiles::default();
+    if options.write_to_empty_dir && !options.track_only {
+        changes.relocation = relocation::prepare(root, &mut directories, rows)?;
+    }
+    let mut directories = directories.into_iter();
     let mut written = HashSet::new();
     for target in targets {
         plan_target(&context, target, &mut directories, rows, &mut changes, &mut written)?;
@@ -120,6 +136,7 @@ fn prepare_targets(
     if bytes > MAX_WRITTEN_BYTES {
         return Err(invalid("inbound workspace materialization bytes"));
     }
+    changes.component_order = metadata::component_order(root, rows)?;
     Ok(changes)
 }
 
@@ -155,6 +172,7 @@ struct Planning<'a> {
     override_existing: bool,
     install_requested: bool,
     merge_strategy: Option<&'a str>,
+    track_only: bool,
 }
 
 fn plan_target(
@@ -192,6 +210,7 @@ fn plan_target(
                     override_existing: context.override_existing,
                     install_requested: context.install_requested,
                     merge_strategy: context.merge_strategy,
+                    track_only: context.track_only,
                 },
             },
             rows,
@@ -209,27 +228,16 @@ fn plan_new_target(
     rows: &mut Map<String, Value>,
     changes: &mut WorkspaceFiles,
 ) -> io::Result<()> {
-    if let Some(empty) = new_directory(context.root, directory, context.override_existing)? {
+    if !context.track_only
+        && let Some(empty) = new_directory(context.root, directory, context.override_existing)?
+    {
         changes.empty_directories.push(empty);
     }
     let files = prepare_target(context.root, directory, target, context.imported, rows)?;
-    for (path, after) in files {
-        match fs::symlink_metadata(&path) {
-            Err(error) if error.kind() == io::ErrorKind::NotFound => {
-                safe_destination(context.root, &path)?;
-                changes.additions.push((path, after));
-            }
-            Ok(_) if context.override_existing => {
-                let before = existing::current_body(context.root, &path)?;
-                if before != after {
-                    changes.replacements.push(Replacement { path, before, after });
-                }
-            }
-            Ok(_) => return Err(invalid("inbound workspace destination occupied")),
-            Err(error) => return Err(error),
-        }
+    if context.track_only {
+        return Ok(());
     }
-    Ok(())
+    new_files::prepare(context, files, changes)
 }
 
 fn prepare_target(
@@ -371,8 +379,11 @@ mod directories;
 mod existing;
 mod history;
 mod metadata;
+mod new_files;
 mod policy;
+mod preflight;
 mod publication;
+mod relocation;
 
 #[cfg(test)]
 mod tests;

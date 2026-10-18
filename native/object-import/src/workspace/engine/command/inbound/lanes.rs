@@ -27,15 +27,7 @@ pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, 
         return aggregate::prepare(input, state);
     }
     let selection = select(input)?;
-    let mut import = if selection.virtual_remotes.is_empty() {
-        command_import::prepare_lane(&input.root, &input.global_remotes_file)?
-    } else {
-        command_import::prepare_lane_with_virtual(
-            &input.root,
-            &input.global_remotes_file,
-            &selection.virtual_remotes,
-        )?
-    };
+    let mut import = initial_import(input, &selection.virtual_remotes)?;
     let (targets, groups) = receive_lanes(input, &selection.lanes, &mut import)?;
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("inbound-{}", state.sequence);
@@ -51,15 +43,17 @@ pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, 
             &token,
         )?
     };
-    receipt["laneFetch"] = json!(true);
-    if input.operation == "laneImport" {
-        receipt["laneImport"] = json!(true);
-    }
-    if selection.lanes.len() > 1 || input.operation == "fetch" {
-        receipt["laneGroups"] = json!(groups);
-    }
+    decorate_receipt(input, selection.lanes.len(), &groups, &mut receipt);
     let count = targets.len();
-    state.inbound = Some(Retained { token, receipt: receipt.clone(), import, workspace: None });
+    state.inbound = Some(Retained {
+        token,
+        receipt: receipt.clone(),
+        import,
+        workspace: None,
+        applied: false,
+        pending: None,
+        proofs: Vec::new(),
+    });
     Ok((count, receipt))
 }
 
@@ -234,3 +228,28 @@ fn append_lane_dependency_progress(
 
 #[cfg(test)]
 mod tests;
+
+fn initial_import(
+    input: &Prepare,
+    virtual_remotes: &[VirtualRemote],
+) -> io::Result<command_import::PreparedImport> {
+    if virtual_remotes.is_empty() {
+        command_import::prepare_lane(&input.root, &input.global_remotes_file)
+    } else {
+        command_import::prepare_lane_with_virtual(
+            &input.root,
+            &input.global_remotes_file,
+            virtual_remotes,
+        )
+    }
+}
+
+fn decorate_receipt(input: &Prepare, lanes: usize, groups: &[usize], receipt: &mut Value) {
+    receipt["laneFetch"] = json!(true);
+    if input.operation == "laneImport" {
+        receipt["laneImport"] = json!(true);
+    }
+    if lanes > 1 || input.operation == "fetch" {
+        receipt["laneGroups"] = json!(groups);
+    }
+}

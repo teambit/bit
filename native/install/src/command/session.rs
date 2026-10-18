@@ -1,6 +1,8 @@
 //! What one `bit install` invocation works with: the process facts, and the
 //! workspace state loaded from disk (reloaded after every config edit).
 
+mod component_order;
+
 use crate::{
     Host, HostInfo,
     config::{EffectiveConfig, ScopeJson, WorkspaceConfig, load_global_config},
@@ -75,7 +77,8 @@ pub struct Loaded {
 impl Loaded {
     pub fn load(session: &Session<'_>) -> io::Result<Self> {
         let config = WorkspaceConfig::load(&session.root)?;
-        let workspace = Workspace::load(&session.root, &config, &session.core_ids())?;
+        let mut workspace = Workspace::load(&session.root, &config, &session.core_ids())?;
+        component_order::apply(&mut workspace, &session.options.workspace_component_order)?;
         let scope = ScopeJson::load(&workspace.scope_path)?;
         let stored = load_global_config(&session.info.global_config_dir)?;
         let effective = EffectiveConfig::new(&stored, &scope.config, &config.config_store);

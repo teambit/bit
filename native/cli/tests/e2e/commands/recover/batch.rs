@@ -89,11 +89,8 @@ fn locally_snapped_removal_imports_from_its_staged_model_without_remote_publicat
     let helper = workspace(1, true);
     setup(&helper, "delete comp1 --silent");
     setup(&helper, "tag comp1 --ignore-issues * --message removed");
-    let result = crate::commands::add::support::compare_with_stdout(
-        &helper,
-        "recover comp1 -x",
-        super::remote::stable,
-    );
+    let result =
+        super::remote::history::compare(&helper, "recover comp1 -x", super::remote::stable);
     assert!(result.status.success(), "{}", result.stderr);
     let map = bitmap(&helper);
     let row = map

@@ -28,5 +28,14 @@ pub(in crate::workspace::engine) fn complete(
         .as_object_mut()
         .unwrap()
         .remove("checkoutPolicyPreparation");
-    Ok((retained.receipt["importedIds"].as_array().map_or(0, Vec::len), retained.receipt.clone()))
+    if retained.applied {
+        workspace.commit_policy()?;
+        retained.receipt["completed"] = serde_json::json!(true);
+    }
+    let result = retained.receipt.clone();
+    let count = result["importedIds"].as_array().map_or(0, Vec::len);
+    if result["completed"] == true {
+        state.inbound = None;
+    }
+    Ok((count, result))
 }

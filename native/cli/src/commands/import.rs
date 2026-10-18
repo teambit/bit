@@ -7,21 +7,25 @@ pub(in crate::commands) use recover::{
     RecoverOptions, recover_import, recover_probe, recover_scope_import,
 };
 
+mod execution;
+mod lifecycle;
 mod options;
 mod output;
 mod patterns;
+mod preparation;
 mod recover;
 mod report;
+mod stages;
 
 use super::{
     color::Chalk,
     engine::Engine,
     installation,
-    status::cache::cache_root,
-    workspace_command::{self, NodeCli, progress::Progress, results::Report},
+    workspace_command::{self, progress::Progress},
 };
 use crate::{commands::Command, native::Outcome, workspace};
 use bit_install::output::Output;
+use preparation::{prepare_into, prepare_into_with};
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, io, path::Path, time::Instant};
 
@@ -38,41 +42,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
-    let installer = match start_installer(&root, &options, &argv) {
-        Ok(installer) => installer,
-        Err(error) => return Ok(Outcome::Declined(format!("import: {error}"))),
-    };
-    let chalk = Chalk::detect(args);
-    let selection = match patterns::select(&root, &options) {
-        Ok(selection) => selection,
-        Err(error) => return Ok(Outcome::Declined(format!("{}: {error}", options.operation))),
-    };
-    if selection.ids.is_empty() && !options.ids.is_empty() {
-        return output::empty(&root, args, &options, &selection, chalk);
-    }
-    let mut planned = match Planned::plan(&root, &options, &selection.ids, chalk) {
-        Ok(planned) => planned,
-        Err(error) => return Ok(Outcome::Declined(format!("{}: {error}", options.operation))),
-    };
-    output::execute(&root, args, &options, |output| {
-        let started = Instant::now();
-        output::selection(&options, &selection, output);
-        planned.apply()?;
-        render(&mut planned, &options, output, started, installer, &root)?;
-        Ok(Report { data: planned.report.clone(), code: 0, details: None })
-    })
-}
-
-/// The installation's host, for an import that installs.
-fn start_installer(
-    root: &Path,
-    options: &options::Options,
-    argv: &[&str],
-) -> io::Result<Option<installation::Installer>> {
-    if !options.installs() {
-        return Ok(None);
-    }
-    installation::Installer::start(root, argv).map(Some)
+    execution::run(&root, args, &options)
 }
 
 fn render(
@@ -82,6 +52,17 @@ fn render(
     started: Instant,
     installer: Option<installation::Installer>,
     root: &Path,
+) -> io::Result<()> {
+    render_with_progress(planned, options, output, started, installer, root, false)
+}
+fn render_with_progress(
+    planned: &mut Planned,
+    options: &options::Options,
+    output: &Output,
+    started: Instant,
+    installer: Option<installation::Installer>,
+    root: &Path,
+    progress_done: bool,
 ) -> io::Result<()> {
     if let Some(groups) = planned.prepared["laneGroups"].as_array() {
         let counts = groups
@@ -96,17 +77,11 @@ fn render(
             .render_fetch_groups(output, &counts, planned.prepared["mainFetch"] == true, started)?;
         return Ok(());
     }
-    render_progress(planned, options, output);
+    if !progress_done {
+        render_progress(planned, options, output);
+    }
     if let Some(installer) = installer {
-        let ids = planned.receipt.ids.clone();
-        if let Err(error) = installer.install(root, options.write.skip_write_config_files, &ids) {
-            output.failure(&format!("installation failed with the following error: {error}"));
-            planned.report = if options.output.json {
-                output::json_report(&planned.prepared, true)?
-            } else {
-                planned.receipt.import_report(planned.chalk, Some(&error.to_string()))?
-            };
-        }
+        render_installation(planned, options, output, installer, root)?;
     }
     output.success("importing components", Some(started));
     if options.lanes
@@ -117,8 +92,37 @@ fn render(
     Ok(())
 }
 
+fn render_installation(
+    planned: &mut Planned,
+    options: &options::Options,
+    output: &Output,
+    installer: installation::Installer,
+    root: &Path,
+) -> io::Result<()> {
+    let ids = planned.receipt.ids.clone();
+    let order = lifecycle::component_order(&planned.prepared)?;
+    if let Err(error) =
+        installer.install_ordered(root, options.write.skip_write_config_files, &ids, &order)
+    {
+        output.failure(&format!("installation failed with the following error: {error}"));
+        planned.report = if options.output.json {
+            output::json_report(&planned.prepared, true)?
+        } else {
+            planned.receipt.import_report(planned.chalk, Some(&error.to_string()))?
+        };
+    }
+    Ok(())
+}
+
 fn render_progress(planned: &Planned, options: &options::Options, output: &Output) {
     if let Some(progress) = &planned.progress {
+        if planned.graph_progress {
+            progress.render_inbound_continuation(
+                output,
+                planned.prepared["currentLane"].is_string(),
+            );
+            return;
+        }
         // The wildcard listing already printed the first `importing components`.
         if options.wildcards().is_empty() {
             progress.render_inbound(
@@ -155,6 +159,7 @@ struct Planned {
     progress: Option<Progress>,
     chalk: Chalk,
     prefetch_count: usize,
+    graph_progress: bool,
 }
 
 impl Planned {
@@ -174,7 +179,17 @@ impl Planned {
         recovery: bool,
     ) -> io::Result<Self> {
         let mut engine = Engine::new()?;
-        let mut prepared = prepare_into_with(&mut engine, root, options, ids, recovery)?;
+        let prepared = prepare_into_with(&mut engine, root, options, ids, recovery)?;
+        Self::from_prepared(engine, prepared, options, ids, chalk, false)
+    }
+    fn from_prepared(
+        mut engine: Engine,
+        mut prepared: Value,
+        options: &options::Options,
+        ids: &[String],
+        chalk: Chalk,
+        graph_progress: bool,
+    ) -> io::Result<Self> {
         if let Some(receipt) = prepared.get("checkoutPolicyPreparation") {
             let semver = workspace_command::checkout_policy::semver(receipt)?;
             prepared = engine.request(&json!({"kind":"commandInboundPolicyComplete",
@@ -196,11 +211,20 @@ impl Planned {
         };
         let rows = json!({ "bitmapCount": 0, "imports": prepared["progress"], "loads": [] });
         let progress = Progress::parse(Some(&rows))?;
-        Ok(Self { engine, prepared, receipt, report, progress, chalk, prefetch_count: ids.len() })
+        Ok(Self {
+            engine,
+            prepared,
+            receipt,
+            report,
+            progress,
+            chalk,
+            prefetch_count: ids.len(),
+            graph_progress,
+        })
     }
 
     /// `commandInboundApply`: the publication must be the planned one.
-    fn apply(&mut self) -> io::Result<()> {
+    fn apply(&mut self) -> io::Result<Value> {
         let request = json!({ "kind": "commandInboundApply", "token": self.prepared["token"] });
         let applied: Value = self.engine.request(&request)?;
         if applied.get("applied") != Some(&Value::Bool(true)) {
@@ -215,7 +239,7 @@ impl Planned {
         if !same {
             return Err(io::Error::other("native inbound publication changed"));
         }
-        Ok(())
+        Ok(applied)
     }
 }
 
@@ -245,6 +269,7 @@ pub(super) fn prepare_status_refresh(
             path: None,
             merge_strategy: None,
             dependencies: options::DependencyOptions::default(),
+            adoption: options::AdoptionOptions::default(),
         },
         lanes: false,
         output: options::OutputOptions::default(),
@@ -270,6 +295,7 @@ pub(super) fn prepare_diff_refresh(
             path: None,
             merge_strategy: None,
             dependencies: options::DependencyOptions::default(),
+            adoption: options::AdoptionOptions::default(),
         },
         lanes: false,
         output: options::OutputOptions::default(),
@@ -295,6 +321,7 @@ pub(super) fn prepare_status_forked_refresh(
             path: None,
             merge_strategy: None,
             dependencies: options::DependencyOptions::default(),
+            adoption: options::AdoptionOptions::default(),
         },
         lanes: true,
         output: options::OutputOptions::default(),
@@ -321,6 +348,7 @@ pub(super) fn prepare_lane_import(
             path: None,
             merge_strategy: None,
             dependencies: options::DependencyOptions::default(),
+            adoption: options::AdoptionOptions::default(),
         },
         lanes: true,
         output: options::OutputOptions::default(),
@@ -335,43 +363,4 @@ pub(super) fn apply_status_refresh(engine: &mut Engine, token: &Value) -> io::Re
         return Err(io::Error::other("status main refresh publication"));
     }
     Ok(())
-}
-
-fn prepare_into(
-    engine: &mut Engine,
-    root: &Path,
-    options: &options::Options,
-    ids: &[String],
-) -> io::Result<Value> {
-    prepare_into_with(engine, root, options, ids, false)
-}
-fn prepare_into_with(
-    engine: &mut Engine,
-    root: &Path,
-    options: &options::Options,
-    ids: &[String],
-    recovery: bool,
-) -> io::Result<Value> {
-    let cli = NodeCli::find()?;
-    let config = cache_root().join("config");
-    let mut request = json!({
-        "kind": "commandInboundPrepare",
-        "root": root,
-        "home": workspace_command::home(),
-        "globalRemotesFile": config.join("global-remotes.json"),
-        "globalConfigDir": config,
-        "nodeExecutable": cli.node,
-        "bitDir": cli.bit_dir,
-        "bitVersion": cli.version,
-        "operation": options.operation,
-        "ids": ids,
-        "options": options.request(),
-    });
-    if recovery {
-        request["options"]["recoveryLocal"] = json!(true);
-    }
-    if !options.objects_only {
-        request["bitmapHistoryFileId"] = json!(workspace_command::file_id());
-    }
-    engine.request(&request)
 }

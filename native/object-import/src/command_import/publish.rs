@@ -20,6 +20,21 @@ pub(super) fn object(hash: &str, kind: &str, value: Value) -> io::Result<Object>
         inflated_size: serialized.len(),
     })
 }
+/// Reuse an immutable wire object only when its entire serialized representation is unchanged.
+pub(super) fn reusing(
+    hash: &str,
+    kind: &str,
+    value: Value,
+    incoming: Option<Object>,
+) -> io::Result<Object> {
+    if let Some(incoming) = incoming {
+        let raw = crate::checkout::repository::inflate(&incoming.bytes, 32 * 1024 * 1024)?;
+        if incoming.kind == kind && raw == serialized(hash, kind, &value)? {
+            return Ok(incoming);
+        }
+    }
+    object(hash, kind, value)
+}
 fn serialized(hash: &str, kind: &str, value: &Value) -> io::Result<Vec<u8>> {
     crate::merge_history::hash(hash)?;
     let text = serde_json::to_string(value).map_err(io::Error::other)?;
@@ -123,3 +138,6 @@ fn write_file(path: &Path, bytes: &[u8]) -> io::Result<()> {
     file.write_all(bytes)?;
     file.sync_all()
 }
+
+#[cfg(test)]
+mod tests;

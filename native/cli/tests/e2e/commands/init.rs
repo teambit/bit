@@ -15,6 +15,7 @@ fn parity_options(helper: &Helper, command: &str, success: bool, rebuilt_index: 
     let baseline = helper.clone_workspace();
     let root = &helper.scopes.local_path;
     comparison::copy_directory_modes(root, &baseline);
+    comparison::wait_past_setup_history(root);
     let node = Helper::cmd_in_with(root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
     assert_eq!(node.status.success(), success, "{} {}", node.stdout, node.stderr);
     let expected = helper.clone_workspace();

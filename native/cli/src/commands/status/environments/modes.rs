@@ -45,6 +45,20 @@ impl Environments {
         self
     }
 
+    /// Import publishes eligible dependency data before actual onLoad subscribers run.
+    pub(in crate::commands) fn for_import_callbacks(mut self, cache_initialized: bool) -> Self {
+        self.import = Some(cache_initialized);
+        self
+    }
+
+    pub(in crate::commands::status) fn is_import(&self) -> bool {
+        self.import.is_some()
+    }
+
+    pub(in crate::commands::status) fn import_cache_initialized(&self) -> bool {
+        self.import == Some(true)
+    }
+
     pub(in crate::commands::status) fn is_checkout(&self) -> bool {
         self.checkout
     }

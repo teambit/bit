@@ -1,6 +1,12 @@
 //! The native import grammar: `bit fetch -c <ids...>` and `bit import`
 //! with ids or wildcard patterns, with or without installing.
 
+pub use adoption::{AdoptionOptions, DependentsOptions};
+
+mod adoption;
+mod semantic;
+mod validation;
+
 use serde_json::{Value, json};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -25,6 +31,7 @@ pub struct WriteOptions {
     pub path: Option<String>,
     pub merge_strategy: Option<String>,
     pub dependencies: DependencyOptions,
+    pub adoption: AdoptionOptions,
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -37,6 +44,7 @@ pub struct OutputOptions {
 pub struct SelectionOptions {
     pub include_deprecated: bool,
     pub lane_only: bool,
+    pub dependents: DependentsOptions,
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -60,8 +68,9 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     } else {
         let (args, path) = take_path(&args[1..])?;
         let (args, depth) = take_depth(&args)?;
-        let (ids, flags) = split(&args)?;
-        import(ids, &flags, path, depth)
+        let values = adoption::values(&args)?;
+        let (ids, flags) = split(&values.args)?;
+        import(ids, &flags, path, depth, values)
     }
 }
 
@@ -152,6 +161,7 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
             path: None,
             merge_strategy: None,
             dependencies: DependencyOptions::default(),
+            adoption: AdoptionOptions::default(),
         },
         lanes: lanes == 1,
         output: OutputOptions::default(),
@@ -165,12 +175,45 @@ fn import(
     flags: &[&str],
     path: Option<String>,
     depth: Option<usize>,
+    values: adoption::Values<'_>,
 ) -> Option<Options> {
     let has = |flag: &str| flags.contains(&flag);
-    if !valid_import_args(flags, &ids) {
+    if !validation::args(flags, &ids) {
         return None;
     }
     let objects_only = ids.is_empty() || has("--objects") || has("-o");
+    let adoption = AdoptionOptions::parse(flags, values.write_deps);
+    let mut dependents = DependentsOptions::parse(flags, values.dependents_via);
+    if !dependents.valid(&ids) {
+        return None;
+    }
+    // ImportAccordingToBitMap never calls getBitIds, so this otherwise valid
+    // flag has no dependent-selection phase without explicit component IDs.
+    if ids.is_empty() {
+        dependents.all = false;
+    }
+    let write = import_write(flags, path, depth, adoption, &ids, objects_only)?;
+    Some(Options {
+        operation: "import",
+        ids,
+        objects_only,
+        all_history: has("--all-history"),
+        write,
+        lanes: false,
+        output: import_output(flags),
+        selection: import_selection(flags, dependents),
+    })
+}
+
+fn import_write(
+    flags: &[&str],
+    path: Option<String>,
+    depth: Option<usize>,
+    adoption: AdoptionOptions,
+    ids: &[String],
+    objects_only: bool,
+) -> Option<WriteOptions> {
+    let has = |flag: &str| flags.contains(&flag);
     let merge_strategy = merge_strategy(flags)?;
     let dependencies = DependencyOptions {
         fetch_deps: has("--fetch-deps"),
@@ -178,9 +221,9 @@ fn import(
         import_head_dependencies: has("--dependencies-head"),
         depth,
     };
-    if !valid_import_mode(
+    if !validation::mode(
         &dependencies,
-        &ids,
+        ids,
         objects_only,
         has("--override"),
         merge_strategy.as_deref(),
@@ -188,80 +231,15 @@ fn import(
     ) {
         return None;
     }
-    Some(Options {
-        operation: "import",
-        ids,
-        objects_only,
-        all_history: has("--all-history"),
-        write: WriteOptions {
-            skip_write_config_files: has("--skip-write-config-files"),
-            skip_dependency_installation: has("--skip-dependency-installation") || has("-x"),
-            override_existing: has("--override"),
-            path,
-            merge_strategy,
-            dependencies,
-        },
-        lanes: false,
-        output: import_output(flags),
-        selection: import_selection(flags),
+    Some(WriteOptions {
+        skip_write_config_files: has("--skip-write-config-files"),
+        skip_dependency_installation: has("--skip-dependency-installation") || has("-x"),
+        override_existing: has("--override"),
+        path,
+        merge_strategy,
+        dependencies,
+        adoption,
     })
-}
-
-fn valid_import_args(flags: &[&str], ids: &[String]) -> bool {
-    valid_import_flags(flags)
-        && (!flags.contains(&"--lane-only") || ids.iter().any(|id| has_wildcard(id)))
-        && !ids
-            .iter()
-            .any(|id| has_wildcard(id) && !valid_pattern(id))
-}
-
-fn valid_import_mode(
-    dependencies: &DependencyOptions,
-    ids: &[String],
-    objects_only: bool,
-    override_existing: bool,
-    merge_strategy: Option<&str>,
-    path: Option<&str>,
-) -> bool {
-    valid_dependencies(dependencies, ids, objects_only, override_existing, merge_strategy, path)
-        && valid_merge_mode(merge_strategy, ids, objects_only, override_existing)
-        && (!override_existing || !objects_only)
-        && valid_path(path, ids, objects_only)
-}
-
-fn valid_dependencies(
-    options: &DependencyOptions,
-    ids: &[String],
-    objects_only: bool,
-    override_existing: bool,
-    merge_strategy: Option<&str>,
-    path: Option<&str>,
-) -> bool {
-    let enabled = options.import_dependencies || options.import_head_dependencies;
-    if options.import_dependencies && options.import_head_dependencies
-        || options.depth.is_some() && !enabled
-    {
-        return false;
-    }
-    !enabled
-        || !objects_only
-            && !ids.is_empty()
-            && !override_existing
-            && merge_strategy.is_none()
-            && path.is_none()
-}
-
-fn valid_merge_mode(
-    strategy: Option<&str>,
-    ids: &[String],
-    objects_only: bool,
-    override_existing: bool,
-) -> bool {
-    strategy.is_none() || !objects_only && ids.len() == 1 && !override_existing
-}
-
-fn valid_path(path: Option<&str>, ids: &[String], objects_only: bool) -> bool {
-    path.is_none() || !objects_only && ids.len() == 1 && !has_wildcard(&ids[0])
 }
 
 fn valid_import_flags(flags: &[&str]) -> bool {
@@ -282,6 +260,11 @@ fn valid_import_flags(flags: &[&str]) -> bool {
         "--dependencies",
         "--dependencies-head",
         "--lane-only",
+        "--track-only",
+        "--write-to-empty-dir",
+        "--dependents",
+        "--dependents-all",
+        "--silent",
     ];
     let has = |flag: &str| flags.contains(&flag);
     let both =
@@ -322,6 +305,18 @@ fn valid_pattern(id: &str) -> bool {
 }
 
 impl Options {
+    pub fn validation_error(&self) -> Option<&'static str> {
+        semantic::error(self)
+    }
+    pub fn needs_installer(&self) -> bool {
+        self.installs() && self.validation_error().is_none()
+    }
+    pub fn requires_facts(&self) -> bool {
+        self.validation_error().is_none()
+            && (self.installs()
+                || !self.objects_only && self.write.adoption.write_deps.is_some()
+                || self.selection.dependents.active())
+    }
     /// Whether the components are written and then installed.
     pub const fn installs(&self) -> bool {
         !self.objects_only && !self.write.skip_dependency_installation
@@ -351,6 +346,8 @@ impl Options {
             "dependenciesDepth": self.write.dependencies.depth,
             "lanes": self.lanes,
             "components": self.operation == "fetch" && !self.lanes,
+            "adoption": self.write.adoption.request(),
+            "dependents": self.selection.dependents.request(),
         })
     }
 }
@@ -365,9 +362,10 @@ fn import_output(flags: &[&str]) -> OutputOptions {
     }
 }
 
-fn import_selection(flags: &[&str]) -> SelectionOptions {
+fn import_selection(flags: &[&str], dependents: DependentsOptions) -> SelectionOptions {
     SelectionOptions {
         include_deprecated: flags.contains(&"--include-deprecated"),
         lane_only: flags.contains(&"--lane-only"),
+        dependents,
     }
 }

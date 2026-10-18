@@ -131,6 +131,16 @@ impl Installer {
         skip_write_config_files: bool,
         ids: &[String],
     ) -> io::Result<()> {
+        self.install_ordered(root, skip_write_config_files, ids, &[])
+    }
+
+    pub(in crate::commands) fn install_ordered(
+        self,
+        root: &Path,
+        skip_write_config_files: bool,
+        ids: &[String],
+        workspace_component_order: &[String],
+    ) -> io::Result<()> {
         let dependencies_graph = if deps_graph_enabled(root)? {
             let ids: Vec<(String, String)> = ids
                 .iter()
@@ -143,7 +153,12 @@ impl Installer {
         } else {
             None
         };
-        self.run(root, skip_write_config_files, dependencies_graph)
+        self.run_ordered(
+            root,
+            skip_write_config_files,
+            dependencies_graph,
+            workspace_component_order,
+        )
     }
 
     /// Merge calls `InstallMain.install` without a supplied dependency graph.
@@ -157,11 +172,22 @@ impl Installer {
         skip_write_config_files: bool,
         dependencies_graph: Option<Value>,
     ) -> io::Result<()> {
+        self.run_ordered(root, skip_write_config_files, dependencies_graph, &[])
+    }
+
+    fn run_ordered(
+        self,
+        root: &Path,
+        skip_write_config_files: bool,
+        dependencies_graph: Option<Value>,
+        workspace_component_order: &[String],
+    ) -> io::Result<()> {
         let options = InstallOptions {
             programmatic: true,
             skip_import: true,
             skip_write_config_files,
             dependencies_graph,
+            workspace_component_order: workspace_component_order.to_vec(),
             ..InstallOptions::default()
         };
         self.run_options(root, options)
