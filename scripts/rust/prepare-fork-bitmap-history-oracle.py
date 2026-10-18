@@ -161,9 +161,12 @@ def fingerprints(args, hook):
 
 
 def validate_rows(rows):
-    reasons = [f'adding replacement.scope/comp{index:02}' for index in range(10)]
-    if len(rows) != 10 or [row.get('reason') for row in rows] != reasons:
-        raise RuntimeError('unexpected released fork bitmap write count/order')
+    reasons = {f'adding replacement.scope/comp{index:02}' for index in range(10)}
+    # File-remote enumeration can reverse the local workspace's component order.
+    # Validate complete unique membership here; preserve the actual released order
+    # verbatim so every timed metadata row must match this independent transcript.
+    if len(rows) != 10 or {row.get('reason') for row in rows} != reasons:
+        raise RuntimeError('unexpected released fork bitmap write count/target membership')
     for index, row in enumerate(rows):
         if row.get('sequence') != index or any(key.endswith('error') for key in row):
             raise RuntimeError(f'failed fork oracle transition: {row}')
