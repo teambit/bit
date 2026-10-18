@@ -32,6 +32,31 @@ pub(crate) fn compare(helper: &Helper, command: &str) -> Run {
     assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
     actual
 }
+/// Preserve the full remote invariant while allowing command-specific duration validation.
+pub(crate) fn compare_with_stdout(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+) -> Run {
+    let remote = tree(&helper.scopes.remote_path);
+    let actual = support::compare_with_stdout(helper, command, stdout);
+    assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
+    actual
+}
+/// Keep delegation explicit and preserve the real remote invariant.
+pub(crate) fn compare_declined(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
+    let remote = tree(&helper.scopes.remote_path);
+    let actual = support::compare_declined(helper, command, stdout);
+    assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
+    actual
+}
+/// JSON commands keep actual installation and strict state while suppressing the vendor reporter.
+pub(crate) fn compare_install(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
+    let remote = tree(&helper.scopes.remote_path);
+    let actual = support::compare_install(helper, command, stdout);
+    assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
+    actual
+}
 pub(crate) fn tag(helper: &Helper) {
     setup(helper, "tag --ignore-issues * --message identity-fixture");
 }

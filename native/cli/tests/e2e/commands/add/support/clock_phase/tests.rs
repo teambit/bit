@@ -1,13 +1,20 @@
-use super::{END, SECOND, START, delay, fork_command};
+use super::{END, SECOND, START, delay, multiple_bitmap_writes};
 #[test]
-fn only_explicit_fork_operations_use_the_launch_gate() {
-    for command in ["fork comp1 comp2", "scope fork old.scope target.scope -x"] {
-        assert!(fork_command(command), "{command}");
-    }
+fn only_explicit_fork_and_recovery_operations_use_the_launch_gate() {
     for command in
-        ["scope rename old new", "export", "checkout head", "forked comp1", "scope forked old"]
+        ["fork comp1 comp2", "scope fork old.scope target.scope -x", "recover scope/comp -x"]
     {
-        assert!(!fork_command(command), "{command}");
+        assert!(multiple_bitmap_writes(command), "{command}");
+    }
+    for command in [
+        "scope rename old new",
+        "export",
+        "checkout head",
+        "forked comp1",
+        "scope forked old",
+        "recovered comp1",
+    ] {
+        assert!(!multiple_bitmap_writes(command), "{command}");
     }
 }
 #[test]

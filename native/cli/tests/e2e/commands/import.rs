@@ -1,5 +1,6 @@
 //! `e2e/commands/import.e2e.ts`.
 
+mod adoption;
 mod fetch_deps;
 mod history;
 mod lanes;

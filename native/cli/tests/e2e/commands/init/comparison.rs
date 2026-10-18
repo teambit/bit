@@ -1,5 +1,11 @@
 //! Only fresh local scope identifiers and wall-clock backup filenames differ.
-use std::{collections::BTreeMap, fs, path::Path};
+mod history;
+
+use std::{
+    collections::{BTreeMap, btree_map::Entry},
+    fs,
+    path::Path,
+};
 
 pub(super) fn tree(actual: &Path, expected: &Path, command: &str, rebuilt_index: bool) {
     let actual = inventory(actual, rebuilt_index);
@@ -16,7 +22,8 @@ pub(super) fn tree(actual: &Path, expected: &Path, command: &str, rebuilt_index:
 }
 fn inventory(root: &Path, rebuilt_index: bool) -> BTreeMap<String, Vec<u8>> {
     let mut result = BTreeMap::new();
-    visit(root, root, &mut result, rebuilt_index);
+    let histories = history::Histories::read(root);
+    visit(root, root, &mut result, rebuilt_index, &histories);
     result
 }
 fn visit(
@@ -24,6 +31,7 @@ fn visit(
     directory: &Path,
     result: &mut BTreeMap<String, Vec<u8>>,
     rebuilt_index: bool,
+    histories: &history::Histories,
 ) {
     for entry in fs::read_dir(directory).unwrap().map(Result::unwrap) {
         let path = entry.path();
@@ -32,10 +40,11 @@ fn visit(
             .unwrap()
             .to_string_lossy()
             .replace('\\', "/");
-        let key = normalize_path(&relative);
+        let key = histories.path(&relative);
         permissions(&entry, &key, result);
         if entry.file_type().unwrap().is_symlink() {
-            result.insert(
+            record(
+                result,
                 format!("{key}:symlink"),
                 fs::read_link(&path)
                     .unwrap()
@@ -44,26 +53,19 @@ fn visit(
                     .into_bytes(),
             );
         } else if entry.file_type().unwrap().is_dir() {
-            result.insert(format!("{key}/"), Vec::new());
-            visit(root, &path, result, rebuilt_index);
+            record(result, format!("{key}/"), Vec::new());
+            visit(root, &path, result, rebuilt_index, histories);
         } else {
-            let mut bytes = normalize(&relative, fs::read(path).unwrap());
+            let bytes = fs::read(path).unwrap();
+            let mut bytes = histories
+                .metadata(&relative, &bytes)
+                .unwrap_or_else(|| normalize(&relative, bytes));
             if rebuilt_index && relative == ".bit/index.json" {
                 bytes = index(&bytes);
             }
-            result.insert(key, bytes);
+            record(result, key, bytes);
         }
     }
-}
-fn normalize_path(path: &str) -> String {
-    if path.contains("/workspace-config-history/files/")
-        || path.contains("/bitmap-history/.bitmap-")
-    {
-        let (parent, name) = path.rsplit_once('/').unwrap();
-        validate_date(name.strip_prefix(".bitmap-").unwrap_or(name));
-        return format!("{parent}/FILE_ID");
-    }
-    path.to_owned()
 }
 fn normalize(path: &str, mut bytes: Vec<u8>) -> Vec<u8> {
     if path.ends_with("scope.json") {
@@ -78,20 +80,7 @@ fn normalize(path: &str, mut bytes: Vec<u8>) -> Vec<u8> {
                 .into_bytes();
         }
     }
-    if path.ends_with("bitmap-history-metadata.txt")
-        || path.ends_with("workspace-config-history/metadata.txt")
-    {
-        return String::from_utf8(bytes)
-            .unwrap()
-            .lines()
-            .flat_map(|line| {
-                let (date, reason) = line.split_once(' ').unwrap();
-                validate_date(date);
-                ["FILE_ID ", reason, "\n"]
-            })
-            .collect::<String>()
-            .into_bytes();
-    }
+
     bytes
 }
 
@@ -141,8 +130,17 @@ fn permissions(entry: &fs::DirEntry, key: &str, result: &mut BTreeMap<String, Ve
         .permissions()
         .mode()
         & 0o7777;
-    result.insert(format!("{key}:permissions"), mode.to_string().into_bytes());
+    record(result, format!("{key}:permissions"), mode.to_string().into_bytes());
 }
 
 #[cfg(not(unix))]
 fn permissions(_entry: &fs::DirEntry, _key: &str, _result: &mut BTreeMap<String, Vec<u8>>) {}
+
+fn record(result: &mut BTreeMap<String, Vec<u8>>, key: String, bytes: Vec<u8>) {
+    match result.entry(key) {
+        Entry::Vacant(entry) => {
+            entry.insert(bytes);
+        }
+        Entry::Occupied(entry) => panic!("duplicate init inventory key: {}", entry.key()),
+    }
+}

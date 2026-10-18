@@ -15,9 +15,29 @@ pub(crate) fn prepare_inbound_with_virtual(
         global_remotes_file,
         targets,
         virtual_remotes,
-        false,
-        all_history,
-        fetch_dependencies,
+        super::Mode { all_history, fetch_dependencies, ..super::Mode::default() },
+    )
+}
+
+pub(crate) fn prepare_graph_inbound_with_virtual(
+    root: &Path,
+    global_remotes_file: &Path,
+    targets: &[Target],
+    virtual_remotes: &[VirtualRemote],
+    all_history: bool,
+    fetch_dependencies: bool,
+) -> io::Result<PreparedImport> {
+    super::prepare_with_virtual_options(
+        root,
+        global_remotes_file,
+        targets,
+        virtual_remotes,
+        super::Mode {
+            all_history,
+            fetch_dependencies,
+            graph_versions: !fetch_dependencies,
+            ..super::Mode::default()
+        },
     )
 }
 

@@ -2,6 +2,7 @@
 mod cached;
 mod controls;
 mod fork;
+mod inbound;
 mod installation;
 mod load;
 mod removal;
@@ -57,6 +58,11 @@ impl ProjectedLinker {
             load::capture(root, bitmap, identities, &mut self.environment, &mut self.stdout);
         let result = result.and_then(|capture| self.retained.keep(capture));
         self.finish(result)
+    }
+
+    /// Transfer immutable native capture proofs to a retained parent-operation plan.
+    pub(in crate::commands) fn captured_read_set(&self) -> Vec<Value> {
+        self.retained.read_receipts()
     }
 
     /// Revalidate retained native facts before a consumer publishes workspace mutations.

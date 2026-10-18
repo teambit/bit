@@ -2,13 +2,16 @@
 //! the complete import without touching the user's repository; Apply publishes.
 
 pub(in crate::workspace::engine) mod autosync;
+pub(in crate::workspace::engine) mod dependents;
 pub(in crate::workspace::engine) mod policy;
+pub(in crate::workspace::engine) mod write_dependencies;
 
 use super::{
     super::{client_status::config, invalid},
     State,
 };
 use crate::command_import::{self, Target};
+use preparation::{finish, prepare_targets};
 use selection::{bitmap_targets, requested_target};
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -20,6 +23,8 @@ mod dependencies;
 mod details;
 mod lane_workspace;
 mod lanes;
+mod owned_writes;
+mod preparation;
 mod progress;
 mod remote;
 mod selection;
@@ -39,7 +44,7 @@ pub fn recovery_remote_connection(
 #[cfg(test)]
 mod protocol_tests;
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Prepare {
     root: PathBuf,
@@ -54,7 +59,7 @@ pub(in crate::workspace::engine) struct Prepare {
     transport: Transport,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Transport {
     global_config_dir: PathBuf,
@@ -68,7 +73,7 @@ pub(in crate::workspace::engine) struct Transport {
     token: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Options {
     objects_only: bool,
@@ -83,7 +88,7 @@ struct Options {
     components: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Resolution {
     #[serde(default)]
@@ -94,9 +99,33 @@ struct Resolution {
     merge_strategy: Option<String>,
     #[serde(default)]
     path: Option<String>,
+    #[serde(default)]
+    adoption: Adoption,
 }
 
-#[derive(Default, Deserialize)]
+#[derive(Default, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Adoption {
+    #[serde(default)]
+    track_only: bool,
+    #[serde(default)]
+    write_to_empty_dir: bool,
+    #[serde(default)]
+    write_deps: Option<String>,
+}
+
+#[derive(Default, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Dependents {
+    #[serde(default)]
+    enabled: bool,
+    #[serde(default)]
+    via: Vec<String>,
+    #[serde(default)]
+    silent: bool,
+}
+
+#[derive(Default, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Traversal {
     #[serde(default)]
@@ -107,11 +136,13 @@ struct Traversal {
     import_head_dependencies: bool,
     #[serde(default)]
     dependencies_depth: Option<usize>,
+    #[serde(default)]
+    dependents: Dependents,
 }
 
 /// `commandInboundList`: the remote listings of wildcard patterns, before
 /// `commandInboundPrepare` imports the selected ids.
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct List {
     root: PathBuf,
@@ -125,7 +156,7 @@ pub(in crate::workspace::engine) struct List {
     transport: Transport,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct RemoteLog {
     #[serde(default)]
@@ -139,7 +170,7 @@ pub(in crate::workspace::engine) fn remote_log(input: &RemoteLog) -> io::Result<
     remote::log(input)
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Apply {
     token: String,
@@ -150,6 +181,9 @@ pub(super) struct Retained {
     receipt: Value,
     import: command_import::PreparedImport,
     workspace: Option<write::Prepared>,
+    applied: bool,
+    pending: Option<dependents::Pending>,
+    proofs: Vec<super::proof::Proof>,
 }
 
 struct ReceiptRoots<'a> {
@@ -168,125 +202,20 @@ pub(in crate::workspace::engine) fn prepare(
         return lanes::prepare(input, state);
     }
     let roots = targets(input)?;
-    let (targets, mut import) = prepare_targets(input, &roots)?;
-    let workspace = prepare_workspace(input, &targets, &mut import)?;
+    let (targets, import) = if dependents::needed(input)
+        && !input.options.dependencies.import_dependencies
+        && !input.options.dependencies.import_head_dependencies
+    {
+        (roots.clone(), command_import::prepare_lane(&input.root, &input.global_remotes_file)?)
+    } else {
+        prepare_targets(input, &roots)?
+    };
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("inbound-{}", state.sequence);
-    let mut receipt = if matches!(input.operation.as_str(), "status" | "diff") {
-        json!({"token":token,"importedIds":[],"progress":[],"refreshCount":import.main_refresh.count,"refreshObjects":import.main_refresh.objects})
-    } else {
-        let prefetched = if input.options.dependencies.dependencies_depth.is_some() {
-            roots.as_slice()
-        } else {
-            &[]
-        };
-        receipt(
-            &input.root,
-            &targets,
-            &import,
-            workspace.as_ref(),
-            &ReceiptRoots {
-                roots: &roots,
-                prefetched,
-                head_dependencies: input.options.dependencies.import_head_dependencies,
-            },
-            &token,
-        )?
-    };
-    if let Some(policy) = workspace.as_ref().and_then(write::Prepared::policy_input) {
-        receipt["checkoutPolicyPreparation"] = policy.clone();
+    if dependents::needed(input) {
+        return dependents::begin(input, roots, targets, import, state, token);
     }
-    if let Some(lane) = remote::active_lane(&input.root)? {
-        receipt["currentLane"] = json!(format!("{}/{}", lane.scope, lane.name));
-    }
-    let count = targets.len();
-    state.inbound = Some(Retained { token, receipt: receipt.clone(), import, workspace });
-    Ok((count, receipt))
-}
-
-fn prepare_targets(
-    input: &Prepare,
-    roots: &[Target],
-) -> io::Result<(Vec<Target>, command_import::PreparedImport)> {
-    if input.options.resolution.recovery_local {
-        let initial = prepare_recovery(input, roots)?;
-        let targets = dependencies::expand(input, roots, &initial)?;
-        if targets.len() == roots.len() {
-            return Ok((targets, initial));
-        }
-        let imported = prepare_recovery(input, &targets)?;
-        return Ok((targets, imported));
-    }
-    if input.operation == "import"
-        && let Some(lane) = remote::active_lane(&input.root)?
-    {
-        return lane_workspace::prepare(input, roots, &lane);
-    }
-    let virtual_remotes = remote::objects(input, roots)?;
-    let initial = prepare_import(input, roots, &virtual_remotes)?;
-    let targets = dependencies::expand(input, roots, &initial)?;
-    if targets.len() == roots.len() {
-        return Ok((targets, initial));
-    }
-    let virtual_remotes = remote::objects(input, &targets)?;
-    let import = prepare_import(input, &targets, &virtual_remotes)?;
-    Ok((targets, import))
-}
-
-fn prepare_workspace(
-    input: &Prepare,
-    targets: &[Target],
-    import: &mut command_import::PreparedImport,
-) -> io::Result<Option<write::Prepared>> {
-    if input.options.objects_only {
-        return Ok(None);
-    }
-    write::prepare(
-        &input.root,
-        targets,
-        import,
-        input.bitmap_history_file_id.as_deref(),
-        write::Options {
-            override_existing: input.options.resolution.override_existing,
-            path: input.options.resolution.path.as_deref(),
-            install_requested: !input.options.skip_dependency_installation,
-            merge_strategy: input.options.resolution.merge_strategy.as_deref(),
-        },
-    )
-    .map(Some)
-}
-
-fn prepare_import(
-    input: &Prepare,
-    targets: &[Target],
-    virtual_remotes: &[command_import::VirtualRemote],
-) -> io::Result<command_import::PreparedImport> {
-    if input.operation == "diff" {
-        let mut imported = command_import::prepare_lane_with_virtual(
-            &input.root,
-            &input.global_remotes_file,
-            virtual_remotes,
-        )?;
-        imported.prepare_diff_versions(targets)?;
-        return Ok(imported);
-    }
-    if input.operation == "status" {
-        command_import::prepare_status_with_virtual(
-            &input.root,
-            &input.global_remotes_file,
-            targets,
-            virtual_remotes,
-        )
-    } else {
-        command_import::prepare_inbound_with_virtual(
-            &input.root,
-            &input.global_remotes_file,
-            targets,
-            virtual_remotes,
-            input.options.all_history,
-            input.options.dependencies.fetch_deps,
-        )
-    }
+    finish(input, &roots, &targets, import, state, token)
 }
 
 fn receipt(
@@ -343,19 +272,36 @@ pub(in crate::workspace::engine) fn apply(
     input: &Apply,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
-    let retained = state.inbound.take().ok_or_else(|| invalid("inbound owner missing"))?;
-    if input.token != retained.token {
+    let mut retained = state.inbound.take().ok_or_else(|| invalid("inbound owner missing"))?;
+    if input.token != retained.token || retained.applied {
         return Err(invalid("inbound owner token"));
     }
     if let Some(workspace) = &retained.workspace {
         workspace.validate_policy()?;
     }
-    retained.import.commit()?;
-    if let Some(workspace) = retained.workspace {
-        workspace.commit()?;
+    super::proof::verify(&retained.proofs)?;
+    if retained.pending.is_some() {
+        return Err(invalid("inbound dependent graph incomplete"));
     }
-    let mut receipt = retained.receipt;
+    let (_, mut writes) = retained.import.commit_with_receipts()?;
+    let deferred = retained.workspace.as_ref().is_some_and(write::Prepared::requires_dependencies);
+    if let Some(workspace) = &retained.workspace {
+        workspace.commit()?;
+        writes.extend(workspace.published_write_receipts()?);
+    }
+    let mut receipt = retained.receipt.clone();
     receipt["applied"] = json!(true);
+    receipt["ownedWorkspaceWrites"] = json!(owned_writes::combine(writes)?);
+    if let Some(workspace) = &retained.workspace {
+        receipt["bitmapProof"] = workspace.published_bitmap_proof()?;
+    }
+    if deferred {
+        receipt["requiresWriteDependencies"] = json!(true);
+        let mut retained = retained;
+        retained.applied = true;
+        retained.receipt = receipt.clone();
+        state.inbound = Some(retained);
+    }
     let count = receipt["importedIds"].as_array().map_or(0, Vec::len);
     Ok((count, receipt))
 }
@@ -428,4 +374,22 @@ fn prepare_recovery(
         targets,
         |requested| remote::objects(input, requested),
     )
+}
+
+pub(in crate::workspace::engine) fn local_preflight(input: &Prepare) -> io::Result<(usize, Value)> {
+    validation::local(input)?;
+    if input.options.objects_only || input.options.lanes {
+        return Ok((0, json!({"eligible":true})));
+    }
+    let targets = if input.ids.is_empty() {
+        bitmap_targets(&input.root)?
+    } else {
+        input.ids
+            .iter()
+            .filter(|id| !id.contains('*'))
+            .map(|id| requested_target(id))
+            .collect::<io::Result<Vec<_>>>()?
+    };
+    write::preflight(&input.root, &targets, preparation::write_options(input))?;
+    Ok((targets.len(), json!({"eligible":true})))
 }

@@ -131,7 +131,7 @@ impl Environments {
             }
             host.call(
                 "dependencyPolicies",
-                &json!({"extensionIds":ids,"bootstrap":ids.iter().any(|id|aspects.contains(id)),"startupAspectIds":aspects,"componentAspectIds":components.iter().flat_map(|component|component.config.keys()).collect::<Vec<_>>()}),
+                &json!({"extensionIds":ids,"bootstrap":ids.iter().any(|id|aspects.contains(id)),"startupAspectIds":aspects,"componentAspectIds":components.iter().flat_map(|component|component.config.keys()).collect::<Vec<_>>(),"componentIdentities":components.iter().map(|component|component.id.to_string_without_version()).collect::<Vec<_>>()}),
             )?;
             if record {
                 let facts = host.call("snapshotLoadFacts", &json!({}))?;

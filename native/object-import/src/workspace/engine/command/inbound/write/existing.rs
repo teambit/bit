@@ -20,6 +20,7 @@ pub(super) struct Resolution<'a> {
     pub(super) override_existing: bool,
     pub(super) install_requested: bool,
     pub(super) merge_strategy: Option<&'a str>,
+    pub(super) track_only: bool,
 }
 
 pub(super) fn prepare(
@@ -29,7 +30,12 @@ pub(super) fn prepare(
 ) -> io::Result<()> {
     checkout::plan::relative_path(input.directory)?;
     let model = imported_model(input, rows)?;
-    let (old, hash, name) = versions(input, model.as_ref())?;
+    let (old, hash, name) = if input.resolution.track_only {
+        let (name, hash) = version(model.as_ref(), &input.target.version)?;
+        (Value::Null, hash, name)
+    } else {
+        versions(input, model.as_ref())?
+    };
     let local;
     let new = if let Some(version) = input.imported.overlay.read(&hash, "Version")? {
         version
@@ -39,7 +45,9 @@ pub(super) fn prepare(
         &local
     };
     let main = validate_new(new)?;
-    plan_files(input, &old, new, &name, changes)?;
+    if !input.resolution.track_only {
+        plan_files(input, &old, new, &name, changes)?;
+    }
     let bitmap =
         rows.get_mut(&input.target.name).ok_or_else(|| invalid("inbound existing bitmap"))?;
     bitmap["version"] = Value::String(name);

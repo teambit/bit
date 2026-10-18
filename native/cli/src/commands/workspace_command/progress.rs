@@ -263,7 +263,9 @@ fn import(row: &Value) -> io::Result<Import> {
 fn known_reason(reason: &str) -> bool {
     if matches!(
         reason,
-        "for getting all dependencies" | "for getting all dependencies - missing dependencies",
+        "for getting all dependencies"
+            | "for getting all dependencies - missing dependencies"
+            | "for building graph-ids from the workspace",
     ) {
         return true;
     }

@@ -14,6 +14,7 @@ mod ancestors;
 mod checkout;
 mod dependencies;
 mod forced;
+mod graph;
 mod lane;
 mod policy;
 mod recovery;
@@ -46,9 +47,7 @@ pub(crate) fn prepare_with_virtual(
         global_remotes_file,
         targets,
         virtual_remotes,
-        false,
-        false,
-        false,
+        Mode::default(),
     )
 }
 
@@ -64,10 +63,16 @@ pub(crate) fn prepare_status_with_virtual(
         global_remotes_file,
         targets,
         virtual_remotes,
-        true,
-        false,
-        false,
+        Mode { ignore_missing: true, ..Mode::default() },
     )
+}
+
+#[derive(Default, Clone, Copy)]
+struct Mode {
+    ignore_missing: bool,
+    all_history: bool,
+    fetch_dependencies: bool,
+    graph_versions: bool,
 }
 
 fn prepare_with_virtual_options(
@@ -75,15 +80,13 @@ fn prepare_with_virtual_options(
     global_remotes_file: &Path,
     targets: &[Target],
     virtual_remotes: &[VirtualRemote],
-    ignore_missing: bool,
-    all_history: bool,
-    fetch_dependencies: bool,
+    mode: Mode,
 ) -> io::Result<PreparedImport> {
     if !root.is_absolute() || !global_remotes_file.is_absolute() || targets.len() > 4096 {
         return Err(invalid("import command bounds"));
     }
     let (mut plan, scope) = empty(root, false)?;
-    plan.cache.fetch_all_dependencies = fetch_dependencies;
+    plan.cache.fetch_all_dependencies = mode.fetch_dependencies;
     for remote in virtual_remotes {
         plan.virtual_remote(&remote.scope, remote.path.clone(), &remote.objects)?;
     }
@@ -105,7 +108,11 @@ fn prepare_with_virtual_options(
         remotes_map.extend(local.clone());
     }
     plan.environment.remotes = remotes.clone();
-    let available = refresh_all(&mut plan, &scoped, &remotes, ignore_missing, all_history)?;
+    let available =
+        refresh_all(&mut plan, &scoped, &remotes, mode.ignore_missing, mode.all_history)?;
+    if mode.graph_versions {
+        plan.prime_versionless_graph_ids(&available)?;
+    }
     prepare_dependencies(&mut plan, root, &available, &remotes)?;
     plan.validate()?;
     Ok(plan)

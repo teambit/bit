@@ -9,7 +9,7 @@ use std::{
 };
 
 impl Prepared {
-    pub(in super::super) fn commit(self) -> io::Result<()> {
+    pub(in super::super) fn commit(&self) -> io::Result<()> {
         self.validate_policy()?;
         self.check_bitmap("before publication")?;
         self.history.check(&self.root)?;

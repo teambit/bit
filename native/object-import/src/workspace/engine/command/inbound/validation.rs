@@ -3,6 +3,12 @@ use super::{Prepare, invalid};
 use std::io;
 
 pub(super) fn validate(input: &Prepare) -> io::Result<()> {
+    validate_phase(input, true)
+}
+pub(super) fn local(input: &Prepare) -> io::Result<()> {
+    validate_phase(input, false)
+}
+fn validate_phase(input: &Prepare, publication: bool) -> io::Result<()> {
     for path in
         [&input.root, &input.home, &input.global_remotes_file, &input.transport.global_config_dir]
     {
@@ -21,7 +27,8 @@ pub(super) fn validate(input: &Prepare) -> io::Result<()> {
     validate_merge(input)?;
     validate_dependencies(input)?;
     validate_lane_ids(input)?;
-    if !valid_write_mode(input) || input.root.join(".bitTmp").try_exists()? {
+    validate_adoption(input)?;
+    if publication && !valid_write_mode(input) || input.root.join(".bitTmp").try_exists()? {
         return Err(invalid("inbound command requires canonical lifecycle"));
     }
     Ok(())
@@ -131,4 +138,25 @@ fn valid_write_mode(input: &Prepare) -> bool {
     } else {
         input.bitmap_history_file_id.is_some()
     }
+}
+
+fn validate_adoption(input: &Prepare) -> io::Result<()> {
+    let adoption = &input.options.resolution.adoption;
+    let dependents = &input.options.dependencies.dependents;
+    let graph = dependents.enabled || !dependents.via.is_empty();
+    if (adoption.track_only
+        || adoption.write_to_empty_dir
+        || adoption.write_deps.is_some()
+        || graph)
+        && (input.operation != "import" || input.options.objects_only)
+    {
+        return Err(invalid("inbound adoption requires workspace import"));
+    }
+    if graph && (!dependents.silent || dependents.via.len() > 4096) {
+        return Err(invalid("inbound interactive dependents"));
+    }
+    for id in &dependents.via {
+        super::requested_target(id)?;
+    }
+    Ok(())
 }

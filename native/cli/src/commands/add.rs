@@ -1,4 +1,5 @@
 //! Native tracking: retain the projected bitmap until component links succeed.
+pub(super) use cache::restrict as restrict_dependency_cache;
 pub(super) use mutation::ProjectedLinker;
 
 mod cache;

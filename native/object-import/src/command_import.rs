@@ -5,9 +5,13 @@ pub(crate) mod lane;
 pub(crate) mod tests;
 pub(crate) use prepare::{
     VirtualRemote,
-    options::{prepare_inbound_with_virtual, prepare_recovery_with_virtual},
+    options::{
+        prepare_graph_inbound_with_virtual, prepare_inbound_with_virtual,
+        prepare_recovery_with_virtual,
+    },
     prepare, prepare_cached, prepare_lane, prepare_lane_with_virtual, prepare_status_with_virtual,
 };
+pub(crate) use retained::write_receipt;
 mod capture;
 mod history;
 mod merge;

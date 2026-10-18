@@ -101,3 +101,73 @@ fn implicit_and_main_lane_fetches_are_native_inputs() {
         assert!(parse(args).is_some(), "{args:?}");
     }
 }
+
+#[test]
+fn adoption_flags_preserve_fetch_and_write_choices() {
+    let options =
+        parse(&["import", "scope/comp", "--track-only", "--write-deps", "package.json", "-x"])
+            .unwrap();
+    assert!(options.write.adoption.track_only);
+    assert!(!options.installs());
+    assert_eq!(options.request()["adoption"]["writeDeps"], "package.json");
+    assert!(parse(&["import", "scope/comp", "--write-to-empty-dir"]).unwrap().installs());
+    assert!(parse(&["fetch", "-c", "scope/comp", "--track-only"]).is_none());
+}
+
+#[test]
+fn dependent_paths_require_noninteractive_selection_without_losing_raw_ids() {
+    let options = parse(&[
+        "import",
+        "scope/comp",
+        "--dependents-via",
+        "scope/middle, scope/other",
+        "--silent",
+        "-x",
+    ])
+    .unwrap();
+    assert_eq!(
+        options.request()["dependents"]["via"],
+        serde_json::json!(["scope/middle", "scope/other"]),
+    );
+    assert_eq!(options.request()["dependents"]["enabled"], true);
+    assert!(parse(&["import", "scope/comp", "--dependents"]).is_none());
+    assert!(parse(&["import", "scope/comp", "--dependents-all", "--silent"]).is_some());
+    assert!(parse(&["import", "--silent"]).is_some());
+}
+
+#[test]
+fn semantic_adoption_errors_parse_for_owned_validation_after_provider_startup() {
+    for (args, error) in semantic_errors() {
+        let options = parse(args).unwrap();
+        assert_eq!(options.validation_error(), Some(error));
+        assert!(!options.requires_facts());
+        assert!(!options.needs_installer());
+    }
+    assert!(parse(&["import", "scope/comp", "--write-deps"]).is_none());
+    assert_eq!(
+        parse(&["import", "--dependents"]).unwrap().validation_error(),
+        Some(r#"you have to specify ids to use "--dependents" flag"#),
+    );
+}
+
+fn semantic_errors() -> Vec<(&'static [&'static str], &'static str)> {
+    vec![
+        (&["import", "--track-only"], r#"you have to specify ids to use "--track-only" flag"#),
+        (
+            &["import", "--dependents", "--silent"],
+            r#"you have to specify ids to use "--dependents" flag"#,
+        ),
+        (
+            &["import", "--dependents-via", "scope/middle", "--silent"],
+            r#"you have to specify ids to use "--dependents-via" flag"#,
+        ),
+        (
+            &["import", "scope/comp", "--write-to-empty-dir", "--override"],
+            "--override and --write-to-empty-dir cannot be used together",
+        ),
+        (
+            &["import", "scope/comp", "--write-to-empty-dir", "--path", "target"],
+            "--path and --write-to-empty-dir cannot be used together",
+        ),
+    ]
+}

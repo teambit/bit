@@ -34,6 +34,7 @@ pub(in crate::commands) struct Environments {
     snapshot_build: bool,
     snapshot_loads: Vec<Value>,
     checkout: bool,
+    import: Option<bool>,
 }
 impl Environments {
     pub(super) fn new() -> Self {
@@ -44,6 +45,7 @@ impl Environments {
             snapshot_build: false,
             snapshot_loads: Vec::new(),
             checkout: false,
+            import: None,
         }
     }
 
@@ -188,6 +190,7 @@ impl Environments {
         }
         enriched["environmentFacts"]["snapshotEnvironmentLoads"] = json!(self.snapshot_loads);
         enriched["environmentReadSet"] = json!(proofs);
+        enriched["importCacheInitialized"] = json!(self.import_cache_initialized());
         Ok(enriched)
     }
 

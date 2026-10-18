@@ -74,6 +74,9 @@ pub struct InstallOptions {
     /// merged (`bit import` writing components); the lockfile is restored from it
     /// before installing, best-effort unless `restore` is set.
     pub dependencies_graph: Option<Value>,
+    /// Parent operation's live bitmap insertion order; the disk bitmap is serialized separately.
+    #[serde(skip)]
+    pub workspace_component_order: Vec<String>,
 }
 
 /// What adding a package already in the workspace policy does

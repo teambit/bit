@@ -7,7 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub(super) fn restrict(root: &Path, capture: &mut Capture) {
+pub(in crate::commands) fn restrict(root: &Path, capture: &mut Capture) {
     let identities = capture.components
         .iter()
         .filter(|component| {

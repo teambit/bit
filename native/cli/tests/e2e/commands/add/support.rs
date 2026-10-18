@@ -31,6 +31,11 @@ pub(crate) fn compare_with_stdout(
     compare_mode(helper, command, false, true, stdout, false)
 }
 
+/// Require clean delegation while retaining exact command bytes and full state.
+pub(crate) fn compare_declined(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
+    compare_mode(helper, command, false, false, stdout, false)
+}
+
 /// Installation changes only these two qualified pnpm wall-clock fields independently.
 pub(crate) fn compare_install(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
     compare_mode(helper, command, false, true, stdout, true)
@@ -351,7 +356,8 @@ fn describe(bytes: Option<&Vec<u8>>, path: &str) -> String {
                 && (bytes.first() == Some(&b'{')
                     || bytes.starts_with(b"//")
                     || bytes.starts_with(b"/*")
-                    || path == "node_modules/.modules.yaml") =>
+                    || path == "node_modules/.modules.yaml"
+                    || path.ends_with(".jsonl")) =>
         {
             String::from_utf8_lossy(bytes).into_owned()
         }

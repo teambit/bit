@@ -143,6 +143,14 @@ fn retain(
     output["laneFetch"] = json!(true);
     output["laneGroups"] = json!(groups);
     let count = targets.len();
-    state.inbound = Some(Retained { token, receipt: output.clone(), import, workspace: None });
+    state.inbound = Some(Retained {
+        token,
+        receipt: output.clone(),
+        import,
+        workspace: None,
+        applied: false,
+        pending: None,
+        proofs: Vec::new(),
+    });
     Ok((count, output))
 }
