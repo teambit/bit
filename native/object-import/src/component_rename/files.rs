@@ -1,3 +1,4 @@
+pub(super) mod batch;
 mod eol;
 
 use super::{Plan, invalid, refactor, unsupported};
@@ -364,4 +365,16 @@ fn target_bytes(
         bytes = replaced;
     }
     Ok((bytes, changed))
+}
+
+pub(super) fn write_changes(changes: &[Change]) -> io::Result<()> {
+    for change in changes {
+        if let Some(parent) = change.destination.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        let bytes = change.writer.contents(change.bytes.clone(), cfg!(windows));
+        fs::write(&change.destination, bytes)?;
+        fs::set_permissions(&change.destination, change.permissions.clone())?;
+    }
+    Ok(())
 }

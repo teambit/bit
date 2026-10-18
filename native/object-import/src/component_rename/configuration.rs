@@ -15,14 +15,20 @@ pub(super) fn prepare(plan: &mut Plan, facts: &Value) -> io::Result<()> {
     if !plan.identity.exported {
         rows.shift_remove(&source_key);
     }
-    if rows.contains_key(&plan.identity.target_name) {
+    let tracked_target = format!(
+        "{}/{}",
+        target["defaultScope"].as_str().unwrap_or_default(),
+        plan.identity.target_name,
+    );
+    let target_key = target_key(rows, &plan.identity.target_name, &tracked_target)?;
+    if rows.contains_key(&target_key) {
         return Err(invalid(format!("component {} already exists", plan.identity.target)));
     }
-    rows.insert(plan.identity.target_name.clone(), target);
+    rows.insert(target_key.clone(), target);
     plan.controls.initial = plan.controls.bitmap.clone();
     if !plan.identity.exported {
-        plan.controls.initial[&plan.identity.target_name]["rootDir"] = source_root;
-        plan.controls.initial[&plan.identity.target_name]["mainFile"] = source_main;
+        plan.controls.initial[&target_key]["rootDir"] = source_root;
+        plan.controls.initial[&target_key]["mainFile"] = source_main;
     }
     rename_aspects(plan);
     if plan.identity.exported {
@@ -41,6 +47,11 @@ fn target_row(plan: &Plan, source: &Value, facts: &Value) -> io::Result<Value> {
             .next()
             .unwrap_or_default()
     );
+    if plan.identity.exported
+        && let Some(scope) = facts["trackingDefaultScope"].as_str()
+    {
+        target["defaultScope"] = json!(scope);
+    }
     target["rootDir"] = json!(plan.identity.target_directory);
     if let Some(main) = source["mainFile"].as_str() {
         target["mainFile"] = json!(if plan.options.preserve {
@@ -162,7 +173,7 @@ fn rename_aspects(plan: &mut Plan) {
         false,
     );
 }
-fn replace_config(config: &mut Value, source: &str, target: &str, rename_env: bool) {
+pub(super) fn replace_config(config: &mut Value, source: &str, target: &str, rename_env: bool) {
     let Some(config) = config.as_object_mut() else { return };
     if let Some(value) = config.shift_remove(source) {
         config.insert(target.into(), value);
@@ -232,4 +243,29 @@ fn backup(plan: &Plan, file_id: &str) -> io::Result<()> {
         .append(true)
         .open(base.join("metadata.txt"))?;
     writeln!(metadata, "{file_id} rename")
+}
+
+pub(super) fn target_key(
+    rows: &mut serde_json::Map<String, Value>,
+    name: &str,
+    target: &str,
+) -> io::Result<String> {
+    let similar = rows
+        .iter()
+        .filter(|(key, row)| row["name"].as_str().unwrap_or(key) == name)
+        .map(|(key, row)| {
+            let scope =
+                identity::scope(row).ok_or_else(|| unsupported("rename duplicate name scope"))?;
+            Ok((key.clone(), format!("{scope}/{name}")))
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    if similar.is_empty() {
+        return Ok(name.into());
+    }
+    for (key, qualified) in similar {
+        if let Some(row) = rows.shift_remove(&key) {
+            rows.insert(qualified, row);
+        }
+    }
+    Ok(target.into())
 }

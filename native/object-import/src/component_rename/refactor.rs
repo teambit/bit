@@ -18,25 +18,72 @@ pub(super) fn content(bytes: &[u8], source: &str, target: &str) -> io::Result<Ve
     Ok(text.into_bytes())
 }
 pub(super) fn package(bytes: &[u8], source: &str, target: &str) -> io::Result<Vec<u8>> {
-    if crate::checkout::eol::binary(bytes) {
-        return Ok(bytes.to_vec());
-    }
-    let text = String::from_utf8_lossy(bytes);
-    let regex =
-        Regex::new(&format!(r#"{source}(['"/])"#)).map_err(|error| invalid(error.to_string()))?;
-    let mut output = String::new();
-    let mut offset = 0;
-    for found in regex.find_iter(&text) {
-        output.push_str(&text[offset..found.range.start]);
-        output.push_str(target);
-        if let Some(suffix) = found.captures.first().and_then(Clone::clone) {
-            output.push_str(&text[suffix]);
-        }
-        offset = found.range.end;
-    }
-    output.push_str(&text[offset..]);
-    Ok(output.into_bytes())
+    PackageMatcher::new(source, target).apply(bytes)
 }
+/// A phase-local matcher compiles only when its first nonbinary file is reached.
+pub(super) struct PackageMatcher {
+    source: String,
+    target: String,
+    regex: Option<Regex>,
+}
+impl PackageMatcher {
+    fn new(source: &str, target: &str) -> Self {
+        Self { source: source.into(), target: target.into(), regex: None }
+    }
+    pub(super) fn apply(&mut self, bytes: &[u8]) -> io::Result<Vec<u8>> {
+        if crate::checkout::eol::binary(bytes) {
+            return Ok(bytes.to_vec());
+        }
+        if self.regex.is_none() {
+            self.regex = Some(
+                Regex::new(&format!(r#"{}(['"/])"#, self.source))
+                    .map_err(|error| invalid(error.to_string()))?,
+            );
+        }
+        let regex = self.regex.as_ref().ok_or_else(|| invalid("package matcher unavailable"))?;
+        let text = String::from_utf8_lossy(bytes);
+        let mut output = String::new();
+        let mut offset = 0;
+        for found in regex.find_iter(&text) {
+            output.push_str(&text[offset..found.range.start]);
+            output.push_str(&self.target);
+            if let Some(suffix) = found.captures.first().and_then(Clone::clone) {
+                output.push_str(&text[suffix]);
+            }
+            offset = found.range.end;
+        }
+        output.push_str(&text[offset..]);
+        Ok(output.into_bytes())
+    }
+}
+pub(super) struct PackageMatchers(Vec<PackageMatcher>);
+impl PackageMatchers {
+    pub(super) fn new(pairs: &[(String, String)]) -> Self {
+        Self(
+            pairs
+                .iter()
+                .map(|(source, target)| PackageMatcher::new(source, target))
+                .collect(),
+        )
+    }
+    pub(super) fn matches(&self, pairs: &[(String, String)]) -> bool {
+        self.0.len() == pairs.len()
+            && self.0
+                .iter()
+                .zip(pairs)
+                .all(|(matcher, (source, target))| {
+                    matcher.source == *source && matcher.target == *target
+                })
+    }
+    pub(super) fn apply(&mut self, bytes: &[u8]) -> io::Result<Vec<u8>> {
+        let mut output = bytes.to_vec();
+        for matcher in &mut self.0 {
+            output = matcher.apply(&output)?;
+        }
+        Ok(output)
+    }
+}
+
 fn replace(text: &str, old: &str, new: &str) -> io::Result<String> {
     let regex = Regex::new(old).map_err(|error| invalid(error.to_string()))?;
     let mut output = String::new();

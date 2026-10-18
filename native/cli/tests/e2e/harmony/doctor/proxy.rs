@@ -21,6 +21,7 @@ impl Proxy {
     fn catalog(body: &str) -> Self {
         let journal = tempfile::tempdir().unwrap();
         fs::write(journal.path().join("requests"), []).unwrap();
+        fs::write(journal.path().join("requests.finished"), []).unwrap();
         let mut child = spawn(body, &journal);
         let mut output = BufReader::new(child.stdout.take().unwrap());
         let mut port = String::new();
@@ -33,6 +34,9 @@ impl Proxy {
     }
     pub fn requests(&self) -> usize {
         fs::read(self.journal.path().join("requests")).unwrap().len()
+    }
+    pub fn completed(&self) -> usize {
+        fs::read(self.journal.path().join("requests.finished")).unwrap().len()
     }
 }
 impl Drop for Proxy {

@@ -1,12 +1,24 @@
 /** Only registered on-add/compiler tooling; native Rust owns rename state and filesystem paths. */
-async function renameTooling({ action, ids }) {
+async function renameTooling({ action, ids, message, progress = true, defaultScoped = true }) {
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
+  if (action === 'installFailure') {
+    const logger = loaded.get('teambit.logger/logger').createLogger('teambit.component/renaming');
+    logger.consoleFailure(`failed installing dependencies. error: ${message}. run "bit install" to retry.`);
+    return {};
+  }
+
   captureBootstrapProgress(workspace);
   const previous = snapshotBootstrapProgress;
-  snapshotBootstrapProgress = true;
+  snapshotBootstrapProgress = progress;
   try {
-    const componentIds = await workspace.resolveMultipleComponentIds(ids);
+    const { ComponentID } = bitRequire('@teambit/component-id');
+    const componentIds = action === 'onAdd'
+      ? ids.map(id => {
+          const parsed = ComponentID.fromString(id);
+          return defaultScoped ? ComponentID.fromObject({ name: parsed.fullName }, parsed.scope) : parsed;
+        })
+      : await workspace.resolveMultipleComponentIds(ids);
     if (action === 'onAdd') {
       for (const id of componentIds) await workspace.triggerOnComponentAdd(id, { compile: true });
       return {};

@@ -2,21 +2,33 @@
 //! local `bit remove`.
 
 pub use batch::NewBatch;
+pub(crate) use batch::remove_source_paths;
+pub(crate) use filesystem::{
+    backup_bitmap, remove_path, validate_ancestors, validate_directory, validate_file_id,
+};
+pub use inventory::has_scanned_files;
 pub(crate) use lane::Lane;
+pub use local::LocalBatch;
+pub use selection::select_ids;
 pub use versioned::VersionedPlan;
 
 mod batch;
+mod filesystem;
+mod inventory;
 mod lane;
+mod local;
 mod row;
+mod selection;
 mod versioned;
 
 use crate::{inspection, recovery};
+use filesystem::{package, safe_relative};
 use lane::select_lane;
 use row::supported_row;
 use serde_json::Value;
 use std::{
     fs, io,
-    path::{Component, Path, PathBuf},
+    path::{Path, PathBuf},
 };
 
 pub struct Plan {
@@ -104,7 +116,7 @@ impl Plan {
 
     fn apply(&self, file_id: &str) -> io::Result<()> {
         if let Some(path) = &self.files {
-            fs::remove_dir_all(path)?;
+            remove_path(path)?;
         }
         if self.package.try_exists()? {
             fs::remove_dir_all(&self.package)?;
@@ -139,10 +151,14 @@ pub(crate) fn select(
         }
         None
     } else {
-        if !matches!(kind, RowKind::New | RowKind::LaneSnap | RowKind::ExportedLane) {
-            return Err(invalid("component removal on a lane"));
-        }
-        Some(select_lane(root, bitmap, scope, component_name, row, kind)?)
+        let lane = select_lane(root, bitmap, scope, component_name, row, kind)?;
+        let member = lane.value["components"]
+            .as_array()
+            .is_some_and(|rows| {
+                rows.iter()
+                    .any(|row| row["id"]["scope"] == scope && row["id"]["name"] == component_name)
+            });
+        member.then_some(lane)
     };
     let version = (kind != RowKind::New).then(|| {
         row["version"]
@@ -151,22 +167,19 @@ pub(crate) fn select(
             .to_owned()
     });
     let identity = format!("{scope}/{component_name}");
-    validate_workspace_config(root, &identity)?;
     if kind == RowKind::New {
         validate_no_model(root, scope, component_name)?;
     }
     let (main_exists, files) = component_files(root, bitmap, key, row, keep_files)?;
-    let package = package(root, scope, component_name)?;
-    if package.try_exists()? {
-        validate_directory(&package)?;
-    }
+    let package =
+        if row["rootDir"] == "." { PathBuf::new() } else { package(root, scope, component_name)? };
     Ok(Selected { key: key.clone(), identity, files, package, main_exists, version, lane })
 }
 
-fn find_row<'a>(
+pub(super) fn find_row<'a>(
     bitmap: &'a Value,
     name: &str,
-    kind: RowKind,
+    _kind: RowKind,
 ) -> io::Result<(&'a String, &'a Value)> {
     bitmap
         .as_object()
@@ -174,12 +187,8 @@ fn find_row<'a>(
         .iter()
         .find(|(key, row)| {
             *key == name
-                || (matches!(kind, RowKind::Imported | RowKind::ExportedLane)
-                    && name
-                        .split_once('/')
-                        .is_some_and(|(scope, component)| {
-                            *key == component && row["scope"] == scope
-                        }))
+                || crate::component_deprecation::selection::identity(key, row)
+                    .is_some_and(|id| id.split('@').next() == Some(name))
         })
         .ok_or_else(|| invalid("component not tracked"))
 }
@@ -204,16 +213,8 @@ fn component_files(
     Ok((main_exists, files(root, rows, key, root_dir, keep_files)?))
 }
 
-fn validate_workspace_config(root: &Path, identity: &str) -> io::Result<()> {
-    let path = root.join("workspace.jsonc");
-    if path.try_exists()? && fs::read_to_string(path)?.contains(identity) {
-        return Err(invalid("component has workspace configuration"));
-    }
-    Ok(())
-}
-
 fn validate_no_model(root: &Path, scope: &str, name: &str) -> io::Result<()> {
-    let path = root.join(".bit/index.json");
+    let path = crate::scope_path(root).join("index.json");
     if !path.try_exists()? {
         return Ok(());
     }
@@ -237,6 +238,9 @@ fn files(
 ) -> io::Result<Option<PathBuf>> {
     let relative = Path::new(directory);
     validate_component_root(relative)?;
+    if relative == Path::new(".") {
+        return Ok(None);
+    }
     validate_no_overlap(rows, key, relative)?;
     if keep {
         return Ok(None);
@@ -249,7 +253,7 @@ fn files(
 
 fn validate_component_root(relative: &Path) -> io::Result<()> {
     if relative == Path::new(".") {
-        return Err(invalid("workspace root component"));
+        return Ok(());
     }
     if !safe_relative(relative)
         || relative
@@ -277,59 +281,14 @@ fn validate_no_overlap(
             return Err(invalid("another component has no root"));
         };
         let other = Path::new(other);
+        if other == Path::new(".") {
+            continue;
+        }
         if !safe_relative(other) || other.starts_with(relative) || relative.starts_with(other) {
             return Err(invalid("component root overlaps another component"));
         }
     }
     Ok(())
-}
-
-fn package(root: &Path, scope: &str, name: &str) -> io::Result<PathBuf> {
-    let (owner, rest) = scope
-        .split_once('.')
-        .map_or((scope, ""), |(owner, rest)| (owner, rest));
-    let filename = if rest.is_empty() {
-        name.replace('/', ".")
-    } else {
-        format!("{}.{}", rest, name.replace('/', "."))
-    };
-    let package = root
-        .join("node_modules")
-        .join(format!("@{owner}"))
-        .join(filename);
-    if !package.starts_with(root.join("node_modules")) {
-        return Err(invalid("component package path"));
-    }
-    validate_ancestors(
-        root,
-        package.strip_prefix(root).map_err(|_| invalid("component package path"))?,
-    )?;
-    Ok(package)
-}
-
-fn validate_ancestors(root: &Path, relative: &Path) -> io::Result<()> {
-    let mut path = root.to_owned();
-    for part in relative.components() {
-        if !matches!(part, Component::Normal(_)) {
-            return Err(invalid("component path is outside the workspace"));
-        }
-        path.push(part);
-        match fs::symlink_metadata(&path) {
-            Ok(metadata) if metadata.file_type().is_dir() && !metadata.file_type().is_symlink() => {
-            }
-            Ok(_) => return Err(invalid("component path is not a directory")),
-            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-            Err(error) => return Err(error),
-        }
-    }
-    Ok(())
-}
-
-fn safe_relative(path: &Path) -> bool {
-    !path.as_os_str().is_empty()
-        && path
-            .components()
-            .all(|component| matches!(component, Component::Normal(_)))
 }
 
 fn valid_name(name: &str) -> bool {
@@ -356,39 +315,6 @@ fn valid_scope(scope: &str) -> bool {
                         .bytes()
                         .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_'))
             })
-}
-
-pub(crate) fn validate_directory(path: &Path) -> io::Result<()> {
-    let kind = fs::symlink_metadata(path)?.file_type();
-    if !kind.is_dir() || kind.is_symlink() {
-        return Err(invalid("component path is not a directory"));
-    }
-    Ok(())
-}
-
-pub(crate) fn validate_file_id(value: &str) -> io::Result<()> {
-    if value.len() > 32
-        || value.split('-').count() != 6
-        || value
-            .split('-')
-            .any(|part| part.is_empty() || !part.bytes().all(|byte| byte.is_ascii_digit()))
-    {
-        return Err(invalid("component bitmap history receipt"));
-    }
-    Ok(())
-}
-
-pub(crate) fn backup_bitmap(root: &Path, file_id: &str, operation: &str) -> io::Result<()> {
-    use std::io::Write;
-    let scope = crate::scope_path(root);
-    let directory = scope.join("bitmap-history");
-    fs::create_dir_all(&directory)?;
-    fs::copy(root.join(".bitmap"), directory.join(format!(".bitmap-{file_id}")))?;
-    let mut metadata = fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(scope.join("bitmap-history-metadata.txt"))?;
-    writeln!(metadata, "{file_id} {operation}")
 }
 
 fn invalid(message: &str) -> io::Error {

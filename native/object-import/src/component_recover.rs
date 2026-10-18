@@ -1,5 +1,11 @@
 //! Restore a locally soft-deleted component from verified scope Sources and its main or lane head.
 
+pub use batch::{Action, Batch};
+pub use probe::probe_remote;
+
+mod batch;
+mod probe;
+
 use crate::{
     checkout::repository,
     component_remove::{Lane, RowKind, backup_bitmap, select, validate_file_id},

@@ -23,12 +23,14 @@ const { createRequire } = require('module');
 const [bitDir, entry, root] = process.argv.slice(-3);
 const cliArguments = JSON.parse(process.env.BIT_NATIVE_HOST_ARGUMENTS ?? '[]');
 const readonlyStatus = ['status', 's', 'diff'].includes(cliArguments[0]);
+const identityRenameCommand = cliArguments[0] === 'rename' || (cliArguments[0] === 'scope' && ['rename', 'rename-owner'].includes(cliArguments[1]));
+const identityMutationCommand = identityRenameCommand || ['move', 'mv', 'deprecate', 'd', 'undeprecate', 'remove', 'rm', 'delete', 'recover'].includes(cliArguments[0]);
 const snapshotCommandName = cliArguments[0] === 't' ? 'tag' : cliArguments[0];
 let snapshotCommand = ['snap', 'tag'].includes(snapshotCommandName) || (cliArguments[0] === 'merge' && cliArguments.includes('--resolve'));
 const checkoutCommand = (cliArguments[0] === 'merge' && cliArguments.includes('--abort')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge-abort') || ['checkout', 'U', 'revert', 'switch'].includes(cliArguments[0]) || (cliArguments[0] === 'lane' && cliArguments[1] === 'import');
 const mergeCommand = (cliArguments[0] === 'merge' && !cliArguments.includes('--abort') && !cliArguments.includes('--resolve')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge');
 const exportCommand = ['export', 'e', 'resume-export'].includes(cliArguments[0]);
-const bufferedCommand = snapshotCommand || checkoutCommand || mergeCommand || exportCommand || ['stash', 'add', 'a', 'move', 'mv', 'rename', 'deprecate', 'd', 'undeprecate'].includes(cliArguments[0]);
+const bufferedCommand = snapshotCommand || checkoutCommand || mergeCommand || exportCommand || identityMutationCommand || ['stash', 'add', 'a'].includes(cliArguments[0]);
 process.argv = [process.execPath, entry, ...cliArguments];
 require(path.join(bitDir, 'dist', 'hook-require.js'));
 const bitRequire = createRequire(path.join(bitDir, 'package.json'));
@@ -106,10 +108,18 @@ async function handle(line) {
 }
 
 const handlers = {
+  identityScopeDefault: async ({ scope }) => {
+    const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
+    workspace.getWorkspaceConfig().setExtension('teambit.workspace/workspace', { defaultScope: scope }, { mergeIntoExisting: true, ignoreVersion: true });
+    workspace.config.defaultScope = scope;
+    return true;
+  },
   renameTooling,
   renameAst,
   renameSourceConfig,
   identityUseCached,
+  identityListOrder,
+  identityConsumerMode,
   identityLinkFacts,
   identityMaterialized,
   identityClearLoadCache: async () => {
@@ -130,6 +140,9 @@ const handlers = {
   identityEnvironments,
   identityBootstrap: async () => {
     const loaded = await loadHarmony();
+    // Scope rename subcommands are appended after CLIMain's loadAspects defaults.
+    // Workspace.registerOnStart therefore skips their configured root aspects.
+    if (cliArguments[0] === 'scope') return true;
     const workspace = loaded.get('teambit.workspace/workspace');
     const loader = loaded.get('teambit.harmony/aspect-loader');
     const ids = loader.getNotLoadedConfiguredExtensions();
@@ -159,7 +172,8 @@ const handlers = {
   devPatterns: ({ envId }) => devPatterns(envId),
   prepareInstall: ({ aspectIds }) => prepareInstall(aspectIds),
   envFallsBack: ({ envId }) => envFallsBack(envId),
-  dependencyPolicies: ({ extensionIds, bootstrap }) => dependencyPolicies(extensionIds, bootstrap),
+  dependencyPolicies: ({ extensionIds, bootstrap, startupAspectIds, componentAspectIds }) =>
+    dependencyPolicies(extensionIds, bootstrap, startupAspectIds, componentAspectIds),
   detectDependencies: ({ envId, files, componentDir, aspectIds }) =>
     detectDependencies(envId, files, componentDir, aspectIds),
   parseDependencies,
@@ -167,6 +181,10 @@ const handlers = {
   snapshotWorkspaceIssues: async () => (await loadHarmony()).get('teambit.workspace/workspace').getWorkspaceIssues({includeNonBlocking:false}).map((error)=>error.message),
   statusWorkspaceIssues: async () => (await loadHarmony()).get('teambit.workspace/workspace').getWorkspaceIssues().map((error) => error.message),
   statusLoadCallbacks,
+  trackingCachedDocs: ({ entries }) => {
+    for (const entry of entries) trackingDocumentation.set(entry.path, entry.docs);
+    return true;
+  },
   trackingDocs: async ({ components }) => {
     const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
     const { SourceFile } = bitRequire('@teambit/component.sources');
@@ -231,7 +249,7 @@ const handlers = {
     }
     if (!retainLoaded) {
       workspace.clearAllComponentsCache();
-      if (cliArguments[0] === 'rename') identityLoadedComponents.clear();
+      if (identityRenameCommand) identityLoadedComponents.clear();
     }
     workspace.consumer.bitMap = projected;
     workspace.bitMap = new WorkspaceBitMap(projected, workspace.consumer);
@@ -476,12 +494,15 @@ function snapshotFreshAspects(ids) {
 }
 
 let snapshotBootstrapProgress = false;
-async function dependencyPolicies(extensionIds, bootstrap) {
+async function dependencyPolicies(extensionIds, bootstrap, startupAspectIds = [], componentAspectIds = []) {
   await loadInstallComponents();
   snapshotBootstrapProgress = bootstrap === true && (['tag', 'checkout', 'add', 'a'].includes(cliArguments[0]) || cliArguments[0] === 'merge');
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
   captureBootstrapProgress(workspace);
+  if (cliArguments[0] === 'scope') {
+    extensionIds = extensionIds.filter(id => !startupAspectIds.includes(id) || componentAspectIds.includes(id));
+  }
   extensionIds=snapshotFreshAspects(extensionIds);
   snapshotBootstrapProgress = bootstrap === true && (['tag', 'checkout', 'add', 'a'].includes(cliArguments[0]) || cliArguments[0] === 'merge');
   try {
@@ -547,6 +568,7 @@ let workspaceAspectsLoaded = false;
 
 /** The workspace aspects the CLI loads on start (`getNotLoadedConfiguredExtensions`), once. */
 async function loadWorkspaceAspects(aspectIds) {
+  if (cliArguments[0] === 'scope') return;
   if (workspaceAspectsLoaded || !aspectIds?.length) return;
   workspaceAspectsLoaded = true;
   const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
@@ -672,7 +694,7 @@ async function packageJsonProps(envId) {
 async function transformPackageJson(componentId, manifest) {
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
-  const component = identityLoadedComponent(componentId) || (['add','a','move','mv','rename'].includes(cliArguments[0]) && statusComponents.find((component)=>component.id.toStringWithoutVersion()===componentId)) || await workspace.get(await workspace.resolveComponentId(componentId));
+  const component = identityLoadedComponent(componentId) || ((identityMutationCommand || ['add','a'].includes(cliArguments[0])) && statusComponents.find((component)=>component.id.toStringWithoutVersion()===componentId)) || await workspace.get(await workspace.resolveComponentId(componentId));
   const env = loaded.get('teambit.envs/envs').getOrCalculateEnv(component).env;
   return env.modifyPackageJson(component, manifest);
 }
@@ -704,6 +726,8 @@ async function afterInstall(request) {
   pendingInstallLoad = null;
   workspace.inInstallContext = true;
   workspace.inInstallAfterPmContext = true;
+  const previousProgress = snapshotBootstrapProgress;
+  if (cliArguments[0] === 'scope' && cliArguments[1] === 'rename') snapshotBootstrapProgress = true;
   try {
     await workspace.clearCache();
     await install.reloadMovedEnvs();
@@ -727,6 +751,7 @@ async function afterInstall(request) {
     const outputs = distDirs && configFiles ? [...distDirs, ...configFiles] : null;
     return { oldNonLoadedEnvs: envs.getFailedToLoadEnvs(), compiled, outputs };
   } finally {
+    snapshotBootstrapProgress = previousProgress;
     workspace.inInstallContext = false;
   }
 }
@@ -886,7 +911,7 @@ async function hydrateStatusComponent(row, sourceConsumer) {
       if (Object.hasOwn(row.scope.currentVersion, field)) consumer[field] = row.scope.currentVersion[field];
     }
   }
-  if (['add','a','move','mv','rename','deprecate','d','undeprecate'].includes(cliArguments[0]) && trackingDocumentation.size) {
+  if ((identityMutationCommand || ['add','a'].includes(cliArguments[0])) && trackingDocumentation.size) {
     consumer.docs = row.files.flatMap((file) => trackingDocumentation.get(path.join(directory, file)) ?? []);
   }
   consumer.defaultScope = id.scope;
@@ -924,21 +949,37 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout }
     }
   }
   for (const row of components) {
-    let component = await hydrateStatusComponent(row);
+    const retainedConsumer = identityConsumerOnly ? undefined : identityConsumers.get(row.identity);
+    let component = await hydrateStatusComponent(row, retainedConsumer);
     const componentIndex = statusComponents.length;
     statusComponents.push(component);
     // DependencyLoader's DevFiles adapter hydrates a separate Harmony class before
     // the actual workspace load. Workspace-root explicitly skips source detection.
     if (!snapshotContinuation) {
-      if (!tracking && (snapshot || (checkout && row.dependencyCacheMiss)) && row.directory !== '.') {
+      if (!retainedConsumer && !tracking && (snapshot || (checkout && row.dependencyCacheMiss)) && row.directory !== '.') {
         const devComponent = await hydrateStatusComponent(row);
         await statusApplyLoadCallbacks(devComponent, { workspace, envs, resolver });
-        if (['move','mv','rename','deprecate','d','undeprecate'].includes(cliArguments[0])) {
+        if (identityMutationCommand) {
           component = await hydrateStatusComponent(row, devComponent.state._consumer);
           statusComponents[componentIndex] = component;
         }
       }
-      await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
+      if (identityConsumerOnly) {
+        // Legacy ComponentLoader defaults loadExtensions:true and its subscriber
+        // calls Workspace.get with this same Consumer and storeInCache:true.
+        await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
+        workspace.componentLoader.saveInCache(component, { loadExtensions: true, executeLoadSlot: true });
+        workspace.consumer.componentLoader.componentsCache.set(component.id.toString(), component.state._consumer);
+        identityConsumers.set(row.identity, component.state._consumer);
+      }
+      else {
+        await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
+        if (['remove', 'rm', 'delete'].includes(cliArguments[0])) {
+          workspace.componentLoader.saveInCache(component, { loadExtensions: true, executeLoadSlot: true });
+          workspace.consumer.componentLoader.componentsCache.set(component.id.toString(), component.state._consumer);
+        }
+        identityConsumers.delete(row.identity);
+      }
     }
   }
   if (snapshot) loadOutput.push(capturedStdout?.slice(outputStart).join('') ?? '');
@@ -952,7 +993,7 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout }
     await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
   }
   if (snapshot) loadOutput.push(capturedStdout?.slice(outputStart).join('') ?? '');
-  if (cliArguments[0] === 'rename') {
+  if (identityRenameCommand) {
     for (const component of statusComponents) identityLoadedComponents.set(component.id.toStringWithoutVersion(), component);
   }
   const results = components.map((row) => {

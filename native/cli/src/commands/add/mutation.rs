@@ -1,8 +1,12 @@
 //! Retain published providers while native identity operations materialize and link files.
 mod cached;
+mod controls;
+mod installation;
 mod load;
+mod removal;
 mod retained;
 mod selection;
+mod selectors;
 
 use super::{cache, execution, linking};
 use crate::{
@@ -16,6 +20,7 @@ pub(in crate::commands) struct ProjectedLinker {
     environment: Option<Environments>,
     stdout: String,
     retained: retained::Retained,
+    installation: Option<bit_install::HostInfo>,
 }
 
 impl ProjectedLinker {
@@ -25,6 +30,7 @@ impl ProjectedLinker {
             environment: Some(Environments::for_tracking().for_checkout()),
             stdout: String::new(),
             retained: retained::Retained::default(),
+            installation: None,
         };
         linker.call(root, "identityBootstrap", &json!({}))?;
         Ok(linker)
@@ -50,6 +56,11 @@ impl ProjectedLinker {
             load::capture(root, bitmap, identities, &mut self.environment, &mut self.stdout);
         let result = result.and_then(|capture| self.retained.keep(capture));
         self.finish(result)
+    }
+
+    /// Revalidate retained native facts before a consumer publishes workspace mutations.
+    pub(in crate::commands) fn validate_captures(&self) -> io::Result<()> {
+        self.retained.validate()
     }
 
     /// Link the materialized projection before the caller publishes its retained bitmap.

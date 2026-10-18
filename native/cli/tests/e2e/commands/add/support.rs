@@ -1,6 +1,8 @@
 //! Exact command bytes and filesystem state replayed at the same absolute workspace path.
 mod config_history;
 mod hardlinks;
+mod install_clocks;
+mod object_diagnostic;
 mod timestamps;
 
 use crate::helper::{Helper, Run};
@@ -13,14 +15,34 @@ pub(crate) fn workspace() -> Helper {
 }
 
 pub(crate) fn compare(helper: &Helper, command: &str) -> Run {
-    compare_mode(helper, command, false, true)
+    compare_mode(helper, command, false, true, str::to_owned, false)
 }
 
 pub(crate) fn compare_ci(helper: &Helper, command: &str, native: bool) -> Run {
-    compare_mode(helper, command, true, native)
+    compare_mode(helper, command, true, native, str::to_owned, false)
 }
 
-fn compare_mode(helper: &Helper, command: &str, ci: bool, native: bool) -> Run {
+pub(crate) fn compare_with_stdout(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+) -> Run {
+    compare_mode(helper, command, false, true, stdout, false)
+}
+
+/// Installation changes only these two qualified pnpm wall-clock fields independently.
+pub(crate) fn compare_install(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
+    compare_mode(helper, command, false, true, stdout, true)
+}
+
+fn compare_mode(
+    helper: &Helper,
+    command: &str,
+    ci: bool,
+    native: bool,
+    stdout: fn(&str) -> String,
+    install_clocks: bool,
+) -> Run {
     let timestamps = timestamps::Snapshot::read(&helper.scopes.local_path);
     let hardlinks = hardlinks::Snapshot::read(&helper.scopes.local_path);
     let baseline = helper.clone_workspace();
@@ -28,14 +50,21 @@ fn compare_mode(helper: &Helper, command: &str, ci: bool, native: bool) -> Run {
     let baseline_history = History::read(root);
     let config_history = config_history::Snapshot::read(root);
     let environment = command_environment(ci, false);
+    let started = chrono::Utc::now().timestamp_millis();
     let expected = Helper::cmd_in_with(root, command, &command_environment(ci, true));
-    let expected_files = tree(root);
+    let ended = chrono::Utc::now().timestamp_millis();
+    let mut expected_files = tree(root);
+    if install_clocks {
+        install_clocks::project(&mut expected_files, started, ended);
+    }
     let expected_scope = scope_tree(root, &config_history);
     let expected_history = history(root, &baseline_history);
     helper.get_cloned_workspace(&baseline);
     hardlinks.restore(root);
     timestamps.restore(root);
+    let started = chrono::Utc::now().timestamp_millis();
     let actual = Helper::cmd_in_with(root, command, &environment);
+    let ended = chrono::Utc::now().timestamp_millis();
     assert_eq!(actual.native, native, "{command}: {}", actual.trace);
     if !native {
         assert!(actual.trace.contains("delegating:"), "{}", actual.trace);
@@ -47,9 +76,13 @@ fn compare_mode(helper: &Helper, command: &str, ci: bool, native: bool) -> Run {
         actual.stderr,
         expected.stderr,
     );
-    assert_eq!(actual.stdout, expected.stdout, "{command}");
+    assert_eq!(stdout(&actual.stdout), stdout(&expected.stdout), "{command}");
     assert_eq!(atomic_error(&actual.stderr), atomic_error(&expected.stderr), "{command}");
-    compare_paths(&tree(root), &expected_files, command);
+    let mut actual_files = tree(root);
+    if install_clocks {
+        install_clocks::project(&mut actual_files, started, ended);
+    }
+    compare_paths(&actual_files, &expected_files, command);
     compare_paths(&scope_tree(root, &config_history), &expected_scope, "scope objects/controls");
     compare_paths(
         &history(root, &baseline_history),
@@ -284,8 +317,8 @@ fn compare_paths(
         .map(|path| {
             format!(
                 "{path}: native={} node={}",
-                describe(actual.get(path)),
-                describe(expected.get(path)),
+                describe(actual.get(path), path),
+                describe(expected.get(path), path),
             )
         })
         .collect();
@@ -301,20 +334,32 @@ fn compare_paths(
             .join("\n"),
     );
 }
-fn describe(bytes: Option<&Vec<u8>>) -> String {
+fn describe(bytes: Option<&Vec<u8>>, path: &str) -> String {
     use sha1::{Digest, Sha1};
     match bytes {
         None => "missing".into(),
+        Some(bytes) if path.starts_with("objects/") && !path.ends_with(":mode") => {
+            object_diagnostic::decode(bytes)
+                .unwrap_or_else(|| format!("{} bytes sha1={:x}", bytes.len(), Sha1::digest(bytes)))
+        }
         Some(bytes)
-            if bytes.len() <= 4096
+            if bytes.len() <= diagnostic_limit(path)
                 && (bytes.first() == Some(&b'{')
                     || bytes.starts_with(b"//")
-                    || bytes.starts_with(b"/*")) =>
+                    || bytes.starts_with(b"/*")
+                    || path == "node_modules/.modules.yaml") =>
         {
             String::from_utf8_lossy(bytes).into_owned()
         }
         Some(bytes) if bytes.len() <= 100 => format!("{bytes:?}"),
         Some(bytes) => format!("{} bytes sha1={:x}", bytes.len(), Sha1::digest(bytes)),
+    }
+}
+
+fn diagnostic_limit(path: &str) -> usize {
+    match path {
+        "node_modules/.modules.yaml" | "node_modules/.pnpm-workspace-state-v1.json" => 16_384,
+        _ => 4096,
     }
 }
 

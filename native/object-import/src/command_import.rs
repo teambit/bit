@@ -4,8 +4,9 @@ pub(crate) mod lane;
 #[cfg(test)]
 pub(crate) mod tests;
 pub(crate) use prepare::{
-    VirtualRemote, options::prepare_inbound_with_virtual, prepare, prepare_cached, prepare_lane,
-    prepare_lane_with_virtual, prepare_status_with_virtual,
+    VirtualRemote,
+    options::{prepare_inbound_with_virtual, prepare_recovery_with_virtual},
+    prepare, prepare_cached, prepare_lane, prepare_lane_with_virtual, prepare_status_with_virtual,
 };
 mod capture;
 mod history;

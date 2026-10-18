@@ -1,8 +1,9 @@
 //! One bitmap publication for `StashMain`'s removal of new components.
-mod cleanup;
+pub(super) mod cleanup;
+pub(super) mod usage;
+
 #[cfg(test)]
 mod tests;
-mod usage;
 use super::{
     BitmapChange, RowKind, Selected, backup_bitmap, component_files, invalid, package,
     row::supported_row, validate_ancestors, validate_directory, validate_file_id,
@@ -102,13 +103,15 @@ impl NewBatch {
         Ok(())
     }
 }
-fn remove_sources(selected: &[Selected]) -> io::Result<()> {
+pub(super) fn remove_sources(selected: &[Selected]) -> io::Result<()> {
+    remove_source_paths(selected.iter().filter_map(|row| row.files.as_deref()))
+}
+
+pub(crate) fn remove_source_paths<'a>(paths: impl IntoIterator<Item = &'a Path>) -> io::Result<()> {
     let mut parents = Vec::new();
-    for selected in selected {
-        if let Some(path) = &selected.files {
-            fs::remove_dir_all(path)?;
-            parents.push(path.parent().ok_or_else(|| invalid("component parent directory"))?);
-        }
+    for path in paths {
+        super::remove_path(path)?;
+        parents.push(path.parent().ok_or_else(|| invalid("component parent directory"))?);
     }
     parents.sort_unstable_by(|left, right| right.cmp(left));
     for parent in parents {
@@ -162,7 +165,7 @@ fn select(root: &Path, bitmap: &Value, key: &str, row: &Value) -> io::Result<Sel
         .remove("config");
     let (name, scope) = supported_row(key, &shape, RowKind::New)?;
     let (main_exists, files) = component_files(root, bitmap, key, row, false)?;
-    let package = package(root, scope, name)?;
+    let package = if row["rootDir"] == "." { PathBuf::new() } else { package(root, scope, name)? };
     if package.try_exists()? {
         validate_directory(&package)?;
     }
@@ -177,8 +180,15 @@ fn select(root: &Path, bitmap: &Value, key: &str, row: &Value) -> io::Result<Sel
     })
 }
 
-fn custom_packages(root: &Path, selected: &mut [Selected], components: &[Value]) -> io::Result<()> {
+pub(super) fn custom_packages(
+    root: &Path,
+    selected: &mut [Selected],
+    components: &[Value],
+) -> io::Result<()> {
     for row in selected {
+        if row.package.as_os_str().is_empty() {
+            continue;
+        }
         let Some(name) = components
             .iter()
             .find(|component| component["identity"] == row.identity)

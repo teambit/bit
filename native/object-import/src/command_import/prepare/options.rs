@@ -41,3 +41,31 @@ impl PreparedImport {
         self.validate()
     }
 }
+
+pub(crate) fn prepare_recovery_with_virtual(
+    root: &Path,
+    global_remotes_file: &Path,
+    targets: &[Target],
+    fetch: impl FnOnce(&[Target]) -> io::Result<Vec<VirtualRemote>>,
+) -> io::Result<PreparedImport> {
+    let mut plan = super::prepare_lane(root, global_remotes_file)?;
+    let scoped = targets.iter().collect::<Vec<_>>();
+    let (local, remote) = super::recovery::retain(&mut plan, &scoped)?;
+    let mut available = local.clone();
+    let requested = remote
+        .iter()
+        .map(|target| (*target).clone())
+        .collect::<Vec<_>>();
+    for incoming in fetch(&requested)? {
+        plan.virtual_remote(&incoming.scope, incoming.path, &incoming.objects)?;
+    }
+    plan.bitmap_count = targets.len();
+    let remotes = plan.environment.remotes.clone();
+    available.extend(super::refresh_all(&mut plan, &remote, &remotes, false, false)?);
+    super::recovery::record_local_main(&mut plan, &local, &remotes)?;
+    super::prepare_dependencies(&mut plan, root, &available, &remotes)?;
+    super::recovery::retain_cached_versions(&mut plan, targets)?;
+    super::recovery::retain_histories(&mut plan, &local)?;
+    plan.validate()?;
+    Ok(plan)
+}

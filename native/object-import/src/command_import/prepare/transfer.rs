@@ -117,7 +117,19 @@ fn receive_history(
     plan.overlay.objects.insert(hash, object);
     Ok(())
 }
-fn receive_sources(plan: &mut PreparedImport, directory: &Path, version: &Value) -> io::Result<()> {
+pub(super) fn receive_sources(
+    plan: &mut PreparedImport,
+    directory: &Path,
+    version: &Value,
+) -> io::Result<()> {
+    retain_sources(plan, directory, version, true)
+}
+pub(super) fn retain_sources(
+    plan: &mut PreparedImport,
+    directory: &Path,
+    version: &Value,
+    transferred: bool,
+) -> io::Result<()> {
     let mut sources = Vec::new();
     for file in version["files"].as_array().ok_or_else(|| invalid("import files"))? {
         sources.push(
@@ -134,11 +146,13 @@ fn receive_sources(plan: &mut PreparedImport, directory: &Path, version: &Value)
     }
     // The wire stream queues sources again on later fetches even when our retained
     // overlay can reuse their validated bytes. Count the phase's unique queue entries.
-    plan.progress
-        .last_mut()
-        .ok_or_else(|| invalid("import progress phase"))?
-        .objects
-        .extend(sources.iter().cloned());
+    if transferred {
+        plan.progress
+            .last_mut()
+            .ok_or_else(|| invalid("import progress phase"))?
+            .objects
+            .extend(sources.iter().cloned());
+    }
     sources.retain(|hash| !plan.overlay.objects.contains_key(hash));
     for (hash, source) in plan.capture.sources(directory, &sources)? {
         plan.overlay.objects.insert(hash, source);

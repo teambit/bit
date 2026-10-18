@@ -1,7 +1,7 @@
 //! Native projected capture and cache publication shared by workspace identity operations.
 use super::{
     super::{cache, docs, projection::Projection},
-    selection,
+    controls, selection,
 };
 use crate::{
     commands::{
@@ -45,9 +45,10 @@ fn prepare_with(
         bit_install::dependencies::cache::invalidation::invalidate(root, &cache)?;
     }
     let (mut engine, projection) = projected(root, bitmap, identities)?;
+    controls::validate(&mut engine, &projection.context)?;
     let environments = project(root, bitmap, &projection, environment, stdout, !invalidate)?;
     let home = workspace_command::home();
-    let capture = capture::capture_with(
+    let mut capture = capture::capture_with(
         &mut engine,
         root,
         &home,
@@ -59,6 +60,7 @@ fn prepare_with(
             ..Default::default()
         },
     )?;
+    controls::retain(&projection.context, &mut capture)?;
     stdout.push_str(&capture::callback_startup_stdout(&capture));
     stdout.push_str(&capture::callback_load_stdout(&capture));
     Ok(Loaded { engine, projection, capture })
@@ -126,8 +128,6 @@ pub(super) fn capture(
     environment: &mut Option<Environments>,
     stdout: &mut String,
 ) -> io::Result<capture::Capture> {
-    // Retained rows may later hydrate a class even without a custom onLoad slot.
-    // Preserve scoped/defaultScope identity metadata for that actual producer.
     capture_with(root, bitmap, identities, environment, stdout, true, true)
 }
 pub(super) fn capture_cached(
@@ -151,6 +151,15 @@ fn capture_with(
 ) -> io::Result<capture::Capture> {
     let mut loaded = prepare_with(root, bitmap, identities, environment, stdout, invalidate)?;
     commit(root, &mut loaded)?;
+    finish_capture(loaded, environment, stdout, hydrate)
+}
+
+fn finish_capture(
+    mut loaded: Loaded,
+    environment: &mut Option<Environments>,
+    stdout: &mut String,
+    hydrate: bool,
+) -> io::Result<capture::Capture> {
     if hydrate {
         enrich(&mut loaded)?;
     }
@@ -159,7 +168,63 @@ fn capture_with(
     let host = Arc::try_unwrap(host)
         .map_err(|_| io::Error::other("identity capture host still borrowed"))?;
     *environment = Some(Environments::from_host(host).for_checkout());
+    for row in &mut loaded.capture.captured {
+        if let Some(component) = loaded.capture.components
+            .iter()
+            .find(|component| {
+                row["identity"]
+                    == component.identity
+                        .split('@')
+                        .next()
+                        .unwrap_or(&component.identity)
+            })
+        {
+            row["packageName"] = json!(component.package_name);
+            row["componentIdentity"] = json!(component.identity);
+            row["componentDependencies"] = json!(component.dependencies);
+        }
+    }
     Ok(loaded.capture)
+}
+
+pub(super) fn capture_consumer(
+    root: &Path,
+    bitmap: &Value,
+    identities: &[String],
+    environment: &mut Option<Environments>,
+    stdout: &mut String,
+) -> io::Result<capture::Capture> {
+    let mut loaded = prepare_with(root, bitmap, identities, environment, stdout, false)?;
+    let histories: Value = loaded.engine.request(&json!({"kind":"statusModels","root":root,"history":true,"stageHistory":true,"historyTargetsOnly":true,"includeHeads":true,
+        "currentLaneId":loaded.projection.context["currentLaneId"],
+        "targets":loaded.projection.selected.iter().map(|row|json!({"identity":row["identity"],"version":row["version"]})).collect::<Vec<_>>()}))?;
+    loaded.projection.context["pendingHistory"] = histories
+        .get("pendingHistory")
+        .cloned()
+        .unwrap_or(json!([]));
+    commit(root, &mut loaded)?;
+    let targets = loaded.capture.comparisons
+        .iter()
+        .cloned()
+        .map(|mut row| {
+            if let Some(row) = row.as_object_mut() {
+                row.remove("trackingVersion");
+            }
+            row
+        })
+        .collect::<Vec<_>>();
+    let compared: Value =
+        loaded.engine.request(&json!({"kind":"statusCompare","root":root,"targets":targets}))?;
+    for row in &mut loaded.capture.captured {
+        row["modified"] = compared["comparisons"]
+            .as_array()
+            .and_then(|rows| {
+                rows.iter()
+                    .find(|other| other["identity"] == row["identity"])
+            })
+            .map_or(Value::Bool(false), |row| row["modified"].clone());
+    }
+    finish_capture(loaded, environment, stdout, true)
 }
 
 pub(super) fn enrich(loaded: &mut Loaded) -> io::Result<()> {

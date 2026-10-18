@@ -21,12 +21,16 @@ impl ProjectedLinker {
         identities: &[String],
     ) -> io::Result<Vec<Value>> {
         let missing = self.retained.missing(identities);
-        let known = identities
-            .iter()
-            .filter(|id| !missing.contains(id))
-            .cloned()
-            .collect::<Vec<_>>();
-        self.cached_classes(root, &self.retained.rows(&known)?)?;
+        if !missing.is_empty() {
+            let known = identities
+                .iter()
+                .filter(|id| !missing.contains(id))
+                .cloned()
+                .collect::<Vec<_>>();
+            // Missing captures may need existing classes, then project a fresh
+            // bitmap. Seed before loading and rebind all classes afterwards.
+            self.cached_classes(root, &self.retained.rows(&known)?)?;
+        }
         let invalidate = self.retained.start();
         if !missing.is_empty() {
             let captured = load::capture_cached(

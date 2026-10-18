@@ -20,9 +20,7 @@ pub(super) mod policy;
 pub(in crate::commands) mod report;
 
 pub(super) mod collate;
-pub(super) use delete::DeleteGraph;
 
-mod delete;
 mod lane_refresh;
 mod loader;
 mod reading;
@@ -33,7 +31,7 @@ use super::{color::Chalk, engine::Engine, workspace_command};
 use crate::{commands::Command, history::History, native::Outcome, workspace};
 use issues::Component;
 use js::{array, decline, text};
-use reading::{ReadFailure, local_result, read};
+use reading::{ReadFailure, read};
 use serde_json::{Value, json};
 use sorting::sort_rows;
 use std::{
@@ -158,41 +156,6 @@ fn prepare_report(
         3 + usize::from(!array(result.get("modifiedComponents"), "modified")?.is_empty())
     };
     Ok((output, loaded, loads))
-}
-
-/// Inspect a staged component for local removal without committing status caches.
-pub(super) fn clean_staged_component(root: &Path, identity: &str) -> io::Result<bool> {
-    clean_component_for_remove(root, identity, true)
-}
-
-pub(super) fn clean_imported_component(root: &Path, identity: &str) -> io::Result<bool> {
-    clean_component_for_remove(root, identity, false)
-}
-
-fn clean_component_for_remove(
-    root: &Path,
-    identity: &str,
-    staged_required: bool,
-) -> io::Result<bool> {
-    let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
-    let mut engine = Engine::new()?;
-    let context: Value = engine.request(&json!({
-        "kind": "statusContext",
-        "root": root,
-        "home": Path::new(&home),
-    }))?;
-    let (result, _, _) = local_result(&mut engine, root, Path::new(&home), &context, None)?;
-    let staged = array(result.get("stagedComponents"), "staged")?;
-    let modified = array(result.get("modifiedComponents"), "modified")?;
-    let invalid = array(result.get("invalidComponents"), "invalid")?;
-    Ok((staged
-        .iter()
-        .any(|row| row["id"] == identity)
-        == staged_required)
-        && !modified
-            .iter()
-            .any(|row| row == identity)
-        && invalid.is_empty())
 }
 
 fn active_components(

@@ -9,13 +9,16 @@ pub(super) struct Retained {
     bytes: u64,
     rows: HashMap<String, Value>,
     started: bool,
+    read_set: Vec<Value>,
+    controls: HashMap<String, Value>,
+    pub(super) facts: super::selectors::Facts,
 }
 
 impl Retained {
     pub(super) fn forget_loaded(&mut self) {
-        // Keep source spools alive and keep their aggregate byte budget, while
-        // matching Workspace._reloadConsumer's loaded-class invalidation.
+        // Keep source spool ownership and its aggregate budget across reloads.
         self.rows.clear();
+        self.facts = super::selectors::Facts::default();
         self.started = false;
     }
     pub(super) fn start(&mut self) -> bool {
@@ -41,7 +44,40 @@ impl Retained {
             })
             .collect()
     }
+    pub(super) fn keep_controls(&mut self, proofs: &[Value]) -> io::Result<()> {
+        for proof in proofs {
+            let path = proof["path"]
+                .as_str()
+                .ok_or_else(|| io::Error::other("identity control proof path"))?;
+            self.controls.insert(path.into(), proof.clone());
+        }
+        Ok(())
+    }
+    pub(super) fn add_proofs(&mut self, proofs: Vec<Value>) {
+        self.read_set.extend(proofs);
+    }
+    pub(super) fn status(&mut self, compared: &Value, ids: &[String]) {
+        for id in ids {
+            let Some(row) = self.rows.get_mut(id) else { continue };
+            row["modified"] = compared["comparisons"]
+                .as_array()
+                .and_then(|rows| {
+                    rows.iter()
+                        .find(|row| row["identity"] == *id)
+                })
+                .map_or(Value::Bool(false), |row| row["modified"].clone());
+        }
+    }
+    pub(super) fn validate(&self) -> io::Result<()> {
+        let mut reads = self.read_set.clone();
+        reads.extend(self.controls.values().cloned());
+        crate::commands::engine::Engine::new()?
+            .validate_read_set(&reads, "identity component facts changed before publication")
+    }
     pub(super) fn keep(&mut self, capture: Capture) -> io::Result<Vec<Value>> {
+        self.read_set.extend(capture.dependency_read_set());
+        self.facts.keep(&capture);
+        self.keep_controls(super::controls::reads(&capture.environment_facts))?;
         let bytes = overlay_bytes(&capture)?;
         self.bytes = self.bytes
             .checked_add(bytes)
@@ -54,13 +90,11 @@ impl Retained {
                 .ok_or_else(|| io::Error::other("retained component identity"))?;
             self.rows.insert(identity.into(), row.clone());
         }
+        // Even unchanged callback sources carry a root descriptor which later
+        // native comparisons validate. Its directory must outlive those facts.
         if rows
             .iter()
-            .any(|row| {
-                row["sourceOverlays"]
-                    .as_object()
-                    .is_some_and(|files| !files.is_empty())
-            })
+            .any(|row| row["sourceOverlayRoot"].is_string())
         {
             self.captures.push(capture);
         }

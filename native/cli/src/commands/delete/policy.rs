@@ -17,23 +17,27 @@ const REASON: &str = "delete (pin deleted-on-lane deps to main)";
 pub(super) struct Policy {
     before: Vec<u8>,
     document: Document,
-    item: String,
+    items: Vec<String>,
 }
 impl Policy {
-    pub(super) fn prepare(root: &Path, pin: Option<&Pin>) -> io::Result<Option<Self>> {
-        let Some(pin) = pin else {
+    pub(super) fn prepare_many(root: &Path, pins: &[&Pin]) -> io::Result<Option<Self>> {
+        if pins.is_empty() {
             return Ok(None);
-        };
+        }
         let before = fs::read(root.join("workspace.jsonc"))?;
         let mut document =
             Document::parse(std::str::from_utf8(&before).map_err(io::Error::other)?)?;
-        let version = range(&document, &pin.version)?;
-        add_root_policy_entries(
-            &mut document,
-            &[(pin.package_name.clone(), version.clone())],
-            ExistingEntries::Skip,
-        )?;
-        Ok(Some(Self { before, document, item: format!("{}@{version}", pin.package_name) }))
+        let mut items = Vec::new();
+        for pin in pins {
+            let version = range(&document, &pin.version)?;
+            add_root_policy_entries(
+                &mut document,
+                &[(pin.package_name.clone(), version.clone())],
+                ExistingEntries::Skip,
+            )?;
+            items.push(format!("{}@{version}", pin.package_name));
+        }
+        Ok(Some(Self { before, document, items }))
     }
     pub(super) fn validate(&self, root: &Path) -> io::Result<()> {
         let path = root.join("workspace.jsonc");
@@ -58,7 +62,7 @@ impl Policy {
         )
     }
     pub(super) fn report(&self, format: &Formatter) -> String {
-        format.section("pinned deleted components to their main version", "these components were deleted from the lane but still have dependents in the workspace, so they were added to the workspace policy to be installed from main", &[format.item(&self.item)])
+        format.section("pinned deleted components to their main version", "these components were deleted from the lane but still have dependents in the workspace, so they were added to the workspace policy to be installed from main", &self.items.iter().map(|item| format.item(item)).collect::<Vec<_>>())
     }
 }
 fn range(document: &Document, tag: &str) -> io::Result<String> {

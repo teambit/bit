@@ -1,0 +1,34 @@
+//! Only callback-visible aspect configuration refines workspace-loaded classifications.
+use super::{Action, Batch, REMOVE, Value, configuration, invalid, selection};
+use std::io;
+
+pub(super) fn refresh(batch: &mut Batch, rows: &[Value]) -> io::Result<()> {
+    let mut items = std::mem::take(&mut batch.items);
+    for item in &mut items {
+        if item.key.is_none() || !matches!(item.action, Action::None | Action::UpdateConfig) {
+            continue;
+        }
+        let identity = selection::bare(&item.id);
+        let row = rows
+            .iter()
+            .find(|row| row["identity"] == identity)
+            .ok_or_else(|| invalid("recovery loaded component receipt missing"))?;
+        let extensions = row["current"]["extensions"]
+            .as_array()
+            .ok_or_else(|| invalid("recovery loaded aspect receipt"))?;
+        if let Some(config) = extensions
+            .iter()
+            .find(|row| row["name"] == REMOVE)
+            .map(|row| &row["config"])
+        {
+            item.action = if super::classification::has_remove_info(config) {
+                Action::UpdateConfig
+            } else {
+                Action::None
+            };
+        }
+        item.configuration = configuration::prepare(batch, item)?;
+    }
+    batch.items = items;
+    Ok(())
+}

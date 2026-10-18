@@ -38,8 +38,25 @@ pub(in crate::commands) fn select_capture(
 ) -> io::Result<(Vec<Value>, Vec<usize>)> {
     let compared: Value =
         engine.request(&json!({"kind":"statusCompare","root":root,"targets":capture.comparisons}))?;
-    let state = State { context, capture, compared: &compared };
+    let state = State {
+        context,
+        captured: &capture.captured,
+        environment_facts: &capture.environment_facts,
+        compared: &compared,
+    };
     select_states(&state, targets, pattern)
+}
+
+/// Apply one workspace criterion after its caller has performed the canonical load phase.
+pub(in crate::commands) fn criterion(
+    context: &Value,
+    targets: Vec<Value>,
+    entered: &str,
+    captured: &[Value],
+    environment_facts: &Value,
+    compared: &Value,
+) -> io::Result<Vec<Value>> {
+    State { context, captured, environment_facts, compared }.filter(targets, entered)
 }
 
 fn select_states(
@@ -112,7 +129,8 @@ fn ordinary(targets: &[Value], parts: &[String]) -> io::Result<Vec<Value>> {
 
 struct State<'a> {
     context: &'a Value,
-    capture: &'a Capture,
+    captured: &'a [Value],
+    environment_facts: &'a Value,
     compared: &'a Value,
 }
 impl State<'_> {
@@ -180,7 +198,7 @@ impl State<'_> {
     }
 
     fn current(&self, id: &str, aspect: &str) -> Value {
-        self.capture.captured
+        self.captured
             .iter()
             .find(|row| row["identity"] == id)
             .and_then(|row| row["current"]["extensions"].as_array())
@@ -264,7 +282,7 @@ impl State<'_> {
         let projected = crate::commands::status::policy::environment_target(self.context, target)?;
         let config = &projected["config"]["extensions"];
         let identity = text(target.get("identity"))?;
-        let env = self.capture.environment_facts[identity]["envId"]
+        let env = self.environment_facts[identity]["envId"]
             .as_str()
             .or_else(|| config["teambit.envs/envs"]["env"].as_str())
             .unwrap_or("teambit.harmony/node");

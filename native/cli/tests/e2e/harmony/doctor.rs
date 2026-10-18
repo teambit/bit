@@ -193,6 +193,7 @@ fn default_diagnoses_match_node_offline_without_creating_a_fresh_index() {
     assert_eq!(fs::read(helper.scopes.local_path.join(".bit/index.json")).ok(), before);
     assert_eq!(fs::read(oracle.join(".bit/index.json")).ok(), before);
     assert_eq!(proxy.requests(), 7);
+    assert_eq!(proxy.completed(), 7);
 }
 
 fn history(bytes: &[u8]) -> Vec<&str> {

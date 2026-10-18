@@ -36,6 +36,13 @@ fn validate_lane_ids(input: &Prepare) -> io::Result<()> {
     Ok(())
 }
 fn validate_override(input: &Prepare) -> io::Result<()> {
+    if input.options.resolution.recovery_local
+        && (input.operation != "import"
+            || input.options.objects_only
+            || !input.options.resolution.override_existing)
+    {
+        return Err(invalid("recovery cache requires explicit overriding workspace import"));
+    }
     if input.options.resolution.override_existing
         && (input.operation != "import"
             || input.options.objects_only

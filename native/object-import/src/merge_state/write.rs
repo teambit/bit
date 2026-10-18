@@ -8,6 +8,16 @@ use std::{
 };
 
 pub(crate) fn commit(path: &Path, contents: &str) -> io::Result<()> {
+    commit_metadata(path, contents, None, false)
+}
+
+/// Copy-file attributes belong to the held destination, never a reopened path.
+pub(crate) fn commit_metadata(
+    path: &Path,
+    contents: &str,
+    metadata: Option<&fs::Metadata>,
+    restore: bool,
+) -> io::Result<()> {
     let name = path.to_str().ok_or_else(|| invalid("non-UTF8 merge state path"))?;
     if !path.is_absolute() || name.len() > 32768 || name.contains('\0') {
         return Err(invalid("invalid merge state path"));
@@ -19,7 +29,24 @@ pub(crate) fn commit(path: &Path, contents: &str) -> io::Result<()> {
     };
     let mut file = open(path, existing.as_ref())?;
     file.set_len(0)?;
-    file.write_all(contents.as_bytes())
+    if let Some(metadata) = metadata {
+        apply_metadata(&file, metadata)?;
+    }
+    file.write_all(contents.as_bytes())?;
+    if (restore || cfg!(windows))
+        && let Some(metadata) = metadata
+    {
+        apply_metadata(&file, metadata)?;
+    }
+    Ok(())
+}
+fn apply_metadata(file: &fs::File, metadata: &fs::Metadata) -> io::Result<()> {
+    file.set_times(
+        fs::FileTimes::new()
+            .set_accessed(metadata.accessed()?)
+            .set_modified(metadata.modified()?),
+    )?;
+    file.set_permissions(metadata.permissions())
 }
 /// Check the same held-file identity rules as `commit` before a larger plan
 /// starts publishing unrelated files. Opening here never truncates the file.

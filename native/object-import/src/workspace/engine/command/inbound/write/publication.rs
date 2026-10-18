@@ -135,8 +135,15 @@ fn rollback_files(written: Vec<PathBuf>, created_dirs: HashSet<PathBuf>) {
 }
 
 impl History {
-    fn check(&self, root: &Path) -> io::Result<()> {
-        safe_destination(root, &self.backup)?;
+    pub(super) fn check(&self, root: &Path) -> io::Result<()> {
+        self.attributes.validate(root, &self.backup)?;
+        match &self.backup_before {
+            Some(before) => {
+                crate::merge_state::write::validate_existing(&self.backup)?;
+                existing::check(root, &self.backup, before)?;
+            }
+            None => safe_destination(root, &self.backup)?,
+        }
         let current = match fs::read(&self.metadata) {
             Ok(bytes) => Some(bytes),
             Err(error) if error.kind() == io::ErrorKind::NotFound => None,
@@ -149,17 +156,18 @@ impl History {
         }
         Ok(())
     }
-    fn publish(&self, root: &Path, original: &[u8]) -> io::Result<()> {
+    pub(super) fn publish(&self, root: &Path, original: &[u8]) -> io::Result<()> {
         self.check(root)?;
         fs::create_dir_all(
             self.backup.parent().ok_or_else(|| invalid("inbound history directory"))?,
         )?;
         let result = (|| {
-            let mut backup = OpenOptions::new()
-                .write(true)
-                .create_new(true)
-                .open(&self.backup)?;
-            backup.write_all(original)?;
+            crate::merge_state::write::commit_metadata(
+                &self.backup,
+                std::str::from_utf8(original).map_err(io::Error::other)?,
+                self.attributes.source.as_ref(),
+                false,
+            )?;
             let mut metadata = OpenOptions::new()
                 .append(true)
                 .create(true)
@@ -172,8 +180,22 @@ impl History {
         }
         result
     }
-    fn rollback(&self) {
-        let _ = fs::remove_file(&self.backup);
+    pub(super) fn rollback(&self) {
+        match &self.backup_before {
+            Some(bytes) => {
+                if let Ok(contents) = std::str::from_utf8(bytes) {
+                    let _ = crate::merge_state::write::commit_metadata(
+                        &self.backup,
+                        contents,
+                        self.attributes.backup.as_ref(),
+                        true,
+                    );
+                }
+            }
+            None => {
+                let _ = fs::remove_file(&self.backup);
+            }
+        }
         match &self.metadata_before {
             Some(bytes) => {
                 let _ = fs::write(&self.metadata, bytes);

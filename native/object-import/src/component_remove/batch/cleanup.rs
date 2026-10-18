@@ -1,5 +1,6 @@
 //! The retained package, workspace-aspect and staged-configuration cleanup.
 mod configuration;
+mod pending;
 use super::super::{Selected, invalid};
 use configuration::Configuration;
 use serde_json::Value;
@@ -7,10 +8,11 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-pub(super) struct Cleanup {
+pub(in crate::component_remove) struct Cleanup {
     manifest: Option<Change>,
     configuration: Option<Configuration>,
     staged: Option<Change>,
+    pending: Option<Change>,
 }
 pub(super) struct Change {
     pub(super) path: PathBuf,
@@ -18,7 +20,7 @@ pub(super) struct Change {
     pub(super) after: Vec<u8>,
 }
 impl Change {
-    pub(super) fn validate(&self) -> io::Result<()> {
+    pub(in crate::component_remove) fn validate(&self) -> io::Result<()> {
         if !fs::symlink_metadata(&self.path)?.file_type().is_file()
             || fs::read(&self.path)? != self.before
         {
@@ -31,7 +33,7 @@ impl Change {
     }
 }
 impl Cleanup {
-    pub(super) fn prepare(
+    pub(in crate::component_remove) fn prepare(
         root: &Path,
         bitmap: &Value,
         selected: &[Selected],
@@ -43,16 +45,21 @@ impl Cleanup {
             .collect();
         let packages: Vec<_> = selected
             .iter()
+            .filter(|row| !row.package.as_os_str().is_empty())
             .map(|row| package_name(root, row, components))
             .collect::<io::Result<_>>()?;
         Ok(Self {
             manifest: manifest(root, &packages)?,
             configuration: Configuration::prepare(root, &identities)?,
             staged: staged(root, bitmap, &identities)?,
+            pending: pending::prepare(root, selected)?,
         })
     }
-    pub(super) fn validate(&self) -> io::Result<()> {
-        for change in [self.manifest.as_ref(), self.staged.as_ref()].into_iter().flatten() {
+    pub(in crate::component_remove) fn validate(&self) -> io::Result<()> {
+        for change in [self.manifest.as_ref(), self.staged.as_ref(), self.pending.as_ref()]
+            .into_iter()
+            .flatten()
+        {
             change.validate()?;
         }
         if let Some(configuration) = &self.configuration {
@@ -60,13 +67,23 @@ impl Cleanup {
         }
         Ok(())
     }
-    pub(super) fn manifest(&self) -> io::Result<()> {
+    pub(in crate::component_remove) fn scope(&self) -> io::Result<()> {
+        if let Some(change) = &self.pending {
+            change.write()?;
+        }
+        Ok(())
+    }
+    pub(in crate::component_remove) fn manifest(&self) -> io::Result<()> {
         if let Some(change) = &self.manifest {
             change.write()?;
         }
         Ok(())
     }
-    pub(super) fn configuration(&self, root: &Path, file_id: &str) -> io::Result<()> {
+    pub(in crate::component_remove) fn configuration(
+        &self,
+        root: &Path,
+        file_id: &str,
+    ) -> io::Result<()> {
         if let Some(configuration) = &self.configuration {
             configuration.write(root, file_id)?;
         }
@@ -143,7 +160,9 @@ fn staged(root: &Path, bitmap: &Value, identities: &[&str]) -> io::Result<Option
 }
 pub(super) fn read_optional(path: &Path) -> io::Result<Option<Vec<u8>>> {
     match fs::symlink_metadata(path) {
-        Ok(metadata) if metadata.file_type().is_file() => Ok(Some(fs::read(path)?)),
+        Ok(metadata) if metadata.file_type().is_file() && metadata.len() <= 32 * 1024 * 1024 => {
+            Ok(Some(crate::read_budget::Budget::new(32 * 1024 * 1024).read(fs::File::open(path)?)?))
+        }
         Ok(_) => Err(invalid("stash configuration is not a regular file")),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
         Err(error) => Err(error),

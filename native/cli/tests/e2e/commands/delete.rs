@@ -1,4 +1,6 @@
 //! Local `bit delete` parity against the pinned Node.js CLI.
+mod completion;
+mod selectors;
 
 use super::remove::scope_objects;
 use crate::helper::Helper;
@@ -62,7 +64,7 @@ fn imported_component_delete_matches_node() {
     helper.create_component_bar_foo("module.exports = 'new';");
     helper.add_component_bar_foo();
     helper.tag_without_build("bar/foo", "");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
@@ -117,7 +119,7 @@ fn new_component_delete_delegates_untouched() {
     let command = "delete bar/foo --silent";
     let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
     let actual = helper.cmd(command);
-    assert!(!actual.native, "{}", actual.trace);
+    assert!(actual.native, "{}", actual.trace);
     assert_eq!(actual.status.code(), node.status.code());
     assert_eq!(actual.stdout, node.stdout);
     assert_eq!(actual.stderr, node.stderr);
@@ -139,7 +141,7 @@ fn unexported_lane_delete_delegates_untouched() {
     let command = "delete bar/foo --silent --lane";
     let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
     let actual = helper.cmd(command);
-    assert!(!actual.native, "{}", actual.trace);
+    assert!(actual.native, "{}", actual.trace);
     assert_eq!(actual.status.code(), node.status.code());
     assert_eq!(actual.stdout, node.stdout);
     assert_eq!(actual.stderr, node.stderr);
@@ -154,15 +156,15 @@ pub(super) fn exported_lane_setup(helper: &Helper, extra_snap: bool) {
     helper.create_component_bar_foo("module.exports = 'base';");
     helper.add_component_bar_foo();
     helper.tag_without_build("bar/foo", "");
-    helper.run("export");
+    crate::helper::remote::publish(helper);
     helper.run("lane create dev");
     helper.run("snap --unmodified --message lane");
-    helper.run("export");
+    crate::helper::remote::publish(helper);
     if extra_snap {
         fs::write(helper.scopes.local_path.join("bar/foo.js"), "module.exports = 'second';")
             .unwrap();
         helper.run("snap --message second");
-        helper.run("export");
+        crate::helper::remote::publish(helper);
     }
 }
 
@@ -453,7 +455,7 @@ pub(super) fn exported_lane_only_setup(helper: &Helper) {
     helper.create_component_bar_foo("module.exports = 'lane only';");
     helper.add_component_bar_foo();
     helper.run("snap --message lane");
-    helper.run("export");
+    crate::helper::remote::publish(helper);
 }
 
 #[test]

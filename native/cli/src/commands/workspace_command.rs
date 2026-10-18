@@ -16,7 +16,7 @@ pub(in crate::commands) mod stash;
 pub mod versions;
 
 pub(in crate::commands) use execution::loader_output;
-pub use execution::{execute_json, execute_then, execute_with};
+pub use execution::{execute_json, execute_then, execute_with, execute_without_loader};
 pub use snapshot::receipt::NodeCli;
 pub(crate) use snapshot::receipt::{User, uuid_v4};
 

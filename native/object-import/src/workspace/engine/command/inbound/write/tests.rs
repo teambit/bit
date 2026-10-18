@@ -24,6 +24,8 @@ fn history(root: &Path) -> History {
         backup: root.join(".bit/bitmap-history/.bitmap-2026-1-2-3-4-5"),
         metadata: root.join(".bit/bitmap-history-metadata.txt"),
         metadata_before: None,
+        backup_before: None,
+        attributes: super::history::Attributes::default(),
         file_id: "2026-1-2-3-4-5".into(),
     }
 }
@@ -187,5 +189,124 @@ fn incomplete_policy_prevents_any_workspace_publication() {
     assert!(plan.commit().is_err());
     assert_eq!(fs::read(root.join(".bitmap")).unwrap(), b"before");
     assert!(!root.join("source.js").exists());
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn same_second_history_replaces_regular_backup_and_rollback_restores_preimage() {
+    let root = root();
+    fs::write(root.join(".bitmap"), b"source bitmap").unwrap();
+    let history = history(&root);
+    fs::create_dir_all(history.backup.parent().unwrap()).unwrap();
+    fs::write(&history.backup, b"earlier bitmap").unwrap();
+    let history = super::history::prepare(&root, Some(&history.file_id)).unwrap();
+    history.publish(&root, b"import bitmap").unwrap();
+    assert_eq!(fs::read(&history.backup).unwrap(), b"import bitmap");
+    history.rollback();
+    assert_eq!(fs::read(&history.backup).unwrap(), b"earlier bitmap");
+    assert!(!history.metadata.exists());
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn existing_history_alias_declines_before_overwriting_either_name() {
+    let root = root();
+    let mut history = history(&root);
+    fs::create_dir_all(history.backup.parent().unwrap()).unwrap();
+    fs::write(&history.backup, b"earlier bitmap").unwrap();
+    let alias = root.join("alias");
+    fs::hard_link(&history.backup, &alias).unwrap();
+    history.backup_before = Some(b"earlier bitmap".to_vec());
+    assert!(history.publish(&root, b"import bitmap").is_err());
+    assert_eq!(fs::read(&alias).unwrap(), b"earlier bitmap");
+    assert_eq!(fs::read(&history.backup).unwrap(), b"earlier bitmap");
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn existing_history_symlink_is_rejected_without_changing_target() {
+    let root = root();
+    fs::write(root.join(".bitmap"), b"source bitmap").unwrap();
+    let history = history(&root);
+    fs::create_dir_all(history.backup.parent().unwrap()).unwrap();
+    let target = root.join("outside-backup");
+    fs::write(&target, b"unrelated").unwrap();
+    std::os::unix::fs::symlink(&target, &history.backup).unwrap();
+    assert!(super::history::prepare(&root, Some(&history.file_id)).is_err());
+    assert_eq!(fs::read(&target).unwrap(), b"unrelated");
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn history_collision_copies_source_mode_and_access_time_and_restores_backup_attributes() {
+    use std::{
+        os::unix::fs::PermissionsExt,
+        time::{Duration, UNIX_EPOCH},
+    };
+    let root = root();
+    fs::write(root.join(".bitmap"), b"source bitmap").unwrap();
+    fs::set_permissions(root.join(".bitmap"), fs::Permissions::from_mode(0o640)).unwrap();
+    let source_time = UNIX_EPOCH + Duration::from_secs(1_600_000_000);
+    fs::File::open(root.join(".bitmap"))
+        .unwrap()
+        .set_times(fs::FileTimes::new().set_accessed(source_time).set_modified(source_time))
+        .unwrap();
+    let history = history(&root);
+    fs::create_dir_all(history.backup.parent().unwrap()).unwrap();
+    fs::write(&history.backup, b"old bitmap").unwrap();
+    fs::set_permissions(&history.backup, fs::Permissions::from_mode(0o600)).unwrap();
+    let backup_time = source_time + Duration::from_secs(100);
+    fs::File::open(&history.backup)
+        .unwrap()
+        .set_times(fs::FileTimes::new().set_accessed(backup_time).set_modified(backup_time))
+        .unwrap();
+    let history = super::history::prepare(&root, Some(&history.file_id)).unwrap();
+    history.publish(&root, b"source bitmap").unwrap();
+    let published = fs::metadata(&history.backup).unwrap();
+    assert_eq!(published.permissions().mode() & 0o777, 0o640);
+    assert_eq!(published.accessed().unwrap(), source_time);
+    assert_ne!(published.modified().unwrap(), source_time);
+    history.rollback();
+    let restored = fs::metadata(&history.backup).unwrap();
+    assert_eq!(restored.permissions().mode() & 0o777, 0o600);
+    assert_eq!(restored.accessed().unwrap(), backup_time);
+    assert_eq!(restored.modified().unwrap(), backup_time);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn history_revalidates_source_mode_before_publication() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = root();
+    fs::write(root.join(".bitmap"), b"source bitmap").unwrap();
+    let history = history(&root);
+    let history = super::history::prepare(&root, Some(&history.file_id)).unwrap();
+    fs::set_permissions(root.join(".bitmap"), fs::Permissions::from_mode(0o600)).unwrap();
+    assert!(history.publish(&root, b"source bitmap").is_err());
+    assert!(!history.backup.exists());
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn empty_history_copy_keeps_the_source_modified_time() {
+    use std::time::{Duration, UNIX_EPOCH};
+    let root = root();
+    fs::write(root.join(".bitmap"), []).unwrap();
+    let source_time = UNIX_EPOCH + Duration::from_secs(1_600_000_000);
+    fs::File::options()
+        .write(true)
+        .open(root.join(".bitmap"))
+        .unwrap()
+        .set_times(fs::FileTimes::new().set_accessed(source_time).set_modified(source_time))
+        .unwrap();
+    let history = history(&root);
+    let history = super::history::prepare(&root, Some(&history.file_id)).unwrap();
+    history.publish(&root, b"").unwrap();
+    let published = fs::metadata(&history.backup).unwrap();
+    assert_eq!(published.modified().unwrap(), source_time);
+    assert_eq!(published.accessed().unwrap(), source_time);
     fs::remove_dir_all(root).unwrap();
 }

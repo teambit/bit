@@ -21,6 +21,9 @@ fn seed_remote_fixture(helper: &Helper) {
         .filter(|row| row.get("rootDir").is_some())
     {
         row["scope"] = serde_json::json!(helper.scopes.remote);
+        row.as_object_mut()
+            .unwrap()
+            .remove("defaultScope");
     }
     std::fs::write(bitmap_path, serde_json::to_vec_pretty(&bitmap).unwrap()).unwrap();
     let scope = helper.scopes.local_path.join(".bit");

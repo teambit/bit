@@ -1,7 +1,9 @@
 #![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
+pub use documentation::proves_empty_docs;
 mod calls;
 mod classification;
+mod documentation;
 mod embedded;
 mod exports;
 mod limits;

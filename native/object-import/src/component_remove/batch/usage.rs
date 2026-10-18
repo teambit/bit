@@ -2,7 +2,10 @@
 use super::super::invalid;
 use serde_json::Value;
 use std::io;
-pub(super) fn validate(identities: &[String], components: &[Value]) -> io::Result<()> {
+pub(in crate::component_remove) fn validate(
+    identities: &[String],
+    components: &[Value],
+) -> io::Result<()> {
     for component in components {
         let Some(identity) = component["identity"].as_str() else {
             return Err(invalid("stash removal component identity"));

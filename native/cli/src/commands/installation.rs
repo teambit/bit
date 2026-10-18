@@ -74,13 +74,37 @@ pub struct Installer {
 }
 
 impl Installer {
-    /// It sets `PATH` for the package manager, so it runs before the engine
-    /// starts its threads.
-    pub fn start(root: &Path, argv: &[&str]) -> io::Result<Self> {
+    /// Reject unsupported package managers before parent-operation providers start.
+    pub(in crate::commands) fn validate_workspace(root: &Path) -> io::Result<()> {
         let package_manager = WorkspaceConfig::load(root)?.dependency_resolver.package_manager;
         if package_manager.as_deref() == Some(YARN) {
             return Err(io::Error::other("the yarn package manager"));
         }
+        Ok(())
+    }
+
+    /// Keep the already loaded providers and process facts of a parent operation.
+    pub(in crate::commands) const fn from_host(host: Arc<Host>, info: HostInfo) -> Self {
+        Self { host, info }
+    }
+
+    /// `RenamingMain.installDepsGracefully` installs without updating existing policy entries.
+    pub(in crate::commands) fn install_scope_rename(self, root: &Path) -> io::Result<()> {
+        let options = InstallOptions {
+            programmatic: true,
+            skip_import: true,
+            copy_peer_to_runtime_on_root: Some(true),
+            copy_peer_to_runtime_on_components: false,
+            existing_entries: bit_install::ExistingEntries::Fail,
+            ..InstallOptions::default()
+        };
+        self.run_options(root, options)
+    }
+
+    /// It sets `PATH` for the package manager, so it runs before the engine
+    /// starts its threads.
+    pub fn start(root: &Path, argv: &[&str]) -> io::Result<Self> {
+        Self::validate_workspace(root)?;
         let Target::Entry(cli) = discovery::find()? else {
             return Err(io::Error::other("the Node.js CLI is only reachable as a wrapper"));
         };
@@ -135,6 +159,10 @@ impl Installer {
             dependencies_graph,
             ..InstallOptions::default()
         };
+        self.run_options(root, options)
+    }
+
+    fn run_options(self, root: &Path, options: InstallOptions) -> io::Result<()> {
         let input = Input::Options(Box::new(options));
         match install::run_install(root.to_path_buf(), input, self.info, self.host)?? {
             Outcome::Installed(_) | Outcome::Skipped => Ok(()),

@@ -1,4 +1,5 @@
 //! Retained component identity, source refactoring and bitmap publication for `rename`.
+pub mod batch;
 pub use options::Options;
 
 mod cleanup;
@@ -149,7 +150,9 @@ impl Plan {
         serde_json::json!({
             "identity":self.identity.target,
             "directory":self.identity.target_directory,
-            "mainFile":self.controls.bitmap[&self.identity.target_name]["mainFile"],
+            "mainFile":self.controls.bitmap.get(&self.identity.target)
+                .or_else(||self.controls.bitmap.get(&self.identity.target_name))
+                .map_or(Value::Null, |row|row["mainFile"].clone()),
             "files":self.files.iter().map(|file| serde_json::json!({
                 "from":file.source,"to":file.destination
             })).collect::<Vec<_>>()

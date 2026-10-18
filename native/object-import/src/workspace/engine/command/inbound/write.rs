@@ -45,6 +45,8 @@ struct History {
     backup: PathBuf,
     metadata: PathBuf,
     metadata_before: Option<Vec<u8>>,
+    backup_before: Option<Vec<u8>>,
+    attributes: history::Attributes,
     file_id: String,
 }
 
@@ -55,7 +57,7 @@ pub(super) fn prepare(
     file_id: Option<&str>,
     options: Options<'_>,
 ) -> io::Result<Prepared> {
-    let history = prepare_history(root, file_id)?;
+    let history = history::prepare(root, file_id)?;
     let template = directories::default_directory(root)?;
     let bitmap_before = fs::read(root.join(".bitmap"))?;
     let mut bitmap = crate::recovery::jsonc::parse(&bitmap_before)?;
@@ -230,25 +232,6 @@ fn plan_new_target(
     Ok(())
 }
 
-fn prepare_history(root: &Path, file_id: Option<&str>) -> io::Result<History> {
-    let file_id = file_id.ok_or_else(|| invalid("inbound bitmap history id"))?;
-    super::super::bitmap::validate_history_file_id(file_id)?;
-    let backup = crate::scope_path(root)
-        .join("bitmap-history")
-        .join(format!(".bitmap-{file_id}"));
-    let metadata = crate::scope_path(root).join("bitmap-history-metadata.txt");
-    safe_destination(root, &backup)?;
-    let metadata_before = match fs::read(&metadata) {
-        Ok(bytes) => Some(bytes),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => None,
-        Err(error) => return Err(error),
-    };
-    if metadata_before.is_some() && !fs::symlink_metadata(&metadata)?.is_file() {
-        return Err(invalid("inbound bitmap history metadata type"));
-    }
-    Ok(History { backup, metadata, metadata_before, file_id: file_id.to_owned() })
-}
-
 fn prepare_target(
     root: &Path,
     directory: &str,
@@ -258,12 +241,8 @@ fn prepare_target(
 ) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
     let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound workspace scope"))?;
     unique_name(rows, &target.name)?;
-    let model = import.overlay
-        .models()
-        .into_iter()
-        .find(|model| model["scope"] == scope && model["name"] == target.name)
-        .ok_or_else(|| invalid("inbound imported model"))?;
-    let (version_name, hash) = version(model, &target.version)?;
+    let model = super::details::model(root, import, scope, &target.name)?;
+    let (version_name, hash) = version(&model, &target.version)?;
     let version = import.overlay
         .read(&hash, "Version")?
         .ok_or_else(|| invalid("inbound imported Version"))?;
@@ -390,6 +369,7 @@ pub(super) fn version(model: &Value, requested: &str) -> io::Result<(String, Str
 
 mod directories;
 mod existing;
+mod history;
 mod metadata;
 mod policy;
 mod publication;

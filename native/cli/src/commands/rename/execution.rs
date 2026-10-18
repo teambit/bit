@@ -98,7 +98,7 @@ fn source_display(prepared: &Prepared) -> String {
         .map_or_else(|| source.clone(), |version| format!("{source}@{version}"))
 }
 
-fn hydrate(
+pub(in crate::commands) fn hydrate(
     root: &Path,
     prepared: &mut Prepared,
     options: &Options,

@@ -2,6 +2,8 @@
 //! of `bit checkout <to> [component-pattern]` that native planning accepts.
 //! Anything else is `None`, and the Node.js CLI runs the command.
 
+mod numeric_target;
+
 use serde_json::{Map, Value, json};
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -90,8 +92,11 @@ fn build(flags: &Map<String, Value>, positionals: &[&str]) -> Option<Options> {
     if conflicting || positionals.len() > 2 {
         return None;
     }
-    let to = positionals.first().filter(|to| valid_to(to))?;
-    if (flag("--workspace-only") || flag("--include-new-from-scope")) && *to != "head" {
+    let to = numeric_target::normalize(positionals.first()?);
+    if !valid_to(&to) {
+        return None;
+    }
+    if (flag("--workspace-only") || flag("--include-new-from-scope")) && to != "head" {
         return None;
     }
     let pattern = positionals.get(1).copied();
@@ -100,7 +105,7 @@ fn build(flags: &Map<String, Value>, positionals: &[&str]) -> Option<Options> {
         return None;
     }
     Some(Options {
-        to: (*to).to_string(),
+        to,
         pattern: pattern.map(str::to_string),
         revert: false,
         all: flag("--all"),
@@ -123,11 +128,12 @@ fn build(flags: &Map<String, Value>, positionals: &[&str]) -> Option<Options> {
 pub fn parse_revert(args: &[&str]) -> Option<Options> {
     let (positionals, verbose, skip_install) = revert_arguments(args)?;
     let [pattern, to] = positionals.as_slice() else { return None };
-    if !valid_pattern(pattern) || !(to == &"main" || valid_revert_version(to)) {
+    let to = numeric_target::normalize(to);
+    if !valid_pattern(pattern) || !(to == "main" || valid_revert_version(&to)) {
         return None;
     }
     Some(Options {
-        to: (*to).to_owned(),
+        to,
         pattern: Some((*pattern).to_owned()),
         revert: true,
         execution: Execution { verbose, skip_install },

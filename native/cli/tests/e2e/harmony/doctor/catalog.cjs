@@ -1,7 +1,8 @@
-// Genuine CONNECT + HTTPS catalog fixture: never depend on proxy-error replay buffers.
+// A real CONNECT tunnel to a listening HTTPS catalog keeps socket ownership separate.
 const fs = require('node:fs');
 const http = require('node:http');
 const https = require('node:https');
+const net = require('node:net');
 const body = Buffer.from(process.argv[4]);
 const catalog = https.createServer({
   key: fs.readFileSync(process.argv[2]),
@@ -16,6 +17,7 @@ const catalog = https.createServer({
     'Connection': 'close',
   });
   fs.appendFileSync(process.argv[5], '1');
+  response.on('finish', () => fs.appendFileSync(`${process.argv[5]}.finished`, '1'));
   response.end(body);
 });
 const proxy = http.createServer();
@@ -23,10 +25,23 @@ proxy.on('connect', (request, socket, head) => {
   if (request.url !== 'bvm.bit.dev:443') {
     throw new Error(`unexpected tunnel ${request.url}`);
   }
-  socket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
-  if (head.length) socket.unshift(head);
-  catalog.emit('connection', socket);
+  const upstream = net.connect(catalog.address().port, '127.0.0.1');
+  upstream.once('connect', () => {
+    socket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+    if (head.length) upstream.write(head);
+    socket.pipe(upstream);
+    upstream.pipe(socket);
+  });
+  upstream.on('error', (error) => {
+    console.error(`catalog tunnel: ${error.code || error.message}`);
+    socket.destroy();
+  });
+  socket.on('error', () => upstream.destroy());
+  socket.once('close', () => upstream.destroy());
 });
-proxy.listen(0, '127.0.0.1', () => {
-  process.stdout.write(`${proxy.address().port}\n`);
+catalog.on('tlsClientError', error => console.error(`catalog TLS: ${error.code || error.message}`));
+catalog.listen(0, '127.0.0.1', () => {
+  proxy.listen(0, '127.0.0.1', () => {
+    process.stdout.write(`${proxy.address().port}\n`);
+  });
 });

@@ -5,6 +5,7 @@ use node_semver::Version;
 use serde_json::Value;
 use std::{collections::HashSet, fs, io, path::Path};
 
+#[derive(Clone)]
 pub struct DependencyComponent {
     pub identity: String,
     pub package_name: String,
@@ -63,7 +64,7 @@ pub(super) fn plan(
 
 fn is_env(root: &Path, selected: &Selected) -> io::Result<bool> {
     let version = outbound::read_object(
-        &root.join(".bit/objects"),
+        &crate::scope_path(root).join("objects"),
         selected.version.as_deref().ok_or_else(|| invalid("lane component version"))?,
         "Version",
     )?;
@@ -121,7 +122,8 @@ fn validate_graph(bitmap: &Value, components: &[DependencyComponent]) -> io::Res
 
 fn read_model(root: &Path, identity: &str, objects: &mut Vec<FrozenObject>) -> io::Result<Value> {
     let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("component identity"))?;
-    let index: Value = serde_json::from_slice(&fs::read(root.join(".bit/index.json"))?)?;
+    let index: Value =
+        serde_json::from_slice(&fs::read(crate::scope_path(root).join("index.json"))?)?;
     let rows = index["components"].as_array().ok_or_else(|| invalid("scope components"))?;
     let matches = rows
         .iter()
@@ -133,7 +135,7 @@ fn read_model(root: &Path, identity: &str, objects: &mut Vec<FrozenObject>) -> i
     let hash = matches[0]["hash"].as_str().ok_or_else(|| invalid("Component hash"))?;
     crate::merge_history::hash(hash)?;
     objects.push(freeze(root, hash)?);
-    let model = outbound::read_object(&root.join(".bit/objects"), hash, "Component")?;
+    let model = outbound::read_object(&crate::scope_path(root).join("objects"), hash, "Component")?;
     if model["scope"] != scope || model["name"] != name {
         return Err(invalid("Component identity"));
     }

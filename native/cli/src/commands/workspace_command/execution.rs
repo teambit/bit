@@ -35,7 +35,7 @@ pub fn execute_then(
     command: &str,
     work: impl FnOnce(&Output) -> io::Result<Report>,
 ) -> io::Result<Outcome> {
-    execute_mode(root, args, command, false, work)
+    execute_mode(root, args, command, false, true, work)
 }
 
 /// `CommandRunner.runJsonHandler`: no loader or console output before the JSON report.
@@ -45,7 +45,17 @@ pub fn execute_json(
     command: &str,
     work: impl FnOnce(&Output) -> io::Result<Report>,
 ) -> io::Result<Outcome> {
-    execute_mode(root, args, command, true, work)
+    execute_mode(root, args, command, true, false, work)
+}
+
+/// A text command whose registry has no loader; callback console output remains visible.
+pub fn execute_without_loader(
+    root: &Path,
+    args: &[OsString],
+    command: &str,
+    work: impl FnOnce(&Output) -> io::Result<Report>,
+) -> io::Result<Outcome> {
+    execute_mode(root, args, command, true, true, work)
 }
 
 fn execute_mode(
@@ -53,6 +63,7 @@ fn execute_mode(
     args: &[OsString],
     command: &str,
     quiet: bool,
+    newline: bool,
     work: impl FnOnce(&Output) -> io::Result<Report>,
 ) -> io::Result<Outcome> {
     let chalk = Chalk::detect(args);
@@ -74,7 +85,7 @@ fn execute_mode(
         }
     };
     output.stop();
-    print(&report, command, !quiet)?;
+    print(&report, command, newline)?;
     history.end(report.code == 0);
     Ok(Outcome::Exit(ExitCode::from(u8::try_from(report.code).unwrap_or(1))))
 }

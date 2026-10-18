@@ -1,8 +1,9 @@
 //! Component rename keeps identity, source and bitmap mutation in the native engine.
+pub(super) mod execution;
+pub(super) mod preparation;
+
 mod ast;
-mod execution;
 mod options;
-mod preparation;
 
 use super::{Command, add::ProjectedLinker, color::Chalk, workspace_command};
 use crate::{native::Outcome, workspace};

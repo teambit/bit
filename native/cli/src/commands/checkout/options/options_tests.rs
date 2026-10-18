@@ -81,3 +81,16 @@ fn checkout_and_revert_preserve_component_predicates() {
         );
     }
 }
+
+#[test]
+fn checkout_and_revert_coerce_only_the_target_before_version_validation() {
+    for (raw, expected) in [
+        ("38938e0", "38938"),
+        ("0xabc", "2748"),
+        ("0012345", "0012345"),
+        ("9007199254740992", "9007199254740992"),
+    ] {
+        assert_eq!(parse(&[raw, "scope/component", "-x"]).unwrap().to, expected);
+        assert_eq!(parse_revert(&["scope/component", raw, "-x"]).unwrap().to, expected);
+    }
+}

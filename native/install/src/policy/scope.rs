@@ -89,7 +89,7 @@ impl Scope {
             proofs
                 .lock()
                 .unwrap_or_else(PoisonError::into_inner)
-                .push(proof(&file, compressed.as_deref()));
+                .push(proof_from_bytes(&file, compressed.as_deref()));
         }
         let Some(compressed) = compressed else { return Ok(None) };
         let mut inflated = Vec::new();
@@ -185,13 +185,15 @@ fn invalid(message: &str) -> io::Error {
 /// A content proof of a local environment manifest, including its absence.
 pub fn read_proof(path: &Path) -> io::Result<Value> {
     match fs::read(path) {
-        Ok(bytes) => Ok(proof(path, Some(&bytes))),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(proof(path, None)),
+        Ok(bytes) => Ok(proof_from_bytes(path, Some(&bytes))),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(proof_from_bytes(path, None)),
         Err(error) => Err(error),
     }
 }
 
-fn proof(path: &Path, bytes: Option<&[u8]>) -> Value {
+/// Build a content proof from already bounded bytes, or an observed absence.
+#[must_use]
+pub fn proof_from_bytes(path: &Path, bytes: Option<&[u8]>) -> Value {
     serde_json::json!({"path":path,"hash":bytes.map(|bytes|format!("{:x}",Sha256::digest(bytes)))})
 }
 

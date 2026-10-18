@@ -9,6 +9,7 @@ use super::{
     State,
 };
 use crate::command_import::{self, Target};
+use selection::{bitmap_targets, requested_target};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{
@@ -21,8 +22,19 @@ mod lane_workspace;
 mod lanes;
 mod progress;
 mod remote;
+mod selection;
 mod validation;
 mod write;
+
+/// Reuse inbound configuration and authentication without persisting recovery probes.
+pub fn recovery_remote_connection(
+    root: &Path,
+    home: &Path,
+    transport: &Value,
+) -> io::Result<(bit_client_transfer::remotes::Remotes, bit_client_transfer::http::Network)> {
+    let transport = serde_json::from_value(transport.clone()).map_err(io::Error::other)?;
+    remote::recovery_connection(root, home, &transport)
+}
 
 #[cfg(test)]
 mod protocol_tests;
@@ -74,6 +86,8 @@ struct Options {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Resolution {
+    #[serde(default)]
+    recovery_local: bool,
     #[serde(default)]
     override_existing: bool,
     #[serde(default)]
@@ -192,6 +206,15 @@ fn prepare_targets(
     input: &Prepare,
     roots: &[Target],
 ) -> io::Result<(Vec<Target>, command_import::PreparedImport)> {
+    if input.options.resolution.recovery_local {
+        let initial = prepare_recovery(input, roots)?;
+        let targets = dependencies::expand(input, roots, &initial)?;
+        if targets.len() == roots.len() {
+            return Ok((targets, initial));
+        }
+        let imported = prepare_recovery(input, &targets)?;
+        return Ok((targets, imported));
+    }
     if input.operation == "import"
         && let Some(lane) = remote::active_lane(&input.root)?
     {
@@ -358,40 +381,6 @@ fn targets(input: &Prepare) -> io::Result<Vec<Target>> {
         .map(|id| requested_target(id))
         .collect()
 }
-fn bitmap_targets(root: &Path) -> io::Result<Vec<Target>> {
-    let bitmap = config::document(&root.join(".bitmap"))?;
-    let rows = bitmap.as_object().ok_or_else(|| invalid("inbound bitmap"))?;
-    let mut targets = Vec::new();
-    for (key, row) in rows {
-        if key == "$schema-version" {
-            continue;
-        }
-        let Some(scope) = row["scope"]
-            .as_str()
-            .filter(|scope| !scope.is_empty())
-        else {
-            continue;
-        };
-        let name = row["name"].as_str().ok_or_else(|| invalid("inbound bitmap name"))?;
-        let version = row["version"].as_str().ok_or_else(|| invalid("inbound bitmap version"))?;
-        targets.push(Target {
-            scope: Some(scope.to_owned()),
-            name: name.to_owned(),
-            version: version.to_owned(),
-        });
-    }
-    Ok(targets)
-}
-fn requested_target(id: &str) -> io::Result<Target> {
-    let (scope, rest) = id.split_once('/').ok_or_else(|| invalid("inbound unscoped id"))?;
-    let (name, version) = rest
-        .rsplit_once('@')
-        .unwrap_or((rest, "latest"));
-    if scope.is_empty() || name.is_empty() || name.contains('*') || version.is_empty() {
-        return Err(invalid("inbound unsupported id"));
-    }
-    Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: version.to_owned() })
-}
 
 fn identity(target: &Target) -> io::Result<String> {
     let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound scope"))?;
@@ -425,4 +414,16 @@ pub(in crate::workspace::engine) fn overlay<'a>(
     }
     retained.import.validate()?;
     Ok(Some(&retained.import.overlay))
+}
+
+fn prepare_recovery(
+    input: &Prepare,
+    targets: &[Target],
+) -> io::Result<command_import::PreparedImport> {
+    command_import::prepare_recovery_with_virtual(
+        &input.root,
+        &input.global_remotes_file,
+        targets,
+        |requested| remote::objects(input, requested),
+    )
 }

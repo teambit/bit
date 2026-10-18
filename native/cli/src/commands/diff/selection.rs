@@ -1,7 +1,7 @@
 //! `idsByPattern` selection for workspace and historical diffs.
 
 pub(super) use states::after_capture;
-pub(in crate::commands) use states::select_capture;
+pub(in crate::commands) use states::{criterion, select_capture};
 
 use crate::commands::{
     inventory, patterns,

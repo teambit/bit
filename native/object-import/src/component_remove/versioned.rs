@@ -1,6 +1,9 @@
 //! Local removal of a staged tagged or imported Component.
 
+pub(super) use publication::publish;
+
 mod history;
+mod publication;
 use history::plan as lane_history;
 
 use super::{Plan, RowKind, invalid, validate_ancestors};
@@ -35,10 +38,7 @@ struct Change {
 struct ModelSelection<'a> {
     scope: &'a str,
     name: &'a str,
-    version: &'a str,
-    staged_version: Option<&'a str>,
     model_hash: &'a str,
-    kind: RowKind,
 }
 
 impl VersionedPlan {
@@ -67,29 +67,16 @@ impl VersionedPlan {
         status_checked: bool,
     ) -> io::Result<Self> {
         let workspace = Plan::prepare_with(root, name, keep_files, kind)?;
-        if !workspace.main_exists {
-            return Err(invalid("tagged component main file is missing"));
-        }
         let (scope, component_name) = workspace.identity
             .split_once('/')
             .ok_or_else(|| invalid("tagged component identity"))?;
         let version = workspace.version.as_deref().ok_or_else(|| invalid("tagged version"))?;
-        if manifest_references_package(root, &workspace.package)? {
-            return Err(invalid("component is listed in package dependencies"));
-        }
         let (index, model_hash) = index_change(root, scope, component_name, kind)?;
-        let (staged, staged_version) =
+        let (staged, _staged_version) =
             staged_selection(root, scope, component_name, kind, workspace.lane.as_ref())?;
         let objects = object_changes(
             root,
-            &ModelSelection {
-                scope,
-                name: component_name,
-                version,
-                staged_version: staged_version.as_deref(),
-                model_hash: &model_hash,
-                kind,
-            },
+            &ModelSelection { scope, name: component_name, model_hash: &model_hash },
         )?;
         let lane = workspace.lane
             .as_ref()
@@ -99,6 +86,14 @@ impl VersionedPlan {
             .then(|| lane_history(root, scope, component_name, version))
             .transpose()?;
         Ok(Self { workspace, index, staged, objects, lane, history })
+    }
+
+    pub(super) fn package_path(&mut self, path: PathBuf) {
+        self.workspace.package = path;
+    }
+    pub(super) fn is_staged(&self) -> bool {
+        (self.staged.is_some() || self.workspace.lane.is_some())
+            && self.workspace.main_exists
     }
 
     #[must_use]
@@ -118,7 +113,7 @@ impl VersionedPlan {
         self.workspace.apply(file_id)
     }
 
-    fn validate_before_commit(&self, file_id: &str) -> io::Result<()> {
+    pub(super) fn validate_before_commit(&self, file_id: &str) -> io::Result<()> {
         self.workspace.validate_before_commit(file_id)?;
         for change in std::iter::once(&self.index)
             .chain(self.staged.iter())
@@ -195,41 +190,16 @@ fn lane_change(lane: &super::Lane, scope: &str, name: &str) -> io::Result<Change
     Ok(Change { path: lane.path.clone(), before: lane.before.clone(), after: Some(after) })
 }
 
-fn manifest_references_package(root: &Path, package_path: &Path) -> io::Result<bool> {
-    let package_name = package_path.file_name().ok_or_else(|| invalid("package name"))?;
-    let scope = package_path
-        .parent()
-        .and_then(Path::file_name)
-        .ok_or_else(|| invalid("package scope"))?;
-    let dependency = format!("{}/{}", scope.to_string_lossy(), package_name.to_string_lossy());
-    let manifest = root.join("package.json");
-    Ok(manifest.try_exists()? && fs::read_to_string(manifest)?.contains(&dependency))
-}
-
 fn index_change(
     root: &Path,
     scope: &str,
     name: &str,
-    kind: RowKind,
+    _kind: RowKind,
 ) -> io::Result<(Change, String)> {
-    let path = root.join(".bit/index.json");
+    let path = crate::scope_path(root).join("index.json");
     regular_file(root, &path)?;
     let before = fs::read(&path)?;
     let mut index: Value = serde_json::from_slice(&before)?;
-    if kind != RowKind::LaneSnap
-        && index["lanes"]
-            .as_array()
-            .is_none_or(|lanes| !lanes.is_empty())
-    {
-        return Err(invalid("tagged component has indexed lanes"));
-    }
-    if kind == RowKind::LaneSnap
-        && index["lanes"]
-            .as_array()
-            .is_none_or(|lanes| lanes.len() != 1)
-    {
-        return Err(invalid("lane component has other indexed lanes"));
-    }
     let rows = index["components"].as_array_mut().ok_or_else(|| invalid("scope components"))?;
     let position = unique_position(rows, scope, name)?;
     if rows[position]["isSymlink"] != false {
@@ -261,9 +231,9 @@ fn unique_position(rows: &[Value], scope: &str, name: &str) -> io::Result<usize>
 }
 
 fn object_changes(root: &Path, selection: &ModelSelection<'_>) -> io::Result<Vec<Change>> {
-    let dir = root.join(".bit/objects");
+    let dir = crate::scope_path(root).join("objects");
     let model = outbound::read_object(&dir, selection.model_hash, "Component")?;
-    let hashes = model_hashes(&dir, &model, selection)?;
+    let hashes = model_hashes(&model, selection)?;
     let mut changes = Vec::new();
     for hash in hashes {
         let path = dir.join(&hash[..2]).join(&hash[2..]);
@@ -273,72 +243,21 @@ fn object_changes(root: &Path, selection: &ModelSelection<'_>) -> io::Result<Vec
     Ok(changes)
 }
 
-fn model_hashes(
-    dir: &Path,
-    model: &Value,
-    selection: &ModelSelection<'_>,
-) -> io::Result<Vec<String>> {
+fn model_hashes(model: &Value, selection: &ModelSelection<'_>) -> io::Result<Vec<String>> {
+    validate_model(model, selection)?;
     let versions = model["versions"].as_object().ok_or_else(|| invalid("Component versions"))?;
-    if selection.kind == RowKind::LaneSnap {
-        return lane_model_hashes(dir, model, selection);
-    }
-    if model["scope"] != selection.scope
-        || model["name"] != selection.name
-        || versions.is_empty()
-        || versions.len() > 32
-        || model.get("orphanedVersions").is_some()
-        || selection.staged_version.is_some_and(|version| !versions.contains_key(version))
-    {
-        return Err(invalid("unsupported tagged Component model"));
-    }
-    let head_hash = versions
-        .get(selection.version)
-        .and_then(Value::as_str)
-        .ok_or_else(|| invalid("tagged version ref"))?;
-    if model["head"] != head_hash {
-        return Err(invalid("tagged Component head"));
-    }
     let mut hashes = vec![selection.model_hash.to_owned()];
-    for (label, value) in versions {
+    for value in versions.values() {
         let hash = value.as_str().ok_or_else(|| invalid("tagged version ref"))?;
         crate::merge_history::hash(hash)?;
-        let local = model["state"]["versions"][label]["local"] == true;
-        if local != (selection.kind == RowKind::Staged)
-            || hashes
-                .iter()
-                .any(|current| current == hash)
+        if !hashes
+            .iter()
+            .any(|current| current == hash)
         {
-            return Err(invalid("version state or identity is unsupported"));
+            hashes.push(hash.to_owned());
         }
-        let _version = outbound::read_object(dir, hash, "Version")?;
-        hashes.push(hash.to_owned());
     }
     Ok(hashes)
-}
-
-fn lane_model_hashes(
-    dir: &Path,
-    model: &Value,
-    selection: &ModelSelection<'_>,
-) -> io::Result<Vec<String>> {
-    if model["scope"] != selection.scope
-        || model["name"] != selection.name
-        || model["versions"]
-            .as_object()
-            .is_none_or(|versions| !versions.is_empty())
-        || !model["head"].is_null()
-    {
-        return Err(invalid("unsupported lane Component model"));
-    }
-    let ancestry = history::ancestry(dir, selection.version)?;
-    if selection.staged_version.is_none_or(|staged| {
-        !ancestry
-            .iter()
-            .any(|version| version["hash"] == staged)
-    }) {
-        return Err(invalid("lane staged version is outside snap ancestry"));
-    }
-    Ok(vec![selection.model_hash.to_owned()])
 }
 
 fn staged_change(
@@ -348,11 +267,12 @@ fn staged_change(
     lane: Option<&super::Lane>,
 ) -> io::Result<(Change, String)> {
     let path = if let Some(lane) = lane {
-        root.join(".bit/staged-config")
+        crate::scope_path(root)
+            .join("staged-config")
             .join(&lane.scope)
             .join(format!("{}.json", lane.name))
     } else {
-        root.join(".bit/staged-config/main.json")
+        crate::scope_path(root).join("staged-config/main.json")
     };
     regular_file(root, &path)?;
     let before = fs::read(&path)?;
@@ -370,7 +290,7 @@ fn staged_change(
 }
 
 fn validate_no_staged(root: &Path, scope: &str, name: &str) -> io::Result<()> {
-    let path = root.join(".bit/staged-config/main.json");
+    let path = crate::scope_path(root).join("staged-config/main.json");
     if !path.try_exists()? {
         return Ok(());
     }
@@ -392,6 +312,17 @@ fn regular_file(root: &Path, path: &Path) -> io::Result<()> {
     let kind = fs::symlink_metadata(path)?.file_type();
     if !kind.is_file() || kind.is_symlink() {
         return Err(invalid("model path is not a regular file"));
+    }
+    Ok(())
+}
+
+fn validate_model(model: &Value, selection: &ModelSelection<'_>) -> io::Result<()> {
+    let versions = model["versions"].as_object().ok_or_else(|| invalid("Component versions"))?;
+    if model["scope"] != selection.scope
+        || model["name"] != selection.name
+        || versions.len() > 65536
+    {
+        return Err(invalid("unsupported tagged Component model"));
     }
     Ok(())
 }

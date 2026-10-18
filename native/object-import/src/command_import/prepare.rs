@@ -16,6 +16,7 @@ mod dependencies;
 mod forced;
 mod lane;
 mod policy;
+mod recovery;
 mod refresh_selection;
 mod remote;
 mod selected;

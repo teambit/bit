@@ -7,6 +7,7 @@ pub mod component_move;
 pub mod component_recover;
 pub mod component_remove;
 pub mod component_rename;
+pub mod component_scope_rename;
 pub mod component_tracking;
 pub mod export_actions;
 pub mod export_progress;
@@ -35,6 +36,7 @@ pub use workspace::engine::{
     read_dependency_cache::{
         cache_stale as dependency_cache_stale, read_cache as read_dependency_cache,
     },
+    recovery_remote_connection,
 };
 
 mod checkout;

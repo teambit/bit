@@ -1,5 +1,9 @@
 //! Local `bit recover -x` parity against the pinned Node.js CLI.
 
+mod batch;
+mod providers;
+mod remote;
+
 use super::remove::scope_objects;
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs};
@@ -72,7 +76,7 @@ fn imported_component_recovery_matches_node() {
     helper.create_component_bar_foo("module.exports = 'new';");
     helper.add_component_bar_foo();
     helper.tag_without_build("bar/foo", "");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
@@ -116,7 +120,7 @@ fn snap_selection_recovery_matches_node() {
 }
 
 #[test]
-fn modified_ranged_component_delegates_to_node() {
+fn modified_ranged_component_recovery_matches_node() {
     let helper = Helper::new();
     helper.re_init_workspace();
     helper.create_component_bar_foo("module.exports = 'new';");
@@ -124,42 +128,23 @@ fn modified_ranged_component_delegates_to_node() {
     helper.tag_without_build("bar/foo", "");
     helper.run("delete bar/foo --silent --range ^0.0.1");
     fs::write(helper.scopes.local_path.join("bar/foo.js"), "module.exports = 'edit';").unwrap();
-    let node_root = helper.clone_workspace();
-    let command = "recover bar/foo -x";
-    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
-    let actual = helper.cmd(command);
-    assert!(!actual.native, "{}", actual.trace);
-    assert_eq!(actual.status.code(), node.status.code());
-    assert_eq!(actual.stdout, node.stdout);
-    assert_eq!(actual.stderr, node.stderr);
+    let actual = crate::commands::add::support::compare(&helper, "recover bar/foo -x");
+    assert!(actual.status.success());
     assert_eq!(
-        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
-        fs::read(node_root.join(".bitmap")).unwrap(),
-    );
-    assert_eq!(
-        fs::read(helper.scopes.local_path.join("bar/foo.js")).unwrap(),
-        fs::read(node_root.join("bar/foo.js")).unwrap(),
+        fs::read_to_string(helper.scopes.local_path.join("bar/foo.js")).unwrap(),
+        "module.exports = 'new';",
     );
 }
 
 #[test]
-fn unsnapped_component_recovery_delegates_to_node() {
+fn unsnapped_component_recovery_matches_node() {
     let helper = Helper::new();
     helper.re_init_workspace();
     helper.create_component_bar_foo("module.exports = 'new';");
     helper.add_component_bar_foo();
-    let node_root = helper.clone_workspace();
-    let command = "recover bar/foo -x";
-    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
-    let actual = helper.cmd(command);
-    assert!(!actual.native, "{}", actual.trace);
-    assert_eq!(actual.status.code(), node.status.code());
-    assert_eq!(actual.stdout, node.stdout);
-    assert_eq!(actual.stderr, node.stderr);
-    assert_eq!(
-        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
-        fs::read(node_root.join(".bitmap")).unwrap(),
-    );
+    let result = crate::commands::add::support::compare(&helper, "recover bar/foo -x");
+    assert!(!result.status.success());
+    assert!(result.stderr.contains("no soft-deleted components found"));
 }
 
 #[test]

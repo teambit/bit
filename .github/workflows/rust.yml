@@ -197,6 +197,8 @@ jobs:
             filters: commands::add harmony::add
           - group: identity
             filters: commands::move_paths harmony::rename harmony::deprecation
+          - group: mutation
+            filters: commands::remove commands::delete commands::recover harmony::scope_rename
     timeout-minutes: 60
     defaults:
       run:

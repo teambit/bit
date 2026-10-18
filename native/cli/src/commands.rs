@@ -30,6 +30,7 @@ mod recovery;
 mod remove;
 mod rename;
 mod reset;
+mod scope_rename;
 mod snap;
 mod stash;
 mod status;
@@ -76,6 +77,7 @@ pub const COMMANDS: &[Command] = &[
     remove::COMMAND,
     reset::COMMAND,
     rename::COMMAND,
+    scope_rename::COMMAND,
     snap::COMMAND,
     stash::COMMAND,
     status::COMMAND,

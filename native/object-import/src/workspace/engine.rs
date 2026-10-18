@@ -5,6 +5,8 @@ pub(crate) mod diff;
 pub(crate) mod inventory;
 pub(crate) mod read_dependency_cache;
 
+pub use command::inbound::recovery_remote_connection;
+
 pub use status_context::configuration::effective as effective_workspace_configuration;
 
 mod command_request;

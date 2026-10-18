@@ -7,6 +7,7 @@ mod merge_lifecycle;
 mod merge_policy;
 mod merge_recovery;
 mod rename;
+mod scope_rename;
 
 mod bitmap_states;
 mod checkout_callbacks;

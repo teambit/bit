@@ -99,15 +99,18 @@ fn replacement_id(value: &Value) -> bool {
 }
 
 fn validate_removal_config(config: &Map<String, Value>) -> io::Result<()> {
-    if config.is_empty() {
-        return Ok(());
-    }
-    if config.get("removed") != Some(&Value::Bool(true))
-        || config
-            .iter()
-            .any(|(key, value)| {
-                !matches!(key.as_str(), "removed" | "removeOnMain") || !value.is_boolean()
-            })
+    if !config
+        .iter()
+        .all(|(key, value)| match key.as_str() {
+            "removed" | "removeOnMain" => value.is_boolean(),
+            "range" => value
+                .as_str()
+                .is_some_and(|range| node_semver::Range::parse(range).is_ok()),
+            "snaps" => value
+                .as_array()
+                .is_some_and(|snaps| snaps.iter().all(Value::is_string)),
+            _ => false,
+        })
     {
         return Err(decline("status unsupported removal configuration"));
     }
@@ -119,3 +122,6 @@ fn core_aspect(name: &str) -> bool {
         .split('"')
         .any(|id| id == name)
 }
+
+#[cfg(test)]
+mod tests;

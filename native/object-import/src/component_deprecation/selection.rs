@@ -1,6 +1,6 @@
 use super::{Value, invalid};
 use std::io;
-pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
+pub(crate) fn identity(key: &str, row: &Value) -> Option<String> {
     let name = row["name"].as_str().unwrap_or(key);
     let scope = row["scope"]
         .as_str()
@@ -12,7 +12,7 @@ pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
         if version.is_empty() { String::new() } else { format!("@{version}") },
     ))
 }
-pub(super) fn key<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a str> {
+pub(crate) fn key<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a str> {
     let id = id.split('@').next().unwrap_or(id);
     bitmap
         .as_object()
@@ -25,11 +25,11 @@ pub(super) fn key<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a str> {
         })
         .ok_or_else(|| invalid(format!("component {id} was not found")))
 }
-pub(super) fn resolve(bitmap: &Value, id: &str) -> io::Result<String> {
+pub(crate) fn resolve(bitmap: &Value, id: &str) -> io::Result<String> {
     let key = key(bitmap, id)?;
     identity(key, &bitmap[key]).ok_or_else(|| invalid("component identity"))
 }
-pub(super) fn select(bitmap: &Value, pattern: &str) -> io::Result<Vec<String>> {
+pub(crate) fn select(bitmap: &Value, pattern: &str) -> io::Result<Vec<String>> {
     validate_pattern(pattern)?;
     let rows = bitmap.as_object().ok_or_else(|| invalid("invalid component bitmap"))?;
     let pattern = if pattern == "$deprecated" { "**" } else { pattern };
@@ -76,7 +76,7 @@ fn matches_parts(key: &str, row: &Value, id: &str, parts: &[&str]) -> bool {
             .filter_map(|p| p.strip_prefix('!'))
             .any(matches)
 }
-pub(super) fn id_object(bitmap: &Value, id: &str) -> io::Result<Value> {
+pub(crate) fn id_object(bitmap: &Value, id: &str) -> io::Result<Value> {
     let (bare, version) = id
         .rsplit_once('@')
         .map_or((id, None), |(id, v)| (id, Some(v)));

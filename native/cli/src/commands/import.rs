@@ -3,9 +3,14 @@
 //! first, and an import that writes components installs them afterwards
 //! unless `-x` is given.
 
+pub(in crate::commands) use recover::{
+    RecoverOptions, recover_import, recover_probe, recover_scope_import,
+};
+
 mod options;
 mod output;
 mod patterns;
+mod recover;
 mod report;
 
 use super::{
@@ -159,7 +164,17 @@ impl Planned {
         ids: &[String],
         chalk: Chalk,
     ) -> io::Result<Self> {
-        let (mut engine, mut prepared) = prepare(root, options, ids)?;
+        Self::plan_with(root, options, ids, chalk, false)
+    }
+    fn plan_with(
+        root: &Path,
+        options: &options::Options,
+        ids: &[String],
+        chalk: Chalk,
+        recovery: bool,
+    ) -> io::Result<Self> {
+        let mut engine = Engine::new()?;
+        let mut prepared = prepare_into_with(&mut engine, root, options, ids, recovery)?;
         if let Some(receipt) = prepared.get("checkoutPolicyPreparation") {
             let semver = workspace_command::checkout_policy::semver(receipt)?;
             prepared = engine.request(&json!({"kind":"commandInboundPolicyComplete",
@@ -328,6 +343,15 @@ fn prepare_into(
     options: &options::Options,
     ids: &[String],
 ) -> io::Result<Value> {
+    prepare_into_with(engine, root, options, ids, false)
+}
+fn prepare_into_with(
+    engine: &mut Engine,
+    root: &Path,
+    options: &options::Options,
+    ids: &[String],
+    recovery: bool,
+) -> io::Result<Value> {
     let cli = NodeCli::find()?;
     let config = cache_root().join("config");
     let mut request = json!({
@@ -343,6 +367,9 @@ fn prepare_into(
         "ids": ids,
         "options": options.request(),
     });
+    if recovery {
+        request["options"]["recoveryLocal"] = json!(true);
+    }
     if !options.objects_only {
         request["bitmapHistoryFileId"] = json!(workspace_command::file_id());
     }

@@ -1,0 +1,509 @@
+{
+  "native_source": {
+    "sha256": "f451823fbd7f61d305b47c16b79f05778928bde20f92ff387fe2f5ab08c452c2",
+    "file_count": 1573
+  },
+  "measured_at_utc": "2026-10-18T03:29:06.819475+00:00",
+  "correctness_valid": true,
+  "performance_valid": true,
+  "performance_qualification": "Raw workload reports remain unchanged; external closed monitors qualify eligible native rows",
+  "driver_sha256": "409b9ceb275b4ac9eb31e2e01e26d51edf6aa08f0b4e6a5636a4b30aa2bac70d",
+  "workload_reports": {
+    "status": {
+      "stage": "/var/tmp/transfer-bench-fovd03hi",
+      "source": "/var/tmp/status-diff-bench-fixture-2586579",
+      "source_sha256": "c58214e737af4a7d07d0521cb22449978cb184c5cdef706b9c7a6ce235829a8f",
+      "remote_sha256": {
+        "/var/tmp/transfer-final-fixtures/transfer-remote": "a170b5b4c8419a66a51af9a0859ecca255be5bc1e763f185fab80234d687caf1"
+      },
+      "rust_sha256": "a62b38a5ccad7b801861b2a935fe1932e4c1adc4f105de7ad6a38f079a16703a",
+      "command": [
+        "status",
+        "--json"
+      ],
+      "runs_ms": {
+        "timed": {
+          "node": [
+            499.173,
+            495.05,
+            495.431,
+            484.907,
+            497.147
+          ],
+          "rust": [
+            10.293,
+            8.667,
+            8.641,
+            8.344,
+            7.885
+          ]
+        },
+        "tty": {
+          "node": [
+            495.518,
+            498.302,
+            509.881,
+            500.582,
+            502.455
+          ],
+          "rust": [
+            21.104,
+            21.166,
+            21.278,
+            21.055,
+            21.312
+          ]
+        },
+        "ci": {
+          "node": [
+            490.033,
+            487.364,
+            495.526,
+            490.133,
+            491.064
+          ],
+          "rust": [
+            8.269,
+            7.975,
+            8.125,
+            7.89,
+            9.053
+          ]
+        }
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0
+        },
+        {
+          "mode": "timed",
+          "run": 1
+        },
+        {
+          "mode": "timed",
+          "run": 2
+        },
+        {
+          "mode": "timed",
+          "run": 3
+        },
+        {
+          "mode": "timed",
+          "run": 4
+        },
+        {
+          "mode": "tty",
+          "run": 0
+        },
+        {
+          "mode": "tty",
+          "run": 1
+        },
+        {
+          "mode": "tty",
+          "run": 2
+        },
+        {
+          "mode": "tty",
+          "run": 3
+        },
+        {
+          "mode": "tty",
+          "run": 4
+        },
+        {
+          "mode": "ci",
+          "run": 0
+        },
+        {
+          "mode": "ci",
+          "run": 1
+        },
+        {
+          "mode": "ci",
+          "run": 2
+        },
+        {
+          "mode": "ci",
+          "run": 3
+        },
+        {
+          "mode": "ci",
+          "run": 4
+        }
+      ],
+      "median_ms": {
+        "timed": {
+          "node": 495.431,
+          "rust": 8.641
+        },
+        "tty": {
+          "node": 500.582,
+          "rust": 21.166
+        },
+        "ci": {
+          "node": 490.133,
+          "rust": 8.125
+        }
+      }
+    },
+    "checkout": {
+      "stage": "/var/tmp/transfer-bench-rbhmj2_f",
+      "source": "/var/tmp/checkout-qualified-benchmark-fixtures/ordinary",
+      "source_sha256": "8211ff87332cff495cb2af431a415947e84134f083b116ca34508e4daf08fb98",
+      "remote_sha256": {
+        "/var/tmp/transfer-final-fixtures/transfer-remote": "a170b5b4c8419a66a51af9a0859ecca255be5bc1e763f185fab80234d687caf1"
+      },
+      "rust_sha256": "a62b38a5ccad7b801861b2a935fe1932e4c1adc4f105de7ad6a38f079a16703a",
+      "command": [
+        "checkout",
+        "0.0.1",
+        "comp2",
+        "--force-theirs",
+        "-x"
+      ],
+      "runs_ms": {
+        "timed": {
+          "node": [
+            438.331,
+            420.035,
+            426.505,
+            433.59,
+            437.827
+          ],
+          "rust": [
+            24.268,
+            13.043,
+            20.557,
+            13.688,
+            23.658
+          ]
+        },
+        "tty": {
+          "node": [
+            445.554,
+            436.369,
+            425.032,
+            447.822,
+            423.516
+          ],
+          "rust": [
+            33.527,
+            33.247,
+            24.482,
+            34.392,
+            24.857
+          ]
+        },
+        "ci": {
+          "node": [
+            433.34,
+            424.804,
+            428.967,
+            434.467,
+            456.273
+          ],
+          "rust": [
+            23.389,
+            15.517,
+            21.725,
+            22.385,
+            23.284
+          ]
+        }
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0
+        },
+        {
+          "mode": "timed",
+          "run": 1
+        },
+        {
+          "mode": "timed",
+          "run": 2
+        },
+        {
+          "mode": "timed",
+          "run": 3
+        },
+        {
+          "mode": "timed",
+          "run": 4
+        },
+        {
+          "mode": "tty",
+          "run": 0
+        },
+        {
+          "mode": "tty",
+          "run": 1
+        },
+        {
+          "mode": "tty",
+          "run": 2
+        },
+        {
+          "mode": "tty",
+          "run": 3
+        },
+        {
+          "mode": "tty",
+          "run": 4
+        },
+        {
+          "mode": "ci",
+          "run": 0
+        },
+        {
+          "mode": "ci",
+          "run": 1
+        },
+        {
+          "mode": "ci",
+          "run": 2
+        },
+        {
+          "mode": "ci",
+          "run": 3
+        },
+        {
+          "mode": "ci",
+          "run": 4
+        }
+      ],
+      "median_ms": {
+        "timed": {
+          "node": 433.59,
+          "rust": 20.557
+        },
+        "tty": {
+          "node": 436.369,
+          "rust": 33.247
+        },
+        "ci": {
+          "node": 433.34,
+          "rust": 22.385
+        }
+      }
+    },
+    "export": {
+      "stage": "/var/tmp/transfer-bench-73k0y37i",
+      "source": "/var/tmp/transfer-final-fixtures/export-main",
+      "source_sha256": "9657e3602a120bc61ab716eaa2011aacd80bcb87f53da5de465ba975b183051f",
+      "remote_sha256": {
+        "/var/tmp/transfer-final-fixtures/transfer-remote": "a170b5b4c8419a66a51af9a0859ecca255be5bc1e763f185fab80234d687caf1"
+      },
+      "rust_sha256": "a62b38a5ccad7b801861b2a935fe1932e4c1adc4f105de7ad6a38f079a16703a",
+      "command": [
+        "export"
+      ],
+      "runs_ms": {
+        "timed": {
+          "node": [
+            263.745,
+            259.74,
+            271.961,
+            265.035,
+            275.013
+          ],
+          "rust": [
+            117.293,
+            113.762,
+            119.174,
+            117.003,
+            116.521
+          ]
+        },
+        "tty": {
+          "node": [
+            278.572,
+            284.731,
+            282.429,
+            273.013,
+            275.201
+          ],
+          "rust": [
+            127.206,
+            127.424,
+            117.286,
+            121.06,
+            118.407
+          ]
+        },
+        "ci": {
+          "node": [
+            287.721,
+            265.072,
+            259.373,
+            261.916,
+            270.749
+          ],
+          "rust": [
+            108.988,
+            105.935,
+            110.305,
+            112.953,
+            116.692
+          ]
+        }
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0
+        },
+        {
+          "mode": "timed",
+          "run": 1
+        },
+        {
+          "mode": "timed",
+          "run": 2
+        },
+        {
+          "mode": "timed",
+          "run": 3
+        },
+        {
+          "mode": "timed",
+          "run": 4
+        },
+        {
+          "mode": "tty",
+          "run": 0
+        },
+        {
+          "mode": "tty",
+          "run": 1
+        },
+        {
+          "mode": "tty",
+          "run": 2
+        },
+        {
+          "mode": "tty",
+          "run": 3
+        },
+        {
+          "mode": "tty",
+          "run": 4
+        },
+        {
+          "mode": "ci",
+          "run": 0
+        },
+        {
+          "mode": "ci",
+          "run": 1
+        },
+        {
+          "mode": "ci",
+          "run": 2
+        },
+        {
+          "mode": "ci",
+          "run": 3
+        },
+        {
+          "mode": "ci",
+          "run": 4
+        }
+      ],
+      "median_ms": {
+        "timed": {
+          "node": 265.035,
+          "rust": 117.003
+        },
+        "tty": {
+          "node": 278.572,
+          "rust": 121.06
+        },
+        "ci": {
+          "node": 265.072,
+          "rust": 110.305
+        }
+      }
+    }
+  },
+  "host_monitor": {
+    "status": {
+      "path": "/var/tmp/workspace-mutation-qualified-benchmark/checkout-argument-qualification/regressions-status-1.monitor.json",
+      "sha256": "b739189f716982c25bad3bb46b5a8280cde79ee4ff7ce40322ddb55d57a17db9",
+      "host_busy_peak_percent": 9.801,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-transfer.py",
+        "--source",
+        "/var/tmp/status-diff-bench-fixture-2586579",
+        "--node",
+        "/var/tmp/status-diff-node-oracle",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--remote",
+        "/var/tmp/transfer-final-fixtures/transfer-remote",
+        "--runs",
+        "5",
+        "--",
+        "status",
+        "--json"
+      ]
+    },
+    "checkout": {
+      "path": "/var/tmp/workspace-mutation-qualified-benchmark/checkout-argument-qualification/regressions-checkout-1.monitor.json",
+      "sha256": "b008aecc66e657b825f9d21b93e1089ad13bc6aece2e7780968f79dd894c6540",
+      "host_busy_peak_percent": 12.415,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-transfer.py",
+        "--source",
+        "/var/tmp/checkout-qualified-benchmark-fixtures/ordinary",
+        "--node",
+        "/var/tmp/status-diff-node-oracle",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--remote",
+        "/var/tmp/transfer-final-fixtures/transfer-remote",
+        "--runs",
+        "5",
+        "--",
+        "checkout",
+        "0.0.1",
+        "comp2",
+        "--force-theirs",
+        "-x"
+      ]
+    },
+    "export": {
+      "path": "/var/tmp/workspace-mutation-qualified-benchmark/checkout-argument-qualification/regressions-export-1.monitor.json",
+      "sha256": "3211cec295e19be49aa19277459fca298c97ac20a82beba78fcb59218ae42483",
+      "host_busy_peak_percent": 10.526,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-transfer.py",
+        "--source",
+        "/var/tmp/transfer-final-fixtures/export-main",
+        "--node",
+        "/var/tmp/status-diff-node-oracle",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--remote",
+        "/var/tmp/transfer-final-fixtures/transfer-remote",
+        "--runs",
+        "5",
+        "--",
+        "export"
+      ]
+    }
+  },
+  "qualification_evidence": {
+    "path": "scripts/rust/benchmarks/workspace-mutation-checkout-fix-qualification.json",
+    "sha256": "fb8d6f3d4b54a4cc14a998ec58cc3e06547b90584133551fc46d7e593e6b73b9"
+  }
+}

@@ -331,6 +331,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "bit-client-transfer",
+ "bit-dependency-scanner",
  "bit-ignore",
  "bit-install",
  "bit-object-import",

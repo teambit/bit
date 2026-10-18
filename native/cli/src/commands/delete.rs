@@ -1,143 +1,100 @@
-//! Native soft deletion of a tracked mainline or exported-lane component.
-
+//! RemoveMain.markRemoveComps: packages, one bitmap publication, then source removal.
+pub(super) mod loading;
+mod options;
 mod policy;
-
+mod preparation;
 use super::{
+    add,
     color::Chalk,
-    status,
+    remove::preparation as selection,
     workspace_command::{self, format::Formatter, results::Report},
 };
 use crate::{commands::Command, native::Outcome, workspace};
-use bit_object_import::component_delete::{Plan, Scope};
+use preparation::Prepared;
 use std::{env, ffi::OsString, io, path::Path};
-
 pub const COMMAND: Command = Command { name: "delete", aliases: &[], run };
-
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".into()));
     };
-    let Some((name, scope, lane)) = parse(&argv[1..]) else {
+    let Some(options) = options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native delete grammar".into()));
     };
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
-    let prepared = match Prepared::prepare(&root, name, scope, lane) {
-        Ok(prepared) => prepared,
-        Err(error) => return Ok(Outcome::Declined(format!("delete: {error}"))),
-    };
-    execute(&root, args, prepared)
-}
-
-fn execute(root: &Path, args: &[OsString], mut prepared: Prepared) -> io::Result<Outcome> {
-    let plan = &prepared.plan;
-    let format = Formatter::new(Chalk::detect(args));
-    let items = if plan.entire() { format.item(plan.full_id()) } else { String::new() };
-    let report = Report {
-        data: Formatter::join(&[
-            format.success_summary("successfully deleted the following components"),
-            items,
-            format.hint(r#"to update the remote, please tag/snap and then export. to revert, please use "bit recover""#),
-        ]),
-        code: 0,
-        details: None,
-    };
-    let file_id = workspace_command::file_id();
-    workspace_command::execute_with(root, args, "delete", &report, |output| {
-        prepared.validate(root)?;
-        output.status("loading 1 component(s)");
-        if prepared.plan.policy_loaded() {
-            output.status("loading 1 component(s)");
-        }
-        prepared.plan.commit(&file_id)?;
-        if let Some(policy) = &prepared.policy
-            && policy.commit(root, &file_id).is_ok()
-        {
-            output.console(&policy.report(&format));
-        }
-        Ok(())
+    if let Err(error) = preflight(&root, &options)
+        && (error.kind() != io::ErrorKind::InvalidInput
+            || env::var_os("CI").is_some_and(|value| !value.is_empty()))
+    {
+        return Ok(Outcome::Declined(format!("delete: {error}")));
+    }
+    let mut linker = add::ProjectedLinker::prepare(&root)?;
+    print!("{}", linker.take_stdout());
+    workspace_command::execute_then(&root, args, "delete", |output| {
+        execute(&root, args, &options, &mut linker, output)
     })
 }
-
-struct Prepared {
-    plan: Plan,
-    graph: Option<status::DeleteGraph>,
-    policy: Option<policy::Policy>,
-}
-
-impl Prepared {
-    fn prepare(root: &Path, name: &str, scope: Scope, lane: bool) -> io::Result<Self> {
-        let graph = if lane && matches!(scope, Scope::Entire) && Plan::needs_dependency_graph(root)?
-        {
-            Some(status::DeleteGraph::read(root)?)
-        } else {
-            None
-        };
-        let plan = match &graph {
-            Some(graph) => {
-                Plan::prepare_lane_with_dependencies(root, name, scope, &graph.components)?
-            }
-            None if lane => Plan::prepare_lane(root, name, scope)?,
-            None => Plan::prepare(root, name, scope)?,
-        };
-        let policy = policy::Policy::prepare(root, plan.pin())?;
-        Ok(Self { plan, graph, policy })
+fn execute(
+    root: &Path,
+    args: &[OsString],
+    options: &options::Options<'_>,
+    linker: &mut add::ProjectedLinker,
+    output: &bit_install::output::Output,
+) -> io::Result<Report> {
+    preparation::validate_options(root, options)?;
+    let bitmap = selection::bitmap(root)?;
+    let ids = linker.select_workspace(root, &bitmap, options.pattern, output)?;
+    Prepared::selected(root, options, &ids)?;
+    let graph = !bitmap["_bit_lane"].is_null()
+        && !options.update_main
+        && matches!(options.scope, bit_object_import::component_delete::Scope::Entire);
+    let loaded_ids = if graph { selection::all(&bitmap) } else { ids.clone() };
+    let loadable = selection::loadable(root, &bitmap, &loaded_ids)?;
+    output.status(&format!("loading {} component(s)", ids.len()));
+    loading::validate(root, &bitmap, &ids, Chalk::detect(args))?;
+    let rows = if loadable.is_empty() {
+        Vec::new()
+    } else {
+        linker.capture_cached(root, &bitmap, &loadable)?
+    };
+    print!("{}", linker.take_stdout());
+    let prepared = Prepared::with_rows(root, options, &ids, &rows)?;
+    if prepared.plan
+        .plans()
+        .iter()
+        .any(bit_object_import::component_delete::Plan::policy_loaded)
+    {
+        output.status(&format!("loading {} component(s)", ids.len()));
     }
-
-    fn validate(&mut self, root: &Path) -> io::Result<()> {
-        if let Some(graph) = &mut self.graph {
-            graph.validate()?;
-        }
-        if let Some(policy) = &self.policy {
-            policy.validate(root)?;
-        }
-        Ok(())
+    prepared.validate(root)?;
+    let file_id = workspace_command::file_id();
+    linker.validate_captures()?;
+    prepared.plan.commit(&file_id)?;
+    let format = Formatter::new(Chalk::detect(args));
+    if let Some(policy) = &prepared.policy
+        && policy.commit(root, &file_id).is_ok()
+    {
+        output.console(&policy.report(&format));
     }
+    Ok(report(&prepared, &format))
+}
+fn report(prepared: &Prepared, format: &Formatter) -> Report {
+    let items = prepared.plan
+        .plans()
+        .iter()
+        .filter(|plan| plan.entire())
+        .map(|plan| format.item(plan.full_id()))
+        .collect::<Vec<_>>()
+        .join("\n");
+    Report { data: Formatter::join(&[format.success_summary("successfully deleted the following components"), items, format.hint(r#"to update the remote, please tag/snap and then export. to revert, please use "bit recover""#)]), code: 0, details: None }
 }
 
-#[derive(Default)]
-struct Parsed<'a> {
-    name: Option<&'a str>,
-    silent: bool,
-    lane: bool,
-    modifier: Option<(&'a str, &'a str)>,
-}
-
-impl<'a> Parsed<'a> {
-    fn add(&mut self, arg: &'a str, rest: &mut impl Iterator<Item = &'a str>) -> Option<()> {
-        match arg {
-            "-s" | "--silent" if !self.silent => self.silent = true,
-            "--lane" if !self.lane => self.lane = true,
-            "--range" | "--snaps" if self.modifier.is_none() => {
-                self.modifier = Some((arg, rest.next()?));
-            }
-            value if !value.starts_with('-') && self.name.is_none() => self.name = Some(value),
-            _ => return None,
-        }
-        Some(())
-    }
-}
-
-fn parse<'a>(args: &[&'a str]) -> Option<(&'a str, Scope, bool)> {
-    let mut parsed = Parsed::default();
-    let mut iter = args.iter().copied();
-    while let Some(arg) = iter.next() {
-        parsed.add(arg, &mut iter)?;
-    }
-    parsed.silent.then_some((parsed.name?, selection(parsed.modifier), parsed.lane))
-}
-
-fn selection(modifier: Option<(&str, &str)>) -> Scope {
-    match modifier {
-        Some(("--range", value)) => Scope::Range(value.to_owned()),
-        Some(("--snaps", value)) => Scope::Snaps(
-            value
-                .split(',')
-                .map(str::trim)
-                .map(str::to_owned)
-                .collect(),
-        ),
-        _ => Scope::Entire,
+fn preflight(root: &Path, options: &options::Options<'_>) -> io::Result<()> {
+    if add::ProjectedLinker::state_pattern(options.pattern) {
+        preparation::validate_options(root, options)?;
+        add::ProjectedLinker::preflight_selection(root, &selection::bitmap(root)?)
+    } else {
+        Prepared::prepare(root, options, true).map(|_| ())
     }
 }

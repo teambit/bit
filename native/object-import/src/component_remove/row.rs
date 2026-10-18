@@ -10,14 +10,9 @@ pub(super) fn supported_row<'a>(
     kind: RowKind,
 ) -> io::Result<(&'a str, &'a str)> {
     let name = row["name"].as_str().ok_or_else(|| invalid("component name"))?;
-    let scope = row[if matches!(kind, RowKind::Imported | RowKind::ExportedLane) {
-        "scope"
-    } else {
-        "defaultScope"
-    }]
-    .as_str()
-    .ok_or_else(|| invalid("component scope"))?;
-    let identity = key == name && valid_name(name) && valid_scope(scope);
+    let scope = scope(row)?;
+    let identity =
+        (key == name || key == format!("{scope}/{name}")) && valid_name(name) && valid_scope(scope);
     let local = if matches!(kind, RowKind::Imported | RowKind::ExportedLane) {
         row["scope"] == scope && row.get("defaultScope").is_none()
     } else {
@@ -35,6 +30,19 @@ pub(super) fn supported_row<'a>(
     Ok((name, scope))
 }
 
+fn scope(row: &Value) -> io::Result<&str> {
+    row[if row["scope"]
+        .as_str()
+        .is_some_and(|scope| !scope.is_empty())
+    {
+        "scope"
+    } else {
+        "defaultScope"
+    }]
+    .as_str()
+    .ok_or_else(|| invalid("component scope"))
+}
+
 fn supported_row_shape(row: &Value, kind: RowKind) -> bool {
     let allowed = [
         "name",
@@ -45,6 +53,9 @@ fn supported_row_shape(row: &Value, kind: RowKind) -> bool {
         "rootDir",
         "onLanesOnly",
         "isAvailableOnCurrentLane",
+        "config",
+        "localOnly",
+        "nextVersion",
     ];
     let shape = row
         .as_object()
@@ -58,8 +69,13 @@ fn supported_row_shape(row: &Value, kind: RowKind) -> bool {
         row.get("onLanesOnly").is_none() && row.get("isAvailableOnCurrentLane").is_none();
     let lane_fields = match kind {
         RowKind::LaneSnap => lane_only,
-        RowKind::ExportedLane => lane_only || ordinary,
-        _ => ordinary,
+        RowKind::ExportedLane | RowKind::Staged | RowKind::Imported => lane_only || ordinary,
+        RowKind::New => ordinary,
     };
-    shape && lane_fields
+    shape
+        && lane_fields
+        && row.get("localOnly").is_none_or(Value::is_boolean)
+        && row
+            .get("nextVersion")
+            .is_none_or(|value| value.is_null() || value.is_object())
 }

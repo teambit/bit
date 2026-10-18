@@ -1,5 +1,5 @@
 //! Native deprecation metadata edits; source and model objects remain unchanged.
-mod selection;
+pub(crate) mod selection;
 mod state;
 #[cfg(test)]
 mod tests;

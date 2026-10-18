@@ -29,7 +29,7 @@ pub(super) fn select_lane(
     let id = &bitmap["_bit_lane"]["id"];
     let lane_scope = id["scope"].as_str().ok_or_else(|| invalid("current lane scope"))?;
     let lane_name = id["name"].as_str().ok_or_else(|| invalid("current lane name"))?;
-    if bitmap["_bit_lane"]["exported"] != (kind == RowKind::ExportedLane)
+    if (kind == RowKind::ExportedLane && bitmap["_bit_lane"]["exported"] != true)
         || !valid_scope(lane_scope)
         || !valid_name(lane_name)
         || lane_name.contains('/')
@@ -42,7 +42,7 @@ pub(super) fn select_lane(
 }
 
 fn read_lane(root: &Path, id: &Value, scope: &str, name: &str) -> io::Result<Lane> {
-    let index_before = fs::read(root.join(".bit/index.json"))?;
+    let index_before = fs::read(crate::scope_path(root).join("index.json"))?;
     let index: Value = serde_json::from_slice(&index_before)?;
     let rows = index["lanes"].as_array().ok_or_else(|| invalid("lane index"))?;
     let matches: Vec<_> = rows
@@ -54,12 +54,12 @@ fn read_lane(root: &Path, id: &Value, scope: &str, name: &str) -> io::Result<Lan
     }
     let hash = matches[0]["hash"].as_str().ok_or_else(|| invalid("lane hash"))?;
     crate::merge_history::hash(hash)?;
-    let path = root
-        .join(".bit/objects")
+    let path = crate::scope_path(root)
+        .join("objects")
         .join(&hash[..2])
         .join(&hash[2..]);
     let before = fs::read(&path)?;
-    let value = outbound::read_object(&root.join(".bit/objects"), hash, "Lane")?;
+    let value = outbound::read_object(&crate::scope_path(root).join("objects"), hash, "Lane")?;
     if value["scope"] != scope || value["name"] != name {
         return Err(invalid("current lane object identity"));
     }

@@ -3184,11 +3184,11 @@ row's fields, object path, header, logical identity, and remote index stay exact
 - [ ] `e2e/harmony/recover.e2e.ts:26` bit recover command › recover before snapping › bit status should not show a section of removed components
 - [ ] `e2e/harmony/recover.e2e.ts:30` bit recover command › recover before snapping › bit status should not show the dependent component with an issue because the dependency is now back to the workspace
 - [ ] `e2e/harmony/recover.e2e.ts:33` bit recover command › recover before snapping › bit list should show the removed component
-- [ ] `e2e/harmony/recover.e2e.ts:50` bit recover command › recover after snapping › should put it back in .bitmap file
+- [x] `e2e/harmony/recover.e2e.ts:50` bit recover command › recover after snapping › should put it back in .bitmap file — `commands::recover::batch::locally_snapped_removal_imports_from_its_staged_model_without_remote_publication`
 - [ ] `e2e/harmony/recover.e2e.ts:54` bit recover command › recover after snapping › bit status should not show the component as remotelySoftRemoved
 - [ ] `e2e/harmony/recover.e2e.ts:58` bit recover command › recover after snapping › bit list should show the component
 - [ ] `e2e/harmony/recover.e2e.ts:62` bit recover command › recover after snapping › bit status should show the component as modified because the RemoveAspect has changed
-- [ ] `e2e/harmony/recover.e2e.ts:83` bit recover command › export the soft-remove component, start a new workspace and recover from there › should import the component
+- [x] `e2e/harmony/recover.e2e.ts:83` bit recover command › export the soft-remove component, start a new workspace and recover from there › should import the component — `commands::recover::remote::deleted_remote_component_is_imported_then_its_removal_is_overridden`
 - [ ] `e2e/harmony/recover.e2e.ts:89` bit recover command › export the soft-remove component, start a new workspace and recover from there › bit status should show the component as modified because the RemoveAspect has changed
 - [ ] `e2e/harmony/recover.e2e.ts:110` bit recover command › import soft-removed component › bit status should show the component as soft-removed
 - [ ] `e2e/harmony/recover.e2e.ts:114` bit recover command › import soft-removed component › bit status should not show the component as modified
@@ -3387,21 +3387,21 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 - [ ] `e2e/harmony/scope-cmd.e2e.ts:28` bit scope command › bit scope fork › should show the forked components from the scope
 - [ ] `e2e/harmony/scope-cmd.e2e.ts:33` bit scope command › bit scope fork › bit show should show the original component in the fork section
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:46` bit scope command › bit scope rename › should rename the scope
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:51` bit scope command › bit scope rename › should delete the old link to node_modules
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:55` bit scope command › bit scope rename › should create a new link to node_modules
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:59` bit scope command › bit scope rename › should compile the renamed components
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:71` bit scope command › bit scope rename --refactor › should change the package name in the component files
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:76` bit scope command › bit scope rename --refactor › should also change the aspect-id in the workspace.jsonc
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:90` bit scope command › bit scope rename, some components are exported some are new › should deprecate the exported one (comp3)
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:97` bit scope command › bit scope rename, some components are exported some are new › should rename the new ones
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:107` bit scope command › bit scope rename, some components are exported some are new › bit status should not have issues
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:110` bit scope command › bit scope rename, some components are exported some are new › bit status should show 3 new components and one modified (comp3 due to deprecation)
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:126` bit scope command › bit scope rename-owner › should rename the default-scope in workspace.jsonc
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:129` bit scope command › bit scope rename-owner › should rename the scope of the components
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:134` bit scope command › bit scope rename-owner › should delete the old link to node_modules
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:140` bit scope command › bit scope rename-owner › should create a new link to node_modules
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:146` bit scope command › bit scope rename-owner › should compile the renamed components
+- [x] `e2e/harmony/scope-cmd.e2e.ts:46` bit scope command › bit scope rename › should rename the scope — `harmony::scope_rename::scope_rename_changes_the_workspace_default_and_all_matching_new_components`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:51` bit scope command › bit scope rename › should delete the old link to node_modules — `harmony::scope_rename::scope_rename_changes_the_workspace_default_and_all_matching_new_components`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:55` bit scope command › bit scope rename › should create a new link to node_modules — `harmony::scope_rename::scope_rename_changes_the_workspace_default_and_all_matching_new_components`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:59` bit scope command › bit scope rename › should compile the renamed components — `harmony::scope_rename::scope_rename_changes_the_workspace_default_and_all_matching_new_components`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:71` bit scope command › bit scope rename --refactor › should change the package name in the component files — `harmony::scope_rename::refactor::mixed_exported_and_new_scope_refactoring_rewrites_the_chain_and_aspect_key`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:76` bit scope command › bit scope rename --refactor › should also change the aspect-id in the workspace.jsonc — `harmony::scope_rename::refactor::scope_refactoring_updates_an_actual_configured_aspect_key`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:90` bit scope command › bit scope rename, some components are exported some are new › should deprecate the exported one (comp3) — `harmony::scope_rename::refactor::mixed_exported_and_new_scope_refactoring_rewrites_the_chain_and_aspect_key`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:97` bit scope command › bit scope rename, some components are exported some are new › should rename the new ones — `harmony::scope_rename::refactor::mixed_exported_and_new_scope_refactoring_rewrites_the_chain_and_aspect_key`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:107` bit scope command › bit scope rename, some components are exported some are new › bit status should not have issues — `harmony::scope_rename::refactor::mixed_exported_and_new_scope_refactoring_rewrites_the_chain_and_aspect_key`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:110` bit scope command › bit scope rename, some components are exported some are new › bit status should show 3 new components and one modified (comp3 due to deprecation) — `harmony::scope_rename::refactor::mixed_exported_and_new_scope_refactoring_rewrites_the_chain_and_aspect_key`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:126` bit scope command › bit scope rename-owner › should rename the default-scope in workspace.jsonc — `harmony::scope_rename::owner_rename_keeps_component_directories_across_multiple_scopes`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:129` bit scope command › bit scope rename-owner › should rename the scope of the components — `harmony::scope_rename::owner_rename_keeps_component_directories_across_multiple_scopes`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:134` bit scope command › bit scope rename-owner › should delete the old link to node_modules — `harmony::scope_rename::owner_rename_keeps_component_directories_across_multiple_scopes`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:140` bit scope command › bit scope rename-owner › should create a new link to node_modules — `harmony::scope_rename::owner_rename_keeps_component_directories_across_multiple_scopes`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:146` bit scope command › bit scope rename-owner › should compile the renamed components — `harmony::scope_rename::owner_rename_keeps_component_directories_across_multiple_scopes`
 - [ ] `e2e/harmony/scope-cmd.e2e.ts:167` bit scope command › bit scope fork when the paths of two components conflicting › should not throw an error about a component is nested in another component dir
 
 ### `e2e/harmony/scope-trust.e2e.ts`

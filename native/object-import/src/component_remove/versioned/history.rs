@@ -36,17 +36,20 @@ pub(super) fn ancestry(objects: &Path, head: &str) -> io::Result<Vec<Value>> {
 pub(super) fn plan(root: &Path, scope: &str, name: &str, head: &str) -> io::Result<HistoryState> {
     let identity = format!("{scope}/{name}:VersionHistory");
     let hash = format!("{:x}", Sha1::digest(identity.as_bytes()));
-    let path = root
-        .join(".bit/objects")
+    let path = crate::scope_path(root)
+        .join("objects")
         .join(&hash[..2])
         .join(&hash[2..]);
-    let versions = ancestry(&root.join(".bit/objects"), head)?;
+    let versions = ancestry(&crate::scope_path(root).join("objects"), head)?;
     let value = json!({"name":name,"scope":scope,"versions":versions,"graphCompleteRefs":[]});
     match fs::symlink_metadata(&path) {
         Ok(metadata) if metadata.file_type().is_file() && !metadata.file_type().is_symlink() => {
             let before = fs::read(&path)?;
-            let existing =
-                outbound::read_object(&root.join(".bit/objects"), &hash, "VersionHistory")?;
+            let existing = outbound::read_object(
+                &crate::scope_path(root).join("objects"),
+                &hash,
+                "VersionHistory",
+            )?;
             if existing != value {
                 return Err(invalid("existing lane VersionHistory differs from snap ancestry"));
             }
@@ -95,25 +98,40 @@ fn ensure_absent(path: &PathBuf) -> io::Result<()> {
 impl super::VersionedPlan {
     /// Keep the main-line history that the released CLI's clean-status check publishes.
     pub fn with_status_history(mut self) -> io::Result<Self> {
+        if self.workspace.lane.is_some() {
+            self.history = Some(plan(
+                &self.workspace.root,
+                self.workspace.identity
+                    .split_once('/')
+                    .ok_or_else(|| invalid("component identity"))?
+                    .0,
+                self.workspace.identity
+                    .split_once('/')
+                    .ok_or_else(|| invalid("component identity"))?
+                    .1,
+                self.workspace.version.as_deref().ok_or_else(|| invalid("lane version"))?,
+            )?);
+            return Ok(self);
+        }
         let (scope, name) = self.workspace.identity
             .split_once('/')
             .ok_or_else(|| invalid("tagged component identity"))?;
         let (_, model_hash) =
             super::index_change(&self.workspace.root, scope, name, super::RowKind::Staged)?;
         let model = outbound::read_object(
-            &self.workspace.root.join(".bit/objects"),
+            &crate::scope_path(&self.workspace.root).join("objects"),
             &model_hash,
             "Component",
         )?;
         let head = model["head"].as_str().ok_or_else(|| invalid("tagged component head"))?;
         let (hash, after) = outbound::prepare_version_history(
-            &self.workspace.root.join(".bit/objects"),
+            &crate::scope_path(&self.workspace.root).join("objects"),
             scope,
             name,
             head,
         )?;
-        let path = self.workspace.root
-            .join(".bit/objects")
+        let path = crate::scope_path(&self.workspace.root)
+            .join("objects")
             .join(&hash[..2])
             .join(&hash[2..]);
         let before = read_history(&self.workspace.root, &path)?;

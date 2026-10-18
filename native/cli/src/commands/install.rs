@@ -105,7 +105,8 @@ fn utf8(args: &[OsString]) -> Option<Vec<String>> {
 pub(super) fn host_info(host: &Host, terminal: &Terminal) -> io::Result<HostInfo> {
     let mut facts = host.call("hostInfo", &terminal.json())?;
     if let Some(Value::String(path)) = facts.get_mut("path").map(Value::take) {
-        // SAFETY: no thread of this process exists yet; the runtime starts after.
+        // SAFETY: only the Host stderr forwarder exists, copying pipe bytes without
+        // accessing the environment. Inventory, resolver and runtime workers start later.
         unsafe { env::set_var("PATH", path) };
     }
     serde_json::from_value(facts).map_err(io::Error::other)
