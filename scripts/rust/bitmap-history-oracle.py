@@ -103,10 +103,10 @@ def _baseline(raw, metadata, baseline):
     return metadata[len(original):]
 
 
-def _oracle(oracle):
+def _oracle(oracle, expected_transitions):
     transitions = oracle['transitions']
-    _require(isinstance(transitions, list) and len(transitions) == 15,
-             'oracle must contain exactly 15 ordered transitions')
+    _require(isinstance(transitions, list) and len(transitions) == expected_transitions,
+             f'oracle must contain exactly {expected_transitions} ordered transitions')
     result = []
     for index, transition in enumerate(transitions):
         reason = transition['reason']
@@ -172,7 +172,7 @@ def _validate_oracle_history(oracle, baseline, transitions):
             _require(row['identity'] == lines[index].partition(' ')[0], 'oracle clock identity differs')
 
 
-def validate(root, baseline, oracle, interval_start_ns, interval_end_ns):
+def validate(root, baseline, oracle, interval_start_ns, interval_end_ns, *, expected_transitions=15):
     """Return ``(logical_projection, raw_proof)`` after every strict check.
 
     ``baseline`` is the unchanged ``STATE.bitmap_history`` mapping. Interval
@@ -187,7 +187,9 @@ def validate(root, baseline, oracle, interval_start_ns, interval_end_ns):
     root = Path(root)
     raw, metadata = _history(root)
     appended = _baseline(raw, metadata, baseline)
-    transitions = _oracle(oracle)
+    _require(type(expected_transitions) is int and expected_transitions in (10, 15),
+             'unsupported fixed-workload transition count')
+    transitions = _oracle(oracle, expected_transitions)
     _validate_oracle_history(oracle, baseline, transitions)
     for field in ['metadata_mode', 'directory_mode']:
         _require(raw[field] == _mode(oracle['raw_history'][field]), f'oracle {field} differs')

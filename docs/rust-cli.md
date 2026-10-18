@@ -203,6 +203,8 @@ intermediate preimages are oracle-derived and are not claimed as observed timed
 bytes. The original failed comparison and host-invalid timing remain preserved;
 this method does not qualify those earlier samples.
 
+Ten-component fork batch benchmarks prepare independent released-CLI write transcripts before timing. Each timed run validates every surviving snapshot against the final writer for its actual timestamp, with exact bytes, modes, reasons, ordering and final bitmap checks. Overwritten intermediate preimages are oracle-derived. Single-copy and refactoring comparisons retain their existing checks. Earlier failed comparisons remain unqualified; already-qualified workloads keep their original source/helper identities and are not rerun.
+
 The [baseline compiler metadata correction](../scripts/rust/benchmarks/import-adoption-completion-provenance-correction.json) records the actual pinned Rust 1.97.0 compiler, also embedded in the measured ELF binary. The original builder queried Rust outside `native/` and recorded the unrelated host compiler. Raw baseline reports, source/binary hashes and measurements remain unchanged.
 
 Recovery of a remotely deleted component uses a case-specific independent released-CLI write transcript to validate its import/recover backups. Every surviving snapshot byte and mode, metadata row, reason and live timestamp group remains checked against the final writer for that ID. The fixture preserves raw evidence and compares final workspace state exactly; overwritten intermediate preimages are oracle-derived, not claimed as observed timed bytes.

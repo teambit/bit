@@ -41,9 +41,11 @@ fn combined(target: &str) {
     );
     let after = support::bitmap(&helper);
     assert_eq!(after["comp4"]["version"], "0.0.2");
+    // AbstractVinyl.write uses eol.auto when materializing the imported Source.
+    let expected = if cfg!(windows) { UPDATED.replace('\n', "\r\n") } else { UPDATED.to_owned() };
     assert_eq!(
         std::fs::read(file(&helper, &after["comp4"], "index.js")).unwrap(),
-        UPDATED.as_bytes(),
+        expected.as_bytes(),
     );
     dependents::assert_components(
         &helper,

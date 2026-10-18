@@ -8,7 +8,11 @@ use crate::{
 use serde_json::Value;
 use std::{collections::BTreeMap, ffi::OsStr, fs, path::Path};
 
-pub(super) fn compare(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
+pub(in crate::commands::recover) fn compare(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+) -> Run {
     let evidence = tempfile::Builder::new()
         .prefix("recovery history ")
         .tempdir()

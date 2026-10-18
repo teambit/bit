@@ -202,5 +202,29 @@ class BitmapHistoryOracleTests(unittest.TestCase):
             self.validate(oracle=oracle)
 
 
+    def ten_transitions(self):
+        self.preimages = self.preimages[:10]
+        self.oracle['transitions'] = self.oracle['transitions'][:10]
+        self.write([0] * 4 + [1] * 6)
+        self.oracle['raw_history'].update({
+            'metadata_base64': encoded(self.metadata.read_bytes()),
+            'backups': {path.name: {'bytes_base64': encoded(path.read_bytes()),
+                                   'mode': path.stat().st_mode & 0o7777}
+                        for path in self.history.iterdir()}})
+
+    def test_explicit_ten_write_workload_accepts_only_validated_last_writer_partitions(self):
+        self.ten_transitions()
+        first, raw_first = self.validate(expected_transitions=10)
+        self.write([0] * 2 + [1] * 5 + [2] * 3)
+        second, raw_second = self.validate(expected_transitions=10)
+        self.assertEqual(first, second)
+        self.assertNotEqual(raw_first['groups'], raw_second['groups'])
+
+    def test_default_fifteen_write_contract_rejects_a_ten_write_transcript(self):
+        self.ten_transitions()
+        with self.assertRaisesRegex(ValueError, 'exactly 15 ordered transitions'):
+            self.validate()
+
+
 if __name__ == '__main__':
     unittest.main()

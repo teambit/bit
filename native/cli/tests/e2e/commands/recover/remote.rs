@@ -1,5 +1,5 @@
 //! Scope.get imports missing models before the separate nonpersisting remote peek.
-mod history;
+pub(super) mod history;
 
 use crate::{
     commands::move_paths::support::{setup, workspace},
