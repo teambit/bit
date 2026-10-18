@@ -1,4 +1,6 @@
 //! Scope.get imports missing models before the separate nonpersisting remote peek.
+mod history;
+
 use crate::{
     commands::move_paths::support::{setup, workspace},
     helper::remote,
@@ -31,11 +33,8 @@ fn deleted_remote_component_is_imported_then_its_removal_is_overridden() {
     helper.re_init_workspace();
     helper.add_remote_scope();
     let id = format!("{}/comp1", helper.scopes.remote);
-    let result = crate::commands::add::support::compare_with_stdout(
-        &helper,
-        &format!("recover {id} -x --skip-write-config-files"),
-        stable,
-    );
+    let command = format!("recover {id} -x --skip-write-config-files");
+    let result = history::compare(&helper, &command, stable);
     assert!(result.status.success(), "{}", result.stderr);
     let map = crate::commands::move_paths::support::bitmap(&helper);
     let row = map

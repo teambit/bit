@@ -107,3 +107,56 @@ fn changing_import_versions_invalidates_only_the_reusable_row() {
     assert_eq!(retained.read_set, vec![source]);
     assert!(retained.started);
 }
+
+#[cfg(windows)]
+#[test]
+fn windows_separator_equivalence_advances_hashes_without_rewriting_proof_paths() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("source.js");
+    fs::write(&path, b"new").unwrap();
+    let forward = path
+        .to_str()
+        .unwrap()
+        .replace('\\', "/");
+    let mut proof = bit_install::policy::scope::proof_from_bytes(&path, Some(b"old"));
+    proof["path"] = json!(forward);
+    let mut retained = Retained { read_set: vec![proof], ..Default::default() };
+    retained
+        .acknowledge_import(&[write(&path, b"old", b"new")])
+        .unwrap();
+    let mut expected = bit_install::policy::scope::proof_from_bytes(&path, Some(b"new"));
+    expected["path"] = json!(forward);
+    assert_eq!(retained.read_set, vec![expected]);
+    let mut duplicate = write(&path, b"new", b"new");
+    duplicate["path"] = json!(forward);
+    let before = retained.read_set.clone();
+    assert!(
+        retained
+            .acknowledge_import(&[write(&path, b"new", b"new"), duplicate])
+            .is_err(),
+    );
+    assert_eq!(retained.read_set, before);
+}
+
+#[test]
+fn malformed_acknowledgments_cannot_advance_a_valid_content_proof() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("source.js");
+    fs::write(&path, b"new").unwrap();
+    let before = bit_install::policy::scope::proof_from_bytes(&path, Some(b"old"));
+    let mut retained = Retained { read_set: vec![before.clone()], ..Default::default() };
+    for field in ["beforeHash", "afterHash", "path"] {
+        let mut receipt = write(&path, b"old", b"new");
+        receipt[field] = json!("invalid");
+        assert!(
+            retained
+                .acknowledge_import(&[receipt])
+                .is_err(),
+        );
+        assert_eq!(retained.read_set, vec![before.clone()]);
+    }
+    retained
+        .acknowledge_import(&[])
+        .unwrap();
+    assert_eq!(retained.read_set, vec![before]);
+}

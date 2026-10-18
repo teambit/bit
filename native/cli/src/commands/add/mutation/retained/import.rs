@@ -30,8 +30,12 @@ impl Retained {
         let replacements = self.import_replacements(writes)?;
         for (before, after) in replacements {
             for proof in self.read_set.iter_mut().chain(self.controls.values_mut()) {
-                if *proof == before {
-                    *proof = after.clone();
+                if content(proof)
+                    && proof["path"].as_str().map(Path::new)
+                        == before["path"].as_str().map(Path::new)
+                    && proof["hash"] == before["hash"]
+                {
+                    proof["hash"] = after["hash"].clone();
                 }
             }
         }
@@ -43,7 +47,7 @@ impl Retained {
         for write in writes {
             let (before, after) = receipt(write)?;
             let path = before["path"].as_str().ok_or_else(|| invalid("import write path"))?;
-            if !seen.insert(path.to_owned()) {
+            if !seen.insert(Path::new(path).to_owned()) {
                 return Err(invalid("duplicate import write path"));
             }
             if !self.matching_content(&before)? {
@@ -60,16 +64,23 @@ impl Retained {
     fn matching_content(&self, before: &Value) -> io::Result<bool> {
         let mut matched = false;
         for proof in self.read_set.iter().chain(self.controls.values()) {
-            if proof["path"] != before["path"] || !content(proof) {
+            if !content(proof) || content_path(proof)? != content_path(before)? {
                 continue;
             }
-            if proof != before {
+            if proof["hash"] != before["hash"] {
                 return Err(invalid("import write preimage changed"));
             }
             matched = true;
         }
         Ok(matched)
     }
+}
+fn content_path(proof: &Value) -> io::Result<&Path> {
+    proof["path"]
+        .as_str()
+        .map(Path::new)
+        .filter(|path| path.is_absolute())
+        .ok_or_else(|| invalid("import content proof path"))
 }
 fn content(proof: &Value) -> bool {
     proof

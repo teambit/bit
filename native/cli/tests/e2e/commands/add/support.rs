@@ -16,11 +16,11 @@ pub(crate) fn workspace() -> Helper {
 }
 
 pub(crate) fn compare(helper: &Helper, command: &str) -> Run {
-    compare_mode(helper, command, false, true, str::to_owned, false)
+    compare_mode(helper, command, false, true, str::to_owned, false, None)
 }
 
 pub(crate) fn compare_ci(helper: &Helper, command: &str, native: bool) -> Run {
-    compare_mode(helper, command, true, native, str::to_owned, false)
+    compare_mode(helper, command, true, native, str::to_owned, false, None)
 }
 
 pub(crate) fn compare_with_stdout(
@@ -28,17 +28,45 @@ pub(crate) fn compare_with_stdout(
     command: &str,
     stdout: fn(&str) -> String,
 ) -> Run {
-    compare_mode(helper, command, false, true, stdout, false)
+    compare_mode(helper, command, false, true, stdout, false, None)
 }
 
 /// Require clean delegation while retaining exact command bytes and full state.
 pub(crate) fn compare_declined(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
-    compare_mode(helper, command, false, false, stdout, false)
+    compare_mode(helper, command, false, false, stdout, false, None)
 }
 
 /// Installation changes only these two qualified pnpm wall-clock fields independently.
 pub(crate) fn compare_install(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
-    compare_mode(helper, command, false, true, stdout, true)
+    compare_mode(helper, command, false, true, stdout, true, None)
+}
+
+pub(crate) type HistoryProjection<'a> = dyn Fn(&Path, i64, i64) -> BTreeMap<String, Vec<u8>> + 'a;
+
+/// Case-specific oracle validates every raw history write before comparing logical transitions.
+pub(crate) fn compare_with_history(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    observe: &HistoryProjection<'_>,
+) -> Run {
+    compare_mode(helper, command, false, true, stdout, false, Some(observe))
+}
+
+/// Untimed oracle preparation restores the identical source/cache/hardlink inputs afterwards.
+pub(crate) fn prepare_history<Prepared>(
+    helper: &Helper,
+    action: impl FnOnce() -> Prepared,
+) -> Prepared {
+    let root = &helper.scopes.local_path;
+    let timestamps = timestamps::Snapshot::read(root);
+    let hardlinks = hardlinks::Snapshot::read(root);
+    let baseline = helper.clone_workspace();
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(action));
+    helper.get_cloned_workspace(&baseline);
+    hardlinks.restore(root);
+    timestamps.restore(root);
+    result.unwrap_or_else(|error| std::panic::resume_unwind(error))
 }
 
 fn compare_mode(
@@ -48,6 +76,7 @@ fn compare_mode(
     native: bool,
     stdout: fn(&str) -> String,
     install_clocks: bool,
+    oracle: Option<&HistoryProjection<'_>>,
 ) -> Run {
     let timestamps = timestamps::Snapshot::read(&helper.scopes.local_path);
     let hardlinks = hardlinks::Snapshot::read(&helper.scopes.local_path);
@@ -62,10 +91,25 @@ fn compare_mode(
     let ended = chrono::Utc::now().timestamp_millis();
     let mut expected_files = tree(root);
     if install_clocks {
+        assert!(
+            expected.status.success(),
+            "{command}: Node installation failed: {} {}",
+            expected.stdout,
+            expected.stderr,
+        );
+        assert!(
+            expected_files.contains_key("node_modules/.modules.yaml"),
+            "{command}: Node installation did not create pnpm metadata: {} {}",
+            expected.stdout,
+            expected.stderr,
+        );
         install_clocks::project(&mut expected_files, started, ended);
     }
     let expected_scope = scope_tree(root, &config_history);
-    let expected_history = history(root, &baseline_history);
+    let expected_history = oracle.map_or_else(
+        || history(root, &baseline_history),
+        |observe| observe(root, started, ended),
+    );
     helper.get_cloned_workspace(&baseline);
     hardlinks.restore(root);
     timestamps.restore(root);
@@ -94,7 +138,10 @@ fn compare_mode(
     compare_paths(&actual_files, &expected_files, command);
     compare_paths(&scope_tree(root, &config_history), &expected_scope, "scope objects/controls");
     compare_paths(
-        &history(root, &baseline_history),
+        &oracle.map_or_else(
+            || history(root, &baseline_history),
+            |observe| observe(root, started, ended),
+        ),
         &expected_history,
         "bitmap history bodies/reasons",
     );

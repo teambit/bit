@@ -57,6 +57,28 @@ pub(crate) fn compare_install(helper: &Helper, command: &str, stdout: fn(&str) -
     assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
     actual
 }
+/// Recovery's independent write oracle retains the same immutable real remote contract.
+pub(crate) fn compare_with_history(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    observe: &support::HistoryProjection<'_>,
+) -> Run {
+    let remote = tree(&helper.scopes.remote_path);
+    let actual = support::compare_with_history(helper, command, stdout, observe);
+    assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
+    actual
+}
+/// The untimed released-CLI preparation must also leave its remote unchanged.
+pub(crate) fn prepare_history<Prepared>(
+    helper: &Helper,
+    action: impl FnOnce() -> Prepared,
+) -> Prepared {
+    let remote = tree(&helper.scopes.remote_path);
+    let result = support::prepare_history(helper, action);
+    assert!(tree(&helper.scopes.remote_path) == remote, "history preparation mutated the remote");
+    result
+}
 pub(crate) fn tag(helper: &Helper) {
     setup(helper, "tag --ignore-issues * --message identity-fixture");
 }
