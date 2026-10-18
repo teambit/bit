@@ -1,4 +1,5 @@
 //! Map only validated clock IDs; metadata order preserves every snapshot and collision group.
+mod clock;
 mod tests;
 
 use std::{collections::BTreeMap, fs, io, path::Path};
@@ -12,6 +13,9 @@ struct History {
     normalized: Vec<u8>,
 }
 impl Histories {
+    pub(super) fn wait_past_setup(root: &Path) {
+        clock::wait(&Self::read(root));
+    }
     pub(super) fn read(root: &Path) -> Self {
         let mut histories = BTreeMap::new();
         for scope in [".bit/", ".git/bit/", ""] {

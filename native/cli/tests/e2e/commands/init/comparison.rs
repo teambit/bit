@@ -7,6 +7,10 @@ use std::{
     path::Path,
 };
 
+/// Keep setup backups older than either real replay command without changing history.
+pub(super) fn wait_past_setup_history(root: &Path) {
+    history::Histories::wait_past_setup(root);
+}
 pub(super) fn tree(actual: &Path, expected: &Path, command: &str, rebuilt_index: bool) {
     let actual = inventory(actual, rebuilt_index);
     let expected = inventory(expected, rebuilt_index);

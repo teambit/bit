@@ -1,0 +1,673 @@
+{
+  "native_source": {
+    "sha256": "4b3d8e805c6215cdcc17799a872dce7d116340a4c8749b0488fdfd4ab609528a",
+    "file_count": 1664
+  },
+  "build_provenance": {
+    "head": "a800673fc4da212e06b15970026ed431dec5b6ea",
+    "native_source": {
+      "sha256": "4b3d8e805c6215cdcc17799a872dce7d116340a4c8749b0488fdfd4ab609528a",
+      "file_count": 1664
+    },
+    "artifact": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+    "binary_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+    "clean_argv": [
+      "cargo",
+      "clean",
+      "--profile",
+      "release",
+      "-p",
+      "bit-cli",
+      "-p",
+      "bit-client-transfer",
+      "-p",
+      "bit-workspace-config",
+      "-p",
+      "bit-dependency-scanner",
+      "-p",
+      "bit-ignore",
+      "-p",
+      "bit-install",
+      "-p",
+      "bit-object-import"
+    ],
+    "build_argv": [
+      "cargo",
+      "build",
+      "--locked",
+      "--release",
+      "-p",
+      "bit-cli"
+    ],
+    "local_workspace_packages": [
+      "bit-cli",
+      "bit-client-transfer",
+      "bit-workspace-config",
+      "bit-dependency-scanner",
+      "bit-ignore",
+      "bit-install",
+      "bit-object-import"
+    ],
+    "functional_validation": {
+      "native_source": {
+        "sha256": "4b3d8e805c6215cdcc17799a872dce7d116340a4c8749b0488fdfd4ab609528a",
+        "file_count": 1664
+      },
+      "tested_tree": "603cb90f06e93d71f82792aefa797dd594e6d702",
+      "head": "51e378bd55e81b9b15f1a1979e2d1089f75eadb7",
+      "counts": {
+        "workspace": 1488,
+        "e2e": 767
+      },
+      "checks": [
+        {
+          "check": "fmt",
+          "code": 0,
+          "seconds": 1.41,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/fmt.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "check": "clippy",
+          "code": 0,
+          "seconds": 3.84,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/clippy.log",
+          "sha256": "c98d196fd9bfe6d6f69aa364ee5b944383e4214a1ccb35487a23b602d094db0e"
+        },
+        {
+          "check": "dylint",
+          "code": 0,
+          "seconds": 12.67,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/dylint.log",
+          "sha256": "29c13740139e7177c65c6ab3a47bdd591e1fa8a097cb507c650e6bc81f93cd27"
+        },
+        {
+          "check": "doc",
+          "code": 0,
+          "seconds": 3.34,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/doc.log",
+          "sha256": "12474906ccb3060a7a5b14d79a0d116b5abecc3d749c5ffea4ab997b6a5a5ebf"
+        },
+        {
+          "check": "workspace",
+          "code": 0,
+          "seconds": 6.41,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/workspace.log",
+          "sha256": "09e2046e8083b06e9a3023f82ae906eea330371f649cfc12b18adc5fb7d4c111"
+        },
+        {
+          "check": "e2e",
+          "code": 0,
+          "seconds": 234.12,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/e2e.log",
+          "sha256": "18aee9808409c793242fa2eaec3392469631df3aec238f72a1d1eb9752336791"
+        },
+        {
+          "check": "port-plan",
+          "code": 0,
+          "seconds": 0.16,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/port-plan.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "check": "scope",
+          "code": 0,
+          "seconds": 0.02,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/scope.log",
+          "sha256": "0ca6565bd8581c49642335d8fb61ae83bab6676813aa044df7ea6967fa124ed5"
+        }
+      ],
+      "logs": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411"
+    },
+    "elapsed_seconds": 53.90389329002937,
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: x86_64-unknown-linux-gnu\nrelease: 1.98.1\nLLVM version: 22.1.8\n",
+    "rustc_wrapper": "",
+    "builder_sha256": "f4ab56d6c96a972bdc0d208ee166281f6fc3bef47ad112088863514a2d1d2c42"
+  },
+  "measured_at_utc": "2026-10-18T10:27:38.550650+00:00",
+  "correctness_valid": true,
+  "performance_valid": true,
+  "performance_qualification": "Exact-source first host-valid complete workloads; slower results remain valid and listed.",
+  "workload_reports": {
+    "status": {
+      "stage": "/var/tmp/transfer-bench-wtwpt3pn",
+      "source": "/var/tmp/import-regression-fixtures/status",
+      "source_sha256": "39929f3318648e695d3d8acb6264752d338c7329f7264e9d69809005e8ec3308",
+      "remote_sha256": {
+        "/var/tmp/transfer-final-fixtures/transfer-remote": "a942d20bbb5a3768ffd723d2f6969428fb55a7ad03c7de26364122c474ae5584"
+      },
+      "rust_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+      "command": [
+        "status",
+        "--json"
+      ],
+      "runs_ms": {
+        "timed": {
+          "node": [
+            792.025,
+            762.062,
+            760.016,
+            744.354,
+            784.103
+          ],
+          "rust": [
+            49.854,
+            51.186,
+            62.55,
+            52.131,
+            63.827
+          ]
+        },
+        "tty": {
+          "node": [
+            783.075,
+            787.608,
+            771.817,
+            760.992,
+            775.592
+          ],
+          "rust": [
+            62.927,
+            63.353,
+            74.274,
+            68.057,
+            76.772
+          ]
+        },
+        "ci": {
+          "node": [
+            747.623,
+            750.102,
+            746.387,
+            780.316,
+            756.007
+          ],
+          "rust": [
+            57.8,
+            53.141,
+            50.997,
+            56.475,
+            63.903
+          ]
+        }
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0
+        },
+        {
+          "mode": "timed",
+          "run": 1
+        },
+        {
+          "mode": "timed",
+          "run": 2
+        },
+        {
+          "mode": "timed",
+          "run": 3
+        },
+        {
+          "mode": "timed",
+          "run": 4
+        },
+        {
+          "mode": "tty",
+          "run": 0
+        },
+        {
+          "mode": "tty",
+          "run": 1
+        },
+        {
+          "mode": "tty",
+          "run": 2
+        },
+        {
+          "mode": "tty",
+          "run": 3
+        },
+        {
+          "mode": "tty",
+          "run": 4
+        },
+        {
+          "mode": "ci",
+          "run": 0
+        },
+        {
+          "mode": "ci",
+          "run": 1
+        },
+        {
+          "mode": "ci",
+          "run": 2
+        },
+        {
+          "mode": "ci",
+          "run": 3
+        },
+        {
+          "mode": "ci",
+          "run": 4
+        }
+      ],
+      "median_ms": {
+        "timed": {
+          "node": 762.062,
+          "rust": 52.131
+        },
+        "tty": {
+          "node": 775.592,
+          "rust": 68.057
+        },
+        "ci": {
+          "node": 750.102,
+          "rust": 56.475
+        }
+      }
+    },
+    "checkout": {
+      "stage": "/var/tmp/transfer-bench-_ft85muc",
+      "source": "/var/tmp/import-regression-fixtures/checkout",
+      "source_sha256": "8cd2297551fb96e3dbc39b3fc7464c3e0106b06d56dfbaf4c4fc7dbcf0f6b032",
+      "remote_sha256": {
+        "/var/tmp/transfer-final-fixtures/transfer-remote": "a942d20bbb5a3768ffd723d2f6969428fb55a7ad03c7de26364122c474ae5584"
+      },
+      "rust_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+      "command": [
+        "checkout",
+        "0.0.1",
+        "comp2",
+        "--force-theirs",
+        "-x"
+      ],
+      "runs_ms": {
+        "timed": {
+          "node": [
+            477.944,
+            472.36,
+            456.772,
+            462.334,
+            462.929
+          ],
+          "rust": [
+            29.471,
+            29.367,
+            29.186,
+            29.778,
+            31.065
+          ]
+        },
+        "tty": {
+          "node": [
+            468.929,
+            476.69,
+            477.443,
+            489.791,
+            474.991
+          ],
+          "rust": [
+            40.192,
+            39.586,
+            42.608,
+            40.335,
+            40.826
+          ]
+        },
+        "ci": {
+          "node": [
+            468.882,
+            471.71,
+            463.349,
+            464.116,
+            474.402
+          ],
+          "rust": [
+            29.868,
+            31.441,
+            29.688,
+            31.141,
+            29.996
+          ]
+        }
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0
+        },
+        {
+          "mode": "timed",
+          "run": 1
+        },
+        {
+          "mode": "timed",
+          "run": 2
+        },
+        {
+          "mode": "timed",
+          "run": 3
+        },
+        {
+          "mode": "timed",
+          "run": 4
+        },
+        {
+          "mode": "tty",
+          "run": 0
+        },
+        {
+          "mode": "tty",
+          "run": 1
+        },
+        {
+          "mode": "tty",
+          "run": 2
+        },
+        {
+          "mode": "tty",
+          "run": 3
+        },
+        {
+          "mode": "tty",
+          "run": 4
+        },
+        {
+          "mode": "ci",
+          "run": 0
+        },
+        {
+          "mode": "ci",
+          "run": 1
+        },
+        {
+          "mode": "ci",
+          "run": 2
+        },
+        {
+          "mode": "ci",
+          "run": 3
+        },
+        {
+          "mode": "ci",
+          "run": 4
+        }
+      ],
+      "median_ms": {
+        "timed": {
+          "node": 462.929,
+          "rust": 29.471
+        },
+        "tty": {
+          "node": 476.69,
+          "rust": 40.335
+        },
+        "ci": {
+          "node": 468.882,
+          "rust": 29.996
+        }
+      }
+    },
+    "export": {
+      "stage": "/var/tmp/transfer-bench-o74exlmj",
+      "source": "/var/tmp/transfer-final-fixtures/export-main",
+      "source_sha256": "54d05d7e3a874ae3be3caccf1dbcdbad42428c1719011ed579992f50184494b1",
+      "remote_sha256": {
+        "/var/tmp/transfer-final-fixtures/transfer-remote": "a942d20bbb5a3768ffd723d2f6969428fb55a7ad03c7de26364122c474ae5584"
+      },
+      "rust_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+      "command": [
+        "export"
+      ],
+      "runs_ms": {
+        "timed": {
+          "node": [
+            292.165,
+            265.049,
+            275.18,
+            275.349,
+            267.324
+          ],
+          "rust": [
+            122.104,
+            118.635,
+            116.768,
+            118.342,
+            117.368
+          ]
+        },
+        "tty": {
+          "node": [
+            278.921,
+            274.655,
+            285.248,
+            281.849,
+            282.537
+          ],
+          "rust": [
+            126.64,
+            128.213,
+            128.152,
+            121.257,
+            130.188
+          ]
+        },
+        "ci": {
+          "node": [
+            260.954,
+            264.845,
+            260.93,
+            272.426,
+            270.912
+          ],
+          "rust": [
+            113.267,
+            116.025,
+            117.701,
+            113.85,
+            118.222
+          ]
+        }
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0
+        },
+        {
+          "mode": "timed",
+          "run": 1
+        },
+        {
+          "mode": "timed",
+          "run": 2
+        },
+        {
+          "mode": "timed",
+          "run": 3
+        },
+        {
+          "mode": "timed",
+          "run": 4
+        },
+        {
+          "mode": "tty",
+          "run": 0
+        },
+        {
+          "mode": "tty",
+          "run": 1
+        },
+        {
+          "mode": "tty",
+          "run": 2
+        },
+        {
+          "mode": "tty",
+          "run": 3
+        },
+        {
+          "mode": "tty",
+          "run": 4
+        },
+        {
+          "mode": "ci",
+          "run": 0
+        },
+        {
+          "mode": "ci",
+          "run": 1
+        },
+        {
+          "mode": "ci",
+          "run": 2
+        },
+        {
+          "mode": "ci",
+          "run": 3
+        },
+        {
+          "mode": "ci",
+          "run": 4
+        }
+      ],
+      "median_ms": {
+        "timed": {
+          "node": 275.18,
+          "rust": 118.342
+        },
+        "tty": {
+          "node": 281.849,
+          "rust": 128.152
+        },
+        "ci": {
+          "node": 264.845,
+          "rust": 116.025
+        }
+      }
+    }
+  },
+  "host_monitor": {
+    "status": {
+      "family": "regressions",
+      "workload": "status",
+      "attempt": 1,
+      "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/regressions-status-1.monitor.json",
+      "sha256": "b75973c074cb2f2c28e11c516774f9a353d336643bd6547fb97f95af01344ea8",
+      "performance_valid": true,
+      "host_busy_peak_percent": 14.250309789343246,
+      "exit_code": 0,
+      "files": {
+        "regressions-status-1.monitor.json": "b75973c074cb2f2c28e11c516774f9a353d336643bd6547fb97f95af01344ea8",
+        "regressions-status-1.result.json": "85253c65681bad1ddcf6bcf092dbeceea28090a76da82b11dd5adf16c6cc1ce0",
+        "regressions-status-1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "regressions-status-1.stdout": "85253c65681bad1ddcf6bcf092dbeceea28090a76da82b11dd5adf16c6cc1ce0",
+        "regressions-status-1.evidence/globals/config/config.json": "ec42de993421d83d7913a85f98fd4f29e2eb5b2b04f4ffa58d05363125a598e5",
+        "regressions-status-1.evidence/globals/config/global-remotes.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "regressions-status-1.evidence/globals/logs/debug.log": "5a56b0145d72cad9616c84dbed960979decf04ef4d76ccf990bea0f536268804",
+        "regressions-status-1.evidence/globals/native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b"
+      },
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-transfer.py",
+        "--source",
+        "/var/tmp/import-regression-fixtures/status",
+        "--node",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/node-oracle",
+        "--rust",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+        "--remote",
+        "/var/tmp/transfer-final-fixtures/transfer-remote",
+        "--runs",
+        "5",
+        "--",
+        "status",
+        "--json"
+      ],
+      "result_path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/regressions-status-1.result.json"
+    },
+    "checkout": {
+      "family": "regressions",
+      "workload": "checkout",
+      "attempt": 1,
+      "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/regressions-checkout-1.monitor.json",
+      "sha256": "c14153e28ee9e5a39a30a4c205d0a4e976725c0936a25f535423a83e80f345fc",
+      "performance_valid": true,
+      "host_busy_peak_percent": 10.676598386095593,
+      "exit_code": 0,
+      "files": {
+        "regressions-checkout-1.monitor.json": "c14153e28ee9e5a39a30a4c205d0a4e976725c0936a25f535423a83e80f345fc",
+        "regressions-checkout-1.result.json": "dd4511d86167b814b35ab3d380f20fddfaf735d0447dd14d7d8d1c0833f8bee3",
+        "regressions-checkout-1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "regressions-checkout-1.stdout": "dd4511d86167b814b35ab3d380f20fddfaf735d0447dd14d7d8d1c0833f8bee3",
+        "regressions-checkout-1.evidence/globals/config/config.json": "ec42de993421d83d7913a85f98fd4f29e2eb5b2b04f4ffa58d05363125a598e5",
+        "regressions-checkout-1.evidence/globals/config/global-remotes.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "regressions-checkout-1.evidence/globals/logs/debug.log": "a5b0339b635aa8b1b898420126197015e9ef619c7a74402adaac20a8b7cca9d2",
+        "regressions-checkout-1.evidence/globals/native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b"
+      },
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-transfer.py",
+        "--source",
+        "/var/tmp/import-regression-fixtures/checkout",
+        "--node",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/node-oracle",
+        "--rust",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+        "--remote",
+        "/var/tmp/transfer-final-fixtures/transfer-remote",
+        "--runs",
+        "5",
+        "--",
+        "checkout",
+        "0.0.1",
+        "comp2",
+        "--force-theirs",
+        "-x"
+      ],
+      "result_path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/regressions-checkout-1.result.json"
+    },
+    "export": {
+      "family": "regressions",
+      "workload": "export",
+      "attempt": 1,
+      "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/regressions-export-1.monitor.json",
+      "sha256": "8495598814e52356337e58b778ea419a9a31b53f88f4921dee1b526356352e23",
+      "performance_valid": true,
+      "host_busy_peak_percent": 5.597014925373134,
+      "exit_code": 0,
+      "files": {
+        "regressions-export-1.monitor.json": "8495598814e52356337e58b778ea419a9a31b53f88f4921dee1b526356352e23",
+        "regressions-export-1.result.json": "ed85cab97bc746f20d55d63848cdb38c95bbfbd91ad0d03fcaa9407d7bb05e11",
+        "regressions-export-1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "regressions-export-1.stdout": "ed85cab97bc746f20d55d63848cdb38c95bbfbd91ad0d03fcaa9407d7bb05e11",
+        "regressions-export-1.evidence/globals/config/config.json": "ec42de993421d83d7913a85f98fd4f29e2eb5b2b04f4ffa58d05363125a598e5",
+        "regressions-export-1.evidence/globals/config/global-remotes.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "regressions-export-1.evidence/globals/logs/debug.log": "e6afdef81bafee3614aff0f9b2f3633c97970830a2ec478ce03be6bbfc866e43"
+      },
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-transfer.py",
+        "--source",
+        "/var/tmp/transfer-final-fixtures/export-main",
+        "--node",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/node-oracle",
+        "--rust",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+        "--remote",
+        "/var/tmp/transfer-final-fixtures/transfer-remote",
+        "--runs",
+        "5",
+        "--",
+        "export"
+      ],
+      "result_path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/regressions-export-1.result.json"
+    }
+  },
+  "qualification_evidence": {
+    "path": "scripts/rust/benchmarks/import-adoption-completion-qualification.json",
+    "sha256": "dcab69d0c1b93a142a381586a38fa0efd999ea984796c5ea3825db521d11724d"
+  }
+}

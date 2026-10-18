@@ -1,0 +1,2025 @@
+{
+  "native_source": {
+    "sha256": "4b3d8e805c6215cdcc17799a872dce7d116340a4c8749b0488fdfd4ab609528a",
+    "file_count": 1664
+  },
+  "build_provenance": {
+    "head": "a800673fc4da212e06b15970026ed431dec5b6ea",
+    "native_source": {
+      "sha256": "4b3d8e805c6215cdcc17799a872dce7d116340a4c8749b0488fdfd4ab609528a",
+      "file_count": 1664
+    },
+    "artifact": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+    "binary_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+    "clean_argv": [
+      "cargo",
+      "clean",
+      "--profile",
+      "release",
+      "-p",
+      "bit-cli",
+      "-p",
+      "bit-client-transfer",
+      "-p",
+      "bit-workspace-config",
+      "-p",
+      "bit-dependency-scanner",
+      "-p",
+      "bit-ignore",
+      "-p",
+      "bit-install",
+      "-p",
+      "bit-object-import"
+    ],
+    "build_argv": [
+      "cargo",
+      "build",
+      "--locked",
+      "--release",
+      "-p",
+      "bit-cli"
+    ],
+    "local_workspace_packages": [
+      "bit-cli",
+      "bit-client-transfer",
+      "bit-workspace-config",
+      "bit-dependency-scanner",
+      "bit-ignore",
+      "bit-install",
+      "bit-object-import"
+    ],
+    "functional_validation": {
+      "native_source": {
+        "sha256": "4b3d8e805c6215cdcc17799a872dce7d116340a4c8749b0488fdfd4ab609528a",
+        "file_count": 1664
+      },
+      "tested_tree": "603cb90f06e93d71f82792aefa797dd594e6d702",
+      "head": "51e378bd55e81b9b15f1a1979e2d1089f75eadb7",
+      "counts": {
+        "workspace": 1488,
+        "e2e": 767
+      },
+      "checks": [
+        {
+          "check": "fmt",
+          "code": 0,
+          "seconds": 1.41,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/fmt.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "check": "clippy",
+          "code": 0,
+          "seconds": 3.84,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/clippy.log",
+          "sha256": "c98d196fd9bfe6d6f69aa364ee5b944383e4214a1ccb35487a23b602d094db0e"
+        },
+        {
+          "check": "dylint",
+          "code": 0,
+          "seconds": 12.67,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/dylint.log",
+          "sha256": "29c13740139e7177c65c6ab3a47bdd591e1fa8a097cb507c650e6bc81f93cd27"
+        },
+        {
+          "check": "doc",
+          "code": 0,
+          "seconds": 3.34,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/doc.log",
+          "sha256": "12474906ccb3060a7a5b14d79a0d116b5abecc3d749c5ffea4ab997b6a5a5ebf"
+        },
+        {
+          "check": "workspace",
+          "code": 0,
+          "seconds": 6.41,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/workspace.log",
+          "sha256": "09e2046e8083b06e9a3023f82ae906eea330371f649cfc12b18adc5fb7d4c111"
+        },
+        {
+          "check": "e2e",
+          "code": 0,
+          "seconds": 234.12,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/e2e.log",
+          "sha256": "18aee9808409c793242fa2eaec3392469631df3aec238f72a1d1eb9752336791"
+        },
+        {
+          "check": "port-plan",
+          "code": 0,
+          "seconds": 0.16,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/port-plan.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "check": "scope",
+          "code": 0,
+          "seconds": 0.02,
+          "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411/scope.log",
+          "sha256": "0ca6565bd8581c49642335d8fb61ae83bab6676813aa044df7ea6967fa124ed5"
+        }
+      ],
+      "logs": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/logs/checks-20261018-085411"
+    },
+    "elapsed_seconds": 53.90389329002937,
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: x86_64-unknown-linux-gnu\nrelease: 1.98.1\nLLVM version: 22.1.8\n",
+    "rustc_wrapper": "",
+    "builder_sha256": "f4ab56d6c96a972bdc0d208ee166281f6fc3bef47ad112088863514a2d1d2c42"
+  },
+  "measured_at_utc": "2026-10-18T10:27:38.544945+00:00",
+  "correctness_valid": true,
+  "performance_valid": true,
+  "performance_qualification": "Exact-source first host-valid complete workloads; slower results remain valid and listed.",
+  "workload_reports": {
+    "scope-rename-mixed": {
+      "stage": "/var/tmp/workspace-mutation-qualified-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "4b3d8e805c6215cdcc17799a872dce7d116340a4c8749b0488fdfd4ab609528a",
+        "file_count": 1664
+      },
+      "correctness_valid": true,
+      "performance_valid": false,
+      "performance_qualification": {
+        "status": "awaiting closed whole-run external monitor qualification",
+        "predeclared_max_host_busy_percent": 80,
+        "required_sample_interval_seconds": 0.5,
+        "required_start_gate_seconds": 20,
+        "required_start_gate_max_busy_percent": 30
+      },
+      "rust_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-scope-rename-mixed"
+        },
+        "home": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-home",
+        "globals": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-globals",
+        "remotes": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-scope-rename-mixed"
+        },
+        "remote_path": "/var/tmp/workspace-mutation-qualified-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        },
+        "scope_bitmap_history_oracle": {
+          "path": "/var/tmp/workspace-mutation-qualified-benchmark/scope-bitmap-history-oracle.json",
+          "sha256": "9d1144e601fdca4f707bdc82b2a6e2219e0a362f5e826d49297313d91c214665"
+        }
+      },
+      "fixture_sha256": {
+        "remove-tagged-batch": "374db2f73c969db8011ef98b9db6516a8c9dd101b49be7e584bd4fec662b1d77",
+        "delete-tagged-batch": "0f49ff58bf09e8c7df23a1d8477f3a05a11058c36852929194cabcffbfc3affc",
+        "recover-deleted-batch": "5cb4b72d2c2a9ba345ea6591ba79ede7318393d167fff0e0b10b61c7773aa9ae",
+        "scope-rename-mixed": "36960d0558afc9572f96adc278c819bf4068ae7d0d0c43b874fb151f4e7040f7"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925"
+      },
+      "remote_fixture_sha256": {
+        "remove-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "delete-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "recover-deleted-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "scope-rename-mixed": "e5753c13bfab82355f21717d639b8ce127174c02fe03de5619bb4507093b95fe"
+      },
+      "host_monitor": null,
+      "host_command_samples": "/var/tmp/workspace-mutation-qualified-benchmark/evidence/*.host.json",
+      "reproduce": [
+        "/usr/bin/python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "scope-rename-mixed",
+        "--output",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-scope-rename-mixed-2.result.json"
+      ],
+      "helper_sha256": {
+        "bench-workspace-mutation.py": "e834cbbdda34c64ba34821da682e052a07ccedff874a2d5da56e02c32d5d6bcf",
+        "prepare-workspace-mutation-benchmark.py": "0c100e6c2afe72ff6df7c453ddd942199ba454c98034095f8b8d3e5fc022ac82",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "f417e33236b373ff635f645350b0cf760a455d2e05c5454ae3751bc3eca55151",
+        "bitmap-history-oracle.py": "90e3f9312c54dfa9f6bc5aa576a93f6e9fe631f38dcd524d07a99ca94ea546c4",
+        "prepare-bitmap-history-oracle.py": "8aa679ea3a7f9a69d4c5485047a51d462d050a5476f09656e34f00555dc461bf",
+        "scope-bitmap-history-oracle.cjs": "3d195c71e826be9945e1044e32f3613c208c003dc548b5bd3abc8212512b05d3"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "Every measured command must remain native in all three presentation modes.",
+      "native_pairs": 15,
+      "warmup_note": "Only explicitly recorded pinned builtin metadata is prewarmed; no first-use claim.",
+      "fixture_prerequisites": {
+        "qualification_status": "generated by pinned CLI; measured parity verified only for entries in verified",
+        "scope_history_collision_validation": "Every actual backup byte, mode and clock-ID group is validated against the prepared released-CLI preimage at its last metadata write. Raw artifacts are retained. Fifteen logical preimages are oracle-derived; overwritten timed bytes are not observable. Timed commands and clocks are unchanged.",
+        "seed_tag_policy": "Seed-only tag ignores missing environment packages; measured commands carry no issue suppression.",
+        "recovery_baseline": "Released delete of twenty tagged retained bitmap rows, recovered from local scope without remote import.",
+        "scope_baseline": "Ten-component import chain; five tail components tagged/exported, five heads new; deprecate preserves exported originals."
+      },
+      "clock_phase_control": {
+        "workloads": [
+          "scope-rename-mixed"
+        ],
+        "start_phase_ms": [
+          50,
+          100
+        ],
+        "outside_command_timing": true,
+        "method": "Wait before launch for the same wall-clock phase on both implementations; clocks and commands are unchanged.",
+        "reason": "Align launch phases only; actual per-write clock collisions are independently validated against the prepared Node transcript."
+      },
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "scope-rename-mixed": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                3168.39,
+                1481.347,
+                1058.013,
+                1073.174,
+                1075.036
+              ],
+              "node": [
+                2559.001,
+                1266.315,
+                1175.869,
+                1190.329,
+                1268.48
+              ]
+            },
+            "median_ms": {
+              "rust": 1075.036,
+              "node": 1266.315
+            }
+          },
+          "ci": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                1017.265,
+                1044.749,
+                1015.929,
+                999.313,
+                1056.135
+              ],
+              "node": [
+                1038.617,
+                1056.259,
+                1035.826,
+                1021.593,
+                1059.058
+              ]
+            },
+            "median_ms": {
+              "rust": 1017.265,
+              "node": 1038.617
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                1159.002,
+                1100.304,
+                1040.986,
+                1031.788,
+                1067.282
+              ],
+              "node": [
+                1093.313,
+                1279.38,
+                1154.015,
+                1051.614,
+                1068.71
+              ]
+            },
+            "median_ms": {
+              "rust": 1067.282,
+              "node": 1093.313
+            }
+          }
+        }
+      }
+    },
+    "remove-tagged-batch": {
+      "stage": "/var/tmp/workspace-mutation-qualified-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "4b3d8e805c6215cdcc17799a872dce7d116340a4c8749b0488fdfd4ab609528a",
+        "file_count": 1664
+      },
+      "correctness_valid": true,
+      "performance_valid": false,
+      "performance_qualification": {
+        "status": "awaiting closed whole-run external monitor qualification",
+        "predeclared_max_host_busy_percent": 80,
+        "required_sample_interval_seconds": 0.5,
+        "required_start_gate_seconds": 20,
+        "required_start_gate_max_busy_percent": 30
+      },
+      "rust_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-scope-rename-mixed"
+        },
+        "home": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-home",
+        "globals": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-globals",
+        "remotes": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-scope-rename-mixed"
+        },
+        "remote_path": "/var/tmp/workspace-mutation-qualified-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        },
+        "scope_bitmap_history_oracle": {
+          "path": "/var/tmp/workspace-mutation-qualified-benchmark/scope-bitmap-history-oracle.json",
+          "sha256": "9d1144e601fdca4f707bdc82b2a6e2219e0a362f5e826d49297313d91c214665"
+        }
+      },
+      "fixture_sha256": {
+        "remove-tagged-batch": "374db2f73c969db8011ef98b9db6516a8c9dd101b49be7e584bd4fec662b1d77",
+        "delete-tagged-batch": "0f49ff58bf09e8c7df23a1d8477f3a05a11058c36852929194cabcffbfc3affc",
+        "recover-deleted-batch": "5cb4b72d2c2a9ba345ea6591ba79ede7318393d167fff0e0b10b61c7773aa9ae",
+        "scope-rename-mixed": "36960d0558afc9572f96adc278c819bf4068ae7d0d0c43b874fb151f4e7040f7"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925"
+      },
+      "remote_fixture_sha256": {
+        "remove-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "delete-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "recover-deleted-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "scope-rename-mixed": "e5753c13bfab82355f21717d639b8ce127174c02fe03de5619bb4507093b95fe"
+      },
+      "host_monitor": null,
+      "host_command_samples": "/var/tmp/workspace-mutation-qualified-benchmark/evidence/*.host.json",
+      "reproduce": [
+        "/usr/bin/python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "remove-tagged-batch",
+        "--output",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-remove-tagged-batch-1.result.json"
+      ],
+      "helper_sha256": {
+        "bench-workspace-mutation.py": "e834cbbdda34c64ba34821da682e052a07ccedff874a2d5da56e02c32d5d6bcf",
+        "prepare-workspace-mutation-benchmark.py": "0c100e6c2afe72ff6df7c453ddd942199ba454c98034095f8b8d3e5fc022ac82",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "f417e33236b373ff635f645350b0cf760a455d2e05c5454ae3751bc3eca55151",
+        "bitmap-history-oracle.py": "90e3f9312c54dfa9f6bc5aa576a93f6e9fe631f38dcd524d07a99ca94ea546c4",
+        "prepare-bitmap-history-oracle.py": "8aa679ea3a7f9a69d4c5485047a51d462d050a5476f09656e34f00555dc461bf",
+        "scope-bitmap-history-oracle.cjs": "3d195c71e826be9945e1044e32f3613c208c003dc548b5bd3abc8212512b05d3"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "Every measured command must remain native in all three presentation modes.",
+      "native_pairs": 15,
+      "warmup_note": "Only explicitly recorded pinned builtin metadata is prewarmed; no first-use claim.",
+      "fixture_prerequisites": {
+        "qualification_status": "generated by pinned CLI; measured parity verified only for entries in verified",
+        "scope_history_collision_validation": "Every actual backup byte, mode and clock-ID group is validated against the prepared released-CLI preimage at its last metadata write. Raw artifacts are retained. Fifteen logical preimages are oracle-derived; overwritten timed bytes are not observable. Timed commands and clocks are unchanged.",
+        "seed_tag_policy": "Seed-only tag ignores missing environment packages; measured commands carry no issue suppression.",
+        "recovery_baseline": "Released delete of twenty tagged retained bitmap rows, recovered from local scope without remote import.",
+        "scope_baseline": "Ten-component import chain; five tail components tagged/exported, five heads new; deprecate preserves exported originals."
+      },
+      "clock_phase_control": {
+        "workloads": [
+          "scope-rename-mixed"
+        ],
+        "start_phase_ms": [
+          50,
+          100
+        ],
+        "outside_command_timing": true,
+        "method": "Wait before launch for the same wall-clock phase on both implementations; clocks and commands are unchanged.",
+        "reason": "Align launch phases only; actual per-write clock collisions are independently validated against the prepared Node transcript."
+      },
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "remove-tagged-batch": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                293.15,
+                301.202,
+                291.857,
+                280.146,
+                280.973
+              ],
+              "node": [
+                565.685,
+                543.664,
+                552.235,
+                558.028,
+                527.009
+              ]
+            },
+            "median_ms": {
+              "rust": 291.857,
+              "node": 552.235
+            }
+          },
+          "ci": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                295.624,
+                301.354,
+                287.182,
+                283.506,
+                280.391
+              ],
+              "node": [
+                542.611,
+                554.79,
+                545.148,
+                546.445,
+                557.973
+              ]
+            },
+            "median_ms": {
+              "rust": 287.182,
+              "node": 546.445
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                293.606,
+                300.716,
+                292.693,
+                290.094,
+                291.643
+              ],
+              "node": [
+                575.694,
+                549.84,
+                569.983,
+                555.64,
+                566.847
+              ]
+            },
+            "median_ms": {
+              "rust": 292.693,
+              "node": 566.847
+            }
+          }
+        }
+      }
+    },
+    "delete-tagged-batch": {
+      "stage": "/var/tmp/workspace-mutation-qualified-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "4b3d8e805c6215cdcc17799a872dce7d116340a4c8749b0488fdfd4ab609528a",
+        "file_count": 1664
+      },
+      "correctness_valid": true,
+      "performance_valid": false,
+      "performance_qualification": {
+        "status": "awaiting closed whole-run external monitor qualification",
+        "predeclared_max_host_busy_percent": 80,
+        "required_sample_interval_seconds": 0.5,
+        "required_start_gate_seconds": 20,
+        "required_start_gate_max_busy_percent": 30
+      },
+      "rust_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-scope-rename-mixed"
+        },
+        "home": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-home",
+        "globals": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-globals",
+        "remotes": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-scope-rename-mixed"
+        },
+        "remote_path": "/var/tmp/workspace-mutation-qualified-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        },
+        "scope_bitmap_history_oracle": {
+          "path": "/var/tmp/workspace-mutation-qualified-benchmark/scope-bitmap-history-oracle.json",
+          "sha256": "9d1144e601fdca4f707bdc82b2a6e2219e0a362f5e826d49297313d91c214665"
+        }
+      },
+      "fixture_sha256": {
+        "remove-tagged-batch": "374db2f73c969db8011ef98b9db6516a8c9dd101b49be7e584bd4fec662b1d77",
+        "delete-tagged-batch": "0f49ff58bf09e8c7df23a1d8477f3a05a11058c36852929194cabcffbfc3affc",
+        "recover-deleted-batch": "5cb4b72d2c2a9ba345ea6591ba79ede7318393d167fff0e0b10b61c7773aa9ae",
+        "scope-rename-mixed": "36960d0558afc9572f96adc278c819bf4068ae7d0d0c43b874fb151f4e7040f7"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925"
+      },
+      "remote_fixture_sha256": {
+        "remove-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "delete-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "recover-deleted-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "scope-rename-mixed": "e5753c13bfab82355f21717d639b8ce127174c02fe03de5619bb4507093b95fe"
+      },
+      "host_monitor": null,
+      "host_command_samples": "/var/tmp/workspace-mutation-qualified-benchmark/evidence/*.host.json",
+      "reproduce": [
+        "/usr/bin/python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "delete-tagged-batch",
+        "--output",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-delete-tagged-batch-1.result.json"
+      ],
+      "helper_sha256": {
+        "bench-workspace-mutation.py": "e834cbbdda34c64ba34821da682e052a07ccedff874a2d5da56e02c32d5d6bcf",
+        "prepare-workspace-mutation-benchmark.py": "0c100e6c2afe72ff6df7c453ddd942199ba454c98034095f8b8d3e5fc022ac82",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "f417e33236b373ff635f645350b0cf760a455d2e05c5454ae3751bc3eca55151",
+        "bitmap-history-oracle.py": "90e3f9312c54dfa9f6bc5aa576a93f6e9fe631f38dcd524d07a99ca94ea546c4",
+        "prepare-bitmap-history-oracle.py": "8aa679ea3a7f9a69d4c5485047a51d462d050a5476f09656e34f00555dc461bf",
+        "scope-bitmap-history-oracle.cjs": "3d195c71e826be9945e1044e32f3613c208c003dc548b5bd3abc8212512b05d3"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "Every measured command must remain native in all three presentation modes.",
+      "native_pairs": 15,
+      "warmup_note": "Only explicitly recorded pinned builtin metadata is prewarmed; no first-use claim.",
+      "fixture_prerequisites": {
+        "qualification_status": "generated by pinned CLI; measured parity verified only for entries in verified",
+        "scope_history_collision_validation": "Every actual backup byte, mode and clock-ID group is validated against the prepared released-CLI preimage at its last metadata write. Raw artifacts are retained. Fifteen logical preimages are oracle-derived; overwritten timed bytes are not observable. Timed commands and clocks are unchanged.",
+        "seed_tag_policy": "Seed-only tag ignores missing environment packages; measured commands carry no issue suppression.",
+        "recovery_baseline": "Released delete of twenty tagged retained bitmap rows, recovered from local scope without remote import.",
+        "scope_baseline": "Ten-component import chain; five tail components tagged/exported, five heads new; deprecate preserves exported originals."
+      },
+      "clock_phase_control": {
+        "workloads": [
+          "scope-rename-mixed"
+        ],
+        "start_phase_ms": [
+          50,
+          100
+        ],
+        "outside_command_timing": true,
+        "method": "Wait before launch for the same wall-clock phase on both implementations; clocks and commands are unchanged.",
+        "reason": "Align launch phases only; actual per-write clock collisions are independently validated against the prepared Node transcript."
+      },
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "delete-tagged-batch": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                319.303,
+                333.562,
+                329.49,
+                327.261,
+                331.727
+              ],
+              "node": [
+                488.378,
+                484.888,
+                499.798,
+                483.652,
+                499.056
+              ]
+            },
+            "median_ms": {
+              "rust": 329.49,
+              "node": 488.378
+            }
+          },
+          "ci": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                324.31,
+                322.602,
+                330.443,
+                327.283,
+                328.066
+              ],
+              "node": [
+                485.929,
+                498.554,
+                479.819,
+                486.04,
+                500.575
+              ]
+            },
+            "median_ms": {
+              "rust": 327.283,
+              "node": 486.04
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                330.482,
+                339.242,
+                353.88,
+                344.478,
+                340.989
+              ],
+              "node": [
+                512.799,
+                511.62,
+                519.977,
+                493.581,
+                501.221
+              ]
+            },
+            "median_ms": {
+              "rust": 340.989,
+              "node": 511.62
+            }
+          }
+        }
+      }
+    },
+    "recover-deleted-batch": {
+      "stage": "/var/tmp/workspace-mutation-qualified-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "4b3d8e805c6215cdcc17799a872dce7d116340a4c8749b0488fdfd4ab609528a",
+        "file_count": 1664
+      },
+      "correctness_valid": true,
+      "performance_valid": false,
+      "performance_qualification": {
+        "status": "awaiting closed whole-run external monitor qualification",
+        "predeclared_max_host_busy_percent": 80,
+        "required_sample_interval_seconds": 0.5,
+        "required_start_gate_seconds": 20,
+        "required_start_gate_max_busy_percent": 30
+      },
+      "rust_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-scope-rename-mixed"
+        },
+        "home": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-home",
+        "globals": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-globals",
+        "remotes": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-scope-rename-mixed"
+        },
+        "remote_path": "/var/tmp/workspace-mutation-qualified-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        },
+        "scope_bitmap_history_oracle": {
+          "path": "/var/tmp/workspace-mutation-qualified-benchmark/scope-bitmap-history-oracle.json",
+          "sha256": "9d1144e601fdca4f707bdc82b2a6e2219e0a362f5e826d49297313d91c214665"
+        }
+      },
+      "fixture_sha256": {
+        "remove-tagged-batch": "374db2f73c969db8011ef98b9db6516a8c9dd101b49be7e584bd4fec662b1d77",
+        "delete-tagged-batch": "0f49ff58bf09e8c7df23a1d8477f3a05a11058c36852929194cabcffbfc3affc",
+        "recover-deleted-batch": "5cb4b72d2c2a9ba345ea6591ba79ede7318393d167fff0e0b10b61c7773aa9ae",
+        "scope-rename-mixed": "36960d0558afc9572f96adc278c819bf4068ae7d0d0c43b874fb151f4e7040f7"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925"
+      },
+      "remote_fixture_sha256": {
+        "remove-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "delete-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "recover-deleted-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "scope-rename-mixed": "e5753c13bfab82355f21717d639b8ce127174c02fe03de5619bb4507093b95fe"
+      },
+      "host_monitor": null,
+      "host_command_samples": "/var/tmp/workspace-mutation-qualified-benchmark/evidence/*.host.json",
+      "reproduce": [
+        "/usr/bin/python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "recover-deleted-batch",
+        "--output",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-recover-deleted-batch-1.result.json"
+      ],
+      "helper_sha256": {
+        "bench-workspace-mutation.py": "e834cbbdda34c64ba34821da682e052a07ccedff874a2d5da56e02c32d5d6bcf",
+        "prepare-workspace-mutation-benchmark.py": "0c100e6c2afe72ff6df7c453ddd942199ba454c98034095f8b8d3e5fc022ac82",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "f417e33236b373ff635f645350b0cf760a455d2e05c5454ae3751bc3eca55151",
+        "bitmap-history-oracle.py": "90e3f9312c54dfa9f6bc5aa576a93f6e9fe631f38dcd524d07a99ca94ea546c4",
+        "prepare-bitmap-history-oracle.py": "8aa679ea3a7f9a69d4c5485047a51d462d050a5476f09656e34f00555dc461bf",
+        "scope-bitmap-history-oracle.cjs": "3d195c71e826be9945e1044e32f3613c208c003dc548b5bd3abc8212512b05d3"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "Every measured command must remain native in all three presentation modes.",
+      "native_pairs": 15,
+      "warmup_note": "Only explicitly recorded pinned builtin metadata is prewarmed; no first-use claim.",
+      "fixture_prerequisites": {
+        "qualification_status": "generated by pinned CLI; measured parity verified only for entries in verified",
+        "scope_history_collision_validation": "Every actual backup byte, mode and clock-ID group is validated against the prepared released-CLI preimage at its last metadata write. Raw artifacts are retained. Fifteen logical preimages are oracle-derived; overwritten timed bytes are not observable. Timed commands and clocks are unchanged.",
+        "seed_tag_policy": "Seed-only tag ignores missing environment packages; measured commands carry no issue suppression.",
+        "recovery_baseline": "Released delete of twenty tagged retained bitmap rows, recovered from local scope without remote import.",
+        "scope_baseline": "Ten-component import chain; five tail components tagged/exported, five heads new; deprecate preserves exported originals."
+      },
+      "clock_phase_control": {
+        "workloads": [
+          "scope-rename-mixed"
+        ],
+        "start_phase_ms": [
+          50,
+          100
+        ],
+        "outside_command_timing": true,
+        "method": "Wait before launch for the same wall-clock phase on both implementations; clocks and commands are unchanged.",
+        "reason": "Align launch phases only; actual per-write clock collisions are independently validated against the prepared Node transcript."
+      },
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "recover-deleted-batch": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                219.264,
+                224.513,
+                230.109,
+                225.257,
+                228.763
+              ],
+              "node": [
+                296.486,
+                284.315,
+                284.514,
+                296.484,
+                292.091
+              ]
+            },
+            "median_ms": {
+              "rust": 225.257,
+              "node": 292.091
+            }
+          },
+          "ci": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                209.68,
+                224.698,
+                228.603,
+                220.112,
+                228.039
+              ],
+              "node": [
+                276.188,
+                279.866,
+                290.168,
+                283.002,
+                299.177
+              ]
+            },
+            "median_ms": {
+              "rust": 224.698,
+              "node": 283.002
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                237.648,
+                243.854,
+                237.607,
+                239.433,
+                249.595
+              ],
+              "node": [
+                294.975,
+                308.554,
+                297.591,
+                307.027,
+                309.279
+              ]
+            },
+            "median_ms": {
+              "rust": 239.433,
+              "node": 307.027
+            }
+          }
+        }
+      }
+    }
+  },
+  "host_monitor": {
+    "scope-rename-mixed": {
+      "family": "workspace-mutation",
+      "workload": "scope-rename-mixed",
+      "attempt": 2,
+      "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-scope-rename-mixed-2.monitor.json",
+      "sha256": "809c2f58cd767c985793cba336cd3daf322fb39695e0fb9299d19c2e9e3a0477",
+      "performance_valid": true,
+      "host_busy_peak_percent": 77.7708592777086,
+      "exit_code": 0,
+      "files": {
+        "workspace-mutation-scope-rename-mixed-2.monitor.json": "809c2f58cd767c985793cba336cd3daf322fb39695e0fb9299d19c2e9e3a0477",
+        "workspace-mutation-scope-rename-mixed-2.result.json": "4cf1edab57df18c37dd49fc180fb6e95c923228bfc7627cf11a635e216c4db95",
+        "workspace-mutation-scope-rename-mixed-2.stderr": "b081e714e65c91dc6b8151f2061b45c29855cbc2167f6c67a57c872f823c0c17",
+        "workspace-mutation-scope-rename-mixed-2.stdout": "4cf1edab57df18c37dd49fc180fb6e95c923228bfc7627cf11a635e216c4db95",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-0-node.bitmap-history.json": "a176f3d8dbdb688e65e56b5178abbf1fe4c4bfc3b46794180d42c43005df4f22",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-0-node.host.json": "6ecf6b82db819e09aa606c38dbb87eef1d8a999406b4ac10d1b993fbadbacd6e",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-0-node.state.json": "85d86eabb9440982712e95a3063c076c5d60d7d0559266a82fc9c8f31d798ae9",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-0-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-0-node.stdout": "d820855821da1c09d5d3798807143b97d09cb65ce471c338e733e8dbd980db00",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-0-rust.bitmap-history.json": "1b9b959929353af9da98ea654372eab0dedf805bcd9cd427b661360b46304524",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-0-rust.host.json": "2da9fd40375a5e8a821c003dd723c957ae8ed07788637fa012eb3a9a6b2650b2",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-0-rust.state.json": "85d86eabb9440982712e95a3063c076c5d60d7d0559266a82fc9c8f31d798ae9",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-0-rust.stderr": "39c06a96f7d1125dd8aa666fe08e966237393076b1cc4606eec133664ee21ff8",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-0-rust.stdout": "d820855821da1c09d5d3798807143b97d09cb65ce471c338e733e8dbd980db00",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-1-node.bitmap-history.json": "b7788b1bc71c102a51b6e62f5b78c1c5909571bfd33d115d6e3f286281b01033",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-1-node.host.json": "d31ff2322e685478e0b8e0203ce4aeaca506579103981a755fa523d354efe260",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-1-node.state.json": "85d86eabb9440982712e95a3063c076c5d60d7d0559266a82fc9c8f31d798ae9",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-1-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-1-node.stdout": "d820855821da1c09d5d3798807143b97d09cb65ce471c338e733e8dbd980db00",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-1-rust.bitmap-history.json": "1e20c00ad0166c701d9be7279e4ea2e919310f75f5bb6cf7eadd1aed82e0e966",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-1-rust.host.json": "3a22a1842a0f029116afc283b0bba9f1584280b99e6b626dedb0c70a2d61e834",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-1-rust.state.json": "85d86eabb9440982712e95a3063c076c5d60d7d0559266a82fc9c8f31d798ae9",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-1-rust.stderr": "be14322d016e10c6e8f18a4095c9202f5043a8ab48a6d6843167ca76871807ca",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-1-rust.stdout": "d820855821da1c09d5d3798807143b97d09cb65ce471c338e733e8dbd980db00",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-2-node.bitmap-history.json": "679a08dc7b81f367add868d35bd3c12e12e8b9ee084f7b497433cbe45e62b20c",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-2-node.host.json": "a0fc641c973a5143356376ba91b6e168b2fbe476b51edd101f8a30c0493ad3c3",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-2-node.state.json": "85d86eabb9440982712e95a3063c076c5d60d7d0559266a82fc9c8f31d798ae9",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-2-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-2-node.stdout": "d820855821da1c09d5d3798807143b97d09cb65ce471c338e733e8dbd980db00",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-2-rust.bitmap-history.json": "61d656a4d4328456f3230e4e9918761070a2c2709375bca3b45ae3377513b352",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-2-rust.host.json": "5f27b4019c5193e7bf911f0868ad37b07eb30991e213f71786eb26aabf0a8097",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-2-rust.state.json": "85d86eabb9440982712e95a3063c076c5d60d7d0559266a82fc9c8f31d798ae9",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-2-rust.stderr": "3703f85b6ea1d77acfa1c24a54f85149dd12230e1b2c6b5b01f3ce9ff128a80b",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-2-rust.stdout": "d820855821da1c09d5d3798807143b97d09cb65ce471c338e733e8dbd980db00",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-3-node.bitmap-history.json": "261b81e47120879405ba43471c5da3145a5aa9b1c58e6ac1da56c4fc5c2f1aa3",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-3-node.host.json": "02435193604d176d1a4176f8b79bcdf719e883f72c5eb608514f2458a1cca2e2",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-3-node.state.json": "85d86eabb9440982712e95a3063c076c5d60d7d0559266a82fc9c8f31d798ae9",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-3-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-3-node.stdout": "d820855821da1c09d5d3798807143b97d09cb65ce471c338e733e8dbd980db00",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-3-rust.bitmap-history.json": "7e7a7162d91836f690d9981cb88fc76dc972cf4bcda0d8d31332c47e57be1565",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-3-rust.host.json": "02b75f644bebb978cac8cf47b4deeef73a35f2ec979112d2ea11d4950e187ab2",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-3-rust.state.json": "85d86eabb9440982712e95a3063c076c5d60d7d0559266a82fc9c8f31d798ae9",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-3-rust.stderr": "e34f2a0577887fc013576ce61bf2463812eccc5df0a6505d3871b032ac4ae15d",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-3-rust.stdout": "d820855821da1c09d5d3798807143b97d09cb65ce471c338e733e8dbd980db00",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-4-node.bitmap-history.json": "5bdb55eb2b4103f5ecae16a65be628e71c402d22691254e9f1c9a6837b80c391",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-4-node.host.json": "36eee5bba08cba6a3f95a3667c7746733ac7083f48b8ebd0102ff3447e94659d",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-4-node.state.json": "85d86eabb9440982712e95a3063c076c5d60d7d0559266a82fc9c8f31d798ae9",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-4-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-4-node.stdout": "d820855821da1c09d5d3798807143b97d09cb65ce471c338e733e8dbd980db00",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-4-rust.bitmap-history.json": "4969f159b21b353e56f02eb06094ad63d552477d556c5366019e0cd952f542c6",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-4-rust.host.json": "0af9fda55db58dee28b8f31b213038fd778a705641b5064e3ea759ccdd6cf9dd",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-4-rust.state.json": "85d86eabb9440982712e95a3063c076c5d60d7d0559266a82fc9c8f31d798ae9",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-4-rust.stderr": "b571b7ba0861a8cf1beae895fe725c3042c9cfb13ef40bab021972da94ede26b",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-ci-4-rust.stdout": "d820855821da1c09d5d3798807143b97d09cb65ce471c338e733e8dbd980db00",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-0-node.bitmap-history.json": "d46fa85e454f5fad6ec7f57fc403ea7bf72b22acb62cb3b26ddda611d81ff3df",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-0-node.host.json": "2c4529f8d7727c162c455c4b92f39addcea2bbaa62599efdfb974c46c7939f81",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-0-node.state.json": "d322209eecf9d8095abe9723e0351769f36e8d41d9be9832c0286a90f9a79f05",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-0-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-0-node.stdout": "806fff95303a2ddec212e68914f1a23f1a60551ff4cbd1d05392f3bc22efcbeb",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-0-rust.bitmap-history.json": "5d57694fbf0e46e661276775adb6ce02ba7cd570a472e05e293b77ecbe2172dc",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-0-rust.host.json": "0a8e1e6077d9d58eac6d0d79b4c8e5784ea82483f671b40ed017386f10e503d6",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-0-rust.state.json": "d322209eecf9d8095abe9723e0351769f36e8d41d9be9832c0286a90f9a79f05",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-0-rust.stderr": "5d3bd227b88bc4911770705c16c683406927b6a0319394bc9a6b33eed8d5c3c1",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-0-rust.stdout": "806fff95303a2ddec212e68914f1a23f1a60551ff4cbd1d05392f3bc22efcbeb",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-1-node.bitmap-history.json": "83f0f7ff2755a6a1eb40e3f5b1244d933f79c5708467552cef1387b26d6e5e62",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-1-node.host.json": "095611fb220421d3273ef5bc137628cd72ae2c6935d6f573b485de685e4c57e1",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-1-node.state.json": "d322209eecf9d8095abe9723e0351769f36e8d41d9be9832c0286a90f9a79f05",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-1-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-1-node.stdout": "806fff95303a2ddec212e68914f1a23f1a60551ff4cbd1d05392f3bc22efcbeb",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-1-rust.bitmap-history.json": "77146001ebbb98feae0de977293a88f3b2bd47084b36796f026381415483362e",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-1-rust.host.json": "7452586369be4cf812905982f57cac37f5932794793283c422ebd13ab48a3250",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-1-rust.state.json": "d322209eecf9d8095abe9723e0351769f36e8d41d9be9832c0286a90f9a79f05",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-1-rust.stderr": "f89eb18d8da657df8a64079ff2edda71421c198a4dba7bdb281c8b942f1272b9",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-1-rust.stdout": "806fff95303a2ddec212e68914f1a23f1a60551ff4cbd1d05392f3bc22efcbeb",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-2-node.bitmap-history.json": "1026d5e06fc9b5d74aa214ab7818be368a1d8ba8b2c72145af767d4c2abe458f",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-2-node.host.json": "19f90cb34348233c537f04b8532746f8e4e3a9b2c9f41eaf7f401c5d2e4bb7f1",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-2-node.state.json": "d322209eecf9d8095abe9723e0351769f36e8d41d9be9832c0286a90f9a79f05",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-2-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-2-node.stdout": "806fff95303a2ddec212e68914f1a23f1a60551ff4cbd1d05392f3bc22efcbeb",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-2-rust.bitmap-history.json": "4f8b6e5a260f064cec4e75b95bfe6b5a38c5df01d1bf8f518b6a350e0a320f21",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-2-rust.host.json": "2c8a617d7593e315b406a7c485ba79d896e24928752da59ce25855c0575ee2c5",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-2-rust.state.json": "d322209eecf9d8095abe9723e0351769f36e8d41d9be9832c0286a90f9a79f05",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-2-rust.stderr": "e80bda2556a4b31d4c0f0740f24377d6f73575bf0e694399c1e16538b8f4ab29",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-2-rust.stdout": "806fff95303a2ddec212e68914f1a23f1a60551ff4cbd1d05392f3bc22efcbeb",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-3-node.bitmap-history.json": "5a3a92f20b5fc5bb931e3dbbc452a7b710f4f4874d00909ba0c47ef5170c713d",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-3-node.host.json": "bb5c306eabc4ed211176b42fdd46472a4c0072c5c364d39a0d164570c806b62c",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-3-node.state.json": "d322209eecf9d8095abe9723e0351769f36e8d41d9be9832c0286a90f9a79f05",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-3-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-3-node.stdout": "806fff95303a2ddec212e68914f1a23f1a60551ff4cbd1d05392f3bc22efcbeb",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-3-rust.bitmap-history.json": "a842f76d361759bcd89be791786cf52719b3d8707709252edb9d9d7a8679b4fd",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-3-rust.host.json": "edad66d7c33831968d593b7f381235586e39d8072380b3c707aa40b382ba8de6",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-3-rust.state.json": "d322209eecf9d8095abe9723e0351769f36e8d41d9be9832c0286a90f9a79f05",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-3-rust.stderr": "1161609cc90f5d9716dea61d9cb45407520fced2898db7b7cf8f4c8b8af0b182",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-3-rust.stdout": "806fff95303a2ddec212e68914f1a23f1a60551ff4cbd1d05392f3bc22efcbeb",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-4-node.bitmap-history.json": "ed9bd724b4e2be5aa79376d10c1312aa764a113e18a62facacb2d439a3cdc69e",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-4-node.host.json": "5efe766aa34f5356fa117cfa8ae3888b2a5cade139f8bb8c9ebc0e30b78f5710",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-4-node.state.json": "d322209eecf9d8095abe9723e0351769f36e8d41d9be9832c0286a90f9a79f05",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-4-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-4-node.stdout": "806fff95303a2ddec212e68914f1a23f1a60551ff4cbd1d05392f3bc22efcbeb",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-4-rust.bitmap-history.json": "a953d026f7a9776559d156f7750434d41c81265145748d8012617d9879a60882",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-4-rust.host.json": "476950a36cf1091d607be252c5ff09303daed5500c1b371ff74c6d1e40970b40",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-4-rust.state.json": "d322209eecf9d8095abe9723e0351769f36e8d41d9be9832c0286a90f9a79f05",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-4-rust.stderr": "dbc976c9adf8b15cc2a1dc4ad67e626e07dfce81bb8b488fcf5837d8d7407809",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-timed-4-rust.stdout": "806fff95303a2ddec212e68914f1a23f1a60551ff4cbd1d05392f3bc22efcbeb",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-0-node.bitmap-history.json": "f14d0958c1496dad388ce0f2c7e98b4df8af7bf6a94fe960a0a2317e30b3b35c",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-0-node.host.json": "29c79c9c76e8db975054a7ca5840203173ebfc9cee21ce1433d1616335504d12",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-0-node.state.json": "6acb8e4ee4d990c6fab66fff9677e47d26ab60189c57c0cacfc1369a47c04a65",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-0-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-0-node.stdout": "bf15e69b5bdd962c5d32e92b6849c2d8120fac1f2ca081409d0ff43337849683",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-0-rust.bitmap-history.json": "c7fbdbf0c1af1e39a0df0ee7c63e8981bceb49d5424671bcb1ef3c82d3509b29",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-0-rust.host.json": "ceb727d61fe7a65a9c6f6a5721d2e09f6c99aa89c672838e25552a7df44308df",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-0-rust.state.json": "6acb8e4ee4d990c6fab66fff9677e47d26ab60189c57c0cacfc1369a47c04a65",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-0-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-0-rust.stdout": "4327ae82edce04f91035d19842aa66937de5c18bf2c07b55a458cf69b1240f69",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-1-node.bitmap-history.json": "8c4bca3f0b561cb040c285effb95637cb541f1a8db395a80b5fa6b5c9fb3f926",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-1-node.host.json": "cd905df019f539ba03341dc557ad188ce314933b4ebd00b50759121a3f171f6c",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-1-node.state.json": "6acb8e4ee4d990c6fab66fff9677e47d26ab60189c57c0cacfc1369a47c04a65",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-1-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-1-node.stdout": "bf15e69b5bdd962c5d32e92b6849c2d8120fac1f2ca081409d0ff43337849683",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-1-rust.bitmap-history.json": "b3e5d6b48ec494d9b845cd79c8e2f607b7bf180b3988eb4c9750a4c8c3e2d516",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-1-rust.host.json": "bcfe0bb5c853ddd4d4a3b26feaac20852b0a5d25930fcb88fe6a79fa26addbf9",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-1-rust.state.json": "6acb8e4ee4d990c6fab66fff9677e47d26ab60189c57c0cacfc1369a47c04a65",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-1-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-1-rust.stdout": "676e0ae42b2af2f3b17917c30c61aa8dede4e92c507d5056b576fa6416670a4a",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-2-node.bitmap-history.json": "14391e792e057ed59562ab8c4641c4ed8c6a34976714ea5d173591c05874d202",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-2-node.host.json": "703fe295f938f3363966ffbe24f7965e02d25f5349cf6f5c3971c873e59032fb",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-2-node.state.json": "6acb8e4ee4d990c6fab66fff9677e47d26ab60189c57c0cacfc1369a47c04a65",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-2-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-2-node.stdout": "bf15e69b5bdd962c5d32e92b6849c2d8120fac1f2ca081409d0ff43337849683",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-2-rust.bitmap-history.json": "9252733f13135a48427d71858a6247f4b1256b4b18493e0e86818056805ad7a3",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-2-rust.host.json": "c4c0e45dc3f0a052e8d71ab0b27bd1d33523242329fe7705128703cd7c0342d3",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-2-rust.state.json": "6acb8e4ee4d990c6fab66fff9677e47d26ab60189c57c0cacfc1369a47c04a65",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-2-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-2-rust.stdout": "9d49032a95489bced518d750b713e4f54e9ccf7e9c3e4e0a1309f88e8d7efa2a",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-3-node.bitmap-history.json": "ed0a141ef81a062fa6541255f6c14955f206884558925f174b038213db0bf0af",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-3-node.host.json": "5963a4e7cf02563fdd11b70f4cc987dafa262d8857e3bd125c811000033c2d33",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-3-node.state.json": "6acb8e4ee4d990c6fab66fff9677e47d26ab60189c57c0cacfc1369a47c04a65",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-3-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-3-node.stdout": "bf15e69b5bdd962c5d32e92b6849c2d8120fac1f2ca081409d0ff43337849683",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-3-rust.bitmap-history.json": "8f35720e6a45fd331c3283de16f2ba56306b5c1a5bd8081da4c4a999594622ad",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-3-rust.host.json": "e78181e83fdaf730e77ed03d94f270f51cce78e040916350bee0573b031ff3a1",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-3-rust.state.json": "6acb8e4ee4d990c6fab66fff9677e47d26ab60189c57c0cacfc1369a47c04a65",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-3-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-3-rust.stdout": "af763824e51eee3eec1bf24fd3c0cb8594c1622daa18e4a3be408abc0967ffd1",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-4-node.bitmap-history.json": "61622accdce19520aec190fc60aa52505616df5f5e1e98bdb0e85d4bc52f09b9",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-4-node.host.json": "5929f143c0d7dca107de3ab4ea3c9464aea6f71b2067d034fa70e5277a35affe",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-4-node.state.json": "6acb8e4ee4d990c6fab66fff9677e47d26ab60189c57c0cacfc1369a47c04a65",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-4-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-4-node.stdout": "bf15e69b5bdd962c5d32e92b6849c2d8120fac1f2ca081409d0ff43337849683",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-4-rust.bitmap-history.json": "858e867c60c5f1924cc69b618908b8617e2d500b00fd9551f440cd7ed4dc1759",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-4-rust.host.json": "f69f8526e4b4ab8847e30d1a55c1d4b878f4e9e3e99db00294d8acbe75cc9409",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-4-rust.state.json": "6acb8e4ee4d990c6fab66fff9677e47d26ab60189c57c0cacfc1369a47c04a65",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-4-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-scope-rename-mixed-2.evidence/scope-rename-mixed-tty-4-rust.stdout": "0e9253d998df0d31d127bac3ab5d895f2d149cf050c6caf2ac89d5e0beedbb9c"
+      },
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "scope-rename-mixed",
+        "--output",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-scope-rename-mixed-2.result.json"
+      ],
+      "result_path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-scope-rename-mixed-2.result.json"
+    },
+    "remove-tagged-batch": {
+      "family": "workspace-mutation",
+      "workload": "remove-tagged-batch",
+      "attempt": 1,
+      "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-remove-tagged-batch-1.monitor.json",
+      "sha256": "1a1ab676ad83bbf9095554d0865d6c7b7e3ef2be9e64ac70c0e211f8e625e118",
+      "performance_valid": true,
+      "host_busy_peak_percent": 10.607940446650124,
+      "exit_code": 0,
+      "files": {
+        "workspace-mutation-remove-tagged-batch-1.monitor.json": "1a1ab676ad83bbf9095554d0865d6c7b7e3ef2be9e64ac70c0e211f8e625e118",
+        "workspace-mutation-remove-tagged-batch-1.result.json": "b0703396233a34d0aeb17697dc606cf1aff3a42c9681a298cabb05f31328bf35",
+        "workspace-mutation-remove-tagged-batch-1.stderr": "a0d634ccd7f075716ff4f703d57c17e10829aa2ead013454748afb013f0c5475",
+        "workspace-mutation-remove-tagged-batch-1.stdout": "b0703396233a34d0aeb17697dc606cf1aff3a42c9681a298cabb05f31328bf35",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-0-node.host.json": "eea025f4e20f6a716a4946adbf65bf85bdefa8dafb6b7437a8d7a0120df0930c",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-0-node.state.json": "4579d8a8bf062352affc671097dc975c6a41f3c32bc19e5a817144cb8dc904d3",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-0-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-0-node.stdout": "6cf2586111e0ee35f08e30b6a48a35eb1f9a2ba08f21245d4fe797a968cde599",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-0-rust.host.json": "0e14511ca596d233f3af8fcaac7835c86b02070d515db831712237e1c3a48c35",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-0-rust.state.json": "4579d8a8bf062352affc671097dc975c6a41f3c32bc19e5a817144cb8dc904d3",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-0-rust.stderr": "7342fd4807ceca58e18d82cedfbec23ac1385ef2a9c882cbe0d6cf1ec1521052",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-0-rust.stdout": "6cf2586111e0ee35f08e30b6a48a35eb1f9a2ba08f21245d4fe797a968cde599",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-1-node.host.json": "83b82a8ce74d51588b6190f25fc5e6c31dda35fc1e7439f768ccd84259a2753e",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-1-node.state.json": "4579d8a8bf062352affc671097dc975c6a41f3c32bc19e5a817144cb8dc904d3",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-1-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-1-node.stdout": "6cf2586111e0ee35f08e30b6a48a35eb1f9a2ba08f21245d4fe797a968cde599",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-1-rust.host.json": "0f54e2e3375a1939a1abcf30ca2af3e086df30cd15c96112e58f225193b5a3e0",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-1-rust.state.json": "4579d8a8bf062352affc671097dc975c6a41f3c32bc19e5a817144cb8dc904d3",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-1-rust.stderr": "09def5bc678d574dcd1aaadc9286206432df9a9828fac5aff134709c6560a8b9",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-1-rust.stdout": "6cf2586111e0ee35f08e30b6a48a35eb1f9a2ba08f21245d4fe797a968cde599",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-2-node.host.json": "34894c8075a084ad7e2aab957718e1cea007e1c36619c41fb758d7566c50e028",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-2-node.state.json": "4579d8a8bf062352affc671097dc975c6a41f3c32bc19e5a817144cb8dc904d3",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-2-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-2-node.stdout": "6cf2586111e0ee35f08e30b6a48a35eb1f9a2ba08f21245d4fe797a968cde599",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-2-rust.host.json": "023aaca351bdf4def62512dc99c63647a49ca0610eaad182745612da1dff5725",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-2-rust.state.json": "4579d8a8bf062352affc671097dc975c6a41f3c32bc19e5a817144cb8dc904d3",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-2-rust.stderr": "d3c96218dbd5110975fc32fc2fb8f881ebc412936fa76882b51e74db8e736913",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-2-rust.stdout": "6cf2586111e0ee35f08e30b6a48a35eb1f9a2ba08f21245d4fe797a968cde599",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-3-node.host.json": "6102ebebbc312319f07cf70a080e5c87ccf13774a0ab53fe7f9c79d3bc0a6b59",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-3-node.state.json": "4579d8a8bf062352affc671097dc975c6a41f3c32bc19e5a817144cb8dc904d3",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-3-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-3-node.stdout": "6cf2586111e0ee35f08e30b6a48a35eb1f9a2ba08f21245d4fe797a968cde599",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-3-rust.host.json": "242d415db41c25a85709ef147d522119a0b22fbafbebf740af69a640bfb11add",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-3-rust.state.json": "4579d8a8bf062352affc671097dc975c6a41f3c32bc19e5a817144cb8dc904d3",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-3-rust.stderr": "fc76ee8222458ef2c77f9d2caf0f21b2df12731f6a07d3744f9d312902bb76ee",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-3-rust.stdout": "6cf2586111e0ee35f08e30b6a48a35eb1f9a2ba08f21245d4fe797a968cde599",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-4-node.host.json": "27d504c38b82b065431d7d34e7ef62109563752408961b95df2e316d3d1ea03e",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-4-node.state.json": "4579d8a8bf062352affc671097dc975c6a41f3c32bc19e5a817144cb8dc904d3",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-4-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-4-node.stdout": "6cf2586111e0ee35f08e30b6a48a35eb1f9a2ba08f21245d4fe797a968cde599",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-4-rust.host.json": "73485c16a4242bc68e903330dac85a9568839e6501e763a38109d12860ed286d",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-4-rust.state.json": "4579d8a8bf062352affc671097dc975c6a41f3c32bc19e5a817144cb8dc904d3",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-4-rust.stderr": "71a0f5f3eac94cda968072a9c4868a734094ff6b5c2478e1319d3ee3639658f2",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-ci-4-rust.stdout": "6cf2586111e0ee35f08e30b6a48a35eb1f9a2ba08f21245d4fe797a968cde599",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-0-node.host.json": "2360bb58c8dbb9295a4c92285393c68b263ee20db94afc4e4efa096cf3eb6892",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-0-node.state.json": "7c73befe7007646956baf7ad73a5776e06f0f1701cefa7ec922e9b6a64b6b62b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-0-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-0-node.stdout": "15fce6cd5e69caa02c656a52f107944c55c01bc741d0330a406d256bc9d87b6b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-0-rust.host.json": "444b6271bc856cef580f28b7b919e207ff9063bc7ac60c866155ed6448ff4dbd",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-0-rust.state.json": "7c73befe7007646956baf7ad73a5776e06f0f1701cefa7ec922e9b6a64b6b62b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-0-rust.stderr": "3e314f5fc49f7ba6a1f13f423a414b30d865054b2598c2616f5eb8d6b1676d82",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-0-rust.stdout": "15fce6cd5e69caa02c656a52f107944c55c01bc741d0330a406d256bc9d87b6b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-1-node.host.json": "4e7cac4ab9cf9bd8c23a676f26d41edad12807dcbcd697b86d616bf2c7cbe4cc",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-1-node.state.json": "7c73befe7007646956baf7ad73a5776e06f0f1701cefa7ec922e9b6a64b6b62b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-1-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-1-node.stdout": "15fce6cd5e69caa02c656a52f107944c55c01bc741d0330a406d256bc9d87b6b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-1-rust.host.json": "0044558ae7f3ef56807eec481aa29e05c0f93f81e5b619734569287d21170f0f",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-1-rust.state.json": "7c73befe7007646956baf7ad73a5776e06f0f1701cefa7ec922e9b6a64b6b62b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-1-rust.stderr": "a16aae43dfa3d1c4afde7d545de75cf4bc16826e7c96d9060ae954af6a7802c0",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-1-rust.stdout": "15fce6cd5e69caa02c656a52f107944c55c01bc741d0330a406d256bc9d87b6b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-2-node.host.json": "699019ed1c5dfc15abe80d15e7821df9068a56e7fa04234ab21fd141c28a7ce8",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-2-node.state.json": "7c73befe7007646956baf7ad73a5776e06f0f1701cefa7ec922e9b6a64b6b62b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-2-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-2-node.stdout": "15fce6cd5e69caa02c656a52f107944c55c01bc741d0330a406d256bc9d87b6b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-2-rust.host.json": "13afd85cf8145029fffb1fce7f0326492dd52e8a08dd04f6081945a754e2b0f4",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-2-rust.state.json": "7c73befe7007646956baf7ad73a5776e06f0f1701cefa7ec922e9b6a64b6b62b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-2-rust.stderr": "1f6964ddbb021c7d7db3bf456d04e0bca99061e213c66673fb94d2683d4f0431",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-2-rust.stdout": "15fce6cd5e69caa02c656a52f107944c55c01bc741d0330a406d256bc9d87b6b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-3-node.host.json": "fc00c66f1aa9d85369feb9815635b8f7f36b22f827721d422b3f3102002dd9d9",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-3-node.state.json": "7c73befe7007646956baf7ad73a5776e06f0f1701cefa7ec922e9b6a64b6b62b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-3-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-3-node.stdout": "15fce6cd5e69caa02c656a52f107944c55c01bc741d0330a406d256bc9d87b6b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-3-rust.host.json": "98318e8d212d2c71de97f5556835cda3414af90dc771e6e71c56a4fac462ae8f",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-3-rust.state.json": "7c73befe7007646956baf7ad73a5776e06f0f1701cefa7ec922e9b6a64b6b62b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-3-rust.stderr": "71a0f5f3eac94cda968072a9c4868a734094ff6b5c2478e1319d3ee3639658f2",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-3-rust.stdout": "15fce6cd5e69caa02c656a52f107944c55c01bc741d0330a406d256bc9d87b6b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-4-node.host.json": "cef998e6efd9e1e2d5bf3382de4ed411c3db9608fa580d97af0ce3adb62a8e6e",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-4-node.state.json": "7c73befe7007646956baf7ad73a5776e06f0f1701cefa7ec922e9b6a64b6b62b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-4-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-4-node.stdout": "15fce6cd5e69caa02c656a52f107944c55c01bc741d0330a406d256bc9d87b6b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-4-rust.host.json": "45d779df4c4527ff8d3ddebc2625c77908f41890b7ead908c154fb667dd4d54a",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-4-rust.state.json": "7c73befe7007646956baf7ad73a5776e06f0f1701cefa7ec922e9b6a64b6b62b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-4-rust.stderr": "16c7741f336db74f53f1188240b4f74bf7dafeddbd261233b3b4f5b7762d4059",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-timed-4-rust.stdout": "15fce6cd5e69caa02c656a52f107944c55c01bc741d0330a406d256bc9d87b6b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-0-node.host.json": "d80137f848b5d3bceab9d9620687c45aa7278b9041b27560100c5416ab70cdd3",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-0-node.state.json": "4d45285ac20a0548291d77e575771fb891ff3a49be886109bfac710509431d9b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-0-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-0-node.stdout": "242d3ea016aca0134b409196458bf1a072cf7ec6355a55d3e7c8a0be7c2d5253",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-0-rust.host.json": "1f1ac239cc3d8e2ce11c5c182ece8b9fb2bda5a2bac959a7e6e723ac385eebb7",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-0-rust.state.json": "4d45285ac20a0548291d77e575771fb891ff3a49be886109bfac710509431d9b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-0-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-0-rust.stdout": "3ed7b54dc053f12a98ddbfa84afc0ab910672172a40db6d16fb0d23e11417762",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-1-node.host.json": "5a791c2298c06823a847311827a2144261391108f115cbce1c1569fa5eec7fff",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-1-node.state.json": "4d45285ac20a0548291d77e575771fb891ff3a49be886109bfac710509431d9b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-1-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-1-node.stdout": "242d3ea016aca0134b409196458bf1a072cf7ec6355a55d3e7c8a0be7c2d5253",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-1-rust.host.json": "8576a2b001854cc6579a617468c3f98aedcbaa402a625714c231811c516e4491",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-1-rust.state.json": "4d45285ac20a0548291d77e575771fb891ff3a49be886109bfac710509431d9b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-1-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-1-rust.stdout": "2f22a637727df07d44a51ce5f2e39942f6fb80e8f02f3a791354a1641b15b856",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-2-node.host.json": "edbc729d46f8bb3f06c82bc3f558d522c7e45de4682e5771c6996e94bd95c0ae",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-2-node.state.json": "4d45285ac20a0548291d77e575771fb891ff3a49be886109bfac710509431d9b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-2-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-2-node.stdout": "242d3ea016aca0134b409196458bf1a072cf7ec6355a55d3e7c8a0be7c2d5253",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-2-rust.host.json": "f8d8f1c2a632da3a03d23d97f01cb7fd80507d9a5fd554f17be0fb627c3ae575",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-2-rust.state.json": "4d45285ac20a0548291d77e575771fb891ff3a49be886109bfac710509431d9b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-2-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-2-rust.stdout": "7bbf5b0079aba4dd6636a9f18933d94da8ff4f5dea40de21a55d4873104787af",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-3-node.host.json": "8b441b692e49af02ee1c3a1574b5a21e47eb4b5cfb9d07e1fc215abf5d971368",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-3-node.state.json": "4d45285ac20a0548291d77e575771fb891ff3a49be886109bfac710509431d9b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-3-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-3-node.stdout": "242d3ea016aca0134b409196458bf1a072cf7ec6355a55d3e7c8a0be7c2d5253",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-3-rust.host.json": "3b539e614dfc6af5c90da0fd218c1757fa114446acb02f575deb764f58232975",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-3-rust.state.json": "4d45285ac20a0548291d77e575771fb891ff3a49be886109bfac710509431d9b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-3-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-3-rust.stdout": "a00afd257f5642fd0a0e6c5f5b5a7dfb80845a3d3dfe3752060a5fcf0559eab6",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-4-node.host.json": "393eda7c308eb0c442a5f75b06b495543c10e6c4f259d2a818bf9f8d76822b1e",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-4-node.state.json": "4d45285ac20a0548291d77e575771fb891ff3a49be886109bfac710509431d9b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-4-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-4-node.stdout": "242d3ea016aca0134b409196458bf1a072cf7ec6355a55d3e7c8a0be7c2d5253",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-4-rust.host.json": "3518ff58c7a6366dd67a36ec0b32bde873bcdef49adc7eea233f42484a5882f5",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-4-rust.state.json": "4d45285ac20a0548291d77e575771fb891ff3a49be886109bfac710509431d9b",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-4-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-remove-tagged-batch-1.evidence/remove-tagged-batch-tty-4-rust.stdout": "fd7df5d2393ab04619f8c3d3c94af0dd5ba9d64f52dfce01cc9262d028a16b81"
+      },
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "remove-tagged-batch",
+        "--output",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-remove-tagged-batch-1.result.json"
+      ],
+      "result_path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-remove-tagged-batch-1.result.json"
+    },
+    "delete-tagged-batch": {
+      "family": "workspace-mutation",
+      "workload": "delete-tagged-batch",
+      "attempt": 1,
+      "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-delete-tagged-batch-1.monitor.json",
+      "sha256": "14e189c96baf8d7536436ee4fb36591fccdf7830db000286895cf241a7984858",
+      "performance_valid": true,
+      "host_busy_peak_percent": 10.105393676379418,
+      "exit_code": 0,
+      "files": {
+        "workspace-mutation-delete-tagged-batch-1.monitor.json": "14e189c96baf8d7536436ee4fb36591fccdf7830db000286895cf241a7984858",
+        "workspace-mutation-delete-tagged-batch-1.result.json": "94282f2223f743f79f0e191e4f389753b99bf0fba78b55fe69e625826bf02891",
+        "workspace-mutation-delete-tagged-batch-1.stderr": "b05b664152e89df8cdeca360008e8444244055ec30c838e8975c37d6bee3f53c",
+        "workspace-mutation-delete-tagged-batch-1.stdout": "94282f2223f743f79f0e191e4f389753b99bf0fba78b55fe69e625826bf02891",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-0-node.host.json": "7214fb85c3ca0f15ef0351b1cd07ed5f48193ec76834b596147d5ae44e2fde5b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-0-node.state.json": "4d9018e31585b8804668d25107f884c6b72f432973c3f7387aed9a66035f7b5a",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-0-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-0-node.stdout": "1937c59321d8cb01b04ebc9c92b766afc4f913b71d4bd013413c5d16e73c982b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-0-rust.host.json": "d0042260ac48d0f4137acaac40e23ed795d790b327efbdd617379869676118d4",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-0-rust.state.json": "4d9018e31585b8804668d25107f884c6b72f432973c3f7387aed9a66035f7b5a",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-0-rust.stderr": "a85a67a452bc501a3b514fc771c780da894bf407140ffacad4061fed81bec757",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-0-rust.stdout": "1937c59321d8cb01b04ebc9c92b766afc4f913b71d4bd013413c5d16e73c982b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-1-node.host.json": "15ba50cd77bb8570790f922ad406aca368a013283e62d21ba49700459f293eca",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-1-node.state.json": "4d9018e31585b8804668d25107f884c6b72f432973c3f7387aed9a66035f7b5a",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-1-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-1-node.stdout": "1937c59321d8cb01b04ebc9c92b766afc4f913b71d4bd013413c5d16e73c982b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-1-rust.host.json": "b2c463eefc272f6eb1562331e112b8856e74c6f608b0fcec32c4a946aac02f76",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-1-rust.state.json": "4d9018e31585b8804668d25107f884c6b72f432973c3f7387aed9a66035f7b5a",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-1-rust.stderr": "3bbf117621c2870bf934c331e4ee04b7089fb26265147941d0a9a310a5549e2a",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-1-rust.stdout": "1937c59321d8cb01b04ebc9c92b766afc4f913b71d4bd013413c5d16e73c982b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-2-node.host.json": "a815aad5d175fc1a4bcd45cd53c50667014466d9d96abf3dc373945e52bf47ee",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-2-node.state.json": "4d9018e31585b8804668d25107f884c6b72f432973c3f7387aed9a66035f7b5a",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-2-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-2-node.stdout": "1937c59321d8cb01b04ebc9c92b766afc4f913b71d4bd013413c5d16e73c982b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-2-rust.host.json": "7125c7c4fb9399b4ecd5675a2465832f33a64ef7040f5e83dd58195ff41d0709",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-2-rust.state.json": "4d9018e31585b8804668d25107f884c6b72f432973c3f7387aed9a66035f7b5a",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-2-rust.stderr": "8693c262aac2f8ab7c175a334b9986e864e05da37fdaf265d6bbd109bf08f756",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-2-rust.stdout": "1937c59321d8cb01b04ebc9c92b766afc4f913b71d4bd013413c5d16e73c982b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-3-node.host.json": "81c1868cb56f343eb49640008863b9c066f3c137c528f3cfcc32bd0e4f92577e",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-3-node.state.json": "4d9018e31585b8804668d25107f884c6b72f432973c3f7387aed9a66035f7b5a",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-3-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-3-node.stdout": "1937c59321d8cb01b04ebc9c92b766afc4f913b71d4bd013413c5d16e73c982b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-3-rust.host.json": "cf3ef922cced345a1c03a1670fa3131814958096ac0ff29ee2453e178a83c8c6",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-3-rust.state.json": "4d9018e31585b8804668d25107f884c6b72f432973c3f7387aed9a66035f7b5a",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-3-rust.stderr": "28f8045e028963eddc441413eee7e230528ab05c6c40011a40e49f7db1b3e0af",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-3-rust.stdout": "1937c59321d8cb01b04ebc9c92b766afc4f913b71d4bd013413c5d16e73c982b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-4-node.host.json": "5c269e854c6d244bcd6b375706076951247b7121c5ba49fe200f923fde7735d8",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-4-node.state.json": "4d9018e31585b8804668d25107f884c6b72f432973c3f7387aed9a66035f7b5a",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-4-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-4-node.stdout": "1937c59321d8cb01b04ebc9c92b766afc4f913b71d4bd013413c5d16e73c982b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-4-rust.host.json": "11ac5f991be118cbdca0f11039a9c507b46553872f1d273c8184fb702fcc6c48",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-4-rust.state.json": "4d9018e31585b8804668d25107f884c6b72f432973c3f7387aed9a66035f7b5a",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-4-rust.stderr": "d6a9dabd79cb22fa95396a422fb06f47c51de818758b005af30833d3e9baedb2",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-ci-4-rust.stdout": "1937c59321d8cb01b04ebc9c92b766afc4f913b71d4bd013413c5d16e73c982b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-0-node.host.json": "9882212449cae0ffd78f2bd36fbf78997a515db443bff02bb82b1e7f77781c5f",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-0-node.state.json": "5c13db61f2dc50835cb72e009356d037bbc1af1d0e201d0f9ea15f14b6907f49",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-0-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-0-node.stdout": "5e93a568ee19c76fd1e15d0e8f30960639cdaea3f09bbc900ff1fa60bc3f7d89",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-0-rust.host.json": "f12d9d20d68bed29703d491a3972c8bef52f1b207282e781a9feca871c595981",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-0-rust.state.json": "5c13db61f2dc50835cb72e009356d037bbc1af1d0e201d0f9ea15f14b6907f49",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-0-rust.stderr": "1b052388c79f407f80813582ed93c864124a32762e17b88825d11a698c03d461",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-0-rust.stdout": "5e93a568ee19c76fd1e15d0e8f30960639cdaea3f09bbc900ff1fa60bc3f7d89",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-1-node.host.json": "1d5a792f9f44eff0478f47f92f352ac4b7d6044d714040e13b4a4ee09272b873",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-1-node.state.json": "5c13db61f2dc50835cb72e009356d037bbc1af1d0e201d0f9ea15f14b6907f49",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-1-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-1-node.stdout": "5e93a568ee19c76fd1e15d0e8f30960639cdaea3f09bbc900ff1fa60bc3f7d89",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-1-rust.host.json": "20480bb785f243d10a1ed878f6da4571d8431f491eb0ac3335cf5d964580b130",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-1-rust.state.json": "5c13db61f2dc50835cb72e009356d037bbc1af1d0e201d0f9ea15f14b6907f49",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-1-rust.stderr": "2f5218d0be60dcbe7dd770b4a611176fb029eaddf414d0efc56a747d2636a7ac",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-1-rust.stdout": "5e93a568ee19c76fd1e15d0e8f30960639cdaea3f09bbc900ff1fa60bc3f7d89",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-2-node.host.json": "40b45890ceed28fda5cc234b3401261828e885eab61a9f3ee3ecb06caaad2b45",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-2-node.state.json": "5c13db61f2dc50835cb72e009356d037bbc1af1d0e201d0f9ea15f14b6907f49",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-2-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-2-node.stdout": "5e93a568ee19c76fd1e15d0e8f30960639cdaea3f09bbc900ff1fa60bc3f7d89",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-2-rust.host.json": "1e0934e350476bbc42e31854aa4c9415806ac297879461149b293be2945e2591",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-2-rust.state.json": "5c13db61f2dc50835cb72e009356d037bbc1af1d0e201d0f9ea15f14b6907f49",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-2-rust.stderr": "d6a9dabd79cb22fa95396a422fb06f47c51de818758b005af30833d3e9baedb2",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-2-rust.stdout": "5e93a568ee19c76fd1e15d0e8f30960639cdaea3f09bbc900ff1fa60bc3f7d89",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-3-node.host.json": "72a46f1e4fcb97f9c51b509f7880b7caa6a5a306a110a04f94fe2dfb3cae731b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-3-node.state.json": "5c13db61f2dc50835cb72e009356d037bbc1af1d0e201d0f9ea15f14b6907f49",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-3-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-3-node.stdout": "5e93a568ee19c76fd1e15d0e8f30960639cdaea3f09bbc900ff1fa60bc3f7d89",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-3-rust.host.json": "62c034137402d2e42df7e596625924ca5a50ce491940d646bd6a50774dcb4b4e",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-3-rust.state.json": "5c13db61f2dc50835cb72e009356d037bbc1af1d0e201d0f9ea15f14b6907f49",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-3-rust.stderr": "012bfece97fb3673ed9c2bc2d15853f867793ff736c797d5161d63df1783048b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-3-rust.stdout": "5e93a568ee19c76fd1e15d0e8f30960639cdaea3f09bbc900ff1fa60bc3f7d89",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-4-node.host.json": "017ebfb4d63265c308382e9675b2b78198982aaadddc164ba402b452e8b7c253",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-4-node.state.json": "5c13db61f2dc50835cb72e009356d037bbc1af1d0e201d0f9ea15f14b6907f49",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-4-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-4-node.stdout": "5e93a568ee19c76fd1e15d0e8f30960639cdaea3f09bbc900ff1fa60bc3f7d89",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-4-rust.host.json": "dfb001cd37b483bb35b6577c13f699cba20e41382581eeaaa13508d272fdd37b",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-4-rust.state.json": "5c13db61f2dc50835cb72e009356d037bbc1af1d0e201d0f9ea15f14b6907f49",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-4-rust.stderr": "6a5f13c4cecfdc5726a070e9183e7eafd22da039b674c4095fa1a97d7b93a6b3",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-timed-4-rust.stdout": "5e93a568ee19c76fd1e15d0e8f30960639cdaea3f09bbc900ff1fa60bc3f7d89",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-0-node.host.json": "64905dcba1afae1cd39ca5b7aca502edb3183277a58c4d01bb2c11f594dc9d52",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-0-node.state.json": "ffcb5e08779e1ea92b119ef873d4c8e7ac6c47a3a9720a3552b211e0fba2320d",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-0-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-0-node.stdout": "02204527a89552d8030a896b0221f1e7a058115d1a44904d8fcbc6695c437221",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-0-rust.host.json": "290037a6411dc7671835387aa5b15cf3695bc19e0c628b37ef40fc4dd903d596",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-0-rust.state.json": "ffcb5e08779e1ea92b119ef873d4c8e7ac6c47a3a9720a3552b211e0fba2320d",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-0-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-0-rust.stdout": "702aa20a32329d011a07f5953c746d1043533a74086f9e522cecb0071d80e891",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-1-node.host.json": "bd1359948c97b8117ff8ed73eab52af449235a416201656e08642c01546e8536",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-1-node.state.json": "ffcb5e08779e1ea92b119ef873d4c8e7ac6c47a3a9720a3552b211e0fba2320d",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-1-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-1-node.stdout": "02204527a89552d8030a896b0221f1e7a058115d1a44904d8fcbc6695c437221",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-1-rust.host.json": "a42f3f39a5ef128ac3571a775f8f63e9a78ab8d60988cac673d18bcec7929bc4",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-1-rust.state.json": "ffcb5e08779e1ea92b119ef873d4c8e7ac6c47a3a9720a3552b211e0fba2320d",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-1-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-1-rust.stdout": "71995d22734391d0f6bd466d3bbdab95d42e2ffedd79083261ec3b1a1171d951",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-2-node.host.json": "9f99963a5180bce06b106955826d8844b31311df7b2365b9f9b8b301e2fa3008",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-2-node.state.json": "ffcb5e08779e1ea92b119ef873d4c8e7ac6c47a3a9720a3552b211e0fba2320d",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-2-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-2-node.stdout": "02204527a89552d8030a896b0221f1e7a058115d1a44904d8fcbc6695c437221",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-2-rust.host.json": "b4d92c6066be9824230e74b11eeec9fee8238e645dc4aad9f85c16cd88dd254d",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-2-rust.state.json": "ffcb5e08779e1ea92b119ef873d4c8e7ac6c47a3a9720a3552b211e0fba2320d",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-2-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-2-rust.stdout": "4cf6636ed647b780c971a00f92451261da6df78d1a4033a0f7bd9572d378b058",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-3-node.host.json": "6b85d9b0fcaf46019912fcaf8540876ce96c9af7a0fc396aa459340d20b9c750",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-3-node.state.json": "ffcb5e08779e1ea92b119ef873d4c8e7ac6c47a3a9720a3552b211e0fba2320d",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-3-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-3-node.stdout": "02204527a89552d8030a896b0221f1e7a058115d1a44904d8fcbc6695c437221",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-3-rust.host.json": "7afa209cb7768fda77a07b88a331497ad5ea60532083e575886edee088177784",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-3-rust.state.json": "ffcb5e08779e1ea92b119ef873d4c8e7ac6c47a3a9720a3552b211e0fba2320d",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-3-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-3-rust.stdout": "ba54e095e25da492007978e9699e4f8a12b3a411c7cec3fed33daa1910b22e13",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-4-node.host.json": "1853d4a3da6d9d0ac9c28391e2aaf7ae08da6c0582b02c218fb08ff9bdd1b1f1",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-4-node.state.json": "ffcb5e08779e1ea92b119ef873d4c8e7ac6c47a3a9720a3552b211e0fba2320d",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-4-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-4-node.stdout": "02204527a89552d8030a896b0221f1e7a058115d1a44904d8fcbc6695c437221",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-4-rust.host.json": "51cad2fd6237eaa14a88f26c8b58a84bdab7ea970def81e5fd679833a60f5151",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-4-rust.state.json": "ffcb5e08779e1ea92b119ef873d4c8e7ac6c47a3a9720a3552b211e0fba2320d",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-4-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-delete-tagged-batch-1.evidence/delete-tagged-batch-tty-4-rust.stdout": "79e01d2bb3dda56b0cd137f58471bfe4b876563f706b178e7c9600881290e04f"
+      },
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "delete-tagged-batch",
+        "--output",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-delete-tagged-batch-1.result.json"
+      ],
+      "result_path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-delete-tagged-batch-1.result.json"
+    },
+    "recover-deleted-batch": {
+      "family": "workspace-mutation",
+      "workload": "recover-deleted-batch",
+      "attempt": 1,
+      "path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-recover-deleted-batch-1.monitor.json",
+      "sha256": "49e85b32ca9692c89797a3da777f9438125b0e771bb270157a621b692e0222b7",
+      "performance_valid": true,
+      "host_busy_peak_percent": 10.46077210460772,
+      "exit_code": 0,
+      "files": {
+        "workspace-mutation-recover-deleted-batch-1.monitor.json": "49e85b32ca9692c89797a3da777f9438125b0e771bb270157a621b692e0222b7",
+        "workspace-mutation-recover-deleted-batch-1.result.json": "1642b04b80d080e70a4bc5fb5dd7ab2f2257a98ca55283f96ce0ca5b08bdcd17",
+        "workspace-mutation-recover-deleted-batch-1.stderr": "419cd37898ec3a779867bd6de07284693fa6a9f82f90a260f703f995e9e2a297",
+        "workspace-mutation-recover-deleted-batch-1.stdout": "1642b04b80d080e70a4bc5fb5dd7ab2f2257a98ca55283f96ce0ca5b08bdcd17",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-0-node.host.json": "309b90eea415cb3bb98b03e74f418ce18305f17f34f4ee660e647c8e99faa107",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-0-node.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-0-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-0-node.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-0-rust.host.json": "328779026025ed5d2636336bd9cc5e06766e82d02ca9b2d3958e835c30cae2d7",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-0-rust.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-0-rust.stderr": "7aa6acb173a737107634566c1f2d5e75d3f43471c037ee677aff437e37ca0957",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-0-rust.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-1-node.host.json": "d0bc201d6682ae600a6539766cf0418d356f5d13c4457fd1245068321b0cff84",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-1-node.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-1-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-1-node.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-1-rust.host.json": "72b797b1765d19b9025c43b2c2735bf69dbbf12c93ffe798432d9297ad1561ca",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-1-rust.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-1-rust.stderr": "0c1c02e9f935a9d131d300d052b124df283e877fd99fd10877d87b7a5793d0db",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-1-rust.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-2-node.host.json": "495007b877d1a4c73cd86253af5f3b54b163431a24f7f064695c7c3a8a1658a7",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-2-node.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-2-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-2-node.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-2-rust.host.json": "3a763f2804511f2d8091a396b3e2d9f2f8c3102c190c3c110f8a574725b66d8e",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-2-rust.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-2-rust.stderr": "0d62b79f8e20c5d96f9072af5b42df901097f653c0e7d89b052c0924a49c1dd9",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-2-rust.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-3-node.host.json": "4fa26161fc0fc5d2a1f081ab463f8627182510fc43a84e543f90b84c8de62c27",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-3-node.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-3-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-3-node.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-3-rust.host.json": "bed7ff93394d3674ef401a101ce247b8ce1a393621f7a1a0c16783f356231bb2",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-3-rust.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-3-rust.stderr": "53c1a2b2de048a288ab89a43e9370db07bf12c0b58fb734125213313c0979128",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-3-rust.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-4-node.host.json": "d4c35b7573f756ff77d8476fe554e17a8099126ffefb644cec5727dda95215ba",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-4-node.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-4-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-4-node.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-4-rust.host.json": "6705f0415fd4c9c40b74e9e4ac6443ec9908b8bb09ebadf5247bfb89b4d0042f",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-4-rust.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-4-rust.stderr": "0d62b79f8e20c5d96f9072af5b42df901097f653c0e7d89b052c0924a49c1dd9",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-ci-4-rust.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-0-node.host.json": "65884a519a1567bccf8ddea1b377706b6677f2ffdd92661aa0e77d13b418bf8f",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-0-node.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-0-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-0-node.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-0-rust.host.json": "b0319b3d2fcf09850025d50f4f8e5405aed027653583d3a7f2bb37cdce460cda",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-0-rust.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-0-rust.stderr": "53c1a2b2de048a288ab89a43e9370db07bf12c0b58fb734125213313c0979128",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-0-rust.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-1-node.host.json": "ebae568e230b84f7117a11e776ef14d396034711e703399823df2231b19f7787",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-1-node.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-1-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-1-node.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-1-rust.host.json": "51d6955739316b4c4c1f7806ecfbc535e733122abda97a08243d22c42f404316",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-1-rust.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-1-rust.stderr": "0c1c02e9f935a9d131d300d052b124df283e877fd99fd10877d87b7a5793d0db",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-1-rust.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-2-node.host.json": "977dbf747cbde7e0007266995d1f869591689844390387ab3cffb110d71a8d01",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-2-node.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-2-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-2-node.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-2-rust.host.json": "60383c35c31807d2071f4c81cd32586773d446e6504ec0c3153f250dfed50ab2",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-2-rust.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-2-rust.stderr": "c0bae226b423766f850f97b8de80e5c48d34bded3c2fbc45d16d12626e27e5fa",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-2-rust.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-3-node.host.json": "87e7b95528b6dc44fc873b6e28aea24f822ec00e0bdfdaa92aa627d8b17f79b5",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-3-node.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-3-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-3-node.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-3-rust.host.json": "3b112c724635e7d93db61a18ee8baa6704854e4c3f30371af5baaa405165eacb",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-3-rust.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-3-rust.stderr": "34de2029b1baebfb124b8aac0321ae02e4f364d4df589cdacfbc2a9d6558717e",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-3-rust.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-4-node.host.json": "0f8b96d50333716317f67eab535d25370a61d2ccd52df9ef3aa0419152253924",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-4-node.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-4-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-4-node.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-4-rust.host.json": "e263eaef6b4b666317087c170ae861d9a029c0168d34fab8508b32f7e91bfbf2",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-4-rust.state.json": "b2b7350625f711c9532a454db28b4de9e571ab8cce59e842cd58d4d76521350b",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-4-rust.stderr": "4d71374b933191b6fbf74d98ff9f4910cf860716491ccdca908ea91855de5821",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-timed-4-rust.stdout": "31d259bac21ab59c5619051e971c4d93d82d86cb441023cde7a17ffb5ddddf43",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-0-node.host.json": "5335f5b4364c33e6aa3c79d47de36022b48a190e712a06c5d561d97c715aea48",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-0-node.state.json": "c7b37b7d96c272cdecaf3d11f76156833956a758485f8054cf0be1e212faf291",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-0-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-0-node.stdout": "c6259f3eed9e79433d72fea5e000f14a36f839b47975ea12fb1c9e3d7af0ece0",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-0-rust.host.json": "d9e70790b118fe7b851926b5d067af06e9fb7dd8a5aed9ad6d115126f18fea2f",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-0-rust.state.json": "c7b37b7d96c272cdecaf3d11f76156833956a758485f8054cf0be1e212faf291",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-0-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-0-rust.stdout": "e1b01601619f6bdf1460ced70afa6a2bd56467c95d097a9fb65c761b40713dd3",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-1-node.host.json": "0dea57da4a7ea778628d824b4f07718297ae8437306354b87fbaa4c075d8b228",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-1-node.state.json": "c7b37b7d96c272cdecaf3d11f76156833956a758485f8054cf0be1e212faf291",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-1-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-1-node.stdout": "c6259f3eed9e79433d72fea5e000f14a36f839b47975ea12fb1c9e3d7af0ece0",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-1-rust.host.json": "a21e7eebb6b273f0bb8fa7cb501a42fa6b9bbdaced5351188373de15190341a8",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-1-rust.state.json": "c7b37b7d96c272cdecaf3d11f76156833956a758485f8054cf0be1e212faf291",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-1-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-1-rust.stdout": "8ab4e3867a68c950c242971c18d6dc43c6e58e74e25fcb632416a420ef17f458",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-2-node.host.json": "e6298e5258b9e8abc1efc64286b0bc0e71c46bc75a5122ab1ce3d247cde68fcd",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-2-node.state.json": "c7b37b7d96c272cdecaf3d11f76156833956a758485f8054cf0be1e212faf291",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-2-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-2-node.stdout": "c6259f3eed9e79433d72fea5e000f14a36f839b47975ea12fb1c9e3d7af0ece0",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-2-rust.host.json": "e79141a1b58444776c6841b0344303efee2f2906c3971247c9d8154818458858",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-2-rust.state.json": "c7b37b7d96c272cdecaf3d11f76156833956a758485f8054cf0be1e212faf291",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-2-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-2-rust.stdout": "c90964459bfe50d350f98d98b5fac9c803537709face70fc5157beec6634d517",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-3-node.host.json": "837791c369ae0407703d7db643306ff8f9bbd6de2c1f10b63385944b6b76ed6c",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-3-node.state.json": "c7b37b7d96c272cdecaf3d11f76156833956a758485f8054cf0be1e212faf291",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-3-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-3-node.stdout": "c6259f3eed9e79433d72fea5e000f14a36f839b47975ea12fb1c9e3d7af0ece0",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-3-rust.host.json": "ba877a0ea789930d5800593d5ccf3322911005ff081a5251f491a0a627a749e4",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-3-rust.state.json": "c7b37b7d96c272cdecaf3d11f76156833956a758485f8054cf0be1e212faf291",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-3-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-3-rust.stdout": "e1b01601619f6bdf1460ced70afa6a2bd56467c95d097a9fb65c761b40713dd3",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-4-node.host.json": "cf767ed1b7d8d643bb145ccb1162bfec2c46838269299ed96a17a6bc502c205e",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-4-node.state.json": "c7b37b7d96c272cdecaf3d11f76156833956a758485f8054cf0be1e212faf291",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-4-node.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-4-node.stdout": "c6259f3eed9e79433d72fea5e000f14a36f839b47975ea12fb1c9e3d7af0ece0",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-4-rust.host.json": "3a53fea5fe06339bb014e465b012d98be0247070881e0eb94dad6266271dfbb5",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-4-rust.state.json": "c7b37b7d96c272cdecaf3d11f76156833956a758485f8054cf0be1e212faf291",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-4-rust.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "workspace-mutation-recover-deleted-batch-1.evidence/recover-deleted-batch-tty-4-rust.stdout": "c656a6e689b3a055575108bd5adef36c59577d7cb7ff5a11c0f08dda8b749367"
+      },
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/artifacts/a800673fc4da212e06b15970026ed431dec5b6ea/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "recover-deleted-batch",
+        "--output",
+        "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-recover-deleted-batch-1.result.json"
+      ],
+      "result_path": "/var/home/zoltan/.cache/bit-rust-work/import-adoption-51e378bd5/qualification/fe37616e96c1b30f57027af1ec93345123648d66-079286f024f1/workspace-mutation-recover-deleted-batch-1.result.json"
+    }
+  },
+  "qualification_evidence": {
+    "path": "scripts/rust/benchmarks/import-adoption-completion-qualification.json",
+    "sha256": "dcab69d0c1b93a142a381586a38fa0efd999ea984796c5ea3825db521d11724d"
+  }
+}
