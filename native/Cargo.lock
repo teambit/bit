@@ -353,6 +353,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "unicode-width 0.2.2",
+ "winapi-util",
  "windows-sys 0.61.2",
 ]
 

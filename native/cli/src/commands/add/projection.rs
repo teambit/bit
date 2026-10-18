@@ -29,7 +29,7 @@ pub(super) fn prepare(
     root: &Path,
     bitmap: &Value,
     added: &[Value],
-    mut context: Value,
+    context: Value,
 ) -> io::Result<Projection> {
     let config =
         WorkspaceConfig::from_value(root.join("workspace.jsonc"), context["workspace"].clone())?;
@@ -38,6 +38,16 @@ pub(super) fn prepare(
     ))
     .map_err(io::Error::other)?;
     let workspace = Workspace::load_projected(root, &config, &core, bitmap)?;
+    prepare_loaded(root, bitmap, added, context, workspace)
+}
+
+pub(super) fn prepare_loaded(
+    root: &Path,
+    bitmap: &Value,
+    added: &[Value],
+    mut context: Value,
+    workspace: Workspace,
+) -> io::Result<Projection> {
     let previous = context["targets"]
         .as_array()
         .cloned()

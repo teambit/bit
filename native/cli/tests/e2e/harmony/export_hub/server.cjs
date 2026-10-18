@@ -69,8 +69,9 @@ const server = http.createServer(async (request, response) => {
       const scope = await loadScope(config.scopes[name], false);
       successIds.push(...(await saveObjects(scope, list)).map(id => id.toString()));
     }
-    // The callback fixture supplies a stable wire acknowledgement; publication stays canonical.
-    if (config.mode === 'callback') successIds.sort();
+    // Fixture acknowledgements must not select an arbitrary saveObjects completion.
+    // Publication still uses the released writer; only these server responses are fixed.
+    if (config.mode === 'callback' || config.mode === 'subset') successIds.sort();
     if (!response.headersSent) response.setHeader('content-type', 'application/x-ndjson');
     response.write(JSON.stringify({message: 'fixture exporter persisted objects'}) + '\n');
     response.end(JSON.stringify({end: true, data: {successIds: config.mode === 'subset' ? successIds.slice(0, 1) : successIds, failedScopes: [], errors: {}, metadata: {jobs: config.mode.startsWith('jobs') ? ['fixture-job'] : []}}}) + '\n');

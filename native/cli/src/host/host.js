@@ -22,13 +22,13 @@ const { createRequire } = require('module');
 
 const [bitDir, entry, root] = process.argv.slice(-3);
 const cliArguments = JSON.parse(process.env.BIT_NATIVE_HOST_ARGUMENTS ?? '[]');
-const readonlyStatus = ['status', 's', 'diff', 'd'].includes(cliArguments[0]);
+const readonlyStatus = ['status', 's', 'diff'].includes(cliArguments[0]);
 const snapshotCommandName = cliArguments[0] === 't' ? 'tag' : cliArguments[0];
 let snapshotCommand = ['snap', 'tag'].includes(snapshotCommandName) || (cliArguments[0] === 'merge' && cliArguments.includes('--resolve'));
 const checkoutCommand = (cliArguments[0] === 'merge' && cliArguments.includes('--abort')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge-abort') || ['checkout', 'U', 'revert', 'switch'].includes(cliArguments[0]) || (cliArguments[0] === 'lane' && cliArguments[1] === 'import');
 const mergeCommand = (cliArguments[0] === 'merge' && !cliArguments.includes('--abort') && !cliArguments.includes('--resolve')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge');
 const exportCommand = ['export', 'e', 'resume-export'].includes(cliArguments[0]);
-const bufferedCommand = snapshotCommand || checkoutCommand || mergeCommand || exportCommand || ['stash', 'add', 'a'].includes(cliArguments[0]);
+const bufferedCommand = snapshotCommand || checkoutCommand || mergeCommand || exportCommand || ['stash', 'add', 'a', 'move', 'mv', 'rename', 'deprecate', 'd', 'undeprecate'].includes(cliArguments[0]);
 process.argv = [process.execPath, entry, ...cliArguments];
 require(path.join(bitDir, 'dist', 'hook-require.js'));
 const bitRequire = createRequire(path.join(bitDir, 'package.json'));
@@ -106,6 +106,38 @@ async function handle(line) {
 }
 
 const handlers = {
+  renameTooling,
+  renameAst,
+  renameSourceConfig,
+  identityUseCached,
+  identityLinkFacts,
+  identityMaterialized,
+  identityClearLoadCache: async () => {
+    (await loadHarmony()).get('teambit.workspace/workspace').clearAllComponentsCache();
+    return true;
+  },
+  trackingAspectComponents: async ({ components }) => {
+    const envs = (await loadHarmony()).get('teambit.envs/envs');
+    const aspects = [];
+    for (const row of components) {
+      const retained = identityLoadedComponent(row.identity) ?? statusComponents.find(component => component.id.toStringWithoutVersion() === row.identity);
+      const component = retained ?? await hydrateStatusComponent(row);
+      const descriptor = retained ? component.state.aspects.get('teambit.envs/envs')?.data : await envs.calcDescriptor(component, { skipWarnings: false });
+      if (descriptor?.type === 'aspect') aspects.push(row.identity);
+    }
+    return aspects;
+  },
+  identityEnvironments,
+  identityBootstrap: async () => {
+    const loaded = await loadHarmony();
+    const workspace = loaded.get('teambit.workspace/workspace');
+    const loader = loaded.get('teambit.harmony/aspect-loader');
+    const ids = loader.getNotLoadedConfiguredExtensions();
+    await loadWorkspaceAspects(ids);
+    const components = await workspace.resolveMultipleComponentIds(ids);
+    for (const id of components) workspace.clearComponentCache(id);
+    return true;
+  },
   exportBootstrap,
   exportFileAction,
   exportInterrupt,
@@ -181,7 +213,7 @@ const handlers = {
       return [];
     }
   },
-  trackingProjectBitmap: async ({ bitmap, components }) => {
+  trackingProjectBitmap: async ({ bitmap, components, retainLoaded = false }) => {
     const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
     const { BitMap: LegacyBitMap } = bitRequire('@teambit/legacy.bit-map');
     const { BitMap: WorkspaceBitMap } = bitRequire('@teambit/workspace/dist/bit-map.js');
@@ -197,7 +229,10 @@ const handlers = {
       componentMap.files = receipt.files.map((file) => ({ ...file }));
       if(Object.hasOwn(receipt,'trackingVersion')) componentMap.id=componentMap.id.changeVersion(receipt.trackingVersion??undefined);
     }
-    workspace.clearAllComponentsCache();
+    if (!retainLoaded) {
+      workspace.clearAllComponentsCache();
+      if (cliArguments[0] === 'rename') identityLoadedComponents.clear();
+    }
     workspace.consumer.bitMap = projected;
     workspace.bitMap = new WorkspaceBitMap(projected, workspace.consumer);
     return true;
@@ -637,7 +672,7 @@ async function packageJsonProps(envId) {
 async function transformPackageJson(componentId, manifest) {
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
-  const component = (['add','a'].includes(cliArguments[0]) && statusComponents.find((component)=>component.id.toStringWithoutVersion()===componentId)) || await workspace.get(await workspace.resolveComponentId(componentId));
+  const component = identityLoadedComponent(componentId) || (['add','a','move','mv','rename'].includes(cliArguments[0]) && statusComponents.find((component)=>component.id.toStringWithoutVersion()===componentId)) || await workspace.get(await workspace.resolveComponentId(componentId));
   const env = loaded.get('teambit.envs/envs').getOrCalculateEnv(component).env;
   return env.modifyPackageJson(component, manifest);
 }
@@ -826,7 +861,7 @@ function serializedIssue(issue) {
   return { type: issue.type, data: JSON.stringify(convert(typeof issue.data === 'string' ? JSON.parse(issue.data) : issue.data)) };
 }
 
-async function hydrateStatusComponent(row) {
+async function hydrateStatusComponent(row, sourceConsumer) {
   const { ComponentID } = bitRequire('@teambit/component-id');
   const { ConsumerComponent, Dependency } = bitRequire('@teambit/legacy.consumer-component');
   const { SourceFile } = bitRequire('@teambit/component.sources');
@@ -838,24 +873,26 @@ async function hydrateStatusComponent(row) {
   let id = row.scoped === false ? ComponentID.fromObject({name:parsedId.fullName,version:parsedId.version},parsedId.scope) : parsedId;
   if(Object.hasOwn(row,'trackingVersion')) id=id.changeVersion(row.trackingVersion??undefined);
   const convert = (extension) => ({ ...extension, extensionId: extension.extensionId ? ComponentID.fromObject(extension.extensionId) : undefined });
-  const consumer = await ConsumerComponent.fromObject({
+  const consumer = sourceConsumer ?? await ConsumerComponent.fromObject({
     ...row.current, name: id.fullName, scope: row.scoped === false ? undefined : id.scope, version: Object.hasOwn(row,'trackingVersion') ? row.trackingVersion??undefined : row.version || undefined, schema: '2.0.0',
     dependencies: (row.current.dependencies ?? []).map((dependency) => Dependency.deserialize(dependency)),
     devDependencies: (row.current.devDependencies ?? []).map((dependency) => Dependency.deserialize(dependency)),
     extensions: row.current.extensions.map(convert),
     files: row.files.map((file) => SourceFile.load(path.join(directory, file), directory, root)),
   });
+  if (!sourceConsumer) {
   if (cliArguments[0] === 'stash' && row.scope?.currentVersion) {
     for (const field of ['log', 'docs', 'buildStatus', 'packageJsonChangedProps']) {
       if (Object.hasOwn(row.scope.currentVersion, field)) consumer[field] = row.scope.currentVersion[field];
     }
   }
-  if (['add','a'].includes(cliArguments[0]) && trackingDocumentation.size) {
+  if (['add','a','move','mv','rename','deprecate','d','undeprecate'].includes(cliArguments[0]) && trackingDocumentation.size) {
     consumer.docs = row.files.flatMap((file) => trackingDocumentation.get(path.join(directory, file)) ?? []);
   }
   consumer.defaultScope = id.scope;
   consumer.writtenPath = directory;
   consumer.issues = IssuesList.deserialize((row.issues ?? []).filter((issue) => issue.type).map(serializedIssue));
+  }
   const state = new State(new Config(consumer), await workspace.createAspectList(consumer.extensions), ComponentFS.fromVinyls(consumer.files), consumer.dependencies, consumer);
   const { WorkspaceComponent } = bitRequire('@teambit/workspace/dist/workspace-component/workspace-component.js');
   const headVersion = row.scope?.head;
@@ -887,12 +924,20 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout }
     }
   }
   for (const row of components) {
-    const component = await hydrateStatusComponent(row);
+    let component = await hydrateStatusComponent(row);
+    const componentIndex = statusComponents.length;
     statusComponents.push(component);
     // DependencyLoader's DevFiles adapter hydrates a separate Harmony class before
     // the actual workspace load. Workspace-root explicitly skips source detection.
     if (!snapshotContinuation) {
-      if (!tracking && (snapshot || (checkout && row.dependencyCacheMiss)) && row.directory !== '.') await statusApplyLoadCallbacks(await hydrateStatusComponent(row), { workspace, envs, resolver });
+      if (!tracking && (snapshot || (checkout && row.dependencyCacheMiss)) && row.directory !== '.') {
+        const devComponent = await hydrateStatusComponent(row);
+        await statusApplyLoadCallbacks(devComponent, { workspace, envs, resolver });
+        if (['move','mv','rename','deprecate','d','undeprecate'].includes(cliArguments[0])) {
+          component = await hydrateStatusComponent(row, devComponent.state._consumer);
+          statusComponents[componentIndex] = component;
+        }
+      }
       await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
     }
   }
@@ -907,6 +952,9 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout }
     await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
   }
   if (snapshot) loadOutput.push(capturedStdout?.slice(outputStart).join('') ?? '');
+  if (cliArguments[0] === 'rename') {
+    for (const component of statusComponents) identityLoadedComponents.set(component.id.toStringWithoutVersion(), component);
+  }
   const results = components.map((row) => {
     const component = statusComponents.find((component) => component.id.toStringWithoutVersion() === row.identity);
     const consumer = component.state._consumer;

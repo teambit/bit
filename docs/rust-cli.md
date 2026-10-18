@@ -169,6 +169,9 @@ Each host method is removed once its behavior is ported to Rust.
 | `lane merge <lane> [pattern]` with or without `-x`, `--build`, `--resolve-unrelated [ours\|theirs]` | native graph divergence, three-way merge, hidden/model-backed targets, removal policy, component/workspace configuration updates and conflicts, lane/history publication and same-session automatic snapshots; preserves squash and unrelated relations | the same retained lifecycle and build adapters as component merge | unsupported lane flags/selectors/package layouts, unavailable adapters, direct `--no-snap` squashing errors requiring delegation before effects, and the component merge boundaries |
 | `lane list` (including `--details`, `--json`, `--merged` and `--not-merged`), `lane current` (including `--json`), `lane show [local-lane]` (including `--json`), `lane list --remote <scope>`, `lane show <lane> --remote` | the engine's `laneList` and `scopeList`, `.bitmap` and `scope.json`, including visible components, hidden update-dependents, readme metadata and main-head ancestry for merge filters; `lane current` reads only `.bitmap` and `scope.json`; `lane list --remote <scope>` and `lane show <lane> --remote` inspect configured bare `file://` scopes with validated Lane and ancestry objects, or configured HTTP scopes through their limited GraphQL lane projection | none | unconfigured remotes, remote inspection outside a workspace, lanes Node migrates to record deleted components (schema before `1.0.0`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `lane create <name>` with `--scope`, `--alias`, and `--fork-lane-new-scope` | Rust writes the Lane and LaneHistory objects, index, scope tracking and bitmap for main and lane forks; native status inherits exported parent refs for new forks | user identity from the existing global/workspace configuration reader | locally staged main versions, unsupported flags or names, and parent metadata the native planner declines before writing |
+| `move <from> <to>`, `mv` | native source relocation or reconciliation of an already moved directory; retained source/control proofs, projected bitmap paths, generated packages, source links and bitmap history | retained published providers, component onLoad callbacks and package transformers | unknown grammar, paths outside the workspace, unsafe filesystem layouts and unsupported inputs decline before provider startup; CI validation errors requiring a JavaScript stack delegate before effects |
+| `rename <source> <target>` with `--scope`, `--path`, `--refactor`, `--preserve`, `--ast`, `--delete` or `--deprecate` | native identity selection, source/path and import refactoring, new-component rename or exported-component copy with source deletion/deprecation, component aspect/env references, package links and bitmap history | retained published onLoad and package callbacks; actual registered onComponentAdd/compiler hooks; the published TypeScript transformer for `--ast`, using private file spools | unknown flags, non-workspace execution, unsafe paths, unsupported metadata or bounded-input limits; scope-wide rename and owner rename are separate operations and delegate |
+| `deprecate <pattern>`, `d`, with `--new-id` or `--range`; `undeprecate <pattern>` | native bitmap deprecation updates, stored Version deprecation/range lookup, replacement identity validation, unchanged-result reporting and bitmap history; local glob/list/negation selectors and `$deprecated` | retained published providers and component hydration | other state selectors, remote-only replacement IDs, unknown options and unsafe/corrupt inputs decline before effects; CI validation errors requiring a JavaScript stack delegate |
 | `remove <component> --silent`, `rm <component> --silent`, with optional `--keep-files` and `--force` for versioned components | Rust untracks clean new, staged tagged and imported mainline components, plus new components and linear snap chains on an unexported current lane. Without `--force`, native status confirms a versioned component is unmodified. Mainline versioned removal deletes Component and Version objects; lane snap removal deletes the Component model, clears the staged lane entry, updates the Lane object, retains its snaps, and preserves or creates the matching VersionHistory. All paths update the scope index and bitmap history, remove the generated package, and delete component files unless kept | none | modified versioned components without `--force`; configured components; versioned components with a missing main file, unsupported model state or staged config; non-linear snap ancestry or divergent VersionHistory; exported or multiple indexed lanes; overlapping roots; interactive confirmation, patterns and other flags; unsupported paths decline before writes |
 | `delete <component> --silent` with optional `--range <range>` or `--snaps <current-hash>`; `--lane` for exported lanes | Rust validates mainline or exported-lane heads, updates bitmap remove config and history, and preserves scope objects/index. Whole-component deletion removes the generated package and source directory; range and selected-snap deletion keep both. Full exported-lane deletion captures workspace dependencies in Rust and pins deleted dependencies to their latest main tag through the shared comment-preserving policy editor; it revalidates the capture before writes | none | new or unexported-lane components, lane ranges, lane dependency graphs containing components outside the captured workspace, non-current snap selection, existing bitmap configuration, missing main files or objects, unsafe paths, patterns, confirmation, hard deletion, `--update-main`, and other flags decline before writes |
 | `recover <component>` with optional `-x` | Rust validates a locally soft-deleted tagged, snapped, or imported mainline or exported-lane component, reads verified Component, Version, and Source objects, restores absent source files for a whole-component deletion or validates retained clean files for a range/snap selection, clears the bitmap remove config, and records bitmap history | none | remote-only recovery, new or unexported-lane components, modified retained sources, existing recovery destinations, missing or corrupt scope objects, unsupported configuration, patterns and other flags decline before writes |
@@ -183,6 +186,47 @@ Each host method is removed once its behavior is ported to Rust.
 Native commands append to the workspace's `command-history` file (in `.bit`,
 or `.git/bit`) as the Node.js CLI does. A declined command writes nothing, so
 the Node.js CLI's own lines are not duplicated.
+
+### Component identity and location
+
+`move`, component `rename`, `deprecate` and `undeprecate` keep workspace mutation in Rust. Their planners retain the original bitmap and relevant source/configuration inputs, validate paths before materialization, and publish bitmap history through the shared native writer. Moving a directory does not change its component identity. Renaming an exported component creates a new component and either deletes or deprecates the source; it does not rewrite previously published Versions.
+
+Configured providers load before the authoritative mutation plan. A retained Harmony session supplies actual component classes, onLoad metadata, package transformations, onComponentAdd hooks and compiler tooling. Rust owns inventory, refactoring, file writes, package/link publication and bitmap changes. AST refactoring calls the published transformer on private source files rather than delegating the rename command. In-memory onLoad source changes are retained for the exported-component copy, while an unversioned rename follows the published target reload.
+
+Unknown grammar and unsupported inputs delegate only before provider startup or another observable prefix. Once providers, caches, links or source publication have produced effects, failures remain owned by the native command. These operations preserve partial publication and callback output rather than rerunning the command through Node.
+
+The Linux release measurements in [`identity.json`](../scripts/rust/benchmarks/identity.json)
+measure source `50ac1ea7c` against Node 22.22.0 / Bit 2.2.94. Subsequent Windows
+fixture and doctor diagnostic changes affect tests only; production sources and
+the measured release binary are unchanged. Five alternating pairs
+per non-TTY, CI and TTY mode passed all 75 output, filesystem, cache, history and
+file-remote comparisons. Non-TTY medians in milliseconds were:
+
+| Workload | Node | Rust |
+| --- | ---: | ---: |
+| Move 11 source files | 447.463 | 301.373 |
+| Deprecate 100 tagged components | 299.932 | 262.639 |
+| Rename a new component with 11 files | 549.241 | 521.201 |
+| Rename an exported component with deprecation | 597.438 | 562.636 |
+| Rename an exported component with dependent refactoring | 614.769 | 543.997 |
+
+All fifteen native identity medians were faster. Another 90 add pairs in
+[`identity-add-regressions.json`](../scripts/rust/benchmarks/identity-add-regressions.json)
+and 45 status/checkout/export pairs in
+[`identity-regressions.json`](../scripts/rust/benchmarks/identity-regressions.json)
+passed on the same source and binary; all 40 native workload/mode medians were
+faster. Ten intentionally delegated CI error pairs are excluded from native speed
+claims. Each complete workload was independently monitored after 20 consecutive
+seconds below 30% host CPU use, with a closed 0.5-second monitor staying below 80%.
+The [qualification evidence](../scripts/rust/benchmarks/identity-ci-fix-qualification.json)
+retains raw counters, the qualification driver and invalid attempts. Earlier
+full-suite trials, including [`identity-contended.json`](../scripts/rust/benchmarks/identity-contended.json),
+remain explicitly invalid for performance. These are controlled warm-metadata,
+file-remote Linux fixtures, not first-use, network-remote or cross-platform claims.
+`scripts/rust/bench-identity.py` prepares and restores fixtures outside command
+timing. Rename launches use the same recorded clock phase on both implementations
+because published backup filenames have second precision; clocks and snapshot
+comparisons remain unchanged.
 
 ### Ignore rules
 

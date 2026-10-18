@@ -6,6 +6,7 @@ mod checkout;
 mod color;
 mod config;
 mod delete;
+mod deprecate;
 mod diff;
 mod doctor;
 mod engine;
@@ -22,10 +23,12 @@ mod list;
 mod log;
 mod merge;
 mod mini_status;
+mod move_paths;
 mod patterns;
 mod recover;
 mod recovery;
 mod remove;
+mod rename;
 mod reset;
 mod snap;
 mod stash;
@@ -52,6 +55,8 @@ pub const COMMANDS: &[Command] = &[
     checkout::REVERT,
     config::COMMAND,
     delete::COMMAND,
+    deprecate::COMMAND,
+    deprecate::UNDEPRECATE,
     doctor::COMMAND,
     file_history::BLAME,
     diff::COMMAND,
@@ -66,9 +71,11 @@ pub const COMMANDS: &[Command] = &[
     log::COMMAND,
     merge::COMMAND,
     mini_status::COMMAND,
+    move_paths::COMMAND,
     recover::COMMAND,
     remove::COMMAND,
     reset::COMMAND,
+    rename::COMMAND,
     snap::COMMAND,
     stash::COMMAND,
     status::COMMAND,

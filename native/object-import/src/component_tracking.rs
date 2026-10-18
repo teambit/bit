@@ -1,10 +1,11 @@
 //! Retained component tracking plans publish the bitmap only after linking succeeds.
+pub(crate) mod observe;
+
 pub use options::Options;
 
 mod files;
 mod identity;
 mod main_file;
-mod observe;
 mod options;
 mod paths;
 mod projection;
@@ -104,4 +105,32 @@ fn unsupported(message: impl Into<String>) -> io::Error {
 fn active(row: &Value) -> bool {
     row["isAvailableOnCurrentLane"] != false
         && !bit_workspace_config::truthy(&row["config"]["teambit.component/remove"]["removed"])
+}
+
+/// Reuse tracked-file policy when an identity mutation reads an existing component.
+pub(crate) fn source_inventory(
+    root: &Path,
+    directory: &str,
+    bitmap: &Value,
+    observed: &mut Observed,
+) -> io::Result<Vec<String>> {
+    let home = std::path::PathBuf::from(
+        std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default(),
+    );
+    observed.read(&root.join("workspace.jsonc"))?;
+    observed.read(&home.join(".bitrc.jsonc"))?;
+    let workspace = crate::effective_workspace_configuration(root, &home)?;
+    let mut plan = Plan {
+        root: root.into(),
+        cwd: root.into(),
+        before: None,
+        bitmap: bitmap.clone(),
+        components: vec![],
+        warnings: json!({}),
+        observed: std::mem::take(observed),
+        dirty: false,
+    };
+    let result = files::read(&mut plan, directory, &[], &json!({"workspace":workspace}));
+    *observed = plan.observed;
+    result
 }

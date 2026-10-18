@@ -269,3 +269,30 @@ fn custom_detectors_override_builtin_scanning_with_source_receipts() {
             .contains("custom detector source changed"),
     );
 }
+
+#[test]
+fn path_aliases_retain_every_string_key_required_by_cycle_replay() {
+    let fixture = Fixture::new();
+    fixture.write("a.js", "require('./b.js');");
+    fixture.write("b.js", "require('./a.js');");
+    let output = fixture
+        .run(&["./a.js", "b.js"], Some(json!({})))
+        .unwrap();
+    let alias = fixture.0
+        .join("./a.js")
+        .to_string_lossy()
+        .into_owned();
+    let normalized = fixture.0
+        .join("a.js")
+        .to_string_lossy()
+        .into_owned();
+    assert!(output["tree"].get(&alias).is_some());
+    assert!(output["tree"].get(&normalized).is_some());
+    assert_eq!(
+        output["scannedPaths"]
+            .as_array()
+            .unwrap()
+            .len(),
+        3,
+    );
+}

@@ -195,6 +195,8 @@ jobs:
             filters: harmony::stash
           - group: tracking
             filters: commands::add harmony::add
+          - group: identity
+            filters: commands::move_paths harmony::rename harmony::deprecation
     timeout-minutes: 60
     defaults:
       run:

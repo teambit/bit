@@ -13,15 +13,21 @@ pub(super) fn restrict(root: &Path, capture: &mut Capture) {
         .filter(|component| {
             capture.captured
                 .iter()
-                .any(|row| row["identity"] == component.identity && row["directory"] != ".")
+                .any(|row| {
+                    row["identity"] == identity(&component.identity) && row["directory"] != "."
+                })
                 && !root
                     .join("node_modules")
                     .join(&component.package_name)
                     .exists()
         })
-        .map(|component| component.identity.clone())
+        .map(|component| identity(&component.identity).to_owned())
         .collect::<HashSet<_>>();
     capture.cache.block_dependencies(&identities);
+}
+
+fn identity(value: &str) -> &str {
+    value.split_once('@').map_or(value, |(identity, _)| identity)
 }
 
 pub(super) struct Manifests(Vec<(PathBuf, Option<String>)>);

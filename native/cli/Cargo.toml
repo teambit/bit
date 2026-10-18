@@ -48,6 +48,9 @@ libc = "0.2"
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61", features = ["Win32_System_Console"] }
 
+[target.'cfg(windows)'.dev-dependencies]
+winapi-util = "0.1"
+
 [dev-dependencies]
 flate2 = "1"
 

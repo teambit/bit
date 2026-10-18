@@ -1,4 +1,8 @@
 //! Exact command bytes and filesystem state replayed at the same absolute workspace path.
+mod config_history;
+mod hardlinks;
+mod timestamps;
+
 use crate::helper::{Helper, Run};
 use std::{collections::BTreeMap, ffi::OsStr, fs, path::Path};
 
@@ -17,15 +21,20 @@ pub(crate) fn compare_ci(helper: &Helper, command: &str, native: bool) -> Run {
 }
 
 fn compare_mode(helper: &Helper, command: &str, ci: bool, native: bool) -> Run {
+    let timestamps = timestamps::Snapshot::read(&helper.scopes.local_path);
+    let hardlinks = hardlinks::Snapshot::read(&helper.scopes.local_path);
     let baseline = helper.clone_workspace();
     let root = &helper.scopes.local_path;
     let baseline_history = History::read(root);
+    let config_history = config_history::Snapshot::read(root);
     let environment = command_environment(ci, false);
     let expected = Helper::cmd_in_with(root, command, &command_environment(ci, true));
     let expected_files = tree(root);
-    let expected_scope = scope_tree(root);
+    let expected_scope = scope_tree(root, &config_history);
     let expected_history = history(root, &baseline_history);
     helper.get_cloned_workspace(&baseline);
+    hardlinks.restore(root);
+    timestamps.restore(root);
     let actual = Helper::cmd_in_with(root, command, &environment);
     assert_eq!(actual.native, native, "{command}: {}", actual.trace);
     if !native {
@@ -41,7 +50,7 @@ fn compare_mode(helper: &Helper, command: &str, ci: bool, native: bool) -> Run {
     assert_eq!(actual.stdout, expected.stdout, "{command}");
     assert_eq!(atomic_error(&actual.stderr), atomic_error(&expected.stderr), "{command}");
     compare_paths(&tree(root), &expected_files, command);
-    compare_paths(&scope_tree(root), &expected_scope, "scope objects/controls");
+    compare_paths(&scope_tree(root, &config_history), &expected_scope, "scope objects/controls");
     compare_paths(
         &history(root, &baseline_history),
         &expected_history,
@@ -208,7 +217,7 @@ fn validate_history_id(id: &str) {
     );
 }
 
-fn scope_tree(root: &Path) -> BTreeMap<String, Vec<u8>> {
+fn scope_tree(root: &Path, baseline: &config_history::Snapshot) -> BTreeMap<String, Vec<u8>> {
     let scope = bit_object_import::scope_path(root);
     let mut output = BTreeMap::new();
     visit(&scope, &scope, &mut output);
@@ -225,6 +234,7 @@ fn scope_tree(root: &Path) -> BTreeMap<String, Vec<u8>> {
             }
         }
     }
+    config_history::normalize(root, baseline, &mut output);
     let commands = fs::read_to_string(scope.join("command-history")).unwrap_or_default();
     let commands = commands
         .lines()
@@ -295,6 +305,14 @@ fn describe(bytes: Option<&Vec<u8>>) -> String {
     use sha1::{Digest, Sha1};
     match bytes {
         None => "missing".into(),
+        Some(bytes)
+            if bytes.len() <= 4096
+                && (bytes.first() == Some(&b'{')
+                    || bytes.starts_with(b"//")
+                    || bytes.starts_with(b"/*")) =>
+        {
+            String::from_utf8_lossy(bytes).into_owned()
+        }
         Some(bytes) if bytes.len() <= 100 => format!("{bytes:?}"),
         Some(bytes) => format!("{} bytes sha1={:x}", bytes.len(), Sha1::digest(bytes)),
     }

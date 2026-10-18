@@ -25,6 +25,14 @@ const SCRIPT: &str = concat!(
     include_str!("host/snapshot.js"),
     "\n",
     include_str!("host/export.js"),
+    "\n",
+    include_str!("host/rename/tooling.js"),
+    "\n",
+    include_str!("host/rename/ast.js"),
+    "\n",
+    include_str!("host/rename/config.js"),
+    "\n",
+    include_str!("host/rename/cache.js"),
 );
 const EXIT_GRACE: Duration = Duration::from_secs(5);
 

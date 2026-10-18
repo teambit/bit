@@ -1,0 +1,977 @@
+{
+  "correctness_valid": true,
+  "performance_valid": true,
+  "measured_at_utc": "2026-10-17T23:50:49.507981+00:00",
+  "method": "Existing complete transfer verifier, five alternating pairs per mode, exact supported output/workspace/object/control/package state; source immutable and disposable file remote restored after each command.",
+  "driver_sha256": "44b2980906443683aecb5711b50331d3dfbfc2b8505d2c893353b255bcb70e92",
+  "helpers_sha256": {
+    "bench-native-command.py": "4ea79082ea31c4e9829de770faf7fca3fe67a4e0b322a12fc6c8fc63f1aaf1e9",
+    "verify-native-command.py": "85ccb4f5be14859ee0c83db63ad635da9cece20d75c5047574c536ddbfa2223b"
+  },
+  "runs": {
+    "status": {
+      "stage": "/var/tmp/transfer-bench-9_kbsob0",
+      "source": "/var/tmp/status-diff-bench-fixture-2586579",
+      "source_sha256": "c58214e737af4a7d07d0521cb22449978cb184c5cdef706b9c7a6ce235829a8f",
+      "remote_sha256": {
+        "/var/tmp/transfer-final-fixtures/transfer-remote": "a170b5b4c8419a66a51af9a0859ecca255be5bc1e763f185fab80234d687caf1"
+      },
+      "rust_sha256": "1d2df596049653380716e3765dd67583ab40318b41ac6c6b1ae87ab73fc96f08",
+      "command": [
+        "status",
+        "--json"
+      ],
+      "runs_ms": {
+        "timed": {
+          "node": [
+            630.531,
+            673.91,
+            563.956,
+            496.47,
+            510.966
+          ],
+          "rust": [
+            9.494,
+            8.653,
+            8.149,
+            8.147,
+            8.568
+          ]
+        },
+        "tty": {
+          "node": [
+            674.45,
+            553.789,
+            512.143,
+            538.322,
+            521.247
+          ],
+          "rust": [
+            21.163,
+            20.909,
+            21.353,
+            21.212,
+            20.982
+          ]
+        },
+        "ci": {
+          "node": [
+            495.291,
+            476.025,
+            501.284,
+            505.478,
+            572.895
+          ],
+          "rust": [
+            8.29,
+            8.204,
+            8.378,
+            9.371,
+            8.049
+          ]
+        }
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0
+        },
+        {
+          "mode": "timed",
+          "run": 1
+        },
+        {
+          "mode": "timed",
+          "run": 2
+        },
+        {
+          "mode": "timed",
+          "run": 3
+        },
+        {
+          "mode": "timed",
+          "run": 4
+        },
+        {
+          "mode": "tty",
+          "run": 0
+        },
+        {
+          "mode": "tty",
+          "run": 1
+        },
+        {
+          "mode": "tty",
+          "run": 2
+        },
+        {
+          "mode": "tty",
+          "run": 3
+        },
+        {
+          "mode": "tty",
+          "run": 4
+        },
+        {
+          "mode": "ci",
+          "run": 0
+        },
+        {
+          "mode": "ci",
+          "run": 1
+        },
+        {
+          "mode": "ci",
+          "run": 2
+        },
+        {
+          "mode": "ci",
+          "run": 3
+        },
+        {
+          "mode": "ci",
+          "run": 4
+        }
+      ],
+      "median_ms": {
+        "timed": {
+          "node": 563.956,
+          "rust": 8.568
+        },
+        "tty": {
+          "node": 538.322,
+          "rust": 21.163
+        },
+        "ci": {
+          "node": 501.284,
+          "rust": 8.29
+        }
+      }
+    },
+    "checkout": {
+      "stage": "/var/tmp/transfer-bench-xtpibcxs",
+      "source": "/var/tmp/checkout-qualified-benchmark-fixtures/ordinary",
+      "source_sha256": "8211ff87332cff495cb2af431a415947e84134f083b116ca34508e4daf08fb98",
+      "remote_sha256": {
+        "/var/tmp/transfer-final-fixtures/transfer-remote": "a170b5b4c8419a66a51af9a0859ecca255be5bc1e763f185fab80234d687caf1"
+      },
+      "rust_sha256": "1d2df596049653380716e3765dd67583ab40318b41ac6c6b1ae87ab73fc96f08",
+      "command": [
+        "checkout",
+        "0.0.1",
+        "comp2",
+        "--force-theirs",
+        "-x"
+      ],
+      "runs_ms": {
+        "timed": {
+          "node": [
+            462.132,
+            444.134,
+            439.76,
+            439.195,
+            433.1
+          ],
+          "rust": [
+            24.062,
+            23.67,
+            18.093,
+            17.106,
+            24.023
+          ]
+        },
+        "tty": {
+          "node": [
+            471.542,
+            444.961,
+            479.329,
+            434.701,
+            445.783
+          ],
+          "rust": [
+            29.05,
+            25.114,
+            26.195,
+            34.024,
+            36.223
+          ]
+        },
+        "ci": {
+          "node": [
+            434.229,
+            416.331,
+            423.371,
+            422.961,
+            425.845
+          ],
+          "rust": [
+            23.24,
+            14.45,
+            22.957,
+            13.957,
+            14.206
+          ]
+        }
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0
+        },
+        {
+          "mode": "timed",
+          "run": 1
+        },
+        {
+          "mode": "timed",
+          "run": 2
+        },
+        {
+          "mode": "timed",
+          "run": 3
+        },
+        {
+          "mode": "timed",
+          "run": 4
+        },
+        {
+          "mode": "tty",
+          "run": 0
+        },
+        {
+          "mode": "tty",
+          "run": 1
+        },
+        {
+          "mode": "tty",
+          "run": 2
+        },
+        {
+          "mode": "tty",
+          "run": 3
+        },
+        {
+          "mode": "tty",
+          "run": 4
+        },
+        {
+          "mode": "ci",
+          "run": 0
+        },
+        {
+          "mode": "ci",
+          "run": 1
+        },
+        {
+          "mode": "ci",
+          "run": 2
+        },
+        {
+          "mode": "ci",
+          "run": 3
+        },
+        {
+          "mode": "ci",
+          "run": 4
+        }
+      ],
+      "median_ms": {
+        "timed": {
+          "node": 439.76,
+          "rust": 23.67
+        },
+        "tty": {
+          "node": 445.783,
+          "rust": 29.05
+        },
+        "ci": {
+          "node": 423.371,
+          "rust": 14.45
+        }
+      }
+    },
+    "export": {
+      "stage": "/var/tmp/transfer-bench-lgczfpdw",
+      "source": "/var/tmp/transfer-final-fixtures/export-main",
+      "source_sha256": "9657e3602a120bc61ab716eaa2011aacd80bcb87f53da5de465ba975b183051f",
+      "remote_sha256": {
+        "/var/tmp/transfer-final-fixtures/transfer-remote": "a170b5b4c8419a66a51af9a0859ecca255be5bc1e763f185fab80234d687caf1"
+      },
+      "rust_sha256": "1d2df596049653380716e3765dd67583ab40318b41ac6c6b1ae87ab73fc96f08",
+      "command": [
+        "export"
+      ],
+      "runs_ms": {
+        "timed": {
+          "node": [
+            269.199,
+            268.531,
+            262.629,
+            269.733,
+            272.892
+          ],
+          "rust": [
+            114.556,
+            104.049,
+            108.516,
+            107.808,
+            107.72
+          ]
+        },
+        "tty": {
+          "node": [
+            288.077,
+            283.126,
+            283.915,
+            278.68,
+            278.051
+          ],
+          "rust": [
+            128.057,
+            118.718,
+            128.053,
+            119.612,
+            159.472
+          ]
+        },
+        "ci": {
+          "node": [
+            433.059,
+            320.209,
+            294.194,
+            292.241,
+            276.106
+          ],
+          "rust": [
+            190.74,
+            120.592,
+            107.514,
+            109.101,
+            110.157
+          ]
+        }
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0
+        },
+        {
+          "mode": "timed",
+          "run": 1
+        },
+        {
+          "mode": "timed",
+          "run": 2
+        },
+        {
+          "mode": "timed",
+          "run": 3
+        },
+        {
+          "mode": "timed",
+          "run": 4
+        },
+        {
+          "mode": "tty",
+          "run": 0
+        },
+        {
+          "mode": "tty",
+          "run": 1
+        },
+        {
+          "mode": "tty",
+          "run": 2
+        },
+        {
+          "mode": "tty",
+          "run": 3
+        },
+        {
+          "mode": "tty",
+          "run": 4
+        },
+        {
+          "mode": "ci",
+          "run": 0
+        },
+        {
+          "mode": "ci",
+          "run": 1
+        },
+        {
+          "mode": "ci",
+          "run": 2
+        },
+        {
+          "mode": "ci",
+          "run": 3
+        },
+        {
+          "mode": "ci",
+          "run": 4
+        }
+      ],
+      "median_ms": {
+        "timed": {
+          "node": 269.199,
+          "rust": 107.808
+        },
+        "tty": {
+          "node": 283.126,
+          "rust": 128.053
+        },
+        "ci": {
+          "node": 294.194,
+          "rust": 110.157
+        }
+      }
+    }
+  },
+  "host_monitor": {
+    "status": {
+      "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/regressions-status-1.monitor.json",
+      "sha256": "c9cda2bb30d2197a2b8a8ae651a705d50ab139b4b50b1af74e2c4972864ed458",
+      "host_busy_peak_percent": 75.623,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-transfer.py",
+        "--source",
+        "/var/tmp/status-diff-bench-fixture-2586579",
+        "--node",
+        "/var/tmp/status-diff-node-oracle",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--remote",
+        "/var/tmp/transfer-final-fixtures/transfer-remote",
+        "--runs",
+        "5",
+        "--",
+        "status",
+        "--json"
+      ]
+    },
+    "checkout": {
+      "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/regressions-checkout-1.monitor.json",
+      "sha256": "5f7311efd5871014a1a4cd1a8073ad26ec9db3a6a19d2981d9bfc78e6269f5ce",
+      "host_busy_peak_percent": 52.97,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-transfer.py",
+        "--source",
+        "/var/tmp/checkout-qualified-benchmark-fixtures/ordinary",
+        "--node",
+        "/var/tmp/status-diff-node-oracle",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--remote",
+        "/var/tmp/transfer-final-fixtures/transfer-remote",
+        "--runs",
+        "5",
+        "--",
+        "checkout",
+        "0.0.1",
+        "comp2",
+        "--force-theirs",
+        "-x"
+      ]
+    },
+    "export": {
+      "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-4/regressions-export-2.monitor.json",
+      "sha256": "4f28a0532102169d0392c1ba16ae3afb06307aa6af164aebecda09b374d440c2",
+      "host_busy_peak_percent": 77.889,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-transfer.py",
+        "--source",
+        "/var/tmp/transfer-final-fixtures/export-main",
+        "--node",
+        "/var/tmp/status-diff-node-oracle",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--remote",
+        "/var/tmp/transfer-final-fixtures/transfer-remote",
+        "--runs",
+        "5",
+        "--",
+        "export"
+      ]
+    }
+  },
+  "performance_qualification": {
+    "status": "independently closed complete workload runs; no row/sample discarded; retry only after host invalidation",
+    "driver_sha256": "44b2980906443683aecb5711b50331d3dfbfc2b8505d2c893353b255bcb70e92",
+    "samples_per_implementation_per_mode": 5,
+    "attempts": [
+      {
+        "family": "identity",
+        "workload": "move",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-2/identity-move-1.monitor.json",
+        "sha256": "f540336cfc8141b879cd07aeaa41fbc0b1a9d9e41da5c5709d95357269225ebf",
+        "host_busy_peak_percent": 75.561,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-identity.py",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--node-binary",
+          "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+          "--node-cli",
+          "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+          "--runs",
+          "5",
+          "--stage",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark",
+          "--workload",
+          "move",
+          "--output",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-2/identity-move-1.result.json"
+        ]
+      },
+      {
+        "family": "identity",
+        "workload": "deprecate-batch",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-2/identity-deprecate-batch-1.monitor.json",
+        "sha256": "5d575c287ab9d52a501b08c4bb474b9f95d33d1884c5fe7b1c45e30c9a69e5c8",
+        "host_busy_peak_percent": 8.571,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-identity.py",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--node-binary",
+          "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+          "--node-cli",
+          "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+          "--runs",
+          "5",
+          "--stage",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark",
+          "--workload",
+          "deprecate-batch",
+          "--output",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-2/identity-deprecate-batch-1.result.json"
+        ]
+      },
+      {
+        "family": "identity",
+        "workload": "rename-new",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-2/identity-rename-new-1.monitor.json",
+        "sha256": "37a34534b9ab1a9403379d604dbe7a2cf0cf26d6e2c46d0c9fa896bcaf0ddbe2",
+        "host_busy_peak_percent": 86.683,
+        "performance_valid": false,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-identity.py",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--node-binary",
+          "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+          "--node-cli",
+          "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+          "--runs",
+          "5",
+          "--stage",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark",
+          "--workload",
+          "rename-new",
+          "--output",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-2/identity-rename-new-1.result.json"
+        ]
+      },
+      {
+        "family": "identity",
+        "workload": "rename-new",
+        "attempt": 2,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-2/identity-rename-new-2.monitor.json",
+        "sha256": "7f1854084dca4f1171a96fc41bf5ef3b697b17e5cf20c1831d8b50e83ff677f7",
+        "host_busy_peak_percent": 27.144,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-identity.py",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--node-binary",
+          "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+          "--node-cli",
+          "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+          "--runs",
+          "5",
+          "--stage",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark",
+          "--workload",
+          "rename-new",
+          "--output",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-2/identity-rename-new-2.result.json"
+        ]
+      },
+      {
+        "family": "identity",
+        "workload": "rename-exported",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-2/identity-rename-exported-1.monitor.json",
+        "sha256": "cc3a0e04eced98b0bbaea47111243cfdaa03e0b0a5103836bf77af1a2f929f2f",
+        "host_busy_peak_percent": 78.367,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-identity.py",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--node-binary",
+          "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+          "--node-cli",
+          "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+          "--runs",
+          "5",
+          "--stage",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark",
+          "--workload",
+          "rename-exported",
+          "--output",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-2/identity-rename-exported-1.result.json"
+        ]
+      },
+      {
+        "family": "identity",
+        "workload": "rename-exported-refactor",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-2/identity-rename-exported-refactor-1.monitor.json",
+        "sha256": "abc073dffa963e1257f2ebea60d9cc7b95f9fefceb843a30862ee90d53aec1e3",
+        "host_busy_peak_percent": 93.583,
+        "performance_valid": false,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-identity.py",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--node-binary",
+          "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+          "--node-cli",
+          "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+          "--runs",
+          "5",
+          "--stage",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark",
+          "--workload",
+          "rename-exported-refactor",
+          "--output",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-2/identity-rename-exported-refactor-1.result.json"
+        ]
+      },
+      {
+        "family": "identity",
+        "workload": "rename-exported-refactor",
+        "attempt": 2,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/identity-rename-exported-refactor-2.monitor.json",
+        "sha256": "f33b8f637b5b3ba8de3c14ab3ba9bc108753d7aa63a9206d8debbd74f17de997",
+        "host_busy_peak_percent": 56.087,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-identity.py",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--node-binary",
+          "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+          "--node-cli",
+          "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+          "--runs",
+          "5",
+          "--stage",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark",
+          "--workload",
+          "rename-exported-refactor",
+          "--output",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/identity-rename-exported-refactor-2.result.json"
+        ]
+      },
+      {
+        "family": "add",
+        "workload": "single",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/add-single-1.monitor.json",
+        "sha256": "5137bb3721472326ea13c851e39b81e288d3af1527659f86f319665e94f211f0",
+        "host_busy_peak_percent": 65.217,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-add.py",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--node-binary",
+          "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+          "--node-cli",
+          "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+          "--runs",
+          "5",
+          "--stage",
+          "/var/tmp/add-file-remote-benchmark",
+          "--workload",
+          "single",
+          "--output",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/add-single-1.result.json"
+        ]
+      },
+      {
+        "family": "add",
+        "workload": "batch",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/add-batch-1.monitor.json",
+        "sha256": "2ede28bf25ce26cfd8950fe76c9cc22533dd8f4f09d3ec8af6eb3799713c2d27",
+        "host_busy_peak_percent": 70.044,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-add.py",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--node-binary",
+          "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+          "--node-cli",
+          "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+          "--runs",
+          "5",
+          "--stage",
+          "/var/tmp/add-file-remote-benchmark",
+          "--workload",
+          "batch",
+          "--output",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/add-batch-1.result.json"
+        ]
+      },
+      {
+        "family": "add",
+        "workload": "root",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/add-root-1.monitor.json",
+        "sha256": "215ff92a1553bcfb5b16b34a8ce9aca6d707176ec6da0981b3726f2150d5b005",
+        "host_busy_peak_percent": 24.365,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-add.py",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--node-binary",
+          "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+          "--node-cli",
+          "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+          "--runs",
+          "5",
+          "--stage",
+          "/var/tmp/add-file-remote-benchmark",
+          "--workload",
+          "root",
+          "--output",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/add-root-1.result.json"
+        ]
+      },
+      {
+        "family": "add",
+        "workload": "readd",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/add-readd-1.monitor.json",
+        "sha256": "56a1389cc4fac9dd5316e29b76b809a1e2578eed3b0c3259c9887074f8e1e468",
+        "host_busy_peak_percent": 34.68,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-add.py",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--node-binary",
+          "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+          "--node-cli",
+          "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+          "--runs",
+          "5",
+          "--stage",
+          "/var/tmp/add-file-remote-benchmark",
+          "--workload",
+          "readd",
+          "--output",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/add-readd-1.result.json"
+        ]
+      },
+      {
+        "family": "add",
+        "workload": "ignored",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/add-ignored-1.monitor.json",
+        "sha256": "b24edffe066eed2f768c7531ae7ac0015d15573a649da7914ec9192cea609ed1",
+        "host_busy_peak_percent": 12.097,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-add.py",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--node-binary",
+          "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+          "--node-cli",
+          "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+          "--runs",
+          "5",
+          "--stage",
+          "/var/tmp/add-file-remote-benchmark",
+          "--workload",
+          "ignored",
+          "--output",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/add-ignored-1.result.json"
+        ]
+      },
+      {
+        "family": "add",
+        "workload": "link-failure",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/add-link-failure-1.monitor.json",
+        "sha256": "d4b85c920c4650fc08ac09dc5d577468d9a41cb6432632f1740a1db945940722",
+        "host_busy_peak_percent": 13.701,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-add.py",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--node-binary",
+          "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+          "--node-cli",
+          "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+          "--runs",
+          "5",
+          "--stage",
+          "/var/tmp/add-file-remote-benchmark",
+          "--workload",
+          "link-failure",
+          "--output",
+          "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/add-link-failure-1.result.json"
+        ]
+      },
+      {
+        "family": "regressions",
+        "workload": "status",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/regressions-status-1.monitor.json",
+        "sha256": "c9cda2bb30d2197a2b8a8ae651a705d50ab139b4b50b1af74e2c4972864ed458",
+        "host_busy_peak_percent": 75.623,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-transfer.py",
+          "--source",
+          "/var/tmp/status-diff-bench-fixture-2586579",
+          "--node",
+          "/var/tmp/status-diff-node-oracle",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--remote",
+          "/var/tmp/transfer-final-fixtures/transfer-remote",
+          "--runs",
+          "5",
+          "--",
+          "status",
+          "--json"
+        ]
+      },
+      {
+        "family": "regressions",
+        "workload": "checkout",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-3/regressions-checkout-1.monitor.json",
+        "sha256": "5f7311efd5871014a1a4cd1a8073ad26ec9db3a6a19d2981d9bfc78e6269f5ce",
+        "host_busy_peak_percent": 52.97,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-transfer.py",
+          "--source",
+          "/var/tmp/checkout-qualified-benchmark-fixtures/ordinary",
+          "--node",
+          "/var/tmp/status-diff-node-oracle",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--remote",
+          "/var/tmp/transfer-final-fixtures/transfer-remote",
+          "--runs",
+          "5",
+          "--",
+          "checkout",
+          "0.0.1",
+          "comp2",
+          "--force-theirs",
+          "-x"
+        ]
+      },
+      {
+        "family": "regressions",
+        "workload": "export",
+        "attempt": 1,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-4/regressions-export-1.monitor.json",
+        "sha256": "59e80bcad781e2e0d18e714990df2ab24f45883fae6f1131c85d269bc4046dae",
+        "host_busy_peak_percent": 82.866,
+        "performance_valid": false,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-transfer.py",
+          "--source",
+          "/var/tmp/transfer-final-fixtures/export-main",
+          "--node",
+          "/var/tmp/status-diff-node-oracle",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--remote",
+          "/var/tmp/transfer-final-fixtures/transfer-remote",
+          "--runs",
+          "5",
+          "--",
+          "export"
+        ]
+      },
+      {
+        "family": "regressions",
+        "workload": "export",
+        "attempt": 2,
+        "path": "/var/tmp/identity-ci-fix-file-remote-benchmark/independent-workloads-ci-fix-4/regressions-export-2.monitor.json",
+        "sha256": "4f28a0532102169d0392c1ba16ae3afb06307aa6af164aebecda09b374d440c2",
+        "host_busy_peak_percent": 77.889,
+        "performance_valid": true,
+        "reproduce_argv": [
+          "python3",
+          "scripts/rust/bench-transfer.py",
+          "--source",
+          "/var/tmp/transfer-final-fixtures/export-main",
+          "--node",
+          "/var/tmp/status-diff-node-oracle",
+          "--rust",
+          "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+          "--remote",
+          "/var/tmp/transfer-final-fixtures/transfer-remote",
+          "--runs",
+          "5",
+          "--",
+          "export"
+        ]
+      }
+    ],
+    "native_source_unchanged": true
+  },
+  "native_source": {
+    "sha256": "1a72fe6e460c9df3a3e491bc584320487ceafcf65ad958eea5ae7d83ffa3ed55",
+    "file_count": 1494
+  },
+  "qualification_evidence": {
+    "path": "scripts/rust/benchmarks/identity-ci-fix-qualification.json",
+    "sha256": "90e57d273488daca4802c0c8242a08db9fd226a5db2e72e2baf898428ab284dd"
+  }
+}

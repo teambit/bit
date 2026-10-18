@@ -19,7 +19,7 @@ impl Environments {
         host.call("stashAdded", &json!({"ids":ids}))?;
         Ok(host.take_stdout())
     }
-    pub(in crate::commands::status) fn from_host(host: Host) -> Self {
+    pub(in crate::commands) fn from_host(host: Host) -> Self {
         Self { host: Some(host), ..Self::new() }
     }
 

@@ -92,7 +92,7 @@ fn validate(prepared: &mut Prepared, capture: &capture::Capture) -> io::Result<(
     )
 }
 
-fn link(
+pub(super) fn link(
     root: &Path,
     projection: &Projection,
     capture: &capture::Capture,
@@ -101,20 +101,36 @@ fn link(
     json: bool,
     chalk: Chalk,
 ) -> io::Result<()> {
-    let dependencies = dependencies::packages(&capture.captured)?.into_iter().collect();
+    link_rows(root, projection, &capture.captured, components, host, json, chalk)
+}
+pub(super) fn link_rows(
+    root: &Path,
+    projection: &Projection,
+    captured: &[serde_json::Value],
+    components: &[WorkspaceComponent],
+    host: &Arc<Host>,
+    json: bool,
+    chalk: Chalk,
+) -> io::Result<()> {
+    let dependencies = dependencies::packages(captured)?.into_iter().collect();
     let adapter = JsHost::new(Arc::clone(host), json);
     let config = bit_install::config::WorkspaceConfig::from_value(
         root.join("workspace.jsonc"),
         projection.context["workspace"].clone(),
     )?;
     let roots = config.root_components_path(root);
+    let aspects: Vec<String> = serde_json::from_value(host.call(
+        "trackingAspectComponents",
+        &serde_json::json!({"components":captured}),
+    )?)?;
+    let aspect_env_ids = aspect_environments(components, &aspects);
     let options = bit_install::links::ComponentLinkOptions {
         has_root_components: config.dependency_resolver.has_root_components(),
         root_components_dir: &roots,
         dependencies: &dependencies,
         cloud_domain: "bit.cloud",
         windows: cfg!(windows),
-        aspect_env_ids: &[],
+        aspect_env_ids: &aspect_env_ids,
     };
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -126,6 +142,13 @@ fn link(
         ))
         .map_err(|error| output::link_error(linking::error(root, components, error), chalk))?;
     Ok(())
+}
+fn aspect_environments(components: &[WorkspaceComponent], aspects: &[String]) -> Vec<String> {
+    components
+        .iter()
+        .filter(|component| aspects.contains(&component.id.to_string_without_version()))
+        .map(|component| component.env_id.clone())
+        .collect()
 }
 fn report(plan: &Plan, json: bool, chalk: Chalk) -> io::Result<Report> {
     let data = if json {

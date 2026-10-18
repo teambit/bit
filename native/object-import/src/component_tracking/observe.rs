@@ -7,14 +7,14 @@ use std::{
 };
 
 #[derive(Default)]
-pub(super) struct Observed {
+pub(crate) struct Observed {
     files: BTreeMap<PathBuf, Option<Vec<u8>>>,
     directories: BTreeMap<PathBuf, Vec<String>>,
     bytes: usize,
     ancestors: BTreeMap<PathBuf, PathBuf>,
 }
 impl Observed {
-    pub(super) fn read(&mut self, path: &Path) -> io::Result<Option<Vec<u8>>> {
+    pub(crate) fn read(&mut self, path: &Path) -> io::Result<Option<Vec<u8>>> {
         let bytes = match fs::symlink_metadata(path) {
             Err(error) if error.kind() == io::ErrorKind::NotFound => None,
             Ok(metadata) if metadata.is_file() && metadata.len() <= 32 * 1024 * 1024 => {
@@ -39,7 +39,7 @@ impl Observed {
         self.files.entry(path.to_owned()).or_insert(hash);
         Ok(bytes)
     }
-    pub(super) fn directory(&mut self, path: &Path) -> io::Result<Vec<String>> {
+    pub(crate) fn directory(&mut self, path: &Path) -> io::Result<Vec<String>> {
         let names = directory(path)?;
         if self.directories.len() >= 65536 {
             return Err(unsupported("tracking directory limit"));
@@ -53,7 +53,7 @@ impl Observed {
         self.directories.entry(path.to_owned()).or_insert_with(|| names.clone());
         Ok(names)
     }
-    pub(super) fn ancestors(&mut self, root: &Path, path: &Path) -> io::Result<()> {
+    pub(crate) fn ancestors(&mut self, root: &Path, path: &Path) -> io::Result<()> {
         if !path.starts_with(root) {
             return Err(unsupported("tracking ancestor outside workspace"));
         }
@@ -72,7 +72,7 @@ impl Observed {
         }
         Ok(())
     }
-    pub(super) fn validate(&self) -> io::Result<()> {
+    pub(crate) fn validate(&self) -> io::Result<()> {
         for (path, real) in &self.ancestors {
             if ancestor(path)? != *real {
                 return Err(unsupported("tracking ancestor changed before publication"));

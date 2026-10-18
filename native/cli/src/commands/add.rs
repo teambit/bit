@@ -1,4 +1,6 @@
 //! Native tracking: retain the projected bitmap until component links succeed.
+pub(super) use mutation::ProjectedLinker;
+
 mod cache;
 mod cleanup;
 mod dependencies;
@@ -6,6 +8,7 @@ mod diagnostics;
 mod docs;
 mod execution;
 mod linking;
+mod mutation;
 mod options;
 mod output;
 mod preparation;

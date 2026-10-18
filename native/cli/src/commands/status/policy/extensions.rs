@@ -99,6 +99,9 @@ fn replacement_id(value: &Value) -> bool {
 }
 
 fn validate_removal_config(config: &Map<String, Value>) -> io::Result<()> {
+    if config.is_empty() {
+        return Ok(());
+    }
     if config.get("removed") != Some(&Value::Bool(true))
         || config
             .iter()

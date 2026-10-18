@@ -51,6 +51,7 @@ struct Projection<'a> {
 struct Metadata {
     issues: IssueData,
     core_aspects: Vec<String>,
+    file_core_aspects: Vec<String>,
     relative: relative::State,
 }
 #[derive(Default)]
@@ -64,6 +65,7 @@ struct IssueData {
 }
 impl Projection<'_> {
     fn file(&mut self, file: &Path) -> io::Result<()> {
+        self.metadata.file_core_aspects.clear();
         let path = file.to_str().ok_or_else(|| invalid("fresh source path"))?;
         let relative = file
             .strip_prefix(&self.request.component_root)
@@ -152,7 +154,8 @@ impl Projection<'_> {
         let id = detection.core_aspect_ids
             .get(index)
             .ok_or_else(|| invalid("fresh core aspect identity mapping"))?;
-        if !self.metadata.core_aspects.contains(id) {
+        if !self.metadata.file_core_aspects.contains(id) {
+            self.metadata.file_core_aspects.push(id.clone());
             self.metadata.core_aspects.push(id.clone());
         }
         Ok(true)

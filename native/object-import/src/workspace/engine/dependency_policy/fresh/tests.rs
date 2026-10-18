@@ -227,3 +227,28 @@ fn workspace_root_skips_source_graph_and_custom_detector_facts() {
     fixture.write("workspace.jsonc", "{}\n");
     assert!(proof::verify(&read_set).is_err());
 }
+
+#[test]
+fn core_aspects_are_unique_per_source_file_but_repeated_across_files() {
+    let fixture = Fixture::new();
+    fixture.write(
+        "comp/first.js",
+        "require('@teambit/example'); require('@teambit/example/extra');\n",
+    );
+    fixture.write("comp/second.js", "require('@teambit/example');\n");
+    fixture.write(
+        "node_modules/@teambit/example/package.json",
+        r#"{"name":"@teambit/example","version":"1.0.0","main":"index.js"}"#,
+    );
+    fixture.write("node_modules/@teambit/example/index.js", "module.exports=1;\n");
+    fixture.write("node_modules/@teambit/example/extra.js", "module.exports=2;\n");
+    let mut request = fixture.request(&["first.js", "second.js"]);
+    request["detection"]["coreAspectIds"] = json!(["teambit.example/example"]);
+    let output = Fixture::run(request).unwrap();
+    assert_eq!(
+        output["detected"]["coreAspects"],
+        json!(["teambit.example/example", "teambit.example/example"]),
+    );
+    assert_eq!(output["detected"]["allDependencies"]["dependencies"], json!([]));
+    assert_eq!(output["detected"]["allPackagesDependencies"]["packageDependencies"], json!({}));
+}

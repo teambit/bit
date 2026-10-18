@@ -6,6 +6,8 @@ pub(super) mod diagnostics;
 pub(in crate::commands) use context::{read_context, read_snapshot_context};
 pub(in crate::commands) use quick::run as quick;
 
+pub(in crate::commands) use callbacks::component_rows as hydration_rows;
+
 mod context;
 mod facts;
 mod modes;

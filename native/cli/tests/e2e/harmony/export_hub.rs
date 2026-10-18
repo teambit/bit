@@ -123,6 +123,10 @@ fn parity(lane: bool, mode: &str) {
     let expected_remote = helper.clone_remote_scope();
     helper.restore_remote_scope(&backup);
     let actual = hub.run(&helper.scopes.local_path, "export --verbose", false);
+    if mode == "subset" {
+        assert!(expected.stdout.contains(&format!("{}/bar/foo - 0.0.1", helper.scopes.remote)));
+        assert!(!expected.stdout.contains(&format!("{}/bar/second - 0.0.1", helper.scopes.remote)));
+    }
     if mode == "failure-ci" {
         comparison::ci_failure(&actual, &expected);
     } else {

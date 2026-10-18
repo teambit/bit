@@ -142,7 +142,7 @@ fn capture_view(
 
 #[derive(Default)]
 struct Capture {
-    seen: HashSet<PathBuf>,
+    seen: HashSet<String>,
     bytes: u64,
 }
 impl Capture {
@@ -158,7 +158,7 @@ impl Capture {
             if request.visited
                 .as_ref()
                 .is_some_and(|visited| visited.contains_key(name))
-                || !self.seen.insert(file.clone())
+                || !self.seen.insert(name.to_owned())
             {
                 continue;
             }

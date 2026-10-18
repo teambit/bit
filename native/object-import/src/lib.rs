@@ -2,8 +2,11 @@
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
 
 pub mod component_delete;
+pub mod component_deprecation;
+pub mod component_move;
 pub mod component_recover;
 pub mod component_remove;
+pub mod component_rename;
 pub mod component_tracking;
 pub mod export_actions;
 pub mod export_progress;

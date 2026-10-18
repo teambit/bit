@@ -10,6 +10,20 @@ impl Environments {
         Self::new()
     }
 
+    /// Retain one provider session across native identity and path mutations.
+    pub(in crate::commands) fn identity_call(
+        &mut self,
+        root: &Path,
+        method: &str,
+        params: &Value,
+    ) -> io::Result<(Value, String)> {
+        let result = self.host(root)?.call(method, params);
+        match result {
+            Ok(value) => Ok((value, self.host(root)?.take_stdout())),
+            Err(error) => Err(self.failure(error)),
+        }
+    }
+
     /// Ask only the published semantic parser; Rust publishes the returned cache metadata.
     pub(in crate::commands) fn tracking_docs(
         &mut self,
@@ -39,6 +53,21 @@ impl Environments {
     ) -> io::Result<String> {
         let host = self.host(root)?;
         host.call("trackingProjectBitmap", &json!({"bitmap":bitmap,"components":components}))?;
+        Ok(host.take_stdout())
+    }
+
+    /// Keep loaded identity classes while projecting later writes from the same command.
+    pub(in crate::commands) fn project_tracking_retained(
+        &mut self,
+        root: &Path,
+        bitmap: &Value,
+        components: &[Value],
+    ) -> io::Result<String> {
+        let host = self.host(root)?;
+        host.call(
+            "trackingProjectBitmap",
+            &json!({"bitmap":bitmap,"components":components,"retainLoaded":true}),
+        )?;
         Ok(host.take_stdout())
     }
 

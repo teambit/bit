@@ -168,17 +168,25 @@ fn component_config(config: &Value) -> bool {
 
 fn aspect_config(name: &str, value: &Value) -> bool {
     let Some(fields) = value.as_object() else { return value == "-" };
+    if let Some(specific) = fields.get("__specific") {
+        if !specific.is_boolean() {
+            return false;
+        }
+        let mut configured = fields.clone();
+        configured.shift_remove("__specific");
+        return aspect_config(name, &Value::Object(configured));
+    }
+    aspect_fields(name, value, fields)
+}
+
+fn aspect_fields(name: &str, value: &Value, fields: &serde_json::Map<String, Value>) -> bool {
+    if fields.is_empty() {
+        return true;
+    }
     match name {
         "teambit.dependencies/dependency-resolver" => true,
-        "teambit.component/deprecation" => fields
-            .iter()
-            .all(|(key, value)| match key.as_str() {
-                "deprecate" => value.is_boolean(),
-                "range" => value.is_string() || value.is_null(),
-                "newId" => replacement_id(value),
-                _ => false,
-            }),
-        "teambit.component/remove" => fields.len() == 1 && value["removed"].is_boolean(),
+        "teambit.component/deprecation" => deprecation_config(fields),
+        "teambit.component/remove" => removal_config(value, fields),
         "teambit.envs/envs" => fields.len() == 1 && value["env"].is_string(),
         "teambit.component/dev-files" => fields
             .keys()
@@ -202,6 +210,24 @@ fn aspect_config(name: &str, value: &Value) -> bool {
             .all(|key| key == "packageJson"),
         _ => true,
     }
+}
+fn removal_config(value: &Value, fields: &serde_json::Map<String, Value>) -> bool {
+    value["removed"].is_boolean()
+        && fields
+            .iter()
+            .all(|(key, value)| {
+                matches!(key.as_str(), "removed" | "removeOnMain") && value.is_boolean()
+            })
+}
+fn deprecation_config(fields: &serde_json::Map<String, Value>) -> bool {
+    fields
+        .iter()
+        .all(|(key, value)| match key.as_str() {
+            "deprecate" => value.is_boolean(),
+            "range" => value.is_string() || value.is_null(),
+            "newId" => replacement_id(value),
+            _ => false,
+        })
 }
 fn replacement_id(value: &Value) -> bool {
     if value.is_null() || value == "" {
@@ -323,3 +349,6 @@ pub(in crate::workspace::engine) fn context_bitmap_targets(
         })
         .collect())
 }
+
+#[cfg(test)]
+mod rename_tests;

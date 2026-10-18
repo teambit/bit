@@ -185,7 +185,10 @@ fn default_diagnoses_match_node_offline_without_creating_a_fresh_index() {
             .unwrap()
             .len(),
         8,
-        "complete offline catalog diagnosis result: {result}",
+        "complete offline catalog diagnosis result: {result}; status: {:?}; stderr: {}; catalog requests: {}",
+        actual.status.code(),
+        actual.stderr,
+        proxy.requests(),
     );
     assert_eq!(fs::read(helper.scopes.local_path.join(".bit/index.json")).ok(), before);
     assert_eq!(fs::read(oracle.join(".bit/index.json")).ok(), before);

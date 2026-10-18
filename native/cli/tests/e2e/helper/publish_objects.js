@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createRequire } = require('node:module');
 
-async function publishObjects(nodeCli, sourcePath, remotePath, laneId) {
+async function publishObjects(nodeCli, sourcePath, remotePath, laneId, componentIds) {
   const req = createRequire(nodeCli);
   const { loadScope } = req('@teambit/legacy.scope');
   const { BitObject, ObjectList, Ref } = req('@teambit/objects');
@@ -21,6 +21,8 @@ async function publishObjects(nodeCli, sourcePath, remotePath, laneId) {
   const index = JSON.parse(fs.readFileSync(path.join(sourcePath, 'index.json'), 'utf8'));
   const laneHash = laneId && index.lanes.find(row => row.id.scope === laneId.scope && row.id.name === laneId.name)?.hash;
   if (laneId && !laneHash) throw new Error('fixture current Lane missing from local index');
+  const requested = componentIds ? JSON.parse(componentIds) : [];
+  const selected = requested.length ? new Set(requested) : undefined;
   const objects = [];
   const directory = path.join(sourcePath, 'objects');
   for (const prefix of fs.readdirSync(directory)) {
@@ -30,6 +32,8 @@ async function publishObjects(nodeCli, sourcePath, remotePath, laneId) {
       const buffer = fs.readFileSync(path.join(directory, prefix, suffix));
       const object = await BitObject.parseObject(buffer);
       const type = object.getType();
+      if (selected && (type === 'Component' || type === 'Symlink') &&
+          !selected.has(`${object.scope}/${object.name}`)) continue;
       if (type === 'VersionHistory' || type === 'ScopeMeta') continue;
       if (type === 'Lane' && prefix + suffix !== laneHash) continue;
       if (type === 'LaneHistory' && object.laneHash !== laneHash) continue;
