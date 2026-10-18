@@ -1,5 +1,14 @@
 //! Retained component identity, source refactoring and bitmap publication for `rename`.
 pub mod batch;
+/// Shared pure ordered source, filename and package refactoring for new component copies.
+pub(crate) mod copy_refactor {
+    pub(crate) use super::{
+        configuration::target_key,
+        identity::validate_name,
+        refactor::{content, filename, package, replace_bytes as replace},
+    };
+}
+
 pub use options::Options;
 
 mod cleanup;

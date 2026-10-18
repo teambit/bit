@@ -119,7 +119,7 @@ fn apply_versions(detected: &mut Value, request: &Complete) -> io::Result<()> {
             None => select(version.dependent.as_deref(), &request.resolution["grammar"])?,
         };
         if let Some(version) = chosen {
-            id.insert("version".to_owned(), Value::String(version));
+            super::component_id::set_version(id, version);
         }
     }
     Ok(())

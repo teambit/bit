@@ -25,11 +25,11 @@ pub(super) fn initial(
             linker.link(root, entries.batch.bitmap(), std::slice::from_ref(&added), false, chalk)?;
             print!("{}", linker.take_stdout());
             entries.batch.write(&workspace_command::file_id(), &format!("adding {target}"))?;
-            load_added(root, entries.batch.bitmap(), &added, &target, linker)?;
+            let components = load_added(root, entries.batch.bitmap(), &added, &target, linker)?;
             linker.call(
                 root,
                 "renameTooling",
-                &json!({"action":"onAdd","ids":[target],"progress":!options.owner,"defaultScoped":!options.owner}),
+                &json!({"action":"onAdd","ids":[target],"components":components,"progress":!options.owner,"defaultScoped":!options.owner}),
             )?;
             print!("{}", linker.take_stdout());
             if !options.deprecate {
@@ -50,14 +50,13 @@ fn load_added(
     added: &String,
     requested: &str,
     linker: &mut ProjectedLinker,
-) -> io::Result<()> {
+) -> io::Result<Option<Vec<Value>>> {
     if added != requested {
-        return Ok(());
+        return Ok(None);
     }
     let rows = linker.capture(root, bitmap, std::slice::from_ref(added))?;
-    linker.call(root, "identityUseCached", &json!({"components":rows}))?;
     print!("{}", linker.take_stdout());
-    Ok(())
+    Ok(Some(rows))
 }
 pub(super) fn pairs(entries: &Entries) -> io::Result<Vec<(String, String)>> {
     entries.facts

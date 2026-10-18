@@ -102,3 +102,15 @@ fn http_lane_wildcard_listing_fetches_only_lane_objects() {
     assert!(request.contains(r#""ids":["remote.scope/dev"]"#), "{request}");
     assert!(request.contains(r#""type":"lane""#), "{request}");
 }
+
+#[test]
+fn fork_file_listing_orders_model_names_before_versions_and_prefix_children() {
+    let mut rows = ["comp1/ui", "comp2", "comp1"].map(|name| bit_client_transfer::http::Listed {
+        scope: "remote.scope".into(),
+        name: name.into(),
+        version: Some("0.0.1".into()),
+        deprecated: false,
+    });
+    super::list_order::file_order(&mut rows);
+    assert_eq!(rows.map(|row| row.name), ["comp1", "comp1/ui", "comp2"]);
+}

@@ -75,8 +75,8 @@ pub(super) fn http(items: &[ObjectItem], id: &str) -> io::Result<bool> {
     }
     Ok(removed(&model, &version, &hash))
 }
-type Objects = HashMap<String, (String, Vec<u8>)>;
-fn decode(items: &[ObjectItem], id: &str) -> io::Result<(Objects, Option<Value>)> {
+pub(crate) type Objects = HashMap<String, (String, Vec<u8>)>;
+pub(crate) fn decode(items: &[ObjectItem], id: &str) -> io::Result<(Objects, Option<Value>)> {
     let mut objects = HashMap::new();
     let mut model = None;
     let mut total = 0;
@@ -116,7 +116,7 @@ fn matching_model(body: &[u8], id: &str) -> io::Result<Option<Value>> {
     );
     Ok((identity == id.split('@').next().unwrap_or(id)).then_some(value))
 }
-fn version_hash(model: &Value, id: &str) -> io::Result<String> {
+pub(crate) fn version_hash(model: &Value, id: &str) -> io::Result<String> {
     let version = id
         .rsplit_once('@')
         .map(|(_, version)| version)

@@ -23,7 +23,7 @@ const { createRequire } = require('module');
 const [bitDir, entry, root] = process.argv.slice(-3);
 const cliArguments = JSON.parse(process.env.BIT_NATIVE_HOST_ARGUMENTS ?? '[]');
 const readonlyStatus = ['status', 's', 'diff'].includes(cliArguments[0]);
-const identityRenameCommand = cliArguments[0] === 'rename' || (cliArguments[0] === 'scope' && ['rename', 'rename-owner'].includes(cliArguments[1]));
+const identityRenameCommand = ['rename', 'fork'].includes(cliArguments[0]) || (cliArguments[0] === 'scope' && ['rename', 'rename-owner', 'fork'].includes(cliArguments[1]));
 const identityMutationCommand = identityRenameCommand || ['move', 'mv', 'deprecate', 'd', 'undeprecate', 'remove', 'rm', 'delete', 'recover'].includes(cliArguments[0]);
 const snapshotCommandName = cliArguments[0] === 't' ? 'tag' : cliArguments[0];
 let snapshotCommand = ['snap', 'tag'].includes(snapshotCommandName) || (cliArguments[0] === 'merge' && cliArguments.includes('--resolve'));
@@ -117,6 +117,14 @@ const handlers = {
   renameTooling,
   renameAst,
   renameSourceConfig,
+  forkRemoteHydrate,
+  forkSourceFacts,
+  forkEnvironment,
+  forkAdded,
+  forkTracked,
+  forkPolicyFacts,
+  forkPolicyApplied,
+  forkAst,
   identityUseCached,
   identityListOrder,
   identityConsumerMode,
@@ -727,7 +735,7 @@ async function afterInstall(request) {
   workspace.inInstallContext = true;
   workspace.inInstallAfterPmContext = true;
   const previousProgress = snapshotBootstrapProgress;
-  if (cliArguments[0] === 'scope' && cliArguments[1] === 'rename') snapshotBootstrapProgress = true;
+  if (cliArguments[0] === 'fork' || (cliArguments[0] === 'scope' && cliArguments[1] === 'rename')) snapshotBootstrapProgress = true;
   try {
     await workspace.clearCache();
     await install.reloadMovedEnvs();
@@ -953,6 +961,12 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout }
     let component = await hydrateStatusComponent(row, retainedConsumer);
     const componentIndex = statusComponents.length;
     statusComponents.push(component);
+    const trackedFork = await forkLoadTracked(component);
+    if (trackedFork) {
+      component = trackedFork;
+      statusComponents[componentIndex] = component;
+      continue;
+    }
     // DependencyLoader's DevFiles adapter hydrates a separate Harmony class before
     // the actual workspace load. Workspace-root explicitly skips source detection.
     if (!snapshotContinuation) {

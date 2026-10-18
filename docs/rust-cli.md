@@ -172,6 +172,7 @@ Each host method is removed once its behavior is ported to Rust.
 | `move <from> <to>`, `mv` | native source relocation or reconciliation of an already moved directory; retained source/control proofs, projected bitmap paths, generated packages, source links and bitmap history | retained published providers, component onLoad callbacks and package transformers | unknown grammar, paths outside the workspace, unsafe filesystem layouts and unsupported inputs decline before provider startup; CI validation errors requiring a JavaScript stack delegate before effects |
 | `rename <source> <target>` with `--scope`, `--path`, `--refactor`, `--preserve`, `--ast`, `--delete` or `--deprecate` | native identity selection, source/path and import refactoring, new-component rename or exported-component copy with source deletion/deprecation, component aspect/env references, package links and bitmap history | retained published onLoad and package callbacks; actual registered onComponentAdd/compiler hooks; the published TypeScript transformer for `--ast`, using private file spools | unknown flags, non-workspace execution, unsafe paths, unsupported metadata or bounded-input limits |
 | `scope rename <old> <new>` with `--refactor`, `--preserve`, `--deprecate`, `-x`; `scope rename-owner <old> <new>` with `--refactor` or `--ast` | native batch selection, default-scope/config and bitmap publication, exported replacement/deletion/deprecation, source and package-import refactoring, package linking and history; optional native installation followed by compilation | actual per-component environment, onLoad, onComponentAdd, package and compiler hooks in a retained session; owner rename preserves paths and the pinned CLI ignores its advertised `--ast` flag | unknown grammar, unsafe paths, unsupported metadata or bounded inputs; other scope subcommands still delegate |
+| `fork <source-or-pattern> [target]` with `--scope`, `--path`, `--env`, `--refactor`, `--skip-config`, `--preserve`, `--no-link`, `--ast`, `-x`; `scope fork <source-scope> [target-scope] [pattern]` with `--ast`, `-x` | Rust owns retained selection, private remote capture, source/refactor materialization, tracking, provenance and dependency-policy writes. All 34 strict local, file/HTTP remote, batch, callback, installation and failure-prefix fixtures pass; the 14 original fork and three scope-fork assertions are mapped individually. Complete Linux qualification passes 360 comparison pairs and all 70 eligible native medians are lower; see the fork qualification below | actual environment/onLoad, onComponentAdd, package/compiler and TypeScript AST tooling; native installation for remote forks when requested | non-UTF-8/unsupported grammar, missing workspace, unsupported inventory or unsafe preflight plans, and requested historical versions of tracked workspace components decline before providers. Once providers or mutation begin, errors stay owned. Scope-fork and remote-pattern option forwarding preserves the published handler’s behavior; single-fork flags are not assumed to apply to every batch |
 | `deprecate <pattern>`, `d`, with `--new-id` or `--range`; `undeprecate <pattern>` | native bitmap deprecation updates, stored Version deprecation/range lookup, replacement identity validation, unchanged-result reporting and bitmap history; local glob/list/negation selectors and `$deprecated` | retained published providers and component hydration | other state selectors, remote-only replacement IDs, unknown options and unsafe/corrupt inputs decline before effects; CI validation errors requiring a JavaScript stack delegate |
 | `remove <pattern> --silent`, `rm`, with `--keep-files`, `--force` and `--track` | native batch selection and repository/bitmap publication, including staged models, current lanes, retained configuration and unmerged-state cleanup; source/package removal preserves partial failures and unrelated objects. Workspace state filters load classes only when their predicate requires them; later status checks reuse those classes | actual retained providers, environment/onLoad/package callbacks and dependency metadata | interactive confirmation, remote removal, unknown grammar, overlapping/unsafe paths, corrupt or unsupported metadata and explicit resource limits; eligibility declines before effects, while started failures remain owned |
 | `delete <pattern> --silent`, `--range`, `--snaps`, `--lane`, `--update-main` | native soft-deletion selection, configuration and bitmap history, main/lane removal policy, dependency-range updates, package/source cleanup and nested empty-parent cleanup. Ordered workspace state filters share retained classes and status inputs | actual retained providers and component/package callbacks | hard deletion, interactive confirmation, unsupported lane/model/configuration states, unsafe paths, unavailable object closures and unknown grammar; started failures remain owned |
@@ -182,11 +183,55 @@ Each host method is removed once its behavior is ported to Rust.
 | `snap [pattern]` | native selection and dependent cascade; source and graph hashes, Version/model objects, parents and history, refs/index and local publication; workspace-root snapshots; generated packages and source links | published aspect/environment hooks, issue callbacks, editor, builder and package transformers; source bodies use private file spools | unsupported option syntax, malformed or over-budget receipts, corrupt repository inputs and unavailable published adapter modules decline before effects; after extension startup or publication, failures remain native |
 | `tag [patterns...]`, `t` | snapshot publication plus semantic versions, versions files, soft tags and persistence, registry-version retries, state/glob selectors, issue policies, graph rebuild/omission and workspace-root provenance | the same extension callbacks as snap; registry availability facts | tagging on lanes, invalid editor combinations and Node-unsupported soft premajor/preminor/prepatch persistence retain canonical validation |
 
+Fork parity fixtures align released/native command launches to the same 50–100 ms wall-clock phase. Functional multi-copy fixtures additionally configure a physically compiled Node-composed environment through component-name variants, whose real onComponentAdd slot waits at least 1,100 ms after every target copy, separating second-resolution bitmap backups through the real callback lifecycle. The environment uses a separate fixture.tools scope outside source selectors. Per-target environment loading guarantees registration even for late-registered scope subcommands that do not bootstrap root-only providers; fixtures assert the real callback receipt exists. Clocks, backup bodies, counts and reasons remain unchanged and strictly compared. Single-copy fixtures use no callback barrier; benchmark fixtures and timings are unchanged.
+
 `confirm` prompts are asked by the Rust process itself, since it owns the terminal.
 
 Native commands append to the workspace's `command-history` file (in `.bit`,
 or `.git/bit`) as the Node.js CLI does. A declined command writes nothing, so
 the Node.js CLI's own lines are not duplicated.
+
+### Component and scope fork qualification
+
+The [complete fork qualification](../scripts/rust/benchmarks/fork-planning-reuse-qualification.json)
+measures source `4799396e8131b5c9e6c05cc440d014d598f05a7c` against Node 22.22.0 /
+Bit 2.2.94. Its native-source SHA-256 is
+`93b0889c80289bf790342910cbfb9cb35147f880a9788f33dcb163254f64c0af` and release-binary
+SHA-256 is `cde14ad3e9e44e3a08d1d19d6c84d464c34fa07108f9f1d6c8908b3bf386316c`.
+Five alternating fresh-copy pairs per non-TTY, CI and TTY mode pass all 360
+output, exit-code, source, control, cache, object, history, mode and link comparisons
+across 24 workloads. Of those pairs, 350 run natively; ten add CI error pairs
+intentionally delegate and are excluded from native speed claims. All 70 eligible
+native workload/mode medians are lower. Non-TTY fork medians in milliseconds are:
+
+| Workload | Node | Rust |
+| --- | ---: | ---: |
+| Local fork, 11 source files | 541.434 | 472.238 |
+| Local fork with dependent refactoring | 570.569 | 461.985 |
+| Local fork, ten components | 881.900 | 798.708 |
+| File-remote fork, 11 source files | 567.404 | 470.154 |
+| File-remote fork, ten components | 686.725 | 541.130 |
+| Scope fork, ten components | 864.747 | 733.166 |
+
+The [fork samples](../scripts/rust/benchmarks/fork-planning-reuse.json),
+[identity](../scripts/rust/benchmarks/fork-planning-reuse-identity.json),
+[add](../scripts/rust/benchmarks/fork-planning-reuse-add.json),
+[mutation](../scripts/rust/benchmarks/fork-planning-reuse-mutation.json) and
+[status/checkout/export](../scripts/rust/benchmarks/fork-planning-reuse-regressions.json)
+reports retain every sample. Each complete workload qualified on its first attempt
+after 20 consecutive seconds below 30% aggregate CPU, with a closed 0.5-second
+monitor staying below 80%. The archive embeds the driver, raw CPU counters,
+helper fingerprints and immutable source identity. These are controlled warm-metadata
+Linux file-remote results; HTTP behavior has functional coverage, without a network
+or cross-platform performance claim.
+
+The [earlier fork baseline](../scripts/rust/benchmarks/fork-completion-qualification.json)
+remains unchanged: all 360 correctness pairs passed, but scope rename CI measured
+1021.802 ms in Rust versus 1014.847 ms in Node. The changed source reuses lazy
+package matchers across generic planning phases and combines added-component cache
+seeding with the following on-add host request. The new scope rename CI median is
+1014.069 ms versus Node's 1041.988 ms; this small difference should not be treated
+as a broad speedup claim. All earlier mutation archives remain unchanged too.
 
 ### Component identity and location
 

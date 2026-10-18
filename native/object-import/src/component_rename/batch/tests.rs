@@ -119,3 +119,31 @@ fn missing_dependent_file_precedes_lazy_invalid_package_regex() {
             .exists(),
     );
 }
+
+#[test]
+fn generic_plan_package_matcher_preserves_binary_then_missing_file_error_order() {
+    let (directory, mut options, mut facts) = workspace();
+    options[0].refactor = true;
+    facts[0]["sourcePackage"] = json!("[");
+    facts[0]["targetPackage"] = json!("new-package");
+    facts[0]["components"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({"identity":"my.scope/second","rootDir":"second","files":["missing.js"]}));
+    let path = directory.path().join("first/index.js");
+    fs::write(&path, b"binary\0source").unwrap();
+    let error = Plan::prepare(directory.path(), &options[0], &facts[0]).err().unwrap();
+    assert_eq!(error.kind(), io::ErrorKind::NotFound);
+    fs::write(&path, b"text source").unwrap();
+    let error = Plan::prepare(directory.path(), &options[0], &facts[0]).err().unwrap();
+    let expected =
+        crate::component_rename::refactor::package(b"text", "[", "new-package").unwrap_err();
+    assert_eq!(error.kind(), expected.kind());
+    assert_eq!(error.to_string(), expected.to_string());
+    assert!(
+        !directory
+            .path()
+            .join("components")
+            .exists(),
+    );
+}

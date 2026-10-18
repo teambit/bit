@@ -2,6 +2,7 @@
 mod connection;
 mod file_list;
 mod lane_list;
+mod list_order;
 mod missing;
 #[cfg(test)]
 mod tests;
@@ -61,9 +62,7 @@ pub(super) fn lane_objects(
     })
 }
 
-/// `Lister.remoteList` for each pattern: the components of `<scope>` whose
-/// names match the rest of the pattern, as the HTTP remote matches them.
-/// File remotes list on the client and are left to the Node.js CLI.
+/// `Lister.remoteList` preserves transport order unless fork file-scope ordering is requested.
 pub(super) fn list(input: &List) -> io::Result<Vec<(String, Vec<Listed>)>> {
     let (remotes, network, _, _) = connect(&input.root, &input.transport)?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
@@ -72,7 +71,15 @@ pub(super) fn list(input: &List) -> io::Result<Vec<(String, Vec<Listed>)>> {
         let mut lists = Vec::with_capacity(input.patterns.len());
         for pattern in &input.patterns {
             lists.push(
-                list_pattern(pattern, input.lane_only, &lane_rows, &remotes, &network).await?,
+                list_pattern(
+                    pattern,
+                    input.lane_only,
+                    &lane_rows,
+                    &remotes,
+                    &network,
+                    input.fork_order,
+                )
+                .await?,
             );
         }
         Ok(lists)
@@ -110,6 +117,7 @@ async fn list_pattern(
     lane_rows: &[Listed],
     remotes: &Remotes,
     network: &Network,
+    fork_order: bool,
 ) -> io::Result<(String, Vec<Listed>)> {
     let (scope, namespaces) = pattern
         .split_once('/')
@@ -126,10 +134,8 @@ async fn list_pattern(
         .cloned()
         .collect::<Vec<_>>();
     if !lane_only {
-        let main = match remotes.resolve(scope, network).await? {
-            Remote::Http(url) => network.list(&url, Some(namespaces)).await?,
-            Remote::File(path) => file_list::list(&path, scope, namespaces)?,
-        };
+        let remote = remotes.resolve(scope, network).await?;
+        let main = list_order::main(&remote, scope, namespaces, network, fork_order).await?;
         let mut seen = listed
             .iter()
             .map(|entry| format!("{}/{}", entry.scope, entry.name))

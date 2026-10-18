@@ -22,6 +22,7 @@ pub(in crate::component_rename) fn batch_dependents(
     targets: &[String],
 ) -> io::Result<(Vec<Change>, Vec<String>)> {
     let mut matchers = refactor::PackageMatchers::new(pairs);
+    let mut initial = refactor::PackageMatcher::new("", "");
     let mut output = Vec::new();
     let mut identities = Vec::new();
     for row in rows {
@@ -33,7 +34,7 @@ pub(in crate::component_rename) fn batch_dependents(
         {
             continue;
         }
-        let changes = batch_component(plan, row, &mut matchers)?;
+        let changes = batch_component(plan, row, &mut matchers, &mut initial)?;
         if !changes.is_empty() {
             identities.push(id.to_owned());
             output.extend(changes);
@@ -45,6 +46,7 @@ fn batch_component(
     plan: &mut Plan,
     row: &Value,
     matchers: &mut refactor::PackageMatchers,
+    initial: &mut refactor::PackageMatcher,
 ) -> io::Result<Vec<Change>> {
     let directory =
         row["directory"].as_str().ok_or_else(|| unsupported("scope rename loaded directory"))?;
@@ -58,7 +60,7 @@ fn batch_component(
             .as_str()
             .or_else(|| file["relativePath"].as_str())
             .ok_or_else(|| unsupported("scope rename loaded path"))?;
-        let (mut change, _) = dependent_file(plan, &component, directory, relative, ("", ""))?;
+        let (mut change, _) = dependent_file(plan, &component, directory, relative, initial)?;
         let before = change.bytes.clone();
         change.bytes = matchers.apply(&change.bytes)?;
         changed |= before != change.bytes;

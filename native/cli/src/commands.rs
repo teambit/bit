@@ -12,6 +12,7 @@ mod doctor;
 mod engine;
 mod export;
 mod file_history;
+mod fork;
 mod ids;
 mod import;
 mod init;
@@ -60,6 +61,7 @@ pub const COMMANDS: &[Command] = &[
     deprecate::UNDEPRECATE,
     doctor::COMMAND,
     file_history::BLAME,
+    fork::COMMAND,
     diff::COMMAND,
     export::COMMAND,
     file_history::LOG_FILE,

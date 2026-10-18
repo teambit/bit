@@ -28,6 +28,10 @@ impl ProjectedLinker {
         self.with_installer(|installer| installer.install_scope_rename(root))
     }
 
+    pub(in crate::commands) fn install_fork(&mut self, root: &Path) -> io::Result<()> {
+        self.with_installer(|installer| installer.install_fork(root))
+    }
+
     /// Keep native recovery imports and installation on the original provider session.
     pub(in crate::commands) fn with_installer<ResultValue>(
         &mut self,

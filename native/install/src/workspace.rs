@@ -221,6 +221,9 @@ impl Loader<'_> {
         } else {
             self.root.join(&entry.root_dir)
         };
+        // Node's path.join renders bitmap separators using the platform separator.
+        #[cfg(windows)]
+        let dir = dir.components().collect::<PathBuf>();
         let files = self.files(entry)?;
         let model = self.objects.component(&entry.id)?;
         let aspects = self.aspects(entry, &dir, model.as_ref())?;

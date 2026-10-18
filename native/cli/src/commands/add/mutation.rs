@@ -1,6 +1,7 @@
 //! Retain published providers while native identity operations materialize and link files.
 mod cached;
 mod controls;
+mod fork;
 mod installation;
 mod load;
 mod removal;

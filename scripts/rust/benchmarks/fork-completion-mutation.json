@@ -1,0 +1,1323 @@
+{
+  "native_source": {
+    "sha256": "6c78e3856995a61b4aa5552e66b50e6fe37fd61fa2ac099156431a28f7d5fd37",
+    "file_count": 1616
+  },
+  "measured_at_utc": "2026-10-18T05:07:02.692481+00:00",
+  "correctness_valid": true,
+  "performance_valid": true,
+  "performance_qualification": "Raw workload reports remain unchanged; external closed monitors qualify eligible native rows",
+  "driver_sha256": "5916ee52fe6078d0cd70792312748c9cec268d90062a79089af83b3da47687be",
+  "workload_reports": {
+    "scope-rename-mixed": {
+      "stage": "/var/tmp/workspace-mutation-qualified-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "6c78e3856995a61b4aa5552e66b50e6fe37fd61fa2ac099156431a28f7d5fd37",
+        "file_count": 1616
+      },
+      "correctness_valid": true,
+      "performance_valid": false,
+      "performance_qualification": {
+        "status": "awaiting closed whole-run external monitor qualification",
+        "predeclared_max_host_busy_percent": 80,
+        "required_sample_interval_seconds": 0.5,
+        "required_start_gate_seconds": 20,
+        "required_start_gate_max_busy_percent": 30
+      },
+      "rust_sha256": "3d7d0357c9cfb0a3029cfa020935f13625d6417dc079cd9849dbcee7afda13d8",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-scope-rename-mixed"
+        },
+        "home": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-home",
+        "globals": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-globals",
+        "remotes": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-scope-rename-mixed"
+        },
+        "remote_path": "/var/tmp/workspace-mutation-qualified-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "aa044fc1d88566b09e560060c0a30e59dacb8e018462052c4b2ac96fdedf550f",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        }
+      },
+      "fixture_sha256": {
+        "remove-tagged-batch": "a580ef6f2064efa743a375a97ee9d322a796885119626559097faa42f2c24757",
+        "delete-tagged-batch": "7a9c685f1bfc58fa71b7d1985cbca890fb717968df7b148b1817b02074d62992",
+        "recover-deleted-batch": "09b6568ba1a33986add337be0f503b880b52e3f639f980bb81949e0a4009f76c",
+        "scope-rename-mixed": "b2cd66ace3b6fa59efde39f7d98345b21f01e19bc1afdb71ecbf9382717fbf51"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925"
+      },
+      "remote_fixture_sha256": {
+        "remove-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "delete-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "recover-deleted-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "scope-rename-mixed": "0faf7a9783ed3a35f7bd3b5c359e567f49def2715cff9265dc5ee21ea1ece38e"
+      },
+      "host_monitor": null,
+      "host_command_samples": "/var/tmp/workspace-mutation-qualified-benchmark/evidence/*.host.json",
+      "reproduce": [
+        "/usr/bin/python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "scope-rename-mixed",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/workspace-mutation-scope-rename-mixed-1.result.json"
+      ],
+      "helper_sha256": {
+        "bench-workspace-mutation.py": "4838fe9d09b5a86e67e20b80bb09f14decfdb16843c099b3dac005ea9bd96b60",
+        "prepare-workspace-mutation-benchmark.py": "0c100e6c2afe72ff6df7c453ddd942199ba454c98034095f8b8d3e5fc022ac82",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "2d0cfe777d6d5ff55c54018499be09cd1167c491ad099b721152fae83a699287"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "Every measured command must remain native in all three presentation modes.",
+      "native_pairs": 15,
+      "warmup_note": "Only explicitly recorded pinned builtin metadata is prewarmed; no first-use claim.",
+      "fixture_prerequisites": {
+        "qualification_status": "generated by pinned CLI; measured parity verified only for entries in verified",
+        "scope_history_collision_risk": "Ten-component scope mutation has multiple writes and may exceed one second. Start phase alone does not prove stable backup collision shape; exact snapshot/count comparison remains mandatory. Preserve failed trials; a real callback barrier fixture requires explicit separate qualification.",
+        "seed_tag_policy": "Seed-only tag ignores missing environment packages; measured commands carry no issue suppression.",
+        "recovery_baseline": "Released delete of twenty tagged retained bitmap rows, recovered from local scope without remote import.",
+        "scope_baseline": "Ten-component import chain; five tail components tagged/exported, five heads new; deprecate preserves exported originals."
+      },
+      "clock_phase_control": {
+        "workloads": [
+          "scope-rename-mixed"
+        ],
+        "start_phase_ms": [
+          50,
+          100
+        ],
+        "outside_command_timing": true,
+        "method": "Wait before launch for the same wall-clock phase on both implementations; clocks and commands are unchanged.",
+        "reason": "Published bitmap backup filenames have second precision; strict retained snapshot comparisons must not depend on crossing a clock boundary."
+      },
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "scope-rename-mixed",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "scope-rename-mixed": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                991.062,
+                1007.142,
+                1023.15,
+                1006.857,
+                988.814
+              ],
+              "node": [
+                1013.407,
+                1012.141,
+                1057.494,
+                1035.057,
+                1041.729
+              ]
+            },
+            "median_ms": {
+              "rust": 1006.857,
+              "node": 1035.057
+            }
+          },
+          "ci": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                1021.802,
+                1025.941,
+                1029.994,
+                1003.633,
+                1003.911
+              ],
+              "node": [
+                1050.409,
+                1014.847,
+                1007.018,
+                1069.721,
+                1011.873
+              ]
+            },
+            "median_ms": {
+              "rust": 1021.802,
+              "node": 1014.847
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                1013.076,
+                1034.573,
+                994.634,
+                1021.832,
+                1007.082
+              ],
+              "node": [
+                1033.198,
+                1062.879,
+                1052.866,
+                1062.957,
+                1056.673
+              ]
+            },
+            "median_ms": {
+              "rust": 1013.076,
+              "node": 1056.673
+            }
+          }
+        }
+      }
+    },
+    "remove-tagged-batch": {
+      "stage": "/var/tmp/workspace-mutation-qualified-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "6c78e3856995a61b4aa5552e66b50e6fe37fd61fa2ac099156431a28f7d5fd37",
+        "file_count": 1616
+      },
+      "correctness_valid": true,
+      "performance_valid": false,
+      "performance_qualification": {
+        "status": "awaiting closed whole-run external monitor qualification",
+        "predeclared_max_host_busy_percent": 80,
+        "required_sample_interval_seconds": 0.5,
+        "required_start_gate_seconds": 20,
+        "required_start_gate_max_busy_percent": 30
+      },
+      "rust_sha256": "3d7d0357c9cfb0a3029cfa020935f13625d6417dc079cd9849dbcee7afda13d8",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-scope-rename-mixed"
+        },
+        "home": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-home",
+        "globals": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-globals",
+        "remotes": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-scope-rename-mixed"
+        },
+        "remote_path": "/var/tmp/workspace-mutation-qualified-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "aa044fc1d88566b09e560060c0a30e59dacb8e018462052c4b2ac96fdedf550f",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        }
+      },
+      "fixture_sha256": {
+        "remove-tagged-batch": "a580ef6f2064efa743a375a97ee9d322a796885119626559097faa42f2c24757",
+        "delete-tagged-batch": "7a9c685f1bfc58fa71b7d1985cbca890fb717968df7b148b1817b02074d62992",
+        "recover-deleted-batch": "09b6568ba1a33986add337be0f503b880b52e3f639f980bb81949e0a4009f76c",
+        "scope-rename-mixed": "b2cd66ace3b6fa59efde39f7d98345b21f01e19bc1afdb71ecbf9382717fbf51"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925"
+      },
+      "remote_fixture_sha256": {
+        "remove-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "delete-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "recover-deleted-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "scope-rename-mixed": "0faf7a9783ed3a35f7bd3b5c359e567f49def2715cff9265dc5ee21ea1ece38e"
+      },
+      "host_monitor": null,
+      "host_command_samples": "/var/tmp/workspace-mutation-qualified-benchmark/evidence/*.host.json",
+      "reproduce": [
+        "/usr/bin/python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "remove-tagged-batch",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/workspace-mutation-remove-tagged-batch-1.result.json"
+      ],
+      "helper_sha256": {
+        "bench-workspace-mutation.py": "4838fe9d09b5a86e67e20b80bb09f14decfdb16843c099b3dac005ea9bd96b60",
+        "prepare-workspace-mutation-benchmark.py": "0c100e6c2afe72ff6df7c453ddd942199ba454c98034095f8b8d3e5fc022ac82",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "2d0cfe777d6d5ff55c54018499be09cd1167c491ad099b721152fae83a699287"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "Every measured command must remain native in all three presentation modes.",
+      "native_pairs": 15,
+      "warmup_note": "Only explicitly recorded pinned builtin metadata is prewarmed; no first-use claim.",
+      "fixture_prerequisites": {
+        "qualification_status": "generated by pinned CLI; measured parity verified only for entries in verified",
+        "scope_history_collision_risk": "Ten-component scope mutation has multiple writes and may exceed one second. Start phase alone does not prove stable backup collision shape; exact snapshot/count comparison remains mandatory. Preserve failed trials; a real callback barrier fixture requires explicit separate qualification.",
+        "seed_tag_policy": "Seed-only tag ignores missing environment packages; measured commands carry no issue suppression.",
+        "recovery_baseline": "Released delete of twenty tagged retained bitmap rows, recovered from local scope without remote import.",
+        "scope_baseline": "Ten-component import chain; five tail components tagged/exported, five heads new; deprecate preserves exported originals."
+      },
+      "clock_phase_control": {
+        "workloads": [
+          "scope-rename-mixed"
+        ],
+        "start_phase_ms": [
+          50,
+          100
+        ],
+        "outside_command_timing": true,
+        "method": "Wait before launch for the same wall-clock phase on both implementations; clocks and commands are unchanged.",
+        "reason": "Published bitmap backup filenames have second precision; strict retained snapshot comparisons must not depend on crossing a clock boundary."
+      },
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "remove-tagged-batch",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "remove-tagged-batch": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                288.423,
+                289.557,
+                289.021,
+                292.52,
+                289.088
+              ],
+              "node": [
+                553.414,
+                564.744,
+                562.593,
+                547.283,
+                550.945
+              ]
+            },
+            "median_ms": {
+              "rust": 289.088,
+              "node": 553.414
+            }
+          },
+          "ci": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                284.488,
+                288.44,
+                278.269,
+                270.02,
+                291.62
+              ],
+              "node": [
+                569.823,
+                536.675,
+                562.185,
+                555.439,
+                540.115
+              ]
+            },
+            "median_ms": {
+              "rust": 284.488,
+              "node": 555.439
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                301.03,
+                301.417,
+                281.313,
+                298.035,
+                296.196
+              ],
+              "node": [
+                551.108,
+                574.98,
+                579.717,
+                573.596,
+                553.279
+              ]
+            },
+            "median_ms": {
+              "rust": 298.035,
+              "node": 573.596
+            }
+          }
+        }
+      }
+    },
+    "delete-tagged-batch": {
+      "stage": "/var/tmp/workspace-mutation-qualified-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "6c78e3856995a61b4aa5552e66b50e6fe37fd61fa2ac099156431a28f7d5fd37",
+        "file_count": 1616
+      },
+      "correctness_valid": true,
+      "performance_valid": false,
+      "performance_qualification": {
+        "status": "awaiting closed whole-run external monitor qualification",
+        "predeclared_max_host_busy_percent": 80,
+        "required_sample_interval_seconds": 0.5,
+        "required_start_gate_seconds": 20,
+        "required_start_gate_max_busy_percent": 30
+      },
+      "rust_sha256": "3d7d0357c9cfb0a3029cfa020935f13625d6417dc079cd9849dbcee7afda13d8",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-scope-rename-mixed"
+        },
+        "home": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-home",
+        "globals": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-globals",
+        "remotes": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-scope-rename-mixed"
+        },
+        "remote_path": "/var/tmp/workspace-mutation-qualified-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "aa044fc1d88566b09e560060c0a30e59dacb8e018462052c4b2ac96fdedf550f",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        }
+      },
+      "fixture_sha256": {
+        "remove-tagged-batch": "a580ef6f2064efa743a375a97ee9d322a796885119626559097faa42f2c24757",
+        "delete-tagged-batch": "7a9c685f1bfc58fa71b7d1985cbca890fb717968df7b148b1817b02074d62992",
+        "recover-deleted-batch": "09b6568ba1a33986add337be0f503b880b52e3f639f980bb81949e0a4009f76c",
+        "scope-rename-mixed": "b2cd66ace3b6fa59efde39f7d98345b21f01e19bc1afdb71ecbf9382717fbf51"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925"
+      },
+      "remote_fixture_sha256": {
+        "remove-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "delete-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "recover-deleted-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "scope-rename-mixed": "0faf7a9783ed3a35f7bd3b5c359e567f49def2715cff9265dc5ee21ea1ece38e"
+      },
+      "host_monitor": null,
+      "host_command_samples": "/var/tmp/workspace-mutation-qualified-benchmark/evidence/*.host.json",
+      "reproduce": [
+        "/usr/bin/python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "delete-tagged-batch",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/workspace-mutation-delete-tagged-batch-1.result.json"
+      ],
+      "helper_sha256": {
+        "bench-workspace-mutation.py": "4838fe9d09b5a86e67e20b80bb09f14decfdb16843c099b3dac005ea9bd96b60",
+        "prepare-workspace-mutation-benchmark.py": "0c100e6c2afe72ff6df7c453ddd942199ba454c98034095f8b8d3e5fc022ac82",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "2d0cfe777d6d5ff55c54018499be09cd1167c491ad099b721152fae83a699287"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "Every measured command must remain native in all three presentation modes.",
+      "native_pairs": 15,
+      "warmup_note": "Only explicitly recorded pinned builtin metadata is prewarmed; no first-use claim.",
+      "fixture_prerequisites": {
+        "qualification_status": "generated by pinned CLI; measured parity verified only for entries in verified",
+        "scope_history_collision_risk": "Ten-component scope mutation has multiple writes and may exceed one second. Start phase alone does not prove stable backup collision shape; exact snapshot/count comparison remains mandatory. Preserve failed trials; a real callback barrier fixture requires explicit separate qualification.",
+        "seed_tag_policy": "Seed-only tag ignores missing environment packages; measured commands carry no issue suppression.",
+        "recovery_baseline": "Released delete of twenty tagged retained bitmap rows, recovered from local scope without remote import.",
+        "scope_baseline": "Ten-component import chain; five tail components tagged/exported, five heads new; deprecate preserves exported originals."
+      },
+      "clock_phase_control": {
+        "workloads": [
+          "scope-rename-mixed"
+        ],
+        "start_phase_ms": [
+          50,
+          100
+        ],
+        "outside_command_timing": true,
+        "method": "Wait before launch for the same wall-clock phase on both implementations; clocks and commands are unchanged.",
+        "reason": "Published bitmap backup filenames have second precision; strict retained snapshot comparisons must not depend on crossing a clock boundary."
+      },
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "delete-tagged-batch",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "delete-tagged-batch": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                333.262,
+                338.47,
+                344.234,
+                337.627,
+                320.655
+              ],
+              "node": [
+                493.417,
+                481.749,
+                503.089,
+                509.703,
+                487.919
+              ]
+            },
+            "median_ms": {
+              "rust": 337.627,
+              "node": 493.417
+            }
+          },
+          "ci": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                340.99,
+                352.524,
+                342.118,
+                337.304,
+                329.799
+              ],
+              "node": [
+                511.264,
+                515.795,
+                499.905,
+                498.048,
+                508.598
+              ]
+            },
+            "median_ms": {
+              "rust": 340.99,
+              "node": 508.598
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                353.759,
+                339.39,
+                348.342,
+                347.276,
+                343.29
+              ],
+              "node": [
+                508.017,
+                525.056,
+                496.874,
+                506.256,
+                523.389
+              ]
+            },
+            "median_ms": {
+              "rust": 347.276,
+              "node": 508.017
+            }
+          }
+        }
+      }
+    },
+    "recover-deleted-batch": {
+      "stage": "/var/tmp/workspace-mutation-qualified-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "6c78e3856995a61b4aa5552e66b50e6fe37fd61fa2ac099156431a28f7d5fd37",
+        "file_count": 1616
+      },
+      "correctness_valid": true,
+      "performance_valid": false,
+      "performance_qualification": {
+        "status": "awaiting closed whole-run external monitor qualification",
+        "predeclared_max_host_busy_percent": 80,
+        "required_sample_interval_seconds": 0.5,
+        "required_start_gate_seconds": 20,
+        "required_start_gate_max_busy_percent": 30
+      },
+      "rust_sha256": "3d7d0357c9cfb0a3029cfa020935f13625d6417dc079cd9849dbcee7afda13d8",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-scope-rename-mixed"
+        },
+        "home": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-home",
+        "globals": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-globals",
+        "remotes": {
+          "remove-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-remove-tagged-batch",
+          "delete-tagged-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-delete-tagged-batch",
+          "recover-deleted-batch": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-recover-deleted-batch",
+          "scope-rename-mixed": "/var/tmp/workspace-mutation-qualified-benchmark/baseline-remote-scope-rename-mixed"
+        },
+        "remote_path": "/var/tmp/workspace-mutation-qualified-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "aa044fc1d88566b09e560060c0a30e59dacb8e018462052c4b2ac96fdedf550f",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        }
+      },
+      "fixture_sha256": {
+        "remove-tagged-batch": "a580ef6f2064efa743a375a97ee9d322a796885119626559097faa42f2c24757",
+        "delete-tagged-batch": "7a9c685f1bfc58fa71b7d1985cbca890fb717968df7b148b1817b02074d62992",
+        "recover-deleted-batch": "09b6568ba1a33986add337be0f503b880b52e3f639f980bb81949e0a4009f76c",
+        "scope-rename-mixed": "b2cd66ace3b6fa59efde39f7d98345b21f01e19bc1afdb71ecbf9382717fbf51"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925"
+      },
+      "remote_fixture_sha256": {
+        "remove-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "delete-tagged-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "recover-deleted-batch": "0124b513102e52ae6e5f8e67e74a11d791dbec7acd054ad2ec60f4371c2baae0",
+        "scope-rename-mixed": "0faf7a9783ed3a35f7bd3b5c359e567f49def2715cff9265dc5ee21ea1ece38e"
+      },
+      "host_monitor": null,
+      "host_command_samples": "/var/tmp/workspace-mutation-qualified-benchmark/evidence/*.host.json",
+      "reproduce": [
+        "/usr/bin/python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "recover-deleted-batch",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/workspace-mutation-recover-deleted-batch-1.result.json"
+      ],
+      "helper_sha256": {
+        "bench-workspace-mutation.py": "4838fe9d09b5a86e67e20b80bb09f14decfdb16843c099b3dac005ea9bd96b60",
+        "prepare-workspace-mutation-benchmark.py": "0c100e6c2afe72ff6df7c453ddd942199ba454c98034095f8b8d3e5fc022ac82",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "2d0cfe777d6d5ff55c54018499be09cd1167c491ad099b721152fae83a699287"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "Every measured command must remain native in all three presentation modes.",
+      "native_pairs": 15,
+      "warmup_note": "Only explicitly recorded pinned builtin metadata is prewarmed; no first-use claim.",
+      "fixture_prerequisites": {
+        "qualification_status": "generated by pinned CLI; measured parity verified only for entries in verified",
+        "scope_history_collision_risk": "Ten-component scope mutation has multiple writes and may exceed one second. Start phase alone does not prove stable backup collision shape; exact snapshot/count comparison remains mandatory. Preserve failed trials; a real callback barrier fixture requires explicit separate qualification.",
+        "seed_tag_policy": "Seed-only tag ignores missing environment packages; measured commands carry no issue suppression.",
+        "recovery_baseline": "Released delete of twenty tagged retained bitmap rows, recovered from local scope without remote import.",
+        "scope_baseline": "Ten-component import chain; five tail components tagged/exported, five heads new; deprecate preserves exported originals."
+      },
+      "clock_phase_control": {
+        "workloads": [
+          "scope-rename-mixed"
+        ],
+        "start_phase_ms": [
+          50,
+          100
+        ],
+        "outside_command_timing": true,
+        "method": "Wait before launch for the same wall-clock phase on both implementations; clocks and commands are unchanged.",
+        "reason": "Published bitmap backup filenames have second precision; strict retained snapshot comparisons must not depend on crossing a clock boundary."
+      },
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "recover-deleted-batch",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "recover-deleted-batch": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                222.119,
+                224.863,
+                223.032,
+                225.25,
+                221.729
+              ],
+              "node": [
+                290.5,
+                290.759,
+                289.244,
+                297.274,
+                291.973
+              ]
+            },
+            "median_ms": {
+              "rust": 223.032,
+              "node": 290.759
+            }
+          },
+          "ci": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                221.756,
+                226.928,
+                231.762,
+                226.037,
+                217.621
+              ],
+              "node": [
+                287.232,
+                278.426,
+                290.214,
+                293.681,
+                287.543
+              ]
+            },
+            "median_ms": {
+              "rust": 226.037,
+              "node": 287.543
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                240.461,
+                239.913,
+                237.165,
+                238.673,
+                240.096
+              ],
+              "node": [
+                292.259,
+                302.316,
+                299.15,
+                301.397,
+                302.201
+              ]
+            },
+            "median_ms": {
+              "rust": 239.913,
+              "node": 301.397
+            }
+          }
+        }
+      }
+    }
+  },
+  "host_monitor": {
+    "scope-rename-mixed": {
+      "path": "/var/tmp/fork-file-remote-benchmark/complete-qualification/workspace-mutation-scope-rename-mixed-1.monitor.json",
+      "sha256": "8488e39390aa5f79db7ba3e5add1fb7f554ba998df3728662dec93342ddd51f5",
+      "host_busy_peak_percent": 12.119,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "scope-rename-mixed",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/workspace-mutation-scope-rename-mixed-1.result.json"
+      ]
+    },
+    "remove-tagged-batch": {
+      "path": "/var/tmp/fork-file-remote-benchmark/complete-qualification/workspace-mutation-remove-tagged-batch-1.monitor.json",
+      "sha256": "76699d4bf941ce0d604ff5dbfce912fa8b1f2203a229a7941740099f3e2a72cf",
+      "host_busy_peak_percent": 10.624,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "remove-tagged-batch",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/workspace-mutation-remove-tagged-batch-1.result.json"
+      ]
+    },
+    "delete-tagged-batch": {
+      "path": "/var/tmp/fork-file-remote-benchmark/complete-qualification/workspace-mutation-delete-tagged-batch-1.monitor.json",
+      "sha256": "fc54e793842bcdac58300cd64a35ed12345e3d50dda2d05593edb313da464a83",
+      "host_busy_peak_percent": 12.508,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "delete-tagged-batch",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/workspace-mutation-delete-tagged-batch-1.result.json"
+      ]
+    },
+    "recover-deleted-batch": {
+      "path": "/var/tmp/fork-file-remote-benchmark/complete-qualification/workspace-mutation-recover-deleted-batch-1.monitor.json",
+      "sha256": "6827fe40c091d0f1d0f4e3873a4c35321bc06c7343e045274432503fb927fb14",
+      "host_busy_peak_percent": 6.091,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-workspace-mutation.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/workspace-mutation-qualified-benchmark",
+        "--workload",
+        "recover-deleted-batch",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/workspace-mutation-recover-deleted-batch-1.result.json"
+      ]
+    }
+  },
+  "qualification_evidence": {
+    "path": "scripts/rust/benchmarks/fork-completion-qualification.json",
+    "sha256": "430e60a40478762338cc96d5b49e7acd1594c802c3116b922f454add9f4a9860"
+  }
+}

@@ -1918,20 +1918,20 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/fork.e2e.ts`
 
-- [ ] `e2e/harmony/fork.e2e.ts:22` bit fork command › fork a local component › should create a new component
-- [ ] `e2e/harmony/fork.e2e.ts:26` bit fork command › fork a local component › bit show should show the forked component
-- [ ] `e2e/harmony/fork.e2e.ts:31` bit fork command › fork a local component › .bitmap should not have internal config fields
-- [ ] `e2e/harmony/fork.e2e.ts:40` bit fork command › fork a component with --no-link › bit show should not show the forked component
-- [ ] `e2e/harmony/fork.e2e.ts:51` bit fork command › fork a remote component with no --target-id flag › should create a new component
-- [ ] `e2e/harmony/fork.e2e.ts:55` bit fork command › fork a remote component with no --target-id flag › should name the new component, same as the old one
-- [ ] `e2e/harmony/fork.e2e.ts:59` bit fork command › fork a remote component with no --target-id flag › bit show should show the forked component
-- [ ] `e2e/harmony/fork.e2e.ts:77` bit fork command › fork multiple components using pattern › validation errors › should throw an error when target-component-name is provided with pattern
-- [ ] `e2e/harmony/fork.e2e.ts:94` bit fork command › fork multiple components using pattern › fork with --scope flag › should fork all matching components
-- [ ] `e2e/harmony/fork.e2e.ts:98` bit fork command › fork multiple components using pattern › fork with --scope flag › should fork components with same names to the target scope
-- [ ] `e2e/harmony/fork.e2e.ts:105` bit fork command › fork multiple components using pattern › fork with --scope flag › bit show should show the forked components with reference to original
-- [ ] `e2e/harmony/fork.e2e.ts:124` bit fork command › fork multiple components using pattern › fork with comma-separated pattern for specific component IDs › should fork the specified components
-- [ ] `e2e/harmony/fork.e2e.ts:128` bit fork command › fork multiple components using pattern › fork with comma-separated pattern for specific component IDs › should fork components with same names to the target scope
-- [ ] `e2e/harmony/fork.e2e.ts:133` bit fork command › fork multiple components using pattern › fork with comma-separated pattern for specific component IDs › bit show should show the forked components with reference to original
+- [x] `e2e/harmony/fork.e2e.ts:22` bit fork command › fork a local component › should create a new component — `harmony::fork::local_fork_creates_a_new_component_with_sanitized_original_provenance`
+- [x] `e2e/harmony/fork.e2e.ts:26` bit fork command › fork a local component › bit show should show the forked component — `harmony::fork::local_fork_creates_a_new_component_with_sanitized_original_provenance`
+- [x] `e2e/harmony/fork.e2e.ts:31` bit fork command › fork a local component › .bitmap should not have internal config fields — `harmony::fork::local_fork_creates_a_new_component_with_sanitized_original_provenance`
+- [x] `e2e/harmony/fork.e2e.ts:40` bit fork command › fork a component with --no-link › bit show should not show the forked component — `harmony::fork::no_link_omits_only_original_provenance_not_the_new_package_link`
+- [x] `e2e/harmony/fork.e2e.ts:51` bit fork command › fork a remote component with no --target-id flag › should create a new component — `harmony::fork::remote::remote_fork_defaults_the_target_name_and_retains_scoped_original_provenance`
+- [x] `e2e/harmony/fork.e2e.ts:55` bit fork command › fork a remote component with no --target-id flag › should name the new component, same as the old one — `harmony::fork::remote::remote_fork_defaults_the_target_name_and_retains_scoped_original_provenance`
+- [x] `e2e/harmony/fork.e2e.ts:59` bit fork command › fork a remote component with no --target-id flag › bit show should show the forked component — `harmony::fork::remote::remote_fork_defaults_the_target_name_and_retains_scoped_original_provenance`
+- [x] `e2e/harmony/fork.e2e.ts:77` bit fork command › fork multiple components using pattern › validation errors › should throw an error when target-component-name is provided with pattern — `harmony::fork::remote::pattern_with_an_explicit_target_preserves_the_released_validation_error`
+- [x] `e2e/harmony/fork.e2e.ts:94` bit fork command › fork multiple components using pattern › fork with --scope flag › should fork all matching components — `harmony::fork::remote::remote_wildcard_forks_each_matching_component_into_the_requested_scope`
+- [x] `e2e/harmony/fork.e2e.ts:98` bit fork command › fork multiple components using pattern › fork with --scope flag › should fork components with same names to the target scope — `harmony::fork::remote::remote_wildcard_forks_each_matching_component_into_the_requested_scope`
+- [x] `e2e/harmony/fork.e2e.ts:105` bit fork command › fork multiple components using pattern › fork with --scope flag › bit show should show the forked components with reference to original — `harmony::fork::remote::remote_wildcard_forks_each_matching_component_into_the_requested_scope`
+- [x] `e2e/harmony/fork.e2e.ts:124` bit fork command › fork multiple components using pattern › fork with comma-separated pattern for specific component IDs › should fork the specified components — `harmony::fork::remote::comma_separated_remote_ids_fork_only_the_requested_components`
+- [x] `e2e/harmony/fork.e2e.ts:128` bit fork command › fork multiple components using pattern › fork with comma-separated pattern for specific component IDs › should fork components with same names to the target scope — `harmony::fork::remote::comma_separated_remote_ids_fork_only_the_requested_components`
+- [x] `e2e/harmony/fork.e2e.ts:133` bit fork command › fork multiple components using pattern › fork with comma-separated pattern for specific component IDs › bit show should show the forked components with reference to original — `harmony::fork::remote::comma_separated_remote_ids_fork_only_the_requested_components`
 
 ### `e2e/harmony/git-worktree.e2e.ts`
 
@@ -3385,8 +3385,8 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/scope-cmd.e2e.ts`
 
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:28` bit scope command › bit scope fork › should show the forked components from the scope
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:33` bit scope command › bit scope fork › bit show should show the original component in the fork section
+- [x] `e2e/harmony/scope-cmd.e2e.ts:28` bit scope command › bit scope fork › should show the forked components from the scope — `harmony::scope_fork::scope_fork_reports_every_copy_and_preserves_original_scope_and_name`
+- [x] `e2e/harmony/scope-cmd.e2e.ts:33` bit scope command › bit scope fork › bit show should show the original component in the fork section — `harmony::scope_fork::scope_fork_reports_every_copy_and_preserves_original_scope_and_name`
 - [x] `e2e/harmony/scope-cmd.e2e.ts:46` bit scope command › bit scope rename › should rename the scope — `harmony::scope_rename::scope_rename_changes_the_workspace_default_and_all_matching_new_components`
 - [x] `e2e/harmony/scope-cmd.e2e.ts:51` bit scope command › bit scope rename › should delete the old link to node_modules — `harmony::scope_rename::scope_rename_changes_the_workspace_default_and_all_matching_new_components`
 - [x] `e2e/harmony/scope-cmd.e2e.ts:55` bit scope command › bit scope rename › should create a new link to node_modules — `harmony::scope_rename::scope_rename_changes_the_workspace_default_and_all_matching_new_components`
@@ -3402,7 +3402,7 @@ row's fields, object path, header, logical identity, and remote index stay exact
 - [x] `e2e/harmony/scope-cmd.e2e.ts:134` bit scope command › bit scope rename-owner › should delete the old link to node_modules — `harmony::scope_rename::owner_rename_keeps_component_directories_across_multiple_scopes`
 - [x] `e2e/harmony/scope-cmd.e2e.ts:140` bit scope command › bit scope rename-owner › should create a new link to node_modules — `harmony::scope_rename::owner_rename_keeps_component_directories_across_multiple_scopes`
 - [x] `e2e/harmony/scope-cmd.e2e.ts:146` bit scope command › bit scope rename-owner › should compile the renamed components — `harmony::scope_rename::owner_rename_keeps_component_directories_across_multiple_scopes`
-- [ ] `e2e/harmony/scope-cmd.e2e.ts:167` bit scope command › bit scope fork when the paths of two components conflicting › should not throw an error about a component is nested in another component dir
+- [x] `e2e/harmony/scope-cmd.e2e.ts:167` bit scope command › bit scope fork when the paths of two components conflicting › should not throw an error about a component is nested in another component dir — `harmony::scope_fork::scope_fork_resolves_component_name_prefixes_without_nested_root_ownership`
 
 ### `e2e/harmony/scope-trust.e2e.ts`
 

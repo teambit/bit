@@ -1,4 +1,7 @@
 //! Keep callback source spools alive until identity publication and tooling finish.
+#[cfg(test)]
+mod tests;
+
 use crate::commands::status::capture::Capture;
 use serde_json::Value;
 use std::{collections::HashMap, fs, io, path::Path};
@@ -20,6 +23,23 @@ impl Retained {
         self.rows.clear();
         self.facts = super::selectors::Facts::default();
         self.started = false;
+    }
+    pub(super) fn advance_bitmap(&mut self, before: &Value, after: &Value) -> io::Result<()> {
+        let matches_path = |proof: &&Value| proof["path"] == before["path"];
+        if self.read_set
+            .iter()
+            .chain(self.controls.values())
+            .filter(matches_path)
+            .any(|proof| proof != before)
+        {
+            return Err(io::Error::other("fork bitmap preimage changed"));
+        }
+        for proof in self.read_set.iter_mut().chain(self.controls.values_mut()) {
+            if proof["path"] == before["path"] {
+                *proof = after.clone();
+            }
+        }
+        Ok(())
     }
     pub(super) fn start(&mut self) -> bool {
         let first = !self.started;

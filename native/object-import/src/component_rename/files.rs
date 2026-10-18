@@ -103,8 +103,9 @@ fn dependencies(plan: &mut Plan, facts: &Value) -> io::Result<()> {
         facts["sourcePackage"].as_str().ok_or_else(|| unsupported("rename source package"))?;
     let target =
         facts["targetPackage"].as_str().ok_or_else(|| unsupported("rename target package"))?;
+    let mut matcher = refactor::PackageMatcher::new(source, target);
     for change in &mut plan.files {
-        change.bytes = refactor::package(&change.bytes, source, target)?;
+        change.bytes = matcher.apply(&change.bytes)?;
     }
     for component in
         facts["components"].as_array().ok_or_else(|| unsupported("rename refactor inventory"))?
@@ -112,11 +113,15 @@ fn dependencies(plan: &mut Plan, facts: &Value) -> io::Result<()> {
         if component["identity"] == plan.identity.source {
             continue;
         }
-        dependent(plan, component, source, target)?;
+        dependent(plan, component, &mut matcher)?;
     }
     Ok(())
 }
-fn dependent(plan: &mut Plan, component: &Value, source: &str, target: &str) -> io::Result<()> {
+fn dependent(
+    plan: &mut Plan,
+    component: &Value,
+    matcher: &mut refactor::PackageMatcher,
+) -> io::Result<()> {
     let directory =
         component["rootDir"].as_str().ok_or_else(|| unsupported("rename dependent root"))?;
     let mut changes = Vec::new();
@@ -125,8 +130,7 @@ fn dependent(plan: &mut Plan, component: &Value, source: &str, target: &str) -> 
         component["files"].as_array().ok_or_else(|| unsupported("rename dependent files"))?
     {
         let relative = file.as_str().ok_or_else(|| unsupported("rename dependent path"))?;
-        let (change, replaced) =
-            dependent_file(plan, component, directory, relative, (source, target))?;
+        let (change, replaced) = dependent_file(plan, component, directory, relative, matcher)?;
         changed |= replaced;
         changes.push(change);
     }
@@ -140,7 +144,7 @@ fn dependent_file(
     component: &Value,
     directory: &str,
     relative: &str,
-    packages: (&str, &str),
+    matcher: &mut refactor::PackageMatcher,
 ) -> io::Result<(Change, bool)> {
     let path = plan.root.join(directory).join(relative);
     plan.observed.ancestors(
@@ -149,7 +153,7 @@ fn dependent_file(
     )?;
     let before = super::required(&mut plan.observed, &path)?;
     let loaded = overlaid(plan, component, relative, before.clone())?;
-    let bytes = refactor::package(&loaded, packages.0, packages.1)?;
+    let bytes = matcher.apply(&loaded)?;
     let changed = bytes != loaded;
     Ok((
         Change {
@@ -281,11 +285,12 @@ pub(super) fn target_load(
 ) -> io::Result<()> {
     let source_root = plan.root.join(&plan.identity.source_directory);
     let mut imports_changed = false;
+    let mut matcher = refactor::PackageMatcher::new(packages.0, packages.1);
     for index in 0..plan.files.len() {
         let Some(relative) = relative_path(&source_root, &plan.files[index].source) else {
             continue;
         };
-        let (bytes, changed) = target_bytes(plan, component, &relative, index, packages)?;
+        let (bytes, changed) = target_bytes(plan, component, &relative, index, &mut matcher)?;
         imports_changed |= changed;
         plan.files[index].bytes = bytes;
     }
@@ -316,6 +321,7 @@ pub(super) fn refactor_loaded(
     } else {
         plan.files.retain(|file| file.source.starts_with(&source_root));
     }
+    let mut matcher = refactor::PackageMatcher::new(packages.0, packages.1);
     for row in rows {
         if row["identity"] == plan.identity.source && !plan.options.deprecate
             || row["identity"] == plan.identity.target && !plan.identity.exported
@@ -323,7 +329,7 @@ pub(super) fn refactor_loaded(
             continue;
         }
         let component = loaded_dependency(row)?;
-        dependent(plan, &component, packages.0, packages.1)?;
+        dependent(plan, &component, &mut matcher)?;
     }
     Ok(())
 }
@@ -347,7 +353,7 @@ fn target_bytes(
     component: &Value,
     relative: &str,
     index: usize,
-    packages: (&str, &str),
+    matcher: &mut refactor::PackageMatcher,
 ) -> io::Result<(Vec<u8>, bool)> {
     let original = plan.files[index].before.clone();
     let mut bytes = overlaid(plan, component, relative, original)?;
@@ -360,7 +366,7 @@ fn target_bytes(
     }
     let mut changed = false;
     if plan.options.refactor {
-        let replaced = refactor::package(&bytes, packages.0, packages.1)?;
+        let replaced = matcher.apply(&bytes)?;
         changed = replaced != bytes;
         bytes = replaced;
     }

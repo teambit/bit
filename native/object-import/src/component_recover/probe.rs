@@ -1,5 +1,5 @@
 //! `ScopeComponentLoader`'s remote object cache: inspect a fetch without publishing it.
-mod objects;
+pub(crate) mod objects;
 use bit_client_transfer::{
     fetch::FetchOptions,
     http::Network,

@@ -3,7 +3,7 @@ use super::{invalid, unsupported};
 use regress::Regex;
 use std::io;
 
-pub(super) fn content(bytes: &[u8], source: &str, target: &str) -> io::Result<Vec<u8>> {
+pub(crate) fn content(bytes: &[u8], source: &str, target: &str) -> io::Result<Vec<u8>> {
     if crate::checkout::eol::binary(bytes) {
         return Ok(bytes.to_vec());
     }
@@ -17,7 +17,7 @@ pub(super) fn content(bytes: &[u8], source: &str, target: &str) -> io::Result<Ve
     }
     Ok(text.into_bytes())
 }
-pub(super) fn package(bytes: &[u8], source: &str, target: &str) -> io::Result<Vec<u8>> {
+pub(crate) fn package(bytes: &[u8], source: &str, target: &str) -> io::Result<Vec<u8>> {
     PackageMatcher::new(source, target).apply(bytes)
 }
 /// A phase-local matcher compiles only when its first nonbinary file is reached.
@@ -27,7 +27,7 @@ pub(super) struct PackageMatcher {
     regex: Option<Regex>,
 }
 impl PackageMatcher {
-    fn new(source: &str, target: &str) -> Self {
+    pub(super) fn new(source: &str, target: &str) -> Self {
         Self { source: source.into(), target: target.into(), regex: None }
     }
     pub(super) fn apply(&mut self, bytes: &[u8]) -> io::Result<Vec<u8>> {
@@ -109,7 +109,7 @@ fn camel(name: &str, pascal: bool) -> String {
     }
     result
 }
-pub(super) fn filename(name: &str, source: &str, target: &str) -> io::Result<String> {
+pub(crate) fn filename(name: &str, source: &str, target: &str) -> io::Result<String> {
     let path = name.replacen(source, target, 1);
     if std::path::Path::new(&path)
         .components()
@@ -119,4 +119,12 @@ pub(super) fn filename(name: &str, source: &str, target: &str) -> io::Result<Str
         return Err(unsupported("rename file path"));
     }
     Ok(path)
+}
+
+/// The global regex replacement used by replaceMultipleStrings, preserving binary files.
+pub(crate) fn replace_bytes(bytes: &[u8], source: &str, target: &str) -> io::Result<Vec<u8>> {
+    if crate::checkout::eol::binary(bytes) {
+        return Ok(bytes.to_vec());
+    }
+    Ok(replace(&String::from_utf8_lossy(bytes), source, target)?.into_bytes())
 }

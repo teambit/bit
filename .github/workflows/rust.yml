@@ -199,6 +199,8 @@ jobs:
             filters: commands::move_paths harmony::rename harmony::deprecation
           - group: mutation
             filters: commands::remove commands::delete commands::recover harmony::scope_rename
+          - group: fork
+            filters: harmony::fork harmony::scope_fork
     timeout-minutes: 60
     defaults:
       run:

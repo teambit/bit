@@ -119,6 +119,8 @@ pub(in crate::workspace::engine) struct List {
     patterns: Vec<String>,
     #[serde(default)]
     lane_only: bool,
+    #[serde(default)]
+    fork_order: bool,
     #[serde(flatten)]
     transport: Transport,
 }

@@ -169,9 +169,11 @@ fn default_diagnoses_match_node_offline_without_creating_a_fresh_index() {
     let oracle = helper.clone_workspace();
     let proxy = proxy::Proxy::new();
     let certificate = proxy::certificate();
+    let node_options = proxy.node_options();
     let environment = [
         ("BVM_https_proxy", OsStr::new(&proxy.url)),
         ("NODE_EXTRA_CA_CERTS", certificate.as_os_str()),
+        ("NODE_OPTIONS", node_options.as_os_str()),
     ];
     let before = fs::read(helper.scopes.local_path.join(".bit/index.json")).ok();
     for command in ["doctor --json", "doctor", r#"doctor "validate bit version" --json"#] {
@@ -185,10 +187,11 @@ fn default_diagnoses_match_node_offline_without_creating_a_fresh_index() {
             .unwrap()
             .len(),
         8,
-        "complete offline catalog diagnosis result: {result}; status: {:?}; stderr: {}; catalog requests: {}",
+        "complete offline catalog diagnosis result: {result}; status: {:?}; stderr: {}; catalog requests: {}; receipts: {}",
         actual.status.code(),
         actual.stderr,
         proxy.requests(),
+        proxy.diagnostics(),
     );
     assert_eq!(fs::read(helper.scopes.local_path.join(".bit/index.json")).ok(), before);
     assert_eq!(fs::read(oracle.join(".bit/index.json")).ok(), before);

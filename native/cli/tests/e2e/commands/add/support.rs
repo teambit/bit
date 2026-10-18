@@ -1,4 +1,5 @@
 //! Exact command bytes and filesystem state replayed at the same absolute workspace path.
+mod clock_phase;
 mod config_history;
 mod hardlinks;
 mod install_clocks;
@@ -50,6 +51,7 @@ fn compare_mode(
     let baseline_history = History::read(root);
     let config_history = config_history::Snapshot::read(root);
     let environment = command_environment(ci, false);
+    clock_phase::align(command);
     let started = chrono::Utc::now().timestamp_millis();
     let expected = Helper::cmd_in_with(root, command, &command_environment(ci, true));
     let ended = chrono::Utc::now().timestamp_millis();
@@ -62,6 +64,7 @@ fn compare_mode(
     helper.get_cloned_workspace(&baseline);
     hardlinks.restore(root);
     timestamps.restore(root);
+    clock_phase::align(command);
     let started = chrono::Utc::now().timestamp_millis();
     let actual = Helper::cmd_in_with(root, command, &environment);
     let ended = chrono::Utc::now().timestamp_millis();
@@ -72,9 +75,10 @@ fn compare_mode(
     assert_eq!(
         actual.status.code(),
         expected.status.code(),
-        "{command}: {} {}",
+        "{command}: {} {}\n{}",
         actual.stderr,
         expected.stderr,
+        actual.trace,
     );
     assert_eq!(stdout(&actual.stdout), stdout(&expected.stdout), "{command}");
     assert_eq!(atomic_error(&actual.stderr), atomic_error(&expected.stderr), "{command}");

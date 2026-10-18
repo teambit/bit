@@ -43,7 +43,9 @@ async function identityUseCached({ components }) {
     let component = identityLoadedComponents.get(row.identity);
     if (!component) {
       component = await hydrateStatusComponent(row);
-      await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
+      const trackedFork = await forkLoadTracked(component);
+      if (trackedFork) component = trackedFork;
+      else await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
       identityLoadedComponents.set(row.identity, component);
     }
     const consumer = component.state._consumer;

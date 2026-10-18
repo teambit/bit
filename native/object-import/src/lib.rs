@@ -3,6 +3,7 @@
 
 pub mod component_delete;
 pub mod component_deprecation;
+pub mod component_fork;
 pub mod component_move;
 pub mod component_recover;
 pub mod component_remove;

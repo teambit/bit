@@ -88,7 +88,7 @@ fn staged(row: &Value, scope: &str, name: &str, exported: bool) -> io::Result<()
     }
     Ok(())
 }
-pub(super) fn validate_name(name: &str) -> io::Result<()> {
+pub(crate) fn validate_name(name: &str) -> io::Result<()> {
     if !name.is_empty()
         && !name.contains("//")
         && name

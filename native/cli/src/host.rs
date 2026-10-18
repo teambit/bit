@@ -33,6 +33,8 @@ const SCRIPT: &str = concat!(
     include_str!("host/rename/config.js"),
     "\n",
     include_str!("host/rename/cache.js"),
+    "\n",
+    include_str!("host/fork.js"),
 );
 const EXIT_GRACE: Duration = Duration::from_secs(5);
 

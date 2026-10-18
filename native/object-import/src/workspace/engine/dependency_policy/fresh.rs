@@ -1,6 +1,7 @@
 pub(in crate::workspace::engine) use wire::{Complete, Detect};
 
 mod complete;
+mod component_id;
 mod packages;
 mod project;
 #[cfg(test)]

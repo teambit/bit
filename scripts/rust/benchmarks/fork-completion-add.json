@@ -1,0 +1,1651 @@
+{
+  "native_source": {
+    "sha256": "6c78e3856995a61b4aa5552e66b50e6fe37fd61fa2ac099156431a28f7d5fd37",
+    "file_count": 1616
+  },
+  "measured_at_utc": "2026-10-18T05:07:02.691419+00:00",
+  "correctness_valid": true,
+  "performance_valid": true,
+  "performance_qualification": "Raw workload reports remain unchanged; external closed monitors qualify eligible native rows",
+  "driver_sha256": "5916ee52fe6078d0cd70792312748c9cec268d90062a79089af83b3da47687be",
+  "workload_reports": {
+    "single": {
+      "stage": "/var/tmp/add-file-remote-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "6c78e3856995a61b4aa5552e66b50e6fe37fd61fa2ac099156431a28f7d5fd37",
+        "file_count": 1616
+      },
+      "rust_sha256": "3d7d0357c9cfb0a3029cfa020935f13625d6417dc079cd9849dbcee7afda13d8",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "single": "/var/tmp/add-file-remote-benchmark/baseline-single",
+          "batch": "/var/tmp/add-file-remote-benchmark/baseline-batch",
+          "root": "/var/tmp/add-file-remote-benchmark/baseline-root",
+          "readd": "/var/tmp/add-file-remote-benchmark/baseline-readd",
+          "ignored": "/var/tmp/add-file-remote-benchmark/baseline-ignored",
+          "link-failure": "/var/tmp/add-file-remote-benchmark/baseline-link-failure"
+        },
+        "home": "/var/tmp/add-file-remote-benchmark/baseline-home",
+        "globals": "/var/tmp/add-file-remote-benchmark/baseline-globals",
+        "remote": "/var/tmp/add-file-remote-benchmark/baseline-remote",
+        "remote_path": "/var/tmp/add-file-remote-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "5ed783d2fe295f7c331ad193155d077109487b4f483bb53b123ebc218f92d122",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        }
+      },
+      "fixture_sha256": {
+        "single": "0ca54f07f6ce50e1dbd43a6a31415e431ff9a314d180253ee682d7fcf1c04748",
+        "batch": "05ea569929d4b815e6ce82b0b2917599789849370875750f9552bf4ff800de2a",
+        "root": "bf0d7f07f6e347cf55ba9c864853191cf551ad9f06761010314597742f15eec1",
+        "readd": "91f09cd24769552e8b98edf72994fc4690061cac98b54f4200b37ae95fd36075",
+        "ignored": "3997923ef3798d8f529b78e797bf495184b5653abe9113747251fb2806763ce9",
+        "link-failure": "b1814d4ec52e43184ac18ce0151d788c3721a9ed7f45faf593f91e4ee6a7d3a4"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925",
+        "remote": "6af4f5c04f00aa075894973d792322d06da653a04e568336b5a2fdf8a5551eec"
+      },
+      "helper_sha256": {
+        "bench-add.py": "a9e913bfc8d71382a18354819e1bb5c0fffe676ee6ebc6b467b1d20cb4e2b670",
+        "prepare-add-benchmark.py": "fc5d46a0279f8972f0ca3ec2c5b42325b69d0f99a9925f6e975ef154ea43157d",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "2d0cfe777d6d5ff55c54018499be09cd1167c491ad099b721152fae83a699287"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "CI ignored and link-failure delegate before effects; no native speed claim for these rows.",
+      "native_pairs": 15,
+      "delegated_pairs": 0,
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "single",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "single",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "single": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                207.991,
+                218.268,
+                206.887,
+                209.968,
+                208.315
+              ],
+              "node": [
+                445.223,
+                455.909,
+                447.21,
+                437.335,
+                426.538
+              ]
+            },
+            "median_ms": {
+              "rust": 208.315,
+              "node": 445.223
+            }
+          },
+          "ci": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                209.63,
+                210.352,
+                211.86,
+                211.807,
+                214.792
+              ],
+              "node": [
+                442.784,
+                430.654,
+                448.017,
+                460.143,
+                424.383
+              ]
+            },
+            "median_ms": {
+              "rust": 211.807,
+              "node": 442.784
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                218.311,
+                231.512,
+                226.265,
+                228.293,
+                236.064
+              ],
+              "node": [
+                440.289,
+                451.543,
+                443.713,
+                445.577,
+                456.079
+              ]
+            },
+            "median_ms": {
+              "rust": 228.293,
+              "node": 445.577
+            }
+          }
+        }
+      }
+    },
+    "batch": {
+      "stage": "/var/tmp/add-file-remote-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "6c78e3856995a61b4aa5552e66b50e6fe37fd61fa2ac099156431a28f7d5fd37",
+        "file_count": 1616
+      },
+      "rust_sha256": "3d7d0357c9cfb0a3029cfa020935f13625d6417dc079cd9849dbcee7afda13d8",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "single": "/var/tmp/add-file-remote-benchmark/baseline-single",
+          "batch": "/var/tmp/add-file-remote-benchmark/baseline-batch",
+          "root": "/var/tmp/add-file-remote-benchmark/baseline-root",
+          "readd": "/var/tmp/add-file-remote-benchmark/baseline-readd",
+          "ignored": "/var/tmp/add-file-remote-benchmark/baseline-ignored",
+          "link-failure": "/var/tmp/add-file-remote-benchmark/baseline-link-failure"
+        },
+        "home": "/var/tmp/add-file-remote-benchmark/baseline-home",
+        "globals": "/var/tmp/add-file-remote-benchmark/baseline-globals",
+        "remote": "/var/tmp/add-file-remote-benchmark/baseline-remote",
+        "remote_path": "/var/tmp/add-file-remote-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "5ed783d2fe295f7c331ad193155d077109487b4f483bb53b123ebc218f92d122",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        }
+      },
+      "fixture_sha256": {
+        "single": "0ca54f07f6ce50e1dbd43a6a31415e431ff9a314d180253ee682d7fcf1c04748",
+        "batch": "05ea569929d4b815e6ce82b0b2917599789849370875750f9552bf4ff800de2a",
+        "root": "bf0d7f07f6e347cf55ba9c864853191cf551ad9f06761010314597742f15eec1",
+        "readd": "91f09cd24769552e8b98edf72994fc4690061cac98b54f4200b37ae95fd36075",
+        "ignored": "3997923ef3798d8f529b78e797bf495184b5653abe9113747251fb2806763ce9",
+        "link-failure": "b1814d4ec52e43184ac18ce0151d788c3721a9ed7f45faf593f91e4ee6a7d3a4"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925",
+        "remote": "6af4f5c04f00aa075894973d792322d06da653a04e568336b5a2fdf8a5551eec"
+      },
+      "helper_sha256": {
+        "bench-add.py": "a9e913bfc8d71382a18354819e1bb5c0fffe676ee6ebc6b467b1d20cb4e2b670",
+        "prepare-add-benchmark.py": "fc5d46a0279f8972f0ca3ec2c5b42325b69d0f99a9925f6e975ef154ea43157d",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "2d0cfe777d6d5ff55c54018499be09cd1167c491ad099b721152fae83a699287"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "CI ignored and link-failure delegate before effects; no native speed claim for these rows.",
+      "native_pairs": 15,
+      "delegated_pairs": 0,
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "batch",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "batch",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "batch": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                735.449,
+                734.136,
+                751.533,
+                741.516,
+                734.79
+              ],
+              "node": [
+                1612.55,
+                1648.165,
+                1585.775,
+                1656.024,
+                1547.93
+              ]
+            },
+            "median_ms": {
+              "rust": 735.449,
+              "node": 1612.55
+            }
+          },
+          "ci": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                738.387,
+                753.798,
+                773.809,
+                744.133,
+                740.458
+              ],
+              "node": [
+                1605.589,
+                1553.842,
+                1541.891,
+                1677.868,
+                1604.751
+              ]
+            },
+            "median_ms": {
+              "rust": 744.133,
+              "node": 1604.751
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                788.212,
+                752.147,
+                730.783,
+                738.288,
+                743.821
+              ],
+              "node": [
+                1663.458,
+                1648.852,
+                1588.516,
+                1593.31,
+                1626.479
+              ]
+            },
+            "median_ms": {
+              "rust": 743.821,
+              "node": 1626.479
+            }
+          }
+        }
+      }
+    },
+    "root": {
+      "stage": "/var/tmp/add-file-remote-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "6c78e3856995a61b4aa5552e66b50e6fe37fd61fa2ac099156431a28f7d5fd37",
+        "file_count": 1616
+      },
+      "rust_sha256": "3d7d0357c9cfb0a3029cfa020935f13625d6417dc079cd9849dbcee7afda13d8",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "single": "/var/tmp/add-file-remote-benchmark/baseline-single",
+          "batch": "/var/tmp/add-file-remote-benchmark/baseline-batch",
+          "root": "/var/tmp/add-file-remote-benchmark/baseline-root",
+          "readd": "/var/tmp/add-file-remote-benchmark/baseline-readd",
+          "ignored": "/var/tmp/add-file-remote-benchmark/baseline-ignored",
+          "link-failure": "/var/tmp/add-file-remote-benchmark/baseline-link-failure"
+        },
+        "home": "/var/tmp/add-file-remote-benchmark/baseline-home",
+        "globals": "/var/tmp/add-file-remote-benchmark/baseline-globals",
+        "remote": "/var/tmp/add-file-remote-benchmark/baseline-remote",
+        "remote_path": "/var/tmp/add-file-remote-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "5ed783d2fe295f7c331ad193155d077109487b4f483bb53b123ebc218f92d122",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        }
+      },
+      "fixture_sha256": {
+        "single": "0ca54f07f6ce50e1dbd43a6a31415e431ff9a314d180253ee682d7fcf1c04748",
+        "batch": "05ea569929d4b815e6ce82b0b2917599789849370875750f9552bf4ff800de2a",
+        "root": "bf0d7f07f6e347cf55ba9c864853191cf551ad9f06761010314597742f15eec1",
+        "readd": "91f09cd24769552e8b98edf72994fc4690061cac98b54f4200b37ae95fd36075",
+        "ignored": "3997923ef3798d8f529b78e797bf495184b5653abe9113747251fb2806763ce9",
+        "link-failure": "b1814d4ec52e43184ac18ce0151d788c3721a9ed7f45faf593f91e4ee6a7d3a4"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925",
+        "remote": "6af4f5c04f00aa075894973d792322d06da653a04e568336b5a2fdf8a5551eec"
+      },
+      "helper_sha256": {
+        "bench-add.py": "a9e913bfc8d71382a18354819e1bb5c0fffe676ee6ebc6b467b1d20cb4e2b670",
+        "prepare-add-benchmark.py": "fc5d46a0279f8972f0ca3ec2c5b42325b69d0f99a9925f6e975ef154ea43157d",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "2d0cfe777d6d5ff55c54018499be09cd1167c491ad099b721152fae83a699287"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "CI ignored and link-failure delegate before effects; no native speed claim for these rows.",
+      "native_pairs": 15,
+      "delegated_pairs": 0,
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "root",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "root",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "root": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                287.915,
+                292.578,
+                282.695,
+                292.311,
+                293.468
+              ],
+              "node": [
+                349.882,
+                339.004,
+                350.325,
+                356.209,
+                342.291
+              ]
+            },
+            "median_ms": {
+              "rust": 292.311,
+              "node": 349.882
+            }
+          },
+          "ci": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                287.948,
+                284.856,
+                293.666,
+                285.655,
+                297.11
+              ],
+              "node": [
+                340.697,
+                357.989,
+                354.168,
+                362.531,
+                348.666
+              ]
+            },
+            "median_ms": {
+              "rust": 287.948,
+              "node": 354.168
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                298.152,
+                308.593,
+                308.247,
+                306.62,
+                311.77
+              ],
+              "node": [
+                346.692,
+                369.126,
+                368.993,
+                355.582,
+                367.101
+              ]
+            },
+            "median_ms": {
+              "rust": 308.247,
+              "node": 367.101
+            }
+          }
+        }
+      }
+    },
+    "readd": {
+      "stage": "/var/tmp/add-file-remote-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "6c78e3856995a61b4aa5552e66b50e6fe37fd61fa2ac099156431a28f7d5fd37",
+        "file_count": 1616
+      },
+      "rust_sha256": "3d7d0357c9cfb0a3029cfa020935f13625d6417dc079cd9849dbcee7afda13d8",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "single": "/var/tmp/add-file-remote-benchmark/baseline-single",
+          "batch": "/var/tmp/add-file-remote-benchmark/baseline-batch",
+          "root": "/var/tmp/add-file-remote-benchmark/baseline-root",
+          "readd": "/var/tmp/add-file-remote-benchmark/baseline-readd",
+          "ignored": "/var/tmp/add-file-remote-benchmark/baseline-ignored",
+          "link-failure": "/var/tmp/add-file-remote-benchmark/baseline-link-failure"
+        },
+        "home": "/var/tmp/add-file-remote-benchmark/baseline-home",
+        "globals": "/var/tmp/add-file-remote-benchmark/baseline-globals",
+        "remote": "/var/tmp/add-file-remote-benchmark/baseline-remote",
+        "remote_path": "/var/tmp/add-file-remote-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "5ed783d2fe295f7c331ad193155d077109487b4f483bb53b123ebc218f92d122",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        }
+      },
+      "fixture_sha256": {
+        "single": "0ca54f07f6ce50e1dbd43a6a31415e431ff9a314d180253ee682d7fcf1c04748",
+        "batch": "05ea569929d4b815e6ce82b0b2917599789849370875750f9552bf4ff800de2a",
+        "root": "bf0d7f07f6e347cf55ba9c864853191cf551ad9f06761010314597742f15eec1",
+        "readd": "91f09cd24769552e8b98edf72994fc4690061cac98b54f4200b37ae95fd36075",
+        "ignored": "3997923ef3798d8f529b78e797bf495184b5653abe9113747251fb2806763ce9",
+        "link-failure": "b1814d4ec52e43184ac18ce0151d788c3721a9ed7f45faf593f91e4ee6a7d3a4"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925",
+        "remote": "6af4f5c04f00aa075894973d792322d06da653a04e568336b5a2fdf8a5551eec"
+      },
+      "helper_sha256": {
+        "bench-add.py": "a9e913bfc8d71382a18354819e1bb5c0fffe676ee6ebc6b467b1d20cb4e2b670",
+        "prepare-add-benchmark.py": "fc5d46a0279f8972f0ca3ec2c5b42325b69d0f99a9925f6e975ef154ea43157d",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "2d0cfe777d6d5ff55c54018499be09cd1167c491ad099b721152fae83a699287"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "CI ignored and link-failure delegate before effects; no native speed claim for these rows.",
+      "native_pairs": 15,
+      "delegated_pairs": 0,
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "readd",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "readd",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "readd": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                225.587,
+                227.527,
+                220.823,
+                223.294,
+                225.465
+              ],
+              "node": [
+                446.148,
+                435.096,
+                435.037,
+                443.927,
+                447.112
+              ]
+            },
+            "median_ms": {
+              "rust": 225.465,
+              "node": 443.927
+            }
+          },
+          "ci": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                220.694,
+                220.554,
+                225.448,
+                224.245,
+                218.952
+              ],
+              "node": [
+                443.88,
+                432.458,
+                447.524,
+                447.296,
+                443.654
+              ]
+            },
+            "median_ms": {
+              "rust": 220.694,
+              "node": 443.88
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                240.71,
+                234.467,
+                238.356,
+                230.662,
+                227.869
+              ],
+              "node": [
+                439.393,
+                442.534,
+                457.064,
+                452.471,
+                447.361
+              ]
+            },
+            "median_ms": {
+              "rust": 234.467,
+              "node": 447.361
+            }
+          }
+        }
+      }
+    },
+    "ignored": {
+      "stage": "/var/tmp/add-file-remote-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "6c78e3856995a61b4aa5552e66b50e6fe37fd61fa2ac099156431a28f7d5fd37",
+        "file_count": 1616
+      },
+      "rust_sha256": "3d7d0357c9cfb0a3029cfa020935f13625d6417dc079cd9849dbcee7afda13d8",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "single": "/var/tmp/add-file-remote-benchmark/baseline-single",
+          "batch": "/var/tmp/add-file-remote-benchmark/baseline-batch",
+          "root": "/var/tmp/add-file-remote-benchmark/baseline-root",
+          "readd": "/var/tmp/add-file-remote-benchmark/baseline-readd",
+          "ignored": "/var/tmp/add-file-remote-benchmark/baseline-ignored",
+          "link-failure": "/var/tmp/add-file-remote-benchmark/baseline-link-failure"
+        },
+        "home": "/var/tmp/add-file-remote-benchmark/baseline-home",
+        "globals": "/var/tmp/add-file-remote-benchmark/baseline-globals",
+        "remote": "/var/tmp/add-file-remote-benchmark/baseline-remote",
+        "remote_path": "/var/tmp/add-file-remote-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "5ed783d2fe295f7c331ad193155d077109487b4f483bb53b123ebc218f92d122",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        }
+      },
+      "fixture_sha256": {
+        "single": "0ca54f07f6ce50e1dbd43a6a31415e431ff9a314d180253ee682d7fcf1c04748",
+        "batch": "05ea569929d4b815e6ce82b0b2917599789849370875750f9552bf4ff800de2a",
+        "root": "bf0d7f07f6e347cf55ba9c864853191cf551ad9f06761010314597742f15eec1",
+        "readd": "91f09cd24769552e8b98edf72994fc4690061cac98b54f4200b37ae95fd36075",
+        "ignored": "3997923ef3798d8f529b78e797bf495184b5653abe9113747251fb2806763ce9",
+        "link-failure": "b1814d4ec52e43184ac18ce0151d788c3721a9ed7f45faf593f91e4ee6a7d3a4"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925",
+        "remote": "6af4f5c04f00aa075894973d792322d06da653a04e568336b5a2fdf8a5551eec"
+      },
+      "helper_sha256": {
+        "bench-add.py": "a9e913bfc8d71382a18354819e1bb5c0fffe676ee6ebc6b467b1d20cb4e2b670",
+        "prepare-add-benchmark.py": "fc5d46a0279f8972f0ca3ec2c5b42325b69d0f99a9925f6e975ef154ea43157d",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "2d0cfe777d6d5ff55c54018499be09cd1167c491ad099b721152fae83a699287"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "CI ignored and link-failure delegate before effects; no native speed claim for these rows.",
+      "native_pairs": 10,
+      "delegated_pairs": 5,
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "ignored",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "ignored",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "ignored",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "ignored",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "ignored",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "ignored",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": false
+        },
+        {
+          "workload": "ignored",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": false
+        },
+        {
+          "workload": "ignored",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": false
+        },
+        {
+          "workload": "ignored",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": false
+        },
+        {
+          "workload": "ignored",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": false
+        },
+        {
+          "workload": "ignored",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "ignored",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "ignored",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "ignored",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "ignored",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "ignored": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                2.044,
+                2.262,
+                2.437,
+                1.925,
+                1.986
+              ],
+              "node": [
+                227.567,
+                221.667,
+                226.528,
+                230.83,
+                222.779
+              ]
+            },
+            "median_ms": {
+              "rust": 2.044,
+              "node": 226.528
+            }
+          },
+          "ci": {
+            "native_ownership": false,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                226.675,
+                230.246,
+                219.964,
+                228.697,
+                222.142
+              ],
+              "node": [
+                222.541,
+                221.653,
+                229.454,
+                217.91,
+                224.182
+              ]
+            },
+            "median_ms": {
+              "rust": 226.675,
+              "node": 222.541
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                21.122,
+                21.297,
+                21.293,
+                21.15,
+                20.895
+              ],
+              "node": [
+                239.248,
+                233.484,
+                241.573,
+                233.46,
+                232.056
+              ]
+            },
+            "median_ms": {
+              "rust": 21.15,
+              "node": 233.484
+            }
+          }
+        }
+      }
+    },
+    "link-failure": {
+      "stage": "/var/tmp/add-file-remote-benchmark",
+      "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+      "native_source": {
+        "sha256": "6c78e3856995a61b4aa5552e66b50e6fe37fd61fa2ac099156431a28f7d5fd37",
+        "file_count": 1616
+      },
+      "rust_sha256": "3d7d0357c9cfb0a3029cfa020935f13625d6417dc079cd9849dbcee7afda13d8",
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+      "node_version": "v22.22.0",
+      "bit_version": "2.2.94",
+      "fixtures": {
+        "workloads": {
+          "single": "/var/tmp/add-file-remote-benchmark/baseline-single",
+          "batch": "/var/tmp/add-file-remote-benchmark/baseline-batch",
+          "root": "/var/tmp/add-file-remote-benchmark/baseline-root",
+          "readd": "/var/tmp/add-file-remote-benchmark/baseline-readd",
+          "ignored": "/var/tmp/add-file-remote-benchmark/baseline-ignored",
+          "link-failure": "/var/tmp/add-file-remote-benchmark/baseline-link-failure"
+        },
+        "home": "/var/tmp/add-file-remote-benchmark/baseline-home",
+        "globals": "/var/tmp/add-file-remote-benchmark/baseline-globals",
+        "remote": "/var/tmp/add-file-remote-benchmark/baseline-remote",
+        "remote_path": "/var/tmp/add-file-remote-benchmark/remote",
+        "builtin_facts_prewarming": {
+          "method": "actual native status --json in isolated disposable workspace/home/globals",
+          "command": [
+            "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+            "status",
+            "--json"
+          ],
+          "exit_status": 0,
+          "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+          "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+          "source": "pinned Node require('module').builtinModules",
+          "fact_count": 136,
+          "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+          "cache_mode": 420,
+          "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+          "prewarming_rust_sha256": "5ed783d2fe295f7c331ad193155d077109487b4f483bb53b123ebc218f92d122",
+          "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+        }
+      },
+      "fixture_sha256": {
+        "single": "0ca54f07f6ce50e1dbd43a6a31415e431ff9a314d180253ee682d7fcf1c04748",
+        "batch": "05ea569929d4b815e6ce82b0b2917599789849370875750f9552bf4ff800de2a",
+        "root": "bf0d7f07f6e347cf55ba9c864853191cf551ad9f06761010314597742f15eec1",
+        "readd": "91f09cd24769552e8b98edf72994fc4690061cac98b54f4200b37ae95fd36075",
+        "ignored": "3997923ef3798d8f529b78e797bf495184b5653abe9113747251fb2806763ce9",
+        "link-failure": "b1814d4ec52e43184ac18ce0151d788c3721a9ed7f45faf593f91e4ee6a7d3a4"
+      },
+      "common_fixture_sha256": {
+        "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925",
+        "remote": "6af4f5c04f00aa075894973d792322d06da653a04e568336b5a2fdf8a5551eec"
+      },
+      "helper_sha256": {
+        "bench-add.py": "a9e913bfc8d71382a18354819e1bb5c0fffe676ee6ebc6b467b1d20cb4e2b670",
+        "prepare-add-benchmark.py": "fc5d46a0279f8972f0ca3ec2c5b42325b69d0f99a9925f6e975ef154ea43157d",
+        "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+        "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+        "stash-benchmark-state.py": "2d0cfe777d6d5ff55c54018499be09cd1167c491ad099b721152fae83a699287"
+      },
+      "normalization": [
+        "native trace",
+        "completed-in durations",
+        "validated command-history ISO timestamps/PIDs",
+        "validated bitmap/config history timestamps with full snapshots/reasons",
+        "checksum-validated cache-index receipt timestamps"
+      ],
+      "excluded_implementation_state": [
+        "exact workspace-root debug.log",
+        "exact globals/logs subtree"
+      ],
+      "ownership_note": "CI ignored and link-failure delegate before effects; no native speed claim for these rows.",
+      "native_pairs": 10,
+      "delegated_pairs": 5,
+      "verified_pairs": 15,
+      "verified": [
+        {
+          "workload": "link-failure",
+          "mode": "timed",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "link-failure",
+          "mode": "timed",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "link-failure",
+          "mode": "timed",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "link-failure",
+          "mode": "timed",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "link-failure",
+          "mode": "timed",
+          "pair": 4,
+          "native_ownership": true
+        },
+        {
+          "workload": "link-failure",
+          "mode": "ci",
+          "pair": 0,
+          "native_ownership": false
+        },
+        {
+          "workload": "link-failure",
+          "mode": "ci",
+          "pair": 1,
+          "native_ownership": false
+        },
+        {
+          "workload": "link-failure",
+          "mode": "ci",
+          "pair": 2,
+          "native_ownership": false
+        },
+        {
+          "workload": "link-failure",
+          "mode": "ci",
+          "pair": 3,
+          "native_ownership": false
+        },
+        {
+          "workload": "link-failure",
+          "mode": "ci",
+          "pair": 4,
+          "native_ownership": false
+        },
+        {
+          "workload": "link-failure",
+          "mode": "tty",
+          "pair": 0,
+          "native_ownership": true
+        },
+        {
+          "workload": "link-failure",
+          "mode": "tty",
+          "pair": 1,
+          "native_ownership": true
+        },
+        {
+          "workload": "link-failure",
+          "mode": "tty",
+          "pair": 2,
+          "native_ownership": true
+        },
+        {
+          "workload": "link-failure",
+          "mode": "tty",
+          "pair": 3,
+          "native_ownership": true
+        },
+        {
+          "workload": "link-failure",
+          "mode": "tty",
+          "pair": 4,
+          "native_ownership": true
+        }
+      ],
+      "workloads": {
+        "link-failure": {
+          "timed": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                208.956,
+                215.982,
+                203.296,
+                205.591,
+                203.924
+              ],
+              "node": [
+                414.193,
+                404.489,
+                423.024,
+                411.001,
+                412.097
+              ]
+            },
+            "median_ms": {
+              "rust": 205.591,
+              "node": 412.097
+            }
+          },
+          "ci": {
+            "native_ownership": false,
+            "speed_claim_eligible": false,
+            "runs_ms": {
+              "rust": [
+                402.854,
+                401.989,
+                422.277,
+                399.737,
+                413.335
+              ],
+              "node": [
+                412.422,
+                405.506,
+                393.424,
+                408.43,
+                399.319
+              ]
+            },
+            "median_ms": {
+              "rust": 402.854,
+              "node": 405.506
+            }
+          },
+          "tty": {
+            "native_ownership": true,
+            "speed_claim_eligible": true,
+            "runs_ms": {
+              "rust": [
+                225.948,
+                212.446,
+                219.826,
+                221.277,
+                223.543
+              ],
+              "node": [
+                418.106,
+                429.737,
+                414.473,
+                415.732,
+                412.948
+              ]
+            },
+            "median_ms": {
+              "rust": 221.277,
+              "node": 415.732
+            }
+          }
+        }
+      }
+    }
+  },
+  "host_monitor": {
+    "single": {
+      "path": "/var/tmp/fork-file-remote-benchmark/complete-qualification/add-single-1.monitor.json",
+      "sha256": "7a800cbe74603b2e8383f4a9af97c35a6f71d0d5c3d030b6b67504295db28f69",
+      "host_busy_peak_percent": 5.729,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-add.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/add-file-remote-benchmark",
+        "--workload",
+        "single",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/add-single-1.result.json"
+      ]
+    },
+    "batch": {
+      "path": "/var/tmp/fork-file-remote-benchmark/complete-qualification/add-batch-1.monitor.json",
+      "sha256": "eae6089c0171fdfe7f6d2219f46039a891c097708b6d9d8cf2da44d7db24739d",
+      "host_busy_peak_percent": 12.002,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-add.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/add-file-remote-benchmark",
+        "--workload",
+        "batch",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/add-batch-1.result.json"
+      ]
+    },
+    "root": {
+      "path": "/var/tmp/fork-file-remote-benchmark/complete-qualification/add-root-1.monitor.json",
+      "sha256": "15260fac5f503b62b03f0fa0a48e4e4b8668a32a8c289c81bed1a85c9e110c0b",
+      "host_busy_peak_percent": 5.725,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-add.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/add-file-remote-benchmark",
+        "--workload",
+        "root",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/add-root-1.result.json"
+      ]
+    },
+    "readd": {
+      "path": "/var/tmp/fork-file-remote-benchmark/complete-qualification/add-readd-1.monitor.json",
+      "sha256": "ddc0383219149ddbdeaa0f709c17a08e8991e02fff780b27cdecb1787899234a",
+      "host_busy_peak_percent": 8.152,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-add.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/add-file-remote-benchmark",
+        "--workload",
+        "readd",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/add-readd-1.result.json"
+      ]
+    },
+    "ignored": {
+      "path": "/var/tmp/fork-file-remote-benchmark/complete-qualification/add-ignored-1.monitor.json",
+      "sha256": "1dc1cc288b84c49d9b24257417d56b91b9bf29bbbe22d2298a0300e147bd6f0d",
+      "host_busy_peak_percent": 11.738,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-add.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/add-file-remote-benchmark",
+        "--workload",
+        "ignored",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/add-ignored-1.result.json"
+      ]
+    },
+    "link-failure": {
+      "path": "/var/tmp/fork-file-remote-benchmark/complete-qualification/add-link-failure-1.monitor.json",
+      "sha256": "3f5274019ed12bffb31985700f6229fe43421bc5b76432a1d379217b1ab10ee6",
+      "host_busy_peak_percent": 9.988,
+      "performance_valid": true,
+      "reproduce_argv": [
+        "python3",
+        "scripts/rust/bench-add.py",
+        "--rust",
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "--node-binary",
+        "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+        "--node-cli",
+        "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+        "--runs",
+        "5",
+        "--stage",
+        "/var/tmp/add-file-remote-benchmark",
+        "--workload",
+        "link-failure",
+        "--output",
+        "/var/tmp/fork-file-remote-benchmark/complete-qualification/add-link-failure-1.result.json"
+      ]
+    }
+  },
+  "qualification_evidence": {
+    "path": "scripts/rust/benchmarks/fork-completion-qualification.json",
+    "sha256": "430e60a40478762338cc96d5b49e7acd1594c802c3116b922f454add9f4a9860"
+  }
+}

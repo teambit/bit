@@ -245,7 +245,7 @@ fn backup(plan: &Plan, file_id: &str) -> io::Result<()> {
     writeln!(metadata, "{file_id} rename")
 }
 
-pub(super) fn target_key(
+pub(crate) fn target_key(
     rows: &mut serde_json::Map<String, Value>,
     name: &str,
     target: &str,

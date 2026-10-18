@@ -101,6 +101,11 @@ impl Installer {
         self.run_options(root, options)
     }
 
+    /// Fork propagates the same native installation result without rename's graceful catch.
+    pub(in crate::commands) fn install_fork(self, root: &Path) -> io::Result<()> {
+        self.install_scope_rename(root)
+    }
+
     /// It sets `PATH` for the package manager, so it runs before the engine
     /// starts its threads.
     pub fn start(root: &Path, argv: &[&str]) -> io::Result<Self> {

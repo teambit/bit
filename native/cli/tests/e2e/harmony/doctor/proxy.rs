@@ -1,6 +1,7 @@
 //! An offline CONNECT proxy serving the published BVM request over real HTTPS.
 use crate::helper::setup;
 use std::{
+    ffi::OsString,
     fs,
     io::{BufRead, BufReader},
     path::PathBuf,
@@ -37,6 +38,26 @@ impl Proxy {
     }
     pub fn completed(&self) -> usize {
         fs::read(self.journal.path().join("requests.finished")).unwrap().len()
+    }
+    pub fn node_options(&self) -> OsString {
+        let preload = self.journal.path().join("bvm-diagnostic.cjs");
+        fs::write(&preload, include_str!("bvm-diagnostic.cjs")).unwrap();
+        let mut options = std::env::var_os("NODE_OPTIONS").unwrap_or_default();
+        options.push(" --require ");
+        options.push(serde_json::to_string(&preload.to_string_lossy().replace('\\', "/")).unwrap());
+        options
+    }
+    pub fn diagnostics(&self) -> String {
+        ["bvm.jsonl", "requests.transport"]
+            .into_iter()
+            .map(|name| {
+                format!(
+                    "{name}:\n{}",
+                    fs::read_to_string(self.journal.path().join(name)).unwrap_or_default(),
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 }
 impl Drop for Proxy {

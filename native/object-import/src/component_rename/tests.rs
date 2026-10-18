@@ -72,3 +72,11 @@ fn ordered_package_matchers_compile_only_after_binary_files_and_fail_in_pair_ord
     ]);
     assert_eq!(chain.apply(b"'@old/pkg'").unwrap(), b"'@new/pkg'");
 }
+
+#[test]
+fn reusable_empty_package_matcher_preserves_lossy_text_and_binary_behavior() {
+    let mut matcher = refactor::PackageMatcher::new("", "");
+    assert_eq!(matcher.apply(b"bad\xff'quoted/sub").unwrap(), "bad\u{fffd}'quoted/sub".as_bytes());
+    assert_eq!(matcher.apply(b"binary\0\xff'quoted").unwrap(), b"binary\0\xff'quoted");
+    assert_eq!(matcher.apply(b"second/path").unwrap(), b"second/path");
+}

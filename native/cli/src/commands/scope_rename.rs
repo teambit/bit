@@ -8,6 +8,15 @@ use bit_object_import::component_scope_rename::Selection;
 use std::{env, ffi::OsString, io};
 pub const COMMAND: Command = Command { name: "scope", aliases: &[], run };
 fn run(args: &[OsString]) -> io::Result<Outcome> {
+    if args
+        .get(1)
+        .is_some_and(|arg| arg == "fork")
+    {
+        return super::fork::run_scope(args);
+    }
+    run_rename(args)
+}
+fn run_rename(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("scope rename arguments are not UTF-8".into()));
     };

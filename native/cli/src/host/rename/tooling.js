@@ -1,5 +1,8 @@
 /** Only registered on-add/compiler tooling; native Rust owns rename state and filesystem paths. */
-async function renameTooling({ action, ids, message, progress = true, defaultScoped = true }) {
+async function renameTooling({ action, ids, components, message, progress = true, defaultScoped = true }) {
+  // Scope rename captures and validates the added class before this frame. Seed
+  // it at the same boundary, before changing loader progress or running on-add.
+  if (action === 'onAdd' && components) await identityUseCached({ components });
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
   if (action === 'installFailure') {

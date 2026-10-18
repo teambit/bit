@@ -1,8 +1,7 @@
 //! Remaining workspace diff selection and presentation parity.
-mod sibling_order;
-
-mod http;
+pub(crate) mod http;
 mod remote_fixture;
+mod sibling_order;
 
 use remote_fixture::publish_remote_fixture;
 

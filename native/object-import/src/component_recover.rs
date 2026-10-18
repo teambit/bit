@@ -1,10 +1,11 @@
 //! Restore a locally soft-deleted component from verified scope Sources and its main or lane head.
 
+pub(crate) mod probe;
+
 pub use batch::{Action, Batch};
 pub use probe::probe_remote;
 
 mod batch;
-mod probe;
 
 use crate::{
     checkout::repository,

@@ -139,6 +139,17 @@ fn workspace() -> (tempfile::TempDir, Workspace) {
 }
 
 #[test]
+fn component_directory_serialization_uses_platform_separators() {
+    let (directory, workspace) = workspace();
+    let component = &workspace.components[0];
+    let expected = directory
+        .path()
+        .join("comps")
+        .join("button");
+    assert_eq!(component.dir.as_os_str(), expected.as_os_str());
+}
+
+#[test]
 fn loads_bitmap_entries() {
     let (dir, workspace) = workspace();
     assert_eq!(workspace.scope_path, dir.path().join(".bit"));

@@ -7,7 +7,7 @@ use std::{
     time::Duration,
 };
 
-pub(super) struct Server(Child);
+pub(crate) struct Server(Child);
 
 impl Drop for Server {
     fn drop(&mut self) {
@@ -16,7 +16,7 @@ impl Drop for Server {
     }
 }
 
-pub(super) fn start(helper: &Helper) -> Server {
+pub(crate) fn start(helper: &Helper) -> Server {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();
     drop(listener);
