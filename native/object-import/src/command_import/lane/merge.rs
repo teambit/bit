@@ -215,7 +215,10 @@ fn index_entry(index: &mut Value, lane: &Record) -> io::Result<bool> {
     Ok(true)
 }
 
-pub(super) fn remote_refs(plan: &mut PreparedImport, lane: &Record) -> io::Result<()> {
+pub(in crate::command_import) fn remote_refs(
+    plan: &mut PreparedImport,
+    lane: &Record,
+) -> io::Result<()> {
     let scope = lane.value["scope"].as_str().ok_or_else(|| invalid("lane remote scope"))?;
     let name = lane.value["name"].as_str().ok_or_else(|| invalid("lane remote name"))?;
     let file = plan.environment.local_directory
@@ -252,9 +255,11 @@ fn stage_changed(
     if incoming.value["schema"].as_str().unwrap_or("0.0.0") == "0.0.0" {
         merged.value["schema"] = json!("0.0.0");
     }
+    let scope = incoming.value["scope"].as_str().ok_or_else(|| invalid("incoming lane scope"))?;
+    let wire = plan.lane_wire_object(scope, &incoming.hash)?;
     plan.overlay.objects.insert(
         merged.hash.clone(),
-        publish::object(&merged.hash, "Lane", merged.value.clone())?,
+        publish::reusing(&merged.hash, "Lane", merged.value.clone(), wire)?,
     );
     index(plan, merged)?;
     if !same_entries(&merged.value, &incoming.value)? {

@@ -1,5 +1,9 @@
 //! `AutoDetectDeps`: the dependency data of a component's files before overrides.
 
+mod core;
+#[cfg(test)]
+mod tests;
+
 use super::{
     Subject, Workspace,
     data::{Detected, LegacyDependency, MissingFile, Untracked, UntrackedFile},
@@ -23,7 +27,7 @@ struct FileTree {
     missing: Vec<String>,
     missing_files: Vec<String>,
     untracked: Vec<String>,
-    core_aspects: Vec<String>,
+    core_aspects: Vec<core::Import>,
 }
 
 /// Detect the dependencies of every file of `subject`.
@@ -68,16 +72,19 @@ fn file_tree(
             }
             other => other,
         };
-        classify(&mut tree, resolved);
+        if let Resolved::CoreAspect(id) = resolved {
+            tree.core_aspects.push(core::import(resolver, component, &specifier, lookup, id)?);
+        } else {
+            classify(&mut tree, resolved);
+        }
     }
     Ok(tree)
 }
 
 fn classify(tree: &mut FileTree, resolved: Resolved) {
     match resolved {
-        Resolved::Ignored | Resolved::Internal => {}
+        Resolved::Ignored | Resolved::Internal | Resolved::CoreAspect(_) => {}
         Resolved::OtherComponent(id) => tree.relative.push(id),
-        Resolved::CoreAspect(id) => tree.core_aspects.push(id),
         Resolved::Package { name, version } => {
             tree.packages.insert(name, version);
         }
@@ -109,11 +116,7 @@ fn populate(
     mut tree: FileTree,
     is_dev: bool,
 ) {
-    for aspect in tree.core_aspects.drain(..) {
-        if !detected.core_aspects.contains(&aspect) {
-            detected.core_aspects.push(aspect);
-        }
-    }
+    detected.core_aspects.extend(core::ordered(&mut tree.core_aspects));
     let model_packages = subject.model.all_packages();
     tree.missing.retain(|name| match model_packages.get(name) {
         Some(version) => {

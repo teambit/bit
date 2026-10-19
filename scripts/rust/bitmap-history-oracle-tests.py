@@ -226,5 +226,47 @@ class BitmapHistoryOracleTests(unittest.TestCase):
             self.validate()
 
 
+    def two_transitions(self):
+        self.preimages = self.preimages[:2]
+        self.oracle['transitions'] = self.oracle['transitions'][:2]
+        self.write([0, 0])
+        self.oracle['raw_history'].update({
+            'metadata_base64': encoded(self.metadata.read_bytes()),
+            'backups': {path.name: {'bytes_base64': encoded(path.read_bytes()),
+                                   'mode': path.stat().st_mode & 0o7777}
+                        for path in self.history.iterdir()}})
+
+    def test_explicit_two_write_workload_validates_both_collided_and_separate_backups(self):
+        self.two_transitions()
+        first, _ = self.validate(expected_transitions=2)
+        self.write([0, 1])
+        second, raw = self.validate(expected_transitions=2)
+        self.assertEqual(first, second)
+        self.assertEqual(len(raw['groups']), 2)
+
+    def test_two_write_contract_rejects_a_fifteen_write_transcript(self):
+        with self.assertRaisesRegex(ValueError, 'exactly 2 ordered transitions'):
+            self.validate(expected_transitions=2)
+
+
+    def test_explicit_single_write_contract_validates_the_only_surviving_backup(self):
+        self.preimages = self.preimages[:1]
+        self.oracle['transitions'] = self.oracle['transitions'][:1]
+        self.write([0])
+        self.oracle['raw_history'].update({
+            'metadata_base64': encoded(self.metadata.read_bytes()),
+            'backups': {path.name: {'bytes_base64': encoded(path.read_bytes()),
+                                   'mode': path.stat().st_mode & 0o7777}
+                        for path in self.history.iterdir()}})
+        logical, raw = self.validate(expected_transitions=1)
+        self.assertEqual(len(logical['transitions']), 1)
+        self.assertEqual(len(raw['groups']), 1)
+
+    def test_single_write_contract_rejects_a_two_write_transcript(self):
+        self.two_transitions()
+        with self.assertRaisesRegex(ValueError, 'exactly 1 ordered transitions'):
+            self.validate(expected_transitions=1)
+
+
 if __name__ == '__main__':
     unittest.main()

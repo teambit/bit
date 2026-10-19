@@ -1,6 +1,9 @@
 //! Native `bit install` (`docs/rust/native-install.md`): the `bit-install`
 //! crate runs the command; the JavaScript host serves what aspects implement.
 
+mod request;
+
+use self::request::lane_installation;
 use crate::{
     commands::Command,
     discovery::{self, NodeCli, Target},
@@ -13,7 +16,6 @@ use async_trait::async_trait;
 use bit_install::{
     AfterInstall, AfterInstallResult, DetectRequest, HostInfo, Outcome as Installed,
 };
-use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 use std::{
     env,
@@ -165,7 +167,10 @@ impl Terminal {
         let tty = io::stdout().is_terminal();
         Self {
             color: color_enabled(tty),
-            tty,
+            // Ora's `is-interactive` excludes dumb terminals and any defined CI variable.
+            tty: tty
+                && env::var_os("TERM").is_none_or(|term| term != "dumb")
+                && env::var_os("CI").is_none(),
             loader: !env::var("BIT_DISABLE_SPINNER").is_ok_and(|value| yn(&value)),
             non_interactive: argv
                 .iter()
@@ -211,26 +216,94 @@ fn yn(value: &str) -> bool {
 
 pub(in crate::commands) struct JsHost(Arc<Host>, bool);
 
-impl JsHost {
-    pub(in crate::commands) fn new(host: Arc<Host>, quiet: bool) -> Self {
-        Self(host, quiet)
-    }
-
-    async fn call<Response: DeserializeOwned>(
-        &self,
-        method: &'static str,
-        params: Value,
-    ) -> io::Result<Response> {
-        let host = Arc::clone(&self.0);
-        let value = tokio::task::spawn_blocking(move || host.call(method, &params))
-            .await
-            .map_err(io::Error::other)??;
-        serde_json::from_value(value).map_err(io::Error::other)
-    }
-}
-
 #[async_trait]
 impl bit_install::Host for JsHost {
+    async fn installation_components(
+        &self,
+        phase: &str,
+        ids: &[String],
+    ) -> io::Result<Option<Value>> {
+        if !lane_installation() {
+            return Ok(None);
+        }
+        let result =
+            self.call::<Value>("switchInstallationComponents", json!({"phase":phase,"ids":ids}))
+                .await;
+        let output = self.0.take_stdout();
+        if !self.1 {
+            let mut stdout = io::stdout().lock();
+            stdout.write_all(output.as_bytes())?;
+            stdout.flush()?;
+        }
+        result.map(Some)
+    }
+
+    async fn component_links_changed(&self, ids: &[String]) -> io::Result<()> {
+        request::links_changed(self, ids).await
+    }
+
+    async fn initial_installation_components(&self, aspect_ids: &[String]) -> io::Result<bool> {
+        let arguments = std::env::args()
+            .skip(1)
+            .take(2)
+            .collect::<Vec<_>>();
+        if arguments
+            .first()
+            .is_none_or(|command| command != "lane")
+            || arguments
+                .get(1)
+                .is_none_or(|command| !matches!(command.as_str(), "checkout" | "revert"))
+        {
+            if lane_installation() {
+                self.prepare_install(aspect_ids).await?;
+            }
+            return Ok(false);
+        }
+        let receipt =
+            self.call::<Value>("historyInstallationComponents", json!({"aspectIds":aspect_ids}))
+                .await;
+        let output = self.0.take_stdout();
+        if !self.1 {
+            let mut stdout = io::stdout().lock();
+            stdout.write_all(output.as_bytes())?;
+            stdout.flush()?;
+        }
+        match &receipt?["error"] {
+            Value::Null => Ok(true),
+            Value::String(message) => Err(io::Error::other(message.clone())),
+            _ => Err(io::Error::other("history installation class receipt")),
+        }
+    }
+
+    async fn install_subscribers(&self, request: &Value) -> io::Result<Option<Value>> {
+        if !lane_installation() {
+            return Ok(None);
+        }
+        let result = self.call::<Value>("switchInstallSubscribers", request.clone()).await;
+        let output = self.0.take_stdout();
+        if !self.1 {
+            let mut stdout = io::stdout().lock();
+            stdout.write_all(output.as_bytes())?;
+            stdout.flush()?;
+        }
+        let result = result?;
+        Ok((!result.is_null()).then_some(result))
+    }
+
+    async fn configured_aspect_classes(&self) -> io::Result<()> {
+        if lane_installation() {
+            let result = self.call::<Value>("switchConfiguredAspectClasses", json!({})).await;
+            let output = self.0.take_stdout();
+            if !self.1 {
+                let mut stdout = io::stdout().lock();
+                stdout.write_all(output.as_bytes())?;
+                stdout.flush()?;
+            }
+            result?;
+        }
+        Ok(())
+    }
+
     async fn env_policy(&self, env_id: &str) -> io::Result<Option<Value>> {
         self.call("envPolicy", json!({ "envId": env_id })).await
     }

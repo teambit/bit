@@ -160,7 +160,9 @@ pub(super) fn normalized(merged: &Value) -> io::Result<Value> {
         return Ok(output);
     };
     for field in ["dependencies", "devDependencies", "peerDependencies"] {
-        let Some(value) = policy.get(field).filter(|value| value.is_array()) else { continue };
+        let Some(value) = policy.get(field).filter(|value| value.is_array()) else {
+            continue;
+        };
         let forced = selected_policy(value, true)?;
         let forced = forced.as_object().unwrap().clone();
         if forced.is_empty() {

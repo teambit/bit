@@ -252,3 +252,31 @@ fn core_aspects_are_unique_per_source_file_but_repeated_across_files() {
     assert_eq!(output["detected"]["allDependencies"]["dependencies"], json!([]));
     assert_eq!(output["detected"]["allPackagesDependencies"]["packageDependencies"], json!({}));
 }
+
+#[test]
+fn core_aspects_keep_package_groups_before_component_groups_per_origin() {
+    let fixture = Fixture::new();
+    fixture.write(
+        "comp/index.js",
+        "require('@teambit/a-component'); require('@teambit/z-package');",
+    );
+    fixture.write(
+        "node_modules/@teambit/a-component/package.json",
+        r#"{"name":"@teambit/a-component","version":"1.0.0","main":"index.js","componentId":{"scope":"teambit.example","name":"component","version":"1.0.0"}}"#,
+    );
+    fixture.write("node_modules/@teambit/a-component/index.js", "module.exports=1;");
+    fixture.write(
+        "node_modules/@teambit/z-package/package.json",
+        r#"{"name":"@teambit/z-package","version":"1.0.0","main":"index.js"}"#,
+    );
+    fixture.write("node_modules/@teambit/z-package/index.js", "module.exports=2;");
+    let mut request = fixture.request(&["index.js"]);
+    request["detection"]["corePackages"] = json!(["@teambit/a-component", "@teambit/z-package"]);
+    request["detection"]["coreAspectIds"] =
+        json!(["teambit.example/component", "teambit.example/package"]);
+    let output = Fixture::run(request).unwrap();
+    assert_eq!(
+        output["detected"]["coreAspects"],
+        json!(["teambit.example/package", "teambit.example/component"]),
+    );
+}

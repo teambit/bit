@@ -170,7 +170,9 @@ fn default_diagnoses_match_node_offline_without_creating_a_fresh_index() {
     let proxy = proxy::Proxy::new();
     let certificate = proxy::certificate();
     let node_options = proxy.node_options();
+    // The proxy serves stable releases independently of the user's persisted BVM channel.
     let environment = [
+        ("BVM_RELEASE_TYPE", OsStr::new("stable")),
         ("BVM_https_proxy", OsStr::new(&proxy.url)),
         ("NODE_EXTRA_CA_CERTS", certificate.as_os_str()),
         ("NODE_OPTIONS", node_options.as_os_str()),

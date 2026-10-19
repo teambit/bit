@@ -15,9 +15,22 @@ use serde_json::{Value, json};
 use std::{env, ffi::OsString, io};
 
 pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
+    let Some(options) = super::super::switch::import_options(&argv[2..]) else {
+        return Ok(Outcome::Declined("outside the native lane import grammar".into()));
+    };
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
+    if options.force_ours && options.force_theirs {
+        if root_callbacks(&root)? {
+            return Ok(Outcome::Declined(
+                "lane import validation requires configured provider startup".into(),
+            ));
+        }
+        return workspace_command::execute_then(&root, args, "import", |_| {
+            Err(io::Error::other("please use either --force-ours or --force-theirs, not both"))
+        });
+    }
     let (current, _) = match list::read_current(&root) {
         Ok(current) => current,
         Err(error) => return Ok(Outcome::Declined(format!("lane import: {error}"))),
@@ -25,24 +38,38 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     if current["name"] == "main" {
         return super::super::switch::lane_import(args, argv);
     }
-    let Some(lane) = scoped_lane(argv) else {
-        return Ok(Outcome::Declined("outside the native active lane import grammar".into()));
-    };
+    if root_callbacks(&root)? {
+        return Ok(Outcome::Declined(
+            "active lane import requires configured provider startup".into(),
+        ));
+    }
+    active(&root, args, &options.lane, &current)
+}
+
+fn active(
+    root: &std::path::Path,
+    args: &[OsString],
+    lane: &str,
+    current: &Value,
+) -> io::Result<Outcome> {
     let current_id = format!(
         "{}/{}",
         current["scope"].as_str().unwrap_or_default(),
         current["name"].as_str().unwrap_or_default(),
     );
     let mut engine = Engine::new()?;
-    let prepared = match super::super::import::prepare_lane_import(&mut engine, &root, lane) {
+    let prepared = match super::super::import::prepare_lane_import(&mut engine, root, lane) {
         Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("lane import: {error}"))),
+    };
+    let Some(lane) = prepared["laneImportId"].as_str() else {
+        return Ok(Outcome::Declined("lane import resolved identity receipt".into()));
     };
     let Some(rows) = validate(&prepared, lane) else {
         return Ok(Outcome::Declined("lane import progress receipt".into()));
     };
     let report = report(lane, &current_id, Chalk::detect(args));
-    workspace_command::execute_then(&root, args, "import", |output| {
+    workspace_command::execute_then(root, args, "import", |output| {
         apply(&mut engine, &prepared)?;
         for row in &rows {
             progress(output, row);
@@ -51,23 +78,19 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     })
 }
 
-fn scoped_lane<'a>(argv: &[&'a str]) -> Option<&'a str> {
-    let ["lane", "import", lane, flags @ ..] = argv else { return None };
-    let (scope, name) = lane.split_once('/')?;
-    if scope.is_empty()
-        || name.is_empty()
-        || name.contains('/')
-        || !scope
-            .bytes()
-            .chain(name.bytes())
-            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_'))
-        || flags
-            .iter()
-            .any(|flag| !matches!(*flag, "-x" | "--skip-dependency-installation"))
-    {
-        return None;
-    }
-    Some(lane)
+fn root_callbacks(root: &std::path::Path) -> io::Result<bool> {
+    let config = bit_install::config::WorkspaceConfig::load(root)?;
+    let core: Vec<String> = serde_json::from_str(include_str!(
+        "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
+    ))?;
+    Ok(config.aspects
+        .keys()
+        .any(|id| {
+            let id = bit_install::config::aspect_id_without_version(id);
+            id.contains('/')
+                && !core.iter().any(|core| core == id)
+                && !bit_install::policy::is_core_env(id)
+        }))
 }
 
 fn validate(prepared: &Value, lane: &str) -> Option<Vec<Value>> {

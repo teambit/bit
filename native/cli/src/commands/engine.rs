@@ -94,7 +94,10 @@ impl Engine {
             if response.canonical_error == Some(true)
                 && let Some(message) = response.error
             {
-                return Err(io::Error::other(CanonicalError(message)));
+                return Err(io::Error::other(CanonicalError {
+                    message,
+                    progress: response.data.get("progress").cloned(),
+                }));
             }
             let kind = input
                 .get("kind")
@@ -108,10 +111,13 @@ impl Engine {
 }
 
 #[derive(Debug)]
-struct CanonicalError(String);
+struct CanonicalError {
+    message: String,
+    progress: Option<Value>,
+}
 impl std::fmt::Display for CanonicalError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(formatter)
+        self.message.fmt(formatter)
     }
 }
 impl std::error::Error for CanonicalError {}
@@ -131,5 +137,19 @@ pub(super) fn is_canonical(error: &io::Error) -> bool {
 
 /// Preserve a published command error without delegating the invocation again.
 pub(super) fn canonical_error(message: String) -> io::Error {
-    io::Error::other(CanonicalError(message))
+    io::Error::other(CanonicalError { message, progress: None })
+}
+
+/// Actual completed native phases preceding an owned command error.
+pub(super) fn canonical_progress(error: &io::Error) -> Option<&Value> {
+    let mut cause = error
+        .get_ref()
+        .map(|error| error as &dyn std::error::Error);
+    while let Some(error) = cause {
+        if let Some(error) = error.downcast_ref::<CanonicalError>() {
+            return error.progress.as_ref();
+        }
+        cause = error.source();
+    }
+    None
 }

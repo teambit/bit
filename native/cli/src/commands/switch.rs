@@ -1,6 +1,8 @@
 //! Native `bit switch <lane>` through the workspace
 //! command's prepare, plan, capture and apply lifecycle.
 
+pub(super) use options::parse_import as import_options;
+mod installation;
 mod options;
 mod report;
 #[cfg(test)]
@@ -8,7 +10,7 @@ mod tests;
 
 use super::{
     color::Chalk,
-    installation::{self, Installer},
+    installation::Installer,
     status::js::{array, decline, text},
     workspace_command::{
         self, Planned, Request, format::Formatter, progress::Progress, results::Report,
@@ -32,12 +34,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 pub(super) fn lane_import(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
-    let Some(options) = options::parse(&argv[2..]) else {
+    let Some(options) = options::parse_import(&argv[2..]) else {
         return Ok(Outcome::Declined("outside the native lane import grammar".into()));
     };
-    if options.skip_fetch || options.verbose {
-        return Ok(Outcome::Declined("outside the native lane import grammar".into()));
-    }
     run_options(args, argv, &options, true)
 }
 
@@ -47,6 +46,11 @@ fn run_options(
     options: &options::Options,
     lane_import: bool,
 ) -> io::Result<Outcome> {
+    if !options.supported_pattern() || options.adoption.json {
+        return Ok(Outcome::Declined(
+            "switch requires an unsupported selector or JSON handler".into(),
+        ));
+    }
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
@@ -54,8 +58,9 @@ fn run_options(
         Ok(installer) => installer,
         Err(error) => return Ok(Outcome::Declined(format!("switch installation: {error}"))),
     };
+    let (environment, installation) = installation_session(installer)?;
     let mut startup = super::status::autosync::Startup::default();
-    let prepared = match prepare(&root, args, options, &mut startup) {
+    let prepared = match prepare(&root, args, options, &mut startup, environment) {
         Ok(prepared) => prepared,
         Err(error) if startup.committed || super::engine::is_canonical(&error) => {
             return workspace_command::checkout_lifecycle::failure(
@@ -68,45 +73,37 @@ fn run_options(
         }
         Err(error) => return Ok(Outcome::Declined(format!("switch: {error}"))),
     };
-    execute(&root, args, prepared, installer, lane_import)
+    execute(&root, args, prepared, installation, lane_import)
 }
 
 fn start_installer(root: &Path, argv: &[&str], skip: bool) -> io::Result<Option<Installer>> {
     if skip { Ok(None) } else { Installer::start(root, argv).map(Some) }
 }
 
+fn installation_session(
+    installer: Option<Installer>,
+) -> io::Result<(Option<super::status::environments::Environments>, Option<bit_install::HostInfo>)>
+{
+    match installer {
+        Some(installer) => {
+            let (environment, info) = installer.into_parts()?;
+            Ok((Some(environment), Some(info)))
+        }
+        None => Ok((None, None)),
+    }
+}
+
 fn execute(
     root: &Path,
     args: &[OsString],
     prepared: PreparedSwitch,
-    installer: Option<Installer>,
+    installation: Option<bit_install::HostInfo>,
     lane_import: bool,
 ) -> io::Result<Outcome> {
     workspace_command::checkout_lifecycle::before(&prepared.startup)?;
-    let needs_checkout_progress = !prepared.checkout_import_present(lane_import);
     let command = if lane_import { "import" } else { "switch" };
-    if let Some(installer) = installer {
-        return workspace_command::execute_then(root, args, command, |output| {
-            install_and_report(
-                root,
-                args,
-                output,
-                prepared,
-                needs_checkout_progress,
-                installer,
-                lane_import,
-            )
-        });
-    }
-    workspace_command::execute(root, args, command, prepared.planned, &prepared.report, |output| {
-        render_progress(
-            output,
-            &prepared.imports,
-            needs_checkout_progress,
-            prepared.import_count,
-            lane_import,
-            &prepared.startup,
-        );
+    workspace_command::execute_then(root, args, command, |output| {
+        install_and_report(root, args, output, prepared, installation)
     })
 }
 
@@ -115,28 +112,34 @@ fn install_and_report(
     args: &[OsString],
     output: &Output,
     mut prepared: PreparedSwitch,
-    checkout_progress: bool,
-    installer: Installer,
-    lane_import: bool,
+    installation: Option<bit_install::HostInfo>,
 ) -> io::Result<Report> {
     render_progress(
         output,
         &prepared.imports,
-        checkout_progress,
-        prepared.import_count,
-        lane_import,
+        prepared.checkout_import.as_ref(),
         &prepared.startup,
     );
-    workspace_command::commit(&mut prepared.planned, root)?;
+    let applied = workspace_command::switch::apply(&mut prepared.planned, root)?;
     if !prepared.install_ids.is_empty()
-        && let Err(error) = installer.install(root, false, &prepared.install_ids)
+        && prepared.planned.plan["result"]["leftUnresolvedConflicts"] != true
+        && let Some(info) = installation
     {
-        output.failure(&format!("installation failed with the following error: {error}"));
-        let formatter = Formatter::new(Chalk::detect(args));
-        prepared.report.data = Formatter::join(&[
-            prepared.report.data,
-            installation::error_report(formatter.chalk, &error.to_string()),
-        ]);
+        let errors = installation::run(
+            root,
+            &mut prepared.planned,
+            info,
+            &prepared.install_ids,
+            output,
+            Chalk::detect(args),
+        )?;
+        let mut sections = vec![prepared.report.data];
+        sections.extend(errors);
+        prepared.report.data = Formatter::join(&sections);
+    }
+    workspace_command::switch::complete(&mut prepared.planned, &applied)?;
+    for warning in &prepared.warnings {
+        output.warning(warning);
     }
     Ok(prepared.report)
 }
@@ -144,14 +147,10 @@ fn install_and_report(
 fn render_progress(
     output: &Output,
     imports: &[RemoteImport],
-    checkout: bool,
-    count: u64,
-    lane_import: bool,
+    checkout: Option<&RemoteImport>,
     startup: &super::status::autosync::Startup,
 ) {
-    if lane_import || !startup.build_stdout.is_empty() {
-        output.restart("switching lanes");
-    }
+    output.status("switching lanes");
     let prepared = prepared_import_count(startup);
     for import in imports.iter().take(prepared) {
         if import.requested > 0 {
@@ -164,8 +163,8 @@ fn render_progress(
             import.render(output);
         }
     }
-    if checkout {
-        render_import(output, count);
+    if let Some(checkout) = checkout {
+        checkout.render(output);
     }
 }
 
@@ -180,19 +179,10 @@ struct PreparedSwitch {
     startup: super::status::autosync::Startup,
     planned: Planned,
     report: Report,
-    import_count: u64,
+    checkout_import: Option<RemoteImport>,
     imports: Vec<RemoteImport>,
     install_ids: Vec<String>,
-}
-
-impl PreparedSwitch {
-    fn checkout_import_present(&self, lane_import: bool) -> bool {
-        !lane_import && self.imports.iter().any(|row| row.reason.is_some())
-            || self.imports.len() > prepared_import_count(&self.startup)
-                && self.imports
-                    .last()
-                    .is_some_and(|row| row.requested > 0)
-    }
+    warnings: Vec<String>,
 }
 
 fn prepare(
@@ -200,36 +190,53 @@ fn prepare(
     args: &[OsString],
     options: &options::Options,
     startup: &mut super::status::autosync::Startup,
+    environment: Option<super::status::environments::Environments>,
 ) -> io::Result<PreparedSwitch> {
     let request =
         Request { operation: "switch", options: options.request(), to: None, verify_fresh: false };
-    let planned = workspace_command::plan_with_startup(root, &request, startup)?;
+    let planned = match environment {
+        Some(environment) => {
+            workspace_command::plan_with_environment(root, &request, startup, environment)?
+        }
+        None => workspace_command::plan_with_startup(root, &request, startup)?,
+    };
     let chalk = super::color::Chalk::detect(args);
     let report = report::format(&planned.plan["result"], options, chalk)?;
-    let import_count = planned.plan["switchImportCount"]
-        .as_u64()
-        .filter(|count| *count <= 4096)
-        .ok_or_else(|| io::Error::other("native switch import progress receipt"))?;
-    let mut imports = remote_imports(planned.plan.get("progress"))?;
-    if imports.iter().any(|import| import.reason.is_some())
-        && let Some(checkout) = imports.last_mut()
-        && checkout.reason.is_none()
-        && checkout.requested > 0
-    {
-        checkout.requested =
-            usize::try_from(import_count).map_err(|_| decline("switch fetched checkout count"))?;
-        checkout.components = import_count;
-        checkout.objects = 0;
-    }
-    let install_ids = installation::component_ids(&planned.plan["result"])?;
+    let checkout_import = checkout_import(&planned.plan["switchCheckoutImport"])?;
+    let imports = remote_imports(planned.plan.get("progress"))?;
+    let install_ids = writer_ids(&planned.plan)?;
     Ok(PreparedSwitch {
         startup: std::mem::take(startup),
         planned,
         report,
-        import_count,
+        checkout_import,
         imports,
         install_ids,
+        warnings: warnings(options),
     })
+}
+
+fn writer_ids(plan: &Value) -> io::Result<Vec<String>> {
+    let rows = plan
+        .get("switchWriterIds")
+        .and_then(Value::as_array)
+        .ok_or_else(|| decline("switch writer identities"))?;
+    if rows.len() > 8192 {
+        return Err(decline("switch writer identity count"));
+    }
+    rows.iter()
+        .map(|id| text(Some(id)).map(str::to_owned))
+        .collect()
+}
+
+fn warnings(options: &options::Options) -> Vec<String> {
+    [(options.adoption.get_all, "get-all"), (options.adoption.head, "head")]
+        .into_iter()
+        .filter(|(enabled, _)| *enabled)
+        .map(|(_, name)| {
+            format!("the --{name} flag is deprecated and currently the default behavior")
+        })
+        .collect()
 }
 
 struct RemoteImport {
@@ -237,6 +244,32 @@ struct RemoteImport {
     components: u64,
     objects: u64,
     reason: Option<String>,
+}
+
+fn checkout_import(receipt: &Value) -> io::Result<Option<RemoteImport>> {
+    let requested = receipt["requested"]
+        .as_u64()
+        .filter(|count| *count <= 8192)
+        .ok_or_else(|| decline("switch checkout import count"))?;
+    let performed =
+        receipt["performed"].as_bool().ok_or_else(|| decline("switch checkout import phase"))?;
+    if performed != (requested > 0) {
+        return Err(decline("switch checkout import phase count"));
+    }
+    let components = receipt["components"]
+        .as_u64()
+        .filter(|count| *count <= 16384)
+        .ok_or_else(|| decline("switch checkout import component count"))?;
+    let objects = receipt["objects"]
+        .as_u64()
+        .filter(|count| *count <= 16384)
+        .ok_or_else(|| decline("switch checkout import object count"))?;
+    Ok(performed.then_some(RemoteImport {
+        requested: usize::try_from(requested).map_err(io::Error::other)?,
+        components,
+        objects,
+        reason: None,
+    }))
 }
 
 fn remote_imports(value: Option<&Value>) -> io::Result<Vec<RemoteImport>> {
@@ -289,11 +322,6 @@ impl RemoteImport {
     }
 }
 
-fn render_import(output: &Output, count: u64) {
-    output.restart(&format!("importing {count} components"));
-    output.restart(&format!("successfully imported {count} components"));
-}
-
 /// Render a prepared switch prefix when callback capture or planning failed.
 pub(super) fn render_failure_progress(
     output: &Output,
@@ -301,7 +329,7 @@ pub(super) fn render_failure_progress(
     failed_output: &str,
 ) -> io::Result<()> {
     let imports = remote_imports(startup.build_progress.as_ref())?;
-    output.restart("switching lanes");
+    output.status("switching lanes");
     for import in &imports {
         if import.requested > 0 {
             import.render(output);
@@ -309,12 +337,13 @@ pub(super) fn render_failure_progress(
     }
     workspace_command::checkout_lifecycle::loaded(startup);
     print!("{failed_output}");
-    if failed_output.is_empty() {
-        let count = startup.build_progress
+    if failed_output.is_empty()
+        && let Some(receipt) = startup.build_progress
             .as_ref()
-            .and_then(|value| value["switchImportCount"].as_u64())
-            .ok_or_else(|| decline("switch prepared checkout count"))?;
-        render_import(output, count);
+            .and_then(|value| value.get("switchCheckoutImport"))
+        && let Some(import) = checkout_import(receipt)?
+    {
+        import.render(output);
     }
     Ok(())
 }

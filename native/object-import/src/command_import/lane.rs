@@ -1,11 +1,14 @@
 //! Lane identity and object reads share the command import capture. None of
 //! these operations publishes an object or changes the workspace's active lane.
+pub(in crate::command_import) mod merge;
+pub(crate) use tracking::SwitchTracking;
+
 use super::{PreparedImport, invalid};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::io;
 mod artifacts;
-mod merge;
+mod tracking;
 
 #[cfg(test)]
 mod tests;
@@ -53,31 +56,6 @@ impl PreparedImport {
     pub(crate) fn switch_existing_versions(&mut self) {
         self.cache.switch_existing_versions = true;
     }
-    /// Stage the local alias Node records when a remote switch first tracks a
-    /// lane. The scope file is captured with the fetched objects and written
-    /// by the same import owner before the workspace bitmap is published.
-    pub(crate) fn stage_switch_tracking(&mut self, id: &Id) -> io::Result<()> {
-        id.validate()?;
-        if id.is_main() {
-            return Ok(());
-        }
-        let path = self.environment.local_directory
-            .parent()
-            .ok_or_else(|| invalid("switch scope directory"))?
-            .join("scope.json");
-        let mut scope = self.capture
-            .json(&path)?
-            .ok_or_else(|| invalid("switch scope configuration missing"))?;
-        if scope.get("lanes").is_none() {
-            scope["lanes"] = serde_json::json!({"current":"main","tracking":[],"new":[]});
-        }
-        if !append_switch_tracking(&mut scope, id)? {
-            return Ok(());
-        }
-        self.writes.switch_tracking = Some(bit_workspace_config::render_scope_json(&scope)?);
-        Ok(())
-    }
-
     /// Publish the remote lane's refs without adding its Lane object to the
     /// local index. Public workspace fetch keeps only these refs.
     pub(crate) fn retain_remote_lane_refs(&mut self, record: &Record) -> io::Result<()> {
@@ -217,15 +195,7 @@ impl PreparedImport {
     }
     pub(crate) fn resolve_lane(&mut self, name: &str) -> io::Result<Id> {
         let scope = self.lane_scope()?;
-        let id = if let Some((scope, name)) = name.split_once('/') {
-            Id { scope: scope.into(), name: name.into() }
-        } else if name == "main" {
-            Id { scope: text(&scope, "name")?.into(), name: name.into() }
-        } else {
-            resolve_local(name, &scope, &self.writes.index)?
-        };
-        id.validate()?;
-        Ok(id)
+        resolved(name, &scope, &self.writes.index)
     }
     pub(crate) fn load_lane(&mut self, id: &Id) -> io::Result<Option<Record>> {
         id.validate()?;
@@ -259,30 +229,33 @@ impl PreparedImport {
     }
 }
 
-fn append_switch_tracking(scope: &mut Value, id: &Id) -> io::Result<bool> {
-    let tracking = scope["lanes"]["tracking"]
-        .as_array_mut()
-        .ok_or_else(|| invalid("switch lane tracking configuration"))?;
-    if tracking.len() >= 4096 {
-        return Err(invalid("switch lane tracking budget"));
+/// Resolve a local lane spelling without fetching; the authoritative importer repeats this capture.
+pub fn resolve_lane_identity(root: &std::path::Path, name: &str) -> io::Result<String> {
+    if !root.is_absolute() {
+        return Err(invalid("command lane root path"));
     }
-    if tracking
-        .iter()
-        .any(|row| row["remoteLane"] == id.name && row["remoteScope"] == id.scope)
-    {
-        return Ok(false);
-    }
-    if let Some(existing) = tracking
-        .iter()
-        .find(|row| row["localLane"] == id.name)
-        && (existing["remoteLane"] != id.name || existing["remoteScope"] != id.scope)
-    {
-        return Err(invalid("switch lane alias already tracks another remote"));
-    }
-    tracking.push(
-        serde_json::json!({"localLane":id.name,"remoteLane":id.name,"remoteScope":id.scope}),
-    );
-    Ok(true)
+    let mut capture = super::Capture::default();
+    let directory = crate::scope_path(root);
+    let scope = capture
+        .json(&directory.join("scope.json"))?
+        .ok_or_else(|| invalid("command lane scope missing"))?;
+    let index = capture
+        .json(&directory.join("index.json"))?
+        .unwrap_or_else(|| serde_json::json!({"lanes":[]}));
+    let id = resolved(name, &scope, &index)?;
+    capture.validate()?;
+    Ok(format!("{}/{}", id.scope, id.name))
+}
+fn resolved(name: &str, scope: &Value, index: &Value) -> io::Result<Id> {
+    let id = if let Some((scope, name)) = name.split_once('/') {
+        Id { scope: scope.into(), name: name.into() }
+    } else if name == "main" {
+        Id { scope: text(scope, "name")?.into(), name: name.into() }
+    } else {
+        resolve_local(name, scope, index)?
+    };
+    id.validate()?;
+    Ok(id)
 }
 
 fn resolve_local(name: &str, scope: &Value, index: &Value) -> io::Result<Id> {

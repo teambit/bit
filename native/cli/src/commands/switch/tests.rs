@@ -1,21 +1,18 @@
-use super::installation::component_ids;
+use super::writer_ids;
 use serde_json::json;
 
 #[test]
-fn installation_uses_changed_and_new_component_versions_once() {
-    let result = json!({
-        "components":[{"id":"s/a@abc"},{"id":"s/b@def"}],
-        "addedComponents":["s/b@def","s/c@ghi"],
+fn installation_uses_only_materialized_writers_even_when_report_lists_components() {
+    let all_ours = json!({
+        "result": {"components":[{"id":"s/a@abc"}],"addedComponents":["s/b@def"]},
+        "switchWriterIds": [],
     });
-    assert_eq!(component_ids(&result).unwrap(), ["s/a@abc", "s/b@def", "s/c@ghi"]);
-    assert!(component_ids(&json!({"components":[],"addedComponents":[]})).unwrap().is_empty());
-    assert_eq!(
-        component_ids(&json!({"newFromLane":["s/new@abc"],"newFromLaneAdded":true})).unwrap(),
-        ["s/new@abc"],
-    );
-    assert!(
-        component_ids(&json!({"newFromLane":["s/new@abc"],"newFromLaneAdded":false}))
-            .unwrap()
-            .is_empty(),
-    );
+    assert!(writer_ids(&all_ours).unwrap().is_empty());
+    let materialized = json!({
+        "result": {"components":[{"id":"s/a@abc"},{"id":"s/b@def"}]},
+        "switchWriterIds": ["s/b@def","s/c@ghi"],
+    });
+    assert_eq!(writer_ids(&materialized).unwrap(), ["s/b@def", "s/c@ghi"]);
+    assert!(writer_ids(&json!({"result": {"components": []}})).is_err());
+    assert!(writer_ids(&json!({"switchWriterIds": [null]})).is_err());
 }

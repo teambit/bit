@@ -2,9 +2,14 @@
 //! the configured aspects and generator envs, the components' dependencies and
 //! the manifests of one engine run.
 
+pub(super) use initial::calculate_linked;
+
+mod initial;
+mod resolution;
+
 use super::session::{Loaded, Session};
 use crate::{
-    dependencies::{self, DependencyOptions, DevPatternConfig, default_package_name, glob},
+    dependencies::{DependencyOptions, DevPatternConfig, default_package_name, glob},
     import::{self, remotes::global_remotes},
     manifests::{
         self, ManifestContext, ManifestInput, ManifestOptions, ManifestOutcome,
@@ -18,6 +23,7 @@ use crate::{
     workspace::{ScopeObjects, external_env_packages},
 };
 use indexmap::IndexMap;
+use resolution::{Resolved, resolve, resolve_initialized};
 use serde_json::Value;
 use std::io;
 
@@ -27,9 +33,12 @@ const DEDUPING: &str = "deduping dependencies for installation";
 /// One calculation of what to install.
 pub struct Calculated {
     pub components: Vec<WorkspaceComponent>,
+    pub engine_components: Vec<WorkspaceComponent>,
     pub env_policies: IndexMap<String, EnvPolicy>,
     pub dependencies: IndexMap<String, ComponentDependencies>,
     pub outcome: ManifestOutcome,
+    pub subscriber_policy: Vec<PolicyEntry>,
+    pub subscriber_links: DependencyMap,
 }
 
 impl Calculated {
@@ -50,18 +59,14 @@ pub async fn calculate(
     loaded: &Loaded,
     linked_root_deps: &DependencyMap,
 ) -> io::Result<Calculated> {
-    // The TypeScript command loads the components twice before the manifests:
-    // `linkCodemods` right after the root links, then `getComponentsDirectory`
-    // in `_getComponentsManifests`. The native linker runs after this
-    // calculation and loads nothing, so both lines belong here.
-    session.loading(loaded);
-    session.loading(loaded);
-    let components = loaded.components();
+    session.host.configured_aspect_classes().await?;
+    let components =
+        super::session::installation_components::load(session, loaded, "manifests").await?;
     let Resolved {
         env_policies,
         workspace_policy,
         dependencies,
-    } = resolve(session, loaded, &components).await?;
+    } = resolve_initialized(session, loaded, &components, true).await?;
     let (linked_root_deps, env_packages) =
         &with_env_links(session, loaded, linked_root_deps, &components, &dependencies)?;
     let apps = apps(session, loaded, &components).await?;
@@ -81,12 +86,26 @@ pub async fn calculate(
             env_packages,
         },
     )?;
-    session.output.success(DEDUPING, None);
-    // The component loads the TypeScript command performs while it finishes
-    // the manifests of the engine run.
-    session.loading(loaded);
-    session.loading(loaded);
-    Ok(Calculated { components, env_policies, dependencies, outcome })
+    session.output.success_status();
+    root_manifest_loading(session, loaded).await?;
+    Ok(Calculated {
+        engine_components: components.clone(),
+        components,
+        env_policies,
+        dependencies,
+        outcome,
+        subscriber_policy: root_policy,
+        subscriber_links: linked_root_deps.clone(),
+    })
+}
+
+async fn root_manifest_loading(session: &Session<'_>, loaded: &Loaded) -> io::Result<()> {
+    // Node loads env and app root manifests only when root components are enabled.
+    if loaded.config.dependency_resolver.has_root_components() {
+        super::session::installation_components::load(session, loaded, "root-envs").await?;
+        super::session::installation_components::load(session, loaded, "root-apps").await?;
+    }
+    Ok(())
 }
 
 /// `writeDependenciesToPackageJson`: the root manifest `_getComponentsManifests`
@@ -128,43 +147,8 @@ pub async fn package_json_dependencies(
             env_packages: &env_packages,
         },
     })?;
-    session.output.success(DEDUPING, None);
+    session.output.success_status();
     Ok(result)
-}
-
-/// The env policies, the workspace policy and the components' dependencies.
-struct Resolved {
-    env_policies: IndexMap<String, EnvPolicy>,
-    workspace_policy: Vec<PolicyEntry>,
-    dependencies: IndexMap<String, ComponentDependencies>,
-}
-
-async fn resolve(
-    session: &Session<'_>,
-    loaded: &Loaded,
-    components: &[WorkspaceComponent],
-) -> io::Result<Resolved> {
-    // `InstallMain.install` loads the components before the manifests; the envs that
-    // registers are the only ones the env requests see until the package manager ran.
-    session.host.prepare_install(&workspace_aspects(session, loaded)).await?;
-    let objects = ScopeObjects::new(&loaded.workspace.scope_path);
-    let env_policies = policy::load_env_policies(&session.root, components, session.host).await?;
-    let workspace_policy = workspace_policy(loaded)?;
-    let mut options = dependency_options(session, loaded, components)?;
-    options.policy_slots =
-        policy::slots::registry(components, &session.info.core_aspects, &objects, session.host)
-            .await?;
-    let dependencies = dependencies::compute(
-        &session.root,
-        components,
-        &workspace_policy,
-        &env_policies,
-        loaded.workspace.root_package_json.as_ref(),
-        &options,
-        session.host,
-    )
-    .await?;
-    Ok(Resolved { env_policies, workspace_policy, dependencies })
 }
 
 /// `linkDepsResolvedFromEnv` (off with root components), and the external env packages
@@ -339,6 +323,7 @@ fn dependency_options(
         merge_config,
         update_dependents: update_dependents(loaded)?,
         use_cache: true,
+        cache_initialized: session.options.dependency_cache_initialized,
         dev_patterns: DevPatternConfig::from_aspects(&|id| loaded.config.aspect(id).cloned()),
         policy_slots: Vec::new(),
         workspace_aspects: workspace_aspects(session, loaded),
@@ -347,7 +332,7 @@ fn dependency_options(
 
 /// `getNotLoadedConfiguredExtensions` of the CLI start: the `workspace.jsonc` aspects
 /// that are not core, whose providers run in TypeScript before any component loads.
-fn workspace_aspects(session: &Session<'_>, loaded: &Loaded) -> Vec<String> {
+pub(super) fn workspace_aspects(session: &Session<'_>, loaded: &Loaded) -> Vec<String> {
     let core_aspects = &session.info.core_aspects;
     loaded.config
         .user_aspect_ids(&session.core_ids())

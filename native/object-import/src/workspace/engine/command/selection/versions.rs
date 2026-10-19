@@ -13,7 +13,11 @@ pub(super) fn resolve(
         return Ok(version.to_owned());
     }
     let model = selection.model.ok_or_else(|| invalid("command checkout model"))?;
-    if let Some(version) = selection.target["switchVersion"].as_str() {
+    if let Some(version) = selection.target
+        .get("historicalVersion")
+        .and_then(Value::as_str)
+        .or_else(|| selection.target["switchVersion"].as_str())
+    {
         return Ok(version.to_owned());
     }
     let to = options.to.as_deref().ok_or_else(|| invalid("command checkout target"))?;

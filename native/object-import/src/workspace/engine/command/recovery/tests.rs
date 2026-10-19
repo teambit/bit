@@ -21,7 +21,7 @@ fn restored(root: &Path, captured: proof::Proof) -> State {
         request: serde_json::from_value(json!({"root":root,"home":root,"globalRemotesFile":root.join("remotes"),"operation":"checkout","options":{"to":"reset","all":true,"skipDependencyInstallation":true}})).unwrap(),
         context: json!({}), targets: Vec::new(), repository: repository::Repository::new(root,None),
         proofs: vec![captured], token: "retained-token".into(), history: history::State::default(),
-        planned: Some(PreparedPlan { plan, bitmap:bitmap::prepare_bytes(root,bitmap,&json!({}),&[],&[]).unwrap(),snap_bitmap:None,reset_config:None,checkout_policy:None }),
+        planned: Some(PreparedPlan { plan, bitmap:bitmap::prepare_bytes(root,bitmap,&json!({}),&[],&[]).unwrap(),snap_bitmap:None,reset_config:None,checkout_policy:None, switch_completion:None }),
     };
     State {
         recovery: Some(Retained {

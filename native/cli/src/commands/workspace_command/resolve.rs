@@ -779,6 +779,10 @@ fn squash_logs(receipt: &mut Value, rows: &[Value]) -> io::Result<()> {
 mod resolve_tests;
 
 impl Planned {
+    pub(in crate::commands) fn has_captured_components(&self) -> bool {
+        !self.capture.components.is_empty()
+    }
+
     /// Move configured callbacks across native merge materialization and resolution.
     pub(in crate::commands) fn take_environment(&mut self) -> Option<environments::Environments> {
         capture::take_callback_environment(&mut self.capture)

@@ -2,6 +2,7 @@ pub(super) mod checkout_pattern;
 pub(super) mod checkout_policy;
 pub(super) mod inbound;
 pub(super) mod input;
+pub(super) mod lane_history;
 pub(super) mod merge_defer;
 pub(crate) mod outbound;
 pub(super) mod policy;
@@ -9,6 +10,7 @@ pub(super) mod recovery;
 pub(super) mod repository;
 pub(super) mod resolve;
 pub(super) mod stash;
+pub(super) mod switch_completion;
 
 mod checkout_stash;
 
@@ -53,6 +55,7 @@ pub(crate) struct State {
     inbound: Option<inbound::Retained>,
     outbound: Option<outbound::Retained>,
     stash: Option<Box<stash::Retained>>,
+    lane_history: Option<Box<lane_history::Retained>>,
 }
 struct Record {
     request: Prepare,
@@ -70,6 +73,7 @@ struct PreparedPlan {
     snap_bitmap: Option<bitmap::Prepared>,
     reset_config: Option<reset_config::Prepared>,
     checkout_policy: Option<checkout_policy::Prepared>,
+    switch_completion: Option<switch_completion::Retained>,
 }
 pub(super) fn prepare(
     request: Prepare,

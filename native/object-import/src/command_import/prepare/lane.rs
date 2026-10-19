@@ -1,4 +1,5 @@
 mod fetch;
+mod history;
 
 use super::{PreparedImport, Target, invalid, read_model, receive, remote};
 use crate::command_import::lane::{Id, Record, entries};
@@ -66,41 +67,49 @@ impl PreparedImport {
         }
         self.progress.push(super::super::Progress::default());
         for identity in identities {
-            let (scope, name) =
-                identity.split_once('/').ok_or_else(|| invalid("lane main scope"))?;
-            if scope == self.environment.local_scope {
-                continue;
-            }
-            let target =
-                Target { scope: Some(scope.into()), name: name.into(), version: "latest".into() };
-            let remotes = self.environment.remotes.clone();
-            let directory = remote(self, &remotes, scope)?;
-            self.progress
-                .last_mut()
-                .ok_or_else(|| invalid("lane main progress"))?
-                .ids
-                .push(format!("{identity}@latest"));
-            let Some(model) = read_model(self, &directory, &target)? else { continue };
-            let Some(head) = model["head"].as_str() else { continue };
-            let progress = self.progress.last_mut().ok_or_else(|| invalid("lane main progress"))?;
-            progress.objects.insert(super::super::object_hash(scope));
-            let local = self.environment.local_directory.clone();
-            if super::read_model(self, &local, &target)?
-                .as_ref()
-                .is_some_and(|stored| stored["head"] == head)
-                && super::read_version(self, head)?.is_some()
-            {
-                self.progress
-                    .last_mut()
-                    .unwrap()
-                    .components
-                    .insert(identity.clone());
-                super::transfer::record_remote_head(self, &target, &model)?;
-                continue;
-            }
-            receive(self, &directory, &target, &model, head, true)?;
+            self.refresh_main_identity(identity)?;
         }
         self.validate()
+    }
+    fn refresh_main_identity(&mut self, identity: &str) -> io::Result<()> {
+        let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("lane main scope"))?;
+        if scope == self.environment.local_scope {
+            return Ok(());
+        }
+        let target =
+            Target { scope: Some(scope.into()), name: name.into(), version: "latest".into() };
+        let remotes = self.environment.remotes.clone();
+        let directory = remote(self, &remotes, scope)?;
+        self.progress
+            .last_mut()
+            .ok_or_else(|| invalid("lane main progress"))?
+            .ids
+            .push(format!("{identity}@latest"));
+        // The fetch stream includes ScopeMeta even when ignoreMissingHead omits the model.
+        self.progress
+            .last_mut()
+            .unwrap()
+            .objects
+            .insert(super::super::object_hash(scope));
+        let Some(model) = read_model(self, &directory, &target)? else { return Ok(()) };
+        let Some(head) = model["head"].as_str() else { return Ok(()) };
+        let local = self.environment.local_directory.clone();
+        if super::read_model(self, &local, &target)?
+            .as_ref()
+            .is_some_and(|stored| stored["head"] == head)
+            && super::read_version(self, head)?.is_some()
+        {
+            self.progress
+                .last_mut()
+                .unwrap()
+                .components
+                .insert(identity.to_owned());
+            super::transfer::merge_model(self, &target, &model, true)?;
+            super::transfer::record_remote_head(self, &target, &model)?;
+            return Ok(());
+        }
+        receive(self, &directory, &target, &model, head, true)?;
+        Ok(())
     }
     /// Capture a remote Lane and its component closure without publishing either.
     pub(crate) fn fetch_lane_contents(&mut self, id: &Id) -> io::Result<Record> {
@@ -185,6 +194,8 @@ fn receive_counted(
     row.ids.push(key.clone());
     let counted = (row.components.clone(), row.objects.clone());
     if present && plan.cache.switch_existing_versions {
+        // sources.getMany(..., true) primes cacheUnBuiltIds before the lane fetch.
+        plan.cache.unbuilt.insert(key);
         return Ok(hash);
     }
     if present {

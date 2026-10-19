@@ -12,6 +12,7 @@ mod list;
 mod manage;
 mod options;
 mod remove;
+mod restoration;
 mod show;
 
 use super::{merge::report, workspace_command};
@@ -32,6 +33,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Some("rename") => manage::rename(args, &argv[2..]),
         Some("change-scope") => manage::change_scope(args, &argv[2..]),
         Some("history") => history::run(args, &argv[2..]),
+        Some("checkout" | "revert") => restoration::run(args, &argv),
         Some("show") => show::show(args, &argv[2..]),
         Some("import") => import::run(args, &argv),
         Some("remove") => remove::run(args, &argv[2..]),

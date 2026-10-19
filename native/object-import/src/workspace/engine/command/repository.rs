@@ -234,6 +234,18 @@ impl Repository {
         }
         Ok(())
     }
+    pub(super) fn prepare_switch_versions(
+        &mut self,
+        targets: &[command_import::Target],
+    ) -> io::Result<Value> {
+        let imported =
+            self.imported.as_mut().ok_or_else(|| super::super::invalid("switch import owner"))?;
+        let progress = imported.prepare_switch_versions(targets)?;
+        Ok(
+            serde_json::json!({"requested":progress.ids.len(),"components":progress.components.len(),
+            "objects":progress.objects.len(),"performed":!progress.ids.is_empty()}),
+        )
+    }
     pub(super) fn prepare_merge_gap(
         &mut self,
         targets: &[command_import::Target],
@@ -294,11 +306,7 @@ impl Repository {
         let Some(imported) = &self.imported else {
             return serde_json::json!({"bitmapCount":0,"imports":[]});
         };
-        serde_json::json!({"bitmapCount":imported.bitmap_count,"imports":imported.progress.iter().map(|progress| {
-            let mut row = serde_json::json!({"reason":progress.reason,"ids":progress.ids,"components":progress.components.len(),"objects":progress.objects.len()});
-            if progress.object_request { row["objectRequest"] = serde_json::json!(true); }
-            row
-        }).collect::<Vec<_>>()})
+        import_progress(imported)
     }
     pub(super) fn complete_lane_histories(
         &mut self,
@@ -328,6 +336,15 @@ impl Repository {
         proof::accept_published(&mut self.proofs, files);
         self.validate()
     }
+    pub(super) fn defer_switch_tracking(
+        &mut self,
+    ) -> io::Result<Option<command_import::lane::SwitchTracking>> {
+        self.imported
+            .as_mut()
+            .map(command_import::PreparedImport::defer_switch_tracking)
+            .transpose()
+            .map(Option::flatten)
+    }
     pub(super) fn commit_import(&self) -> io::Result<()> {
         if let Some(imported) = &self.imported {
             imported.commit()?;
@@ -349,4 +366,12 @@ pub(super) fn model(context: &Value, identity: &str) -> io::Result<Option<Value>
             ) == identity
         })
         .cloned())
+}
+
+pub(super) fn import_progress(imported: &command_import::PreparedImport) -> Value {
+    serde_json::json!({"bitmapCount":imported.bitmap_count,"imports":imported.progress.iter().map(|progress| {
+            let mut row = serde_json::json!({"reason":progress.reason,"ids":progress.ids,"components":progress.components.len(),"objects":progress.objects.len()});
+            if progress.object_request { row["objectRequest"] = serde_json::json!(true); }
+            row
+        }).collect::<Vec<_>>()})
 }

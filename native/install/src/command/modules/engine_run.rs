@@ -1,5 +1,7 @@
 //! One engine run with the progress lines `DependencyInstaller.installComponents`
 //! prints, and the `enrichUnpublishedSnapDepError` error rewrite.
+mod effective;
+mod subscribers;
 
 use super::super::{
     calculate::Calculated,
@@ -31,26 +33,29 @@ pub async fn run(
 ) -> io::Result<EngineResult> {
     let output = &session.output;
     output.status(PRE_SUBSCRIBERS);
+    let receipt = subscribers::run(session, loaded, calculated, "pre").await?;
     output.success(PRE_SUBSCRIBERS, None);
-    output.status(RUNNING);
-    // `PnpmPackageManager.install` turns the logger off for the package manager's output.
-    output.loader_off();
-    let started = Instant::now();
-    let options = EngineInstallOptions {
+    let mut options = EngineInstallOptions {
         update_all: session.options.update,
         lockfile_only: session.options.lockfile_only,
         include_optional_deps: !session.options.no_optional,
         restore: restore.cloned(),
         output: Some(OutputSink(output.sink())),
     };
-    let result = engine::install(&calculated.outcome.plan, &loaded.engine, &options)
-        .await
+    let (plan, settings) =
+        effective::apply(&session.root, calculated, loaded, receipt.as_ref(), &mut options)?;
+    output.status(RUNNING);
+    // `PnpmPackageManager.install` turns the logger off for the package manager's output.
+    output.loader_off();
+    let started = Instant::now();
+    let result = engine::install(&plan, &settings, &options).await
         .map_err(|error| enrich(error, calculated, output))?;
     // `PnpmPackageManager.install` turns the logger back on after the engine,
     // which starts Bit's loader even when the command runs without one.
     output.loader_on();
     output.success(&format!("done {RUNNING}"), Some(started));
     output.status(POST_SUBSCRIBERS);
+    subscribers::run(session, loaded, calculated, "post").await?;
     output.success(POST_SUBSCRIBERS, None);
     Ok(result)
 }

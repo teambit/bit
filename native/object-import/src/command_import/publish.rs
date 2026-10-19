@@ -27,14 +27,24 @@ pub(super) fn reusing(
     value: Value,
     incoming: Option<Object>,
 ) -> io::Result<Object> {
-    if let Some(incoming) = incoming {
+    reusing_candidates(hash, kind, value, incoming)
+}
+pub(super) fn reusing_candidates(
+    hash: &str,
+    kind: &str,
+    value: Value,
+    candidates: impl IntoIterator<Item = Object>,
+) -> io::Result<Object> {
+    let expected = serialized(hash, kind, &value)?;
+    for incoming in candidates {
         let raw = crate::checkout::repository::inflate(&incoming.bytes, 32 * 1024 * 1024)?;
-        if incoming.kind == kind && raw == serialized(hash, kind, &value)? {
+        if incoming.kind == kind && raw == expected {
             return Ok(incoming);
         }
     }
     object(hash, kind, value)
 }
+
 fn serialized(hash: &str, kind: &str, value: &Value) -> io::Result<Vec<u8>> {
     crate::merge_history::hash(hash)?;
     let text = serde_json::to_string(value).map_err(io::Error::other)?;
@@ -126,7 +136,7 @@ impl PreparedImport {
         Ok(())
     }
 }
-fn write_file(path: &Path, bytes: &[u8]) -> io::Result<()> {
+pub(super) fn write_file(path: &Path, bytes: &[u8]) -> io::Result<()> {
     let parent = path.parent().ok_or_else(|| invalid("import publication parent"))?;
     fs::create_dir_all(parent)?;
     // Canonical outputFile preserves the existing inode and its owner/ACLs.

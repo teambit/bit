@@ -5,6 +5,11 @@ use serde_json::{Value, json};
 use std::{ffi::OsString, io, path::Path};
 
 impl Environments {
+    /// Preserve already-buffered provider output before another metadata adapter drains it.
+    pub(in crate::commands) fn take_tracking_stdout(&self) -> String {
+        self.host.as_ref().map_or_else(String::new, Host::take_stdout)
+    }
+
     /// Resolve installer process facts before native workers can read the environment.
     pub(in crate::commands) fn identity_installation_info(
         &mut self,
@@ -51,9 +56,13 @@ impl Environments {
         &mut self,
         root: &Path,
         components: &[Value],
+        native_cache_only: bool,
     ) -> io::Result<Value> {
         self.host(root)?
-            .call("trackingDocs", &json!({"components":components}))
+            .call(
+                "trackingDocs",
+                &json!({"components":components,"nativeCacheOnly":native_cache_only}),
+            )
     }
 
     /// Resolve only published environment configuration metadata before native tracking.

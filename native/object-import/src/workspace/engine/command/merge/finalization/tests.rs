@@ -140,7 +140,7 @@ fn lane_snapshot_stages_current_lane_config_and_validates_its_original_bytes() {
     assert!(
         !prepared.writes
             .iter()
-            .any(|(path, _)| *path == directory.0.join(".bit/staged-config/main.json")),
+            .any(|(path, _)| { *path == directory.0.join(".bit/staged-config/main.json") }),
     );
     assert_eq!(fs::read(&config).unwrap(), b"[]");
     prepared.validate().unwrap();

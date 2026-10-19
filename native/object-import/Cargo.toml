@@ -9,7 +9,7 @@ bit-ignore = { path = "../ignore" }
 bit-workspace-config = { path = "../workspace-config" }
 bit-dependency-scanner = { path = "../dependency-scanner" }
 bit-client-transfer = { path = "../client-transfer" }
-flate2 = { version = "1.1", default-features = false, features = ["zlib-rs"] }
+flate2 = { version = "1.1", default-features = false, features = ["zlib-ng-compat"] }
 futures-util = "0.3"
 indexmap = { version = "2", features = ["serde"] }
 sha1 = "0.10"

@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "qualification": "lane adoption",
+  "summary": {
+    "workloads": 41,
+    "pairs": 615,
+    "native_pairs": 605,
+    "eligible_modes": 121,
+    "slower": []
+  },
+  "runtime": {
+    "rust": "1.97.0",
+    "node": "22.22.0",
+    "bit": "2.2.94",
+    "platform": "Linux",
+    "modes": [
+      "ordinary",
+      "CI",
+      "colored noninteractive PTY (TERM=dumb)"
+    ],
+    "binary_sha256": "76bd668be0b6125be0576da7c170b2cd28fd4db74c6e7c8834ba9149e16de795"
+  },
+  "scope": "Warm-metadata file-remotes only; ten intentionally delegated add-error pairs excluded from native speed claims. No cross-platform speed claim.",
+  "evidence": {
+    "url": "https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-benchmark-evidence-9b0756851.tar.gz",
+    "sha256": "3d2275e38ef2e37116202809f3d3fec4575583796b5ecef3fe77fd2384aae3b5",
+    "bytes": 15552688,
+    "qualification_path": "scripts/rust/benchmarks/lane-adoption-completion-qualification.json",
+    "qualification_sha256": "d9d970b204df26575bafd324dcebcd503a6f5164389812daddba906d614b77ac"
+  },
+  "publication_state": "Published; downloaded asset checksum verified."
+}

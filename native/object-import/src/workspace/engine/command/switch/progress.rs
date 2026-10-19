@@ -1,58 +1,60 @@
+//! Checkout imports each selected status, including already cached or unchanged IDs.
 use super::invalid;
-use serde_json::Value;
-use std::{collections::HashSet, io, path::Path};
+use serde_json::{Value, json};
+use std::{io, path::Path};
 
 pub(in crate::workspace::engine::command) fn import_count(
-    root: &Path,
+    _root: &Path,
     context: &Value,
     targets: &[Value],
 ) -> io::Result<usize> {
+    if let Some(count) = context["switchCheckoutImport"]["requested"].as_u64() {
+        return usize::try_from(count).map_err(io::Error::other);
+    }
     let additions = context["lane"]["addedTargets"]
         .as_array()
         .ok_or_else(|| invalid("switch addition count"))?
         .len();
-    if context["lane"]["switchId"]["name"] == "main" {
-        return Ok(targets.len() + additions);
-    }
-    if context["lane"]["switchFetched"] == true {
-        return context["lane"]["switchLaneHeads"]
-            .as_object()
-            .map(serde_json::Map::len)
-            .ok_or_else(|| invalid("switch fetched head count"));
-    }
-    let staged = match std::fs::read_to_string(crate::scope_path(root).join("staged-snaps")) {
-        Ok(value) => value,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => {
-            return Ok(targets.len() + additions);
-        }
-        Err(error) => return Err(error),
-    };
-    let local = staged
-        .lines()
-        .map(str::trim)
-        .collect::<HashSet<_>>();
-    Ok(staged_count(context, targets, &local))
+    Ok(targets.len() + additions)
 }
 
-fn staged_count(context: &Value, targets: &[Value], local: &HashSet<&str>) -> usize {
-    let new_imports = context["lane"]["addedTargets"]
+pub(in crate::workspace::engine::command) fn receipt(count: usize) -> Value {
+    json!({"requested":count,"components":count,"objects":0,"performed":count > 0})
+}
+
+pub(in crate::workspace::engine::command) fn additions(
+    context: &Value,
+    targets: &mut Vec<crate::command_import::Target>,
+) -> io::Result<()> {
+    let added = context["lane"]["addedTargets"]
         .as_array()
-        .unwrap()
-        .iter()
-        .filter(|target| {
-            target["version"]
-                .as_str()
-                .is_none_or(|version| !local.contains(version))
-        })
-        .count();
-    new_imports
-        + targets
-            .iter()
-            .filter(|target| {
-                let identity = target["identity"].as_str().unwrap_or_default();
-                let version = target["switchVersion"].as_str().unwrap_or_default();
-                context["lane"]["switchLaneHeads"].get(identity).is_none()
-                    || !local.contains(version)
-            })
-            .count()
+        .ok_or_else(|| invalid("switch addition count"))?;
+    for target in added {
+        let identity =
+            target["identity"].as_str().ok_or_else(|| invalid("switch addition identity"))?;
+        let (scope, name) =
+            identity.split_once('/').ok_or_else(|| invalid("switch addition scope"))?;
+        let version =
+            target["version"].as_str().ok_or_else(|| invalid("switch addition version"))?;
+        targets.push(crate::command_import::Target {
+            scope: Some(scope.into()),
+            name: name.into(),
+            version: version.into(),
+        });
+    }
+    Ok(())
+}
+
+pub(in crate::workspace::engine::command) fn failure(
+    error: io::Error,
+    record: &super::Record,
+) -> io::Error {
+    if record.request.operation != super::super::input::Operation::Switch {
+        return error;
+    }
+    let mut progress = record.repository.progress();
+    if let Some(imported) = record.context.get("switchCheckoutImport") {
+        progress["switchCheckoutImport"] = imported.clone();
+    }
+    super::super::super::response::with_progress(error, progress)
 }

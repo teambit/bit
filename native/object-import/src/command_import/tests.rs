@@ -1,14 +1,15 @@
+mod canonical_model;
 mod graph;
 use super::{
     Object, Overlay, PreparedImport, Target, VirtualRemote, history, object_hash, prepare,
     prepare::prepare_with_virtual, prepare_cached, publish,
 };
-use flate2::{Compression, read::ZlibDecoder, write::ZlibEncoder};
+use flate2::Compression;
 use serde_json::{Value, json};
 use std::{
     collections::BTreeMap,
     fs,
-    io::{Read, Write},
+    io::Write,
     path::{Path, PathBuf},
     sync::atomic::{AtomicUsize, Ordering},
 };
@@ -228,7 +229,7 @@ fn external_scope_without_mapping_declines_before_any_publication() {
 }
 
 #[test]
-fn equal_component_import_preserves_existing_compressed_bytes() {
+fn equal_component_import_canonicalizes_model_bytes_without_changing_the_version() {
     let fixture = Fixture::new();
     let head = "c".repeat(40);
     fixture.model(&head);
@@ -239,28 +240,26 @@ fn equal_component_import_preserves_existing_compressed_bytes() {
         .join(&hash[..2])
         .join(&hash[2..]);
     let compressed = fs::read(&path).unwrap();
-    let mut inflated = Vec::new();
-    ZlibDecoder::new(compressed.as_slice()).read_to_end(&mut inflated).unwrap();
-    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::none());
-    encoder.write_all(&inflated).unwrap();
-    let existing = encoder.finish().unwrap();
+    let existing = canonical_model::alternative(&compressed, Compression::none());
+    let version_path = fixture.root
+        .join(".bit/objects")
+        .join(&head[..2])
+        .join(&head[2..]);
+    let version = fs::read(&version_path).unwrap();
     fs::write(&path, &existing).unwrap();
 
-    let refs = fixture.root.join(".bit/refs/remotes/remote.scope/main");
-    fs::create_dir_all(refs.parent().unwrap()).unwrap();
-    fs::write(
-        &refs,
-        serde_json::to_vec(&json!([{"id":{"scope":"remote.scope","name":"alpha"},
-        "head":"d".repeat(40)}]))
-        .unwrap(),
-    )
-    .unwrap();
+    canonical_model::point_main_at(&fixture, &"d".repeat(40));
     let mut plan = prepare_cached(&fixture.root, &fixture.global).unwrap();
     plan.prepare_merge_gap(&[Fixture::target()])
         .unwrap();
-    assert!(!plan.overlay.objects.contains_key(&hash));
+    assert_eq!(plan.overlay.objects[&hash].bytes, compressed);
+    assert_eq!(
+        crate::checkout::repository::inflate(&plan.overlay.objects[&hash].bytes, 32768).unwrap(),
+        crate::checkout::repository::inflate(&existing, 32768).unwrap(),
+    );
     plan.commit().unwrap();
-    assert_eq!(fs::read(path).unwrap(), existing);
+    assert_eq!(fs::read(path).unwrap(), compressed);
+    assert_eq!(fs::read(version_path).unwrap(), version);
 }
 
 #[test]

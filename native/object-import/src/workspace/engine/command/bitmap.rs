@@ -32,13 +32,30 @@ pub(super) struct Prepared {
     changed: bool,
 }
 impl Prepared {
+    pub(super) fn switch_continuation(
+        &mut self,
+        context: &Value,
+        publish_checkout: bool,
+    ) -> io::Result<Self> {
+        let original = if publish_checkout && self.changed { &self.output } else { &self.original };
+        let mut final_bitmap = Self {
+            root: self.root.clone(),
+            original: original.clone(),
+            output: self.output.clone(),
+            changed: false,
+        };
+        final_bitmap.switch_lane(context)?;
+        if !publish_checkout {
+            self.changed = false;
+        }
+        Ok(final_bitmap)
+    }
     pub(super) fn restore_stash(&mut self, context: &Value) -> io::Result<()> {
         stash::append(self, context)
     }
 
     /// `switch` changes the active lane even when every component was skipped.
-    /// Re-render from the prepared bytes so component updates and the lane header
-    /// are published in the same bitmap history entry.
+    /// Re-render the post-checkout bytes for Consumer.onDestroy after installation.
     pub(super) fn switch_lane(&mut self, context: &Value) -> io::Result<()> {
         let id = &context["lane"]["switchId"];
         let name = id["name"].as_str().ok_or_else(|| invalid("switch lane name"))?;
@@ -51,7 +68,7 @@ impl Prepared {
             "exported":context["lane"]["switchExported"] == true})
         });
         self.output = render_rows(entries, &bitmap["$schema-version"], header)?;
-        self.changed = self.output != self.original;
+        self.changed = true;
         Ok(())
     }
     /// A first snapshot on a lane makes a newly tracked component lane-only.
@@ -324,6 +341,14 @@ impl Prepared {
             return Err(invalid("command bitmap changed"));
         }
         Ok(())
+    }
+    pub(super) fn publication_receipt(&self) -> io::Result<Value> {
+        let after = if self.changed { &self.output } else { &self.original };
+        let path = self.root.join(".bitmap");
+        if fs::read(&path)? != *after {
+            return Err(invalid("switch bitmap publication changed"));
+        }
+        Ok(crate::command_import::write_receipt(&path, Some(&self.original), after))
     }
     pub(super) fn commit(&self, file_id: &str, reason: &str) -> io::Result<Option<String>> {
         self.validate()?;

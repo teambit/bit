@@ -187,7 +187,7 @@ def validate(root, baseline, oracle, interval_start_ns, interval_end_ns, *, expe
     root = Path(root)
     raw, metadata = _history(root)
     appended = _baseline(raw, metadata, baseline)
-    _require(type(expected_transitions) is int and expected_transitions in (10, 15),
+    _require(type(expected_transitions) is int and expected_transitions in (1, 2, 10, 15),
              'unsupported fixed-workload transition count')
     transitions = _oracle(oracle, expected_transitions)
     _validate_oracle_history(oracle, baseline, transitions)

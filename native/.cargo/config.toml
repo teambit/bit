@@ -3,3 +3,6 @@
 path = "../.pnpm/crates/config.toml"
 optional = true
 # <<< pnpm-managed cargo sources <<<
+
+[env]
+CMAKE_TOOLCHAIN_FILE = { value = "cmake/zlib-compat.cmake", relative = true }

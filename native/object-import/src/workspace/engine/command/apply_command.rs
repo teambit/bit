@@ -14,19 +14,41 @@ pub(super) fn run(input: &Apply, state: &mut State) -> io::Result<(usize, Value)
     let mut prepared = record.planned.take().ok_or_else(|| invalid("command not planned"))?;
     record.proofs.extend(input.dependency_read_set.iter().cloned());
     record.proofs = proof::unique(record.proofs);
+    if let Some(completion) = &prepared.switch_completion {
+        completion.pending()?;
+    }
     validate(&record, &prepared)?;
+    let (warning, notifications) = publish(&record, &mut prepared, &input.file_id)?;
+    super::lane_history::applied(state, &record.request, &prepared.bitmap.publication_receipt()?)?;
+    let count = prepared.plan.result["components"].as_array().map_or(0, Vec::len);
+    let mut output =
+        json!({"applied":true,"warning":warning,"postPersistNotifications":notifications});
+    if let Some(completion) = &mut prepared.switch_completion {
+        completion.published()?;
+        output["requiresSwitchCompletion"] = json!(true);
+        output["token"] = json!(record.token);
+        output["ownedWorkspaceWrites"] = json!([prepared.bitmap.publication_receipt()?]);
+        record.planned = Some(prepared);
+        state.record = Some(record);
+    }
+    Ok((count, output))
+}
+fn publish(
+    record: &Record,
+    prepared: &mut PreparedPlan,
+    file_id: &str,
+) -> io::Result<(Option<String>, usize)> {
     record.repository.commit_import()?;
     prepared.plan.history.commit(&record.request.root)?;
     publish_sources(&mut prepared.plan, &record.request.root)?;
     if let Some(config) = &prepared.reset_config {
         config.commit()?;
     }
-    let (warning, notifications) = publish_bitmap(&mut prepared, &record, &input.file_id)?;
+    let result = publish_bitmap(prepared, record, file_id)?;
     if let Some(policy) = &prepared.checkout_policy {
         policy.commit()?;
     }
-    let count = prepared.plan.result["components"].as_array().map_or(0, Vec::len);
-    Ok((count, json!({"applied":true,"warning":warning,"postPersistNotifications":notifications})))
+    Ok(result)
 }
 fn validate(record: &Record, prepared: &PreparedPlan) -> io::Result<()> {
     proof::verify(&record.proofs)?;
@@ -72,7 +94,7 @@ fn reason(record: &Record, plan: &planning::Planned) -> io::Result<String> {
         return Ok("merge".to_owned());
     }
     if record.request.operation == input::Operation::Switch {
-        return Ok("switch".to_owned());
+        return Ok("checkout".to_owned());
     }
     if plan.materials.iter().all(|material| material.keep_ours) {
         return Ok(format!(

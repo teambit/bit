@@ -240,9 +240,19 @@ fn capture_environment(
         commit::publish_import_dependencies(engine, root, &mut captured)?;
     }
     if behavior.callbacks {
+        validate_documentation(engine, context)?;
         environments.callbacks(context, &mut captured, behavior.missing_status_invalid)?;
     }
     Ok(captured)
+}
+
+fn validate_documentation(engine: &mut Engine, context: &Value) -> io::Result<()> {
+    engine.validate_read_set(
+        context["documentationReadSet"]
+            .as_array()
+            .map_or(&[], Vec::as_slice),
+        "documentation sources changed before callbacks",
+    )
 }
 
 fn validate_write(

@@ -4,6 +4,29 @@ use serde_json::Value;
 use std::{io, path::Path};
 
 impl ProjectedLinker {
+    /// Checkout's filesystem consumer parses documentation before loading dependencies.
+    pub(in crate::commands) fn prepare_checkout_docs(
+        root: &Path,
+        environment: &mut crate::commands::status::environments::Environments,
+        identities: &[String],
+        deferred: bool,
+    ) -> io::Result<super::super::PreparedDocs> {
+        let bitmap = bit_object_import::parse_jsonc(&std::fs::read(root.join(".bitmap"))?)?;
+        let (mut engine, projection) = super::load::projected(root, &bitmap, identities)?;
+        super::controls::validate(&mut engine, &projection.context)?;
+        super::super::docs::prepare(root, environment, &projection.loading_components(), deferred)
+    }
+
+    /// `ComponentWriter` updates the live bitmap before its retained Host installs.
+    pub(in crate::commands) fn project_installation_workspace(
+        root: &Path,
+        environment: &mut crate::commands::status::environments::Environments,
+    ) -> io::Result<String> {
+        let bitmap = bit_object_import::parse_jsonc(&std::fs::read(root.join(".bitmap"))?)?;
+        let (mut engine, projection) = super::load::projected(root, &bitmap, &[])?;
+        super::controls::validate(&mut engine, &projection.context)?;
+        environment.project_tracking_retained(root, &bitmap, &projection.components)
+    }
     pub(in crate::commands) fn capture_import(
         &mut self,
         root: &Path,

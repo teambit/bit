@@ -6,6 +6,7 @@
 //! for the duration of one engine call. Engine calls are serialized
 //! (`run::engine_call_lock`), so one slot is enough.
 
+mod options;
 use crate::host::HostInfo;
 use pnpm_default_reporter::{
     MaxLogLevel,
@@ -58,6 +59,15 @@ impl ReporterSettings {
             width: info.columns.map_or(80, |columns| (columns as usize).saturating_sub(2).max(1)),
             color: info.color,
         }
+    }
+    pub(crate) fn apply_throttle_progress(
+        &mut self,
+        value: Option<&serde_json::Value>,
+    ) -> std::io::Result<()> {
+        if let Some(duration) = options::throttle(value)? {
+            self.throttle_progress = duration;
+        }
+        Ok(())
     }
 }
 

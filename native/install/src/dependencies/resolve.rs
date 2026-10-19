@@ -6,6 +6,8 @@
 //! naming a `.ts` file, directory `index` files), then the `CommonJS` lookup;
 //! other origins use the `CommonJS` lookup, `resolve.sync` with Bit's extension list.
 
+mod manifests;
+
 use super::{builtins, data::id_from_object};
 use crate::{
     host::CoreAspect,
@@ -267,48 +269,6 @@ impl<'a> Resolver<'a> {
             Resolved::Missing(_) => Resolved::Ignored,
             other => bit_aspect(other),
         })
-    }
-
-    /// `resolvePackagePath` from the component dir, then `resolvePackageData`.
-    pub fn package(&mut self, from: &Path, name: &str) -> io::Result<Resolved> {
-        let Some(manifest) = self.find_manifest(from, name)? else {
-            return Ok(Resolved::Missing(name.to_owned()));
-        };
-        Ok(from_manifest(&manifest, name))
-    }
-
-    /// The `package.json` of `node_modules/<name>` closest to `from`.
-    pub fn find_manifest(&mut self, from: &Path, name: &str) -> io::Result<Option<Value>> {
-        for dir in from.ancestors() {
-            let path = dir
-                .join("node_modules")
-                .join(name)
-                .join("package.json");
-            if let Some(manifest) = self.read(&path)? {
-                return Ok(Some(manifest));
-            }
-        }
-        Ok(None)
-    }
-
-    fn read(&mut self, path: &Path) -> io::Result<Option<Value>> {
-        if let Some(cached) = self.manifests.get(path) {
-            return Ok(cached.clone());
-        }
-        let manifest = match fs::read(path) {
-            Ok(bytes) => serde_json::from_slice(&bytes).ok(),
-            Err(error)
-                if matches!(
-                    error.kind(),
-                    io::ErrorKind::NotFound | io::ErrorKind::NotADirectory,
-                ) =>
-            {
-                None
-            }
-            Err(error) => return Err(error),
-        };
-        self.manifests.insert(path.to_path_buf(), manifest.clone());
-        Ok(manifest)
     }
 }
 

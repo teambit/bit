@@ -16,6 +16,25 @@ pub(super) fn load(
     environment: &mut Environments,
     components: &[Value],
 ) -> io::Result<()> {
+    prepare(root, environment, components, false)?.publish()
+}
+
+pub(in crate::commands) struct Prepared {
+    root: PathBuf,
+    components: Vec<Value>,
+    observed: BTreeMap<PathBuf, Source>,
+    directory: PathBuf,
+    entries: Vec<(String, String)>,
+    write_cache: bool,
+    deferred: bool,
+}
+
+pub(super) fn prepare(
+    root: &Path,
+    environment: &mut Environments,
+    components: &[Value],
+    deferred: bool,
+) -> io::Result<Prepared> {
     let write_cache = !cache::no_fs_cache(root);
     let observed = observe(root, components)?;
     let directory = bit_object_import::scope_path(root).join("cache/components/docs");
@@ -26,7 +45,7 @@ pub(super) fn load(
     let writes = if plan.misses.is_empty() {
         json!([])
     } else {
-        environment.tracking_docs(root, &plan.misses)?
+        environment.tracking_docs(root, &plan.misses, deferred)?
     };
     if observed != observe(root, components)? {
         return Err(io::Error::other("tracking documentation sources changed"));
@@ -36,12 +55,40 @@ pub(super) fn load(
     writes.extend(parsed.iter().cloned());
     order(root, components, &mut writes)?;
     let entries = validate(&writes, &observed)?;
-    for (path, bytes) in entries {
-        if write_cache {
-            bit_install::dependencies::cache::put(&directory, &path, &bytes)?;
-        }
+    Ok(Prepared {
+        root: root.to_owned(),
+        components: components.to_vec(),
+        observed,
+        directory,
+        entries,
+        write_cache,
+        deferred,
+    })
+}
+
+impl Prepared {
+    pub(in crate::commands) fn source_proofs(&self) -> Vec<Value> {
+        self.observed
+            .iter()
+            .map(|(path, source)| {
+                bit_install::policy::scope::proof_from_bytes(path, Some(source.bytes()))
+            })
+            .collect()
     }
-    Ok(())
+
+    pub(in crate::commands) fn publish(self) -> io::Result<()> {
+        // Deferred source proofs are consumed before onLoad. Its authorized edits must
+        // not replace the documentation the consumer already parsed from its old files.
+        if !self.deferred && self.observed != observe(&self.root, &self.components)? {
+            return Err(io::Error::other("prepared documentation sources changed"));
+        }
+        for (path, bytes) in self.entries {
+            if self.write_cache {
+                bit_install::dependencies::cache::put(&self.directory, &path, &bytes)?;
+            }
+        }
+        Ok(())
+    }
 }
 fn validate(
     writes: &[Value],

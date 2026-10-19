@@ -74,6 +74,17 @@ impl PreparedImport {
     pub(crate) fn prepare_versions(&mut self, targets: &[Target]) -> io::Result<()> {
         self.prepare_versions_with_reason(targets, None)
     }
+    pub(crate) fn prepare_switch_versions(
+        &mut self,
+        targets: &[Target],
+    ) -> io::Result<super::super::Progress> {
+        let previous = self.cache.switch_existing_versions;
+        self.cache.switch_existing_versions = false;
+        let result = self.prepare_versions(targets);
+        self.cache.switch_existing_versions = previous;
+        result?;
+        self.progress.pop().ok_or_else(|| invalid("switch checkout import progress"))
+    }
     pub(crate) fn prepare_diff_versions(&mut self, targets: &[Target]) -> io::Result<()> {
         self.prepare_versions_with_reason(targets, Some("to show diff"))?;
         let ids = self.progress

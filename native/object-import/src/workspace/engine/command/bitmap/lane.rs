@@ -37,29 +37,40 @@ pub(super) fn switch_visibility(
         .ok_or_else(|| invalid("switch lane-only identities"))?;
     for entry in entries {
         let component = identity(entry)?;
+        let (available, lane_only) = switch_flags(context, &component, name, lane_only)?;
         let fields = entry.as_object_mut().ok_or_else(|| invalid("switch bitmap entry"))?;
         fields.shift_remove("isAvailableOnCurrentLane");
         fields.shift_remove("onLanesOnly");
-        let has_main_head = name == "main"
-            && repository::model(context, &component)?
-                .is_some_and(|model| model["head"].as_str().is_some());
-        if has_main_head
-            || !lane_only
-                .iter()
-                .any(|value| value == &component)
-        {
-            continue;
-        }
-        let on_destination =
-            name != "main" && context["lane"]["switchLaneHeads"].get(&component).is_some();
-        if on_destination {
+        if lane_only {
             fields.insert("onLanesOnly".into(), Value::Bool(true));
-            fields.insert("isAvailableOnCurrentLane".into(), Value::Bool(true));
-        } else {
-            fields.insert("isAvailableOnCurrentLane".into(), Value::Bool(false));
+        }
+        if !available || lane_only {
+            fields.insert("isAvailableOnCurrentLane".into(), Value::Bool(available));
         }
     }
     Ok(())
+}
+fn switch_flags(
+    context: &Value,
+    component: &str,
+    name: &str,
+    lane_only: &[Value],
+) -> io::Result<(bool, bool)> {
+    let has_main_head = name == "main"
+        && repository::model(context, component)?
+            .is_some_and(|model| model["head"].as_str().is_some());
+    let was_lane_only = !has_main_head
+        && lane_only
+            .iter()
+            .any(|value| value == component);
+    let on_destination = was_lane_only
+        && name != "main"
+        && context["lane"]["switchLaneHeads"].get(component).is_some();
+    let available = context["lane"]["switchSelectedIds"]
+        .as_array()
+        .map_or(!was_lane_only || on_destination, |ids| ids.iter().any(|id| id == component));
+    let lane_only = on_destination && (context["lane"]["switchWorkspaceOnly"] != true || available);
+    Ok((available, lane_only))
 }
 
 // Consumer.getNotExportedIds considers only the current lane's available bitmap

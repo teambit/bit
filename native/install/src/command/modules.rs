@@ -1,12 +1,13 @@
 //! `_installModules`: link, calculate manifests, run the engine, link the
 //! components, compile, and repeat while legacy envs keep changing the manifests.
 
+pub(super) mod linking;
+
 mod compile_stamp;
 mod engine_run;
-mod linking;
 
 use super::{
-    calculate::{Calculated, calculate},
+    calculate::{Calculated, calculate, calculate_linked, workspace_aspects},
     packages, restore,
     session::{Loaded, Session},
     workspace_jsonc,
@@ -35,9 +36,12 @@ pub async fn install(session: &Session<'_>, mut loaded: Loaded) -> io::Result<In
     let output = &session.output;
     let manager = output.paint(Style::Cyan, "teambit.dependencies/pnpm");
     output.console(&format!("installing dependencies in workspace using pnpm ({manager})"));
-    let links = linking::root_links(session, &loaded)?;
-    let mut calculated = calculate(session, &loaded, &links).await?;
-    linking::link_components_timed(session, &loaded, &calculated).await?;
+    let classes_loaded =
+        session.host.initial_installation_components(&workspace_aspects(session, &loaded)).await?;
+    let initial_components =
+        super::session::installation_components::initial(session, &loaded, classes_loaded).await?;
+    let links = linking::root_links(session, &loaded, &initial_components)?;
+    let mut calculated = calculate_linked(session, &loaded, &links).await?;
     if session.options.add_missing_deps
         && add_missing_deps(session, &loaded, &calculated, &links).await?
     {
@@ -49,10 +53,11 @@ pub async fn install(session: &Session<'_>, mut loaded: Loaded) -> io::Result<In
     let restore = restore::input(session, has_root_components, &calculated)?;
     prepare_directories(&loaded, &calculated)?;
     // `_installModulesProfiled` loads the component directory map before the engine runs.
-    session.loading(&loaded);
+    calculated.engine_components =
+        super::session::installation_components::load(session, &loaded, "engine").await?;
     let context = CycleContext { loaded: &loaded, links: &links, restore: restore.as_ref() };
     let old_non_loaded_envs = run_cycles(session, &context, &mut calculated).await?;
-    linking::sync_core_aspects(session, &loaded, &calculated)?;
+    linking::sync_core_aspects(session, &loaded, &calculated.engine_components)?;
     if !session.options.lockfile_only && !session.options.skip_prune {
         // A failed prune never fails the installation. Directories the host
         // process loaded modules from stay (`loadedVirtualStoreDirNames`).
@@ -79,9 +84,11 @@ async fn run_cycles(
         let has_missing_local_components = calculated.outcome.has_missing_local_components;
         let result = engine_run::run(session, loaded, calculated, restore).await?;
         // `linkCodemods` loads the components it links.
-        session.loading(loaded);
-        linking::link_components(session, loaded, calculated).await?;
-        linking::sync_core_aspects(session, loaded, calculated)?;
+        let linking_components =
+            super::session::installation_components::load(session, loaded, "linking").await?;
+        linking::link_components(session, loaded, &calculated.dependencies, &linking_components)
+            .await?;
+        linking::sync_core_aspects(session, loaded, &calculated.engine_components)?;
         let old_non_loaded_envs = calculated.non_loaded_envs();
         after_install(session, loaded, calculated, &old_non_loaded_envs).await?;
         if !result.dependencies_changed
@@ -91,7 +98,9 @@ async fn run_cycles(
             return Ok(old_non_loaded_envs);
         }
         previous.insert(manifests_hash(&calculated.outcome.plan));
+        let engine_components = std::mem::take(&mut calculated.engine_components);
         *calculated = calculate(session, loaded, links).await?;
+        calculated.engine_components = engine_components;
         let unchanged = previous.contains(&manifests_hash(&calculated.outcome.plan));
         if (unchanged && !has_missing_local_components) || cycle == MAX_CYCLES {
             return Ok(calculated.non_loaded_envs());

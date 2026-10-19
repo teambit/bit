@@ -51,7 +51,7 @@ struct Projection<'a> {
 struct Metadata {
     issues: IssueData,
     core_aspects: Vec<String>,
-    file_core_aspects: Vec<String>,
+    file_core_aspects: [Vec<String>; 2],
     relative: relative::State,
 }
 #[derive(Default)]
@@ -65,7 +65,7 @@ struct IssueData {
 }
 impl Projection<'_> {
     fn file(&mut self, file: &Path) -> io::Result<()> {
-        self.metadata.file_core_aspects.clear();
+        self.metadata.file_core_aspects.iter_mut().for_each(Vec::clear);
         let path = file.to_str().ok_or_else(|| invalid("fresh source path"))?;
         let relative = file
             .strip_prefix(&self.request.component_root)
@@ -87,6 +87,7 @@ impl Projection<'_> {
         for edge in edges {
             self.edge(path, edge, &mut packages, &mut components, field)?;
         }
+        self.finish_core_aspects();
         self.error(path, &relative)?;
         self.missing(path, &relative)?;
         self.missing_packages(path, &relative, field, &mut packages)?;
@@ -127,7 +128,7 @@ impl Projection<'_> {
             return self.relative(origin, &edge, field);
         }
         let package = self.reader.package(&edge)?;
-        if self.core_aspect(&package.name)? {
+        if self.core_aspect(&package.name, package.component.is_some())? {
             return Ok(());
         }
         if package.component.is_some() {
@@ -140,7 +141,7 @@ impl Projection<'_> {
         }
         Ok(())
     }
-    fn core_aspect(&mut self, name: &str) -> io::Result<bool> {
+    fn core_aspect(&mut self, name: &str, component: bool) -> io::Result<bool> {
         let detection = &self.request.detection;
         if detection.core_aspect_ids.contains(&unversioned(&self.request.identity).to_owned()) {
             return Ok(false);
@@ -154,11 +155,20 @@ impl Projection<'_> {
         let id = detection.core_aspect_ids
             .get(index)
             .ok_or_else(|| invalid("fresh core aspect identity mapping"))?;
-        if !self.metadata.file_core_aspects.contains(id) {
-            self.metadata.file_core_aspects.push(id.clone());
-            self.metadata.core_aspects.push(id.clone());
-        }
+        self.metadata.file_core_aspects[usize::from(component)].push(id.clone());
         Ok(true)
+    }
+
+    fn finish_core_aspects(&mut self) {
+        // AutoDetectDeps processes unidentified packages before component packages,
+        // then deduplicates only this origin file's combined list.
+        let mut seen = Vec::new();
+        for id in self.metadata.file_core_aspects.iter().flatten() {
+            if !seen.contains(id) {
+                seen.push(id.clone());
+            }
+        }
+        self.metadata.core_aspects.extend(seen);
     }
 
     fn relative(&mut self, origin: &str, edge: &str, field: usize) -> io::Result<()> {

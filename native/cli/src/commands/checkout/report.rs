@@ -14,6 +14,16 @@ use std::io;
 
 /// The checkout report of the engine's result.
 pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Report> {
+    format_title(result, options, chalk, None)
+}
+
+/// `checkoutOutput` accepts a lane-history title without changing its checkout sections.
+pub(in crate::commands) fn format_title(
+    result: &Value,
+    options: &Options,
+    chalk: Chalk,
+    title: Option<&str>,
+) -> io::Result<Report> {
     let results = hydrate(result)?;
     if results.snaps.is_some() || results.snap_error.is_some() {
         return Err(crate::commands::status::js::decline(
@@ -25,6 +35,7 @@ pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Rep
         options,
         format: Formatter::new(chalk),
         policy: policy::format(result.get("workspaceConfigUpdateResult"), chalk)?,
+        title,
     };
     let skipped = !results.skipped.is_empty()
         && options.report_all()
@@ -54,6 +65,7 @@ struct Checkout<'r> {
     options: &'r Options,
     format: Formatter,
     policy: (String, String),
+    title: Option<&'r str>,
 }
 
 impl Checkout<'_> {
@@ -127,7 +139,7 @@ impl Checkout<'_> {
             chalk.bold(&version),
         );
         join_lines(&[
-            self.format.success_summary(&title),
+            self.format.success_summary(self.title.unwrap_or(&title)),
             self.results.apply_version_report(&self.format, false, false),
         ])
     }
@@ -156,7 +168,7 @@ impl Checkout<'_> {
             components.len(),
         );
         join_lines(&[
-            self.format.success_summary(&title),
+            self.format.success_summary(self.title.unwrap_or(&title)),
             self.results.apply_version_report(&self.format, true, self.to("head")),
         ])
     }

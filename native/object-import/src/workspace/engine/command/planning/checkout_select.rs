@@ -12,6 +12,11 @@ pub(super) fn select(
     state: &mut checkout_transition::State,
     recovery_reset: bool,
 ) -> io::Result<Value> {
+    if let Some(selected) =
+        super::super::lane_history::planning::added(&record.targets[index], captured)
+    {
+        return Ok(selected);
+    }
     let identity = &captured.target.identity;
     if !super::super::checkout_stash::loading(&record.request.options)
         && let Some(selected) = tracked_head(record, captured)
@@ -58,7 +63,9 @@ fn tracked_head(record: &Record, captured: &capture::Captured) -> Option<Value> 
 }
 
 fn remote_head(record: &mut Record, identity: &str) -> io::Result<Option<String>> {
-    if record.request.operation == input::Operation::Switch {
+    if super::super::lane_history::phase(&record.request.options).is_some() {
+        super::super::lane_history::heads::remote(record, identity)
+    } else if record.request.operation == input::Operation::Switch {
         Ok(None)
     } else {
         record.repository.remote_head(identity)

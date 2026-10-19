@@ -54,6 +54,21 @@ fn preflight(
     Ok(())
 }
 
+/// Reuse installation's process-fact Host without skipping autosync or providers.
+pub(in crate::commands) fn bootstrap_inherited(
+    root: &Path,
+    request: &super::Request<'_>,
+    startup: &mut Startup,
+    inherited: Environments,
+) -> io::Result<Environments> {
+    let home = super::home();
+    preflight(root, &home, request, false)?;
+    let mut engine = Engine::new()?;
+    let (_, environment) =
+        environments::read_inherited_context(&mut engine, root, &home, None, startup, inherited)?;
+    Ok(environment.for_checkout())
+}
+
 pub(in crate::commands) fn retain(startup: Option<&mut Startup>, capture: &capture::Capture) {
     if let Some(startup) = startup {
         startup.stdout.push_str(&capture::callback_startup_stdout(capture));

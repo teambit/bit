@@ -12,7 +12,12 @@ pub(super) fn replay(
     let Some(model) = model else {
         return Ok(());
     };
-    let head = model["head"].as_str();
+    let head = super::super::lane_history::heads::source(
+        &record.request.options,
+        &record.context,
+        identity,
+        model,
+    );
     let to = record.request.options.to.as_deref().unwrap_or_default();
     let observations = selected["observations"]
         .as_array()

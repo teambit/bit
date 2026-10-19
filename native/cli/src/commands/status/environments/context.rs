@@ -14,7 +14,7 @@ pub(in crate::commands) fn read_context(
     pattern: Option<&str>,
     startup: &mut crate::commands::status::autosync::Startup,
 ) -> io::Result<(Value, Environments)> {
-    read_context_with(engine, root, home, history, pattern, startup, None)
+    read_context_with(engine, root, home, history, pattern, startup, ContextSetup::default())
 }
 
 /// Snapshot-specific provider startup precedes native command control receipts.
@@ -25,7 +25,40 @@ pub(in crate::commands) fn read_snapshot_context(
     build: bool,
     startup: &mut crate::commands::status::autosync::Startup,
 ) -> io::Result<(Value, Environments)> {
-    read_context_with(engine, root, home, false, None, startup, Some(build))
+    read_context_with(
+        engine,
+        root,
+        home,
+        false,
+        None,
+        startup,
+        ContextSetup { snapshot: Some(build), inherited: None },
+    )
+}
+
+/// Installation process facts share a Host, while ordinary provider startup still runs.
+pub(in crate::commands) fn read_inherited_context(
+    engine: &mut crate::commands::engine::Engine,
+    root: &Path,
+    home: &Path,
+    pattern: Option<&str>,
+    startup: &mut crate::commands::status::autosync::Startup,
+    inherited: Environments,
+) -> io::Result<(Value, Environments)> {
+    read_context_with(
+        engine,
+        root,
+        home,
+        false,
+        pattern,
+        startup,
+        ContextSetup { snapshot: None, inherited: Some(inherited) },
+    )
+}
+#[derive(Default)]
+struct ContextSetup {
+    snapshot: Option<bool>,
+    inherited: Option<Environments>,
 }
 
 fn read_context_with(
@@ -35,7 +68,7 @@ fn read_context_with(
     history: bool,
     pattern: Option<&str>,
     startup: &mut crate::commands::status::autosync::Startup,
-    snapshot: Option<bool>,
+    setup: ContextSetup,
 ) -> io::Result<(Value, Environments)> {
     crate::commands::status::autosync::run(engine, root, startup)?;
     let request = json!({"kind":"statusContext","root":root,"home":home,"history":history});
@@ -44,15 +77,15 @@ fn read_context_with(
         array(context.get("targets"), "environment targets")?,
         pattern,
     )?;
-    let mut environments = Environments::new();
-    if let Some(build) = snapshot {
+    let mut environments = setup.inherited.unwrap_or_else(Environments::new);
+    if let Some(build) = setup.snapshot {
         environments = environments.for_snapshot_build(build);
     }
     if Environments::require_native_write_for(root, &context, &selected).is_err() {
         startup.committed = true;
     }
     bootstrap_owned(&mut environments, root, &context, &selected, startup)?;
-    if let Some(build) = snapshot
+    if let Some(build) = setup.snapshot
         && (build || super::snapshot::configured(engine, root, &context)?)
     {
         startup.committed = true;

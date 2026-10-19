@@ -17,11 +17,14 @@ pub(super) fn run(
     proof::verify(&input.dependency_read_set)?;
     record.proofs.extend(input.dependency_read_set.iter().cloned());
     validate_versions(&mut record)?;
-    let mut planned = plan_operation(&mut record, input, snapshots, pool)?;
+    let mut planned = plan_operation(&mut record, input, snapshots, pool)
+        .map_err(|error| super::switch::progress::failure(error, &record))
+        .map_err(|error| super::lane_history::progress::failure(error, &record))?;
     if record.request.operation == input::Operation::Switch {
         super::switch::append_skipped(&record.context, &record.targets, &mut planned.result)?;
     }
-    let bitmap = prepare_bitmap(&record, &planned)?;
+    let mut bitmap = prepare_bitmap(&record, &planned)?;
+    let switch_completion = super::switch_completion::prepare(&mut record, &mut bitmap, &planned)?;
     for material in &planned.materials {
         materialization::validate(material, &record.request.root)?;
     }
@@ -29,22 +32,33 @@ pub(super) fn run(
     proof::verify(&record.proofs)?;
     let output = plan_output(&record, &planned)?;
     let count = planned.result["components"].as_array().map_or(0, Vec::len);
-    let checkout_policy = prepare_checkout_policy(&record, &planned, &output)?;
+    record.planned = Some(retain_plan(&record, planned, (bitmap, switch_completion), &output)?);
+    snapshots.command.record = Some(record);
+    Ok((count, output))
+}
+
+fn retain_plan(
+    record: &Record,
+    planned: planning::Planned,
+    publication: (bitmap::Prepared, Option<super::switch_completion::Retained>),
+    output: &Value,
+) -> io::Result<PreparedPlan> {
+    let (bitmap, switch_completion) = publication;
+    let checkout_policy = prepare_checkout_policy(record, &planned, output)?;
     let configuration = match record.request.operation {
         input::Operation::Checkout | input::Operation::Switch => {
-            Some(super::reset_config::checkout(&record, &planned)?)
+            Some(super::reset_config::checkout(record, &planned)?)
         }
         input::Operation::Merge => None,
     };
-    record.planned = Some(PreparedPlan {
+    Ok(PreparedPlan {
         plan: planned,
         bitmap,
         snap_bitmap: None,
         reset_config: configuration,
         checkout_policy,
-    });
-    snapshots.command.record = Some(record);
-    Ok((count, output))
+        switch_completion,
+    })
 }
 
 fn plan_operation(
@@ -102,6 +116,14 @@ fn prepare_checkout_policy(
 fn plan_output(record: &Record, planned: &planning::Planned) -> io::Result<Value> {
     let mut output = json!({"token":record.token,"result":planned.result,"progress":record.repository.progress()});
     if record.request.operation == input::Operation::Switch {
+        output["switchWriterIds"] = json!(
+            planned.materials
+                .iter()
+                .filter(|material| !material.keep_ours)
+                .map(|material| &material.output["id"])
+                .collect::<Vec<_>>()
+        );
+        output["switchCheckoutImport"] = record.context["switchCheckoutImport"].clone();
         output["switchImportCount"] = json!(super::switch::progress::import_count(
             &record.request.root,
             &record.context,
@@ -118,7 +140,7 @@ fn plan_output(record: &Record, planned: &planning::Planned) -> io::Result<Value
         );
     }
     snap_receipt(&mut output, planned)?;
-    if record.request.operation == input::Operation::Checkout
+    if matches!(record.request.operation, input::Operation::Checkout | input::Operation::Switch)
         && !super::checkout_stash::new_only(&record.request.options)
         && let Some(receipt) = checkout_policy::receipt(
             &record.context,
@@ -212,12 +234,7 @@ pub(super) fn prepare_bitmap_bytes(
     }
     let removed =
         planned.merge.as_ref().map_or_else(Vec::new, super::merge_planning::Prepared::removed_ids);
-    let mut bitmap =
-        bitmap::prepare_bytes(&record.request.root, original, &record.context, &updates, &removed)?;
-    if record.request.operation == input::Operation::Switch {
-        bitmap.switch_lane(&record.context)?;
-    }
-    Ok(bitmap)
+    bitmap::prepare_bytes(&record.request.root, original, &record.context, &updates, &removed)
 }
 
 fn bitmap_update(

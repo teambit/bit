@@ -25,6 +25,7 @@ pub mod stash_store;
 pub use bit_workspace_config::jsonc;
 /// Bit's JSONC reader (comments and trailing commas), used for `.bitmap`.
 pub use bit_workspace_config::parse_jsonc;
+pub use command_import::lane::resolve_lane_identity;
 pub use json_stringify::stringify_json;
 /// Native import merge decisions (`kind: component | version | versionHistory | ...`).
 pub use operation::plan as plan_import_operation;

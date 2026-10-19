@@ -56,3 +56,18 @@ fn tracked_lane_component_keeps_lane_only_flags_on_another_lane() {
     assert_eq!(bitmap["a"]["isAvailableOnCurrentLane"], true);
     assert_eq!(bitmap["_bit_lane"]["id"]["name"], "study");
 }
+
+#[test]
+fn workspace_only_keeps_inactive_lane_entries_unavailable_without_lane_only_flags() {
+    let context = json!({"lane":{"switchSelectedIds":["s/visible"],"switchWorkspaceOnly":true,
+        "switchLaneOnly":["s/inactive"],"switchLaneHeads":{"s/inactive":"head"}}});
+    let mut entries = vec![
+        json!({"name":"inactive","scope":"s","onLanesOnly":true,
+        "isAvailableOnCurrentLane":false}),
+        json!({"name":"visible","scope":"s"}),
+    ];
+    super::lane::switch_visibility(&mut entries, &context, "dev").unwrap();
+    assert_eq!(entries[0]["isAvailableOnCurrentLane"], false);
+    assert!(entries[0].get("onLanesOnly").is_none());
+    assert!(entries[1].get("isAvailableOnCurrentLane").is_none());
+}

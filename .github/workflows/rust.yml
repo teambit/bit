@@ -184,7 +184,7 @@ jobs:
           - group: snapshot
             filters: commands::snap commands::tag snapshot_environments
           - group: checkout
-            filters: checkout_platform checkout_local checkout_callbacks checkout_policy checkout_selection reset_selection harmony::revert
+            filters: checkout_platform checkout_local checkout_callbacks checkout_policy checkout_selection reset_selection harmony::revert harmony::lane_adoption harmony::lane_restoration
           - group: transfer
             filters: commands::import commands::export export_completion export_hub export_callbacks
           - group: merge-history

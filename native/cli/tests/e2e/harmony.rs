@@ -2,6 +2,8 @@
 mod add;
 mod deprecation;
 mod fork;
+mod lane_adoption;
+mod lane_restoration;
 mod merge_callbacks;
 mod merge_history;
 mod merge_lifecycle;

@@ -4,6 +4,8 @@ use std::{
     time::Duration,
 };
 
+static STATUS_TEST: Mutex<()> = Mutex::new(());
+
 fn recorder() -> (Sink, Arc<Mutex<String>>) {
     let written = Arc::new(Mutex::new(String::new()));
     let target = Arc::clone(&written);
@@ -31,6 +33,7 @@ fn paints_only_with_colors() {
 
 #[test]
 fn writes_like_ora_without_a_tty() {
+    let _status = STATUS_TEST.lock().unwrap();
     let (sink, written) = recorder();
     let output = Output::new(false, false, true, sink);
     output.status("importing missing objects");
@@ -46,6 +49,7 @@ fn writes_like_ora_without_a_tty() {
 
 #[test]
 fn without_a_loader_only_console_messages_print() {
+    let _status = STATUS_TEST.lock().unwrap();
     let (sink, written) = recorder();
     let output = Output::new(false, false, false, sink);
     output.status("importing missing objects");
@@ -56,11 +60,28 @@ fn without_a_loader_only_console_messages_print() {
 
 #[test]
 fn status_lines_are_not_shown_on_ci() {
+    let _status = STATUS_TEST.lock().unwrap();
     let (sink, written) = recorder();
     let output = Output::new(false, false, true, sink).with_ci(true);
     output.status("loading 1 component(s)");
     output.success("done", None);
     assert_eq!(*written.lock().unwrap(), "✔ done\n");
+}
+
+#[test]
+fn ci_completion_reuses_status_without_explicit_completions_replacing_it() {
+    let _status = STATUS_TEST.lock().unwrap();
+    let (sink, written) = recorder();
+    let output = Output::new(false, false, true, sink).with_ci(true);
+    output.restart("successfully imported 1 components");
+    output.status("deduping dependencies for installation");
+    output.success_status();
+    output.success("linking components", None);
+    output.success_status();
+    assert_eq!(
+        *written.lock().unwrap(),
+        "- successfully imported 1 components\n✔ successfully imported 1 components\n✔ linking components\n✔ successfully imported 1 components\n",
+    );
 }
 
 #[test]

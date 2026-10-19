@@ -165,13 +165,13 @@ impl Output {
         if !self.loader() {
             return;
         }
+        lock().text = text.to_string();
         if !self.tty {
             self.line(&format!("- {text}"));
             return;
         }
         let generation = {
             let mut spinner = lock();
-            spinner.text = text.to_string();
             spinner.generation += 1;
             spinner.spinning = true;
             spinner.color = self.color;
@@ -202,6 +202,12 @@ impl Output {
             None => message.to_string(),
         };
         self.persist(&self.symbol('✔', Style::Green), &message);
+    }
+
+    /// `logger.consoleSuccess()` without a message uses the loader's retained text.
+    pub fn success_status(&self) {
+        let message = lock().text.clone();
+        self.success(&message, None);
     }
 
     /// `logger.consoleWarning(message)`.

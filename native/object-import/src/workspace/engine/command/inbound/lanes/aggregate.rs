@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 use std::{collections::HashMap, io};
 
 pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, Value)> {
-    let mut selection = select(input)?;
+    let mut selection = select(input, None)?;
     let main = super::super::bitmap_targets(&input.root)?;
     let mut import = connected(input, &main, &mut selection)?;
     import.prepare_main_fetch(&input.root, &main, input.options.all_history)?;

@@ -61,6 +61,10 @@ fn checkout_captured(
         directories: Vec::new(),
         result: json!({"components":[],"failedComponents":[],"removedComponents":[]}),
     };
+    if super::lane_history::phase(&record.request.options).is_some() {
+        plan.result["newFromLaneAdded"] = json!(false);
+    }
+    super::lane_history::planning::attach(record, &mut plan)?;
     let selections = select_captured(record, &mut plan, semver, recovery_reset)?;
     import_selected(record, &selections)?;
     prepare_selections(record, &mut plan, &selections, snapshots)?;
@@ -123,6 +127,22 @@ fn import_selected(record: &mut Record, selections: &[Value]) -> io::Result<()> 
     if super::checkout_stash::loading(&record.request.options) {
         return Ok(());
     }
+    let mut expanded = expanded_imports(record, selections)?;
+    if record.request.operation == input::Operation::Switch {
+        super::switch::progress::additions(&record.context, &mut expanded)?;
+        record.context["switchCheckoutImport"] =
+            record.repository.prepare_switch_versions(&expanded)?;
+        Ok(())
+    } else if super::lane_history::phase(&record.request.options).is_some() {
+        super::lane_history::progress::import(record, &expanded)
+    } else {
+        record.repository.prepare_versions(&expanded)
+    }
+}
+fn expanded_imports(
+    record: &Record,
+    selections: &[Value],
+) -> io::Result<Vec<command_import::Target>> {
     let targets = record.targets
         .iter()
         .zip(selections)
@@ -145,7 +165,7 @@ fn import_selected(record: &mut Record, selections: &[Value]) -> io::Result<()> 
             });
         }
     }
-    record.repository.prepare_versions(&expanded)
+    Ok(expanded)
 }
 fn failure(result: &mut Value, target: &Value, selected: &Value) -> io::Result<()> {
     if selected["legitimate"] != true || selected["shouldBeRemoved"] == true {
@@ -334,11 +354,17 @@ fn modification(
     } else {
         comparison::compare(&captured.target, &captured.metadata, &version)?["modified"] == true
     };
+    let source = super::lane_history::heads::source(
+        &record.request.options,
+        &record.context,
+        identity,
+        model,
+    );
     let distance = staged.distance(
         &record.request.root,
         identity,
         model,
-        [model["head"].as_str(), remote],
+        [source, remote],
         &mut record.repository,
     )?;
     Ok((

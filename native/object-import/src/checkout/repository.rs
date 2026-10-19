@@ -1,3 +1,5 @@
+pub(crate) use inflate_error::message as inflate_message;
+mod inflate_error;
 use std::{
     cell::RefCell,
     fs::File,
@@ -161,7 +163,7 @@ fn inflate_using(
         let before_out = decoder.total_out();
         let status = decoder
             .decompress(&compressed[before_in as usize..], chunk, FlushDecompress::None)
-            .map_err(|_| invalid("checkout invalid compressed object"))?;
+            .map_err(inflate_error::retain)?;
         let count = (decoder.total_out() - before_out) as usize;
         if output.len() + count > maximum {
             return Err(invalid("checkout inflated bytes out of bounds"));

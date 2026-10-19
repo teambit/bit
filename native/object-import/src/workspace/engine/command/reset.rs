@@ -51,6 +51,7 @@ pub(super) fn plan(
         snap_bitmap: None,
         reset_config: Some(configuration),
         checkout_policy: None,
+        switch_completion: None,
     };
     validate(record, &prepared)?;
     Ok(prepared)

@@ -108,6 +108,39 @@ pub struct DetectRequest<'a> {
 /// workspace actually needs it.
 #[async_trait]
 pub trait Host: Send + Sync {
+    /// Load the retained component classes before root linking, when the parent needs them.
+    async fn initial_installation_components(&self, aspect_ids: &[String]) -> io::Result<bool> {
+        let _ = aspect_ids;
+        Ok(false)
+    }
+
+    /// Actual component class loads and ordered directory facts at an installation phase.
+    async fn installation_components(
+        &self,
+        phase: &str,
+        ids: &[String],
+    ) -> io::Result<Option<Value>> {
+        let _ = (phase, ids);
+        Ok(None)
+    }
+
+    /// Invalidate retained component classes after the native linker changed package manifests.
+    async fn component_links_changed(&self, ids: &[String]) -> io::Result<()> {
+        let _ = ids;
+        Ok(())
+    }
+
+    /// Run actual package-manager subscribers over the native installation metadata.
+    async fn install_subscribers(&self, request: &Value) -> io::Result<Option<Value>> {
+        let _ = request;
+        Ok(None)
+    }
+
+    /// Load configured aspect classes at the root-policy phase without aggregating policy.
+    async fn configured_aspect_classes(&self) -> io::Result<()> {
+        Ok(())
+    }
+
     /// Dependency policy (`EnvPolicyConfigObject`) of an env that has no
     /// `env.jsonc`: core envs and legacy envs implementing `getDependencies()`.
     /// `None` when the env cannot be loaded.

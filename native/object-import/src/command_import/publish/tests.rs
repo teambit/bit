@@ -1,4 +1,5 @@
 //! Preserve the exact validated Node stream; compressors may emit different valid encodings.
+mod compression;
 use serde_json::Value;
 const HASH: &str = "1916562e4f80016ca7cfb37975c8257ab52506d8";
 const BODY: &str = r#"{"name":"comp-a2","scope":"25412c31-remote","versions":{"0.0.1":"173108081623a641493cb6a1c777c4d7d01d04a0"},"lang":"javascript","deprecated":false,"bindingPrefix":"@25412c31-remote","remotes":[{"url":"file:///var/tmp/bit-native-e2e/3972936/case-AkphF3/25412c31-remote","name":"25412c31-remote","date":"1792308099002"}],"schema":"2.0.0","head":"173108081623a641493cb6a1c777c4d7d01d04a0"}"#;
@@ -80,4 +81,19 @@ fn captured(path: &std::path::Path, capture: &mut super::super::Capture) -> supe
         .object(path, HASH, "Component")
         .unwrap()
         .unwrap()
+}
+
+#[test]
+fn unchanged_second_candidate_preserves_the_original_stream_after_a_different_local_value() {
+    let directory = tempfile::tempdir().unwrap();
+    let mut capture = super::super::Capture::default();
+    let incoming = captured(directory.path(), &mut capture);
+    let bytes = incoming.bytes.clone();
+    let value = incoming.value.clone().unwrap();
+    let mut local = value.clone();
+    local["deprecated"] = Value::Bool(true);
+    let local = super::object(HASH, "Component", local).unwrap();
+    let result = super::reusing_candidates(HASH, "Component", value, [local, incoming]).unwrap();
+    assert_eq!(result.bytes, bytes);
+    capture.validate().unwrap();
 }

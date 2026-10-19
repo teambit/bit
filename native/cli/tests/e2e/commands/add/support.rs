@@ -1,11 +1,15 @@
 //! Exact command bytes and filesystem state replayed at the same absolute workspace path.
+pub(crate) mod history_oracle;
+
 mod clock_phase;
 mod config_history;
 mod hardlinks;
 mod install_clocks;
 mod object_diagnostic;
+mod output;
 mod timestamps;
 
+use self::output::Comparison;
 use crate::helper::{Helper, Run};
 use std::{collections::BTreeMap, ffi::OsStr, fs, path::Path};
 
@@ -16,11 +20,11 @@ pub(crate) fn workspace() -> Helper {
 }
 
 pub(crate) fn compare(helper: &Helper, command: &str) -> Run {
-    compare_mode(helper, command, false, true, str::to_owned, false, None)
+    compare_mode(helper, command, false, true, Comparison::exact(str::to_owned), false, None)
 }
 
 pub(crate) fn compare_ci(helper: &Helper, command: &str, native: bool) -> Run {
-    compare_mode(helper, command, true, native, str::to_owned, false, None)
+    compare_mode(helper, command, true, native, Comparison::exact(str::to_owned), false, None)
 }
 
 pub(crate) fn compare_with_stdout(
@@ -28,17 +32,28 @@ pub(crate) fn compare_with_stdout(
     command: &str,
     stdout: fn(&str) -> String,
 ) -> Run {
-    compare_mode(helper, command, false, true, stdout, false, None)
+    compare_mode(helper, command, false, true, Comparison::exact(stdout), false, None)
+}
+
+/// Only a caller with independently qualified complete Node errors may use variants.
+pub(crate) fn compare_with_error_variants(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    variants: &[String; 2],
+) -> Run {
+    let output = Comparison { stdout, errors: Some(variants) };
+    compare_mode(helper, command, false, true, output, false, None)
 }
 
 /// Require clean delegation while retaining exact command bytes and full state.
 pub(crate) fn compare_declined(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
-    compare_mode(helper, command, false, false, stdout, false, None)
+    compare_mode(helper, command, false, false, Comparison::exact(stdout), false, None)
 }
 
 /// Installation changes only these two qualified pnpm wall-clock fields independently.
 pub(crate) fn compare_install(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
-    compare_mode(helper, command, false, true, stdout, true, None)
+    compare_mode(helper, command, false, true, Comparison::exact(stdout), true, None)
 }
 
 pub(crate) type HistoryProjection<'a> = dyn Fn(&Path, i64, i64) -> BTreeMap<String, Vec<u8>> + 'a;
@@ -50,7 +65,45 @@ pub(crate) fn compare_with_history(
     stdout: fn(&str) -> String,
     observe: &HistoryProjection<'_>,
 ) -> Run {
-    compare_mode(helper, command, false, true, stdout, false, Some(observe))
+    compare_mode(helper, command, false, true, Comparison::exact(stdout), false, Some(observe))
+}
+
+/// Successful installation and a per-write oracle retain both independent clock proofs.
+pub(crate) fn compare_install_with_history(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    observe: &HistoryProjection<'_>,
+) -> Run {
+    compare_mode(helper, command, false, true, Comparison::exact(stdout), true, Some(observe))
+}
+
+/// CI is scoped to this command while retaining full installation/history state.
+pub(crate) fn compare_install_with_history_ci(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    observe: &HistoryProjection<'_>,
+    ci: bool,
+) -> Run {
+    if !ci {
+        return compare_install_with_history(helper, command, stdout, observe);
+    }
+    compare_mode(helper, command, true, true, Comparison::exact(stdout), true, Some(observe))
+}
+
+/// The same history projection with per-command CI selection.
+pub(crate) fn compare_with_history_ci(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    observe: &HistoryProjection<'_>,
+    ci: bool,
+) -> Run {
+    if !ci {
+        return compare_with_history(helper, command, stdout, observe);
+    }
+    compare_mode(helper, command, true, true, Comparison::exact(stdout), false, Some(observe))
 }
 
 /// Untimed oracle preparation restores the identical source/cache/hardlink inputs afterwards.
@@ -74,7 +127,7 @@ fn compare_mode(
     command: &str,
     ci: bool,
     native: bool,
-    stdout: fn(&str) -> String,
+    output: Comparison<'_>,
     install_clocks: bool,
     oracle: Option<&HistoryProjection<'_>>,
 ) -> Run {
@@ -129,8 +182,13 @@ fn compare_mode(
         expected.stderr,
         actual.trace,
     );
-    assert_eq!(stdout(&actual.stdout), stdout(&expected.stdout), "{command}");
-    assert_eq!(atomic_error(&actual.stderr), atomic_error(&expected.stderr), "{command}");
+    assert_eq!((output.stdout)(&actual.stdout), (output.stdout)(&expected.stdout), "{command}");
+    match output.errors {
+        Some(variants) => output::assert_errors(&actual.stderr, &expected.stderr, variants),
+        None => {
+            assert_eq!(atomic_error(&actual.stderr), atomic_error(&expected.stderr), "{command}");
+        }
+    }
     let mut actual_files = tree(root);
     if install_clocks {
         install_clocks::project(&mut actual_files, started, ended);

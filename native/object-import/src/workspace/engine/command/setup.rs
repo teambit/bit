@@ -8,7 +8,7 @@ use super::{
 use serde_json::{Value, json};
 use std::io;
 pub(super) fn run(
-    request: Prepare,
+    mut request: Prepare,
     state: &mut State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
@@ -20,7 +20,9 @@ pub(super) fn run(
     if state.record.is_some() || state.recovery.is_some() || state.resolve.is_some() {
         return Err(invalid("command owner already active"));
     }
+    super::lane_history::resolve(&mut request, state)?;
     let mut proofs = preparation_proofs(&request)?;
+    super::lane_history::extend_proofs(&request, state, &mut proofs)?;
     let (context, imported) = prepare::context(&request, pool)?;
     component_controls(&request, &context, &mut proofs)?;
     super::lane_context::validate_additions(&request.root, &context, &mut proofs)?;

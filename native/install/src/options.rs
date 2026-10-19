@@ -66,6 +66,8 @@ pub struct InstallOptions {
     pub skip_prune: bool,
     /// `optimizeReportForNonTerminal`: the package manager appends output lines.
     pub append_only: bool,
+    /// Programmatic package-manager reporter throttle in milliseconds (`throttleProgress`).
+    pub throttle_progress: Option<Value>,
     /// `copyPeerToRuntimeOnRoot`; unset means `true`.
     pub copy_peer_to_runtime_on_root: Option<bool>,
     /// `copyPeerToRuntimeOnComponents`
@@ -77,6 +79,9 @@ pub struct InstallOptions {
     /// Parent operation's live bitmap insertion order; the disk bitmap is serialized separately.
     #[serde(skip)]
     pub workspace_component_order: Vec<String>,
+    /// A retained parent consumer already initialized dependency caching before its writes.
+    #[serde(skip)]
+    pub dependency_cache_initialized: bool,
 }
 
 /// What adding a package already in the workspace policy does

@@ -198,7 +198,9 @@ fn insert_version(groups: &mut Vec<(String, Vec<String>)>, name: &str, version: 
 fn workspace_entries(policy: &serde_json::Map<String, Value>) -> io::Result<Vec<Value>> {
     let mut entries = Vec::new();
     for field in ["dependencies", "devDependencies", "peerDependencies"] {
-        let Some(dependencies) = policy.get(field).and_then(Value::as_object) else { continue };
+        let Some(dependencies) = policy.get(field).and_then(Value::as_object) else {
+            continue;
+        };
         for (name, value) in dependencies {
             let version = value
                 .as_str()

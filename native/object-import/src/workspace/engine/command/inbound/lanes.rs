@@ -26,24 +26,21 @@ pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, 
     {
         return aggregate::prepare(input, state);
     }
-    let selection = select(input)?;
-    let mut import = initial_import(input, &selection.virtual_remotes)?;
+    let mut import = command_import::prepare_lane(&input.root, &input.global_remotes_file)?;
+    let selection = select(input, Some(&mut import))?;
+    for remote in &selection.virtual_remotes {
+        import.virtual_remote(&remote.scope, remote.path.clone(), &remote.objects)?;
+    }
     let (targets, groups) = receive_lanes(input, &selection.lanes, &mut import)?;
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("inbound-{}", state.sequence);
-    let mut receipt = if input.operation == "status" {
-        json!({"token":token,"importedIds":[],"progress":[],"refreshCount":targets.len()})
-    } else {
-        receipt(
-            &input.root,
-            &targets,
-            &import,
-            None,
-            &super::ReceiptRoots { roots: &[], prefetched: &[], head_dependencies: false },
-            &token,
-        )?
-    };
+    let mut receipt = lane_receipt(input, &targets, &import, &token)?;
     decorate_receipt(input, selection.lanes.len(), &groups, &mut receipt);
+    if input.operation == "laneImport"
+        && let Some((id, _)) = selection.lanes.first()
+    {
+        receipt["laneImportId"] = json!(format!("{}/{}", id.scope, id.name));
+    }
     let count = targets.len();
     state.inbound = Some(Retained {
         token,
@@ -57,11 +54,26 @@ pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, 
     Ok((count, receipt))
 }
 
-fn select(input: &Prepare) -> io::Result<Selection> {
+fn select(
+    input: &Prepare,
+    import: Option<&mut command_import::PreparedImport>,
+) -> io::Result<Selection> {
     let mut lanes = Vec::new();
     let mut seen = HashSet::new();
     let mut virtual_remotes: HashMap<String, VirtualRemote> = HashMap::new();
-    for text in &selection::ids(input)? {
+    let ids = if input.operation == "laneImport" {
+        let import = import.ok_or_else(|| invalid("lane import resolution owner"))?;
+        input.ids
+            .iter()
+            .map(|name| {
+                let id = import.resolve_lane(name)?;
+                Ok(format!("{}/{}", id.scope, id.name))
+            })
+            .collect::<io::Result<Vec<_>>>()?
+    } else {
+        selection::ids(input)?
+    };
+    for text in &ids {
         let id = parse_id(text, &mut seen)?;
         let fetched = remote::lane_objects(input, &id)?;
         let hash = if let Some((remote, hash)) = fetched {
@@ -207,7 +219,9 @@ fn append_lane_dependency_progress(
     };
     for target in targets {
         dependencies.ids.push(identity(target)?);
-        let Some(version) = import.overlay.read(&target.version, "Version")? else { continue };
+        let Some(version) = import.overlay.read(&target.version, "Version")? else {
+            continue;
+        };
         if let Some(graph) = version["flattenedEdgesRef"].as_str() {
             crate::merge_history::hash(graph)?;
             if !crate::scope_path(root)
@@ -229,21 +243,6 @@ fn append_lane_dependency_progress(
 #[cfg(test)]
 mod tests;
 
-fn initial_import(
-    input: &Prepare,
-    virtual_remotes: &[VirtualRemote],
-) -> io::Result<command_import::PreparedImport> {
-    if virtual_remotes.is_empty() {
-        command_import::prepare_lane(&input.root, &input.global_remotes_file)
-    } else {
-        command_import::prepare_lane_with_virtual(
-            &input.root,
-            &input.global_remotes_file,
-            virtual_remotes,
-        )
-    }
-}
-
 fn decorate_receipt(input: &Prepare, lanes: usize, groups: &[usize], receipt: &mut Value) {
     receipt["laneFetch"] = json!(true);
     if input.operation == "laneImport" {
@@ -252,4 +251,24 @@ fn decorate_receipt(input: &Prepare, lanes: usize, groups: &[usize], receipt: &m
     if lanes > 1 || input.operation == "fetch" {
         receipt["laneGroups"] = json!(groups);
     }
+}
+
+fn lane_receipt(
+    input: &Prepare,
+    targets: &[Target],
+    import: &command_import::PreparedImport,
+    token: &str,
+) -> io::Result<Value> {
+    Ok(if input.operation == "status" {
+        json!({"token":token,"importedIds":[],"progress":[],"refreshCount":targets.len()})
+    } else {
+        receipt(
+            &input.root,
+            targets,
+            import,
+            None,
+            &super::ReceiptRoots { roots: &[], prefetched: &[], head_dependencies: false },
+            token,
+        )?
+    })
 }

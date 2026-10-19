@@ -11,7 +11,7 @@ use super::{
 use crate::model::{DependencyMap, Manifest};
 use indexmap::IndexMap;
 use serde_json::Value;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// The component's manifest version: its snap as semver, `0.0.1-new` when new.
 fn component_version(version: Option<&str>) -> String {
@@ -115,8 +115,21 @@ pub(super) fn merge_linked(
     input: &ManifestInput<'_>,
     forced_harmony_version: Option<&str>,
 ) {
-    let root = input.root.to_path_buf();
-    let mut linked = input.context.linked_root_deps.clone();
+    merge_linked_root(
+        manifests,
+        input.root,
+        input.context.linked_root_deps.clone(),
+        forced_harmony_version,
+    );
+}
+
+pub(super) fn merge_linked_root(
+    manifests: &mut IndexMap<PathBuf, Manifest>,
+    root: &Path,
+    mut linked: DependencyMap,
+    forced_harmony_version: Option<&str>,
+) {
+    let root = root.to_path_buf();
     if let Some(root_manifest) = manifests.get_mut(&root) {
         let mut dependencies = manifest_field(root_manifest, "dependencies");
         if forced_harmony_version.is_none()

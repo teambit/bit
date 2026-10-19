@@ -71,9 +71,18 @@ pub(super) fn error_report(chalk: Chalk, error: &str) -> String {
 pub struct Installer {
     host: Arc<Host>,
     info: HostInfo,
+    cache_initialized: bool,
 }
 
 impl Installer {
+    /// Process facts precede workers; the same Host later initializes checkout providers.
+    pub(in crate::commands) fn into_parts(
+        self,
+    ) -> io::Result<(crate::commands::status::environments::Environments, HostInfo)> {
+        let host = Arc::try_unwrap(self.host)
+            .map_err(|_| io::Error::other("installation Host is still borrowed"))?;
+        Ok((crate::commands::status::environments::Environments::from_host(host), self.info))
+    }
     /// Reject unsupported package managers before parent-operation providers start.
     pub(in crate::commands) fn validate_workspace(root: &Path) -> io::Result<()> {
         let package_manager = WorkspaceConfig::load(root)?.dependency_resolver.package_manager;
@@ -85,7 +94,13 @@ impl Installer {
 
     /// Keep the already loaded providers and process facts of a parent operation.
     pub(in crate::commands) const fn from_host(host: Arc<Host>, info: HostInfo) -> Self {
-        Self { host, info }
+        Self { host, info, cache_initialized: false }
+    }
+
+    /// Checkout and installation share the same consumer's single invalidation check.
+    pub(in crate::commands) const fn with_initialized_cache(mut self, initialized: bool) -> Self {
+        self.cache_initialized = initialized;
+        self
     }
 
     /// `RenamingMain.installDepsGracefully` installs without updating existing policy entries.
@@ -120,7 +135,7 @@ impl Installer {
         let terminal = Terminal::detect(&argv);
         let host = Arc::new(Host::new(cli, root.to_path_buf(), terminal.color));
         let info = install::host_info(&host, &terminal)?;
-        Ok(Self { host, info })
+        Ok(Self { host, info, cache_initialized: false })
     }
 
     /// `InstallMain.install(undefined, { dedupe, import: false, writeConfigFiles,
@@ -188,6 +203,7 @@ impl Installer {
             skip_write_config_files,
             dependencies_graph,
             workspace_component_order: workspace_component_order.to_vec(),
+            dependency_cache_initialized: self.cache_initialized,
             ..InstallOptions::default()
         };
         self.run_options(root, options)

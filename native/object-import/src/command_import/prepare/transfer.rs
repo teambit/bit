@@ -37,7 +37,6 @@ fn receive_from(
     include_history: bool,
     origin: bool,
 ) -> io::Result<()> {
-    let local = plan.environment.local_directory.clone();
     let row = plan.progress.last_mut().ok_or_else(|| invalid("import progress phase"))?;
     row.components.insert(identity(target)?);
     row.objects.insert(hash.to_owned());
@@ -46,7 +45,12 @@ fn receive_from(
         .ok_or_else(|| invalid("import remote Version missing"))?;
     let version = record.value.as_ref().ok_or_else(|| invalid("import Version metadata"))?;
     crate::history_query::validate_version(version)?;
-    receive_sources(plan, directory, version)?;
+    let scope = plan.cache.lane_sources
+        .get(&identity(target)?)
+        .cloned()
+        .or_else(|| target.scope.clone());
+    receive_sources(plan, directory, version)
+        .map_err(|error| super::super::remote_error::mark(scope.as_deref(), error))?;
     let old = read_version(plan, hash)?;
     let newer = old
         .as_ref()
@@ -63,30 +67,29 @@ fn receive_from(
     if include_history {
         receive_history(plan, directory, incoming, hash)?;
     }
-    let old = read_model(plan, &local, target)?;
-    let value = merge::model_from(old.as_ref(), incoming, origin)?;
-    stage_model(plan, directory, target, value)?;
+    merge_model(plan, target, incoming, origin)?;
     if origin {
         record_remote_head(plan, target, incoming)?;
     }
     Ok(())
 }
 
-fn stage_model(
+/// `ObjectFetcher` always rewrites each merged Component using the canonical serializer.
+/// Equal heads can avoid fetching Sources, but do not make the mutable model immutable.
+pub(super) fn merge_model(
     plan: &mut PreparedImport,
-    directory: &Path,
     target: &Target,
-    value: Value,
+    incoming: &Value,
+    origin: bool,
 ) -> io::Result<()> {
+    let local = plan.environment.local_directory.clone();
+    let old = read_model(plan, &local, target)?;
+    let value = merge::model_from(old.as_ref(), incoming, origin)?;
     let hash = object_hash(&identity(target)?);
-    let existing = plan.capture.object(&plan.environment.local_directory, &hash, "Component")?;
-    if existing.as_ref().and_then(|record| record.value.as_ref()) != Some(&value) {
-        let incoming = plan.capture.object(directory, &hash, "Component")?;
-        plan.overlay.objects.insert(
-            hash.clone(),
-            super::super::publish::reusing(&hash, "Component", value, incoming)?,
-        );
-    }
+    plan.overlay.objects.insert(
+        hash.clone(),
+        super::super::publish::object(&hash, "Component", value)?,
+    );
     update_index(plan, target, &hash)?;
     Ok(())
 }

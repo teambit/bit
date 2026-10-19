@@ -7,6 +7,20 @@ use crate::command_import::{Progress, lane::validate_value};
 use std::{collections::HashSet, io};
 
 impl PreparedImport {
+    pub(in crate::command_import) fn lane_wire_object(
+        &mut self,
+        scope: &str,
+        hash: &str,
+    ) -> io::Result<Option<crate::command_import::capture::Object>> {
+        if !self.environment.remote_overrides.contains_key(scope)
+            && self.environment.remotes.get(scope).is_none()
+        {
+            return Ok(None);
+        }
+        let remotes = self.environment.remotes.clone();
+        let directory = remote(self, &remotes, scope)?;
+        self.capture.object(&directory, hash, "Lane")
+    }
     pub(crate) fn fetch_lane_contents_at_hash(
         &mut self,
         id: &Id,

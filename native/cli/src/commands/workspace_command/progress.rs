@@ -2,6 +2,7 @@
 //! prints while checkout runs. The receipt is validated before anything is
 //! printed or written.
 
+mod history;
 mod inbound;
 
 use crate::commands::status::js::{array, decline, text};
@@ -188,6 +189,16 @@ impl Progress {
             render_import(output, row);
         }
     }
+
+    /// `LanesMain` invokes `Checkout.checkout` directly, without `checkoutByCLIValues` statuses.
+    pub(in crate::commands) fn render_lane_history(&self, output: &Output) {
+        for row in &self.imports {
+            render_import(output, row);
+        }
+        for count in &self.loads {
+            output.status(&format!("loading {count} component(s)"));
+        }
+    }
 }
 
 fn render_lane_tail(row: Option<&Import>, output: &Output) {
@@ -308,6 +319,26 @@ fn render_import(output: &Output, row: &Import) {
     if row.ids.is_empty() {
         return;
     }
+    let message = import_message(row);
+    let reason = row.reason
+        .as_ref()
+        .map_or_else(String::new, |reason| format!(" {reason}"));
+    // `ObjectsFetcher` starts the loader itself, so its lines show on CI too.
+    output.restart(&message);
+    if std::env::var_os("CI").is_none() {
+        for downloaded in (100..=row.objects).step_by(100) {
+            output.status(&format!("{message}. downloaded {downloaded} objects."));
+        }
+    }
+    let imported = if row.components > 0 {
+        format!("{} components", row.components)
+    } else {
+        format!("{} objects", row.objects)
+    };
+    output.restart(&format!("successfully imported {imported}{reason}"));
+}
+
+fn import_message(row: &Import) -> String {
     let names: HashSet<&str> = row.ids
         .iter()
         .map(|id| without_version(id))
@@ -322,20 +353,7 @@ fn render_import(output: &Output, row: &Import) {
     let reason = row.reason
         .as_ref()
         .map_or_else(String::new, |reason| format!(" {reason}"));
-    let message = format!("importing {ids}{reason}");
-    // `ObjectsFetcher` starts the loader itself, so its lines show on CI too.
-    output.restart(&message);
-    if std::env::var_os("CI").is_none() {
-        for downloaded in (100..=row.objects).step_by(100) {
-            output.status(&format!("{message}. downloaded {downloaded} objects."));
-        }
-    }
-    let imported = if row.components > 0 {
-        format!("{} components", row.components)
-    } else {
-        format!("{} objects", row.objects)
-    };
-    output.restart(&format!("successfully imported {imported}{reason}"));
+    format!("importing {ids}{reason}")
 }
 
 /// `id.replace(/@[^@]+$/, '')`.

@@ -49,3 +49,26 @@ fn duplicate_visible_components_are_rejected_before_import() {
     let row = json!({"id":{"scope":"test.scope","name":"alpha"},"head":"1".repeat(40)});
     assert!(entries(&json!({"components":[row,row]})).is_err());
 }
+
+#[test]
+fn public_alias_lookup_matches_the_authoritative_owner_and_retains_scope_preimages() {
+    let root = tempfile::tempdir().unwrap();
+    let directory = root.path().join(".bit");
+    std::fs::create_dir_all(directory.join("objects")).unwrap();
+    let scope = json!({"name":"local.scope","lanes":{"tracking":[
+        {"localLane":"local-dev","remoteLane":"dev","remoteScope":"remote.scope"}
+    ]}});
+    std::fs::write(directory.join("scope.json"), scope.to_string()).unwrap();
+    std::fs::write(directory.join("index.json"), r#"{"components":[],"lanes":[]}"#).unwrap();
+    assert_eq!(super::resolve_lane_identity(root.path(), "local-dev").unwrap(), "remote.scope/dev");
+    let mut plan =
+        super::super::prepare_lane(root.path(), &root.path().join("global.json")).unwrap();
+    assert_eq!(
+        plan.resolve_lane("local-dev").unwrap(),
+        Id { scope: "remote.scope".into(), name: "dev".into() },
+    );
+    let mut changed = scope;
+    changed["lanes"]["tracking"][0]["remoteScope"] = json!("changed.scope");
+    std::fs::write(directory.join("scope.json"), changed.to_string()).unwrap();
+    assert!(plan.validate().is_err());
+}

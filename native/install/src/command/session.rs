@@ -1,6 +1,8 @@
 //! What one `bit install` invocation works with: the process facts, and the
 //! workspace state loaded from disk (reloaded after every config edit).
 
+pub(super) mod installation_components;
+
 mod component_order;
 
 use crate::{
@@ -97,6 +99,7 @@ impl Loaded {
         // `reportOptions.appendOnly = optimizeReportForNonTerminal`.
         if let Some(reporter) = engine.reporter.as_mut() {
             reporter.append_only |= session.options.append_only;
+            reporter.apply_throttle_progress(session.options.throttle_progress.as_ref())?;
         }
         Ok(Self { config, global, effective, workspace, engine })
     }

@@ -4,6 +4,7 @@
 pub(in crate::workspace::engine) mod autosync;
 pub(in crate::workspace::engine) mod dependents;
 pub(in crate::workspace::engine) mod policy;
+pub(in crate::workspace::engine::command) mod remote;
 pub(in crate::workspace::engine) mod write_dependencies;
 
 use super::{
@@ -26,7 +27,6 @@ mod lanes;
 mod owned_writes;
 mod preparation;
 mod progress;
-mod remote;
 mod selection;
 mod validation;
 mod write;

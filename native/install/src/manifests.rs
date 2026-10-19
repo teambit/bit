@@ -14,6 +14,8 @@ mod env_root;
 mod intersect;
 mod load_order;
 mod root_components;
+#[cfg(test)]
+mod subscriber_tests;
 mod versions;
 
 use crate::{
@@ -28,6 +30,7 @@ use crate::{
 use component_deps::RootPolicy;
 use deps::Field;
 use indexmap::IndexMap;
+use serde_json::Value;
 use std::{
     collections::BTreeMap,
     hash::{DefaultHasher, Hash, Hasher},
@@ -174,6 +177,8 @@ impl ManifestOptions {
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ManifestOutcome {
     pub plan: InstallPlan,
+    /// Manifests before `installComponents` applies the mutable linked-dependency options.
+    pub pre_link_projects: Vec<crate::model::Project>,
     /// Env peer overrides (`overrides: true` in `env.jsonc`), already folded into `plan.overrides`.
     pub peer_overrides: DependencyMap,
     /// `logger.consoleWarning` lines (conflicting env peers).
@@ -286,6 +291,7 @@ pub fn plan(input: &ManifestInput<'_>) -> io::Result<ManifestOutcome> {
     let mut manifests = workspace_manifests(input, &env_root)?;
     let (root_dirs, has_missing_local_components) = add_root_components(input, &mut manifests);
     let forced_harmony_version = assemble::forced_harmony_version(input);
+    let pre_link_projects = projects(manifests.clone(), input.root);
     assemble::merge_linked(&mut manifests, input, forced_harmony_version.as_deref());
     let external_dependencies = assemble::external_dependencies(input, &manifests);
     let config_overrides = input.config.overrides.clone().unwrap_or_default();
@@ -297,12 +303,72 @@ pub fn plan(input: &ManifestInput<'_>) -> io::Result<ManifestOutcome> {
     };
     Ok(ManifestOutcome {
         plan,
+        pre_link_projects,
         peer_overrides: env_root.overrides,
         warnings: env_root.warnings,
         messages: env_root.messages,
         has_missing_local_components,
         root_dirs,
     })
+}
+
+/// Apply only the mutable `installComponents` links; policy/manifests stay precomputed.
+pub fn subscriber_links(
+    root: &Path,
+    plan: &mut InstallPlan,
+    original: &[crate::model::Project],
+    options: &Value,
+) -> io::Result<()> {
+    let mut manifests = original
+        .iter()
+        .map(|project| (project.dir.clone(), project.manifest.clone()))
+        .collect::<IndexMap<_, _>>();
+    plan.forced_harmony_version = options
+        .get("forcedHarmonyVersion")
+        .filter(|value| !value.is_null())
+        .map(|value| serde_json::from_value(value.clone()))
+        .transpose()
+        .map_err(io::Error::other)?;
+    if let Some(links) = options
+        .get("linkedDependencies")
+        .filter(|value| !value.is_null())
+    {
+        merge_subscriber_projects(
+            root,
+            &mut manifests,
+            links,
+            plan.forced_harmony_version.as_deref(),
+        )?;
+    }
+    plan.projects = projects(manifests, root);
+    Ok(())
+}
+
+fn merge_subscriber_projects(
+    root: &Path,
+    manifests: &mut IndexMap<PathBuf, Manifest>,
+    links: &Value,
+    forced_harmony_version: Option<&str>,
+) -> io::Result<()> {
+    let links: IndexMap<PathBuf, DependencyMap> =
+        serde_json::from_value(links.clone()).map_err(io::Error::other)?;
+    for (directory, dependencies) in links {
+        if !directory.is_absolute() || !directory.starts_with(root) {
+            return Err(io::Error::other("subscriber linked project outside workspace"));
+        }
+        if directory == root {
+            assemble::merge_linked_root(manifests, root, dependencies, forced_harmony_version);
+        } else {
+            let manifest = manifests.entry(directory).or_default();
+            let merged =
+                deps::spread(&[&dependencies, &deps::manifest_field(manifest, "dependencies")]);
+            manifest.insert(
+                "dependencies".into(),
+                serde_json::to_value(merged).map_err(io::Error::other)?,
+            );
+        }
+    }
+    Ok(())
 }
 
 /// What `writeDependenciesToPackageJson` writes to the root `package.json`.

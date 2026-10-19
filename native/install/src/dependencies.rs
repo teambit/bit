@@ -73,6 +73,8 @@ pub struct DependencyOptions {
     pub update_dependents: Vec<ComponentId>,
     /// Read Bit's dependency cache when it is fresh, and write it after a detection.
     pub use_cache: bool,
+    /// The retained consumer already completed its once-per-session invalidation check.
+    pub cache_initialized: bool,
     /// The workspace configuration of the dev-pattern registrars.
     pub dev_patterns: DevPatternConfig,
     /// Dependency policies aspects registered (`registerDependenciesPolicies`).
@@ -204,6 +206,7 @@ fn invalidate_cache(
     options: &DependencyOptions,
 ) -> io::Result<()> {
     if options.use_cache
+        && !options.cache_initialized
         && !cache::disabled()
         && let Some(scope) = scope
     {

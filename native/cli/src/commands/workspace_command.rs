@@ -13,6 +13,7 @@ pub mod progress;
 pub mod resolve;
 pub mod results;
 pub(in crate::commands) mod stash;
+pub(in crate::commands) mod switch;
 pub mod versions;
 
 pub(in crate::commands) use execution::loader_output;
@@ -84,6 +85,42 @@ pub fn plan_with_startup(
     plan_with(root, request, false, false, Some(startup), false, None)
 }
 
+/// Preserve the native lane-history owner and the already initialized provider session.
+pub(in crate::commands) fn plan_retained(
+    root: &Path,
+    request: &Request<'_>,
+    startup: &mut super::status::autosync::Startup,
+    environment: Option<super::status::environments::Environments>,
+    engine: Engine,
+) -> io::Result<Planned> {
+    let mut prepared =
+        preparation::capture_retained(root, request, Some(&mut *startup), environment, engine)?;
+    let plan = preparation::owned_result(
+        plan_captured(&mut prepared, request, false, Some(&mut *startup)),
+        &mut prepared.docs,
+        Some(&mut *startup),
+    )?;
+    stage_captured(root, request, false, false, prepared, plan, Some(&mut *startup))
+}
+
+impl Planned {
+    /// Return the session containing the retained history selection after a checkout phase.
+    pub(in crate::commands) fn into_engine(self) -> Engine {
+        self.engine
+    }
+}
+
+/// Preserve one initialized provider session through switch and installation.
+pub(in crate::commands) fn plan_with_environment(
+    root: &Path,
+    request: &Request<'_>,
+    startup: &mut super::status::autosync::Startup,
+    environment: super::status::environments::Environments,
+) -> io::Result<Planned> {
+    let environment = checkout_lifecycle::bootstrap_inherited(root, request, startup, environment)?;
+    plan_with(root, request, false, false, Some(startup), false, Some(environment))
+}
+
 /// Capture providers once, materialize the merge, then snap its retained pending identities.
 pub fn plan_merge(
     root: &Path,
@@ -98,50 +135,101 @@ pub(super) fn plan_with(
     request: &Request<'_>,
     preview_snapshot: bool,
     internal_materialization: bool,
-    startup: Option<&mut super::status::autosync::Startup>,
+    mut startup: Option<&mut super::status::autosync::Startup>,
     defer_snapshot: bool,
     inherited: Option<super::status::environments::Environments>,
 ) -> io::Result<Planned> {
-    let preparation::Prepared {
-        mut engine,
-        home,
-        token,
-        context,
+    let mut prepared =
+        preparation::capture(root, request, preview_snapshot, startup.as_deref_mut(), inherited)?;
+    let plan = preparation::owned_result(
+        plan_captured(&mut prepared, request, internal_materialization, startup.as_deref_mut()),
+        &mut prepared.docs,
+        startup.as_deref_mut(),
+    )?;
+    stage_captured(root, request, preview_snapshot, defer_snapshot, prepared, plan, startup)
+}
+
+fn stage_captured(
+    root: &Path,
+    request: &Request<'_>,
+    preview_snapshot: bool,
+    defer_snapshot: bool,
+    mut prepared: preparation::Prepared,
+    mut plan: Value,
+    mut startup: Option<&mut super::status::autosync::Startup>,
+) -> io::Result<Planned> {
+    let mut steps = Steps {
+        engine: &mut prepared.engine,
+        root,
+        home: &prepared.home,
+        token: &prepared.token,
+        context: &prepared.context,
+    };
+    let capture = preparation::owned_result(
+        steps.stages(&mut plan, prepared.capture, request, preview_snapshot, defer_snapshot),
+        &mut prepared.docs,
+        startup.as_deref_mut(),
+    )?;
+    if defer_snapshot {
+        defer_merge_snapshot(&mut prepared.engine, &prepared.token, &mut plan)?;
+    }
+    preparation::publish_docs(prepared.docs.take(), startup)?;
+    Ok(Planned {
+        engine: prepared.engine,
+        token: prepared.token,
+        context: prepared.context,
         capture,
-        selector_loads,
-    } = preparation::capture(root, request, preview_snapshot, startup, inherited)?;
-    let semver = grammar::snapshot(semver_values(request.to, &context)?.iter().map(String::as_str))
-        .ok_or_else(|| decline("semver grammar limits"))?;
+        plan,
+        apply: "commandApply",
+    })
+}
+
+fn plan_captured(
+    prepared: &mut preparation::Prepared,
+    request: &Request<'_>,
+    internal_materialization: bool,
+    startup: Option<&mut super::status::autosync::Startup>,
+) -> io::Result<Value> {
+    let semver =
+        grammar::snapshot(semver_values(request.to, &prepared.context)?.iter().map(String::as_str))
+            .ok_or_else(|| decline("semver grammar limits"))?;
     let mut plan_request = json!({
         "kind": "commandPlan",
-        "token": token,
-        "current": capture.captured,
-        "dependencyReadSet": capture.dependency_read_set(),
+        "token": prepared.token,
+        "current": prepared.capture.captured,
+        "dependencyReadSet": prepared.capture.dependency_read_set(),
         "semver": semver,
     });
-    lane::validate(&request.options, &context, internal_materialization)?;
-    if let Some(ids) = lane::pattern_ids(&request.options, &context)? {
+    lane::validate(&request.options, &prepared.context, internal_materialization)?;
+    if let Some(ids) = lane::pattern_ids(&request.options, &prepared.context)? {
         plan_request["lanePatternIds"] = json!(ids);
     }
-    let mut plan: Value = engine.request(&plan_request)?;
-    if !selector_loads.is_empty() {
-        plan["progress"]["loads"] = json!(selector_loads);
+    let mut plan: Value = prepared.engine
+        .request(&plan_request)
+        .inspect_err(|error| {
+            if let Some(progress) = super::engine::canonical_progress(error)
+                && let Some(startup) = startup
+            {
+                startup.build_progress = Some(progress.clone());
+            }
+        })?;
+    if !prepared.selector_loads.is_empty() {
+        plan["progress"]["loads"] = json!(prepared.selector_loads);
     }
-    if plan.get("token").and_then(Value::as_str) != Some(token.as_str()) {
+    if plan.get("token").and_then(Value::as_str) != Some(prepared.token.as_str()) {
         return Err(decline("command plan token"));
     }
-    let mut steps =
-        Steps { engine: &mut engine, root, home: &home, token: &token, context: &context };
-    let capture = steps.stages(&mut plan, capture, request, preview_snapshot, defer_snapshot)?;
-    if defer_snapshot {
-        let deferred: Value =
-            engine.request(&json!({"kind":"commandMergeDeferSnapshot","token":token}))?;
-        plan["mergeSnapshotSeeds"] = deferred["identities"].clone();
-        plan.as_object_mut()
-            .unwrap()
-            .remove("needsSnap");
-    }
-    Ok(Planned { engine, token, context, capture, plan, apply: "commandApply" })
+    Ok(plan)
+}
+
+fn defer_merge_snapshot(engine: &mut Engine, token: &str, plan: &mut Value) -> io::Result<()> {
+    let deferred: Value =
+        engine.request(&json!({"kind":"commandMergeDeferSnapshot","token":token}))?;
+    plan["mergeSnapshotSeeds"] = deferred["identities"].clone();
+    plan.as_object_mut()
+        .unwrap()
+        .remove("needsSnap");
+    Ok(())
 }
 
 /// What the steps after `commandPlan` share.
@@ -271,6 +359,11 @@ pub(super) fn semver_values(to: Option<&str>, context: &Value) -> io::Result<Vec
 
 /// `capture.commit()`, then `commandApply`.
 pub(super) fn commit(planned: &mut Planned, root: &Path) -> io::Result<()> {
+    commit_receipt(planned, root).map(|_| ())
+}
+
+/// Preserve native publication receipts for operations with post-write continuations.
+fn commit_receipt(planned: &mut Planned, root: &Path) -> io::Result<Value> {
     capture::commit(&mut planned.engine, root, &planned.context, &planned.capture)?;
     let applied: Value = planned.engine.request(&json!({
         "kind": planned.apply,
@@ -281,7 +374,7 @@ pub(super) fn commit(planned: &mut Planned, root: &Path) -> io::Result<()> {
     if applied.get("applied") != Some(&Value::Bool(true)) {
         return Err(io::Error::other("native command apply receipt"));
     }
-    Ok(())
+    Ok(applied)
 }
 
 /// `currentDateAndTimeToFileName()`: local time, unpadded.

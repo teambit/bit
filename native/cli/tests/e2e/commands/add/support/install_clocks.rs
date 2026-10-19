@@ -11,7 +11,8 @@ pub(super) fn project(files: &mut BTreeMap<String, Vec<u8>>, started: i64, ended
             .as_str()
             .is_some_and(|value| value.starts_with("pnpm@")),
     );
-    assert!(value["injectedDeps"].is_object() && value["included"].is_object());
+    assert!(value.get("injectedDeps").is_none_or(Value::is_object));
+    assert!(value["included"].is_object());
     let date = value["prunedAt"].as_str().expect("prunedAt string");
     let parsed = chrono::DateTime::parse_from_rfc2822(date).expect("prunedAt canonical date");
     assert_eq!(parsed.format("%a, %d %b %Y %H:%M:%S GMT").to_string(), date);

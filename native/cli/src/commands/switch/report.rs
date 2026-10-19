@@ -16,7 +16,6 @@ pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Rep
     let results = hydrate(result)?;
     if results.snaps.is_some()
         || results.snap_error.is_some()
-        || results.conflicts
         || results.version.is_some()
     {
         return Err(decline("native switch report shape"));
