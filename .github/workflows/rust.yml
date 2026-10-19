@@ -130,7 +130,8 @@ jobs:
     # released Node.js CLI that cli/tests/e2e/bit-version names behind it.
     name: Ported e2e cases
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # The complete suite also runs the reduced-stack regressions before saving caches.
+    timeout-minutes: 90
     defaults:
       run:
         working-directory: native
