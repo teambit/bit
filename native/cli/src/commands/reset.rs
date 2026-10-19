@@ -286,7 +286,7 @@ fn run_lane_batch(
     ) {
         Ok(batch) => batch,
         Err(error) if bit_object_import::reset_lane::diagnostic(&error).is_some() => {
-            return lane_failure(args, root, selected, error);
+            return lane_failure(args, root, selected, &error);
         }
         Err(error) => return Ok(Outcome::Declined(format!("lane reset batch: {error}"))),
     };
@@ -323,7 +323,7 @@ fn lane_failure(
     args: &[OsString],
     root: &Path,
     selected: Option<&selection::Selected>,
-    error: io::Error,
+    error: &io::Error,
 ) -> io::Result<Outcome> {
     if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
         return Ok(Outcome::Declined(LANE_CI_DIAGNOSTIC.into()));
@@ -333,8 +333,9 @@ fn lane_failure(
             selected.render(output);
             selected.verify()?;
         }
-        bit_object_import::reset_lane::apply_error_prefix(&error)?;
-        Err(error)
+        bit_object_import::reset_lane::apply_error_prefix(error)?;
+        // defaultErrorHandler colors a non-BitError message before its outer red wrapper.
+        Err(io::Error::new(error.kind(), Chalk::detect(args).red(&error.to_string())))
     })
 }
 

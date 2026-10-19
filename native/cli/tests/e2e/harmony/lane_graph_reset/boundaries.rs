@@ -72,6 +72,7 @@ fn a_new_lane_merged_without_a_known_boundary_preserves_the_exact_fatal_error() 
     let result = support::compare(&helper, "reset --silent");
     assert!(!result.status.success());
     assert!(result.stderr.contains("fatal:"));
+    fixture::colored_error(&helper, "reset --silent");
     fixture::unchanged(&files);
 }
 

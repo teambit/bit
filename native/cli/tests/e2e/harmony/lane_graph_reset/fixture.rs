@@ -3,7 +3,7 @@ use crate::{
     helper::{Helper, Run, config, remote},
 };
 use serde_json::Value;
-use std::{collections::BTreeMap, fs, path::PathBuf};
+use std::{collections::BTreeMap, ffi::OsStr, fs, path::PathBuf};
 
 pub(super) fn workspace(count: usize, tagged: bool) -> Helper {
     let helper = support::workspace(count, false);
@@ -47,6 +47,24 @@ pub(super) fn successful(helper: &Helper, command: &str) -> Run {
     let result = history_oracle::compare(helper, command, str::to_owned, ["reset"], false);
     assert!(result.status.success(), "{} {}", result.stdout, result.stderr);
     result
+}
+
+pub(super) fn colored_error(helper: &Helper, command: &str) {
+    let environment = [("FORCE_COLOR", OsStr::new("1")), ("BIT_NATIVE_QUIET", OsStr::new("1"))];
+    let expected = support::prepare_history(helper, || {
+        Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            command,
+            &[environment[0], environment[1], ("BIT_NATIVE", OsStr::new("off"))],
+        )
+    });
+    let actual = Helper::cmd_in_with(&helper.scopes.local_path, command, &environment);
+    assert!(actual.native, "{}", actual.trace);
+    assert!(!actual.status.success());
+    assert_eq!(actual.status.code(), expected.status.code());
+    assert_eq!(actual.stdout, expected.stdout);
+    assert_eq!(actual.stderr, expected.stderr);
+    assert!(actual.stderr.contains("\u{1b}[31m\u{1b}[31m"));
 }
 
 pub(super) fn modified_only(helper: &Helper, count: usize) {

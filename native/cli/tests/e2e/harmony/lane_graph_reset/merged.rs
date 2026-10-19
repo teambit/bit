@@ -58,6 +58,7 @@ fn head_only_reset_keeps_the_released_multiple_parent_failure() {
     assert!(result.stderr.contains(&format!(
         "removeComponentVersions found multiple parents for a local (un-exported) version {merged}"
     )));
+    fixture::colored_error(&helper, "reset --head --silent");
     assert_eq!(fixture::head(&helper, "dev", "comp1"), merged);
     fixture::unchanged(&files);
 }
