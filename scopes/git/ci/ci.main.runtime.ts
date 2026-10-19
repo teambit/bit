@@ -320,10 +320,10 @@ export class CiMain {
 
   /**
    * The repository's default branch name, whole — slashes included (see `parseOriginHeadRef`).
-   * What `detectDefaultBranchName` finds, else `fallback` (`master` unless the caller says otherwise).
+   * What `detectDefaultBranchName` finds, else `master`.
    */
-  async getDefaultBranchName({ fallback = 'master' }: { fallback?: string } = {}): Promise<string> {
-    return (await this.detectDefaultBranchName()) ?? fallback;
+  async getDefaultBranchName(): Promise<string> {
+    return (await this.detectDefaultBranchName()) ?? 'master';
   }
 
   /**

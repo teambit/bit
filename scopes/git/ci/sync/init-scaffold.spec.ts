@@ -274,7 +274,14 @@ describe('init-scaffold', () => {
     });
 
     it('suggests no server for an origin that is a path on this machine', () => {
-      ['/tmp/e2e/remote.git', '../remote.git', 'file:///srv/remote.git', 'C:\\repos\\remote.git'].forEach((origin) => {
+      [
+        '/tmp/e2e/remote.git',
+        '../remote.git',
+        'remote.git',
+        'repos/remote.git',
+        'file:///srv/remote.git',
+        'C:\\repos\\remote.git',
+      ].forEach((origin) => {
         expect(isLocalPathRemote(origin), origin).to.be.true;
         const out = report(origin, { originUrl: origin });
         expect(out, origin).to.contain(`origin ${origin}`);
@@ -284,6 +291,8 @@ describe('init-scaffold', () => {
       });
       expect(isLocalPathRemote('git@ghe.example:acme/store.git')).to.be.false;
       expect(isLocalPathRemote('https://ghe.example/acme/store.git')).to.be.false;
+      expect(isLocalPathRemote('ssh://git@ghe.example:2222/acme/store.git')).to.be.false;
+      expect(isLocalPathRemote('ghe.example:acme/store.git')).to.be.false;
     });
 
     it('never prints the credentials an origin URL carries', () => {

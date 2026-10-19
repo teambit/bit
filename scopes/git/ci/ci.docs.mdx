@@ -255,7 +255,7 @@ prints one short report: the files it changed, and three steps that need a perso
    `dispatches` API.
 
 The commands name the repository of `origin`. When `origin` is not a GitHub remote yet, `--init` prints
-step 1 only, and tells you to run `--init` again after you push.
+only the push step, then tells you to run `--init` again after you push.
 
 `--init` reports an existing file as unchanged, and overwrites no file, so a second run is safe. `--init`
 writes the files, then exits. Do not combine `--init` with a lane argument or with another flag.

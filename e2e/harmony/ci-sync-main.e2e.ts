@@ -416,7 +416,8 @@ describe('bit ci sync: main-scope reconciliation', function () {
     // Built by hand because bit refuses to `init` a workspace inside another workspace — the repo root
     // must be a plain git repo that is NOT itself a workspace, exactly how a monorepo looks.
     it('should write the workflows at the REPOSITORY root when the workspace is in a subdirectory', () => {
-      const repoRoot = path.join(path.dirname(helper.scopes.localPath), `subdir-repo-${Date.now()}`);
+      // a tracked directory under the e2e root: helper.scopeHelper.destroy() removes it
+      const repoRoot = helper.fs.createNewDirectory();
       const wsDir = path.join(repoRoot, 'packages', 'app');
       fs.mkdirpSync(wsDir);
       helper.command.runCmd('git init', repoRoot);
@@ -455,8 +456,7 @@ describe('bit ci sync: main-scope reconciliation', function () {
      * branch is detected locally. `env` pins the server, so the host's own GITHUB_* variables don't leak in.
      */
     function initWithGitHubOrigin(originUrl: string, env: Record<string, string>) {
-      const repoDir = path.join(path.dirname(helper.scopes.localPath), `gh-origin-repo-${Date.now()}`);
-      fs.mkdirpSync(repoDir);
+      const repoDir = helper.fs.createNewDirectory();
       helper.command.runCmd('git init', repoDir);
       helper.command.runCmd('bit init --skip-interactive', repoDir);
       helper.command.runCmd(`git remote add origin ${originUrl}`, repoDir);

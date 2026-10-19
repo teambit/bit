@@ -347,10 +347,16 @@ export interface InitReportInput {
 
 /**
  * A remote that is a path on this machine (a bare repository, a `file://` URL), not a server. It has
- * no host to suggest as a GitHub Enterprise Server.
+ * no host to suggest as a GitHub Enterprise Server. Git's own rule: a URL has a scheme, or is scp-like
+ * (`host:path`, with no slash before the first colon); anything else is a path, `remote.git` included.
  */
 export function isLocalPathRemote(remoteUrl: string): boolean {
-  return /^(?:\/|\.{1,2}[/\\]|~|file:\/\/|[a-z]:[/\\])/i.test(remoteUrl.trim());
+  const url = remoteUrl.trim();
+  if (/^file:\/\//i.test(url)) return true;
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(url)) return false;
+  // a Windows drive (`C:\repos`) looks scp-like to the next check
+  if (/^[a-z]:[/\\]/i.test(url)) return true;
+  return !/^[^/\\]+:/.test(url);
 }
 
 /**
