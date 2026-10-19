@@ -1,6 +1,10 @@
 mod compression;
 use super::{empty, exported, lane};
-use crate::{commands::move_paths::support, helper::remote};
+use crate::{
+    commands::move_paths::support,
+    helper::{Helper, remote},
+};
+use std::ffi::OsStr;
 
 #[test]
 fn workspace_only_switches_existing_component_without_adding_new_lane_rows() {
@@ -31,10 +35,23 @@ fn main_switch_reports_components_not_snapped_on_the_lane_as_skipped() {
     support::setup(&helper, "lane create dev");
     support::setup(&helper, "snap comp1 --unmodified --ignore-issues * --message lane");
     remote::publish(&helper);
-    let output = two_write_success(&helper, "switch main -x");
+    let output = support::prepare_history(&helper, || two_write_success(&helper, "switch main -x"));
     assert!(output.stdout.contains("1 skipped component(s)"), "{}", output.stdout);
-    let details = support::setup(&helper, "details");
-    assert!(details.contains("comp2"), "{details}");
+    let globals = helper.own_global_config("analytics_reporting", "false");
+    let output = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "switch main -x",
+        &[("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NATIVE_QUIET", OsStr::new("1"))],
+    );
+    assert!(output.native && output.status.success(), "{} {}", output.stdout, output.stderr);
+    assert!(output.stdout.contains("1 skipped component(s)"), "{}", output.stdout);
+    let details = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "details",
+        &[("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(details.status.success(), "{} {}", details.stdout, details.stderr);
+    assert!(details.stdout.contains("comp2"), "{}", details.stdout);
 }
 
 #[test]

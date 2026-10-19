@@ -36,10 +36,22 @@ fn publishes_two_lane_resets_once_and_checks_external_dependents() {
             "Component",
             &json!({
                 "name":name,"scope":"scope","versions":{"1.0.0":mains[index]},
-                "state":{"versions":{},"head":mains[index]},
+                "state":{"versions":{}},"head":mains[index],
             }),
         );
-        object(&root, mains[index], "Version", &json!({"parents":[],"origin":{}}));
+        // Released scope-graph.js:112 scans tagged/orphaned flattenedDependencies,
+        // not the direct dependency arrays of untagged lane heads.
+        let flattened = if index == 1 {
+            json!([{"scope":"scope","name":"alpha","version":snaps[0]}])
+        } else {
+            json!([])
+        };
+        object(
+            &root,
+            mains[index],
+            "Version",
+            &json!({"parents":[],"origin":{},"flattenedDependencies":flattened}),
+        );
         let dependencies = if index == 1 {
             json!([{"id":{"scope":"scope","name":"alpha","version":snaps[0]}}])
         } else {

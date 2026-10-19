@@ -1,97 +1,109 @@
-//! `DependencyGraph.getImmediateDependentsPerId` guard for explicit lane resets.
-
-use super::{invalid, outbound};
+//! Published `loadAllVersions` uses tagged/orphaned Versions and flattened dependency edges.
+use super::{diagnostics, invalid, proofs};
 use serde_json::Value;
-use std::{collections::HashSet, fs, io, path::Path};
+use std::{io, path::Path};
 
-pub(super) fn validate(root: &Path, identity: &str, removed: &[String]) -> io::Result<()> {
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| invalid("lane dependent identity"))?;
-    let index: Value =
-        serde_json::from_slice(&fs::read(crate::scope_path(root).join("index.json"))?)?;
+pub(super) fn validate(
+    root: &Path,
+    identity: &str,
+    removed: &[String],
+    reads: &mut proofs::ReadSet,
+) -> io::Result<()> {
+    let bytes = proofs::read(&crate::scope_path(root).join("index.json"), reads)?
+        .ok_or_else(|| invalid("lane dependent index absent"))?;
+    let index: Value = serde_json::from_slice(&bytes)?;
     let objects = crate::scope_path(root).join("objects");
-    let removed = removed
-        .iter()
-        .map(String::as_str)
-        .collect::<HashSet<_>>();
-    let references = references(&objects, &index)?;
-    for reference in references {
-        if removed.contains(reference.as_str()) {
-            continue;
-        }
-        let version = outbound::read_object(&objects, &reference, "Version")?;
-        if uses_removed(&version, scope, name, &removed) {
-            return Err(invalid("lane reset version has a dependent"));
+    let references = references(&objects, &index, reads)?;
+    let model = proofs::object(&objects, &super::object_hash(identity), "Component", reads)?;
+    for hash in removed.iter().rev() {
+        let label = tag(&model, hash);
+        let dependents = immediate(&objects, &references, identity, &label, reads)?;
+        if !dependents.is_empty() {
+            return Err(diagnostics::error(format!(
+                "unable to reset {identity}, the version {label} has the following dependent(s) {}",
+                dependents.join(", "),
+            )));
         }
     }
     Ok(())
 }
 
-fn references(objects: &Path, index: &Value) -> io::Result<HashSet<String>> {
-    let mut refs = HashSet::new();
-    let components =
-        index["components"].as_array().ok_or_else(|| invalid("lane dependent components"))?;
-    for row in components {
-        let hash = row["hash"].as_str().ok_or_else(|| invalid("lane dependent component hash"))?;
-        let model = outbound::read_object(objects, hash, "Component")?;
-        model_refs(&model, &mut refs)?;
+fn immediate(
+    objects: &Path,
+    references: &[(String, String)],
+    identity: &str,
+    label: &str,
+    reads: &mut proofs::ReadSet,
+) -> io::Result<Vec<String>> {
+    let target = format!("{identity}@{label}");
+    let mut found = Vec::new();
+    for (reference, id) in references {
+        let version = match proofs::object(objects, reference, "Version", reads) {
+            Ok(version) => version,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => continue,
+            Err(error) => return Err(error),
+        };
+        if version["flattenedDependencies"]
+            .as_array()
+            .is_some_and(|rows| {
+                rows.iter()
+                    .any(|row| dependency_id(row).as_deref() == Some(target.as_str()))
+            })
+            && !found.contains(id)
+        {
+            found.push(id.clone());
+        }
     }
-    let lanes = index["lanes"].as_array().ok_or_else(|| invalid("lane dependent lanes"))?;
-    for row in lanes {
-        let hash = row["hash"].as_str().ok_or_else(|| invalid("lane dependent lane hash"))?;
-        let lane = outbound::read_object(objects, hash, "Lane")?;
-        lane_refs(&lane, &mut refs)?;
-    }
-    if refs.len() > 32768 {
-        return Err(invalid("lane dependent reference limit"));
+    Ok(found)
+}
+
+fn references(
+    objects: &Path,
+    index: &Value,
+    reads: &mut proofs::ReadSet,
+) -> io::Result<Vec<(String, String)>> {
+    let mut refs = Vec::new();
+    for row in index["components"].as_array().ok_or_else(|| invalid("lane dependent components"))? {
+        let hash = row["hash"].as_str().ok_or_else(|| invalid("lane dependent model hash"))?;
+        let model = proofs::object(objects, hash, "Component", reads)?;
+        let identity = format!(
+            "{}/{}",
+            model["scope"].as_str().ok_or_else(|| invalid("lane dependent scope"))?,
+            model["name"].as_str().ok_or_else(|| invalid("lane dependent name"))?,
+        );
+        let mut versions = model["versions"]
+            .as_object()
+            .ok_or_else(|| invalid("lane dependent versions"))?
+            .clone();
+        if let Some(orphaned) = model["orphanedVersions"].as_object() {
+            versions.extend(orphaned.clone());
+        }
+        for (label, hash) in versions {
+            if refs.len() >= 32768 {
+                return Err(invalid("lane dependent reference limit"));
+            }
+            let hash = hash.as_str().ok_or_else(|| invalid("lane dependent version reference"))?;
+            crate::merge_history::hash(hash)?;
+            refs.push((hash.to_owned(), format!("{identity}@{label}")));
+        }
     }
     Ok(refs)
 }
 
-fn model_refs(model: &Value, refs: &mut HashSet<String>) -> io::Result<()> {
-    let versions =
-        model["versions"].as_object().ok_or_else(|| invalid("lane dependent versions"))?;
-    refs.extend(
-        versions
-            .values()
-            .filter_map(Value::as_str)
-            .map(str::to_owned),
-    );
-    if let Some(head) = model["head"].as_str() {
-        refs.insert(head.to_owned());
-    }
-    if let Some(local) = model["state"]["versions"].as_object() {
-        refs.extend(
-            local
-                .keys()
-                .filter(|key| crate::merge_history::hash(key).is_ok())
-                .cloned(),
-        );
-    }
-    Ok(())
-}
-
-fn lane_refs(lane: &Value, refs: &mut HashSet<String>) -> io::Result<()> {
-    let components =
-        lane["components"].as_array().ok_or_else(|| invalid("lane dependent lane rows"))?;
-    for row in components {
-        let head = row["head"].as_str().ok_or_else(|| invalid("lane dependent lane head"))?;
-        refs.insert(head.to_owned());
-    }
-    Ok(())
-}
-
-fn uses_removed(version: &Value, scope: &str, name: &str, removed: &HashSet<&str>) -> bool {
-    ["dependencies", "devDependencies", "peerDependencies", "extensionDependencies"]
-        .into_iter()
-        .filter_map(|field| version[field].as_array())
-        .flatten()
-        .any(|dependency| {
-            let id = &dependency["id"];
-            id["scope"] == scope
-                && id["name"] == name
-                && id["version"]
-                    .as_str()
-                    .is_some_and(|reference| removed.contains(reference))
+fn tag(model: &Value, hash: &str) -> String {
+    model["versions"]
+        .as_object()
+        .and_then(|versions| {
+            versions
+                .iter()
+                .find_map(|(tag, value)| (value.as_str() == Some(hash)).then(|| tag.clone()))
         })
+        .unwrap_or_else(|| hash.to_owned())
+}
+
+fn dependency_id(value: &Value) -> Option<String> {
+    let scope = value["scope"].as_str()?;
+    let name = value["name"].as_str()?;
+    let version = value["version"].as_str()?;
+    Some(format!("{scope}/{name}@{version}"))
 }

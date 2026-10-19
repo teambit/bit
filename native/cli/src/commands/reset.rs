@@ -1,4 +1,4 @@
-//! Native main-lane `bit reset <component>` for a linear local history.
+//! Native reset of local main and lane histories while preserving working-tree bytes.
 
 mod reports;
 mod selection;
@@ -12,7 +12,7 @@ use super::{
 };
 use crate::{commands::Command, native::Outcome, workspace};
 use bit_object_import::{
-    reset_lane::{Batch as LaneBatch, Plan as LanePlan},
+    reset_lane::Batch as LaneBatch,
     reset_main::{Batch, Plan},
     reset_never_exported::Plan as NeverPlan,
     reset_soft::Plan as SoftPlan,
@@ -20,6 +20,7 @@ use bit_object_import::{
 use std::{env, ffi::OsString, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "reset", aliases: &[], run };
+const LANE_CI_DIAGNOSTIC: &str = "CI lane reset diagnostics require the published stack";
 
 struct Options<'a> {
     pattern: Option<&'a str>,
@@ -64,6 +65,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
+    if !options.soft
+        && !options.never_exported
+        && options.pattern.is_some_and(selection::stateful)
+        && env::var_os("CI").is_some_and(|value| !value.is_empty())
+        && bitmap::read(&root)?.lane.is_some()
+    {
+        return Ok(Outcome::Declined(LANE_CI_DIAGNOSTIC.into()));
+    }
     let mut startup = super::status::autosync::Startup::default();
     if let Some(pattern) = options.pattern.filter(|pattern| selection::stateful(pattern)) {
         match selection::states(&root, pattern, &mut startup) {
@@ -214,14 +223,8 @@ fn run_lane(
     head_only: bool,
     force: bool,
 ) -> io::Result<Outcome> {
-    let plan = match LanePlan::prepare(root, identity, head_only, force) {
-        Ok(plan) => plan,
-        Err(error) => return Ok(Outcome::Declined(format!("lane reset: {error}"))),
-    };
-    let report = report(args, identity, plan.labels());
-    workspace_command::execute_with(root, args, "reset", &report, |_| {
-        plan.commit(&workspace_command::file_id())
-    })
+    let selected = selection::Selected::ordinary(vec![identity.to_owned()]);
+    run_lane_batch(args, root, head_only, Some(&selected), force)
 }
 
 fn run_batch(
@@ -282,6 +285,9 @@ fn run_lane_batch(
         |ids| LaneBatch::prepare_selected(root, &ids.identities, head_only, force),
     ) {
         Ok(batch) => batch,
+        Err(error) if bit_object_import::reset_lane::diagnostic(&error).is_some() => {
+            return lane_failure(args, root, selected, error);
+        }
         Err(error) => return Ok(Outcome::Declined(format!("lane reset batch: {error}"))),
     };
     let formatter = Formatter::new(Chalk::detect(args));
@@ -310,6 +316,25 @@ fn run_lane_batch(
             selected.verify()?;
         }
         batch.commit(&workspace_command::file_id())
+    })
+}
+
+fn lane_failure(
+    args: &[OsString],
+    root: &Path,
+    selected: Option<&selection::Selected>,
+    error: io::Error,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+        return Ok(Outcome::Declined(LANE_CI_DIAGNOSTIC.into()));
+    }
+    workspace_command::execute_then(root, args, "reset", |output| {
+        if let Some(selected) = selected {
+            selected.render(output);
+            selected.verify()?;
+        }
+        bit_object_import::reset_lane::apply_error_prefix(&error)?;
+        Err(error)
     })
 }
 
