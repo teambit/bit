@@ -97,3 +97,10 @@ export const HARD_DELETE_FEATURE = 'hard-delete';
  * `bit config set features=capsule-auto-prune`.
  */
 export const CAPSULE_AUTO_PRUNE = 'capsule-auto-prune';
+
+/**
+ * allow snapping/tagging components that use "+^"/"+~" versions (e.g. in env.jsonc). gated because older bit
+ * versions (including the one bit.cloud may run) write them as is to the package.json. Enable with
+ * `BIT_FEATURES=plus-range-versions` or `bit config set features=plus-range-versions`.
+ */
+export const PLUS_RANGE_VERSIONS_FEATURE = 'plus-range-versions';

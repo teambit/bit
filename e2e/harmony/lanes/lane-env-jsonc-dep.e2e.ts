@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import { PLUS_RANGE_VERSIONS_FEATURE } from '@teambit/harmony.modules.feature-toggle';
 
 /**
  * Bug reproduction: env.jsonc peer dependency that is also a workspace component
@@ -146,6 +147,7 @@ export default new MyEnv();
     let comp1DepsOnLane: Record<string, any>[];
     const getComp2DepData = (deps: Record<string, any>[]) => deps.find((d) => d.packageName === comp2PkgName);
     before(async () => {
+      helper.command.setFeatures(PLUS_RANGE_VERSIONS_FEATURE);
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2); // comp1 requires comp2
       helper.env.setEmptyEnv();
