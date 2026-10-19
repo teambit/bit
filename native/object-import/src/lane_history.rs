@@ -1,4 +1,6 @@
 //! Read a local lane's validated history object without a Node object round trip.
+pub use diagnostic::ci_requires_published_diagnostic;
+mod diagnostic;
 use crate::workspace::engine::command::outbound;
 use serde_json::Value;
 use sha1::{Digest, Sha1};

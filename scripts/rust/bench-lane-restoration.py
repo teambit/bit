@@ -9,12 +9,14 @@ import argparse
 import base64
 import datetime
 import email.utils
+import hashlib
 import json
 import platform
 import re
 import os
 import shlex
 import statistics
+import stat
 import subprocess
 import shutil
 import tempfile
@@ -22,6 +24,7 @@ import time
 from pathlib import Path
 import importlib.util
 import sys
+import zlib
 sys.dont_write_bytecode = True
 
 
@@ -63,6 +66,67 @@ def clock_phase(workload):
     raise RuntimeError('could not satisfy the predeclared lane start-clock phase')
 
 
+def validate_revert_json(stdout, history_id):
+    """PTYs merge native diagnostics into stdout; retain the existing exact-output projection."""
+    value = json.loads(STATE.normalized(stdout))
+    if value.get('historyId') != history_id or value.get('mergeSnapResults', 'missing') is not None:
+        raise RuntimeError('actual revert JSON result differs from released schema')
+
+
+def native_ownership(workload, mode):
+    """Only the two CI error cases require the published V8 diagnostic stack."""
+    return not (mode == 'ci' and workload in PREPARE.ERRORS)
+
+
+def history_baseline(root, baseline_objects, remote, workload, history_id):
+    """Validate the single missing remote entry in released LaneHistory.merge's local-first order."""
+    if workload != 'remote-history-refresh':
+        return baseline_objects
+    lane = bitmap(root)['_bit_lane']['id']
+    index = json.loads((STATE.scope(root) / 'index.json').read_text())
+    matches = [row['hash'] for row in index['lanes'] if row['id'] == lane]
+    if len(matches) != 1:
+        raise RuntimeError('history refresh requires one indexed active lane')
+    reference = hashlib.sha1(f'{matches[0]}:LaneHistory'.encode()).hexdigest()
+    original = baseline_objects.get(reference)
+    if original is None or original[0] != 'LaneHistory':
+        raise RuntimeError('history refresh requires the existing active LaneHistory')
+    path = remote / 'objects' / reference[:2] / reference[2:]
+    raw = zlib.decompress(path.read_bytes())
+    header, separator, body = raw.partition(b'\0')
+    length = len(body.decode('utf-8').encode('utf-16-le')) // 2
+    if not separator or header != f'LaneHistory {reference} {length}'.encode():
+        raise RuntimeError('history refresh remote identity/length differs')
+    value = json.loads(body)
+    if (value.get('laneHash') != matches[0] or value.get('scope') != lane['scope']
+            or value.get('name') != lane['name'] or history_id not in value['history']):
+        raise RuntimeError('history refresh remote lane or requested entry differs')
+    entry = value['history'].pop(history_id)
+    expected = json.dumps(value, separators=(',', ':'), ensure_ascii=False).encode()
+    if original[1] != expected:
+        raise RuntimeError('history refresh baseline differs beyond the single missing entry')
+    value['history'][history_id] = entry
+    merged = json.dumps(value, separators=(',', ':'), ensure_ascii=False).encode()
+    validated = dict(baseline_objects)
+    validated[reference] = ('LaneHistory', merged, original[2], original[3])
+    return validated
+
+
+def raw_history(root):
+    """Capture exact zero-write state, including metadata absent on a fresh main lane."""
+    scope = root / '.bit'
+    metadata = scope / 'bitmap-history-metadata.txt'
+    directory = scope / 'bitmap-history'
+    return {
+        'metadata_base64': base64.b64encode(metadata.read_bytes()).decode() if metadata.exists() else None,
+        'metadata_mode': stat.S_IMODE(metadata.stat().st_mode) if metadata.exists() else None,
+        'directory_mode': stat.S_IMODE(directory.stat().st_mode) if directory.exists() else None,
+        'backups': {path.name: {'bytes_base64': base64.b64encode(path.read_bytes()).decode(),
+                              'mode': stat.S_IMODE(path.stat().st_mode)}
+                    for path in sorted(directory.iterdir())} if directory.exists() else None,
+    }
+
+
 def execute(args, stage, fixtures, workload, mode, run, implementation):
     for source, name in [(fixtures['workloads'][workload], 'workspace'),
                          (fixtures['home'], 'home'), (fixtures['globals'], 'globals'),
@@ -70,7 +134,7 @@ def execute(args, stage, fixtures, workload, mode, run, implementation):
         COMMON.restore(Path(source), stage / name)
     root = stage / 'workspace'
     baseline_objects, baseline_history = STATE.objects(root), STATE.bitmap_history(root)
-    baseline_raw_history = HISTORY_PREPARE.CORE.raw_history(root)
+    baseline_raw_history = raw_history(root)
     binary = args.node_binary if implementation == 'node' else args.rust
     before = COMMON.sha(binary)
     command = fixtures['commands'][workload]
@@ -103,8 +167,12 @@ def execute(args, stage, fixtures, workload, mode, run, implementation):
     trace = output.stdout + output.stderr
     if implementation == 'rust':
         marker = f'running `{command[0]}` natively'.encode()
-        if marker not in trace or b'declined' in trace or b'delegating:' in trace:
-            raise RuntimeError(f'{prefix}: command did not remain native')
+        if native_ownership(workload, mode):
+            if marker not in trace or b'declined' in trace or b'delegating:' in trace:
+                raise RuntimeError(f'{prefix}: command did not remain native')
+        elif (b'delegating:' not in trace
+              or b'CI lane history diagnostics require the published stack' not in trace):
+            raise RuntimeError(f'{prefix}: expected pre-effect CI diagnostic delegation')
     prefix.with_suffix('.host.json').write_text(json.dumps({
         'before': host_before, 'after': host_after,
         'start_clock_phase': phase}, indent=2) + '\n')
@@ -128,23 +196,23 @@ def execute(args, stage, fixtures, workload, mode, run, implementation):
             raise
         raw_path.write_text(json.dumps(raw, indent=2) + '\n')
     if workload not in HISTORY_PREPARE.WORKLOADS:
-        raw = HISTORY_PREPARE.CORE.raw_history(root)
+        raw = raw_history(root)
         prefix.with_suffix('.bitmap-history.json').write_text(json.dumps({
             'expected_writes': 0, 'baseline': baseline_raw_history, 'actual': raw}, indent=2) + '\n')
         if raw != baseline_raw_history:
             raise RuntimeError(f'{prefix}: zero-write historical operation changed raw bitmap history')
     if STATE.tree(stage / 'remote') != STATE.tree(Path(fixtures['remotes'][workload])):
         raise RuntimeError(f'{prefix}: historical command mutated its immutable remote')
-    workspace = IMPORT_STATE.import_state(root, baseline_objects, baseline_history, Path(fixtures['remotes'][workload]))
+    remote = Path(fixtures['remotes'][workload])
+    expected_objects = history_baseline(root, baseline_objects, remote, workload, command[2])
+    workspace = IMPORT_STATE.import_state(root, expected_objects, baseline_history, remote)
     if history_projection is not None:
         workspace['bitmap_history'] = history_projection
     if workload in PREPARE.INSTALLATIONS:
         installation_clocks(root, workspace, prefix, host_before['time_ns'], host_after['time_ns'])
     verify_postconditions(root, workload, fixtures)
     if workload == 'restore-json':
-        value = json.loads(output.stdout)
-        if value.get('historyId') != command[2] or value.get('mergeSnapResults', 'missing') is not None:
-            raise RuntimeError('actual revert JSON result differs from released schema')
+        validate_revert_json(output.stdout, command[2])
     globals_state = STATE.tree(stage / 'globals', globals_directory=True)
     command_details_clock(stage / 'globals', globals_state, prefix, host_before['time_ns'], host_after['time_ns'], Path(fixtures['globals']))
     result = {'status': output.returncode, 'stdout': STATE.normalized(output.stdout),
@@ -373,9 +441,8 @@ def main():
                     differences = [key for key in pair['node'] if pair['node'][key] != pair['rust'][key]]
                     raise RuntimeError(f'{workload}/{mode}/{run}: {differences} differ; evidence {stage}/evidence')
                 verified.append({'workload': workload, 'mode': mode, 'pair': run,
-                                 'native_ownership': True, 'expected_nonzero': workload in PREPARE.ERRORS, 'expected_exit_code': PREPARE.EXPECTED_CODES[workload], 'exit_code': pair['rust']['status']})
-            native_ownership = True
-            measurements[workload][mode] = {'native_ownership': native_ownership,
+                                 'native_ownership': native_ownership(workload, mode), 'expected_nonzero': workload in PREPARE.ERRORS, 'expected_exit_code': PREPARE.EXPECTED_CODES[workload], 'exit_code': pair['rust']['status']})
+            measurements[workload][mode] = {'native_ownership': native_ownership(workload, mode),
                 'speed_claim_eligible': False, 'runs_ms': samples,
                 'median_ms': {key: statistics.median(value) for key, value in samples.items()}}
             print(f'verified {workload} {mode}: {measurements[workload][mode]["median_ms"]}',
@@ -431,9 +498,9 @@ def main():
                                 'lane bitmap histories: every surviving raw backup validated against independent last-writer preimages; overwritten preimages remain oracle-only',
                                 'checksum-validated cache-index receipt timestamps',
                                 'last-command-details/meta.json must remain byte-exact to immutable baseline for lane subcommands'],
-              'intentional_boundaries': ['lane checkout has no JSON option; genuine lane revert JSON is included', 'unsupported transports/provider inputs remain explicit command boundaries'],
+              'intentional_boundaries': ['lane checkout has no JSON option; genuine lane revert JSON is included', 'two CI errors deliberately delegate before effects to retain the exact published V8 stack; their ten pairs are excluded from native speed claims', 'unsupported transports/provider inputs remain explicit command boundaries'],
               'excluded_implementation_state': ['exact workspace-root debug.log', 'exact globals/logs subtree'],
-              'ownership_note': 'Every measured command must remain native in all three presentation modes.',
+              'ownership_note': 'All successful modes and ordinary/TTY errors remain native. The two CI error modes must explicitly delegate before effects; their timings never qualify native speed.',
               'native_pairs': sum(row['native_ownership'] for row in verified),
               'warmup_note': 'Pinned builtin metadata is prewarmed; untimed installation transcript preparation may also warm the package store. No first-use claim.',
               'clock_phase_control': {

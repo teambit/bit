@@ -51,7 +51,7 @@ Git branches, broader pattern grammar, and JSON success are not qualified here.
 
 ## Lane history restoration correctness
 
-All 14 strict same-path `harmony::lane_restoration` cases pass against released Bit
+The strict same-path `harmony::lane_restoration` cases compare against released Bit
 2.2.94. They cover historical checkout, revert with and without deleted-component
 restoration, preserved existing versions, the real revert JSON handler, remote
 history refresh, unpublished local history and retained provider installation and
@@ -69,6 +69,20 @@ fixture accepts only those two independently proven complete messages; exact
 cause, advice, scope, stdout, exit, ownership and all local/remote/history state
 remain checked. Other diagnostics remain byte-exact. Negative cases reject a
 changed scope, cause, advice and extra output.
+
+Additional lane-history CI diagnostic controls cover:
+`errors::ci_missing_history_errors_preserve_the_published_stack_before_any_native_effect`
+and `errors::ci_main_lane_errors_preserve_the_published_stack_before_history_resolution`
+require explicit pre-bootstrap delegation for both checkout and revert, preserving
+full published stacks, exact output/state, unchanged bitmap and immutable remote.
+The exact decline reason is `CI lane history diagnostics require the published stack`.
+`errors::ci_cached_revert_remains_native_and_restores_file_bytes_without_changing_bitmap`
+requires native cached success and actual historical file restoration with no bitmap
+change. `refresh::ci_uncached_file_remote_history_refresh_remains_native_and_restores_exact_sources`
+requires native file-remote refresh with the independent actual Node checkout-write
+oracle receiving the same per-command CI environment. Existing non-CI controls remain
+unchanged. Uncached HTTP CI eligibility remains a documented pre-effect fallback;
+these fixtures do not claim native HTTP success.
 
 ## Where ports live
 

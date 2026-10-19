@@ -61,7 +61,7 @@ pub enum Status {
 }
 
 impl Status {
-    fn parse(name: &str) -> io::Result<Self> {
+    pub(in crate::commands) fn parse(name: &str) -> io::Result<Self> {
         Ok(match name {
             "merged" => Self::Merged,
             "manual" => Self::Manual,

@@ -1,6 +1,10 @@
 //! Only the local `LaneHistory` is stale; component Versions and `VersionHistory` stay consistent.
 use super::fixture;
-use crate::{commands::move_paths::support, helper::remote};
+use crate::{
+    commands::{add::support::history_oracle, move_paths::support},
+    harmony::lane_adoption::output::durations,
+    helper::remote,
+};
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::Value;
 use sha1::{Digest, Sha1};
@@ -8,6 +12,32 @@ use std::{fs, io::Write};
 
 #[test]
 fn checkout_refreshes_remote_lane_history_before_resolving_the_requested_entry() {
+    let fixture = stale_file_remote();
+    fixture::successful(&fixture, "checkout", false, false);
+    assert_eq!(
+        fs::read_to_string(fixture.helper.scopes.local_path.join("comp3/index.js")).unwrap(),
+        fixture::written_source("module.exports='remote-history';\n"),
+    );
+}
+
+#[test]
+fn ci_uncached_file_remote_history_refresh_remains_native_and_restores_exact_sources() {
+    let fixture = stale_file_remote();
+    let output = history_oracle::compare_ci(
+        &fixture.helper,
+        &format!("lane checkout {} -x", fixture.history),
+        durations,
+        ["checkout"],
+        false,
+    );
+    assert!(output.status.success(), "{} {}", output.stdout, output.stderr);
+    assert_eq!(
+        fs::read_to_string(fixture.helper.scopes.local_path.join("comp3/index.js")).unwrap(),
+        fixture::written_source("module.exports='remote-history';\n"),
+    );
+}
+
+fn stale_file_remote() -> fixture::Fixture {
     let fixture = fixture::initial();
     fixture.helper.output_file("comp3/index.js", "module.exports='remote-history';\n");
     support::setup(&fixture.helper, "snap --ignore-issues * --message remote-update");
@@ -23,12 +53,7 @@ fn checkout_refreshes_remote_lane_history_before_resolving_the_requested_entry()
         &format!("import {}/comp3 --all-history -x", fixture.helper.scopes.remote),
     );
     remove_local_entry(&fixture.helper, &history);
-    let fixture = fixture::Fixture { history, ..fixture };
-    fixture::successful(&fixture, "checkout", false, false);
-    assert_eq!(
-        fs::read_to_string(fixture.helper.scopes.local_path.join("comp3/index.js")).unwrap(),
-        fixture::written_source("module.exports='remote-history';\n"),
-    );
+    fixture::Fixture { history, ..fixture }
 }
 
 fn remove_local_entry(helper: &crate::helper::Helper, id: &str) {

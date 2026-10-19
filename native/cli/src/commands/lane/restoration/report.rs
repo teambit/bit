@@ -3,7 +3,10 @@ use super::options::Options;
 use crate::commands::{
     checkout,
     color::Chalk,
-    workspace_command::{format::Formatter, results::Report},
+    workspace_command::{
+        format::Formatter,
+        results::{Report, Status},
+    },
 };
 use serde_json::{Value, json};
 use std::io;
@@ -11,7 +14,7 @@ use std::io;
 pub(super) fn render(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Report> {
     if options.json {
         return Ok(Report {
-            data: serde_json::to_string_pretty(&project(result, &options.id))?,
+            data: serde_json::to_string_pretty(&project(result, &options.id, chalk)?)?,
             code: 0,
             details: None,
         });
@@ -57,12 +60,15 @@ const RESULT_FIELDS: [&str; 14] = [
     "mergeSnapError",
 ];
 
-fn project(result: &Value, id: &str) -> Value {
+fn project(result: &Value, id: &str, chalk: Chalk) -> io::Result<Value> {
     let mut projected = serde_json::Map::new();
     for name in RESULT_FIELDS {
         if let Some(value) = result.get(name) {
             projected.insert(name.into(), value.clone());
         }
+    }
+    for name in ["components", "abortedComponents"] {
+        project_statuses(projected.get_mut(name), chalk)?;
     }
     projected.insert(
         "mergeSnapResults".into(),
@@ -78,7 +84,25 @@ fn project(result: &Value, id: &str) -> Value {
         projected.insert("workspaceConfigUpdateResult".into(), json!({"logs":logs}));
     }
     projected.insert("historyId".into(), json!(id));
-    Value::Object(projected)
+    Ok(Value::Object(projected))
+}
+
+fn project_statuses(components: Option<&mut Value>, chalk: Chalk) -> io::Result<()> {
+    for component in components
+        .and_then(Value::as_array_mut)
+        .into_iter()
+        .flatten()
+    {
+        let Some(statuses) = component.get_mut("filesStatus").and_then(Value::as_object_mut) else {
+            continue;
+        };
+        for status in statuses.values_mut() {
+            let key =
+                status.as_str().ok_or_else(|| io::Error::other("lane revert JSON file status"))?;
+            *status = Value::String(Status::parse(key)?.label(chalk));
+        }
+    }
+    Ok(())
 }
 
 pub(super) fn merge(first: &mut Value, second: &Value) -> io::Result<()> {
