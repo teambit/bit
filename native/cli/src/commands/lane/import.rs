@@ -139,7 +139,7 @@ fn validate(prepared: &Value, lane: &str) -> Option<Vec<Value>> {
 
 fn apply(engine: &mut Engine, prepared: &Value) -> io::Result<()> {
     let applied: Value =
-        engine.request(&json!({"kind":"commandInboundApply","token":prepared["token"]}))?;
+        engine.request(&json!({"kind":"commandInboundApply","token":prepared["token"],"omitOwnedWriteReceipts":true}))?;
     if applied["applied"] != true
         || applied["token"] != prepared["token"]
         || applied["laneImport"] != true

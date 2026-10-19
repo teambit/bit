@@ -262,6 +262,7 @@ fn serve_hub(listener: &TcpListener, remote: &str, count: usize) -> Vec<String> 
 }
 
 fn respond_hub(mut stream: TcpStream, remote: &str) -> String {
+    stream.set_nonblocking(false).unwrap();
     let mut reader = BufReader::new(stream.try_clone().unwrap());
     let (mut request, length) = read_headers(&mut reader);
     let mut body = vec![0; length];
