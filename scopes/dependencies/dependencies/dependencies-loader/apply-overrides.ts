@@ -791,7 +791,10 @@ export class ApplyOverrides {
       if (resolved?.concreteVersion && semver.satisfies(resolved.concreteVersion, wsVersion)) {
         return resolved.concreteVersion;
       }
-      return (semver.validRange(wsVersion) && semver.minVersion(wsVersion)?.version) || wsVersion;
+      const validRange = semver.validRange(wsVersion);
+      // an unconstrained range (e.g. "*") has no meaningful minimum, keep it as is
+      if (!validRange || validRange === '*') return wsVersion;
+      return semver.minVersion(wsVersion)?.version || wsVersion;
     }
     if (resolved && resolved.concreteVersion) {
       return resolved.concreteVersion;

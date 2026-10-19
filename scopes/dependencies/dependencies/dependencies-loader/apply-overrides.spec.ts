@@ -27,6 +27,10 @@ describe('ApplyOverrides.resolveEnvPeerDepVersion()', () => {
     const applyOverrides = createApplyOverrides({ installed: '17.0.0', inWorkspacePolicy: '^18.1.0' });
     expect(applyOverrides.resolveEnvPeerDepVersion('my-pkg', true)).to.equal('18.1.0');
   });
+  it('should keep an unconstrained workspace policy range as is', () => {
+    const applyOverrides = createApplyOverrides({ inWorkspacePolicy: '*' });
+    expect(applyOverrides.resolveEnvPeerDepVersion('my-pkg', true)).to.equal('*');
+  });
   it('should fall back to the installed version when the workspace policy does not have the package', () => {
     const applyOverrides = createApplyOverrides({ installed: '2.0.0' });
     expect(applyOverrides.resolveEnvPeerDepVersion('my-pkg', true)).to.equal('2.0.0');
