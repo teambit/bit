@@ -320,10 +320,13 @@ export class CiMain {
 
   /**
    * The repository's default branch name, whole — slashes included (see `parseOriginHeadRef`).
-   * What `detectDefaultBranchName` finds, else `master`.
+   * What `detectDefaultBranchName` finds, else `master`, with a warning that names it.
    */
   async getDefaultBranchName(): Promise<string> {
-    return (await this.detectDefaultBranchName()) ?? 'master';
+    const detected = await this.detectDefaultBranchName();
+    if (detected) return detected;
+    this.logger.console(chalk.yellow(`Unable to detect default branch, using 'master'`));
+    return 'master';
   }
 
   /**
@@ -351,7 +354,8 @@ export class CiMain {
       if (branches.all.includes('origin/main')) return 'main';
       if (branches.all.includes('origin/master')) return 'master';
     } catch (err) {
-      this.logger.console(chalk.yellow(`Unable to detect default branch: ${(err as Error).message}`));
+      // debug only: the caller decides what to say, and what to use instead
+      this.logger.debug(`detectDefaultBranchName: "git branch -r" failed: ${(err as Error).message}`);
     }
     return undefined;
   }

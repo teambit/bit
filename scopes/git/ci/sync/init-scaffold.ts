@@ -401,6 +401,12 @@ export function redactRemoteUrl(remoteUrl: string): string {
   return url.replace(/^([a-z][a-z0-9+.-]*:\/\/[^:@/]*):[^@/]*@/i, '$1@');
 }
 
+/** `value` with each control character written as `\xNN`, so printing it cannot move or restyle the terminal. */
+export function escapeControlChars(value: string): string {
+  // eslint-disable-next-line no-control-regex
+  return value.replace(/[\u0000-\u001f\u007f-\u009f]/g, (c) => `\\x${c.charCodeAt(0).toString(16).padStart(2, '0')}`);
+}
+
 /**
  * Quote a value for a POSIX shell, so a command the report prints runs as shown when pasted. Plain
  * names stay unquoted for readability; anything else is single-quoted. A git-valid branch such as
@@ -444,10 +450,15 @@ export function renderInitReport(input: InitReportInput): string {
   const { ownerRepo, defaultBranch } = input;
   const scope = input.scopeId ?? '<scope>';
   // An origin that isn't recognized is most often a GitHub Enterprise Server the shell doesn't know about.
-  const unrecognizedOrigin = !ownerRepo && input.originUrl ? redactRemoteUrl(input.originUrl) : undefined;
-  // Suggest a server only for a remote that names a host: a local path has none.
+  const redactedOrigin = !ownerRepo && input.originUrl ? redactRemoteUrl(input.originUrl) : undefined;
+  // Shown, so made inert: a control character (a newline, a terminal escape) must not reach the terminal.
+  const unrecognizedOrigin = redactedOrigin && escapeControlChars(redactedOrigin);
+  // Suggest a server only for a remote that names a host: a local path has none, and a URL with a
+  // control character in it has no trustworthy one.
   const serverHost =
-    unrecognizedOrigin && !isLocalPathRemote(unrecognizedOrigin) ? remoteHost(unrecognizedOrigin) : undefined;
+    redactedOrigin && redactedOrigin === unrecognizedOrigin && !isLocalPathRemote(redactedOrigin)
+      ? remoteHost(redactedOrigin)
+      : undefined;
   const repoRootFromCwd = input.repoRootFromCwd || '.';
   const configDisplayPath = input.configDisplayPath || 'workspace.jsonc';
 

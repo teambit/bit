@@ -15,6 +15,7 @@ import {
   suggestedServerUrl,
   isLocalPathRemote,
   redactRemoteUrl,
+  escapeControlChars,
 } from './init-scaffold';
 import type { OwnerRepo } from './init-scaffold';
 
@@ -314,6 +315,22 @@ describe('init-scaffold', () => {
       expect(isLocalPathRemote('https://ghe.example/acme/store.git')).to.be.false;
       expect(isLocalPathRemote('ssh://git@ghe.example:2222/acme/store.git')).to.be.false;
       expect(isLocalPathRemote('ghe.example:acme/store.git')).to.be.false;
+    });
+
+    it('prints control characters in an origin as inert text, and suggests no server for it', () => {
+      expect(escapeControlChars('a\nb\u001b[2Jc')).to.equal('a\\x0ab\\x1b[2Jc');
+      const origin = 'https://ghe.example/acme/store.git\n\u001b[32m✔ all set';
+      const out = renderInitReport({
+        scopeId: 'acme.shop',
+        originUrl: origin,
+        defaultBranch: 'main',
+        files,
+        configAdded: true,
+      });
+      expect(out).to.not.contain('\u001b[32m');
+      expect(out).to.not.contain('store.git\n');
+      expect(out).to.contain('origin https://ghe.example/acme/store.git\\x0a\\x1b[32m');
+      expect(out).to.not.contain('GITHUB_SERVER_URL');
     });
 
     it('never prints the credentials an origin URL carries', () => {
