@@ -9,6 +9,7 @@ import argparse
 import base64
 import datetime
 import email.utils
+import hashlib
 import json
 import platform
 import re
@@ -22,6 +23,7 @@ import time
 from pathlib import Path
 import importlib.util
 import sys
+import zlib
 sys.dont_write_bytecode = True
 
 
@@ -68,6 +70,40 @@ def validate_revert_json(stdout, history_id):
     value = json.loads(STATE.normalized(stdout))
     if value.get('historyId') != history_id or value.get('mergeSnapResults', 'missing') is not None:
         raise RuntimeError('actual revert JSON result differs from released schema')
+
+
+def history_baseline(root, baseline_objects, remote, workload, history_id):
+    """Validate the single missing remote entry in released LaneHistory.merge's local-first order."""
+    if workload != 'remote-history-refresh':
+        return baseline_objects
+    lane = bitmap(root)['_bit_lane']['id']
+    index = json.loads((STATE.scope(root) / 'index.json').read_text())
+    matches = [row['hash'] for row in index['lanes'] if row['id'] == lane]
+    if len(matches) != 1:
+        raise RuntimeError('history refresh requires one indexed active lane')
+    reference = hashlib.sha1(f'{matches[0]}:LaneHistory'.encode()).hexdigest()
+    original = baseline_objects.get(reference)
+    if original is None or original[0] != 'LaneHistory':
+        raise RuntimeError('history refresh requires the existing active LaneHistory')
+    path = remote / 'objects' / reference[:2] / reference[2:]
+    raw = zlib.decompress(path.read_bytes())
+    header, separator, body = raw.partition(b'\0')
+    length = len(body.decode('utf-8').encode('utf-16-le')) // 2
+    if not separator or header != f'LaneHistory {reference} {length}'.encode():
+        raise RuntimeError('history refresh remote identity/length differs')
+    value = json.loads(body)
+    if (value.get('laneHash') != matches[0] or value.get('scope') != lane['scope']
+            or value.get('name') != lane['name'] or history_id not in value['history']):
+        raise RuntimeError('history refresh remote lane or requested entry differs')
+    entry = value['history'].pop(history_id)
+    expected = json.dumps(value, separators=(',', ':'), ensure_ascii=False).encode()
+    if original[1] != expected:
+        raise RuntimeError('history refresh baseline differs beyond the single missing entry')
+    value['history'][history_id] = entry
+    merged = json.dumps(value, separators=(',', ':'), ensure_ascii=False).encode()
+    validated = dict(baseline_objects)
+    validated[reference] = ('LaneHistory', merged, original[2], original[3])
+    return validated
 
 
 def execute(args, stage, fixtures, workload, mode, run, implementation):
@@ -142,7 +178,9 @@ def execute(args, stage, fixtures, workload, mode, run, implementation):
             raise RuntimeError(f'{prefix}: zero-write historical operation changed raw bitmap history')
     if STATE.tree(stage / 'remote') != STATE.tree(Path(fixtures['remotes'][workload])):
         raise RuntimeError(f'{prefix}: historical command mutated its immutable remote')
-    workspace = IMPORT_STATE.import_state(root, baseline_objects, baseline_history, Path(fixtures['remotes'][workload]))
+    remote = Path(fixtures['remotes'][workload])
+    expected_objects = history_baseline(root, baseline_objects, remote, workload, command[2])
+    workspace = IMPORT_STATE.import_state(root, expected_objects, baseline_history, remote)
     if history_projection is not None:
         workspace['bitmap_history'] = history_projection
     if workload in PREPARE.INSTALLATIONS:
