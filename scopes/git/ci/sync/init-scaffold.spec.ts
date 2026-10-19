@@ -9,7 +9,7 @@ import {
   renderBitReleaseWorkflow,
   scaffoldWorkflowFiles,
   deriveOwnerRepo,
-  renderInitChecklist,
+  renderInitReport,
 } from './init-scaffold';
 import type { OwnerRepo } from './init-scaffold';
 
@@ -117,33 +117,77 @@ describe('init-scaffold', () => {
     });
   });
 
-  describe('renderInitChecklist', () => {
-    it('renders a real dispatch URL when owner/repo were derived, a placeholder when not', () => {
-      const derived = renderInitChecklist({ owner: 'acme', repo: 'shop', host: 'github.com' });
-      expect(derived).to.contain('https://api.github.com/repos/acme/shop/dispatches');
-      expect(derived).to.not.contain('<owner>/<repo>');
-      expect(renderInitChecklist(undefined)).to.contain('https://api.github.com/repos/<owner>/<repo>/dispatches');
+  describe('renderInitReport', () => {
+    const files = [
+      {
+        relativePath: WORKFLOW_RELATIVE_PATHS.sync,
+        status: 'written' as const,
+        displayPath: '.github/workflows/bit-sync.yml',
+      },
+      {
+        relativePath: WORKFLOW_RELATIVE_PATHS.release,
+        status: 'written' as const,
+        displayPath: '.github/workflows/bit-release.yml',
+      },
+    ];
+    // eslint-disable-next-line no-control-regex
+    const plain = (text: string) => text.replace(/\u001b\[[0-9;]*m/g, '');
+    const report = (remote: string | undefined, extra: Partial<Parameters<typeof renderInitReport>[0]> = {}) =>
+      plain(
+        renderInitReport({
+          scopeId: 'acme.shop',
+          ownerRepo: deriveOwnerRepo(remote),
+          defaultBranch: 'main',
+          files,
+          configAdded: true,
+          ...extra,
+        })
+      );
+
+    it('prints each step once, as commands for the derived repository', () => {
+      const out = report('git@github.com:acme/shop.git');
+      expect(out).to.contain('for acme.shop, mirrored to acme/shop (default branch: main)');
+      expect(out).to.contain('git push -u origin main');
+      expect(out).to.contain('gh secret set BIT_CONFIG_ACCESS_TOKEN -R acme/shop');
+      expect(out).to.contain('gh api -X PUT repos/acme/shop/actions/permissions/workflow');
+      expect(out.match(/Next: 3 steps to go live/g)).to.have.length(1);
     });
 
-    it('derives the repository and the dispatch URL from a GitHub Enterprise Server remote', () => {
-      const saved = { api: process.env.GITHUB_API_URL, server: process.env.GITHUB_SERVER_URL };
-      process.env.GITHUB_API_URL = 'https://ghe.corp.example/api/v3';
-      process.env.GITHUB_SERVER_URL = 'https://ghe.corp.example';
-      try {
-        const ownerRepo = deriveOwnerRepo('git@ghe.corp.example:acme/store.git');
-        expect(ownerRepo).to.deep.equal({ owner: 'acme', repo: 'store', host: 'ghe.corp.example' });
-        expect(renderInitChecklist(ownerRepo)).to.contain(
-          'https://ghe.corp.example/api/v3/repos/acme/store/dispatches'
-        );
-      } finally {
-        if (saved.api === undefined) delete process.env.GITHUB_API_URL;
-        else process.env.GITHUB_API_URL = saved.api;
-        if (saved.server === undefined) delete process.env.GITHUB_SERVER_URL;
-        else process.env.GITHUB_SERVER_URL = saved.server;
-      }
+    it('points github.com repositories at the GitHub App and the relay, not at a personal token', () => {
+      const out = report('https://github.com/acme/shop.git');
+      expect(out).to.contain('https://github.com/apps/bit-git-sync');
+      expect(out).to.contain('/setup');
+      expect(out).to.not.contain('/dispatches');
+      expect(out).to.not.contain('Authorization: Bearer');
     });
 
-    describe('on a GHES-configured runner', () => {
+    it('asks to create the repository when there is no GitHub remote yet', () => {
+      const out = report(undefined);
+      expect(out).to.contain('no GitHub remote yet');
+      expect(out).to.contain('gh repo create <owner>/<repo> --private --source . --remote origin --push');
+      expect(out).to.not.contain('git push -u origin');
+    });
+
+    it('names an origin it does not recognize, and says how to mark a GitHub Enterprise Server', () => {
+      const origin = 'git@github.corp.example:acme/store.git';
+      const out = report(origin, { originUrl: origin });
+      expect(out).to.contain(`origin ${origin}`);
+      expect(out).to.contain('GITHUB_SERVER_URL=https://github.corp.example');
+      expect(out).to.contain('git push -u origin main');
+      expect(out).to.not.contain('no GitHub remote yet');
+    });
+
+    it('marks files that already existed and a config block that was already there', () => {
+      const out = report('git@github.com:acme/shop.git', {
+        files: [{ ...files[0], status: 'skipped' }, files[1]],
+        configAdded: false,
+      });
+      expect(out).to.match(/\.github\/workflows\/bit-sync\.yml\s+already exists, left unchanged/);
+      expect(out).to.match(/\.github\/workflows\/bit-release\.yml\s+releases the scope/);
+      expect(out).to.match(/workspace\.jsonc\s+already configures sync/);
+    });
+
+    describe('on GitHub Enterprise Server', () => {
       const saved: Record<string, string | undefined> = {};
       beforeEach(() => {
         saved.api = process.env.GITHUB_API_URL;
@@ -157,43 +201,37 @@ describe('init-scaffold', () => {
         else process.env.GITHUB_SERVER_URL = saved.server;
       });
 
-      it('names api.github.com for a github.com origin', () => {
+      it('uses the dispatch webhook on the server API, and gh commands that name the host', () => {
         process.env.GITHUB_API_URL = 'https://ghe.corp.example/api/v3';
-        const checklist = renderInitChecklist(deriveOwnerRepo('git@github.com:acme/shop.git'));
-        expect(checklist).to.contain('https://api.github.com/repos/acme/shop/dispatches');
-        expect(checklist).to.not.contain('ghe.corp.example');
+        const out = report('git@ghe.corp.example:acme/store.git');
+        expect(out).to.contain('https://ghe.corp.example/api/v3/repos/acme/store/dispatches');
+        expect(out).to.contain('"event_type":"bit-export"');
+        expect(out).to.contain('gh secret set BIT_CONFIG_ACCESS_TOKEN -R ghe.corp.example/acme/store');
+        expect(out).to.contain('gh api --hostname ghe.corp.example -X PUT repos/acme/store/');
+        expect(out).to.not.contain('github.com/apps/bit-git-sync');
       });
 
-      it('derives <server>/api/v3 for an enterprise origin when GITHUB_API_URL is unset', () => {
+      it('derives <server>/api/v3 when GITHUB_API_URL is unset', () => {
         delete process.env.GITHUB_API_URL;
-        expect(renderInitChecklist(deriveOwnerRepo('https://ghe.corp.example/acme/store.git'))).to.contain(
+        expect(report('https://ghe.corp.example/acme/store.git')).to.contain(
           'https://ghe.corp.example/api/v3/repos/acme/store/dispatches'
         );
       });
 
-      it('names no API for an enterprise origin whose GITHUB_API_URL is on another host', () => {
+      it('names no API when GITHUB_API_URL is on another host', () => {
         process.env.GITHUB_API_URL = 'https://api.github.com';
-        const checklist = renderInitChecklist(deriveOwnerRepo('https://ghe.corp.example/acme/store.git'));
-        expect(checklist).to.contain('<GitHub API URL>/repos/acme/store/dispatches');
-        expect(checklist).to.contain('GITHUB_API_URL "https://api.github.com"');
-        expect(checklist).to.not.contain('https://api.github.com/repos');
+        const out = report('https://ghe.corp.example/acme/store.git');
+        expect(out).to.contain('<GitHub API URL>/repos/acme/store/dispatches');
+        expect(out).to.contain('GITHUB_API_URL "https://api.github.com"');
+        expect(out).to.not.contain('https://api.github.com/repos');
       });
-    });
 
-    it('always includes the secrets, permissions, webhook and fetch-depth checklist items', () => {
-      const checklist = renderInitChecklist(undefined);
-      [
-        'BIT_CONFIG_ACCESS_TOKEN',
-        'BIT_SYNC_GH_TOKEN',
-        'contents: write',
-        'Components > Export',
-        'Authorization: Bearer <PAT>',
-        'Accept: application/vnd.github+json',
-        '"event_type":"bit-export"',
-        '{{laneId}}',
-        'drops its custom headers',
-        'fetch-depth: 0',
-      ].forEach((item) => expect(checklist, item).to.contain(item));
+      it('keeps the App path for a github.com origin', () => {
+        process.env.GITHUB_API_URL = 'https://ghe.corp.example/api/v3';
+        const out = report('git@github.com:acme/shop.git');
+        expect(out).to.contain('https://github.com/apps/bit-git-sync');
+        expect(out).to.not.contain('ghe.corp.example');
+      });
     });
   });
 });

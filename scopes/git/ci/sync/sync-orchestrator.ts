@@ -11,6 +11,7 @@ import { git } from '../git';
 import type { CiSyncConfig } from './sync-config';
 import {
   branchToLaneName,
+  isValidGitBranchName,
   laneNameToBranch,
   parseLaneTarget,
   resolveSyncConfig,
@@ -21,7 +22,7 @@ import { HALT_SUMMARY_PREFIX, REFUSED_SUMMARY_PREFIX, LaneSyncExecutor } from '.
 import { MainSyncExecutor } from './main-sync-executor';
 import { selectGitHostProvider } from './git-host-provider';
 import { gitRepoRoot, isNonContentPath, listRemoteBranches } from './git-ops';
-import { deriveOwnerRepo, renderInitChecklist, scaffoldWorkflowFiles } from './init-scaffold';
+import { deriveOwnerRepo, renderInitReport, scaffoldWorkflowFiles } from './init-scaffold';
 
 /**
  * Refuse a `--dry-run` whose plan would be computed by force-checking-out branches over uncommitted
@@ -211,7 +212,11 @@ export class SyncOrchestrator {
    * re-run: existing files are skipped, an existing config block is left alone; it never reconciles.
    */
   private async syncInit(): Promise<string> {
-    const defaultBranch = await this.deps.ci.getDefaultBranchName();
+    const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
+    const origin = typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined;
+    // With an origin, the remote knows the default branch. Without one (a repository not pushed yet),
+    // asking it falls back to "master"; the branch the user is on is the better guess.
+    const defaultBranch = origin ? await this.deps.ci.getDefaultBranchName() : await this.currentBranchOr('main');
 
     // Workflows belong to the repository, not the workspace: GitHub only discovers them at
     // `<repo-root>/.github/workflows`, and a bit workspace may be a subdirectory.
@@ -232,23 +237,26 @@ export class SyncOrchestrator {
       const fromCwd = path.relative(process.cwd(), abs);
       return fromCwd && !fromCwd.startsWith('..') ? fromCwd : abs;
     };
-    const fileLines = fileOutcomes.map((outcome) =>
-      outcome.status === 'written'
-        ? `wrote ${displayPath(outcome.relativePath)} (default branch: ${defaultBranch})`
-        : `skipped ${displayPath(outcome.relativePath)} (already exists — bit ci sync --init never overwrites)`
-    );
-
     const configAdded = await this.ensureSyncConfigBlock();
-    const configLine = configAdded
-      ? 'added "teambit.git/ci": { "sync": {} } to workspace.jsonc'
-      : 'workspace.jsonc already configures "teambit.git/ci".sync — left untouched';
 
-    const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
-    const ownerRepo = deriveOwnerRepo(typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined);
+    // Returned, not logged: the command prints what `report()` returns.
+    return renderInitReport({
+      scopeId: this.deps.workspace.defaultScope,
+      ownerRepo: deriveOwnerRepo(origin),
+      originUrl: origin,
+      defaultBranch,
+      files: fileOutcomes.map((outcome) => ({ ...outcome, displayPath: displayPath(outcome.relativePath) })),
+      configAdded,
+    });
+  }
 
-    const summary = ['bit ci sync --init', ...fileLines, configLine, renderInitChecklist(ownerRepo)].join('\n');
-    this.deps.logger.console(summary);
-    return summary;
+  /** The checked-out branch when it is a usable name (not detached, not option-like), else `fallback`. */
+  private async currentBranchOr(fallback: string): Promise<string> {
+    const current = await git
+      .raw(['branch', '--show-current'])
+      .then((out) => out.trim())
+      .catch(() => '');
+    return current && isValidGitBranchName(current) ? current : fallback;
   }
 
   /**

@@ -1,4 +1,6 @@
 import fs from 'fs';
+import chalk from 'chalk';
+import { formatHint, formatItem, formatTitle, formatWarningSummary, joinSections, successSymbol } from '@teambit/cli';
 import path from 'path';
 import { parseGitHubRepo, isGitHubRemote, gitHubApiUrl, remoteHost } from './github-client';
 
@@ -294,52 +296,138 @@ export function deriveOwnerRepo(remoteUrl: string | undefined): OwnerRepo | unde
 
 /**
  * The bit.cloud custom webhook payload template, verified byte-perfect against a live delivery.
- * Lane vs. main export is discriminated by whether `laneId` is empty.
+ * Lane vs. main export is discriminated by whether `laneId` is empty. Used on GitHub Enterprise
+ * Server, where the webhook posts straight to the repository's `dispatches` API with a token.
  */
 const WEBHOOK_PAYLOAD_TEMPLATE =
   '{"event_type":"bit-export","client_payload":{"laneId":"{{laneId}}","componentIds":"{{componentIds}}","owner":"{{owner}}","actor":"{{username}}"}}';
 
 /**
- * The manual-steps checklist `bit ci sync --init` prints: everything the command itself cannot do
- * (secrets live in GitHub settings; the webhook lives on bit.cloud).
+ * On github.com, instant Bit -> Git goes through the hosted relay: the `bit-git-sync` GitHub App lets
+ * it send `repository_dispatch` to the repositories it is installed on, and its setup page hands out
+ * one webhook URL per repository. No personal token is involved.
  */
-export function renderInitChecklist(ownerRepo: OwnerRepo | undefined): string {
-  const repoSegment = ownerRepo ? `${ownerRepo.owner}/${ownerRepo.repo}` : '<owner>/<repo>';
-  const api = gitHubApiUrl(ownerRepo?.host);
-  const dispatchUrl = `${'error' in api ? '<GitHub API URL>' : api.url}/repos/${repoSegment}/dispatches`;
-  return [
-    '',
-    'Remaining manual steps (bit ci sync --init only scaffolds files -- these need a human):',
-    '',
-    '1. Secrets -- add in the repository (or org) Settings > Secrets and variables > Actions:',
-    '   - BIT_CONFIG_ACCESS_TOKEN (required): a bit.cloud service-account token with export rights on',
-    "     this scope. This account must also be exempt from the org's",
-    '     change-request/merge block -- it is the only identity that merges lanes.',
-    '   - BIT_SYNC_GH_TOKEN (optional): a GitHub PAT or App token. Without it, sync pushes/PRs use the',
-    '     default GITHUB_TOKEN, which does NOT trigger downstream workflow runs (loop-safe, but the',
-    '     sync PR then gets no CI checks).',
-    '',
-    '2. Permissions -- both scaffolded workflows already declare `contents: write` and',
-    '   `pull-requests: write`. Nothing to change unless an org-wide policy overrides workflow-level',
-    '   permissions (e.g. a default of "Read repository contents permission" for the GITHUB_TOKEN).',
-    '',
-    '3. bit.cloud webhook -- create ONE webhook (org Settings > Webhooks) on the "Components > Export',
-    '   succeeded" event:',
-    `   URL:     ${dispatchUrl}`,
-    ...('error' in api ? [`            (${api.error})`] : []),
-    '   Headers: Authorization: Bearer <PAT>',
-    '            Accept: application/vnd.github+json',
-    '   Custom payload template:',
-    `   ${WEBHOOK_PAYLOAD_TEMPLATE}`,
-    '   WARNING: create this webhook fresh -- editing an existing webhook drops its custom headers',
-    '   (known bit.cloud platform bug, verified 2026-07-29). If the URL, headers or template need to',
-    '   change later, delete the webhook and create a new one rather than editing it.',
-    '',
-    '4. Checkout depth -- both scaffolded workflows already check out with `fetch-depth: 0`. This is',
-    '   required: the reconciler reads full git history, and a shallow (--depth=1) clone fails sync',
-    '   safely but uselessly (HALTED, no writes). Keep `fetch-depth: 0` if you customize the workflow.',
-    '   Narrowing the REFSPEC is fine, though -- a single-branch clone is supported, because every',
-    '   fetch sync performs names +refs/heads/*:refs/remotes/origin/* explicitly.',
-    '',
-  ].join('\n');
+const BIT_GIT_SYNC_APP_URL = 'https://github.com/apps/bit-git-sync';
+const WEBHOOK_RELAY_SETUP_URL = 'https://webhook-relay-gggmal.r2.composed.app/setup';
+const SETUP_GUIDE_URL = 'https://github.com/teambit/acme-modular-store#set-it-up-for-your-own-scope';
+
+/** What each scaffolded file does, in the words the report shows next to it. */
+const FILE_PURPOSE: Record<string, string> = {
+  [WORKFLOW_RELATIVE_PATHS.sync]: 'syncs lanes and branches: on export, on push, and hourly',
+  [WORKFLOW_RELATIVE_PATHS.release]: 'releases the scope when a pull request merges',
+};
+
+export interface InitReportInput {
+  /** the workspace's default scope, the one this repository mirrors */
+  scopeId?: string;
+  /** derived from the `origin` remote; undefined when there is none, or it isn't a recognized GitHub host */
+  ownerRepo?: OwnerRepo;
+  /** the raw `origin` URL, to name a remote that exists but isn't recognized as GitHub */
+  originUrl?: string;
+  defaultBranch: string;
+  /** scaffolded workflow files, with the path to show (relative to where the user stands) */
+  files: Array<ScaffoldFileOutcome & { displayPath: string }>;
+  /** whether `--init` added the sync block to workspace.jsonc, or found one already there */
+  configAdded: boolean;
+}
+
+/**
+ * The report `bit ci sync --init` prints: what it changed, then the steps that need a person, as
+ * commands to paste. Short by design; the setup guide carries the details.
+ */
+export function renderInitReport(input: InitReportInput): string {
+  const { ownerRepo, defaultBranch } = input;
+  const scope = input.scopeId ?? '<scope>';
+  const onGitHubCom = !ownerRepo || ownerRepo.host === 'github.com';
+  const repo = ownerRepo ? `${ownerRepo.owner}/${ownerRepo.repo}` : '<owner>/<repo>';
+  // gh takes HOST/OWNER/REPO for an enterprise server
+  const ghRepo = onGitHubCom ? repo : `${ownerRepo!.host}/${repo}`;
+  const ghApi = onGitHubCom ? 'gh api' : `gh api --hostname ${ownerRepo!.host}`;
+  // An origin that isn't recognized is most often a GitHub Enterprise Server the shell doesn't know about.
+  const unrecognizedOrigin = !ownerRepo && input.originUrl ? input.originUrl : undefined;
+
+  const target = ownerRepo
+    ? chalk.cyan(ghRepo)
+    : unrecognizedOrigin
+      ? `origin ${unrecognizedOrigin}`
+      : 'no GitHub remote yet';
+  const header = [
+    `${successSymbol()} ${formatTitle('Scaffolded bit ci sync')} for ${chalk.cyan(scope)}, mirrored to ${target} ${formatHint(
+      `(default branch: ${defaultBranch})`
+    )}`,
+  ];
+  if (unrecognizedOrigin) {
+    const host = remoteHost(unrecognizedOrigin);
+    header.push(
+      formatWarningSummary(
+        `origin isn't a GitHub remote bit recognizes. On GitHub Enterprise Server, set\n` +
+          `  GITHUB_SERVER_URL=https://${host ?? '<your server>'} and run bit ci sync --init again for exact commands.`
+      )
+    );
+  }
+
+  const width = Math.max(...input.files.map((f) => f.displayPath.length), 'workspace.jsonc'.length) + 2;
+  const fileItem = (displayPath: string, note: string) => formatItem(`${displayPath.padEnd(width)}${formatHint(note)}`);
+  const files = [
+    ...input.files.map((file) =>
+      fileItem(
+        file.displayPath,
+        file.status === 'written' ? (FILE_PURPOSE[file.relativePath] ?? '') : 'already exists, left unchanged'
+      )
+    ),
+    fileItem(
+      'workspace.jsonc',
+      input.configAdded ? 'added "teambit.git/ci": { "sync": {} }' : 'already configures sync, left unchanged'
+    ),
+  ];
+
+  const step = (n: number, title: string, who: string, body: string[]) =>
+    [`${formatTitle(`${n}. ${title}`)} ${formatHint(`(${who})`)}`, ...body.map((line) => `   ${line}`)].join('\n');
+  const cmd = (text: string) => chalk.cyan(text);
+
+  const pushStep =
+    ownerRepo || unrecognizedOrigin
+      ? step(1, 'Push it', 'you', [
+          cmd(`git add -A && git commit -m "Mirror ${scope}" && git push -u origin ${defaultBranch}`),
+        ])
+      : step(1, 'Create the repository and push it', 'you', [
+          cmd(`git add -A && git commit -m "Mirror ${scope}"`),
+          cmd(`gh repo create ${repo} --private --source . --remote origin --push`),
+        ]);
+  const permissionsStep = step(2, 'Let the workflows publish to bit.cloud and open pull requests', 'repository admin', [
+    cmd(`gh secret set BIT_CONFIG_ACCESS_TOKEN -R ${ghRepo}`),
+    formatHint(`a bit.cloud access token with Write permission on ${scope}`),
+    cmd(`${ghApi} -X PUT repos/${repo}/actions/permissions/workflow \\`),
+    cmd(`  -F can_approve_pull_request_reviews=true`),
+    formatHint('allows the workflows to open pull requests'),
+  ]);
+  let instantStep: string;
+  if (onGitHubCom) {
+    instantStep = step(3, 'Make Bit -> Git instant', 'organization admin, optional', [
+      `Install ${chalk.cyan(BIT_GIT_SYNC_APP_URL)} on ${repo}.`,
+      `Copy the repository's webhook URL from ${chalk.cyan(WEBHOOK_RELAY_SETUP_URL)}`,
+      `and add it to ${scope} on bit.cloud as an "Export succeeded" webhook.`,
+    ]);
+  } else {
+    const api = gitHubApiUrl(ownerRepo!.host);
+    const dispatchUrl = `${'error' in api ? '<GitHub API URL>' : api.url}/repos/${repo}/dispatches`;
+    instantStep = step(3, 'Make Bit -> Git instant', 'optional', [
+      `On bit.cloud, add an "Export succeeded" webhook to ${scope}:`,
+      `  URL      ${chalk.cyan(dispatchUrl)}`,
+      ...('error' in api ? [chalk.yellow(`  (${api.error})`)] : []),
+      '  Headers  Authorization: Bearer <token with access to this repository>',
+      '           Accept: application/vnd.github+json',
+      `  Payload  ${WEBHOOK_PAYLOAD_TEMPLATE}`,
+      formatHint('Create it fresh: editing a bit.cloud webhook drops its custom headers.'),
+    ]);
+  }
+
+  return joinSections([
+    header.join('\n'),
+    files.join('\n'),
+    [formatTitle('Next: 3 steps to go live'), '', pushStep, '', permissionsStep, '', instantStep].join('\n'),
+    formatHint(
+      `After step 2 the sync runs on every push and every hour; step 3 adds instant Bit -> Git.\nGuide: ${SETUP_GUIDE_URL}`
+    ),
+  ]);
 }
