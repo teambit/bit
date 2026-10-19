@@ -290,8 +290,9 @@ export class WorkspaceManifestFactory {
     const semverVersions = versions.filter((v) => !isPlusVersion(v) && semver.coerce(v) !== null);
 
     if (semverVersions.length === 0) {
-      // All versions are non-semver (e.g., '+'), just pick the first
-      return versions[0];
+      // All versions are non-semver (e.g., '+'). they resolve against the same version, so the strictest satisfies all
+      const strictestPlusVersion = ['+', '+~', '+^'].find((plusVersion) => versions.includes(plusVersion));
+      return strictestPlusVersion || versions[0];
     }
 
     // For each version, count how many envs it could satisfy
