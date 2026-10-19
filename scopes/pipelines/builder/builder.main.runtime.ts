@@ -1,4 +1,4 @@
-import { cloneDeep } from 'lodash';
+import { cloneDeep, uniqBy } from 'lodash';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { ArtifactVinyl, ArtifactObject } from '@teambit/component.sources';
 import { ArtifactFiles } from '@teambit/component.sources';
@@ -83,6 +83,18 @@ export type RawBuilderData = {
   artifacts?: ArtifactObject[];
   aspectsData: AspectData[];
   bitVersion?: string;
+  /**
+   * the tasks that are going to run once the component is built. saved only when tagging/snapping without a build,
+   * so the tasks can be shown before the build (e.g. on the CI) starts. the build replaces the builder data, and with
+   * it this prop, so "pipeline" is the source of truth for what ran.
+   */
+  plannedTasks?: PlannedTask[];
+};
+
+export type PlannedTask = {
+  taskId: string; // task aspect-id
+  taskName: string;
+  taskDescription?: string;
 };
 /**
  * builder data mapped to an ArtifactList instance
@@ -506,6 +518,18 @@ export class BuilderMain {
     const tagTasks = this.tagService.getCurrentPipeTasks(compEnv);
     const snapTasks = this.snapService.getCurrentPipeTasks(compEnv);
     return { id: component.id, envId: compEnv.id, buildTasks, tagTasks, snapTasks };
+  }
+
+  /**
+   * the tasks of the build pipeline and the snap/tag pipeline (according to `isSnap`) of the component's env.
+   */
+  getPlannedTasks(component: Component, isSnap = false): PlannedTask[] {
+    const env = this.envs.getEnv(component);
+    const deployService = isSnap ? this.snapService : this.tagService;
+    const tasks = [...this.buildService.getCurrentPipeline([env]), ...deployService.getCurrentPipeline([env])];
+    // a task can be registered to more than one pipeline (e.g. PreparePackages), it runs once.
+    const uniqTasks = uniqBy(tasks, (task) => BuildTaskHelper.serializeId(task));
+    return uniqTasks.map((task) => ({ taskId: task.aspectId, taskName: task.name, taskDescription: task.description }));
   }
 
   /**

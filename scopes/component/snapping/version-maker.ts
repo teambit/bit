@@ -12,6 +12,7 @@ import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-m
 import type { Consumer } from '@teambit/legacy.consumer';
 import { NewerVersionFound } from '@teambit/legacy.consumer';
 import type { Component } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
 import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
 import { formatItem, formatSection, formatWarningSummary } from '@teambit/cli';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
@@ -20,7 +21,7 @@ import { PkgAspect, getPublishRegistry, shouldPublishToExternalRegistry } from '
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { isSnap as isSnapVersion } from '@teambit/component-version';
-import type { BuilderMain, OnTagOpts } from '@teambit/builder';
+import type { BuilderMain, OnTagOpts, PlannedTask, RawBuilderData } from '@teambit/builder';
 import type { ModelComponent, Log, Lane } from '@teambit/objects';
 import { DependenciesGraph } from '@teambit/objects';
 import type { MessagePerComponent } from './message-per-component';
@@ -359,6 +360,7 @@ export class VersionMaker {
 
   private async build(harmonyCompsToTag: Component[], publishedPackages: string[]) {
     if (!this.params.build) {
+      await this.addPlannedTasksToBuilderData(harmonyCompsToTag);
       return;
     }
     const {
@@ -407,6 +409,37 @@ export class VersionMaker {
       await mapSeries(componentsToBuild, (comp) => this.snapping.enrichComp(comp));
       if (populateArtifactsFrom) await updateHiddenProp(this.scope, populateArtifactsFrom);
     }
+  }
+
+  /**
+   * when not building, save the tasks that are going to run once the component is built (e.g. by the CI), so they
+   * can be shown before the build starts.
+   */
+  private async addPlannedTasksToBuilderData(harmonyCompsToTag: Component[]) {
+    const plannedTasksPerComp = new Map<Component, PlannedTask[]>();
+    harmonyCompsToTag
+      .filter((c) => !c.isDeleted())
+      .forEach((component) => {
+        try {
+          plannedTasksPerComp.set(component, this.builder.getPlannedTasks(component, this.params.isSnap));
+        } catch (err: any) {
+          // e.g. the env is not loaded. it's only informative, don't fail the tag/snap.
+          this.snapping.logger.debug(`unable to get the planned tasks of ${component.id.toString()}: ${err.message}`);
+        }
+      });
+    const components = Array.from(plannedTasksPerComp.keys());
+    if (!components.length) return;
+    const builderDataMap = ComponentMap.as<RawBuilderData>(components, (component) => ({
+      pipeline: [],
+      aspectsData: [],
+      plannedTasks: plannedTasksPerComp.get(component),
+    }));
+    const buildResult = this.builder.builderDataMapToLegacyOnTagResults(builderDataMap);
+    this.snapping._updateComponentsByTagResult(
+      components.map((c) => c.state._consumer),
+      buildResult
+    );
+    await mapSeries(components, (comp) => this.snapping.enrichComp(comp));
   }
 
   private async checkForNewerVersions() {

@@ -9,6 +9,7 @@ import type { Packer } from './packer';
  */
 export class PublishDryRunTask implements BuildTask {
   readonly name = 'PublishDryRun';
+  readonly description = 'Validating the packages with a publish dry-run';
   readonly location = 'end';
   dependencies: string[];
   constructor(
