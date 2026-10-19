@@ -214,9 +214,9 @@ export class SyncOrchestrator {
   private async syncInit(): Promise<string> {
     const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
     const origin = typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined;
-    // With an origin, the remote knows the default branch. Without one (a repository not pushed yet),
-    // asking it falls back to "master"; the branch the user is on is the better guess.
-    const defaultBranch = origin ? await this.deps.ci.getDefaultBranchName() : await this.currentBranchOr('main');
+    // The remote knows the default branch. When it can't answer (no origin, a repository not pushed
+    // yet, a server out of reach), the branch the user is on is a better guess than "master".
+    const defaultBranch = await this.deps.ci.getDefaultBranchName({ fallback: await this.currentBranchOr('main') });
 
     // Workflows belong to the repository, not the workspace: GitHub only discovers them at
     // `<repo-root>/.github/workflows`, and a bit workspace may be a subdirectory.

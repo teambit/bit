@@ -321,8 +321,9 @@ export class CiMain {
   /**
    * The repository's default branch name, whole — slashes included (see `parseOriginHeadRef`).
    * Local `origin/HEAD` symref first, then the remote's own answer, then the conventional probe.
+   * `fallback` replaces the probe's last resort, `master`, when nothing else answers.
    */
-  async getDefaultBranchName(): Promise<string> {
+  async getDefaultBranchName({ fallback = 'master' }: { fallback?: string } = {}): Promise<string> {
     try {
       const result = await git.raw(['symbolic-ref', 'refs/remotes/origin/HEAD']);
       const local = parseOriginHeadRef(result);
@@ -335,24 +336,22 @@ export class CiMain {
     }
     const remote = await remoteHeadBranch();
     if (remote && isValidGitBranchName(remote)) return remote;
-    return this.probeDefaultBranchName();
+    return this.probeDefaultBranchName(fallback);
   }
 
   /**
-   * Last-resort fallback: the two conventional names among the remote branches, then `master`.
+   * Last-resort fallback: the two conventional names among the remote branches, then `fallback`.
    * Deliberately only `main`/`master` — any wider guess risks protecting the wrong branch.
    */
-  private async probeDefaultBranchName(originalError?: Error): Promise<string> {
+  private async probeDefaultBranchName(fallback: string): Promise<string> {
     try {
       const branches = await git.branch(['-r']);
       if (branches.all.includes('origin/main')) return 'main';
       if (branches.all.includes('origin/master')) return 'master';
-      return 'master';
+      return fallback;
     } catch {
-      this.logger.console(
-        chalk.yellow(`Unable to detect default branch, using 'master'${originalError ? `: ${originalError}` : ''}`)
-      );
-      return 'master';
+      this.logger.console(chalk.yellow(`Unable to detect default branch, using '${fallback}'`));
+      return fallback;
     }
   }
 
