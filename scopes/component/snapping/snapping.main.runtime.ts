@@ -1413,7 +1413,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       ...legacyComponent.devDependencies.get(),
       ...legacyComponent.peerDependencies.get(),
     ];
-    const dependenciesList = this.dependencyResolver.getDependencies(component);
+    // peers can be hidden, and they're part of the legacy peers
+    const dependenciesList = this.dependencyResolver.getDependencies(component, { includeHidden: true });
     deps.forEach((dep) => {
       const updatedBitId = updatedIds.searchWithoutVersion(dep.id);
       if (updatedBitId) {

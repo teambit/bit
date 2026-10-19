@@ -1,4 +1,5 @@
 import path from 'path';
+import semver from 'semver';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import { cloneDeep, difference, forEach, isEmpty, pick, pickBy, uniq } from 'lodash';
@@ -784,10 +785,14 @@ export class ApplyOverrides {
   private resolveEnvPeerDepVersion(pkgName: string, preferWorkspacePolicy = false): string {
     const wsPolicy = this.depsResolver.getWorkspacePolicyManifest();
     const wsVersion = wsPolicy?.dependencies?.[pkgName] || wsPolicy?.peerDependencies?.[pkgName];
-    if (preferWorkspacePolicy && wsVersion) {
-      return wsVersion;
-    }
     const resolved = this._resolvePackageData(pkgName);
+    if (preferWorkspacePolicy && wsVersion) {
+      // the workspace.jsonc has usually a range. the plus version needs a concrete version to add its own prefix to
+      if (resolved?.concreteVersion && semver.satisfies(resolved.concreteVersion, wsVersion)) {
+        return resolved.concreteVersion;
+      }
+      return (semver.validRange(wsVersion) && semver.minVersion(wsVersion)?.version) || wsVersion;
+    }
     if (resolved && resolved.concreteVersion) {
       return resolved.concreteVersion;
     }
