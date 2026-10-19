@@ -12,6 +12,11 @@ use std::{
     thread,
 };
 
+enum Continuation {
+    Resume(Value),
+    Receipt(Value),
+}
+
 /// Resume the same published installation promise after each native engine call.
 pub(super) fn call(
     host: &Host,
@@ -21,23 +26,35 @@ pub(super) fn call(
 ) -> io::Result<Value> {
     let mut receipt = host.call(method, params)?;
     while let Some(payload) = receipt.get("needsEngine") {
-        let engine = run(host, payload, info)?;
-        receipt = host.call("installCanonicalResume", &json!({"engine": engine}))?;
+        receipt = match run(host, payload, info)? {
+            Continuation::Resume(engine) => {
+                host.call("installCanonicalResume", &json!({"engine": engine}))?
+            }
+            Continuation::Receipt(receipt) => receipt,
+        };
     }
     Ok(receipt)
 }
 
-fn run(host: &Host, payload: &Value, info: &HostInfo) -> io::Result<Value> {
+fn run(host: &Host, payload: &Value, info: &HostInfo) -> io::Result<Continuation> {
     if payload["umask"].as_u64() != Some(u64::from(pnpm_fs::file_mode::current_umask())) {
         crate::trace::log("stock pnpm installation uses a different Host file mask");
-        return Ok(json!({"supported": false, "stdout": ""}));
+        return Ok(Continuation::Resume(json!({"supported": false, "stdout": ""})));
     }
     let Some(prepared) = CanonicalInstall::prepare(payload, info) else {
         crate::trace::log("stock pnpm installation options require the published engine adapter");
-        return Ok(json!({"supported": false, "stdout": ""}));
+        return Ok(Continuation::Resume(json!({"supported": false, "stdout": ""})));
     };
-    let path = host.call("installCanonicalEnginePrepare", &json!({}))?;
-    let path = path.as_str().ok_or_else(|| io::Error::other("published build-script PATH"))?;
+    let result = host.call("installCanonicalEnginePrepare", &json!({}))?;
+    if let Some(receipt) = result.get("receipt") {
+        return Ok(Continuation::Receipt(receipt.clone()));
+    }
+    let path =
+        result["path"].as_str().ok_or_else(|| io::Error::other("published build-script PATH"))?;
+    Ok(Continuation::Resume(run_prepared(prepared, path.to_owned())))
+}
+
+fn run_prepared(prepared: CanonicalInstall, path: String) -> Value {
     let output = Arc::new(Mutex::new(String::new()));
     let captured = Arc::clone(&output);
     let sink = OutputSink(Arc::new(move |text| {
@@ -47,9 +64,9 @@ fn run(host: &Host, payload: &Value, info: &HostInfo) -> io::Result<Value> {
             .push_str(text);
     }));
     crate::trace::log("running stock pnpm installation natively");
-    let outcome = engine_thread(prepared, path.to_owned(), sink);
+    let outcome = engine_thread(prepared, path, sink);
     let stdout = std::mem::take(&mut *output.lock().unwrap_or_else(PoisonError::into_inner));
-    Ok(match outcome {
+    match outcome {
         Ok(result) => json!({"supported": true, "result": {
             "dependenciesChanged": result.dependencies_changed,
             "storeDir": result.store_dir,
@@ -59,7 +76,7 @@ fn run(host: &Host, payload: &Value, info: &HostInfo) -> io::Result<Value> {
             "supported": true, "error": error.to_string(),
             "nativeError": native_error(&error), "stdout": stdout,
         }),
-    })
+    }
 }
 
 fn native_error(error: &io::Error) -> Value {

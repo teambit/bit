@@ -128,7 +128,8 @@ and actual onLoad/pre-install/post-install/compiler receipts observing the old
 lane before finalization. A mutable-subscriber fixture verifies real local links,
 optional-dependency settings, retained installer/argument identity and the released
 difference between mutation of an original options object and reassignment of an
-argument-bundle field. CI variants cover core, provider and mutable-subscriber
+argument-bundle field. Package-manager wrappers retain their receiver and the
+published rebuild function, including its exact source. CI variants cover core, provider and mutable-subscriber
 installation with per-command environments shared by the independent Node oracle.
 Message-less completion retains the released loader status when CI suppresses
 status updates. Broader mutable package-manager options remain unfinished.

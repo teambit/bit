@@ -44,6 +44,7 @@ fn install_subscribers(ci: bool) {
     let helper = installation_fixture();
     helper.output_file("lane-adoption-record-phases", "active");
     helper.output_file("lane-adoption-mutate-install", "active");
+    helper.output_file("lane-adoption-wrap-package-manager", "active");
     helper.output_file(
         "subscriber-linked/package.json",
         &json!({"name":"@fixture/subscriber-linked","version":"1.0.0","main":"index.js"})
@@ -63,6 +64,23 @@ fn install_subscribers(ci: bool) {
     assert_throttle_receipts(&helper);
     assert_receipt(&helper);
     assert_linked_package(&helper);
+    assert_manager_receipt(&helper);
+}
+
+fn assert_manager_receipt(helper: &crate::helper::Helper) {
+    let text =
+        fs::read_to_string(helper.scopes.local_path.join("lane-adoption-manager-receipts.jsonl"))
+            .unwrap();
+    let rows = text
+        .lines()
+        .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(rows.len(), 1, "{text}");
+    let row = &rows[0];
+    assert_eq!(row["sameReceiver"], true, "{text}");
+    assert_eq!(row["rebuildType"], "function", "{text}");
+    assert_eq!(row["rebuildName"], "rebuild", "{text}");
+    assert_eq!(row["rebuildConstructor"], "AsyncFunction", "{text}");
 }
 fn assert_linked_package(helper: &crate::helper::Helper) {
     let package = helper.scopes.local_path.join("node_modules/@fixture/subscriber-linked");

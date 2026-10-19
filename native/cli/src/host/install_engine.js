@@ -54,6 +54,7 @@ function installEnginePlain(value, seen = new Set()) {
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return true;
   if (typeof value === 'number') return Number.isFinite(value);
   if (typeof value !== 'object' || seen.has(value)) return false;
+  if (require('node:util').types.isProxy(value)) return false;
   const prototype = Object.getPrototypeOf(value);
   if (prototype !== Object.prototype && prototype !== Array.prototype && prototype !== null) return false;
   seen.add(value);
@@ -226,7 +227,7 @@ function installEngineIntercept(session, args) {
   const pm = install?.dependencyResolver?.getPackageManager?.();
   if (session.pending || support.lynx.install !== session.interceptor
     || install?.constructor !== support.installConstructor
-    || pm?.constructor !== support.pmConstructor || pm.install !== support.pmInstall
+    || pm?.constructor !== support.pmConstructor
     || support.installerConstructor.prototype.installComponents !== support.componentInstall
     || install._installModulesProfiled !== support.modulesInstall) {
     installEngineTrace('methods changed before lynx');
@@ -261,6 +262,7 @@ async function installCanonicalResume({ engine }) {
   } else if (engine.supported === true && pending.prepared && installEngineResult(engine.result)) {
     const result = {
       dependenciesChanged: engine.result.dependenciesChanged,
+      rebuild: pending.rebuild,
       storeDir: engine.result.storeDir,
       depsRequiringBuild: engine.result.depsRequiringBuild ?? undefined,
     };
@@ -284,13 +286,35 @@ function installEngineError(session, pending, engine) {
   return session.support.convertError(error);
 }
 
-/** The original lynx mutates hoistPattern, then prepares build-script PATH. */
-function installCanonicalEnginePrepare() {
-  const pending = installEngineSession?.pending;
+/** Run the real lynx prefix once, retaining its genuine rebuild closure. */
+async function installCanonicalEnginePrepare() {
+  const session = installEngineSession;
+  const pending = session?.pending;
   if (!pending || pending.prepared) throw new Error('no unprepared installation engine call');
-  installEngineHoist(pending.payload);
-  pending.prepared = true;
-  return prepareNativeBuildScriptsPath();
+  try {
+    const args = pending.args.slice();
+    args[7] = new Proxy(args[7], {
+      get(target, key, receiver) {
+        if (key === 'dryRun') return true;
+        return Reflect.get(target, key, receiver);
+      },
+    });
+    const dryRun = await session.support.original(...args);
+    if (typeof dryRun?.rebuild !== 'function') {
+      throw new Error('published pnpm dry run did not return rebuild');
+    }
+    pending.rebuild = dryRun.rebuild;
+    bitRequire('@teambit/pnpm/dist/build-scripts-path.js').prepareBuildScriptsPath(pending.args[8]);
+    const path = process.env.PATH;
+    pending.prepared = true;
+    return { path };
+  } catch (error) {
+    session.pending = null;
+    session.next = installEngineDeferred();
+    pending.reject(error);
+    const receipt = installEngineDone(await Promise.race([session.next.promise, session.completion]));
+    return { receipt };
+  }
 }
 
 function installEngineResult(result) {
@@ -299,19 +323,4 @@ function installEngineResult(result) {
     && (result.depsRequiringBuild == null
       || (Array.isArray(result.depsRequiringBuild)
         && result.depsRequiringBuild.every(value => typeof value === 'string')));
-}
-
-/** Mirror lynx's in-place hoist-pattern exclusion before it constructs installOptions. */
-function installEngineHoist(payload) {
-  const { rootDir, manifestsByPaths, options } = payload;
-  if (!options?.rootComponents || options.rootComponentsForCapsules
-    || options.hoistInjectedDependencies || !Array.isArray(options.hoistPattern)
-    || !options.hoistPattern.length) return;
-  const externalDependencies = new Set();
-  for (const [dir, manifest] of Object.entries(manifestsByPaths)) {
-    if (dir !== rootDir && manifest.name) externalDependencies.add(manifest.name);
-  }
-  for (const name of externalDependencies) {
-    options.hoistPattern.push(`!${name}`);
-  }
 }

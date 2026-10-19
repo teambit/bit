@@ -60,6 +60,18 @@ class LaneAdoptionLifecycle {
         args.packageManagerOptions.hidePackageManagerOutput = true;
       }
       throttleReceipt('pre', args);
+      if (active() && fs.existsSync(path.join(workspace.path, 'lane-adoption-wrap-package-manager'))) {
+        const manager = installer.packageManager;
+        const original = manager.install;
+        manager.install = async function (...values) {
+          const result = await Reflect.apply(original, this, values);
+          fs.appendFileSync(path.join(workspace.path, 'lane-adoption-manager-receipts.jsonl'),
+            JSON.stringify({sameReceiver: this === manager, rebuildType: typeof result.rebuild,
+              rebuildName: result.rebuild?.name, rebuildConstructor: result.rebuild?.constructor.name,
+              rebuildSource: result.rebuild?.toString()}) + '\n');
+          return result;
+        };
+      }
       if (!mutableInstall()) return;
       retainedInstall = {installer, args, options: args.options, packageOptions: args.packageManagerOptions, root: args.rootDir};
       retainedInstall.packageOptions.includeOptionalDeps = false;
