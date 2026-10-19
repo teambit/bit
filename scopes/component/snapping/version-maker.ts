@@ -191,7 +191,7 @@ export class VersionMaker {
       await this._addDependenciesGraphToComponents();
     }
     await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
-    if (!build) this.emptyBuilderData();
+    if (!build) this.setUnbuiltBuilderData();
     this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);
 
     const currentLane = this.consumer?.getCurrentLaneId();
@@ -700,14 +700,12 @@ export class VersionMaker {
   }
 
   /**
-   * otherwise, tagging without build will have the old build data of the previous snap/tag.
-   * in case we currently build, it's ok to leave the data as is, because it'll be overridden anyway.
+   * when not building, replace the builder data, otherwise, it has the old build data of the previous snap/tag.
+   * (when building, the build overrides it anyway).
+   * the new data has only the tasks that are going to run once the component is built (e.g. by the CI), so they can
+   * be shown before the build starts.
    */
-  /**
-   * the builder data is populated by the build. without a build, save only the tasks that are going to run once the
-   * component is built (e.g. by the CI), so they can be shown before the build starts.
-   */
-  private emptyBuilderData() {
+  private setUnbuiltBuilderData() {
     const plannedTasksPerComp = this.builder.getPlannedTasks(
       this.getHarmonyComps(this.allComponentsToTag.filter((c) => !c.isRemoved())),
       this.params.isSnap ? 'snap' : 'tag'
