@@ -208,7 +208,7 @@ export class SyncOrchestrator {
 
   /**
    * `bit ci sync --init` — one-command onboarding: scaffolds the two workflow files, adds the sync
-   * config block to workspace.jsonc if missing, and prints the manual-steps checklist. Safe to
+   * config block to workspace.jsonc if missing, and returns the report of the steps left. Safe to
    * re-run: existing files are skipped, an existing config block is left alone; it never reconciles.
    */
   private async syncInit(): Promise<string> {
@@ -233,13 +233,18 @@ export class SyncOrchestrator {
     }
 
     const fileOutcomes = scaffoldWorkflowFiles(scaffoldRoot, defaultBranch);
-    // Report the path relative to where the user is standing, not to the workspace.
-    const displayPath = (relativePath: string) => {
-      const abs = path.join(scaffoldRoot, relativePath);
+    // Report the path relative to where the user is standing (`../../.github/...` from a nested
+    // workspace), not to the workspace, so it is right to paste. Absolute only across drives.
+    const displayPath = (abs: string) => {
       const fromCwd = path.relative(process.cwd(), abs);
-      return fromCwd && !fromCwd.startsWith('..') ? fromCwd : abs;
+      return fromCwd && !path.isAbsolute(fromCwd) ? fromCwd : abs;
     };
     const configAdded = await this.ensureSyncConfigBlock();
+    // No commit yet: the first commit must take the whole workspace, not only the files --init wrote.
+    const repoHasCommits = await git
+      .raw(['rev-parse', '--verify', '--quiet', 'HEAD'])
+      .then((out) => out.trim().length > 0)
+      .catch(() => false);
 
     // Returned, not logged: the command prints what `report()` returns.
     return renderInitReport({
@@ -248,9 +253,14 @@ export class SyncOrchestrator {
       originUrl: origin,
       defaultBranch,
       defaultBranchGuessed: !detectedBranch,
-      // `git add -A` from a subdirectory would miss the workflows, which live at the repository root
-      cwdIsRepoRoot: path.resolve(scaffoldRoot) === path.resolve(process.cwd()),
-      files: fileOutcomes.map((outcome) => ({ ...outcome, displayPath: displayPath(outcome.relativePath) })),
+      // the workflows live at the repository root, which may be above the workspace
+      repoRootFromCwd: path.relative(process.cwd(), scaffoldRoot) || '.',
+      repoHasCommits,
+      files: fileOutcomes.map((outcome) => ({
+        ...outcome,
+        displayPath: displayPath(path.join(scaffoldRoot, outcome.relativePath)),
+      })),
+      configDisplayPath: displayPath(path.join(this.deps.workspace.path, 'workspace.jsonc')),
       configAdded,
     });
   }

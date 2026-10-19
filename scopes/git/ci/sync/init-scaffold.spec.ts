@@ -13,6 +13,8 @@ import {
   shellQuote,
   chooseInitDefaultBranch,
   suggestedServerUrl,
+  isLocalPathRemote,
+  redactRemoteUrl,
 } from './init-scaffold';
 import type { OwnerRepo } from './init-scaffold';
 
@@ -178,6 +180,7 @@ describe('init-scaffold', () => {
       const out = report(undefined);
       expect(out).to.contain('no GitHub remote yet');
       expect(out).to.contain('gh repo create --private --source . --remote origin --push');
+      expect(out).to.not.contain('GITHUB_SERVER_URL');
       expect(out).to.contain('Run bit ci sync --init again');
       expect(out).to.contain('Next: 2 steps to go live');
       expect(out).to.not.contain('<owner>');
@@ -186,8 +189,28 @@ describe('init-scaffold', () => {
 
     it('commits and pushes in separate commands, so a re-run with nothing to commit still pushes', () => {
       const out = report('git@github.com:acme/shop.git');
-      expect(out).to.match(/git add -A && git commit -m 'Mirror acme\.shop'\n\s+git push -u origin HEAD/);
-      expect(out).to.not.contain('&& git push');
+      expect(out).to.match(/git commit -m 'Mirror acme\.shop'\n\s+git push -u origin HEAD/);
+      expect(out).to.not.contain('&& git');
+    });
+
+    it('stages only the files --init touched, so unrelated local changes stay out of the commit', () => {
+      const out = report('git@github.com:acme/shop.git');
+      expect(out).to.contain(
+        'git add -- .github/workflows/bit-sync.yml .github/workflows/bit-release.yml workspace.jsonc\n'
+      );
+      expect(out).to.not.contain('git add -A');
+      // the paths are the ones shown, as seen from where the user stands
+      expect(
+        report('git@github.com:acme/shop.git', {
+          files: files.map((f) => ({ ...f, displayPath: `/repo root/${f.displayPath}` })),
+          configDisplayPath: 'workspace.jsonc',
+        })
+      ).to.contain("git add -- '/repo root/.github/workflows/bit-sync.yml'");
+    });
+
+    it('stages the whole workspace for the first commit of a new repository', () => {
+      expect(report(undefined, { repoHasCommits: false })).to.contain('git add -A\n');
+      expect(report(undefined, { repoHasCommits: false, repoRootFromCwd: '../..' })).to.contain('git add -A :/\n');
     });
 
     it('shell-quotes values it puts in commands', () => {
@@ -203,7 +226,8 @@ describe('init-scaffold', () => {
       const out = report('git@github.com:acme/shop.git');
       expect(out).to.contain('exempt the token');
       expect(out).to.contain('Allow GitHub Actions to create and approve pull requests');
-      expect(out).to.contain('gh secret set BIT_SYNC_GH_TOKEN -R acme/shop');
+      // the command line ends at the command, so it runs when pasted
+      expect(out).to.match(/gh secret set BIT_SYNC_GH_TOKEN -R acme\/shop\n\s+optional: a GitHub token/);
     });
 
     it('states the schedule the scaffolded workflow installs', () => {
@@ -233,16 +257,54 @@ describe('init-scaffold', () => {
       expect(out).to.match(/workspace\.jsonc\s+already configures sync/);
     });
 
-    it('stages from the repository root when the workspace is a subdirectory', () => {
-      expect(report('git@github.com:acme/shop.git', { cwdIsRepoRoot: false })).to.contain(
-        'git add -A :/ && git commit'
+    it('creates the repository from the repository root when the workspace is a subdirectory', () => {
+      expect(report(undefined, { repoRootFromCwd: '../..' })).to.contain(
+        'gh repo create --private --source ../.. --remote origin --push'
       );
-      expect(report('git@github.com:acme/shop.git', { cwdIsRepoRoot: true })).to.contain('git add -A && git commit');
+      expect(report(undefined, { repoRootFromCwd: '/my repo' })).to.contain("--source '/my repo' --remote");
     });
 
     it('flags a guessed default branch', () => {
-      expect(report(undefined, { defaultBranchGuessed: true })).to.contain("didn't name its default branch");
-      expect(report('git@github.com:acme/shop.git')).to.not.contain("didn't name its default branch");
+      const origin = 'git@github.com:acme/shop.git';
+      expect(report(origin, { originUrl: origin, defaultBranchGuessed: true })).to.contain(
+        "the remote didn't name its default branch"
+      );
+      expect(report(undefined, { defaultBranchGuessed: true })).to.contain('no remote names the default branch');
+      expect(report(origin)).to.not.contain('default branch, so');
+    });
+
+    it('suggests no server for an origin that is a path on this machine', () => {
+      ['/tmp/e2e/remote.git', '../remote.git', 'file:///srv/remote.git', 'C:\\repos\\remote.git'].forEach((origin) => {
+        expect(isLocalPathRemote(origin), origin).to.be.true;
+        const out = report(origin, { originUrl: origin });
+        expect(out, origin).to.contain(`origin ${origin}`);
+        expect(out, origin).to.not.contain('GITHUB_SERVER_URL');
+        expect(out, origin).to.not.contain('<your-server>');
+        expect(out, origin).to.contain('git push -u origin HEAD');
+      });
+      expect(isLocalPathRemote('git@ghe.example:acme/store.git')).to.be.false;
+      expect(isLocalPathRemote('https://ghe.example/acme/store.git')).to.be.false;
+    });
+
+    it('never prints the credentials an origin URL carries', () => {
+      expect(redactRemoteUrl('https://user:ghp_secret@git.corp.example/acme/store.git')).to.equal(
+        'https://git.corp.example/acme/store.git'
+      );
+      expect(redactRemoteUrl('https://ghp_secret@git.corp.example/acme/store.git')).to.equal(
+        'https://git.corp.example/acme/store.git'
+      );
+      expect(redactRemoteUrl('ssh://git:secret@git.corp.example/acme/store.git')).to.equal(
+        'ssh://git@git.corp.example/acme/store.git'
+      );
+      expect(redactRemoteUrl('ssh://git@git.corp.example/acme/store.git')).to.equal(
+        'ssh://git@git.corp.example/acme/store.git'
+      );
+      expect(redactRemoteUrl('git@git.corp.example:acme/store.git')).to.equal('git@git.corp.example:acme/store.git');
+      const origin = 'https://user:ghp_secret@git.corp.example:8443/acme/store.git';
+      const out = report(origin, { originUrl: origin });
+      expect(out).to.not.contain('ghp_secret');
+      expect(out).to.contain('origin https://git.corp.example:8443/acme/store.git');
+      expect(out).to.contain('GITHUB_SERVER_URL=https://git.corp.example:8443 bit ci sync --init');
     });
 
     it('suggests a GITHUB_SERVER_URL that keeps an https port, and drops an ssh one', () => {

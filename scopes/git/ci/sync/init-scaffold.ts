@@ -327,12 +327,41 @@ export interface InitReportInput {
   defaultBranch: string;
   /** true when the remote didn't name its default branch and `defaultBranch` is a guess */
   defaultBranchGuessed?: boolean;
-  /** false when the command runs below the repository root, where `git add -A` misses the workflows */
-  cwdIsRepoRoot?: boolean;
+  /**
+   * The repository root as seen from where the user stands (`.` when they stand in it). The workflows
+   * live there, so the first commit and `gh repo create --source` must name it.
+   */
+  repoRootFromCwd?: string;
+  /**
+   * false when the repository has no commit yet. The first commit then takes the whole workspace;
+   * after that, the commit takes only the files `--init` touched, never unrelated local changes.
+   */
+  repoHasCommits?: boolean;
   /** scaffolded workflow files, with the path to show (relative to where the user stands) */
   files: Array<ScaffoldFileOutcome & { displayPath: string }>;
+  /** workspace.jsonc, as seen from where the user stands */
+  configDisplayPath?: string;
   /** whether `--init` added the sync block to workspace.jsonc, or found one already there */
   configAdded: boolean;
+}
+
+/**
+ * A remote that is a path on this machine (a bare repository, a `file://` URL), not a server. It has
+ * no host to suggest as a GitHub Enterprise Server.
+ */
+export function isLocalPathRemote(remoteUrl: string): boolean {
+  return /^(?:\/|\.{1,2}[/\\]|~|file:\/\/|[a-z]:[/\\])/i.test(remoteUrl.trim());
+}
+
+/**
+ * The remote URL without the credentials a URL can carry (`https://user:token@host/...`), so the
+ * report never prints a token. An http(s) user name can itself be a token, so all of it goes; other
+ * schemes keep the user name (`ssh://git@host`) and lose only a password.
+ */
+export function redactRemoteUrl(remoteUrl: string): string {
+  const url = remoteUrl.trim();
+  if (/^https?:\/\//i.test(url)) return url.replace(/^(https?:\/\/)[^@/]*@/i, '$1');
+  return url.replace(/^([a-z][a-z0-9+.-]*:\/\/[^:@/]*):[^@/]*@/i, '$1@');
 }
 
 /**
@@ -378,7 +407,12 @@ export function renderInitReport(input: InitReportInput): string {
   const { ownerRepo, defaultBranch } = input;
   const scope = input.scopeId ?? '<scope>';
   // An origin that isn't recognized is most often a GitHub Enterprise Server the shell doesn't know about.
-  const unrecognizedOrigin = !ownerRepo && input.originUrl ? input.originUrl : undefined;
+  const unrecognizedOrigin = !ownerRepo && input.originUrl ? redactRemoteUrl(input.originUrl) : undefined;
+  // Suggest a server only for a remote that names a host: a local path has none.
+  const serverHost =
+    unrecognizedOrigin && !isLocalPathRemote(unrecognizedOrigin) ? remoteHost(unrecognizedOrigin) : undefined;
+  const repoRootFromCwd = input.repoRootFromCwd || '.';
+  const configDisplayPath = input.configDisplayPath || 'workspace.jsonc';
 
   const target = ownerRepo
     ? chalk.cyan(
@@ -395,14 +429,15 @@ export function renderInitReport(input: InitReportInput): string {
     )}`,
   ];
   if (input.defaultBranchGuessed) {
+    const why = input.originUrl ? "the remote didn't name its default branch" : 'no remote names the default branch';
     header.push(
       formatWarningSummary(
-        `the remote didn't name its default branch, so the workflows use "${defaultBranch}". If that's wrong,\n` +
+        `${why}, so the workflows use "${defaultBranch}". If that's wrong,\n` +
           `  edit the branch filters in both workflow files.`
       )
     );
   }
-  if (unrecognizedOrigin) {
+  if (serverHost && unrecognizedOrigin) {
     header.push(
       formatWarningSummary("origin isn't a GitHub remote bit recognizes. For GitHub Enterprise Server, run:")
     );
@@ -411,7 +446,7 @@ export function renderInitReport(input: InitReportInput): string {
     );
   }
 
-  const width = Math.max(...input.files.map((f) => f.displayPath.length), 'workspace.jsonc'.length) + 2;
+  const width = Math.max(...input.files.map((f) => f.displayPath.length), configDisplayPath.length) + 2;
   const fileItem = (displayPath: string, note: string) => formatItem(`${displayPath.padEnd(width)}${formatHint(note)}`);
   const files = [
     ...input.files.map((file) =>
@@ -421,7 +456,7 @@ export function renderInitReport(input: InitReportInput): string {
       )
     ),
     fileItem(
-      'workspace.jsonc',
+      configDisplayPath,
       input.configAdded ? 'added "teambit.git/ci": { "sync": {} }' : 'already configures sync, left unchanged'
     ),
   ];
@@ -429,20 +464,27 @@ export function renderInitReport(input: InitReportInput): string {
   const step = (n: number, title: string, who: string, body: string[]) =>
     [`${formatTitle(`${n}. ${title}`)} ${formatHint(`(${who})`)}`, ...body.map((line) => `   ${line}`)].join('\n');
   const cmd = (text: string) => chalk.cyan(text);
+  // Stage only what `--init` touched, so unrelated local changes stay out of the commit. The first
+  // commit of a new repository is the exception: it must carry the whole workspace. `:/` stages from
+  // the repository root, where the workflows are, when the workspace is a subdirectory.
+  const stage =
+    input.repoHasCommits === false
+      ? repoRootFromCwd === '.'
+        ? 'git add -A'
+        : 'git add -A :/'
+      : `git add -- ${[...input.files.map((f) => f.displayPath), configDisplayPath].map(shellQuote).join(' ')}`;
   // Commit and push are separate: on a re-run nothing may be left to commit, and the push must still run.
-  // `:/` stages from the repository root, where the workflows are, when the workspace is a subdirectory.
-  const addAll = input.cwdIsRepoRoot === false ? 'git add -A :/' : 'git add -A';
-  const commit = cmd(`${addAll} && git commit -m ${shellQuote(`Mirror ${scope}`)}`);
+  const commit = [cmd(stage), cmd(`git commit -m ${shellQuote(`Mirror ${scope}`)}`)];
 
   const steps: string[] = [];
   if (!ownerRepo) {
     steps.push(
       unrecognizedOrigin
-        ? step(1, 'Push it', 'you', [commit, cmd('git push -u origin HEAD')])
+        ? step(1, 'Push it', 'you', [...commit, cmd('git push -u origin HEAD')])
         : step(1, 'Create the repository and push it', 'you', [
-            commit,
-            cmd('gh repo create --private --source . --remote origin --push'),
-            formatHint('names the repository after this folder; add OWNER/NAME after "create" to choose'),
+            ...commit,
+            cmd(`gh repo create --private --source ${shellQuote(repoRootFromCwd)} --remote origin --push`),
+            formatHint('names the repository after its root folder; add OWNER/NAME after "create" to choose'),
           ]),
       step(2, 'Run bit ci sync --init again', 'you', [
         'Once origin is a GitHub remote bit recognizes, it prints the secret, permission and webhook',
@@ -456,7 +498,7 @@ export function renderInitReport(input: InitReportInput): string {
     const ghRepo = shellQuote(onGitHubCom ? repo : `${ownerRepo.host}/${repo}`);
     const ghApi = onGitHubCom ? 'gh api' : `gh api --hostname ${shellQuote(ownerRepo.host)}`;
     steps.push(
-      step(1, 'Push it', 'you', [commit, cmd('git push -u origin HEAD')]),
+      step(1, 'Push it', 'you', [...commit, cmd('git push -u origin HEAD')]),
       step(2, 'Let the workflows publish to bit.cloud and open pull requests', 'repository admin', [
         cmd(`gh secret set BIT_CONFIG_ACCESS_TOKEN -R ${ghRepo}`),
         formatHint(`a bit.cloud access token with Write permission on ${scope}. If your organization`),
@@ -464,8 +506,8 @@ export function renderInitReport(input: InitReportInput): string {
         cmd(`${ghApi} -X PUT ${shellQuote(`repos/${repo}/actions/permissions/workflow`)} \\`),
         cmd('  -F can_approve_pull_request_reviews=true'),
         formatHint('turns on "Allow GitHub Actions to create and approve pull requests"'),
-        cmd(`gh secret set BIT_SYNC_GH_TOKEN -R ${ghRepo}`) + formatHint('  (optional)'),
-        formatHint('a GitHub token, so the pushes the sync makes start your other workflows (CI checks)'),
+        cmd(`gh secret set BIT_SYNC_GH_TOKEN -R ${ghRepo}`),
+        formatHint('optional: a GitHub token, so the pushes the sync makes start your other workflows (CI checks)'),
       ])
     );
     if (onGitHubCom) {
