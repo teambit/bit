@@ -1,8 +1,8 @@
 //! Read the local remote-lane ref that bounds reset's removable snap chain.
 
-use super::{BitmapState, Repository, invalid};
+use super::{BitmapState, invalid, proofs};
 use serde_json::Value;
-use std::{fs, io, path::Path};
+use std::{io, path::Path};
 
 pub(super) fn remote_head(
     root: &Path,
@@ -10,6 +10,7 @@ pub(super) fn remote_head(
     lane_name: &str,
     scope: &str,
     name: &str,
+    reads: &mut proofs::ReadSet,
 ) -> io::Result<Option<String>> {
     if [lane_scope, lane_name]
         .iter()
@@ -21,7 +22,7 @@ pub(super) fn remote_head(
         .join(".bit/refs/remotes")
         .join(lane_scope)
         .join(lane_name);
-    let bytes = fs::read(path)?;
+    let Some(bytes) = proofs::read(&path, reads)? else { return Ok(None) };
     if bytes.len() > 4 * 1024 * 1024 {
         return Err(invalid("lane reset remote refs oversized"));
     }
@@ -30,6 +31,10 @@ pub(super) fn remote_head(
         .as_array()
         .filter(|rows| rows.len() <= 4096)
         .ok_or_else(|| invalid("lane reset remote refs"))?;
+    head_for(rows, scope, name)
+}
+
+fn head_for(rows: &[Value], scope: &str, name: &str) -> io::Result<Option<String>> {
     let mut found = None;
     for row in rows {
         if row["id"]["scope"] == scope && row["id"]["name"] == name {
@@ -48,16 +53,40 @@ pub(super) fn exported_head(
     bitmap: &BitmapState,
     scope: &str,
     name: &str,
+    reads: &mut proofs::ReadSet,
 ) -> io::Result<Option<String>> {
     if !bitmap.exported {
         return Ok(None);
     }
-    remote_head(root, &bitmap.lane_scope, &bitmap.lane_name, scope, name)
+    remote_head(root, &bitmap.lane_scope, &bitmap.lane_name, scope, name, reads)
 }
 
-pub(super) fn reached_boundary(repository: &Repository, next: Option<&str>) -> io::Result<bool> {
-    let Some(next) = next else {
-        return Ok(true);
-    };
-    Ok(repository.heads.is_remote(next) || !repository.is_lane_origin(next)?)
+/// `populateLocalAndRemoteHeads` prefers the lane ref, then a new lane's fork ref.
+pub(super) fn baseline(
+    root: &Path,
+    bitmap: &BitmapState,
+    lane: &Value,
+    model: &Value,
+    identity: (&str, &str),
+    lane_remote: Option<&str>,
+    reads: &mut proofs::ReadSet,
+) -> io::Result<Option<String>> {
+    let (scope, name) = identity;
+    if let Some(head) = lane_remote {
+        return Ok(Some(head.to_owned()));
+    }
+    if !bitmap.exported
+        && let Some(fork) = lane.get("forkedFrom")
+    {
+        let fork_scope = fork["scope"].as_str().ok_or_else(|| invalid("lane reset fork scope"))?;
+        let fork_name = fork["name"].as_str().ok_or_else(|| invalid("lane reset fork name"))?;
+        if let Some(head) = remote_head(root, fork_scope, fork_name, scope, name, reads)? {
+            return Ok(Some(head));
+        }
+        if fork_scope != bitmap.lane_scope {
+            return Ok(None);
+        }
+    }
+    Ok(remote_head(root, scope, "main", scope, name, reads)?
+        .or_else(|| model["head"].as_str().map(str::to_owned)))
 }

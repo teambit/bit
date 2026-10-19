@@ -33,7 +33,7 @@ fn resets_linear_lane_snaps_and_refuses_stale_publication() {
         "Component",
         &json!({
             "name":"alpha","scope":"scope","versions":{"1.0.0":main},
-            "state":{"versions":{},"head":main},
+            "state":{"versions":{}},"head":main,
         }),
     );
     for (hash, parent, batch, lane) in [

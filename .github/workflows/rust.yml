@@ -88,6 +88,7 @@ jobs:
       - name: Check benchmark JSON and bitmap history validators
         run: |
           python3 ../scripts/rust/lane-restoration-benchmark-tests.py
+          python3 ../scripts/rust/lane-graph-reset-benchmark-tests.py
           python3 ../scripts/rust/bitmap-history-oracle-tests.py
 
   test:
@@ -129,7 +130,8 @@ jobs:
     # released Node.js CLI that cli/tests/e2e/bit-version names behind it.
     name: Ported e2e cases
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # The complete suite also runs the reduced-stack regressions before saving caches.
+    timeout-minutes: 90
     defaults:
       run:
         working-directory: native
@@ -188,7 +190,7 @@ jobs:
           - group: snapshot
             filters: commands::snap commands::tag snapshot_environments
           - group: checkout
-            filters: checkout_platform checkout_local checkout_callbacks checkout_policy checkout_selection reset_selection harmony::revert harmony::lane_adoption harmony::lane_restoration
+            filters: checkout_platform checkout_local checkout_callbacks checkout_policy checkout_selection reset_selection harmony::revert harmony::lane_adoption harmony::lane_restoration harmony::lane_graph_reset
           - group: transfer
             filters: commands::import commands::export export_completion export_hub export_callbacks
           - group: merge-history

@@ -1,12 +1,12 @@
 //! One lane and bitmap publication for `bit reset --silent` on a lane.
 
+mod candidates;
 #[cfg(test)]
 mod tests;
 
 use super::{
-    BytesChange, ObjectChange, Plan, bitmap, bitmap_key, changed, history::batch_ids, indexed_hash,
-    invalid, is_lane_origin, object_path, outbound, pending_histories, remote::remote_head,
-    unique_position,
+    BytesChange, ObjectChange, Plan, bitmap, bitmap_key, changed, diagnostics, history::batch_ids,
+    invalid, membership, outbound, pending_histories, unique_position,
 };
 use serde_json::Value;
 use std::{
@@ -51,32 +51,53 @@ impl Batch {
     }
 
     fn prepare_with(root: &Path, head_only: bool, selected: Option<Selected>) -> io::Result<Self> {
-        let mut identities = candidates(root)?;
+        let discovery = candidates::prepare(root)?;
+        let mut identities = discovery.identities.clone();
         if let Some(selected) = &selected {
             identities.retain(|id| selected.identities.contains(id));
-            if identities.is_empty() {
-                return Err(invalid("no selected lane components found to reset"));
-            }
         }
-        let items = identities
-            .iter()
-            .map(|id| {
-                Plan::prepare(
-                    root,
-                    id,
-                    head_only,
-                    selected.as_ref().is_none_or(|selected| selected.force),
-                )
-            })
-            .collect::<io::Result<Vec<_>>>()?;
-        let objects = project_objects(root, &items)?;
-        let (bitmap_before, bitmap_after) = project_bitmap(root, &items)?;
-        let index = project_index(root, &items)?;
+        let mut items = prepare_items(
+            root,
+            &identities,
+            head_only,
+            selected.as_ref().is_none_or(|selected| selected.force),
+        )
+        .map_err(|error| discovery.failure(error))?;
+        Self::assemble(root, head_only, selected, &mut items, discovery)
+    }
+
+    fn assemble(
+        root: &Path,
+        head_only: bool,
+        selected: Option<Selected>,
+        items: &mut Vec<Plan>,
+        discovery: candidates::Discovery,
+    ) -> io::Result<Self> {
+        let population = discovery.population
+            .into_iter()
+            .chain(items.iter().flat_map(|item| item.selection.population.clone()))
+            .collect();
+        let retained = discovery.proofs
+            .into_iter()
+            .chain(items.iter().flat_map(|item| item.selection.proofs.clone()))
+            .collect::<Vec<_>>();
+        if let Some(first) = items.first_mut() {
+            first.selection.population = population;
+            first.selection.proofs = retained;
+            let identities = items
+                .iter()
+                .map(|item| item.identity.clone())
+                .collect::<Vec<_>>();
+            items[0].selection.controls = super::controls::prepare(root, &identities)?;
+        }
+        let objects = project_objects(root, items)?;
+        let (bitmap_before, bitmap_after) = project_bitmap(root, items)?;
+        let index = project_index(root, items)?;
         Ok(Self {
             root: root.to_owned(),
             head_only,
             selected,
-            items,
+            items: std::mem::take(items),
             objects,
             bitmap_before,
             bitmap_after,
@@ -97,81 +118,66 @@ impl Batch {
             || self.bitmap_before != fresh.bitmap_before
             || self.bitmap_after != fresh.bitmap_after
             || self.index != fresh.index
+            || self.items
+                .iter()
+                .map(|item| &item.selection)
+                .collect::<Vec<_>>()
+                != fresh.items
+                    .iter()
+                    .map(|item| &item.selection)
+                    .collect::<Vec<_>>()
         {
             return Err(invalid("lane reset batch changed during preparation"));
         }
-        for object in &self.objects {
-            let path = object_path(&crate::scope_path(&self.root).join("objects"), &object.hash);
-            if let Some(after) = &object.after {
-                fs::create_dir_all(
-                    path.parent().ok_or_else(|| invalid("lane batch object path"))?,
-                )?;
-                fs::write(path, after)?;
-            } else {
-                fs::remove_file(path)?;
-            }
+        if let Some(first) = self.items.first() {
+            let population = diagnostics::with_population(
+                diagnostics::error("candidate graph population"),
+                &crate::scope_path(&self.root).join("objects"),
+                first.selection.population.clone(),
+                first.selection.proofs.clone(),
+            );
+            diagnostics::apply_error_prefix(&population)?;
         }
+        super::write_objects(&self.root, &self.objects)?;
         if let Some(index) = &self.index {
             fs::write(crate::scope_path(&self.root).join("index.json"), &index.after)?;
+        }
+        if let Some(first) = self.items.first() {
+            super::controls::publish(&first.selection.controls)?;
         }
         crate::reset_main::backup_bitmap(&self.root, file_id)?;
         fs::write(self.root.join(".bitmap"), &self.bitmap_after)
     }
 }
 
-fn candidates(root: &Path) -> io::Result<Vec<String>> {
-    let (scope, name, exported) = lane_context(root)?;
-    let index: Value =
-        serde_json::from_slice(&fs::read(crate::scope_path(root).join("index.json"))?)?;
-    let hash = indexed_hash(&index, "lanes", &scope, &name)?;
-    let objects = crate::scope_path(root).join("objects");
-    let lane = outbound::read_object(&objects, &hash, "Lane")?;
-    let rows = lane["components"].as_array().ok_or_else(|| invalid("lane batch components"))?;
-    let mut selected = Vec::new();
-    for row in rows {
-        if let Some(identity) = candidate(root, &objects, &index, &scope, &name, exported, row)? {
-            selected.push(identity);
-        }
-    }
-    if selected.is_empty() {
-        return Err(invalid("no components found to reset on your workspace"));
-    }
-    selected.sort();
-    Ok(selected)
-}
-
-fn lane_context(root: &Path) -> io::Result<(String, String, bool)> {
-    let bitmap = crate::recovery::jsonc::parse(&fs::read(root.join(".bitmap"))?)?;
-    let lane = &bitmap["_bit_lane"];
-    let scope = lane["id"]["scope"].as_str().ok_or_else(|| invalid("lane batch scope"))?;
-    let name = lane["id"]["name"].as_str().ok_or_else(|| invalid("lane batch name"))?;
-    let exported = lane["exported"].as_bool().ok_or_else(|| invalid("lane batch export state"))?;
-    Ok((scope.to_owned(), name.to_owned(), exported))
-}
-
-fn candidate(
+fn prepare_items(
     root: &Path,
-    objects: &Path,
-    index: &Value,
-    lane_scope: &str,
-    lane_name: &str,
-    exported: bool,
-    row: &Value,
-) -> io::Result<Option<String>> {
-    let scope = row["id"]["scope"].as_str().ok_or_else(|| invalid("lane batch component scope"))?;
-    let name = row["id"]["name"].as_str().ok_or_else(|| invalid("lane batch component name"))?;
-    let head = row["head"].as_str().ok_or_else(|| invalid("lane batch component head"))?;
-    if exported {
-        return remote_head(root, lane_scope, lane_name, scope, name)
-            .map(|remote| (remote.as_deref() != Some(head)).then(|| format!("{scope}/{name}")));
+    identities: &[String],
+    head_only: bool,
+    force: bool,
+) -> io::Result<Vec<Plan>> {
+    if identities.is_empty() {
+        return Err(diagnostics::error("no components found to reset on your workspace"));
     }
-    let hash = indexed_hash(index, "components", scope, name)?;
-    let component = outbound::read_object(objects, &hash, "Component")?;
-    let main = component["versions"].as_object().ok_or_else(|| invalid("lane batch versions"))?;
-    Ok((!main
-        .values()
-        .any(|version| version == head))
-    .then(|| format!("{scope}/{name}")))
+    let mut items: Vec<Plan> = Vec::new();
+    for identity in identities {
+        let item = Plan::prepare(root, identity, head_only, force)
+            .map_err(|error| earlier_failure(&items, error))?;
+        items.push(item);
+    }
+    Ok(items)
+}
+
+fn earlier_failure(items: &[Plan], mut error: io::Error) -> io::Error {
+    for item in items.iter().rev() {
+        error = diagnostics::with_population(
+            error,
+            &crate::scope_path(&item.root).join("objects"),
+            item.selection.population.clone(),
+            item.selection.proofs.clone(),
+        );
+    }
+    error
 }
 
 fn project_objects(root: &Path, items: &[Plan]) -> io::Result<Vec<ObjectChange>> {
@@ -202,6 +208,25 @@ fn project_objects(root: &Path, items: &[Plan]) -> io::Result<Vec<ObjectChange>>
     changes.push(changed(&objects, history_hash, "LaneHistory", &history)?);
     changes.push(changed(&objects, lane_hash, "Lane", &lane)?);
     changes.extend(pending);
+    append_model_changes(&mut changes, items);
+    merge_populations(&mut changes, items);
+    Ok(changes)
+}
+
+fn append_model_changes(changes: &mut Vec<ObjectChange>, items: &[Plan]) {
+    changes.extend(
+        items
+            .iter()
+            .flat_map(|item| {
+                item.objects
+                    .iter()
+                    .skip(3)
+                    .filter(|object| {
+                        object.after.is_some() && object.hash == super::object_hash(&item.identity)
+                    })
+                    .cloned()
+            }),
+    );
     changes.extend(
         items
             .iter()
@@ -212,46 +237,39 @@ fn project_objects(root: &Path, items: &[Plan]) -> io::Result<Vec<ObjectChange>>
                     .cloned()
             }),
     );
-    Ok(changes)
 }
 
-fn apply_lane(objects: &Path, lane: &mut Value, item: &Plan) -> io::Result<()> {
+fn merge_populations(changes: &mut Vec<ObjectChange>, items: &[Plan]) {
+    let Some(first) = items.first() else { return };
+    for population in &first.selection.population {
+        if items
+            .iter()
+            .any(|item| item.objects[0].hash == population.hash)
+        {
+            continue;
+        }
+        if let Some(existing) = changes
+            .iter_mut()
+            .find(|object| object.hash == population.hash)
+        {
+            existing.after.clone_from(&population.after);
+        } else {
+            changes.push(population.clone());
+        }
+    }
+}
+
+fn apply_lane(_objects: &Path, lane: &mut Value, item: &Plan) -> io::Result<()> {
     let (scope, name) =
         item.identity.split_once('/').ok_or_else(|| invalid("lane batch identity"))?;
-    let head = item.selection.next.as_deref();
-    let on_lane = head
-        .map(|head| {
-            is_lane_origin(
-                objects,
-                head,
-                &item.objects[2].hash,
-                lane["scope"].as_str().unwrap_or_default(),
-                lane["name"].as_str().unwrap_or_default(),
-            )
-        })
-        .transpose()?
-        .unwrap_or(false);
-    let rows = lane["components"].as_array_mut().ok_or_else(|| invalid("lane batch lane rows"))?;
-    let position = rows
-        .iter()
-        .position(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
-        .ok_or_else(|| invalid("lane batch lane row absent"))?;
-    if on_lane || (item.head_only && head.is_some()) {
-        rows[position]["head"] =
-            Value::String(head.ok_or_else(|| invalid("lane batch parent"))?.to_owned());
-    } else {
-        rows.remove(position);
-    }
-    Ok(())
+    membership::project(lane, scope, name, &item.selection)
 }
 
 fn remove_batches(history: &mut Value, batches: HashSet<String>) -> io::Result<()> {
     let entries =
         history["history"].as_object_mut().ok_or_else(|| invalid("lane batch history entries"))?;
     for batch in batches {
-        if entries.shift_remove(&batch).is_none() {
-            return Err(invalid("lane batch history entry absent"));
-        }
+        entries.shift_remove(&batch);
     }
     Ok(())
 }
@@ -263,6 +281,9 @@ fn project_bitmap(root: &Path, items: &[Plan]) -> io::Result<(Vec<u8>, Vec<u8>)>
         let (scope, name) =
             item.identity.split_once('/').ok_or_else(|| invalid("lane batch identity"))?;
         let rows = bitmap.as_object_mut().ok_or_else(|| invalid("lane batch bitmap"))?;
+        if item.bitmap.before == item.bitmap.after && bitmap_key(rows, scope, name).is_err() {
+            continue;
+        }
         let single = crate::recovery::jsonc::parse(&item.bitmap.after)?;
         let key = if let Ok(key) = bitmap_key(rows, scope, name) {
             key

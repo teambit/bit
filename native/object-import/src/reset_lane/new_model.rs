@@ -9,7 +9,7 @@ pub(super) fn remove_new_model(
     scope: &str,
     name: &str,
 ) -> io::Result<(ObjectChange, BytesChange)> {
-    let before = fs::read(root.join(".bit/index.json"))?;
+    let before = fs::read(crate::scope_path(root).join("index.json"))?;
     let mut index: Value = serde_json::from_slice(&before)?;
     let rows =
         index["components"].as_array_mut().ok_or_else(|| invalid("lane reset index components"))?;
@@ -21,7 +21,7 @@ pub(super) fn remove_new_model(
     crate::merge_history::hash(&hash)?;
     let model = ObjectChange {
         hash: hash.clone(),
-        before: fs::read(object_path(&root.join(".bit/objects"), &hash))?,
+        before: fs::read(object_path(&crate::scope_path(root).join("objects"), &hash))?,
         after: None,
     };
     rows.remove(position);

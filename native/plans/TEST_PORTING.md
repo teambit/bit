@@ -9,6 +9,60 @@ native yet, and asserts what the e2e case asserts.
 The list below names every case in `e2e/` with its file and line. It is a floor, not a
 ceiling: native-only cases for edge cases the e2e suite does not cover are welcome.
 
+## Graph-aware lane reset acceptance
+
+`harmony::lane_graph_reset` adds strict same-absolute-path released-Node replay
+for graph reset. The focused suite passes all 20 cases against released Bit 2.2.94.
+Successful and ordinary-error cases require native ownership, exact output/error/exit
+and complete local state, caches, objects, bitmap histories and an unchanged real remote.
+The CI diagnostic cases explicitly require pre-effect delegation and compare the
+actual published stacks and resulting state without normalizing stack frames. Success
+uses an independent actual Node `reset` write transcript to verify exactly one
+`reset` bitmap write. Errors keep
+the exact ordinary comparator and every surviving partial effect.
+
+| Original assertions | New source fixture |
+| --- | --- |
+| `lanes/bit-reset-after-merge-main.e2e.ts:57,69,74,79` | `merged::all_reset_removes_a_two_parent_merge_and_preserves_merged_bytes_and_objects`: proves two parents, exported lane boundary, preserved immutable Version/Source bytes, modified-only status, then real resnap/export ancestry. |
+| Published `sources.findHeadInExistingVersions` multiple-parent boundary | `merged::head_only_reset_keeps_the_released_multiple_parent_failure`: exact Node/native failure and unchanged head/source. |
+| `lanes/bit-reset-after-merge-main.e2e.ts:124,136,141,146` | `merged::fast_forward_reset_returns_to_exported_lane_without_materializing_old_files`: proves one parent and retained main content/objects, then resnap/export. |
+| `lanes/bit-reset-after-merge-main.e2e.ts:183,188,195` | `merged::no_snap_merge_has_no_reset_target_and_retains_the_working_tree`: exact no-components error and modified source/head. |
+| `lanes/bit-reset-on-lanes.e2e.ts:32,35` | `boundaries::resetting_main_does_not_delete_a_foreign_lanes_immutable_snap`: main reset preserves lane object closure and later lane status. |
+| `lanes/bit-reset-on-lanes.e2e.ts:49,63,67` | `boundaries` main-base and forked-exported-lane cases: inherited base survives and only one local Version is staged. |
+| `lanes/bit-reset-on-lanes.e2e.ts:84,91` | `boundaries::a_new_lane_merged_without_a_known_boundary_preserves_the_exact_fatal_error`: two staged Versions and canonical failure, no invented replacement head. |
+| `lanes/bit-reset-on-lanes.e2e.ts:117` | `divergence::sparse_fork_history_reset_preserves_remote_ancestor_objects`: fresh consumer, remote intermediate snapshots and exact reset/state. |
+| `lanes/bit-reset-on-lanes.e2e.ts:131` | `selected::selected_introduced_member_leaves_the_other_lane_member_and_main_versions_intact`: selected comp1 removal leaves comp2 and both main Versions. |
+| Published `sources.removeComponentVersions` common-Ref identity boundary | `selected::head_only_introduced_member_keeps_the_main_parent_as_a_lane_member`: head-only reset retains the lane entry at the same main parent that all-version reset removes. |
+| `delete.e2e.ts:427,430` | `selected::resetting_a_snapped_lane_deletion_restores_the_exact_bitmap_removal_configuration`: exact prior component row restored. |
+| `lanes/diverged-from-remote-lane.e2e.ts:30,34` | `divergence::reset_a_diverged_exported_lane_uses_its_remote_boundary_and_preserves_disk_bytes`: merge-pending before reset, clean history afterward, unchanged source bytes. |
+
+`hidden::all_reset_rewinds_the_real_hidden_cascade_without_adding_bitmap_rows`
+ports the reset assertions in `lanes/update-dependents-cascade-reset.e2e.ts:145,151`
+through the existing released bare-scope `snapFromScope(...updateDependents:true)`
+helper, including its Windows-safe actual remote writer. It proves the cascade
+changes the hidden head before testing reset and compares exact restored bitmap
+visibility and both visible/hidden lane heads. No hidden raw objects are fabricated.
+`divergence::import_before_local_snap_keeps_the_local_parent_and_reset_uses_the_lane_boundary`
+also covers `lanes/diverged-from-remote-lane.e2e.ts:47,54`. The sparse-history case continues with an explicit source edit, snap and export.
+Follow-on snaps/exports are explicitly released-Node state-usability checks, not
+native ownership claims for those later commands. Existing main reset and
+selection suites remain unchanged. No performance claim is made.
+
+The supplemental CI cases
+`merged::ci_head_only_merge_reset_delegates_the_exact_published_error_and_stack`
+`boundaries::ci_unknown_inherited_boundary_delegates_the_exact_published_fatal_error_and_stack`
+and `merged::ci_stateful_head_only_reset_delegates_before_selection_and_preserves_the_published_stack`
+retain exact errors, stacks, bitmap/head/source state and real remote contents. The
+sparse-history fixture additionally requires both intermediate Version bodies to
+remain absent before and after reset. The CI cases pass alongside a native CI success control for two-parent all-reset.
+
+The discovery regression
+`selected_discovery::selected_local_member_resets_while_unselected_inherited_member_has_no_replacement`
+qualifies a real Node reset-all fatal error in a restored untimed preparation, then
+requires strict successful native selected reset from that same baseline. The
+unselected inherited member's head, bitmap row and immutable closure must survive.
+The selected discovery case passes with exact output, state and remote comparisons.
+
 ## Lane adoption focused qualification
 
 The lane-adoption filter passed all 24 tests (23 strict integration fixtures and
@@ -1628,8 +1682,8 @@ row's fields, object path, header, logical identity, and remote index stay exact
 - [ ] `e2e/harmony/delete.e2e.ts:386` bit delete command › delete previous versions › importing the component › import the previous version should show the deleted message
 - [ ] `e2e/harmony/delete.e2e.ts:400` bit delete command › deleting with --range when it overlaps the current version › should show the component as deleted
 - [ ] `e2e/harmony/delete.e2e.ts:405` bit delete command › deleting with --range when it overlaps the current version › when the range is outside the current version it should not show as deleted
-- [ ] `e2e/harmony/delete.e2e.ts:427` bit delete command › reset after delete on lane › should reset the deleted component
-- [ ] `e2e/harmony/delete.e2e.ts:430` bit delete command › reset after delete on lane › should revert the .bitmap entry of the deleted component as it was before
+- [x] `e2e/harmony/delete.e2e.ts:427` bit delete command › reset after delete on lane › should reset the deleted component
+- [x] `e2e/harmony/delete.e2e.ts:430` bit delete command › reset after delete on lane › should revert the .bitmap entry of the deleted component as it was before
 - [ ] `e2e/harmony/delete.e2e.ts:451` bit delete command › deleting component then creating a new one with the same name › should throw a descriptive error
 - [ ] `e2e/harmony/delete.e2e.ts:470` bit delete command › delete and then remove › bit status should not throw an error
 - [ ] `e2e/harmony/delete.e2e.ts:481` bit delete command › hard-delete guard in non-interactive sessions › should fail with guidance instead of hanging when a confirmation is needed but there is no TTY
@@ -2321,29 +2375,29 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:57` bit reset after merging main into a lane › diverged with no conflicts (auto-snap after merge) › merge should have created a new snap with two parents
-- [ ] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:69` bit reset after merging main into a lane › diverged with no conflicts (auto-snap after merge) › after running bit reset › should revert the lane head to its pre-merge state
-- [ ] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:74` bit reset after merging main into a lane › diverged with no conflicts (auto-snap after merge) › after running bit reset › should not change the files (merged content remains on disk)
-- [ ] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:79` bit reset after merging main into a lane › diverged with no conflicts (auto-snap after merge) › after running bit reset › should show the component as modified since files do not match the reverted lane head
-- [ ] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:124` bit reset after merging main into a lane › true fast-forward (component born on lane, merged to main, main advanced) › merge should be a fast-forward (no merge snap with 2 parents)
-- [ ] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:136` bit reset after merging main into a lane › true fast-forward (component born on lane, merged to main, main advanced) › after running bit reset › should revert the lane head to its pre-merge state
-- [ ] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:141` bit reset after merging main into a lane › true fast-forward (component born on lane, merged to main, main advanced) › after running bit reset › should not change the files (main content remains on disk)
-- [ ] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:146` bit reset after merging main into a lane › true fast-forward (component born on lane, merged to main, main advanced) › after running bit reset › should show the component as modified since files do not match the reverted lane head
-- [ ] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:183` bit reset after merging main into a lane › with --no-snap (no snap, no head change) › lane head should not have changed
-- [ ] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:188` bit reset after merging main into a lane › with --no-snap (no snap, no head change) › files should have the merged content and show as modified
-- [ ] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:195` bit reset after merging main into a lane › with --no-snap (no snap, no head change) › bit reset should throw because there is nothing to reset
+- [x] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:57` bit reset after merging main into a lane › diverged with no conflicts (auto-snap after merge) › merge should have created a new snap with two parents
+- [x] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:69` bit reset after merging main into a lane › diverged with no conflicts (auto-snap after merge) › after running bit reset › should revert the lane head to its pre-merge state
+- [x] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:74` bit reset after merging main into a lane › diverged with no conflicts (auto-snap after merge) › after running bit reset › should not change the files (merged content remains on disk)
+- [x] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:79` bit reset after merging main into a lane › diverged with no conflicts (auto-snap after merge) › after running bit reset › should show the component as modified since files do not match the reverted lane head
+- [x] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:124` bit reset after merging main into a lane › true fast-forward (component born on lane, merged to main, main advanced) › merge should be a fast-forward (no merge snap with 2 parents)
+- [x] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:136` bit reset after merging main into a lane › true fast-forward (component born on lane, merged to main, main advanced) › after running bit reset › should revert the lane head to its pre-merge state
+- [x] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:141` bit reset after merging main into a lane › true fast-forward (component born on lane, merged to main, main advanced) › after running bit reset › should not change the files (main content remains on disk)
+- [x] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:146` bit reset after merging main into a lane › true fast-forward (component born on lane, merged to main, main advanced) › after running bit reset › should show the component as modified since files do not match the reverted lane head
+- [x] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:183` bit reset after merging main into a lane › with --no-snap (no snap, no head change) › lane head should not have changed
+- [x] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:188` bit reset after merging main into a lane › with --no-snap (no snap, no head change) › files should have the merged content and show as modified
+- [x] `e2e/harmony/lanes/bit-reset-after-merge-main.e2e.ts:195` bit reset after merging main into a lane › with --no-snap (no snap, no head change) › bit reset should throw because there is nothing to reset
 
 ### `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:32` bit reset when on lane › snapping on a lane, switching to main, snapping and running "bit reset" › should not delete the head of the lane
-- [ ] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:35` bit reset when on lane › snapping on a lane, switching to main, snapping and running "bit reset" › bit status should not throw after switching to the lane
-- [ ] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:49` bit reset when on lane › reset on lane after export from main › bit reset should not throw
-- [ ] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:63` bit reset when on lane › reset on lane after fork from another exported lane › bit status should show only one version as staged, not two
-- [ ] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:67` bit reset when on lane › reset on lane after fork from another exported lane › bit reset should not throw
-- [ ] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:84` bit reset when on lane › reset on a new lane after merging from another lane › bit status should show not only one version as staged, but two
-- [ ] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:91` bit reset when on lane › reset on a new lane after merging from another lane › bit reset should throw a descriptive error suggesting either removing the component or the lane
-- [ ] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:117` bit reset when on lane › reset after merge where it snapped multiple snaps on the other lane › bit reset should not throw
-- [ ] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:131` bit reset when on lane › reset a component that was just introduced to the lane › should remove the component from the lane
+- [x] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:32` bit reset when on lane › snapping on a lane, switching to main, snapping and running "bit reset" › should not delete the head of the lane
+- [x] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:35` bit reset when on lane › snapping on a lane, switching to main, snapping and running "bit reset" › bit status should not throw after switching to the lane
+- [x] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:49` bit reset when on lane › reset on lane after export from main › bit reset should not throw
+- [x] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:63` bit reset when on lane › reset on lane after fork from another exported lane › bit status should show only one version as staged, not two
+- [x] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:67` bit reset when on lane › reset on lane after fork from another exported lane › bit reset should not throw
+- [x] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:84` bit reset when on lane › reset on a new lane after merging from another lane › bit status should show not only one version as staged, but two
+- [x] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:91` bit reset when on lane › reset on a new lane after merging from another lane › bit reset should throw a descriptive error suggesting either removing the component or the lane
+- [x] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:117` bit reset when on lane › reset after merge where it snapped multiple snaps on the other lane › bit reset should not throw
+- [x] `e2e/harmony/lanes/bit-reset-on-lanes.e2e.ts:131` bit reset when on lane › reset a component that was just introduced to the lane › should remove the component from the lane
 
 ### `e2e/harmony/lanes/diverged-from-forked.e2e.ts`
 
@@ -2354,10 +2408,10 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts:30` local is diverged from the remote › snap first then import › bit status should show it as merge-pending
-- [ ] `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts:34` local is diverged from the remote › snap first then import › bit reset should not throw
-- [ ] `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts:47` local is diverged from the remote › import first then snap › parent of the snap should be the previous local snap, not the remote snap
-- [ ] `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts:54` local is diverged from the remote › import first then snap › bit status should show it as merge-pending
+- [x] `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts:30` local is diverged from the remote › snap first then import › bit status should show it as merge-pending
+- [x] `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts:34` local is diverged from the remote › snap first then import › bit reset should not throw
+- [x] `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts:47` local is diverged from the remote › import first then snap › parent of the snap should be the previous local snap, not the remote snap
+- [x] `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts:54` local is diverged from the remote › import first then snap › bit status should show it as merge-pending
 - [ ] `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts:96` local is diverged from the remote and another lane has a more recent snap › bit status should show it as merge-pending
 
 ### `e2e/harmony/lanes/import-lanes.e2e.ts`
@@ -2995,7 +3049,7 @@ row's fields, object path, header, logical identity, and remote index stay exact
 - [ ] `e2e/harmony/lanes/update-dependents-cascade-reset.e2e.ts:98` updateDependents cascade - reset, history and checkout › scenario 7: local cascade survives a `bit fetch --lanes` before export › bit export still publishes the cascade to the remote afterward
 - [ ] `e2e/harmony/lanes/update-dependents-cascade-reset.e2e.ts:106` updateDependents cascade - reset, history and checkout › scenario 7: local cascade survives a `bit fetch --lanes` before export › cascaded comp2 on the remote points at the new comp3 head
 - [ ] `e2e/harmony/lanes/update-dependents-cascade-reset.e2e.ts:146` updateDependents cascade - reset, history and checkout › scenario 8: bit reset reverts the cascade, not just the direct snap › comp3 on the lane should rewind to its pre-snap head
-- [ ] `e2e/harmony/lanes/update-dependents-cascade-reset.e2e.ts:151` updateDependents cascade - reset, history and checkout › scenario 8: bit reset reverts the cascade, not just the direct snap › lane.updateDependents should revert to the pre-cascade comp2 hash
+- [x] `e2e/harmony/lanes/update-dependents-cascade-reset.e2e.ts:151` updateDependents cascade - reset, history and checkout › scenario 8: bit reset reverts the cascade, not just the direct snap › lane.updateDependents should revert to the pre-cascade comp2 hash
 - [ ] `e2e/harmony/lanes/update-dependents-cascade-reset.e2e.ts:157` updateDependents cascade - reset, history and checkout › scenario 8: bit reset reverts the cascade, not just the direct snap › a subsequent export should leave the remote lane unchanged from its pre-snap state
 - [ ] `e2e/harmony/lanes/update-dependents-cascade-reset.e2e.ts:210` updateDependents cascade - reset, history and checkout › scenario 9: bit reset --head rewinds only the last snap, and leaves status clean › lane.updateDependents should point at the FIRST-snap cascade comp2 hash (not reverted to pre-cascade)
 - [ ] `e2e/harmony/lanes/update-dependents-cascade-reset.e2e.ts:217` updateDependents cascade - reset, history and checkout › scenario 9: bit reset --head rewinds only the last snap, and leaves status clean › bit status should not throw ComponentsPendingImport for the visible component
