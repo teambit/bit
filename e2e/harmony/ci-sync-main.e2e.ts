@@ -413,6 +413,47 @@ describe('bit ci sync: main-scope reconciliation', function () {
       expect(fs.readFileSync(workflowPath('bit-release.yml'), 'utf8')).to.equal(releaseYmlBefore);
     });
 
+    it('stages files that exist but were never committed, and prints no commit once they are committed', () => {
+      const repo = helper.scopes.localPath;
+      const before = runBit('bit ci sync --init');
+      expect(before.exitCode, before.output).to.equal(0);
+      // the two runs above left the workflows and workspace.jsonc uncommitted: a re-run must still stage them
+      expect(before.output).to.match(/git add -- \S*bit-sync\.yml \S*bit-release\.yml \S*workspace\.jsonc/);
+      helper.command.runCmd(
+        'git add -A && git -c user.email=e2e@bit.dev -c user.name=e2e commit -q -m "mirror the scope"',
+        repo
+      );
+      const after = runBit('bit ci sync --init');
+      expect(after.exitCode, after.output).to.equal(0);
+      expect(after.output).to.include('nothing to commit');
+      expect(after.output).to.not.include('git commit');
+      expect(after.output).to.include('git push -u origin HEAD');
+    });
+
+    it('force-adds workflow files that .gitignore matches, so the rest of step 1 still runs', () => {
+      const repoDir = helper.fs.createNewDirectory();
+      helper.command.runCmd('git init', repoDir);
+      helper.command.runCmd('bit init --skip-interactive', repoDir);
+      fs.appendFileSync(path.join(repoDir, '.gitignore'), '\n.github/\n');
+      helper.command.runCmd(
+        'git add -A && git -c user.email=e2e@bit.dev -c user.name=e2e commit -q -m "workspace"',
+        repoDir
+      );
+      const { output, exitCode } = runBit('bit ci sync --init', repoDir);
+      expect(exitCode, output).to.equal(0);
+      expect(output).to.include('git add -- workspace.jsonc');
+      expect(output).to.include('git add -f -- .github/workflows/bit-sync.yml .github/workflows/bit-release.yml');
+      expect(output).to.include('.gitignore matches these');
+      // the printed commands really work: git accepts them, and both workflows end up committed
+      helper.command.runCmd(
+        'git add -- workspace.jsonc && git add -f -- .github/workflows/bit-sync.yml .github/workflows/bit-release.yml',
+        repoDir
+      );
+      const staged = helper.command.runCmd('git diff --cached --name-only', repoDir);
+      expect(staged).to.include('.github/workflows/bit-sync.yml');
+      expect(staged).to.include('.github/workflows/bit-release.yml');
+    });
+
     // Built by hand because bit refuses to `init` a workspace inside another workspace — the repo root
     // must be a plain git repo that is NOT itself a workspace, exactly how a monorepo looks.
     it('should write the workflows at the REPOSITORY root when the workspace is in a subdirectory', () => {

@@ -374,6 +374,13 @@ export interface InitReportInput {
   configDisplayPath?: string;
   /** whether `--init` added the sync block to workspace.jsonc, or found one already there */
   configAdded: boolean;
+  /**
+   * Of the workflow files and workspace.jsonc, the ones git shows as new or changed, as displayed.
+   * Omitted: stage them all. Empty: nothing is left to commit (a re-run after the commit).
+   */
+  toStage?: string[];
+  /** Of those files, the untracked ones `.gitignore` matches. `git add` refuses them by name. */
+  ignored?: string[];
 }
 
 /**
@@ -515,18 +522,30 @@ export function renderInitReport(input: InitReportInput): string {
   // Stage only what `--init` touched, so unrelated local changes stay out of the commit. The first
   // commit of a new repository is the exception: it must carry the whole workspace. `:/` stages from
   // the repository root, where the workflows are, when the workspace is a subdirectory.
-  const stage =
-    input.repoHasCommits === false
-      ? repoRootFromCwd === '.'
-        ? 'git add -A'
-        : 'git add -A :/'
-      : `git add -- ${[...input.files.map((f) => f.displayPath), configDisplayPath].map(shellQuote).join(' ')}`;
+  // Stage exactly what git shows as new or changed among the files `--init` handles: a re-run still
+  // stages files that exist but were never committed, and a file already committed is not named.
+  const firstCommit = input.repoHasCommits === false;
+  const toStage = input.toStage ?? [...input.files.map((f) => f.displayPath), configDisplayPath];
+  const ignored = firstCommit ? [] : (input.ignored ?? []);
+  const quoted = (paths: string[]) => paths.map(shellQuote).join(' ');
+  const stage: string[] = firstCommit
+    ? [cmd(repoRootFromCwd === '.' ? 'git add -A' : 'git add -A :/')]
+    : [
+        ...(toStage.length ? [cmd(`git add -- ${quoted(toStage)}`)] : []),
+        // `git add` refuses a named path that .gitignore matches, and GitHub runs only committed workflows
+        ...(ignored.length
+          ? [cmd(`git add -f -- ${quoted(ignored)}`), formatHint('.gitignore matches these; -f adds them anyway')]
+          : []),
+      ];
   // Commit and push are separate: on a re-run nothing may be left to commit, and the push must still run.
   const gitInit = repoRootFromCwd === '.' ? 'git init' : `git init ${shellQuote(repoRootFromCwd)}`;
+  const nothingToCommit = !firstCommit && !toStage.length && !ignored.length;
   const commit = [
     ...(input.inGitRepo === false ? [cmd(gitInit)] : []),
-    cmd(stage),
-    cmd(`git commit -m ${shellQuote(`Mirror ${scope}`)}`),
+    ...stage,
+    ...(nothingToCommit
+      ? [formatHint('nothing to commit: these files are already committed')]
+      : [cmd(`git commit -m ${shellQuote(`Mirror ${scope}`)}`)]),
   ];
 
   const steps: string[] = [];
@@ -557,8 +576,11 @@ export function renderInitReport(input: InitReportInput): string {
         formatHint(`a bit.cloud access token with Write permission on ${scope}. If your organization`),
         formatHint("requires change requests, exempt the token's account: it is the one that merges lanes."),
         cmd(`${ghApi} -X PUT ${shellQuote(`repos/${repo}/actions/permissions/workflow`)} \\`),
-        cmd('  -F can_approve_pull_request_reviews=true'),
-        formatHint('turns on "Allow GitHub Actions to create and approve pull requests"'),
+        cmd('  -f default_workflow_permissions=write -F can_approve_pull_request_reviews=true'),
+        formatHint(
+          'turns on "Read and write permissions" and "Allow GitHub Actions to create and approve pull requests".'
+        ),
+        formatHint('If they are greyed out in the settings, an organization owner must allow them first.'),
         cmd(`gh secret set BIT_SYNC_GH_TOKEN -R ${ghRepo}`),
         formatHint('optional: a GitHub token, so the pushes the sync makes start your other workflows (CI checks)'),
       ])

@@ -223,6 +223,31 @@ describe('init-scaffold', () => {
       ).to.contain("git add -- '/repo root/.github/workflows/bit-sync.yml'");
     });
 
+    it('stages exactly the files git shows as new or changed', () => {
+      const out = report('git@github.com:acme/shop.git', { toStage: ['.github/workflows/bit-sync.yml'], ignored: [] });
+      expect(out).to.contain('git add -- .github/workflows/bit-sync.yml\n');
+      expect(out).to.not.contain('bit-release.yml workspace.jsonc');
+    });
+
+    it('force-adds a workflow file that .gitignore matches, so the rest of the staging still runs', () => {
+      const out = report('git@github.com:acme/shop.git', {
+        toStage: ['workspace.jsonc'],
+        ignored: ['.github/workflows/bit-release.yml'],
+      });
+      expect(out).to.contain('git add -- workspace.jsonc\n');
+      expect(out).to.contain('git add -f -- .github/workflows/bit-release.yml\n');
+      expect(out).to.contain('.gitignore matches these');
+      expect(out).to.contain("git commit -m 'Mirror acme.shop'");
+    });
+
+    it('prints no commit when nothing is left to commit, and still pushes', () => {
+      const out = report('git@github.com:acme/shop.git', { toStage: [], ignored: [] });
+      expect(out).to.not.contain('git add');
+      expect(out).to.not.contain('git commit');
+      expect(out).to.contain('nothing to commit');
+      expect(out).to.contain('git push -u origin HEAD');
+    });
+
     it('starts with git init when the workspace is not in a git repository', () => {
       const out = report(undefined, { inGitRepo: false, repoHasCommits: false });
       expect(out).to.match(/git init\n\s+git add -A\n\s+git commit -m/);
@@ -248,6 +273,9 @@ describe('init-scaffold', () => {
       const out = report('git@github.com:acme/shop.git');
       expect(out).to.contain('exempt the token');
       expect(out).to.contain('Allow GitHub Actions to create and approve pull requests');
+      // one command sets both settings guide step 4 names
+      expect(out).to.contain('-f default_workflow_permissions=write -F can_approve_pull_request_reviews=true');
+      expect(out).to.contain('Read and write permissions');
       // the command line ends at the command, so it runs when pasted
       expect(out).to.match(/gh secret set BIT_SYNC_GH_TOKEN -R acme\/shop\n\s+optional: a GitHub token/);
     });

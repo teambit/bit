@@ -255,6 +255,36 @@ export class SyncOrchestrator {
       .then((out) => out.trim().length > 0)
       .catch(() => false);
 
+    // What step 1 must stage: of the files --init handles, those git shows as new or changed. One that
+    // .gitignore matches is listed apart, because `git add` refuses an ignored path named on the command line.
+    const handled = [
+      ...fileOutcomes.map((outcome) => path.join(scaffoldRoot, outcome.relativePath)),
+      path.join(this.deps.workspace.path, 'workspace.jsonc'),
+    ];
+    const toStage: string[] = [];
+    const ignored: string[] = [];
+    if (repoRoot && repoHasCommits) {
+      for (const abs of handled) {
+        // Ignored first: `git status` hides an ignored file, so it would look unchanged. `check-ignore`
+        // skips tracked files and prints the path only when it is ignored (it exits 1 otherwise).
+        // oxlint-disable-next-line no-await-in-loop
+        const isIgnored = await git
+          .raw(['check-ignore', '--', abs])
+          .then((out) => out.trim().length > 0)
+          .catch(() => false);
+        if (isIgnored) {
+          ignored.push(displayPath(abs));
+          continue;
+        }
+        // oxlint-disable-next-line no-await-in-loop
+        const changed = await git
+          .raw(['status', '--porcelain', '--untracked-files=all', '--', abs])
+          .then((out) => out.trim().length > 0)
+          .catch(() => true);
+        if (changed) toStage.push(displayPath(abs));
+      }
+    }
+
     // Returned, not logged: the command prints what `report()` returns.
     return renderInitReport({
       scopeId: this.deps.workspace.defaultScope,
@@ -272,6 +302,7 @@ export class SyncOrchestrator {
       })),
       configDisplayPath: displayPath(path.join(this.deps.workspace.path, 'workspace.jsonc')),
       configAdded,
+      ...(repoRoot && repoHasCommits ? { toStage, ignored } : {}),
     });
   }
 
