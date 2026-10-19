@@ -2,6 +2,8 @@
 //! `installPackagesGracefully` runs, through the native installer and the
 //! JavaScript host. The compile `compileGracefully` repeats runs inside it.
 
+mod canonical;
+
 use crate::{
     commands::{
         color::Chalk,
@@ -235,7 +237,9 @@ impl Installer {
         skip_write_config_files: bool,
         ids: &[String],
     ) -> io::Result<ImportErrors> {
-        let receipt = self.host.call(
+        let receipt = canonical::call(
+            &self.host,
+            &self.info,
             "installImportWriter",
             &json!({"ids":ids,"skipWriteConfigFiles":skip_write_config_files}),
         )?;
@@ -342,7 +346,9 @@ impl Installer {
     }
 
     fn run_canonical(&self, options: &Value, writer: bool) -> io::Result<()> {
-        let receipt = self.host.call(
+        let receipt = canonical::call(
+            &self.host,
+            &self.info,
             "installCanonical",
             &json!({"options":options,"writer":writer,"loaderText":Output::retained_text()}),
         );

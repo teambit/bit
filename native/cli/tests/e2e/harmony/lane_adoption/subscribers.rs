@@ -14,6 +14,32 @@ fn ci_install_subscribers_mutate_original_inputs_and_retain_reassigned_argument_
     install_subscribers(true);
 }
 
+#[test]
+fn package_install_failure_resumes_original_lifecycle_without_replay() {
+    let helper = installation_fixture();
+    helper.output_file("lane-adoption-record-phases", "active");
+    helper.output_file("lane-adoption-mutate-install", "active");
+    helper.output_file("lane-adoption-invalid-local-package", "active");
+    helper.output_file("subscriber-linked/package.json", "{ invalid package manifest");
+    let output = history_oracle::compare(
+        &helper,
+        "switch dev",
+        super::output::durations,
+        ["checkout", "lane-switch"],
+        false,
+    );
+    assert!(output.status.success(), "{} {}", output.stdout, output.stderr);
+    #[cfg(target_os = "linux")]
+    assert!(output.trace.contains("running stock pnpm installation natively"), "{}", output.trace);
+    assert!(output.stdout.contains("Installation Error"), "{}", output.stdout);
+    let phases =
+        fs::read_to_string(helper.scopes.local_path.join("lane-adoption-phases.jsonl")).unwrap();
+    assert_eq!(phases.matches(r#""phase":"preInstall""#).count(), 1, "{phases}");
+    assert!(!phases.contains(r#""phase":"postInstall""#), "{phases}");
+    assert!(phases.contains(r#""phase":"compile""#), "{phases}");
+    assert!(!helper.scopes.local_path.join("lane-adoption-subscriber-receipts.jsonl").exists());
+}
+
 fn install_subscribers(ci: bool) {
     let helper = installation_fixture();
     helper.output_file("lane-adoption-record-phases", "active");
@@ -31,6 +57,8 @@ fn install_subscribers(ci: bool) {
     let output =
         compare(&helper, "switch dev", super::output::durations, ["checkout", "lane-switch"], true);
     assert!(output.status.success(), "{} {}", output.stdout, output.stderr);
+    #[cfg(target_os = "linux")]
+    assert!(output.trace.contains("running stock pnpm installation natively"), "{}", output.trace);
     assert_phases(&helper);
     assert_throttle_receipts(&helper);
     assert_receipt(&helper);

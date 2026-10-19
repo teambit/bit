@@ -40,6 +40,17 @@ pub fn settings(
     env: &EnvVars,
 ) -> io::Result<EngineSettings> {
     let base = Config::default().current::<Host>(root).map_err(|error| diagnostic(&error))?;
+    settings_with_base(root, config, global, info, env, base)
+}
+
+pub(super) fn settings_with_base(
+    root: &Path,
+    config: &DependencyResolverConfig,
+    global: &GlobalConfig,
+    info: &HostInfo,
+    env: &EnvVars,
+    base: Config,
+) -> io::Result<EngineSettings> {
     let enable_global_virtual_store = enable_global_virtual_store(config, global, env);
     Ok(EngineSettings {
         root: root.to_path_buf(),

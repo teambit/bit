@@ -48,6 +48,8 @@ const SCRIPT: &str = concat!(
     "\n",
     include_str!("host/install.js"),
     "\n",
+    include_str!("host/install_engine.js"),
+    "\n",
     include_str!("host/inventory.js"),
 );
 const EXIT_GRACE: Duration = Duration::from_secs(5);

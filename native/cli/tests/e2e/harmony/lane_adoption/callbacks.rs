@@ -222,6 +222,8 @@ fn default_switch_installation(ci: bool) {
     assert!(output.status.success(), "{} {}", output.stdout, output.stderr);
     assert_eq!(output.stdout.matches("lane adoption configured provider started").count(), 1);
     assert!(helper.scopes.local_path.join("pnpm-lock.yaml").is_file());
+    #[cfg(target_os = "linux")]
+    assert!(output.trace.contains("running stock pnpm installation natively"), "{}", output.trace);
     assert!(helper.scopes.local_path.join("node_modules/.modules.yaml").is_file());
     assert_phases(&helper);
     let phases =

@@ -117,6 +117,8 @@ const handlers = {
   prepareNativeBuildScriptsPath,
   installCanonicalNeeded,
   installCanonical,
+  installCanonicalResume,
+  installCanonicalEnginePrepare,
   installImportWriter,
   installCanonicalFinalize,
   mergeLoadApps,

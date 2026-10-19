@@ -14,6 +14,7 @@ function prepareNativeBuildScriptsPath() {
 function installCanonicalSupport() {
   try {
     const { InstallMain } = bitRequire('@teambit/install/dist/install.main.runtime.js');
+    installEngineInitialize();
     return typeof InstallMain === 'function' && typeof InstallMain.prototype.install === 'function';
   } catch {
     return false;
@@ -69,16 +70,20 @@ async function installCanonical({ options, writer = false, loaderText }) {
     }
     const loader = bitRequire('@teambit/legacy.loader').loader.on();
     if (typeof loaderText === 'string' && loaderText.length <= 4096) loader.setText(loaderText);
-    try {
-      const install = loaded.get('teambit.workspace/install');
-      if (!install || typeof install.install !== 'function') {
-        throw new Error('published InstallMain.install unavailable');
-      }
-      await install.install(undefined, invocation);
-      return { error: null, loaderStarted: loader.isStarted };
-    } finally {
-      componentLogger.setStatusLine = capturedStatusLine;
+    const install = loaded.get('teambit.workspace/install');
+    if (!install || typeof install.install !== 'function') {
+      throw new Error('published InstallMain.install unavailable');
     }
+    return await installEngineBegin(async () => {
+      try {
+        await install.install(undefined, invocation);
+        return { error: null, loaderStarted: loader.isStarted };
+      } catch (error) {
+        return { error: error?.message ?? String(error), loaderStarted: loader.isStarted };
+      } finally {
+        componentLogger.setStatusLine = capturedStatusLine;
+      }
+    }, install);
   } catch (error) {
     // Parent operations catch installation errors and may compile once afterward.
     return { error: error?.message ?? String(error),
@@ -107,12 +112,15 @@ async function installImportWriter({ ids, skipWriteConfigFiles }) {
   }
   canonicalInstallWriterPending = true;
   bitRequire('@teambit/legacy.loader').loader.on();
-  try {
-    const error = await writer.installPackagesGracefully(componentIds, skipWriteConfigFiles === true);
-    return { error: error?.message ?? null };
-  } finally {
-    componentLogger.setStatusLine = capturedStatusLine;
-  }
+  const install = loaded.get('teambit.workspace/install');
+  return installEngineBegin(async () => {
+    try {
+      const error = await writer.installPackagesGracefully(componentIds, skipWriteConfigFiles === true);
+      return { error: error?.message ?? null };
+    } finally {
+      componentLogger.setStatusLine = capturedStatusLine;
+    }
+  }, install);
 }
 
 /** ComponentWriter.finalizeWrite compiles after its gracefully caught install error. */

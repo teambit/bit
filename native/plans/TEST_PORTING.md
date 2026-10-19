@@ -304,6 +304,11 @@ stored after its consumer on the lane, which the published loader requests first
 `switch_reports_batch_snapped_provider_in_published_order` separately checks the
 released report order when a batch snap places the provider first on the lane.
 
+`harmony::lane_adoption::subscribers::package_install_failure_resumes_original_lifecycle_without_replay`
+compares the actual package-engine failure, retained install subscribers, subsequent
+compilation and lane finalization. On Linux the default and mutable-subscriber
+cases also require the stock pnpm package step to execute in Rust.
+
 
 `harmony::checkout_platform` compares complete released Node/native checkout,
 reset, revert and lane-switch commands. It checks obsolete file deletion, missing

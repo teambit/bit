@@ -7,6 +7,7 @@
 //! `readPackage` hooks implemented natively instead of through a JavaScript
 //! callback.
 
+pub use canonical::CanonicalInstall;
 pub use cloud_user::{
     LOOKUP_TIMEOUT as CLOUD_LOOKUP_TIMEOUT, apply_cloud_username, cloud_username,
 };
@@ -22,6 +23,7 @@ pub use run::install;
 pub use scripts::ScriptPolicy;
 pub use settings::{EnvVars, settings};
 
+mod canonical;
 mod cloud_user;
 mod config_overlay;
 mod error;

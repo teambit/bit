@@ -65,7 +65,8 @@ class LaneAdoptionLifecycle {
       retainedInstall.packageOptions.includeOptionalDeps = false;
       const linked = args.options.linkedDependencies || (args.options.linkedDependencies = {});
       const rootLinks = linked[args.rootDir] || (linked[args.rootDir] = {});
-      rootLinks['@fixture/subscriber-linked'] = 'link:' + path.join(workspace.path, 'subscriber-linked');
+      const protocol = fs.existsSync(path.join(workspace.path, 'lane-adoption-invalid-local-package')) ? 'file:' : 'link:';
+      rootLinks['@fixture/subscriber-linked'] = protocol + path.join(workspace.path, 'subscriber-linked');
       args.rootDir = path.join(workspace.path, 'subscriber-ignored-root');
       args.packageManagerOptions = {...retainedInstall.packageOptions, includeOptionalDeps: true};
     }]);
