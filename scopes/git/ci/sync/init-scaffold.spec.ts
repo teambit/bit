@@ -10,6 +10,7 @@ import {
   scaffoldWorkflowFiles,
   deriveOwnerRepo,
   renderInitReport,
+  shellQuote,
 } from './init-scaffold';
 import type { OwnerRepo } from './init-scaffold';
 
@@ -161,20 +162,54 @@ describe('init-scaffold', () => {
       expect(out).to.not.contain('Authorization: Bearer');
     });
 
-    it('asks to create the repository when there is no GitHub remote yet', () => {
+    it('prints no placeholder commands when there is no GitHub remote yet', () => {
       const out = report(undefined);
       expect(out).to.contain('no GitHub remote yet');
-      expect(out).to.contain('gh repo create <owner>/<repo> --private --source . --remote origin --push');
-      expect(out).to.not.contain('git push -u origin');
+      expect(out).to.contain('gh repo create --private --source . --remote origin --push');
+      expect(out).to.contain('Run bit ci sync --init again');
+      expect(out).to.contain('Next: 2 steps to go live');
+      expect(out).to.not.contain('<owner>');
+      expect(out).to.not.contain('gh secret set');
+    });
+
+    it('commits and pushes in separate commands, so a re-run with nothing to commit still pushes', () => {
+      const out = report('git@github.com:acme/shop.git');
+      expect(out).to.match(/git add -A && git commit -m 'Mirror acme\.shop'\n\s+git push -u origin main/);
+      expect(out).to.not.contain('&& git push');
+    });
+
+    it('shell-quotes values it puts in commands', () => {
+      expect(shellQuote('main')).to.equal('main');
+      expect(shellQuote('feature/x-1.2')).to.equal('feature/x-1.2');
+      expect(shellQuote('$(id)')).to.equal("'$(id)'");
+      expect(shellQuote("it's")).to.equal("'it'\\''s'");
+      expect(report('git@github.com:acme/shop.git', { defaultBranch: '$(id)' })).to.contain(
+        "git push -u origin '$(id)'"
+      );
+    });
+
+    it('names the token-account exemption, the PR setting and the optional CI token', () => {
+      const out = report('git@github.com:acme/shop.git');
+      expect(out).to.contain('exempt the token');
+      expect(out).to.contain('Allow GitHub Actions to create and approve pull requests');
+      expect(out).to.contain('gh secret set BIT_SYNC_GH_TOKEN -R acme/shop');
+    });
+
+    it('states the schedule the scaffolded workflow installs', () => {
+      expect(renderBitSyncWorkflow('main')).to.contain("cron: '*/30 * * * *'");
+      expect(report('git@github.com:acme/shop.git')).to.contain('every 30 minutes');
     });
 
     it('names an origin it does not recognize, and says how to mark a GitHub Enterprise Server', () => {
       const origin = 'git@github.corp.example:acme/store.git';
       const out = report(origin, { originUrl: origin });
       expect(out).to.contain(`origin ${origin}`);
-      expect(out).to.contain('GITHUB_SERVER_URL=https://github.corp.example');
+      expect(out).to.contain('GITHUB_SERVER_URL=https://github.corp.example bit ci sync --init');
       expect(out).to.contain('git push -u origin main');
       expect(out).to.not.contain('no GitHub remote yet');
+      // the host is unknown, so no github.com steps
+      expect(out).to.not.contain('github.com/apps/bit-git-sync');
+      expect(out).to.not.contain('gh secret set');
     });
 
     it('marks files that already existed and a config block that was already there', () => {

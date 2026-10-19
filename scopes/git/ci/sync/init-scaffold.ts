@@ -313,7 +313,7 @@ const SETUP_GUIDE_URL = 'https://github.com/teambit/acme-modular-store#set-it-up
 
 /** What each scaffolded file does, in the words the report shows next to it. */
 const FILE_PURPOSE: Record<string, string> = {
-  [WORKFLOW_RELATIVE_PATHS.sync]: 'syncs lanes and branches: on export, on push, and hourly',
+  [WORKFLOW_RELATIVE_PATHS.sync]: 'syncs lanes and branches: on export, on push, and every 30 minutes',
   [WORKFLOW_RELATIVE_PATHS.release]: 'releases the scope when a pull request merges',
 };
 
@@ -332,22 +332,32 @@ export interface InitReportInput {
 }
 
 /**
+ * Quote a value for a POSIX shell, so a command the report prints runs as shown when pasted. Plain
+ * names stay unquoted for readability; anything else is single-quoted. A git-valid branch such as
+ * `$(id)` must not run as a command substitution.
+ */
+export function shellQuote(value: string): string {
+  return /^[\w./@:+-]+$/.test(value) ? value : `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+/**
  * The report `bit ci sync --init` prints: what it changed, then the steps that need a person, as
- * commands to paste. Short by design; the setup guide carries the details.
+ * commands to paste. Short by design; the setup guide carries the details. Commands are printed only
+ * for a resolved repository: a placeholder would not run when pasted.
  */
 export function renderInitReport(input: InitReportInput): string {
   const { ownerRepo, defaultBranch } = input;
   const scope = input.scopeId ?? '<scope>';
-  const onGitHubCom = !ownerRepo || ownerRepo.host === 'github.com';
-  const repo = ownerRepo ? `${ownerRepo.owner}/${ownerRepo.repo}` : '<owner>/<repo>';
-  // gh takes HOST/OWNER/REPO for an enterprise server
-  const ghRepo = onGitHubCom ? repo : `${ownerRepo!.host}/${repo}`;
-  const ghApi = onGitHubCom ? 'gh api' : `gh api --hostname ${ownerRepo!.host}`;
   // An origin that isn't recognized is most often a GitHub Enterprise Server the shell doesn't know about.
   const unrecognizedOrigin = !ownerRepo && input.originUrl ? input.originUrl : undefined;
+  const unrecognizedHost = unrecognizedOrigin ? remoteHost(unrecognizedOrigin) : undefined;
 
   const target = ownerRepo
-    ? chalk.cyan(ghRepo)
+    ? chalk.cyan(
+        ownerRepo.host === 'github.com'
+          ? `${ownerRepo.owner}/${ownerRepo.repo}`
+          : `${ownerRepo.host}/${ownerRepo.owner}/${ownerRepo.repo}`
+      )
     : unrecognizedOrigin
       ? `origin ${unrecognizedOrigin}`
       : 'no GitHub remote yet';
@@ -357,12 +367,11 @@ export function renderInitReport(input: InitReportInput): string {
     )}`,
   ];
   if (unrecognizedOrigin) {
-    const host = remoteHost(unrecognizedOrigin);
     header.push(
-      formatWarningSummary(
-        `origin isn't a GitHub remote bit recognizes. On GitHub Enterprise Server, set\n` +
-          `  GITHUB_SERVER_URL=https://${host ?? '<your server>'} and run bit ci sync --init again for exact commands.`
-      )
+      formatWarningSummary("origin isn't a GitHub remote bit recognizes. For GitHub Enterprise Server, run:")
+    );
+    header.push(
+      `  ${chalk.cyan(`GITHUB_SERVER_URL=https://${unrecognizedHost ?? '<your-server>'} bit ci sync --init`)}`
     );
   }
 
@@ -384,50 +393,75 @@ export function renderInitReport(input: InitReportInput): string {
   const step = (n: number, title: string, who: string, body: string[]) =>
     [`${formatTitle(`${n}. ${title}`)} ${formatHint(`(${who})`)}`, ...body.map((line) => `   ${line}`)].join('\n');
   const cmd = (text: string) => chalk.cyan(text);
+  // Commit and push are separate: on a re-run nothing may be left to commit, and the push must still run.
+  const commit = cmd(`git add -A && git commit -m ${shellQuote(`Mirror ${scope}`)}`);
 
-  const pushStep =
-    ownerRepo || unrecognizedOrigin
-      ? step(1, 'Push it', 'you', [
-          cmd(`git add -A && git commit -m "Mirror ${scope}" && git push -u origin ${defaultBranch}`),
-        ])
-      : step(1, 'Create the repository and push it', 'you', [
-          cmd(`git add -A && git commit -m "Mirror ${scope}"`),
-          cmd(`gh repo create ${repo} --private --source . --remote origin --push`),
-        ]);
-  const permissionsStep = step(2, 'Let the workflows publish to bit.cloud and open pull requests', 'repository admin', [
-    cmd(`gh secret set BIT_CONFIG_ACCESS_TOKEN -R ${ghRepo}`),
-    formatHint(`a bit.cloud access token with Write permission on ${scope}`),
-    cmd(`${ghApi} -X PUT repos/${repo}/actions/permissions/workflow \\`),
-    cmd(`  -F can_approve_pull_request_reviews=true`),
-    formatHint('allows the workflows to open pull requests'),
-  ]);
-  let instantStep: string;
-  if (onGitHubCom) {
-    instantStep = step(3, 'Make Bit -> Git instant', 'organization admin, optional', [
-      `Install ${chalk.cyan(BIT_GIT_SYNC_APP_URL)} on ${repo}.`,
-      `Copy the repository's webhook URL from ${chalk.cyan(WEBHOOK_RELAY_SETUP_URL)}`,
-      `and add it to ${scope} on bit.cloud as an "Export succeeded" webhook.`,
-    ]);
+  const steps: string[] = [];
+  if (!ownerRepo) {
+    steps.push(
+      unrecognizedOrigin
+        ? step(1, 'Push it', 'you', [commit, cmd(`git push -u origin ${shellQuote(defaultBranch)}`)])
+        : step(1, 'Create the repository and push it', 'you', [
+            commit,
+            cmd('gh repo create --private --source . --remote origin --push'),
+            formatHint('names the repository after this folder; add OWNER/NAME after "create" to choose'),
+          ]),
+      step(2, 'Run bit ci sync --init again', 'you', [
+        'Once origin is a GitHub remote bit recognizes, it prints the secret, permission and webhook',
+        'steps for your repository as commands.',
+      ])
+    );
   } else {
-    const api = gitHubApiUrl(ownerRepo!.host);
-    const dispatchUrl = `${'error' in api ? '<GitHub API URL>' : api.url}/repos/${repo}/dispatches`;
-    instantStep = step(3, 'Make Bit -> Git instant', 'optional', [
-      `On bit.cloud, add an "Export succeeded" webhook to ${scope}:`,
-      `  URL      ${chalk.cyan(dispatchUrl)}`,
-      ...('error' in api ? [chalk.yellow(`  (${api.error})`)] : []),
-      '  Headers  Authorization: Bearer <token with access to this repository>',
-      '           Accept: application/vnd.github+json',
-      `  Payload  ${WEBHOOK_PAYLOAD_TEMPLATE}`,
-      formatHint('Create it fresh: editing a bit.cloud webhook drops its custom headers.'),
-    ]);
+    const onGitHubCom = ownerRepo.host === 'github.com';
+    const repo = `${ownerRepo.owner}/${ownerRepo.repo}`;
+    // gh takes HOST/OWNER/REPO, or --hostname, for an enterprise server
+    const ghRepo = shellQuote(onGitHubCom ? repo : `${ownerRepo.host}/${repo}`);
+    const ghApi = onGitHubCom ? 'gh api' : `gh api --hostname ${shellQuote(ownerRepo.host)}`;
+    steps.push(
+      step(1, 'Push it', 'you', [commit, cmd(`git push -u origin ${shellQuote(defaultBranch)}`)]),
+      step(2, 'Let the workflows publish to bit.cloud and open pull requests', 'repository admin', [
+        cmd(`gh secret set BIT_CONFIG_ACCESS_TOKEN -R ${ghRepo}`),
+        formatHint(`a bit.cloud access token with Write permission on ${scope}. If your organization`),
+        formatHint("requires change requests, exempt the token's account: it is the one that merges lanes."),
+        cmd(`${ghApi} -X PUT ${shellQuote(`repos/${repo}/actions/permissions/workflow`)} \\`),
+        cmd('  -F can_approve_pull_request_reviews=true'),
+        formatHint('turns on "Allow GitHub Actions to create and approve pull requests"'),
+        cmd(`gh secret set BIT_SYNC_GH_TOKEN -R ${ghRepo}`) + formatHint('  (optional)'),
+        formatHint('a GitHub token, so the pushes the sync makes start your other workflows (CI checks)'),
+      ])
+    );
+    if (onGitHubCom) {
+      steps.push(
+        step(3, 'Make Bit -> Git instant', 'organization admin, optional', [
+          `Install ${chalk.cyan(BIT_GIT_SYNC_APP_URL)} on ${repo}.`,
+          `Copy the repository's webhook URL from ${chalk.cyan(WEBHOOK_RELAY_SETUP_URL)}`,
+          `and add it to ${scope} on bit.cloud as an "Export succeeded" webhook.`,
+        ])
+      );
+    } else {
+      const api = gitHubApiUrl(ownerRepo.host);
+      const dispatchUrl = `${'error' in api ? '<GitHub API URL>' : api.url}/repos/${repo}/dispatches`;
+      steps.push(
+        step(3, 'Make Bit -> Git instant', 'optional', [
+          `On bit.cloud, add an "Export succeeded" webhook to ${scope}:`,
+          `  URL      ${chalk.cyan(dispatchUrl)}`,
+          ...('error' in api ? [chalk.yellow(`  (${api.error})`)] : []),
+          '  Headers  Authorization: Bearer <token with access to this repository>',
+          '           Accept: application/vnd.github+json',
+          `  Payload  ${WEBHOOK_PAYLOAD_TEMPLATE}`,
+          formatHint('Create it fresh: editing a bit.cloud webhook drops its custom headers.'),
+        ])
+      );
+    }
   }
 
+  const footer = ownerRepo
+    ? `After step 2 the sync runs on pushes to feature branches and every 30 minutes; step 3 adds instant Bit -> Git.\nGuide: ${SETUP_GUIDE_URL}`
+    : `Guide: ${SETUP_GUIDE_URL}`;
   return joinSections([
     header.join('\n'),
     files.join('\n'),
-    [formatTitle('Next: 3 steps to go live'), '', pushStep, '', permissionsStep, '', instantStep].join('\n'),
-    formatHint(
-      `After step 2 the sync runs on every push and every hour; step 3 adds instant Bit -> Git.\nGuide: ${SETUP_GUIDE_URL}`
-    ),
+    [formatTitle(`Next: ${steps.length} steps to go live`), '', steps.join('\n\n')].join('\n'),
+    formatHint(footer),
   ]);
 }
