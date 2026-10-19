@@ -1,4 +1,9 @@
-export { Component as ConsumerComponent, ManuallyChangedDependencies, InvalidComponent } from './consumer-component';
+export {
+  Component as ConsumerComponent,
+  ManuallyChangedDependencies,
+  InvalidComponent,
+  getDocsFromFiles,
+} from './consumer-component';
 export { Dependencies, Dependency } from './dependencies';
 export { ImportSpecifier, Specifier, RelativePath } from './dependencies/dependency';
 export { DEPENDENCIES_TYPES_UI_MAP, DEPENDENCIES_TYPES } from './dependencies/dependencies';
