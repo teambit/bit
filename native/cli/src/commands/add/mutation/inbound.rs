@@ -22,9 +22,19 @@ impl ProjectedLinker {
         root: &Path,
         environment: &mut crate::commands::status::environments::Environments,
     ) -> io::Result<String> {
+        let mut engine = crate::commands::engine::Engine::new()?;
+        Self::project_installation_workspace_with_engine(root, environment, &mut engine)
+    }
+
+    /// The retained switch session also owns the fresh post-write projection.
+    pub(in crate::commands) fn project_installation_workspace_with_engine(
+        root: &Path,
+        environment: &mut crate::commands::status::environments::Environments,
+        engine: &mut crate::commands::engine::Engine,
+    ) -> io::Result<String> {
         let bitmap = bit_object_import::parse_jsonc(&std::fs::read(root.join(".bitmap"))?)?;
-        let (mut engine, projection) = super::load::projected(root, &bitmap, &[])?;
-        super::controls::validate(&mut engine, &projection.context)?;
+        let projection = super::load::projected_with_engine(root, &bitmap, &[], engine)?;
+        super::controls::validate(engine, &projection.context)?;
         environment.project_tracking_retained(root, &bitmap, &projection.components)
     }
     pub(in crate::commands) fn capture_import(

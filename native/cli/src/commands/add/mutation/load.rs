@@ -72,10 +72,20 @@ pub(super) fn projected(
     identities: &[String],
 ) -> io::Result<(Engine, Projection)> {
     let mut engine = Engine::new()?;
+    let projection = projected_with_engine(root, bitmap, identities, &mut engine)?;
+    Ok((engine, projection))
+}
+
+pub(super) fn projected_with_engine(
+    root: &Path,
+    bitmap: &Value,
+    identities: &[String],
+    engine: &mut Engine,
+) -> io::Result<Projection> {
     let home = workspace_command::home();
     let context =
         engine.request(&json!({"kind":"trackingContext","root":root,"home":home,"bitmap":bitmap}))?;
-    Ok((engine, selection::prepare(root, bitmap, identities, context)?))
+    selection::prepare(root, bitmap, identities, context)
 }
 
 fn project(

@@ -68,6 +68,11 @@ pub struct Planned {
 }
 
 impl Planned {
+    /// Reuse the retained command's pool for fresh post-write tooling reads.
+    pub(in crate::commands) fn engine_mut(&mut self) -> &mut Engine {
+        &mut self.engine
+    }
+
     /// `MergingMain` clears the cached current and incoming versions after writing.
     pub(in crate::commands) fn merge_cache_ids(&self) -> io::Result<Vec<String>> {
         let rows = array(self.plan["result"].get("components"), "merged components")?;

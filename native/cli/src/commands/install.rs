@@ -110,10 +110,20 @@ fn utf8(args: &[OsString]) -> Option<Vec<String>> {
 /// executable directory to PATH; the terminal facts are ours. Run this before
 /// native workers start. The node-gyp script path is prepared at engine start.
 pub(super) fn host_info(host: &Host, terminal: &Terminal) -> io::Result<HostInfo> {
+    host_info_for(host, terminal, false)
+}
+
+pub(super) fn host_info_for(
+    host: &Host,
+    terminal: &Terminal,
+    canonical_only: bool,
+) -> io::Result<HostInfo> {
     if host.call("installCanonicalSupport", &json!({}))? != true {
         return Err(io::Error::other("published InstallMain.install unavailable"));
     }
-    let mut facts = host.call("hostInfo", &terminal.json())?;
+    let mut request = terminal.json();
+    request["canonicalOnly"] = json!(canonical_only);
+    let mut facts = host.call("hostInfo", &request)?;
     if let Some(Value::String(path)) = facts.get_mut("path").map(Value::take) {
         // SAFETY: only the Host stderr forwarder exists, copying pipe bytes without
         // accessing the environment. Inventory, resolver and runtime workers start later.

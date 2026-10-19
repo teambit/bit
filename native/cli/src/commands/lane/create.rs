@@ -76,6 +76,7 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
 
 fn report(plan: &Plan, options: &Options<'_>, chalk: Chalk) -> Report {
     let display = chalk.bold(options.alias.unwrap_or(options.name));
+    let formatter = crate::commands::workspace_command::format::Formatter::new(chalk);
     let scope = chalk.bold(plan.scope());
     let note = if options.scope.is_some() {
         format!("this lane will be exported to the remote scope {scope}")
@@ -91,7 +92,10 @@ fn report(plan: &Plan, options: &Options<'_>, chalk: Chalk) -> Report {
         });
     Report {
         data: format!(
-            "✔ successfully created and checked out to lane {display}\n{parent_note}\n{note}",
+            "{}\n{parent_note}\n{note}",
+            formatter.success_summary(&format!(
+                "successfully created and checked out to lane {display}"
+            )),
         ),
         code: 0,
         details: None,

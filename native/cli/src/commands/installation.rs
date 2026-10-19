@@ -156,7 +156,7 @@ impl Installer {
             .collect();
         let terminal = Terminal::detect(&argv);
         let host = Arc::new(Host::new(cli, root.to_path_buf(), terminal.color));
-        let info = install::host_info(&host, &terminal)?;
+        let info = install::host_info_for(&host, &terminal, Self::needs_canonical(root))?;
         Ok(Self { host, info, cache_initialized: false })
     }
 
@@ -317,6 +317,9 @@ impl Installer {
     }
 
     fn canonical_needed(&self, root: &Path) -> bool {
+        if self.info.canonical_only {
+            return true;
+        }
         if Self::needs_canonical(root) {
             return true;
         }

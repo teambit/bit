@@ -1,5 +1,5 @@
 //! Client-side lane creation from a clean main workspace.
-use crate::helper::{Helper, config, parse, setup};
+use crate::helper::{Helper, config, parse, remote, setup};
 use flate2::read::ZlibDecoder;
 use sha1::{Digest, Sha1};
 use std::{
@@ -30,10 +30,10 @@ fn lane_import_on_main_and_same_lane_matches_node() {
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    remote::publish(&helper);
     helper.run("lane create dev");
     helper.run("snap --unmodified --message lane");
-    helper.run("export");
+    remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
     let command = format!("lane import {}/dev -x", helper.scopes.remote);
@@ -65,18 +65,21 @@ fn lane_import_from_another_lane_matches_node() {
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    remote::publish(&helper);
     helper.run("lane create dev");
     helper.run("snap --unmodified --message lane");
-    helper.run("export");
+    remote::publish(&helper);
     let producer = helper.clone_workspace();
     helper.run("switch main -x");
     helper.run("lane create other");
     fs::write(producer.join("bar/foo.js"), "module.exports = () => 'advanced';").unwrap();
-    for command in ["snap bar/foo --message advance", "export"] {
-        let result = Helper::cmd_in_with(&producer, command, &[("BIT_NATIVE", OsStr::new("off"))]);
-        assert!(result.status.success(), "{command}: {} {}", result.stdout, result.stderr);
-    }
+    let snap = Helper::cmd_in_with(
+        &producer,
+        "snap bar/foo --message advance",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(snap.status.success(), "{} {}", snap.stdout, snap.stderr);
+    remote::publish_at(&helper, &producer);
     let node_root = helper.clone_workspace();
     let native_file = fs::read(helper.scopes.local_path.join("bar/foo.js")).unwrap();
     let native_bitmap = fs::read(helper.scopes.local_path.join(".bitmap")).unwrap();
@@ -112,7 +115,7 @@ fn local_lane_remove_moves_lane_to_trash_like_node() {
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    remote::publish(&helper);
     helper.run("lane create dev");
     helper.run("snap --unmodified --message lane");
     helper.run("switch main -x");
@@ -199,10 +202,10 @@ fn http_remote_lane_inspection_matches_node() {
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    remote::publish(&helper);
     helper.run("lane create dev");
     helper.run("snap --unmodified --message lane");
-    helper.run("export");
+    remote::publish(&helper);
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();
     drop(listener);
@@ -262,7 +265,12 @@ fn http_remote_lane_inspection_matches_node() {
             &command,
             &[("BIT_NATIVE", OsStr::new("off"))],
         );
-        assert!(node.status.success());
+        assert!(
+            node.status.success(),
+            "{command}: stdout: {}\nstderr: {}",
+            node.stdout,
+            node.stderr,
+        );
         let native = helper.native_run(&command);
         assert!(native.native, "{command}: {}", native.trace);
         assert_eq!(native.status.code(), node.status.code(), "{command}");
@@ -286,10 +294,10 @@ fn configured_file_remote_lane_inspection_matches_node() {
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    remote::publish(&helper);
     helper.run("lane create dev");
     helper.run("snap --unmodified --message lane");
-    helper.run("export");
+    remote::publish(&helper);
     let remote = &helper.scopes.remote;
     for command in [
         format!("lane list --remote {remote} --json"),
@@ -329,7 +337,7 @@ fn configured_file_remote_lane_inspection_matches_node() {
         assert_eq!(native.stderr, node.stderr, "{command}");
     }
     helper.run("lane merge dev -x");
-    helper.run("export");
+    remote::publish(&helper);
     for command in [
         format!("lane list --remote {remote} --merged --json"),
         format!("lane list --remote {remote} --not-merged"),
@@ -353,10 +361,10 @@ fn lane_inspection_keeps_hidden_update_dependents_out_of_visible_components() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
     helper.run("tag");
-    helper.run("export");
+    remote::publish(&helper);
     helper.run("lane create dev");
     helper.run("snap comp2 --skip-auto-snap --unmodified --message lane");
-    helper.run("export");
+    remote::publish(&helper);
     helper.seed_hidden_update_dependent(
         &format!("{}/comp1", helper.scopes.remote),
         &format!("{}/dev", helper.scopes.remote),
@@ -390,7 +398,7 @@ fn lane_merged_filters_follow_main_head_ancestry() {
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    remote::publish(&helper);
     helper.run("lane create dev");
     assert_lane_filters_match_node(&helper);
     helper.run("snap --unmodified --message lane");
@@ -967,7 +975,7 @@ fn create_after_export_matches_node() {
     helper.create_component_bar_foo("// lane base");
     helper.add_component_bar_foo();
     helper.run("tag bar/foo --message base");
-    helper.run("export");
+    remote::publish(&helper);
     let node_root = helper.clone_workspace();
     let node =
         Helper::cmd_in_with(&node_root, "lane create dev", &[("BIT_NATIVE", OsStr::new("off"))]);
@@ -1027,7 +1035,7 @@ fn create_from_an_exported_lane_matches_node() {
     helper.create_component_bar_foo("// on parent");
     helper.add_component_bar_foo();
     helper.run("snap --message parent");
-    helper.run("export");
+    remote::publish(&helper);
     let node_root = helper.clone_workspace();
     let node =
         Helper::cmd_in_with(&node_root, "lane create child", &[("BIT_NATIVE", OsStr::new("off"))]);
@@ -1058,7 +1066,7 @@ fn create_cross_scope_fork_matches_node() {
     helper.create_component_bar_foo("// on parent");
     helper.add_component_bar_foo();
     helper.run("snap --message parent");
-    helper.run("export");
+    remote::publish(&helper);
     let node_root = helper.clone_workspace();
     let command = "lane create child --scope other-scope --fork-lane-new-scope";
     let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);

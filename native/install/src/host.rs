@@ -43,6 +43,10 @@ pub struct HostInfo {
     pub write_to_console: Option<bool>,
     /// The process runs with `--json`/non-interactive output.
     pub non_interactive: bool,
+    /// Static workspace preflight proved that installation must stay on the
+    /// retained published class; native linker facts were intentionally omitted.
+    #[serde(default)]
+    pub canonical_only: bool,
     /// `currentDateAndTimeToFileName()` at command start: names the
     /// `workspace.jsonc` backup in local time.
     pub file_id: String,

@@ -376,7 +376,9 @@ function hostInfo(terminal) {
     process.env.PATH = `${nodeDir}${path.delimiter}${process.env.PATH ?? ''}`;
   }
   return {
-    ...coreAspectsInfo(),
+    ...(terminal.canonicalOnly === true
+      ? { bitDir, coreAspects: [], corePackages: [], canonicalOnly: true }
+      : coreAspectsInfo()),
     bvmDir: findBvmDir(entry) ?? null,
     nodePath: process.execPath,
     globalConfigDir: GLOBAL_CONFIG,
