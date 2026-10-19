@@ -368,7 +368,7 @@ describe('bit ci sync: main-scope reconciliation', function () {
       return path.join(helper.scopes.localPath, '.github', 'workflows', name);
     }
 
-    it('scaffolds both workflow files with the real default branch substituted, adds the sync config block, prints the checklist, and exits 0', () => {
+    it('scaffolds both workflow files with the real default branch substituted, adds the sync config block, prints the report once, and exits 0', () => {
       const { output, exitCode } = runBit('bit ci sync --init');
       expect(exitCode, `bit ci sync --init output:\n${output}`).to.equal(0);
       expect(fs.existsSync(workflowPath('bit-sync.yml')), 'bit-sync.yml should have been written').to.be.true;
@@ -383,17 +383,21 @@ describe('bit ci sync: main-scope reconciliation', function () {
       expect(syncYml).to.include('main-sync-branch: bit-sync/main');
       expect(releaseYml).to.include("github.event.pull_request.head.ref != 'bit-sync/main'");
 
-      expect(output).to.include('wrote .github/workflows/bit-sync.yml');
-      expect(output).to.include('wrote .github/workflows/bit-release.yml');
-      expect(output).to.include('added "teambit.git/ci": { "sync": {} } to workspace.jsonc');
+      expect(output).to.match(/\.github\/workflows\/bit-sync\.yml\s+syncs lanes and branches/);
+      expect(output).to.match(/\.github\/workflows\/bit-release\.yml\s+releases the scope/);
+      expect(output).to.match(/workspace\.jsonc\s+added "teambit\.git\/ci": \{ "sync": \{\} \}/);
       expect(helper.workspaceJsonc.read()['teambit.git/ci'].sync).to.deep.equal({});
 
-      // the manual-steps checklist
-      expect(output).to.include('BIT_CONFIG_ACCESS_TOKEN');
-      expect(output).to.include('BIT_SYNC_GH_TOKEN');
-      expect(output).to.include('Components > Export');
-      expect(output).to.include('drops its custom headers');
-      expect(output).to.include('fetch-depth: 0');
+      // one report, no reconcile banner, the branch the remote names
+      expect(output.match(/Scaffolded bit ci sync/g), output).to.have.length(1);
+      expect(output.match(/steps to go live/g), output).to.have.length(1);
+      expect(output).to.not.include('Initializing sync command');
+      expect(output).to.include(`(default branch: ${defaultBranch})`);
+      expect(output).to.not.include("didn't name its default branch");
+      // origin is a bare repository on disk: no server to suggest, no placeholder command
+      expect(output).to.not.include('GITHUB_SERVER_URL');
+      expect(output).to.include('git push -u origin HEAD');
+      expect(output).to.include('Run bit ci sync --init again');
     });
 
     it('is idempotent: a second run skips both files and the config block, and still exits 0', () => {
@@ -401,9 +405,10 @@ describe('bit ci sync: main-scope reconciliation', function () {
       const releaseYmlBefore = fs.readFileSync(workflowPath('bit-release.yml'), 'utf8');
       const { output, exitCode } = runBit('bit ci sync --init');
       expect(exitCode, `bit ci sync --init output:\n${output}`).to.equal(0);
-      expect(output).to.include('skipped .github/workflows/bit-sync.yml');
-      expect(output).to.include('skipped .github/workflows/bit-release.yml');
-      expect(output).to.include('workspace.jsonc already configures "teambit.git/ci".sync');
+      expect(output).to.match(/\.github\/workflows\/bit-sync\.yml\s+already exists, left unchanged/);
+      expect(output).to.match(/\.github\/workflows\/bit-release\.yml\s+already exists, left unchanged/);
+      expect(output).to.match(/workspace\.jsonc\s+already configures sync, left unchanged/);
+      expect(output.match(/Scaffolded bit ci sync/g), output).to.have.length(1);
       expect(fs.readFileSync(workflowPath('bit-sync.yml'), 'utf8')).to.equal(syncYmlBefore);
       expect(fs.readFileSync(workflowPath('bit-release.yml'), 'utf8')).to.equal(releaseYmlBefore);
     });
@@ -421,7 +426,7 @@ describe('bit ci sync: main-scope reconciliation', function () {
       // non-vacuous: the run really used the SUBDIRECTORY workspace
       expect(exitCode, `bit ci sync --init output:\n${output}`).to.equal(0);
       expect(fs.existsSync(path.join(wsDir, 'workspace.jsonc')), 'the subdir must be its own workspace').to.be.true;
-      expect(output).to.include('added "teambit.git/ci": { "sync": {} } to workspace.jsonc');
+      expect(output).to.match(/workspace\.jsonc\s+added "teambit\.git\/ci"/);
       expect(fs.readFileSync(path.join(wsDir, 'workspace.jsonc'), 'utf8')).to.include('teambit.git/ci');
       expect(fs.existsSync(path.join(repoRoot, 'workspace.jsonc'))).to.be.false;
 
@@ -435,8 +440,58 @@ describe('bit ci sync: main-scope reconciliation', function () {
         'no .github may be created under the subdirectory workspace — GitHub would never discover it'
       ).to.be.false;
       // the reported path resolves from where the user is standing
-      expect(output).to.match(/wrote .*\.github[/\\]workflows[/\\]bit-sync\.yml/);
-      expect(output).to.not.match(/wrote \.github[/\\]workflows[/\\]bit-sync\.yml/);
+      const reportedSyncYml = path.join('..', '..', '.github', 'workflows', 'bit-sync.yml');
+      expect(output).to.include(`${reportedSyncYml} `);
+      expect(output, 'a cwd-relative path that misses the repository root').to.not.match(
+        /^\s+\S+ \.github[/\\]workflows[/\\]bit-sync\.yml/m
+      );
+      // no remote: the branch is a guess, and the repository is created from its root, not the subdirectory
+      expect(output).to.include('no remote names the default branch');
+      expect(output).to.include(`--source ${path.join('..', '..')} --remote origin --push`);
+    });
+
+    /**
+     * A repository with a GitHub `origin`, never contacted: `origin/HEAD` is set by hand, so the default
+     * branch is detected locally. `env` pins the server, so the host's own GITHUB_* variables don't leak in.
+     */
+    function initWithGitHubOrigin(originUrl: string, env: Record<string, string>) {
+      const repoDir = path.join(path.dirname(helper.scopes.localPath), `gh-origin-repo-${Date.now()}`);
+      fs.mkdirpSync(repoDir);
+      helper.command.runCmd('git init', repoDir);
+      helper.command.runCmd('bit init --skip-interactive', repoDir);
+      helper.command.runCmd(`git remote add origin ${originUrl}`, repoDir);
+      helper.command.runCmd('git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/trunk', repoDir);
+      const { output, exitCode } = runBit('bit ci sync --init', repoDir, env);
+      expect(exitCode, `bit ci sync --init output:\n${output}`).to.equal(0);
+      const syncYml = fs.readFileSync(path.join(repoDir, '.github', 'workflows', 'bit-sync.yml'), 'utf8');
+      return { output, syncYml };
+    }
+
+    it('prints the github.com steps as commands for the origin repository', () => {
+      const { output, syncYml } = initWithGitHubOrigin('https://github.com/acme/shop.git', {
+        GITHUB_SERVER_URL: 'https://github.com',
+        GITHUB_API_URL: 'https://api.github.com',
+      });
+      expect(syncYml).to.include("branches-ignore: ['trunk', 'bit-sync/**']");
+      expect(output).to.include('mirrored to acme/shop (default branch: trunk)');
+      expect(output).to.include('Next: 3 steps to go live');
+      expect(output).to.include('gh secret set BIT_CONFIG_ACCESS_TOKEN -R acme/shop');
+      expect(output).to.include('gh secret set BIT_SYNC_GH_TOKEN -R acme/shop');
+      expect(output).to.include('https://github.com/apps/bit-git-sync');
+      expect(output).to.not.include('/dispatches');
+    });
+
+    it('prints the dispatch webhook on the server API for a GitHub Enterprise Server origin', () => {
+      const { output } = initWithGitHubOrigin('https://ghe.corp.example/acme/store.git', {
+        GITHUB_SERVER_URL: 'https://ghe.corp.example',
+        GITHUB_API_URL: 'https://ghe.corp.example/api/v3',
+      });
+      expect(output).to.include('mirrored to ghe.corp.example/acme/store (default branch: trunk)');
+      expect(output).to.include('gh secret set BIT_CONFIG_ACCESS_TOKEN -R ghe.corp.example/acme/store');
+      expect(output).to.include('https://ghe.corp.example/api/v3/repos/acme/store/dispatches');
+      expect(output).to.include('Authorization: Bearer');
+      expect(output).to.include('drops its custom headers');
+      expect(output).to.not.include('github.com/apps/bit-git-sync');
     });
   });
 });
