@@ -9,6 +9,10 @@ native yet, and asserts what the e2e case asserts.
 The list below names every case in `e2e/` with its file and line. It is a floor, not a
 ceiling: native-only cases for edge cases the e2e suite does not cover are welcome.
 
+| Additional released-CLI oracle | Native test |
+| --- | --- |
+| `ConsumerComponent.getLoadedFiles` checks the main file after loading every source and before starting any documentation parser; a missing later main file must leave earlier rich-source docs uncached. | `commands::cat::released_loader_rejects_missing_main_before_any_documentation_cache_write` |
+
 ## Graph-aware lane reset acceptance
 
 `harmony::lane_graph_reset` adds strict same-absolute-path released-Node replay

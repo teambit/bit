@@ -56,10 +56,14 @@ fn rekey_docs_cache(original: &Path, clone: &Path) {
                 .unwrap();
             let entry = bit_object_import::read_dependency_cache(
                 &original.join(".bit/cache/components/docs"),
-                source.to_str().unwrap(),
+                &source_key(original, &source),
             )
             .unwrap()?;
-            Some(json!({"key":destination,"data":entry["data"],"timestamp":entry["timestamp"]}))
+            Some(json!({
+                "key":source_key(clone, &destination),
+                "data":entry["data"],
+                "timestamp":entry["timestamp"],
+            }))
         })
         .collect::<Vec<_>>();
     write_cloned_docs_cache(clone, &entries);
@@ -133,9 +137,9 @@ fn source_extension(path: &Path) -> bool {
 
 fn cached_docs(root: &Path, relative: &Path) -> Option<(String, Option<bool>)> {
     let path = root.join(relative);
-    let key = path.to_str().unwrap();
+    let key = source_key(root, &path);
     let cache = root.join(".bit/cache/components/docs");
-    let entry = bit_object_import::read_dependency_cache(&cache, key).unwrap()?;
+    let entry = bit_object_import::read_dependency_cache(&cache, &key).unwrap()?;
     let timestamp = entry["timestamp"].as_f64().unwrap();
     let fresh = fs::metadata(path)
         .ok()
@@ -156,6 +160,30 @@ fn cached_docs(root: &Path, relative: &Path) -> Option<(String, Option<bool>)> {
             .to_owned(),
         fresh,
     ))
+}
+
+#[cfg(not(windows))]
+fn source_key(_root: &Path, path: &Path) -> String {
+    path.to_str().unwrap().to_owned()
+}
+
+#[cfg(windows)]
+fn source_key(root: &Path, path: &Path) -> String {
+    let output = Command::new(std::env::var_os("BIT_NODE_BINARY").unwrap_or_else(|| "node".into()))
+        .args(["-e", include_str!("cat/source-key.cjs")])
+        .arg(
+            setup::shared().node_cli
+                .parent()
+                .unwrap()
+                .parent()
+                .unwrap(),
+        )
+        .arg(root)
+        .arg(path)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+    String::from_utf8(output.stdout).unwrap()
 }
 
 fn clear_docs_cache(root: &Path) {
@@ -363,13 +391,15 @@ fn cold_rich_semantic_docs_and_mixed_cache_hits_match_released_cat() {
         "/**\n * The typed value.\n * @public\n */\nexport const typed: string = 'first';\n",
     );
     helper.output_file("bar/button.jsx", "import React from 'react';\n/** A button component. */\nexport function Button({ label }) { return <button>{label}</button>; }\n");
+    helper.output_file("bar/foo.spec.js", "/** A spec-like source. */\nexport const spec = 1;\n");
     helper.run("add bar -i bar/foo --main foo.js");
     clear_docs_cache(&helper.scopes.local_path);
     let first = parse(&compared(&helper, "cat bar/foo --json", true));
-    assert_eq!(first["files"].as_array().unwrap().len(), 3);
+    assert_eq!(first["files"].as_array().unwrap().len(), 4);
     assert!(cached_docs(&helper.scopes.local_path, Path::new("bar/foo.js")).is_some());
     assert!(cached_docs(&helper.scopes.local_path, Path::new("bar/typed.ts")).is_some());
     assert!(cached_docs(&helper.scopes.local_path, Path::new("bar/button.jsx")).is_some());
+    assert!(cached_docs(&helper.scopes.local_path, Path::new("bar/foo.spec.js")).is_some());
     let foo_docs = cached_docs(&helper.scopes.local_path, Path::new("bar/foo.js")).unwrap().0;
     assert!(
         !parse(&foo_docs)
@@ -486,4 +516,19 @@ fn missing_file_delegates_before_cold_semantics_and_keeps_published_cache_effect
     }
     compared(&helper, "cat bar/foo --file absent.js --json", false);
     assert!(cached_docs(&helper.scopes.local_path, Path::new("bar/foo.js")).is_some());
+}
+
+#[test]
+fn released_loader_rejects_missing_main_before_any_documentation_cache_write() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.create_component_bar_foo(
+        "/**\n * Public foo.\n * @public\n */\nexport function foo() { return 1; }\n",
+    );
+    helper.output_file("bar/z.js", "export const main = 2;\n");
+    helper.run("add bar -i bar/foo --main z.js");
+    clear_docs_cache(&helper.scopes.local_path);
+    fs::remove_file(helper.scopes.local_path.join("bar/z.js")).unwrap();
+    compared(&helper, "cat bar/foo --json", false);
+    assert_eq!(cached_docs(&helper.scopes.local_path, Path::new("bar/foo.js")), None);
 }

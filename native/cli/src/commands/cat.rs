@@ -253,7 +253,13 @@ fn parse_docs(root: &Path, plan: &mut docs::CatDocs) -> Result<Option<String>, F
         return Ok(None);
     }
     let writes = host
-        .call("catSemanticDocs", &json!({"components":plan.misses()}))
+        .call(
+            "catSemanticDocs",
+            &json!({
+                "components":plan.components(),
+                "scopePath":bit_object_import::scope_path(root),
+            }),
+        )
         .map_err(|error| Failure::Committed(error, host.take_stdout()))?;
     if let Some(error) =
         plan.absorb(&writes).map_err(|error| Failure::Committed(error, host.take_stdout()))?
@@ -355,10 +361,16 @@ fn workspace_files(root: &Path, entry: &bitmap::Entry) -> io::Result<WorkspaceFi
         "../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
     ))?;
     let workspace = bit_install::workspace::Workspace::load(root, &config, &core)?;
-    let component = workspace.components
+    let (component, bitmap_entry) = workspace.components
         .iter()
-        .find(|component| component.id.to_string_without_version() == entry.identity)
+        .zip(&workspace.entries)
+        .find(|(component, _)| component.id.to_string_without_version() == entry.identity)
         .ok_or_else(|| decline("cat workspace component absent"))?;
+    if component.root_dir != entry.root_dir || !component.files.contains(&bitmap_entry.main_file) {
+        return Err(decline("cat workspace directory changed"));
+    }
+    // Both Workspace::load and BitMap.trackDirectoryChanges rescan a component
+    // with a rootDir; published getFilesByDir marks every scanned file test:false.
     let docs = json!({
         "directory":component.root_dir,
         "files":component.files.iter().map(|file| json!({

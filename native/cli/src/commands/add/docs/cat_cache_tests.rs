@@ -63,50 +63,29 @@ fn rich_uncached_cat_source_requires_published_parser() {
 }
 
 #[test]
-fn later_parse_failure_publishes_only_completed_docs_prefix() {
+fn published_parser_receipt_keeps_cache_writes_host_owned() {
     let root = tempfile::tempdir().unwrap();
-    fs::write(root.path().join("first.js"), "module.exports=1;\n").unwrap();
-    fs::write(root.path().join("second.js"), "/** @public */\nmodule.exports=2;\n").unwrap();
-    fs::write(root.path().join("third.js"), "/** @public */\nmodule.exports=3;\n").unwrap();
-    fs::write(root.path().join("fourth.js"), "module.exports=4;\n").unwrap();
-    let component = json!({"directory":".","files":[
-        {"relativePath":"first.js","test":false},
-        {"relativePath":"second.js","test":false},
-        {"relativePath":"third.js","test":false},
-        {"relativePath":"fourth.js","test":false}
-    ]});
+    fs::write(root.path().join("file.js"), "/** @public */\nmodule.exports=2;\n").unwrap();
+    let component = json!({"directory":".","files":[{"relativePath":"file.js","test":false}]});
     let mut plan = cat_prepare(root.path(), component).unwrap();
     assert_eq!(plan.misses().len(), 1);
-    let second = root.path().join("second.js");
-    let third = root.path().join("third.js");
-    fs::remove_file(&third).unwrap();
-    let result = plan
-        .absorb(&json!({
-            "writes":[{"path":second,"docs":[{"name":"second"}]}],
-            "failedAt":third,
-            "error":"third source vanished"
-        }))
-        .unwrap();
-    assert_eq!(result.as_deref(), Some("third source vanished"));
+    assert_eq!(plan.components().len(), 1);
+    assert_eq!(
+        plan.absorb(&json!({"published":true,"error":null}))
+            .unwrap(),
+        None,
+    );
+    plan.publish().unwrap();
     let cache = root.path().join(".bit/cache/components/docs");
-    for name in ["first.js", "second.js"] {
-        assert!(
-            bit_object_import::read_dependency_cache(
-                &cache,
-                root.path().join(name).to_str().unwrap()
-            )
-            .unwrap()
-            .is_some(),
-        );
-    }
-    for name in ["third.js", "fourth.js"] {
-        assert!(
-            bit_object_import::read_dependency_cache(
-                &cache,
-                root.path().join(name).to_str().unwrap()
-            )
-            .unwrap()
-            .is_none(),
-        );
-    }
+    assert!(
+        bit_object_import::read_dependency_cache(
+            &cache,
+            root.path()
+                .join("file.js")
+                .to_str()
+                .unwrap()
+        )
+        .unwrap()
+        .is_none(),
+    );
 }
