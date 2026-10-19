@@ -20,7 +20,7 @@ import type { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } fro
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { BuilderAspect } from '@teambit/builder';
-import { mergeDependencies } from './merge-dependencies';
+import { getDependenciesOfVersion, mergeDependencies } from './merge-dependencies';
 
 export type MergeStatusProviderOptions = {
   resolveUnrelated?: MergeStrategy;
@@ -174,9 +174,9 @@ other:   ${otherLaneHead.toString()}`);
     const dependenciesMergeResult = this.workspace
       ? undefined
       : mergeDependencies(
-          baseComponent,
+          getDependenciesOfVersion(baseComponent),
           currentComponent,
-          otherComponent,
+          getDependenciesOfVersion(otherComponent),
           this.options.mergeStrategy,
           this.currentLane?.toComponentIdsIncludeUpdateDependents()
         );

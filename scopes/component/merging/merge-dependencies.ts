@@ -1,7 +1,9 @@
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { isEqual, union } from 'lodash';
 import type { ComponentIdList } from '@teambit/component-id';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
+import { ModelComponent } from '@teambit/objects';
 
 const COMPONENT_DEPS_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies'] as const;
 const PACKAGE_DEPS_FIELDS = ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'] as const;
@@ -15,6 +17,26 @@ type PackageDepsField = (typeof PACKAGE_DEPS_FIELDS)[number];
 export type DependenciesSnapshot = { [field in ComponentDepsField]: Dependencies } & {
   [field in PackageDepsField]: Record<string, string>;
 };
+
+/**
+ * the dependencies of a Version, with the package names of the component dependencies, same as a component loaded from
+ * the scope has them (see ModelComponent.toConsumerComponent). without them, a dependency of a Version and the same
+ * dependency of a loaded component are not equal.
+ */
+export function getDependenciesOfVersion(
+  version: DependenciesSnapshot & { extensions: ExtensionDataList }
+): DependenciesSnapshot {
+  const withPackageNames = (deps: Dependencies) =>
+    new Dependencies(ModelComponent.addDepsInfoFromDepsResolver(deps, version.extensions));
+  return {
+    dependencies: withPackageNames(version.dependencies),
+    devDependencies: withPackageNames(version.devDependencies),
+    peerDependencies: withPackageNames(version.peerDependencies),
+    packageDependencies: version.packageDependencies,
+    devPackageDependencies: version.devPackageDependencies,
+    peerPackageDependencies: version.peerPackageDependencies,
+  };
+}
 
 /**
  * 3-way merge of the resolved dependencies of a component: base (the common snap), current (the target lane) and

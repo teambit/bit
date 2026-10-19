@@ -1,8 +1,9 @@
 import { expect } from 'chai';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { DependenciesSnapshot } from './merge-dependencies';
-import { mergeDependencies } from './merge-dependencies';
+import { getDependenciesOfVersion, mergeDependencies } from './merge-dependencies';
 
 type SnapshotInput = {
   comps?: string[]; // runtime component deps, e.g. "my-scope/b@0.0.1"
@@ -150,6 +151,28 @@ describe('mergeDependencies', () => {
     });
     it('should be kept when b is not on the lane, as both sides changed it', () => {
       expect(mergeDependencies(base, current, other, 'manual').dependencies.get()).to.have.lengthOf(1);
+    });
+  });
+  describe('a component dependency that other removed, with base and other from Versions', () => {
+    // a Version has the package names in the dependency-resolver data only, a component loaded from the scope (current)
+    // has them on the dependencies as well
+    const asVersion = (deps: DependenciesSnapshot) => {
+      const depsData = deps.dependencies.get().map((dep) => ({ id: dep.id.toString(), packageName: dep.packageName }));
+      return getDependenciesOfVersion({
+        ...deps,
+        dependencies: asLoaded(deps.dependencies.get().map((dep) => new Dependency(dep.id, dep.relativePaths))),
+        extensions: ExtensionDataList.fromArray([
+          new ExtensionDataEntry(undefined, undefined, 'teambit.dependencies/dependency-resolver', undefined, {
+            dependencies: depsData,
+          }),
+        ]),
+      });
+    };
+    const base = asVersion(snapshot({ comps: ['my-scope/b@0.0.1'] }));
+    const current = snapshot({ comps: ['my-scope/b@0.0.1'] });
+    const other = asVersion(snapshot({}));
+    it('should be removed', () => {
+      expect(idsOf(mergeDependencies(base, current, other, 'manual').dependencies)).to.deep.equal([]);
     });
   });
 });
