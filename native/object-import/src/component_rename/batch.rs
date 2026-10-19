@@ -2,7 +2,7 @@
 mod publication;
 #[cfg(test)]
 mod tests;
-use super::{Options, Plan, invalid};
+use super::{Options, Plan, PreparationContext, invalid};
 use rayon::prelude::*;
 use serde_json::Value;
 use std::{
@@ -33,11 +33,12 @@ impl Batch {
         }
         let threads = std::thread::available_parallelism().map_or(1, std::num::NonZero::get).min(4);
         let pool = crate::session::shared_pool(threads)?;
+        let context = PreparationContext::default();
         let results = pool.install(|| {
             options
                 .par_iter()
                 .zip(facts.par_iter())
-                .map(|(options, facts)| Plan::prepare(root, options, facts))
+                .map(|(options, facts)| Plan::prepare_with_context(root, options, facts, &context))
                 .collect::<Vec<_>>()
         });
         results.into_iter().collect()
@@ -173,7 +174,10 @@ impl Batch {
             .as_ref()
             .is_none_or(|matchers| !matchers.matches(pairs))
         {
-            self.packages = Some(super::refactor::PackageMatchers::new(pairs));
+            let context =
+                &self.plans.get(index).ok_or_else(|| invalid("scope rename plan index"))?.context;
+            self.packages =
+                Some(super::refactor::PackageMatchers::with_cache(pairs, &context.patterns));
         }
         let plan = self.plans.get_mut(index).ok_or_else(|| invalid("scope rename plan index"))?;
         let matchers =
@@ -221,7 +225,8 @@ impl Batch {
     }
     pub fn refresh(&mut self, index: usize, facts: &Value) -> io::Result<()> {
         let options = self.plan(index)?.options.clone();
-        let mut plan = Plan::prepare(&self.root, &options, facts)?;
+        let context = self.plan(index)?.context.clone();
+        let mut plan = Plan::prepare_with_context(&self.root, &options, facts, &context)?;
         let directory = plan.root.join(&plan.identity.source_directory);
         plan.files.retain(|file| file.source.starts_with(&directory));
         *self.plan_mut(index)? = plan;

@@ -1,5 +1,6 @@
 pub(super) mod batch;
 mod eol;
+mod preflight;
 
 use super::{Plan, invalid, refactor, unsupported};
 use serde_json::Value;
@@ -7,6 +8,7 @@ use std::{
     collections::BTreeSet,
     fs, io,
     path::{Path, PathBuf},
+    sync::Arc,
 };
 
 pub(super) struct Change {
@@ -28,6 +30,11 @@ pub(super) fn prepare(plan: &mut Plan, facts: &Value) -> io::Result<()> {
         .and_then(|row| row["files"].as_array())
         .ok_or_else(|| unsupported("rename source file inventory"))?;
     let mut destinations = BTreeSet::new();
+    let content = refactor::ContentMatcher::new(
+        leaf(&plan.identity.source_name),
+        leaf(&plan.identity.target_name),
+        Arc::clone(&plan.context.patterns),
+    );
     for file in files {
         let relative = file
             .as_str()
@@ -37,6 +44,7 @@ pub(super) fn prepare(plan: &mut Plan, facts: &Value) -> io::Result<()> {
             plan,
             relative,
             component.ok_or_else(|| unsupported("rename source inventory"))?,
+            &content,
         )?;
         if !destinations.insert(change.destination.clone()) {
             return Err(invalid("rename file collision"));
@@ -52,14 +60,19 @@ fn prepare_dependencies(plan: &mut Plan, facts: &Value) -> io::Result<()> {
     if plan.identity.exported {
         // Validate now; package replacements follow onAdd and original removal.
         let target = std::mem::take(&mut plan.files);
-        dependencies(plan, facts)?;
+        dependencies(plan, facts, true)?;
         plan.files = target;
         Ok(())
     } else {
-        dependencies(plan, facts)
+        dependencies(plan, facts, false)
     }
 }
-fn change(plan: &mut Plan, relative: &str, component: &Value) -> io::Result<Change> {
+fn change(
+    plan: &mut Plan,
+    relative: &str,
+    component: &Value,
+    content: &refactor::ContentMatcher,
+) -> io::Result<Change> {
     let source = plan.root.join(&plan.identity.source_directory).join(relative);
     plan.observed.ancestors(
         &plan.root,
@@ -81,11 +94,7 @@ fn change(plan: &mut Plan, relative: &str, component: &Value) -> io::Result<Chan
     let bytes = if plan.options.preserve || (plan.options.ast && !plan.identity.exported) {
         bytes
     } else {
-        refactor::content(
-            &bytes,
-            leaf(&plan.identity.source_name),
-            leaf(&plan.identity.target_name),
-        )?
+        content.apply(&bytes)?
     };
     let destination = plan.root.join(&plan.identity.target_directory).join(name);
     safe_parent(&plan.root, &destination)?;
@@ -98,12 +107,13 @@ fn change(plan: &mut Plan, relative: &str, component: &Value) -> io::Result<Chan
         bytes,
     })
 }
-fn dependencies(plan: &mut Plan, facts: &Value) -> io::Result<()> {
+fn dependencies(plan: &mut Plan, facts: &Value, validate_only: bool) -> io::Result<()> {
     let source =
         facts["sourcePackage"].as_str().ok_or_else(|| unsupported("rename source package"))?;
     let target =
         facts["targetPackage"].as_str().ok_or_else(|| unsupported("rename target package"))?;
-    let mut matcher = refactor::PackageMatcher::new(source, target);
+    let mut matcher =
+        refactor::PackageMatcher::with_cache(source, target, Arc::clone(&plan.context.patterns));
     for change in &mut plan.files {
         change.bytes = matcher.apply(&change.bytes)?;
     }
@@ -113,7 +123,7 @@ fn dependencies(plan: &mut Plan, facts: &Value) -> io::Result<()> {
         if component["identity"] == plan.identity.source {
             continue;
         }
-        dependent(plan, component, &mut matcher)?;
+        dependent(plan, component, &mut matcher, validate_only)?;
     }
     Ok(())
 }
@@ -121,6 +131,7 @@ fn dependent(
     plan: &mut Plan,
     component: &Value,
     matcher: &mut refactor::PackageMatcher,
+    validate_only: bool,
 ) -> io::Result<()> {
     let directory =
         component["rootDir"].as_str().ok_or_else(|| unsupported("rename dependent root"))?;
@@ -130,6 +141,10 @@ fn dependent(
         component["files"].as_array().ok_or_else(|| unsupported("rename dependent files"))?
     {
         let relative = file.as_str().ok_or_else(|| unsupported("rename dependent path"))?;
+        if validate_only {
+            preflight::dependent(plan, component, directory, relative, matcher)?;
+            continue;
+        }
         let (change, replaced) = dependent_file(plan, component, directory, relative, matcher)?;
         changed |= replaced;
         changes.push(change);
@@ -329,7 +344,7 @@ pub(super) fn refactor_loaded(
             continue;
         }
         let component = loaded_dependency(row)?;
-        dependent(plan, &component, &mut matcher)?;
+        dependent(plan, &component, &mut matcher, false)?;
     }
     Ok(())
 }

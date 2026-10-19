@@ -94,6 +94,26 @@ fn parallel_failures_report_the_first_requested_plan_without_publication() {
 }
 
 #[test]
+fn hydrated_plan_reads_provider_changed_sources_and_rejects_later_mutation() {
+    let (directory, options, facts) = workspace();
+    let mut plans = Batch::prepare_plans(directory.path(), &options, &facts).unwrap();
+    let mut plan = plans.remove(0);
+    let source = directory.path().join("first/index.js");
+    fs::write(&source, "module.exports='first provider edit';").unwrap();
+    plan.rehydrate(&options[0], &facts[0])
+        .unwrap();
+    let materialized = plan.ast_inputs();
+    assert_eq!(materialized.len(), 1);
+    let fresh = Plan::prepare(directory.path(), &options[0], &facts[0]).unwrap();
+    assert_eq!(materialized, fresh.ast_inputs());
+    assert!(String::from_utf8_lossy(&materialized[0].1).contains("provider edit"));
+    plan.validate().unwrap();
+
+    fs::write(&source, "module.exports='late external edit';").unwrap();
+    assert!(plan.validate().is_err());
+}
+
+#[test]
 fn mismatched_inputs_fail_before_reading_the_workspace() {
     let directory = Directory::new();
     let result = Batch::prepare_plans(directory.path(), &[Options::default()], &[]);
@@ -146,4 +166,30 @@ fn generic_plan_package_matcher_preserves_binary_then_missing_file_error_order()
             .join("components")
             .exists(),
     );
+}
+
+#[test]
+fn exported_preflight_validates_dependents_without_retaining_their_writes() {
+    let (directory, mut options, mut facts) = workspace();
+    let root = directory.path();
+    let mut bitmap = crate::parse_jsonc(&fs::read(root.join(".bitmap")).unwrap()).unwrap();
+    bitmap["first"]["scope"] = json!("my.scope");
+    bitmap["first"]["version"] = json!("1.0.0");
+    fs::write(root.join(".bitmap"), serde_json::to_vec(&bitmap).unwrap()).unwrap();
+    options[0].refactor = true;
+    facts[0]["sourcePackage"] = json!("[");
+    facts[0]["targetPackage"] = json!("new-package");
+    facts[0]["components"][0]["identity"] = json!("my.scope/first");
+    facts[0]["components"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({
+            "identity":"my.scope/dependent","rootDir":"second","files":["index.js","missing.js"]
+        }));
+    fs::write(root.join("second/index.js"), b"binary\0source").unwrap();
+    let error = Plan::prepare(root, &options[0], &facts[0]).err().unwrap();
+    assert_eq!(error.kind(), io::ErrorKind::NotFound);
+    fs::write(root.join("second/missing.js"), "text source").unwrap();
+    let error = Plan::prepare(root, &options[0], &facts[0]).err().unwrap();
+    assert_eq!(error.kind(), io::ErrorKind::InvalidInput);
 }

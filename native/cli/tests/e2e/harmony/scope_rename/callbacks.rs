@@ -84,6 +84,35 @@ fn second_onadd_failure_preserves_the_first_renamed_component_and_the_second_add
 }
 
 #[test]
+fn later_onload_failure_stops_before_any_scope_addition() {
+    let helper = configured(true);
+    helper.output_file("scope-second-load-fails", "fail");
+    let old = helper.scopes.remote.clone();
+    let output = compare(
+        &helper,
+        &format!("scope rename {old} replacement.scope --preserve --deprecate -x"),
+    );
+    assert!(!output.status.success());
+    assert!(output.stdout.contains(&format!("scope lifecycle load {old}/comp1")));
+    assert!(output.stdout.contains(&format!("scope lifecycle load {old}/comp2")));
+    assert!(!output.stdout.contains("scope lifecycle added"));
+    assert!(!helper.scopes.local_path.join("scope-added-comp1").exists());
+}
+
+#[test]
+fn first_onload_mutation_is_seen_by_later_source_capture() {
+    let helper = configured(true);
+    helper.output_file("scope-mutate-later-source", "mutate");
+    let old = helper.scopes.remote.clone();
+    let output = compare(
+        &helper,
+        &format!("scope rename {old} replacement.scope --preserve --deprecate -x"),
+    );
+    assert!(output.status.success());
+    assert!(output.stdout.contains("scope lifecycle later source observed"));
+}
+
+#[test]
 fn root_only_configured_provider_is_not_started_for_late_registered_scope_subcommands() {
     let helper = configured(false);
     config::set_workspace_aspect_key(

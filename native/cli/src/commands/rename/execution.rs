@@ -125,7 +125,7 @@ pub(in crate::commands) fn hydrate(
     }
     prepared.facts["preflight"] = json!(false);
     refreshed_files(prepared, &captured)?;
-    prepared.plan = Plan::prepare(root, options, &prepared.facts)?;
+    prepared.plan.rehydrate(options, &prepared.facts)?;
     Ok(())
 }
 
