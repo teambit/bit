@@ -381,7 +381,7 @@ fn identity(root: &Path, pattern: &str) -> io::Result<(String, bool)> {
         .filter(|entry| {
             entry.identity == pattern
                 || entry.identity
-                    .rsplit_once('/')
+                    .split_once('/')
                     .is_some_and(|(_, name)| name == pattern)
         })
         .collect();

@@ -4,7 +4,7 @@
 pub(in crate::workspace::engine) mod autosync;
 pub(in crate::workspace::engine) mod dependents;
 pub(in crate::workspace::engine) mod policy;
-pub(in crate::workspace::engine::command) mod remote;
+pub(in crate::workspace::engine) mod remote;
 pub(in crate::workspace::engine) mod write_dependencies;
 
 use super::{

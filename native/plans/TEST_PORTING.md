@@ -364,14 +364,14 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/commands/cat.e2e.ts`
 
-- [ ] `e2e/commands/cat.e2e.ts:23` bit cat command › basic usage › should show all source files with headers
-- [ ] `e2e/commands/cat.e2e.ts:29` bit cat command › basic usage › should show a specific file with --file (raw, no header)
-- [ ] `e2e/commands/cat.e2e.ts:35` bit cat command › basic usage › should error when --file references a non-existent file
-- [ ] `e2e/commands/cat.e2e.ts:40` bit cat command › basic usage › should show config with --config
-- [ ] `e2e/commands/cat.e2e.ts:45` bit cat command › basic usage › should show both files and config with --all
-- [ ] `e2e/commands/cat.e2e.ts:50` bit cat command › basic usage › should output valid JSON with --json
-- [ ] `e2e/commands/cat.e2e.ts:72` bit cat command › versioned component › should show files at a specific historical version
-- [ ] `e2e/commands/cat.e2e.ts:78` bit cat command › versioned component › should show the latest version when no version is specified
+- [x] `e2e/commands/cat.e2e.ts:23` bit cat command › basic usage › should show all source files with headers — `commands::cat::source_file_config_and_json_views_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:29` bit cat command › basic usage › should show a specific file with --file (raw, no header) — `commands::cat::source_file_config_and_json_views_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:35` bit cat command › basic usage › should error when --file references a non-existent file — `commands::cat::source_file_config_and_json_views_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:40` bit cat command › basic usage › should show config with --config — `commands::cat::source_file_config_and_json_views_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:45` bit cat command › basic usage › should show both files and config with --all — `commands::cat::source_file_config_and_json_views_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:50` bit cat command › basic usage › should output valid JSON with --json — `commands::cat::source_file_config_and_json_views_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:72` bit cat command › versioned component › should show files at a specific historical version — `commands::cat::explicit_historical_version_and_default_latest_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:78` bit cat command › versioned component › should show the latest version when no version is specified — `commands::cat::explicit_historical_version_and_default_latest_match_released_cat`
 
 ### `e2e/commands/config.e2e.ts`
 
@@ -570,9 +570,9 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 - [x] `e2e/commands/list.e2e.ts:20` bit list command › when a component is created but not tagged › should display "found 0 components" — `commands::list::a_new_component_is_not_listed`
 - [x] `e2e/commands/list.e2e.ts:32` bit list command › when a component is created and tagged › should display "found 1 components" — `commands::list::a_tagged_component_is_listed`
-- [x] `e2e/commands/list.e2e.ts:60` bit list command › with --outdated flag › when a remote component has a higher version than the local component › should show that it has a later version in the remote — `commands::list::known_failures::a_later_remote_version_is_shown` (known failure)
-- [x] `e2e/commands/list.e2e.ts:79` bit list command › with --outdated flag › when a remote component has the same version as the local component › should display the same version for the local and remote — `commands::list::known_failures::the_same_remote_version_is_shown` (known failure)
-- [x] `e2e/commands/list.e2e.ts:93` bit list command › with --outdated flag › when a component is local only (never exported) › should show that the component does not have a remote version — `commands::list::known_failures::a_local_only_component_has_no_remote_version` (known failure)
+- [x] `e2e/commands/list.e2e.ts:60` bit list command › with --outdated flag › when a remote component has a higher version than the local component › should show that it has a later version in the remote — `commands::list::outdated::a_later_remote_version_is_shown`
+- [x] `e2e/commands/list.e2e.ts:79` bit list command › with --outdated flag › when a remote component has the same version as the local component › should display the same version for the local and remote — `commands::list::outdated::the_same_remote_version_is_shown`
+- [x] `e2e/commands/list.e2e.ts:93` bit list command › with --outdated flag › when a component is local only (never exported) › should show that the component does not have a remote version — `commands::list::outdated::a_local_only_component_has_no_remote_version`
 
 ### `e2e/commands/move.e2e.ts`
 
@@ -665,13 +665,13 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/commands/reset.e2e.ts`
 
-- [x] `e2e/commands/reset.e2e.ts:29` bit reset command › untag single component › with one version › should delete the entire component from the model — `commands::reset::known_failures::reset_head_of_a_single_version_deletes_the_component` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:44` bit reset command › untag single component › with multiple versions when specifying the version › should delete only the specified tag — `commands::reset::known_failures::reset_head_deletes_only_the_head_tag` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:51` bit reset command › untag single component › with multiple versions when specifying the version › should delete the specified version from the "state" attribute — `commands::reset::known_failures::reset_head_deletes_only_the_head_tag` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:58` bit reset command › untag single component › with multiple versions when specifying the version › bit show should work — `commands::reset::known_failures::reset_head_deletes_only_the_head_tag` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:62` bit reset command › untag single component › with multiple versions when specifying the version › bit status should show the component as staged — `commands::reset::known_failures::reset_head_deletes_only_the_head_tag` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:78` bit reset command › untag single component › with multiple versions when not specifying the version › and all versions are local › should delete the entire component from the model — `commands::reset::known_failures::reset_of_local_versions_deletes_the_component` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:99` bit reset command › untag single component › when some versions are exported, some are local › untagging without version › should delete only the local tag and leave the exported tag — `commands::reset::known_failures::reset_keeps_the_exported_tag` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:29` bit reset command › untag single component › with one version › should delete the entire component from the model — `commands::reset::reset_head_of_a_single_version_deletes_the_component`
+- [x] `e2e/commands/reset.e2e.ts:44` bit reset command › untag single component › with multiple versions when specifying the version › should delete only the specified tag — `commands::reset::reset_head_deletes_only_the_head_tag`
+- [x] `e2e/commands/reset.e2e.ts:51` bit reset command › untag single component › with multiple versions when specifying the version › should delete the specified version from the "state" attribute — `commands::reset::reset_head_deletes_only_the_head_tag`
+- [x] `e2e/commands/reset.e2e.ts:58` bit reset command › untag single component › with multiple versions when specifying the version › bit show should work — `commands::reset::reset_head_deletes_only_the_head_tag`
+- [x] `e2e/commands/reset.e2e.ts:62` bit reset command › untag single component › with multiple versions when specifying the version › bit status should show the component as staged — `commands::reset::reset_head_deletes_only_the_head_tag`
+- [x] `e2e/commands/reset.e2e.ts:78` bit reset command › untag single component › with multiple versions when not specifying the version › and all versions are local › should delete the entire component from the model — `commands::reset::reset_of_local_versions_deletes_the_component`
+- [x] `e2e/commands/reset.e2e.ts:99` bit reset command › untag single component › when some versions are exported, some are local › untagging without version › should delete only the local tag and leave the exported tag — `commands::reset::reset_keeps_the_exported_tag`
 - [x] `e2e/commands/reset.e2e.ts:109` bit reset command › untag single component › when tagging non-existing component › should show an descriptive error — `commands::reset::known_failures::reset_of_a_missing_component_fails` (known failure)
 - [x] `e2e/commands/reset.e2e.ts:137` bit reset command › untag multiple components (--all flag) › without specifying a version › should display a descriptive successful message — `commands::reset::reset_all_removes_only_local_components`
 - [x] `e2e/commands/reset.e2e.ts:140` bit reset command › untag multiple components (--all flag) › without specifying a version › should remove only local components from the model — `commands::reset::reset_all_removes_only_local_components`
@@ -681,9 +681,9 @@ row's fields, object path, header, logical identity, and remote index stay exact
 - [x] `e2e/commands/reset.e2e.ts:197` bit reset command › components with dependencies › untag only the dependency › with force flag › should untag successfully — `commands::reset::known_failures::reset_of_a_dependency_needs_force` (known failure)
 - [x] `e2e/commands/reset.e2e.ts:215` bit reset command › components with dependencies › untag only the dependency › after exporting the component and tagging the scope › should show an error — `commands::reset::known_failures::reset_of_an_exported_dependency_fails` (known failure)
 - [x] `e2e/commands/reset.e2e.ts:226` bit reset command › components with dependencies › untag all components › when all components have only local versions › should remove all the components because it does not leave a damaged component without dependency — `commands::reset::reset_all_of_local_dependencies_removes_all`
-- [x] `e2e/commands/reset.e2e.ts:238` bit reset command › components with dependencies › untag only the dependent › should untag successfully the dependent — `commands::reset::known_failures::reset_of_the_dependent_keeps_the_dependency` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:242` bit reset command › components with dependencies › untag only the dependent › should leave the dependency intact — `commands::reset::known_failures::reset_of_the_dependent_keeps_the_dependency` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:265` bit reset command › components with dependencies › after import and tagging › untag using the id without scope-name › should untag successfully — `commands::reset::known_failures::reset_by_an_id_without_scope` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:238` bit reset command › components with dependencies › untag only the dependent › should untag successfully the dependent — `commands::reset::reset_of_the_dependent_keeps_the_dependency`
+- [x] `e2e/commands/reset.e2e.ts:242` bit reset command › components with dependencies › untag only the dependent › should leave the dependency intact — `commands::reset::reset_of_the_dependent_keeps_the_dependency`
+- [x] `e2e/commands/reset.e2e.ts:265` bit reset command › components with dependencies › after import and tagging › untag using the id without scope-name › should untag successfully — `commands::reset::reset_by_an_id_without_scope`
 - [x] `e2e/commands/reset.e2e.ts:277` bit reset command › components with dependencies › after import and tagging › modify, tag and then untag all › should show the component as modified — `commands::reset::reset_all_keeps_the_modification`
 - [x] `e2e/commands/reset.e2e.ts:297` bit reset command › components with config in the .bitmap file › bit reset should leave the config as they were before the tag — `commands::reset::reset_keeps_the_bitmap_config`
 - [x] `e2e/commands/reset.e2e.ts:301` bit reset command › components with config in the .bitmap file › bit export should remove the entries form the staged-config file — `commands::reset::reset_keeps_the_bitmap_config`
@@ -3825,10 +3825,10 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/untag-harmony.e2e.ts`
 
-- [ ] `e2e/harmony/untag-harmony.e2e.ts:29` untag components on Harmony › when an old version is missing from the scope › should untag successfully with no errors
-- [ ] `e2e/harmony/untag-harmony.e2e.ts:42` untag components on Harmony › untagging multiple versions › should show the component as new only, not as staged nor snapped
-- [ ] `e2e/harmony/untag-harmony.e2e.ts:57` untag components on Harmony › untagging multiple versions when the new head is exported › bit status should be clean
-- [ ] `e2e/harmony/untag-harmony.e2e.ts:60` untag components on Harmony › untagging multiple versions when the new head is exported › bitmap should show a version, not a hash
+- [x] `e2e/harmony/untag-harmony.e2e.ts:29` untag components on Harmony › when an old version is missing from the scope › should untag successfully with no errors — `harmony::untag::missing_old_exported_version_object_does_not_block_reset_all`
+- [x] `e2e/harmony/untag-harmony.e2e.ts:42` untag components on Harmony › untagging multiple versions › should show the component as new only, not as staged nor snapped — `harmony::untag::multiple_local_tags_reset_to_new_only`
+- [x] `e2e/harmony/untag-harmony.e2e.ts:57` untag components on Harmony › untagging multiple versions when the new head is exported › bit status should be clean — `harmony::untag::exported_boundary_resets_to_clean_status_and_semver_bitmap`
+- [x] `e2e/harmony/untag-harmony.e2e.ts:60` untag components on Harmony › untagging multiple versions when the new head is exported › bitmap should show a version, not a hash — `harmony::untag::exported_boundary_resets_to_clean_status_and_semver_bitmap`
 
 ### `e2e/harmony/update-cmd.e2e.ts`
 

@@ -57,6 +57,14 @@ pub struct Remotes {
 }
 
 impl Remotes {
+    /// A locally configured file/HTTP remote, without a resolver or hub request.
+    pub fn configured(&self, scope: &str) -> io::Result<Option<Remote>> {
+        self.hosts
+            .get(scope)
+            .map(|host| Remote::from_host(host))
+            .transpose()
+    }
+
     pub fn load(
         scope_json: &Value,
         global_config_dir: &Path,

@@ -1,5 +1,7 @@
 //! Native cache publication around the published semantic documentation parser.
 mod cache_hits;
+#[cfg(test)]
+mod cat_cache_tests;
 mod sources;
 
 use crate::commands::status::{cache, environments::Environments};
@@ -27,6 +29,67 @@ pub(in crate::commands) struct Prepared {
     entries: Vec<(String, String)>,
     write_cache: bool,
     deferred: bool,
+}
+
+/// A read-only `Workspace.get` documentation plan for plain `CatCmd`. Rich or
+/// uncertain sources stay on the published loader before any cache mutation.
+pub(in crate::commands) struct CacheOnly {
+    root: PathBuf,
+    components: Vec<Value>,
+    observed: BTreeMap<PathBuf, Source>,
+    directory: PathBuf,
+    proven: Vec<Value>,
+    write_cache: bool,
+}
+
+pub(in crate::commands) fn cache_only(
+    root: &Path,
+    component: Value,
+) -> io::Result<Option<CacheOnly>> {
+    if cache::no_fs_cache(root) {
+        return Ok(None);
+    }
+    let components = vec![component];
+    let observed = observe(root, &components)?;
+    let directory = bit_object_import::scope_path(root).join("cache/components/docs");
+    let write_cache = !cache::no_fs_cache(root);
+    let plan = cache_hits::prepare(root, &directory, &components, &observed, write_cache);
+    if !plan.misses.is_empty() {
+        return Ok(None);
+    }
+    validate(&plan.proven, &observed)?;
+    Ok(Some(CacheOnly {
+        root: root.to_owned(),
+        components,
+        observed,
+        directory,
+        proven: plan.proven,
+        write_cache,
+    }))
+}
+
+impl CacheOnly {
+    pub(in crate::commands) fn publish(self) -> io::Result<()> {
+        if self.observed != observe(&self.root, &self.components)? {
+            return Err(io::Error::other("cat documentation sources changed"));
+        }
+        let current = cache_hits::prepare(
+            &self.root,
+            &self.directory,
+            &self.components,
+            &self.observed,
+            self.write_cache,
+        );
+        if !current.misses.is_empty() || current.proven != self.proven {
+            return Err(io::Error::other("cat documentation cache changed"));
+        }
+        if self.write_cache {
+            for (path, bytes) in validate(&self.proven, &self.observed)? {
+                bit_install::dependencies::cache::put(&self.directory, &path, &bytes)?;
+            }
+        }
+        Ok(())
+    }
 }
 
 pub(super) fn prepare(

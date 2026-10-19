@@ -255,67 +255,80 @@ fn reset_restores_the_env_after_a_deps_change() {
     assert_eq!(env_of_comp1(&helper), "teambit.react/react");
 }
 
-/// Native `reset` declines a component id it cannot resolve to one bitmap entry (`reset
-/// identity absent or ambiguous`), which covers every single-component reset here, and a
-/// batch whose head is exported (`reset head is exported`).
-mod known_failures {
-    use super::{
-        Helper, cat_component, failure_output, imported_and_tagged, list_local_scope, parse,
-        read_bitmap, single_component, single_component_tagged_twice, with_dependencies,
-    };
-    use crate::allow_known_failure;
+/// Single-component reset of the only local tag removes its model entry.
+#[test]
+fn reset_head_of_a_single_version_deletes_the_component() {
+    let (helper, _) = single_component();
+    helper.native("reset bar/foo --head");
+    assert!(list_local_scope(&helper).contains("found 0 components"));
+}
 
-    /// untag single component › with one version › should delete the entire component from
-    /// the model
-    #[test]
-    fn reset_head_of_a_single_version_deletes_the_component() {
-        let (helper, _) = single_component();
-        allow_known_failure!(helper.native_output_or_known("reset bar/foo --head"));
-        assert!(list_local_scope(&helper).contains("found 0 components"));
-    }
-
-    /// untag single component › with multiple versions when specifying the version › should
-    /// delete only the specified tag; should delete the specified version from the "state"
-    /// attribute; bit show should work; bit status should show the component as staged
-    #[test]
-    fn reset_head_deletes_only_the_head_tag() {
-        let helper = single_component_tagged_twice();
-        allow_known_failure!(helper.native_output_or_known("reset bar/foo --head"));
-        let cat = cat_component(&helper, "bar/foo");
-        for versions in [&cat["versions"], &cat["state"]["versions"]] {
-            assert!(versions.get("0.0.2").is_none(), "{versions}");
-            assert!(versions.get("0.0.1").is_some(), "{versions}");
-        }
-        let show = parse(&helper.run("show bar/foo --json --legacy"));
-        assert_eq!(show["name"], "bar/foo");
-        assert!(helper.run("status").contains("staged components"));
-    }
-
-    /// untag single component › with multiple versions when not specifying the version › and
-    /// all versions are local › should delete the entire component from the model
-    #[test]
-    fn reset_of_local_versions_deletes_the_component() {
-        let helper = single_component_tagged_twice();
-        allow_known_failure!(helper.native_output_or_known("reset bar/foo"));
-        assert!(list_local_scope(&helper).contains("found 0 components"));
-    }
-
-    /// untag single component › when some versions are exported, some are local › untagging
-    /// without version › should delete only the local tag and leave the exported tag
-    #[test]
-    fn reset_keeps_the_exported_tag() {
-        let (helper, local_scope) = single_component();
-        helper.get_cloned_workspace(&local_scope);
-        helper.re_init_remote_scope();
-        helper.add_remote_scope();
-        helper.run("export");
-        helper.tag_without_build("bar/foo", "--unmodified");
-        assert!(cat_component(&helper, "bar/foo")["versions"].get("0.0.2").is_some());
-        allow_known_failure!(helper.native_output_or_known("reset bar/foo"));
-        let versions = &cat_component(&helper, "bar/foo")["versions"];
+/// Resetting only the latest local tag preserves the older tag and staged status.
+#[test]
+fn reset_head_deletes_only_the_head_tag() {
+    let helper = single_component_tagged_twice();
+    helper.native("reset bar/foo --head");
+    let cat = cat_component(&helper, "bar/foo");
+    for versions in [&cat["versions"], &cat["state"]["versions"]] {
         assert!(versions.get("0.0.2").is_none(), "{versions}");
         assert!(versions.get("0.0.1").is_some(), "{versions}");
     }
+    let show = parse(&helper.run("show bar/foo --json --legacy"));
+    assert_eq!(show["name"], "bar/foo");
+    assert!(helper.run("status").contains("staged components"));
+}
+
+/// Resetting all local tags removes the component from the scope index.
+#[test]
+fn reset_of_local_versions_deletes_the_component() {
+    let helper = single_component_tagged_twice();
+    helper.native("reset bar/foo");
+    assert!(list_local_scope(&helper).contains("found 0 components"));
+}
+
+/// Resetting local tags preserves an exported tag.
+#[test]
+fn reset_keeps_the_exported_tag() {
+    let (helper, local_scope) = single_component();
+    helper.get_cloned_workspace(&local_scope);
+    helper.re_init_remote_scope();
+    helper.add_remote_scope();
+    helper.run("export");
+    helper.tag_without_build("bar/foo", "--unmodified");
+    assert!(cat_component(&helper, "bar/foo")["versions"].get("0.0.2").is_some());
+    helper.native("reset bar/foo");
+    let versions = &cat_component(&helper, "bar/foo")["versions"];
+    assert!(versions.get("0.0.2").is_none(), "{versions}");
+    assert!(versions.get("0.0.1").is_some(), "{versions}");
+}
+
+/// Resetting the dependent preserves its dependency.
+#[test]
+fn reset_of_the_dependent_keeps_the_dependency() {
+    let (helper, local_scope) = with_dependencies();
+    helper.get_cloned_workspace(&local_scope);
+    let output = helper.native("reset utils/is-string");
+    assert!(output.contains("1 component(s) reset successfully"), "{output}");
+    assert!(output.contains("utils/is-string"), "{output}");
+    assert!(list_local_scope(&helper).contains("utils/is-type"));
+}
+
+/// Reset accepts the unscoped workspace id of an imported component.
+#[test]
+fn reset_by_an_id_without_scope() {
+    let (helper, _) = imported_and_tagged();
+    let output = helper.native("reset utils/is-string");
+    assert!(output.contains("1 component(s) reset successfully"), "{output}");
+    assert!(output.contains("utils/is-string"), "{output}");
+}
+
+/// These error and detached-head cases still delegate to the published CLI.
+mod known_failures {
+    use super::{
+        Helper, cat_component, failure_output, parse, read_bitmap, single_component,
+        with_dependencies,
+    };
+    use crate::allow_known_failure;
 
     /// untag single component › when tagging non-existing component › should show an
     /// descriptive error
@@ -360,28 +373,6 @@ mod known_failures {
         let output = format!("{}\n{}", run.stdout, run.stderr);
         let expected = format!("unable to reset {}/utils/is-type", helper.scopes.remote);
         assert!(output.contains(&expected), "{output}");
-    }
-
-    /// components with dependencies › untag only the dependent › should untag successfully
-    /// the dependent; should leave the dependency intact
-    #[test]
-    fn reset_of_the_dependent_keeps_the_dependency() {
-        let (helper, local_scope) = with_dependencies();
-        helper.get_cloned_workspace(&local_scope);
-        let output = allow_known_failure!(helper.native_output_or_known("reset utils/is-string"));
-        assert!(output.contains("1 component(s) reset successfully"), "{output}");
-        assert!(output.contains("utils/is-string"), "{output}");
-        assert!(list_local_scope(&helper).contains("utils/is-type"));
-    }
-
-    /// components with dependencies › after import and tagging › untag using the id without
-    /// scope-name › should untag successfully
-    #[test]
-    fn reset_by_an_id_without_scope() {
-        let (helper, _) = imported_and_tagged();
-        let output = allow_known_failure!(helper.native_output_or_known("reset utils/is-string"));
-        assert!(output.contains("1 component(s) reset successfully"), "{output}");
-        assert!(output.contains("utils/is-string"), "{output}");
     }
 
     /// when checked out to a non-head version with detach-head functionality › expect .bitmap

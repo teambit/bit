@@ -186,11 +186,11 @@ jobs:
       matrix:
         include:
           - group: status
-            filters: diff_completion status_completion status_component_policy status_environments status_relative status_component_selectors status_graph_remote status_autosync
+            filters: commands::list commands::cat diff_completion status_completion status_component_policy status_environments status_relative status_component_selectors status_graph_remote status_autosync
           - group: snapshot
             filters: commands::snap commands::tag snapshot_environments
           - group: checkout
-            filters: checkout_platform checkout_local checkout_callbacks checkout_policy checkout_selection reset_selection harmony::revert harmony::lane_adoption harmony::lane_restoration harmony::lane_graph_reset
+            filters: checkout_platform checkout_local checkout_callbacks checkout_policy checkout_selection reset_selection harmony::untag harmony::revert harmony::lane_adoption harmony::lane_restoration harmony::lane_graph_reset
           - group: transfer
             filters: commands::import commands::export export_completion export_hub export_callbacks
           - group: merge-history

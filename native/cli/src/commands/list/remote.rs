@@ -1,0 +1,115 @@
+//! Scalar remote inventory and latest-version facts, without importing repository objects.
+
+use super::{Options, Row, WorkspaceRow, decline};
+use crate::commands::{engine::Engine, status::cache::cache_root, workspace_command::NodeCli};
+use serde_json::{Value, json};
+use std::{
+    fs::File,
+    io::{self, Read},
+    path::Path,
+};
+
+fn request(root: Option<&Path>, mode: &str) -> io::Result<Value> {
+    let cli = NodeCli::find()?;
+    Ok(json!({
+        "kind":"commandRemoteInventory", "root":root, "mode":mode,
+        "globalConfigDir":cache_root().join("config"),
+        "nodeExecutable":cli.node, "bitDir":cli.bit_dir, "bitVersion":cli.version,
+    }))
+}
+
+pub(super) fn list(root: Option<&Path>, options: &Options) -> io::Result<Vec<Row>> {
+    let mut query = request(root, "list")?;
+    query["scope"] = json!(options.remote);
+    query["namespaces"] = json!(
+        options.namespace
+            .as_ref()
+            .map(|text| { if text.contains('*') { text.clone() } else { format!("{text}/**") } })
+    );
+    query["includeDeleted"] = json!(options.include_deleted);
+    let result: Value = Engine::new()?.request(&query)?;
+    result["components"]
+        .as_array()
+        .ok_or_else(|| decline("remote list rows"))?
+        .iter()
+        .map(row)
+        .collect()
+}
+
+fn row(value: &Value) -> io::Result<Row> {
+    let id = value["id"].as_str().ok_or_else(|| decline("remote list component id"))?;
+    let (identity, version) = id
+        .rsplit_once('@')
+        .map_or((id, None), |(id, version)| (id, Some(version.to_string())));
+    if !identity.contains('/') || version.as_ref().is_some_and(String::is_empty) {
+        return Err(decline("remote list identity"));
+    }
+    let boolean = |field| match value.get(field) {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::Bool(flag)) => Ok(Some(*flag)),
+        _ => Err(decline("remote list metadata")),
+    };
+    let lane_readme_of = match value.get("laneReadmeOf") {
+        None | Some(Value::Null) => Vec::new(),
+        Some(Value::Array(lanes)) => lanes
+            .iter()
+            .map(|lane| {
+                lane.as_str()
+                    .map(str::to_string)
+                    .ok_or_else(|| decline("remote list readme"))
+            })
+            .collect::<io::Result<_>>()?,
+        _ => return Err(decline("remote list readme")),
+    };
+    Ok(Row {
+        identity: identity.to_string(),
+        workspace: WorkspaceRow { has_scope: true, used: None, root_dir: None },
+        version,
+        deprecated: boolean("deprecated")?,
+        removed: boolean("removed")?,
+        remote_version: None,
+        lane_readme_of,
+    })
+}
+
+/// `ComponentsList.listAll` requests versions before scope and lane visibility filters.
+pub(super) fn versions(root: &Path, rows: &mut [Row]) -> io::Result<()> {
+    let mut bytes = Vec::new();
+    File::open(bit_object_import::scope_path(root).join("scope.json"))?
+        .take(1024 * 1024 + 1)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() > 1024 * 1024 {
+        return Err(decline("local scope configuration budget"));
+    }
+    let config: Value = serde_json::from_slice(&bytes)?;
+    let local = config["name"].as_str().ok_or_else(|| decline("local scope name"))?;
+    let ids = rows
+        .iter()
+        .filter(|row| {
+            row.workspace.has_scope
+                && row.identity
+                    .split_once('/')
+                    .is_some_and(|(scope, _)| scope != local)
+        })
+        .map(Row::id)
+        .collect::<Vec<_>>();
+    if ids.is_empty() {
+        return Ok(());
+    }
+    let mut query = request(Some(root), "latestVersions")?;
+    query["ids"] = json!(ids);
+    let result: Value = Engine::new()?.request(&query)?;
+    for value in result["ids"].as_array().ok_or_else(|| decline("remote latest versions"))? {
+        let id = value.as_str().ok_or_else(|| decline("remote version id"))?;
+        let (identity, version) = id.rsplit_once('@').ok_or_else(|| decline("remote version"))?;
+        let row = rows
+            .iter_mut()
+            .find(|row| row.identity == identity)
+            .ok_or_else(|| decline("unexpected remote version"))?;
+        if version.is_empty() || row.remote_version.is_some() {
+            return Err(decline("duplicate remote version"));
+        }
+        row.remote_version = Some(version.to_string());
+    }
+    Ok(())
+}

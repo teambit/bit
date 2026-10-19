@@ -1,6 +1,6 @@
-//! Persist the pending main-lane head in `VersionHistory` before resetting it.
+//! Persist selected pending main-lane versions in `VersionHistory` before resetting them.
 
-use super::{ObjectChange, invalid, outbound};
+use super::{ObjectChange, invalid, outbound, selection::Selection};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{fs, io, path::Path};
@@ -9,6 +9,7 @@ pub(super) fn pending(
     root: &Path,
     identity: &str,
     component: &Value,
+    selection: &Selection,
 ) -> io::Result<Option<ObjectChange>> {
     let (scope, name) =
         identity.split_once('/').ok_or_else(|| invalid("reset history identity"))?;
@@ -27,19 +28,30 @@ pub(super) fn pending(
     if history["scope"] != scope || history["name"] != name {
         return Err(invalid("reset VersionHistory identity"));
     }
-    let versions =
-        history["versions"].as_array_mut().ok_or_else(|| invalid("reset history versions"))?;
-    if versions
-        .iter()
-        .any(|entry| entry["hash"] == current)
-    {
+    if !append_removed(&objects, &mut history, selection)? {
         return Ok(None);
     }
-    let version = outbound::read_object(&objects, current, "Version")?;
-    versions.push(json!({"hash":current,"parents":version["parents"]}));
     Ok(Some(ObjectChange {
         hash: hash.clone(),
         before,
         after: Some(outbound::encode_object(&hash, "VersionHistory", &history)?),
     }))
+}
+
+fn append_removed(objects: &Path, history: &mut Value, selection: &Selection) -> io::Result<bool> {
+    let versions =
+        history["versions"].as_array_mut().ok_or_else(|| invalid("reset history versions"))?;
+    let mut changed = false;
+    for reference in &selection.removed {
+        if versions
+            .iter()
+            .any(|entry| entry["hash"] == *reference)
+        {
+            continue;
+        }
+        let version = outbound::read_object(objects, reference, "Version")?;
+        versions.push(json!({"hash":reference,"parents":version["parents"]}));
+        changed = true;
+    }
+    Ok(changed)
 }

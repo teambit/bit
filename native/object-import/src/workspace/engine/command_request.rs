@@ -24,6 +24,9 @@ pub(super) fn dispatch(
             command::inbound::policy::complete(input, &mut snapshots.command)
         }
         Request::CommandInboundList(input) => pool.install(|| command::inbound::list(&input)),
+        Request::CommandRemoteInventory(input) => {
+            pool.install(|| command::inbound::remote::inventory::read(&input))
+        }
         Request::CommandInboundApply(input) => {
             pool.install(|| command::inbound::apply(&input, &mut snapshots.command))
         }

@@ -7,6 +7,7 @@ pub use hub::HubReply;
 mod configuration;
 mod doctor;
 mod hub;
+mod inventory;
 mod lane;
 mod stream;
 

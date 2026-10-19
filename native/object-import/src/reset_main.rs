@@ -73,7 +73,7 @@ impl Plan {
             )?;
         }
         let version = selection.bitmap_version(&repository.component);
-        let history = history::pending(root, identity, &repository.component)?;
+        let history = history::pending(root, identity, &repository.component, &selection)?;
         let bitmap = bitmap.project(version)?;
         let (object, index) = repository.project(&selection)?;
         let input =
