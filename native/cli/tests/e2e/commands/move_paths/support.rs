@@ -32,6 +32,13 @@ pub(crate) fn compare(helper: &Helper, command: &str) -> Run {
     assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
     actual
 }
+/// Per-command CI preserves exact output, explicit ownership and the untouched remote.
+pub(crate) fn compare_ci(helper: &Helper, command: &str, native: bool) -> Run {
+    let remote = tree(&helper.scopes.remote_path);
+    let actual = support::compare_ci(helper, command, native);
+    assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
+    actual
+}
 /// Preserve the full remote invariant while allowing command-specific duration validation.
 pub(crate) fn compare_with_stdout(
     helper: &Helper,

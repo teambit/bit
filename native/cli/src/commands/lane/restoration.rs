@@ -1,4 +1,5 @@
 //! Historical lane targets use retained native selection and complete checkout phases.
+mod diagnostics;
 mod installation;
 mod options;
 mod report;
@@ -19,6 +20,11 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
+    if diagnostics::requires_node(&root, &options.id) {
+        return Ok(Outcome::Declined(
+            "CI lane history diagnostics require the published stack".into(),
+        ));
+    }
     let mut startup = Startup::default();
     let session = match session::Session::start(&root, argv, &options, &mut startup) {
         Ok(session) => session,

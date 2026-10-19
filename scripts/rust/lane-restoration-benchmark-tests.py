@@ -22,6 +22,13 @@ def output(**fields):
 
 
 class RevertJsonTests(unittest.TestCase):
+    def test_only_ci_history_errors_delegate_and_never_claim_native_speed(self):
+        for workload in BENCH.PREPARE.WORKLOADS:
+            for mode in ['timed', 'ci', 'tty']:
+                expected = not (mode == 'ci' and workload in ['missing-history', 'main-history'])
+                self.assertEqual(BENCH.native_ownership(workload, mode), expected,
+                                 (workload, mode))
+
     def test_plain_and_colored_json_keep_released_status_bytes(self):
         for status in ['updated', '\x1b[32mupdated\x1b[39m']:
             raw = output(components=[{'filesStatus': {'index.js': status}}])

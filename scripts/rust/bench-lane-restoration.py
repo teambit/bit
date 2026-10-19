@@ -72,6 +72,11 @@ def validate_revert_json(stdout, history_id):
         raise RuntimeError('actual revert JSON result differs from released schema')
 
 
+def native_ownership(workload, mode):
+    """Only the two CI error cases require the published V8 diagnostic stack."""
+    return not (mode == 'ci' and workload in PREPARE.ERRORS)
+
+
 def history_baseline(root, baseline_objects, remote, workload, history_id):
     """Validate the single missing remote entry in released LaneHistory.merge's local-first order."""
     if workload != 'remote-history-refresh':
@@ -146,8 +151,12 @@ def execute(args, stage, fixtures, workload, mode, run, implementation):
     trace = output.stdout + output.stderr
     if implementation == 'rust':
         marker = f'running `{command[0]}` natively'.encode()
-        if marker not in trace or b'declined' in trace or b'delegating:' in trace:
-            raise RuntimeError(f'{prefix}: command did not remain native')
+        if native_ownership(workload, mode):
+            if marker not in trace or b'declined' in trace or b'delegating:' in trace:
+                raise RuntimeError(f'{prefix}: command did not remain native')
+        elif (b'delegating:' not in trace
+              or b'CI lane history diagnostics require the published stack' not in trace):
+            raise RuntimeError(f'{prefix}: expected pre-effect CI diagnostic delegation')
     prefix.with_suffix('.host.json').write_text(json.dumps({
         'before': host_before, 'after': host_after,
         'start_clock_phase': phase}, indent=2) + '\n')
@@ -416,9 +425,8 @@ def main():
                     differences = [key for key in pair['node'] if pair['node'][key] != pair['rust'][key]]
                     raise RuntimeError(f'{workload}/{mode}/{run}: {differences} differ; evidence {stage}/evidence')
                 verified.append({'workload': workload, 'mode': mode, 'pair': run,
-                                 'native_ownership': True, 'expected_nonzero': workload in PREPARE.ERRORS, 'expected_exit_code': PREPARE.EXPECTED_CODES[workload], 'exit_code': pair['rust']['status']})
-            native_ownership = True
-            measurements[workload][mode] = {'native_ownership': native_ownership,
+                                 'native_ownership': native_ownership(workload, mode), 'expected_nonzero': workload in PREPARE.ERRORS, 'expected_exit_code': PREPARE.EXPECTED_CODES[workload], 'exit_code': pair['rust']['status']})
+            measurements[workload][mode] = {'native_ownership': native_ownership(workload, mode),
                 'speed_claim_eligible': False, 'runs_ms': samples,
                 'median_ms': {key: statistics.median(value) for key, value in samples.items()}}
             print(f'verified {workload} {mode}: {measurements[workload][mode]["median_ms"]}',
@@ -474,9 +482,9 @@ def main():
                                 'lane bitmap histories: every surviving raw backup validated against independent last-writer preimages; overwritten preimages remain oracle-only',
                                 'checksum-validated cache-index receipt timestamps',
                                 'last-command-details/meta.json must remain byte-exact to immutable baseline for lane subcommands'],
-              'intentional_boundaries': ['lane checkout has no JSON option; genuine lane revert JSON is included', 'unsupported transports/provider inputs remain explicit command boundaries'],
+              'intentional_boundaries': ['lane checkout has no JSON option; genuine lane revert JSON is included', 'two CI errors deliberately delegate before effects to retain the exact published V8 stack; their ten pairs are excluded from native speed claims', 'unsupported transports/provider inputs remain explicit command boundaries'],
               'excluded_implementation_state': ['exact workspace-root debug.log', 'exact globals/logs subtree'],
-              'ownership_note': 'Every measured command must remain native in all three presentation modes.',
+              'ownership_note': 'All successful modes and ordinary/TTY errors remain native. The two CI error modes must explicitly delegate before effects; their timings never qualify native speed.',
               'native_pairs': sum(row['native_ownership'] for row in verified),
               'warmup_note': 'Pinned builtin metadata is prewarmed; untimed installation transcript preparation may also warm the package store. No first-use claim.',
               'clock_phase_control': {

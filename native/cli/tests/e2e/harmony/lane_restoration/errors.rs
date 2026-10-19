@@ -40,3 +40,51 @@ fn checkout_json_remains_an_explicit_pre_effect_unsupported_option() {
     assert!(!output.status.success());
     assert_eq!(support::bitmap(&fixture.helper), before);
 }
+
+#[test]
+fn ci_missing_history_errors_preserve_the_published_stack_before_any_native_effect() {
+    let fixture = fixture::initial();
+    let before = support::bitmap(&fixture.helper);
+    for action in ["checkout", "revert"] {
+        let output = support::compare_ci(
+            &fixture.helper,
+            &format!("lane {action} missing-history -x"),
+            false,
+        );
+        assert!(!output.status.success());
+        assert!(output.trace.contains("CI lane history diagnostics require the published stack"));
+        assert!(output.stderr.contains("unable to find history"));
+        assert!(output.stderr.contains("missing-history"));
+        assert!(output.stderr.contains("    at "));
+        assert_eq!(support::bitmap(&fixture.helper), before);
+    }
+}
+
+#[test]
+fn ci_main_lane_errors_preserve_the_published_stack_before_history_resolution() {
+    let helper = support::workspace(1, false);
+    let before = support::bitmap(&helper);
+    for action in ["checkout", "revert"] {
+        let output =
+            support::compare_ci(&helper, &format!("lane {action} missing-history -x"), false);
+        assert!(!output.status.success());
+        assert!(output.trace.contains("CI lane history diagnostics require the published stack"));
+        assert!(output.stderr.contains("while on main"));
+        assert!(output.stderr.contains("    at "));
+        assert_eq!(support::bitmap(&helper), before);
+    }
+}
+
+#[test]
+fn ci_cached_revert_remains_native_and_restores_file_bytes_without_changing_bitmap() {
+    let fixture = fixture::deleted(true);
+    let before = support::bitmap(&fixture.helper);
+    let output =
+        support::compare_ci(&fixture.helper, &format!("lane revert {} -x", fixture.history), true);
+    assert!(output.status.success(), "{} {}", output.stdout, output.stderr);
+    assert_eq!(support::bitmap(&fixture.helper), before);
+    assert_eq!(
+        std::fs::read_to_string(fixture.helper.scopes.local_path.join("comp3/index.js")).unwrap(),
+        fixture::written_source("module.exports=()=> 'comp3';\n"),
+    );
+}
