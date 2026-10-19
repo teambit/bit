@@ -139,6 +139,7 @@ export function ComponentPreview({
   const [forceVisible, setForceVisible] = useState(false);
   const heightReportsRef = useRef<HeightReport[]>([]);
   const viewportSizedContentRef = useRef<ViewportSizedContent | undefined>(undefined);
+  const connectedIframeRef = useRef<HTMLIFrameElement | null>(null);
 
   /**
    * the iframe height to apply for a size report, or undefined to keep the current one.
@@ -203,9 +204,13 @@ export function ComponentPreview({
   }, [component.id.toString(), onLoad, propagateError, onPreviewError]);
 
   useEffect(() => {
-    if (!iframeRef.current) return;
+    const iframe = iframeRef.current;
+    // connect once per iframe. the deps go from null to the iframe after the first render, and a second connection
+    // receives every size report again, which the viewport-sized content detection can't tell apart from a new one
+    if (!iframe || connectedIframeRef.current === iframe) return;
+    connectedIframeRef.current = iframe;
     connectToChild({
-      iframe: iframeRef.current,
+      iframe,
       methods: {
         pub: (event, message) => {
           if (message.type === 'preview-size') {
