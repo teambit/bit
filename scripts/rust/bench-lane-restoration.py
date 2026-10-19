@@ -16,6 +16,7 @@ import re
 import os
 import shlex
 import statistics
+import stat
 import subprocess
 import shutil
 import tempfile
@@ -111,6 +112,21 @@ def history_baseline(root, baseline_objects, remote, workload, history_id):
     return validated
 
 
+def raw_history(root):
+    """Capture exact zero-write state, including metadata absent on a fresh main lane."""
+    scope = root / '.bit'
+    metadata = scope / 'bitmap-history-metadata.txt'
+    directory = scope / 'bitmap-history'
+    return {
+        'metadata_base64': base64.b64encode(metadata.read_bytes()).decode() if metadata.exists() else None,
+        'metadata_mode': stat.S_IMODE(metadata.stat().st_mode) if metadata.exists() else None,
+        'directory_mode': stat.S_IMODE(directory.stat().st_mode) if directory.exists() else None,
+        'backups': {path.name: {'bytes_base64': base64.b64encode(path.read_bytes()).decode(),
+                              'mode': stat.S_IMODE(path.stat().st_mode)}
+                    for path in sorted(directory.iterdir())} if directory.exists() else None,
+    }
+
+
 def execute(args, stage, fixtures, workload, mode, run, implementation):
     for source, name in [(fixtures['workloads'][workload], 'workspace'),
                          (fixtures['home'], 'home'), (fixtures['globals'], 'globals'),
@@ -118,7 +134,7 @@ def execute(args, stage, fixtures, workload, mode, run, implementation):
         COMMON.restore(Path(source), stage / name)
     root = stage / 'workspace'
     baseline_objects, baseline_history = STATE.objects(root), STATE.bitmap_history(root)
-    baseline_raw_history = HISTORY_PREPARE.CORE.raw_history(root)
+    baseline_raw_history = raw_history(root)
     binary = args.node_binary if implementation == 'node' else args.rust
     before = COMMON.sha(binary)
     command = fixtures['commands'][workload]
@@ -180,7 +196,7 @@ def execute(args, stage, fixtures, workload, mode, run, implementation):
             raise
         raw_path.write_text(json.dumps(raw, indent=2) + '\n')
     if workload not in HISTORY_PREPARE.WORKLOADS:
-        raw = HISTORY_PREPARE.CORE.raw_history(root)
+        raw = raw_history(root)
         prefix.with_suffix('.bitmap-history.json').write_text(json.dumps({
             'expected_writes': 0, 'baseline': baseline_raw_history, 'actual': raw}, indent=2) + '\n')
         if raw != baseline_raw_history:

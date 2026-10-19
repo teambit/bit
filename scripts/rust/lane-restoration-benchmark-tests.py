@@ -63,6 +63,63 @@ class RevertJsonTests(unittest.TestCase):
         self.assertNotEqual(BENCH.STATE.normalized(plain), BENCH.STATE.normalized(colored))
 
 
+class RawHistoryTests(unittest.TestCase):
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory(prefix='lane-raw-history-unit-')
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        self.scope = self.root / '.bit'
+        self.scope.mkdir()
+        self.directory = self.scope / 'bitmap-history'
+        self.metadata = self.scope / 'bitmap-history-metadata.txt'
+
+    def test_absence_is_distinct_from_creating_empty_directory_or_metadata(self):
+        absent = BENCH.raw_history(self.root)
+        self.directory.mkdir()
+        empty_directory = BENCH.raw_history(self.root)
+        self.assertNotEqual(absent, empty_directory)
+        self.assertIsNone(empty_directory['metadata_base64'])
+        self.assertEqual(empty_directory['backups'], {})
+        self.metadata.write_bytes(b'')
+        self.assertNotEqual(empty_directory, BENCH.raw_history(self.root))
+
+    def test_existing_history_matches_frozen_oracle_capture_exactly(self):
+        self.directory.mkdir()
+        self.metadata.write_bytes(b'metadata\x00\xff')
+        (self.directory / 'backup').write_bytes(b'bitmap\x00\xff')
+        self.assertEqual(BENCH.raw_history(self.root), BENCH.HISTORY_PREPARE.CORE.raw_history(self.root))
+
+    def test_backup_bytes_and_modes_remain_significant_without_metadata(self):
+        self.directory.mkdir()
+        backup = self.directory / 'backup'
+        backup.write_bytes(b'before')
+        backup.chmod(0o640)
+        before = BENCH.raw_history(self.root)
+        backup.write_bytes(b'after')
+        self.assertNotEqual(before, BENCH.raw_history(self.root))
+        backup.write_bytes(b'before')
+        self.assertEqual(before, BENCH.raw_history(self.root))
+        backup.chmod(0o600)
+        self.assertNotEqual(before, BENCH.raw_history(self.root))
+        backup.unlink()
+        self.assertNotEqual(before, BENCH.raw_history(self.root))
+
+    def test_metadata_bytes_and_directory_modes_remain_significant(self):
+        self.directory.mkdir(mode=0o750)
+        self.metadata.write_bytes(b'before')
+        self.metadata.chmod(0o640)
+        before = BENCH.raw_history(self.root)
+        self.metadata.write_bytes(b'after')
+        self.assertNotEqual(before, BENCH.raw_history(self.root))
+        self.metadata.write_bytes(b'before')
+        self.metadata.chmod(0o600)
+        self.assertNotEqual(before, BENCH.raw_history(self.root))
+        self.metadata.chmod(0o640)
+        self.assertEqual(before, BENCH.raw_history(self.root))
+        self.directory.chmod(0o700)
+        self.assertNotEqual(before, BENCH.raw_history(self.root))
+
+
 class HistoryRefreshTests(unittest.TestCase):
     def setUp(self):
         directory = tempfile.TemporaryDirectory(prefix='lane-refresh-unit-')
