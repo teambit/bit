@@ -2,14 +2,16 @@ import { expect } from 'chai';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
-import type { DependenciesSnapshot } from './merge-dependencies';
-import { getDependenciesOfVersion, mergeDependencies } from './merge-dependencies';
+import type { DependenciesSnapshot, ImportsOfMerge, SideOfMerge } from './merge-dependencies';
+import { getDependenciesOfVersion, getImportedPackagesWithoutVersion, mergeDependencies } from './merge-dependencies';
 
 type SnapshotInput = {
   comps?: string[]; // runtime component deps, e.g. "my-scope/b@0.0.1"
   devComps?: string[];
+  peerComps?: string[];
   pkgs?: Record<string, string>;
   devPkgs?: Record<string, string>;
+  peerPkgs?: Record<string, string>;
 };
 
 // a component loaded from the scope has its dependencies as plain objects (see Dependencies.getClone())
@@ -23,16 +25,21 @@ const toDeps = (ids: string[] = []) =>
     })
   );
 
-function snapshot({ comps, devComps, pkgs, devPkgs }: SnapshotInput): DependenciesSnapshot {
+function snapshot({ comps, devComps, peerComps, pkgs, devPkgs, peerPkgs }: SnapshotInput): DependenciesSnapshot {
   return {
     dependencies: toDeps(comps),
     devDependencies: toDeps(devComps),
-    peerDependencies: toDeps(),
+    peerDependencies: toDeps(peerComps),
     packageDependencies: pkgs || {},
     devPackageDependencies: devPkgs || {},
-    peerPackageDependencies: {},
+    peerPackageDependencies: peerPkgs || {},
   };
 }
+
+const importsOf = (merged: Record<string, 'runtime' | 'dev'>, sides: string[]): ImportsOfMerge => ({
+  merged: new Map(Object.entries(merged)),
+  sides: new Set(sides),
+});
 
 const idsOf = (deps: Dependencies) => deps.get().map((dep) => dep.id.toString());
 
@@ -174,5 +181,118 @@ describe('mergeDependencies', () => {
     it('should be removed', () => {
       expect(idsOf(mergeDependencies(base, current, other, 'manual').dependencies)).to.deep.equal([]);
     });
+  });
+  describe('with the imports of the merged files', () => {
+    describe('a package that one side stopped importing and the other side imports from another file', () => {
+      // the lane removed the only import of lodash, main kept it and imports it from another file as well
+      const base = snapshot({ pkgs: { lodash: '4.17.20' } });
+      const current = snapshot({});
+      const other = snapshot({ pkgs: { lodash: '4.17.21' } });
+      const imports = importsOf({ lodash: 'runtime' }, ['lodash']);
+      it('should be removed without the imports, as it was removed on current only', () => {
+        expect(mergeDependencies(base, current, other, 'manual').packageDependencies).to.deep.equal({});
+      });
+      it('should be kept, taken from other, when the merged files import it', () => {
+        const merged = mergeDependencies(base, current, other, 'manual', undefined, imports);
+        expect(merged.packageDependencies).to.deep.equal({ lodash: '4.17.21' });
+      });
+    });
+    describe('a package that each side stopped importing from a different file', () => {
+      // both sides still import it, but not the merged files
+      const base = snapshot({ pkgs: { lodash: '4.17.20' } });
+      const merged = mergeDependencies(base, base, base, 'manual', undefined, importsOf({}, ['lodash']));
+      it('should be removed', () => {
+        expect(merged.packageDependencies).to.deep.equal({});
+      });
+    });
+    describe('a component dependency that the merged files import from dev files only', () => {
+      const base = snapshot({ comps: ['my-scope/b@0.0.1'] });
+      const merged = mergeDependencies(base, base, base, 'manual', undefined, importsOf({ '@my-scope/b': 'dev' }, []));
+      it('should be a dev dependency', () => {
+        expect(idsOf(merged.dependencies)).to.deep.equal([]);
+        expect(idsOf(merged.devDependencies)).to.deep.equal(['my-scope/b@0.0.1']);
+      });
+    });
+    describe('a component dependency that the merged files import, and only base has', () => {
+      const base = snapshot({ comps: ['my-scope/b@0.0.1'] });
+      const current = snapshot({});
+      const merged = mergeDependencies(
+        base,
+        current,
+        current,
+        'manual',
+        undefined,
+        importsOf({ '@my-scope/b': 'runtime' }, [])
+      );
+      it('should be taken from base', () => {
+        expect(idsOf(merged.dependencies)).to.deep.equal(['my-scope/b@0.0.1']);
+      });
+    });
+    describe('a peer package that the merged files import', () => {
+      const base = snapshot({ peerPkgs: { react: '^18.0.0' } });
+      const merged = mergeDependencies(
+        base,
+        base,
+        base,
+        'manual',
+        undefined,
+        importsOf({ react: 'runtime' }, ['react'])
+      );
+      it('should stay a peer', () => {
+        expect(merged.peerPackageDependencies).to.deep.equal({ react: '^18.0.0' });
+        expect(merged.packageDependencies).to.deep.equal({});
+      });
+    });
+    describe('a package that no side imports', () => {
+      // e.g. added by a policy
+      const base = snapshot({ pkgs: { 'core-js': '3.0.0' } });
+      const merged = mergeDependencies(base, base, base, 'manual', undefined, importsOf({}, []));
+      it('should keep the 3-way result', () => {
+        expect(merged.packageDependencies).to.deep.equal({ 'core-js': '3.0.0' });
+      });
+    });
+    describe('a types package', () => {
+      const base = snapshot({ pkgs: { '@scope/foo': '1.0.0' }, devPkgs: { '@types/scope__foo': '1.0.0' } });
+      const current = snapshot({});
+      it('should be removed with the package it types', () => {
+        const merged = mergeDependencies(base, base, base, 'manual', undefined, importsOf({}, ['@scope/foo']));
+        expect(merged.devPackageDependencies).to.deep.equal({});
+      });
+      it('should be kept with the package it types', () => {
+        const imports = importsOf({ '@scope/foo': 'runtime' }, ['@scope/foo']);
+        const merged = mergeDependencies(base, current, base, 'manual', undefined, imports);
+        expect(merged.packageDependencies).to.deep.equal({ '@scope/foo': '1.0.0' });
+        expect(merged.devPackageDependencies).to.deep.equal({ '@types/scope__foo': '1.0.0' });
+      });
+    });
+  });
+});
+
+describe('getImportedPackagesWithoutVersion', () => {
+  const side = (input: SnapshotInput, ignoredPackages: string[] = []): SideOfMerge => ({
+    dependencies: snapshot(input),
+    ignoredPackages: new Set(ignoredPackages),
+  });
+  it('should return a package that a side ignored and the merge does not, when no side has it', () => {
+    // the lane imports lodash while it's ignored, main removes the "-"
+    const result = getImportedPackagesWithoutVersion(side({}, ['lodash']), side({}, ['lodash']), side({}), ['lodash']);
+    expect(result).to.deep.equal(['lodash']);
+  });
+  it('should not return a package that the merge still ignores', () => {
+    const ignoring = side({}, ['lodash']);
+    expect(getImportedPackagesWithoutVersion(ignoring, ignoring, ignoring, ['lodash'])).to.deep.equal([]);
+  });
+  it('should not return a package that a side has as a dependency', () => {
+    const result = getImportedPackagesWithoutVersion(
+      side({}, ['lodash']),
+      side({}, ['lodash']),
+      side({ pkgs: { lodash: '4.17.21' } }),
+      ['lodash']
+    );
+    expect(result).to.deep.equal([]);
+  });
+  it('should not return a package that no side ignored', () => {
+    // e.g. a core aspect, which is never a dependency
+    expect(getImportedPackagesWithoutVersion(side({}), side({}), side({}), ['@scope/core'])).to.deep.equal([]);
   });
 });

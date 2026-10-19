@@ -6,7 +6,7 @@ import type { LaneId } from '@teambit/lane-id';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
 import { getDivergeData } from '@teambit/component.snap-distance';
-import type { Lane, ModelComponent, Ref, Version } from '@teambit/objects';
+import type { Lane, ModelComponent, Ref, Source, Version } from '@teambit/objects';
 import { NoCommonSnap, Tmp } from '@teambit/legacy.scope';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { ImporterMain } from '@teambit/importer';
@@ -14,13 +14,21 @@ import type { Logger } from '@teambit/logger';
 import { compact, isEqual } from 'lodash';
 import { ComponentConfigMerger } from '@teambit/config-merger';
 import type { ScopeMain } from '@teambit/scope';
-import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
-import { threeWayMerge } from '@teambit/component.modules.merge-helper';
+import type { MergeResultsThreeWay, MergeStrategy } from '@teambit/component.modules.merge-helper';
+import { applyModifiedVersion, threeWayMerge } from '@teambit/component.modules.merge-helper';
 import type { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './merging.main.runtime';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { VariantPolicyEntry } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
 import { BuilderAspect } from '@teambit/builder';
-import { getDependenciesOfVersion, mergeDependencies } from './merge-dependencies';
+import { DevFilesAspect } from '@teambit/dev-files';
+import type { FileContent, ImportsCache } from '@teambit/dependencies';
+import { detectImportedPackages } from '@teambit/dependencies';
+import { matchPatterns, splitPatterns } from '@teambit/toolbox.path.match-patterns';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
+import type { DependenciesSnapshot, ImportsOfMerge, SideOfMerge } from './merge-dependencies';
+import { getDependenciesOfVersion, getImportedPackagesWithoutVersion, mergeDependencies } from './merge-dependencies';
 
 export type MergeStatusProviderOptions = {
   resolveUnrelated?: MergeStrategy;
@@ -170,16 +178,12 @@ other:   ${otherLaneHead.toString()}`);
       currentLabel,
       baseComponent,
     });
-    // a workspace re-detects the dependencies from the merged files. a bare scope can't, it merges the resolved ones.
-    const dependenciesMergeResult = this.workspace
+    // a workspace re-detects the dependencies from the merged files. a bare scope can't resolve imports, it merges the
+    // resolved ones.
+    const scopeDepsMerge = this.workspace
       ? undefined
-      : mergeDependencies(
-          getDependenciesOfVersion(baseComponent),
-          currentComponent,
-          getDependenciesOfVersion(otherComponent),
-          this.options.mergeStrategy,
-          this.currentLane?.toComponentIdsIncludeUpdateDependents()
-        );
+      : await this.mergeDependenciesInScope(baseComponent, currentComponent, otherComponent, mergeResults);
+    if (scopeDepsMerge?.failure) return { id, currentComponent, unchangedMessage: scopeDepsMerge.failure };
     return {
       currentComponent,
       id,
@@ -187,8 +191,98 @@ other:   ${otherLaneHead.toString()}`);
       divergeData,
       configMergeResult,
       dataMergeResult,
-      dependenciesMergeResult,
+      dependenciesMergeResult: scopeDepsMerge?.dependenciesMergeResult,
     };
+  }
+
+  /**
+   * merge the resolved dependencies of the sides, and correct them by the packages that the merged files import, see
+   * mergeDependencies(). fails when the merged files import a package that no side has a version of.
+   */
+  private async mergeDependenciesInScope(
+    baseComponent: Version,
+    currentComponent: ConsumerComponent,
+    otherComponent: Version,
+    mergeResults: MergeResultsThreeWay
+  ): Promise<{ dependenciesMergeResult?: DependenciesSnapshot; failure?: string }> {
+    const base = getDependenciesOfVersion(baseComponent);
+    const other = getDependenciesOfVersion(otherComponent);
+    const imports = await this.getImportsOfMerge(baseComponent, currentComponent, otherComponent, mergeResults);
+    if (imports) {
+      const sideOf = (dependencies: DependenciesSnapshot, extensions: ExtensionDataList): SideOfMerge => ({
+        dependencies,
+        ignoredPackages: getIgnoredPackages(extensions),
+      });
+      const packagesWithoutVersion = getImportedPackagesWithoutVersion(
+        sideOf(base, baseComponent.extensions),
+        sideOf(currentComponent, currentComponent.extensions),
+        sideOf(other, otherComponent.extensions),
+        imports.merged.keys()
+      );
+      if (packagesWithoutVersion.length) {
+        return {
+          failure: `the merged files import ${packagesWithoutVersion.join(', ')}, which the merged dependencies policy doesn't ignore anymore ("-"), but no side has it as a dependency to take its version from. please merge in a workspace`,
+        };
+      }
+    }
+    const dependenciesMergeResult = mergeDependencies(
+      base,
+      currentComponent,
+      other,
+      this.options.mergeStrategy,
+      this.currentLane?.toComponentIdsIncludeUpdateDependents(),
+      imports
+    );
+    return { dependenciesMergeResult };
+  }
+
+  /**
+   * the packages imported by the merged files and by the files of each side, see mergeDependencies().
+   * undefined when the files have conflicts (the merge stops before the snap) or the imports of a file are unknown.
+   */
+  private async getImportsOfMerge(
+    baseComponent: Version,
+    currentComponent: ConsumerComponent,
+    otherComponent: Version,
+    mergeResults: MergeResultsThreeWay
+  ): Promise<ImportsOfMerge | undefined> {
+    if (mergeResults.hasConflicts) return undefined;
+    const repo = this.scope.legacyScope.objects;
+    const filesOfVersion = (version: Version): Promise<FileContent[]> =>
+      Promise.all(
+        version.files.map(async (file) => {
+          const source = (await file.file.load(repo)) as Source;
+          return { relativePath: pathNormalizeToLinux(file.relativePath), content: source.contents.toString() };
+        })
+      );
+    const filesOfComponent = (files: ConsumerComponent['files']): FileContent[] =>
+      files.map((file) => ({ relativePath: pathNormalizeToLinux(file.relative), content: file.contents.toString() }));
+    const { modifiedFiles } = applyModifiedVersion(currentComponent.files, mergeResults, this.options.mergeStrategy);
+    // in a lane merge, the aspects-data of currentComponent is already merged (see mergeExtensionsData), so are the
+    // dev patterns
+    const devFilesData = currentComponent.extensions.findCoreExtension(DevFilesAspect.id)?.data || {};
+    const devPatterns: string[] = Object.values(devFilesData.devPatterns || {}).flat() as string[];
+    const devFiles = new Set(Object.values(devFilesData.devFiles || {}).flat() as string[]);
+    const { includePatterns, excludePatterns } = splitPatterns(devPatterns);
+    const isDevFile = (relativePath: string) =>
+      devFiles.has(relativePath) || matchPatterns(relativePath, includePatterns, excludePatterns);
+    const cache: ImportsCache = new Map();
+    const importsAreUnknown = () => {
+      this.logger.debug(
+        `the imports of ${currentComponent.id.toString()} are unknown, its dependencies are not corrected`
+      );
+      return undefined;
+    };
+    const merged = await detectImportedPackages(filesOfComponent(modifiedFiles), isDevFile, cache);
+    if (!merged) return importsAreUnknown();
+    const filesOfSides = [
+      await filesOfVersion(baseComponent),
+      filesOfComponent(currentComponent.files),
+      await filesOfVersion(otherComponent),
+    ];
+    const sides = await Promise.all(filesOfSides.map((files) => detectImportedPackages(files, undefined, cache)));
+    if (sides.some((side) => !side)) return importsAreUnknown();
+    return { merged, sides: new Set(sides.flatMap((side) => [...side!.keys()])) };
   }
 
   private mergeExtensionsData(
@@ -562,4 +656,15 @@ it was probably created in each lane separately and it also exists on main. plea
       `unsupported strategy "${resolveUnrelated}" of resolve-unrelated. supported strategies are: [ours, theirs]`
     );
   }
+}
+
+/**
+ * the packages that the dependencies policy of a component ignores ("-"). the policy of a Version is the resolved one
+ * (env, aspects and config), see DependencyResolverMain.mergeVariantPolicies().
+ */
+function getIgnoredPackages(extensions: ExtensionDataList): Set<string> {
+  const policy: VariantPolicyEntry[] = extensions.findCoreExtension(DependencyResolverAspect.id)?.data.policy || [];
+  return new Set(
+    policy.filter((entry) => entry.value.version === MANUALLY_REMOVE_DEPENDENCY).map((entry) => entry.dependencyId)
+  );
 }
