@@ -113,6 +113,8 @@ async function handle(line) {
 const handlers = {
   catSupport,
   catMetadata,
+  catSemanticDocsSupport,
+  catSemanticDocs,
   identityScopeDefault: async ({ scope }) => {
     const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
     workspace.getWorkspaceConfig().setExtension('teambit.workspace/workspace', { defaultScope: scope }, { mergeIntoExisting: true, ignoreVersion: true });

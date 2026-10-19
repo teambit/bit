@@ -82,6 +82,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(prepared) => prepared,
         Err(Failure::Declined(error)) => return Ok(Outcome::Declined(format!("cat: {error}"))),
         Err(Failure::Committed(error, output)) => {
+            History::start(&root, args).end(false);
             io::stdout().write_all(output.as_bytes())?;
             return Err(error);
         }
@@ -97,7 +98,10 @@ fn present(
 ) -> io::Result<Outcome> {
     let rendered = match report::render(&prepared.value, options) {
         Ok(rendered) => rendered,
-        Err(error) if prepared.metadata => return Err(error),
+        Err(error) if prepared.metadata || prepared.committed => {
+            History::start(root, args).end(false);
+            return Err(error);
+        }
         Err(error) => return Ok(Outcome::Declined(format!("cat: {error}"))),
     };
     io::stdout().write_all(prepared.output.as_bytes())?;
@@ -110,7 +114,7 @@ fn present(
             |_| {
                 prepared.docs
                     .take()
-                    .map_or(Ok(()), docs::CacheOnly::publish)
+                    .map_or(Ok(()), docs::CatDocs::publish)
             },
         );
     }
@@ -121,7 +125,7 @@ fn json_output(
     root: &Path,
     args: &[OsString],
     rendered: &str,
-    cache: Option<docs::CacheOnly>,
+    cache: Option<docs::CatDocs>,
 ) -> io::Result<Outcome> {
     let history = History::start(root, args);
     let result = (|| {
@@ -141,7 +145,8 @@ struct Prepared {
     value: Value,
     output: String,
     metadata: bool,
-    docs: Option<docs::CacheOnly>,
+    committed: bool,
+    docs: Option<docs::CatDocs>,
 }
 
 enum Failure {
@@ -153,6 +158,14 @@ impl From<io::Error> for Failure {
     fn from(error: io::Error) -> Self {
         Self::Declined(error)
     }
+}
+
+#[derive(Default)]
+struct Read {
+    value: Value,
+    docs: Option<docs::CatDocs>,
+    output: String,
+    committed: bool,
 }
 
 fn prepare(root: &Path, options: &Options<'_>) -> Result<Prepared, Failure> {
@@ -167,30 +180,87 @@ fn prepare(root: &Path, options: &Options<'_>) -> Result<Prepared, Failure> {
     let mut engine = Engine::new()?;
     require_component(root, &entry, &mut engine)?;
     let current_version = explicit.is_none_or(|version| entry.version.as_deref() == Some(version));
-    let (mut value, docs) = if current_version {
+    let mut source = if current_version {
         read_current(root, &entry, options)?
     } else {
-        let version = explicit.ok_or_else(|| decline("cat stored version"))?;
-        (read_stored(root, &entry, version, &mut engine)?, None)
+        Read {
+            value: read_stored(
+                root,
+                &entry,
+                explicit.ok_or_else(|| decline("cat stored version"))?,
+                &mut engine,
+            )?,
+            ..Default::default()
+        }
     };
-    value["id"] = json!(entry.identity);
-    let metadata = options.config || options.all || (current_version && docs.is_none());
-    let output = if metadata { cat_metadata(root, raw, &mut value)? } else { String::new() };
-    Ok(Prepared { value, output, metadata, docs })
+    source.value["id"] = json!(entry.identity);
+    let metadata =
+        options.config || options.all || (current_version && source.docs.is_none());
+    if metadata {
+        source.output =
+            cat_metadata(root, raw, &mut source.value, current_version.then_some(&entry))?;
+    }
+    Ok(Prepared {
+        value: source.value,
+        output: source.output,
+        metadata,
+        committed: source.committed,
+        docs: source.docs,
+    })
 }
 
 fn read_current(
     root: &Path,
     entry: &bitmap::Entry,
     options: &Options<'_>,
-) -> io::Result<(Value, Option<docs::CacheOnly>)> {
+) -> Result<Read, Failure> {
     let current = workspace_files(root, entry)?;
-    let docs =
-        if options.config || options.all { None } else { docs::cache_only(root, current.docs)? };
-    Ok((
-        json!({"version":entry.version.as_deref().unwrap_or("latest"),"files":current.files}),
-        docs,
-    ))
+    if let Some(file) = options.file {
+        report::select(&current.files, file)?;
+    }
+    let mut source = Read {
+        value: json!({"version":entry.version.as_deref().unwrap_or("latest"),"files":current.files}),
+        docs: if options.config || options.all {
+            None
+        } else {
+            docs::cat_prepare(root, current.docs)
+        },
+        ..Default::default()
+    };
+    if let Some(plan) = source.docs.as_mut()
+        && !plan.misses().is_empty()
+    {
+        if let Some(output) = parse_docs(root, plan)? {
+            source.committed = true;
+            source.output = output;
+        } else {
+            source.docs = None;
+        }
+    }
+    Ok(source)
+}
+
+fn parse_docs(root: &Path, plan: &mut docs::CatDocs) -> Result<Option<String>, Failure> {
+    let Target::Entry(cli) = discovery::find()? else {
+        return Err(Failure::Declined(decline("published cat semantic parser unavailable")));
+    };
+    let host = Host::new(cli, root.to_owned(), false);
+    let supported = host
+        .call("catSemanticDocsSupport", &json!({}))
+        .and_then(|value| serde_json::from_value::<bool>(value).map_err(io::Error::other))
+        .map_err(|error| Failure::Committed(error, host.take_stdout()))?;
+    if !supported {
+        return Ok(None);
+    }
+    let writes = host
+        .call("catSemanticDocs", &json!({"components":plan.misses()}))
+        .map_err(|error| Failure::Committed(error, host.take_stdout()))?;
+    if let Some(error) =
+        plan.absorb(&writes).map_err(|error| Failure::Committed(error, host.take_stdout()))?
+    {
+        return Err(Failure::Committed(io::Error::other(error), host.take_stdout()));
+    }
+    Ok(Some(host.take_stdout()))
 }
 
 fn read_stored(
@@ -236,7 +306,12 @@ fn require_component(root: &Path, entry: &bitmap::Entry, engine: &mut Engine) ->
     Environments::require_native_write_for(root, &context, std::slice::from_ref(target))
 }
 
-fn cat_metadata(root: &Path, id: &str, value: &mut Value) -> Result<String, Failure> {
+fn cat_metadata(
+    root: &Path,
+    id: &str,
+    value: &mut Value,
+    current: Option<&bitmap::Entry>,
+) -> Result<String, Failure> {
     let Target::Entry(cli) = discovery::find()? else {
         return Err(Failure::Declined(decline("published CatCmd host unavailable")));
     };
@@ -253,6 +328,16 @@ fn cat_metadata(root: &Path, id: &str, value: &mut Value) -> Result<String, Fail
     value["id"] = metadata["id"].clone();
     value["version"] = metadata["version"].clone();
     value["config"] = metadata["config"].clone();
+    if let Some(entry) = current {
+        let refreshed = workspace_files(root, entry)
+            .map_err(|error| Failure::Committed(error, host.take_stdout()))?;
+        if value["files"] != json!(refreshed.files) {
+            return Err(Failure::Committed(
+                io::Error::other("cat workspace sources changed during metadata capture"),
+                host.take_stdout(),
+            ));
+        }
+    }
     Ok(host.take_stdout())
 }
 
@@ -282,23 +367,35 @@ fn workspace_files(root: &Path, entry: &bitmap::Entry) -> io::Result<WorkspaceFi
             "test":false,
         })).collect::<Vec<_>>(),
     });
-    let mut current = Vec::with_capacity(component.files.len());
-    for name in &component.files {
+    Ok(WorkspaceFiles { files: source_files(&component.dir, &component.files)?, docs })
+}
+
+fn source_files(directory: &Path, names: &[String]) -> io::Result<Vec<Value>> {
+    if names.len() > 16_384 {
+        return Err(decline("cat workspace file count budget"));
+    }
+    let mut current = Vec::with_capacity(names.len());
+    let mut remaining = 96 * 1024 * 1024_u64;
+    for name in names {
         if !safe_relative(name) {
             return Err(decline("cat workspace file path"));
         }
-        let path = component.dir.join(name);
+        let path = directory.join(name);
         let metadata = std::fs::symlink_metadata(&path)?;
         if metadata.file_type().is_symlink()
             || !metadata.is_file()
             || metadata.len() > 8 * 1024 * 1024
+            || metadata.len() > remaining
         {
             return Err(decline("cat workspace file shape or size"));
         }
         let bytes = std::fs::read(path)?;
+        remaining = remaining
+            .checked_sub(bytes.len() as u64)
+            .ok_or_else(|| decline("cat workspace source budget"))?;
         current.push(json!({"path":name,"content":String::from_utf8_lossy(&bytes)}));
     }
-    Ok(WorkspaceFiles { files: current, docs })
+    Ok(current)
 }
 
 fn safe_relative(path: &str) -> bool {

@@ -58,7 +58,7 @@ mod outdated {
         helper.create_component_bar_foo(FOO_FIXTURE);
         helper.add_component_bar_foo();
         helper.tag_component_bar_foo();
-        helper.run("export");
+        crate::helper::remote::publish(&helper);
         helper.re_init_workspace();
         helper.add_remote_scope();
         let remote = &helper.scopes.remote;
@@ -68,7 +68,7 @@ mod outdated {
         helper.add_remote_scope();
         helper.run(&format!("import {remote}/bar/foo@0.0.1"));
         helper.tag_without_build("bar/foo", "--unmodified");
-        helper.run("export");
+        crate::helper::remote::publish(&helper);
         helper.get_cloned_workspace(&cloned);
         let list = listed(&parity::compare(&helper, OUTDATED));
         let bar_foo = entry(&list, &format!("{remote}/bar/foo"));
@@ -85,7 +85,7 @@ mod outdated {
         helper.output_file("bar/baz.js", "");
         helper.run("add bar -i bar/baz");
         helper.tag_without_build("bar/baz", "");
-        helper.run("export");
+        crate::helper::remote::publish(&helper);
         helper.re_init_workspace();
         helper.add_remote_scope();
         let remote = &helper.scopes.remote;

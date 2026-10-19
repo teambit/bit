@@ -158,6 +158,13 @@ fn cached_docs(root: &Path, relative: &Path) -> Option<(String, Option<bool>)> {
     ))
 }
 
+fn clear_docs_cache(root: &Path) {
+    let cache = root.join(".bit/cache/components/docs");
+    if cache.exists() {
+        fs::remove_dir_all(cache).unwrap();
+    }
+}
+
 #[test]
 fn source_file_config_and_json_views_match_released_cat() {
     let helper = Helper::new();
@@ -344,4 +351,139 @@ fn current_lane_sources_and_historical_main_version_match_released_cat() {
             .contains("main"),
     );
     compared(&helper, "cat bar/foo --all --json", true);
+}
+
+#[test]
+fn cold_rich_semantic_docs_and_mixed_cache_hits_match_released_cat() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.create_component_bar_foo("/**\n * The public foo.\n * @public\n * @returns {string} greeting\n */\nexport function foo() { return 'hello'; }\n");
+    helper.output_file(
+        "bar/typed.ts",
+        "/**\n * The typed value.\n * @public\n */\nexport const typed: string = 'first';\n",
+    );
+    helper.output_file("bar/button.jsx", "import React from 'react';\n/** A button component. */\nexport function Button({ label }) { return <button>{label}</button>; }\n");
+    helper.run("add bar -i bar/foo --main foo.js");
+    clear_docs_cache(&helper.scopes.local_path);
+    let first = parse(&compared(&helper, "cat bar/foo --json", true));
+    assert_eq!(first["files"].as_array().unwrap().len(), 3);
+    assert!(cached_docs(&helper.scopes.local_path, Path::new("bar/foo.js")).is_some());
+    assert!(cached_docs(&helper.scopes.local_path, Path::new("bar/typed.ts")).is_some());
+    assert!(cached_docs(&helper.scopes.local_path, Path::new("bar/button.jsx")).is_some());
+    let foo_docs = cached_docs(&helper.scopes.local_path, Path::new("bar/foo.js")).unwrap().0;
+    assert!(
+        !parse(&foo_docs)
+            .as_array()
+            .unwrap()
+            .is_empty(),
+    );
+
+    helper.output_file(
+        "bar/typed.ts",
+        "/**\n * Updated typed value.\n * @public\n */\nexport const typed: string = 'second';\n",
+    );
+    fs::File::options()
+        .write(true)
+        .open(helper.scopes.local_path.join("bar/typed.ts"))
+        .unwrap()
+        .set_times(
+            fs::FileTimes::new()
+                .set_modified(std::time::SystemTime::now() + std::time::Duration::from_secs(2)),
+        )
+        .unwrap();
+    let mixed = parse(&compared(&helper, "cat bar/foo --json", true));
+    assert!(
+        mixed["files"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|file| {
+                file["path"] == "typed.ts"
+                    && file["content"]
+                        .as_str()
+                        .unwrap()
+                        .contains("second")
+            }),
+    );
+}
+
+#[test]
+fn no_fs_cache_feature_uses_published_cat_semantics_without_cache_writes() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.create_component_bar_foo("/** No cache. */\nexport const foo = 1;\n");
+    helper.add_component_bar_foo();
+    clear_docs_cache(&helper.scopes.local_path);
+    let node_root = helper.clone_workspace();
+    let command = "cat bar/foo --json";
+    let node = Helper::cmd_in_with(
+        &node_root,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off")), ("BIT_FEATURES", OsStr::new("no-fs-cache"))],
+    );
+    let native = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_FEATURES", OsStr::new("no-fs-cache"))],
+    );
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(cached_docs(&helper.scopes.local_path, Path::new("bar/foo.js")), None);
+    assert_eq!(cached_docs(&node_root, Path::new("bar/foo.js")), None);
+}
+
+#[cfg(unix)]
+#[test]
+fn cold_docs_cache_write_failure_remains_nonfatal() {
+    use std::os::unix::fs::PermissionsExt;
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.create_component_bar_foo("/** This cache write must fail. */\nexport const foo = 1;\n");
+    helper.add_component_bar_foo();
+    let cache = helper.scopes.local_path.join(".bit/cache/components/docs");
+    if cache.exists() {
+        fs::remove_dir_all(&cache).unwrap();
+    }
+    fs::create_dir_all(&cache).unwrap();
+    let node_root = helper.clone_workspace();
+    let node_cache = node_root.join(".bit/cache/components/docs");
+    for path in [&cache, &node_cache] {
+        fs::set_permissions(path, fs::Permissions::from_mode(0o500)).unwrap();
+        assert_eq!(
+            fs::write(path.join("probe"), "blocked").unwrap_err().kind(),
+            std::io::ErrorKind::PermissionDenied,
+        );
+    }
+    let command = "cat bar/foo --json";
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native = helper.native_run(command);
+    for path in [&cache, &node_cache] {
+        fs::set_permissions(path, fs::Permissions::from_mode(0o700)).unwrap();
+    }
+    assert!(native.native, "{}", native.trace);
+    assert!(native.status.success());
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert!(parse(&native.stdout)["files"].is_array());
+    assert_eq!(cached_docs(&helper.scopes.local_path, Path::new("bar/foo.js")), None);
+    assert_eq!(cached_docs(&node_root, Path::new("bar/foo.js")), None);
+}
+
+#[test]
+fn missing_file_delegates_before_cold_semantics_and_keeps_published_cache_effects() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.create_component_bar_foo(
+        "/**\n * Public foo.\n * @public\n */\nexport function foo() { return 1; }\n",
+    );
+    helper.add_component_bar_foo();
+    let cache = helper.scopes.local_path.join(".bit/cache/components/docs");
+    if cache.exists() {
+        fs::remove_dir_all(cache).unwrap();
+    }
+    compared(&helper, "cat bar/foo --file absent.js --json", false);
+    assert!(cached_docs(&helper.scopes.local_path, Path::new("bar/foo.js")).is_some());
 }

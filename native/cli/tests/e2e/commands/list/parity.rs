@@ -79,7 +79,7 @@ fn two_components(helper: &Helper) {
     helper.output_file("ui/button/index.js", "module.exports = 'button';");
     helper.run("add ui/button -i ui/button");
     helper.tag_without_build("", "");
-    helper.run("export");
+    crate::helper::remote::publish(helper);
 }
 
 #[test]
@@ -89,7 +89,7 @@ fn remote_and_local_include_deleted_match_released_node_in_json_ids_and_table() 
     helper.run("delete ui/button --silent");
     helper.output_file("bar/foo.js", "module.exports = 'next';");
     helper.run("snap --message after-delete");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     let remote = &helper.scopes.remote;
     for command in [
         "list --local-scope --json --include-deleted".to_string(),
@@ -128,7 +128,7 @@ fn outdated_lane_and_missing_remote_ids_match_released_node_without_importing() 
     helper.create_component_bar_foo("module.exports = 'foo';");
     helper.add_component_bar_foo();
     helper.tag_component_bar_foo();
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("lane create dev");
     helper.run("snap --unmodified --message lane");
     for command in ["list --local-scope --json --outdated", "list --local-scope --ids --outdated"] {
@@ -151,7 +151,7 @@ fn outdated_missing_remote_component_declines_before_any_inventory_write() {
     helper.create_component_bar_foo("module.exports = 'foo';");
     helper.add_component_bar_foo();
     helper.tag_component_bar_foo();
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     // The workspace still has the exported model and its configured remote name,
     // but that remote no longer holds the requested Component.
     helper.re_init_remote_scope();

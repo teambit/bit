@@ -63,6 +63,14 @@ fn partition(
     }
     Ok(plan)
 }
+pub(super) fn inspect(
+    root: &Path,
+    cache: &Path,
+    components: &[Value],
+    observed: &BTreeMap<PathBuf, Source>,
+) -> io::Result<Plan> {
+    partition(root, cache, components, observed, true)
+}
 fn classify(
     cache: &Path,
     path: &Path,
