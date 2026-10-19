@@ -99,7 +99,7 @@ fn default_switch_installation(ci: bool) {
     assert_throttle_receipts(&helper);
 }
 
-fn assert_throttle_receipts(helper: &crate::helper::Helper) {
+pub(crate) fn assert_throttle_receipts(helper: &crate::helper::Helper) {
     let text = std::fs::read_to_string(helper.scopes.local_path.join(
         "lane-adoption-throttle-receipts.jsonl",
     ))

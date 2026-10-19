@@ -2,7 +2,10 @@
 use super::fixture;
 use crate::{
     commands::{add::support::history_oracle, move_paths::support},
-    harmony::lane_adoption::{callbacks::installation_fixture, output::durations},
+    harmony::lane_adoption::{
+        callbacks::{assert_throttle_receipts, installation_fixture},
+        output::durations,
+    },
     helper::{Helper, config, remote},
 };
 use serde_json::Value;
@@ -82,6 +85,8 @@ fn provider_deleted() -> (Helper, String, Value) {
 #[test]
 fn phase_two_onload_tooling_errors_are_owned_but_discarded_from_the_first_result() {
     let (helper, history, version) = provider_deleted();
+    // Both real pre-install subscribers suppress clock-sampled pnpm redraws.
+    helper.output_file("lane-adoption-throttle-progress", "active");
     let result = history_oracle::compare(
         &helper,
         &format!("lane revert {history} --restore-deleted-components"),
@@ -90,6 +95,7 @@ fn phase_two_onload_tooling_errors_are_owned_but_discarded_from_the_first_result
         true,
     );
     assert!(result.status.success(), "{} {}", result.stdout, result.stderr);
+    assert_throttle_receipts(&helper);
     assert!(format!("{}{}", result.stdout, result.stderr).contains(
         "lane history actual onLoad failure"
     ),);
