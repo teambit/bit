@@ -271,7 +271,14 @@ impl Reader {
                 request,
                 preview,
             )?,
-        };
+        }
+        .map(|environment| {
+            if request.operation == "switch" {
+                environment.with_issue_facts(false)
+            } else {
+                environment
+            }
+        });
         let (token, context, targets) = prepare_owned(
             &mut engine,
             root,

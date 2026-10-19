@@ -204,11 +204,8 @@ const handlers = {
   switchInstallSubscribers,
   collationOrder: ({ ids }) => ids.map((_, index) => index).sort((left, right) => ids[left].localeCompare(ids[right])),
   envPolicy: ({ envId }) => envPolicy(envId),
-  compilerFacts: async ({ envId }) => {
-    const env = await loadEnv(envId) ?? await loadEnv('teambit.harmony/node');
-    const compiler = env?.getCompiler?.();
-    return { hasCompiler: Boolean(compiler), distDir: compiler?.getDistDir?.() ?? 'dist' };
-  },
+  compilerFacts: ({ envId }) => compilerFacts(envId),
+  providerFacts,
   environmentIds: async ({ ids }) => {
     const envs = (await loadHarmony()).get('teambit.envs/envs');
     return ids.map((id) => envs.getEnvDefinitionByStringId(id)).filter(Boolean).map((definition) => definition.id);
@@ -227,6 +224,11 @@ const handlers = {
   snapshotWorkspaceIssues: async () => (await loadHarmony()).get('teambit.workspace/workspace').getWorkspaceIssues({includeNonBlocking:false}).map((error)=>error.message),
   statusWorkspaceIssues: async () => (await loadHarmony()).get('teambit.workspace/workspace').getWorkspaceIssues().map((error) => error.message),
   statusLoadCallbacks,
+  switchStatusBegin,
+  switchStatusLoadOne,
+  switchStatusStageRow,
+  switchStatusResume,
+  switchStatusFinish,
   trackingCachedDocs: ({ entries }) => {
     for (const entry of entries) trackingDocumentation.set(entry.path, entry.docs);
     return true;
@@ -366,6 +368,9 @@ const handlers = {
  */
 function hostInfo(terminal) {
   requireHelpers();
+  if (cliArguments[0] === 'switch' && terminal.canonicalOnly === true) {
+    switchCanonicalOnlyHostInfo = true;
+  }
   const { GLOBAL_CONFIG } = bitRequire('@teambit/legacy.constants');
   const { getBitVersion } = bitRequire('@teambit/bit.get-bit-version');
   const { findBvmDir } = bitRequire('@teambit/bvm.path/dist/path.js');
@@ -480,6 +485,23 @@ async function envPolicy(envId) {
   return policy ?? null;
 }
 
+async function compilerFacts(envId) {
+  const env = await loadEnv(envId) ?? await loadEnv('teambit.harmony/node');
+  const compiler = env?.getCompiler?.();
+  return { hasCompiler: Boolean(compiler), distDir: compiler?.getDistDir?.() ?? 'dist' };
+}
+
+/** Run the same environment methods in their original order after the manifest read. */
+async function providerFacts({ envId, needsEnvPolicy, needsIssues }) {
+  if (typeof envId !== 'string' || typeof needsEnvPolicy !== 'boolean' || typeof needsIssues !== 'boolean') {
+    throw new Error('invalid provider facts request');
+  }
+  const policy = needsEnvPolicy ? await envPolicy(envId) : null;
+  const patterns = await devPatterns(envId);
+  const compiler = needsIssues ? await compilerFacts(envId) : null;
+  return { envPolicy: policy, devPatterns: patterns, compiler };
+}
+
 /**
  * The env's dev-file pattern methods, each `null` when the env does not implement it.
  * The node env implements none of them.
@@ -582,7 +604,19 @@ async function dependencyPolicies(extensionIds, bootstrap, startupAspectIds = []
     // MergeStatusProvider reads the selected components without loading their
     // configured aspects. MergingMain loads application aspects after the write.
     if(!beforePackageManager && !laneMergeCommand && extensionIds.length) {
-      await workspace.loadAspects(extensionIds, false, undefined, { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+      if (cliArguments[0] === 'switch' && startupAspectIds.length
+          && (typeof workspace.resolveMultipleComponentIds !== 'function'
+            || typeof workspace.clearComponentCache !== 'function')) {
+        throw new Error('published switch aspect cache invalidation is unavailable');
+      }
+      const loadedAspects = await workspace.loadAspects(extensionIds, false, undefined,
+        { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+      if (cliArguments[0] === 'switch' && startupAspectIds.length) {
+        const startup = new Set(startupAspectIds.map(id => id.split('@')[0]));
+        const roots = loadedAspects.filter(id => startup.has(id.split('@')[0]));
+        const resolved = await workspace.resolveMultipleComponentIds(roots);
+        for (const id of resolved) workspace.clearComponentCache(id);
+      }
       if (cliArguments[0] === 'import') extensionIds.forEach(id => importPrimedPolicies.add(id));
     }
   } finally {snapshotBootstrapProgress = false;}
@@ -643,6 +677,7 @@ async function registeredEnvPolicy(envId, aspectIds) {
 }
 
 let workspaceAspectsLoaded = false;
+let switchCanonicalOnlyHostInfo = false;
 
 /** The workspace aspects the CLI loads on start (`getNotLoadedConfiguredExtensions`), once. */
 async function loadWorkspaceAspects(aspectIds) {
@@ -651,7 +686,18 @@ async function loadWorkspaceAspects(aspectIds) {
   workspaceAspectsLoaded = true;
   const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
   aspectIds=snapshotFreshAspects(aspectIds);
-  if(aspectIds.length) await workspace.loadAspects(aspectIds, false, undefined, { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+  if (!aspectIds.length) return;
+  if (cliArguments[0] === 'switch'
+      && (typeof workspace.resolveMultipleComponentIds !== 'function'
+        || typeof workspace.clearComponentCache !== 'function')) {
+    throw new Error('published switch aspect cache invalidation is unavailable');
+  }
+  const aspects = await workspace.loadAspects(aspectIds, false, undefined,
+    { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+  if (cliArguments[0] === 'switch') {
+    const componentIds = await workspace.resolveMultipleComponentIds(aspects);
+    componentIds.forEach(id => workspace.clearComponentCache(id));
+  }
 }
 
 /** MergingMain.mergeSnaps loads application aspects after writing and before install. */
@@ -971,6 +1017,7 @@ async function statusCallbackInfo({ coreIds, aspectIds }) {
   return {
     onLoad: Boolean(importClassMode) || loaded.get('teambit.workspace/workspace').onComponentLoadSlot.toArray().some(([id]) => custom(id)),
     issues: loaded.get('teambit.component/issues').addComponentsIssuesSlot.toArray().some(([id]) => custom(id)),
+    classLoad: cliArguments[0] === 'switch' && (switchCanonicalOnlyHostInfo || aspectIds.length > 0),
   };
 }
 
@@ -1033,7 +1080,7 @@ async function hydrateStatusComponent(row, sourceConsumer) {
   return component;
 }
 
-async function statusLoadCallbacks({ components, directory, snapshot, checkout }) {
+async function statusLoadCallbacks({ components, directory, snapshot, checkout, configured, loadOrder }) {
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
   const envs = loaded.get('teambit.envs/envs');
@@ -1042,9 +1089,10 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout }
   statusComponents = [];
   const loadOutput = [];
   let outputStart = capturedStdout?.length ?? 0;
-  const importClasses = await importHydrateClasses(components);
-  if (importClasses) {
-    statusComponents = importClasses;
+  const importedClasses = await importHydrateClasses(components);
+  const switchClasses = importedClasses ? undefined : await switchStatusHydrateClasses(components, workspace, checkout && configured, loadOrder, directory);
+  if (importedClasses || switchClasses) {
+    statusComponents = importedClasses ?? switchClasses;
   } else {
   const tracking=['add','a'].includes(cliArguments[0]);
   if(tracking && !snapshotContinuation) {

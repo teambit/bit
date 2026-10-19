@@ -3,6 +3,7 @@
 pub(super) mod progress;
 pub(super) mod validation;
 pub(super) use report::append_skipped;
+mod load_order;
 mod report;
 mod selection;
 #[cfg(test)]
@@ -41,6 +42,7 @@ pub(super) fn context(
     let mut context = selection.metadata(request, pool)?;
     prepare::extend_models(request, pool, &mut context, Some(&selection.imported))?;
     selection.remove_without_main_head(&mut context)?;
+    load_order::apply(&mut context, &entries(selection.lane.as_ref())?)?;
     selection::attach(&mut context, request)?;
     if selection.current.is_main() && staged_main(&request.root, &context)? {
         return Err(invalid("switch staged main components require export or reset"));

@@ -295,6 +295,15 @@ source and bitmap state, temporary-directory cleanup, and the dependency-cache
 prefix retained after a merge conflict, including subsequent forced switches.
 Unsupported HTTP transports decline before configured providers run.
 
+`harmony::lane_adoption::callbacks::switch_loads_configured_compiler_without_custom_onload`
+checks the actual grouped loader's compiler calls when the provider registers no
+custom onLoad slot. `switch_reads_later_source_after_earlier_onload` checks that a
+later component's source is read after an earlier onLoad callback changes it.
+`switch_loads_lane_provider_before_its_later_checkout_target` checks a provider
+stored after its consumer on the lane, which the published loader requests first.
+`switch_reports_batch_snapped_provider_in_published_order` separately checks the
+released report order when a batch snap places the provider first on the lane.
+
 
 `harmony::checkout_platform` compares complete released Node/native checkout,
 reset, revert and lane-switch commands. It checks obsolete file deletion, missing

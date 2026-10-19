@@ -22,6 +22,7 @@ mod identities;
 mod missing;
 mod order;
 mod snapshot;
+mod switch;
 mod target;
 
 use super::{
@@ -220,26 +221,24 @@ fn capture_environment(
     behavior.callbacks |= snapshot || checkout;
     let mut captured = initialize(root, context, !targets.is_empty(), capture_options)?;
     let mut facts = None;
-    for target in targets {
-        let scan = Scan {
-            engine: &mut *engine,
-            root,
-            home,
-            context,
-            inventory: &inventory,
-            facts: &mut facts,
-            environments,
-            behavior,
-        };
-        scan.target(target, &mut captured)?;
-    }
+    let scan = Scan {
+        engine,
+        root,
+        home,
+        context,
+        inventory: &inventory,
+        facts: &mut facts,
+        environments,
+        behavior,
+    };
+    switch::scan(scan, targets, &mut captured)?;
     if snapshot {
         order::snapshot(root, &mut captured)?;
     }
     if environments.is_import() {
         commit::publish_import_dependencies(engine, root, &mut captured)?;
     }
-    if behavior.callbacks {
+    if behavior.callbacks && captured.cache.callbacks.host.is_none() {
         validate_documentation(engine, context)?;
         environments.callbacks(context, &mut captured, behavior.missing_status_invalid)?;
     }

@@ -15,6 +15,7 @@ mod facts;
 mod modes;
 mod quick;
 mod snapshot;
+mod switch;
 mod tracking;
 
 use super::js::{array, decline, text};

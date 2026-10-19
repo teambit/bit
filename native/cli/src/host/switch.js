@@ -1,3 +1,182 @@
+let switchStatusSession;
+
+/** CheckoutMain loads selected IDs serially, after LaneSwitcher orders main-only before lane IDs. */
+async function switchStatusBegin({loadOrder, directory}) {
+  if (cliArguments[0] !== 'switch' || switchStatusSession) {
+    throw new Error('switch grouped loader session is unavailable');
+  }
+  const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
+  const loader = workspace.componentLoader;
+  if (typeof loader.getAndLoadSlotOrdered !== 'function'
+      || typeof loader.groupAndUpdateIds !== 'function'
+      || typeof loader.buildLoadGroups !== 'function'
+      || typeof workspace.get !== 'function') {
+    throw new Error('published grouped switch component loader is unavailable');
+  }
+  const devFiles = (await loadHarmony()).get('teambit.component/dev-files');
+  if (typeof devFiles?.getDevFilesForConsumerComp !== 'function') {
+    throw new Error('published switch dependency loader is unavailable');
+  }
+  const { DependenciesLoader } = bitRequire('@teambit/dependencies/dist/dependencies-loader/dependencies-loader.js');
+  if (typeof DependenciesLoader?.prototype.getDependenciesDataFromCacheIfPossible !== 'function') {
+    throw new Error('published switch dependency cache validation is unavailable');
+  }
+  const legacy = workspace.consumer;
+  const cache = legacy?.componentLoader?.componentsCache;
+  if (typeof legacy?.bitMap?.getAllIdsAvailableOnLane !== 'function'
+      || typeof legacy.bitMap.getComponent !== 'function'
+      || typeof legacy.loadComponents !== 'function'
+      || typeof cache?.get !== 'function' || typeof cache?.set !== 'function') {
+    throw new Error('published switch legacy component loader is unavailable');
+  }
+  const available = legacy.bitMap.getAllIdsAvailableOnLane();
+  if (!Array.isArray(loadOrder) || new Set(loadOrder).size !== loadOrder.length
+      || !loadOrder.every(identity => typeof identity === 'string')
+      || typeof directory !== 'string' || !path.isAbsolute(directory)) {
+    throw new Error('switch ordered target identities changed');
+  }
+  const ids = new Map(loadOrder.map(identity => {
+    const id = available.find(candidate => candidate.toStringWithoutVersion() === identity);
+    if (!id) throw new Error(`switch component identity changed: ${identity}`);
+    return [identity, id];
+  }));
+  const byRow = new Map();
+  const byIdentity = new Map();
+  const originalLoad = legacy.loadComponents;
+  const devFilesLoaded = new Set();
+  legacy.loadComponents = async function (requested, ...args) {
+    for (const id of requested) {
+      const identity = id.toStringWithoutVersion();
+      if (ids.has(identity) && !byRow.has(identity)) {
+        const session = switchStatusSession;
+        let waiting = session.waiting.get(identity);
+        if (!waiting) {
+          let resume;
+          const promise = new Promise(resolve => { resume = resolve; });
+          waiting = {promise, resume};
+          session.waiting.set(identity, waiting);
+          session.notifyNeed?.();
+        }
+        await waiting.promise;
+      }
+      const row = byRow.get(identity);
+      if (!row) {
+        // The published loader can request transitive envs or aspects.
+        continue;
+      }
+      if (row.version && id.version !== row.version) {
+        throw new Error(`switch component identity changed: ${identity}`);
+      }
+      let component = byIdentity.get(identity);
+      if (!component) {
+        component = await hydrateStatusComponent(row);
+        byIdentity.set(identity, component);
+        const consumer = component.state._consumer;
+        if (!cache.get(consumer.id.toString())) cache.set(consumer.id.toString(), consumer);
+      }
+      if (row.directory === '.' || devFilesLoaded.has(identity)) continue;
+      const consumer = component.state._consumer;
+      if (cache.get(consumer.id.toString()) !== consumer) continue;
+      consumer.componentMap ??= legacy.bitMap.getComponent(consumer.id, {ignoreVersion: true});
+      const dependencies = new DependenciesLoader(consumer, undefined, undefined, undefined,
+        workspace.componentLoader.logger);
+      if (await dependencies.getDependenciesDataFromCacheIfPossible(workspace, {useDependenciesCache: true})) continue;
+      devFilesLoaded.add(identity);
+      await devFiles.getDevFilesForConsumerComp(consumer);
+    }
+    return originalLoad.call(this, requested, ...args);
+  };
+  statusComponents = [];
+  switchStatusSession = { workspace, legacy, originalLoad, ids, loadOrder, byRow, byIdentity,
+    next: 0, directory, waiting: new Map(), operation: undefined, notifyNeed: undefined };
+  return true;
+}
+
+function switchStatusStageRow({component: row}) {
+  const session = switchStatusSession;
+  const id = session?.ids.get(row?.identity);
+  if (!id || session.byRow.has(row.identity) || (row.version && row.version !== id.version)) {
+    throw new Error(`switch component identity changed: ${row.identity}`);
+  }
+  session.byRow.set(row.identity, row);
+  const waiting = session.waiting.get(row.identity);
+  if (waiting) {
+    session.waiting.delete(row.identity);
+    waiting.resume();
+  }
+  return true;
+}
+
+/** One published workspace.get follows one native capture and precedes the next. */
+async function switchStatusLoadOne({component: row}) {
+  const session = switchStatusSession;
+  if (!session || session.operation || row?.identity !== session.loadOrder[session.next]) {
+    throw new Error('switch ordered target changed during class loading');
+  }
+  if (!session.byRow.has(row.identity)) switchStatusStageRow({component: row});
+  const id = session.ids.get(row.identity);
+  session.operation = session.workspace.get(id).then(component => switchStatusResult(session, row, component));
+  return switchStatusResume();
+}
+
+async function switchStatusResume() {
+  const session = switchStatusSession;
+  if (!session?.operation) throw new Error('switch grouped loader continuation is unavailable');
+  if (session.waiting.size) return {needsRows: [...session.waiting.keys()]};
+  const need = new Promise(resolve => { session.notifyNeed = () => resolve({needsRows: [...session.waiting.keys()]}); });
+  try {
+    const result = await Promise.race([session.operation, need]);
+    if (result.row) session.operation = undefined;
+    return result;
+  } finally {
+    session.notifyNeed = undefined;
+  }
+}
+
+function switchStatusResult(session, row, component) {
+  const native = session.byIdentity.get(row.identity);
+  if (!native || component.id.toString() !== native.id.toString()) {
+    throw new Error(`switch grouped load changed component identity: ${row.identity}`);
+  }
+  for (const key of Object.keys(native).filter(key => key.startsWith('__native'))) component[key] = native[key];
+  statusComponents.push(component);
+  session.next += 1;
+  const consumer = component.state._consumer;
+  const sources = statusSourceOverlays(component, session.directory, 'current');
+  return {row: { identity: row.identity, current: statusMetadata(row.current, consumer),
+    files: consumer.files.map(statusRelative), sourceOverlays: sources.overlays,
+    sourceOverlayRoot: session.directory, issues: statusIssues(consumer.issues),
+    readSet: sources.proofs, originalDependencyIdentities: component.__nativeOriginalDependencyIds,
+    dependencyIdentities: [...consumer.dependencies.get(), ...consumer.devDependencies.get(),
+      ...consumer.peerDependencies.get()].map(dependency => dependency.id.toString()) }};
+}
+
+function switchStatusFinish() {
+  const session = switchStatusSession;
+  if (!session) return true;
+  session.legacy.loadComponents = session.originalLoad;
+  switchStatusSession = undefined;
+  if (session.operation || session.waiting.size || session.next !== session.loadOrder.length) {
+    throw new Error('switch grouped load changed component count');
+  }
+  return true;
+}
+
+async function switchStatusHydrateClasses(rows, workspace, checkout, loadOrder, directory) {
+  if (cliArguments[0] !== 'switch' || !checkout) return undefined;
+  await switchStatusBegin({loadOrder, directory});
+  try {
+    for (const row of loadOrder.map(identity => rows.find(row => row.identity === identity))) {
+      let result = await switchStatusLoadOne({component: row});
+      while (result.needsRows) throw new Error('switch batch loader needs ordered source capture');
+    }
+    return rows.map(row => statusComponents.find(component =>
+      component.id.toStringWithoutVersion() === row.identity));
+  } finally {
+    switchStatusFinish();
+  }
+}
+
 /** ComponentWriter.finalizeWrite compiles once more after installPackagesGracefully. */
 async function switchCompile({ installationSucceeded }) {
   if (!laneSwitchCommand) throw new Error('switch compiler adapter outside lane adoption');

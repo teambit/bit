@@ -231,8 +231,16 @@ impl Response {
 /// itself (an aspect left a handle open) is killed.
 impl Drop for Session {
     fn drop(&mut self) {
+        let started = Instant::now();
         self.stop();
-        let _ = self.stderr_finished.recv_timeout(Duration::from_millis(100));
+        let stopped = started.elapsed();
+        let stderr_finished = self.stderr_finished.recv_timeout(Duration::from_millis(100));
+        trace::log(format!(
+            "host shutdown took {} ms (process {} ms, stderr finished {})",
+            started.elapsed().as_millis(),
+            stopped.as_millis(),
+            stderr_finished.is_ok(),
+        ));
     }
 }
 
