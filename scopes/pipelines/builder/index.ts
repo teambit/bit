@@ -14,6 +14,7 @@ export type {
   OnTagOpts,
   LegacyOnTagResult,
   PlannedTask,
+  UnbuiltBuilderData,
 } from './builder.main.runtime';
 export type { TaskHandler } from './pipeline';
 export { Pipeline } from './pipeline';

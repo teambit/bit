@@ -9,7 +9,7 @@ import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
 import type { Component, IComponent, ComponentMain } from '@teambit/component';
 import { ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
-import type { EnvsMain } from '@teambit/envs';
+import type { EnvsMain, EnvDefinition } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
@@ -83,18 +83,16 @@ export type RawBuilderData = {
   artifacts?: ArtifactObject[];
   aspectsData: AspectData[];
   bitVersion?: string;
-  /**
-   * the tasks that are going to run once the component is built. saved only when tagging/snapping without a build,
-   * so the tasks can be shown before the build (e.g. on the CI) starts. the build replaces the builder data, and with
-   * it this prop, so "pipeline" is the source of truth for what ran.
-   */
-  plannedTasks?: PlannedTask[];
 };
 
-export type PlannedTask = {
-  taskId: string; // task aspect-id
-  taskName: string;
-  taskDescription?: string;
+export type PlannedTask = Pick<PipelineReport, 'taskId' | 'taskName' | 'taskDescription'>;
+
+/**
+ * builder data of a version that was tagged/snapped without a build. it has the tasks that are going to run once the
+ * component is built, so they can be shown before the build (e.g. on the CI) starts. the build replaces it.
+ */
+export type UnbuiltBuilderData = {
+  plannedTasks: PlannedTask[];
 };
 /**
  * builder data mapped to an ArtifactList instance
@@ -499,11 +497,8 @@ export class BuilderMain {
    * one of the pipelines that run (e.g. a build task when the snap pipeline runs as well).
    */
   private throwIfNoTaskMatchesFilter(components: Component[], tasks: string[], deployPipeline?: 'tag' | 'snap') {
-    const services = [this.buildService];
-    if (deployPipeline) services.push(deployPipeline === 'snap' ? this.snapService : this.tagService);
     const envsById = new Map(components.map((component) => this.envs.getEnv(component)).map((env) => [env.id, env]));
-    const envs = [...envsById.values()];
-    const allTasks = services.flatMap((service) => service.getCurrentPipeline(envs));
+    const allTasks = this.getPipelinesTasks([...envsById.values()], deployPipeline);
     if (allTasks.length && !allTasks.some((task) => isTaskInFilter(task, tasks))) {
       const availableTasks = [...new Set(allTasks.map((task) => BuildTaskHelper.serializeId(task)))].sort();
       throw new BitError(
@@ -521,15 +516,39 @@ export class BuilderMain {
   }
 
   /**
-   * the tasks of the build pipeline and the snap/tag pipeline (according to `isSnap`) of the component's env.
+   * the tasks of the build pipeline and the snap/tag pipeline of each component's env, keyed by the component id
+   * without version. a component whose env can't be found (e.g. not loaded) is skipped.
    */
-  getPlannedTasks(component: Component, isSnap = false): PlannedTask[] {
-    const env = this.envs.getEnv(component);
-    const deployService = isSnap ? this.snapService : this.tagService;
-    const tasks = [...this.buildService.getCurrentPipeline([env]), ...deployService.getCurrentPipeline([env])];
-    // a task can be registered to more than one pipeline (e.g. PreparePackages), it runs once.
-    const uniqTasks = uniqBy(tasks, (task) => BuildTaskHelper.serializeId(task));
-    return uniqTasks.map((task) => ({ taskId: task.aspectId, taskName: task.name, taskDescription: task.description }));
+  getPlannedTasks(components: Component[], deployPipeline: 'tag' | 'snap'): Map<string, PlannedTask[]> {
+    const plannedTasksPerEnv = new Map<string, PlannedTask[]>();
+    const plannedTasksPerComp = new Map<string, PlannedTask[]>();
+    components.forEach((component) => {
+      let env: EnvDefinition;
+      try {
+        env = this.envs.getEnv(component);
+      } catch (err: any) {
+        this.logger.debug(`unable to get the planned tasks of ${component.id.toString()}: ${err.message}`);
+        return;
+      }
+      if (!plannedTasksPerEnv.has(env.id)) {
+        // a task can be registered to more than one pipeline (e.g. PreparePackages), it runs once.
+        const tasks = uniqBy(this.getPipelinesTasks([env], deployPipeline), (task) =>
+          BuildTaskHelper.serializeId(task)
+        );
+        plannedTasksPerEnv.set(
+          env.id,
+          tasks.map((task) => ({ taskId: task.aspectId, taskName: task.name, taskDescription: task.description }))
+        );
+      }
+      plannedTasksPerComp.set(component.id.toStringWithoutVersion(), plannedTasksPerEnv.get(env.id)!);
+    });
+    return plannedTasksPerComp;
+  }
+
+  private getPipelinesTasks(envs: EnvDefinition[], deployPipeline?: 'tag' | 'snap'): BuildTask[] {
+    const services = [this.buildService];
+    if (deployPipeline) services.push(deployPipeline === 'snap' ? this.snapService : this.tagService);
+    return services.flatMap((service) => service.getCurrentPipeline(envs));
   }
 
   /**

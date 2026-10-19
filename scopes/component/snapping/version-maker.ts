@@ -12,7 +12,6 @@ import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-m
 import type { Consumer } from '@teambit/legacy.consumer';
 import { NewerVersionFound } from '@teambit/legacy.consumer';
 import type { Component } from '@teambit/component';
-import { ComponentMap } from '@teambit/component';
 import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
 import { formatItem, formatSection, formatWarningSummary } from '@teambit/cli';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
@@ -21,9 +20,10 @@ import { PkgAspect, getPublishRegistry, shouldPublishToExternalRegistry } from '
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { isSnap as isSnapVersion } from '@teambit/component-version';
-import type { BuilderMain, OnTagOpts, PlannedTask, RawBuilderData } from '@teambit/builder';
+import type { BuilderMain, OnTagOpts, UnbuiltBuilderData } from '@teambit/builder';
 import type { ModelComponent, Log, Lane } from '@teambit/objects';
 import { DependenciesGraph } from '@teambit/objects';
+import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { MessagePerComponent } from './message-per-component';
 import { MessagePerComponentFetcher } from './message-per-component';
 import { VersionFileParser } from './version-file-parser';
@@ -360,7 +360,6 @@ export class VersionMaker {
 
   private async build(harmonyCompsToTag: Component[], publishedPackages: string[]) {
     if (!this.params.build) {
-      await this.addPlannedTasksToBuilderData(harmonyCompsToTag);
       return;
     }
     const {
@@ -409,37 +408,6 @@ export class VersionMaker {
       await mapSeries(componentsToBuild, (comp) => this.snapping.enrichComp(comp));
       if (populateArtifactsFrom) await updateHiddenProp(this.scope, populateArtifactsFrom);
     }
-  }
-
-  /**
-   * when not building, save the tasks that are going to run once the component is built (e.g. by the CI), so they
-   * can be shown before the build starts.
-   */
-  private async addPlannedTasksToBuilderData(harmonyCompsToTag: Component[]) {
-    const plannedTasksPerComp = new Map<Component, PlannedTask[]>();
-    harmonyCompsToTag
-      .filter((c) => !c.isDeleted())
-      .forEach((component) => {
-        try {
-          plannedTasksPerComp.set(component, this.builder.getPlannedTasks(component, this.params.isSnap));
-        } catch (err: any) {
-          // e.g. the env is not loaded. it's only informative, don't fail the tag/snap.
-          this.snapping.logger.debug(`unable to get the planned tasks of ${component.id.toString()}: ${err.message}`);
-        }
-      });
-    const components = Array.from(plannedTasksPerComp.keys());
-    if (!components.length) return;
-    const builderDataMap = ComponentMap.as<RawBuilderData>(components, (component) => ({
-      pipeline: [],
-      aspectsData: [],
-      plannedTasks: plannedTasksPerComp.get(component),
-    }));
-    const buildResult = this.builder.builderDataMapToLegacyOnTagResults(builderDataMap);
-    this.snapping._updateComponentsByTagResult(
-      components.map((c) => c.state._consumer),
-      buildResult
-    );
-    await mapSeries(components, (comp) => this.snapping.enrichComp(comp));
   }
 
   private async checkForNewerVersions() {
@@ -735,12 +703,36 @@ export class VersionMaker {
    * otherwise, tagging without build will have the old build data of the previous snap/tag.
    * in case we currently build, it's ok to leave the data as is, because it'll be overridden anyway.
    */
+  /**
+   * the builder data is populated by the build. without a build, save only the tasks that are going to run once the
+   * component is built (e.g. by the CI), so they can be shown before the build starts.
+   */
   private emptyBuilderData() {
+    const plannedTasksPerComp = this.builder.getPlannedTasks(
+      this.getHarmonyComps(this.allComponentsToTag.filter((c) => !c.isRemoved())),
+      this.params.isSnap ? 'snap' : 'tag'
+    );
     this.allComponentsToTag.forEach((component) => {
       component.extensions = component.extensions.clone();
+      const plannedTasks = plannedTasksPerComp.get(component.id.toStringWithoutVersion());
+      const data: Partial<UnbuiltBuilderData> = plannedTasks ? { plannedTasks } : {};
       const existingBuilder = component.extensions.findCoreExtension(Extensions.builder);
-      if (existingBuilder) existingBuilder.data = {};
+      if (existingBuilder) existingBuilder.data = data;
+      else if (plannedTasks)
+        component.extensions.push(new ExtensionDataEntry(undefined, undefined, Extensions.builder, {}, data));
     });
+  }
+
+  /**
+   * the harmony components that were already loaded. (the auto-tagged ones are available only in a workspace).
+   */
+  private getHarmonyComps(consumerComponents: ConsumerComponent[]): Component[] {
+    const loadedComps = [...this.components, ...(this.allWorkspaceComps || [])];
+    return compact(
+      consumerComponents.map((consumerComp) =>
+        loadedComps.find((comp) => comp.id.isEqualWithoutVersion(consumerComp.id))
+      )
+    );
   }
 
   private updateDependenciesVersions() {
