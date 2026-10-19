@@ -243,7 +243,8 @@ bit ci sync --init
 ```
 
 `--init` writes `.github/workflows/bit-sync.yml` and `bit-release.yml`, with the real default branch of this
-repository in both files. `--init` adds `"teambit.git/ci": { "sync": {} }` to `workspace.jsonc` if the key is
+repository in both files. When the workspace is below the repository root, `--init` writes the files at the
+root and sets `ws-dir` to the workspace directory in both. `--init` adds `"teambit.git/ci": { "sync": {} }` to `workspace.jsonc` if the key is
 absent. The edit keeps the comments in the file, and it changes no existing `sync` setting. `--init` then
 prints one short report: the files it changed, and three steps that need a person, as commands to paste:
 

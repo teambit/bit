@@ -9,9 +9,10 @@ import { parseGitHubRepo, isGitHubRemote, gitHubApiUrl, remoteHost } from './git
  *
  * TEMPLATE SOURCE OF TRUTH: `BIT_SYNC_WORKFLOW_RAW` / `BIT_RELEASE_WORKFLOW_RAW` are byte-for-byte
  * copies of the canonical templates in the `bit-git-sync` action workspace
- * (git-sync/git-sync/workflows/templates/) and MUST be kept in sync with them. The ONLY departure is
- * the two `DEFAULT_BRANCH_MARKER` substitution points; everything else — CHANGE-ME comments, the
- * placeholder action ref, `bit-sync/main` config defaults — stays untouched.
+ * (git-sync/git-sync/workflows/templates/) and MUST be kept in sync with them. The ONLY departures
+ * are the two `DEFAULT_BRANCH_MARKER` substitution points and, for a workspace below the repository
+ * root, the `WS_DIR_MARKER` line; everything else — CHANGE-ME comments, the placeholder action ref,
+ * `bit-sync/main` config defaults — stays untouched.
  */
 
 /** Where `scaffoldWorkflowFiles` writes each file, relative to the workspace root. */
@@ -237,14 +238,35 @@ function substituteDefaultBranch(raw: string, marker: string, defaultBranch: str
   return raw.replace(marker, () => substitutedMarker);
 }
 
-/** Render `bit-sync.yml` with the repository's actual default branch substituted. */
-export function renderBitSyncWorkflow(defaultBranch: string): string {
-  return substituteDefaultBranch(BIT_SYNC_WORKFLOW_RAW, DEFAULT_BRANCH_MARKER.sync, defaultBranch);
+/** The commented-out `ws-dir` input, once in each template. */
+const WS_DIR_MARKER = '# ws-dir: packages/my-workspace';
+
+/**
+ * Set the action's `ws-dir` input when the workspace is below the repository root (`wsDir` is the
+ * workspace directory relative to the root, `/`-separated). At the root, the line stays commented out.
+ */
+function substituteWsDir(raw: string, wsDir: string | undefined): string {
+  if (!wsDir || wsDir === '.') return raw;
+  if (!raw.includes(WS_DIR_MARKER)) {
+    throw new Error(`init-scaffold: expected marker "${WS_DIR_MARKER}" not found in its workflow template`);
+  }
+  return raw.replace(WS_DIR_MARKER, () => `ws-dir: ${yamlSingleQuoted(wsDir)}`);
 }
 
-/** Render `bit-release.yml` with the repository's actual default branch substituted. */
-export function renderBitReleaseWorkflow(defaultBranch: string): string {
-  return substituteDefaultBranch(BIT_RELEASE_WORKFLOW_RAW, DEFAULT_BRANCH_MARKER.release, defaultBranch);
+/** Render `bit-sync.yml` with the repository's actual default branch, and `ws-dir` for a nested workspace. */
+export function renderBitSyncWorkflow(defaultBranch: string, wsDir?: string): string {
+  return substituteWsDir(
+    substituteDefaultBranch(BIT_SYNC_WORKFLOW_RAW, DEFAULT_BRANCH_MARKER.sync, defaultBranch),
+    wsDir
+  );
+}
+
+/** Render `bit-release.yml` with the repository's actual default branch, and `ws-dir` for a nested workspace. */
+export function renderBitReleaseWorkflow(defaultBranch: string, wsDir?: string): string {
+  return substituteWsDir(
+    substituteDefaultBranch(BIT_RELEASE_WORKFLOW_RAW, DEFAULT_BRANCH_MARKER.release, defaultBranch),
+    wsDir
+  );
 }
 
 export interface ScaffoldFileOutcome {
@@ -264,11 +286,18 @@ function writeIfAbsent(workspaceDir: string, relativePath: string, content: stri
   return { relativePath, status: 'written' };
 }
 
-/** Scaffold both workflow files under `workspaceDir`. Never overwrites; creates `.github/workflows/` as needed. */
-export function scaffoldWorkflowFiles(workspaceDir: string, defaultBranch: string): ScaffoldFileOutcome[] {
+/**
+ * Scaffold both workflow files under `workspaceDir` (the repository root). `wsDir` is the bit workspace
+ * relative to it, when the workspace is a subdirectory. Never overwrites; creates `.github/workflows/`.
+ */
+export function scaffoldWorkflowFiles(
+  workspaceDir: string,
+  defaultBranch: string,
+  wsDir?: string
+): ScaffoldFileOutcome[] {
   return [
-    writeIfAbsent(workspaceDir, WORKFLOW_RELATIVE_PATHS.sync, renderBitSyncWorkflow(defaultBranch)),
-    writeIfAbsent(workspaceDir, WORKFLOW_RELATIVE_PATHS.release, renderBitReleaseWorkflow(defaultBranch)),
+    writeIfAbsent(workspaceDir, WORKFLOW_RELATIVE_PATHS.sync, renderBitSyncWorkflow(defaultBranch, wsDir)),
+    writeIfAbsent(workspaceDir, WORKFLOW_RELATIVE_PATHS.release, renderBitReleaseWorkflow(defaultBranch, wsDir)),
   ];
 }
 
@@ -337,6 +366,8 @@ export interface InitReportInput {
    * after that, the commit takes only the files `--init` touched, never unrelated local changes.
    */
   repoHasCommits?: boolean;
+  /** false when the workspace is not in a git repository yet: step 1 then starts with `git init` */
+  inGitRepo?: boolean;
   /** scaffolded workflow files, with the path to show (relative to where the user stands) */
   files: Array<ScaffoldFileOutcome & { displayPath: string }>;
   /** workspace.jsonc, as seen from where the user stands */
@@ -480,7 +511,12 @@ export function renderInitReport(input: InitReportInput): string {
         : 'git add -A :/'
       : `git add -- ${[...input.files.map((f) => f.displayPath), configDisplayPath].map(shellQuote).join(' ')}`;
   // Commit and push are separate: on a re-run nothing may be left to commit, and the push must still run.
-  const commit = [cmd(stage), cmd(`git commit -m ${shellQuote(`Mirror ${scope}`)}`)];
+  const gitInit = repoRootFromCwd === '.' ? 'git init' : `git init ${shellQuote(repoRootFromCwd)}`;
+  const commit = [
+    ...(input.inGitRepo === false ? [cmd(gitInit)] : []),
+    cmd(stage),
+    cmd(`git commit -m ${shellQuote(`Mirror ${scope}`)}`),
+  ];
 
   const steps: string[] = [];
   if (!ownerRepo) {

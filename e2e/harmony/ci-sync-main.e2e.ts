@@ -436,6 +436,12 @@ describe('bit ci sync: main-scope reconciliation', function () {
         'bit-sync.yml belongs at the repo root, where GitHub looks for it'
       ).to.be.true;
       expect(fs.existsSync(path.join(repoRoot, '.github', 'workflows', 'bit-release.yml'))).to.be.true;
+      // the actions must chdir into the workspace
+      ['bit-sync.yml', 'bit-release.yml'].forEach((file) =>
+        expect(fs.readFileSync(path.join(repoRoot, '.github', 'workflows', file), 'utf8'), file).to.include(
+          "ws-dir: 'packages/app'"
+        )
+      );
       expect(
         fs.existsSync(path.join(wsDir, '.github')),
         'no .github may be created under the subdirectory workspace — GitHub would never discover it'
@@ -473,6 +479,8 @@ describe('bit ci sync: main-scope reconciliation', function () {
         GITHUB_API_URL: 'https://api.github.com',
       });
       expect(syncYml).to.include("branches-ignore: ['trunk', 'bit-sync/**']");
+      // a workspace at the repository root leaves ws-dir commented out
+      expect(syncYml).to.include('# ws-dir: packages/my-workspace');
       expect(output).to.include('mirrored to acme/shop (default branch: trunk)');
       expect(output).to.include('Next: 3 steps to go live');
       expect(output).to.include('gh secret set BIT_CONFIG_ACCESS_TOKEN -R acme/shop');

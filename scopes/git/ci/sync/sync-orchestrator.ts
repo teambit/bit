@@ -1,4 +1,5 @@
 import { formatTitle, formatWarningSummary } from '@teambit/cli';
+import fs from 'fs';
 import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
 import type { Logger } from '@teambit/logger';
@@ -232,7 +233,15 @@ export class SyncOrchestrator {
       );
     }
 
-    const fileOutcomes = scaffoldWorkflowFiles(scaffoldRoot, defaultBranch);
+    // A workspace below the repository root: the actions must chdir into it (`ws-dir`).
+    // Real paths: git reports the root with symlinks resolved (macOS `/tmp` is `/private/tmp`).
+    const realPath = (p: string) => (fs.existsSync(p) ? fs.realpathSync(p) : p);
+    const wsDir = path.relative(realPath(scaffoldRoot), realPath(this.deps.workspace.path)).split(path.sep).join('/');
+    const fileOutcomes = scaffoldWorkflowFiles(
+      scaffoldRoot,
+      defaultBranch,
+      wsDir && !wsDir.startsWith('..') ? wsDir : undefined
+    );
     // Report the path relative to where the user is standing (`../../.github/...` from a nested
     // workspace), not to the workspace, so it is right to paste. Absolute only across drives.
     const displayPath = (abs: string) => {
@@ -256,6 +265,7 @@ export class SyncOrchestrator {
       // the workflows live at the repository root, which may be above the workspace
       repoRootFromCwd: path.relative(process.cwd(), scaffoldRoot) || '.',
       repoHasCommits,
+      inGitRepo: Boolean(repoRoot),
       files: fileOutcomes.map((outcome) => ({
         ...outcome,
         displayPath: displayPath(path.join(scaffoldRoot, outcome.relativePath)),

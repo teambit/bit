@@ -61,6 +61,20 @@ describe('init-scaffold', () => {
       expect(renderBitSyncWorkflow("it's/a-branch")).to.contain("'it''s/a-branch'");
       expect(yamlLoad(renderBitSyncWorkflow('release/main')).jobs).to.be.an('object');
     });
+
+    it('set the action ws-dir for a workspace below the repository root, and leave it commented at the root', () => {
+      const withInput = (doc: string) =>
+        Object.values(yamlLoad(doc).jobs as Record<string, any>)
+          .flatMap((job) => job.steps)
+          .find((s: any) => String(s.uses).startsWith('teambit/bit-git-sync')).with;
+      [renderBitSyncWorkflow, renderBitReleaseWorkflow].forEach((render) => {
+        expect(withInput(render('main', 'packages/app'))['ws-dir']).to.equal('packages/app');
+        expect(withInput(render('main', "it's dir"))['ws-dir']).to.equal("it's dir");
+        expect(withInput(render('main'))).to.not.have.property('ws-dir');
+        expect(render('main')).to.contain('# ws-dir: packages/my-workspace');
+        expect(render('main', '.')).to.equal(render('main'));
+      });
+    });
   });
 
   describe('scaffoldWorkflowFiles', () => {
@@ -206,6 +220,13 @@ describe('init-scaffold', () => {
           configDisplayPath: 'workspace.jsonc',
         })
       ).to.contain("git add -- '/repo root/.github/workflows/bit-sync.yml'");
+    });
+
+    it('starts with git init when the workspace is not in a git repository', () => {
+      const out = report(undefined, { inGitRepo: false, repoHasCommits: false });
+      expect(out).to.match(/git init\n\s+git add -A\n\s+git commit -m/);
+      expect(report(undefined, { inGitRepo: false, repoRootFromCwd: '..' })).to.contain('git init ..\n');
+      expect(report(undefined)).to.not.contain('git init');
     });
 
     it('stages the whole workspace for the first commit of a new repository', () => {
