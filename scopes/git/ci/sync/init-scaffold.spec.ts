@@ -11,6 +11,8 @@ import {
   deriveOwnerRepo,
   renderInitReport,
   shellQuote,
+  chooseInitDefaultBranch,
+  suggestedServerUrl,
 } from './init-scaffold';
 import type { OwnerRepo } from './init-scaffold';
 
@@ -118,6 +120,16 @@ describe('init-scaffold', () => {
     });
   });
 
+  describe('chooseInitDefaultBranch', () => {
+    it('takes the detected branch, else main or master when checked out, else main', () => {
+      expect(chooseInitDefaultBranch('trunk', 'feature/x')).to.equal('trunk');
+      expect(chooseInitDefaultBranch(undefined, 'master')).to.equal('master');
+      expect(chooseInitDefaultBranch(undefined, 'main')).to.equal('main');
+      expect(chooseInitDefaultBranch(undefined, 'feature/x')).to.equal('main');
+      expect(chooseInitDefaultBranch(undefined, undefined)).to.equal('main');
+    });
+  });
+
   describe('renderInitReport', () => {
     const files = [
       {
@@ -148,7 +160,7 @@ describe('init-scaffold', () => {
     it('prints each step once, as commands for the derived repository', () => {
       const out = report('git@github.com:acme/shop.git');
       expect(out).to.contain('for acme.shop, mirrored to acme/shop (default branch: main)');
-      expect(out).to.contain('git push -u origin main');
+      expect(out).to.contain('git push -u origin HEAD');
       expect(out).to.contain('gh secret set BIT_CONFIG_ACCESS_TOKEN -R acme/shop');
       expect(out).to.contain('gh api -X PUT repos/acme/shop/actions/permissions/workflow');
       expect(out.match(/Next: 3 steps to go live/g)).to.have.length(1);
@@ -174,7 +186,7 @@ describe('init-scaffold', () => {
 
     it('commits and pushes in separate commands, so a re-run with nothing to commit still pushes', () => {
       const out = report('git@github.com:acme/shop.git');
-      expect(out).to.match(/git add -A && git commit -m 'Mirror acme\.shop'\n\s+git push -u origin main/);
+      expect(out).to.match(/git add -A && git commit -m 'Mirror acme\.shop'\n\s+git push -u origin HEAD/);
       expect(out).to.not.contain('&& git push');
     });
 
@@ -183,9 +195,8 @@ describe('init-scaffold', () => {
       expect(shellQuote('feature/x-1.2')).to.equal('feature/x-1.2');
       expect(shellQuote('$(id)')).to.equal("'$(id)'");
       expect(shellQuote("it's")).to.equal("'it'\\''s'");
-      expect(report('git@github.com:acme/shop.git', { defaultBranch: '$(id)' })).to.contain(
-        "git push -u origin '$(id)'"
-      );
+      // the push names HEAD, so a branch name never reaches a command
+      expect(report('git@github.com:acme/shop.git', { defaultBranch: '$(id)' })).to.contain('git push -u origin HEAD');
     });
 
     it('names the token-account exemption, the PR setting and the optional CI token', () => {
@@ -205,7 +216,7 @@ describe('init-scaffold', () => {
       const out = report(origin, { originUrl: origin });
       expect(out).to.contain(`origin ${origin}`);
       expect(out).to.contain('GITHUB_SERVER_URL=https://github.corp.example bit ci sync --init');
-      expect(out).to.contain('git push -u origin main');
+      expect(out).to.contain('git push -u origin HEAD');
       expect(out).to.not.contain('no GitHub remote yet');
       // the host is unknown, so no github.com steps
       expect(out).to.not.contain('github.com/apps/bit-git-sync');
@@ -220,6 +231,28 @@ describe('init-scaffold', () => {
       expect(out).to.match(/\.github\/workflows\/bit-sync\.yml\s+already exists, left unchanged/);
       expect(out).to.match(/\.github\/workflows\/bit-release\.yml\s+releases the scope/);
       expect(out).to.match(/workspace\.jsonc\s+already configures sync/);
+    });
+
+    it('stages from the repository root when the workspace is a subdirectory', () => {
+      expect(report('git@github.com:acme/shop.git', { cwdIsRepoRoot: false })).to.contain(
+        'git add -A :/ && git commit'
+      );
+      expect(report('git@github.com:acme/shop.git', { cwdIsRepoRoot: true })).to.contain('git add -A && git commit');
+    });
+
+    it('flags a guessed default branch', () => {
+      expect(report(undefined, { defaultBranchGuessed: true })).to.contain("didn't name its default branch");
+      expect(report('git@github.com:acme/shop.git')).to.not.contain("didn't name its default branch");
+    });
+
+    it('suggests a GITHUB_SERVER_URL that keeps an https port, and drops an ssh one', () => {
+      expect(suggestedServerUrl('https://ghe.example:8443/acme/store.git')).to.equal('https://ghe.example:8443');
+      expect(suggestedServerUrl('git@ghe.example:acme/store.git')).to.equal('https://ghe.example');
+      expect(suggestedServerUrl('ssh://git@ghe.example:2222/acme/store.git')).to.equal('https://ghe.example');
+      const origin = 'https://ghe.example:8443/acme/store.git';
+      expect(report(origin, { originUrl: origin })).to.contain(
+        'GITHUB_SERVER_URL=https://ghe.example:8443 bit ci sync --init'
+      );
     });
 
     describe('on GitHub Enterprise Server', () => {

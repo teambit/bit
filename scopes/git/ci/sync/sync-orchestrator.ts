@@ -22,7 +22,7 @@ import { HALT_SUMMARY_PREFIX, REFUSED_SUMMARY_PREFIX, LaneSyncExecutor } from '.
 import { MainSyncExecutor } from './main-sync-executor';
 import { selectGitHostProvider } from './git-host-provider';
 import { gitRepoRoot, isNonContentPath, listRemoteBranches } from './git-ops';
-import { deriveOwnerRepo, renderInitReport, scaffoldWorkflowFiles } from './init-scaffold';
+import { chooseInitDefaultBranch, deriveOwnerRepo, renderInitReport, scaffoldWorkflowFiles } from './init-scaffold';
 
 /**
  * Refuse a `--dry-run` whose plan would be computed by force-checking-out branches over uncommitted
@@ -215,8 +215,10 @@ export class SyncOrchestrator {
     const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
     const origin = typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined;
     // The remote knows the default branch. When it can't answer (no origin, a repository not pushed
-    // yet, a server out of reach), the branch the user is on is a better guess than "master".
-    const defaultBranch = await this.deps.ci.getDefaultBranchName({ fallback: await this.currentBranchOr('main') });
+    // yet, a server out of reach), guess: the checked-out branch when it's main or master, else main.
+    // A feature branch is never the guess: it would go into the workflows' branch filters.
+    const detectedBranch = await this.deps.ci.detectDefaultBranchName();
+    const defaultBranch = chooseInitDefaultBranch(detectedBranch, await this.currentBranchOr(''));
 
     // Workflows belong to the repository, not the workspace: GitHub only discovers them at
     // `<repo-root>/.github/workflows`, and a bit workspace may be a subdirectory.
@@ -245,6 +247,9 @@ export class SyncOrchestrator {
       ownerRepo: deriveOwnerRepo(origin),
       originUrl: origin,
       defaultBranch,
+      defaultBranchGuessed: !detectedBranch,
+      // `git add -A` from a subdirectory would miss the workflows, which live at the repository root
+      cwdIsRepoRoot: path.resolve(scaffoldRoot) === path.resolve(process.cwd()),
       files: fileOutcomes.map((outcome) => ({ ...outcome, displayPath: displayPath(outcome.relativePath) })),
       configAdded,
     });

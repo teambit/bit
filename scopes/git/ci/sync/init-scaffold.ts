@@ -325,6 +325,10 @@ export interface InitReportInput {
   /** the raw `origin` URL, to name a remote that exists but isn't recognized as GitHub */
   originUrl?: string;
   defaultBranch: string;
+  /** true when the remote didn't name its default branch and `defaultBranch` is a guess */
+  defaultBranchGuessed?: boolean;
+  /** false when the command runs below the repository root, where `git add -A` misses the workflows */
+  cwdIsRepoRoot?: boolean;
   /** scaffolded workflow files, with the path to show (relative to where the user stands) */
   files: Array<ScaffoldFileOutcome & { displayPath: string }>;
   /** whether `--init` added the sync block to workspace.jsonc, or found one already there */
@@ -341,6 +345,31 @@ export function shellQuote(value: string): string {
 }
 
 /**
+ * The default branch `--init` writes into the workflows: the one the remote names, else a guess. The
+ * guess is the checked-out branch only when it is `main` or `master`: a feature branch in the branch
+ * filters would exclude itself from sync and point releases at the wrong base.
+ */
+export function chooseInitDefaultBranch(detected: string | undefined, current: string | undefined): string {
+  if (detected) return detected;
+  return current === 'main' || current === 'master' ? current : 'main';
+}
+
+/**
+ * The `GITHUB_SERVER_URL` to suggest for a remote bit doesn't recognize: an http(s) remote's own origin,
+ * port included, else https on the remote's host (an ssh port is not the web server's).
+ */
+export function suggestedServerUrl(remoteUrl: string): string {
+  if (/^https?:\/\//i.test(remoteUrl.trim())) {
+    try {
+      return new URL(remoteUrl.trim()).origin;
+    } catch {
+      // fall through to the host
+    }
+  }
+  return `https://${remoteHost(remoteUrl) ?? '<your-server>'}`;
+}
+
+/**
  * The report `bit ci sync --init` prints: what it changed, then the steps that need a person, as
  * commands to paste. Short by design; the setup guide carries the details. Commands are printed only
  * for a resolved repository: a placeholder would not run when pasted.
@@ -350,7 +379,6 @@ export function renderInitReport(input: InitReportInput): string {
   const scope = input.scopeId ?? '<scope>';
   // An origin that isn't recognized is most often a GitHub Enterprise Server the shell doesn't know about.
   const unrecognizedOrigin = !ownerRepo && input.originUrl ? input.originUrl : undefined;
-  const unrecognizedHost = unrecognizedOrigin ? remoteHost(unrecognizedOrigin) : undefined;
 
   const target = ownerRepo
     ? chalk.cyan(
@@ -366,12 +394,20 @@ export function renderInitReport(input: InitReportInput): string {
       `(default branch: ${defaultBranch})`
     )}`,
   ];
+  if (input.defaultBranchGuessed) {
+    header.push(
+      formatWarningSummary(
+        `the remote didn't name its default branch, so the workflows use "${defaultBranch}". If that's wrong,\n` +
+          `  edit the branch filters in both workflow files.`
+      )
+    );
+  }
   if (unrecognizedOrigin) {
     header.push(
       formatWarningSummary("origin isn't a GitHub remote bit recognizes. For GitHub Enterprise Server, run:")
     );
     header.push(
-      `  ${chalk.cyan(`GITHUB_SERVER_URL=https://${unrecognizedHost ?? '<your-server>'} bit ci sync --init`)}`
+      `  ${chalk.cyan(`GITHUB_SERVER_URL=${shellQuote(suggestedServerUrl(unrecognizedOrigin))} bit ci sync --init`)}`
     );
   }
 
@@ -394,13 +430,15 @@ export function renderInitReport(input: InitReportInput): string {
     [`${formatTitle(`${n}. ${title}`)} ${formatHint(`(${who})`)}`, ...body.map((line) => `   ${line}`)].join('\n');
   const cmd = (text: string) => chalk.cyan(text);
   // Commit and push are separate: on a re-run nothing may be left to commit, and the push must still run.
-  const commit = cmd(`git add -A && git commit -m ${shellQuote(`Mirror ${scope}`)}`);
+  // `:/` stages from the repository root, where the workflows are, when the workspace is a subdirectory.
+  const addAll = input.cwdIsRepoRoot === false ? 'git add -A :/' : 'git add -A';
+  const commit = cmd(`${addAll} && git commit -m ${shellQuote(`Mirror ${scope}`)}`);
 
   const steps: string[] = [];
   if (!ownerRepo) {
     steps.push(
       unrecognizedOrigin
-        ? step(1, 'Push it', 'you', [commit, cmd(`git push -u origin ${shellQuote(defaultBranch)}`)])
+        ? step(1, 'Push it', 'you', [commit, cmd('git push -u origin HEAD')])
         : step(1, 'Create the repository and push it', 'you', [
             commit,
             cmd('gh repo create --private --source . --remote origin --push'),
@@ -418,7 +456,7 @@ export function renderInitReport(input: InitReportInput): string {
     const ghRepo = shellQuote(onGitHubCom ? repo : `${ownerRepo.host}/${repo}`);
     const ghApi = onGitHubCom ? 'gh api' : `gh api --hostname ${shellQuote(ownerRepo.host)}`;
     steps.push(
-      step(1, 'Push it', 'you', [commit, cmd(`git push -u origin ${shellQuote(defaultBranch)}`)]),
+      step(1, 'Push it', 'you', [commit, cmd('git push -u origin HEAD')]),
       step(2, 'Let the workflows publish to bit.cloud and open pull requests', 'repository admin', [
         cmd(`gh secret set BIT_CONFIG_ACCESS_TOKEN -R ${ghRepo}`),
         formatHint(`a bit.cloud access token with Write permission on ${scope}. If your organization`),

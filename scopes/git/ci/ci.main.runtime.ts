@@ -320,10 +320,19 @@ export class CiMain {
 
   /**
    * The repository's default branch name, whole — slashes included (see `parseOriginHeadRef`).
-   * Local `origin/HEAD` symref first, then the remote's own answer, then the conventional probe.
-   * `fallback` replaces the probe's last resort, `master`, when nothing else answers.
+   * What `detectDefaultBranchName` finds, else `fallback` (`master` unless the caller says otherwise).
    */
   async getDefaultBranchName({ fallback = 'master' }: { fallback?: string } = {}): Promise<string> {
+    return (await this.detectDefaultBranchName()) ?? fallback;
+  }
+
+  /**
+   * The default branch as the repository itself states it: the local `origin/HEAD` symref, then the
+   * remote's own answer, then `main`/`master` among the remote branches. Undefined when none of them
+   * answers (no origin, a repository not pushed yet, a server out of reach), so a caller can tell a
+   * detected branch from a guess.
+   */
+  async detectDefaultBranchName(): Promise<string | undefined> {
     try {
       const result = await git.raw(['symbolic-ref', 'refs/remotes/origin/HEAD']);
       const local = parseOriginHeadRef(result);
@@ -336,23 +345,15 @@ export class CiMain {
     }
     const remote = await remoteHeadBranch();
     if (remote && isValidGitBranchName(remote)) return remote;
-    return this.probeDefaultBranchName(fallback);
-  }
-
-  /**
-   * Last-resort fallback: the two conventional names among the remote branches, then `fallback`.
-   * Deliberately only `main`/`master` — any wider guess risks protecting the wrong branch.
-   */
-  private async probeDefaultBranchName(fallback: string): Promise<string> {
+    // Deliberately only `main`/`master` — any wider guess risks protecting the wrong branch.
     try {
       const branches = await git.branch(['-r']);
       if (branches.all.includes('origin/main')) return 'main';
       if (branches.all.includes('origin/master')) return 'master';
-      return fallback;
-    } catch {
-      this.logger.console(chalk.yellow(`Unable to detect default branch, using '${fallback}'`));
-      return fallback;
+    } catch (err) {
+      this.logger.console(chalk.yellow(`Unable to detect default branch: ${(err as Error).message}`));
     }
+    return undefined;
   }
 
   async getGitCommitMessage() {
