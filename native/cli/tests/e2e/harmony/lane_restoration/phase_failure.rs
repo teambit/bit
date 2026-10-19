@@ -85,8 +85,6 @@ fn provider_deleted() -> (Helper, String, Value) {
 #[test]
 fn phase_two_onload_tooling_errors_are_owned_but_discarded_from_the_first_result() {
     let (helper, history, version) = provider_deleted();
-    // Both real pre-install subscribers suppress clock-sampled pnpm redraws.
-    helper.output_file("lane-adoption-throttle-progress", "active");
     let result = history_oracle::compare(
         &helper,
         &format!("lane revert {history} --restore-deleted-components"),

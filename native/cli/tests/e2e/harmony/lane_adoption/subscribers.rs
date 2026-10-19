@@ -1,5 +1,5 @@
 //! Actual install subscriber objects remain mutable across the package-manager call.
-use super::callbacks::{assert_phases, installation_fixture};
+use super::callbacks::{assert_phases, assert_throttle_receipts, installation_fixture};
 use crate::{commands::add::support::history_oracle, helper::config};
 use serde_json::json;
 use std::fs;
@@ -32,6 +32,7 @@ fn install_subscribers(ci: bool) {
         compare(&helper, "switch dev", super::output::durations, ["checkout", "lane-switch"], true);
     assert!(output.status.success(), "{} {}", output.stdout, output.stderr);
     assert_phases(&helper);
+    assert_throttle_receipts(&helper);
     assert_receipt(&helper);
     assert_linked_package(&helper);
 }

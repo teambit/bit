@@ -82,8 +82,6 @@ fn ci_default_switch_installation_reuses_the_real_provider_session() {
 fn default_switch_installation(ci: bool) {
     let helper = installation_fixture();
     helper.output_file("lane-adoption-record-phases", "active");
-    // A real subscriber sets the same supported pnpm throttle for both implementations.
-    helper.output_file("lane-adoption-throttle-progress", "active");
     let compare = if ci {
         crate::commands::add::support::history_oracle::compare_ci
     } else {
@@ -133,6 +131,8 @@ pub(crate) fn installation_fixture() -> crate::helper::Helper {
     support::setup(&helper, "snap --ignore-issues * --message lane");
     crate::helper::remote::publish(&helper);
     support::setup(&helper, "switch main -x");
+    // Every comparison uses the same supported progress throttle through the real subscriber.
+    helper.output_file("lane-adoption-throttle-progress", "active");
     helper.output_file("lane-adoption-provider-active", "active");
     helper
 }
