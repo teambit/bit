@@ -23,18 +23,26 @@ export function getPlusRangeVersionsUsage(component: ConsumerComponent): string[
   });
   const envJsonc = component.files.find((file) => ['env.jsonc', 'env.json'].includes(file.relative));
   if (envJsonc) {
-    let envJsoncPolicy: Record<string, any[]> | undefined;
+    let envJsoncPolicy: Record<string, any> | undefined;
     try {
       envJsoncPolicy = (parse(envJsonc.contents.toString()) as Record<string, any>)?.policy;
     } catch {
       // an invalid env.jsonc is reported when the env is loaded
     }
+    const addUsage = (field: string, name: string, version: any) => {
+      if (isPlusRangeVersion(version)) usages.push(`env.jsonc policy.${field} ${name}: "${version}"`);
+    };
     Object.entries(envJsoncPolicy || {}).forEach(([field, entries]) => {
-      if (!Array.isArray(entries)) return;
-      entries.forEach((entry) => {
-        ['version', 'supportedRange'].forEach((key) => {
-          if (isPlusRangeVersion(entry?.[key])) usages.push(`env.jsonc policy.${field} ${entry.name}: "${entry[key]}"`);
+      if (Array.isArray(entries)) {
+        entries.forEach((entry) => {
+          addUsage(field, entry?.name, entry?.version);
+          addUsage(field, entry?.name, entry?.supportedRange);
         });
+        return;
+      }
+      // the legacy format, e.g. "peerDependencies": { "pkg": "1.0.0" } or { "pkg": { "version": "1.0.0" } }
+      Object.entries(entries || {}).forEach(([name, value]: [string, any]) => {
+        addUsage(field, name, typeof value === 'string' ? value : value?.version);
       });
     });
   }

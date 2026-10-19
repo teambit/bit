@@ -46,6 +46,15 @@ describe('getPlusRangeVersionsUsage()', () => {
       'env.jsonc policy.peers my-pkg: "+^"',
     ]);
   });
+  it('should find a "+^" version in the legacy format of the env.jsonc policy', () => {
+    const envJsonc = {
+      policy: { peerDependencies: { 'my-pkg': '+^', 'other-pkg': { version: '+~' }, 'ok-pkg': '+' } },
+    };
+    expect(getPlusRangeVersionsUsage(createComponent({ envJsonc }))).to.deep.equal([
+      'env.jsonc policy.peerDependencies my-pkg: "+^"',
+      'env.jsonc policy.peerDependencies other-pkg: "+~"',
+    ]);
+  });
   it('should ignore "+" and regular versions', () => {
     const envJsonc = { policy: { peers: [{ name: 'my-pkg', version: '+', supportedRange: '^1.0.0' }] } };
     const component = createComponent({ depVersionRange: '+', policyVersion: '1.0.0', envJsonc });
