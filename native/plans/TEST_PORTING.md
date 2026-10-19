@@ -220,6 +220,10 @@ The rest follow as their commands are ported.
 
 These released-CLI parity cases supplement the TypeScript case inventory below:
 
+- `harmony::scope_rename::callbacks::later_onload_failure_stops_before_any_scope_addition`
+  checks ordered source callbacks and the exact failure prefix before scope additions.
+- `harmony::scope_rename::callbacks::first_onload_mutation_is_seen_by_later_source_capture`
+  checks that later source capture observes a file created by an earlier callback.
 - `commands::snap::sources::tracked_package_json_is_linked_without_generated_metadata_matching_node`
   checks tracked package manifests, source links, stdout/stderr, bitmap publication and exact
   inflated Source objects and their logical hashes against Node.js 2.2.94.

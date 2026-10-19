@@ -21,7 +21,7 @@ pub(in crate::component_rename) fn batch_dependents(
     pairs: &[(String, String)],
     targets: &[String],
 ) -> io::Result<(Vec<Change>, Vec<String>)> {
-    let mut matchers = refactor::PackageMatchers::new(pairs);
+    let mut matchers = refactor::PackageMatchers::with_cache(pairs, &plan.context.patterns);
     let mut initial = refactor::PackageMatcher::new("", "");
     let mut output = Vec::new();
     let mut identities = Vec::new();

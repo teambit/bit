@@ -26,7 +26,15 @@ use serde_json::{Value, json};
 use std::{
     io,
     path::{Path, PathBuf},
+    sync::Arc,
 };
+
+/// Pure regex programs shared by an ordered rename batch. File bytes and
+/// workspace controls are deliberately read again after provider callbacks.
+#[derive(Default, Clone)]
+pub struct PreparationContext {
+    patterns: Arc<refactor::PatternCache>,
+}
 
 /// Source and target IDs, directories and exported-state policy.
 pub struct Identity {
@@ -57,6 +65,7 @@ pub struct Plan {
     files: Vec<files::Change>,
     observed: Observed,
     cleanup: Option<cleanup::Tree>,
+    context: PreparationContext,
 }
 struct Controls {
     bitmap: Value,
@@ -69,6 +78,15 @@ struct Controls {
 impl Plan {
     /// Read filesystem sources in Rust and retain every source/control preimage.
     pub fn prepare(root: &Path, options: &Options, facts: &Value) -> io::Result<Self> {
+        Self::prepare_with_context(root, options, facts, &PreparationContext::default())
+    }
+    /// Reuse only pure compiled patterns; all filesystem inputs are captured afresh.
+    pub fn prepare_with_context(
+        root: &Path,
+        options: &Options,
+        facts: &Value,
+        context: &PreparationContext,
+    ) -> io::Result<Self> {
         let mut observed = Observed::default();
         observed.ancestors(root, root)?;
         let bitmap_before = required(&mut observed, &root.join(".bitmap"))?;
@@ -84,6 +102,7 @@ impl Plan {
             files: Vec::new(),
             observed,
             cleanup: None,
+            context: context.clone(),
             controls: Controls {
                 expected: bitmap_before,
                 initial: bitmap.clone(),
@@ -98,6 +117,12 @@ impl Plan {
         configuration::prepare(&mut plan, facts)?;
         plan.validate()?;
         Ok(plan)
+    }
+    /// Rebuild after provider hydration, including any changed sources or config.
+    pub fn rehydrate(&mut self, options: &Options, facts: &Value) -> io::Result<()> {
+        let next = Self::prepare_with_context(&self.root, options, facts, &self.context)?;
+        *self = next;
+        Ok(())
     }
     /// Native projected tracking state after the rename has finished.
     #[must_use]

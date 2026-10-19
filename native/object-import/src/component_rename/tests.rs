@@ -80,3 +80,32 @@ fn reusable_empty_package_matcher_preserves_lossy_text_and_binary_behavior() {
     assert_eq!(matcher.apply(b"binary\0\xff'quoted").unwrap(), b"binary\0\xff'quoted");
     assert_eq!(matcher.apply(b"second/path").unwrap(), b"second/path");
 }
+
+#[test]
+fn ordered_package_matchers_preserve_unmatched_and_lossy_sources() {
+    let mut no_match = refactor::PackageMatchers::new(&[
+        ("@missing/one".into(), "@new/one".into()),
+        ("@missing/two".into(), "@new/two".into()),
+    ]);
+    assert_eq!(no_match.apply(b"plain source").unwrap(), b"plain source");
+    assert_eq!(no_match.apply(b"bad\xff source").unwrap(), "bad\u{fffd} source".as_bytes());
+    let mut chain = refactor::PackageMatchers::new(&[
+        ("@missing/pkg".into(), "unused".into()),
+        ("@old/p.g".into(), "@mid/pkg".into()),
+        ("@mid/pkg".into(), "@final/pkg".into()),
+    ]);
+    assert_eq!(chain.apply(b"'@old/pkg'").unwrap(), b"'@final/pkg'");
+}
+
+#[test]
+fn same_name_content_retains_lossy_conversion_and_regex_metacharacters() {
+    assert_eq!(
+        refactor::content(b"bad\xff comp-one", "comp-one", "comp-one").unwrap(),
+        "bad\u{fffd} comp-one".as_bytes(),
+    );
+    assert_eq!(
+        refactor::content(b"binary\0\xffcomp-one", "comp-one", "comp-one").unwrap(),
+        b"binary\0\xffcomp-one",
+    );
+    assert_eq!(refactor::content(b"axb a.b", "a.b", "a.b").unwrap(), b"a.b a.b");
+}

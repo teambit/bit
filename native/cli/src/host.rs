@@ -104,13 +104,11 @@ impl Host {
 
     /// Output emitted while loading aspects and serving callback facts.
     pub fn take_stdout(&self) -> String {
+        // `call` holds session before failed_stdout on transport failure.
+        let mut guard = self.session.lock().unwrap_or_else(PoisonError::into_inner);
         let mut output =
             std::mem::take(&mut *self.failed_stdout.lock().unwrap_or_else(PoisonError::into_inner));
-        if let Some(session) = self.session
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner)
-            .as_mut()
-        {
+        if let Some(session) = guard.as_mut() {
             output.push_str(&std::mem::take(&mut session.captured_stdout));
         }
         output
