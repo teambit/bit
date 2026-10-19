@@ -18,8 +18,9 @@ use crate::{
 use bit_install::{
     HostInfo, InstallOptions, Outcome,
     config::{EffectiveConfig, ScopeJson, WorkspaceConfig, load_global_config, scope_path},
+    output::Output,
 };
-use serde_json::Value;
+use serde_json::{Value, json};
 use std::{env, io, path::Path, sync::Arc};
 
 const YARN: &str = "teambit.dependencies/yarn";
@@ -74,6 +75,13 @@ pub struct Installer {
     cache_initialized: bool,
 }
 
+/// The two graceful results of `ComponentWriter.finalizeWrite` after an import.
+pub(in crate::commands) struct ImportErrors {
+    pub installation: Option<String>,
+    pub compilation: Option<String>,
+    pub installation_reported: bool,
+}
+
 impl Installer {
     /// Process facts precede workers; the same Host later initializes checkout providers.
     pub(in crate::commands) fn into_parts(
@@ -90,6 +98,12 @@ impl Installer {
             return Err(io::Error::other("the yarn package manager"));
         }
         Ok(())
+    }
+
+    /// A configured user class may register mutable `InstallMain` or package-manager callbacks.
+    /// Keep those workspaces on the released installation class before native install effects.
+    pub(in crate::commands) fn needs_canonical(root: &Path) -> bool {
+        canonical_workspace(root).unwrap_or(true)
     }
 
     /// Keep the already loaded providers and process facts of a parent operation.
@@ -113,7 +127,15 @@ impl Installer {
             existing_entries: bit_install::ExistingEntries::Fail,
             ..InstallOptions::default()
         };
-        self.run_options(root, options)
+        self.run_options(
+            root,
+            options,
+            &json!({
+                "dedupe":true,"import":false,"copyPeerToRuntimeOnRoot":true,
+                "copyPeerToRuntimeOnComponents":false,"updateExisting":false,
+            }),
+            false,
+        )
     }
 
     /// Fork propagates the same native installation result without rename's graceful catch.
@@ -168,26 +190,87 @@ impl Installer {
         } else {
             None
         };
+        let mut canonical = json!({
+            "dedupe":true,"updateExisting":false,"import":false,
+            "writeConfigFiles":!skip_write_config_files,
+        });
+        if let Some(graph) = &dependencies_graph {
+            canonical["dependenciesGraph"] = graph.clone();
+        }
         self.run_ordered(
             root,
             skip_write_config_files,
             dependencies_graph,
             workspace_component_order,
+            &canonical,
+            true,
         )
+    }
+
+    /// The published writer compiles even after its graceful install failure.
+    /// Retain both class calls when the live Host has a bitmap scan error or a
+    /// custom installation callback; ordinary imports use native installation.
+    pub(in crate::commands) fn install_import(
+        self,
+        root: &Path,
+        skip_write_config_files: bool,
+        ids: &[String],
+        workspace_component_order: &[String],
+    ) -> io::Result<ImportErrors> {
+        if !self.canonical_needed(root) {
+            return Ok(ImportErrors {
+                installation: self
+                    .install_ordered(root, skip_write_config_files, ids, workspace_component_order)
+                    .err()
+                    .map(|error| error.to_string()),
+                compilation: None,
+                installation_reported: false,
+            });
+        }
+        self.canonical_import(skip_write_config_files, ids)
+    }
+
+    fn canonical_import(
+        self,
+        skip_write_config_files: bool,
+        ids: &[String],
+    ) -> io::Result<ImportErrors> {
+        let receipt = self.host.call(
+            "installImportWriter",
+            &json!({"ids":ids,"skipWriteConfigFiles":skip_write_config_files}),
+        )?;
+        self.print_host_output();
+        let installation = match &receipt["error"] {
+            Value::Null => None,
+            Value::String(error) => Some(error.clone()),
+            _ => return Err(io::Error::other("published ComponentWriter installation receipt")),
+        };
+        let receipt = self.host.call("installCanonicalFinalize", &json!({}))?;
+        self.print_host_output();
+        let compilation = match &receipt["error"] {
+            Value::Null => None,
+            Value::String(error) => Some(error.clone()),
+            _ => {
+                return Err(io::Error::other(
+                    "published ComponentWriter.compileGracefully receipt",
+                ));
+            }
+        };
+        Ok(ImportErrors { installation, compilation, installation_reported: true })
     }
 
     /// Merge calls `InstallMain.install` without a supplied dependency graph.
     pub fn install_merge(self, root: &Path) -> io::Result<()> {
-        self.run(root, false, None)
-    }
-
-    fn run(
-        self,
-        root: &Path,
-        skip_write_config_files: bool,
-        dependencies_graph: Option<Value>,
-    ) -> io::Result<()> {
-        self.run_ordered(root, skip_write_config_files, dependencies_graph, &[])
+        self.run_ordered(
+            root,
+            false,
+            None,
+            &[],
+            &json!({
+                "dedupe":true,"updateExisting":false,"import":false,
+            }),
+            false,
+        )
     }
 
     fn run_ordered(
@@ -196,6 +279,8 @@ impl Installer {
         skip_write_config_files: bool,
         dependencies_graph: Option<Value>,
         workspace_component_order: &[String],
+        canonical: &Value,
+        writer: bool,
     ) -> io::Result<()> {
         let options = InstallOptions {
             programmatic: true,
@@ -206,10 +291,22 @@ impl Installer {
             dependency_cache_initialized: self.cache_initialized,
             ..InstallOptions::default()
         };
-        self.run_options(root, options)
+        self.run_options(root, options, canonical, writer)
     }
 
-    fn run_options(self, root: &Path, options: InstallOptions) -> io::Result<()> {
+    fn run_options(
+        self,
+        root: &Path,
+        options: InstallOptions,
+        canonical: &Value,
+        writer: bool,
+    ) -> io::Result<()> {
+        // Keep the Host that the parent command started. A configured provider
+        // may have registered callbacks during its VCS lifecycle, including
+        // after an onLoad; read the live slots before native installation work.
+        if self.canonical_needed(root) {
+            return self.run_canonical(canonical, writer);
+        }
         let input = Input::Options(Box::new(options));
         match install::run_install(root.to_path_buf(), input, self.info, self.host)?? {
             Outcome::Installed(_) | Outcome::Skipped => Ok(()),
@@ -218,6 +315,102 @@ impl Installer {
             }
         }
     }
+
+    fn canonical_needed(&self, root: &Path) -> bool {
+        if Self::needs_canonical(root) {
+            return true;
+        }
+        let core_ids: Vec<String> = match serde_json::from_str(include_str!(
+            "../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
+        )) {
+            Ok(ids) => ids,
+            Err(_) => return true,
+        };
+        let result = self.host.call("installCanonicalNeeded", &json!({"coreIds":core_ids}));
+        self.print_host_output();
+        result.map_or(true, |value| value != false)
+    }
+
+    fn print_host_output(&self) {
+        let stdout = self.host.take_stdout();
+        if !self.info.non_interactive {
+            print!("{stdout}");
+        }
+    }
+
+    fn run_canonical(&self, options: &Value, writer: bool) -> io::Result<()> {
+        let receipt = self.host.call(
+            "installCanonical",
+            &json!({"options":options,"writer":writer,"loaderText":Output::retained_text()}),
+        );
+        self.print_host_output();
+        let receipt = receipt?;
+        match &receipt["error"] {
+            Value::Null => Ok(()),
+            Value::String(error) => {
+                if receipt["loaderStarted"] == false {
+                    Output::external_loader_off();
+                }
+                Err(io::Error::other(error.clone()))
+            }
+            _ => Err(io::Error::other("published InstallMain.install receipt")),
+        }
+    }
+}
+
+fn canonical_workspace(root: &Path) -> io::Result<bool> {
+    let config = WorkspaceConfig::load(root)?;
+    let core: Vec<String> = serde_json::from_str(include_str!(
+        "../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
+    ))?;
+    let custom = |id: &str| {
+        !core
+            .iter()
+            .any(|core| core == bit_install::config::aspect_id_without_version(id))
+    };
+    if config.aspects.keys().any(|id| custom(id)) {
+        return Ok(true);
+    }
+    if scope_has_custom_aspects(root, &custom)? {
+        return Ok(true);
+    }
+    let global = load_global_config(&cache_root().join("config"))?;
+    if global
+        .keys()
+        .any(|id| id.contains('/') && custom(id))
+    {
+        return Ok(true);
+    }
+    let raw = bit_install::jsonc::parse(&std::fs::read_to_string(&config.path)?)?;
+    if !raw["require"].is_null()
+        && raw["require"] != false
+        && raw["require"] != json!([])
+        && raw["require"] != ""
+    {
+        return Ok(true);
+    }
+    let workspace = bit_install::workspace::Workspace::load(root, &config, &core)?;
+    Ok(workspace.components
+        .iter()
+        .any(|component| {
+            component.env_id != "teambit.harmony/node"
+                || component.config.keys().any(|id| custom(id))
+        }))
+}
+
+fn scope_has_custom_aspects(root: &Path, custom: &impl Fn(&str) -> bool) -> io::Result<bool> {
+    let path = scope_path(root).join("scope.jsonc");
+    if !path.try_exists()? {
+        return Ok(false);
+    }
+    let raw = bit_install::jsonc::parse(&std::fs::read_to_string(path)?)?;
+    Ok(raw
+        .as_object()
+        .is_none_or(|entries| {
+            entries
+                .keys()
+                .any(|id| id != "$schema" && id.contains('/') && custom(id))
+        }))
 }
 
 /// `isFeatureEnabled(DEPS_GRAPH)`: `BIT_FEATURES`, else the `features` config.

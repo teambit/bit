@@ -1,15 +1,16 @@
 //! Local `bit lane history` backed by the native `LaneHistory` object reader.
-use super::{list, show};
 use crate::{
-    commands::workspace_command::{self, results::Report},
+    commands::{
+        engine::Engine,
+        remote_resolution::Session,
+        status::cache::cache_root,
+        workspace_command::{self, NodeCli, results::Report},
+    },
     history::History,
     native::Outcome,
-    workspace,
 };
-use bit_object_import::lane_history;
-use serde_json::{Map, Value};
+use serde_json::{Map, Value, json};
 use std::{
-    env,
     ffi::OsString,
     io::{self, Write},
     path::Path,
@@ -42,30 +43,122 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
     let Some(options) = parse(lane_args) else {
         return Ok(Outcome::Declined("lane history flags outside the native grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let scope_root = match super::scope_root::discover() {
+        Ok(Some(scope_root)) => scope_root,
+        Ok(None) => return Ok(Outcome::Declined("not inside a scope".into())),
+        Err(error) => return Ok(Outcome::Declined(format!("lane history scope: {error}"))),
     };
-    let selected = match select(&root, &options) {
+    let root = scope_root.path;
+    let mut session = scope_root.bare.then(|| Session::for_scope(&root, args));
+    let host = if let Some(session) = &mut session {
+        match resolve_bare_remote(&root, options.lane, session) {
+            Ok(host) => host,
+            Err(error) if session.owned() => return Err(error),
+            Err(error) => return Ok(Outcome::Declined(format!("lane history: {error}"))),
+        }
+    } else {
+        None
+    };
+    let mut engine = Engine::new()?;
+    let prepared = match inspect(&root, scope_root.bare, host.as_deref(), &options, &mut engine) {
         Ok(value) => value,
+        Err(error) if session.as_ref().is_some_and(Session::owned) => return Err(error),
         Err(error) => return Ok(Outcome::Declined(format!("lane history: {error}"))),
     };
-    if options.json {
-        return emit_json(&root, args, &selected, options.id.is_some());
-    }
-    let report =
-        Report { data: text_rows(&selected, options.id.is_some())?, code: 0, details: None };
-    workspace_command::execute_with(&root, args, "history", &report, |_| Ok(()))
+    finish(&root, scope_root.bare, args, &options, session.as_ref(), &mut engine, &prepared)
 }
 
-fn select(root: &Path, options: &Options<'_>) -> io::Result<Vec<(String, Value)>> {
-    let (lanes, (current, _)) = list::read(root)?;
-    let target = options.lane.unwrap_or_else(|| current["name"].as_str().unwrap_or("main"));
-    let lane = show::find(&lanes, target)
-        .filter(|lane| !lane.is_main())
-        .ok_or_else(invalid)?;
-    let (_, lane_hash) = lane.lane.as_ref().ok_or_else(invalid)?;
-    let value = lane_history::read(root, lane_hash)?;
-    let rows = sorted(&value)?;
+fn finish(
+    root: &Path,
+    bare: bool,
+    args: &[OsString],
+    options: &Options<'_>,
+    session: Option<&Session>,
+    engine: &mut Engine,
+    prepared: &Value,
+) -> io::Result<Outcome> {
+    let selected = match select(&prepared["history"], options) {
+        Ok(value) => value,
+        Err(error) if session.is_some_and(Session::owned) => return Err(error),
+        Err(error) => return Ok(Outcome::Declined(format!("lane history: {error}"))),
+    };
+    let json_output =
+        options.json.then(|| json_rows(&selected, options.id.is_some())).transpose()?;
+    let report =
+        if options.json { None } else { Some(text_rows(&selected, options.id.is_some())?) };
+    apply_refresh(engine, prepared)?;
+    if let Some(session) = session {
+        io::stdout()
+            .lock()
+            .write_all(session.output().as_bytes())?;
+    }
+    if options.json {
+        return emit_json(root, bare, args, json_output.as_ref().ok_or_else(invalid)?);
+    }
+    let report = Report { data: report.ok_or_else(invalid)?, code: 0, details: None };
+    if bare {
+        workspace_command::execute_with_scope(root, args, "history", &report)
+    } else {
+        workspace_command::execute_with(root, args, "history", &report, |_| Ok(()))
+    }
+}
+
+fn apply_refresh(engine: &mut Engine, prepared: &Value) -> io::Result<()> {
+    if prepared["needsApply"] != true {
+        return Ok(());
+    }
+    let token = prepared["token"].as_str().ok_or_else(invalid)?;
+    let receipt: Value = engine.request(&json!({
+        "kind":"commandLaneHistoryInspectApply", "token":token,
+    }))?;
+    if receipt["applied"] != true {
+        return Err(invalid());
+    }
+    Ok(())
+}
+
+fn resolve_bare_remote(
+    root: &Path,
+    lane: Option<&str>,
+    session: &mut Session,
+) -> io::Result<Option<String>> {
+    let Some(lane) = lane else { return Ok(None) };
+    let scope: Value = serde_json::from_slice(&std::fs::read(root.join("scope.json"))?)?;
+    let local = scope["name"].as_str().ok_or_else(invalid)?;
+    let (remote, name) = lane
+        .split_once('/')
+        .unwrap_or((local, lane));
+    if scope["lanes"]["new"]
+        .as_array()
+        .is_some_and(|rows| rows.iter().any(|row| row == name))
+    {
+        return Ok(None);
+    }
+    session.resolve(&[remote.to_owned()])?;
+    Ok(session.overrides().get(remote).cloned())
+}
+
+fn inspect(
+    root: &Path,
+    bare: bool,
+    host: Option<&str>,
+    options: &Options<'_>,
+    engine: &mut Engine,
+) -> io::Result<Value> {
+    let cli = NodeCli::find()?;
+    let config = cache_root().join("config");
+    engine.request(&json!({
+        "kind":"commandLaneHistoryInspectPrepare", "root":root,
+        "home":workspace_command::home(),
+        "globalRemotesFile":config.join("global-remotes.json"),
+        "globalConfigDir":config, "nodeExecutable":cli.node,
+        "bitDir":cli.bit_dir, "bitVersion":cli.version,
+        "lane":options.lane, "bareScope":bare, "remoteHost":host,
+    }))
+}
+
+fn select(value: &Value, options: &Options<'_>) -> io::Result<Vec<(String, Value)>> {
+    let rows = sorted(value)?;
     if let Some(id) = options.id {
         let (_, row) = rows
             .iter()
@@ -79,12 +172,18 @@ fn select(root: &Path, options: &Options<'_>) -> io::Result<Vec<(String, Value)>
         .collect())
 }
 
-fn emit_json(
-    root: &Path,
-    args: &[OsString],
-    rows: &[(String, Value)],
-    single: bool,
-) -> io::Result<Outcome> {
+fn emit_json(root: &Path, bare: bool, args: &[OsString], output: &Value) -> io::Result<Outcome> {
+    let history = (!bare).then(|| History::start(root, args));
+    let mut stdout = io::stdout().lock();
+    stdout.write_all(serde_json::to_string_pretty(output)?.as_bytes())?;
+    stdout.flush()?;
+    if let Some(history) = history {
+        history.end(true);
+    }
+    Ok(Outcome::Exit(ExitCode::SUCCESS))
+}
+
+fn json_rows(rows: &[(String, Value)], single: bool) -> io::Result<Value> {
     let output = if single {
         json_row(&rows[0].0, &rows[0].1)?
     } else {
@@ -94,12 +193,7 @@ fn emit_json(
                 .collect::<io::Result<_>>()?,
         )
     };
-    let history = History::start(root, args);
-    let mut stdout = io::stdout().lock();
-    stdout.write_all(serde_json::to_string_pretty(&output)?.as_bytes())?;
-    stdout.flush()?;
-    history.end(true);
-    Ok(Outcome::Exit(ExitCode::SUCCESS))
+    Ok(output)
 }
 
 fn sorted(value: &Value) -> io::Result<Vec<(&str, &Value)>> {

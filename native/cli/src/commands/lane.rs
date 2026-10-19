@@ -13,6 +13,7 @@ mod manage;
 mod options;
 mod remove;
 mod restoration;
+mod scope_root;
 mod show;
 
 use super::{merge::report, workspace_command};

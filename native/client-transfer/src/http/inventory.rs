@@ -4,31 +4,72 @@ use crate::invalid;
 use serde_json::{Map, Value, json};
 use std::io;
 
+#[derive(Debug)]
+struct OldServerFallbackError(String);
+impl std::fmt::Display for OldServerFallbackError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(formatter)
+    }
+}
+impl std::error::Error for OldServerFallbackError {}
+
+/// The published warning was already observable before a failed retry.
+pub fn old_server_fallback(error: &io::Error) -> bool {
+    error.get_ref().is_some_and(<dyn std::error::Error + Send + Sync>::is::<OldServerFallbackError>)
+}
+
+fn fallback_error(error: &io::Error) -> io::Error {
+    io::Error::other(OldServerFallbackError(error.to_string()))
+}
+
 const LIST_DELETED_QUERY: &str = r#"query list($namespaces: [String!], $includeDeleted: Boolean) { scope { components(namespaces: $namespaces, includeDeleted: $includeDeleted) { id { scope version name } aspects(include: ["teambit.component/remove"]) { id config } deprecation { isDeprecate } } } }"#;
 const LATEST_VERSIONS_QUERY: &str =
     "query getLatestVersions($ids: [String]!) { scope { _legacyLatestVersions(ids: $ids) } }";
 const MAX_GRAPHQL_BYTES: usize = 8 * 1024 * 1024;
 
 impl Network {
-    /// `Http.list` with the published `includeDeleted` projection. Older
-    /// servers need the canonical client's warning and therefore decline.
+    /// `Http.list` with the published `includeDeleted` projection.
     pub async fn inventory(
         &self,
         url: &str,
         namespaces: Option<&str>,
         include_deleted: bool,
     ) -> io::Result<Vec<Value>> {
+        self.inventory_with_warning(url, namespaces, include_deleted).await.map(|(rows, _)| rows)
+    }
+
+    /// Return the rows and whether the published older-server warning precedes them.
+    pub async fn inventory_with_warning(
+        &self,
+        url: &str,
+        namespaces: Option<&str>,
+        include_deleted: bool,
+    ) -> io::Result<(Vec<Value>, bool)> {
         let query = if include_deleted { LIST_DELETED_QUERY } else { LIST_QUERY };
         let body = json!({
             "query": query,
             "variables": list_variables(namespaces, include_deleted),
         });
-        let response = self.graphql_bounded(&format!("{url}/graphql"), &body).await?;
+        let endpoint = format!("{url}/graphql");
+        let response = self.graphql_bounded(&endpoint, &body).await?;
         if include_deleted && unknown_include_deleted(&response) {
-            return Err(invalid("remote include-deleted needs canonical warning"));
+            let fallback = self
+                .graphql_bounded(
+                    &endpoint,
+                    &json!({
+                        "query": LIST_QUERY,
+                        "variables": list_variables(namespaces, false),
+                    }),
+                )
+                .await
+                .map_err(|error| fallback_error(&error))?;
+            graphql_error(&fallback).map_err(|error| fallback_error(&error))?;
+            return inventory_rows(&fallback, false)
+                .map(|rows| (rows, true))
+                .map_err(|error| fallback_error(&error));
         }
         graphql_error(&response)?;
-        inventory_rows(&response, include_deleted)
+        inventory_rows(&response, include_deleted).map(|rows| (rows, false))
     }
 
     /// `Http.latestVersions`: GraphQL returns ids in the remote's own order.

@@ -8,7 +8,7 @@ fn active_lane_import_preserves_real_provider_startup_and_config_mutation() {
     support::setup(&helper, "lane create current");
     configure(&helper, true);
     let before = support::bitmap(&helper);
-    let output = support::compare_declined(
+    let output = support::compare_with_stdout(
         &helper,
         &format!("lane import {}/dev -x", helper.scopes.remote),
         str::to_owned,

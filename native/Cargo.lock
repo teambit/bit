@@ -344,6 +344,7 @@ dependencies = [
  "node-semver",
  "pnpm-deps-path",
  "pnpm-diagnostics",
+ "pnpm-fs",
  "pnpm-lockfile",
  "regress",
  "reqwest",

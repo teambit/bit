@@ -1,18 +1,19 @@
 //! Read-only public remote list and latest-version inventory. The request
 //! carries identities only; model and Version object bodies remain in Rust.
+mod latest;
+
 use super::{connection, file_list, invalid};
-use crate::read_budget::Budget;
+use crate::{read_budget::Budget, workspace::engine::response};
 use bit_client_transfer::{
-    GlobalConfig, fetch,
+    GlobalConfig,
     http::Network,
     remotes::{Remote, Remotes},
 };
-use futures_util::{StreamExt, TryStreamExt, stream};
 use indexmap::IndexMap;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     env,
     fs::File,
     io,
@@ -26,6 +27,17 @@ pub(in crate::workspace::engine) struct Request {
     root: Option<PathBuf>,
     #[serde(default)]
     home: Option<PathBuf>,
+    #[serde(flatten)]
+    selection: Selection,
+    #[serde(default)]
+    hosts: HashMap<String, String>,
+    #[serde(flatten)]
+    transport: super::super::Transport,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Selection {
     mode: String,
     #[serde(default)]
     scope: Option<String>,
@@ -35,24 +47,34 @@ pub(in crate::workspace::engine) struct Request {
     include_deleted: bool,
     #[serde(default)]
     ids: Vec<String>,
-    #[serde(flatten)]
-    transport: super::super::Transport,
 }
 
 pub(in crate::workspace::engine) fn read(input: &Request) -> io::Result<(usize, Value)> {
     validate(input)?;
     let (remotes, network, global) = connection(input)?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
-    let rows = runtime.block_on(async {
-        match input.mode.as_str() {
+    let outcome = runtime.block_on(async {
+        match input.selection.mode.as_str() {
             "list" => list(input, &remotes, &network).await,
-            "latestVersions" => latest_versions(input, &remotes, &network, &global).await,
+            "latestVersions" => {
+                latest::versions(input, &remotes, &network, &global).await.map(|rows| (rows, false))
+            }
             _ => Err(invalid("remote inventory mode")),
         }
+    });
+    let (rows, warning) = outcome.map_err(|error| {
+        if bit_client_transfer::http::old_server_fallback(&error) {
+            return response::with_progress(response::canonical(error.to_string()),
+                json!({"warning":"error: the remote does not support the include-deleted flag yet, falling back to listing without deleted components"}));
+        }
+        error
     })?;
     let count = rows.len();
-    let receipt =
-        if input.mode == "list" { json!({"components": rows}) } else { json!({"ids": rows}) };
+    let receipt = if input.selection.mode == "list" {
+        json!({"components": rows, "oldServerWarning": warning})
+    } else {
+        json!({"ids": rows})
+    };
     Ok((count, receipt))
 }
 
@@ -66,29 +88,39 @@ fn validate(input: &Request) -> io::Result<()> {
         || input.home
             .as_ref()
             .is_some_and(|path| !path.is_absolute())
+        || invalid_hosts(&input.hosts)
     {
         return Err(invalid("remote inventory paths"));
     }
-    match input.mode.as_str() {
+    match input.selection.mode.as_str() {
         "list"
-            if input.ids.is_empty()
-                && input.scope.as_deref().is_some_and(valid_scope)
-                && input.namespaces
+            if input.selection.ids.is_empty()
+                && input.selection.scope.as_deref().is_some_and(valid_scope)
+                && input.selection.namespaces
                     .as_ref()
                     .is_none_or(|value| value.len() <= 4096) =>
         {
             Ok(())
         }
         "latestVersions"
-            if input.scope.is_none()
-                && input.namespaces.is_none()
-                && !input.include_deleted
-                && input.ids.len() <= 4096 =>
+            if input.selection.scope.is_none()
+                && input.selection.namespaces.is_none()
+                && !input.selection.include_deleted
+                && input.selection.ids.len() <= 4096 =>
         {
             Ok(())
         }
         _ => Err(invalid("remote inventory selection")),
     }
+}
+
+fn invalid_hosts(hosts: &HashMap<String, String>) -> bool {
+    hosts.len() > 4096
+        || hosts
+            .iter()
+            .any(|(scope, host)| {
+                !valid_scope(scope) || host.len() > 4096 || Remote::from_host(host).is_err()
+            })
 }
 
 fn valid_scope(scope: &str) -> bool {
@@ -119,86 +151,52 @@ fn connection(input: &Request) -> io::Result<(Remotes, Network, GlobalConfig)> {
     Ok((remotes, network, global))
 }
 
-async fn list(input: &Request, remotes: &Remotes, network: &Network) -> io::Result<Vec<Value>> {
-    let scope = input.scope.as_deref().ok_or_else(|| invalid("remote inventory scope"))?;
-    let remote = remotes
-        .configured(scope)?
-        .ok_or_else(|| invalid("remote inventory needs configured remote"))?;
+async fn list(
+    input: &Request,
+    remotes: &Remotes,
+    network: &Network,
+) -> io::Result<(Vec<Value>, bool)> {
+    let scope =
+        input.selection.scope.as_deref().ok_or_else(|| invalid("remote inventory scope"))?;
+    let remote = remote_for(input, scope, remotes, network).await?;
     match remote {
-        Remote::File(path) => {
-            file_list(&path, scope, input.namespaces.as_deref(), input.include_deleted)
-        }
+        Remote::File(path) => file_list(
+            &path,
+            scope,
+            input.selection.namespaces.as_deref(),
+            input.selection.include_deleted,
+        )
+        .map(|rows| (rows, false)),
         Remote::Http(url) => {
-            network.inventory(&url, input.namespaces.as_deref(), input.include_deleted).await
+            network.inventory_with_warning(
+                &url,
+                input.selection.namespaces.as_deref(),
+                input.selection.include_deleted,
+            )
+            .await
         }
     }
 }
 
-async fn latest_versions(
+async fn remote_for(
     input: &Request,
+    scope: &str,
     remotes: &Remotes,
     network: &Network,
-    global: &GlobalConfig,
-) -> io::Result<Vec<Value>> {
-    let jobs = latest_jobs(input, remotes)?;
-    let concurrency = fetch::concurrency(global).clamp(1, 4);
-    let mut groups = stream::iter(jobs.into_iter().enumerate())
-        .map(|(index, (scope, ids, remote))| async move {
-            latest_group(scope, ids, remote, network).await.map(|rows| (index, rows))
-        })
-        .buffer_unordered(concurrency)
-        .try_collect::<Vec<_>>()
-        .await?;
-    groups.sort_by_key(|(index, _)| *index);
-    Ok(groups
-        .into_iter()
-        .flat_map(|(_, rows)| rows.into_iter().map(Value::String))
-        .collect())
-}
-
-fn latest_jobs(
-    input: &Request,
-    remotes: &Remotes,
-) -> io::Result<Vec<(String, Vec<String>, Remote)>> {
-    let mut grouped = IndexMap::<String, Vec<String>>::new();
-    for id in &input.ids {
-        let (scope, _) = identity(id)?;
-        grouped
-            .entry(scope.to_owned())
-            .or_default()
-            .push(id.clone());
+) -> io::Result<Remote> {
+    if let Some(remote) = remotes.configured(scope)? {
+        return Ok(remote);
     }
-    let mut jobs = Vec::with_capacity(grouped.len());
-    for (scope, ids) in grouped {
-        let remote = remotes
-            .configured(&scope)?
-            .ok_or_else(|| invalid("remote inventory needs configured remote"))?;
-        jobs.push((scope, ids, remote));
+    if let Some(host) = input.hosts.get(scope) {
+        if !remotes.has_custom_resolver() {
+            return Err(invalid("unexpected remote inventory host override"));
+        }
+        return Remote::from_host(host);
     }
-    Ok(jobs)
-}
-
-async fn latest_group(
-    scope: String,
-    ids: Vec<String>,
-    remote: Remote,
-    network: &Network,
-) -> io::Result<Vec<String>> {
-    let rows = match remote {
-        Remote::File(path) => file_latest(&path, &scope, &ids),
-        Remote::Http(url) => network.latest_versions(&url, &ids).await,
-    }?;
-    if rows.len() != ids.len()
-        || rows
-            .iter()
-            .zip(&ids)
-            .any(|(row, requested)| {
-                !row.contains('@') || identity(row).ok() != identity(requested).ok()
-            })
-    {
-        return Err(invalid("remote latest versions result"));
+    if remotes.has_custom_resolver() {
+        return Err(invalid("remote inventory resolver callback needs retained host"));
     }
-    Ok(rows)
+    remotes.resolve(scope, network).await
 }
 
 fn identity(id: &str) -> io::Result<(&str, &str)> {

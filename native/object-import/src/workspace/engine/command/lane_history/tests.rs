@@ -38,15 +38,18 @@ fn selected_history_proof_is_propagated_and_rejects_later_content_changes() {
     let mut proofs = Vec::new();
     super::proof::read(&history, &mut proofs).unwrap();
     let state = super::State {
-        lane_history: Some(Box::new(super::Retained {
-            root: root.into(),
-            token: "retained".into(),
-            lane_id: crate::command_import::lane::Id { scope: "s".into(), name: "dev".into() },
-            lane_hash: "a".repeat(40),
-            phases: vec![],
-            next: 0,
-            proofs,
-        })),
+        histories: super::super::Histories {
+            checkout: Some(Box::new(super::Retained {
+                root: root.into(),
+                token: "retained".into(),
+                lane_id: crate::command_import::lane::Id { scope: "s".into(), name: "dev".into() },
+                lane_hash: "a".repeat(40),
+                phases: vec![],
+                next: 0,
+                proofs,
+            })),
+            ..Default::default()
+        },
         ..super::State::default()
     };
     let request=serde_json::from_value(json!({"root":root,"home":root,"globalRemotesFile":root.join("global-remotes.json"),"operation":"checkout","options":{"laneHistory":{"token":"retained","phase":0},"skipDependencyInstallation":true}})).unwrap();

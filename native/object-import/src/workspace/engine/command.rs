@@ -55,7 +55,12 @@ pub(crate) struct State {
     inbound: Option<inbound::Retained>,
     outbound: Option<outbound::Retained>,
     stash: Option<Box<stash::Retained>>,
-    lane_history: Option<Box<lane_history::Retained>>,
+    histories: Histories,
+}
+#[derive(Default)]
+struct Histories {
+    checkout: Option<Box<lane_history::Retained>>,
+    inspection: Option<Box<lane_history::inspection::Retained>>,
 }
 struct Record {
     request: Prepare,

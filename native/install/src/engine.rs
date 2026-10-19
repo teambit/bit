@@ -70,6 +70,19 @@ pub struct EngineSettings {
     pub reporter: Option<ReporterSettings>,
 }
 
+impl EngineSettings {
+    /// Supply the published build-script PATH to child processes without changing
+    /// the environment of already-running native workers.
+    pub(crate) fn set_build_scripts_path(&mut self, path: String) {
+        if !self.base.extra_env
+            .keys()
+            .any(|key| key.eq_ignore_ascii_case("PATH"))
+        {
+            self.base.extra_env.insert("PATH".to_string(), path);
+        }
+    }
+}
+
 /// Where packages come from and how to reach them.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct RegistrySettings {

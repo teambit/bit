@@ -34,6 +34,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(prepared) => prepared,
         Err(reason) => return Ok(Outcome::Declined(reason)),
     };
+    if super::installation::Installer::needs_canonical(&root) {
+        return Ok(Outcome::Declined(
+            "configured installation callbacks use InstallMain.install".into(),
+        ));
+    }
     let terminal = Terminal::detect(&argv);
     let host = Arc::new(Host::new(cli, root.clone(), terminal.color));
     // A host that cannot describe the Node.js CLI leaves the command to it.
@@ -101,10 +106,13 @@ fn utf8(args: &[OsString]) -> Option<Vec<String>> {
         .collect()
 }
 
-/// The host computes everything `HostInfo` needs from Node and adds the PATH
-/// the engine's lifecycle scripts must see; the terminal facts are ours.
-/// It sets `PATH`, so it runs before this process starts any thread.
+/// The host computes everything `HostInfo` needs from Node and prefixes its
+/// executable directory to PATH; the terminal facts are ours. Run this before
+/// native workers start. The node-gyp script path is prepared at engine start.
 pub(super) fn host_info(host: &Host, terminal: &Terminal) -> io::Result<HostInfo> {
+    if host.call("installCanonicalSupport", &json!({}))? != true {
+        return Err(io::Error::other("published InstallMain.install unavailable"));
+    }
     let mut facts = host.call("hostInfo", &terminal.json())?;
     if let Some(Value::String(path)) = facts.get_mut("path").map(Value::take) {
         // SAFETY: only the Host stderr forwarder exists, copying pipe bytes without
@@ -218,6 +226,11 @@ pub(in crate::commands) struct JsHost(Arc<Host>, bool);
 
 #[async_trait]
 impl bit_install::Host for JsHost {
+    async fn prepare_build_scripts_path(&self) -> io::Result<Option<String>> {
+        self.call("prepareNativeBuildScriptsPath", json!({})).await
+            .map(Some)
+    }
+
     async fn installation_components(
         &self,
         phase: &str,

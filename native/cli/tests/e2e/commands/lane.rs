@@ -3,6 +3,7 @@ use crate::helper::{Helper, config, parse, setup};
 use flate2::read::ZlibDecoder;
 use sha1::{Digest, Sha1};
 use std::{
+    collections::BTreeMap,
     ffi::OsStr,
     fs,
     io::Read,
@@ -557,6 +558,284 @@ fn local_history_reports_match_node() {
         assert_eq!(native.stdout, node.stdout, "{command}");
         assert_eq!(native.stderr, node.stderr, "{command}");
     }
+}
+
+#[test]
+fn remote_history_refresh_matches_published_node_full_state() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = 'lane history';");
+    helper.add_component_bar_foo();
+    helper.tag_component_bar_foo();
+    crate::helper::remote::publish(&helper);
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message remote-history");
+    crate::helper::remote::publish(&helper);
+    let index =
+        parse(&fs::read_to_string(helper.scopes.local_path.join(".bit/index.json")).unwrap());
+    let lane_hash = index["lanes"][0]["hash"].as_str().unwrap();
+    let history_hash = format!("{:x}", Sha1::digest(format!("{lane_hash}:LaneHistory").as_bytes()));
+    let local_history = helper.scopes.local_path
+        .join(".bit/objects")
+        .join(&history_hash[..2])
+        .join(&history_hash[2..]);
+    assert!(local_history.is_file());
+    fs::remove_file(local_history).unwrap();
+    let native_root = helper.clone_workspace();
+    let node_root = helper.clone_workspace();
+    let before_remote = state(&helper.scopes.remote_path);
+    for command in ["lane history --json", "lane history"] {
+        let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(node.status.success(), "{command}: {}", node.stderr);
+        let native = Helper::cmd_in_with(&native_root, command, &[]);
+        assert!(native.native, "{}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+        assert_state_maps(&state(&native_root), &state(&node_root), command);
+        assert_eq!(command_history(&native_root), command_history(&node_root));
+        assert_state_maps(&state(&helper.scopes.remote_path), &before_remote, command);
+    }
+}
+
+#[test]
+fn bare_scope_lane_inspection_matches_published_node_full_state() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = 'bare lane';");
+    helper.add_component_bar_foo();
+    helper.tag_component_bar_foo();
+    crate::helper::remote::publish(&helper);
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message bare-lane");
+    crate::helper::remote::publish(&helper);
+    let native_scope = helper.scopes.remote_path.clone();
+    let node_scope = helper.clone_remote_scope();
+    for command in ["lane list --json", "lane show dev --json"] {
+        let node = Helper::cmd_in_with(&node_scope, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        let native = Helper::cmd_in_with(&native_scope, command, &[]);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert!(node.status.success(), "{command}: {}", node.stderr);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+        assert_state_maps(&state(&native_scope), &state(&node_scope), command);
+        assert_eq!(command_history(&native_scope), command_history(&node_scope), "{command}");
+    }
+    let observer = helper.scopes.e2e_dir.join("bare-lane-observer");
+    setup::copy_dir(&setup::shared().bare_scope_template, &observer);
+    config::update_scope_json(&observer.join("scope.json"), |scope| {
+        scope.insert("name".into(), serde_json::json!("bare-lane-observer"));
+        scope
+            .entry("remotes")
+            .or_insert_with(|| serde_json::json!({}))[&helper.scopes.remote] =
+            serde_json::json!(format!("file://{}", native_scope.display()));
+    });
+    let node_observer = helper.scopes.e2e_dir.join("bare-lane-observer-node");
+    setup::copy_dir(&observer, &node_observer);
+    let globals = helper.scopes.e2e_dir.join("bare-lane-globals");
+    fs::create_dir_all(globals.join("config")).unwrap();
+    fs::copy(
+        setup::shared().root.join("globals/config/config.json"),
+        globals.join("config/config.json"),
+    )
+    .unwrap();
+    let mut remotes = serde_json::json!({});
+    remotes[&helper.scopes.remote] =
+        serde_json::json!(format!("file://{}", native_scope.display()));
+    fs::write(globals.join("config/global-remotes.json"), remotes.to_string()).unwrap();
+    for command in [
+        format!("lane list --remote {} --json", helper.scopes.remote),
+        format!("lane show {}/dev --remote --json", helper.scopes.remote),
+    ] {
+        let node = Helper::cmd_in_with(
+            &node_observer,
+            &command,
+            &[("BIT_NATIVE", OsStr::new("off")), ("BIT_GLOBALS_DIR", globals.as_os_str())],
+        );
+        let native =
+            Helper::cmd_in_with(&observer, &command, &[("BIT_GLOBALS_DIR", globals.as_os_str())]);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert!(node.status.success(), "{command}: {}", node.stderr);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+        assert_state_maps(&state(&observer), &state(&node_observer), &command);
+    }
+    assert_state_maps(&state(&native_scope), &state(&node_scope), "bare scope inspection");
+}
+
+#[test]
+fn bare_scope_lane_history_refresh_matches_published_node_full_state() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = 'bare history base';");
+    helper.add_component_bar_foo();
+    helper.tag_component_bar_foo();
+    crate::helper::remote::publish(&helper);
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message first-bare-history");
+    crate::helper::remote::publish(&helper);
+    let native_scope = helper.clone_remote_scope();
+    let node_scope = helper.clone_remote_scope();
+    for scope_root in [&native_scope, &node_scope] {
+        config::update_scope_json(&scope_root.join("scope.json"), |scope| {
+            scope
+                .entry("remotes")
+                .or_insert_with(|| serde_json::json!({}))
+                [&helper.scopes.remote] =
+                serde_json::json!(format!("file://{}", helper.scopes.remote_path.display()));
+        });
+    }
+    fs::write(
+        helper.scopes.local_path.join("bar/foo.js"),
+        "module.exports = 'bare history advance';",
+    )
+    .unwrap();
+    helper.run("snap bar/foo --message second-bare-history");
+    crate::helper::remote::publish(&helper);
+    let before_remote = state(&helper.scopes.remote_path);
+    for command in ["lane history dev --json", "lane history dev"] {
+        let node = Helper::cmd_in_with(&node_scope, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        let native = Helper::cmd_in_with(&native_scope, command, &[]);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert!(node.status.success(), "{command}: {}", node.stderr);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+        assert_state_maps(&state(&native_scope), &state(&node_scope), command);
+        assert_eq!(command_history(&native_scope), command_history(&node_scope), "{command}");
+        assert_state_maps(&state(&helper.scopes.remote_path), &before_remote, command);
+    }
+}
+
+#[test]
+fn absent_remote_lane_after_custom_resolver_is_owned_once() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    let native_scope = helper.scopes.e2e_dir.join("lane-resolver-native");
+    setup::copy_dir(&helper.scopes.local_path, &native_scope);
+    let resolver = native_scope.join("resolver.cjs");
+    fs::write(&resolver, format!(
+        r"const fs=require('fs');module.exports=async()=>{{fs.appendFileSync(process.cwd()+'/resolver-count','called\n');return {};}};",
+        serde_json::json!(format!("file://{}", helper.scopes.remote_path.display())),
+    )).unwrap();
+    config::update_scope_json(&native_scope.join(".bit/scope.json"), |scope| {
+        scope.insert("remotes".into(), serde_json::json!({}));
+        scope.insert("resolverPath".into(), serde_json::json!(resolver));
+    });
+    let node_scope = helper.scopes.e2e_dir.join("lane-resolver-node");
+    setup::copy_dir(&native_scope, &node_scope);
+    let command = format!("lane show {}/absent --remote", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_scope, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native = Helper::cmd_in_with(&native_scope, &command, &[]);
+    assert!(native.native, "{}", native.trace);
+    assert!(!node.status.success());
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(fs::read_to_string(native_scope.join("resolver-count")).unwrap(), "called\n");
+    assert_eq!(fs::read_to_string(node_scope.join("resolver-count")).unwrap(), "called\n");
+    assert_state_maps(&state(&native_scope), &state(&node_scope), "resolver failure");
+}
+
+fn state(root: &Path) -> BTreeMap<String, Vec<u8>> {
+    fn visit(root: &Path, dir: &Path, rows: &mut BTreeMap<String, Vec<u8>>) {
+        for entry in fs::read_dir(dir).unwrap() {
+            let path = entry.unwrap().path();
+            let key = path
+                .strip_prefix(root)
+                .unwrap()
+                .to_string_lossy()
+                .replace('\\', "/");
+            if key == ".bit/command-history" || key == "command-history" {
+                continue;
+            }
+            let metadata = fs::symlink_metadata(&path).unwrap();
+            rows.insert(format!("{key}:mode"), file_mode(&metadata));
+            let bytes = entry_bytes(root, &path, &metadata, &key);
+            rows.insert(key, bytes);
+            if metadata.is_dir() {
+                visit(root, &path, rows);
+            }
+        }
+    }
+    let mut rows = BTreeMap::new();
+    visit(root, root, &mut rows);
+    rows
+}
+
+fn entry_bytes(root: &Path, path: &Path, metadata: &fs::Metadata, key: &str) -> Vec<u8> {
+    if metadata.file_type().is_symlink() {
+        let target = fs::read_link(path).unwrap();
+        let target = target
+            .strip_prefix(root)
+            .map_or_else(
+                |_| target.to_string_lossy().into_owned(),
+                |relative| format!("<WORKSPACE>/{}", relative.display()),
+            );
+        return format!("symlink:{target}").into_bytes();
+    }
+    if metadata.is_dir() {
+        return b"directory".to_vec();
+    }
+    if key.starts_with(".bit/objects/") || key.starts_with("objects/") {
+        let mut bytes = Vec::new();
+        ZlibDecoder::new(fs::File::open(path).unwrap()).read_to_end(&mut bytes).unwrap();
+        return bytes;
+    }
+    fs::read(path).unwrap()
+}
+
+fn assert_state_maps(
+    actual: &BTreeMap<String, Vec<u8>>,
+    expected: &BTreeMap<String, Vec<u8>>,
+    command: &str,
+) {
+    for key in actual.keys().chain(expected.keys()) {
+        assert!(
+            actual.get(key) == expected.get(key),
+            "{command}: path {key} differs: native {}, Node {}",
+            state_summary(actual.get(key)),
+            state_summary(expected.get(key)),
+        );
+    }
+}
+
+fn state_summary(value: Option<&Vec<u8>>) -> String {
+    match value {
+        None => "absent".to_owned(),
+        Some(bytes) => format!("{} bytes {:?}", bytes.len(), &bytes[..bytes.len().min(96)]),
+    }
+}
+
+#[cfg(unix)]
+fn file_mode(metadata: &fs::Metadata) -> Vec<u8> {
+    use std::os::unix::fs::PermissionsExt;
+    (metadata.permissions().mode() & 0o7777).to_le_bytes().to_vec()
+}
+
+#[cfg(not(unix))]
+fn file_mode(metadata: &fs::Metadata) -> Vec<u8> {
+    vec![u8::from(metadata.permissions().readonly())]
+}
+
+fn command_history(root: &Path) -> Vec<String> {
+    let path = if root.join("scope.json").is_file() {
+        root.join("command-history")
+    } else {
+        root.join(".bit/command-history")
+    };
+    fs::read_to_string(path)
+        .unwrap_or_default()
+        .lines()
+        .map(|line| {
+            line.splitn(3, ' ')
+                .nth(2)
+                .unwrap_or_default()
+                .to_owned()
+        })
+        .collect()
 }
 
 #[test]

@@ -152,14 +152,17 @@ fn prepare_dependencies(
     Ok(())
 }
 fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
+    empty_at(&crate::scope_path(root), allow_lane)
+}
+fn empty_at(directory: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
     let mut capture = Capture::default();
     let scope = capture
-        .json(&crate::scope_path(root).join("scope.json"))?
+        .json(&directory.join("scope.json"))?
         .ok_or_else(|| invalid("import local scope"))?;
     remote::settings_for_lane(&scope, allow_lane)?;
     let name = scope["name"].as_str().ok_or_else(|| invalid("import local name"))?;
     let index = capture
-        .json(&crate::scope_path(root).join("index.json"))?
+        .json(&directory.join("index.json"))?
         .unwrap_or_else(|| json!({"components":[],"lanes":[]}));
     let plan = PreparedImport {
         overlay: Overlay::default(),
@@ -168,7 +171,7 @@ fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
         main_refresh: super::MainRefresh::default(),
         capture,
         environment: super::Environment {
-            local_directory: crate::scope_path(root).join("objects"),
+            local_directory: directory.join("objects"),
             remote_overrides: HashMap::new(),
             global_remotes: None,
             missing_global_remotes: None,
@@ -182,6 +185,8 @@ fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
             index_changed: false,
             lane_histories: Vec::new(),
             switch_tracking: None,
+            post_write_bitmap_history: false,
+            switch_warning: None,
         },
     };
     Ok((plan, scope))
@@ -197,11 +202,17 @@ pub(crate) fn prepare_cached(
     Ok(plan)
 }
 pub(crate) fn prepare_lane(root: &Path, global_remotes_file: &Path) -> io::Result<PreparedImport> {
-    if !root.is_absolute() || !global_remotes_file.is_absolute() {
+    prepare_lane_at(&crate::scope_path(root), global_remotes_file)
+}
+pub(crate) fn prepare_lane_at(
+    directory: &Path,
+    global_remotes_file: &Path,
+) -> io::Result<PreparedImport> {
+    if !directory.is_absolute() || !global_remotes_file.is_absolute() {
         return Err(invalid("lane import absolute paths"));
     }
-    let (mut plan, _) = empty(root, true)?;
-    configure_cached(&mut plan, root, global_remotes_file)?;
+    let (mut plan, _) = empty_at(directory, true)?;
+    configure_cached_at(&mut plan, directory, global_remotes_file)?;
     Ok(plan)
 }
 pub(crate) fn prepare_lane_with_virtual(
@@ -221,8 +232,15 @@ fn configure_cached(
     root: &Path,
     global_remotes_file: &Path,
 ) -> io::Result<()> {
+    configure_cached_at(plan, &crate::scope_path(root), global_remotes_file)
+}
+fn configure_cached_at(
+    plan: &mut PreparedImport,
+    directory: &Path,
+    global_remotes_file: &Path,
+) -> io::Result<()> {
     let scope = plan.capture
-        .json(&crate::scope_path(root).join("scope.json"))?
+        .json(&directory.join("scope.json"))?
         .ok_or_else(|| invalid("import local scope"))?;
     let global = plan.capture.json(global_remotes_file)?;
     if global.is_none() {
@@ -235,7 +253,7 @@ fn configure_cached(
     }
     plan.environment.remotes = remotes;
     let staged = plan.capture
-        .read(&crate::scope_path(root).join("staged-snaps"))?
+        .read(&directory.join("staged-snaps"))?
         .unwrap_or_default();
     plan.cache.staged = String::from_utf8(staged).map_err(io::Error::other)?;
     plan.validate()?;

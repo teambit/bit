@@ -37,6 +37,13 @@ pub(super) fn load(
         "statusLoadCallbacks",
         &json!({"components":components,"status":status,"snapshot":snapshot,"checkout":checkout,"directory":directory.path()}),
     )?;
+    if checkout {
+        let checked = host.call("statusDependencyCacheChecked", &json!({}))?;
+        if !checked.is_boolean() {
+            return Err(decline("checkout dependency loader cache receipt"));
+        }
+        capture.environment_facts["checkoutLoaderCacheChecked"] = checked;
+    }
     capture.cache.retain_callback_directory(directory);
     capture.cache.retain_callback_stdout(rows["stdout"].as_str().unwrap_or_default());
     if snapshot {

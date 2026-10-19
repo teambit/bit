@@ -66,7 +66,7 @@ impl Planned {
             return Err(io::Error::other("native import dependency receipt changed"));
         }
         self.report = if options.output.json {
-            output::json_report(&completed, false)?
+            output::json_report(&completed, false, false)?
         } else {
             receipt.import_report(self.chalk, None)?
         };

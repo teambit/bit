@@ -323,6 +323,12 @@ pub(super) fn remote_lane_hash(
         .iter()
         .filter(|row| row["id"]["scope"] == id.scope && row["id"]["name"] == id.name)
         .collect::<Vec<_>>();
+    if matches.is_empty() {
+        return Err(io::Error::new(
+            io::ErrorKind::NotFound,
+            format!(r#"lane "{}" was not found in scope "{}""#, id.name, id.scope),
+        ));
+    }
     if matches.len() != 1 {
         return Err(invalid("lane remote identity missing or ambiguous"));
     }

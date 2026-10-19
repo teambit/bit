@@ -1,9 +1,11 @@
 //! `e2e/commands/import.e2e.ts`.
 
 mod adoption;
+mod authored_install;
 mod fetch_deps;
 mod history;
 mod lanes;
+mod original_scopes;
 mod policy;
 
 use crate::{

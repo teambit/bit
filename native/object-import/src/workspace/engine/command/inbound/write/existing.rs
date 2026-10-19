@@ -18,7 +18,6 @@ pub(super) struct Input<'a> {
 #[derive(Clone, Copy)]
 pub(super) struct Resolution<'a> {
     pub(super) override_existing: bool,
-    pub(super) install_requested: bool,
     pub(super) merge_strategy: Option<&'a str>,
     pub(super) track_only: bool,
 }
@@ -105,9 +104,6 @@ fn versions(input: &Input<'_>, model: &Value) -> io::Result<(Value, String, Stri
     let old = if let Some(version) = details::local_object(input.root, &current_hash, "Version")? {
         version
     } else {
-        if input.resolution.install_requested {
-            return Err(invalid("inbound authored import installation requires canonical writer"));
-        }
         input.imported.overlay
             .read(&current_hash, "Version")?
             .ok_or_else(|| invalid("inbound existing Version"))?

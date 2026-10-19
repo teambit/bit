@@ -246,6 +246,7 @@ impl Reader {
         if let Some(startup) = startup {
             let mut progress = reader.context["commandProgress"].clone();
             progress["switchImportCount"] = reader.context["switchImportCount"].clone();
+            progress["switchRemoteWarning"] = reader.context["switchRemoteWarning"].clone();
             startup.build_progress = Some(progress);
         }
         Ok(reader)

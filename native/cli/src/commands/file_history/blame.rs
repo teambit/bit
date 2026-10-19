@@ -30,7 +30,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
     let data = match read(&root, path)
-        .and_then(|(_, rows)| report(&rows, include_message, Chalk::detect(args)))
+        .and_then(|(_, _, rows)| report(&rows, include_message, Chalk::detect(args)))
     {
         Ok(data) => data,
         Err(error) => return Ok(Outcome::Declined(format!("blame: {error}"))),
@@ -52,7 +52,7 @@ fn report(rows: &[Value], include_message: bool, chalk: Chalk) -> io::Result<Str
         .iter()
         .map(|row| row.iter().map(String::as_str).collect())
         .collect::<Vec<_>>();
-    Ok(log::table(&borrowed))
+    Ok(log::table_with_separator(&borrowed, &chalk.gray(" ")))
 }
 
 fn selected(rows: &[Value]) -> Vec<&Value> {

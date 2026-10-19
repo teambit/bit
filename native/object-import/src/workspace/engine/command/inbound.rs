@@ -390,6 +390,6 @@ pub(in crate::workspace::engine) fn local_preflight(input: &Prepare) -> io::Resu
             .map(|id| requested_target(id))
             .collect::<io::Result<Vec<_>>>()?
     };
-    write::preflight(&input.root, &targets, preparation::write_options(input))?;
+    write::preflight(&input.root, &targets, preparation::write_options(input, false))?;
     Ok((targets.len(), json!({"eligible":true})))
 }

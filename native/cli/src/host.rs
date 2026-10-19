@@ -43,6 +43,12 @@ const SCRIPT: &str = concat!(
     include_str!("host/switch.js"),
     "\n",
     include_str!("host/cat.js"),
+    "\n",
+    include_str!("host/log_file.js"),
+    "\n",
+    include_str!("host/install.js"),
+    "\n",
+    include_str!("host/inventory.js"),
 );
 const EXIT_GRACE: Duration = Duration::from_secs(5);
 

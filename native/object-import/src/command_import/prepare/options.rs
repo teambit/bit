@@ -42,6 +42,25 @@ pub(crate) fn prepare_graph_inbound_with_virtual(
 }
 
 impl PreparedImport {
+    /// `importMany({ lane, preferDependencyGraph: false })` traverses all
+    /// selected lane and main IDs after their heads have been retained.
+    pub(crate) fn prepare_lane_dependencies(
+        &mut self,
+        root: &Path,
+        targets: &[Target],
+    ) -> io::Result<()> {
+        if targets.is_empty() {
+            return Ok(());
+        }
+        self.cache.fetch_all_dependencies = true;
+        for target in targets {
+            self.cache.unbuilt.insert(format!("{}@{}", super::identity(target)?, target.version));
+        }
+        let remotes = self.environment.remotes.clone();
+        super::prepare_dependencies(self, root, &targets.iter().collect::<Vec<_>>(), &remotes)?;
+        self.validate()
+    }
+
     pub(crate) fn prepare_main_fetch(
         &mut self,
         root: &Path,

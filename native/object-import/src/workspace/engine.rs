@@ -83,6 +83,8 @@ enum Request {
     CommandStashPersist(command::stash::Persist),
     CommandPrepare(command::input::Prepare),
     CommandLaneHistoryPrepare(command::lane_history::Prepare),
+    CommandLaneHistoryInspectPrepare(command::lane_history::inspection::Prepare),
+    CommandLaneHistoryInspectApply(command::lane_history::inspection::Apply),
     CommandCheckoutSelect(command::checkout_pattern::Request),
     CommandInboundPrepare(command::inbound::Prepare),
     CommandInboundLocalPreflight(command::inbound::Prepare),

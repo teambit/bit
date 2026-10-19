@@ -1,5 +1,6 @@
 //! `e2e/commands/tag.e2e.ts`.
 
+mod lane;
 mod registry;
 mod root;
 mod soft;

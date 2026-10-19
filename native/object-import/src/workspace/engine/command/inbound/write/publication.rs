@@ -33,10 +33,7 @@ impl Prepared {
         let result = (|| {
             self.publish_files(&mut written)?;
             self.publish_replacements(&mut replaced)?;
-            self.check_bitmap("during publication")?;
-            self.history.publish(&self.root, &self.bitmap_before)?;
-            history_published = true;
-            self.publish_bitmap()
+            self.publish_history_and_bitmap(&mut history_published)
         })();
         if result.is_err() {
             if history_published {
@@ -50,6 +47,16 @@ impl Prepared {
             policy.commit()?;
         }
         Ok(())
+    }
+
+    fn publish_history_and_bitmap(&self, history_published: &mut bool) -> io::Result<()> {
+        self.check_bitmap("during publication")?;
+        self.history.publish(&self.root, &self.bitmap_before)?;
+        *history_published = true;
+        if self.history.post_write_backup {
+            self.history.publish_after_write(&self.bitmap_before, &self.bitmap_after)?;
+        }
+        self.publish_bitmap()
     }
 
     fn check_bitmap(&self, stage: &str) -> io::Result<()> {
@@ -168,17 +175,38 @@ impl History {
                 self.attributes.source.as_ref(),
                 false,
             )?;
-            let mut metadata = OpenOptions::new()
-                .append(true)
-                .create(true)
-                .open(&self.metadata)?;
-            writeln!(metadata, "{} import", self.file_id)?;
-            metadata.sync_all()
+            self.append_metadata()
         })();
         if result.is_err() {
             self.rollback();
         }
         result
+    }
+    pub(super) fn publish_after_write(&self, original: &[u8], after: &[u8]) -> io::Result<()> {
+        if fs::read(&self.backup)? != original || fs::read(&self.metadata)? != self.first_metadata()
+        {
+            return Err(invalid("inbound bitmap history changed after first write"));
+        }
+        crate::merge_state::write::commit_metadata(
+            &self.backup,
+            std::str::from_utf8(after).map_err(io::Error::other)?,
+            self.attributes.source.as_ref(),
+            false,
+        )?;
+        self.append_metadata()
+    }
+    fn first_metadata(&self) -> Vec<u8> {
+        let mut expected = self.metadata_before.clone().unwrap_or_default();
+        expected.extend_from_slice(format!("{} import\n", self.file_id).as_bytes());
+        expected
+    }
+    fn append_metadata(&self) -> io::Result<()> {
+        let mut metadata = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(&self.metadata)?;
+        writeln!(metadata, "{} import", self.file_id)?;
+        metadata.sync_all()
     }
     pub(super) fn rollback(&self) {
         match &self.backup_before {

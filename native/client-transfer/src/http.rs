@@ -3,8 +3,10 @@
 //! symphony GraphQL for hub scope resolution.
 
 pub use hub::HubReply;
+pub use inventory::old_server_fallback;
 
 mod configuration;
+mod delete;
 mod doctor;
 mod hub;
 mod inventory;
@@ -14,7 +16,7 @@ mod stream;
 use configuration::{config_str, proxy, sockets, tls};
 
 use crate::{Cancellation, GlobalConfig, fetch::FetchOptions, invalid, tar::ObjectItem};
-use reqwest::{Client, RequestBuilder, Response};
+use reqwest::{Client, RequestBuilder, Response, redirect::Policy};
 use serde_json::{Value, json};
 use std::{io, time::Duration};
 
@@ -100,6 +102,7 @@ impl Retry {
 /// The client every HTTP remote request goes through.
 pub struct Network {
     client: Client,
+    delete_client: Client,
     token: Option<String>,
     client_version: String,
     local_scope: Option<String>,
@@ -167,11 +170,22 @@ impl Network {
     ) -> io::Result<Self> {
         let global = crate::config::effective(global.clone(), &Value::Null, &Value::Null);
         let global = &global;
-        let builder = sockets(Client::builder().user_agent(USER_AGENT), global)?;
-        let builder = proxy(builder, global)?;
-        let client = tls(builder, global)?.build().map_err(io::Error::other)?;
+        let configured = |builder| {
+            let builder = sockets(builder, global)?;
+            let builder = proxy(builder, global)?;
+            tls(builder, global)?.build().map_err(io::Error::other)
+        };
+        let client = configured(Client::builder().user_agent(USER_AGENT))?;
+        // A 307/308 redirect can repeat a POST after the original delete was
+        // committed. Keep redirects disabled only for mutation-by-delete.
+        let delete_client = configured(
+            Client::builder()
+                .user_agent(USER_AGENT)
+                .redirect(Policy::none()),
+        )?;
         Ok(Self {
             client,
+            delete_client,
             token: token
                 .filter(|token| !token.is_empty())
                 .or_else(|| config_str(global, CFG_USER_TOKEN))

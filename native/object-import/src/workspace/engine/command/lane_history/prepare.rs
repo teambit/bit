@@ -11,7 +11,7 @@ pub(in crate::workspace::engine) fn run(
     input: Prepare,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
-    if state.record.is_some() || state.lane_history.is_some() {
+    if state.record.is_some() || state.histories.checkout.is_some() {
         return Err(invalid("history owner active"));
     }
     for path in [&input.root, &input.home, &input.global_remotes_file] {

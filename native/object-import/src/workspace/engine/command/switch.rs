@@ -50,6 +50,7 @@ pub(super) fn context(
         progress::import_count(&request.root, &context, context["targets"].as_array().unwrap())?;
     context["switchImportCount"] = json!(count);
     context["switchCheckoutImport"] = progress::receipt(count);
+    context["switchRemoteWarning"] = json!(selection.imported.switch_warning());
     selection.imported.validate()?;
     Ok((context, Some(selection.imported)))
 }
@@ -91,7 +92,7 @@ impl LaneSelection {
             return Err(invalid("already checked out to requested lane"));
         }
         refresh_main(request, &bitmap, &mut imported)?;
-        let lane = imported.resolve_other_lane(
+        let lane = imported.resolve_switch_lane(
             &destination,
             request.options.lane.as_ref().unwrap().skip_fetch,
         )?;

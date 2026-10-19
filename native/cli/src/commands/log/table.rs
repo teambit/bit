@@ -3,6 +3,11 @@
 use unicode_width::UnicodeWidthStr;
 
 pub(in crate::commands) fn table(rows: &[Vec<&str>]) -> String {
+    table_with_separator(rows, " ")
+}
+
+/// `cli-table` styles its middle border separately from plain cell padding.
+pub(in crate::commands) fn table_with_separator(rows: &[Vec<&str>], separator: &str) -> String {
     let fields = rows.first().map_or(0, Vec::len);
     let widths: Vec<usize> = (0..fields)
         .map(|index| {
@@ -35,9 +40,9 @@ pub(in crate::commands) fn table(rows: &[Vec<&str>]) -> String {
                 output.push_str(&" ".repeat(widths[index].saturating_sub(UnicodeWidthStr::width(
                     value,
                 ))));
-                output.push(' ');
+                output.push_str(separator);
             }
-            let _ = output.pop();
+            output.truncate(output.len().saturating_sub(separator.len()));
             lines.push(output);
         }
     }

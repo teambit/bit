@@ -7,6 +7,7 @@ pub(in crate::commands) use recover::{
     RecoverOptions, recover_import, recover_probe, recover_scope_import,
 };
 
+mod cache;
 mod execution;
 mod lifecycle;
 mod options;
@@ -101,14 +102,26 @@ fn render_installation(
 ) -> io::Result<()> {
     let ids = planned.receipt.ids.clone();
     let order = lifecycle::component_order(&planned.prepared)?;
-    if let Err(error) =
-        installer.install_ordered(root, options.write.skip_write_config_files, &ids, &order)
+    let errors =
+        installer.install_import(root, options.write.skip_write_config_files, &ids, &order)?;
+    if let Some(error) = &errors.installation
+        && !errors.installation_reported
     {
         output.failure(&format!("installation failed with the following error: {error}"));
+    }
+    if errors.installation.is_some() || errors.compilation.is_some() {
         planned.report = if options.output.json {
-            output::json_report(&planned.prepared, true)?
+            output::json_report(
+                &planned.prepared,
+                errors.installation.is_some(),
+                errors.compilation.is_some(),
+            )?
         } else {
-            planned.receipt.import_report(planned.chalk, Some(&error.to_string()))?
+            planned.receipt.import_report_with_errors(
+                planned.chalk,
+                errors.installation.as_deref(),
+                errors.compilation.as_deref(),
+            )?
         };
     }
     Ok(())
@@ -203,7 +216,7 @@ impl Planned {
         let receipt = report::validate(&prepared)?;
         output::validate_lane_groups(&prepared, options)?;
         let report = if options.output.json {
-            output::json_report(&prepared, false)?
+            output::json_report(&prepared, false, false)?
         } else if options.operation == "fetch" {
             receipt.fetch_report(chalk)?
         } else {

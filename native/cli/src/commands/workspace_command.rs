@@ -17,7 +17,10 @@ pub(in crate::commands) mod switch;
 pub mod versions;
 
 pub(in crate::commands) use execution::loader_output;
-pub use execution::{execute_json, execute_then, execute_with, execute_without_loader};
+pub use execution::{
+    execute_failure_scope, execute_json, execute_then, execute_with, execute_with_scope,
+    execute_without_loader,
+};
 pub use snapshot::receipt::NodeCli;
 pub(crate) use snapshot::receipt::{User, uuid_v4};
 
@@ -62,6 +65,32 @@ pub struct Planned {
     /// The request that applies the plan: `commandApply`, or the resolve
     /// commands' own.
     apply: &'static str,
+}
+
+impl Planned {
+    /// `MergingMain` clears the cached current and incoming versions after writing.
+    pub(in crate::commands) fn merge_cache_ids(&self) -> io::Result<Vec<String>> {
+        let rows = array(self.plan["result"].get("components"), "merged components")?;
+        let targets = self.context["lane"]["targets"].as_array();
+        let mut ids = Vec::new();
+        for row in rows {
+            let current = text(row.get("id"))?;
+            ids.push(current.to_owned());
+            let identity = current.rsplit_once('@').map_or(current, |(identity, _)| identity);
+            let incoming = targets
+                .into_iter()
+                .flatten()
+                .find(|target| target["identity"] == identity)
+                .and_then(|target| target["head"].as_str());
+            if let Some(head) = incoming {
+                let incoming = format!("{identity}@{head}");
+                if incoming != current {
+                    ids.push(incoming);
+                }
+            }
+        }
+        Ok(ids)
+    }
 }
 
 /// What one workspace command asks the engine for.
@@ -117,8 +146,22 @@ pub(in crate::commands) fn plan_with_environment(
     startup: &mut super::status::autosync::Startup,
     environment: super::status::environments::Environments,
 ) -> io::Result<Planned> {
-    let environment = checkout_lifecycle::bootstrap_inherited(root, request, startup, environment)?;
+    let environment =
+        checkout_lifecycle::bootstrap_inherited(root, request, startup, environment, false)?;
     plan_with(root, request, false, false, Some(startup), false, Some(environment))
+}
+
+/// Merge keeps its provider session across planning, install and a possible resolution snap.
+pub(in crate::commands) fn plan_merge_with_environment(
+    root: &Path,
+    request: &Request<'_>,
+    startup: &mut super::status::autosync::Startup,
+    environment: super::status::environments::Environments,
+) -> io::Result<Planned> {
+    let preview = request.options["noSnap"] != true;
+    let environment =
+        checkout_lifecycle::bootstrap_inherited(root, request, startup, environment, preview)?;
+    plan_with(root, request, preview, true, Some(startup), true, Some(environment))
 }
 
 /// Capture providers once, materialize the merge, then snap its retained pending identities.

@@ -24,6 +24,43 @@ fn fixture() -> Helper {
     helper
 }
 
+fn dependency_fixture() -> Helper {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    helper.tag_without_build("", "--message main");
+    crate::helper::remote::seed_after_node_export(&helper);
+    helper.run("lane create dev");
+    helper.append_file("comp1/index.js", "\n// lane dependency version");
+    helper.run("snap comp1 --message lane");
+    crate::helper::remote::seed_after_node_export(&helper);
+    helper.run("switch main --skip-fetch -x");
+    let old = helper.clone_workspace();
+    helper.append_file("comp2/index.js", "\n// new main dependency version");
+    helper.tag_without_build("comp2", "--message main-update");
+    crate::helper::remote::seed_after_node_export(&helper);
+    helper.get_cloned_workspace(&old);
+    helper.run("switch dev --skip-fetch -x");
+    helper
+}
+
+#[test]
+fn active_lane_fetch_deps_preserves_lane_and_main_dependency_heads() {
+    let helper = dependency_fixture();
+    let command = format!(
+        "import {}/comp1 {}/comp2 -x --fetch-deps",
+        helper.scopes.remote, helper.scopes.remote,
+    );
+    let native = crate::commands::add::support::history_oracle::compare(
+        &helper,
+        &command,
+        super::without_progress_timing,
+        ["import", "import"],
+        false,
+    );
+    assert!(native.status.success(), "{} {}", native.stdout, native.stderr);
+}
+
 #[test]
 fn fetch_main_and_tracked_lanes_matches_canonical_groups() {
     let helper = fixture();

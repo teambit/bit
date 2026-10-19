@@ -35,14 +35,26 @@ pub(super) fn remote(
     name: &str,
 ) -> io::Result<PathBuf> {
     let directory = raw_remote(plan, remotes, name)?;
-    // A file remote's ScopeMeta travels with its objects; an HTTP response
-    // (a virtual remote) carries none.
-    if !plan.environment.remote_overrides.contains_key(name) {
-        let hash = object_hash(name);
-        plan.overlay.objects.insert(
-            hash.clone(),
-            super::super::publish::object(&hash, "ScopeMeta", json!({"name":name}))?,
-        );
+    // The published importer persists ScopeMeta for both file and HTTP
+    // transfers, including when the remote has no matching component model.
+    let hash = object_hash(name);
+    if !plan.overlay.objects.contains_key(&hash) {
+        let incoming = plan.capture.object(&directory, &hash, "ScopeMeta")?;
+        if incoming
+            .as_ref()
+            .is_some_and(|record| {
+                record.value
+                    .as_ref()
+                    .is_none_or(|value| value["name"] != name)
+            })
+        {
+            return Err(invalid("import remote ScopeMeta identity"));
+        }
+        let record = match incoming {
+            Some(record) => record,
+            None => super::super::publish::object(&hash, "ScopeMeta", json!({"name":name}))?,
+        };
+        plan.overlay.objects.insert(hash, record);
     }
     Ok(directory)
 }

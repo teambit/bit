@@ -51,6 +51,15 @@ pub(crate) fn compare_declined(helper: &Helper, command: &str, stdout: fn(&str) 
     compare_mode(helper, command, false, false, Comparison::exact(stdout), false, None)
 }
 
+/// A delegated `install` still needs the two independently qualified pnpm clock projections.
+pub(crate) fn compare_install_declined(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+) -> Run {
+    compare_mode(helper, command, false, false, Comparison::exact(stdout), true, None)
+}
+
 /// Installation changes only these two qualified pnpm wall-clock fields independently.
 pub(crate) fn compare_install(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
     compare_mode(helper, command, false, true, Comparison::exact(stdout), true, None)
@@ -473,6 +482,7 @@ fn describe(bytes: Option<&Vec<u8>>, path: &str) -> String {
 
 fn diagnostic_limit(path: &str) -> usize {
     match path {
+        "unmerged.json" => 2048,
         "node_modules/.modules.yaml" | "node_modules/.pnpm-workspace-state-v1.json" => 16_384,
         _ => 4096,
     }

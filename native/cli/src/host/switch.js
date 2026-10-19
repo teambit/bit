@@ -5,10 +5,12 @@ async function switchCompile({ installationSucceeded }) {
   const workspace = loaded.get('teambit.workspace/workspace');
   captureBootstrapProgress(workspace);
   const loader = bitRequire('@teambit/legacy.loader').loader;
-  // Pnpm turns the loader off before its engine and restores it only on success.
-  // Rust ran that engine; preserve its failed-install loader state for the real compiler.
+  // A retained InstallMain invocation has already made the published loader
+  // transitions. Only native package-manager failure needs its state mirrored.
+  const canonicalAttempted = canonicalInstallAttempted;
+  canonicalInstallAttempted = false;
   const failedBeforePm = laneHistoryCommand && historyInstallationFailedBeforePm;
-  if (!installationSucceeded && !failedBeforePm) loader.off();
+  if (!installationSucceeded && !failedBeforePm && !canonicalAttempted) loader.off();
   const previous = snapshotBootstrapProgress;
   snapshotBootstrapProgress = failedBeforePm
     ? !cliArguments.some(argument => ['--json', '-j'].includes(argument))

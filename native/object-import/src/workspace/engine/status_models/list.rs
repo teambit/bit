@@ -22,6 +22,8 @@ use std::{
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {
     root: PathBuf,
+    #[serde(default)]
+    bare_scope: bool,
     /// The current lane, when it is not main.
     #[serde(default)]
     lane: Option<LaneId>,
@@ -39,8 +41,15 @@ pub(in crate::workspace::engine) fn read(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     super::super::path(&request.root)?;
-    let items = index::read(&request.root)?;
-    let directory = crate::scope_path(&request.root).join("objects");
+    if request.bare_scope {
+        validate_bare_scope(&request.root)?;
+    }
+    let items = if request.bare_scope {
+        index::read_at(&request.root)?
+    } else {
+        index::read(&request.root)?
+    };
+    let directory = scope_directory(&request.root, request.bare_scope).join("objects");
     let reader = Reader {
         directory: &directory,
         overlay: None,
@@ -48,7 +57,7 @@ pub(in crate::workspace::engine) fn read(
         packed: Budget::new(256 * 1024 * 1024),
     };
     let lane_heads = match &request.lane {
-        Some(lane) => lane_heads(&request.root, &reader, lane)?,
+        Some(lane) => lane_heads(&request.root, request.bare_scope, &reader, lane)?,
         None => HashMap::new(),
     };
     let rows = pool.install(|| {
@@ -75,29 +84,37 @@ pub(in crate::workspace::engine) fn read(
 pub(in crate::workspace::engine) struct Lanes {
     root: PathBuf,
     #[serde(default)]
+    bare_scope: bool,
+    #[serde(default)]
     merge_data: bool,
     #[serde(default)]
     remote_scope: Option<String>,
     #[serde(default)]
     global_remotes_file: Option<PathBuf>,
+    #[serde(default)]
+    remote_host: Option<String>,
 }
 
 /// `laneList`: each lane of the index (`listLanes`), in its order, with the
 /// hash it is indexed by and its Lane object.
 pub(in crate::workspace::engine) fn lanes(request: &Lanes) -> io::Result<(usize, Value)> {
     super::super::path(&request.root)?;
+    if request.bare_scope {
+        validate_bare_scope(&request.root)?;
+    }
     let remote = request.remote_scope
         .as_deref()
         .map(|scope| remote_repository(request, scope))
         .transpose()?;
     let index = match &remote {
-        Some(path) => read_bare_index(path)?,
+        Some(path) => read_local_bare_index(path)?,
+        None if request.bare_scope => read_local_bare_index(&request.root)?,
         None => read_index(&request.root)?,
     };
     let directory = remote
         .as_ref()
         .map_or_else(
-            || crate::scope_path(&request.root).join("objects"),
+            || scope_directory(&request.root, request.bare_scope).join("objects"),
             |path| path.join("objects"),
         );
     let reader = Reader {
@@ -106,30 +123,38 @@ pub(in crate::workspace::engine) fn lanes(request: &Lanes) -> io::Result<(usize,
         raw: Budget::new(32 * 1024 * 1024),
         packed: Budget::new(32 * 1024 * 1024),
     };
+    let lanes = lane_entries(&reader, &index, request.merge_data)?;
+    Ok((lanes.len(), json!({ "lanes": lanes })))
+}
+
+fn lane_entries(reader: &Reader<'_>, index: &Value, merge_data: bool) -> io::Result<Vec<Value>> {
     let rows = index["lanes"]
         .as_array()
         .map_or(&[][..], Vec::as_slice);
     if rows.len() > 4096 {
         return Err(invalid("list lane count"));
     }
-    let lanes = rows
-        .iter()
+    rows.iter()
         .map(|row| {
             let hash = row["hash"].as_str().ok_or_else(|| invalid("list lane hash"))?;
             let lane = reader.read(hash, "Lane")?;
             let mut result = json!({ "hash": hash, "lane": lane });
-            if request.merge_data {
-                result["isMerged"] = json!(fully_merged(&reader, &index, &lane)?);
+            if merge_data {
+                result["isMerged"] = json!(fully_merged(reader, index, &lane)?);
             }
             Ok(result)
         })
-        .collect::<io::Result<Vec<_>>>()?;
-    Ok((lanes.len(), json!({ "lanes": lanes })))
+        .collect::<io::Result<Vec<_>>>()
 }
 
 fn remote_repository(request: &Lanes, scope: &str) -> io::Result<PathBuf> {
-    let Remote::File(path) =
-        configured_remote(&request.root, scope, request.global_remotes_file.as_deref())?
+    let Remote::File(path) = remote_for_lane(
+        &request.root,
+        request.bare_scope,
+        scope,
+        request.global_remotes_file.as_deref(),
+        request.remote_host.as_deref(),
+    )?
     else {
         return Err(invalid("list HTTP remote requires canonical adapter"));
     };
@@ -159,6 +184,56 @@ pub(super) fn configured_remote(
             global[scope].as_str().map(str::to_owned)
         })
         .ok_or_else(|| invalid("list unconfigured remote"))?;
+    Remote::from_host(&host)
+}
+
+pub(super) fn scope_directory(root: &Path, bare: bool) -> PathBuf {
+    if bare { root.to_owned() } else { crate::scope_path(root) }
+}
+
+pub(super) fn validate_bare_scope(root: &Path) -> io::Result<String> {
+    let scope = read_json_file(&root.join("scope.json"))?;
+    let name = scope["name"]
+        .as_str()
+        .filter(|name| !name.is_empty() && !name.contains('/'))
+        .ok_or_else(|| invalid("bare lane scope name"))?;
+    if !root.join("objects").is_dir() {
+        return Err(invalid("bare lane scope objects"));
+    }
+    read_local_bare_index(root)?;
+    Ok(name.to_owned())
+}
+
+fn read_local_bare_index(root: &Path) -> io::Result<Value> {
+    match read_bare_index(root) {
+        Ok(index) => Ok(index),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {
+            Ok(json!({"components":[],"lanes":[]}))
+        }
+        Err(error) => Err(error),
+    }
+}
+
+pub(super) fn remote_for_lane(
+    root: &Path,
+    bare: bool,
+    scope: &str,
+    global_remotes_file: Option<&Path>,
+    remote_host: Option<&str>,
+) -> io::Result<Remote> {
+    if scope.is_empty() || scope.contains('/') || scope == "." || scope == ".." {
+        return Err(invalid("bare lane remote scope"));
+    }
+    if let Some(host) = remote_host {
+        return Remote::from_host(host);
+    }
+    if !bare {
+        return configured_remote(root, scope, global_remotes_file);
+    }
+    let host = global_remotes_file
+        .and_then(|path| read_json_file(path).ok())
+        .and_then(|global| global[scope].as_str().map(str::to_owned))
+        .ok_or_else(|| invalid("bare lane unconfigured remote"))?;
     Remote::from_host(&host)
 }
 
@@ -240,10 +315,11 @@ fn read_index(root: &Path) -> io::Result<Value> {
 /// (`lane.getComponentHead`). The lane must be in the index.
 fn lane_heads(
     root: &Path,
+    bare: bool,
     reader: &Reader<'_>,
     lane: &LaneId,
 ) -> io::Result<HashMap<String, String>> {
-    let index = read_index(root)?;
+    let index = if bare { read_local_bare_index(root)? } else { read_index(root)? };
     let row = index["lanes"]
         .as_array()
         .into_iter()

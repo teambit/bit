@@ -10,6 +10,12 @@ pub(super) fn dispatch(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     match request {
+        Request::CommandLaneHistoryInspectPrepare(input) => {
+            command::lane_history::inspection::prepare(&input, &mut snapshots.command)
+        }
+        Request::CommandLaneHistoryInspectApply(input) => {
+            command::lane_history::inspection::apply(&input, &mut snapshots.command)
+        }
         Request::CommandInboundLocalPreflight(input) => command::inbound::local_preflight(&input),
         Request::CommandInboundPrepare(input) => {
             pool.install(|| command::inbound::prepare(&input, &mut snapshots.command))

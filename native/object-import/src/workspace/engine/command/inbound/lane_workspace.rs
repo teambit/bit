@@ -8,8 +8,7 @@ pub(super) fn prepare(
     roots: &[Target],
     id: &lane::Id,
 ) -> io::Result<(Vec<Target>, PreparedImport)> {
-    if input.options.dependencies.fetch_deps
-        || input.options.objects_only
+    if input.options.objects_only
         || input.options.dependencies.import_dependencies
         || input.options.dependencies.import_head_dependencies
     {
@@ -27,10 +26,10 @@ fn prepare_file(
     id: &lane::Id,
 ) -> io::Result<(Vec<Target>, PreparedImport)> {
     let mut import = command_import::prepare_lane(&input.root, &input.global_remotes_file)?;
-    let record = import.fetch_lane_contents_at_hash(id, None)?;
+    let record = import.fetch_lane_workspace_at_hash(id, None, !input.options.all_history)?;
     let choice = choose(input, roots, lane::entries(&record.value)?)?;
     import.retain_remote_lane_refs(&record)?;
-    finish(import, choice, id)
+    finish(import, choice, id, input)
 }
 
 fn prepare_http(
@@ -62,9 +61,9 @@ fn prepare_http(
         &input.global_remotes_file,
         &remotes,
     )?;
-    let record = import.fetch_lane_contents_at_hash(id, Some(hash))?;
+    let record = import.fetch_lane_workspace_at_hash(id, Some(hash), !input.options.all_history)?;
     import.retain_remote_lane_refs(&record)?;
-    finish(import, choice, id)
+    finish(import, choice, id, input)
 }
 
 struct Choice {
@@ -88,11 +87,25 @@ fn finish(
     mut import: PreparedImport,
     choice: Choice,
     id: &lane::Id,
+    input: &Prepare,
 ) -> io::Result<(Vec<Target>, PreparedImport)> {
     if !choice.main.is_empty() {
         import.refresh_lane_main(&choice.main)?;
     }
-    progress(&mut import, &choice.selected, &choice.main, id, choice.changed)?;
+    if input.options.dependencies.fetch_deps {
+        import.prepare_lane_dependencies(&input.root, &choice.selected)?;
+        if !choice.main.is_empty() {
+            import.mark_post_write_bitmap_history();
+        }
+    }
+    progress(
+        &mut import,
+        &choice.selected,
+        &choice.main,
+        id,
+        choice.changed,
+        input.options.dependencies.fetch_deps,
+    )?;
     Ok((choice.selected, import))
 }
 
@@ -140,15 +153,16 @@ fn progress(
     main: &[String],
     id: &lane::Id,
     changed: usize,
+    fetch_deps: bool,
 ) -> io::Result<()> {
     let lane_count = import.progress
         .first()
         .map_or(0, |row| row.components.len())
         .max(changed);
-    let main_count = import.progress.last().map_or(0, |row| row.components.len())
+    let main_count = import.progress.get(1).map_or(0, |row| row.components.len())
         * usize::from(!main.is_empty());
     let latest = latest_row(selected, id, lane_count + main_count)?;
-    let missing = missing_row(selected, main, id, lane_count)?;
+    let missing = missing_row(selected, main, id, lane_count, fetch_deps)?;
     import.progress = vec![latest, missing];
     Ok(())
 }
@@ -174,6 +188,7 @@ fn missing_row(
     main: &[String],
     id: &lane::Id,
     lane_count: usize,
+    fetch_deps: bool,
 ) -> io::Result<Progress> {
     let mut missing_ids = main
         .iter()
@@ -192,7 +207,14 @@ fn missing_row(
             .collect::<io::Result<Vec<_>>>()?,
     );
     let mut missing = Progress {
-        reason: Some("for getting missing versions and dependencies".into()),
+        reason: Some(
+            if fetch_deps {
+                "for getting all dependencies"
+            } else {
+                "for getting missing versions and dependencies"
+            }
+            .into(),
+        ),
         ids: missing_ids,
         ..Default::default()
     };

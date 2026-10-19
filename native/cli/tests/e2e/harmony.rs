@@ -2,8 +2,10 @@
 mod add;
 mod deprecation;
 mod fork;
+mod install_compat;
 mod lane_adoption;
 mod lane_graph_reset;
+mod lane_import_callbacks;
 mod lane_restoration;
 mod merge_callbacks;
 mod merge_history;
@@ -50,6 +52,8 @@ mod export_completion;
 mod export_hub;
 
 mod export_callbacks;
+
+mod file_history;
 
 mod stash;
 

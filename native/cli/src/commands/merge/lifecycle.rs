@@ -3,9 +3,10 @@ mod snapshot;
 use super::report;
 use crate::{
     commands::{
+        add::ProjectedLinker,
         color::Chalk,
         installation::Installer,
-        status::{autosync::Startup, js::decline},
+        status::{autosync::Startup, environments::Environments, js::decline},
         workspace_command::{
             self, Planned, Request, checkout_lifecycle, progress::Progress, resolve,
             results::Report,
@@ -13,9 +14,9 @@ use crate::{
     },
     native::Outcome,
 };
-use bit_install::output::Output;
+use bit_install::{HostInfo, output::Output};
 use serde_json::Value;
-use std::{ffi::OsString, io, path::Path};
+use std::{ffi::OsString, io, path::Path, sync::Arc};
 
 pub(in crate::commands) struct Options {
     pub request: Value,
@@ -57,6 +58,7 @@ pub(in crate::commands) fn run(
         Ok(installer) => installer,
         Err(error) => return Ok(Outcome::Declined(format!("merge installation: {error}"))),
     };
+    let (environment, installation) = installation_session(installer)?;
     let mut startup = Startup::default();
     let request = Request {
         operation: "merge",
@@ -64,17 +66,16 @@ pub(in crate::commands) fn run(
         to: None,
         verify_fresh: true,
     };
-    let prepared = workspace_command::plan_merge(root, &request, &mut startup)
-        .and_then(|planned| {
-            super::failures::check(
-                &planned.plan["result"],
-                Chalk::detect(args),
-                options.mode.lane,
-            )?;
-            Progress::parse(planned.plan.get("progress"))?;
-            report::format(&planned.plan["result"], options.mode, Chalk::detect(args))?;
-            Ok(planned)
-        });
+    let planned = match environment {
+        Some(environment) => workspace_command::plan_merge_with_environment(
+            root,
+            &request,
+            &mut startup,
+            environment,
+        ),
+        None => workspace_command::plan_merge(root, &request, &mut startup),
+    };
+    let prepared = planned.and_then(|planned| precheck(planned, args, &options));
     let planned = match prepared {
         Ok(planned) => planned,
         Err(error) if startup.committed || crate::commands::engine::is_canonical(&error) => {
@@ -86,8 +87,27 @@ pub(in crate::commands) fn run(
         checkout_lifecycle::before(&startup)?;
     }
     workspace_command::execute_then(root, args, "merge", |output| {
-        execute(root, args, output, planned, &startup, &options, installer)
+        execute(root, args, output, planned, &startup, &options, installation)
     })
+}
+
+fn precheck(planned: Planned, args: &[OsString], options: &Options) -> io::Result<Planned> {
+    super::failures::check(&planned.plan["result"], Chalk::detect(args), options.mode.lane)?;
+    Progress::parse(planned.plan.get("progress"))?;
+    report::format(&planned.plan["result"], options.mode, Chalk::detect(args))?;
+    Ok(planned)
+}
+
+fn installation_session(
+    installer: Option<Installer>,
+) -> io::Result<(Option<Environments>, Option<HostInfo>)> {
+    match installer {
+        Some(installer) => {
+            let (environment, info) = installer.into_parts()?;
+            Ok((Some(environment), Some(info)))
+        }
+        None => Ok((None, None)),
+    }
 }
 
 fn execute(
@@ -97,7 +117,7 @@ fn execute(
     mut planned: Planned,
     startup: &Startup,
     options: &Options,
-    installer: Option<Installer>,
+    installation: Option<HostInfo>,
 ) -> io::Result<Report> {
     if let Some(progress) = Progress::parse(planned.plan.get("progress"))? {
         if options.mode.lane {
@@ -116,8 +136,8 @@ fn execute(
                     .any(|row| row["hasConflicts"] == true)
             });
     if !conflicts
-        && let Some(installer) = installer
-        && let Err(error) = installer.install_merge(root)
+        && let Some(info) = installation
+        && let Err(error) = install_retained(root, &mut planned, info)
     {
         output.failure(&format!(
             "failed installing packages, see the log for full stacktrace. error: {error}",
@@ -132,4 +152,26 @@ fn execute(
     }
     crate::commands::status::cleanup_temporary(root)?;
     report::format(&result, options.mode, Chalk::detect(args))
+}
+
+fn install_retained(root: &Path, planned: &mut Planned, mut info: HostInfo) -> io::Result<()> {
+    let mut environment = planned
+        .take_environment()
+        .ok_or_else(|| io::Error::other("merge installation provider session"))?;
+    print!("{}", ProjectedLinker::project_installation_workspace(root, &mut environment)?);
+    let component_ids = planned.merge_cache_ids()?;
+    print!("{}", environment.merge_load_apps(root, &component_ids)?);
+    let host = Arc::new(
+        environment
+            .into_tracking_host()
+            .ok_or_else(|| io::Error::other("merge installation Host"))?,
+    );
+    info.file_id = workspace_command::file_id();
+    let installed = Installer::from_host(Arc::clone(&host), info)
+        .with_initialized_cache(planned.has_captured_components())
+        .install_merge(root);
+    let host = Arc::try_unwrap(host)
+        .map_err(|_| io::Error::other("merge installation Host still borrowed"))?;
+    planned.restore_host(host);
+    installed
 }

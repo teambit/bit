@@ -46,6 +46,28 @@ pub(super) fn with_home(
     Ok((remotes, network, global, local.to_owned()))
 }
 
+/// A bare scope has scope and global settings, but no workspace policy layer.
+pub(super) fn bare(
+    directory: &Path,
+    transport: &Transport,
+) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
+    let scope: Value =
+        serde_json::from_slice(&fs::read(directory.join("scope.json"))?).map_err(io::Error::other)?;
+    let local = scope["name"].as_str().ok_or_else(|| invalid("bare inbound local scope"))?;
+    if !directory.join("objects").is_dir() {
+        return Err(invalid("bare inbound objects"));
+    }
+    let global = bit_client_transfer::config::effective(
+        global_config(transport)?,
+        &scope["config"],
+        &Value::Object(serde_json::Map::new()),
+    );
+    let remotes = Remotes::load(&scope, &transport.global_config_dir, &global)?;
+    let network =
+        Network::new(&global, &transport.bit_version, Some(local), transport.token.as_deref())?;
+    Ok((remotes, network, global, local.to_owned()))
+}
+
 pub(super) fn global_config(transport: &Transport) -> io::Result<GlobalConfig> {
     serde_json::from_value(bit_workspace_config::read_global_config(&transport.global_config_dir)?)
         .map_err(io::Error::other)

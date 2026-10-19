@@ -48,16 +48,16 @@ fn existing_target(
     let scope = row["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty());
-    let Some(scope) = scope else { return authored(options.install_requested) };
+    let Some(scope) = scope else { return Ok(()) };
     let hash =
         crate::validate::hexadecimal(&Sha1::digest(format!("{scope}/{}", target.name).as_bytes()));
     let Some(model) = super::super::details::local_object(root, &hash, "Component")? else {
-        return authored(options.install_requested);
+        return Ok(());
     };
     let requested = row["version"].as_str().ok_or_else(|| invalid("inbound existing version"))?;
     let (_, hash) = super::version(&model, requested)?;
     let Some(version) = super::super::details::local_object(root, &hash, "Version")? else {
-        return authored(options.install_requested);
+        return Ok(());
     };
     if options.override_existing || options.merge_strategy.is_some() {
         return Ok(());
@@ -98,12 +98,4 @@ fn check_sources(root: &Path, row: &Value, version: &Value) -> io::Result<()> {
         }
     }
     Ok(())
-}
-
-fn authored(installation: bool) -> io::Result<()> {
-    if installation {
-        Err(invalid("inbound authored import installation requires canonical writer"))
-    } else {
-        Ok(())
-    }
 }

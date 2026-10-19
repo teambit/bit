@@ -9,7 +9,8 @@ pub(crate) use prepare::{
         prepare_graph_inbound_with_virtual, prepare_inbound_with_virtual,
         prepare_recovery_with_virtual,
     },
-    prepare, prepare_cached, prepare_lane, prepare_lane_with_virtual, prepare_status_with_virtual,
+    prepare, prepare_cached, prepare_lane, prepare_lane_at, prepare_lane_with_virtual,
+    prepare_status_with_virtual,
 };
 pub(crate) use remote_error::message as remote_inflate_message;
 pub(crate) use retained::write_receipt;
@@ -122,6 +123,15 @@ impl MainRefresh {
     }
 }
 impl PreparedImport {
+    pub(crate) fn remote_host(&mut self, scope: &str, host: &str) -> io::Result<()> {
+        bit_client_transfer::remotes::Remote::from_host(host)?;
+        let remotes = self.environment.remotes
+            .as_object_mut()
+            .ok_or_else(|| invalid("import remotes map"))?;
+        remotes.insert(scope.to_owned(), Value::String(host.to_owned()));
+        Ok(())
+    }
+
     pub(crate) fn all_external_targets_unmapped(
         &self,
         targets: &[Target],
@@ -181,8 +191,22 @@ struct Writes {
     index_changed: bool,
     lane_histories: Vec<Value>,
     switch_tracking: Option<Vec<u8>>,
+    post_write_bitmap_history: bool,
+    switch_warning: Option<String>,
 }
 impl PreparedImport {
+    pub(crate) fn switch_warning(&self) -> Option<&str> {
+        self.writes.switch_warning.as_deref()
+    }
+
+    pub(crate) fn mark_post_write_bitmap_history(&mut self) {
+        self.writes.post_write_bitmap_history = true;
+    }
+
+    pub(crate) fn post_write_bitmap_history(&self) -> bool {
+        self.writes.post_write_bitmap_history
+    }
+
     pub(crate) fn virtual_remote(
         &mut self,
         scope: &str,

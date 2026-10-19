@@ -29,6 +29,7 @@ mod move_paths;
 mod patterns;
 mod recover;
 mod recovery;
+mod remote_resolution;
 mod remove;
 mod rename;
 mod reset;

@@ -108,6 +108,12 @@ pub struct DetectRequest<'a> {
 /// workspace actually needs it.
 #[async_trait]
 pub trait Host: Send + Sync {
+    /// Prepare the published node-gyp script path only when the package engine
+    /// is about to run. The returned PATH belongs to child lifecycle processes.
+    async fn prepare_build_scripts_path(&self) -> io::Result<Option<String>> {
+        Ok(None)
+    }
+
     /// Load the retained component classes before root linking, when the parent needs them.
     async fn initial_installation_components(&self, aspect_ids: &[String]) -> io::Result<bool> {
         let _ = aspect_ids;

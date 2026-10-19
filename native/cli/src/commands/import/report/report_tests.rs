@@ -85,3 +85,25 @@ fn an_installation_error_precedes_the_summary() {
         ),
     );
 }
+
+#[test]
+fn a_writer_compile_error_follows_the_graceful_install_error() {
+    let added = receipt(&json!({
+        "id":"s/a", "versions":["0.0.1"], "latestVersion":"0.0.1",
+        "status":"added", "filesStatus":null, "missingDeps":[], "deprecated":false
+    }));
+    let report = validate(&added)
+        .unwrap()
+        .import_report_with_errors(
+            Chalk::new(false),
+            Some("missing directory"),
+            Some("missing directory"),
+        )
+        .unwrap();
+    assert_eq!(
+        report,
+        expected_success_symbols(
+            "imported components (1)\n   › added s/a currently used version 0.0.1 (latest)\n\n✖ Installation Error\nThe following error was thrown by the package manager:\nmissing directory\nUse \"bit install\" to complete the installation, remove the imported components using \"bit remove <comp id>\" or remove the missing dependencies from their source code\n\n✖ Compilation Error\nThe following error was thrown by the compiler\nmissing directory\nPlease fix the issue and run \"bit compile\"\n\n✔ successfully imported one component"
+        ),
+    );
+}

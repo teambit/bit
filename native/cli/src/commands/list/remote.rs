@@ -1,7 +1,10 @@
 //! Scalar remote inventory and latest-version facts, without importing repository objects.
 
 use super::{Options, Row, WorkspaceRow, decline};
-use crate::commands::{engine::Engine, status::cache::cache_root, workspace_command::NodeCli};
+use crate::commands::{
+    engine::Engine, remote_resolution::Session, status::cache::cache_root,
+    workspace_command::NodeCli,
+};
 use serde_json::{Value, json};
 use std::{
     fs::File,
@@ -18,8 +21,14 @@ fn request(root: Option<&Path>, mode: &str) -> io::Result<Value> {
     }))
 }
 
-pub(super) fn list(root: Option<&Path>, options: &Options) -> io::Result<Vec<Row>> {
+pub(super) fn list(
+    root: Option<&Path>,
+    options: &Options,
+    session: &mut Session,
+) -> io::Result<Vec<Row>> {
     let mut query = request(root, "list")?;
+    let scope = options.remote.as_ref().ok_or_else(|| decline("remote list scope"))?;
+    session.resolve(std::slice::from_ref(scope))?;
     query["scope"] = json!(options.remote);
     query["namespaces"] = json!(
         options.namespace
@@ -27,7 +36,11 @@ pub(super) fn list(root: Option<&Path>, options: &Options) -> io::Result<Vec<Row
             .map(|text| { if text.contains('*') { text.clone() } else { format!("{text}/**") } })
     );
     query["includeDeleted"] = json!(options.include_deleted);
+    query["hosts"] = json!(session.overrides());
     let result: Value = Engine::new()?.request(&query)?;
+    if result["oldServerWarning"] == true {
+        session.add_warning("error: the remote does not support the include-deleted flag yet, falling back to listing without deleted components");
+    }
     result["components"]
         .as_array()
         .ok_or_else(|| decline("remote list rows"))?
@@ -73,7 +86,7 @@ fn row(value: &Value) -> io::Result<Row> {
 }
 
 /// `ComponentsList.listAll` requests versions before scope and lane visibility filters.
-pub(super) fn versions(root: &Path, rows: &mut [Row]) -> io::Result<()> {
+pub(super) fn versions(root: &Path, rows: &mut [Row], session: &mut Session) -> io::Result<()> {
     let mut bytes = Vec::new();
     File::open(bit_object_import::scope_path(root).join("scope.json"))?
         .take(1024 * 1024 + 1)
@@ -97,7 +110,9 @@ pub(super) fn versions(root: &Path, rows: &mut [Row]) -> io::Result<()> {
         return Ok(());
     }
     let mut query = request(Some(root), "latestVersions")?;
+    session.resolve(&remote_scopes(&ids)?)?;
     query["ids"] = json!(ids);
+    query["hosts"] = json!(session.overrides());
     let result: Value = Engine::new()?.request(&query)?;
     for value in result["ids"].as_array().ok_or_else(|| decline("remote latest versions"))? {
         let id = value.as_str().ok_or_else(|| decline("remote version id"))?;
@@ -112,4 +127,15 @@ pub(super) fn versions(root: &Path, rows: &mut [Row]) -> io::Result<()> {
         row.remote_version = Some(version.to_string());
     }
     Ok(())
+}
+
+fn remote_scopes(ids: &[String]) -> io::Result<Vec<String>> {
+    let mut scopes = Vec::new();
+    for id in ids {
+        let scope = id.split_once('/').ok_or_else(|| decline("remote version scope"))?.0;
+        if !scopes.iter().any(|seen| seen == scope) {
+            scopes.push(scope.to_owned());
+        }
+    }
+    Ok(scopes)
 }

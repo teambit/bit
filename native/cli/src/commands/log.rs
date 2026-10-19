@@ -2,7 +2,7 @@
 //! with the Node CLI's report and JSON views. Missing objects and unusual
 //! graph or metadata forms delegate before output.
 
-pub(super) use table::table;
+pub(super) use table::{table, table_with_separator};
 
 use super::{
     color::Chalk,

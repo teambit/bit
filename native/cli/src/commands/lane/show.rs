@@ -1,19 +1,21 @@
 //! Native `bit lane show` for a local lane or main.
 
-use super::list::{LaneData, components_report, project_http, read, read_http, read_remote};
+use super::list::{
+    LaneData, components_report, project_http, read_for_scope,
+    remote::{http_at, read_at},
+};
 use crate::{
     commands::{
         color::Chalk,
+        remote_resolution::Session,
         status::js::{decline, text},
         workspace_command::{self, format::Formatter, results::Report},
     },
     history::History,
     native::Outcome,
-    workspace,
 };
 use serde_json::Value;
 use std::{
-    env,
     ffi::OsString,
     io::{self, Write},
     path::Path,
@@ -25,20 +27,36 @@ pub(super) fn show(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome>
     let Some((name, json, remote)) = parse(lane_args) else {
         return Ok(Outcome::Declined("lane show flags outside the native grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let scope_root = match super::scope_root::discover() {
+        Ok(Some(scope_root)) => scope_root,
+        Ok(None) => return Ok(Outcome::Declined("not inside a scope".into())),
+        Err(error) => return Ok(Outcome::Declined(format!("lane show scope: {error}"))),
     };
-    let lane = match select_lane(&root, name, remote) {
+    let root = scope_root.path;
+    let mut session =
+        if scope_root.bare { Session::new(None, args) } else { Session::new(Some(&root), args) };
+    let lane = match select_or_exit(&root, scope_root.bare, args, json, name, remote, &mut session)?
+    {
         Ok(lane) => lane,
-        Err(error) => return Ok(Outcome::Declined(format!("lane show: {error}"))),
+        Err(outcome) => return Ok(outcome),
     };
-    let Some(lane) = lane else {
-        return Ok(Outcome::Declined("lane show name is absent or ambiguous".into()));
-    };
+    io::stdout()
+        .lock()
+        .write_all(session.output().as_bytes())?;
+    emit_selected(&root, scope_root.bare, args, json, lane)
+}
+
+fn emit_selected(
+    root: &Path,
+    bare: bool,
+    args: &[OsString],
+    json: bool,
+    lane: Selected,
+) -> io::Result<Outcome> {
     if json {
         return match &lane {
-            Selected::File(lane) => emit_json(&root, args, &lane.json()),
-            Selected::Http(row) => emit_json(&root, args, row),
+            Selected::File(lane) => emit_json(root, bare, args, &lane.json()),
+            Selected::Http(row) => emit_json(root, bare, args, row),
         };
     }
     let lane = match lane {
@@ -46,7 +64,61 @@ pub(super) fn show(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome>
         Selected::Http(row) => Box::new(project_http(&row)?),
     };
     let report = Report { data: show_report(&lane, Chalk::detect(args))?, code: 0, details: None };
-    workspace_command::execute_with(&root, args, "show", &report, |_| Ok(()))
+    if bare {
+        workspace_command::execute_with_scope(root, args, "show", &report)
+    } else {
+        workspace_command::execute_with(root, args, "show", &report, |_| Ok(()))
+    }
+}
+
+fn select_or_exit(
+    root: &Path,
+    bare: bool,
+    args: &[OsString],
+    json: bool,
+    name: Option<&str>,
+    remote: bool,
+    session: &mut Session,
+) -> io::Result<Result<Selected, Outcome>> {
+    match select_lane(root, bare, name, remote, session) {
+        Ok(Some(lane)) => Ok(Ok(lane)),
+        Ok(None) if session.owned() => {
+            let field = if json { "components" } else { "id" };
+            let error = io::Error::other(format!(
+                "Cannot read properties of undefined (reading '{field}')",
+            ));
+            Ok(Err(owned_failure(root, bare, args, json, session, error)?))
+        }
+        Ok(None) => Ok(Err(Outcome::Declined("lane show name is absent or ambiguous".into()))),
+        Err(error) if session.owned() => {
+            Ok(Err(owned_failure(root, bare, args, json, session, error)?))
+        }
+        Err(error) => Ok(Err(Outcome::Declined(format!("lane show: {error}")))),
+    }
+}
+
+fn owned_failure(
+    root: &Path,
+    bare: bool,
+    args: &[OsString],
+    json: bool,
+    session: &Session,
+    error: io::Error,
+) -> io::Result<Outcome> {
+    let callback_output = session.output();
+    if bare {
+        workspace_command::execute_failure_scope(root, args, "show", json, callback_output, error)
+    } else if json {
+        workspace_command::execute_json(root, args, "show", |_| {
+            io::stdout().lock().write_all(callback_output.as_bytes())?;
+            Err(error)
+        })
+    } else {
+        workspace_command::execute_then(root, args, "show", |_| {
+            io::stdout().lock().write_all(callback_output.as_bytes())?;
+            Err(error)
+        })
+    }
 }
 
 enum Selected {
@@ -54,8 +126,14 @@ enum Selected {
     Http(Value),
 }
 
-fn select_lane(root: &Path, name: Option<&str>, remote: bool) -> io::Result<Option<Selected>> {
-    let (local, (current, _)) = read(root)?;
+fn select_lane(
+    root: &Path,
+    bare: bool,
+    name: Option<&str>,
+    remote: bool,
+    session: &mut Session,
+) -> io::Result<Option<Selected>> {
+    let (local, (current, _)) = read_for_scope(root, bare, false)?;
     let target = name.unwrap_or_else(|| current["name"].as_str().unwrap_or("main"));
     if !remote {
         return Ok(find(&local, target)
@@ -63,30 +141,47 @@ fn select_lane(root: &Path, name: Option<&str>, remote: bool) -> io::Result<Opti
             .map(Box::new)
             .map(Selected::File));
     }
-    let scope = target
-        .split_once('/')
-        .map(|(scope, _)| scope.to_owned())
-        .or_else(|| {
-            find(&local, target)
-                .and_then(|lane| lane.id["scope"].as_str())
-                .map(str::to_owned)
-        });
-    let scope = scope.ok_or_else(|| io::Error::other("remote lane identity"))?;
-    if let Ok((lanes, _)) = read_remote(root, &scope, false) {
-        return Ok(find(&lanes, target)
+    let scope = remote_scope(&local, target)?;
+    session.resolve(std::slice::from_ref(&scope))?;
+    let host = session
+        .overrides()
+        .get(&scope)
+        .map(String::as_str);
+    if let Ok((lanes, _)) = read_at(root, bare, &scope, false, host) {
+        return find(&lanes, target)
             .cloned()
             .map(Box::new)
-            .map(Selected::File));
+            .map(Selected::File)
+            .map(Some)
+            .ok_or_else(|| missing(target));
     }
     let name = target.rsplit_once('/').map_or(target, |(_, name)| name);
-    let rows = read_http(root, &scope, Some(name))?;
+    let rows = http_at(root, bare, &scope, Some(name), host)?;
     let lane = rows
         .into_iter()
         .find(|row| {
             row["id"]["name"] == target
                 || format!("{scope}/{}", row["id"]["name"].as_str().unwrap_or_default()) == target
         });
-    Ok(lane.map(Selected::Http))
+    lane.map(Selected::Http)
+        .map(Some)
+        .ok_or_else(|| missing(target))
+}
+
+fn remote_scope(local: &[LaneData], target: &str) -> io::Result<String> {
+    let scope = target
+        .split_once('/')
+        .map(|(scope, _)| scope.to_owned())
+        .or_else(|| {
+            find(local, target)
+                .and_then(|lane| lane.id["scope"].as_str())
+                .map(str::to_owned)
+        });
+    scope.ok_or_else(|| io::Error::other("remote lane identity"))
+}
+
+fn missing(target: &str) -> io::Error {
+    io::Error::other(format!(r#"lane "{target}" was not found"#))
 }
 
 fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool, bool)> {
@@ -119,12 +214,14 @@ pub(super) fn find<'a>(lanes: &'a [LaneData], target: &str) -> Option<&'a LaneDa
     (matches.len() == 1).then(|| matches[0])
 }
 
-fn emit_json(root: &Path, args: &[OsString], lane: &Value) -> io::Result<Outcome> {
-    let history = History::start(root, args);
+fn emit_json(root: &Path, bare: bool, args: &[OsString], lane: &Value) -> io::Result<Outcome> {
+    let history = (!bare).then(|| History::start(root, args));
     let mut stdout = io::stdout().lock();
     stdout.write_all(serde_json::to_string_pretty(lane)?.as_bytes())?;
     stdout.flush()?;
-    history.end(true);
+    if let Some(history) = history {
+        history.end(true);
+    }
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 

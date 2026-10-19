@@ -418,7 +418,10 @@ fn cold_rich_semantic_docs_and_mixed_cache_hits_match_released_cat() {
         .unwrap()
         .set_times(
             fs::FileTimes::new()
-                .set_modified(std::time::SystemTime::now() + std::time::Duration::from_secs(2)),
+                // The published parser stamps a rewritten cache entry with Date.now().
+                // Keep this source newer than both sequential oracle runs so its
+                // post-write cache validity is deterministic on slow CI hosts.
+                .set_modified(std::time::SystemTime::now() + std::time::Duration::from_hours(24)),
         )
         .unwrap();
     let mixed = parse(&compared(&helper, "cat bar/foo --json", true));

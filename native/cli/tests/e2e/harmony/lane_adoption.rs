@@ -4,6 +4,7 @@ pub(crate) mod output;
 
 mod conflicts;
 mod environment;
+mod reporter;
 mod selection;
 mod subscribers;
 
@@ -77,6 +78,7 @@ fn json_switch_fails_before_adoption_because_the_released_handler_is_absent() {
 fn remote_pattern_performs_real_default_installation() {
     let helper = exported(2);
     empty(&helper);
+    reporter::configure(&helper);
     let command = format!("switch {} -p {}/comp1", lane(&helper), helper.scopes.remote);
     let output = crate::commands::add::support::history_oracle::compare(
         &helper,
@@ -91,6 +93,7 @@ fn remote_pattern_performs_real_default_installation() {
     assert!(bitmap.get("comp2").is_none());
     assert!(helper.scopes.local_path.join("pnpm-lock.yaml").is_file());
     assert!(helper.scopes.local_path.join("node_modules/.modules.yaml").is_file());
+    reporter::assert_receipt(&helper);
 }
 
 #[test]

@@ -57,6 +57,12 @@ pub struct Remotes {
 }
 
 impl Remotes {
+    /// Whether an unconfigured scope would invoke the workspace resolver callback.
+    #[must_use]
+    pub fn has_custom_resolver(&self) -> bool {
+        self.resolver.is_some()
+    }
+
     /// A locally configured file/HTTP remote, without a resolver or hub request.
     pub fn configured(&self, scope: &str) -> io::Result<Option<Remote>> {
         self.hosts

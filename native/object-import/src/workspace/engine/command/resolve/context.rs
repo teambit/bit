@@ -20,7 +20,10 @@ pub(super) fn prepare(
     context["callbackLifecycle"] = json!(request.options.callback_lifecycle);
     let ordinary: input::Prepare = serde_json::from_value(json!({"root":request.root,"home":request.home,
         "globalRemotesFile":request.global_remotes_file,"operation":"merge","options":{"skipDependencyInstallation":true,"pattern":request.options.pattern,"message":request.options.message},"dependencyGrammar":request.dependency_grammar})).map_err(io::Error::other)?;
-    if request.ordinary_tag && !context["lane"]["current"].is_null() {
+    if request.ordinary_tag
+        && !request.tag_options.as_ref().is_some_and(|options| options.soft)
+        && !context["lane"]["current"].is_null()
+    {
         return Err(invalid("tag is only supported on main"));
     }
     load_models(request, pool, &mut context, &imported)?;

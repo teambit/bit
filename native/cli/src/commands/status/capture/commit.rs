@@ -24,7 +24,8 @@ pub fn commit(
         && !capture.cache.is_empty()
     {
         let entries = capture.cache.entries();
-        fresh::commit(engine, root, &entries, capture.cache.reset, !capture.cache.no_fs_cache)?;
+        let reset = checkout_reset(capture);
+        fresh::commit(engine, root, &entries, reset, !capture.cache.no_fs_cache)?;
     }
     if plans.is_empty() {
         return Ok(());
@@ -46,7 +47,11 @@ pub fn commit_checkout_dependencies(
 ) -> io::Result<()> {
     if capture.cache.callbacks.host.is_some() && !capture.cache.is_empty() {
         let entries = capture.cache.entries();
-        fresh::commit(engine, root, &entries, capture.cache.reset, !capture.cache.no_fs_cache)?;
+        // The retained loader can invalidate the old cache and publish a fresh
+        // environment entry after capture's initial reset decision. Keep that
+        // published entry when the workspace is no longer stale.
+        let reset = checkout_reset(capture);
+        fresh::commit(engine, root, &entries, reset, !capture.cache.no_fs_cache)?;
     }
     Ok(())
 }
@@ -67,3 +72,11 @@ pub(super) fn publish_import_dependencies(
     capture.environment_facts["importDependencyCachePublished"] = json!(true);
     Ok(())
 }
+
+fn checkout_reset(capture: &Capture) -> bool {
+    capture.cache.reset && capture.environment_facts["checkoutLoaderCacheChecked"] != true
+}
+
+#[cfg(test)]
+#[path = "commit_tests.rs"]
+mod tests;

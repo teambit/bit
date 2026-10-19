@@ -224,13 +224,20 @@ fn prepare_row(
 fn workspace_ids(record: &Record) -> io::Result<Value> {
     projection::array(&record.context["targets"])?
         .iter()
-        .map(|target| {
-            let identity =
-                target["identity"].as_str().ok_or_else(|| invalid("command workspace identity"))?;
-            Ok(json!({"base":identity,"legacy":identity,"version":target["version"]}))
-        })
+        .map(workspace_id)
         .collect::<io::Result<Vec<_>>>()
         .map(Value::Array)
+}
+
+fn workspace_id(target: &Value) -> io::Result<Value> {
+    let identity =
+        target["identity"].as_str().ok_or_else(|| invalid("command workspace identity"))?;
+    let version = target["version"]
+        .as_str()
+        .filter(|version| !version.is_empty());
+    let legacy =
+        version.map_or_else(|| identity.to_owned(), |version| format!("{identity}@{version}"));
+    Ok(json!({"base":identity,"legacy":legacy,"version":target["version"]}))
 }
 
 fn projected_context(policy: &Prepared, record: &Record) -> io::Result<Value> {

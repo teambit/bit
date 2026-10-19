@@ -19,10 +19,17 @@ pub(super) fn execute(
     }
 }
 
-pub(super) fn json_report(prepared: &Value, installation_error: bool) -> io::Result<String> {
+pub(super) fn json_report(
+    prepared: &Value,
+    installation_error: bool,
+    compilation_error: bool,
+) -> io::Result<String> {
     let mut report = json!({"importDetails":prepared["importDetails"],"missingIds":[]});
     if installation_error {
         report["installationError"] = json!({});
+    }
+    if compilation_error {
+        report["compilationError"] = json!({});
     }
     serde_json::to_string_pretty(&report).map_err(io::Error::other)
 }
@@ -100,7 +107,7 @@ pub(super) fn empty(
         output.success("importing components", Some(started));
         Ok(Report {
             data: if options.output.json {
-                json_report(&json!({"importDetails":[]}), false)?
+                json_report(&json!({"importDetails":[]}), false, false)?
             } else {
                 chalk.yellow("nothing to import")
             },

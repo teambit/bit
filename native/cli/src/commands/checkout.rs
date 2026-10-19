@@ -5,15 +5,17 @@ pub(super) mod options;
 pub(super) mod report;
 
 use super::{
+    add::ProjectedLinker,
     color::Chalk,
     installation::{self, Installer},
+    status::environments::Environments,
     workspace_command::{
         self, Planned, Request, format::Formatter, progress::Progress, results::Report,
     },
 };
 use crate::{commands::Command, native::Outcome, workspace};
-use bit_install::output::Output;
-use std::{env, ffi::OsString, io, path::Path};
+use bit_install::{HostInfo, output::Output};
+use std::{env, ffi::OsString, io, path::Path, sync::Arc};
 
 pub const COMMAND: Command = Command { name: "checkout", aliases: &["U"], run };
 pub const REVERT: Command = Command { name: "revert", aliases: &[], run: run_revert };
@@ -50,8 +52,9 @@ fn run_options(
         Ok(installer) => installer,
         Err(error) => return Ok(Outcome::Declined(format!("checkout installation: {error}"))),
     };
+    let (environment, installation) = installation_session(installer)?;
     let mut startup = super::status::autosync::Startup::default();
-    let prepared = match prepare(&root, args, options, &mut startup) {
+    let prepared = match prepare(&root, args, options, &mut startup, environment) {
         Ok(prepared) => prepared,
         Err(error) if startup.committed || super::engine::is_canonical(&error) => {
             return workspace_command::checkout_lifecycle::failure(
@@ -64,11 +67,23 @@ fn run_options(
         }
         Err(error) => return Ok(Outcome::Declined(format!("checkout: {error}"))),
     };
-    execute(&root, args, if options.revert { "revert" } else { "checkout" }, prepared, installer)
+    execute(&root, args, if options.revert { "revert" } else { "checkout" }, prepared, installation)
 }
 
 fn start_installer(root: &Path, argv: &[&str], skip: bool) -> io::Result<Option<Installer>> {
     if skip { Ok(None) } else { Installer::start(root, argv).map(Some) }
+}
+
+fn installation_session(
+    installer: Option<Installer>,
+) -> io::Result<(Option<Environments>, Option<HostInfo>)> {
+    match installer {
+        Some(installer) => {
+            let (environment, info) = installer.into_parts()?;
+            Ok((Some(environment), Some(info)))
+        }
+        None => Ok((None, None)),
+    }
 }
 
 struct PreparedCheckout {
@@ -87,6 +102,7 @@ fn prepare(
     args: &[OsString],
     options: &options::Options,
     startup: &mut super::status::autosync::Startup,
+    environment: Option<Environments>,
 ) -> io::Result<PreparedCheckout> {
     let request = Request {
         operation: "checkout",
@@ -94,7 +110,12 @@ fn prepare(
         to: Some(&options.to),
         verify_fresh: false,
     };
-    let planned = workspace_command::plan_with_startup(root, &request, startup)?;
+    let planned = match environment {
+        Some(environment) => {
+            workspace_command::plan_with_environment(root, &request, startup, environment)?
+        }
+        None => workspace_command::plan_with_startup(root, &request, startup)?,
+    };
     let report = report::format(&planned.plan["result"], options, Chalk::detect(args))?;
     let progress = Progress::parse(planned.plan.get("progress"))?;
     let ids = if options.to == "reset" {
@@ -120,12 +141,12 @@ fn execute(
     args: &[OsString],
     command: &str,
     prepared: PreparedCheckout,
-    installer: Option<Installer>,
+    installation: Option<HostInfo>,
 ) -> io::Result<Outcome> {
     workspace_command::checkout_lifecycle::before(&prepared.startup)?;
-    if let Some(installer) = installer {
+    if let Some(info) = installation {
         return workspace_command::execute_then(root, args, command, |output| {
-            install_and_report(root, args, output, prepared, installer)
+            install_and_report(root, args, output, prepared, info)
         });
     }
     workspace_command::execute(root, args, command, prepared.planned, &prepared.report, |output| {
@@ -139,20 +160,37 @@ fn install_and_report(
     args: &[OsString],
     output: &Output,
     mut prepared: PreparedCheckout,
-    installer: Installer,
+    mut info: HostInfo,
 ) -> io::Result<Report> {
     render_progress(output, prepared.progress.as_ref(), prepared.main, prepared.revert);
     workspace_command::checkout_lifecycle::loaded(&prepared.startup);
     workspace_command::commit(&mut prepared.planned, root)?;
-    if !prepared.conflicts
-        && !prepared.ids.is_empty()
-        && let Err(error) = installer.install(root, false, &prepared.ids)
-    {
-        output.failure(&format!("installation failed with the following error: {error}"));
-        prepared.report.data = Formatter::join(&[
-            prepared.report.data,
-            installation::error_report(Chalk::detect(args), &error.to_string()),
-        ]);
+    if !prepared.conflicts && !prepared.ids.is_empty() {
+        let mut environment = prepared.planned
+            .take_environment()
+            .ok_or_else(|| io::Error::other("checkout installation provider session"))?;
+        print!("{}", ProjectedLinker::project_installation_workspace(root, &mut environment)?);
+        let host = environment
+            .into_tracking_host()
+            .ok_or_else(|| io::Error::other("checkout installation Host"))?;
+        info.file_id = workspace_command::file_id();
+        let host = Arc::new(host);
+        let installer = Installer::from_host(Arc::clone(&host), info)
+            .with_initialized_cache(prepared.planned.has_captured_components());
+        let installed = installer.install(root, false, &prepared.ids);
+        if let Err(error) = &installed {
+            output.failure(&format!("installation failed with the following error: {error}"));
+        }
+        // ComponentWriter.finalizeWrite compiles once after the install call,
+        // whether that call succeeded or failed, on its retained class cache.
+        host.call("installCanonicalFinalize", &serde_json::json!({}))?;
+        print!("{}", host.take_stdout());
+        if let Err(error) = installed {
+            prepared.report.data = Formatter::join(&[
+                prepared.report.data,
+                installation::error_report(Chalk::detect(args), &error.to_string()),
+            ]);
+        }
     }
     Ok(prepared.report)
 }

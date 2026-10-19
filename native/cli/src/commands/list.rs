@@ -10,13 +10,16 @@
 pub(in crate::commands) mod bitmap;
 pub(super) mod table;
 
+mod failure;
 mod options;
 mod remote;
 mod report;
 use options::{Options, parse};
 use report::{json_report, report};
 
-use super::{color::Chalk, engine::Engine, status::collate, workspace_command};
+use super::{
+    color::Chalk, engine::Engine, remote_resolution::Session, status::collate, workspace_command,
+};
 use crate::{commands::Command, history::History, native::Outcome, workspace};
 use serde_json::{Value, json};
 use std::{
@@ -40,11 +43,26 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if let Some(reason) = unsupported(root.as_deref(), &options) {
         return Ok(Outcome::Declined(reason.into()));
     }
-    let rows = match prepared_rows(root.as_deref(), &options) {
+    let mut session = Session::new(root.as_deref(), args);
+    let rows = match prepared_rows(root.as_deref(), &options, &mut session) {
         Ok(rows) => rows,
+        Err(error) if super::engine::is_canonical(&error) => {
+            if let Some(warning) = super::engine::canonical_progress(&error)
+                .and_then(|progress| progress["warning"].as_str())
+            {
+                session.add_warning(warning);
+            }
+            return failure::owned(root.as_deref(), args, &options, &session, error);
+        }
+        Err(error) if session.owned() => {
+            return failure::owned(root.as_deref(), args, &options, &session, error);
+        }
+        Err(error) if super::remote_resolution::is_ci_decline(&error) => {
+            return Ok(Outcome::Declined(error.to_string()));
+        }
         Err(error) => return Ok(Outcome::Declined(format!("list: {error}"))),
     };
-    present(root.as_deref(), args, &rows, &options)
+    present(root.as_deref(), args, &rows, &options, &session)
 }
 
 fn unsupported(root: Option<&Path>, options: &Options) -> Option<&'static str> {
@@ -60,11 +78,15 @@ fn unsupported(root: Option<&Path>, options: &Options) -> Option<&'static str> {
     None
 }
 
-fn prepared_rows(root: Option<&Path>, options: &Options) -> io::Result<Vec<Row>> {
+fn prepared_rows(
+    root: Option<&Path>,
+    options: &Options,
+    session: &mut Session,
+) -> io::Result<Vec<Row>> {
     let mut rows = if options.remote.is_some() {
-        remote::list(root, options)?
+        remote::list(root, options, session)?
     } else {
-        list(root.unwrap(), options)?
+        list(root.unwrap(), options, session)?
     };
     sort(&mut rows)?;
     if options.outdated && !options.json && !options.ids {
@@ -78,9 +100,10 @@ fn present(
     args: &[OsString],
     rows: &[Row],
     options: &Options,
+    session: &Session,
 ) -> io::Result<Outcome> {
     if options.json {
-        return json_output(root, args, rows, options.ids);
+        return json_output(root, args, rows, options.ids, session);
     }
     let report = workspace_command::results::Report {
         data: report(rows, options, Chalk::detect(args), table::colors(args)),
@@ -92,12 +115,24 @@ fn present(
     if let Some(root) = root {
         workspace_command::execute_with(root, args, "list", &report, |output| {
             output.status(status);
+            io::stdout()
+                .lock()
+                .write_all(session.output().as_bytes())?;
+            if let Some(warning) = session.warning() {
+                output.console(&Chalk::detect(args).red(warning));
+            }
             Ok(())
         })
     } else {
         let output = workspace_command::loader_output(Chalk::detect(args), false);
         output.restart(r#"running command "list"..."#);
         output.status(status);
+        io::stdout()
+            .lock()
+            .write_all(session.output().as_bytes())?;
+        if let Some(warning) = session.warning() {
+            output.console(&Chalk::detect(args).red(warning));
+        }
         output.stop();
         writeln!(io::stdout().lock(), "{}", report.data)?;
         Ok(Outcome::Exit(ExitCode::SUCCESS))
@@ -109,10 +144,15 @@ fn json_output(
     args: &[OsString],
     rows: &[Row],
     ids: bool,
+    session: &Session,
 ) -> io::Result<Outcome> {
     let history = root.map(|root| History::start(root, args));
     // `CommandRunner` writes `JSON.stringify(data, null, 2)` without a newline.
     let mut stdout = io::stdout().lock();
+    stdout.write_all(session.output().as_bytes())?;
+    if let Some(warning) = session.warning() {
+        writeln!(stdout, "{}", Chalk::detect(args).red(warning))?;
+    }
     stdout.write_all(serde_json::to_string_pretty(&json_report(rows, ids))?.as_bytes())?;
     stdout.flush()?;
     if let Some(history) = history {
@@ -164,7 +204,7 @@ struct Model {
 
 /// `localList`: the workspace's (or with `--local-scope`, the scope's) ids,
 /// filtered, sorted by `localeCompare` of their ids.
-fn list(root: &Path, options: &Options) -> io::Result<Vec<Row>> {
+fn list(root: &Path, options: &Options, session: &mut Session) -> io::Result<Vec<Row>> {
     let bitmap::Bitmap { entries: bitmap, lane } = bitmap::read(root)?;
     let (models, lane) = models(root, lane.as_ref())?;
     let mut ids = all_ids(&bitmap, &models, options.local_scope);
@@ -178,7 +218,7 @@ fn list(root: &Path, options: &Options) -> io::Result<Vec<Row>> {
         .collect();
     sort(&mut rows)?;
     if options.outdated {
-        remote::versions(root, &mut rows)?;
+        remote::versions(root, &mut rows, session)?;
     }
     rows.retain(|row| listed(row, &bitmap, &lane, options));
     Ok(rows)
