@@ -574,20 +574,33 @@ export class WorkspaceComponentLoader {
     });
     if (!aspectIds.length) return;
 
+    const loadAsAspects = (ids: string[]) =>
+      this.workspace.loadAspects(ids, true, 'self loading aspects', { useScopeAspectsCapsule: true });
     try {
-      await this.workspace.loadAspects(aspectIds, true, 'self loading aspects', { useScopeAspectsCapsule: true });
+      await loadAsAspects(aspectIds);
     } catch (err: any) {
       this.logger.warn(`failed loading components as aspects for components ${aspectIds.join(', ')}`, err);
+      // one failing aspect fails the entire batch. load them one by one, so the aspects that are fine get loaded,
+      // and only the failing ones (and the components using them) are reported.
+      const failures: Array<{ aspectId: string; errMsg: string }> = [];
+      await mapSeries(aspectIds, async (aspectId) => {
+        let singleErr: any;
+        await loadAsAspects([aspectId]).catch((loadErr) => {
+          singleErr = loadErr;
+        });
+        // a load that doesn't throw is not enough. the loader hides errors it already reported in the batch.
+        if (!this.aspectLoader.hasAspectInstance(aspectId)) {
+          const failure = singleErr || err;
+          failures.push({ aspectId, errMsg: failure.message || String(failure) });
+        }
+      });
       // the error is not thrown (best-effort loading), but it's surfaced as a component issue
       // so it shows up in "bit status" instead of disappearing.
       if (!this.workspace.inInstallContext) {
-        const errMsg = err.message || String(err);
-        aspectIds.forEach((aspectId) => {
+        failures.forEach(({ aspectId, errMsg }) => {
           reportLoadFailure({ failedId: aspectId, phase: 'load-comps-as-aspects', error: errMsg });
-        });
-        components.forEach((component) => {
-          if (!aspectIds.includes(component.id.toString())) return;
-          this.addLoadFailureIssue(component, component.id.toString(), 'load-comps-as-aspects', errMsg);
+          const component = components.find((comp) => comp.id.toString() === aspectId);
+          if (component) this.addLoadFailureIssue(component, aspectId, 'load-comps-as-aspects', errMsg);
         });
       }
     }

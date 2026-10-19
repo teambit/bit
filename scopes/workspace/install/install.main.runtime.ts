@@ -146,6 +146,11 @@ export class InstallMain {
 
   private oldNonLoadedEnvs: string[] = [];
 
+  /** nesting depth of _installModules, so the install marker is written once and removed by the outermost call */
+  private runningInstalls = 0;
+
+  private installMarkerUpdate = Promise.resolve();
+
   constructor(
     private dependencyResolver: DependencyResolverMain,
 
@@ -383,13 +388,27 @@ export class InstallMain {
     this.workspace.inInstallContext = true;
     this.workspace.inInstallAfterPmContext = false;
     this.logger.profile('install.total');
+    // let other bit processes of this workspace know not to write into node_modules meanwhile (nested installs share
+    // one marker). see IpcEventsMain.markInstallStarted()
+    if (this.runningInstalls++ === 0) await this.updateInstallMarker(() => this.ipcEvents.markInstallStarted());
     try {
       return await this._installModulesProfiled(options);
     } finally {
+      if (--this.runningInstalls === 0) await this.updateInstallMarker(() => this.ipcEvents.markInstallEnded());
       this.logger.profile('install.total');
       this.workspace.inInstallContext = prevInInstallContext;
       this.workspace.inInstallAfterPmContext = prevInInstallAfterPmContext;
     }
+  }
+
+  /**
+   * serialized, so the removal by an ending install can't land after the write of an install that started meanwhile
+   */
+  private updateInstallMarker(update: () => Promise<void>): Promise<void> {
+    this.installMarkerUpdate = this.installMarkerUpdate.then(update).catch((err) => {
+      this.logger.debug(`failed to update the install marker: ${err.message}`);
+    });
+    return this.installMarkerUpdate;
   }
 
   private async _installModulesProfiled(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {

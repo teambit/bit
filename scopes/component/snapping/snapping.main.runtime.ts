@@ -22,6 +22,7 @@ import type { BuildStatus } from '@teambit/legacy.constants';
 import { Extensions, LATEST } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsPendingImport } from '@teambit/legacy.consumer';
+import { getDocsFromFiles } from '@teambit/legacy.consumer-component';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import pMapSeries from 'p-map-series';
 import type { Logger, LoggerMain } from '@teambit/logger';
@@ -517,6 +518,23 @@ export class SnappingMain {
         if (snapData.files?.length) {
           await this.updateSourceFiles(comp, snapData.files);
         }
+      })
+    );
+
+    // a workspace parses the docs from the files whenever it loads a component. the files of these components are new
+    // or changed (updated above or merged in-memory), so parse them, rather than keeping the docs of the loaded version.
+    const compsWithChangedFiles = [
+      ...newComponents,
+      ...existingComponents.filter(
+        (comp) =>
+          getSnapData(comp.id).files?.length ||
+          updatedLegacyComponents.some((legacyComp) => legacyComp.id.isEqualWithoutVersion(comp.id))
+      ),
+    ];
+    await Promise.all(
+      compsWithChangedFiles.map(async (comp) => {
+        const legacyComp: ConsumerComponent = comp.state._consumer;
+        legacyComp.docs = await getDocsFromFiles(legacyComp.files);
       })
     );
 
