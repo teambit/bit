@@ -63,6 +63,13 @@ def clock_phase(workload):
     raise RuntimeError('could not satisfy the predeclared lane start-clock phase')
 
 
+def validate_revert_json(stdout, history_id):
+    """PTYs merge native diagnostics into stdout; retain the existing exact-output projection."""
+    value = json.loads(STATE.normalized(stdout))
+    if value.get('historyId') != history_id or value.get('mergeSnapResults', 'missing') is not None:
+        raise RuntimeError('actual revert JSON result differs from released schema')
+
+
 def execute(args, stage, fixtures, workload, mode, run, implementation):
     for source, name in [(fixtures['workloads'][workload], 'workspace'),
                          (fixtures['home'], 'home'), (fixtures['globals'], 'globals'),
@@ -142,9 +149,7 @@ def execute(args, stage, fixtures, workload, mode, run, implementation):
         installation_clocks(root, workspace, prefix, host_before['time_ns'], host_after['time_ns'])
     verify_postconditions(root, workload, fixtures)
     if workload == 'restore-json':
-        value = json.loads(output.stdout)
-        if value.get('historyId') != command[2] or value.get('mergeSnapResults', 'missing') is not None:
-            raise RuntimeError('actual revert JSON result differs from released schema')
+        validate_revert_json(output.stdout, command[2])
     globals_state = STATE.tree(stage / 'globals', globals_directory=True)
     command_details_clock(stage / 'globals', globals_state, prefix, host_before['time_ns'], host_after['time_ns'], Path(fixtures['globals']))
     result = {'status': output.returncode, 'stdout': STATE.normalized(output.stdout),

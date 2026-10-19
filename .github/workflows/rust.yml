@@ -85,6 +85,10 @@ jobs:
         run: cargo doc --locked --workspace --no-deps
       - name: Check that the e2e porting plan lists every e2e case
         run: node ../scripts/rust/e2e-port-plan.mjs --check
+      - name: Check benchmark JSON and bitmap history validators
+        run: |
+          python3 ../scripts/rust/lane-restoration-benchmark-tests.py
+          python3 ../scripts/rust/bitmap-history-oracle-tests.py
 
   test:
     name: Rust tests (${{ matrix.os }})
