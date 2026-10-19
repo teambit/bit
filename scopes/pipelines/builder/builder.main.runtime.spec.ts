@@ -13,11 +13,12 @@ const comp2 = fakeComponent('my-scope/comp2');
 const compWithoutEnv = fakeComponent('my-scope/comp-without-env');
 
 let buildPipelineCalls = 0;
+let throwOnBuildPipeline = false;
 const service = (tasks: any[], onCall = () => {}) =>
   ({
-    getCurrentPipeline: () => {
+    getCurrentPipelinePerEnv: (envDefs: any[]) => {
       onCall();
-      return tasks;
+      return new Map(envDefs.map((env) => [env.id, tasks]));
     },
   }) as any;
 const envs = {
@@ -31,7 +32,10 @@ const logger = { debug: () => {} } as any;
 const builder = new BuilderMain(
   envs,
   undefined as any,
-  service([compileTask, prepareTask], () => buildPipelineCalls++),
+  service([compileTask, prepareTask], () => {
+    buildPipelineCalls++;
+    if (throwOnBuildPipeline) throw new Error('missing task dependency');
+  }),
   service([prepareTask]),
   service([prepareTask, publishTask]),
   undefined as any,
@@ -59,11 +63,19 @@ describe('BuilderMain', () => {
       const plannedTasks = builder.getPlannedTasks([comp1], 'tag').get('my-scope/comp1');
       expect(plannedTasks?.map((plannedTask) => plannedTask.taskName)).to.deep.equal(['TSCompiler', 'PreparePackages']);
     });
-    it('calculates the pipelines once per env and skips components without an env', () => {
+    it('calculates the pipelines once for all envs and skips components without an env', () => {
       buildPipelineCalls = 0;
       const plannedTasksPerComp = builder.getPlannedTasks([comp1, comp2, compWithoutEnv], 'snap');
       expect(buildPipelineCalls).to.equal(1);
       expect([...plannedTasksPerComp.keys()]).to.deep.equal(['my-scope/comp1', 'my-scope/comp2']);
+    });
+    it('does not throw when the pipeline cannot be calculated', () => {
+      throwOnBuildPipeline = true;
+      try {
+        expect(builder.getPlannedTasks([comp1], 'snap').size).to.equal(0);
+      } finally {
+        throwOnBuildPipeline = false;
+      }
     });
   });
 });

@@ -498,7 +498,8 @@ export class BuilderMain {
    */
   private throwIfNoTaskMatchesFilter(components: Component[], tasks: string[], deployPipeline?: 'tag' | 'snap') {
     const envsById = new Map(components.map((component) => this.envs.getEnv(component)).map((env) => [env.id, env]));
-    const allTasks = this.getPipelinesTasks([...envsById.values()], deployPipeline);
+    const envs = [...envsById.values()];
+    const allTasks = this.getPipelineServices(deployPipeline).flatMap((service) => service.getCurrentPipeline(envs));
     if (allTasks.length && !allTasks.some((task) => isTaskInFilter(task, tasks))) {
       const availableTasks = [...new Set(allTasks.map((task) => BuildTaskHelper.serializeId(task)))].sort();
       throw new BitError(
@@ -517,38 +518,49 @@ export class BuilderMain {
 
   /**
    * the tasks of the build pipeline and the snap/tag pipeline of each component's env, keyed by the component id
-   * without version. a component whose env can't be found (e.g. not loaded) is skipped.
+   * without version. it's only informative, so it never throws. a component whose env can't be found (e.g. not
+   * loaded) is skipped.
    */
   getPlannedTasks(components: Component[], deployPipeline: 'tag' | 'snap'): Map<string, PlannedTask[]> {
-    const plannedTasksPerEnv = new Map<string, PlannedTask[]>();
-    const plannedTasksPerComp = new Map<string, PlannedTask[]>();
+    const envIdPerComp = new Map<string, string>();
+    const envsById = new Map<string, EnvDefinition>();
     components.forEach((component) => {
-      let env: EnvDefinition;
       try {
-        env = this.envs.getEnv(component);
+        const env = this.envs.getEnv(component);
+        envIdPerComp.set(component.id.toStringWithoutVersion(), env.id);
+        envsById.set(env.id, env);
       } catch (err: any) {
         this.logger.debug(`unable to get the planned tasks of ${component.id.toString()}: ${err.message}`);
-        return;
       }
-      if (!plannedTasksPerEnv.has(env.id)) {
-        // a task can be registered to more than one pipeline (e.g. PreparePackages), it runs once.
-        const tasks = uniqBy(this.getPipelinesTasks([env], deployPipeline), (task) =>
-          BuildTaskHelper.serializeId(task)
-        );
-        plannedTasksPerEnv.set(
-          env.id,
-          tasks.map((task) => ({ taskId: task.aspectId, taskName: task.name, taskDescription: task.description }))
-        );
-      }
-      plannedTasksPerComp.set(component.id.toStringWithoutVersion(), plannedTasksPerEnv.get(env.id)!);
     });
-    return plannedTasksPerComp;
+    if (!envsById.size) return new Map();
+    let tasksPerEnvPerService: Map<string, BuildTask[]>[];
+    try {
+      // calculated for all the envs together, as in the actual run, so a task may depend on a task of another env.
+      tasksPerEnvPerService = this.getPipelineServices(deployPipeline).map((service) =>
+        service.getCurrentPipelinePerEnv([...envsById.values()])
+      );
+    } catch (err: any) {
+      this.logger.debug(`unable to get the planned tasks: ${err.message}`);
+      return new Map();
+    }
+    const plannedTasksPerEnv = new Map<string, PlannedTask[]>();
+    envsById.forEach((env, envId) => {
+      const tasks = tasksPerEnvPerService.flatMap((tasksPerEnv) => tasksPerEnv.get(envId) || []);
+      // a task can be registered to more than one pipeline (e.g. PreparePackages), the report has it once.
+      const uniqTasks = uniqBy(tasks, (task) => BuildTaskHelper.serializeId(task));
+      plannedTasksPerEnv.set(
+        envId,
+        uniqTasks.map((task) => ({ taskId: task.aspectId, taskName: task.name, taskDescription: task.description }))
+      );
+    });
+    return new Map([...envIdPerComp].map(([compId, envId]) => [compId, plannedTasksPerEnv.get(envId)!]));
   }
 
-  private getPipelinesTasks(envs: EnvDefinition[], deployPipeline?: 'tag' | 'snap'): BuildTask[] {
+  private getPipelineServices(deployPipeline?: 'tag' | 'snap'): BuilderService[] {
     const services = [this.buildService];
     if (deployPipeline) services.push(deployPipeline === 'snap' ? this.snapService : this.tagService);
-    return services.flatMap((service) => service.getCurrentPipeline(envs));
+    return services;
   }
 
   /**
