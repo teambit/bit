@@ -27,6 +27,7 @@ import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { MessagePerComponent } from './message-per-component';
 import { MessagePerComponentFetcher } from './message-per-component';
 import { VersionFileParser } from './version-file-parser';
+import { throwForPlusRangeVersions } from './plus-range-versions';
 import type { VersionCandidate } from './published-versions';
 import { createIsVersionPublished, skipPublishedVersions } from './published-versions';
 import type { DependencyResolverMain, ComponentRangePrefix } from '@teambit/dependency-resolver';
@@ -156,6 +157,8 @@ export class VersionMaker {
 
     await this.triggerOnPreSnap(autoTagIds);
     this.allComponentsToTag = [...componentsToTag, ...autoTagComponents];
+    // in a bare scope (e.g. bit.cloud), the components were already snapped in a workspace, so they passed this check
+    if (this.workspace) throwForPlusRangeVersions(this.allComponentsToTag);
     await this.parseVersionsFile(idsToTag, autoTagIds);
     const messagePerId = await this.getMessagePerId(idsToTag, autoTagIds);
     await this.checkForNewerVersions();

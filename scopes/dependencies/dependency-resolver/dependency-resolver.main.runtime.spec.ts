@@ -51,6 +51,33 @@ describe('DepenendencyResolverMain.validateAspectData()', () => {
       } as any)
     ).to.equal(undefined);
   });
+  for (const version of ['+', '+^', '+~']) {
+    it(`should accept "${version}" as a policy version of a component`, () => {
+      const depResolver = createDependencyResolverMain();
+      expect(
+        depResolver.validateAspectData({
+          dependencies: [
+            {
+              __type: 'component',
+              id: 'org.scope/comp@0.0.1',
+              version: '0.0.1',
+              packageName: '@org/scope.comp',
+              versionRange: version,
+            },
+          ],
+          policy: [{ dependencyId: '@org/scope.comp', value: { version } }],
+        } as any)
+      ).to.equal(undefined);
+    });
+  }
+  it('should reject an unknown "+" spec as a policy version', () => {
+    const depResolver = createDependencyResolverMain();
+    const result = depResolver.validateAspectData({
+      dependencies: [],
+      policy: [{ dependencyId: 'some-pkg', value: { version: '+>' } }],
+    } as any);
+    expect(result?.errorMsg).to.include('"+>"');
+  });
 });
 
 describe('DependencyResolverMain.getComponentEnvPolicyFromExtension()', () => {
@@ -638,5 +665,42 @@ describe('DepenendencyResolverMain.getComponentEnvPolicyFromEnv()', () => {
         'Peer "@teambit/community.ui.bit-cli.commands-provider" has an empty supportedRange'
       );
     }
+  });
+});
+
+describe('DepenendencyResolverMain.getEnvJsoncPolicyPkgs()', () => {
+  it('should not return env.jsonc entries with a plus version, as they follow the workspace version', () => {
+    const depResolver = new DependencyResolverMain(
+      {} as any,
+      {} as any,
+      {} as any,
+      { isEnv: () => true } as any,
+      logger as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any
+    );
+    const envJsonc = {
+      policy: {
+        peers: [
+          { name: 'plus-pkg', version: '+', supportedRange: '+^' },
+          { name: 'plus-caret-pkg', version: '+^', supportedRange: '+^' },
+          { name: 'fixed-pkg', version: '1.0.0', supportedRange: '^1.0.0' },
+        ],
+        runtime: [{ name: 'plus-runtime-pkg', version: '+~' }],
+      },
+    };
+    const component = {
+      id: ComponentID.fromString('scope/my-env'),
+      filesystem: { files: [{ relative: 'env.jsonc', contents: Buffer.from(JSON.stringify(envJsonc)) }] },
+    };
+    const pkgs = depResolver.getEnvJsoncPolicyPkgs([component as any]);
+    expect(pkgs.map((pkg) => pkg.name)).to.deep.equal(['fixed-pkg']);
   });
 });
