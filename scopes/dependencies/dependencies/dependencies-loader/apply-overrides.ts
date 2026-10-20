@@ -247,7 +247,9 @@ export class ApplyOverrides {
   }
 
   private async loadAutoDetectOverrides() {
-    this.autoDetectOverrides = await this.workspace?.getAutoDetectOverrides(
+    // outside a workspace, they're calculated by the caller (if at all) and set before this runs
+    if (!this.workspace) return;
+    this.autoDetectOverrides = await this.workspace.getAutoDetectOverrides(
       this.component.extensions,
       this.component.id,
       this.component.files,
@@ -292,10 +294,28 @@ export class ApplyOverrides {
 
   private _getComponentIdToAdd(
     dependency: string,
-    versionRange: string
-  ): { componentId?: ComponentID; packageName?: string; versionRange: string } {
+    versionRange: string,
+    depField: string
+  ): { componentId?: ComponentID; packageName?: string; versionRange?: string } {
+    if (!this.consumer) {
+      // a scope has no node_modules to resolve the package from. if it's a component dependency, use it. otherwise, a
+      // forced component dependency (e.g. an env's own peer, which is a runtime dep of the env) is added as a package
+      // and then dropped in favor of the component dependency, which may be in a different field.
+      const compDep = this.findComponentDepByPackageName(dependency);
+      if (compDep) {
+        // same as the workspace (see updateDependenciesVersions), only a peer component dependency keeps its range
+        const range = depField === 'peerDependencies' ? versionRange : undefined;
+        return { componentId: compDep.id, packageName: dependency, versionRange: range };
+      }
+    }
     const packageData = this._resolvePackageData(dependency);
     return { componentId: packageData?.componentId, packageName: packageData?.name, versionRange };
+  }
+
+  private findComponentDepByPackageName(packageName: string): Dependency | undefined {
+    const { dependencies, devDependencies, peerDependencies } = this.allDependencies;
+    const isMatch = (dep: Dependency) => dep.packageName === packageName;
+    return dependencies.find(isMatch) || devDependencies.find(isMatch) || peerDependencies.find(isMatch);
   }
 
   getDependenciesToAddManually(
@@ -311,7 +331,7 @@ export class ApplyOverrides {
       if (!overrides[depField]) return;
       Object.keys(overrides[depField]).forEach((dependency) => {
         const dependencyValue = overrides[depField][dependency];
-        const componentData = this._getComponentIdToAdd(dependency, dependencyValue);
+        const componentData = this._getComponentIdToAdd(dependency, dependencyValue, depField);
         if (componentData?.componentId) {
           if (componentData.componentId.isEqualWithoutVersion(this.componentId)) {
             this.logger.warn(
@@ -591,10 +611,7 @@ export class ApplyOverrides {
 
   private isPackageAutoDetected(pkgName: string, originallyExists: string[], missingPackages: string[]): boolean {
     // Check component dependencies
-    const existsInAnyCompDeps =
-      this.allDependencies.dependencies.some((dep) => dep.packageName === pkgName) ||
-      this.allDependencies.devDependencies.some((dep) => dep.packageName === pkgName) ||
-      this.allDependencies.peerDependencies.some((dep) => dep.packageName === pkgName);
+    const existsInAnyCompDeps = Boolean(this.findComponentDepByPackageName(pkgName));
 
     // Check originAllPackagesDependencies instead of allPackagesDependencies
     // as it might be already removed at this point if it was set with "-" in runtime/dev

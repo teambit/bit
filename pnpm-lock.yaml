@@ -31,7 +31,8 @@ overrides:
   encoding: '-'
   '@pnpm/util.lex-comparator': 3.0.2
   '@pnpm/config.nerf-dart': 1.0.1
-  '@teambit/legacy@*': '-'
+
+untrackedPnpmfileReadPackageHook: true
 
 importers:
 
@@ -7324,7 +7325,7 @@ importers:
         version: file:scopes/lanes/merge-lanes(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(chai@5.2.1)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(domexception@4.0.0)(esbuild@0.14.29)(eslint@8.56.0)(graphql@15.8.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@teambit/merging':
         specifier: workspace:*
-        version: file:scopes/component/merging(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/merging(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/mocha':
         specifier: workspace:*
         version: file:scopes/defender/mocha(mocha@11.7.1)(react@19.2.7)(supports-color@9.4.0)
@@ -8401,7 +8402,7 @@ importers:
         version: file:scopes/lanes/merge-lanes(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(chai@4.3.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(domexception@4.0.0)(esbuild@0.14.29)(eslint@8.56.0)(graphql@15.8.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@teambit/merging':
         specifier: workspace:*
-        version: file:scopes/component/merging(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/merging(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/mocha':
         specifier: workspace:*
         version: file:scopes/defender/mocha(mocha@11.1.0)(react@19.2.7)(supports-color@9.4.0)
@@ -9466,7 +9467,7 @@ importers:
         version: file:scopes/lanes/merge-lanes(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(chai@4.3.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(domexception@4.0.0)(esbuild@0.14.29)(eslint@8.56.0)(graphql@15.8.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@teambit/merging':
         specifier: workspace:*
-        version: file:scopes/component/merging(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/merging(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/mocha':
         specifier: workspace:*
         version: file:scopes/defender/mocha(mocha@11.1.0)(react@18.3.1)(supports-color@9.4.0)
@@ -10528,7 +10529,7 @@ importers:
         version: file:scopes/lanes/merge-lanes(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(chai@4.3.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(domexception@4.0.0)(esbuild@0.14.29)(eslint@8.56.0)(graphql@15.8.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@teambit/merging':
         specifier: workspace:*
-        version: file:scopes/component/merging(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/merging(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/mocha':
         specifier: workspace:*
         version: file:scopes/defender/mocha(mocha@11.7.1)(react@19.2.7)(supports-color@9.4.0)
@@ -11575,7 +11576,7 @@ importers:
         version: file:scopes/lanes/merge-lanes(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(chai@4.3.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(domexception@4.0.0)(esbuild@0.14.29)(eslint@8.56.0)(graphql@15.8.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@teambit/merging':
         specifier: workspace:*
-        version: file:scopes/component/merging(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/merging(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/mocha':
         specifier: workspace:*
         version: file:scopes/defender/mocha(mocha@11.7.1)(react@19.2.7)(supports-color@9.4.0)
@@ -12622,7 +12623,7 @@ importers:
         version: file:scopes/lanes/merge-lanes(@babel/core@7.26.9)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(chai@4.3.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(domexception@4.0.0)(esbuild@0.14.29)(eslint@8.56.0)(graphql@15.8.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@teambit/merging':
         specifier: workspace:*
-        version: file:scopes/component/merging(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/merging(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/mocha':
         specifier: workspace:*
         version: file:scopes/defender/mocha(mocha@11.1.0)(react@19.2.7)(supports-color@9.4.0)
@@ -13678,7 +13679,7 @@ importers:
         version: file:scopes/lanes/merge-lanes(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(chai@4.3.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(domexception@4.0.0)(esbuild@0.14.29)(eslint@8.56.0)(graphql@15.8.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@teambit/merging':
         specifier: workspace:*
-        version: file:scopes/component/merging(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/merging(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/mocha':
         specifier: workspace:*
         version: file:scopes/defender/mocha(mocha@11.1.0)(react@19.2.7)(supports-color@9.4.0)
@@ -16367,6 +16368,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       chalk:
         specifier: 4.1.2
         version: 4.1.2
@@ -34169,6 +34173,8 @@ packages:
 
   '@teambit/merging@file:scopes/component/merging':
     resolution: {directory: scopes/component/merging, type: directory}
+    peerDependencies:
+      chai: 5.2.1
 
   '@teambit/mocha@file:scopes/defender/mocha':
     resolution: {directory: scopes/defender/mocha, type: directory}
@@ -74588,7 +74594,7 @@ snapshots:
       - webpack-hot-middleware
       - webpack-plugin-serve
 
-  '@teambit/merging@file:scopes/component/merging(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)':
+  '@teambit/merging@file:scopes/component/merging(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
@@ -74609,6 +74615,40 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
+      chalk: 4.1.2
+      lodash: 4.18.1
+      p-map-series: 2.1.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    transitivePeerDependencies:
+      - domexception
+      - graphql
+      - supports-color
+
+  '@teambit/merging@file:scopes/component/merging(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)':
+    dependencies:
+      '@teambit/bit-error': 0.0.404
+      '@teambit/component-id': 1.2.5
+      '@teambit/component.modules.merge-helper': file:scopes/component/modules/merge-helper(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/component.snap-distance': file:scopes/component/snap-distance(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@teambit/lane-id': 0.0.312
+      '@teambit/legacy.component-list': file:components/legacy/component-list(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy.constants': file:components/legacy/constants
+      '@teambit/legacy.consumer': file:components/legacy/consumer(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy.extension-data': file:components/legacy/extension-data
+      '@teambit/legacy.scope': file:components/legacy/scope(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/pkg.modules.component-package-name': file:components/modules/component-package-name
+      '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 5.2.1
       chalk: 4.1.2
       lodash: 4.18.1
       p-map-series: 2.1.0

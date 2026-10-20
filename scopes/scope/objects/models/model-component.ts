@@ -1197,8 +1197,8 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       lang: this.lang,
       bindingPrefix: this.bindingPrefix,
       mainFile: version.mainFile,
-      dependencies: this.addDepsInfoFromDepsResolver(version.dependencies, extensions),
-      devDependencies: this.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
+      dependencies: Component.addDepsInfoFromDepsResolver(version.dependencies, extensions),
+      devDependencies: Component.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
       peerDependencies: this.getPeerDepsFromDepsResolver(version, extensions),
       // built on first read and shared with clones (which copy this loader). a failed load is not kept, so it throws again.
       loadFlattenedDependencies: () =>
@@ -1225,7 +1225,11 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     return consumerComponent;
   }
 
-  private addDepsInfoFromDepsResolver(dependencies: Dependencies, extensions: ExtensionDataList): Dependency[] {
+  /**
+   * a Version has the package names of its component dependencies in the dependency-resolver data only. returns copies
+   * of the dependencies with their package names.
+   */
+  static addDepsInfoFromDepsResolver(dependencies: Dependencies, extensions: ExtensionDataList): Dependency[] {
     const cloned = dependencies.getClone();
     const depsResolverData = extensions.findCoreExtension(Extensions.dependencyResolver);
     if (!depsResolverData) return cloned;
