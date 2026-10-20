@@ -2,6 +2,9 @@ import type { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@te
 import type { Logger } from '@teambit/logger';
 import type { Packer } from './packer';
 import { Extensions } from '@teambit/legacy.constants';
+import type { Component } from '@teambit/component';
+
+const PACK_LIFECYCLE_SCRIPTS = ['prepack', 'prepare', 'postpack'];
 
 /**
  * pack components to a .tgz file
@@ -27,5 +30,15 @@ export class PackTask implements BuildTask {
       componentsResults: packResults,
       artifacts: [packArtifactsDefs],
     };
+  }
+
+  /**
+   * packing runs the pack lifecycle scripts of the package.json, which might need the packages.
+   */
+  requiresCapsuleInstallation(components: Component[]): boolean {
+    return components.some((component) => {
+      const scripts = component.state.aspects.get(this.aspectId)?.data?.packageJsonModification?.scripts;
+      return PACK_LIFECYCLE_SCRIPTS.some((script) => scripts?.[script]);
+    });
   }
 }

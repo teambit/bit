@@ -35,4 +35,11 @@ export class PublishTask implements BuildTask {
       artifacts: [],
     };
   }
+
+  /**
+   * it publishes the tarball created by the PackComponents task.
+   */
+  requiresCapsuleInstallation(): boolean {
+    return false;
+  }
 }

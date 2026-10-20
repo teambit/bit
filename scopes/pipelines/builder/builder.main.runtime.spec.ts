@@ -1,4 +1,9 @@
 import { expect } from 'chai';
+import {
+  ENV_VAR_FEATURE_TOGGLE,
+  SKIP_TAG_CAPSULE_INSTALL,
+  reloadFeatureToggle,
+} from '@teambit/harmony.modules.feature-toggle';
 import { BuilderMain } from './builder.main.runtime';
 
 // Minimal fakes — getPlannedTasks only reads the env of the components and the pipelines of the services.
@@ -76,6 +81,70 @@ describe('BuilderMain', () => {
       } finally {
         throwOnBuildPipeline = false;
       }
+    });
+  });
+
+  describe('shouldSkipCapsuleInstallation', () => {
+    const taskRequiring = (aspectId: string, name: string, requiresInstallation: boolean) => ({
+      ...task(aspectId, name),
+      requiresCapsuleInstallation: () => requiresInstallation,
+    });
+    const coreExporterTask = taskRequiring('teambit.harmony/aspect', 'CoreExporter', false);
+    const packTask = taskRequiring('teambit.pkg/pkg', 'PackComponents', false);
+    const appDeployTask = taskRequiring('teambit.harmony/application', 'deploy_application', true);
+    const customTask = task('my-scope/my-env', 'MyCustomTask'); // doesn't declare whether it needs the installation
+    const pipelineService = (tasks: any[]) => ({ getCurrentPipeline: () => tasks }) as any;
+    // the build pipeline has the compiler, which doesn't declare it, but only the teambit.harmony/aspect tasks run.
+    const createBuilder = (tagTasks: any[]) =>
+      new BuilderMain(
+        envs,
+        undefined as any,
+        pipelineService([compileTask, coreExporterTask]),
+        pipelineService(tagTasks),
+        pipelineService([]),
+        undefined as any,
+        undefined as any,
+        undefined as any,
+        undefined as any,
+        undefined as any,
+        undefined as any,
+        undefined as any,
+        logger,
+        undefined as any
+      );
+    const shouldSkip = (tagTasks: any[], runTagPipeline = true) =>
+      createBuilder(tagTasks)['shouldSkipCapsuleInstallation']([comp1], runTagPipeline ? 'tag' : undefined);
+
+    const originalFeatures = process.env[ENV_VAR_FEATURE_TOGGLE];
+    const setFeatures = (features: string) => {
+      process.env[ENV_VAR_FEATURE_TOGGLE] = features;
+      reloadFeatureToggle();
+    };
+    beforeEach(() => setFeatures(SKIP_TAG_CAPSULE_INSTALL));
+    after(() => {
+      if (originalFeatures === undefined) delete process.env[ENV_VAR_FEATURE_TOGGLE];
+      else process.env[ENV_VAR_FEATURE_TOGGLE] = originalFeatures;
+      reloadFeatureToggle();
+    });
+
+    it('skips the installation when none of the running tasks requires it', () => {
+      expect(shouldSkip([packTask])).to.be.true;
+    });
+    it('installs when the feature is disabled', () => {
+      setFeatures('another-feature');
+      expect(shouldSkip([packTask])).to.be.false;
+    });
+    it('installs when a task requires it', () => {
+      expect(shouldSkip([packTask, appDeployTask])).to.be.false;
+    });
+    it('installs when a task does not declare whether it requires it', () => {
+      expect(shouldSkip([packTask, customTask])).to.be.false;
+    });
+    it('ignores the tag tasks when the tag pipeline does not run', () => {
+      expect(shouldSkip([customTask], false)).to.be.true;
+    });
+    it('installs when the tasks cannot be determined', () => {
+      expect(createBuilder([packTask])['shouldSkipCapsuleInstallation']([compWithoutEnv], 'tag')).to.be.false;
     });
   });
 });
