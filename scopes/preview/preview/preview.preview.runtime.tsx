@@ -64,6 +64,12 @@ export class PreviewPreview {
 
   private isDev = false;
 
+  /**
+   * reports the preview size to the parent. render() runs on every hash change, so it's replaced each time.
+   */
+  private sizeObserver?: ResizeObserver;
+  private debouncedSizeReport?: ReturnType<typeof debounce>;
+
   private isReady() {
     const { previewName } = this.getLocation();
     const name = previewName || this.getDefault();
@@ -195,6 +201,9 @@ export class PreviewPreview {
       const { width, height } = measure();
       this.pubsub.pub(PreviewAspect.id, new SizeEvent({ width, height }));
     };
+    // drop the observer of the previous render, otherwise every render adds another report per resize
+    this.sizeObserver?.disconnect();
+    this.debouncedSizeReport?.cancel();
     // publish right away so the parent gets the first real size as soon as possible
     publish();
     // publish dimension changes when the content size actually changes
@@ -203,6 +212,8 @@ export class PreviewPreview {
     resizedObserver.observe(window.document.documentElement);
     const root = window.document.getElementById('root');
     if (root) resizedObserver.observe(root);
+    this.sizeObserver = resizedObserver;
+    this.debouncedSizeReport = debounced;
   }
 
   async getPreviewModule(previewName: string, id: ComponentID): Promise<PreviewModule> {

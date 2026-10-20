@@ -25,6 +25,7 @@ export const DEPLOY_TASK = 'deploy_application';
 
 export class DeployTask implements BuildTask {
   name = DEPLOY_TASK;
+  readonly description = 'Deploying the application';
   aspectId = ApplicationAspect.id;
   readonly location = 'end';
   constructor(

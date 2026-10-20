@@ -15,7 +15,7 @@ import { compact, isEqual } from 'lodash';
 import { ComponentConfigMerger } from '@teambit/config-merger';
 import type { ScopeMain } from '@teambit/scope';
 import type { MergeResultsThreeWay, MergeStrategy } from '@teambit/component.modules.merge-helper';
-import { applyModifiedVersion, threeWayMerge } from '@teambit/component.modules.merge-helper';
+import { applyModifiedVersion, MergeOptions, threeWayMerge } from '@teambit/component.modules.merge-helper';
 import type { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './merging.main.runtime';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { VariantPolicyEntry } from '@teambit/dependency-resolver';
@@ -205,8 +205,12 @@ other:   ${otherLaneHead.toString()}`);
     otherComponent: Version,
     mergeResults: MergeResultsThreeWay
   ): Promise<{ dependenciesMergeResult?: DependenciesSnapshot; failure?: string }> {
-    const base = getDependenciesOfVersion(baseComponent);
     const other = getDependenciesOfVersion(otherComponent);
+    // "theirs" with a file conflict takes all the files of other (see applyModifiedVersion), so the dependencies too
+    if (mergeResults.hasConflicts && this.options.mergeStrategy === MergeOptions.theirs) {
+      return { dependenciesMergeResult: other };
+    }
+    const base = getDependenciesOfVersion(baseComponent);
     const imports = await this.getImportsOfMerge(baseComponent, currentComponent, otherComponent, mergeResults);
     if (imports) {
       const sideOf = (dependencies: DependenciesSnapshot, extensions: ExtensionDataList): SideOfMerge => ({
