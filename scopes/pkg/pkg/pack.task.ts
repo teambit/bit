@@ -34,11 +34,21 @@ export class PackTask implements BuildTask {
 
   /**
    * packing runs the pack lifecycle scripts of the package.json, which might need the packages.
+   * the scripts of the package.json written to the capsule come from the pkg config, the component overrides and,
+   * when the artifacts are reused, the package.json of the last build (which includes the env transformations).
    */
   requiresCapsuleInstallation(components: Component[]): boolean {
     return components.some((component) => {
-      const scripts = component.state.aspects.get(this.aspectId)?.data?.packageJsonModification?.scripts;
-      return PACK_LIFECYCLE_SCRIPTS.some((script) => scripts?.[script]);
+      const legacyComponent = component.state._consumer;
+      const pkgJsonOfLastBuild = legacyComponent.extensions
+        .findExtension(Extensions.builder)
+        ?.data?.aspectsData?.find((aspectData) => aspectData.aspectId === this.aspectId)?.data?.pkgJson;
+      const scriptsSources = [
+        component.state.aspects.get(this.aspectId)?.data?.packageJsonModification?.scripts,
+        legacyComponent.overrides?.componentOverridesPackageJsonData?.scripts,
+        pkgJsonOfLastBuild?.scripts,
+      ];
+      return scriptsSources.some((scripts) => PACK_LIFECYCLE_SCRIPTS.some((script) => scripts?.[script]));
     });
   }
 }
