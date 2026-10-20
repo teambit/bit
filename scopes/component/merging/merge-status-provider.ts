@@ -15,11 +15,12 @@ import { compact, isEqual } from 'lodash';
 import { ComponentConfigMerger } from '@teambit/config-merger';
 import type { ScopeMain } from '@teambit/scope';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
-import { threeWayMerge } from '@teambit/component.modules.merge-helper';
+import { MergeOptions, threeWayMerge } from '@teambit/component.modules.merge-helper';
 import type { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './merging.main.runtime';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { BuilderAspect } from '@teambit/builder';
+import { getDependenciesOfVersion, mergeDependencies } from './merge-dependencies';
 
 export type MergeStatusProviderOptions = {
   resolveUnrelated?: MergeStrategy;
@@ -169,6 +170,22 @@ other:   ${otherLaneHead.toString()}`);
       currentLabel,
       baseComponent,
     });
+    // a workspace re-detects the dependencies from the merged files. a bare scope can't, it merges the resolved ones.
+    const getDependenciesMergeResult = () => {
+      if (this.workspace) return undefined;
+      // "theirs" with a file conflict takes all the files of other (see applyModifiedVersion), so the dependencies too
+      if (mergeResults.hasConflicts && this.options.mergeStrategy === MergeOptions.theirs) {
+        return getDependenciesOfVersion(otherComponent);
+      }
+      return mergeDependencies(
+        getDependenciesOfVersion(baseComponent),
+        currentComponent,
+        getDependenciesOfVersion(otherComponent),
+        this.options.mergeStrategy,
+        this.currentLane?.toComponentIdsIncludeUpdateDependents()
+      );
+    };
+    const dependenciesMergeResult = getDependenciesMergeResult();
     return {
       currentComponent,
       id,
@@ -176,6 +193,7 @@ other:   ${otherLaneHead.toString()}`);
       divergeData,
       configMergeResult,
       dataMergeResult,
+      dependenciesMergeResult,
     };
   }
 

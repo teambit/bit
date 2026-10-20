@@ -206,4 +206,19 @@ describe('ExtensionDataList', () => {
       expect(configArr[1]).to.deep.equal({ id: 'my-scope/ext2', config: {} });
     });
   });
+  describe('adjust envs on config object', () => {
+    it('should move the env version to the root of the object', () => {
+      const conf: Record<string, any> = { 'teambit.envs/envs': { env: 'my-scope/my-env@1.0.0' } };
+      ExtensionDataList.adjustEnvsOnConfigObject(conf);
+      expect(conf).to.deep.equal({ 'teambit.envs/envs': { env: 'my-scope/my-env' }, 'my-scope/my-env@1.0.0': {} });
+    });
+    it('should keep the env specific when it is set specifically', () => {
+      const conf: Record<string, any> = { 'teambit.envs/envs': { env: 'my-scope/my-env@1.0.0', __specific: true } };
+      ExtensionDataList.adjustEnvsOnConfigObject(conf);
+      expect(conf).to.deep.equal({
+        'teambit.envs/envs': { env: 'my-scope/my-env', __specific: true },
+        'my-scope/my-env@1.0.0': { __specific: true },
+      });
+    });
+  });
 });
