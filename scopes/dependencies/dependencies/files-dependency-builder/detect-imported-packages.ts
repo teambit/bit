@@ -24,6 +24,12 @@ export type ImportsCache = Map<string, string[] | undefined>;
 const EXTENSIONS_OF_ENV_DETECTORS = ['.vue', '.svelte', '.astro'];
 
 /**
+ * in files of these types, an import of a package starts with "~". without it, it's an import of a file, even when it's
+ * not relative (e.g. `@import 'variables'`), same as a workspace resolves it (see lookupStyling).
+ */
+const EXTENSIONS_OF_STYLE_FILES = ['.scss', '.sass', '.less'];
+
+/**
  * the packages the given files import, found by parsing their content, without resolving the imports. a workspace
  * resolves each import against node_modules (see AutoDetectDeps), a bare scope has the files in memory only.
  * returns undefined when the imports of one of the files are unknown: it can't be parsed, or only an env detector
@@ -39,7 +45,9 @@ export async function detectImportedPackages(
     const specifiers = await getImportSpecifiers(file, cache);
     if (!specifiers) return undefined;
     const type = isDevFile(file.relativePath) ? 'dev' : 'runtime';
+    const isStyleFile = EXTENSIONS_OF_STYLE_FILES.includes(path.extname(file.relativePath));
     specifiers.forEach((specifier) => {
+      if (isStyleFile && !specifier.startsWith('~')) return;
       const packageName = toPackageName(specifier);
       if (!packageName || importedPackages.get(packageName) === 'runtime') return;
       importedPackages.set(packageName, type);

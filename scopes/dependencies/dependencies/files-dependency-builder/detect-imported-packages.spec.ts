@@ -31,8 +31,8 @@ const chalk = require('chalk');`,
     expect(packages!.get('chai')).to.equal('dev');
     expect(packages!.get('lodash')).to.equal('runtime');
   });
-  it('should find packages imported by style files', async () => {
-    const scss = { relativePath: 'style.scss', content: `@import '~@scope/theme/colors';` };
+  it('should find packages imported by style files, not files imported without a relative path', async () => {
+    const scss = { relativePath: 'style.scss', content: `@import 'variables';\n@import '~@scope/theme/colors';` };
     const packages = await detectImportedPackages([scss]);
     expect([...packages!.keys()]).to.deep.equal(['@scope/theme']);
   });
