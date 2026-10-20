@@ -205,7 +205,7 @@ impl Terminal {
         })
     }
 
-    fn red(&self, text: &str) -> String {
+    pub(super) fn red(&self, text: &str) -> String {
         if self.color { format!("\u{1b}[31m{text}\u{1b}[39m") } else { text.to_string() }
     }
 }

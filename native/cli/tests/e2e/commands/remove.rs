@@ -1,6 +1,7 @@
 //! Local removal against the pinned Node.js CLI.
 mod completion;
 mod selectors;
+mod suite;
 
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs};

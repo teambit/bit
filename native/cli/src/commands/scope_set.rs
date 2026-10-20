@@ -1,6 +1,6 @@
 //! Native `bit scope set <scope-name> [component-pattern]` (`ScopeSetCmd`).
 
-mod selection;
+pub(in crate::commands) mod selection;
 #[cfg(test)]
 mod tests;
 
@@ -25,7 +25,7 @@ struct Options {
     pattern: Option<String>,
 }
 
-enum Failure {
+pub(in crate::commands) enum Failure {
     Declined(String),
     User(String),
 }

@@ -83,6 +83,9 @@ fn single(batch: &mut Batch, pattern: &str) -> io::Result<Vec<String>> {
             identity(&key, &batch.bitmap[&key]).ok_or_else(|| invalid("recovery identity"))?,
         ]);
     }
+    if let Some(id) = lane_component(batch, pattern)? {
+        return Ok(vec![id]);
+    }
     let index = repository::index(batch)?;
     let rows: Vec<_> = index["components"]
         .as_array()
@@ -109,6 +112,37 @@ fn single(batch: &mut Batch, pattern: &str) -> io::Result<Vec<String>> {
         return Err(invalid(format!("component {pattern} was not found")));
     }
     Ok(vec![pattern.into()])
+}
+fn lane_component(batch: &mut Batch, pattern: &str) -> io::Result<Option<String>> {
+    let Some(lane) = repository::lane(batch)? else { return Ok(None) };
+    let rows: Vec<_> = lane["components"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|row| {
+            row["id"]["name"] == bare(pattern)
+                || format!(
+                    "{}/{}",
+                    row["id"]["scope"].as_str().unwrap_or_default(),
+                    row["id"]["name"].as_str().unwrap_or_default(),
+                ) == bare(pattern)
+        })
+        .collect();
+    if rows.len() > 1 {
+        return Err(invalid("ambiguous recovery component identity"));
+    }
+    let Some(row) = rows.first() else { return Ok(None) };
+    let bare = format!(
+        "{}/{}",
+        row["id"]["scope"].as_str().unwrap_or_default(),
+        row["id"]["name"].as_str().unwrap_or_default(),
+    );
+    let version = pattern
+        .split_once('@')
+        .map(|(_, version)| version)
+        .or_else(|| row["head"].as_str())
+        .ok_or_else(|| invalid("recovery lane head"))?;
+    Ok(Some(format!("{bare}@{version}")))
 }
 fn removed_head(batch: &mut Batch, id: &str) -> io::Result<bool> {
     let Some(model) = repository::model(batch, bare(id))? else { return Ok(false) };

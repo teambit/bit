@@ -295,10 +295,8 @@ fn valid_name(value: &str) -> bool {
             })
 }
 fn valid_scope(value: &str) -> bool {
-    !value.is_empty()
-        && value
-            .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.'))
+    let parts: Vec<&str> = value.split('.').collect();
+    (parts.len() == 2 || value.len() >= 2) && parts.len() <= 2 && parts.into_iter().all(valid_name)
 }
 fn invalid() -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, "unsupported local lane metadata change")

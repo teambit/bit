@@ -87,7 +87,9 @@ fn prepare_checkout_import(
         let default_scope = context["workspace"]["teambit.workspace/workspace"]["defaultScope"]
             .as_str()
             .ok_or_else(|| invalid("command default scope"))?;
-        if cached.all_external_targets_unmapped(&targets, default_scope) {
+        if targets.iter().all(|target| target.scope.is_none())
+            || cached.all_external_targets_unmapped(&targets, default_scope)
+        {
             return Ok(cached);
         }
     }

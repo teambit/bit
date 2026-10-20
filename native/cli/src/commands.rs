@@ -4,6 +4,7 @@
 mod add;
 mod cat;
 mod checkout;
+mod clear_cache;
 mod color;
 mod config;
 mod delete;
@@ -25,6 +26,7 @@ mod installation;
 mod inventory;
 mod lane;
 mod list;
+mod local_only;
 mod log;
 mod logout;
 mod merge;
@@ -44,6 +46,7 @@ mod reset;
 mod scope_rename;
 mod scope_set;
 mod scope_trust;
+mod search;
 mod snap;
 mod stash;
 mod status;
@@ -52,6 +55,7 @@ mod system;
 mod tag;
 #[cfg(test)]
 mod test_support;
+mod uninstall;
 mod unuse_cmd;
 mod use_cmd;
 mod version;
@@ -73,6 +77,7 @@ pub const COMMANDS: &[Command] = &[
     cat::COMMAND,
     checkout::COMMAND,
     checkout::REVERT,
+    clear_cache::COMMAND,
     config::COMMAND,
     delete::COMMAND,
     deprecate::COMMAND,
@@ -92,6 +97,7 @@ pub const COMMANDS: &[Command] = &[
     install::COMMAND,
     lane::COMMAND,
     list::COMMAND,
+    local_only::COMMAND,
     log::COMMAND,
     logout::COMMAND,
     merge::COMMAND,
@@ -106,12 +112,14 @@ pub const COMMANDS: &[Command] = &[
     reset::COMMAND,
     rename::COMMAND,
     scope_rename::COMMAND,
+    search::COMMAND,
     snap::COMMAND,
     stash::COMMAND,
     status::COMMAND,
     switch::COMMAND,
     system::COMMAND,
     tag::COMMAND,
+    uninstall::COMMAND,
     unuse_cmd::COMMAND,
     use_cmd::COMMAND,
     version::COMMAND,

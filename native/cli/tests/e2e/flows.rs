@@ -3,6 +3,7 @@
 mod big_file;
 mod bitmap_deleted;
 mod delete_files;
+mod id_with_wildcard;
 mod import_package_json;
 mod remote_commands_outside_workspace;
 mod same_name_different_scopes;

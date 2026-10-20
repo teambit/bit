@@ -33,6 +33,28 @@ pub fn update_document(
     Ok(())
 }
 
+/// Remove `packages` from `dependencies` and `peerDependencies` in the workspace policy.
+pub fn remove_from_document(document: &mut Document, packages: &[String]) -> bool {
+    let initial = document
+        .get(&[DEPENDENCY_RESOLVER_ASPECT, "policy"])
+        .unwrap_or(Value::Null);
+    let policy = config_entries(&initial);
+    let original_len = policy.len();
+    let retained: Vec<Entry> = policy
+        .into_iter()
+        .filter(|(_, name, _)| {
+            !packages
+                .iter()
+                .any(|package| package == name)
+        })
+        .collect();
+    let changed = retained.len() != original_len;
+    if changed {
+        update_config_policy(document, &to_config_object(&retained));
+    }
+    changed
+}
+
 /// Add `entries` (`[name, version]`) with `updateExisting` and write `workspace.jsonc`.
 pub fn add_to_root_policy(
     session: &Session<'_>,

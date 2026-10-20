@@ -100,7 +100,14 @@ pub(super) fn retain_histories(plan: &mut PreparedImport, targets: &[&Target]) -
     for target in targets {
         let model = read_model(plan, &directory, target)?
             .ok_or_else(|| invalid("recovery divergence model"))?;
-        let head = model["head"].as_str().ok_or_else(|| invalid("recovery divergence head"))?;
+        let head = model["head"]
+            .as_str()
+            .or_else(|| {
+                crate::merge_history::hash(&target.version)
+                    .is_ok()
+                    .then_some(target.version.as_str())
+            })
+            .ok_or_else(|| invalid("recovery divergence head"))?;
         let (hash, history, changed) =
             super::history::populate(&mut plan.capture, &directory, &model, head)?;
         if changed {

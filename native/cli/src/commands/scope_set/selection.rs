@@ -9,7 +9,7 @@ use bit_install::workspace::{Bitmap, BitmapEntry};
 use serde_json::Value;
 use std::{fs, path::Path};
 
-pub(super) fn resolve_pattern_entries<'a>(
+pub(in crate::commands) fn resolve_pattern_entries<'a>(
     root: &Path,
     bitmap: &'a Bitmap,
     pattern: &str,
@@ -140,7 +140,7 @@ pub(super) fn validate_scope_name(scope: &str) -> Result<(), Failure> {
     )))
 }
 
-pub(super) fn entry_full_id(entry: &BitmapEntry) -> String {
+pub(in crate::commands) fn entry_full_id(entry: &BitmapEntry) -> String {
     let identity = entry.id.to_string_without_version();
     match &entry.id.version {
         Some(version) if !version.is_empty() && version != "latest" => {

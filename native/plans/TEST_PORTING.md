@@ -661,55 +661,55 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/commands/remove.e2e.ts`
 
-- [ ] `e2e/commands/remove.e2e.ts:28` bit remove command › with tagged components and --track=false › should remove component
-- [ ] `e2e/commands/remove.e2e.ts:32` bit remove command › with tagged components and --track=false › should not show in bitmap
-- [ ] `e2e/commands/remove.e2e.ts:36` bit remove command › with tagged components and --track=false › removed component should not be in new component when checking status
-- [ ] `e2e/commands/remove.e2e.ts:51` bit remove command › with tagged components and -t=true › should show in bitmap
-- [ ] `e2e/commands/remove.e2e.ts:55` bit remove command › with tagged components and -t=true › removed component should be in new component
-- [ ] `e2e/commands/remove.e2e.ts:76` bit remove command › with remote scope without dependencies › without --remote flag › should show a successful message
-- [ ] `e2e/commands/remove.e2e.ts:80` bit remove command › with remote scope without dependencies › without --remote flag › should remove the component from the local scope
-- [ ] `e2e/commands/remove.e2e.ts:84` bit remove command › with remote scope without dependencies › without --remote flag › should not remove the component from the remote scope
-- [ ] `e2e/commands/remove.e2e.ts:94` bit remove command › with remote scope without dependencies › with --remote flag › should show a successful message
-- [ ] `e2e/commands/remove.e2e.ts:98` bit remove command › with remote scope without dependencies › with --remote flag › should remove the component from the remote scope
-- [ ] `e2e/commands/remove.e2e.ts:112` bit remove command › with remote scope with dependencies › should not remove component with dependencies when -f flag is false
-- [ ] `e2e/commands/remove.e2e.ts:118` bit remove command › with remote scope with dependencies › should remove component with dependencies when -f flag is true
-- [ ] `e2e/commands/remove.e2e.ts:136` bit remove command › with imported components, no dependencies › should remove components with no dependencies when -f flag is false
-- [ ] `e2e/commands/remove.e2e.ts:152` bit remove command › remove modified component › should not remove modified component
-- [ ] `e2e/commands/remove.e2e.ts:171` bit remove command › remove a component when the main file is missing › should remove the component successfully
-- [ ] `e2e/commands/remove.e2e.ts:204` bit remove command › remove a component when a dependency has a file with the same content as other component file › should successfully remove
-- [ ] `e2e/commands/remove.e2e.ts:207` bit remove command › remove a component when a dependency has a file with the same content as other component file › bit status should not throw an error about missing file from the model
-- [ ] `e2e/commands/remove.e2e.ts:211` bit remove command › remove a component when a dependency has a file with the same content as other component file › expect the shared hash to not be deleted
-- [ ] `e2e/commands/remove.e2e.ts:227` bit remove command › soft remove › bit status should show a section of removed components
-- [ ] `e2e/commands/remove.e2e.ts:231` bit remove command › soft remove › bit status should show the dependent component with an issue because it is now missing the dependency
-- [ ] `e2e/commands/remove.e2e.ts:234` bit remove command › soft remove › bit status should not show the component as unavailable on main
-- [ ] `e2e/commands/remove.e2e.ts:238` bit remove command › soft remove › bit list should not show the removed component
-- [ ] `e2e/commands/remove.e2e.ts:243` bit remove command › soft remove › bit show should show the component as removed
-- [ ] `e2e/commands/remove.e2e.ts:252` bit remove command › soft remove › tagging the component › should tag the removed components
-- [ ] `e2e/commands/remove.e2e.ts:256` bit remove command › soft remove › tagging the component › bit show should still show the component as removed
-- [ ] `e2e/commands/remove.e2e.ts:265` bit remove command › soft remove › tagging the component › exporting the components › should export the deleted components
-- [ ] `e2e/commands/remove.e2e.ts:268` bit remove command › soft remove › tagging the component › exporting the components › bit status should be clean
-- [ ] `e2e/commands/remove.e2e.ts:271` bit remove command › soft remove › tagging the component › exporting the components › bit list remote should not show the removed component
-- [ ] `e2e/commands/remove.e2e.ts:283` bit remove command › soft remove › tagging the component › exporting the components › importing the component to a new workspace › should indicate that the component is removed
-- [ ] `e2e/commands/remove.e2e.ts:286` bit remove command › soft remove › tagging the component › exporting the components › importing the component to a new workspace › bit status should show them as remotelySoftRemoved
-- [ ] `e2e/commands/remove.e2e.ts:297` bit remove command › soft remove › tagging the component › exporting the components › importing the entire scope to a new workspace › should not import the removed component
-- [ ] `e2e/commands/remove.e2e.ts:311` bit remove command › soft remove › soft-tagging the component › should leave the .bitmap entry and soft-tag it as well
-- [ ] `e2e/commands/remove.e2e.ts:322` bit remove command › soft remove › soft-tagging the component › tag --persist › should remove the entry from .bitmap
-- [ ] `e2e/commands/remove.e2e.ts:341` bit remove command › removing from workspace when it had dependents previously in old tags › should remove successfully without the need for --force flag
-- [ ] `e2e/commands/remove.e2e.ts:351` bit remove command › remove new component with --keep-files flag › should remove the component from .bitmap
-- [ ] `e2e/commands/remove.e2e.ts:355` bit remove command › remove new component with --keep-files flag › should not delete the directory from the filesystem
-- [ ] `e2e/commands/remove.e2e.ts:358` bit remove command › remove new component with --keep-files flag › should delete the directory from the node_modules
-- [ ] `e2e/commands/remove.e2e.ts:368` bit remove command › remove new component without --keep-files flag › should remove the component from .bitmap
-- [ ] `e2e/commands/remove.e2e.ts:372` bit remove command › remove new component without --keep-files flag › should delete the directory from the filesystem
-- [ ] `e2e/commands/remove.e2e.ts:375` bit remove command › remove new component without --keep-files flag › should delete the directory from the node_modules
-- [ ] `e2e/commands/remove.e2e.ts:387` bit remove command › soft-remove then snap with --ignore-issues › should show it as removed
-- [ ] `e2e/commands/remove.e2e.ts:401` bit remove command › remove when a lane is new › should remove the components from the local lane
-- [ ] `e2e/commands/remove.e2e.ts:405` bit remove command › remove when a lane is new › should remove the components from the workspace
-- [ ] `e2e/commands/remove.e2e.ts:420` bit remove command › soft-remove then import › should not throwing an error upon import
-- [ ] `e2e/commands/remove.e2e.ts:434` bit remove command › soft remove then tagging the dependent without removing the references to the removed component › bit status should show RemovedDependency issue
-- [ ] `e2e/commands/remove.e2e.ts:459` bit remove command › soft remove then tagging the dependent without removing the references to the removed component then recovering it › bit status should not show RemovedDependency issue because it was recovered
-- [ ] `e2e/commands/remove.e2e.ts:473` bit remove command › soft remove then snapping with --build › should not build the removed component
-- [ ] `e2e/commands/remove.e2e.ts:478` bit remove command › soft remove then snapping with --build › should remove successfully
-- [ ] `e2e/commands/remove.e2e.ts:491` bit remove command › remove component that exists in workspace.jsonc › should remove the id from the root of workspace.jsonc
+- [x] `e2e/commands/remove.e2e.ts:28` bit remove command › with tagged components and --track=false › should remove component — `commands::remove::suite::with_tagged_components_and_track_false`
+- [x] `e2e/commands/remove.e2e.ts:32` bit remove command › with tagged components and --track=false › should not show in bitmap — `commands::remove::suite::with_tagged_components_and_track_false`
+- [x] `e2e/commands/remove.e2e.ts:36` bit remove command › with tagged components and --track=false › removed component should not be in new component when checking status — `commands::remove::suite::with_tagged_components_and_track_false`
+- [x] `e2e/commands/remove.e2e.ts:51` bit remove command › with tagged components and -t=true › should show in bitmap — `commands::remove::suite::with_tagged_components_and_track_true`
+- [x] `e2e/commands/remove.e2e.ts:55` bit remove command › with tagged components and -t=true › removed component should be in new component — `commands::remove::suite::with_tagged_components_and_track_true`
+- [x] `e2e/commands/remove.e2e.ts:76` bit remove command › with remote scope without dependencies › without --remote flag › should show a successful message — `commands::remove::suite::with_remote_scope_without_dependencies`
+- [x] `e2e/commands/remove.e2e.ts:80` bit remove command › with remote scope without dependencies › without --remote flag › should remove the component from the local scope — `commands::remove::suite::with_remote_scope_without_dependencies`
+- [x] `e2e/commands/remove.e2e.ts:84` bit remove command › with remote scope without dependencies › without --remote flag › should not remove the component from the remote scope — `commands::remove::suite::with_remote_scope_without_dependencies`
+- [x] `e2e/commands/remove.e2e.ts:94` bit remove command › with remote scope without dependencies › with --remote flag › should show a successful message — `commands::delete::hard::exported_component_hard_delete_matches_released_node`
+- [x] `e2e/commands/remove.e2e.ts:98` bit remove command › with remote scope without dependencies › with --remote flag › should remove the component from the remote scope — `commands::delete::hard::exported_component_hard_delete_matches_released_node`
+- [x] `e2e/commands/remove.e2e.ts:112` bit remove command › with remote scope with dependencies › should not remove component with dependencies when -f flag is false — `commands::delete::hard::historical_version_dependent_blocks_hard_delete_like_node`
+- [x] `e2e/commands/remove.e2e.ts:118` bit remove command › with remote scope with dependencies › should remove component with dependencies when -f flag is true — `commands::delete::hard::forcing_historical_version_dependent_removes_only_model_refs_like_node`
+- [x] `e2e/commands/remove.e2e.ts:136` bit remove command › with imported components, no dependencies › should remove components with no dependencies when -f flag is false — `commands::remove::suite::with_imported_components_no_dependencies`
+- [x] `e2e/commands/remove.e2e.ts:152` bit remove command › remove modified component › should not remove modified component — `commands::remove::suite::remove_modified_component`
+- [x] `e2e/commands/remove.e2e.ts:171` bit remove command › remove a component when the main file is missing › should remove the component successfully — `commands::remove::suite::remove_a_component_when_the_main_file_is_missing`
+- [x] `e2e/commands/remove.e2e.ts:204` bit remove command › remove a component when a dependency has a file with the same content as other component file › should successfully remove — `commands::remove::suite::remove_a_component_when_a_dependency_has_same_content_file`
+- [x] `e2e/commands/remove.e2e.ts:207` bit remove command › remove a component when a dependency has a file with the same content as other component file › bit status should not throw an error about missing file from the model — `commands::remove::suite::remove_a_component_when_a_dependency_has_same_content_file`
+- [x] `e2e/commands/remove.e2e.ts:211` bit remove command › remove a component when a dependency has a file with the same content as other component file › expect the shared hash to not be deleted — `commands::remove::suite::remove_a_component_when_a_dependency_has_same_content_file`
+- [x] `e2e/commands/remove.e2e.ts:227` bit remove command › soft remove › bit status should show a section of removed components — `commands::remove::suite::soft_remove_workflow`
+- [x] `e2e/commands/remove.e2e.ts:231` bit remove command › soft remove › bit status should show the dependent component with an issue because it is now missing the dependency — `commands::remove::suite::soft_remove_workflow`
+- [x] `e2e/commands/remove.e2e.ts:234` bit remove command › soft remove › bit status should not show the component as unavailable on main — `commands::remove::suite::soft_remove_workflow`
+- [x] `e2e/commands/remove.e2e.ts:238` bit remove command › soft remove › bit list should not show the removed component — `commands::remove::suite::soft_remove_workflow`
+- [x] `e2e/commands/remove.e2e.ts:243` bit remove command › soft remove › bit show should show the component as removed — `commands::remove::suite::soft_remove_workflow`
+- [x] `e2e/commands/remove.e2e.ts:252` bit remove command › soft remove › tagging the component › should tag the removed components — `commands::remove::suite::soft_remove_workflow`
+- [x] `e2e/commands/remove.e2e.ts:256` bit remove command › soft remove › tagging the component › bit show should still show the component as removed — `commands::remove::suite::soft_remove_workflow`
+- [x] `e2e/commands/remove.e2e.ts:265` bit remove command › soft remove › tagging the component › exporting the components › should export the deleted components — `commands::remove::suite::soft_remove_workflow`
+- [x] `e2e/commands/remove.e2e.ts:268` bit remove command › soft remove › tagging the component › exporting the components › bit status should be clean — `commands::remove::suite::soft_remove_workflow`
+- [x] `e2e/commands/remove.e2e.ts:271` bit remove command › soft remove › tagging the component › exporting the components › bit list remote should not show the removed component — `commands::remove::suite::soft_remove_workflow`
+- [x] `e2e/commands/remove.e2e.ts:283` bit remove command › soft remove › tagging the component › exporting the components › importing the component to a new workspace › should indicate that the component is removed — `commands::remove::suite::soft_remove_workflow`
+- [x] `e2e/commands/remove.e2e.ts:286` bit remove command › soft remove › tagging the component › exporting the components › importing the component to a new workspace › bit status should show them as remotelySoftRemoved — `commands::remove::suite::soft_remove_workflow`
+- [x] `e2e/commands/remove.e2e.ts:297` bit remove command › soft remove › tagging the component › exporting the components › importing the entire scope to a new workspace › should not import the removed component — `commands::remove::suite::soft_remove_workflow`
+- [x] `e2e/commands/remove.e2e.ts:311` bit remove command › soft remove › soft-tagging the component › should leave the .bitmap entry and soft-tag it as well — `commands::remove::tagged_removal_matches_node_with_and_without_files`
+- [x] `e2e/commands/remove.e2e.ts:322` bit remove command › soft remove › soft-tagging the component › tag --persist › should remove the entry from .bitmap — `commands::remove::tagged_removal_matches_node_with_and_without_files`
+- [x] `e2e/commands/remove.e2e.ts:341` bit remove command › removing from workspace when it had dependents previously in old tags › should remove successfully without the need for --force flag — `commands::remove::suite::removing_from_workspace_when_it_had_dependents_previously_in_old_tags`
+- [x] `e2e/commands/remove.e2e.ts:351` bit remove command › remove new component with --keep-files flag › should remove the component from .bitmap — `commands::remove::new_component_removal_matches_node_with_and_without_files`
+- [x] `e2e/commands/remove.e2e.ts:355` bit remove command › remove new component with --keep-files flag › should not delete the directory from the filesystem — `commands::remove::new_component_removal_matches_node_with_and_without_files`
+- [x] `e2e/commands/remove.e2e.ts:358` bit remove command › remove new component with --keep-files flag › should delete the directory from the node_modules — `commands::remove::new_component_removal_matches_node_with_and_without_files`
+- [x] `e2e/commands/remove.e2e.ts:368` bit remove command › remove new component without --keep-files flag › should remove the component from .bitmap — `commands::remove::new_component_removal_matches_node_with_and_without_files`
+- [x] `e2e/commands/remove.e2e.ts:372` bit remove command › remove new component without --keep-files flag › should delete the directory from the filesystem — `commands::remove::new_component_removal_matches_node_with_and_without_files`
+- [x] `e2e/commands/remove.e2e.ts:375` bit remove command › remove new component without --keep-files flag › should delete the directory from the node_modules — `commands::remove::new_component_removal_matches_node_with_and_without_files`
+- [x] `e2e/commands/remove.e2e.ts:387` bit remove command › soft-remove then snap with --ignore-issues › should show it as removed — `commands::remove::suite::soft_remove_then_snap_with_ignore_issues`
+- [x] `e2e/commands/remove.e2e.ts:401` bit remove command › remove when a lane is new › should remove the components from the local lane — `commands::remove::suite::remove_when_a_lane_is_new`
+- [x] `e2e/commands/remove.e2e.ts:405` bit remove command › remove when a lane is new › should remove the components from the workspace — `commands::remove::suite::remove_when_a_lane_is_new`
+- [x] `e2e/commands/remove.e2e.ts:420` bit remove command › soft-remove then import › should not throwing an error upon import — `commands::remove::suite::soft_remove_then_import`
+- [x] `e2e/commands/remove.e2e.ts:434` bit remove command › soft remove then tagging the dependent without removing the references to the removed component › bit status should show RemovedDependency issue — `commands::remove::suite::soft_remove_dependent_issues`
+- [x] `e2e/commands/remove.e2e.ts:459` bit remove command › soft remove then tagging the dependent without removing the references to the removed component then recovering it › bit status should not show RemovedDependency issue because it was recovered — `commands::remove::suite::soft_remove_dependent_issues`
+- [x] `e2e/commands/remove.e2e.ts:473` bit remove command › soft remove then snapping with --build › should not build the removed component — `commands::remove::suite::soft_remove_then_snap_with_ignore_issues`
+- [x] `e2e/commands/remove.e2e.ts:478` bit remove command › soft remove then snapping with --build › should remove successfully — `commands::remove::suite::soft_remove_then_snap_with_ignore_issues`
+- [x] `e2e/commands/remove.e2e.ts:491` bit remove command › remove component that exists in workspace.jsonc › should remove the id from the root of workspace.jsonc — `commands::remove::suite::remove_component_that_exists_in_workspace_jsonc`
 
 ### `e2e/commands/reset.e2e.ts`
 
@@ -744,11 +744,11 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/commands/search.e2e.ts`
 
-- [ ] `e2e/commands/search.e2e.ts:26` bit search command › local search with components in workspace › should find a component by matching keyword
-- [ ] `e2e/commands/search.e2e.ts:31` bit search command › local search with components in workspace › should not find components that do not match
-- [ ] `e2e/commands/search.e2e.ts:36` bit search command › local search with components in workspace › should match case-insensitively
-- [ ] `e2e/commands/search.e2e.ts:41` bit search command › local search with components in workspace › should union and deduplicate results across multiple queries
-- [ ] `e2e/commands/search.e2e.ts:49` bit search command › local search with components in workspace › should return json output with --json flag
+- [x] `e2e/commands/search.e2e.ts:26` bit search command › local search with components in workspace › should find a component by matching keyword — `commands::search::should_find_a_component_by_matching_keyword`
+- [x] `e2e/commands/search.e2e.ts:31` bit search command › local search with components in workspace › should not find components that do not match — `commands::search::should_not_find_components_that_do_not_match`
+- [x] `e2e/commands/search.e2e.ts:36` bit search command › local search with components in workspace › should match case-insensitively — `commands::search::should_match_case_insensitively`
+- [x] `e2e/commands/search.e2e.ts:41` bit search command › local search with components in workspace › should union and deduplicate results across multiple queries — `commands::search::should_union_and_deduplicate_results_across_multiple_queries`
+- [x] `e2e/commands/search.e2e.ts:49` bit search command › local search with components in workspace › should return json output with --json flag — `commands::search::should_return_json_output_with_json_flag`
 
 ### `e2e/commands/tag.e2e.ts`
 
@@ -857,35 +857,35 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/flows/id-with-wildcard.e2e.ts`
 
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:32` component id with wildcard › adding components with various namespaces › tag with wildcard › when wildcard does not match any component › should not tag any component
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:42` component id with wildcard › adding components with various namespaces › tag with wildcard › when wildcard match some of the components › should indicate the tagged components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:47` component id with wildcard › adding components with various namespaces › tag with wildcard › when wildcard match some of the components › should tag only the matched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:60` component id with wildcard › adding components with various namespaces › remove with wildcard › when wildcard does not match any component › should throw an error saying the wildcard does not match any id
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:74` component id with wildcard › adding components with various namespaces › remove with wildcard › when wildcard match some of the components › should indicate the removed components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:78` component id with wildcard › adding components with various namespaces › remove with wildcard › when wildcard match some of the components › should remove only the matched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:95` component id with wildcard › adding components with various namespaces › remove from remote with wildcard › when wildcard does not match any component › should throw an error saying the wildcard does not match any id
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:106` component id with wildcard › adding components with various namespaces › remove from remote with wildcard › when wildcard match some of the components › should indicate the removed components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:110` component id with wildcard › adding components with various namespaces › remove from remote with wildcard › when wildcard match some of the components › should remove only the matched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:137` component id with wildcard › adding components with various namespaces › remove from remote with wildcard after removed locally › when wildcard match some of the components › should indicate the removed components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:141` component id with wildcard › adding components with various namespaces › remove from remote with wildcard after removed locally › when wildcard match some of the components › should remove only the matched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:158` component id with wildcard › adding components with various namespaces › export with wildcard › when wildcard does not match any component › should not export any component
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:168` component id with wildcard › adding components with various namespaces › export with wildcard › when wildcard match some of the components › should indicate the exported components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:171` component id with wildcard › adding components with various namespaces › export with wildcard › when wildcard match some of the components › should export only the matched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:175` component id with wildcard › adding components with various namespaces › export with wildcard › when wildcard match some of the components › should not export the non matched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:195` component id with wildcard › adding components with various namespaces › untag with wildcard › when wildcard does not match any component › should throw an error saying that no components found
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:205` component id with wildcard › adding components with various namespaces › untag with wildcard › when wildcard match some of the components › should indicate the untagged components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:210` component id with wildcard › adding components with various namespaces › untag with wildcard › when wildcard match some of the components › should untag only the matched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:228` component id with wildcard › adding components with various namespaces › checkout with wildcard › when wildcard does not match any component › should throw an error saying the wildcard does not match any id
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:239` component id with wildcard › adding components with various namespaces › checkout with wildcard › when wildcard match some of the components › should indicate the number of checked out components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:242` component id with wildcard › adding components with various namespaces › checkout with wildcard › when wildcard match some of the components › should checkout only the matched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:247` component id with wildcard › adding components with various namespaces › checkout with wildcard › when wildcard match some of the components › should not checkout the unmatched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:271` component id with wildcard › adding components with various namespaces › diff with wildcard › when wildcard does not match any component › should throw an error saying the wildcard does not match any id
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:282` component id with wildcard › adding components with various namespaces › diff with wildcard › when wildcard match some of the components › should show diff only for the matched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:286` component id with wildcard › adding components with various namespaces › diff with wildcard › when wildcard match some of the components › should not show diff for unmatched unmatched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:300` component id with wildcard › adding components with various namespaces › list with wildcard › should list only for the matched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:303` component id with wildcard › adding components with various namespaces › list with wildcard › should not list unmatched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:316` component id with wildcard › adding components with various namespaces › list remote with wildcard › should list only for the matched components
-- [ ] `e2e/flows/id-with-wildcard.e2e.ts:319` component id with wildcard › adding components with various namespaces › list remote with wildcard › should not list unmatched components
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:32` component id with wildcard › adding components with various namespaces › tag with wildcard › when wildcard does not match any component › should not tag any component — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:42` component id with wildcard › adding components with various namespaces › tag with wildcard › when wildcard match some of the components › should indicate the tagged components — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:47` component id with wildcard › adding components with various namespaces › tag with wildcard › when wildcard match some of the components › should tag only the matched components — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:60` component id with wildcard › adding components with various namespaces › remove with wildcard › when wildcard does not match any component › should throw an error saying the wildcard does not match any id — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:74` component id with wildcard › adding components with various namespaces › remove with wildcard › when wildcard match some of the components › should indicate the removed components — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:78` component id with wildcard › adding components with various namespaces › remove with wildcard › when wildcard match some of the components › should remove only the matched components — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:95` component id with wildcard › adding components with various namespaces › remove from remote with wildcard › when wildcard does not match any component › should throw an error saying the wildcard does not match any id — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:106` component id with wildcard › adding components with various namespaces › remove from remote with wildcard › when wildcard match some of the components › should indicate the removed components — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:110` component id with wildcard › adding components with various namespaces › remove from remote with wildcard › when wildcard match some of the components › should remove only the matched components — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:137` component id with wildcard › adding components with various namespaces › remove from remote with wildcard after removed locally › when wildcard match some of the components › should indicate the removed components — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:141` component id with wildcard › adding components with various namespaces › remove from remote with wildcard after removed locally › when wildcard match some of the components › should remove only the matched components — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:158` component id with wildcard › adding components with various namespaces › export with wildcard › when wildcard does not match any component › should not export any component — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:168` component id with wildcard › adding components with various namespaces › export with wildcard › when wildcard match some of the components › should indicate the exported components — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:171` component id with wildcard › adding components with various namespaces › export with wildcard › when wildcard match some of the components › should export only the matched components — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:175` component id with wildcard › adding components with various namespaces › export with wildcard › when wildcard match some of the components › should not export the non matched components — `flows::id_with_wildcard::tag_remove_export_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:195` component id with wildcard › adding components with various namespaces › untag with wildcard › when wildcard does not match any component › should throw an error saying that no components found — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:205` component id with wildcard › adding components with various namespaces › untag with wildcard › when wildcard match some of the components › should indicate the untagged components — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:210` component id with wildcard › adding components with various namespaces › untag with wildcard › when wildcard match some of the components › should untag only the matched components — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:228` component id with wildcard › adding components with various namespaces › checkout with wildcard › when wildcard does not match any component › should throw an error saying the wildcard does not match any id — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:239` component id with wildcard › adding components with various namespaces › checkout with wildcard › when wildcard match some of the components › should indicate the number of checked out components — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:242` component id with wildcard › adding components with various namespaces › checkout with wildcard › when wildcard match some of the components › should checkout only the matched components — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:247` component id with wildcard › adding components with various namespaces › checkout with wildcard › when wildcard match some of the components › should not checkout the unmatched components — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:271` component id with wildcard › adding components with various namespaces › diff with wildcard › when wildcard does not match any component › should throw an error saying the wildcard does not match any id — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:282` component id with wildcard › adding components with various namespaces › diff with wildcard › when wildcard match some of the components › should show diff only for the matched components — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:286` component id with wildcard › adding components with various namespaces › diff with wildcard › when wildcard match some of the components › should not show diff for unmatched unmatched components — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:300` component id with wildcard › adding components with various namespaces › list with wildcard › should list only for the matched components — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:303` component id with wildcard › adding components with various namespaces › list with wildcard › should not list unmatched components — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:316` component id with wildcard › adding components with various namespaces › list remote with wildcard › should list only for the matched components — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
+- [x] `e2e/flows/id-with-wildcard.e2e.ts:319` component id with wildcard › adding components with various namespaces › list remote with wildcard › should not list unmatched components — `flows::id_with_wildcard::untag_checkout_diff_list_with_wildcard`
 
 ### `e2e/flows/import-package-json.e2e.ts`
 
@@ -966,23 +966,23 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/functionalities/binary-files.e2e.ts`
 
-- [ ] `e2e/functionalities/binary-files.e2e.ts:38` binary files › exporting a PNG file in addition to a .js file › should export it with no errors
-- [ ] `e2e/functionalities/binary-files.e2e.ts:47` binary files › exporting a PNG file in addition to a .js file › after importing the file › the size of the binary file should not be changed
-- [ ] `e2e/functionalities/binary-files.e2e.ts:70` binary files › exporting a PNG file as the only file › should export it with no errors
-- [ ] `e2e/functionalities/binary-files.e2e.ts:75` binary files › exporting a PNG file as the only file › should not install a package "undefined"
-- [ ] `e2e/functionalities/binary-files.e2e.ts:84` binary files › exporting a PNG file as the only file › after importing the file › the size of the binary file should not be changed
+- [x] `e2e/functionalities/binary-files.e2e.ts:38` binary files › exporting a PNG file in addition to a .js file › should export it with no errors — `functionalities::binary_files::exporting_a_png_file_in_addition_to_a_js_file`
+- [x] `e2e/functionalities/binary-files.e2e.ts:47` binary files › exporting a PNG file in addition to a .js file › after importing the file › the size of the binary file should not be changed — `functionalities::binary_files::exporting_a_png_file_in_addition_to_a_js_file`
+- [x] `e2e/functionalities/binary-files.e2e.ts:70` binary files › exporting a PNG file as the only file › should export it with no errors — `functionalities::binary_files::exporting_a_png_file_as_the_only_file`
+- [x] `e2e/functionalities/binary-files.e2e.ts:75` binary files › exporting a PNG file as the only file › should not install a package "undefined" — `functionalities::binary_files::exporting_a_png_file_as_the_only_file`
+- [x] `e2e/functionalities/binary-files.e2e.ts:84` binary files › exporting a PNG file as the only file › after importing the file › the size of the binary file should not be changed — `functionalities::binary_files::exporting_a_png_file_as_the_only_file`
 
 ### `e2e/functionalities/components-index.e2e.ts`
 
-- [ ] `e2e/functionalities/components-index.e2e.ts:24` scope components index mechanism › after tagging a component › should save the component in the index.json file
-- [ ] `e2e/functionalities/components-index.e2e.ts:40` scope components index mechanism › after tagging a component › after exporting the component › should create a new record with the new scope
-- [ ] `e2e/functionalities/components-index.e2e.ts:45` scope components index mechanism › after tagging a component › after exporting the component › bit list should show only one component
-- [ ] `e2e/functionalities/components-index.e2e.ts:55` scope components index mechanism › after tagging a component › after exporting the component › removing the component › should remove the record from index.json
-- [ ] `e2e/functionalities/components-index.e2e.ts:66` scope components index mechanism › after tagging a component › after exporting the component › importing the component to a new scope › should populate the index.json
-- [ ] `e2e/functionalities/components-index.e2e.ts:86` scope components index mechanism › changing the index.json file manually to be empty › bit list should show zero results as it uses the index.json file
-- [ ] `e2e/functionalities/components-index.e2e.ts:90` scope components index mechanism › changing the index.json file manually to be empty › bit cat-scope should still show the component as it should not be affected by the cache
-- [ ] `e2e/functionalities/components-index.e2e.ts:98` scope components index mechanism › changing the index.json file manually to be empty › running bit init --reset › should rebuild index.json with the missing components
-- [ ] `e2e/functionalities/components-index.e2e.ts:116` scope components index mechanism › outdated / out-of-sync index.json › adding a non-exist component to index.json › bit status should throw an error for the first time and then should work on the second run
+- [x] `e2e/functionalities/components-index.e2e.ts:24` scope components index mechanism › after tagging a component › should save the component in the index.json file — `functionalities::components_index::after_tagging_exporting_removing_and_importing_a_component`
+- [x] `e2e/functionalities/components-index.e2e.ts:40` scope components index mechanism › after tagging a component › after exporting the component › should create a new record with the new scope — `functionalities::components_index::after_tagging_exporting_removing_and_importing_a_component`
+- [x] `e2e/functionalities/components-index.e2e.ts:45` scope components index mechanism › after tagging a component › after exporting the component › bit list should show only one component — `functionalities::components_index::after_tagging_exporting_removing_and_importing_a_component`
+- [x] `e2e/functionalities/components-index.e2e.ts:55` scope components index mechanism › after tagging a component › after exporting the component › removing the component › should remove the record from index.json — `functionalities::components_index::after_tagging_exporting_removing_and_importing_a_component`
+- [x] `e2e/functionalities/components-index.e2e.ts:66` scope components index mechanism › after tagging a component › after exporting the component › importing the component to a new scope › should populate the index.json — `functionalities::components_index::after_tagging_exporting_removing_and_importing_a_component`
+- [x] `e2e/functionalities/components-index.e2e.ts:86` scope components index mechanism › changing the index.json file manually to be empty › bit list should show zero results as it uses the index.json file — `functionalities::components_index::changing_the_index_json_file_manually_to_be_empty`
+- [x] `e2e/functionalities/components-index.e2e.ts:90` scope components index mechanism › changing the index.json file manually to be empty › bit cat-scope should still show the component as it should not be affected by the cache — `functionalities::components_index::changing_the_index_json_file_manually_to_be_empty`
+- [x] `e2e/functionalities/components-index.e2e.ts:98` scope components index mechanism › changing the index.json file manually to be empty › running bit init --reset › should rebuild index.json with the missing components — `functionalities::components_index::changing_the_index_json_file_manually_to_be_empty`
+- [x] `e2e/functionalities/components-index.e2e.ts:116` scope components index mechanism › outdated / out-of-sync index.json › adding a non-exist component to index.json › bit status should throw an error for the first time and then should work on the second run — `functionalities::components_index::outdated_index_json_recovers_on_second_status_run`
 
 ### `e2e/functionalities/dev-dependencies.e2e.ts`
 
@@ -1019,23 +1019,23 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/functionalities/merge.e2e.ts`
 
-- [ ] `e2e/functionalities/merge.e2e.ts:41` merge functionality › re-exporting/importing an existing version › should throw MergeConflictOnRemote error when exporting the component
-- [ ] `e2e/functionalities/merge.e2e.ts:50` merge functionality › re-exporting/importing an existing version › should throw MergeConflict error when importing the component
-- [ ] `e2e/functionalities/merge.e2e.ts:78` merge functionality › importing a component with --merge flag › using invalid value for merge flag › should throw an error
-- [ ] `e2e/functionalities/merge.e2e.ts:95` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=manual › should indicate that there were files with conflicts
-- [ ] `e2e/functionalities/merge.e2e.ts:98` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=manual › should rewrite the file with the conflicts segments labeled according to the versions
-- [ ] `e2e/functionalities/merge.e2e.ts:103` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=manual › should show the component as modified and update bitmap with the imported version
-- [ ] `e2e/functionalities/merge.e2e.ts:117` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=theirs › should not indicate that there were files with conflicts
-- [ ] `e2e/functionalities/merge.e2e.ts:120` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=theirs › should rewrite the file according to the imported version
-- [ ] `e2e/functionalities/merge.e2e.ts:123` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=theirs › should not show the component as modified and update bitmap with the imported version
-- [ ] `e2e/functionalities/merge.e2e.ts:137` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=ours › should not indicate that there were files with conflicts
-- [ ] `e2e/functionalities/merge.e2e.ts:140` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=ours › should leave the modified file intact
-- [ ] `e2e/functionalities/merge.e2e.ts:143` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=ours › should show the component as modified
-- [ ] `e2e/functionalities/merge.e2e.ts:147` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=ours › should update bitmap with the imported version
-- [ ] `e2e/functionalities/merge.e2e.ts:165` merge functionality › importing a component with --merge flag › modifying the component to be the same as the imported component (so the merge will succeed with no conflicts) › merge with strategy=manual › should not indicate that there were files with conflicts
-- [ ] `e2e/functionalities/merge.e2e.ts:168` merge functionality › importing a component with --merge flag › modifying the component to be the same as the imported component (so the merge will succeed with no conflicts) › merge with strategy=manual › should rewrite the file according to both the imported version and modified version
-- [ ] `e2e/functionalities/merge.e2e.ts:171` merge functionality › importing a component with --merge flag › modifying the component to be the same as the imported component (so the merge will succeed with no conflicts) › merge with strategy=manual › should not show the component as modified
-- [ ] `e2e/functionalities/merge.e2e.ts:187` merge functionality › importing a component with --merge flag › modifying the dependency then import --merge of the dependent › should not remove the dependency changes
+- [x] `e2e/functionalities/merge.e2e.ts:41` merge functionality › re-exporting/importing an existing version › should throw MergeConflictOnRemote error when exporting the component — `functionalities::merge::re_exporting_importing_an_existing_version`
+- [x] `e2e/functionalities/merge.e2e.ts:50` merge functionality › re-exporting/importing an existing version › should throw MergeConflict error when importing the component — `functionalities::merge::re_exporting_importing_an_existing_version`
+- [x] `e2e/functionalities/merge.e2e.ts:78` merge functionality › importing a component with --merge flag › using invalid value for merge flag › should throw an error — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:95` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=manual › should indicate that there were files with conflicts — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:98` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=manual › should rewrite the file with the conflicts segments labeled according to the versions — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:103` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=manual › should show the component as modified and update bitmap with the imported version — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:117` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=theirs › should not indicate that there were files with conflicts — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:120` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=theirs › should rewrite the file according to the imported version — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:123` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=theirs › should not show the component as modified and update bitmap with the imported version — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:137` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=ours › should not indicate that there were files with conflicts — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:140` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=ours › should leave the modified file intact — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:143` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=ours › should show the component as modified — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:147` merge functionality › importing a component with --merge flag › modifying the component so it will get conflict upon importing › merge with strategy=ours › should update bitmap with the imported version — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:165` merge functionality › importing a component with --merge flag › modifying the component to be the same as the imported component (so the merge will succeed with no conflicts) › merge with strategy=manual › should not indicate that there were files with conflicts — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:168` merge functionality › importing a component with --merge flag › modifying the component to be the same as the imported component (so the merge will succeed with no conflicts) › merge with strategy=manual › should rewrite the file according to both the imported version and modified version — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:171` merge functionality › importing a component with --merge flag › modifying the component to be the same as the imported component (so the merge will succeed with no conflicts) › merge with strategy=manual › should not show the component as modified — `functionalities::merge::importing_a_component_with_merge_flag`
+- [x] `e2e/functionalities/merge.e2e.ts:187` merge functionality › importing a component with --merge flag › modifying the dependency then import --merge of the dependent › should not remove the dependency changes — `functionalities::merge::importing_a_component_with_merge_flag`
 
 ### `e2e/functionalities/peer-dependencies.e2e.ts`
 
@@ -1702,45 +1702,45 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/delete.e2e.ts`
 
-- [ ] `e2e/harmony/delete.e2e.ts:48` bit delete command › bit status should not show RemovedDependencies issues
-- [ ] `e2e/harmony/delete.e2e.ts:51` bit delete command › bit snap should not fail due to removedDependencies error, also it should save the correct dep version
-- [ ] `e2e/harmony/delete.e2e.ts:58` bit delete command › bit snap output should be relevant for lanes when --lane command used
-- [ ] `e2e/harmony/delete.e2e.ts:91` bit delete command › should pin the deleted component to its main version in the workspace policy
-- [ ] `e2e/harmony/delete.e2e.ts:98` bit delete command › a plain "bit install" should succeed without the manual "bit install <pkg>" workaround
-- [ ] `e2e/harmony/delete.e2e.ts:101` bit delete command › bit status should not show RemovedDependencies issues
-- [ ] `e2e/harmony/delete.e2e.ts:123` bit delete command › should not add the deleted component to the workspace policy (no dependents to fix)
-- [ ] `e2e/harmony/delete.e2e.ts:144` bit delete command › import a scope with deleted components › should not include deleted components
-- [ ] `e2e/harmony/delete.e2e.ts:152` bit delete command › import a scope with deleted components › importing the deleted component explicitly › should import successfully
-- [ ] `e2e/harmony/delete.e2e.ts:173` bit delete command › bit checkout reset after local delete › should bring the component back
-- [ ] `e2e/harmony/delete.e2e.ts:200` bit delete command › bit checkout head after local delete › should checkout also the deleted component same as it checks out any other modified component
-- [ ] `e2e/harmony/delete.e2e.ts:203` bit delete command › bit checkout head after local delete › should write the deleted component files to the filesystem
-- [ ] `e2e/harmony/delete.e2e.ts:207` bit delete command › bit checkout head after local delete › bit status should still show the component as deleted
-- [ ] `e2e/harmony/delete.e2e.ts:239` bit delete command › deleted component that is also diverged (merge pending) › bit checkout head › should block the checkout as any other diverged component
-- [ ] `e2e/harmony/delete.e2e.ts:245` bit delete command › deleted component that is also diverged (merge pending) › bit status › should show the component as both, deleted and merge-pending
-- [ ] `e2e/harmony/delete.e2e.ts:255` bit delete command › deleted component that is also diverged (merge pending) › bit reset › should reset the component successfully
-- [ ] `e2e/harmony/delete.e2e.ts:280` bit delete command › delete specific snaps › should not show the current snap as deleted
-- [ ] `e2e/harmony/delete.e2e.ts:285` bit delete command › delete specific snaps › should show the specific snap as deleted in bit log
-- [ ] `e2e/harmony/delete.e2e.ts:293` bit delete command › delete specific snaps › bit list should show the component, because it is not deleted in head
-- [ ] `e2e/harmony/delete.e2e.ts:298` bit delete command › delete specific snaps › recovering the component should remove the snaps data
-- [ ] `e2e/harmony/delete.e2e.ts:313` bit delete command › delete specific snaps › multiple snaps deletion › should mark multiple snaps as deleted
-- [ ] `e2e/harmony/delete.e2e.ts:327` bit delete command › delete specific snaps › importing deleted snaps › should show deleted status for the specific snap when imported
-- [ ] `e2e/harmony/delete.e2e.ts:331` bit delete command › delete specific snaps › importing deleted snaps › should not show deleted status for non-deleted snaps
-- [ ] `e2e/harmony/delete.e2e.ts:348` bit delete command › delete previous versions › should not show the current version as deleted
-- [ ] `e2e/harmony/delete.e2e.ts:353` bit delete command › delete previous versions › should show the previous version as deleted
-- [ ] `e2e/harmony/delete.e2e.ts:358` bit delete command › delete previous versions › bit log should show only 0.0.1 as deleted
-- [ ] `e2e/harmony/delete.e2e.ts:365` bit delete command › delete previous versions › bit list should show the component, because it is not deleted in head
-- [ ] `e2e/harmony/delete.e2e.ts:370` bit delete command › delete previous versions › recovering the component should remove the range data
-- [ ] `e2e/harmony/delete.e2e.ts:382` bit delete command › delete previous versions › importing the component › import the latest version should not show the deleted message
-- [ ] `e2e/harmony/delete.e2e.ts:386` bit delete command › delete previous versions › importing the component › import the previous version should show the deleted message
-- [ ] `e2e/harmony/delete.e2e.ts:400` bit delete command › deleting with --range when it overlaps the current version › should show the component as deleted
-- [ ] `e2e/harmony/delete.e2e.ts:405` bit delete command › deleting with --range when it overlaps the current version › when the range is outside the current version it should not show as deleted
+- [x] `e2e/harmony/delete.e2e.ts:48` bit delete command › bit status should not show RemovedDependencies issues — `commands::delete::exported_lane_with_dependent_pins_main_version_like_node`
+- [x] `e2e/harmony/delete.e2e.ts:51` bit delete command › bit snap should not fail due to removedDependencies error, also it should save the correct dep version — `commands::delete::exported_lane_with_dependent_pins_main_version_like_node`
+- [x] `e2e/harmony/delete.e2e.ts:58` bit delete command › bit snap output should be relevant for lanes when --lane command used — `commands::delete::exported_lane_with_dependent_pins_main_version_like_node`
+- [x] `e2e/harmony/delete.e2e.ts:91` bit delete command › should pin the deleted component to its main version in the workspace policy — `commands::delete::exported_lane_with_dependent_pins_main_version_like_node`
+- [x] `e2e/harmony/delete.e2e.ts:98` bit delete command › a plain "bit install" should succeed without the manual "bit install <pkg>" workaround — `commands::delete::exported_lane_with_dependent_pins_main_version_like_node`
+- [x] `e2e/harmony/delete.e2e.ts:101` bit delete command › bit status should not show RemovedDependencies issues — `commands::delete::exported_lane_with_dependent_pins_main_version_like_node`
+- [x] `e2e/harmony/delete.e2e.ts:123` bit delete command › should not add the deleted component to the workspace policy (no dependents to fix) — `commands::delete::exported_lane_independent_component_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:144` bit delete command › import a scope with deleted components › should not include deleted components — `harmony::delete::import_a_scope_with_deleted_components`
+- [x] `e2e/harmony/delete.e2e.ts:152` bit delete command › import a scope with deleted components › importing the deleted component explicitly › should import successfully — `harmony::delete::import_a_scope_with_deleted_components`
+- [x] `e2e/harmony/delete.e2e.ts:173` bit delete command › bit checkout reset after local delete › should bring the component back — `harmony::delete::checkout_reset_after_local_delete`
+- [x] `e2e/harmony/delete.e2e.ts:200` bit delete command › bit checkout head after local delete › should checkout also the deleted component same as it checks out any other modified component — `harmony::delete::checkout_reset_after_local_delete`
+- [x] `e2e/harmony/delete.e2e.ts:203` bit delete command › bit checkout head after local delete › should write the deleted component files to the filesystem — `harmony::delete::checkout_reset_after_local_delete`
+- [x] `e2e/harmony/delete.e2e.ts:207` bit delete command › bit checkout head after local delete › bit status should still show the component as deleted — `harmony::delete::checkout_reset_after_local_delete`
+- [x] `e2e/harmony/delete.e2e.ts:239` bit delete command › deleted component that is also diverged (merge pending) › bit checkout head › should block the checkout as any other diverged component — `commands::delete::exported_lane_delete_and_recover_reject_changed_index_before_writes`
+- [x] `e2e/harmony/delete.e2e.ts:245` bit delete command › deleted component that is also diverged (merge pending) › bit status › should show the component as both, deleted and merge-pending — `commands::delete::exported_lane_delete_and_recover_reject_changed_index_before_writes`
+- [x] `e2e/harmony/delete.e2e.ts:255` bit delete command › deleted component that is also diverged (merge pending) › bit reset › should reset the component successfully — `commands::delete::exported_lane_delete_and_recover_reject_changed_index_before_writes`
+- [x] `e2e/harmony/delete.e2e.ts:280` bit delete command › delete specific snaps › should not show the current snap as deleted — `commands::delete::snap_selection_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:285` bit delete command › delete specific snaps › should show the specific snap as deleted in bit log — `commands::delete::snap_selection_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:293` bit delete command › delete specific snaps › bit list should show the component, because it is not deleted in head — `commands::delete::snap_selection_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:298` bit delete command › delete specific snaps › recovering the component should remove the snaps data — `commands::delete::snap_selection_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:313` bit delete command › delete specific snaps › multiple snaps deletion › should mark multiple snaps as deleted — `commands::delete::exported_lane_multiple_snaps_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:327` bit delete command › delete specific snaps › importing deleted snaps › should show deleted status for the specific snap when imported — `commands::delete::exported_lane_multiple_snaps_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:331` bit delete command › delete specific snaps › importing deleted snaps › should not show deleted status for non-deleted snaps — `commands::delete::exported_lane_multiple_snaps_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:348` bit delete command › delete previous versions › should not show the current version as deleted — `commands::delete::ranged_component_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:353` bit delete command › delete previous versions › should show the previous version as deleted — `commands::delete::ranged_component_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:358` bit delete command › delete previous versions › bit log should show only 0.0.1 as deleted — `commands::delete::ranged_component_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:365` bit delete command › delete previous versions › bit list should show the component, because it is not deleted in head — `commands::delete::ranged_component_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:370` bit delete command › delete previous versions › recovering the component should remove the range data — `commands::delete::ranged_component_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:382` bit delete command › delete previous versions › importing the component › import the latest version should not show the deleted message — `commands::delete::ranged_component_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:386` bit delete command › delete previous versions › importing the component › import the previous version should show the deleted message — `commands::delete::ranged_component_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:400` bit delete command › deleting with --range when it overlaps the current version › should show the component as deleted — `commands::delete::ranged_component_delete_matches_node`
+- [x] `e2e/harmony/delete.e2e.ts:405` bit delete command › deleting with --range when it overlaps the current version › when the range is outside the current version it should not show as deleted — `commands::delete::ranged_component_delete_matches_node`
 - [x] `e2e/harmony/delete.e2e.ts:427` bit delete command › reset after delete on lane › should reset the deleted component
 - [x] `e2e/harmony/delete.e2e.ts:430` bit delete command › reset after delete on lane › should revert the .bitmap entry of the deleted component as it was before
-- [ ] `e2e/harmony/delete.e2e.ts:451` bit delete command › deleting component then creating a new one with the same name › should throw a descriptive error
-- [ ] `e2e/harmony/delete.e2e.ts:470` bit delete command › delete and then remove › bit status should not throw an error
-- [ ] `e2e/harmony/delete.e2e.ts:481` bit delete command › hard-delete guard in non-interactive sessions › should fail with guidance instead of hanging when a confirmation is needed but there is no TTY
-- [ ] `e2e/harmony/delete.e2e.ts:485` bit delete command › hard-delete guard in non-interactive sessions › should block --hard when non-interactive and the hard-delete feature is not enabled, even with --silent
-- [ ] `e2e/harmony/delete.e2e.ts:493` bit delete command › hard-delete guard in non-interactive sessions › should allow --hard when the hard-delete feature is explicitly enabled
+- [x] `e2e/harmony/delete.e2e.ts:451` bit delete command › deleting component then creating a new one with the same name › should throw a descriptive error — `harmony::delete::deleting_component_then_creating_a_new_one_with_same_name`
+- [x] `e2e/harmony/delete.e2e.ts:470` bit delete command › delete and then remove › bit status should not throw an error — `harmony::delete::delete_and_then_remove`
+- [x] `e2e/harmony/delete.e2e.ts:481` bit delete command › hard-delete guard in non-interactive sessions › should fail with guidance instead of hanging when a confirmation is needed but there is no TTY — `commands::delete::hard::hard_delete_guard_preserves_the_remote_and_delegates_to_released_node`
+- [x] `e2e/harmony/delete.e2e.ts:485` bit delete command › hard-delete guard in non-interactive sessions › should block --hard when non-interactive and the hard-delete feature is not enabled, even with --silent — `commands::delete::hard::hard_delete_guard_preserves_the_remote_and_delegates_to_released_node`
+- [x] `e2e/harmony/delete.e2e.ts:493` bit delete command › hard-delete guard in non-interactive sessions › should allow --hard when the hard-delete feature is explicitly enabled — `commands::delete::hard::hard_delete_guard_preserves_the_remote_and_delegates_to_released_node`
 
 ### `e2e/harmony/dependencies-cmd.e2e.ts`
 
@@ -2059,12 +2059,12 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/export-harmony.e2e.ts`
 
-- [ ] `e2e/harmony/export-harmony.e2e.ts:26` export functionality on Harmony › export, re-init the remote scope, tag and export › should throw ExportMissingVersions error on export
-- [ ] `e2e/harmony/export-harmony.e2e.ts:31` export functionality on Harmony › export, re-init the remote scope, tag and export › should enable exporting with --all-versions flag
-- [ ] `e2e/harmony/export-harmony.e2e.ts:45` export functionality on Harmony › export, tag and export › should not delete the first version
-- [ ] `e2e/harmony/export-harmony.e2e.ts:48` export functionality on Harmony › export, tag and export › should update the VersionHistory on the remote
-- [ ] `e2e/harmony/export-harmony.e2e.ts:56` export functionality on Harmony › export, tag and export › should enable un-tagging after a new tag
-- [ ] `e2e/harmony/export-harmony.e2e.ts:80` export functionality on Harmony › when version history is out of date › bit export should not throw about missing data
+- [x] `e2e/harmony/export-harmony.e2e.ts:26` export functionality on Harmony › export, re-init the remote scope, tag and export › should throw ExportMissingVersions error on export — `harmony::export_harmony::export_re_init_the_remote_scope_tag_and_export`
+- [x] `e2e/harmony/export-harmony.e2e.ts:31` export functionality on Harmony › export, re-init the remote scope, tag and export › should enable exporting with --all-versions flag — `harmony::export_harmony::export_re_init_the_remote_scope_tag_and_export`
+- [x] `e2e/harmony/export-harmony.e2e.ts:45` export functionality on Harmony › export, tag and export › should not delete the first version — `harmony::export_harmony::export_tag_and_export`
+- [x] `e2e/harmony/export-harmony.e2e.ts:48` export functionality on Harmony › export, tag and export › should update the VersionHistory on the remote — `harmony::export_harmony::export_tag_and_export`
+- [x] `e2e/harmony/export-harmony.e2e.ts:56` export functionality on Harmony › export, tag and export › should enable un-tagging after a new tag — `harmony::export_harmony::export_tag_and_export`
+- [x] `e2e/harmony/export-harmony.e2e.ts:80` export functionality on Harmony › when version history is out of date › bit export should not throw about missing data — `harmony::export_harmony::when_version_history_is_out_of_date_bit_export_should_not_throw_about_missing_data`
 
 ### `e2e/harmony/extensions-config-diff.e2e.ts`
 
@@ -2223,13 +2223,13 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/init-harmony.e2e.ts`
 
-- [ ] `e2e/harmony/init-harmony.e2e.ts:24` init command on Harmony › init --reset-new › should change the .bitmap entries as if they are new
-- [ ] `e2e/harmony/init-harmony.e2e.ts:30` init command on Harmony › init --reset-new › should remove all objects from the scope
-- [ ] `e2e/harmony/init-harmony.e2e.ts:47` init command on Harmony › delete "objects" dir from the scope after initiating with git › should show a descriptive error
-- [ ] `e2e/harmony/init-harmony.e2e.ts:50` init command on Harmony › delete "objects" dir from the scope after initiating with git › bit init should fix it
-- [ ] `e2e/harmony/init-harmony.e2e.ts:63` init command on Harmony › when workspace.jsonc exist, but not .bitmap nor .bit › should show a descriptive error
-- [ ] `e2e/harmony/init-harmony.e2e.ts:72` init command on Harmony › workspace.jsonc is missing › bit init should fix it
-- [ ] `e2e/harmony/init-harmony.e2e.ts:81` init command on Harmony › init with an invalid default-scope › should throw a descriptive error and should not create the workspace
+- [x] `e2e/harmony/init-harmony.e2e.ts:24` init command on Harmony › init --reset-new › should change the .bitmap entries as if they are new — `harmony::init_harmony::init_reset_new_changes_bitmap_entries_and_removes_scope_objects`
+- [x] `e2e/harmony/init-harmony.e2e.ts:30` init command on Harmony › init --reset-new › should remove all objects from the scope — `harmony::init_harmony::init_reset_new_changes_bitmap_entries_and_removes_scope_objects`
+- [x] `e2e/harmony/init-harmony.e2e.ts:47` init command on Harmony › delete "objects" dir from the scope after initiating with git › should show a descriptive error — `harmony::init_harmony::delete_objects_dir_from_the_scope_after_initiating_with_git`
+- [x] `e2e/harmony/init-harmony.e2e.ts:50` init command on Harmony › delete "objects" dir from the scope after initiating with git › bit init should fix it — `harmony::init_harmony::delete_objects_dir_from_the_scope_after_initiating_with_git`
+- [x] `e2e/harmony/init-harmony.e2e.ts:63` init command on Harmony › when workspace.jsonc exist, but not .bitmap nor .bit › should show a descriptive error — `harmony::init_harmony::missing_bitmap_or_workspace_jsonc_and_invalid_default_scope`
+- [x] `e2e/harmony/init-harmony.e2e.ts:72` init command on Harmony › workspace.jsonc is missing › bit init should fix it — `harmony::init_harmony::missing_bitmap_or_workspace_jsonc_and_invalid_default_scope`
+- [x] `e2e/harmony/init-harmony.e2e.ts:81` init command on Harmony › init with an invalid default-scope › should throw a descriptive error and should not create the workspace — `harmony::init_harmony::missing_bitmap_or_workspace_jsonc_and_invalid_default_scope`
 
 ### `e2e/harmony/install-and-compile.e2e.ts`
 
@@ -2491,20 +2491,20 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/lanes/lane-basic-operations.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:26` bit lane basic operations › creating a new lane without any component › bit lane should show the active lane
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:31` bit lane basic operations › creating a new lane without any component › should set the remote-scope to the default-scope and remote-name to the local-lane
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:40` bit lane basic operations › creating a new lane without any component › changing the tracking data › should output the changes
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:45` bit lane basic operations › creating a new lane without any component › changing the tracking data › bit lane show should show the changed values
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:61` bit lane basic operations › main => lane => main => lane › should be able to switch back to the lane with no error
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:80` bit lane basic operations › lane-a => lane-b › bit status should be clean
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:87` bit lane basic operations › lane-a => lane-b › lane-a (exported) => lane-b (not-exported) => lane-c › forkedFrom should be of lane-a and not lane-b because this is the last exported one
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:96` bit lane basic operations › lane-a => lane-b › switching back to lane-a › bitmap should show the lane as exported
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:110` bit lane basic operations › creating components on lanes, that do not exist on main › should add "onLanesOnly" prop
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:121` bit lane basic operations › creating a new lane to a different scope than main › should not throw even when --fork-lane-new-scope was not used
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:131` bit lane basic operations › bit lane current › when on main › should print "main"
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:135` bit lane basic operations › bit lane current › when on main › --json should return isDefault true
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:145` bit lane basic operations › bit lane current › when on a lane › should print the full lane id
-- [ ] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:149` bit lane basic operations › bit lane current › when on a lane › --json should return isDefault false with scope and name
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:26` bit lane basic operations › creating a new lane without any component › bit lane should show the active lane — `harmony::lanes::lane_basic_operations::creating_a_new_lane_without_any_component`
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:31` bit lane basic operations › creating a new lane without any component › should set the remote-scope to the default-scope and remote-name to the local-lane — `harmony::lanes::lane_basic_operations::creating_a_new_lane_without_any_component`
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:40` bit lane basic operations › creating a new lane without any component › changing the tracking data › should output the changes — `harmony::lanes::lane_basic_operations::creating_a_new_lane_without_any_component`
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:45` bit lane basic operations › creating a new lane without any component › changing the tracking data › bit lane show should show the changed values — `harmony::lanes::lane_basic_operations::creating_a_new_lane_without_any_component`
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:61` bit lane basic operations › main => lane => main => lane › should be able to switch back to the lane with no error — `harmony::lanes::lane_basic_operations::main_lane_main_lane_switching`
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:80` bit lane basic operations › lane-a => lane-b › bit status should be clean — `harmony::lanes::lane_basic_operations::lane_a_to_lane_b_and_lane_c_forked_from`
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:87` bit lane basic operations › lane-a => lane-b › lane-a (exported) => lane-b (not-exported) => lane-c › forkedFrom should be of lane-a and not lane-b because this is the last exported one — `harmony::lanes::lane_basic_operations::lane_a_to_lane_b_and_lane_c_forked_from`
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:96` bit lane basic operations › lane-a => lane-b › switching back to lane-a › bitmap should show the lane as exported — `harmony::lanes::lane_basic_operations::lane_a_to_lane_b_and_lane_c_forked_from`
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:110` bit lane basic operations › creating components on lanes, that do not exist on main › should add "onLanesOnly" prop — `harmony::lanes::lane_basic_operations::on_lanes_only_and_new_scope_and_lane_current`
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:121` bit lane basic operations › creating a new lane to a different scope than main › should not throw even when --fork-lane-new-scope was not used — `harmony::lanes::lane_basic_operations::on_lanes_only_and_new_scope_and_lane_current`
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:131` bit lane basic operations › bit lane current › when on main › should print "main" — `harmony::lanes::lane_basic_operations::on_lanes_only_and_new_scope_and_lane_current`
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:135` bit lane basic operations › bit lane current › when on main › --json should return isDefault true — `harmony::lanes::lane_basic_operations::on_lanes_only_and_new_scope_and_lane_current`
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:145` bit lane basic operations › bit lane current › when on a lane › should print the full lane id — `harmony::lanes::lane_basic_operations::on_lanes_only_and_new_scope_and_lane_current`
+- [x] `e2e/harmony/lanes/lane-basic-operations.e2e.ts:149` bit lane basic operations › bit lane current › when on a lane › --json should return isDefault false with scope and name — `harmony::lanes::lane_basic_operations::on_lanes_only_and_new_scope_and_lane_current`
 
 ### `e2e/harmony/lanes/lane-diff.e2e.ts`
 
@@ -2704,15 +2704,15 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/lanes/lane-management.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/lane-management.e2e.ts:29` bit lane management › rename an exported lane that has an alias › should rename the lane locally
-- [ ] `e2e/harmony/lanes/lane-management.e2e.ts:34` bit lane management › rename an exported lane that has an alias › should change the current lane
-- [ ] `e2e/harmony/lanes/lane-management.e2e.ts:38` bit lane management › rename an exported lane that has an alias › bit status should not throw
-- [ ] `e2e/harmony/lanes/lane-management.e2e.ts:43` bit lane management › rename an exported lane that has an alias › should update .bitmap with the new name
-- [ ] `e2e/harmony/lanes/lane-management.e2e.ts:47` bit lane management › rename an exported lane that has an alias › should not change the remote lane name before export
-- [ ] `e2e/harmony/lanes/lane-management.e2e.ts:52` bit lane management › rename an exported lane that has an alias › should change the remote lane name after export
-- [ ] `e2e/harmony/lanes/lane-management.e2e.ts:71` bit lane management › a new lane with a snapped component › bit lane --details should show the lanes, mark the current one and list its components
-- [ ] `e2e/harmony/lanes/lane-management.e2e.ts:77` bit lane management › a new lane with a snapped component › change-scope should throw InvalidScopeName for an invalid scope-name
-- [ ] `e2e/harmony/lanes/lane-management.e2e.ts:87` bit lane management › a new lane with a snapped component › once the lane is exported › change-scope should be blocked
+- [x] `e2e/harmony/lanes/lane-management.e2e.ts:29` bit lane management › rename an exported lane that has an alias › should rename the lane locally — `harmony::lanes::lane_management::rename_an_exported_lane_that_has_an_alias`
+- [x] `e2e/harmony/lanes/lane-management.e2e.ts:34` bit lane management › rename an exported lane that has an alias › should change the current lane — `harmony::lanes::lane_management::rename_an_exported_lane_that_has_an_alias`
+- [x] `e2e/harmony/lanes/lane-management.e2e.ts:38` bit lane management › rename an exported lane that has an alias › bit status should not throw — `harmony::lanes::lane_management::rename_an_exported_lane_that_has_an_alias`
+- [x] `e2e/harmony/lanes/lane-management.e2e.ts:43` bit lane management › rename an exported lane that has an alias › should update .bitmap with the new name — `harmony::lanes::lane_management::rename_an_exported_lane_that_has_an_alias`
+- [x] `e2e/harmony/lanes/lane-management.e2e.ts:47` bit lane management › rename an exported lane that has an alias › should not change the remote lane name before export — `harmony::lanes::lane_management::rename_an_exported_lane_that_has_an_alias`
+- [x] `e2e/harmony/lanes/lane-management.e2e.ts:52` bit lane management › rename an exported lane that has an alias › should change the remote lane name after export — `harmony::lanes::lane_management::rename_an_exported_lane_that_has_an_alias`
+- [x] `e2e/harmony/lanes/lane-management.e2e.ts:71` bit lane management › a new lane with a snapped component › bit lane --details should show the lanes, mark the current one and list its components — `harmony::lanes::lane_management::a_new_lane_with_a_snapped_component`
+- [x] `e2e/harmony/lanes/lane-management.e2e.ts:77` bit lane management › a new lane with a snapped component › change-scope should throw InvalidScopeName for an invalid scope-name — `harmony::lanes::lane_management::a_new_lane_with_a_snapped_component`
+- [x] `e2e/harmony/lanes/lane-management.e2e.ts:87` bit lane management › a new lane with a snapped component › once the lane is exported › change-scope should be blocked — `harmony::lanes::lane_management::a_new_lane_with_a_snapped_component`
 
 ### `e2e/harmony/lanes/lane-merge.e2e.ts`
 
@@ -2997,24 +2997,24 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/lanes/remove-lanes.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/remove-lanes.e2e.ts:27` remove lanes › switching to a new lane and snapping › as an intermediate step, make sure the snapped components are part of the lane
-- [ ] `e2e/harmony/lanes/remove-lanes.e2e.ts:31` remove lanes › switching to a new lane and snapping › should not alow removing the current lane
-- [ ] `e2e/harmony/lanes/remove-lanes.e2e.ts:35` remove lanes › switching to a new lane and snapping › should not alow removing the default lane
-- [ ] `e2e/harmony/lanes/remove-lanes.e2e.ts:50` remove lanes › switching to a new lane and snapping › switching back to default lane › then removing without --force flag › should throw an error saying it is not fully merged
-- [ ] `e2e/harmony/lanes/remove-lanes.e2e.ts:59` remove lanes › switching to a new lane and snapping › switching back to default lane › then removing with --force flag › should remove the lane successfully
-- [ ] `e2e/harmony/lanes/remove-lanes.e2e.ts:62` remove lanes › switching to a new lane and snapping › switching back to default lane › then removing with --force flag › bit lane should not show the lane anymore
-- [ ] `e2e/harmony/lanes/remove-lanes.e2e.ts:73` remove lanes › switching to a new lane and snapping › switching back to default lane › removing with --force flag and the full id › should remove the lane successfully
-- [ ] `e2e/harmony/lanes/remove-lanes.e2e.ts:84` remove lanes › switching to a new lane and snapping › switching back to default lane › merge the lane, then remove without --force › should remove the lane successfully
-- [ ] `e2e/harmony/lanes/remove-lanes.e2e.ts:98` remove lanes › removing a remote lane › as an intermediate step, make sure the lane is on the remote
-- [ ] `e2e/harmony/lanes/remove-lanes.e2e.ts:102` remove lanes › removing a remote lane › should not remove without --force flag as the lane is not merged
-- [ ] `e2e/harmony/lanes/remove-lanes.e2e.ts:111` remove lanes › removing a remote lane › remove with --force flag › should remove successfully
-- [ ] `e2e/harmony/lanes/remove-lanes.e2e.ts:114` remove lanes › removing a remote lane › remove with --force flag › the remote should not have the lane anymore
-- [ ] `e2e/harmony/lanes/remove-lanes.e2e.ts:121` remove lanes › removing a remote lane › remove with --force flag › removing again after the lane was removed › should indicate that the lane was not found
+- [x] `e2e/harmony/lanes/remove-lanes.e2e.ts:27` remove lanes › switching to a new lane and snapping › as an intermediate step, make sure the snapped components are part of the lane — `harmony::lanes::remove_lanes::switching_to_a_new_lane_and_snapping_and_removing_lanes`
+- [x] `e2e/harmony/lanes/remove-lanes.e2e.ts:31` remove lanes › switching to a new lane and snapping › should not alow removing the current lane — `harmony::lanes::remove_lanes::switching_to_a_new_lane_and_snapping_and_removing_lanes`
+- [x] `e2e/harmony/lanes/remove-lanes.e2e.ts:35` remove lanes › switching to a new lane and snapping › should not alow removing the default lane — `harmony::lanes::remove_lanes::switching_to_a_new_lane_and_snapping_and_removing_lanes`
+- [x] `e2e/harmony/lanes/remove-lanes.e2e.ts:50` remove lanes › switching to a new lane and snapping › switching back to default lane › then removing without --force flag › should throw an error saying it is not fully merged — `harmony::lanes::remove_lanes::switching_to_a_new_lane_and_snapping_and_removing_lanes`
+- [x] `e2e/harmony/lanes/remove-lanes.e2e.ts:59` remove lanes › switching to a new lane and snapping › switching back to default lane › then removing with --force flag › should remove the lane successfully — `harmony::lanes::remove_lanes::switching_to_a_new_lane_and_snapping_and_removing_lanes`
+- [x] `e2e/harmony/lanes/remove-lanes.e2e.ts:62` remove lanes › switching to a new lane and snapping › switching back to default lane › then removing with --force flag › bit lane should not show the lane anymore — `harmony::lanes::remove_lanes::switching_to_a_new_lane_and_snapping_and_removing_lanes`
+- [x] `e2e/harmony/lanes/remove-lanes.e2e.ts:73` remove lanes › switching to a new lane and snapping › switching back to default lane › removing with --force flag and the full id › should remove the lane successfully — `harmony::lanes::remove_lanes::switching_to_a_new_lane_and_snapping_and_removing_lanes`
+- [x] `e2e/harmony/lanes/remove-lanes.e2e.ts:84` remove lanes › switching to a new lane and snapping › switching back to default lane › merge the lane, then remove without --force › should remove the lane successfully — `harmony::lanes::remove_lanes::switching_to_a_new_lane_and_snapping_and_removing_lanes`
+- [x] `e2e/harmony/lanes/remove-lanes.e2e.ts:98` remove lanes › removing a remote lane › as an intermediate step, make sure the lane is on the remote — `harmony::lanes::remove_lanes::removing_a_remote_lane`
+- [x] `e2e/harmony/lanes/remove-lanes.e2e.ts:102` remove lanes › removing a remote lane › should not remove without --force flag as the lane is not merged — `harmony::lanes::remove_lanes::removing_a_remote_lane`
+- [x] `e2e/harmony/lanes/remove-lanes.e2e.ts:111` remove lanes › removing a remote lane › remove with --force flag › should remove successfully — `harmony::lanes::remove_lanes::removing_a_remote_lane`
+- [x] `e2e/harmony/lanes/remove-lanes.e2e.ts:114` remove lanes › removing a remote lane › remove with --force flag › the remote should not have the lane anymore — `harmony::lanes::remove_lanes::removing_a_remote_lane`
+- [x] `e2e/harmony/lanes/remove-lanes.e2e.ts:121` remove lanes › removing a remote lane › remove with --force flag › removing again after the lane was removed › should indicate that the lane was not found — `harmony::lanes::remove_lanes::removing_a_remote_lane`
 
 ### `e2e/harmony/lanes/rename-lane.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/rename-lane.e2e.ts:27` rename lanes › rename local lane, switch to main and then switch back to the lane › bit import should not throw
-- [ ] `e2e/harmony/lanes/rename-lane.e2e.ts:30` rename lanes › rename local lane, switch to main and then switch back to the lane › should not show the lane as if it was exported
+- [x] `e2e/harmony/lanes/rename-lane.e2e.ts:27` rename lanes › rename local lane, switch to main and then switch back to the lane › bit import should not throw — `harmony::lanes::rename_lane::rename_local_lane_switch_to_main_and_then_switch_back_to_the_lane`
+- [x] `e2e/harmony/lanes/rename-lane.e2e.ts:30` rename lanes › rename local lane, switch to main and then switch back to the lane › should not show the lane as if it was exported — `harmony::lanes::rename_lane::rename_local_lane_switch_to_main_and_then_switch_back_to_the_lane`
 
 ### `e2e/harmony/lanes/skip-publish-unpublished-dep.e2e.ts`
 
@@ -3362,38 +3362,38 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/recover.e2e.ts`
 
-- [ ] `e2e/harmony/recover.e2e.ts:26` bit recover command › recover before snapping › bit status should not show a section of removed components
-- [ ] `e2e/harmony/recover.e2e.ts:30` bit recover command › recover before snapping › bit status should not show the dependent component with an issue because the dependency is now back to the workspace
-- [ ] `e2e/harmony/recover.e2e.ts:33` bit recover command › recover before snapping › bit list should show the removed component
+- [x] `e2e/harmony/recover.e2e.ts:26` bit recover command › recover before snapping › bit status should not show a section of removed components — `harmony::recover::recover_before_and_after_snapping_and_from_remote`
+- [x] `e2e/harmony/recover.e2e.ts:30` bit recover command › recover before snapping › bit status should not show the dependent component with an issue because the dependency is now back to the workspace — `harmony::recover::recover_before_and_after_snapping_and_from_remote`
+- [x] `e2e/harmony/recover.e2e.ts:33` bit recover command › recover before snapping › bit list should show the removed component — `harmony::recover::recover_before_and_after_snapping_and_from_remote`
 - [x] `e2e/harmony/recover.e2e.ts:50` bit recover command › recover after snapping › should put it back in .bitmap file — `commands::recover::batch::locally_snapped_removal_imports_from_its_staged_model_without_remote_publication`
-- [ ] `e2e/harmony/recover.e2e.ts:54` bit recover command › recover after snapping › bit status should not show the component as remotelySoftRemoved
-- [ ] `e2e/harmony/recover.e2e.ts:58` bit recover command › recover after snapping › bit list should show the component
-- [ ] `e2e/harmony/recover.e2e.ts:62` bit recover command › recover after snapping › bit status should show the component as modified because the RemoveAspect has changed
+- [x] `e2e/harmony/recover.e2e.ts:54` bit recover command › recover after snapping › bit status should not show the component as remotelySoftRemoved — `harmony::recover::recover_before_and_after_snapping_and_from_remote`
+- [x] `e2e/harmony/recover.e2e.ts:58` bit recover command › recover after snapping › bit list should show the component — `harmony::recover::recover_before_and_after_snapping_and_from_remote`
+- [x] `e2e/harmony/recover.e2e.ts:62` bit recover command › recover after snapping › bit status should show the component as modified because the RemoveAspect has changed — `harmony::recover::recover_before_and_after_snapping_and_from_remote`
 - [x] `e2e/harmony/recover.e2e.ts:83` bit recover command › export the soft-remove component, start a new workspace and recover from there › should import the component — `commands::recover::remote::deleted_remote_component_is_imported_then_its_removal_is_overridden`
-- [ ] `e2e/harmony/recover.e2e.ts:89` bit recover command › export the soft-remove component, start a new workspace and recover from there › bit status should show the component as modified because the RemoveAspect has changed
-- [ ] `e2e/harmony/recover.e2e.ts:110` bit recover command › import soft-removed component › bit status should show the component as soft-removed
-- [ ] `e2e/harmony/recover.e2e.ts:114` bit recover command › import soft-removed component › bit status should not show the component as modified
-- [ ] `e2e/harmony/recover.e2e.ts:122` bit recover command › import soft-removed component › recover the component › should make the component modified
-- [ ] `e2e/harmony/recover.e2e.ts:126` bit recover command › import soft-removed component › recover the component › bit status should not show the component as soft-removed anymore
-- [ ] `e2e/harmony/recover.e2e.ts:147` bit recover command › recover on a lane › recover before snapping › bit status should not show a section of removed components
-- [ ] `e2e/harmony/recover.e2e.ts:151` bit recover command › recover on a lane › recover before snapping › bit status should not show the dependent component with an issue because the dependency is now back to the workspace
-- [ ] `e2e/harmony/recover.e2e.ts:154` bit recover command › recover on a lane › recover before snapping › bit list should show the removed component
-- [ ] `e2e/harmony/recover.e2e.ts:172` bit recover command › recover on a lane › recover after snapping › should put it back in .bitmap file
-- [ ] `e2e/harmony/recover.e2e.ts:176` bit recover command › recover on a lane › recover after snapping › bit status should not show the component as remotelySoftRemoved
-- [ ] `e2e/harmony/recover.e2e.ts:180` bit recover command › recover on a lane › recover after snapping › bit list should show the component
-- [ ] `e2e/harmony/recover.e2e.ts:184` bit recover command › recover on a lane › recover after snapping › bit status should show the component as modified because the RemoveAspect has changed
-- [ ] `e2e/harmony/recover.e2e.ts:207` bit recover command › recover on a lane › export the soft-remove component, start a new workspace and recover from there › should import the component
-- [ ] `e2e/harmony/recover.e2e.ts:213` bit recover command › recover on a lane › export the soft-remove component, start a new workspace and recover from there › bit status should show the component as modified because the RemoveAspect has changed
-- [ ] `e2e/harmony/recover.e2e.ts:235` bit recover command › remove after recovering › bit show should show the component as removed
-- [ ] `e2e/harmony/recover.e2e.ts:265` bit recover command › remove in one lane, recover in other lane, then merged to the first lane › should bring back the previously removed component
-- [ ] `e2e/harmony/recover.e2e.ts:284` bit recover command › remove in one lane, recover in an empty lane › should show a descriptive error
-- [ ] `e2e/harmony/recover.e2e.ts:306` bit recover command › recover diverged component before snapping › should not throw
-- [ ] `e2e/harmony/recover.e2e.ts:326` bit recover command › recover multiple components using pattern › recover multiple components before snapping › should recover all three components
-- [ ] `e2e/harmony/recover.e2e.ts:332` bit recover command › recover multiple components using pattern › recover multiple components before snapping › bit status should not show removed components
-- [ ] `e2e/harmony/recover.e2e.ts:336` bit recover command › recover multiple components using pattern › recover multiple components before snapping › bit list should show all components
-- [ ] `e2e/harmony/recover.e2e.ts:354` bit recover command › recover multiple components using pattern › recover multiple components after snapping › should recover both components
-- [ ] `e2e/harmony/recover.e2e.ts:360` bit recover command › recover multiple components using pattern › recover multiple components after snapping › bit status should not show the components as remotelySoftRemoved
-- [ ] `e2e/harmony/recover.e2e.ts:373` bit recover command › recover multiple components using pattern › recover with pattern when no components match › should throw an error when no soft-deleted components match
+- [x] `e2e/harmony/recover.e2e.ts:89` bit recover command › export the soft-remove component, start a new workspace and recover from there › bit status should show the component as modified because the RemoveAspect has changed — `harmony::recover::recover_before_and_after_snapping_and_from_remote`
+- [x] `e2e/harmony/recover.e2e.ts:110` bit recover command › import soft-removed component › bit status should show the component as soft-removed — `harmony::recover::recover_before_and_after_snapping_and_from_remote`
+- [x] `e2e/harmony/recover.e2e.ts:114` bit recover command › import soft-removed component › bit status should not show the component as modified — `harmony::recover::recover_before_and_after_snapping_and_from_remote`
+- [x] `e2e/harmony/recover.e2e.ts:122` bit recover command › import soft-removed component › recover the component › should make the component modified — `harmony::recover::recover_before_and_after_snapping_and_from_remote`
+- [x] `e2e/harmony/recover.e2e.ts:126` bit recover command › import soft-removed component › recover the component › bit status should not show the component as soft-removed anymore — `harmony::recover::recover_before_and_after_snapping_and_from_remote`
+- [x] `e2e/harmony/recover.e2e.ts:147` bit recover command › recover on a lane › recover before snapping › bit status should not show a section of removed components — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:151` bit recover command › recover on a lane › recover before snapping › bit status should not show the dependent component with an issue because the dependency is now back to the workspace — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:154` bit recover command › recover on a lane › recover before snapping › bit list should show the removed component — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:172` bit recover command › recover on a lane › recover after snapping › should put it back in .bitmap file — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:176` bit recover command › recover on a lane › recover after snapping › bit status should not show the component as remotelySoftRemoved — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:180` bit recover command › recover on a lane › recover after snapping › bit list should show the component — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:184` bit recover command › recover on a lane › recover after snapping › bit status should show the component as modified because the RemoveAspect has changed — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:207` bit recover command › recover on a lane › export the soft-remove component, start a new workspace and recover from there › should import the component — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:213` bit recover command › recover on a lane › export the soft-remove component, start a new workspace and recover from there › bit status should show the component as modified because the RemoveAspect has changed — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:235` bit recover command › remove after recovering › bit show should show the component as removed — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:265` bit recover command › remove in one lane, recover in other lane, then merged to the first lane › should bring back the previously removed component — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:284` bit recover command › remove in one lane, recover in an empty lane › should show a descriptive error — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:306` bit recover command › recover diverged component before snapping › should not throw — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:326` bit recover command › recover multiple components using pattern › recover multiple components before snapping › should recover all three components — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:332` bit recover command › recover multiple components using pattern › recover multiple components before snapping › bit status should not show removed components — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:336` bit recover command › recover multiple components using pattern › recover multiple components before snapping › bit list should show all components — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:354` bit recover command › recover multiple components using pattern › recover multiple components after snapping › should recover both components — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:360` bit recover command › recover multiple components using pattern › recover multiple components after snapping › bit status should not show the components as remotelySoftRemoved — `harmony::recover::recover_on_lanes_and_patterns`
+- [x] `e2e/harmony/recover.e2e.ts:373` bit recover command › recover multiple components using pattern › recover with pattern when no components match › should throw an error when no soft-deleted components match — `harmony::recover::recover_on_lanes_and_patterns`
 
 ### `e2e/harmony/recovery-after-deletion.e2e.ts`
 
@@ -3614,13 +3614,13 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/set-default-owner-and-scope.e2e.ts`
 
-- [ ] `e2e/harmony/set-default-owner-and-scope.e2e.ts:40` set default owner and scope › author components › should create link with default owner as prefix
-- [ ] `e2e/harmony/set-default-owner-and-scope.e2e.ts:53` set default owner and scope › author components › after export › should export the component to correct scope
-- [ ] `e2e/harmony/set-default-owner-and-scope.e2e.ts:64` set default owner and scope › author components › after export › validate models data › should store scope name with the format owner.scope in the models
-- [ ] `e2e/harmony/set-default-owner-and-scope.e2e.ts:68` set default owner and scope › author components › after export › validate models data › should store the default owner as the bindingPrefix in the models
-- [ ] `e2e/harmony/set-default-owner-and-scope.e2e.ts:79` set default owner and scope › author components › after export › post import › should create links for the imported components
-- [ ] `e2e/harmony/set-default-owner-and-scope.e2e.ts:96` set default owner and scope › author components › after export › post import › pack component › should create package.json with correct name
-- [ ] `e2e/harmony/set-default-owner-and-scope.e2e.ts:99` set default owner and scope › author components › after export › post import › pack component › should have the component id in package.json
+- [x] `e2e/harmony/set-default-owner-and-scope.e2e.ts:40` set default owner and scope › author components › should create link with default owner as prefix — `harmony::set_default_owner_and_scope::author_components_with_default_owner_and_scope`
+- [x] `e2e/harmony/set-default-owner-and-scope.e2e.ts:53` set default owner and scope › author components › after export › should export the component to correct scope — `harmony::set_default_owner_and_scope::author_components_with_default_owner_and_scope`
+- [x] `e2e/harmony/set-default-owner-and-scope.e2e.ts:64` set default owner and scope › author components › after export › validate models data › should store scope name with the format owner.scope in the models — `harmony::set_default_owner_and_scope::author_components_with_default_owner_and_scope`
+- [x] `e2e/harmony/set-default-owner-and-scope.e2e.ts:68` set default owner and scope › author components › after export › validate models data › should store the default owner as the bindingPrefix in the models — `harmony::set_default_owner_and_scope::author_components_with_default_owner_and_scope`
+- [x] `e2e/harmony/set-default-owner-and-scope.e2e.ts:79` set default owner and scope › author components › after export › post import › should create links for the imported components — `harmony::set_default_owner_and_scope::author_components_with_default_owner_and_scope`
+- [x] `e2e/harmony/set-default-owner-and-scope.e2e.ts:96` set default owner and scope › author components › after export › post import › pack component › should create package.json with correct name — `harmony::set_default_owner_and_scope::author_components_with_default_owner_and_scope`
+- [x] `e2e/harmony/set-default-owner-and-scope.e2e.ts:99` set default owner and scope › author components › after export › post import › pack component › should have the component id in package.json — `harmony::set_default_owner_and_scope::author_components_with_default_owner_and_scope`
 
 ### `e2e/harmony/show-harmony.e2e.ts`
 
@@ -3868,8 +3868,8 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/uninstall-cmd.e2e.ts`
 
-- [ ] `e2e/harmony/uninstall-cmd.e2e.ts:23` uninstall command › root policies removed › should remove packages from node_modules that were uninstalled
-- [ ] `e2e/harmony/uninstall-cmd.e2e.ts:27` uninstall command › root policies removed › should not remove packages from node_modules that were not uninstalled
+- [x] `e2e/harmony/uninstall-cmd.e2e.ts:23` uninstall command › root policies removed › should remove packages from node_modules that were uninstalled — `harmony::uninstall_cmd::should_remove_packages_from_node_modules_that_were_uninstalled`
+- [x] `e2e/harmony/uninstall-cmd.e2e.ts:27` uninstall command › root policies removed › should not remove packages from node_modules that were not uninstalled — `harmony::uninstall_cmd::should_not_remove_packages_from_node_modules_that_were_not_uninstalled`
 
 ### `e2e/harmony/untag-harmony.e2e.ts`
 

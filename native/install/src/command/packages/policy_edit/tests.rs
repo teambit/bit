@@ -56,3 +56,27 @@ fn existing_entries_update_skip_or_fail_by_name_in_any_lifecycle() {
     );
     assert!(admits(&policy, "lodash", ExistingEntries::Fail).unwrap());
 }
+
+#[test]
+fn removes_specified_packages_and_retains_others() {
+    let text = r#"{
+  "teambit.dependencies/dependency-resolver": {
+    "policy": {
+      "dependencies": {
+        "is-positive": "1.0.0",
+        "is-negative": "1.0.0",
+        "is-odd": "1.0.0"
+      }
+    }
+  }
+}"#;
+    let mut document = Document::parse(text).unwrap();
+    let removed = super::remove_from_document(
+        &mut document,
+        &["is-positive".to_string(), "is-negative".to_string()],
+    );
+    assert!(removed);
+    let value = document.value();
+    let policy = &value["teambit.dependencies/dependency-resolver"]["policy"];
+    assert_eq!(policy["dependencies"], json!({ "is-odd": "1.0.0" }));
+}

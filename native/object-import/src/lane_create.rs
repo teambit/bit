@@ -172,15 +172,9 @@ impl Origin {
             .find(|row| row["id"] == *parent_id)
             .ok_or_else(invalid)?;
         let hash = row["hash"].as_str().ok_or_else(invalid)?;
-        let lane = outbound::read_object(
-            &bit_workspace_config::scope_path(root).join("objects"),
-            hash,
-            "Lane",
-        )?;
-        let components = lane["components"]
-            .as_array()
-            .ok_or_else(invalid)?
-            .clone();
+        let objects_dir = bit_workspace_config::scope_path(root).join("objects");
+        let lane = outbound::read_object(&objects_dir, hash, "Lane")?;
+        let components = active_lane_components(&objects_dir, &lane)?;
         let forked_from = if parent["exported"] == true {
             Some(parent_id.clone())
         } else {
@@ -188,6 +182,27 @@ impl Origin {
         };
         Ok(Self { parent_name: Some(parent_name), components, forked_from })
     }
+}
+
+fn active_lane_components(objects_dir: &Path, lane: &Value) -> io::Result<Vec<Value>> {
+    let mut components = Vec::new();
+    for entry in lane["components"].as_array().ok_or_else(invalid)? {
+        let head = entry["head"].as_str().ok_or_else(invalid)?;
+        let version = outbound::read_object(objects_dir, head, "Version")?;
+        let removed = version["extensions"]
+            .as_array()
+            .is_some_and(|rows| {
+                rows.iter()
+                    .any(|row| {
+                        row["name"] == "teambit.component/remove"
+                            && row["config"]["removed"] == true
+                    })
+            });
+        if !removed {
+            components.push(entry.clone());
+        }
+    }
+    Ok(components)
 }
 
 impl Objects {
