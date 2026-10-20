@@ -266,15 +266,21 @@ export class RippleMain {
    * each node represents a build container that builds one or more components.
    */
   getCiGraphNodes(job: { ciGraph?: string }): CiGraphNode[] {
+    return this.parseCiGraph(job).map(({ versionedIds, ...node }) => ({
+      ...node,
+      componentIds: versionedIds.map((id) => stripComponentVersion(id)),
+    }));
+  }
+
+  private parseCiGraph(job: { ciGraph?: string }) {
     if (!job.ciGraph) return [];
     try {
       const graph = JSON.parse(job.ciGraph) as { nodes?: Array<{ id: string; attr: string | Record<string, any> }> };
       if (!graph.nodes) return [];
       return graph.nodes.map((node) => {
         const attr = typeof node.attr === 'string' ? JSON.parse(node.attr) : node.attr;
-        const ids: string[] = (attr.ids || []).map((id: string) => stripComponentVersion(id));
         return {
-          componentIds: ids,
+          versionedIds: (attr.ids || []) as string[],
           containerName: attr.status?.name || node.id,
           phase: attr.status?.phase || 'UNKNOWN',
         };
@@ -284,10 +290,22 @@ export class RippleMain {
     }
   }
 
-  async getComponentBuildSummary(jobId: string, componentId: string): Promise<ComponentBuildSummary | null> {
+  /**
+   * the build summary needs the component version built in the job. when it is missing (e.g. an id copied from
+   * "bit ripple log", which lists the ids without versions), take it from the job's ciGraph.
+   */
+  async getComponentBuildSummary(
+    job: { id: string; ciGraph?: string },
+    componentId: string
+  ): Promise<ComponentBuildSummary | null> {
+    const versionedId = componentId.includes('@')
+      ? componentId
+      : this.parseCiGraph(job)
+          .flatMap((node) => node.versionedIds)
+          .find((id) => stripComponentVersion(id) === componentId);
     const data = await this.fetchRippleGQL<{ getComponentBuildSummary: ComponentBuildSummary }>(
       RippleMain.GET_COMPONENT_BUILD_SUMMARY,
-      { jobId, componentId }
+      { jobId: job.id, componentId: versionedId || componentId }
     );
     return data?.getComponentBuildSummary ?? null;
   }

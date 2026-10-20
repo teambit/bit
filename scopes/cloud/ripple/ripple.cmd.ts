@@ -257,7 +257,7 @@ export class RippleLogCmd implements Command {
     lines.push(`  ${chalk.cyan('URL:')}      ${jobUrl}`);
 
     if (flags.component) {
-      await this.appendComponentDetail(lines, job.id, flags.component);
+      await this.appendComponentDetail(lines, job, flags.component);
     } else {
       this.appendComponentList(lines, job);
     }
@@ -265,8 +265,8 @@ export class RippleLogCmd implements Command {
     return lines.join('\n');
   }
 
-  private async appendComponentDetail(lines: string[], jobId: string, componentId: string) {
-    const summary = await this.ripple.getComponentBuildSummary(jobId, componentId);
+  private async appendComponentDetail(lines: string[], job: RippleJob, componentId: string) {
+    const summary = await this.ripple.getComponentBuildSummary(job, componentId);
     if (!summary) {
       lines.push('');
       lines.push(chalk.yellow(`No build summary found for component "${componentId}" in this job.`));
@@ -339,7 +339,7 @@ export class RippleLogCmd implements Command {
   async json([jobId]: [string], flags: { lane?: string; component?: string }) {
     const { job, source, lastExport } = await this.resolveJob(jobId, flags);
     if (flags.component && job) {
-      const summary = await this.ripple.getComponentBuildSummary(job.id, flags.component);
+      const summary = await this.ripple.getComponentBuildSummary(job, flags.component);
       return { job, componentBuild: summary, source, lastExport };
     }
     return { job, source, lastExport };
@@ -355,7 +355,8 @@ export class RippleErrorsCmd implements Command {
 
   options: CommandOptions = [
     ['', 'lane <lane>', 'lane ID to find the latest job for (default: detected from .bitmap)'],
-    ['', 'log', 'show full build log for failed containers (not just the error summary)'],
+    // not "--log", which is bit's global flag for printing its own logs.
+    ['', 'full-log', 'show full build log for failed containers (not just the error summary)'],
     ['j', 'json', 'return the output as JSON'],
   ];
 
@@ -368,7 +369,7 @@ export class RippleErrorsCmd implements Command {
 
   constructor(private ripple: RippleMain) {}
 
-  async report([jobId]: [string], flags: { lane?: string; log?: boolean }) {
+  async report([jobId]: [string], flags: { lane?: string; fullLog?: boolean }) {
     const { job, ciNodes, source, lastExport, error } = await this.getErrors(jobId, flags);
 
     if (!job) {
@@ -417,6 +418,13 @@ export class RippleErrorsCmd implements Command {
           chalk.yellow(`${totalComponents} component(s) in this job — no individual component failures found.`)
         );
         lines.push(chalk.yellow('The failure may be in a pipeline-level step. Check the Ripple CI URL above.'));
+      } else if (blockedComponents.length) {
+        lines.push('');
+        lines.push(
+          chalk.yellow(
+            `No failures so far. ${blockedComponents.length} of ${totalComponents} component(s) not built yet.`
+          )
+        );
       } else {
         lines.push('');
         lines.push(chalk.green(`All ${totalComponents} component(s) built successfully.`));
@@ -438,12 +446,12 @@ export class RippleErrorsCmd implements Command {
 
       const logMessages = logMap.get(node.containerName);
       if (logMessages && logMessages.length > 0) {
-        const errorLines = flags.log ? logMessages : this.ripple.extractErrorsFromLog(logMessages);
+        const errorLines = flags.fullLog ? logMessages : this.ripple.extractErrorsFromLog(logMessages);
         if (errorLines.length > 0) {
           for (const msg of errorLines) {
             const clean = stripAnsi(msg);
-            // skip stack trace lines (noisy) unless --log is used
-            if (!flags.log && /^\s+at\s/.test(clean)) continue;
+            // skip stack trace lines (noisy) unless --full-log is used
+            if (!flags.fullLog && /^\s+at\s/.test(clean)) continue;
             if (clean.length > 0) {
               lines.push(`    ${clean}`);
             }
@@ -473,7 +481,7 @@ export class RippleErrorsCmd implements Command {
     return lines.join('\n');
   }
 
-  async json([jobId]: [string], flags: { lane?: string; log?: boolean }) {
+  async json([jobId]: [string], flags: { lane?: string; fullLog?: boolean }) {
     const { job, ciNodes, source, lastExport, error } = await this.getErrors(jobId, flags);
     if (!job) {
       return { error: error || 'No job found', job: null, ciNodes: [], containerLogs: {}, source, lastExport };
@@ -485,7 +493,7 @@ export class RippleErrorsCmd implements Command {
     const logMap = await this.ripple.getContainerLogs(job.id, containerNames);
     const containerLogs: Record<string, string[]> = {};
     for (const [name, messages] of logMap) {
-      containerLogs[name] = flags.log ? messages : this.ripple.extractErrorsFromLog(messages);
+      containerLogs[name] = flags.fullLog ? messages : this.ripple.extractErrorsFromLog(messages);
     }
 
     return { job, ciNodes, containerLogs, source, lastExport };
