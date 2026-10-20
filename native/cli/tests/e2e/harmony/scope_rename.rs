@@ -110,3 +110,35 @@ fn exported_scope_rename_creates_replacements_and_deprecates_the_original_batch(
             .any(|row| row["config"]["teambit.component/deprecation"]["deprecate"] == true),
     );
 }
+#[test]
+fn scope_set_updates_component_and_workspace_default_scopes_natively() {
+    let helper = support::workspace(2, false);
+    let comp_out = helper.cmd("scope set custom.scope comp1");
+    assert!(comp_out.native, "{}", comp_out.trace);
+    assert!(comp_out.status.success(), "{}\n{}", comp_out.stdout, comp_out.stderr);
+    assert!(
+        comp_out.stdout.contains(
+            "set custom.scope as the default-scope for the following component(s)"
+        ),
+        "{}",
+        comp_out.stdout,
+    );
+    assert!(comp_out.stdout.contains("custom.scope/comp1"), "{}", comp_out.stdout);
+    let map = bitmap(&helper);
+    assert_eq!(map["comp1"]["defaultScope"], "custom.scope");
+    assert_eq!(map["comp2"]["defaultScope"], helper.scopes.remote);
+
+    let ws_out = helper.cmd("scope set workspace.scope");
+    assert!(ws_out.native, "{}", ws_out.trace);
+    assert!(ws_out.status.success(), "{}\n{}", ws_out.stdout, ws_out.stderr);
+    assert!(
+        ws_out.stdout.contains("set the workspace's default-scope to workspace.scope"),
+        "{}",
+        ws_out.stdout,
+    );
+    let workspace = config::read_jsonc(&helper.scopes.local_path.join("workspace.jsonc"));
+    assert_eq!(workspace["teambit.workspace/workspace"]["defaultScope"], "workspace.scope");
+    let map_after = bitmap(&helper);
+    assert_eq!(map_after["comp1"]["defaultScope"], "custom.scope");
+    assert_eq!(map_after["comp2"]["defaultScope"], "workspace.scope");
+}

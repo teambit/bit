@@ -14,6 +14,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     {
         return super::fork::run_scope(args);
     }
+    if args
+        .get(1)
+        .is_some_and(|arg| arg == "set")
+    {
+        return super::scope_set::run(args);
+    }
     run_rename(args)
 }
 fn run_rename(args: &[OsString]) -> io::Result<Outcome> {

@@ -12,6 +12,7 @@ mod merge_history;
 mod merge_lifecycle;
 mod merge_policy;
 mod merge_recovery;
+mod refactor;
 mod rename;
 mod scope_fork;
 mod scope_rename;

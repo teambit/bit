@@ -423,19 +423,19 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/commands/config.e2e.ts`
 
-- [ ] `e2e/commands/config.e2e.ts:28` bit config › set, get, delete configs › should set the config correctly
-- [ ] `e2e/commands/config.e2e.ts:32` bit config › set, get, delete configs › should get the config correctly
-- [ ] `e2e/commands/config.e2e.ts:36` bit config › set, get, delete configs › should delete the config correctly
-- [ ] `e2e/commands/config.e2e.ts:51` bit config › saving config in the local workspace › should save to the workspace when using "--local-track"
-- [ ] `e2e/commands/config.e2e.ts:55` bit config › saving config in the local workspace › should be available for config-get
-- [ ] `e2e/commands/config.e2e.ts:63` bit config › saving config in the local workspace › deleting the config › should not list it anymore
-- [ ] `e2e/commands/config.e2e.ts:67` bit config › saving config in the local workspace › deleting the config › should not be available for config-get
-- [ ] `e2e/commands/config.e2e.ts:77` bit config › saving config in the local workspace › same config in global and workspace › bit config get should return the local one
-- [ ] `e2e/commands/config.e2e.ts:89` bit config › saving config in the local scope › should save to the scope when using "--local"
-- [ ] `e2e/commands/config.e2e.ts:93` bit config › saving config in the local scope › should be available for config-get
-- [ ] `e2e/commands/config.e2e.ts:101` bit config › saving config in the local scope › deleting the config › should not list it anymore
-- [ ] `e2e/commands/config.e2e.ts:105` bit config › saving config in the local scope › deleting the config › should not be available for config-get
-- [ ] `e2e/commands/config.e2e.ts:115` bit config › saving config in the local scope › same config in global and scope › bit config get should return the local one
+- [x] `e2e/commands/config.e2e.ts:28` bit config › set, get, delete configs › should set the config correctly — `commands::config::set_get_and_delete_configs`
+- [x] `e2e/commands/config.e2e.ts:32` bit config › set, get, delete configs › should get the config correctly — `commands::config::set_get_and_delete_configs`
+- [x] `e2e/commands/config.e2e.ts:36` bit config › set, get, delete configs › should delete the config correctly — `commands::config::set_get_and_delete_configs`
+- [x] `e2e/commands/config.e2e.ts:51` bit config › saving config in the local workspace › should save to the workspace when using "--local-track" — `commands::config::saving_config_in_the_local_workspace`
+- [x] `e2e/commands/config.e2e.ts:55` bit config › saving config in the local workspace › should be available for config-get — `commands::config::saving_config_in_the_local_workspace`
+- [x] `e2e/commands/config.e2e.ts:63` bit config › saving config in the local workspace › deleting the config › should not list it anymore — `commands::config::saving_config_in_the_local_workspace`
+- [x] `e2e/commands/config.e2e.ts:67` bit config › saving config in the local workspace › deleting the config › should not be available for config-get — `commands::config::saving_config_in_the_local_workspace`
+- [x] `e2e/commands/config.e2e.ts:77` bit config › saving config in the local workspace › same config in global and workspace › bit config get should return the local one — `commands::config::saving_config_in_the_local_workspace`
+- [x] `e2e/commands/config.e2e.ts:89` bit config › saving config in the local scope › should save to the scope when using "--local" — `commands::config::saving_config_in_the_local_scope`
+- [x] `e2e/commands/config.e2e.ts:93` bit config › saving config in the local scope › should be available for config-get — `commands::config::saving_config_in_the_local_scope`
+- [x] `e2e/commands/config.e2e.ts:101` bit config › saving config in the local scope › deleting the config › should not list it anymore — `commands::config::saving_config_in_the_local_scope`
+- [x] `e2e/commands/config.e2e.ts:105` bit config › saving config in the local scope › deleting the config › should not be available for config-get — `commands::config::saving_config_in_the_local_scope`
+- [x] `e2e/commands/config.e2e.ts:115` bit config › saving config in the local scope › same config in global and scope › bit config get should return the local one — `commands::config::saving_config_in_the_local_scope`
 
 ### `e2e/commands/diff.e2e.ts`
 
@@ -3451,12 +3451,12 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/refactor.e2e.ts`
 
-- [ ] `e2e/harmony/refactor.e2e.ts:19` bit refactor command and flag › refactoring with refactor command › should throw when specifying the non-exist component-id
-- [ ] `e2e/harmony/refactor.e2e.ts:24` bit refactor command and flag › refactoring with refactor command › should change the dependency in the source code to the new package-name
-- [ ] `e2e/harmony/refactor.e2e.ts:36` bit refactor command and flag › rename a new component with --refactor flag › should change the dependency in the source code to the new package-name
-- [ ] `e2e/harmony/refactor.e2e.ts:49` bit refactor command and flag › rename an exported component with --refactor flag › should change the dependency in the source code to the new package-name
-- [ ] `e2e/harmony/refactor.e2e.ts:65` bit refactor command and flag › fork command with --refactor flag › fork a local component › should change the dependency in the source code to the new package-name
-- [ ] `e2e/harmony/refactor.e2e.ts:76` bit refactor command and flag › fork command with --refactor flag › fork a remote component with no --target-id flag › should throw
+- [x] `e2e/harmony/refactor.e2e.ts:19` bit refactor command and flag › refactoring with refactor command › should throw when specifying the non-exist component-id — `harmony::refactor::refactoring_with_refactor_command`
+- [x] `e2e/harmony/refactor.e2e.ts:24` bit refactor command and flag › refactoring with refactor command › should change the dependency in the source code to the new package-name — `harmony::refactor::refactoring_with_refactor_command`
+- [x] `e2e/harmony/refactor.e2e.ts:36` bit refactor command and flag › rename a new component with --refactor flag › should change the dependency in the source code to the new package-name — `harmony::refactor::rename_a_new_component_with_refactor_flag`
+- [x] `e2e/harmony/refactor.e2e.ts:49` bit refactor command and flag › rename an exported component with --refactor flag › should change the dependency in the source code to the new package-name — `harmony::refactor::rename_an_exported_component_with_refactor_flag`
+- [x] `e2e/harmony/refactor.e2e.ts:65` bit refactor command and flag › fork command with --refactor flag › fork a local component › should change the dependency in the source code to the new package-name — `harmony::refactor::fork_command_with_refactor_flag`
+- [x] `e2e/harmony/refactor.e2e.ts:76` bit refactor command and flag › fork command with --refactor flag › fork a remote component with no --target-id flag › should throw — `harmony::refactor::fork_command_with_refactor_flag`
 
 ### `e2e/harmony/relative-paths.e2e.ts`
 

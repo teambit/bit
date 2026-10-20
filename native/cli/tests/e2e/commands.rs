@@ -5,6 +5,7 @@ pub(crate) mod diff_completion;
 pub(crate) mod move_paths;
 
 mod cat;
+mod config;
 mod delete;
 mod diff;
 mod export;

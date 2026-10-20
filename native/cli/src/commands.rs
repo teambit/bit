@@ -30,12 +30,14 @@ mod pattern;
 mod patterns;
 mod recover;
 mod recovery;
+mod refactor;
 mod remote;
 mod remote_resolution;
 mod remove;
 mod rename;
 mod reset;
 mod scope_rename;
+mod scope_set;
 mod snap;
 mod stash;
 mod status;
@@ -82,6 +84,7 @@ pub const COMMANDS: &[Command] = &[
     move_paths::COMMAND,
     pattern::COMMAND,
     recover::COMMAND,
+    refactor::COMMAND,
     remote::COMMAND,
     remove::COMMAND,
     reset::COMMAND,
