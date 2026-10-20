@@ -34,6 +34,10 @@ export class CoreExporterTask implements BuildTask {
     };
   }
 
+  requiresCapsuleInstallation(): boolean {
+    return false;
+  }
+
   private addFolderForAllCoreAspects(mainAspectCapsule: Capsule, distDir: string) {
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsNamesPackages = coreAspectsIds.map((id) => {
