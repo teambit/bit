@@ -46,6 +46,7 @@ export function getDependenciesOfVersion(
 export type ImportsOfMerge = {
   merged: ImportedPackages; // imported by the merged files
   sides: Set<string>; // imported by the files of base, current or other
+  isOfPolicy?: (name: string) => boolean; // whether the merged policy decides on the package, see withPolicyOfMerge()
 };
 
 /**
@@ -171,24 +172,21 @@ export function getImportedPackagesWithoutVersion(
 }
 
 /**
- * the imports of a merge without the packages that the merged policy ignores ("-") or forces, so these keep the 3-way
- * result, which follows the policy of each side. e.g. when one side adds a "-" for a package that the files import,
- * the 3-way merge removes it, and the imports don't restore it. and an env keeps its own peers when no file imports
- * them anymore.
+ * the imports of a merge, with the packages that the merged policy ignores ("-") or forces. these keep the 3-way
+ * result, which follows the policy of each side, the imports don't change them. e.g. when one side adds a "-" for a
+ * package that the files import, the 3-way merge removes it, and the imports don't restore it. and an env keeps its
+ * own peers when no file imports them anymore.
  */
-export function withoutImportsOfPolicy(
+export function withPolicyOfMerge(
   imports: ImportsOfMerge,
   base: SideOfMerge,
   current: SideOfMerge,
   other: SideOfMerge
 ): ImportsOfMerge {
-  const isNotOfPolicy = (name: string) =>
-    !isSetOnMerge(base, current, other, (side) => side.ignoredPackages.has(name)) &&
-    !isSetOnMerge(base, current, other, (side) => side.forcedPackages.has(name));
-  return {
-    merged: new Map([...imports.merged].filter(([name]) => isNotOfPolicy(name))),
-    sides: new Set([...imports.sides].filter(isNotOfPolicy)),
-  };
+  const isOfPolicy = (name: string) =>
+    isSetOnMerge(base, current, other, (side) => side.ignoredPackages.has(name)) ||
+    isSetOnMerge(base, current, other, (side) => side.forcedPackages.has(name));
+  return { ...imports, isOfPolicy };
 }
 
 /**
@@ -231,6 +229,7 @@ function applyImports<Field extends string, Value>(
   const importedName = (name: string) => typedPackageName(name) || name;
   const isFromImports = (name: string) =>
     imports.merged.has(importedName(name)) || imports.sides.has(importedName(name));
+  const isOfPolicy = (name: string) => Boolean(imports.isOfPolicy?.(name));
   const withFieldOfImports = (entry: MergedEntry<Field, Value>, name: string): MergedEntry<Field, Value> => {
     const importedAs = imports.merged.get(name);
     // a peer is set by a policy or by the dependency itself, not by the files that import it
@@ -241,7 +240,7 @@ function applyImports<Field extends string, Value>(
   const names = new Set<string>();
   entries.forEach((entry) => {
     const name = nameOf(entry.key, entry.value);
-    if (!name) {
+    if (!name || isOfPolicy(name)) {
       result.push(entry);
       return;
     }
@@ -254,7 +253,7 @@ function applyImports<Field extends string, Value>(
   );
   const importedNames = [...imports.merged.keys()].flatMap((name) => [name, toTypesPackageName(name)]);
   importedNames.forEach((name) => {
-    if (names.has(name)) return;
+    if (names.has(name) || isOfPolicy(name)) return;
     // when no side has it, it's e.g. a core aspect, or a package that a policy ignores
     const fromSide = sidesByName.map((side) => side.get(name)).find(Boolean);
     if (!fromSide) return;

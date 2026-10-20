@@ -7,7 +7,7 @@ import {
   getDependenciesOfVersion,
   getImportedPackagesWithoutVersion,
   mergeDependencies,
-  withoutImportsOfPolicy,
+  withPolicyOfMerge,
 } from './merge-dependencies';
 
 type SnapshotInput = {
@@ -313,7 +313,7 @@ describe('getImportedPackagesWithoutVersion', () => {
   });
 });
 
-describe('withoutImportsOfPolicy', () => {
+describe('withPolicyOfMerge', () => {
   const mergeWithImports = (base: SideOfMerge, current: SideOfMerge, other: SideOfMerge, imports: ImportsOfMerge) =>
     mergeDependencies(
       base.dependencies,
@@ -321,7 +321,7 @@ describe('withoutImportsOfPolicy', () => {
       other.dependencies,
       'manual',
       undefined,
-      withoutImportsOfPolicy(imports, base, current, other)
+      withPolicyOfMerge(imports, base, current, other)
     );
   it('should let the 3-way merge remove a package that other started to ignore, although the files import it', () => {
     const base = side({ pkgs: { lodash: '4.17.21' } });
@@ -333,5 +333,12 @@ describe('withoutImportsOfPolicy', () => {
     const env = side({ pkgs: { react: '^18.0.0' } }, [], ['react']);
     const merged = mergeWithImports(env, env, env, importsOf({}, ['react']));
     expect(merged.packageDependencies).to.deep.equal({ react: '^18.0.0' });
+  });
+  it('should let the 3-way merge remove a types package that other started to ignore, although the files import it', () => {
+    const base = side({ pkgs: { react: '18.0.0' }, devPkgs: { '@types/react': '18.0.0' } });
+    const other = side({ pkgs: { react: '18.0.0' } }, ['@types/react']);
+    const merged = mergeWithImports(base, base, other, importsOf({ react: 'runtime' }, ['react']));
+    expect(merged.devPackageDependencies).to.deep.equal({});
+    expect(merged.packageDependencies).to.deep.equal({ react: '18.0.0' });
   });
 });

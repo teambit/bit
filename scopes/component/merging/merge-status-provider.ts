@@ -33,7 +33,7 @@ import {
   getDependenciesOfVersion,
   getImportedPackagesWithoutVersion,
   mergeDependencies,
-  withoutImportsOfPolicy,
+  withPolicyOfMerge,
 } from './merge-dependencies';
 
 export type MergeStatusProviderOptions = {
@@ -244,7 +244,7 @@ other:   ${otherLaneHead.toString()}`);
       other,
       this.options.mergeStrategy,
       this.currentLane?.toComponentIdsIncludeUpdateDependents(),
-      imports && withoutImportsOfPolicy(imports, baseSide, currentSide, otherSide)
+      imports && withPolicyOfMerge(imports, baseSide, currentSide, otherSide)
     );
     return { dependenciesMergeResult };
   }
@@ -274,11 +274,16 @@ other:   ${otherLaneHead.toString()}`);
     const { modifiedFiles } = applyModifiedVersion(filesToMergeInto, mergeResults, this.options.mergeStrategy);
     const snappedExtensions = isTheirs ? otherComponent.extensions : currentComponent.extensions;
     const devFilesData = snappedExtensions.findCoreExtension(DevFilesAspect.id)?.data || {};
-    const devPatterns: string[] = Object.values(devFilesData.devPatterns || {}).flat() as string[];
     const devFiles = new Set(Object.values(devFilesData.devFiles || {}).flat() as string[]);
-    const { includePatterns, excludePatterns } = splitPatterns(devPatterns);
+    // the patterns of each aspect are matched separately, same as DevFilesMain.computeDevFiles()
+    const patternsOfAspects = Object.values(devFilesData.devPatterns || {}).map((patterns) =>
+      splitPatterns(patterns as string[])
+    );
     const isDevFile = (relativePath: string) =>
-      devFiles.has(relativePath) || matchPatterns(relativePath, includePatterns, excludePatterns);
+      devFiles.has(relativePath) ||
+      patternsOfAspects.some(({ includePatterns, excludePatterns }) =>
+        matchPatterns(relativePath, includePatterns, excludePatterns)
+      );
     const cache: ImportsCache = new Map();
     const importsAreUnknown = () => {
       this.logger.debug(
