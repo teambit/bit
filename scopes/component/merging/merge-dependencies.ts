@@ -157,14 +157,38 @@ export function getImportedPackagesWithoutVersion(
 ): string[] {
   const sides = [base, current, other];
   const dependencyNames = new Set(sides.flatMap(({ dependencies }) => namesOfDependencies(dependencies)));
-  const isIgnoredOnMerge = (name: string) => {
-    const [ignoredOnBase, ignoredOnCurrent, ignoredOnOther] = sides.map((side) => side.ignoredPackages.has(name));
-    return mergeValue(ignoredOnBase, ignoredOnCurrent, ignoredOnOther, undefined, (a, b) => a === b);
-  };
   return [...importedByMergedFiles].filter(
     (name) =>
-      !dependencyNames.has(name) && sides.some((side) => side.ignoredPackages.has(name)) && !isIgnoredOnMerge(name)
+      !dependencyNames.has(name) &&
+      sides.some((side) => side.ignoredPackages.has(name)) &&
+      !isIgnoredOnMerge(base, current, other, name)
   );
+}
+
+/**
+ * the imports of a merge without the packages that the merged policy ignores ("-"), so these keep the 3-way result,
+ * which follows the policy of each side. e.g. when one side adds a "-" for a package that the files import, the 3-way
+ * merge removes it, and the imports don't restore it.
+ */
+export function withoutIgnoredImports(
+  imports: ImportsOfMerge,
+  base: SideOfMerge,
+  current: SideOfMerge,
+  other: SideOfMerge
+): ImportsOfMerge {
+  const isNotIgnored = (name: string) => !isIgnoredOnMerge(base, current, other, name);
+  return {
+    merged: new Map([...imports.merged].filter(([name]) => isNotIgnored(name))),
+    sides: new Set([...imports.sides].filter(isNotIgnored)),
+  };
+}
+
+/**
+ * whether the merged policy ignores ("-") the package, by a 3-way merge of whether each side ignores it.
+ */
+function isIgnoredOnMerge(base: SideOfMerge, current: SideOfMerge, other: SideOfMerge, name: string): boolean {
+  const [onBase, onCurrent, onOther] = [base, current, other].map((side) => side.ignoredPackages.has(name));
+  return Boolean(mergeValue(onBase, onCurrent, onOther, undefined, (a, b) => a === b));
 }
 
 function namesOfDependencies(dependencies: DependenciesSnapshot): string[] {

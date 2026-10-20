@@ -3,7 +3,12 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { DependenciesSnapshot, ImportsOfMerge, SideOfMerge } from './merge-dependencies';
-import { getDependenciesOfVersion, getImportedPackagesWithoutVersion, mergeDependencies } from './merge-dependencies';
+import {
+  getDependenciesOfVersion,
+  getImportedPackagesWithoutVersion,
+  mergeDependencies,
+  withoutIgnoredImports,
+} from './merge-dependencies';
 
 type SnapshotInput = {
   comps?: string[]; // runtime component deps, e.g. "my-scope/b@0.0.1"
@@ -303,5 +308,22 @@ describe('getImportedPackagesWithoutVersion', () => {
   it('should not return a package that no side ignored', () => {
     // e.g. a core aspect, which is never a dependency
     expect(getImportedPackagesWithoutVersion(side({}), side({}), side({}), ['@scope/core'])).to.deep.equal([]);
+  });
+});
+
+describe('withoutIgnoredImports', () => {
+  it('should let the 3-way merge remove a package that other started to ignore, although the files import it', () => {
+    const base = { dependencies: snapshot({ pkgs: { lodash: '4.17.21' } }), ignoredPackages: new Set<string>() };
+    const other = { dependencies: snapshot({}), ignoredPackages: new Set(['lodash']) };
+    const imports = withoutIgnoredImports(importsOf({ lodash: 'runtime' }, ['lodash']), base, base, other);
+    const merged = mergeDependencies(
+      base.dependencies,
+      base.dependencies,
+      other.dependencies,
+      'manual',
+      undefined,
+      imports
+    );
+    expect(merged.packageDependencies).to.deep.equal({});
   });
 });

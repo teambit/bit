@@ -6,7 +6,7 @@ import type { LaneId } from '@teambit/lane-id';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
 import { getDivergeData } from '@teambit/component.snap-distance';
-import type { Lane, ModelComponent, Ref, Source, Version } from '@teambit/objects';
+import type { Lane, ModelComponent, Ref, Version } from '@teambit/objects';
 import { NoCommonSnap, Tmp } from '@teambit/legacy.scope';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { ImporterMain } from '@teambit/importer';
@@ -23,12 +23,18 @@ import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
 import { BuilderAspect } from '@teambit/builder';
 import { DevFilesAspect } from '@teambit/dev-files';
+import { SourceFile } from '@teambit/component.sources';
 import type { FileContent, ImportsCache } from '@teambit/dependencies';
 import { detectImportedPackages } from '@teambit/dependencies';
 import { matchPatterns, splitPatterns } from '@teambit/toolbox.path.match-patterns';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import type { DependenciesSnapshot, ImportsOfMerge, SideOfMerge } from './merge-dependencies';
-import { getDependenciesOfVersion, getImportedPackagesWithoutVersion, mergeDependencies } from './merge-dependencies';
+import {
+  getDependenciesOfVersion,
+  getImportedPackagesWithoutVersion,
+  mergeDependencies,
+  withoutIgnoredImports,
+} from './merge-dependencies';
 
 export type MergeStatusProviderOptions = {
   resolveUnrelated?: MergeStrategy;
@@ -211,16 +217,19 @@ other:   ${otherLaneHead.toString()}`);
       return { dependenciesMergeResult: other };
     }
     const base = getDependenciesOfVersion(baseComponent);
+    const sideOf = (dependencies: DependenciesSnapshot, extensions: ExtensionDataList): SideOfMerge => ({
+      dependencies,
+      ignoredPackages: getIgnoredPackages(extensions),
+    });
+    const baseSide = sideOf(base, baseComponent.extensions);
+    const currentSide = sideOf(currentComponent, currentComponent.extensions);
+    const otherSide = sideOf(other, otherComponent.extensions);
     const imports = await this.getImportsOfMerge(baseComponent, currentComponent, otherComponent, mergeResults);
     if (imports) {
-      const sideOf = (dependencies: DependenciesSnapshot, extensions: ExtensionDataList): SideOfMerge => ({
-        dependencies,
-        ignoredPackages: getIgnoredPackages(extensions),
-      });
       const packagesWithoutVersion = getImportedPackagesWithoutVersion(
-        sideOf(base, baseComponent.extensions),
-        sideOf(currentComponent, currentComponent.extensions),
-        sideOf(other, otherComponent.extensions),
+        baseSide,
+        currentSide,
+        otherSide,
         imports.merged.keys()
       );
       if (packagesWithoutVersion.length) {
@@ -235,7 +244,7 @@ other:   ${otherLaneHead.toString()}`);
       other,
       this.options.mergeStrategy,
       this.currentLane?.toComponentIdsIncludeUpdateDependents(),
-      imports
+      imports && withoutIgnoredImports(imports, baseSide, currentSide, otherSide)
     );
     return { dependenciesMergeResult };
   }
@@ -252,20 +261,18 @@ other:   ${otherLaneHead.toString()}`);
   ): Promise<ImportsOfMerge | undefined> {
     if (mergeResults.hasConflicts) return undefined;
     const repo = this.scope.legacyScope.objects;
-    const filesOfVersion = (version: Version): Promise<FileContent[]> =>
-      Promise.all(
-        version.files.map(async (file) => {
-          const source = (await file.file.load(repo)) as Source;
-          return { relativePath: pathNormalizeToLinux(file.relativePath), content: source.contents.toString() };
-        })
-      );
-    const filesOfComponent = (files: ConsumerComponent['files']): FileContent[] =>
+    const loadFiles = (version: Version) =>
+      Promise.all(version.files.map((file) => SourceFile.loadFromSourceFileModel(file, repo)));
+    const toFileContents = (files: SourceFile[]): FileContent[] =>
       files.map((file) => ({ relativePath: pathNormalizeToLinux(file.relative), content: file.contents.toString() }));
-    const { modifiedFiles } = applyModifiedVersion(currentComponent.files, mergeResults, this.options.mergeStrategy);
-    // the dev patterns of the aspects-data that is snapped. in a lane merge, the aspects-data of currentComponent is
-    // already merged (see mergeExtensionsData). "theirs" snaps the aspects-data of other (see MergingMain.applyVersion)
-    const snappedExtensions =
-      this.options.mergeStrategy === MergeOptions.theirs ? otherComponent.extensions : currentComponent.extensions;
+    const [baseFiles, otherFiles] = await Promise.all([loadFiles(baseComponent), loadFiles(otherComponent)]);
+    // the files and the aspects-data that are snapped, see MergingMain.applyVersion. "theirs" applies the merge to the
+    // files of other and snaps the aspects-data of other. otherwise, it's currentComponent, whose aspects-data is
+    // already merged in a lane merge (see mergeExtensionsData).
+    const isTheirs = this.options.mergeStrategy === MergeOptions.theirs;
+    const filesToMergeInto = isTheirs ? otherFiles : currentComponent.files;
+    const { modifiedFiles } = applyModifiedVersion(filesToMergeInto, mergeResults, this.options.mergeStrategy);
+    const snappedExtensions = isTheirs ? otherComponent.extensions : currentComponent.extensions;
     const devFilesData = snappedExtensions.findCoreExtension(DevFilesAspect.id)?.data || {};
     const devPatterns: string[] = Object.values(devFilesData.devPatterns || {}).flat() as string[];
     const devFiles = new Set(Object.values(devFilesData.devFiles || {}).flat() as string[]);
@@ -279,14 +286,13 @@ other:   ${otherLaneHead.toString()}`);
       );
       return undefined;
     };
-    const merged = await detectImportedPackages(filesOfComponent(modifiedFiles), isDevFile, cache);
+    const merged = await detectImportedPackages(toFileContents(modifiedFiles), isDevFile, cache);
     if (!merged) return importsAreUnknown();
-    const filesOfSides = [
-      await filesOfVersion(baseComponent),
-      filesOfComponent(currentComponent.files),
-      await filesOfVersion(otherComponent),
-    ];
-    const sides = await Promise.all(filesOfSides.map((files) => detectImportedPackages(files, undefined, cache)));
+    const sides = await Promise.all(
+      [baseFiles, currentComponent.files, otherFiles].map((files) =>
+        detectImportedPackages(toFileContents(files), undefined, cache)
+      )
+    );
     if (sides.some((side) => !side)) return importsAreUnknown();
     return { merged, sides: new Set(sides.flatMap((side) => [...side!.keys()])) };
   }
