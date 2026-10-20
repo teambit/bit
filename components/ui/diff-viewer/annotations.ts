@@ -83,6 +83,8 @@ export function buildAnnotationIndex(annotations?: DiffAnnotation[]): Annotation
   };
 
   for (const annotation of annotations) {
+    // a host-supplied line that is not a positive whole number cannot match any row.
+    if (!isLineNumber(annotation.line)) continue;
     const side = annotation.side ?? 'new';
     const key = lineKey(side, annotation.line);
     index.anchored.add(key);
@@ -93,10 +95,13 @@ export function buildAnnotationIndex(annotations?: DiffAnnotation[]): Annotation
       index.hasWidgets = true;
     }
 
-    const from = annotation.range?.start ?? annotation.line;
-    const to = annotation.range?.end ?? annotation.line;
+    // a range that is not finite, is reversed or is implausibly long falls back to the anchor line:
+    // every line in it is added to a set, so a bad endpoint would otherwise stall the render.
+    const range = validRange(annotation.range);
+    const from = range?.start ?? annotation.line;
+    const to = range?.end ?? annotation.line;
     // a range is only meaningful when it spans more than the anchor line itself.
-    if (annotation.range) {
+    if (range) {
       for (let line = from; line <= to; line++) index.range.add(lineKey(side, line));
     }
     if (annotation.active) {
@@ -105,6 +110,19 @@ export function buildAnnotationIndex(annotations?: DiffAnnotation[]): Annotation
   }
 
   return index;
+}
+
+/** the longest range an annotation may tint; longer ones fall back to their anchor line. */
+const MAX_ANNOTATION_RANGE = 10_000;
+
+function isLineNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0;
+}
+
+function validRange(range?: { start: number; end: number }): { start: number; end: number } | undefined {
+  if (!range || !isLineNumber(range.start) || !isLineNumber(range.end)) return undefined;
+  if (range.end < range.start || range.end - range.start > MAX_ANNOTATION_RANGE) return undefined;
+  return range;
 }
 
 function push(map: Map<string, ReactNode[]>, key: string, node: ReactNode) {
@@ -120,12 +138,13 @@ export function lineAttribute(side: DiffLineSide): string {
 
 /**
  * Read the live text selection and, if it covers more than one line of this diff, resolve it to the
- * first/last line numbers on `side`.
+ * first/last line numbers on `side` and the selected text on that side.
  *
- * The line number is read off the whole row (unified) or side cell (split) rather than the gutter:
- * a selection dragged through the code column starts and ends *inside* a code cell, so the first and
- * last rows' gutters fall outside the range entirely and those lines would be missed. The row
- * element, by contrast, is partially contained — which is what `containsNode(node, true)` reports.
+ * Each row (unified) or side cell (split) carries its line number. A line counts only when the
+ * selection covers some of the text in that line's code cell, so:
+ * - a selection that ends at the very start of the next line does not add that line, and
+ * - in a unified diff, lines of the other side (e.g. removed lines for a new-side action) add neither
+ *   their numbers nor their text.
  *
  * Returns undefined when there is no selection, it stays within one line, it does not cover `line`
  * (when given), or there is no window (SSR).
@@ -135,32 +154,45 @@ export function captureDiffSelection(
   root?: Element | null,
   line?: number
 ): DiffLineSelection | undefined {
-  if (typeof window === 'undefined' || typeof window.getSelection !== 'function') return undefined;
+  if (typeof window === 'undefined' || typeof document === 'undefined') return undefined;
+  if (typeof window.getSelection !== 'function') return undefined;
 
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return undefined;
+  const range = selection.getRangeAt(0);
 
-  const text = selection.toString();
-  if (!text.trim()) return undefined;
-
-  const scope = root ?? (typeof document !== 'undefined' ? document.body : null);
-  if (!scope) return undefined;
-
+  const scope = root ?? document.body;
   const attribute = lineAttribute(side);
-  const rows = scope.querySelectorAll(`[${attribute}]`);
-  let startLine: number | undefined;
-  let endLine: number | undefined;
+  const selected: Array<{ line: number; text: string }> = [];
 
-  for (const row of Array.from(rows)) {
-    if (!selection.containsNode(row, true)) continue;
+  for (const row of Array.from(scope.querySelectorAll(`[${attribute}]`))) {
     const rowLine = Number(row.getAttribute(attribute));
-    if (!Number.isFinite(rowLine) || rowLine <= 0) continue;
-    if (startLine === undefined || rowLine < startLine) startLine = rowLine;
-    if (endLine === undefined || rowLine > endLine) endLine = rowLine;
+    if (!isLineNumber(rowLine)) continue;
+    const code = row.querySelector('code');
+    if (!code) continue;
+    const text = selectedTextIn(range, code);
+    if (text) selected.push({ line: rowLine, text });
   }
 
-  if (startLine === undefined || endLine === undefined || startLine === endLine) return undefined;
+  if (selected.length < 2) return undefined;
+  selected.sort((a, b) => a.line - b.line);
+  const startLine = selected[0].line;
+  const endLine = selected[selected.length - 1].line;
+  if (startLine === endLine) return undefined;
   // a selection left over from elsewhere in the diff does not belong to an action on another line.
   if (line !== undefined && (line < startLine || line > endLine)) return undefined;
+
+  const text = selected.map((entry) => entry.text).join('\n');
+  if (!text.trim()) return undefined;
   return { startLine, endLine, text };
+}
+
+/** the part of `range` that falls inside `node`, as text. Empty when they do not overlap. */
+function selectedTextIn(range: Range, node: Node): string {
+  if (!range.intersectsNode(node)) return '';
+  const part = document.createRange();
+  part.selectNodeContents(node);
+  if (range.compareBoundaryPoints(Range.START_TO_START, part) > 0) part.setStart(range.startContainer, range.startOffset);
+  if (range.compareBoundaryPoints(Range.END_TO_END, part) < 0) part.setEnd(range.endContainer, range.endOffset);
+  return part.toString();
 }

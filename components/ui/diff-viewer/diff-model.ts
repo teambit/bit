@@ -328,3 +328,28 @@ export function pairForSplit(items: DiffLineItem[]): SplitRow[] {
   }
   return rows;
 }
+
+/** how many lines a collapsed gap shows from its top and bottom edge. */
+export type GapState = { top: number; bottom: number };
+
+const EMPTY_GAP_STATES: Record<string, GapState> = {};
+
+/**
+ * The expansion of each gap, derived from the set of lines the reader revealed: the unbroken run of
+ * revealed lines at the top and at the bottom of the gap. Deriving it from lines rather than storing it
+ * per gap keeps expanded regions open when the sections are rebuilt and the positional gap ids change.
+ */
+export function gapStatesFor(sections: DiffSection[], revealed: ReadonlySet<DiffLineItem>): Record<string, GapState> {
+  if (revealed.size === 0) return EMPTY_GAP_STATES;
+  const states: Record<string, GapState> = {};
+  for (const section of sections) {
+    if (section.kind !== 'gap') continue;
+    const { hidden } = section;
+    let top = 0;
+    while (top < hidden.length && revealed.has(hidden[top])) top++;
+    let bottom = 0;
+    while (bottom < hidden.length - top && revealed.has(hidden[hidden.length - 1 - bottom])) bottom++;
+    if (top || bottom) states[section.id] = { top, bottom };
+  }
+  return states;
+}

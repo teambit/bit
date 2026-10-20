@@ -58,6 +58,17 @@ describe('buildAnnotationIndex', () => {
     expect([...index.anchored].sort()).toEqual(['new:3', 'old:7']);
   });
 
+  it('falls back to the anchor line for a range that is not finite, reversed or too long', () => {
+    const index = buildAnnotationIndex([
+      { line: 1, range: { start: 1, end: Number.POSITIVE_INFINITY } },
+      { line: 5, range: { start: 6, end: 2 } },
+      { line: 9, range: { start: 9, end: 1e9 } },
+      { line: Number.NaN },
+    ]);
+    expect(index.range.size).toBe(0);
+    expect([...index.anchored].sort()).toEqual(['new:1', 'new:5', 'new:9']);
+  });
+
   it('marks only the anchor line when an active annotation has no range', () => {
     const index = buildAnnotationIndex([{ line: 9, active: true }]);
 
@@ -73,71 +84,102 @@ describe('buildAnnotationIndex', () => {
 });
 
 describe('captureDiffSelection', () => {
-  const originalGetSelection = window.getSelection;
-
   afterEach(() => {
-    window.getSelection = originalGetSelection;
+    window.getSelection()?.removeAllRanges();
     document.body.innerHTML = '';
   });
 
-  function mountRows(lines: number[], side: 'old' | 'new' = 'new') {
-    document.body.innerHTML = lines
-      .map((line) => `<div ${lineAttribute(side)}="${line}">${line}</div>`)
+  /** rows as the viewer renders them: the line number on the row, the source in a `<code>` cell. */
+  function mountRows(rows: Array<{ new?: number; old?: number; text: string }>) {
+    document.body.innerHTML = rows
+      .map((row) => {
+        const attrs = [
+          row.old !== undefined ? `${lineAttribute('old')}="${row.old}"` : '',
+          row.new !== undefined ? `${lineAttribute('new')}="${row.new}"` : '',
+        ].join(' ');
+        return `<div ${attrs}><span>${row.old ?? row.new}</span><code>${row.text}</code></div>`;
+      })
       .join('');
     return document.body;
   }
 
-  function stubSelection(text: string, covered: (node: Node) => boolean) {
-    window.getSelection = (() => ({
-      rangeCount: 1,
-      isCollapsed: false,
-      toString: () => text,
-      containsNode: (node: Node) => covered(node),
-    })) as unknown as typeof window.getSelection;
+  /** select from `startOffset` in the code of row `startRow` to `endOffset` in the code of row `endRow`. */
+  function select(startRow: number, startOffset: number, endRow: number, endOffset: number) {
+    const codes = document.querySelectorAll('code');
+    const range = document.createRange();
+    range.setStart(codes[startRow].firstChild as Node, startOffset);
+    range.setEnd(codes[endRow].firstChild as Node, endOffset);
+    const selection = window.getSelection() as Selection;
+    selection.removeAllRanges();
+    selection.addRange(range);
   }
 
-  it('resolves a multi-line selection to its first and last line on the requested side', () => {
-    const root = mountRows([10, 11, 12, 13]);
-    stubSelection('two lines', (node) => ['11', '12'].includes((node as Element).textContent ?? ''));
+  it('resolves a multi-line selection to its first and last line and the selected text', () => {
+    const root = mountRows([
+      { new: 10, text: 'ten' },
+      { new: 11, text: 'eleven' },
+      { new: 12, text: 'twelve' },
+      { new: 13, text: 'thirteen' },
+    ]);
+    select(1, 3, 2, 3);
 
-    expect(captureDiffSelection('new', root)).toEqual({ startLine: 11, endLine: 12, text: 'two lines' });
-  });
-
-  it('returns the selection only when it covers the acted-on line', () => {
-    const root = mountRows([10, 11, 12, 13]);
-    stubSelection('two lines', (node) => ['11', '12'].includes((node as Element).textContent ?? ''));
-
-    expect(captureDiffSelection('new', root, 12)).toEqual({ startLine: 11, endLine: 12, text: 'two lines' });
-    expect(captureDiffSelection('new', root, 13)).toBeUndefined();
+    expect(captureDiffSelection('new', root)).toEqual({ startLine: 11, endLine: 12, text: 'ven\ntwe' });
   });
 
   it('ignores a selection confined to a single line', () => {
-    const root = mountRows([1, 2, 3]);
-    stubSelection('one line', (node) => (node as Element).textContent === '2');
+    const root = mountRows([
+      { new: 1, text: 'one' },
+      { new: 2, text: 'two' },
+    ]);
+    select(0, 0, 0, 3);
 
     expect(captureDiffSelection('new', root)).toBeUndefined();
   });
 
-  it('ignores rows belonging to the other side', () => {
-    const root = mountRows([4, 5, 6], 'old');
-    stubSelection('some text', () => true);
+  it('does not count a line where the selection only ends at its start', () => {
+    const root = mountRows([
+      { new: 1, text: 'one' },
+      { new: 2, text: 'two' },
+    ]);
+    select(0, 0, 1, 0);
 
     expect(captureDiffSelection('new', root)).toBeUndefined();
-    expect(captureDiffSelection('old', root)).toEqual({ startLine: 4, endLine: 6, text: 'some text' });
+  });
+
+  it('leaves out the lines and text of the other side in a unified diff', () => {
+    const root = mountRows([
+      { old: 1, new: 1, text: 'same' },
+      { old: 2, text: 'removed' },
+      { new: 2, text: 'added' },
+    ]);
+    select(0, 0, 2, 5);
+
+    expect(captureDiffSelection('new', root)).toEqual({ startLine: 1, endLine: 2, text: 'same\nadded' });
+    expect(captureDiffSelection('old', root)).toEqual({ startLine: 1, endLine: 2, text: 'same\nremoved' });
+  });
+
+  it('returns the selection only when it covers the acted-on line', () => {
+    const root = mountRows([
+      { new: 10, text: 'ten' },
+      { new: 11, text: 'eleven' },
+      { new: 12, text: 'twelve' },
+      { new: 13, text: 'thirteen' },
+    ]);
+    select(1, 0, 2, 6);
+
+    expect(captureDiffSelection('new', root, 12)).toEqual({ startLine: 11, endLine: 12, text: 'eleven\ntwelve' });
+    expect(captureDiffSelection('new', root, 13)).toBeUndefined();
   });
 
   it('ignores a collapsed or whitespace-only selection', () => {
-    const root = mountRows([1, 2]);
-
-    window.getSelection = (() => ({
-      rangeCount: 1,
-      isCollapsed: true,
-      toString: () => '',
-      containsNode: () => true,
-    })) as unknown as typeof window.getSelection;
+    const root = mountRows([
+      { new: 1, text: '  ' },
+      { new: 2, text: '  ' },
+    ]);
+    select(0, 1, 0, 1);
     expect(captureDiffSelection('new', root)).toBeUndefined();
 
-    stubSelection('   \n  ', () => true);
+    select(0, 0, 1, 2);
     expect(captureDiffSelection('new', root)).toBeUndefined();
   });
 });

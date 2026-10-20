@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import classNames from 'classnames';
-import type { DiffLineItem, DiffSection } from './diff-model';
-import { computeDiffLines, buildSections, statsFromItems, pairForSplit } from './diff-model';
+import type { DiffLineItem, DiffSection, GapState } from './diff-model';
+import { computeDiffLines, buildSections, gapStatesFor, statsFromItems, pairForSplit } from './diff-model';
 import type { HlLines, HlToken } from './highlighter';
 import { useHighlightedLines } from './highlighter';
 import { langFromFileName, normalizeLanguage } from './language';
@@ -62,8 +62,8 @@ const VIRTUALIZE_THRESHOLD = 120;
 const OVERSCAN = 14;
 const EXPAND_CHUNK = 20;
 
-type GapState = { top: number; bottom: number };
-const EMPTY_GAP_STATES: Record<string, GapState> = {};
+const EMPTY_REVEALED: Set<DiffLineItem> = new Set();
+
 
 /** a single rendered row: a code line (or a left/right pair), a collapsed-gap expander, or a
  * host-supplied full-width block anchored under a line. */
@@ -131,12 +131,14 @@ export function DiffViewer({
         (!!item.newLn && anchored.has(lineKey('new', item.newLn)))
     );
   }, [items, contextLines, anchorsKey]);
-  const [gapStateStore, setGapStateStore] = useState<{
-    sections?: DiffSection[];
-    states: Record<string, GapState>;
-  }>({ states: {} });
-  // A rebuilt section model gets an empty expansion state immediately, before effects run.
-  const gapStates = gapStateStore.sections === sections ? gapStateStore.states : EMPTY_GAP_STATES;
+  // Expanded gaps are remembered as the lines they revealed, not per gap: gap ids are positional and
+  // change whenever the sections are rebuilt (e.g. a new comment adds an anchor), which would otherwise
+  // collapse every gap the reader opened. New file contents start collapsed again.
+  const [revealStore, setRevealStore] = useState<{ items?: DiffLineItem[]; revealed: Set<DiffLineItem> }>({
+    revealed: new Set(),
+  });
+  const revealed = revealStore.items === items ? revealStore.revealed : EMPTY_REVEALED;
+  const gapStates = useMemo(() => gapStatesFor(sections, revealed), [sections, revealed]);
 
   // tokenize each whole file once; multi-line constructs stay correct and lines are looked up by number.
   const oldHl = useHighlightedLines(oldContent, lang);
@@ -150,21 +152,24 @@ export function DiffViewer({
   }, [items]);
 
   const expandGap = useCallback(
-    (id: string, hiddenLen: number, dir: 'top' | 'bottom' | 'all') => {
-      setGapStateStore((prev) => {
-        const states = prev.sections === sections ? prev.states : {};
-        const cur = states[id] ?? { top: 0, bottom: 0 };
-        const remaining = hiddenLen - cur.top - cur.bottom;
+    (id: string, _hiddenLen: number, dir: 'top' | 'bottom' | 'all') => {
+      const gap = sections.find((section) => section.kind === 'gap' && section.id === id);
+      if (!gap || gap.kind !== 'gap') return;
+      setRevealStore((prev) => {
+        const current = prev.items === items ? prev.revealed : EMPTY_REVEALED;
+        const { top, bottom } = gapStatesFor([gap], current)[id] ?? { top: 0, bottom: 0 };
+        const remaining = gap.hidden.length - top - bottom;
         if (remaining <= 0) return prev;
-        if (dir === 'all') {
-          return { sections, states: { ...states, [id]: { top: cur.top + remaining, bottom: cur.bottom } } };
-        }
-        const add = Math.min(EXPAND_CHUNK, remaining);
-        if (dir === 'top') return { sections, states: { ...states, [id]: { ...cur, top: cur.top + add } } };
-        return { sections, states: { ...states, [id]: { ...cur, bottom: cur.bottom + add } } };
+        let from = top;
+        let to = gap.hidden.length - bottom;
+        if (dir === 'top') to = top + Math.min(EXPAND_CHUNK, remaining);
+        if (dir === 'bottom') from = to - Math.min(EXPAND_CHUNK, remaining);
+        const next = new Set(current);
+        for (let i = from; i < to; i++) next.add(gap.hidden[i]);
+        return { items, revealed: next };
       });
     },
-    [sections]
+    [sections, items]
   );
 
   const rows = useMemo(
@@ -378,12 +383,15 @@ function DiffBody({
   useEffect(() => {
     const viewChanged = previousViewRef.current !== view;
     previousViewRef.current = view;
+    // Without windowing the browser owns the scroll position, and `maxScrollTop` is 0. Clamping to it
+    // would jump the pane to the top, e.g. when a widget turns windowing off while scrolled down.
+    if (!windowing && !viewChanged) return;
     setScrollTop((current) => {
       const next = viewChanged ? 0 : Math.min(current, maxScrollTop);
       if (scrollRef.current && scrollRef.current.scrollTop !== next) scrollRef.current.scrollTop = next;
       return current === next ? current : next;
     });
-  }, [view, maxScrollTop]);
+  }, [view, maxScrollTop, windowing]);
 
   // cancel a pending scroll RAF on unmount — DiffBody is conditionally mounted (collapse hides it),
   // so a queued frame could otherwise fire setScrollTop() after unmount.

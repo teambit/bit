@@ -15,6 +15,10 @@ jest.mock('./code-compare-view', () => ({
     mockViewProps.push(props);
     return null;
   },
+  CodeCompareViewLoader: () => {
+    mockViewProps.push({ loader: true });
+    return null;
+  },
 }));
 jest.mock('./code-compare-tree', () => ({ CodeCompareTree: () => null }));
 jest.mock('./code-compare.widgets', () => ({ Widget: () => null }));
@@ -94,7 +98,7 @@ describe('CodeCompare', () => {
     expect(props.files).toEqual(['b.tsx', 'd.tsx', 'a.tsx', 'c.tsx']);
   });
 
-  it('holds the file list back while the compare data loads', () => {
+  it('shows the loader, not a fallback file, while the file list loads', () => {
     mockViewProps.length = 0;
     mockUseCode.mockReturnValue({ fileTree: ['a.tsx'], mainFile: 'a.tsx', loading: false });
     mockUseComponentCompare.mockReturnValue({
@@ -105,6 +109,6 @@ describe('CodeCompare', () => {
 
     renderToStaticMarkup(<CodeCompare />);
 
-    expect(mockViewProps[0].files).toEqual([]);
+    expect(mockViewProps).toEqual([{ loader: true }]);
   });
 });

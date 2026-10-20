@@ -183,6 +183,8 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
   // allow the body to shrink inside flex/grid hosts so it scrolls its own (wide) content
   // horizontally instead of forcing the page wider.
   min-width: 0;
+  // lets a widget row size to the visible pane (`100cqi`) rather than the scrolled track.
+  container-type: inline-size;
 }
 
 // Unified: the track grows to the longest line so the body scrolls it horizontally (one scrollbar).
@@ -511,7 +513,15 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 // a full-width host block anchored under its line — variable height, so it opts the file out of
 // fixed-row virtualization (see `hasWidgets` in the viewer).
 .widgetRow {
-  width: 100%;
+  // The unified track is as wide as the longest code line. Sized and pinned to the visible pane, the
+  // widget wraps its text there instead of widening the track, and stays in view when the code is
+  // scrolled sideways. `contain` keeps its content out of the track's max-content width.
+  position: sticky;
+  left: 0;
+  width: 100cqi;
+  max-width: 100%;
+  box-sizing: border-box;
+  contain: inline-size;
   background: $surface-1;
   border-top: 1px solid $border;
   border-bottom: 1px solid $border;

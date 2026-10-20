@@ -15,7 +15,7 @@ import { useLocation } from '@teambit/base-react.navigation.link';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { CodeCompareTree } from './code-compare-tree';
 import type { CodeCompareViewProps } from './code-compare-view';
-import { CodeCompareView } from './code-compare-view';
+import { CodeCompareView, CodeCompareViewLoader } from './code-compare-view';
 import { Widget } from './code-compare.widgets';
 
 import styles from './code-compare.module.scss';
@@ -59,12 +59,13 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
   // `undefined` while the compare data loads; `null` when there is none. The diff waits for the same.
   const compareDataLoading = !!componentCompareContext && fileCompareDataByName === undefined;
+  const listLoading = baseTreeLoading || compareTreeLoading || compareDataLoading;
 
   // Build the list only when both file trees and the compare data have landed. Building it earlier
   // reshuffled the file tabs and the tree on first load: the two trees resolve in either order, and
   // the changed files moved to the top only when the compare data arrived.
   const { fileTree, firstChangedFile } = useMemo(() => {
-    if (baseTreeLoading || compareTreeLoading || compareDataLoading) return { fileTree: [] as string[] };
+    if (listLoading) return { fileTree: [] as string[] };
     const allFiles = uniq<string>((baseFileTree || []).concat(compareFileTree || []));
     if (!fileCompareDataByName) return { fileTree: allFiles };
     const isChanged = (file: string) => {
@@ -78,9 +79,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
     const firstChanged = mainFile && isChanged(mainFile) ? mainFile : sorted.find(isChanged);
     return { fileTree: sorted, firstChangedFile: firstChanged };
   }, [
-    baseTreeLoading,
-    compareTreeLoading,
-    compareDataLoading,
+    listLoading,
     baseFileTree,
     compareFileTree,
     fileCompareDataByName,
@@ -94,6 +93,9 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
       state?.id || selectedFileFromParams || firstChangedFile || mainFile || DEFAULT_FILE,
     [state?.id, selectedFileFromParams, firstChangedFile, mainFile]
   );
+  // Without an explicit file, the file to open depends on the list. Opening a fallback before the list
+  // lands would load and show that file, then switch to the first changed file.
+  const waitForList = !state?.id && !selectedFileFromParams && listLoading;
 
   const controlledHref = useUpdatedUrlFromQuery({});
   const useHref = (node: any) => {
@@ -165,14 +167,18 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
         </Pane>
         <HoverSplitter className={styles.splitter} />
         <Pane className={classNames(styles.right, styles.dark, !isSidebarOpen && styles.collapsed)}>
-          <CodeView
-            widgets={[Widget]}
-            fileName={selectedFile}
-            files={fileTree}
-            getHref={useHref}
-            onTabClicked={hook?.onClick}
-            fileIconSlot={fileIconSlot}
-          />
+          {waitForList ? (
+            <CodeCompareViewLoader />
+          ) : (
+            <CodeView
+              widgets={[Widget]}
+              fileName={selectedFile}
+              files={fileTree}
+              getHref={useHref}
+              onTabClicked={hook?.onClick}
+              fileIconSlot={fileIconSlot}
+            />
+          )}
         </Pane>
       </SplitPane>
     </div>
