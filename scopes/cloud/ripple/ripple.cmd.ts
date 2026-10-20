@@ -412,21 +412,19 @@ export class RippleErrorsCmd implements Command {
     const blockedComponents = otherNodes.flatMap((n) => n.componentIds);
 
     if (failedComponents.length === 0) {
+      lines.push('');
       if (isFailedPhase(job.status?.phase)) {
-        lines.push('');
         lines.push(
           chalk.yellow(`${totalComponents} component(s) in this job — no individual component failures found.`)
         );
         lines.push(chalk.yellow('The failure may be in a pipeline-level step. Check the Ripple CI URL above.'));
       } else if (blockedComponents.length) {
-        lines.push('');
         lines.push(
           formatWarningSummary(
             `No failures so far. ${blockedComponents.length} of ${totalComponents} component(s) not built yet.`
           )
         );
       } else {
-        lines.push('');
         lines.push(chalk.green(`All ${totalComponents} component(s) built successfully.`));
       }
       return lines.join('\n');

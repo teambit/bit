@@ -70,6 +70,8 @@ export type ComponentBuildSummary = {
 
 export type CiGraphNode = {
   componentIds: string[];
+  /** the component ids with the versions built in the job */
+  versionedIds: string[];
   containerName: string;
   phase: string;
 };
@@ -266,21 +268,16 @@ export class RippleMain {
    * each node represents a build container that builds one or more components.
    */
   getCiGraphNodes(job: { ciGraph?: string }): CiGraphNode[] {
-    return this.parseCiGraph(job).map(({ versionedIds, ...node }) => ({
-      ...node,
-      componentIds: versionedIds.map((id) => stripComponentVersion(id)),
-    }));
-  }
-
-  private parseCiGraph(job: { ciGraph?: string }) {
     if (!job.ciGraph) return [];
     try {
       const graph = JSON.parse(job.ciGraph) as { nodes?: Array<{ id: string; attr: string | Record<string, any> }> };
       if (!graph.nodes) return [];
       return graph.nodes.map((node) => {
         const attr = typeof node.attr === 'string' ? JSON.parse(node.attr) : node.attr;
+        const versionedIds: string[] = attr.ids || [];
         return {
-          versionedIds: (attr.ids || []) as string[],
+          componentIds: versionedIds.map((id) => stripComponentVersion(id)),
+          versionedIds,
           containerName: attr.status?.name || node.id,
           phase: attr.status?.phase || 'UNKNOWN',
         };
@@ -298,14 +295,15 @@ export class RippleMain {
     job: { id: string; ciGraph?: string },
     componentId: string
   ): Promise<ComponentBuildSummary | null> {
-    const versionedId = componentId.includes('@')
+    const hasVersion = stripComponentVersion(componentId) !== componentId;
+    const versionedId = hasVersion
       ? componentId
-      : this.parseCiGraph(job)
+      : (this.getCiGraphNodes(job)
           .flatMap((node) => node.versionedIds)
-          .find((id) => stripComponentVersion(id) === componentId);
+          .find((id) => stripComponentVersion(id) === componentId) ?? componentId);
     const data = await this.fetchRippleGQL<{ getComponentBuildSummary: ComponentBuildSummary }>(
       RippleMain.GET_COMPONENT_BUILD_SUMMARY,
-      { jobId: job.id, componentId: versionedId || componentId }
+      { jobId: job.id, componentId: versionedId }
     );
     return data?.getComponentBuildSummary ?? null;
   }
