@@ -62,3 +62,5 @@ mod file_history;
 mod stash;
 
 mod untag;
+
+mod use_cmd;

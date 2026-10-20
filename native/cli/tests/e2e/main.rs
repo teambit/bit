@@ -7,6 +7,7 @@
 
 mod commands;
 mod flows;
+mod functionalities;
 mod harmony;
 mod helper;
 mod known_failure;

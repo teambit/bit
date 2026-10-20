@@ -1,5 +1,6 @@
 //! Validate the bounded inbound command protocol before remote reads or writes.
 use super::{Prepare, invalid};
+use serde_json::Value;
 use std::io;
 
 pub(super) fn validate(input: &Prepare) -> io::Result<()> {
@@ -20,7 +21,10 @@ fn validate_phase(input: &Prepare, publication: bool) -> io::Result<()> {
     {
         return Err(invalid("inbound command requires canonical lifecycle"));
     }
-    if input.options.from_original_scope || !valid_operation(input) {
+    if input.options.from_original_scope
+        || !valid_operation(input)
+        || has_local_unscoped_conflict(input)?
+    {
         return Err(invalid("inbound command requires canonical lifecycle"));
     }
     validate_override(input)?;
@@ -138,6 +142,34 @@ fn valid_write_mode(input: &Prepare) -> bool {
     } else {
         input.bitmap_history_file_id.is_some()
     }
+}
+
+fn is_unscoped_match(key: &str, row: &Value, raw_id: &str) -> bool {
+    if key == "$schema-version" {
+        return false;
+    }
+    let has_scope = row["scope"]
+        .as_str()
+        .is_some_and(|scope| !scope.is_empty());
+    !has_scope && (key == raw_id || row["name"].as_str() == Some(raw_id))
+}
+
+fn has_local_unscoped_conflict(input: &Prepare) -> io::Result<bool> {
+    let Ok(bitmap) = super::config::document(&input.root.join(".bitmap")) else {
+        return Ok(false);
+    };
+    let Some(rows) = bitmap.as_object() else {
+        return Ok(false);
+    };
+    for id in &input.ids {
+        let (raw_id, _) = id
+            .split_once('@')
+            .unwrap_or((id.as_str(), ""));
+        if rows.iter().any(|(key, row)| is_unscoped_match(key, row, raw_id)) {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
 fn validate_adoption(input: &Prepare) -> io::Result<()> {

@@ -108,7 +108,7 @@ fn failure(
     owned: bool,
     error: io::Error,
 ) -> io::Result<Outcome> {
-    if owned {
+    if owned && !error.to_string().starts_with("the engine declined") {
         return output::execute(root, args, options, |_| Err(error));
     }
     Ok(Outcome::Declined(format!("{}: {error}", options.operation)))

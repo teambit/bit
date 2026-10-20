@@ -813,9 +813,9 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/flows/big-file.e2e.ts`
 
-- [ ] `e2e/flows/big-file.e2e.ts:34` big text file › Windows format (\\r\\n) › tagging the component should not throw any error
-- [ ] `e2e/flows/big-file.e2e.ts:45` big text file › Windows format (\\r\\n) › exporting and importing the component › should work with no errors
-- [ ] `e2e/flows/big-file.e2e.ts:48` big text file › Windows format (\\r\\n) › exporting and importing the component › should import the big file
+- [x] `e2e/flows/big-file.e2e.ts:34` big text file › Windows format (\\r\\n) › tagging the component should not throw any error
+- [x] `e2e/flows/big-file.e2e.ts:45` big text file › Windows format (\\r\\n) › exporting and importing the component › should work with no errors
+- [x] `e2e/flows/big-file.e2e.ts:48` big text file › Windows format (\\r\\n) › exporting and importing the component › should import the big file
 
 ### `e2e/flows/bitmap-deleted.e2e.ts`
 
@@ -889,7 +889,7 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/flows/import-package-json.e2e.ts`
 
-- [ ] `e2e/flows/import-package-json.e2e.ts:23` component with package.json as a file of the component › bit version >= 14.8.0 should ignore package.json files altogether › should not track the package.json file
+- [x] `e2e/flows/import-package-json.e2e.ts:23` component with package.json as a file of the component › bit version >= 14.8.0 should ignore package.json files altogether › should not track the package.json file
 
 ### `e2e/flows/out-of-sync-componets.e2e.ts`
 
@@ -916,34 +916,34 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/flows/remote-commands-outside-workspace.e2e.ts`
 
-- [ ] `e2e/flows/remote-commands-outside-workspace.e2e.ts:31` bit remote command › exporting a component to a global remote › bit status should throw an error OutsideWorkspaceError
-- [ ] `e2e/flows/remote-commands-outside-workspace.e2e.ts:36` bit remote command › exporting a component to a global remote › bit list without --remote flag should throw an error ConsumerNotFound
-- [ ] `e2e/flows/remote-commands-outside-workspace.e2e.ts:41` bit remote command › exporting a component to a global remote › bit list with --remote flag should list the global remote successfully
-- [ ] `e2e/flows/remote-commands-outside-workspace.e2e.ts:45` bit remote command › exporting a component to a global remote › bit show --legacy should show the component and not throw an error about missing workspace
-- [ ] `e2e/flows/remote-commands-outside-workspace.e2e.ts:49` bit remote command › exporting a component to a global remote › bit show without --legacy should throw a descriptive error
-- [ ] `e2e/flows/remote-commands-outside-workspace.e2e.ts:58` bit remote command › exporting a component to a global remote › bit remove with --remote flag › should not throw an error
-- [ ] `e2e/flows/remote-commands-outside-workspace.e2e.ts:61` bit remote command › exporting a component to a global remote › bit remove with --remote flag › should remove successfully
+- [x] `e2e/flows/remote-commands-outside-workspace.e2e.ts:31` bit remote command › exporting a component to a global remote › bit status should throw an error OutsideWorkspaceError
+- [x] `e2e/flows/remote-commands-outside-workspace.e2e.ts:36` bit remote command › exporting a component to a global remote › bit list without --remote flag should throw an error ConsumerNotFound
+- [x] `e2e/flows/remote-commands-outside-workspace.e2e.ts:41` bit remote command › exporting a component to a global remote › bit list with --remote flag should list the global remote successfully
+- [x] `e2e/flows/remote-commands-outside-workspace.e2e.ts:45` bit remote command › exporting a component to a global remote › bit show --legacy should show the component and not throw an error about missing workspace
+- [x] `e2e/flows/remote-commands-outside-workspace.e2e.ts:49` bit remote command › exporting a component to a global remote › bit show without --legacy should throw a descriptive error
+- [x] `e2e/flows/remote-commands-outside-workspace.e2e.ts:58` bit remote command › exporting a component to a global remote › bit remove with --remote flag › should not throw an error
+- [x] `e2e/flows/remote-commands-outside-workspace.e2e.ts:61` bit remote command › exporting a component to a global remote › bit remove with --remote flag › should remove successfully
 
 ### `e2e/flows/same-name-different-scopes.e2e.ts`
 
-- [ ] `e2e/flows/same-name-different-scopes.e2e.ts:32` two components with the same name but different scope-name › importing objects from another scope › bit status should show the component as new
-- [ ] `e2e/flows/same-name-different-scopes.e2e.ts:58` two components with the same name but different scope-name › importing and using both in the same workspace › bitmap should have both and the keys should contain the scope-name to differentiate
-- [ ] `e2e/flows/same-name-different-scopes.e2e.ts:63` two components with the same name but different scope-name › importing and using both in the same workspace › bit status should show the new component correctly
-- [ ] `e2e/flows/same-name-different-scopes.e2e.ts:79` two components with the same name but different scope-name › importing and using both in the same workspace › having both components as imported › the workspace should be fine and not throw errors
-- [ ] `e2e/flows/same-name-different-scopes.e2e.ts:96` two components with the same name but different scope-name › creating two new components with the same name in the same workspace › bit list should list them both
-- [ ] `e2e/flows/same-name-different-scopes.e2e.ts:104` two components with the same name but different scope-name › creating two new components with the same name in the same workspace › tagging them both › should tag both of them
-- [ ] `e2e/flows/same-name-different-scopes.e2e.ts:108` two components with the same name but different scope-name › creating two new components with the same name in the same workspace › tagging them both › should export with no errors
+- [x] `e2e/flows/same-name-different-scopes.e2e.ts:32` two components with the same name but different scope-name › importing objects from another scope › bit status should show the component as new
+- [x] `e2e/flows/same-name-different-scopes.e2e.ts:58` two components with the same name but different scope-name › importing and using both in the same workspace › bitmap should have both and the keys should contain the scope-name to differentiate
+- [x] `e2e/flows/same-name-different-scopes.e2e.ts:63` two components with the same name but different scope-name › importing and using both in the same workspace › bit status should show the new component correctly
+- [x] `e2e/flows/same-name-different-scopes.e2e.ts:79` two components with the same name but different scope-name › importing and using both in the same workspace › having both components as imported › the workspace should be fine and not throw errors
+- [x] `e2e/flows/same-name-different-scopes.e2e.ts:96` two components with the same name but different scope-name › creating two new components with the same name in the same workspace › bit list should list them both
+- [x] `e2e/flows/same-name-different-scopes.e2e.ts:104` two components with the same name but different scope-name › creating two new components with the same name in the same workspace › tagging them both › should tag both of them
+- [x] `e2e/flows/same-name-different-scopes.e2e.ts:108` two components with the same name but different scope-name › creating two new components with the same name in the same workspace › tagging them both › should export with no errors
 
 ### `e2e/flows/sort-components-output.e2e.ts`
 
-- [ ] `e2e/flows/sort-components-output.e2e.ts:33` basic flow with dependencies › after adding components › bit status › should show all of them under new components
-- [ ] `e2e/flows/sort-components-output.e2e.ts:37` basic flow with dependencies › after adding components › bit status › should show new components sorted alphabetically
-- [ ] `e2e/flows/sort-components-output.e2e.ts:41` basic flow with dependencies › after adding components › bit list --local-scope should not show any component
-- [ ] `e2e/flows/sort-components-output.e2e.ts:54` basic flow with dependencies › after adding components › after tagging the components › bit status › should show all of them under staged components
-- [ ] `e2e/flows/sort-components-output.e2e.ts:58` basic flow with dependencies › after adding components › after tagging the components › bit status › should show staged components sorted alphabetically
-- [ ] `e2e/flows/sort-components-output.e2e.ts:62` basic flow with dependencies › after adding components › after tagging the components › bit list should show the components sorted alphabetically
-- [ ] `e2e/flows/sort-components-output.e2e.ts:82` basic flow with dependencies › after adding components › after tagging the components › after deleting the components › bit status › should show all of them under deleted components
-- [ ] `e2e/flows/sort-components-output.e2e.ts:85` basic flow with dependencies › after adding components › after tagging the components › after deleting the components › bit status › should show deleted components sorted alphabetically
+- [x] `e2e/flows/sort-components-output.e2e.ts:33` basic flow with dependencies › after adding components › bit status › should show all of them under new components
+- [x] `e2e/flows/sort-components-output.e2e.ts:37` basic flow with dependencies › after adding components › bit status › should show new components sorted alphabetically
+- [x] `e2e/flows/sort-components-output.e2e.ts:41` basic flow with dependencies › after adding components › bit list --local-scope should not show any component
+- [x] `e2e/flows/sort-components-output.e2e.ts:54` basic flow with dependencies › after adding components › after tagging the components › bit status › should show all of them under staged components
+- [x] `e2e/flows/sort-components-output.e2e.ts:58` basic flow with dependencies › after adding components › after tagging the components › bit status › should show staged components sorted alphabetically
+- [x] `e2e/flows/sort-components-output.e2e.ts:62` basic flow with dependencies › after adding components › after tagging the components › bit list should show the components sorted alphabetically
+- [x] `e2e/flows/sort-components-output.e2e.ts:82` basic flow with dependencies › after adding components › after tagging the components › after deleting the components › bit status › should show all of them under deleted components
+- [x] `e2e/flows/sort-components-output.e2e.ts:85` basic flow with dependencies › after adding components › after tagging the components › after deleting the components › bit status › should show deleted components sorted alphabetically
 
 ### `e2e/functionalities/auto-tagging.e2e.ts`
 
@@ -1004,13 +1004,13 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/functionalities/dynamic-namespaces.e2e.ts`
 
-- [ ] `e2e/functionalities/dynamic-namespaces.e2e.ts:30` dynamic namespaces › multi-level namespace. using name "${veryLongName}" › should save the component correctly on the model
-- [ ] `e2e/functionalities/dynamic-namespaces.e2e.ts:35` dynamic namespaces › multi-level namespace. using name "${veryLongName}" › bit status should show the component as staged
-- [ ] `e2e/functionalities/dynamic-namespaces.e2e.ts:40` dynamic namespaces › multi-level namespace. using name "${veryLongName}" › bit list should list the component
-- [ ] `e2e/functionalities/dynamic-namespaces.e2e.ts:44` dynamic namespaces › multi-level namespace. using name "${veryLongName}" › bit show should show the component with the correct name
-- [ ] `e2e/functionalities/dynamic-namespaces.e2e.ts:55` dynamic namespaces › multi-level namespace. using name "${veryLongName}" › after import › should create the directories according to the multiple namespaces
-- [ ] `e2e/functionalities/dynamic-namespaces.e2e.ts:74` dynamic namespaces › import a component with same id string as a local different component › should throw an error and not allow the import
-- [ ] `e2e/functionalities/dynamic-namespaces.e2e.ts:80` dynamic namespaces › import a component with same id string as a local different component › should throw an error also after tagging
+- [x] `e2e/functionalities/dynamic-namespaces.e2e.ts:30` dynamic namespaces › multi-level namespace. using name "${veryLongName}" › should save the component correctly on the model
+- [x] `e2e/functionalities/dynamic-namespaces.e2e.ts:35` dynamic namespaces › multi-level namespace. using name "${veryLongName}" › bit status should show the component as staged
+- [x] `e2e/functionalities/dynamic-namespaces.e2e.ts:40` dynamic namespaces › multi-level namespace. using name "${veryLongName}" › bit list should list the component
+- [x] `e2e/functionalities/dynamic-namespaces.e2e.ts:44` dynamic namespaces › multi-level namespace. using name "${veryLongName}" › bit show should show the component with the correct name
+- [x] `e2e/functionalities/dynamic-namespaces.e2e.ts:55` dynamic namespaces › multi-level namespace. using name "${veryLongName}" › after import › should create the directories according to the multiple namespaces
+- [x] `e2e/functionalities/dynamic-namespaces.e2e.ts:74` dynamic namespaces › import a component with same id string as a local different component › should throw an error and not allow the import
+- [x] `e2e/functionalities/dynamic-namespaces.e2e.ts:80` dynamic namespaces › import a component with same id string as a local different component › should throw an error also after tagging
 
 ### `e2e/functionalities/env-peer-deps-install.e2e.ts`
 
@@ -3912,7 +3912,7 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/use.e2e.ts`
 
-- [ ] `e2e/harmony/use.e2e.ts:18` bit use command › when the aspect is new › should not throw an error
+- [x] `e2e/harmony/use.e2e.ts:18` bit use command › when the aspect is new › should not throw an error
 
 ### `e2e/harmony/validate.e2e.ts`
 

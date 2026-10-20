@@ -26,9 +26,11 @@ mod inventory;
 mod lane;
 mod list;
 mod log;
+mod logout;
 mod merge;
 mod mini_status;
 mod move_paths;
+mod npmrc;
 mod pattern;
 mod patterns;
 mod recover;
@@ -50,7 +52,10 @@ mod system;
 mod tag;
 #[cfg(test)]
 mod test_support;
+mod unuse_cmd;
+mod use_cmd;
 mod version;
+mod whoami;
 mod workspace_command;
 
 use crate::native::Outcome;
@@ -88,9 +93,11 @@ pub const COMMANDS: &[Command] = &[
     lane::COMMAND,
     list::COMMAND,
     log::COMMAND,
+    logout::COMMAND,
     merge::COMMAND,
     mini_status::COMMAND,
     move_paths::COMMAND,
+    npmrc::COMMAND,
     pattern::COMMAND,
     recover::COMMAND,
     refactor::COMMAND,
@@ -105,7 +112,10 @@ pub const COMMANDS: &[Command] = &[
     switch::COMMAND,
     system::COMMAND,
     tag::COMMAND,
+    unuse_cmd::COMMAND,
+    use_cmd::COMMAND,
     version::COMMAND,
+    whoami::COMMAND,
 ];
 
 pub fn find(name: &str) -> Option<&'static Command> {
