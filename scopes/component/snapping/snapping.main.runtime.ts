@@ -401,20 +401,27 @@ export class SnappingMain {
     // extension, which mergeExtensionsData() reports as a data conflict (see loadAspectOnlyForIds). when it's not
     // loaded, it didn't change, so the env part of the stored policy is still valid. (the other parts, such as the
     // policies of aspects and the config, are calculated by mergeVariantPolicies() from the current config)
-    const storedEnvPolicy = VariantPolicy.parse(depResolverExt?.data.policy || []).filter(
-      (entry) => entry.source === 'env'
-    );
+    const storedPolicy = VariantPolicy.parse(depResolverExt?.data.policy || []);
+    const storedEnvPolicy = storedPolicy.filter((entry) => entry.source === 'env');
     // an env.jsonc env that is snapped along (e.g. merged as well) has its policy in its new files, like a workspace
     // that loads the env from its files. otherwise, the policy is read from the stored version of the env.
     const envPolicy =
       (await this.dependencyResolver.getEnvPolicyFromComponents(extensions, componentsInSnap)) ??
       (await this.dependencyResolver.getComponentEnvPolicyFromExtension(extensions, storedEnvPolicy));
+    // when the component is an env, its own policy (its own peers) is calculated from its env.jsonc or from the loaded
+    // env. same as above, an env that defines it in code and is not loaded didn't change, so the stored one is valid.
+    const envExtendsDeps = legacyComponent.dependencies.get();
+    const storedEnvOwnPolicy = storedPolicy.filter((entry) => entry.source === 'env-own');
+    const isEnvOwnPolicyMissing =
+      storedEnvOwnPolicy.length > 0 &&
+      !(await this.dependencyResolver.getPoliciesFromEnvForItself(component.id, legacyComponent.files, envExtendsDeps));
     const policy = await this.dependencyResolver.mergeVariantPolicies(
       extensions,
       component.id,
       legacyComponent.files,
-      legacyComponent.dependencies.get(),
-      envPolicy
+      envExtendsDeps,
+      // merged right after the env policy, same as mergeVariantPolicies() merges a calculated own policy
+      isEnvOwnPolicyMissing ? VariantPolicy.mergePolices([envPolicy, storedEnvOwnPolicy]) : envPolicy
     );
     // the "source" of each dependency in the dependency-resolver data is determined by this policy
     if (depResolverExt) depResolverExt.data.policy = policy.serialize();
