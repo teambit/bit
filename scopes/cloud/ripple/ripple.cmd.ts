@@ -2,7 +2,7 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import Table from 'cli-table';
 import type { LastExportData } from '@teambit/export';
-import { formatSuccessSummary, formatItem, formatHint, joinSections } from '@teambit/cli';
+import { formatSuccessSummary, formatWarningSummary, formatItem, formatHint, joinSections } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import type { RippleMain, RippleJob, CiGraphNode, SimulateNetwork } from './ripple.main.runtime';
@@ -412,7 +412,7 @@ export class RippleErrorsCmd implements Command {
     const blockedComponents = otherNodes.flatMap((n) => n.componentIds);
 
     if (failedComponents.length === 0) {
-      if (job.status?.phase?.toUpperCase() === 'FAILURE') {
+      if (isFailedPhase(job.status?.phase)) {
         lines.push('');
         lines.push(
           chalk.yellow(`${totalComponents} component(s) in this job — no individual component failures found.`)
@@ -421,7 +421,7 @@ export class RippleErrorsCmd implements Command {
       } else if (blockedComponents.length) {
         lines.push('');
         lines.push(
-          chalk.yellow(
+          formatWarningSummary(
             `No failures so far. ${blockedComponents.length} of ${totalComponents} component(s) not built yet.`
           )
         );
