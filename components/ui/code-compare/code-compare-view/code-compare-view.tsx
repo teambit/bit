@@ -47,13 +47,19 @@ export function CodeCompareView({
   const baseIdString = baseId?.toString();
   const compareIdString = compareId?.toString();
 
+  // The status alone is not enough: it is missing when the compare data is not there, e.g. when a
+  // version is compared with itself and Bit skips the compare query. Identical contents on both
+  // sides mean the same thing.
+  const isUnchanged =
+    fileStatus === 'UNCHANGED' || (originalFileContent !== undefined && originalFileContent === modifiedFileContent);
+
   let defaultView: EditorViewMode = 'split';
   if (
     !baseId ||
     (compareId && baseId.isEqual(compareId)) ||
     !originalFileContent ||
     !modifiedFileContent ||
-    fileStatus === 'UNCHANGED'
+    isUnchanged
   ) {
     defaultView = 'inline';
   }
@@ -127,9 +133,9 @@ export function CodeCompareView({
             wordWrap={wrap}
             // A file with no changes has nothing to collapse *toward*: diff-only would hide 100% of
             // it and leave a pane containing only an "Expand N unchanged lines" button, which reads
-            // as a broken view. The file tree only surfaces an UNCHANGED file when it is explicitly
+            // as a broken view. The file tree only surfaces an unchanged file when it is explicitly
             // selected, so that is exactly when the reader wants to see it.
-            diffOnly={diffOnly && fileStatus !== 'UNCHANGED'}
+            diffOnly={diffOnly && !isUnchanged}
             Loader={<CodeCompareViewLoader />}
             fullScreen={isFullScreen}
           />
