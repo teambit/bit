@@ -193,7 +193,9 @@ Each host method is removed once its behavior is ported to Rust.
 | `snap [pattern]` | native selection and dependent cascade; source and graph hashes, Version/model objects, parents and history, refs/index and local publication; workspace-root snapshots; generated packages and source links | published aspect/environment hooks, issue callbacks, editor, builder and package transformers; source bodies use private file spools | unsupported option syntax, malformed or over-budget receipts, corrupt repository inputs and unavailable published adapter modules decline before effects; after extension startup or publication, failures remain native |
 | `tag [patterns...]`, `t` | snapshot publication plus semantic versions, versions files, soft tags and persistence, registry-version retries, state/glob selectors, issue policies, graph rebuild/omission and workspace-root provenance | the same extension callbacks as snap; registry availability facts | tagging on lanes, invalid editor combinations and Node-unsupported soft premajor/preminor/prepatch persistence retain canonical validation |
 
-Import adoption qualification covers `--track-only`, `--write-to-empty-dir`, noninteractive `--dependents` / `--dependents-via` with `--silent`, and `--write-deps package.json|workspace.jsonc`. Strict same-path fixtures cover existing source preservation, destination collisions and incompatible options, graph paths and via filtering (including modified live workspace dependencies and configured-provider source edits), HTTP capture, highest-range publication across existing and newly imported components, and actual imported-target onLoad failure after publication. All 25 new strict same-path cases pass locally, including default installation with supported JSON output, edited-source docs caches, live component insertion order through pnpm manifests, and actual onLoad callback receipts. Nine original acceptance mappings are recorded, including an explicit delegation control for the ordinary occupied destination. The initial Linux production source `a800673fc` passes the [complete import baseline](../scripts/rust/benchmarks/import-adoption-completion-qualification.json): 450 correct pairs, 440 native pairs, and all 88 eligible native medians lower than Node. The subsequent session-owner heap allocation addresses Windows main-stack pressure. Import acknowledgments also compare native path components while preserving each proof path spelling, so equivalent Windows separators advance only the exact validated content hash. The [completed Windows-proof runtime qualification](../scripts/rust/benchmarks/import-adoption-fork-oracle-qualification.json) covers 450 correct pairs (440 native), with all 88 eligible native medians lower than Node. Twenty workload results retain their original source/controller/helper identities; ten missing workloads use independently prepared fork history transcripts and a clean rebuilt, byte-identical release executable. The archive preserves failed preparations, CPU-invalid attempts and raw backup evidence. These are warm-metadata Linux file-remote measurements against Node 22.22.0 / Bit 2.2.94, without cross-platform speed claims. Interactive dependent selection remains a separate pre-effect delegation boundary: even `--dependents-all` still asks for final confirmation without `--silent`, and a strict EOF control exercises the released success-exit/no-import path. The ordinary nonempty, untracked destination without `--write-to-empty-dir` retains its existing pre-effect delegation boundary; its control fixture explicitly requires delegation. Valid adoption modes and semantic option-validation errors require native ownership.
+Historical benchmark JSON reports linked below are preserved as files in the [benchmark evidence archive](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz) (SHA-256 `ebefd1cde2b05b020e1524359b015187558a5a76c50de71840c26be5d1fb8e4d`). The small summary and checksum index remain in Git.
+
+Import adoption qualification covers `--track-only`, `--write-to-empty-dir`, noninteractive `--dependents` / `--dependents-via` with `--silent`, and `--write-deps package.json|workspace.jsonc`. Strict same-path fixtures cover existing source preservation, destination collisions and incompatible options, graph paths and via filtering (including modified live workspace dependencies and configured-provider source edits), HTTP capture, highest-range publication across existing and newly imported components, and actual imported-target onLoad failure after publication. All 25 new strict same-path cases pass locally, including default installation with supported JSON output, edited-source docs caches, live component insertion order through pnpm manifests, and actual onLoad callback receipts. Nine original acceptance mappings are recorded, including an explicit delegation control for the ordinary occupied destination. The initial Linux production source `a800673fc` passes the [complete import baseline](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz): 450 correct pairs, 440 native pairs, and all 88 eligible native medians lower than Node. The subsequent session-owner heap allocation addresses Windows main-stack pressure. Import acknowledgments also compare native path components while preserving each proof path spelling, so equivalent Windows separators advance only the exact validated content hash. The [completed Windows-proof runtime qualification](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz) covers 450 correct pairs (440 native), with all 88 eligible native medians lower than Node. Twenty workload results retain their original source/controller/helper identities; ten missing workloads use independently prepared fork history transcripts and a clean rebuilt, byte-identical release executable. The archive preserves failed preparations, CPU-invalid attempts and raw backup evidence. These are warm-metadata Linux file-remote measurements against Node 22.22.0 / Bit 2.2.94, without cross-platform speed claims. Interactive dependent selection remains a separate pre-effect delegation boundary: even `--dependents-all` still asks for final confirmation without `--silent`, and a strict EOF control exercises the released success-exit/no-import path. The ordinary nonempty, untracked destination without `--write-to-empty-dir` retains its existing pre-effect delegation boundary; its control fixture explicitly requires delegation. Valid adoption modes and semantic option-validation errors require native ownership.
 
 The [lane-adoption qualification](../scripts/rust/benchmarks/lane-adoption-completion-summary.json) covers 41 workloads and 615 correct comparison pairs, including 605 native pairs. All 121 eligible native workload/mode medians are lower than Node 22.22.0 / Bit 2.2.94. The clean release executable was built with pinned Rust 1.97.0. These are warm-metadata Linux file-remote measurements in ordinary, CI and colored noninteractive PTY (`TERM=dumb`) modes; they do not establish cross-platform or interactive-terminal speed. Ten add error pairs intentionally delegate and are excluded from native speed claims.
 
@@ -239,7 +241,7 @@ This is historical qualification for that executable; changed code requires fres
 
 ### Component and scope fork qualification
 
-The [complete fork qualification](../scripts/rust/benchmarks/fork-planning-reuse-qualification.json)
+The [complete fork qualification](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 measures source `4799396e8131b5c9e6c05cc440d014d598f05a7c` against Node 22.22.0 /
 Bit 2.2.94. Its native-source SHA-256 is
 `93b0889c80289bf790342910cbfb9cb35147f880a9788f33dcb163254f64c0af` and release-binary
@@ -259,11 +261,11 @@ native workload/mode medians are lower. Non-TTY fork medians in milliseconds are
 | File-remote fork, ten components | 686.725 | 541.130 |
 | Scope fork, ten components | 864.747 | 733.166 |
 
-The [fork samples](../scripts/rust/benchmarks/fork-planning-reuse.json),
-[identity](../scripts/rust/benchmarks/fork-planning-reuse-identity.json),
-[add](../scripts/rust/benchmarks/fork-planning-reuse-add.json),
-[mutation](../scripts/rust/benchmarks/fork-planning-reuse-mutation.json) and
-[status/checkout/export](../scripts/rust/benchmarks/fork-planning-reuse-regressions.json)
+The [fork samples](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz),
+[identity](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz),
+[add](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz),
+[mutation](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz) and
+[status/checkout/export](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 reports retain every sample. Each complete workload qualified on its first attempt
 after 20 consecutive seconds below 30% aggregate CPU, with a closed 0.5-second
 monitor staying below 80%. The archive embeds the driver, raw CPU counters,
@@ -271,7 +273,7 @@ helper fingerprints and immutable source identity. These are controlled warm-met
 Linux file-remote results; HTTP behavior has functional coverage, without a network
 or cross-platform performance claim.
 
-The [earlier fork baseline](../scripts/rust/benchmarks/fork-completion-qualification.json)
+The [earlier fork baseline](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 remains unchanged: all 360 correctness pairs passed, but scope rename CI measured
 1021.802 ms in Rust versus 1014.847 ms in Node. The changed source reuses lazy
 package matchers across generic planning phases and combines added-component cache
@@ -287,7 +289,7 @@ Configured providers load before the authoritative mutation plan. A retained Har
 
 Unknown grammar and unsupported inputs delegate only before provider startup or another observable prefix. Once providers, caches, links or source publication have produced effects, failures remain owned by the native command. These operations preserve partial publication and callback output rather than rerunning the command through Node.
 
-The Linux release measurements in [`identity.json`](../scripts/rust/benchmarks/identity.json)
+The Linux release measurements in [`identity.json`](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 measure source `50ac1ea7c` against Node 22.22.0 / Bit 2.2.94. Subsequent Windows
 fixture and doctor diagnostic changes affect tests only; production sources and
 the measured release binary are unchanged. Five alternating pairs
@@ -303,16 +305,16 @@ file-remote comparisons. Non-TTY medians in milliseconds were:
 | Rename an exported component with dependent refactoring | 614.769 | 543.997 |
 
 All fifteen native identity medians were faster. Another 90 add pairs in
-[`identity-add-regressions.json`](../scripts/rust/benchmarks/identity-add-regressions.json)
+[`identity-add-regressions.json`](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 and 45 status/checkout/export pairs in
-[`identity-regressions.json`](../scripts/rust/benchmarks/identity-regressions.json)
+[`identity-regressions.json`](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 passed on the same source and binary; all 40 native workload/mode medians were
 faster. Ten intentionally delegated CI error pairs are excluded from native speed
 claims. Each complete workload was independently monitored after 20 consecutive
 seconds below 30% host CPU use, with a closed 0.5-second monitor staying below 80%.
-The [qualification evidence](../scripts/rust/benchmarks/identity-ci-fix-qualification.json)
+The [qualification evidence](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 retains raw counters, the qualification driver and invalid attempts. Earlier
-full-suite trials, including [`identity-contended.json`](../scripts/rust/benchmarks/identity-contended.json),
+full-suite trials, including [`identity-contended.json`](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz),
 remain explicitly invalid for performance. These are controlled warm-metadata,
 file-remote Linux fixtures, not first-use, network-remote or cross-platform claims.
 `scripts/rust/bench-identity.py` prepares and restores fixtures outside command
@@ -329,7 +331,7 @@ preserving every input proof, first-error order and serial provider/publication
 lifecycle. Native documentation cache reads and conservative empty-documentation
 AST proofs avoid redundant parsing; other sources retain the published parser.
 
-The [complete qualification evidence](../scripts/rust/benchmarks/workspace-mutation-batch-regex-qualification.json)
+The [complete qualification evidence](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 measures source `0f78ee808` against Node 22.22.0 / Bit 2.2.94. Five alternating
 pairs per non-TTY, CI and TTY mode passed all 270 full-output, exit-code,
 filesystem, cache, object, history, link/mode and file-remote comparisons. Of
@@ -348,18 +350,18 @@ Scope gains were modest: 4.2–4.5% in non-TTY/CI, while TTY was effectively tie
 (1018.503 ms Node versus 1017.679 ms Rust). Batch package refactoring reuses
 lazily compiled matchers, and fully cached capture avoids seeding the same
 classes twice; lifecycle callbacks, ordered errors and input proofs remain.
-The [mutation samples](../scripts/rust/benchmarks/workspace-mutation-batch-regex.json),
-[identity samples](../scripts/rust/benchmarks/workspace-mutation-batch-regex-identity.json),
-[add samples](../scripts/rust/benchmarks/workspace-mutation-batch-regex-add.json) and
-[status/checkout/export regressions](../scripts/rust/benchmarks/workspace-mutation-batch-regex-regressions.json)
+The [mutation samples](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz),
+[identity samples](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz),
+[add samples](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz) and
+[status/checkout/export regressions](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 use the same measured source and binary. Each complete workload qualified after
 20 consecutive seconds below 30% aggregate host CPU, with a closed 0.5-second
 monitor remaining below 80%. Every workload qualified on its first attempt;
 no samples or rows were removed or remeasured.
 
-The [earlier qualification](../scripts/rust/benchmarks/workspace-mutation-qualification.json)
+The [earlier qualification](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 retains source `a3393697c` and its preceding slower trials. The separate
-[numeric-target qualification](../scripts/rust/benchmarks/workspace-mutation-checkout-fix-qualification.json)
+[numeric-target qualification](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 retains source `3d404801a`: all 270 correctness pairs passed, but scope TTY was
 slower (1030.642 ms Rust versus 1018.141 ms Node). These reports retain their
 original fingerprints and samples. The current archive also includes 78 actual
@@ -451,7 +453,7 @@ The six workloads without configured callbacks measured 2.1–27× lower complet
 Configured callbacks measured 653 ms versus Node's 682 ms off a terminal, 653 ms versus 673 ms in
 CI, and 669 ms versus 677 ms on a TTY. An earlier full run had effectively tied callback TTY medians. These are local fixture measurements;
 the actual Harmony/extension bootstrap dominates the callback path. The
-[complete samples and fingerprints](../scripts/rust/benchmarks/transfer.json) include both slower
+[complete samples and fingerprints](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz) include both slower
 intermediate implementations and the final artifact. Reproduce the fixtures with
 `scripts/rust/prepare-transfer-benchmark.py` and measure all seven with
 `scripts/rust/bench-transfer-suite.py`; both require disposable remotes.
@@ -479,10 +481,10 @@ fixtures use Node 22.22.0 / Bit 2.2.94, disabled analytics and `log_level=fatal`
 The full doctor command measured 1.8× lower medians across the three modes; the published
 BVM lookup and external npm/yarn metadata remain part of the command. These are local fixture
 measurements, without a general or cross-platform speed guarantee. The
-[samples, fingerprints and settings](../scripts/rust/benchmarks/consolidation.json) are reproduced
+[samples, fingerprints and settings](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz) are reproduced
 by `scripts/rust/bench-provisioning.py` with explicit pinned Node/CLI and release binary paths.
 An additional 45 pairs verified status, checkout and export against the same release artifact;
-the [regression measurements](../scripts/rust/benchmarks/consolidation-regressions.json) include
+the [regression measurements](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz) include
 the exact commands, fixture fingerprints and complete-state verifier.
 
 ### Component tracking
@@ -506,7 +508,7 @@ includes a JavaScript stack also delegate before providers or publication;
 successful CI adds remain native. These delegated error cases are covered for
 parity and excluded from native performance claims.
 
-The Linux release qualification in [`add.json`](../scripts/rust/benchmarks/add.json)
+The Linux release qualification in [`add.json`](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 compares six complete commands against Node 22.22.0 / Bit 2.2.94 with five
 alternating pairs per non-TTY, TTY and CI mode (90 pairs: 80 native and 10 delegated
 CI errors). Output, exit status, workspace/repository files, modes, links,
@@ -526,13 +528,13 @@ Every native median was faster across the three modes; delegated CI error rows
 are excluded from speed claims. These timing records identify measured commit
 `e3ae55f49`. The subsequent outside-workspace diagnostics, filesystem-aware main-file casing
 and platform-specific test changes passed another 135 parity pairs; their
-[`add-final-contended.json`](../scripts/rust/benchmarks/add-final-contended.json) and
-[`add-regressions-final-contended.json`](../scripts/rust/benchmarks/add-regressions-final-contended.json)
+[`add-final-contended.json`](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz) and
+[`add-regressions-final-contended.json`](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 records are excluded from timing claims because peak host load exceeded 80%. These are controlled file-remote, warm builtin
 metadata fixtures, not first-use, network-remote or cross-platform performance
 claims. Records include source, binary, helper and fixture fingerprints and exact
 normalizations. A further 45 pairs in
-[`add-regressions.json`](../scripts/rust/benchmarks/add-regressions.json) qualify
+[`add-regressions.json`](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz) qualify
 status, checkout and export using the same release binary. Peak aggregate CPU use
 was 16.5%, sampled every 0.5 seconds after a quiet-minute start gate. A representative
 contended trial is retained with `performance_valid: false` and excluded from timing
@@ -556,7 +558,7 @@ after native materialization. The stash is consumed only after checkout succeeds
 failures retain the published persistence prefix.
 
 The Linux release qualification in
-[`scripts/rust/benchmarks/stash.json`](../scripts/rust/benchmarks/stash.json)
+[`scripts/rust/benchmarks/stash.json`](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 compares six complete workloads against Node 22.22.0 / Bit 2.2.94, with five
 alternating pairs in each of non-TTY, TTY and CI modes (90 pairs). All compared
 output, workspace, repository, package and retained global state matched. On these
@@ -576,7 +578,7 @@ measured gain was only 1.01–1.08× across modes, which is near parity. These r
 first-use, cross-platform or large-workspace performance. The record includes
 source, binary, helper and fixture fingerprints, exact normalizations and
 validated builtin-metadata prewarming shared by both implementations. A further
-45 pairs in [`stash-regressions.json`](../scripts/rust/benchmarks/stash-regressions.json)
+45 pairs in [`stash-regressions.json`](https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-pr10813-legacy-benchmarks-15ef7ef4e.tar.gz)
 qualify status, checkout and export using the same release binary. Host load was sampled
 every 0.5 seconds; peak aggregate CPU use was 17.3%. A separate contended trial
 is retained with `performance_valid: false` and is excluded from speedup evidence.
