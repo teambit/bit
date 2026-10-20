@@ -728,7 +728,9 @@ if you just want to get a quick look into this snap, create a new workspace and 
   private async getAllFlattenedDeps(bitIds: ComponentID[]): Promise<ComponentIdList> {
     const remoteComps = await this.scope.scopeImporter.getManyRemoteComponents(bitIds);
     const versions = remoteComps.getVersions();
-    return ComponentIdList.uniqFromArray(versions.flatMap((v) => [...v.flattenedDependencies]));
+    // the objects aren't written to the scope yet, so the flattened dependencies are loaded from the received objects.
+    const flattenedDeps = await Promise.all(versions.map((v) => v.loadFlattenedDependencies(remoteComps)));
+    return ComponentIdList.uniqFromArray(flattenedDeps.flatMap((deps) => [...deps]));
   }
 
   /**
@@ -747,7 +749,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
     const missingEdges: string[] = [];
     for (const { component, versionStr, version } of componentsAndVersions) {
       const edges = await version.getFlattenedEdges(this.scope.objects);
-      if (!edges.length && version.flattenedDependencies.length) {
+      if (!edges.length && (await version.loadFlattenedDependencies(this.scope.objects)).length) {
         missingEdges.push(`${component.toComponentId().toStringWithoutVersion()}@${versionStr}`);
         continue;
       }

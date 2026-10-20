@@ -1,7 +1,6 @@
 import React from 'react';
 import type { SearchResult, FuzzySearchItem } from '@teambit/explorer.ui.command-bar';
 import { FuzzySearcher } from '@teambit/explorer.ui.command-bar';
-import type { SearchProvider } from '@teambit/command-bar';
 import type { ComponentResultPlugin } from './component-result';
 import { ComponentResult } from './component-result';
 import type { ComponentModel } from '../component-model';
@@ -21,7 +20,7 @@ type ComponentSearcherOptions = {
   resultPlugins?: ComponentResultPlugin[];
 };
 
-export class ComponentSearcher extends FuzzySearcher<ComponentModel, ComponentSearchIdx> implements SearchProvider {
+export class ComponentSearcher extends FuzzySearcher<ComponentModel, ComponentSearchIdx> {
   constructor(public options: ComponentSearcherOptions) {
     super({ searchKeys });
   }

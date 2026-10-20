@@ -124,4 +124,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CIRCLE_TOKEN: ${{ secrets.CIRCLE_TOKEN }}
+          # a bit-core member's token for the merge fallback (master's push restriction excludes GITHUB_TOKEN)
+          MERGE_QUEUE_MERGE_TOKEN: ${{ secrets.MERGE_QUEUE_MERGE_TOKEN }}
           MERGE_QUEUE_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && 'true' || 'false' }}

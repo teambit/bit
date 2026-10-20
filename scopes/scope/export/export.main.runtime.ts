@@ -473,7 +473,8 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       const anySquashed = [...headPerCompIdStr.values()].some(({ headVersion }) => headVersion.squashed);
       if (!anySquashed) return; // no squash in this export set — no snap could have been dropped
       await mapSeries([...headPerCompIdStr.values()], async ({ entry: headEntry, headVersion }) => {
-        await mapSeries(headVersion.getAllFlattenedDependencies(), async (depId) => {
+        const flattenedDependencies = await headVersion.loadFlattenedDependencies(scope.objects);
+        await mapSeries(flattenedDependencies, async (depId) => {
           // the remote check validates only same-scope deps (it skips `depId.scope !== scope.name`),
           // so same-scope is all that needs shipping. also filters out most of the flattened list.
           if (depId.scope !== headEntry.modelComponent.scope) return;
@@ -699,34 +700,37 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       );
     };
     process.on('SIGINT', warnCancelExport);
-    let centralHubResults;
     try {
-      if (resumeExportId) {
-        const remotes = manyObjectsPerRemote.map((o) => o.remote);
-        await validateRemotes(remotes, resumeExportId);
-        await persistRemotes(manyObjectsPerRemote, resumeExportId);
-      } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
-        centralHubResults = await pushAllToCentralHub();
-      } else {
-        // await pushToRemotes();
-        await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
+      let centralHubResults;
+      try {
+        if (resumeExportId) {
+          const remotes = manyObjectsPerRemote.map((o) => o.remote);
+          await validateRemotes(remotes, resumeExportId);
+          await persistRemotes(manyObjectsPerRemote, resumeExportId);
+        } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
+          centralHubResults = await pushAllToCentralHub();
+        } else {
+          // await pushToRemotes();
+          await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
+        }
+      } catch (err: any) {
+        throw addScopesInvolvedToError(
+          err,
+          manyObjectsPerRemote.map((o) => o.remote.name)
+        );
       }
-    } catch (err: any) {
-      throw addScopesInvolvedToError(
-        err,
-        manyObjectsPerRemote.map((o) => o.remote.name)
-      );
-    }
 
-    this.logger.setStatusLine('updating data locally...');
-    const results = await updateLocalObjects(laneObject);
-    process.removeListener('SIGINT', warnCancelExport);
-    return {
-      newIdsOnRemote: results.map((r) => r.newIdsOnRemote).flat(),
-      exported: ComponentIdList.uniqFromArray(results.map((r) => r.exported).flat()),
-      updatedLocally: ComponentIdList.uniqFromArray(results.map((r) => r.updatedLocally).flat()),
-      rippleJobs: centralHubResults?.rippleJobs || [],
-    };
+      this.logger.setStatusLine('updating data locally...');
+      const results = await updateLocalObjects(laneObject);
+      return {
+        newIdsOnRemote: results.map((r) => r.newIdsOnRemote).flat(),
+        exported: ComponentIdList.uniqFromArray(results.map((r) => r.exported).flat()),
+        updatedLocally: ComponentIdList.uniqFromArray(results.map((r) => r.updatedLocally).flat()),
+        rippleJobs: centralHubResults?.rippleJobs || [],
+      };
+    } finally {
+      process.removeListener('SIGINT', warnCancelExport);
+    }
   }
 
   private transformToOneObjectListWithScopeData(objectsPerRemote: ObjectsPerRemote[]): ObjectList {

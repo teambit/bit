@@ -285,6 +285,9 @@ export class Watcher {
   }
 
   async watch() {
+    // the pre-compilation (when enabled) compiles all components after the wait, edits made meanwhile included.
+    // without it, the listeners are registered right away and each change waits for the install by itself.
+    if (this.options.preCompile) await this.waitForInstallRunningElsewhere();
     await this.setRootDirs();
     const componentIds = Object.values(this.rootDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, this.options);
@@ -662,7 +665,10 @@ export class Watcher {
     try {
       if (filePath.endsWith(BIT_MAP)) {
         this.bitMapChangesInProgress = true;
-        const buildResults = await this.watchQueue.add(() => this.handleBitmapChanges());
+        const buildResults = await this.watchQueue.add(async () => {
+          await this.waitForInstallRunningElsewhere(); // a .bitmap change may add components, which get compiled
+          return this.handleBitmapChanges();
+        });
         this.bitMapChangesInProgress = false;
         this.logger.clearStatusLine();
         return { results: buildResults, files: [filePath] };
@@ -687,10 +693,16 @@ export class Watcher {
       }
       this.changedFilesPerComponent[compIdStr] = [filePath];
       await this.sleep(DEBOUNCE_WAIT_MS);
+      // files changed meanwhile keep piling up in changedFilesPerComponent, so they're handled in one go afterwards
+      await this.waitForInstallRunningElsewhere();
       const files = this.changedFilesPerComponent[compIdStr];
       delete this.changedFilesPerComponent[compIdStr];
 
-      const buildResults = await this.watchQueue.add(() => this.triggerCompChanges(componentId, files));
+      const buildResults = await this.watchQueue.add(async () => {
+        // an install may have started while this job waited in the queue
+        await this.waitForInstallRunningElsewhere();
+        return this.triggerCompChanges(componentId, files);
+      });
       const failureMsg = buildResults.length
         ? undefined
         : `files ${files.join(', ')} are inside the component ${compIdStr} but configured to be ignored`;
@@ -703,6 +715,18 @@ export class Watcher {
       this.logger.clearStatusLine();
       return { results: [], files: [filePath], failureMsg: err.message };
     }
+  }
+
+  /**
+   * an install in another process may be replacing node_modules, and the on-change subscribers (e.g. the compiler)
+   * write into it. see IpcEventsMain.markInstallStarted().
+   */
+  private async waitForInstallRunningElsewhere() {
+    const { ipcEvents } = this.watcherMain;
+    const runningInstall = await ipcEvents.getInstallRunningElsewhere();
+    if (!runningInstall) return;
+    this.logger.setStatusLine(`waiting for the install running in process ${runningInstall.pid} to finish`);
+    await ipcEvents.waitForInstallRunningElsewhere();
   }
 
   private async sleep(ms: number) {

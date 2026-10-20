@@ -52,7 +52,7 @@ export type CiSwitchLaneOptions = SwitchLaneOptions & {
 import type { CiSyncConfig } from './sync/sync-config';
 import { SyncOrchestrator } from './sync/sync-orchestrator';
 import type { GitHostProvider } from './sync/git-host-provider';
-import { GitHubHostProvider } from './sync/github-client';
+import { GitHubHostProvider, gitHubApiUrl } from './sync/github-client';
 import { addAllExceptScopeAndModules, parseOriginHeadRef, remoteHeadBranch } from './sync/git-ops';
 import { isValidGitBranchName } from './sync/sync-config';
 import { NO_CHANGES_TO_SNAP, statusReportsUnsyncedWork } from './sync/sync-state';
@@ -274,9 +274,12 @@ export class CiMain {
     if (!pullRequestUrl) return undefined;
 
     try {
-      const { pathname } = new URL(pullRequestUrl);
+      const { hostname, pathname } = new URL(pullRequestUrl);
       const [, owner, repo, pullSegment, pullNumber] = pathname.split('/');
       if (!owner || !repo || pullSegment !== 'pull' || !pullNumber) return undefined;
+      // an enterprise API the environment can't vouch for gets no token, and no request
+      const api = gitHubApiUrl(hostname);
+      if ('error' in api) return undefined;
 
       const headers: Record<string, string> = {
         Accept: 'application/vnd.github+json',
@@ -287,7 +290,7 @@ export class CiMain {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5_000);
       try {
-        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`, {
+        const response = await fetch(`${api.url}/repos/${owner}/${repo}/pulls/${pullNumber}`, {
           headers,
           signal: controller.signal,
         });

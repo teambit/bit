@@ -78,13 +78,15 @@ function buildGraph(components: Component[]): Graph {
   components.forEach((component) => {
     const idStr = component.id.toStringWithoutVersion();
     component.getAllDependencies().forEach((dependency: Dependency) => {
-      if (componentsIds.searchWithoutVersion(dependency.id)) {
-        const depId = dependency.id.toStringWithoutVersion();
-        // save the full ComponentID of a string id to be able to retrieve it later with no confusion
-        if (!graph.hasNode(idStr)) graph.setNode(idStr, component.id);
-        if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
-        graph.setEdge(idStr, depId);
-      }
+      if (!componentsIds.searchWithoutVersion(dependency.id)) return;
+      const depId = dependency.id.toStringWithoutVersion();
+      // the component uses the version set in its config (e.g. "bit deps set"), not the workspace one. so a change in
+      // the workspace one doesn't affect it.
+      if (component.isDependencyVersionFromConfig(dependency.id)) return;
+      // save the full ComponentID of a string id to be able to retrieve it later with no confusion
+      if (!graph.hasNode(idStr)) graph.setNode(idStr, component.id);
+      if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
+      graph.setEdge(idStr, depId);
     });
   });
   return graph;

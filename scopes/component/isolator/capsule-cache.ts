@@ -33,6 +33,8 @@ export const CAPSULE_ORIGIN_FILE = '.bit-capsule-origin.json';
 export const CAPSULE_TRASH_DIR = '.trash';
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+// one auto-prune per process is enough, so a later harmony load replaces the hook of the previous one
+const AUTO_PRUNE_HOOK_KEY = 'teambit.component/isolator:auto-prune';
 
 export type CapsuleKind = 'workspace' | 'scope-aspects-root' | 'scope-aspect' | 'scope';
 
@@ -194,7 +196,7 @@ export class CapsuleCache {
       } catch (err: any) {
         this.logger.debug(`auto-prune skipped due to error: ${err?.message ?? err}`);
       }
-    });
+    }, AUTO_PRUNE_HOOK_KEY);
   }
 
   private async maybeAutoPrune(): Promise<void> {

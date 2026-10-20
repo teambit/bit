@@ -88,8 +88,11 @@ export class DependencyGraph {
     // set all edges
     // @todo: currently the label is "require". Change it to be "direct" and "indirect" depends on whether it comes from
     // flattenedDependencies or from dependencies.
-    Object.keys(depObj).forEach((id) =>
-      depObj[id].flattenedDependencies.forEach((dep) => graph.setEdge(id, dep.toString(), 'require'))
+    await Promise.all(
+      Object.keys(depObj).map(async (id) => {
+        const flattenedDependencies = await depObj[id].loadFlattenedDependencies(scope.objects);
+        flattenedDependencies.forEach((dep) => graph.setEdge(id, dep.toString(), 'require'));
+      })
     );
     return graph;
   }

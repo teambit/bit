@@ -1188,6 +1188,7 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     // ConsumerComponent instance is changed, the Version will be changed as well, and since
     // the Version instance is saved in the Repository._cache, the next time a Version instance
     // is retrieved, it'll be different than the first time.
+    let flattenedDependencies: ComponentIdList | undefined;
     const consumerComponent = new ConsumerComponent({
       name: this.name,
       version: componentVersion.version,
@@ -1198,8 +1199,9 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       mainFile: version.mainFile,
       dependencies: this.addDepsInfoFromDepsResolver(version.dependencies, extensions),
       devDependencies: this.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
-      // a new list, but the ids themselves are immutable, no need to clone them
-      flattenedDependencies: ComponentIdList.fromArray(version.flattenedDependencies),
+      // built on first read and shared with clones (which copy this loader). a failed load is not kept, so it throws again.
+      loadFlattenedDependencies: () =>
+        (flattenedDependencies ??= ComponentIdList.fromArray(version.loadFlattenedDependenciesSync(repository))),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),

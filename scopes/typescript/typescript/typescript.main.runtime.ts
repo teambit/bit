@@ -481,9 +481,17 @@ export class TypescriptMain {
     const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);
     cli.register(checkTypesCmd);
 
-    // serve components whose env provides no schema extractor (e.g. the default empty-env)
+    // serve components whose env provides no schema extractor (e.g. the default empty-env).
+    // the schema aspect types the transformers as unknown[] on purpose, so it does not import this
+    // aspect (see the decoupling in #10769) - this is the boundary where they get their real types.
     schema.registerFallbackExtractorFactory((tsserverPath, contextPath, schemaTransformers, apiTransformers) =>
-      tsMain.createSchemaExtractor(undefined, tsserverPath, contextPath, schemaTransformers, apiTransformers)
+      tsMain.createSchemaExtractor(
+        undefined,
+        tsserverPath,
+        contextPath,
+        schemaTransformers as SchemaTransformer[] | undefined,
+        apiTransformers as SchemaNodeTransformer[] | undefined
+      )
     );
 
     return tsMain;

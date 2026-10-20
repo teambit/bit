@@ -467,6 +467,14 @@ For GitHub, the command reads **`BIT_GITHUB_TOKEN` before `GITHUB_TOKEN`**. GitH
 `GITHUB_TOKEN` on every job, so an override needs the higher priority. The command reads the repository from
 `GITHUB_REPOSITORY`. If that variable is absent, the command reads the `origin` remote.
 
+On GitHub Enterprise Server, the command also claims an `origin` remote on the host that `GITHUB_SERVER_URL`
+names, and sends the API requests for that host to `GITHUB_API_URL`. GitHub Actions sets both variables on
+every job. Outside Actions, set `GITHUB_SERVER_URL` (for example `https://ghe.example.com`); without
+`GITHUB_API_URL` the API defaults to `https://ghe.example.com/api/v3`. A `GITHUB_API_URL` must be on the server
+host or on `api.<server host>` (GHE.com data residency), and must be `https` when the server is; any other
+value is refused with a warning and the GitHub provider stays unconfigured, so the enterprise token is never
+sent elsewhere. A github.com remote on such a runner still uses `https://api.github.com`.
+
 ---
 
 ## Configuration

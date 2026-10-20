@@ -156,6 +156,11 @@ export class InstallMain {
 
   private oldNonLoadedEnvs: string[] = [];
 
+  /** nesting depth of _installModules, so the install marker is written once and removed by the outermost call */
+  private runningInstalls = 0;
+
+  private installMarkerUpdate = Promise.resolve();
+
   constructor(
     private dependencyResolver: DependencyResolverMain,
 
@@ -392,13 +397,27 @@ export class InstallMain {
     this.workspace.inInstallContext = true;
     this.workspace.inInstallAfterPmContext = false;
     this.logger.profile('install.total');
+    // let other bit processes of this workspace know not to write into node_modules meanwhile (nested installs share
+    // one marker). see IpcEventsMain.markInstallStarted()
+    if (this.runningInstalls++ === 0) await this.updateInstallMarker(() => this.ipcEvents.markInstallStarted());
     try {
       return await this._installModulesProfiled(options);
     } finally {
+      if (--this.runningInstalls === 0) await this.updateInstallMarker(() => this.ipcEvents.markInstallEnded());
       this.logger.profile('install.total');
       this.workspace.inInstallContext = prevInInstallContext;
       this.workspace.inInstallAfterPmContext = prevInInstallAfterPmContext;
     }
+  }
+
+  /**
+   * serialized, so the removal by an ending install can't land after the write of an install that started meanwhile
+   */
+  private updateInstallMarker(update: () => Promise<void>): Promise<void> {
+    this.installMarkerUpdate = this.installMarkerUpdate.then(update).catch((err) => {
+      this.logger.debug(`failed to update the install marker: ${err.message}`);
+    });
+    return this.installMarkerUpdate;
   }
 
   private async _installModulesProfiled(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
@@ -871,36 +890,42 @@ export class InstallMain {
         })
       )
     );
-    await Promise.all(
-      loadedPlugins.map(async ({ plugins: plugin, id }) => {
-        const runtime = plugin.getRuntime(MainRuntime);
-        if (!runtime) return;
-        // the reload is best-effort (resolveAspects above runs with throwOnError: false). the
-        // provider requires the plugin files, which may not be requirable yet, e.g. an env in a
-        // fresh workspace whose dist was not compiled - it will be loaded later, once compiled
-        // (the compile phase of this very install). only that transient state is tolerated - a
-        // plugin failing with a genuine error must still fail the install, otherwise a "success"
-        // is reported for an env the user has to fix.
-        try {
-          await runtime.provider(undefined, undefined, undefined, this.harmony);
-        } catch (err: any) {
-          const notRequirableYet =
-            err.code === 'MODULE_NOT_FOUND' ||
-            err.code === 'ERR_MODULE_NOT_FOUND' ||
-            err.code === 'ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING' ||
-            err.code === 'ERR_REQUIRE_ESM' ||
-            err.message?.includes('Cannot find module') ||
-            // a CJS dist evaluated as ESM (or vice versa) - happens when the package manager
-            // re-created the env's package instance and its package.json is not in place yet
-            err.message?.includes('exports is not defined in ES module scope') ||
-            err.message?.includes('Cannot use import statement outside a module');
-          if (!notRequirableYet) throw err;
-          this.logger.consoleWarning(
-            `unable to reload the env ${id.toString()}, it will be loaded once compiled. error: ${err.message}`
-          );
+    // the provider registers the plugin, so run them one by one. a plugin that fails to load gets its component
+    // (and deps) compiled and is then re-loaded. in parallel, these compilations write the same files (e.g. of a
+    // shared env) while another plugin imports them. a failing plugin doesn't stop the others from registering.
+    let firstError: Error | undefined;
+    await pMapSeries(loadedPlugins, async ({ plugins: plugin, id }) => {
+      const runtime = plugin.getRuntime(MainRuntime);
+      if (!runtime) return;
+      // the reload is best-effort (resolveAspects above runs with throwOnError: false). the
+      // provider requires the plugin files, which may not be requirable yet, e.g. an env in a
+      // fresh workspace whose dist was not compiled - it will be loaded later, once compiled
+      // (the compile phase of this very install). only that transient state is tolerated - a
+      // plugin failing with a genuine error must still fail the install, otherwise a "success"
+      // is reported for an env the user has to fix.
+      try {
+        await runtime.provider(undefined, undefined, undefined, this.harmony);
+      } catch (err: any) {
+        const notRequirableYet =
+          err.code === 'MODULE_NOT_FOUND' ||
+          err.code === 'ERR_MODULE_NOT_FOUND' ||
+          err.code === 'ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING' ||
+          err.code === 'ERR_REQUIRE_ESM' ||
+          err.message?.includes('Cannot find module') ||
+          // a CJS dist evaluated as ESM (or vice versa) - happens when the package manager
+          // re-created the env's package instance and its package.json is not in place yet
+          err.message?.includes('exports is not defined in ES module scope') ||
+          err.message?.includes('Cannot use import statement outside a module');
+        if (!notRequirableYet) {
+          firstError ??= err;
+          return;
         }
-      })
-    );
+        this.logger.consoleWarning(
+          `unable to reload the env ${id.toString()}, it will be loaded once compiled. error: ${err.message}`
+        );
+      }
+    });
+    if (firstError) throw firstError;
   }
 
   /**

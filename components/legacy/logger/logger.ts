@@ -76,7 +76,7 @@ const commandHistoryFile = 'command-history';
 class BitLogger implements IBitLogger {
   logger: PinoLogger;
   private profiler: Profiler;
-  private onBeforeExitFns: Function[] = [];
+  private onBeforeExitFns = new Map<string | symbol, Function>();
 
   private _isDaemon = false; // 'bit cli' is a daemon as it should never exit the process, unless the user kills it
   private _rotationTimer: ReturnType<typeof setInterval> | undefined;
@@ -231,16 +231,42 @@ class BitLogger implements IBitLogger {
     if (shouldWriteToConsole) this.console(fullMsg);
   }
 
-  registerOnBeforeExitFn(fn: Function) {
-    this.onBeforeExitFns.push(fn);
+  /**
+   * @param key when given, a later registration with the same key replaces this one. pass it for a hook that each
+   * harmony load registers, so a process that loads harmony more than once keeps one copy of the hook, and not one
+   * per load (each copy keeps its harmony instance in memory).
+   */
+  registerOnBeforeExitFn(fn: Function, key?: string) {
+    this.onBeforeExitFns.set(key ?? Symbol('on-before-exit'), fn);
   }
 
-  async runOnBeforeExitFns() {
-    return pMapSeries(this.onBeforeExitFns, (fn) => fn());
+  /**
+   * @returns whether all the hooks succeeded
+   */
+  async runOnBeforeExitFns(): Promise<boolean> {
+    // each hook runs once. "bit cli" gets here after every command, and must not run the same hooks again each time.
+    const fns = [...this.onBeforeExitFns.values()];
+    this.onBeforeExitFns.clear();
+    let allSucceeded = true;
+    // the hooks are independent clean-ups, so one that fails must not stop the others
+    await pMapSeries(fns, async (fn) => {
+      try {
+        await fn();
+      } catch (err: any) {
+        allSucceeded = false;
+        const msg = `an on-before-exit hook failed: ${err?.message ?? err}`;
+        this.error(msg, err);
+        process.stderr.write(`${msg}\n`);
+      }
+    });
+    return allSucceeded;
   }
 
-  async exitAfterFlush(code = 0, commandName: string, cliOutput = '') {
+  async exitAfterFlush(commandCode = 0, commandName: string, cliOutput = '') {
     await Analytics.sendData();
+    const hooksSucceeded = await this.runOnBeforeExitFns();
+    // a failed clean-up fails the command, as it did when a failing hook stopped the exit with an error
+    const code = hooksSucceeded ? commandCode : commandCode || 1;
     const isSuccess = code === 0;
     const level = isSuccess ? 'info' : 'error';
     if (cliOutput) {
@@ -257,7 +283,6 @@ class BitLogger implements IBitLogger {
     // finalLogger[level](msg);
     this.logger[level](msg);
     this.writeCommandHistoryEnd(code);
-    await this.runOnBeforeExitFns();
     if (!this.isDaemon) process.exit(code);
   }
 

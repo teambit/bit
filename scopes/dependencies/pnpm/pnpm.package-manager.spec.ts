@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import type { ResolvedConfig } from '@pnpm/napi';
-import { PnpmPackageManager } from './pnpm.package-manager';
+import { PnpmPackageManager, mergeGraphLockfileIntoExisting } from './pnpm.package-manager';
 
 describe('PnpmPackageManager.getNetworkConfig', () => {
   it('uses the Bit user agent when no user agent is configured', async () => {
@@ -76,3 +76,82 @@ function createPackageManager(config: Partial<ResolvedConfig>) {
   });
   return packageManager;
 }
+
+describe('mergeGraphLockfileIntoExisting', () => {
+  function lockfile(pnpmfileChecksum?: string) {
+    return { lockfileVersion: '9.0', importers: {}, ...(pnpmfileChecksum ? { pnpmfileChecksum } : {}) };
+  }
+  /** A graph lockfile that adds a resolution to the merge. */
+  function resolved<T extends object>(graphLockfile: T) {
+    return { ...graphLockfile, packages: { 'foo@1.0.0': { resolution: { integrity: 'sha512-a' } } } };
+  }
+  /** An existing lockfile that holds resolutions of its own. */
+  function existing<T extends object>(existingLockfile: T) {
+    return { ...existingLockfile, packages: { 'bar@1.0.0': { resolution: { integrity: 'sha512-b' } } } };
+  }
+  const settings = { autoInstallPeers: true, dedupePeers: true };
+
+  it('keeps the pnpmfileChecksum both lockfiles were resolved with', () => {
+    const merged = mergeGraphLockfileIntoExisting(existing(lockfile('bit-1')), resolved(lockfile('bit-1')));
+    expect(merged.pnpmfileChecksum).to.equal('bit-1');
+  });
+
+  it('drops a pnpmfileChecksum the lockfiles disagree on', () => {
+    expect(
+      mergeGraphLockfileIntoExisting(existing(lockfile('bit-1')), resolved(lockfile('bit-2')))
+    ).not.to.have.property('pnpmfileChecksum');
+    expect(mergeGraphLockfileIntoExisting(existing(lockfile('bit-1')), resolved(lockfile()))).not.to.have.property(
+      'pnpmfileChecksum'
+    );
+  });
+
+  it('keeps the settings both lockfiles were resolved under', () => {
+    const merged = mergeGraphLockfileIntoExisting(
+      existing({ ...lockfile(), settings }),
+      resolved({ ...lockfile(), settings: { ...settings } })
+    );
+    expect(merged.settings).to.eql(settings);
+  });
+
+  it('drops settings the lockfiles disagree on', () => {
+    expect(
+      mergeGraphLockfileIntoExisting(
+        existing({ ...lockfile(), settings }),
+        resolved({ ...lockfile(), settings: { ...settings, dedupePeers: false } })
+      )
+    ).not.to.have.property('settings');
+    expect(
+      mergeGraphLockfileIntoExisting(existing({ ...lockfile(), settings }), resolved(lockfile()))
+    ).not.to.have.property('settings');
+  });
+
+  it('keeps the overrides both lockfiles were resolved with, and drops ones they disagree on', () => {
+    const overrides = { '@teambit/legacy@*': '-' };
+    expect(
+      mergeGraphLockfileIntoExisting(
+        existing({ ...lockfile(), overrides }),
+        resolved({ ...lockfile(), overrides: { ...overrides } })
+      ).overrides
+    ).to.eql(overrides);
+    expect(
+      mergeGraphLockfileIntoExisting(existing({ ...lockfile(), overrides }), resolved(lockfile()))
+    ).not.to.have.property('overrides');
+  });
+
+  it("takes the graph's checksum, settings and overrides when the existing lockfile has no resolutions", () => {
+    const overrides = { '@teambit/legacy@*': '-' };
+    const merged = mergeGraphLockfileIntoExisting(
+      { ...lockfile('hooks-1'), settings: { dedupePeers: false } },
+      resolved({ ...lockfile(), settings, overrides })
+    );
+    expect(merged).not.to.have.property('pnpmfileChecksum');
+    expect(merged.settings).to.eql(settings);
+    expect(merged.overrides).to.eql(overrides);
+  });
+
+  it('keeps the checksum and settings of the existing lockfile when the graph adds no resolutions', () => {
+    const merged = mergeGraphLockfileIntoExisting(existing({ ...lockfile('bit-1'), settings }), lockfile());
+    expect(merged.pnpmfileChecksum).to.equal('bit-1');
+    expect(merged.settings).to.eql(settings);
+  });
+});

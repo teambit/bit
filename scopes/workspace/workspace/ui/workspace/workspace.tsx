@@ -99,7 +99,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   if (!workspace) {
     // While the light workspace query resolves, show a full-shell skeleton instead of a blank
     // screen. The heavy per-component data (status, issues) streams in after first paint.
-    return <WorkspaceSkeleton />;
+    return <WorkspaceSkeleton isMinimal={isMinimal} showTopBar={showTopBar} />;
   }
 
   return (

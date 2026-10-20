@@ -166,6 +166,9 @@ function _convertLockfileToGraph(
   const graph = new DependenciesGraph({
     edges: buildEdges(lockfile, { directDependencies, componentIdByPkgName }),
     packages: buildPackages(lockfile, { componentIdByPkgName }),
+    pnpmfileChecksum: lockfile.pnpmfileChecksum,
+    lockfileSettings: lockfile.settings,
+    overrides: lockfile.overrides,
   });
   dropOrphanFilePkgs(graph);
   return graph;
@@ -353,6 +356,32 @@ export async function convertGraphToLockfile(
     importers: {},
     bit: { depsRequiringBuild },
   };
+  // Carry the readPackage hooks checksum the graph was resolved with, if any,
+  // so pnpm accepts the restored resolution only while the hooks are the same.
+  // Bit passes no hooks anymore, and the graph model translates the checksum of
+  // its last hooks into the overrides that replaced them.
+  //
+  // A graph saved before the graph recorded the checksum has none, and gets
+  // none here: pnpm then resolves its dependencies again. Stamping the current
+  // checksum on it would be wrong, because the hooks changed what they do to
+  // dependency manifests while such graphs were being saved (e.g. stripping
+  // `@teambit/harmony` from every dependency was added after graphs started
+  // being stored), so an old graph may hold resolutions the current hooks
+  // would not produce.
+  if (graph.pnpmfileChecksum != null) {
+    lockfile.pnpmfileChecksum = graph.pnpmfileChecksum;
+  }
+  // Carry the resolution settings the graph was resolved under as well. pnpm
+  // compares them with the install's settings, and a lockfile without them
+  // reads as resolved with dedupePeers and injectWorkspacePackages off, which
+  // Bit's installs never match, so every restored lockfile was resolved again.
+  if (graph.lockfileSettings != null) {
+    lockfile.settings = graph.lockfileSettings;
+  }
+  // And the overrides, which pnpm compares with the install's the same way.
+  if (graph.overrides != null) {
+    lockfile.overrides = graph.overrides;
+  }
   const rootEdge = graph.findRootEdge();
   if (rootEdge) {
     for (const [projectDir, manifest] of Object.entries(manifests)) {
