@@ -69,13 +69,13 @@ export function CodeCompareView({
   const [wrap, setWrap] = useState(true);
   const [diffOnly, setDiffOnly] = useState(true);
 
-  // The view follows `defaultView` until the reader picks one, and that pick holds only for the file
-  // and versions it was made on. It is derived on render: copying `defaultView` into state from an
-  // effect painted one frame in the loading-time view (unified) before switching to split.
+  // The view follows `defaultView` until the reader picks one. A pick is kept per file and versions, so
+  // going back to a file shows the view chosen for it. It is derived on render: copying `defaultView`
+  // into state from an effect painted one frame in the loading-time view (unified) before split.
   const viewKey = `${fileName}|${baseIdString}|${compareIdString}`;
-  const [chosenView, setChosenView] = useState<{ key: string; view: EditorViewMode }>();
-  const view = chosenView?.key === viewKey ? chosenView.view : defaultView;
-  const setView = (next: EditorViewMode) => setChosenView({ key: viewKey, view: next });
+  const [chosenViews, setChosenViews] = useState<Record<string, EditorViewMode>>({});
+  const view = chosenViews[viewKey] ?? defaultView;
+  const setView = (next: EditorViewMode) => setChosenViews((prev) => ({ ...prev, [viewKey]: next }));
 
   const codeNavFiles = useMemo(() => {
     return files.filter((file) => {

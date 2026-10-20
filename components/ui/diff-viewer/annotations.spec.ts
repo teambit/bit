@@ -50,6 +50,14 @@ describe('buildAnnotationIndex', () => {
     expect([...index.range]).toEqual([lineKey('new', 4), lineKey('new', 5), lineKey('new', 6)]);
   });
 
+  it('records the anchor line of every annotation', () => {
+    const index = buildAnnotationIndex([
+      { line: 3, range: { start: 3, end: 5 } },
+      { line: 7, side: 'old', gutter: 'b' },
+    ]);
+    expect([...index.anchored].sort()).toEqual(['new:3', 'old:7']);
+  });
+
   it('marks only the anchor line when an active annotation has no range', () => {
     const index = buildAnnotationIndex([{ line: 9, active: true }]);
 
@@ -93,6 +101,14 @@ describe('captureDiffSelection', () => {
     stubSelection('two lines', (node) => ['11', '12'].includes((node as Element).textContent ?? ''));
 
     expect(captureDiffSelection('new', root)).toEqual({ startLine: 11, endLine: 12, text: 'two lines' });
+  });
+
+  it('returns the selection only when it covers the acted-on line', () => {
+    const root = mountRows([10, 11, 12, 13]);
+    stubSelection('two lines', (node) => ['11', '12'].includes((node as Element).textContent ?? ''));
+
+    expect(captureDiffSelection('new', root, 12)).toEqual({ startLine: 11, endLine: 12, text: 'two lines' });
+    expect(captureDiffSelection('new', root, 13)).toBeUndefined();
   });
 
   it('ignores a selection confined to a single line', () => {

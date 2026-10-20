@@ -45,13 +45,16 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   const compareHost = compare?.hasLocalChanges ? 'teambit.workspace/workspace' : 'teambit.scope/scope';
   const {
     fileTree: baseFileTree,
-    mainFile,
+    mainFile: baseMainFile,
     loading: baseTreeLoading,
   } = useCode(hidden ? undefined : base?.model.id, baseHost);
-  const { fileTree: compareFileTree, loading: compareTreeLoading } = useCode(
-    hidden ? undefined : compare?.model.id,
-    compareHost
-  );
+  const {
+    fileTree: compareFileTree,
+    mainFile: compareMainFile,
+    loading: compareTreeLoading,
+  } = useCode(hidden ? undefined : compare?.model.id, compareHost);
+  // a new component has no base, so its main file comes from the compare side.
+  const mainFile = baseMainFile || compareMainFile;
 
   const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
   // `undefined` while the compare data loads; `null` when there is none. The diff waits for the same.
@@ -60,25 +63,36 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   // Build the list only when both file trees and the compare data have landed. Building it earlier
   // reshuffled the file tabs and the tree on first load: the two trees resolve in either order, and
   // the changed files moved to the top only when the compare data arrived.
-  const { fileTree, anyFileChanged } = useMemo(() => {
-    if (baseTreeLoading || compareTreeLoading || compareDataLoading) return { fileTree: [], anyFileChanged: false };
+  const { fileTree, firstChangedFile } = useMemo(() => {
+    if (baseTreeLoading || compareTreeLoading || compareDataLoading) return { fileTree: [] as string[] };
     const allFiles = uniq<string>((baseFileTree || []).concat(compareFileTree || []));
-    if (!fileCompareDataByName) return { fileTree: allFiles, anyFileChanged: false };
+    if (!fileCompareDataByName) return { fileTree: allFiles };
     const isChanged = (file: string) => {
       const status = fileCompareDataByName.get(file)?.status;
       return !!status && status !== 'UNCHANGED';
     };
     // changed files first. the sort is stable, so each group keeps the order of the file trees.
     const sorted = [...allFiles].sort((a, b) => Number(isChanged(b)) - Number(isChanged(a)));
-    return { fileTree: sorted, anyFileChanged: sorted.some(isChanged) };
-  }, [baseTreeLoading, compareTreeLoading, compareDataLoading, baseFileTree, compareFileTree, fileCompareDataByName]);
+    // open the main file when it changed. that includes a new component, where every file is NEW.
+    // otherwise open the first changed file.
+    const firstChanged = mainFile && isChanged(mainFile) ? mainFile : sorted.find(isChanged);
+    return { fileTree: sorted, firstChangedFile: firstChanged };
+  }, [
+    baseTreeLoading,
+    compareTreeLoading,
+    compareDataLoading,
+    baseFileTree,
+    compareFileTree,
+    fileCompareDataByName,
+    mainFile,
+  ]);
 
   const selectedFileFromParams = useCompareQueryParam('file');
 
   const selectedFile = React.useMemo(
     () =>
-      state?.id || selectedFileFromParams || (anyFileChanged ? fileTree[0] : mainFile || DEFAULT_FILE),
-    [state?.id, selectedFileFromParams, anyFileChanged, fileTree, mainFile]
+      state?.id || selectedFileFromParams || firstChangedFile || mainFile || DEFAULT_FILE,
+    [state?.id, selectedFileFromParams, firstChangedFile, mainFile]
   );
 
   const controlledHref = useUpdatedUrlFromQuery({});

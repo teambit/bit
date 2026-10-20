@@ -50,6 +50,8 @@ export type AnnotationIndex = {
   widget: Map<string, ReactNode[]>;
   range: Set<string>;
   active: Set<string>;
+  /** the line each annotation is anchored to. These lines stay visible when unchanged code collapses. */
+  anchored: Set<string>;
   /** widgets make rows variable-height, which is incompatible with fixed-row virtualization. */
   hasWidgets: boolean;
 };
@@ -59,6 +61,7 @@ export const EMPTY_ANNOTATION_INDEX: AnnotationIndex = {
   widget: new Map(),
   range: new Set(),
   active: new Set(),
+  anchored: new Set(),
   hasWidgets: false,
 };
 
@@ -75,12 +78,14 @@ export function buildAnnotationIndex(annotations?: DiffAnnotation[]): Annotation
     widget: new Map(),
     range: new Set(),
     active: new Set(),
+    anchored: new Set(),
     hasWidgets: false,
   };
 
   for (const annotation of annotations) {
     const side = annotation.side ?? 'new';
     const key = lineKey(side, annotation.line);
+    index.anchored.add(key);
 
     if (annotation.gutter) push(index.gutter, key, annotation.gutter);
     if (annotation.widget) {
@@ -122,9 +127,14 @@ export function lineAttribute(side: DiffLineSide): string {
  * last rows' gutters fall outside the range entirely and those lines would be missed. The row
  * element, by contrast, is partially contained — which is what `containsNode(node, true)` reports.
  *
- * Returns undefined when there is no selection, it stays within one line, or there is no window (SSR).
+ * Returns undefined when there is no selection, it stays within one line, it does not cover `line`
+ * (when given), or there is no window (SSR).
  */
-export function captureDiffSelection(side: DiffLineSide, root?: Element | null): DiffLineSelection | undefined {
+export function captureDiffSelection(
+  side: DiffLineSide,
+  root?: Element | null,
+  line?: number
+): DiffLineSelection | undefined {
   if (typeof window === 'undefined' || typeof window.getSelection !== 'function') return undefined;
 
   const selection = window.getSelection();
@@ -143,12 +153,14 @@ export function captureDiffSelection(side: DiffLineSide, root?: Element | null):
 
   for (const row of Array.from(rows)) {
     if (!selection.containsNode(row, true)) continue;
-    const line = Number(row.getAttribute(attribute));
-    if (!Number.isFinite(line) || line <= 0) continue;
-    if (startLine === undefined || line < startLine) startLine = line;
-    if (endLine === undefined || line > endLine) endLine = line;
+    const rowLine = Number(row.getAttribute(attribute));
+    if (!Number.isFinite(rowLine) || rowLine <= 0) continue;
+    if (startLine === undefined || rowLine < startLine) startLine = rowLine;
+    if (endLine === undefined || rowLine > endLine) endLine = rowLine;
   }
 
   if (startLine === undefined || endLine === undefined || startLine === endLine) return undefined;
+  // a selection left over from elsewhere in the diff does not belong to an action on another line.
+  if (line !== undefined && (line < startLine || line > endLine)) return undefined;
   return { startLine, endLine, text };
 }

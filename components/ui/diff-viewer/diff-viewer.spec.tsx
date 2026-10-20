@@ -90,7 +90,7 @@ describe('DiffViewer', () => {
     });
 
     it('keeps an already-annotated gutter showing its badge instead of the add-affordance', () => {
-      // annotated on the new side only: that gutter shows the badge, the old-side one still offers "+"
+      // an unchanged unified line offers "+" only in its new-side gutter, which here shows the badge
       const oneSide = renderToStaticMarkup(
         <DiffViewer
           fileName="a.ts"
@@ -103,7 +103,7 @@ describe('DiffViewer', () => {
       );
 
       expect(oneSide).toContain('avatar');
-      expect(countOccurrences(oneSide, 'aria-label="Comment on this line"')).toBe(1);
+      expect(countOccurrences(oneSide, 'aria-label="Comment on this line"')).toBe(0);
 
       const bothSides = renderToStaticMarkup(
         <DiffViewer
@@ -120,6 +120,41 @@ describe('DiffViewer', () => {
       );
 
       expect(bothSides).not.toContain('aria-label="Comment on this line"');
+    });
+
+    it('offers one add-affordance per unified line: new side, or old side for a removed line', () => {
+      const markup = renderToStaticMarkup(
+        <DiffViewer
+          fileName="a.ts"
+          oldContent={'same\nremoved\n'}
+          newContent={'same\nadded\n'}
+          view="unified"
+          onLineAction={() => {}}
+        />
+      );
+
+      // three rows (unchanged, removed, added), one "+" each
+      expect(countOccurrences(markup, 'aria-label="Comment on this line"')).toBe(3);
+    });
+
+    it('keeps an annotated unchanged line visible when unchanged code collapses', () => {
+      const lines = Array.from({ length: 40 }, (_, i) => `line ${i + 1}`);
+      const content = `${lines.join('\n')}\n`;
+      const markup = renderToStaticMarkup(
+        <DiffViewer
+          fileName="a.ts"
+          oldContent={content}
+          newContent={content.replace('line 1\n', 'line one\n')}
+          view="unified"
+          contextLines={3}
+          annotations={[{ line: 30, gutter: <span>comment-on-30</span> }]}
+        />
+      );
+
+      expect(markup).toContain('comment-on-30');
+      expect(markup).toContain('line 30');
+      // the lines around it stay collapsed
+      expect(markup).not.toContain('>line 20<');
     });
 
     it('renders annotations in split view on the side they belong to', () => {

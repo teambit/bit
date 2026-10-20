@@ -15,6 +15,15 @@ export type CodeCompareEditorProps = {
 } & EditorSettingsState;
 
 const REGULAR_DIFF_HEIGHT = 640;
+/** above this many lines, an inline diff virtualizes inside a capped pane instead of growing the page. */
+const LARGE_FILE_LINES = 1000;
+
+function lineCount(content?: string): number {
+  if (!content) return 0;
+  let count = 1;
+  for (let i = 0; i < content.length; i++) if (content.charCodeAt(i) === 10) count++;
+  return count;
+}
 const FULLSCREEN_CHROME_HEIGHT = 160;
 const MIN_FULLSCREEN_DIFF_HEIGHT = 220;
 
@@ -50,6 +59,8 @@ export function CodeCompareEditor({
   fullScreen,
 }: CodeCompareEditorProps) {
   const maxHeight = useDiffHeight(fullScreen);
+  const isLargeFile =
+    Math.max(lineCount(originalFileContent), lineCount(modifiedFileContent)) > LARGE_FILE_LINES;
   return (
     <DiffViewer
       key={`${originalPath}-${modifiedPath}-${editorViewMode}`}
@@ -66,11 +77,15 @@ export function CodeCompareEditor({
       // so a two-line diff and a thousand-line one looked identical. Fullscreen is the opposite case —
       // there the diff owns the viewport, so it keeps the capped height and scrolls (and virtualizes)
       // internally. Carried over from Monaco, which always rendered into a fixed-height editor.
-      virtualize={fullScreen}
+      // A large file virtualizes inline too: rendering thousands of highlighted rows at once (e.g. an
+      // unchanged file shown in full) is slow, and a page that long is hard to use.
+      virtualize={fullScreen || isLargeFile}
       showHeader={false}
       showViewToggle={false}
       collapsible={false}
-      wrap={wordWrap}
+      // Soft wrap makes rows variable-height, which turns windowing off and mounts every row. A large
+      // file keeps fixed-height rows (long lines scroll sideways) so only the visible rows render.
+      wrap={wordWrap && !isLargeFile}
     />
   );
 }

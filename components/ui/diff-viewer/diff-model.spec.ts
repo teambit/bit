@@ -10,6 +10,27 @@ describe('buildSections', () => {
     const items = computeDiffLines('one\ntwo\nthree', 'one\ntwo\nthree');
     expect(buildSections(items, 1)).toEqual([{ kind: 'gap', id: 'gap-all', hidden: items }]);
   });
+
+  it('keeps an anchored unchanged line and its context visible', () => {
+    const lines = Array.from({ length: 30 }, (_, i) => `l${i + 1}`).join('\n');
+    const items = computeDiffLines(lines, lines);
+    const sections = buildSections(items, 2, (item) => item.newLn === 15);
+    const visible = sections.flatMap((section) => (section.kind === 'lines' ? section.items : []));
+
+    expect(visible.map((item) => item.newLn)).toEqual([13, 14, 15, 16, 17]);
+  });
+
+  it('keeps an anchored line between two changes from collapsing into a gap', () => {
+    const lines = Array.from({ length: 40 }, (_, i) => `l${i + 1}`);
+    const changed = [...lines];
+    changed[0] = 'first';
+    changed[39] = 'last';
+    const items = computeDiffLines(lines.join('\n'), changed.join('\n'));
+    const sections = buildSections(items, 2, (item) => item.newLn === 20);
+    const visible = sections.flatMap((section) => (section.kind === 'lines' ? section.items : []));
+
+    expect(visible.some((item) => item.newLn === 20 && item.type === 'context')).toBe(true);
+  });
 });
 
 describe('computeDiffLines', () => {

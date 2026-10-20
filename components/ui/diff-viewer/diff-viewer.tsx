@@ -115,7 +115,22 @@ export function DiffViewer({
     [oldContent, newContent, ignoreTrimWhitespace]
   );
   const stats = useMemo(() => statsFromItems(items), [items]);
-  const sections = useMemo(() => buildSections(items, contextLines), [items, contextLines]);
+  const annotationIndex = useMemo(() => buildAnnotationIndex(annotations), [annotations]);
+  // Annotated lines stay visible when unchanged code collapses, so a comment is never hidden in a gap.
+  // Keyed by the set of anchored lines, not the annotations array: a host that re-creates the array
+  // with the same lines must not rebuild the sections, which would reset the expanded gaps.
+  const anchorsKey = useMemo(() => [...annotationIndex.anchored].sort().join(','), [annotationIndex]);
+  const sections = useMemo(() => {
+    if (!anchorsKey) return buildSections(items, contextLines);
+    const anchored = new Set(anchorsKey.split(','));
+    return buildSections(
+      items,
+      contextLines,
+      (item) =>
+        (!!item.oldLn && anchored.has(lineKey('old', item.oldLn))) ||
+        (!!item.newLn && anchored.has(lineKey('new', item.newLn)))
+    );
+  }, [items, contextLines, anchorsKey]);
   const [gapStateStore, setGapStateStore] = useState<{
     sections?: DiffSection[];
     states: Record<string, GapState>;
@@ -152,8 +167,6 @@ export function DiffViewer({
     [sections]
   );
 
-  const annotationIndex = useMemo(() => buildAnnotationIndex(annotations), [annotations]);
-
   const rows = useMemo(
     () => buildRenderRows(sections, gapStates, view, annotationIndex),
     [sections, gapStates, view, annotationIndex]
@@ -166,7 +179,7 @@ export function DiffViewer({
   const emitLineAction = useCallback(
     (side: DiffLineSide, line: number, text: string, event: React.MouseEvent) => {
       if (!onLineAction) return;
-      const selection = captureDiffSelection(side, rootRef.current);
+      const selection = captureDiffSelection(side, rootRef.current, line);
       onLineAction({ fileName, side, line, text, selection }, event);
     },
     [onLineAction, fileName]
@@ -450,17 +463,20 @@ function LineGutter({
   line,
   text,
   decoration,
+  allowAction = true,
 }: {
   side: DiffLineSide;
   line?: number;
   text: string;
   decoration: RowDecoration;
+  /** false to show only the number and annotations, e.g. the old gutter of a unified context line. */
+  allowAction?: boolean;
 }) {
   const { annotationIndex, onLineAction, lineActionLabel } = decoration;
   const nodes = line ? annotationIndex.gutter.get(lineKey(side, line)) : undefined;
   // The annotation and the add-affordance share the gutter's one free slot; an annotated line keeps
   // its badge (which stays clickable) rather than swapping it for a "+" on hover.
-  const actionable = !!onLineAction && !!line && !nodes;
+  const actionable = allowAction && !!onLineAction && !!line && !nodes;
 
   return (
     <span className={classNames(styles.gutter, styles.gutterNum)}>
@@ -524,8 +540,22 @@ function UnifiedRow({
       // resolves its first and last lines — see captureDiffSelection.
       {...{ [lineAttribute('old')]: item.oldLn, [lineAttribute('new')]: item.newLn }}
     >
-      <LineGutter side="old" line={item.oldLn} text={item.oldText ?? item.text} decoration={decoration} />
-      <LineGutter side="new" line={item.newLn} text={item.newText ?? item.text} decoration={decoration} />
+      {/* one add-affordance per unified line: the old side only for a removed line, the new side
+          otherwise. An unchanged line has both numbers, and two buttons would anchor to different sides. */}
+      <LineGutter
+        side="old"
+        line={item.oldLn}
+        text={item.oldText ?? item.text}
+        decoration={decoration}
+        allowAction={item.type === 'del'}
+      />
+      <LineGutter
+        side="new"
+        line={item.newLn}
+        text={item.newText ?? item.text}
+        decoration={decoration}
+        allowAction={item.type !== 'del'}
+      />
       <span className={classNames(styles.gutter, styles.sign)}>{sign}</span>
       <code className={styles.code}>
         {renderLineContent(hlForLine(item, oldHl, newHl), item.newText ?? item.text, item.intra)}
