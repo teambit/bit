@@ -22,6 +22,7 @@ export type DependenciesSnapshot = { [field in ComponentDepsField]: Dependencies
  * the dependencies of a Version, with the package names of the component dependencies, same as a component loaded from
  * the scope has them (see ModelComponent.toConsumerComponent). without them, a dependency of a Version and the same
  * dependency of a loaded component are not equal.
+ * returns copies, so they can be changed (e.g. set to a component that is snapped) without changing the Version.
  */
 export function getDependenciesOfVersion(
   version: DependenciesSnapshot & { extensions: ExtensionDataList }
@@ -32,9 +33,9 @@ export function getDependenciesOfVersion(
     dependencies: withPackageNames(version.dependencies),
     devDependencies: withPackageNames(version.devDependencies),
     peerDependencies: withPackageNames(version.peerDependencies),
-    packageDependencies: version.packageDependencies,
-    devPackageDependencies: version.devPackageDependencies,
-    peerPackageDependencies: version.peerPackageDependencies,
+    packageDependencies: { ...version.packageDependencies },
+    devPackageDependencies: { ...version.devPackageDependencies },
+    peerPackageDependencies: { ...version.peerPackageDependencies },
   };
 }
 
