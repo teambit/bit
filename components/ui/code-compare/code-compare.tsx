@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from 'react';
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { uniq } from 'lodash';
 import classNames from 'classnames';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
@@ -43,40 +43,42 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   const [isSidebarOpen, setSidebarOpenness] = useState(false);
   const baseHost = 'teambit.scope/scope';
   const compareHost = compare?.hasLocalChanges ? 'teambit.workspace/workspace' : 'teambit.scope/scope';
-  const { fileTree: baseFileTree = [], mainFile } = useCode(hidden ? undefined : base?.model.id, baseHost);
-  const { fileTree: compareFileTree = [] } = useCode(hidden ? undefined : compare?.model.id, compareHost);
+  const {
+    fileTree: baseFileTree,
+    mainFile,
+    loading: baseTreeLoading,
+  } = useCode(hidden ? undefined : base?.model.id, baseHost);
+  const { fileTree: compareFileTree, loading: compareTreeLoading } = useCode(
+    hidden ? undefined : compare?.model.id,
+    compareHost
+  );
 
   const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
-  const anyFileHasDiffStatus = useRef<boolean>(false);
+  // `undefined` while the compare data loads; `null` when there is none. The diff waits for the same.
+  const compareDataLoading = !!componentCompareContext && fileCompareDataByName === undefined;
 
-  const fileTree = useMemo(() => {
-    const allFiles = uniq<string>(baseFileTree.concat(compareFileTree));
-    anyFileHasDiffStatus.current = false;
-    // sort by diff status
-    return !fileCompareDataByName
-      ? allFiles
-      : allFiles.sort((a, b) => {
-          const aCompareResult = fileCompareDataByName.get(a);
-          const bCompareResult = fileCompareDataByName.get(b);
-          const noStatus = (status?: string) => !status || status === 'UNCHANGED';
-          const aStatus = aCompareResult?.status;
-          const bStatus = bCompareResult?.status;
-          if (!noStatus(aStatus) && !noStatus(bStatus)) return 0;
-          if (!noStatus(aStatus)) return -1;
-          if (!noStatus(bStatus)) return 1;
-          if (!anyFileHasDiffStatus.current) anyFileHasDiffStatus.current = true;
-          if (aStatus?.toLowerCase() === 'new') return -1;
-          if (bStatus?.toLowerCase() === 'new') return 1;
-          return 0;
-        });
-  }, [fileCompareDataByName?.size, baseFileTree.length, compareFileTree.length, hidden]);
+  // Build the list only when both file trees and the compare data have landed. Building it earlier
+  // reshuffled the file tabs and the tree on first load: the two trees resolve in either order, and
+  // the changed files moved to the top only when the compare data arrived.
+  const { fileTree, anyFileChanged } = useMemo(() => {
+    if (baseTreeLoading || compareTreeLoading || compareDataLoading) return { fileTree: [], anyFileChanged: false };
+    const allFiles = uniq<string>((baseFileTree || []).concat(compareFileTree || []));
+    if (!fileCompareDataByName) return { fileTree: allFiles, anyFileChanged: false };
+    const isChanged = (file: string) => {
+      const status = fileCompareDataByName.get(file)?.status;
+      return !!status && status !== 'UNCHANGED';
+    };
+    // changed files first. the sort is stable, so each group keeps the order of the file trees.
+    const sorted = [...allFiles].sort((a, b) => Number(isChanged(b)) - Number(isChanged(a)));
+    return { fileTree: sorted, anyFileChanged: sorted.some(isChanged) };
+  }, [baseTreeLoading, compareTreeLoading, compareDataLoading, baseFileTree, compareFileTree, fileCompareDataByName]);
 
   const selectedFileFromParams = useCompareQueryParam('file');
 
   const selectedFile = React.useMemo(
     () =>
-      state?.id || selectedFileFromParams || (anyFileHasDiffStatus.current ? fileTree[0] : mainFile || DEFAULT_FILE),
-    [state?.id, selectedFileFromParams, fileTree, mainFile]
+      state?.id || selectedFileFromParams || (anyFileChanged ? fileTree[0] : mainFile || DEFAULT_FILE),
+    [state?.id, selectedFileFromParams, anyFileChanged, fileTree, mainFile]
   );
 
   const controlledHref = useUpdatedUrlFromQuery({});

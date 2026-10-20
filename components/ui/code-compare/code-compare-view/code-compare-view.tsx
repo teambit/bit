@@ -66,13 +66,16 @@ export function CodeCompareView({
 
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(false);
-  const [view, setView] = useState<EditorViewMode>(defaultView);
   const [wrap, setWrap] = useState(true);
   const [diffOnly, setDiffOnly] = useState(true);
 
-  React.useEffect(() => {
-    setView(defaultView);
-  }, [defaultView, fileName, baseIdString, compareIdString, originalFileContent, modifiedFileContent, fileStatus]);
+  // The view follows `defaultView` until the reader picks one, and that pick holds only for the file
+  // and versions it was made on. It is derived on render: copying `defaultView` into state from an
+  // effect painted one frame in the loading-time view (unified) before switching to split.
+  const viewKey = `${fileName}|${baseIdString}|${compareIdString}`;
+  const [chosenView, setChosenView] = useState<{ key: string; view: EditorViewMode }>();
+  const view = chosenView?.key === viewKey ? chosenView.view : defaultView;
+  const setView = (next: EditorViewMode) => setChosenView({ key: viewKey, view: next });
 
   const codeNavFiles = useMemo(() => {
     return files.filter((file) => {
