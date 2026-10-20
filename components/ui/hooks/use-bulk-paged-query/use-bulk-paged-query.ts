@@ -47,7 +47,8 @@ export type UseBulkPagedQueryResult<TItem> = {
   loadedCount: number;
   /**
    * true when the server's GraphQL schema does not have this query or one of its fields, e.g. an older
-   * backend. Paging stops at once and every pair reads as `null`; retrying cannot help.
+   * backend: the first page was rejected and no data loaded. Paging stops at once and every pair reads as
+   * `null`; retrying cannot help.
    */
   unsupported: boolean;
 };
@@ -134,14 +135,14 @@ export function useBulkPagedQuery<TItem>({
   // consecutive transient page-fetch errors. a flaky page is retried up to MAX_PAGE_RETRIES before the
   // remaining pairs read as failed — so one dropped request no longer permanently fails every later pair.
   const [errorRetries, setErrorRetries] = useState(0);
-  // a page rejected because the server's schema lacks the query or a field. permanent, so never retried.
-  const [fetchUnsupported, setFetchUnsupported] = useState(false);
   useEffect(() => {
     setStoppedShort(false);
     setErrorRetries(0);
-    setFetchUnsupported(false);
   }, [sessionKey, skip]);
-  const unsupported = !skip && (fetchUnsupported || isUnsupportedQueryError(error));
+  // the server's schema rejected the query. A schema mismatch rejects the very first page, so only a
+  // failed first page with no data counts: a later page's failure is retried as before, and results that
+  // already loaded are never discarded.
+  const unsupported = !skip && !data && isUnsupportedQueryError(error);
 
   // the session this hook is currently paging — a fetchMore started for an earlier session can still
   // resolve/reject after the inputs changed, so its callbacks check this before terminating the new
@@ -195,16 +196,10 @@ export function useBulkPagedQuery<TItem>({
           },
         };
       },
-    }).catch((err) => {
-      if (!stillActive()) return;
-      // the server's schema does not have this query: stop paging instead of retrying.
-      if (isUnsupportedQueryError(err)) {
-        setFetchUnsupported(true);
-        return;
-      }
+    }).catch(() => {
       // a transient fetch failure: bump the retry counter so the effect re-issues this page (up to
       // MAX_PAGE_RETRIES) instead of permanently failing every not-yet-fetched pair.
-      setErrorRetries((n) => n + 1);
+      if (stillActive()) setErrorRetries((n) => n + 1);
     });
   }, [
     skip,

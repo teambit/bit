@@ -50,12 +50,12 @@ describe('buildAnnotationIndex', () => {
     expect([...index.range]).toEqual([lineKey('new', 4), lineKey('new', 5), lineKey('new', 6)]);
   });
 
-  it('records the anchor line of every annotation', () => {
+  it('keeps the anchor line and every line of its range visible', () => {
     const index = buildAnnotationIndex([
       { line: 3, range: { start: 3, end: 5 } },
       { line: 7, side: 'old', gutter: 'b' },
     ]);
-    expect([...index.anchored].sort()).toEqual(['new:3', 'old:7']);
+    expect([...index.anchored].sort()).toEqual(['new:3', 'new:4', 'new:5', 'old:7']);
   });
 
   it('falls back to the anchor line for a range that is not finite, reversed or too long', () => {
@@ -89,15 +89,19 @@ describe('captureDiffSelection', () => {
     document.body.innerHTML = '';
   });
 
-  /** rows as the viewer renders them: the line number on the row, the source in a `<code>` cell. */
-  function mountRows(rows: Array<{ new?: number; old?: number; text: string }>) {
+  /**
+   * rows as the viewer renders them: the line number on the row, the source in the row's own `<code>`
+   * cell. `badge` puts a `<code>` inside the gutter too, like a host-supplied annotation could.
+   */
+  function mountRows(rows: Array<{ new?: number; old?: number; text: string; badge?: boolean }>) {
     document.body.innerHTML = rows
       .map((row) => {
         const attrs = [
           row.old !== undefined ? `${lineAttribute('old')}="${row.old}"` : '',
           row.new !== undefined ? `${lineAttribute('new')}="${row.new}"` : '',
         ].join(' ');
-        return `<div ${attrs}><span>${row.old ?? row.new}</span><code>${row.text}</code></div>`;
+        const gutter = row.badge ? '<span><code>badge</code></span>' : `<span>${row.old ?? row.new}</span>`;
+        return `<div ${attrs}>${gutter}<code>${row.text}</code></div>`;
       })
       .join('');
     return document.body;
@@ -105,7 +109,7 @@ describe('captureDiffSelection', () => {
 
   /** select from `startOffset` in the code of row `startRow` to `endOffset` in the code of row `endRow`. */
   function select(startRow: number, startOffset: number, endRow: number, endOffset: number) {
-    const codes = document.querySelectorAll('code');
+    const codes = Array.from(document.body.children).map((row) => row.querySelector(':scope > code') as Element);
     const range = document.createRange();
     range.setStart(codes[startRow].firstChild as Node, startOffset);
     range.setEnd(codes[endRow].firstChild as Node, endOffset);
@@ -124,6 +128,27 @@ describe('captureDiffSelection', () => {
     select(1, 3, 2, 3);
 
     expect(captureDiffSelection('new', root)).toEqual({ startLine: 11, endLine: 12, text: 'ven\ntwe' });
+  });
+
+  it('keeps a blank line the selection covers', () => {
+    const root = mountRows([
+      { new: 1, text: 'one' },
+      { new: 2, text: '' },
+      { new: 3, text: 'three' },
+    ]);
+    select(0, 0, 2, 5);
+
+    expect(captureDiffSelection('new', root)).toEqual({ startLine: 1, endLine: 3, text: 'one\n\nthree' });
+  });
+
+  it('reads the source cell, not a `<code>` inside a gutter badge', () => {
+    const root = mountRows([
+      { new: 1, text: 'one', badge: true },
+      { new: 2, text: 'two' },
+    ]);
+    select(0, 1, 1, 2);
+
+    expect(captureDiffSelection('new', root)).toEqual({ startLine: 1, endLine: 2, text: 'ne\ntw' });
   });
 
   it('ignores a selection confined to a single line', () => {

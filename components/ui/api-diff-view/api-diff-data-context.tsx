@@ -83,8 +83,12 @@ export function ApiDiffDataProvider({
 
   const value = useMemo<ApiDiffDataContextModel>(
     () => ({
+      // only a pair without data reads as unsupported; a result that loaded is always kept.
       apiDiffFor: unsupported
-        ? (compareId: string) => (lookupByCompareId(compareId) === undefined ? undefined : UNSUPPORTED_API_DIFF)
+        ? (compareId: string) => {
+            const loaded = lookupByCompareId(compareId);
+            return loaded === null ? UNSUPPORTED_API_DIFF : loaded;
+          }
         : lookupByCompareId,
       loading,
       unsupported,

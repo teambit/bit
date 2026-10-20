@@ -157,6 +157,18 @@ describe('DiffViewer', () => {
       expect(markup).not.toContain('>line 20<');
     });
 
+    it('widens the line-number gutter for numbers longer than three digits', () => {
+      const short = renderToStaticMarkup(<DiffViewer fileName="a.ts" oldContent="a\n" newContent="b\n" view="unified" />);
+      expect(short).toContain('--diff-gutter-width:50px');
+
+      const many = `${Array.from({ length: 12000 }, (_, i) => `l${i}`).join('\n')}\n`;
+      const long = renderToStaticMarkup(
+        <DiffViewer fileName="a.ts" oldContent={many} newContent={`${many}x\n`} view="unified" />
+      );
+      // five digits: the 28px slot plus 5 × 7px
+      expect(long).toContain('--diff-gutter-width:63px');
+    });
+
     it('renders annotations in split view on the side they belong to', () => {
       const markup = renderToStaticMarkup(
         <DiffViewer

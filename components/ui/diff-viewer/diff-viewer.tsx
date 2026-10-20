@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import classNames from 'classnames';
 import type { DiffLineItem, DiffSection, GapState } from './diff-model';
-import { computeDiffLines, buildSections, gapStatesFor, statsFromItems, pairForSplit } from './diff-model';
+import { computeDiffLines, buildSections, revealInGaps, statsFromItems, pairForSplit } from './diff-model';
 import type { HlLines, HlToken } from './highlighter';
 import { useHighlightedLines } from './highlighter';
 import { langFromFileName, normalizeLanguage } from './language';
@@ -63,6 +63,12 @@ const OVERSCAN = 14;
 const EXPAND_CHUNK = 20;
 
 const EMPTY_REVEALED: Set<DiffLineItem> = new Set();
+// every gap renders collapsed: revealed lines are split out of the gaps (see `revealInGaps`).
+const COLLAPSED_GAPS: Record<string, GapState> = {};
+/** gutter sizing: the badge/action slot plus the right padding, one digit at 11px, and the minimum width. */
+const GUTTER_SLOT_WIDTH = 28;
+const GUTTER_DIGIT_WIDTH = 7;
+const GUTTER_MIN_WIDTH = 50;
 
 
 /** a single rendered row: a code line (or a left/right pair), a collapsed-gap expander, or a
@@ -120,7 +126,7 @@ export function DiffViewer({
   // Keyed by the set of anchored lines, not the annotations array: a host that re-creates the array
   // with the same lines must not rebuild the sections, which would reset the expanded gaps.
   const anchorsKey = useMemo(() => [...annotationIndex.anchored].sort().join(','), [annotationIndex]);
-  const sections = useMemo(() => {
+  const collapsedSections = useMemo(() => {
     if (!anchorsKey) return buildSections(items, contextLines);
     const anchored = new Set(anchorsKey.split(','));
     return buildSections(
@@ -132,17 +138,27 @@ export function DiffViewer({
     );
   }, [items, contextLines, anchorsKey]);
   // Expanded gaps are remembered as the lines they revealed, not per gap: gap ids are positional and
-  // change whenever the sections are rebuilt (e.g. a new comment adds an anchor), which would otherwise
-  // collapse every gap the reader opened. New file contents start collapsed again.
+  // change whenever the sections are rebuilt (e.g. a comment is added or removed), which would otherwise
+  // collapse every gap the reader opened. Revealed lines are split out of whatever gaps they fall in, so
+  // they stay visible even when two gaps merge around them. New file contents start collapsed again.
   const [revealStore, setRevealStore] = useState<{ items?: DiffLineItem[]; revealed: Set<DiffLineItem> }>({
     revealed: new Set(),
   });
   const revealed = revealStore.items === items ? revealStore.revealed : EMPTY_REVEALED;
-  const gapStates = useMemo(() => gapStatesFor(sections, revealed), [sections, revealed]);
+  const sections = useMemo(() => revealInGaps(collapsedSections, revealed), [collapsedSections, revealed]);
+  const gapStates = COLLAPSED_GAPS;
 
   // tokenize each whole file once; multi-line constructs stay correct and lines are looked up by number.
   const oldHl = useHighlightedLines(oldContent, lang);
   const newHl = useHighlightedLines(newContent, lang);
+
+  // the line-number column fits the longest number plus the badge/action slot on its left (18px):
+  // 50px holds up to three digits, longer numbers widen it.
+  const gutterWidth = useMemo(() => {
+    let maxLine = 0;
+    for (const it of items) maxLine = Math.max(maxLine, it.oldLn ?? 0, it.newLn ?? 0);
+    return Math.max(GUTTER_MIN_WIDTH, GUTTER_SLOT_WIDTH + String(maxLine).length * GUTTER_DIGIT_WIDTH);
+  }, [items]);
 
   // a stable horizontal track width so virtualized rows align and the gutters can stay sticky.
   const codeWidthCh = useMemo(() => {
@@ -157,13 +173,12 @@ export function DiffViewer({
       if (!gap || gap.kind !== 'gap') return;
       setRevealStore((prev) => {
         const current = prev.items === items ? prev.revealed : EMPTY_REVEALED;
-        const { top, bottom } = gapStatesFor([gap], current)[id] ?? { top: 0, bottom: 0 };
-        const remaining = gap.hidden.length - top - bottom;
-        if (remaining <= 0) return prev;
-        let from = top;
-        let to = gap.hidden.length - bottom;
-        if (dir === 'top') to = top + Math.min(EXPAND_CHUNK, remaining);
-        if (dir === 'bottom') from = to - Math.min(EXPAND_CHUNK, remaining);
+        // a gap holds only hidden lines, so expanding reveals from its edges (or all of it).
+        const count = gap.hidden.length;
+        let from = 0;
+        let to = count;
+        if (dir === 'top') to = Math.min(EXPAND_CHUNK, count);
+        if (dir === 'bottom') from = Math.max(0, count - EXPAND_CHUNK);
         const next = new Set(current);
         for (let i = from; i < to; i++) next.add(gap.hidden[i]);
         return { items, revealed: next };
@@ -194,6 +209,7 @@ export function DiffViewer({
     <div
       ref={rootRef}
       className={classNames(styles.diffViewer, wrap && styles.wrap, className)}
+      style={{ '--diff-gutter-width': `${gutterWidth}px` } as React.CSSProperties}
       data-status={status}
     >
       {showHeader && (

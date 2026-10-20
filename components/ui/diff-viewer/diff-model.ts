@@ -332,24 +332,38 @@ export function pairForSplit(items: DiffLineItem[]): SplitRow[] {
 /** how many lines a collapsed gap shows from its top and bottom edge. */
 export type GapState = { top: number; bottom: number };
 
-const EMPTY_GAP_STATES: Record<string, GapState> = {};
-
 /**
- * The expansion of each gap, derived from the set of lines the reader revealed: the unbroken run of
- * revealed lines at the top and at the bottom of the gap. Deriving it from lines rather than storing it
- * per gap keeps expanded regions open when the sections are rebuilt and the positional gap ids change.
+ * Split the revealed lines out of every gap they fall in: a gap becomes alternating runs of visible lines
+ * and smaller gaps. Deriving this from the lines the reader revealed, not from per-gap state, keeps them
+ * visible when the sections are rebuilt with new gap ids, including when two gaps merge around them.
  */
-export function gapStatesFor(sections: DiffSection[], revealed: ReadonlySet<DiffLineItem>): Record<string, GapState> {
-  if (revealed.size === 0) return EMPTY_GAP_STATES;
-  const states: Record<string, GapState> = {};
+export function revealInGaps(sections: DiffSection[], revealed: ReadonlySet<DiffLineItem>): DiffSection[] {
+  if (revealed.size === 0) return sections;
+  const result: DiffSection[] = [];
   for (const section of sections) {
-    if (section.kind !== 'gap') continue;
-    const { hidden } = section;
-    let top = 0;
-    while (top < hidden.length && revealed.has(hidden[top])) top++;
-    let bottom = 0;
-    while (bottom < hidden.length - top && revealed.has(hidden[hidden.length - 1 - bottom])) bottom++;
-    if (top || bottom) states[section.id] = { top, bottom };
+    if (section.kind !== 'gap' || !section.hidden.some((item) => revealed.has(item))) {
+      result.push(section);
+      continue;
+    }
+    let run: DiffLineItem[] = [];
+    let runRevealed = false;
+    let runStart = 0;
+    const flush = () => {
+      if (run.length === 0) return;
+      if (runRevealed) result.push({ kind: 'lines', items: run });
+      else result.push({ kind: 'gap', id: `${section.id}:${runStart}`, hidden: run });
+    };
+    section.hidden.forEach((item, i) => {
+      const isRevealed = revealed.has(item);
+      if (run.length > 0 && isRevealed !== runRevealed) {
+        flush();
+        run = [];
+        runStart = i;
+      }
+      runRevealed = isRevealed;
+      run.push(item);
+    });
+    flush();
   }
-  return states;
+  return result;
 }

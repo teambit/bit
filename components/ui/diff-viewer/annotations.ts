@@ -50,7 +50,10 @@ export type AnnotationIndex = {
   widget: Map<string, ReactNode[]>;
   range: Set<string>;
   active: Set<string>;
-  /** the line each annotation is anchored to. These lines stay visible when unchanged code collapses. */
+  /**
+   * the lines that stay visible when unchanged code collapses: each annotation's anchor line and every
+   * line of its range, so a highlighted span is never cut by a gap.
+   */
   anchored: Set<string>;
   /** widgets make rows variable-height, which is incompatible with fixed-row virtualization. */
   hasWidgets: boolean;
@@ -102,7 +105,10 @@ export function buildAnnotationIndex(annotations?: DiffAnnotation[]): Annotation
     const to = range?.end ?? annotation.line;
     // a range is only meaningful when it spans more than the anchor line itself.
     if (range) {
-      for (let line = from; line <= to; line++) index.range.add(lineKey(side, line));
+      for (let line = from; line <= to; line++) {
+        index.range.add(lineKey(side, line));
+        index.anchored.add(lineKey(side, line));
+      }
     }
     if (annotation.active) {
       for (let line = from; line <= to; line++) index.active.add(lineKey(side, line));
@@ -168,10 +174,14 @@ export function captureDiffSelection(
   for (const row of Array.from(scope.querySelectorAll(`[${attribute}]`))) {
     const rowLine = Number(row.getAttribute(attribute));
     if (!isLineNumber(rowLine)) continue;
-    const code = row.querySelector('code');
+    // the row's own source cell. A plain `querySelector('code')` could match a `<code>` inside a
+    // host-supplied gutter badge, which comes first in the row.
+    const code = row.querySelector(':scope > code');
     if (!code) continue;
     const text = selectedTextIn(range, code);
-    if (text) selected.push({ line: rowLine, text });
+    // a blank line has no text to select, so it counts when the selection covers all of it. A line the
+    // selection only touches (e.g. ends at its start) still does not count.
+    if (text || (!code.textContent && coversNode(range, code))) selected.push({ line: rowLine, text });
   }
 
   if (selected.length < 2) return undefined;
@@ -185,6 +195,17 @@ export function captureDiffSelection(
   const text = selected.map((entry) => entry.text).join('\n');
   if (!text.trim()) return undefined;
   return { startLine, endLine, text };
+}
+
+/** whether `range` covers all of `node`'s contents. */
+function coversNode(range: Range, node: Node): boolean {
+  if (!range.intersectsNode(node)) return false;
+  const whole = document.createRange();
+  whole.selectNodeContents(node);
+  return (
+    range.compareBoundaryPoints(Range.START_TO_START, whole) <= 0 &&
+    range.compareBoundaryPoints(Range.END_TO_END, whole) >= 0
+  );
 }
 
 /** the part of `range` that falls inside `node`, as text. Empty when they do not overlap. */

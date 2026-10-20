@@ -78,3 +78,42 @@ it('stops at once and reports unsupported when the server schema lacks the query
   // requested pairs read as failed (null): the data will never come from this server.
   expect(result.current.lookupByCompareId('a@2')).toBeNull();
 });
+
+it('keeps loaded results and retries when a later page fails', async () => {
+  const pairs = [
+    { baseId: 'a@1', compareId: 'a@2' },
+    { baseId: 'b@1', compareId: 'b@2' },
+  ];
+  const PAGED = gql`
+    query TestPaged($pairs: [ComponentComparePair!]!, $offset: Int, $limit: Int, $host: String) {
+      getHost(id: $host) {
+        id
+        items(pairs: $pairs, offset: $offset, limit: $limit) {
+          name
+        }
+      }
+    }
+  `;
+  const mocks = [
+    {
+      request: { query: PAGED, variables: { pairs, offset: 0, limit: 1, host: undefined } },
+      result: { data: { getHost: { __typename: 'ComponentHost', id: 'h', items: [{ __typename: 'Item', name: 'a' }] } } },
+    },
+    // the second page fails with a 400: that is not a schema mismatch, the first page worked.
+    {
+      request: { query: PAGED, variables: { pairs, offset: 1, limit: 1, host: undefined } },
+      result: { errors: [new GraphQLError('Response not successful: Received status code 400')] },
+    },
+  ];
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <MockedProvider mocks={mocks}>{children}</MockedProvider>
+  );
+  const { result } = renderHook(
+    () => useBulkPagedQuery<{ name: string }>({ query: PAGED, resultField: 'items', pairs, pageSize: 1 }),
+    { wrapper }
+  );
+
+  await waitFor(() => expect(result.current.loading).toBe(false));
+  expect(result.current.unsupported).toBe(false);
+  expect(result.current.lookupByCompareId('a@2')).toEqual({ __typename: 'Item', name: 'a' });
+});

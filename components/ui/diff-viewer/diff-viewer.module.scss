@@ -209,7 +209,7 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
   }
 
   .unifiedRow {
-    grid-template-columns: 50px 50px 22px minmax(0, 1fr);
+    grid-template-columns: var(--diff-gutter-width, 50px) var(--diff-gutter-width, 50px) 22px minmax(0, 1fr);
   }
 
   .row {
@@ -248,7 +248,7 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 // virtualized rows aligned.
 .unifiedRow {
   display: grid;
-  grid-template-columns: 50px 50px 22px minmax(var(--diff-code-width, 60ch), 1fr);
+  grid-template-columns: var(--diff-gutter-width, 50px) var(--diff-gutter-width, 50px) 22px minmax(var(--diff-code-width, 60ch), 1fr);
 
   // Let unusually wide glyphs extend the shared `ch`-based estimate. The body owns horizontal
   // scrolling, so visible overflow remains reachable without widening the page.
@@ -266,7 +266,7 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 
 .splitCell {
   display: grid;
-  grid-template-columns: 50px minmax(0, 1fr);
+  grid-template-columns: var(--diff-gutter-width, 50px) minmax(0, 1fr);
   background-color: inherit;
   min-width: 0;
 
@@ -314,7 +314,7 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
   }
   .gutterNum:nth-of-type(2) {
     position: sticky;
-    left: 50px;
+    left: var(--diff-gutter-width, 50px);
     z-index: 2;
   }
   .sign {
@@ -385,7 +385,7 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 
 .gapRow {
   display: grid;
-  grid-template-columns: 50px 1fr;
+  grid-template-columns: var(--diff-gutter-width, 50px) 1fr;
   align-items: center;
   background: color-mix(in srgb, $accent 4%, $surface);
   border-top: 1px solid color-mix(in srgb, $border 70%, transparent);
@@ -440,7 +440,8 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 // --- host annotations (gutter content, line widgets, highlighted ranges) ---
 
 // the gutter's one free slot, shared by an annotation badge and the hover add-affordance. Both are
-// taken out of flow so the line number keeps its right-aligned position and the cell stays 50px.
+// taken out of flow so the line number keeps its right-aligned position. The viewer widens the gutter
+// (`--diff-gutter-width`) for long line numbers, so the slot never covers the digits.
 .gutterNum {
   position: relative;
 }
