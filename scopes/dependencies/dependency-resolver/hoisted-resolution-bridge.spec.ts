@@ -6,6 +6,7 @@ import path from 'path';
 import {
   ensureHoistedDependencyResolution,
   hoistedResolutionDirs,
+  isGlobalVirtualStoreLayout,
   isPathInsideOrEqual,
   isSamePath,
   parseRecordedVirtualStoreDir,
@@ -43,6 +44,38 @@ describe('parseRecordedVirtualStoreDir()', () => {
   });
   it('should return undefined when the manifest records no store dir', () => {
     expect(parseRecordedVirtualStoreDir(JSON.stringify({ layoutVersion: 5 }))).to.eq(undefined);
+  });
+});
+
+describe('isGlobalVirtualStoreLayout()', () => {
+  let root: string;
+  const writeManifest = (virtualStoreDir: string) =>
+    fs.outputFileSync(path.join(root, 'node_modules', '.modules.yaml'), JSON.stringify({ virtualStoreDir }));
+
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'is-global-virtual-store-'));
+  });
+  afterEach(() => fs.removeSync(root));
+
+  it('should read a store dir outside the root as the global virtual store', () => {
+    const store = fs.mkdtempSync(path.join(os.tmpdir(), 'global-store-links-'));
+    try {
+      writeManifest(store);
+      expect(isGlobalVirtualStoreLayout(root)).to.eq(true);
+    } finally {
+      fs.removeSync(store);
+    }
+  });
+  it('should read the local .pnpm store as project-local', () => {
+    fs.ensureDirSync(path.join(root, 'node_modules', '.pnpm'));
+    writeManifest('.pnpm');
+    expect(isGlobalVirtualStoreLayout(root)).to.eq(false);
+  });
+  it('should read an absolute store dir recorded before the installation was moved as project-local', () => {
+    // bvm on Windows: installed into versions/_tmp_* (recorded as an absolute path), then renamed
+    fs.ensureDirSync(path.join(root, 'node_modules', '.pnpm'));
+    writeManifest(path.join(path.dirname(root), '_tmp_moved_away', 'node_modules', '.pnpm'));
+    expect(isGlobalVirtualStoreLayout(root)).to.eq(false);
   });
 });
 

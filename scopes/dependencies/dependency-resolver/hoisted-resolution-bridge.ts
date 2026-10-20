@@ -172,11 +172,15 @@ export function isGlobalVirtualStoreLayout(workspaceRoot: string): boolean {
     // fall back to the given spelling
   }
   const resolved = path.resolve(workspaceRealpath, 'node_modules', virtualStoreDir);
-  let storeRealpath = resolved;
+  let storeRealpath: string;
   try {
     storeRealpath = fs.realpathSync(resolved);
   } catch {
-    // dangling recorded dir - judge by the lexical resolution
+    // dangling recorded dir: the installation was moved after it was installed, and there are no
+    // store slots left to bridge to. bvm on Windows is the common case - it installs into a
+    // `versions/_tmp_*` dir and renames it, and pnpm records the store dir there as an absolute path,
+    // so judging by the lexical resolution would read every bvm installation as global-store.
+    return false;
   }
   return !isPathInsideOrEqual(storeRealpath, workspaceRealpath);
 }
