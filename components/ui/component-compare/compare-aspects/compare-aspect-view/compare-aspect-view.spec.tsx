@@ -1,42 +1,16 @@
-import React from 'react';
-import { renderToStaticMarkup } from 'react-dom/server.node';
-import { CompareAspectView } from './compare-aspect-view';
+import { unchangedContext } from './config-editor';
 
-/** Captures the props each diff hands to the viewer: the config diff first, then the data diff. */
-const mockViewerProps: Array<Record<string, any>> = [];
+// Tests the decision only, without rendering: rendering needs `react-dom`, and this component's env can
+// resolve a `react-dom` that does not match its `react`, which fails the suite before it runs.
+jest.mock('@teambit/code.ui.diff-viewer', () => ({ DiffViewer: () => null }));
 
-jest.mock('@teambit/code.ui.diff-viewer', () => ({
-  DiffViewer: (props: Record<string, any>) => {
-    mockViewerProps.push(props);
-    return null;
-  },
-}));
-
-function render(base: { config: unknown; data: unknown }, compare: { config: unknown; data: unknown }) {
-  mockViewerProps.length = 0;
-  renderToStaticMarkup(
-    <CompareAspectView name="teambit.dependencies/dependency-resolver" baseAspectData={base as any} compareAspectData={compare as any} />
-  );
-  const [config, data] = mockViewerProps;
-  return { config, data };
-}
-
-describe('CompareAspectView', () => {
-  it('shows an unchanged config and unchanged data in full', () => {
-    const same = { config: { policy: {} }, data: { packageName: 'a' } };
-    const { config, data } = render(same, same);
-
-    expect(config.contextLines).toBe(Number.MAX_SAFE_INTEGER);
-    expect(data.contextLines).toBe(Number.MAX_SAFE_INTEGER);
+describe('unchangedContext', () => {
+  it('gives unlimited context when both sides are the same, so the diff is shown in full', () => {
+    const same = JSON.stringify({ policy: {} }, null, 2);
+    expect(unchangedContext(same, same)).toBe(Number.MAX_SAFE_INTEGER);
   });
 
-  it('keeps the default context for a config or data that changed', () => {
-    const { config, data } = render(
-      { config: { policy: {} }, data: { packageName: 'a' } },
-      { config: { policy: { dependencies: {} } }, data: { packageName: 'b' } }
-    );
-
-    expect(config.contextLines).toBeUndefined();
-    expect(data.contextLines).toBeUndefined();
+  it('keeps the default context when the sides differ', () => {
+    expect(unchangedContext('{}', '{ "policy": {} }')).toBeUndefined();
   });
 });
