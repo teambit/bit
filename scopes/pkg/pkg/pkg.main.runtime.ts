@@ -203,7 +203,7 @@ export class PkgMain {
       scope.registerOnCompAspectReCalc(calcPkgOnLoad);
     }
 
-    PackageJsonTransformer.registerPackageJsonTransformer(pkg.transformPackageJson.bind(pkg));
+    PackageJsonTransformer.registerPackageJsonTransformer(pkg.transformPackageJson.bind(pkg), PkgAspect.id);
     // TODO: consider passing the pkg instead of packer
     cli.register(new PackCmd(packer), new PublishCmd(publisher));
     return pkg;

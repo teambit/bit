@@ -1,9 +1,8 @@
-import type { CompositionProps } from '@teambit/compositions';
-import { Composition } from '@teambit/compositions';
+import type { CompositionProps } from '@teambit/compositions.model.composition-type';
+import { Composition } from '@teambit/compositions.model.composition-type';
 import type { ComponentIdObj } from '@teambit/component-id';
 import { ComponentID } from '@teambit/component-id';
 import type { LegacyComponentLog } from '@teambit/legacy-component-log';
-import type { ComponentPreviewSize } from '@teambit/preview';
 import { Tag } from '../../tag';
 import { TagMap } from '../../tag-map';
 import type { TagProps } from '../../tag/tag';
@@ -29,6 +28,27 @@ export type RegularCompDescriptor = {
   type?: string;
   name?: string;
   description?: string;
+};
+
+/**
+ * the preview bundle size the component model needs. it lives here and not in the preview aspect, so the
+ * component model doesn't depend on that aspect (it depends on component).
+ */
+export type ComponentPreviewSize = {
+  files: ComponentPreviewSizedFile[];
+  assets: ComponentPreviewSizedFile[];
+  totalFiles: number;
+  compressedTotalFiles?: number;
+  totalAssets: number;
+  compressedTotalAssets?: number;
+  total: number;
+  compressedTotal?: number;
+};
+
+export type ComponentPreviewSizedFile = {
+  name: string;
+  size: number;
+  compressedSize?: number;
 };
 
 // ADDING MORE PROPERTIES HERE IS NOT ALLOWED!!! IF YOU NEED DATA PLEASE ADD A NEW

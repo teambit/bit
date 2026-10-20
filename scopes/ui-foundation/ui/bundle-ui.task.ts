@@ -39,6 +39,7 @@ export function getUiRootHtmlFilename(uiRootAspectId: string): string {
 export class BundleUiTask implements BuildTask {
   aspectId = 'teambit.ui-foundation/ui';
   name = BUNDLE_UI_TASK_NAME;
+  readonly description = 'Pre-bundling the Bit UI';
   location: TaskLocation = 'end';
 
   constructor(

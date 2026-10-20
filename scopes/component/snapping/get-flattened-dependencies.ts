@@ -99,7 +99,7 @@ export class FlattenedDependenciesGetter {
 if this is an external env/extension/aspect configured in workspace.jsonc, make sure it is set with a version`);
           }
           const fromModel = await this.scope.getVersionInstance(id);
-          this.cache[id.toString()] = fromModel.flattenedDependencies;
+          this.cache[id.toString()] = await fromModel.loadFlattenedDependencies(this.scope.objects);
         }
       }
     }

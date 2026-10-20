@@ -44,6 +44,7 @@ export const GENERATE_ENV_TEMPLATE_TASK_NAME = 'GenerateEnvTemplate';
 export class EnvPreviewTemplateTask implements BuildTask {
   aspectId = 'teambit.preview/preview';
   name = GENERATE_ENV_TEMPLATE_TASK_NAME;
+  readonly description = 'Generating the preview template of the env';
   location: TaskLocation = 'end';
   // readonly dependencies = [CompilerAspect.id];
 

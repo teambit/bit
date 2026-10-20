@@ -22,6 +22,7 @@ import type { BuildStatus } from '@teambit/legacy.constants';
 import { Extensions, LATEST } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsPendingImport } from '@teambit/legacy.consumer';
+import { getDocsFromFiles } from '@teambit/legacy.consumer-component';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import pMapSeries from 'p-map-series';
 import type { Logger, LoggerMain } from '@teambit/logger';
@@ -31,6 +32,7 @@ import pMap from 'p-map';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { getLogForSquash } from '@teambit/harmony.modules.get-basic-log';
+import { FLATTENED_DEPS_IN_SOURCE, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import type { ScopeMain } from '@teambit/scope';
@@ -73,7 +75,7 @@ import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import type { RemoveMain } from '@teambit/remove';
 import { RemoveAspect } from '@teambit/remove';
-import type { BasicTagParams, BasicTagSnapParams, VersionMakerParams } from './version-maker';
+import type { BasicTagParams, BasicTagSnapParams, DependentWithPinnedDeps, VersionMakerParams } from './version-maker';
 import { VersionMaker, updateVersions } from './version-maker';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
@@ -137,6 +139,7 @@ export type BasicTagResults = {
   warnings: string[];
   newComponents: ComponentIdList;
   removedComponents?: ComponentIdList;
+  dependentsWithPinnedDeps?: DependentWithPinnedDeps[];
   totalComponentsCount?: number; // total count of all components tagged/snapped (including auto-tagged)
   /**
    * the workspace-root component that joined the batch because it was new or modified, at its new
@@ -308,6 +311,7 @@ export class SnappingMain {
     const {
       taggedComponents,
       autoTaggedResults,
+      dependentsWithPinnedDeps,
       publishedPackages,
       stagedConfig,
       removedComponents,
@@ -317,6 +321,7 @@ export class SnappingMain {
     const tagResults = {
       taggedComponents,
       autoTaggedResults,
+      dependentsWithPinnedDeps,
       isSoftTag: soft,
       publishedPackages,
       warnings,
@@ -516,6 +521,23 @@ export class SnappingMain {
       })
     );
 
+    // a workspace parses the docs from the files whenever it loads a component. the files of these components are new
+    // or changed (updated above or merged in-memory), so parse them, rather than keeping the docs of the loaded version.
+    const compsWithChangedFiles = [
+      ...newComponents,
+      ...existingComponents.filter(
+        (comp) =>
+          getSnapData(comp.id).files?.length ||
+          updatedLegacyComponents.some((legacyComp) => legacyComp.id.isEqualWithoutVersion(comp.id))
+      ),
+    ];
+    await Promise.all(
+      compsWithChangedFiles.map(async (comp) => {
+        const legacyComp: ConsumerComponent = comp.state._consumer;
+        legacyComp.docs = await getDocsFromFiles(legacyComp.files);
+      })
+    );
+
     // load the aspects user configured to set on the components. it creates capsules if needed.
     // otherwise, when a user set a custom-env, it won't be loaded and the Version object will leave the
     // teambit.envs/envs in a weird state. the config will be set correctly but the data will be set to the default
@@ -656,12 +678,19 @@ export class SnappingMain {
       ignoreIssues,
       autoAddedWorkspaceRoot,
     };
-    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents, totalComponentsCount } =
-      await this.makeVersion(idsToSnap, components, makeVersionParams);
+    const {
+      taggedComponents,
+      autoTaggedResults,
+      dependentsWithPinnedDeps,
+      stagedConfig,
+      removedComponents,
+      totalComponentsCount,
+    } = await this.makeVersion(idsToSnap, components, makeVersionParams);
 
     const snapResults: Partial<SnapResults> = {
       snappedComponents: taggedComponents,
       autoSnappedResults: autoTaggedResults,
+      dependentsWithPinnedDeps,
       newComponents,
       removedComponents,
       totalComponentsCount,
@@ -1216,6 +1245,10 @@ another option, in case this dependency is not in main yet is to remove all refe
       id: { scope: source.scope || (source.defaultScope as string), name: source.name },
       lane: lane ? { scope: lane.scope, name: lane.name, hash: lane.hash().toString() } : undefined,
     };
+    if (isFeatureEnabled(FLATTENED_DEPS_IN_SOURCE)) {
+      const flattenedDependencies = version.moveFlattenedDependenciesToSource();
+      if (flattenedDependencies) objectRepo.add(flattenedDependencies);
+    }
     objectRepo.add(version);
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
     if (dependenciesGraph) this.objectsRepo.add(dependenciesGraph);

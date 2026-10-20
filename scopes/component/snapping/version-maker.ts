@@ -20,9 +20,10 @@ import { PkgAspect, getPublishRegistry, shouldPublishToExternalRegistry } from '
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { isSnap as isSnapVersion } from '@teambit/component-version';
-import type { BuilderMain, OnTagOpts } from '@teambit/builder';
+import type { BuilderMain, OnTagOpts, UnbuiltBuilderData } from '@teambit/builder';
 import type { ModelComponent, Log, Lane } from '@teambit/objects';
 import { DependenciesGraph } from '@teambit/objects';
+import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { MessagePerComponent } from './message-per-component';
 import { MessagePerComponentFetcher } from './message-per-component';
 import { VersionFileParser } from './version-file-parser';
@@ -67,6 +68,12 @@ export type BasicTagParams = BasicTagSnapParams & {
    */
   skipPublishedVersions?: boolean;
 };
+
+/**
+ * a workspace component that depends on a tagged/snapped component, but its config sets the version of this
+ * dependency (e.g. "bit deps set"). it doesn't use the workspace version, so it's not auto-tagged.
+ */
+export type DependentWithPinnedDeps = { id: ComponentID; pinnedDependencies: string[] };
 
 export type VersionMakerParams = {
   tagDataPerComp?: TagDataPerComp[];
@@ -123,6 +130,7 @@ export class VersionMaker {
   async makeVersion(): Promise<{
     taggedComponents: ConsumerComponent[];
     autoTaggedResults: AutoTagResult[];
+    dependentsWithPinnedDeps: DependentWithPinnedDeps[];
     publishedPackages: string[];
     stagedConfig?: StagedConfig;
     removedComponents?: ComponentIdList;
@@ -154,6 +162,7 @@ export class VersionMaker {
     this.params.isSnap ? this.setHashes() : await this.setFutureVersions(autoTagIds);
     // go through all dependencies and update their versions
     this.updateDependenciesVersions();
+    const dependentsWithPinnedDeps = this.getDependentsWithPinnedDeps();
     this.recordWorkspaceRoot();
     await this.addLogToComponents(componentsToTag, autoTagComponents, messagePerId);
     // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
@@ -167,6 +176,7 @@ export class VersionMaker {
       return {
         taggedComponents: componentsToTag,
         autoTaggedResults: autoTagData,
+        dependentsWithPinnedDeps,
         publishedPackages: [],
         stagedConfig,
         totalComponentsCount: this.allComponentsToTag.length,
@@ -181,7 +191,7 @@ export class VersionMaker {
       await this._addDependenciesGraphToComponents();
     }
     await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
-    if (!build) this.emptyBuilderData();
+    if (!build) this.setUnbuiltBuilderData();
     this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);
 
     const currentLane = this.consumer?.getCurrentLaneId();
@@ -270,6 +280,7 @@ export class VersionMaker {
     return {
       taggedComponents: componentsToTag,
       autoTaggedResults: autoTagData,
+      dependentsWithPinnedDeps,
       publishedPackages,
       stagedConfig,
       removedComponents,
@@ -689,15 +700,37 @@ export class VersionMaker {
   }
 
   /**
-   * otherwise, tagging without build will have the old build data of the previous snap/tag.
-   * in case we currently build, it's ok to leave the data as is, because it'll be overridden anyway.
+   * when not building, replace the builder data, otherwise, it has the old build data of the previous snap/tag.
+   * (when building, the build overrides it anyway).
+   * the new data has only the tasks that are going to run once the component is built (e.g. by the CI), so they can
+   * be shown before the build starts.
    */
-  private emptyBuilderData() {
+  private setUnbuiltBuilderData() {
+    const plannedTasksPerComp = this.builder.getPlannedTasks(
+      this.getHarmonyComps(this.allComponentsToTag.filter((c) => !c.isRemoved())),
+      this.params.isSnap ? 'snap' : 'tag'
+    );
     this.allComponentsToTag.forEach((component) => {
       component.extensions = component.extensions.clone();
+      const plannedTasks = plannedTasksPerComp.get(component.id.toStringWithoutVersion());
+      const data: Partial<UnbuiltBuilderData> = plannedTasks ? { plannedTasks } : {};
       const existingBuilder = component.extensions.findCoreExtension(Extensions.builder);
-      if (existingBuilder) existingBuilder.data = {};
+      if (existingBuilder) existingBuilder.data = data;
+      else if (plannedTasks)
+        component.extensions.push(new ExtensionDataEntry(undefined, undefined, Extensions.builder, {}, data));
     });
+  }
+
+  /**
+   * the harmony components that were already loaded. (the auto-tagged ones are available only in a workspace).
+   */
+  private getHarmonyComps(consumerComponents: ConsumerComponent[]): Component[] {
+    const loadedComps = [...this.components, ...(this.allWorkspaceComps || [])];
+    return compact(
+      consumerComponents.map((consumerComp) =>
+        loadedComps.find((comp) => comp.id.isEqualWithoutVersion(consumerComp.id))
+      )
+    );
   }
 
   private updateDependenciesVersions() {
@@ -706,9 +739,12 @@ export class VersionMaker {
     // from main. we want to keep it as the user requested. Otherwise, this changes the dependency version to the newly
     // snapped one unintentionally.
     const componentsToTag = this.allComponentsToTag.filter((c) => !c.isRemoved());
-    const getNewDependencyVersion = (id: ComponentID): ComponentID | null => {
+    const getNewDependencyVersion = (id: ComponentID, dependent?: ConsumerComponent): ComponentID | null => {
       const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
-      return foundDependency ? id.changeVersion(foundDependency.version) : null;
+      if (!foundDependency) return null;
+      // the dependent uses the version set in its config (e.g. "bit deps set"), not the workspace one. keep it.
+      if (dependent?.isDependencyVersionFromConfig(id)) return null;
+      return id.changeVersion(foundDependency.version);
     };
     const changeExtensionsVersion = (component: ConsumerComponent): void => {
       component.extensions.forEach((ext) => {
@@ -736,7 +772,7 @@ export class VersionMaker {
         // "ComponentID.fromObject expect to get an object, got an instance of ComponentID" (locally it didn't happen)
         const depId =
           dep.componentId instanceof ComponentID ? dep.componentId : ComponentID.fromObject(dep.componentId);
-        const newDepId = getNewDependencyVersion(depId);
+        const newDepId = getNewDependencyVersion(depId, component);
         dep.componentId = (newDepId || depId).serialize();
         dep.id = (newDepId || depId).toString();
         dep.version = (newDepId || depId).version;
@@ -754,7 +790,7 @@ export class VersionMaker {
       const componentRangePrefix =
         this.dependencyResolver.calcComponentRangePrefixByConsumerComponent(oneComponentToTag);
       oneComponentToTag.getAllDependencies().forEach((dependency) => {
-        const newDepId = getNewDependencyVersion(dependency.id);
+        const newDepId = getNewDependencyVersion(dependency.id, oneComponentToTag);
         if (!newDepId) return;
         dependency.id = newDepId;
         // if componentRangePrefix === '+', then, only it only saves packages in workspace.jsonc.
@@ -767,6 +803,25 @@ export class VersionMaker {
       changeExtensionsVersion(oneComponentToTag);
       oneComponentToTag = updateDepsResolverData(oneComponentToTag);
     });
+  }
+
+  private getDependentsWithPinnedDeps(): DependentWithPinnedDeps[] {
+    if (!this.allWorkspaceComps) return [];
+    const idsToTag = ComponentIdList.fromArray(this.allComponentsToTag.map((c) => c.id));
+    // like updateDependenciesVersions, a removed component doesn't count as a new version of a dependency
+    const idsWithNewVersion = ComponentIdList.fromArray(
+      this.allComponentsToTag.filter((c) => !c.isRemoved()).map((c) => c.id)
+    );
+    return compact(
+      this.allWorkspaceComps.map((component) => {
+        const consumerComponent: ConsumerComponent = component.state._consumer;
+        const pinnedDependencies = consumerComponent.getDependenciesWithVersionFromConfig((id) =>
+          idsWithNewVersion.hasWithoutVersion(id)
+        );
+        if (!pinnedDependencies.length || idsToTag.hasWithoutVersion(component.id)) return null;
+        return { id: component.id, pinnedDependencies };
+      })
+    );
   }
 
   /**

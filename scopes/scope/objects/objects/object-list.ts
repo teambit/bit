@@ -290,11 +290,13 @@ export class ObjectList {
   ): Promise<{ bitObjectList: BitObjectList; rawSources: RawObjectsMap }> {
     const concurrency = concurrentIOLimit();
     const rawSources: RawObjectsMap = new Map();
+    const objectsByRef = new Map<string, BitObject>();
     const bitObjects = await pMapPool(
       this.objects,
       async (object) => {
         try {
           const { object: bitObject, inflatedSize } = await BitObject.parseObjectWithSize(object.buffer);
+          objectsByRef.set(object.ref.toString(), bitObject);
           if (collectRawSources && bitObject.getType() === 'Source') {
             if (bitObject.hash().isEqual(object.ref)) {
               rawSources.set(bitObject, { buffer: object.buffer, inflatedSize, ref: object.ref });
@@ -313,7 +315,7 @@ export class ObjectList {
       },
       { concurrency }
     );
-    return { bitObjectList: new BitObjectList(compact(bitObjects)), rawSources };
+    return { bitObjectList: new BitObjectList(compact(bitObjects), objectsByRef), rawSources };
   }
 
   static async fromBitObjects(bitObjects: BitObject[]): Promise<ObjectList> {

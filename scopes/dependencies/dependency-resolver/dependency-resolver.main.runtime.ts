@@ -145,6 +145,22 @@ export type GetVersionResolverOptions = {
   cacheRootDirectory?: string;
 };
 
+/**
+ * this is needed because during tag process, the data.dependencies can be loaded and the componentId can become
+ * an instance of ComponentID class. it needs to be serialized before saved into objects.
+ * it's at the module level, so that it doesn't keep the provider's scope, and with it the harmony instance, alive.
+ */
+function serializeDepResolverDataBeforePersist(extDataList: ExtensionDataList) {
+  const entry = extDataList.findCoreExtension(DependencyResolverAspect.id);
+  if (!entry) return;
+  const dependencies = get(entry, ['data', 'dependencies'], []);
+  dependencies.forEach((dep) => {
+    if (dep.__type === COMPONENT_DEP_TYPE) {
+      dep.componentId = dep.componentId instanceof ComponentID ? dep.componentId.serialize() : dep.componentId;
+    }
+  });
+}
+
 const defaultLinkingOptions: LinkingOptions = {
   linkTeambitBit: true,
   linkCoreAspects: true,
@@ -2089,19 +2105,9 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     envs.registerService(new DependenciesService());
     envs.registerEnvJsoncMergeCustomizer(dependencyResolver.mergeEnvManifestPolicy.bind(dependencyResolver));
 
-    // this is needed because during tag process, the data.dependencies can be loaded and the componentId can become
-    // an instance of ComponentID class. it needs to be serialized before saved into objects.
-    const serializeDepResolverDataBeforePersist = (extDataList: ExtensionDataList) => {
-      const entry = extDataList.findCoreExtension(DependencyResolverAspect.id);
-      if (!entry) return;
-      const dependencies = get(entry, ['data', 'dependencies'], []);
-      dependencies.forEach((dep) => {
-        if (dep.__type === COMPONENT_DEP_TYPE) {
-          dep.componentId = dep.componentId instanceof ComponentID ? dep.componentId.serialize() : dep.componentId;
-        }
-      });
-    };
-    ExtensionDataList.toModelObjectsHook.push(serializeDepResolverDataBeforePersist);
+    if (!ExtensionDataList.toModelObjectsHook.includes(serializeDepResolverDataBeforePersist)) {
+      ExtensionDataList.toModelObjectsHook.push(serializeDepResolverDataBeforePersist);
+    }
 
     // validate aspects data (env id, dependencies data) before persisting them into the model during snap/tag.
     // (was registered by teambit.harmony/aspect before it was removed from the core aspects)
@@ -2134,7 +2140,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
         }
       }
       return packageJsonObject;
-    });
+    }, DependencyResolverAspect.id);
 
     return dependencyResolver;
   }

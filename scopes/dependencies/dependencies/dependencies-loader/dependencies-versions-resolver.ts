@@ -29,6 +29,8 @@ export async function updateDependenciesVersions(
   const currentLane = await workspace.getCurrentLaneObject();
   const componentRangePrefix = depsResolver.calcComponentRangePrefixByConsumerComponent(component);
   const supportComponentRange = componentRangePrefix && componentRangePrefix !== '-';
+  const dependenciesWithVersionFromConfig: string[] = [];
+  component.dependenciesWithVersionFromConfig = dependenciesWithVersionFromConfig;
   updateDependencies(component.dependencies, 'dependencies');
   updateDependencies(component.devDependencies, 'devDependencies');
   updateDependencies(component.peerDependencies, 'peerDependencies');
@@ -42,7 +44,11 @@ export async function updateDependenciesVersions(
    * running bit link --rewire).
    * 2: this gets called for extension-id.
    */
-  function resolveVersion(id: ComponentID, depType: DepType, pkg?: string): { version?: string; range?: string } {
+  function resolveVersion(
+    id: ComponentID,
+    depType: DepType,
+    pkg?: string
+  ): { version?: string; range?: string; fromConfig?: boolean } {
     const idFromBitMap = getIdFromBitMap(id);
     const idFromComponentConfig = getIdFromComponentConfig(id);
     const getFromComponentConfig = () => idFromComponentConfig;
@@ -97,17 +103,19 @@ export async function updateDependenciesVersions(
         debugDep.version = version;
       }
 
-      return { version, range: strategyId instanceof ComponentID ? undefined : strategyId.range };
+      const fromConfig = strategy === getFromComponentConfig || strategy === getFromOverrides;
+      return { version, range: strategyId instanceof ComponentID ? undefined : strategyId.range, fromConfig };
     }
     return {};
   }
 
   function updateDependency(dependency: Dependency, depType: DepType) {
     const { id, packageName } = dependency;
-    const { version: resolvedVersion, range } = resolveVersion(id, depType, packageName);
+    const { version: resolvedVersion, range, fromConfig } = resolveVersion(id, depType, packageName);
     if (!resolvedVersion) {
       return;
     }
+    if (fromConfig) dependenciesWithVersionFromConfig.push(id.toStringWithoutVersion());
     dependency.id = dependency.id.changeVersion(resolvedVersion);
     if (supportComponentRange) {
       if (range) dependency.versionRange = range;

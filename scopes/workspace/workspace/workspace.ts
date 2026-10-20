@@ -14,6 +14,7 @@ import type {
   InvalidComponent,
   ResolveAspectsOptions,
   AspectList,
+  GetGraphIdsOpts,
 } from '@teambit/component';
 import { AspectEntry } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
@@ -640,7 +641,11 @@ export class Workspace implements ComponentFactory {
     return this.buildOneGraphForComponents(ids, undefined, undefined, shouldThrowOnMissingDep);
   }
 
-  async getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<CompIdGraph> {
+  async getGraphIds(
+    ids?: ComponentID[],
+    shouldThrowOnMissingDep = true,
+    opts: GetGraphIdsOpts = {}
+  ): Promise<CompIdGraph> {
     if (!ids || ids.length < 1) ids = this.listIds();
 
     const graphIdsFromFsBuilder = new GraphIdsFromFsBuilder(
@@ -649,7 +654,7 @@ export class Workspace implements ComponentFactory {
       this.dependencyResolver,
       shouldThrowOnMissingDep
     );
-    return graphIdsFromFsBuilder.buildGraph(ids);
+    return graphIdsFromFsBuilder.buildGraph(ids, opts);
   }
 
   async getUnavailableOnMainComponents(): Promise<ComponentID[]> {
@@ -681,7 +686,8 @@ export class Workspace implements ComponentFactory {
     const flattenedEdges = await this.scope.getFlattenedEdges(component.id);
     const versionObj = await this.scope.getBitObjectVersionById(component.id);
     if (!flattenedEdges || !versionObj) return null;
-    if (!flattenedEdges.length && versionObj.flattenedDependencies.length) {
+    const flattenedDependencies = await versionObj.loadFlattenedDependencies(this.scope.legacyScope.objects);
+    if (!flattenedEdges.length && flattenedDependencies.length) {
       // there are flattenedDependencies, so must be edges, if they're empty, it's because the component was tagged
       // with a version < ~0.0.901, so this flattenedEdges wasn't exist.
       return null;
@@ -698,7 +704,7 @@ export class Workspace implements ComponentFactory {
     const currentVersion = getCurrentVersionAsTagIfPossible();
 
     flattenedBitIdCompIdMap[component.id.changeVersion(currentVersion).toString()] = component.id;
-    versionObj.flattenedDependencies.forEach((bitId) => {
+    flattenedDependencies.forEach((bitId) => {
       flattenedBitIdCompIdMap[bitId.toString()] = bitId;
     });
     const getCompIdByIdStr = (idStr: string): ComponentID => {
@@ -2527,20 +2533,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   async resolveEnvManifest(envId: string, envExtendsDeps: LegacyDependency[] = []): Promise<EnvJsonc> {
     if (this.aspectLoader.isCoreEnv(envId)) return {};
 
-    const splitted = envId.split('@');
-    const envIdWithVersion = envId.startsWith('@') ? `@${splitted[1]}` : splitted[0];
-    const foundEnv = envExtendsDeps.find(
-      (dep) => dep.id.toStringWithoutVersion() === envIdWithVersion || dep.packageName === envIdWithVersion
-    );
-    let id = envId;
-    if (foundEnv?.id) {
-      if (foundEnv.id.version.includes('-new')) {
-        id = foundEnv.id.toStringWithoutVersion();
-      } else {
-        id = foundEnv.id.toString();
-      }
-    }
-
+    const id = this.envs.getParentEnvIdToLoad(envId, envExtendsDeps);
     const resolvedEnvComponentId = await this.resolveComponentId(id);
 
     // We need to load the env component with the slot and extensions to get the env manifest of the parent
