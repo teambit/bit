@@ -45,7 +45,41 @@ export type UseBulkPagedQueryResult<TItem> = {
   loading: boolean;
   /** number of pairs whose data has loaded so far. */
   loadedCount: number;
+  /**
+   * true when the server's GraphQL schema does not have this query or one of its fields, e.g. an older
+   * backend. Paging stops at once and every pair reads as `null`; retrying cannot help.
+   */
+  unsupported: boolean;
 };
+
+/**
+ * Whether an Apollo error says the server rejected the query itself: its GraphQL schema does not have
+ * a queried field or type (a validation error). That is a permanent mismatch with the backend, not a
+ * transient failure.
+ *
+ * Servers answer a validation error with HTTP 400. Some clients (e.g. Bit Cloud's error link) keep only
+ * Apollo's "Received status code 400" message and drop the server's text, so a 400 counts too: the
+ * callers' queries are static, so a 400 can only mean the schema rejected them.
+ */
+export function isUnsupportedQueryError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const err = error as {
+    graphQLErrors?: Array<{ message?: string }>;
+    networkError?: { statusCode?: number; result?: { errors?: Array<{ message?: string }> } };
+  };
+  if (err.networkError?.statusCode === 400) return true;
+  const messages = [
+    ...(err.graphQLErrors ?? []),
+    // Apollo reports a 400 response (how servers return validation errors) as a network error.
+    ...(err.networkError?.result?.errors ?? []),
+  ].map((e) => e?.message ?? '');
+  return messages.some(
+    (message) =>
+      /^Cannot query field "[^"]+" on type "[^"]+"/.test(message) ||
+      /^Unknown type "[^"]+"/.test(message) ||
+      message.endsWith('Received status code 400')
+  );
+}
 
 /**
  * Sequentially pages a bulk GraphQL query (page 1, then `fetchMore` for each subsequent page) and
@@ -78,7 +112,7 @@ export function useBulkPagedQuery<TItem>({
 
   // raw `useQuery` (not the app's `useDataQuery` wrapper) on purpose: the wrapper pops an error toast on
   // failure, which would fire on every transient page error this hook is designed to silently retry.
-  const { data, loading, fetchMore } = useQuery(query, {
+  const { data, loading, fetchMore, error } = useQuery(query, {
     variables: { pairs: stablePairs, offset: 0, limit: pageSize, host },
     skip,
     notifyOnNetworkStatusChange: true,
@@ -100,10 +134,14 @@ export function useBulkPagedQuery<TItem>({
   // consecutive transient page-fetch errors. a flaky page is retried up to MAX_PAGE_RETRIES before the
   // remaining pairs read as failed — so one dropped request no longer permanently fails every later pair.
   const [errorRetries, setErrorRetries] = useState(0);
+  // a page rejected because the server's schema lacks the query or a field. permanent, so never retried.
+  const [fetchUnsupported, setFetchUnsupported] = useState(false);
   useEffect(() => {
     setStoppedShort(false);
     setErrorRetries(0);
+    setFetchUnsupported(false);
   }, [sessionKey, skip]);
+  const unsupported = !skip && (fetchUnsupported || isUnsupportedQueryError(error));
 
   // the session this hook is currently paging — a fetchMore started for an earlier session can still
   // resolve/reject after the inputs changed, so its callbacks check this before terminating the new
@@ -117,7 +155,7 @@ export function useBulkPagedQuery<TItem>({
   // every page loaded, paging stopped at a short page, or transient retries exhausted: no more requests.
   // NB: a transient error alone does NOT make us `done` — the loop retries it (up to MAX_PAGE_RETRIES),
   // and until then un-fetched pairs stay `undefined` (pending) rather than being reported as failed.
-  const done = allLoaded || stoppedShort || errorRetries >= MAX_PAGE_RETRIES;
+  const done = allLoaded || stoppedShort || errorRetries >= MAX_PAGE_RETRIES || unsupported;
 
   // sequential background paging: whenever a page settles and pairs remain, request the next page.
   useEffect(() => {
@@ -157,10 +195,16 @@ export function useBulkPagedQuery<TItem>({
           },
         };
       },
-    }).catch(() => {
+    }).catch((err) => {
+      if (!stillActive()) return;
+      // the server's schema does not have this query: stop paging instead of retrying.
+      if (isUnsupportedQueryError(err)) {
+        setFetchUnsupported(true);
+        return;
+      }
       // a transient fetch failure: bump the retry counter so the effect re-issues this page (up to
       // MAX_PAGE_RETRIES) instead of permanently failing every not-yet-fetched pair.
-      if (stillActive()) setErrorRetries((n) => n + 1);
+      setErrorRetries((n) => n + 1);
     });
   }, [
     skip,
@@ -206,7 +250,8 @@ export function useBulkPagedQuery<TItem>({
       },
       loading: !done,
       loadedCount: results.length,
+      unsupported,
     }),
-    [dataByCompareId, done, requestedCompareIds, results.length]
+    [dataByCompareId, done, requestedCompareIds, results.length, unsupported]
   );
 }

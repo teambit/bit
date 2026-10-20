@@ -107,8 +107,10 @@ describe('CodeCompare', () => {
       fileCompareDataByName: undefined,
     });
 
-    renderToStaticMarkup(<CodeCompare />);
+    const markup = renderToStaticMarkup(<CodeCompare />);
 
     expect(mockViewProps).toEqual([{ loader: true }]);
+    // the loader is absolutely positioned, so it must sit in its own positioned box, not overlay the page.
+    expect(markup).toContain('listLoader');
   });
 });

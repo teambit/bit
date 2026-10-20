@@ -168,7 +168,11 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
         <HoverSplitter className={styles.splitter} />
         <Pane className={classNames(styles.right, styles.dark, !isSidebarOpen && styles.collapsed)}>
           {waitForList ? (
-            <CodeCompareViewLoader />
+            // the loader is absolutely positioned (it overlays the diff area while a file loads), so it
+            // needs its own positioned box here. Without one it covers every drawer on the page.
+            <div className={styles.listLoader}>
+              <CodeCompareViewLoader className={styles.listLoaderSkeleton} />
+            </div>
           ) : (
             <CodeView
               widgets={[Widget]}
