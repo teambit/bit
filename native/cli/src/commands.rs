@@ -8,12 +8,15 @@ mod color;
 mod config;
 mod delete;
 mod deprecate;
+mod details;
 mod diff;
 mod doctor;
 mod engine;
 mod export;
 mod file_history;
 mod fork;
+mod git;
+mod globals;
 mod ids;
 mod import;
 mod init;
@@ -38,13 +41,16 @@ mod rename;
 mod reset;
 mod scope_rename;
 mod scope_set;
+mod scope_trust;
 mod snap;
 mod stash;
 mod status;
 mod switch;
+mod system;
 mod tag;
 #[cfg(test)]
 mod test_support;
+mod version;
 mod workspace_command;
 
 use crate::native::Outcome;
@@ -66,12 +72,15 @@ pub const COMMANDS: &[Command] = &[
     delete::COMMAND,
     deprecate::COMMAND,
     deprecate::UNDEPRECATE,
+    details::COMMAND,
     doctor::COMMAND,
     file_history::BLAME,
     fork::COMMAND,
     diff::COMMAND,
     export::COMMAND,
     file_history::LOG_FILE,
+    git::COMMAND,
+    globals::COMMAND,
     import::FETCH,
     import::IMPORT,
     init::COMMAND,
@@ -94,7 +103,9 @@ pub const COMMANDS: &[Command] = &[
     stash::COMMAND,
     status::COMMAND,
     switch::COMMAND,
+    system::COMMAND,
     tag::COMMAND,
+    version::COMMAND,
 ];
 
 pub fn find(name: &str) -> Option<&'static Command> {

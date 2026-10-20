@@ -20,4 +20,5 @@ mod remote;
 mod remove;
 mod reset;
 mod snap;
+mod system_git_scope;
 mod tag;

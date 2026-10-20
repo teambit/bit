@@ -6,6 +6,7 @@
 //! `cargo test -p bit-cli --features e2e --test e2e`.
 
 mod commands;
+mod flows;
 mod harmony;
 mod helper;
 mod known_failure;

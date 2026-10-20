@@ -1,5 +1,6 @@
 //! `e2e/harmony/`.
 mod add;
+mod bit_ignore;
 mod deprecation;
 mod fork;
 mod install_compat;
@@ -7,6 +8,7 @@ mod lane_adoption;
 mod lane_graph_reset;
 mod lane_import_callbacks;
 mod lane_restoration;
+mod lanes;
 mod merge_callbacks;
 mod merge_history;
 mod merge_lifecycle;
@@ -16,6 +18,7 @@ mod refactor;
 mod rename;
 mod scope_fork;
 mod scope_rename;
+mod workspace_config;
 
 mod bitmap_states;
 mod checkout_callbacks;

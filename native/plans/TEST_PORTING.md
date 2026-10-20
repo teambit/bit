@@ -819,8 +819,8 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/flows/bitmap-deleted.e2e.ts`
 
-- [ ] `e2e/flows/bitmap-deleted.e2e.ts:29` user deleted only .bitmap file leaving the objects in place › tagging a component, then, deleting .bitmap file › bit init › should throw an error
-- [ ] `e2e/flows/bitmap-deleted.e2e.ts:39` user deleted only .bitmap file leaving the objects in place › tagging a component, then, deleting .bitmap file › bit init --force › should init successfully
+- [x] `e2e/flows/bitmap-deleted.e2e.ts:29` user deleted only .bitmap file leaving the objects in place › tagging a component, then, deleting .bitmap file › bit init › should throw an error — `flows::bitmap_deleted::bit_init_should_throw_an_error`
+- [x] `e2e/flows/bitmap-deleted.e2e.ts:39` user deleted only .bitmap file leaving the objects in place › tagging a component, then, deleting .bitmap file › bit init --force › should init successfully — `flows::bitmap_deleted::bit_init_force_should_init_successfully`
 
 ### `e2e/flows/cyclic-dependencies.e2e.ts`
 
@@ -851,9 +851,9 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/flows/delete-files.e2e.ts`
 
-- [ ] `e2e/flows/delete-files.e2e.ts:24` delete files from a component › after adding it › bit status should not throw an error and should show it as a new component
-- [ ] `e2e/flows/delete-files.e2e.ts:38` delete files from a component › tag and then delete a file › bit status should show the component as modified
-- [ ] `e2e/flows/delete-files.e2e.ts:54` delete files from a component › adding a file, tagging it, deleting it and then tagging again › should not show the deleted file in bit show command
+- [x] `e2e/flows/delete-files.e2e.ts:24` delete files from a component › after adding it › bit status should not throw an error and should show it as a new component — `flows::delete_files::after_adding_it_bit_status_should_not_throw_an_error_and_should_show_it_as_a_new_component`
+- [x] `e2e/flows/delete-files.e2e.ts:38` delete files from a component › tag and then delete a file › bit status should show the component as modified — `flows::delete_files::tag_and_then_delete_a_file_bit_status_should_show_the_component_as_modified`
+- [x] `e2e/flows/delete-files.e2e.ts:54` delete files from a component › adding a file, tagging it, deleting it and then tagging again › should not show the deleted file in bit show command — `flows::delete_files::adding_a_file_tagging_it_deleting_it_and_then_tagging_again_should_not_show_the_deleted_file_in_bit_show_command`
 
 ### `e2e/flows/id-with-wildcard.e2e.ts`
 
@@ -1207,12 +1207,12 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/bit-ignore.e2e.ts`
 
-- [ ] `e2e/harmony/bit-ignore.e2e.ts:21` Bit Ignore functionality › adding .bitignore in a comp dir › should respect the .bitignore file and ignore according to the pattern
-- [ ] `e2e/harmony/bit-ignore.e2e.ts:35` Bit Ignore functionality › adding .bitignore in the root dir › should respect the .bitignore file and ignore according to the pattern
-- [ ] `e2e/harmony/bit-ignore.e2e.ts:49` Bit Ignore functionality › adding .gitignore and an empty .bitignore in the root dir › should only consider the .bitignore and ignore the .gitignore file
-- [ ] `e2e/harmony/bit-ignore.e2e.ts:61` Bit Ignore functionality › adding only .gitignore in the component dir › should consider the .gitignore, ignore the patterns in it, but track this .gitignore file
-- [ ] `e2e/harmony/bit-ignore.e2e.ts:74` Bit Ignore functionality › using ignoredFiles config in workspace.jsonc › should ignore files matching the configured patterns
-- [ ] `e2e/harmony/bit-ignore.e2e.ts:88` Bit Ignore functionality › adding .gitignore and .bitignore in the component dir › .bitignore should take precedence
+- [x] `e2e/harmony/bit-ignore.e2e.ts:21` Bit Ignore functionality › adding .bitignore in a comp dir › should respect the .bitignore file and ignore according to the pattern — `harmony::bit_ignore::adding_bitignore_in_a_comp_dir_should_respect_the_bitignore_file_and_ignore_according_to_the_pattern`
+- [x] `e2e/harmony/bit-ignore.e2e.ts:35` Bit Ignore functionality › adding .bitignore in the root dir › should respect the .bitignore file and ignore according to the pattern — `harmony::bit_ignore::adding_bitignore_in_the_root_dir_should_respect_the_bitignore_file_and_ignore_according_to_the_pattern`
+- [x] `e2e/harmony/bit-ignore.e2e.ts:49` Bit Ignore functionality › adding .gitignore and an empty .bitignore in the root dir › should only consider the .bitignore and ignore the .gitignore file — `harmony::bit_ignore::adding_gitignore_and_an_empty_bitignore_in_the_root_dir_should_only_consider_the_bitignore_and_ignore_the_gitignore_file`
+- [x] `e2e/harmony/bit-ignore.e2e.ts:61` Bit Ignore functionality › adding only .gitignore in the component dir › should consider the .gitignore, ignore the patterns in it, but track this .gitignore file — `harmony::bit_ignore::adding_only_gitignore_in_the_component_dir_should_consider_the_gitignore_ignore_the_patterns_in_it_but_track_this_gitignore_file`
+- [x] `e2e/harmony/bit-ignore.e2e.ts:74` Bit Ignore functionality › using ignoredFiles config in workspace.jsonc › should ignore files matching the configured patterns — `harmony::bit_ignore::using_ignored_files_config_in_workspace_jsonc_should_ignore_files_matching_the_configured_patterns`
+- [x] `e2e/harmony/bit-ignore.e2e.ts:88` Bit Ignore functionality › adding .gitignore and .bitignore in the component dir › .bitignore should take precedence — `harmony::bit_ignore::adding_gitignore_and_bitignore_in_the_component_dir_bitignore_should_take_precedence`
 
 ### `e2e/harmony/build-cmd.e2e.ts`
 
@@ -2330,17 +2330,17 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/lanes/abort-merge-lane.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/abort-merge-lane.e2e.ts:34` bit lane merge-abort command › when the lane was merged successfully without conflicts or diverged › should revert the .bitmap to the state before the merge
-- [ ] `e2e/harmony/lanes/abort-merge-lane.e2e.ts:39` bit lane merge-abort command › when the lane was merged successfully without conflicts or diverged › should revert the lane object to the state before the merge
-- [ ] `e2e/harmony/lanes/abort-merge-lane.e2e.ts:45` bit lane merge-abort command › when the lane was merged successfully without conflicts or diverged › should reset the source code to pre-merge
-- [ ] `e2e/harmony/lanes/abort-merge-lane.e2e.ts:69` bit lane merge-abort command › when the merged lane introduced new components › should delete the newly introduced component root-dirs
+- [x] `e2e/harmony/lanes/abort-merge-lane.e2e.ts:34` bit lane merge-abort command › when the lane was merged successfully without conflicts or diverged › should revert the .bitmap to the state before the merge — `harmony::lanes::abort_merge_lane::when_the_lane_was_merged_successfully_without_conflicts_or_diverged`
+- [x] `e2e/harmony/lanes/abort-merge-lane.e2e.ts:39` bit lane merge-abort command › when the lane was merged successfully without conflicts or diverged › should revert the lane object to the state before the merge — `harmony::lanes::abort_merge_lane::when_the_lane_was_merged_successfully_without_conflicts_or_diverged`
+- [x] `e2e/harmony/lanes/abort-merge-lane.e2e.ts:45` bit lane merge-abort command › when the lane was merged successfully without conflicts or diverged › should reset the source code to pre-merge — `harmony::lanes::abort_merge_lane::when_the_lane_was_merged_successfully_without_conflicts_or_diverged`
+- [x] `e2e/harmony/lanes/abort-merge-lane.e2e.ts:69` bit lane merge-abort command › when the merged lane introduced new components › should delete the newly introduced component root-dirs — `harmony::lanes::abort_merge_lane::when_the_merged_lane_introduced_new_components_should_delete_the_newly_introduced_component_root_dirs`
 
 ### `e2e/harmony/lanes/bit-checkout-on-lanes.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/bit-checkout-on-lanes.e2e.ts:39` bit checkout command when on a lane › checkout head when some components are merge-pending › should leave the merge-pending component with the current version
-- [ ] `e2e/harmony/lanes/bit-checkout-on-lanes.e2e.ts:43` bit checkout command when on a lane › checkout head when some components are merge-pending › should not update the non-merge-pending component to the latest
-- [ ] `e2e/harmony/lanes/bit-checkout-on-lanes.e2e.ts:48` bit checkout command when on a lane › checkout head when some components are merge-pending › should not write the files of the non-merge-pending component
-- [ ] `e2e/harmony/lanes/bit-checkout-on-lanes.e2e.ts:78` bit checkout command when on a lane › checkout head on main when some components are not available on main › should make them available on main even without running bit-import before
+- [x] `e2e/harmony/lanes/bit-checkout-on-lanes.e2e.ts:39` bit checkout command when on a lane › checkout head when some components are merge-pending › should leave the merge-pending component with the current version — `harmony::lanes::bit_checkout_on_lanes::parity_bugs::checkout_head_when_some_components_are_merge_pending`
+- [x] `e2e/harmony/lanes/bit-checkout-on-lanes.e2e.ts:43` bit checkout command when on a lane › checkout head when some components are merge-pending › should not update the non-merge-pending component to the latest — `harmony::lanes::bit_checkout_on_lanes::parity_bugs::checkout_head_when_some_components_are_merge_pending`
+- [x] `e2e/harmony/lanes/bit-checkout-on-lanes.e2e.ts:48` bit checkout command when on a lane › checkout head when some components are merge-pending › should not write the files of the non-merge-pending component — `harmony::lanes::bit_checkout_on_lanes::parity_bugs::checkout_head_when_some_components_are_merge_pending`
+- [x] `e2e/harmony/lanes/bit-checkout-on-lanes.e2e.ts:78` bit checkout command when on a lane › checkout head on main when some components are not available on main › should make them available on main even without running bit-import before — `harmony::lanes::bit_checkout_on_lanes::parity_bugs::checkout_head_on_main_when_some_components_are_not_available_on_main`
 
 ### `e2e/harmony/lanes/bit-import-on-lanes.e2e.ts`
 
@@ -2773,8 +2773,8 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/lanes/lanes-with-issues.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/lanes-with-issues.e2e.ts:30` lanes with various issues › issue - object of head of main is missing from the filesystem and remote › bit diff diff should not throw
-- [ ] `e2e/harmony/lanes/lanes-with-issues.e2e.ts:35` lanes with various issues › issue - object of head of main is missing from the filesystem and remote › bit diff main should not throw
+- [x] `e2e/harmony/lanes/lanes-with-issues.e2e.ts:30` lanes with various issues › issue - object of head of main is missing from the filesystem and remote › bit diff diff should not throw — `harmony::lanes::lanes_with_issues::bit_diff_should_not_throw`
+- [x] `e2e/harmony/lanes/lanes-with-issues.e2e.ts:35` lanes with various issues › issue - object of head of main is missing from the filesystem and remote › bit diff main should not throw — `harmony::lanes::lanes_with_issues::bit_diff_main_should_not_throw`
 
 ### `e2e/harmony/lanes/merge-lane-to-main-stale-dep-ref.e2e.ts`
 
@@ -2889,10 +2889,10 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/lanes/merge-lanes-partial.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/merge-lanes-partial.e2e.ts:34` merge lanes - partial merge functionality › partial merge › from a lane to main › without --include-deps › should throw an error asking to enter --include-deps flag
-- [ ] `e2e/harmony/lanes/merge-lanes-partial.e2e.ts:43` merge lanes - partial merge functionality › partial merge › from a lane to main › with --include-deps › should not merge components that were not part of the patterns nor part of the pattern dependencies
-- [ ] `e2e/harmony/lanes/merge-lanes-partial.e2e.ts:47` merge lanes - partial merge functionality › partial merge › from a lane to main › with --include-deps › should merge components that merge the pattern
-- [ ] `e2e/harmony/lanes/merge-lanes-partial.e2e.ts:51` merge lanes - partial merge functionality › partial merge › from a lane to main › with --include-deps › should merge components that are dependencies of the given pattern
+- [x] `e2e/harmony/lanes/merge-lanes-partial.e2e.ts:34` merge lanes - partial merge functionality › partial merge › from a lane to main › without --include-deps › should throw an error asking to enter --include-deps flag — `harmony::lanes::merge_lanes_partial::without_include_deps_should_throw_an_error_asking_to_enter_include_deps_flag`
+- [x] `e2e/harmony/lanes/merge-lanes-partial.e2e.ts:43` merge lanes - partial merge functionality › partial merge › from a lane to main › with --include-deps › should not merge components that were not part of the patterns nor part of the pattern dependencies — `harmony::lanes::merge_lanes_partial::with_include_deps_merges_pattern_and_dependencies_only`
+- [x] `e2e/harmony/lanes/merge-lanes-partial.e2e.ts:47` merge lanes - partial merge functionality › partial merge › from a lane to main › with --include-deps › should merge components that merge the pattern — `harmony::lanes::merge_lanes_partial::with_include_deps_merges_pattern_and_dependencies_only`
+- [x] `e2e/harmony/lanes/merge-lanes-partial.e2e.ts:51` merge lanes - partial merge functionality › partial merge › from a lane to main › with --include-deps › should merge components that are dependencies of the given pattern — `harmony::lanes::merge_lanes_partial::with_include_deps_merges_pattern_and_dependencies_only`
 
 ### `e2e/harmony/lanes/merge-lanes-remote.e2e.ts`
 
@@ -3934,12 +3934,12 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/workspace-config.e2e.ts`
 
-- [ ] `e2e/harmony/workspace-config.e2e.ts:18` workspace config (workspace.jsonc) › adding a non-component key › any command should throw a descriptive error
-- [ ] `e2e/harmony/workspace-config.e2e.ts:30` workspace config (workspace.jsonc) › adding a non-existing component to a variant › any command should throw a ComponentNotFound error with specific suggestions for the workspace.jsonc file
-- [ ] `e2e/harmony/workspace-config.e2e.ts:57` workspace config (workspace.jsonc) › comment preservation in workspace.jsonc › when changing defaultScope using workspace config API › should preserve comments above the workspace aspect
-- [ ] `e2e/harmony/workspace-config.e2e.ts:60` workspace config (workspace.jsonc) › comment preservation in workspace.jsonc › when changing defaultScope using workspace config API › should preserve comments inside the workspace aspect object
-- [ ] `e2e/harmony/workspace-config.e2e.ts:64` workspace config (workspace.jsonc) › comment preservation in workspace.jsonc › when changing defaultScope using workspace config API › should update the defaultScope value
-- [ ] `e2e/harmony/workspace-config.e2e.ts:67` workspace config (workspace.jsonc) › comment preservation in workspace.jsonc › when changing defaultScope using workspace config API › should not lose any other properties
+- [x] `e2e/harmony/workspace-config.e2e.ts:18` workspace config (workspace.jsonc) › adding a non-component key › any command should throw a descriptive error — `harmony::workspace_config::adding_a_non_component_key_any_command_should_throw_a_descriptive_error`
+- [x] `e2e/harmony/workspace-config.e2e.ts:30` workspace config (workspace.jsonc) › adding a non-existing component to a variant › any command should throw a ComponentNotFound error with specific suggestions for the workspace.jsonc file — `harmony::workspace_config::adding_a_non_existing_component_to_a_variant_any_command_should_throw_a_component_not_found_error`
+- [x] `e2e/harmony/workspace-config.e2e.ts:57` workspace config (workspace.jsonc) › comment preservation in workspace.jsonc › when changing defaultScope using workspace config API › should preserve comments above the workspace aspect — `harmony::workspace_config::comment_preservation_when_changing_default_scope_in_workspace_jsonc`
+- [x] `e2e/harmony/workspace-config.e2e.ts:60` workspace config (workspace.jsonc) › comment preservation in workspace.jsonc › when changing defaultScope using workspace config API › should preserve comments inside the workspace aspect object — `harmony::workspace_config::comment_preservation_when_changing_default_scope_in_workspace_jsonc`
+- [x] `e2e/harmony/workspace-config.e2e.ts:64` workspace config (workspace.jsonc) › comment preservation in workspace.jsonc › when changing defaultScope using workspace config API › should update the defaultScope value — `harmony::workspace_config::comment_preservation_when_changing_default_scope_in_workspace_jsonc`
+- [x] `e2e/harmony/workspace-config.e2e.ts:67` workspace config (workspace.jsonc) › comment preservation in workspace.jsonc › when changing defaultScope using workspace config API › should not lose any other properties — `harmony::workspace_config::comment_preservation_when_changing_default_scope_in_workspace_jsonc`
 
 ### `e2e/performance/filesystem-read.e2e.ts`
 

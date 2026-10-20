@@ -20,7 +20,41 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     {
         return super::scope_set::run(args);
     }
+    if args
+        .get(1)
+        .is_some_and(|arg| arg == "trust")
+    {
+        return super::scope_trust::run(args);
+    }
+    if let Some(sub) = unrecognized_subcommand(args)
+        && let Some(root) = workspace::root(&env::current_dir()?)
+    {
+        let chalk = Chalk::detect(args);
+        let data = chalk.red(&format!(
+            r#""{sub}" is not a subcommand of "scope", please run "bit scope --help" to list the subcommands"#,
+        ));
+        return workspace_command::execute_then(&root, args, "scope", |_output| {
+            Ok(workspace_command::results::Report { data, code: 0, details: None })
+        });
+    }
     run_rename(args)
+}
+
+fn unrecognized_subcommand(args: &[OsString]) -> Option<String> {
+    let tokens = args
+        .iter()
+        .skip(1)
+        .map(|arg| arg.to_str())
+        .collect::<Option<Vec<_>>>()?;
+    let filtered = tokens
+        .into_iter()
+        .filter(|token| *token != "--no-color")
+        .collect::<Vec<_>>();
+    let [sub] = filtered.as_slice() else {
+        return None;
+    };
+    (!sub.starts_with('-') && !matches!(*sub, "fork" | "set" | "trust" | "rename" | "rename-owner"))
+        .then(|| (*sub).to_owned())
 }
 fn run_rename(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {

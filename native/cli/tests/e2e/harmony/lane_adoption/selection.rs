@@ -48,9 +48,9 @@ fn main_switch_reports_components_not_snapped_on_the_lane_as_skipped() {
     let details = Helper::cmd_in_with(
         &helper.scopes.local_path,
         "details",
-        &[("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NATIVE", OsStr::new("off"))],
+        &[("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NATIVE_QUIET", OsStr::new("1"))],
     );
-    assert!(details.status.success(), "{} {}", details.stdout, details.stderr);
+    assert!(details.native && details.status.success(), "{} {}", details.stdout, details.stderr);
     assert!(details.stdout.contains("comp2"), "{}", details.stdout);
 }
 
