@@ -6,6 +6,8 @@ import type { HlLines, HlToken } from './highlighter';
 import { useHighlightedLines } from './highlighter';
 import { langFromFileName, normalizeLanguage } from './language';
 import { resolveTokenColor } from './shiki-bit-theme';
+import type { AnnotationIndex, DiffAnnotation, DiffLineContext, DiffLineSide } from './annotations';
+import { EMPTY_ANNOTATION_INDEX, buildAnnotationIndex, captureDiffSelection, lineAttribute, lineKey } from './annotations';
 import styles from './diff-viewer.module.scss';
 
 export type DiffViewMode = 'unified' | 'split';
@@ -46,6 +48,12 @@ export type DiffViewerProps = {
   /** soft-wrap long lines instead of scrolling them horizontally (default false). Best for stacked,
    * non-virtualized diffs (e.g. a changes view) where per-line/side scrollbars would be noise. */
   wrap?: boolean;
+  /** per-line gutter content, under-line widgets and highlighted ranges supplied by the host. */
+  annotations?: DiffAnnotation[];
+  /** enables the gutter add-affordance; called with the line acted on and any covering selection. */
+  onLineAction?: (context: DiffLineContext, event: React.MouseEvent) => void;
+  /** accessible label for the gutter add-affordance (default "Comment on this line"). */
+  lineActionLabel?: string;
   className?: string;
 };
 
@@ -57,11 +65,13 @@ const EXPAND_CHUNK = 20;
 type GapState = { top: number; bottom: number };
 const EMPTY_GAP_STATES: Record<string, GapState> = {};
 
-/** a single rendered row: a code line (or a left/right pair) or a collapsed-gap expander. */
+/** a single rendered row: a code line (or a left/right pair), a collapsed-gap expander, or a
+ * host-supplied full-width block anchored under a line. */
 type RenderRow =
   | { kind: 'unified'; item: DiffLineItem; key: string }
   | { kind: 'split'; left?: DiffLineItem; right?: DiffLineItem; key: string }
-  | { kind: 'gap'; id: string; hidden: DiffLineItem[]; state: GapState; key: string };
+  | { kind: 'gap'; id: string; hidden: DiffLineItem[]; state: GapState; key: string }
+  | { kind: 'widget'; nodes: React.ReactNode[]; key: string };
 
 export function DiffViewer({
   fileName,
@@ -81,6 +91,9 @@ export function DiffViewer({
   showHeader = true,
   showViewToggle = true,
   wrap = false,
+  annotations,
+  onLineAction,
+  lineActionLabel = 'Comment on this line',
   className,
 }: DiffViewerProps) {
   const [uncontrolledView, setUncontrolledView] = useState<DiffViewMode>(defaultView);
@@ -139,10 +152,32 @@ export function DiffViewer({
     [sections]
   );
 
-  const rows = useMemo(() => buildRenderRows(sections, gapStates, view), [sections, gapStates, view]);
+  const annotationIndex = useMemo(() => buildAnnotationIndex(annotations), [annotations]);
+
+  const rows = useMemo(
+    () => buildRenderRows(sections, gapStates, view, annotationIndex),
+    [sections, gapStates, view, annotationIndex]
+  );
+
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Resolve the acted-on line into a host-facing context, attaching the covering text selection (if
+  // any) before the click collapses it.
+  const emitLineAction = useCallback(
+    (side: DiffLineSide, line: number, text: string, event: React.MouseEvent) => {
+      if (!onLineAction) return;
+      const selection = captureDiffSelection(side, rootRef.current);
+      onLineAction({ fileName, side, line, text, selection }, event);
+    },
+    [onLineAction, fileName]
+  );
 
   return (
-    <div className={classNames(styles.diffViewer, wrap && styles.wrap, className)} data-status={status}>
+    <div
+      ref={rootRef}
+      className={classNames(styles.diffViewer, wrap && styles.wrap, className)}
+      data-status={status}
+    >
       {showHeader && (
         <DiffHeader
           fileName={fileName}
@@ -165,11 +200,14 @@ export function DiffViewer({
           newHl={newHl}
           codeWidthCh={codeWidthCh}
           maxHeight={maxHeight}
-          // Wrap makes rows variable-height, which invalidates fixed-row windowing. Render all rows
-          // but retain the requested scroll cap through constrainHeight.
-          virtualize={virtualize && !wrap}
+          // Wrap and under-line widgets both make rows variable-height, which invalidates fixed-row
+          // windowing. Render all rows but retain the requested scroll cap through constrainHeight.
+          virtualize={virtualize && !wrap && !annotationIndex.hasWidgets}
           constrainHeight={virtualize}
           onExpand={expandGap}
+          annotationIndex={annotationIndex}
+          onLineAction={onLineAction ? emitLineAction : undefined}
+          lineActionLabel={lineActionLabel}
         />
       )}
     </div>
@@ -245,26 +283,40 @@ function DiffHeader({
 
 // --- Body + virtualization ---
 
+/** reports a gutter action back to DiffViewer, which enriches it with the covering text selection. */
+type LineActionEmitter = (side: DiffLineSide, line: number, text: string, event: React.MouseEvent) => void;
+
+type RowDecoration = {
+  annotationIndex: AnnotationIndex;
+  onLineAction?: LineActionEmitter;
+  lineActionLabel: string;
+};
+
 const Row = React.memo(function Row({
   row,
   view,
   oldHl,
   newHl,
   onExpand,
+  decoration,
 }: {
   row: RenderRow;
   view: DiffViewMode;
   oldHl: HlLines | null;
   newHl: HlLines | null;
   onExpand: (id: string, hiddenLen: number, dir: 'top' | 'bottom' | 'all') => void;
+  decoration: RowDecoration;
 }) {
   if (row.kind === 'gap') {
     return <GapRow id={row.id} hidden={row.hidden} state={row.state} view={view} onExpand={onExpand} />;
   }
-  if (row.kind === 'unified') {
-    return <UnifiedRow item={row.item} oldHl={oldHl} newHl={newHl} />;
+  if (row.kind === 'widget') {
+    return <WidgetRow nodes={row.nodes} />;
   }
-  return <SplitRowView left={row.left} right={row.right} oldHl={oldHl} newHl={newHl} />;
+  if (row.kind === 'unified') {
+    return <UnifiedRow item={row.item} oldHl={oldHl} newHl={newHl} decoration={decoration} />;
+  }
+  return <SplitRowView left={row.left} right={row.right} oldHl={oldHl} newHl={newHl} decoration={decoration} />;
 });
 
 function DiffBody({
@@ -277,6 +329,9 @@ function DiffBody({
   virtualize,
   constrainHeight,
   onExpand,
+  annotationIndex,
+  onLineAction,
+  lineActionLabel,
 }: {
   rows: RenderRow[];
   view: DiffViewMode;
@@ -289,6 +344,9 @@ function DiffBody({
   /** keep the body bounded even when wrapping disables fixed-row virtualization. */
   constrainHeight: boolean;
   onExpand: (id: string, hiddenLen: number, dir: 'top' | 'bottom' | 'all') => void;
+  annotationIndex: AnnotationIndex;
+  onLineAction?: LineActionEmitter;
+  lineActionLabel: string;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -341,6 +399,11 @@ function DiffBody({
   const visible = windowing ? rows.slice(start, end) : rows;
   const offsetY = start * ROW_H;
 
+  const decoration = useMemo<RowDecoration>(
+    () => ({ annotationIndex, onLineAction, lineActionLabel }),
+    [annotationIndex, onLineAction, lineActionLabel]
+  );
+
   const bodyStyle: React.CSSProperties = {
     // Wrapped rows cannot use fixed-height virtualization, but still need the caller's scroll cap.
     maxHeight: constrainHeight ? maxHeight : undefined,
@@ -357,7 +420,15 @@ function DiffBody({
       >
         <div style={windowing ? { transform: `translateY(${offsetY}px)` } : undefined}>
           {visible.map((row) => (
-            <Row key={row.key} row={row} view={view} oldHl={oldHl} newHl={newHl} onExpand={onExpand} />
+            <Row
+              key={row.key}
+              row={row}
+              view={view}
+              oldHl={oldHl}
+              newHl={newHl}
+              onExpand={onExpand}
+              decoration={decoration}
+            />
           ))}
         </div>
       </div>
@@ -370,17 +441,106 @@ function hlForLine(item: DiffLineItem, oldHl: HlLines | null, newHl: HlLines | n
   return item.newLn ? (newHl?.[item.newLn - 1] ?? null) : null;
 }
 
-function UnifiedRow({ item, oldHl, newHl }: { item: DiffLineItem; oldHl: HlLines | null; newHl: HlLines | null }) {
+/**
+ * A line-number gutter cell. Beyond the number it hosts the host's annotation content (e.g. a
+ * commenter avatar) and, on hover, the add-affordance that reports a line action.
+ */
+function LineGutter({
+  side,
+  line,
+  text,
+  decoration,
+}: {
+  side: DiffLineSide;
+  line?: number;
+  text: string;
+  decoration: RowDecoration;
+}) {
+  const { annotationIndex, onLineAction, lineActionLabel } = decoration;
+  const nodes = line ? annotationIndex.gutter.get(lineKey(side, line)) : undefined;
+  // The annotation and the add-affordance share the gutter's one free slot; an annotated line keeps
+  // its badge (which stays clickable) rather than swapping it for a "+" on hover.
+  const actionable = !!onLineAction && !!line && !nodes;
+
+  return (
+    <span className={classNames(styles.gutter, styles.gutterNum)}>
+      {nodes && (
+        <span className={styles.gutterAnnotation}>
+          {nodes.map((node, i) => (
+            <React.Fragment key={i}>{node}</React.Fragment>
+          ))}
+        </span>
+      )}
+      {actionable && (
+        <button
+          type="button"
+          className={styles.lineAction}
+          aria-label={lineActionLabel}
+          title={lineActionLabel}
+          onClick={(event) => onLineAction?.(side, line, text, event)}
+        >
+          +
+        </button>
+      )}
+      {line ?? ''}
+    </span>
+  );
+}
+
+/** range/active tints for a row, derived from whichever of its sides the host annotated. */
+function toneFor(index: AnnotationIndex, sides: Array<[DiffLineSide, number | undefined]>) {
+  let inRange = false;
+  let active = false;
+  for (const [side, line] of sides) {
+    if (!line) continue;
+    const key = lineKey(side, line);
+    if (index.range.has(key)) inRange = true;
+    if (index.active.has(key)) active = true;
+  }
+  return classNames(inRange && styles.rangeLine, active && styles.activeLine);
+}
+
+function UnifiedRow({
+  item,
+  oldHl,
+  newHl,
+  decoration,
+}: {
+  item: DiffLineItem;
+  oldHl: HlLines | null;
+  newHl: HlLines | null;
+  decoration: RowDecoration;
+}) {
   const tone = item.type === 'add' ? styles.addLine : item.type === 'del' ? styles.delLine : undefined;
   const sign = item.type === 'add' ? '+' : item.type === 'del' ? '−' : '';
+  const annotated = toneFor(decoration.annotationIndex, [
+    ['old', item.oldLn],
+    ['new', item.newLn],
+  ]);
   return (
-    <div className={classNames(styles.row, styles.unifiedRow, tone)}>
-      <span className={classNames(styles.gutter, styles.gutterNum)}>{item.oldLn ?? ''}</span>
-      <span className={classNames(styles.gutter, styles.gutterNum)}>{item.newLn ?? ''}</span>
+    <div
+      className={classNames(styles.row, styles.unifiedRow, tone, annotated)}
+      // carried on the row (not the gutter) so a selection dragged through the code column still
+      // resolves its first and last lines — see captureDiffSelection.
+      {...{ [lineAttribute('old')]: item.oldLn, [lineAttribute('new')]: item.newLn }}
+    >
+      <LineGutter side="old" line={item.oldLn} text={item.oldText ?? item.text} decoration={decoration} />
+      <LineGutter side="new" line={item.newLn} text={item.newText ?? item.text} decoration={decoration} />
       <span className={classNames(styles.gutter, styles.sign)}>{sign}</span>
       <code className={styles.code}>
         {renderLineContent(hlForLine(item, oldHl, newHl), item.newText ?? item.text, item.intra)}
       </code>
+    </div>
+  );
+}
+
+/** a host-supplied block spanning the full row width, anchored beneath its line. */
+function WidgetRow({ nodes }: { nodes: React.ReactNode[] }) {
+  return (
+    <div className={styles.widgetRow}>
+      {nodes.map((node, i) => (
+        <React.Fragment key={i}>{node}</React.Fragment>
+      ))}
     </div>
   );
 }
@@ -390,16 +550,18 @@ function SplitRowView({
   right,
   oldHl,
   newHl,
+  decoration,
 }: {
   left?: DiffLineItem;
   right?: DiffLineItem;
   oldHl: HlLines | null;
   newHl: HlLines | null;
+  decoration: RowDecoration;
 }) {
   return (
     <div className={classNames(styles.row, styles.splitRow)}>
-      <SplitCell item={left} side="left" oldHl={oldHl} newHl={newHl} />
-      <SplitCell item={right} side="right" oldHl={oldHl} newHl={newHl} />
+      <SplitCell item={left} side="left" oldHl={oldHl} newHl={newHl} decoration={decoration} />
+      <SplitCell item={right} side="right" oldHl={oldHl} newHl={newHl} decoration={decoration} />
     </div>
   );
 }
@@ -409,11 +571,13 @@ function SplitCell({
   side,
   oldHl,
   newHl,
+  decoration,
 }: {
   item?: DiffLineItem;
   side: 'left' | 'right';
   oldHl: HlLines | null;
   newHl: HlLines | null;
+  decoration: RowDecoration;
 }) {
   if (!item) {
     return (
@@ -424,6 +588,7 @@ function SplitCell({
     );
   }
   const tone = item.type === 'add' ? styles.addLine : item.type === 'del' ? styles.delLine : undefined;
+  const diffSide: DiffLineSide = side === 'left' ? 'old' : 'new';
   const num = side === 'left' ? item.oldLn : item.newLn;
   const text = side === 'left' ? (item.oldText ?? item.text) : (item.newText ?? item.text);
   const highlighted =
@@ -434,9 +599,14 @@ function SplitCell({
       : item.newLn
         ? (newHl?.[item.newLn - 1] ?? null)
         : null;
+  const annotated = toneFor(decoration.annotationIndex, [[diffSide, num]]);
   return (
-    <div className={classNames(styles.splitCell, tone)}>
-      <span className={classNames(styles.gutter, styles.gutterNum)}>{num ?? ''}</span>
+    <div
+      className={classNames(styles.splitCell, tone, annotated)}
+      // the cell, not the gutter — see captureDiffSelection.
+      {...(num ? { [lineAttribute(diffSide)]: num } : {})}
+    >
+      <LineGutter side={diffSide} line={num} text={text} decoration={decoration} />
       <code className={styles.code}>{renderLineContent(highlighted, text, item.intra)}</code>
     </div>
   );
@@ -560,10 +730,28 @@ function renderLineContent(tokens: HlToken[] | null, text: string, intra?: Array
 
 // --- render-row assembly ---
 
+/** collect the host's under-line blocks for whichever sides this row covers, in old-then-new order. */
+function widgetsFor(
+  index: AnnotationIndex,
+  sides: Array<[DiffLineSide, number | undefined]>
+): React.ReactNode[] | undefined {
+  if (!index.hasWidgets) return undefined;
+  let out: React.ReactNode[] | undefined;
+  for (const [side, line] of sides) {
+    if (!line) continue;
+    const nodes = index.widget.get(lineKey(side, line));
+    if (!nodes) continue;
+    if (out) out.push(...nodes);
+    else out = [...nodes];
+  }
+  return out;
+}
+
 function buildRenderRows(
   sections: DiffSection[],
   gapStates: Record<string, GapState>,
-  view: DiffViewMode
+  view: DiffViewMode,
+  annotationIndex: AnnotationIndex = EMPTY_ANNOTATION_INDEX
 ): RenderRow[] {
   const rows: RenderRow[] = [];
   let buffer: DiffLineItem[] = [];
@@ -575,16 +763,23 @@ function buildRenderRows(
     if (buffer.length === 0) return;
     if (view === 'split') {
       for (const pair of pairForSplit(buffer)) {
-        rows.push({
-          kind: 'split',
-          left: pair.left,
-          right: pair.right,
-          key: `s:${pair.left?.oldLn ?? 'x'}:${pair.right?.newLn ?? 'x'}`,
-        });
+        const key = `s:${pair.left?.oldLn ?? 'x'}:${pair.right?.newLn ?? 'x'}`;
+        rows.push({ kind: 'split', left: pair.left, right: pair.right, key });
+        const widgets = widgetsFor(annotationIndex, [
+          ['old', pair.left?.oldLn],
+          ['new', pair.right?.newLn],
+        ]);
+        if (widgets) rows.push({ kind: 'widget', nodes: widgets, key: `w:${key}` });
       }
     } else {
       for (const item of buffer) {
-        rows.push({ kind: 'unified', item, key: `u:${item.oldLn ?? 'x'}:${item.newLn ?? 'x'}:${item.type}` });
+        const key = `u:${item.oldLn ?? 'x'}:${item.newLn ?? 'x'}:${item.type}`;
+        rows.push({ kind: 'unified', item, key });
+        const widgets = widgetsFor(annotationIndex, [
+          ['old', item.oldLn],
+          ['new', item.newLn],
+        ]);
+        if (widgets) rows.push({ kind: 'widget', nodes: widgets, key: `w:${key}` });
       }
     }
     buffer = [];

@@ -61,6 +61,12 @@ export function CodeCompareEditor({
       view={editorViewMode === 'inline' ? 'unified' : 'split'}
       contextLines={diffOnly ? 3 : Number.MAX_SAFE_INTEGER}
       maxHeight={maxHeight}
+      // Inline (in a drawer/stacked list) the file has to size to its own content and scroll with the
+      // page: a fixed inner viewport gave every file the same height no matter how much it changed,
+      // so a two-line diff and a thousand-line one looked identical. Fullscreen is the opposite case —
+      // there the diff owns the viewport, so it keeps the capped height and scrolls (and virtualizes)
+      // internally. Carried over from Monaco, which always rendered into a fixed-height editor.
+      virtualize={fullScreen}
       showHeader={false}
       showViewToggle={false}
       collapsible={false}
