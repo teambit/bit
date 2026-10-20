@@ -19,9 +19,10 @@ jest.mock('./code-compare-view', () => ({
 jest.mock('./code-compare-tree', () => ({ CodeCompareTree: () => null }));
 jest.mock('./code-compare.widgets', () => ({ Widget: () => null }));
 jest.mock('@teambit/base-ui.surfaces.split-pane.hover-splitter', () => ({ HoverSplitter: () => null }));
+// no JSX inside mock factories: compiled, it references the JSX runtime, which jest forbids there.
 jest.mock('@teambit/base-ui.surfaces.split-pane.split-pane', () => ({
-  SplitPane: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  Pane: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  SplitPane: ({ children }: { children?: unknown }) => children,
+  Pane: ({ children }: { children?: unknown }) => children,
   Layout: { row: 'row', right: 'right' },
 }));
 jest.mock('@teambit/component.ui.component-compare.context', () => ({
