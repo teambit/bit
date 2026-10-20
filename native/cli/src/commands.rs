@@ -26,9 +26,11 @@ mod log;
 mod merge;
 mod mini_status;
 mod move_paths;
+mod pattern;
 mod patterns;
 mod recover;
 mod recovery;
+mod remote;
 mod remote_resolution;
 mod remove;
 mod rename;
@@ -78,7 +80,9 @@ pub const COMMANDS: &[Command] = &[
     merge::COMMAND,
     mini_status::COMMAND,
     move_paths::COMMAND,
+    pattern::COMMAND,
     recover::COMMAND,
+    remote::COMMAND,
     remove::COMMAND,
     reset::COMMAND,
     rename::COMMAND,

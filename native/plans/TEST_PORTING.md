@@ -633,31 +633,31 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/commands/pattern.e2e.ts`
 
-- [ ] `e2e/commands/pattern.e2e.ts:22` pattern command › general pattern matching › should match all components with **
-- [ ] `e2e/commands/pattern.e2e.ts:30` pattern command › general pattern matching › should match specific component by name
-- [ ] `e2e/commands/pattern.e2e.ts:38` pattern command › general pattern matching › should match components with comma-separated patterns
-- [ ] `e2e/commands/pattern.e2e.ts:47` pattern command › general pattern matching › should return JSON format when using --json flag
-- [ ] `e2e/commands/pattern.e2e.ts:57` pattern command › general pattern matching › should handle non-matching patterns gracefully
-- [ ] `e2e/commands/pattern.e2e.ts:73` pattern command › pattern exclusion with negation (!) › basic exclusion patterns › should exclude comp1 when using pattern "**, !**/comp1"
-- [ ] `e2e/commands/pattern.e2e.ts:81` pattern command › pattern exclusion with negation (!) › full component ID exclusion › should exclude comp1 when using pattern with just "!scope-name/comp1"
-- [ ] `e2e/commands/pattern.e2e.ts:88` pattern command › pattern exclusion with negation (!) › full component ID exclusion › should exclude both components when using "!scope-name/comp1, !scope-name/comp2"
-- [ ] `e2e/commands/pattern.e2e.ts:110` pattern command › pattern with --remote flag › should list all components from remote scope with **
-- [ ] `e2e/commands/pattern.e2e.ts:120` pattern command › pattern with --remote flag › should support wildcard exclusion patterns from remote
-- [ ] `e2e/commands/pattern.e2e.ts:128` pattern command › pattern with --remote flag › should throw error when pattern does not include scope name
-- [ ] `e2e/commands/pattern.e2e.ts:148` pattern command › pattern with --remote flag › with multiple remote scopes › should list components from multiple remote scopes
+- [x] `e2e/commands/pattern.e2e.ts:22` pattern command › general pattern matching › should match all components with ** — `commands::pattern::general_pattern_matching`
+- [x] `e2e/commands/pattern.e2e.ts:30` pattern command › general pattern matching › should match specific component by name — `commands::pattern::general_pattern_matching`
+- [x] `e2e/commands/pattern.e2e.ts:38` pattern command › general pattern matching › should match components with comma-separated patterns — `commands::pattern::general_pattern_matching`
+- [x] `e2e/commands/pattern.e2e.ts:47` pattern command › general pattern matching › should return JSON format when using --json flag — `commands::pattern::general_pattern_matching`
+- [x] `e2e/commands/pattern.e2e.ts:57` pattern command › general pattern matching › should handle non-matching patterns gracefully — `commands::pattern::general_pattern_matching`
+- [x] `e2e/commands/pattern.e2e.ts:73` pattern command › pattern exclusion with negation (!) › basic exclusion patterns › should exclude comp1 when using pattern "**, !**/comp1" — `commands::pattern::pattern_exclusion_with_negation`
+- [x] `e2e/commands/pattern.e2e.ts:81` pattern command › pattern exclusion with negation (!) › full component ID exclusion › should exclude comp1 when using pattern with just "!scope-name/comp1" — `commands::pattern::pattern_exclusion_with_negation`
+- [x] `e2e/commands/pattern.e2e.ts:88` pattern command › pattern exclusion with negation (!) › full component ID exclusion › should exclude both components when using "!scope-name/comp1, !scope-name/comp2" — `commands::pattern::pattern_exclusion_with_negation`
+- [x] `e2e/commands/pattern.e2e.ts:110` pattern command › pattern with --remote flag › should list all components from remote scope with ** — `commands::pattern::pattern_with_remote_flag`
+- [x] `e2e/commands/pattern.e2e.ts:120` pattern command › pattern with --remote flag › should support wildcard exclusion patterns from remote — `commands::pattern::pattern_with_remote_flag`
+- [x] `e2e/commands/pattern.e2e.ts:128` pattern command › pattern with --remote flag › should throw error when pattern does not include scope name — `commands::pattern::pattern_with_remote_flag`
+- [x] `e2e/commands/pattern.e2e.ts:148` pattern command › pattern with --remote flag › with multiple remote scopes › should list components from multiple remote scopes — `commands::pattern::pattern_with_remote_flag`
 
 ### `e2e/commands/remote.e2e.ts`
 
-- [ ] `e2e/commands/remote.e2e.ts:22` bit remote command › adding a global remote › should be shown when running "bit remote"
-- [ ] `e2e/commands/remote.e2e.ts:26` bit remote command › adding a global remote › should be shown from any other workspace as well
-- [ ] `e2e/commands/remote.e2e.ts:35` bit remote command › adding a global remote › deleting remote › deleting a non-exist remote should throw an error
-- [ ] `e2e/commands/remote.e2e.ts:39` bit remote command › adding a global remote › deleting remote › deleting the global remote without "--global" flag should throw an error
-- [ ] `e2e/commands/remote.e2e.ts:45` bit remote command › adding a global remote › deleting remote › should successfully delete the global remote when "--global" flag was used
-- [ ] `e2e/commands/remote.e2e.ts:60` bit remote command › adding a local remote › should be shown when running "bit remote"
-- [ ] `e2e/commands/remote.e2e.ts:64` bit remote command › adding a local remote › should not be shown from other workspace
-- [ ] `e2e/commands/remote.e2e.ts:74` bit remote command › adding a local remote › deleting remote › deleting the remote with "--global" flag should throw an error
-- [ ] `e2e/commands/remote.e2e.ts:80` bit remote command › adding a local remote › deleting remote › should successfully delete the remote when "--global" flag was not used
-- [ ] `e2e/commands/remote.e2e.ts:90` bit remote command › adding a non exist local remote with relative path › should throw ScopeNotFound error
+- [x] `e2e/commands/remote.e2e.ts:22` bit remote command › adding a global remote › should be shown when running "bit remote" — `commands::remote::adding_and_deleting_a_global_remote`
+- [x] `e2e/commands/remote.e2e.ts:26` bit remote command › adding a global remote › should be shown from any other workspace as well — `commands::remote::adding_and_deleting_a_global_remote`
+- [x] `e2e/commands/remote.e2e.ts:35` bit remote command › adding a global remote › deleting remote › deleting a non-exist remote should throw an error — `commands::remote::adding_and_deleting_a_global_remote`
+- [x] `e2e/commands/remote.e2e.ts:39` bit remote command › adding a global remote › deleting remote › deleting the global remote without "--global" flag should throw an error — `commands::remote::adding_and_deleting_a_global_remote`
+- [x] `e2e/commands/remote.e2e.ts:45` bit remote command › adding a global remote › deleting remote › should successfully delete the global remote when "--global" flag was used — `commands::remote::adding_and_deleting_a_global_remote`
+- [x] `e2e/commands/remote.e2e.ts:60` bit remote command › adding a local remote › should be shown when running "bit remote" — `commands::remote::adding_and_deleting_a_local_remote`
+- [x] `e2e/commands/remote.e2e.ts:64` bit remote command › adding a local remote › should not be shown from other workspace — `commands::remote::adding_and_deleting_a_local_remote`
+- [x] `e2e/commands/remote.e2e.ts:74` bit remote command › adding a local remote › deleting remote › deleting the remote with "--global" flag should throw an error — `commands::remote::adding_and_deleting_a_local_remote`
+- [x] `e2e/commands/remote.e2e.ts:80` bit remote command › adding a local remote › deleting remote › should successfully delete the remote when "--global" flag was not used — `commands::remote::adding_and_deleting_a_local_remote`
+- [x] `e2e/commands/remote.e2e.ts:90` bit remote command › adding a non exist local remote with relative path › should throw ScopeNotFound error — `commands::remote::adding_non_exist_local_remote_with_relative_path_throws_scope_not_found`
 
 ### `e2e/commands/remove.e2e.ts`
 
