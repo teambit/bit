@@ -139,9 +139,14 @@ export function mergeDependencies(
 }
 
 /**
- * the dependencies of one side of a merge, and the packages that its dependencies policy ignores ("-").
+ * the dependencies of one side of a merge, and the packages that its dependencies policy ignores ("-") or forces (adds
+ * even when no file imports them, e.g. the own peers of an env).
  */
-export type SideOfMerge = { dependencies: DependenciesSnapshot; ignoredPackages: Set<string> };
+export type SideOfMerge = {
+  dependencies: DependenciesSnapshot;
+  ignoredPackages: Set<string>;
+  forcedPackages: Set<string>;
+};
 
 /**
  * packages that the merged files import, that the merged policy doesn't ignore, and that no side has as a dependency,
@@ -161,33 +166,42 @@ export function getImportedPackagesWithoutVersion(
     (name) =>
       !dependencyNames.has(name) &&
       sides.some((side) => side.ignoredPackages.has(name)) &&
-      !isIgnoredOnMerge(base, current, other, name)
+      !isSetOnMerge(base, current, other, (side) => side.ignoredPackages.has(name))
   );
 }
 
 /**
- * the imports of a merge without the packages that the merged policy ignores ("-"), so these keep the 3-way result,
- * which follows the policy of each side. e.g. when one side adds a "-" for a package that the files import, the 3-way
- * merge removes it, and the imports don't restore it.
+ * the imports of a merge without the packages that the merged policy ignores ("-") or forces, so these keep the 3-way
+ * result, which follows the policy of each side. e.g. when one side adds a "-" for a package that the files import,
+ * the 3-way merge removes it, and the imports don't restore it. and an env keeps its own peers when no file imports
+ * them anymore.
  */
-export function withoutIgnoredImports(
+export function withoutImportsOfPolicy(
   imports: ImportsOfMerge,
   base: SideOfMerge,
   current: SideOfMerge,
   other: SideOfMerge
 ): ImportsOfMerge {
-  const isNotIgnored = (name: string) => !isIgnoredOnMerge(base, current, other, name);
+  const isNotOfPolicy = (name: string) =>
+    !isSetOnMerge(base, current, other, (side) => side.ignoredPackages.has(name)) &&
+    !isSetOnMerge(base, current, other, (side) => side.forcedPackages.has(name));
   return {
-    merged: new Map([...imports.merged].filter(([name]) => isNotIgnored(name))),
-    sides: new Set([...imports.sides].filter(isNotIgnored)),
+    merged: new Map([...imports.merged].filter(([name]) => isNotOfPolicy(name))),
+    sides: new Set([...imports.sides].filter(isNotOfPolicy)),
   };
 }
 
 /**
- * whether the merged policy ignores ("-") the package, by a 3-way merge of whether each side ignores it.
+ * whether the merged policy sets something for a package (e.g. ignores it), by a 3-way merge of whether the policy of
+ * each side sets it.
  */
-function isIgnoredOnMerge(base: SideOfMerge, current: SideOfMerge, other: SideOfMerge, name: string): boolean {
-  const [onBase, onCurrent, onOther] = [base, current, other].map((side) => side.ignoredPackages.has(name));
+function isSetOnMerge(
+  base: SideOfMerge,
+  current: SideOfMerge,
+  other: SideOfMerge,
+  isSet: (side: SideOfMerge) => boolean
+): boolean {
+  const [onBase, onCurrent, onOther] = [base, current, other].map(isSet);
   return Boolean(mergeValue(onBase, onCurrent, onOther, undefined, (a, b) => a === b));
 }
 

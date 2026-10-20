@@ -7,7 +7,7 @@ import {
   getDependenciesOfVersion,
   getImportedPackagesWithoutVersion,
   mergeDependencies,
-  withoutIgnoredImports,
+  withoutImportsOfPolicy,
 } from './merge-dependencies';
 
 type SnapshotInput = {
@@ -47,6 +47,12 @@ const importsOf = (merged: Record<string, 'runtime' | 'dev'>, sides: string[]): 
 });
 
 const idsOf = (deps: Dependencies) => deps.get().map((dep) => dep.id.toString());
+
+const side = (input: SnapshotInput, ignoredPackages: string[] = [], forcedPackages: string[] = []): SideOfMerge => ({
+  dependencies: snapshot(input),
+  ignoredPackages: new Set(ignoredPackages),
+  forcedPackages: new Set(forcedPackages),
+});
 
 describe('mergeDependencies', () => {
   describe('packages', () => {
@@ -274,10 +280,6 @@ describe('mergeDependencies', () => {
 });
 
 describe('getImportedPackagesWithoutVersion', () => {
-  const side = (input: SnapshotInput, ignoredPackages: string[] = []): SideOfMerge => ({
-    dependencies: snapshot(input),
-    ignoredPackages: new Set(ignoredPackages),
-  });
   it('should return a package that a side ignored and the merge does not, when no side has it', () => {
     // the lane imports lodash while it's ignored, main removes the "-"
     const result = getImportedPackagesWithoutVersion(side({}, ['lodash']), side({}, ['lodash']), side({}), ['lodash']);
@@ -311,19 +313,25 @@ describe('getImportedPackagesWithoutVersion', () => {
   });
 });
 
-describe('withoutIgnoredImports', () => {
-  it('should let the 3-way merge remove a package that other started to ignore, although the files import it', () => {
-    const base = { dependencies: snapshot({ pkgs: { lodash: '4.17.21' } }), ignoredPackages: new Set<string>() };
-    const other = { dependencies: snapshot({}), ignoredPackages: new Set(['lodash']) };
-    const imports = withoutIgnoredImports(importsOf({ lodash: 'runtime' }, ['lodash']), base, base, other);
-    const merged = mergeDependencies(
+describe('withoutImportsOfPolicy', () => {
+  const mergeWithImports = (base: SideOfMerge, current: SideOfMerge, other: SideOfMerge, imports: ImportsOfMerge) =>
+    mergeDependencies(
       base.dependencies,
-      base.dependencies,
+      current.dependencies,
       other.dependencies,
       'manual',
       undefined,
-      imports
+      withoutImportsOfPolicy(imports, base, current, other)
     );
+  it('should let the 3-way merge remove a package that other started to ignore, although the files import it', () => {
+    const base = side({ pkgs: { lodash: '4.17.21' } });
+    const merged = mergeWithImports(base, base, side({}, ['lodash']), importsOf({ lodash: 'runtime' }, ['lodash']));
     expect(merged.packageDependencies).to.deep.equal({});
+  });
+  it('should keep a package that the policy forces, when the merged files stop importing it', () => {
+    // e.g. an own peer of an env, which is a runtime dependency of the env
+    const env = side({ pkgs: { react: '^18.0.0' } }, [], ['react']);
+    const merged = mergeWithImports(env, env, env, importsOf({}, ['react']));
+    expect(merged.packageDependencies).to.deep.equal({ react: '^18.0.0' });
   });
 });

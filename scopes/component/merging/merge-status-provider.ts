@@ -33,7 +33,7 @@ import {
   getDependenciesOfVersion,
   getImportedPackagesWithoutVersion,
   mergeDependencies,
-  withoutIgnoredImports,
+  withoutImportsOfPolicy,
 } from './merge-dependencies';
 
 export type MergeStatusProviderOptions = {
@@ -219,7 +219,7 @@ other:   ${otherLaneHead.toString()}`);
     const base = getDependenciesOfVersion(baseComponent);
     const sideOf = (dependencies: DependenciesSnapshot, extensions: ExtensionDataList): SideOfMerge => ({
       dependencies,
-      ignoredPackages: getIgnoredPackages(extensions),
+      ...getPackagesOfPolicy(extensions),
     });
     const baseSide = sideOf(base, baseComponent.extensions);
     const currentSide = sideOf(currentComponent, currentComponent.extensions);
@@ -244,7 +244,7 @@ other:   ${otherLaneHead.toString()}`);
       other,
       this.options.mergeStrategy,
       this.currentLane?.toComponentIdsIncludeUpdateDependents(),
-      imports && withoutIgnoredImports(imports, baseSide, currentSide, otherSide)
+      imports && withoutImportsOfPolicy(imports, baseSide, currentSide, otherSide)
     );
     return { dependenciesMergeResult };
   }
@@ -671,12 +671,15 @@ it was probably created in each lane separately and it also exists on main. plea
 }
 
 /**
- * the packages that the dependencies policy of a component ignores ("-"). the policy of a Version is the resolved one
- * (env, aspects and config), see DependencyResolverMain.mergeVariantPolicies().
+ * the packages that the dependencies policy of a component ignores ("-") or forces. the policy of a Version is the
+ * resolved one (env, aspects and config), see DependencyResolverMain.mergeVariantPolicies().
  */
-function getIgnoredPackages(extensions: ExtensionDataList): Set<string> {
+function getPackagesOfPolicy(extensions: ExtensionDataList): Pick<SideOfMerge, 'ignoredPackages' | 'forcedPackages'> {
   const policy: VariantPolicyEntry[] = extensions.findCoreExtension(DependencyResolverAspect.id)?.data.policy || [];
-  return new Set(
-    policy.filter((entry) => entry.value.version === MANUALLY_REMOVE_DEPENDENCY).map((entry) => entry.dependencyId)
-  );
+  const isIgnored = (entry: VariantPolicyEntry) => entry.value.version === MANUALLY_REMOVE_DEPENDENCY;
+  const namesOf = (entries: VariantPolicyEntry[]) => new Set(entries.map((entry) => entry.dependencyId));
+  return {
+    ignoredPackages: namesOf(policy.filter(isIgnored)),
+    forcedPackages: namesOf(policy.filter((entry) => entry.force && !isIgnored(entry))),
+  };
 }
