@@ -11,8 +11,9 @@ export type FileContent = { relativePath: string; content: string };
 export type ImportedPackages = Map<string, 'runtime' | 'dev'>;
 
 /**
- * the import specifiers of a file per its extension and content hash. files that didn't change between versions are
- * parsed once. undefined when the file can't be parsed.
+ * the import specifiers of a file per its path and content hash. files that didn't change between versions are parsed
+ * once. (not per content only, a detector may support a file by its name, e.g. env.jsonc). undefined when the file
+ * can't be parsed.
  */
 export type ImportsCache = Map<string, string[] | undefined>;
 
@@ -49,7 +50,7 @@ export async function detectImportedPackages(
 
 async function getImportSpecifiers(file: FileContent, cache: ImportsCache): Promise<string[] | undefined> {
   const ext = path.extname(file.relativePath);
-  const key = `${ext}:${sha1(file.content)}`;
+  const key = `${file.relativePath}:${sha1(file.content)}`;
   if (cache.has(key)) return cache.get(key);
   let specifiers: string[] | undefined;
   try {

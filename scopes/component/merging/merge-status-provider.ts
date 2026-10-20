@@ -262,9 +262,11 @@ other:   ${otherLaneHead.toString()}`);
     const filesOfComponent = (files: ConsumerComponent['files']): FileContent[] =>
       files.map((file) => ({ relativePath: pathNormalizeToLinux(file.relative), content: file.contents.toString() }));
     const { modifiedFiles } = applyModifiedVersion(currentComponent.files, mergeResults, this.options.mergeStrategy);
-    // in a lane merge, the aspects-data of currentComponent is already merged (see mergeExtensionsData), so are the
-    // dev patterns
-    const devFilesData = currentComponent.extensions.findCoreExtension(DevFilesAspect.id)?.data || {};
+    // the dev patterns of the aspects-data that is snapped. in a lane merge, the aspects-data of currentComponent is
+    // already merged (see mergeExtensionsData). "theirs" snaps the aspects-data of other (see MergingMain.applyVersion)
+    const snappedExtensions =
+      this.options.mergeStrategy === MergeOptions.theirs ? otherComponent.extensions : currentComponent.extensions;
+    const devFilesData = snappedExtensions.findCoreExtension(DevFilesAspect.id)?.data || {};
     const devPatterns: string[] = Object.values(devFilesData.devPatterns || {}).flat() as string[];
     const devFiles = new Set(Object.values(devFilesData.devFiles || {}).flat() as string[]);
     const { includePatterns, excludePatterns } = splitPatterns(devPatterns);

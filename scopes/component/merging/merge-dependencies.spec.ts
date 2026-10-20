@@ -291,6 +291,15 @@ describe('getImportedPackagesWithoutVersion', () => {
     );
     expect(result).to.deep.equal([]);
   });
+  it('should return a package that a side ignored and the merge does not, when a side has its types package only', () => {
+    const result = getImportedPackagesWithoutVersion(
+      side({}, ['lodash']),
+      side({ devPkgs: { '@types/lodash': '4.17.0' } }, ['lodash']),
+      side({}),
+      ['lodash']
+    );
+    expect(result).to.deep.equal(['lodash']);
+  });
   it('should not return a package that no side ignored', () => {
     // e.g. a core aspect, which is never a dependency
     expect(getImportedPackagesWithoutVersion(side({}), side({}), side({}), ['@scope/core'])).to.deep.equal([]);

@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { DetectorHook } from '@teambit/dependency-resolver';
 import { detectImportedPackages } from './detect-imported-packages';
 
 describe('detectImportedPackages', () => {
@@ -48,6 +49,23 @@ const chalk = require('chalk');`,
   it('should return undefined when only an env detector supports a file', async () => {
     const vue = { relativePath: 'comp.vue', content: `<script>import x from 'x';</script>` };
     expect(await detectImportedPackages([vue, index])).to.equal(undefined);
+  });
+  it('should not share the imports of files with the same content and different names', async () => {
+    // e.g. the env.jsonc detector, which supports a file by its name
+    DetectorHook.hooks.push({
+      isSupported: ({ filename }) => filename.endsWith('env.jsonc'),
+      detect: () => ['@scope/base-env'],
+    });
+    try {
+      const content = '{ "extends": "@scope/base-env" }';
+      const files = [
+        { relativePath: 'config.jsonc', content },
+        { relativePath: 'env.jsonc', content },
+      ];
+      expect([...(await detectImportedPackages(files))!.keys()]).to.deep.equal(['@scope/base-env']);
+    } finally {
+      DetectorHook.hooks.pop();
+    }
   });
   it('should return undefined when a file can not be parsed', async () => {
     const broken = { relativePath: 'broken.js', content: `import { from` };

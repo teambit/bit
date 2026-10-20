@@ -147,7 +147,7 @@ export type SideOfMerge = { dependencies: DependenciesSnapshot; ignoredPackages:
  * packages that the merged files import, that the merged policy doesn't ignore, and that no side has as a dependency,
  * because the sides that import them ignored them. (e.g. one side imports a package while it's ignored, and the other
  * side removes the "-"). a workspace adds such a package with the version installed in node_modules, a bare scope has
- * no version for it.
+ * no version for it. a types package of it (e.g. @types/foo) is not a version of it.
  */
 export function getImportedPackagesWithoutVersion(
   base: SideOfMerge,
@@ -163,10 +163,7 @@ export function getImportedPackagesWithoutVersion(
   };
   return [...importedByMergedFiles].filter(
     (name) =>
-      !dependencyNames.has(name) &&
-      !dependencyNames.has(toTypesPackageName(name)) &&
-      sides.some((side) => side.ignoredPackages.has(name)) &&
-      !isIgnoredOnMerge(name)
+      !dependencyNames.has(name) && sides.some((side) => side.ignoredPackages.has(name)) && !isIgnoredOnMerge(name)
   );
 }
 
