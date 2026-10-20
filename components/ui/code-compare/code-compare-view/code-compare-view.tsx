@@ -89,8 +89,9 @@ export function CodeCompareView({
   const isFullScreen = Boolean(componentCompareContext?.isFullScreen);
 
   return (
+    // No key on fileName here: it remounted the file tabs on every file switch, so they re-measured and
+    // reloaded their icons and the whole bar flashed. Only the editor below is keyed per file.
     <div
-      key={`component-compare-code-view-${fileName}`}
       className={classNames(styles.componentCompareCodeViewContainer, className, isFullScreen && styles.isFullScreen)}
     >
       {files.length > 0 && (
@@ -126,6 +127,8 @@ export function CodeCompareView({
           <CodeCompareViewLoader className={classNames(isFullScreen && styles.isFullScreen, styles.fullHeight)} />
         ) : (
           <CodeCompareEditor
+            // a new file starts with fresh expand and scroll state
+            key={`${originalPath}|${modifiedPath}`}
             language={langFromFileName(fileName)}
             modifiedPath={modifiedPath}
             originalPath={originalPath}
