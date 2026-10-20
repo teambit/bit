@@ -8,6 +8,10 @@ use std::{io, path::Path};
 
 /// Return the history for a lane already resolved in the local index.
 pub fn read(root: &Path, lane_hash: &str) -> io::Result<Value> {
+    read_at(&crate::scope_path(root), lane_hash)
+}
+
+pub(crate) fn read_at(directory: &Path, lane_hash: &str) -> io::Result<Value> {
     if lane_hash.len() != 40
         || !lane_hash
             .bytes()
@@ -16,8 +20,7 @@ pub fn read(root: &Path, lane_hash: &str) -> io::Result<Value> {
         return Err(invalid());
     }
     let hash = hash(lane_hash);
-    let value =
-        outbound::read_object(&crate::scope_path(root).join("objects"), &hash, "LaneHistory")?;
+    let value = outbound::read_object(&directory.join("objects"), &hash, "LaneHistory")?;
     // A rename or scope change preserves the Lane hash and the history object's
     // original name/scope, so only the stable identity can be checked here.
     if value["laneHash"] != lane_hash {

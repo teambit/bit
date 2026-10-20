@@ -171,6 +171,14 @@ fn virtual_http_history_never_publishes_synthetic_remote_directory() {
     assert!(!virtual_path.exists());
     plan.commit().unwrap();
     assert!(!virtual_path.exists());
+    let scope_meta = object_hash("remote.scope");
+    assert!(
+        fixture.root
+            .join(".bit/objects")
+            .join(&scope_meta[..2])
+            .join(&scope_meta[2..])
+            .exists(),
+    );
     let history = history::identity("remote.scope/alpha");
     assert!(
         fixture.root

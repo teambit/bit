@@ -60,12 +60,22 @@ pub(in crate::commands) fn bootstrap_inherited(
     request: &super::Request<'_>,
     startup: &mut Startup,
     inherited: Environments,
+    preview: bool,
 ) -> io::Result<Environments> {
     let home = super::home();
-    preflight(root, &home, request, false)?;
+    preflight(root, &home, request, preview)?;
     let mut engine = Engine::new()?;
-    let (_, environment) =
-        environments::read_inherited_context(&mut engine, root, &home, None, startup, inherited)?;
+    let pattern = request.options["pattern"]
+        .as_str()
+        .filter(|pattern| !crate::commands::diff::selection::stateful(pattern));
+    let (_, environment) = environments::read_inherited_context(
+        &mut engine,
+        root,
+        &home,
+        pattern,
+        startup,
+        inherited,
+    )?;
     Ok(environment.for_checkout())
 }
 

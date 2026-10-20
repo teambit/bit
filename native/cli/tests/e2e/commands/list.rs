@@ -25,13 +25,11 @@ fn a_tagged_component_is_listed() {
     assert!(output.contains("found 1 components"), "{output}");
 }
 
-/// `bit list --outdated` runs on the Node.js CLI.
-mod known_failures {
-    use super::{FOO_FIXTURE, Helper};
-    use crate::{
-        allow_known_failure,
-        helper::{Run, parse},
-    };
+mod parity;
+
+mod outdated {
+    use super::{FOO_FIXTURE, Helper, parity};
+    use crate::helper::{Run, parse};
     use serde_json::Value;
 
     /// `listLocalScopeParsed('-o')`.
@@ -60,7 +58,7 @@ mod known_failures {
         helper.create_component_bar_foo(FOO_FIXTURE);
         helper.add_component_bar_foo();
         helper.tag_component_bar_foo();
-        helper.run("export");
+        crate::helper::remote::publish(&helper);
         helper.re_init_workspace();
         helper.add_remote_scope();
         let remote = &helper.scopes.remote;
@@ -70,9 +68,9 @@ mod known_failures {
         helper.add_remote_scope();
         helper.run(&format!("import {remote}/bar/foo@0.0.1"));
         helper.tag_without_build("bar/foo", "--unmodified");
-        helper.run("export");
+        crate::helper::remote::publish(&helper);
         helper.get_cloned_workspace(&cloned);
-        let list = listed(&allow_known_failure!(helper.native_or_known(OUTDATED)));
+        let list = listed(&parity::compare(&helper, OUTDATED));
         let bar_foo = entry(&list, &format!("{remote}/bar/foo"));
         assert_eq!(bar_foo["remoteVersion"], "0.0.2");
         assert_eq!(bar_foo["localVersion"], "0.0.1");
@@ -87,12 +85,12 @@ mod known_failures {
         helper.output_file("bar/baz.js", "");
         helper.run("add bar -i bar/baz");
         helper.tag_without_build("bar/baz", "");
-        helper.run("export");
+        crate::helper::remote::publish(&helper);
         helper.re_init_workspace();
         helper.add_remote_scope();
         let remote = &helper.scopes.remote;
         helper.run(&format!("import {remote}/bar/baz@0.0.1"));
-        let list = listed(&allow_known_failure!(helper.native_or_known(OUTDATED)));
+        let list = listed(&parity::compare(&helper, OUTDATED));
         let bar_baz = entry(&list, &format!("{remote}/bar/baz"));
         assert_eq!(bar_baz["remoteVersion"], bar_baz["localVersion"]);
     }
@@ -106,7 +104,7 @@ mod known_failures {
         helper.output_file("bar/local", FOO_FIXTURE);
         helper.run("add bar -i bar/local");
         helper.tag_without_build("bar/local", "");
-        let list = listed(&allow_known_failure!(helper.native_or_known(OUTDATED)));
+        let list = listed(&parity::compare(&helper, OUTDATED));
         assert_eq!(entry(&list, "my-scope/bar/local")["remoteVersion"], "N/A");
     }
 }

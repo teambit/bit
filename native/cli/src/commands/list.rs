@@ -1,18 +1,27 @@
-//! Native `bit list` (`ls`) of the workspace on main: `ListCmd` with
+//! Native local and remote `bit list` (`ls`): `ListCmd` with
 //! `ListerMain.localList` and `ComponentsList.listAll`. The workspace engine's
 //! `scopeList` reads the scope's models; the bitmap gives the workspace ids.
 //!
 //! On a lane, the components' heads are their lane heads.
 //!
-//! A remote scope, `--outdated`, `--include-deleted`, and ids or namespaces
-//! this module cannot match like Node run on the Node.js CLI.
+//! Rust reads scalar remote inventory and latest versions without importing
+//! objects; unsupported input and diagnostics delegate before effects.
 
 pub(in crate::commands) mod bitmap;
 pub(super) mod table;
 
-use super::{color::Chalk, engine::Engine, status::collate, workspace_command};
+mod failure;
+mod options;
+mod remote;
+mod report;
+use options::{Options, parse};
+use report::{json_report, report};
+
+use super::{
+    color::Chalk, engine::Engine, remote_resolution::Session, status::collate, workspace_command,
+};
 use crate::{commands::Command, history::History, native::Outcome, workspace};
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 use std::{
     env,
     ffi::OsString,
@@ -23,68 +32,6 @@ use std::{
 
 pub const COMMAND: Command = Command { name: "list", aliases: &["ls"], run };
 
-/// The flags `ListCmd` takes that run natively.
-#[derive(Debug, Default, PartialEq, Eq)]
-struct Options {
-    ids: bool,
-    local_scope: bool,
-    scope: Option<String>,
-    json: bool,
-    namespace: Option<String>,
-}
-
-/// `args` starts after the command name; `None` for anything else.
-fn parse(args: &[&str]) -> Option<Options> {
-    let mut options = Options::default();
-    let mut seen: Vec<&str> = Vec::new();
-    let mut index = 0;
-    while index < args.len() {
-        let flag = long_flag(args[index]);
-        index += 1;
-        if seen.contains(&flag) {
-            return None;
-        }
-        seen.push(flag);
-        index += options.flag(flag, args.get(index).copied())?;
-    }
-    Some(options)
-}
-
-/// The long name of a short flag.
-fn long_flag(flag: &str) -> &str {
-    match flag {
-        "-i" => "--ids",
-        "-l" => "--local-scope",
-        "-s" => "--scope",
-        "-j" => "--json",
-        "-n" => "--namespace",
-        other => other,
-    }
-}
-
-impl Options {
-    /// One flag; the number of values it consumed.
-    fn flag(&mut self, flag: &str, next: Option<&str>) -> Option<usize> {
-        match flag {
-            "--ids" => self.ids = true,
-            "--local-scope" => self.local_scope = true,
-            "--json" => self.json = true,
-            "--scope" | "--namespace" => {
-                let value = next.filter(|value| !value.starts_with('-') && !value.is_empty())?;
-                let value = Some(value.to_string());
-                if flag == "--scope" {
-                    self.scope = value;
-                } else {
-                    self.namespace = value;
-                }
-                return Some(1);
-            }
-            _ => return None,
-        }
-        Some(0)
-    }
-}
-
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(arguments) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("the arguments are not UTF-8".to_string()));
@@ -92,36 +39,126 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse(&arguments[1..]) else {
         return Ok(Outcome::Declined("flags outside the native `list` grammar".to_string()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".to_string()));
-    };
-    if !collate::root_locale() {
-        return Ok(Outcome::Declined("the locale may collate ids differently".to_string()));
+    let root = workspace::root(&env::current_dir()?);
+    if let Some(reason) = unsupported(root.as_deref(), &options) {
+        return Ok(Outcome::Declined(reason.into()));
     }
-    let rows = match list(&root, &options) {
+    let mut session = Session::new(root.as_deref(), args);
+    let rows = match prepared_rows(root.as_deref(), &options, &mut session) {
         Ok(rows) => rows,
+        Err(error) if super::engine::is_canonical(&error) => {
+            if let Some(warning) = super::engine::canonical_progress(&error)
+                .and_then(|progress| progress["warning"].as_str())
+            {
+                session.add_warning(warning);
+            }
+            return failure::owned(root.as_deref(), args, &options, &session, error);
+        }
+        Err(error) if session.owned() => {
+            return failure::owned(root.as_deref(), args, &options, &session, error);
+        }
+        Err(error) if super::remote_resolution::is_ci_decline(&error) => {
+            return Ok(Outcome::Declined(error.to_string()));
+        }
         Err(error) => return Ok(Outcome::Declined(format!("list: {error}"))),
     };
+    present(root.as_deref(), args, &rows, &options, &session)
+}
+
+fn unsupported(root: Option<&Path>, options: &Options) -> Option<&'static str> {
+    if root.is_none() && options.remote.is_none() {
+        return Some("not inside a workspace");
+    }
+    if options.remote.is_some() && (options.local_scope || options.scope.is_some()) {
+        return Some("remote list with local scope filtering");
+    }
+    if !collate::root_locale() {
+        return Some("the locale may collate ids differently");
+    }
+    None
+}
+
+fn prepared_rows(
+    root: Option<&Path>,
+    options: &Options,
+    session: &mut Session,
+) -> io::Result<Vec<Row>> {
+    let mut rows = if options.remote.is_some() {
+        remote::list(root, options, session)?
+    } else {
+        list(root.unwrap(), options, session)?
+    };
+    sort(&mut rows)?;
+    if options.outdated && !options.json && !options.ids {
+        validate_versions(&rows)?;
+    }
+    Ok(rows)
+}
+
+fn present(
+    root: Option<&Path>,
+    args: &[OsString],
+    rows: &[Row],
+    options: &Options,
+    session: &Session,
+) -> io::Result<Outcome> {
     if options.json {
-        let history = History::start(&root, args);
-        // `CommandRunner` writes `JSON.stringify(data, null, 2)` without a newline.
-        let mut stdout = io::stdout().lock();
-        stdout.write_all(
-            serde_json::to_string_pretty(&json_report(&rows, options.ids))?.as_bytes(),
-        )?;
-        stdout.flush()?;
-        history.end(true);
-        return Ok(Outcome::Exit(ExitCode::SUCCESS));
+        return json_output(root, args, rows, options.ids, session);
     }
     let report = workspace_command::results::Report {
-        data: report(&rows, options.ids, Chalk::detect(args), table::colors(args)),
+        data: report(rows, options, Chalk::detect(args), table::colors(args)),
         code: 0,
         details: None,
     };
-    workspace_command::execute_with(&root, args, "list", &report, |output| {
-        output.status("listing components");
-        Ok(())
-    })
+    let status =
+        if options.remote.is_some() { "listing remote components" } else { "listing components" };
+    if let Some(root) = root {
+        workspace_command::execute_with(root, args, "list", &report, |output| {
+            output.status(status);
+            io::stdout()
+                .lock()
+                .write_all(session.output().as_bytes())?;
+            if let Some(warning) = session.warning() {
+                output.console(&Chalk::detect(args).red(warning));
+            }
+            Ok(())
+        })
+    } else {
+        let output = workspace_command::loader_output(Chalk::detect(args), false);
+        output.restart(r#"running command "list"..."#);
+        output.status(status);
+        io::stdout()
+            .lock()
+            .write_all(session.output().as_bytes())?;
+        if let Some(warning) = session.warning() {
+            output.console(&Chalk::detect(args).red(warning));
+        }
+        output.stop();
+        writeln!(io::stdout().lock(), "{}", report.data)?;
+        Ok(Outcome::Exit(ExitCode::SUCCESS))
+    }
+}
+
+fn json_output(
+    root: Option<&Path>,
+    args: &[OsString],
+    rows: &[Row],
+    ids: bool,
+    session: &Session,
+) -> io::Result<Outcome> {
+    let history = root.map(|root| History::start(root, args));
+    // `CommandRunner` writes `JSON.stringify(data, null, 2)` without a newline.
+    let mut stdout = io::stdout().lock();
+    stdout.write_all(session.output().as_bytes())?;
+    if let Some(warning) = session.warning() {
+        writeln!(stdout, "{}", Chalk::detect(args).red(warning))?;
+    }
+    stdout.write_all(serde_json::to_string_pretty(&json_report(rows, ids))?.as_bytes())?;
+    stdout.flush()?;
+    if let Some(history) = history {
+        history.end(true);
+    }
+    Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
 /// A `ListScopeResult`.
@@ -129,10 +166,19 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 struct Row {
     /// `scope/name`.
     identity: String,
+    workspace: WorkspaceRow,
     /// The latest version in the scope, `None` for a new component.
     version: Option<String>,
-    deprecated: bool,
+    deprecated: Option<bool>,
+    removed: Option<bool>,
+    remote_version: Option<String>,
     lane_readme_of: Vec<String>,
+}
+
+/// Workspace identity and location facts used independently of stored model versions.
+#[derive(Debug, PartialEq, Eq)]
+struct WorkspaceRow {
+    has_scope: bool,
     /// `currentlyUsedVersion`: the bitmap's version.
     used: Option<String>,
     root_dir: Option<String>,
@@ -158,7 +204,7 @@ struct Model {
 
 /// `localList`: the workspace's (or with `--local-scope`, the scope's) ids,
 /// filtered, sorted by `localeCompare` of their ids.
-fn list(root: &Path, options: &Options) -> io::Result<Vec<Row>> {
+fn list(root: &Path, options: &Options, session: &mut Session) -> io::Result<Vec<Row>> {
     let bitmap::Bitmap { entries: bitmap, lane } = bitmap::read(root)?;
     let (models, lane) = models(root, lane.as_ref())?;
     let mut ids = all_ids(&bitmap, &models, options.local_scope);
@@ -169,8 +215,16 @@ fn list(root: &Path, options: &Options) -> io::Result<Vec<Row>> {
     let mut rows: Vec<Row> = ids
         .into_iter()
         .map(|(identity, _)| row(identity, &bitmap, &models))
-        .filter(|row| listed(row, &bitmap, &lane, options))
         .collect();
+    sort(&mut rows)?;
+    if options.outdated {
+        remote::versions(root, &mut rows, session)?;
+    }
+    rows.retain(|row| listed(row, &bitmap, &lane, options));
+    Ok(rows)
+}
+
+fn sort(rows: &mut [Row]) -> io::Result<()> {
     if !rows
         .iter()
         .all(|row| collate::supported(&row.id()))
@@ -178,7 +232,21 @@ fn list(root: &Path, options: &Options) -> io::Result<Vec<Row>> {
         return Err(decline("ids outside the supported collation"));
     }
     rows.sort_by(|left, right| collate::compare(&left.id(), &right.id()));
-    Ok(rows)
+    Ok(())
+}
+
+/// `listTemplate` calls strict npm semver only for non-JSON, non-ID outdated reports.
+fn validate_versions(rows: &[Row]) -> io::Result<()> {
+    for row in rows {
+        if let Some(remote) = &row.remote_version
+            && row.version
+                .as_ref()
+                .is_none_or(|local| node_semver::npm::compare(local, remote, false).is_none())
+        {
+            return Err(decline("outdated table requires the published semver diagnostic"));
+        }
+    }
+    Ok(())
 }
 
 /// `--scope`'s filter, then, without `--local-scope`, `isIdOnCurrentLane`.
@@ -267,11 +335,16 @@ fn row(identity: String, bitmap: &[bitmap::Entry], models: &[Model]) -> Row {
         .iter()
         .find(|entry| entry.identity == identity);
     Row {
+        workspace: WorkspaceRow {
+            has_scope: entry.map_or_else(|| model.is_some(), |entry| entry.has_scope),
+            used: entry.and_then(|entry| entry.version.clone()),
+            root_dir: entry.map(|entry| entry.root_dir.clone()),
+        },
         version: model.map(|model| model.version.clone()),
-        deprecated: model.is_some_and(|model| model.deprecated),
+        deprecated: Some(model.is_some_and(|model| model.deprecated)),
+        removed: None,
+        remote_version: None,
         lane_readme_of: model.map_or_else(Vec::new, |model| model.lane_readme_of.clone()),
-        used: entry.and_then(|entry| entry.version.clone()),
-        root_dir: entry.map(|entry| entry.root_dir.clone()),
         identity,
     }
 }
@@ -359,95 +432,6 @@ fn matches_at(pattern: &[char], text: &[char]) -> bool {
 
 const fn line_terminator(character: char) -> bool {
     matches!(character, '\n' | '\r' | '\u{2028}' | '\u{2029}')
-}
-
-/// `ListCmd.json`: the ids, or `listTemplate(results, true, false)`.
-fn json_report(rows: &[Row], ids: bool) -> Value {
-    if ids {
-        return json!(
-            rows.iter()
-                .map(Row::id)
-                .collect::<Vec<_>>()
-        );
-    }
-    Value::Array(
-        rows.iter()
-            .map(|row| {
-                let mut data = Map::new();
-                data.insert("id".into(), json!(row.identity));
-                data.insert("localVersion".into(), json!(local_version(row)));
-                data.insert("deprecated".into(), json!(row.deprecated));
-                data.insert("currentVersion".into(), json!(current_version(row)));
-                data.insert("remoteVersion".into(), json!("N/A"));
-                if let Some(root_dir) = &row.root_dir {
-                    data.insert("rootDir".into(), json!(root_dir));
-                }
-                Value::Object(data)
-            })
-            .collect(),
-    )
-}
-
-fn local_version(row: &Row) -> &str {
-    row.version.as_deref().unwrap_or("<new>")
-}
-
-fn current_version(row: &Row) -> &str {
-    row.used.as_deref().unwrap_or("N/A")
-}
-
-/// `ListCmd.report`: the count, then the ids or the table.
-fn report(rows: &[Row], ids: bool, chalk: Chalk, colors: bool) -> String {
-    let header = format!("found {} components\n", rows.len());
-    if rows.is_empty() {
-        return header;
-    }
-    if ids {
-        return serde_json::to_string(
-            &rows
-                .iter()
-                .map(Row::id)
-                .collect::<Vec<_>>(),
-        )
-        .unwrap_or_default();
-    }
-    let has_path = rows.iter().any(|row| row.root_dir.is_some());
-    let mut head = vec!["component ID", "latest in scope", "used in workspace"];
-    if has_path {
-        head.push("path");
-    }
-    let cells: Vec<Vec<String>> = rows
-        .iter()
-        .map(|row| {
-            let mut cells = vec![
-                formatted_id(row, chalk),
-                local_version(row).to_string(),
-                current_version(row).to_string(),
-            ];
-            if has_path {
-                cells.push(row.root_dir.clone().unwrap_or_default());
-            }
-            cells
-        })
-        .collect();
-    let mut report = header;
-    report.push_str(&table::render(&head, &cells, colors));
-    report
-}
-
-/// `getFormattedId` of `listTemplate`.
-fn formatted_id(row: &Row, chalk: Chalk) -> String {
-    let mut id = chalk.white(&row.identity);
-    if row.deprecated {
-        id = chalk.yellow(&format!("{id} [Deprecated]"));
-    }
-    if !row.lane_readme_of.is_empty() {
-        id.push('\n');
-        for lane in &row.lane_readme_of {
-            id.push_str(&chalk.yellow(&format!("[Lane Readme]: {lane}\n")));
-        }
-    }
-    id
 }
 
 fn decline(reason: &str) -> io::Error {

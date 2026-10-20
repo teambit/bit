@@ -204,7 +204,11 @@ impl<'r> Session<'r> {
         let environments =
             session_environment(&mut engine, root, &home, startup, build, inherited)?;
         let prepared = preparation(&mut engine, root, &home, request, environments.is_some())?;
-        let context = prepared["context"].clone();
+        let mut context = prepared["context"].clone();
+        if matches!(&request.selection, Selection::Tag { tag_options, .. } if tag_options["soft"] == true)
+        {
+            stage_soft_history(&mut engine, root, &home, &mut context)?;
+        }
         let targets = array(prepared.get("targets"), "targets")?;
         let pending_tag = matches!(&request.selection, Selection::Tag { tag_options, .. } if tag_options["persist"] == true || tag_options["soft"] == true);
         let verify = CaptureOptions {
@@ -394,6 +398,24 @@ impl<'r> Session<'r> {
         let Self { engine, token, context, capture, .. } = self;
         Planned { engine, token, context, capture, plan, apply }
     }
+}
+
+/// `listTagPendingIds` populates missing lane history while checking staged snaps.
+/// Stage the same read-proven write before the soft bitmap publication.
+fn stage_soft_history(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    context: &mut Value,
+) -> io::Result<()> {
+    let status: Value =
+        engine.request(&json!({"kind":"statusContext","root":root,"home":home,"history":true}))?;
+    if status["models"] != context["models"] {
+        return Err(decline("soft tag history models changed"));
+    }
+    context["pendingHistory"] =
+        json!(array(status.get("pendingHistory"), "soft tag pending history")?);
+    Ok(())
 }
 
 fn preparation(
@@ -786,5 +808,9 @@ impl Planned {
     /// Move configured callbacks across native merge materialization and resolution.
     pub(in crate::commands) fn take_environment(&mut self) -> Option<environments::Environments> {
         capture::take_callback_environment(&mut self.capture)
+    }
+
+    pub(in crate::commands) fn restore_host(&mut self, host: crate::host::Host) {
+        capture::restore_callback_host(&mut self.capture, host);
     }
 }

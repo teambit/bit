@@ -25,7 +25,7 @@ pub(super) fn run(
     let token = hash(format!("history:{}:{}", std::process::id(), state.sequence).as_bytes());
     let output = json!({"historyToken":token,"laneId":format!("{}/{}",lane_id.scope,lane_id.name),"phases":phases.iter().enumerate().map(|(index,phase)|phase.receipt(index)).collect::<Vec<_>>(),"progress":{"imports":[]}});
     let count = phases.len();
-    state.lane_history = Some(Box::new(Retained {
+    state.histories.checkout = Some(Box::new(Retained {
         root: input.root,
         token,
         lane_id,

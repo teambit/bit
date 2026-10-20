@@ -1,4 +1,4 @@
-use super::{Defaults, dependencies, extensions};
+use super::{Defaults, configured_entries, dependencies, extensions};
 use serde_json::{Value, json};
 
 fn defaults() -> Defaults {
@@ -11,6 +11,18 @@ fn defaults() -> Defaults {
             {"id":"teambit.preview/preview","data":{"doesScaling":true},"undefinedKeys":[]},
             {"id":"teambit.compositions/compositions","data":{"compositions":[]},"undefinedKeys":[]},
             {"id":"teambit.docs/docs","data":{},"undefinedKeys":["doc"]}]})).unwrap()
+}
+
+#[test]
+fn unversioned_workspace_aspect_keeps_stored_version_for_merge_identity() {
+    let stored = json!([{"extensionId":{"scope":"scope","name":"env/provider","version":"0.0.1"},
+        "config":{"before":true},"data":{"loaded":true}}]);
+    let configured = json!([{"extensionId":{"scope":"scope","name":"env/provider"},
+        "config":{"after":true},"data":{}}]);
+    let selected = configured_entries(&stored, &configured).unwrap();
+    assert_eq!(selected[0]["extensionId"]["version"], "0.0.1");
+    assert_eq!(selected[0]["config"], json!({"after":true}));
+    assert_eq!(selected[0]["data"], json!({"loaded":true}));
 }
 
 #[test]

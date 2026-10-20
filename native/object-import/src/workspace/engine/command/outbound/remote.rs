@@ -2,12 +2,9 @@
 use super::{Pending, Prepare, Retained, invalid};
 use bit_client_transfer::{http::Network, remotes::Remote, tar};
 use serde_json::{Value, json};
-use std::{
-    fs,
-    io::{self, Write},
-    path::Path,
-};
+use std::{fs, io, path::Path};
 mod file_bridge;
+mod group;
 use file_bridge::FileBridge;
 
 const MAX_BYTES: usize = 32 * 1024 * 1024;
@@ -78,12 +75,7 @@ fn check_file_remote(path: &Path, scope: &str) -> io::Result<()> {
     if config["name"] != scope {
         return Err(invalid("outbound file remote scope"));
     }
-    if config["groupName"]
-        .as_str()
-        .is_some_and(|group| !group.is_empty())
-    {
-        return Err(invalid("outbound file remote group ownership requires canonical export"));
-    }
+    group::id(&config)?;
     Ok(())
 }
 
@@ -123,14 +115,19 @@ fn push_file(
     }
     let pending = parent.join(client);
     fs::create_dir(&pending)?;
-    let result = write_pending(&pending, objects);
+    let result = write_pending(&pending, objects, group::owner(path, &pending)?);
     if result.is_err() {
         let _ = fs::remove_dir_all(&pending);
     }
     result
 }
 
-fn write_pending(pending: &Path, objects: &[tar::ObjectItem]) -> io::Result<()> {
+fn write_pending(
+    pending: &Path,
+    objects: &[tar::ObjectItem],
+    owner: Option<(u32, u32)>,
+) -> io::Result<()> {
+    let store = crate::store::Store::new(pending.to_owned(), owner)?;
     let mut total = 0usize;
     for object in objects {
         let hash = crate::merge_history::hash(&object.hash)?;
@@ -140,16 +137,7 @@ fn write_pending(pending: &Path, objects: &[tar::ObjectItem]) -> io::Result<()> 
         if total > MAX_BYTES {
             return Err(invalid("outbound pending budget"));
         }
-        let digest = crate::validate::hexadecimal(&hash);
-        let path = pending
-            .join(&digest[..2])
-            .join(&digest[2..]);
-        fs::create_dir_all(path.parent().ok_or_else(|| invalid("outbound pending parent"))?)?;
-        let mut file = fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(path)?;
-        file.write_all(&object.compressed)?;
+        store.write(&crate::validate::hexadecimal(&hash), &object.compressed)?;
     }
     Ok(())
 }

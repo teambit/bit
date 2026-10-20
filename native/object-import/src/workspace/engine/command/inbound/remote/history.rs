@@ -10,10 +10,29 @@ pub(in crate::workspace::engine::command) fn history_remote(
     transport: &super::super::Transport,
     id: &lane::Id,
 ) -> io::Result<Option<(VirtualRemote, String)>> {
-    let (remotes, network, _, _) = connection::with_home(root, transport, home)?;
+    history_remote_at(root, home, transport, id, false, None)
+}
+
+pub(in crate::workspace::engine::command) fn history_remote_at(
+    root: &Path,
+    home: &Path,
+    transport: &super::super::Transport,
+    id: &lane::Id,
+    bare: bool,
+    remote_host: Option<&str>,
+) -> io::Result<Option<(VirtualRemote, String)>> {
+    let (remotes, network, _, _) = if bare {
+        connection::bare(root, transport)?
+    } else {
+        connection::with_home(root, transport, home)?
+    };
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     runtime.block_on(async {
-        let Remote::Http(url) = remotes.resolve(&id.scope, &network).await? else {
+        let remote = match remote_host {
+            Some(host) => Remote::from_host(host)?,
+            None => remotes.resolve(&id.scope, &network).await?,
+        };
+        let Remote::Http(url) = remote else {
             return Ok(None);
         };
         let mut options = FetchOptions::lanes();
@@ -27,6 +46,10 @@ pub(in crate::workspace::engine::command) fn history_remote(
         .await?;
         let (hash, _) = remote_lane(id, &items)?;
         let (mut rows, _) = collect((Vec::new(), 0), root, id.scope.clone(), Some(items))?;
-        Ok(Some((rows.pop().ok_or_else(|| invalid("lane history remote"))?, hash)))
+        let mut row = rows.pop().ok_or_else(|| invalid("lane history remote"))?;
+        if bare {
+            row.path = root.join(".rust-inbound-virtual").join(&id.scope);
+        }
+        Ok(Some((row, hash)))
     })
 }

@@ -18,25 +18,19 @@ pub(super) fn load(
     snapshot: bool,
     checkout: bool,
 ) -> io::Result<bool> {
-    capture.cache.retain_callback_startup(&host.take_stdout());
-    let core = core_ids()?;
-    let aspects = context["workspace"]
-        .as_object()
-        .into_iter()
-        .flat_map(|config| config.keys())
-        .filter(|id| id.contains('/') && !core.contains(id))
-        .collect::<Vec<_>>();
-    let info = host.call("statusCallbackInfo", &json!({"coreIds":core,"aspectIds":aspects}))?;
-    capture.cache.retain_callback_startup(&host.take_stdout());
-    if !snapshot && info["onLoad"] != true && info["issues"] != true {
+    let info = callback_info(host, context, capture)?;
+    if !snapshot && info["onLoad"] != true && info["issues"] != true && info["classLoad"] != true {
         return Ok(false);
     }
     let components = component_rows(capture, context)?;
     let directory = tempfile::Builder::new().prefix("bit-native-callback-").tempdir()?;
     let rows = host.call(
         "statusLoadCallbacks",
-        &json!({"components":components,"status":status,"snapshot":snapshot,"checkout":checkout,"directory":directory.path()}),
+        &json!({"components":components,"status":status,"snapshot":snapshot,"checkout":checkout,"configured":info["onLoad"] == true || info["classLoad"] == true,"loadOrder":context["switchStatusLoadOrder"],"directory":directory.path()}),
     )?;
+    if checkout {
+        checked_cache(host, capture)?;
+    }
     capture.cache.retain_callback_directory(directory);
     capture.cache.retain_callback_stdout(rows["stdout"].as_str().unwrap_or_default());
     if snapshot {
@@ -47,6 +41,121 @@ pub(super) fn load(
         apply(capture, row)?;
     }
     Ok(info["issues"] == true)
+}
+
+fn callback_info(host: &Host, context: &Value, capture: &Capture) -> io::Result<Value> {
+    capture.cache.retain_callback_startup(&host.take_stdout());
+    let core = core_ids()?;
+    let aspects = context["workspace"]
+        .as_object()
+        .into_iter()
+        .flat_map(|config| config.keys())
+        .filter(|id| id.contains('/') && !core.contains(id))
+        .collect::<Vec<_>>();
+    let info = host.call("statusCallbackInfo", &json!({"coreIds":core,"aspectIds":aspects}))?;
+    capture.cache.retain_callback_startup(&host.take_stdout());
+    Ok(info)
+}
+
+fn checked_cache(host: &Host, capture: &mut Capture) -> io::Result<()> {
+    let checked = host.call("statusDependencyCacheChecked", &json!({}))?;
+    if !checked.is_boolean() {
+        return Err(decline("checkout dependency loader cache receipt"));
+    }
+    capture.environment_facts["checkoutLoaderCacheChecked"] = checked;
+    Ok(())
+}
+
+pub(in crate::commands::status) struct SwitchStage {
+    directory: tempfile::TempDir,
+    pub(super) issues: bool,
+}
+
+pub(super) fn switch_begin(
+    host: &Host,
+    context: &Value,
+    capture: &Capture,
+    order: &[String],
+) -> io::Result<Option<SwitchStage>> {
+    let info = callback_info(host, context, capture)?;
+    if info["onLoad"] != true && info["classLoad"] != true {
+        return Ok(None);
+    }
+    let directory = tempfile::Builder::new().prefix("bit-native-callback-").tempdir()?;
+    let result =
+        host.call("switchStatusBegin", &json!({"loadOrder":order,"directory":directory.path()}))?;
+    capture.cache.retain_callback_startup(&host.take_stdout());
+    if result != true {
+        return Err(decline("switch callback stage begin receipt"));
+    }
+    Ok(Some(SwitchStage { directory, issues: info["issues"] == true }))
+}
+
+fn switch_component(context: &Value, capture: &Capture, identity: &str) -> io::Result<Value> {
+    component_rows(capture, context)?
+        .into_iter()
+        .find(|row| row["identity"] == identity)
+        .ok_or_else(|| decline("switch callback target missing"))
+}
+
+pub(super) fn switch_one(
+    host: &Host,
+    context: &Value,
+    capture: &Capture,
+    identity: &str,
+) -> io::Result<Value> {
+    let component = switch_component(context, capture, identity)?;
+    let result = host.call("switchStatusLoadOne", &json!({"component":component}))?;
+    capture.cache.retain_callback_stdout(&host.take_stdout());
+    Ok(result)
+}
+
+pub(super) fn switch_stage_row(
+    host: &Host,
+    context: &Value,
+    capture: &Capture,
+    identity: &str,
+) -> io::Result<()> {
+    let component = switch_component(context, capture, identity)?;
+    let result = host.call("switchStatusStageRow", &json!({"component":component}))?;
+    capture.cache.retain_callback_stdout(&host.take_stdout());
+    if result != true {
+        return Err(decline("switch callback staged row receipt"));
+    }
+    Ok(())
+}
+
+pub(super) fn switch_resume(host: &Host, capture: &Capture) -> io::Result<Value> {
+    let result = host.call("switchStatusResume", &json!({}))?;
+    capture.cache.retain_callback_stdout(&host.take_stdout());
+    Ok(result)
+}
+
+pub(super) fn switch_accept(
+    capture: &mut Capture,
+    result: &Value,
+    identity: &str,
+) -> io::Result<()> {
+    let row = result.get("row").ok_or_else(|| decline("switch callback row receipt"))?;
+    if row["identity"] != identity {
+        return Err(decline("switch callback target changed"));
+    }
+    apply(capture, row)
+}
+
+pub(super) fn switch_finish(
+    host: &Host,
+    capture: &mut Capture,
+    stage: SwitchStage,
+) -> io::Result<bool> {
+    let result = host.call("switchStatusFinish", &json!({}))?;
+    capture.cache.retain_callback_stdout(&host.take_stdout());
+    if result != true {
+        return Err(decline("switch callback stage finish receipt"));
+    }
+    checked_cache(host, capture)?;
+    capture.cache.retain_callback_directory(stage.directory);
+    Ok(stage.issues)
 }
 
 pub(in crate::commands) fn component_rows(

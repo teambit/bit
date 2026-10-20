@@ -8,6 +8,11 @@ fn imports_without_installing_and_fetches() {
     assert!(parse(&["import", "s/a", "-o"]).unwrap().objects_only);
     let fetch = parse(&["fetch", "-c", "s/a"]).unwrap();
     assert_eq!(fetch.request()["components"], true);
+    let original = parse(&["fetch", "-c", "s/a", "--from-original-scopes"]).unwrap();
+    assert_eq!(original.request()["fromOriginalScope"], false);
+    let lane_original =
+        parse(&["fetch", "s/feature", "--lanes", "--from-original-scopes"]).unwrap();
+    assert_eq!(lane_original.request()["fromOriginalScope"], false);
     let lanes = parse(&["fetch", "s/feature", "--lanes"]).unwrap();
     assert_eq!(lanes.request()["lanes"], true);
     assert_eq!(parse(&["fetch", "s/feature", "s/other", "--lanes"]).unwrap().ids.len(), 2);

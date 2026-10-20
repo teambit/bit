@@ -2,6 +2,7 @@
 //! one of its aliases, exactly as the Node.js CLI spells them.
 
 mod add;
+mod cat;
 mod checkout;
 mod color;
 mod config;
@@ -28,6 +29,7 @@ mod move_paths;
 mod patterns;
 mod recover;
 mod recovery;
+mod remote_resolution;
 mod remove;
 mod rename;
 mod reset;
@@ -53,6 +55,7 @@ pub struct Command {
 
 pub const COMMANDS: &[Command] = &[
     add::COMMAND,
+    cat::COMMAND,
     checkout::COMMAND,
     checkout::REVERT,
     config::COMMAND,

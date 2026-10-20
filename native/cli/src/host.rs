@@ -41,6 +41,16 @@ const SCRIPT: &str = concat!(
     include_str!("host/directory_identity.js"),
     "\n",
     include_str!("host/switch.js"),
+    "\n",
+    include_str!("host/cat.js"),
+    "\n",
+    include_str!("host/log_file.js"),
+    "\n",
+    include_str!("host/install.js"),
+    "\n",
+    include_str!("host/install_engine.js"),
+    "\n",
+    include_str!("host/inventory.js"),
 );
 const EXIT_GRACE: Duration = Duration::from_secs(5);
 
@@ -223,8 +233,16 @@ impl Response {
 /// itself (an aspect left a handle open) is killed.
 impl Drop for Session {
     fn drop(&mut self) {
+        let started = Instant::now();
         self.stop();
-        let _ = self.stderr_finished.recv_timeout(Duration::from_millis(100));
+        let stopped = started.elapsed();
+        let stderr_finished = self.stderr_finished.recv_timeout(Duration::from_millis(100));
+        trace::log(format!(
+            "host shutdown took {} ms (process {} ms, stderr finished {})",
+            started.elapsed().as_millis(),
+            stopped.as_millis(),
+            stderr_finished.is_ok(),
+        ));
     }
 }
 

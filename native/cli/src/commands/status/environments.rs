@@ -15,6 +15,7 @@ mod facts;
 mod modes;
 mod quick;
 mod snapshot;
+mod switch;
 mod tracking;
 
 use super::js::{array, decline, text};
@@ -76,6 +77,17 @@ impl Environments {
             ));
         }
         self.host.as_ref().ok_or_else(|| decline("environment host"))
+    }
+
+    /// Match `MergingMain`'s post-write application load in the retained session.
+    pub(in crate::commands) fn merge_load_apps(
+        &mut self,
+        root: &Path,
+        component_ids: &[String],
+    ) -> io::Result<String> {
+        let host = self.host(root)?;
+        host.call("mergeLoadApps", &json!({"componentIds":component_ids}))?;
+        Ok(host.take_stdout())
     }
 
     pub(in crate::commands) fn failure(&self, error: io::Error) -> io::Error {

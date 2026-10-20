@@ -1,4 +1,5 @@
 pub(super) mod comparison;
+pub(in crate::workspace::engine) mod component_cat;
 pub(super) mod component_log;
 pub(super) mod file_history;
 pub(super) mod harmony;

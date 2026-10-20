@@ -110,6 +110,7 @@ fn data_expression(expression: &Expression<'_>) -> bool {
         | Expression::Identifier(_)
         | Expression::ObjectExpression(_)
         | Expression::ArrayExpression(_)
+        | Expression::BinaryExpression(_)
         | Expression::AssignmentExpression(_) => true,
         Expression::StaticMemberExpression(member) => !member.optional,
         Expression::CallExpression(call) => literal_require(call),

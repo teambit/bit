@@ -4,7 +4,7 @@
 pub(in crate::workspace::engine) mod autosync;
 pub(in crate::workspace::engine) mod dependents;
 pub(in crate::workspace::engine) mod policy;
-pub(in crate::workspace::engine::command) mod remote;
+pub(in crate::workspace::engine) mod remote;
 pub(in crate::workspace::engine) mod write_dependencies;
 
 use super::{
@@ -174,6 +174,8 @@ pub(in crate::workspace::engine) fn remote_log(input: &RemoteLog) -> io::Result<
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Apply {
     token: String,
+    #[serde(default)]
+    omit_owned_write_receipts: bool,
 }
 
 pub(super) struct Retained {
@@ -272,6 +274,7 @@ pub(in crate::workspace::engine) fn apply(
     input: &Apply,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
+    validate_receipt_mode(input, state)?;
     let mut retained = state.inbound.take().ok_or_else(|| invalid("inbound owner missing"))?;
     if input.token != retained.token || retained.applied {
         return Err(invalid("inbound owner token"));
@@ -283,15 +286,13 @@ pub(in crate::workspace::engine) fn apply(
     if retained.pending.is_some() {
         return Err(invalid("inbound dependent graph incomplete"));
     }
-    let (_, mut writes) = retained.import.commit_with_receipts()?;
     let deferred = retained.workspace.as_ref().is_some_and(write::Prepared::requires_dependencies);
-    if let Some(workspace) = &retained.workspace {
-        workspace.commit()?;
-        writes.extend(workspace.published_write_receipts()?);
-    }
+    let writes = commit_inbound(&mut retained, input.omit_owned_write_receipts)?;
     let mut receipt = retained.receipt.clone();
     receipt["applied"] = json!(true);
-    receipt["ownedWorkspaceWrites"] = json!(owned_writes::combine(writes)?);
+    if let Some(writes) = writes {
+        receipt["ownedWorkspaceWrites"] = json!(owned_writes::combine(writes)?);
+    }
     if let Some(workspace) = &retained.workspace {
         receipt["bitmapProof"] = workspace.published_bitmap_proof()?;
     }
@@ -304,6 +305,32 @@ pub(in crate::workspace::engine) fn apply(
     }
     let count = receipt["importedIds"].as_array().map_or(0, Vec::len);
     Ok((count, receipt))
+}
+
+fn validate_receipt_mode(input: &Apply, state: &State) -> io::Result<()> {
+    if input.omit_owned_write_receipts {
+        let retained = state.inbound.as_ref().ok_or_else(|| invalid("inbound owner missing"))?;
+        if retained.receipt["laneImport"] != true || retained.workspace.is_some() {
+            return Err(invalid("inbound write receipts required"));
+        }
+    }
+    Ok(())
+}
+
+fn commit_inbound(retained: &mut Retained, omit_receipts: bool) -> io::Result<Option<Vec<Value>>> {
+    let mut writes = if omit_receipts {
+        retained.import.commit_retained()?;
+        None
+    } else {
+        Some(retained.import.commit_with_receipts()?.1)
+    };
+    if let Some(workspace) = &retained.workspace {
+        workspace.commit()?;
+        if let Some(writes) = &mut writes {
+            writes.extend(workspace.published_write_receipts()?);
+        }
+    }
+    Ok(writes)
 }
 
 /// Compare the current lane with main using the retained remote import before
@@ -390,6 +417,6 @@ pub(in crate::workspace::engine) fn local_preflight(input: &Prepare) -> io::Resu
             .map(|id| requested_target(id))
             .collect::<io::Result<Vec<_>>>()?
     };
-    write::preflight(&input.root, &targets, preparation::write_options(input))?;
+    write::preflight(&input.root, &targets, preparation::write_options(input, false))?;
     Ok((targets.len(), json!({"eligible":true})))
 }

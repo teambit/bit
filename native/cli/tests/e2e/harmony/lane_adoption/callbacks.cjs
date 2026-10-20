@@ -28,32 +28,57 @@ class LaneAdoptionLifecycle {
       fs.writeFileSync(path.join(workspace.path, 'lane-adoption-provider-receipt.json'),
         JSON.stringify({module: __filename, workspace: workspace.path}));
     }
-    workspace.registerOnComponentLoad(component => {
-      if (component.id.fullName === 'comp1') {
-        receipt('onLoad');
-        if (active() && fs.existsSync(path.join(workspace.path, 'lane-history-fail-load'))) {
-          throw new Error('lane history actual onLoad failure');
+    if (!fs.existsSync(path.join(workspace.path, 'lane-adoption-disable-onload'))) {
+      workspace.registerOnComponentLoad(component => {
+        if (component.id.fullName === 'comp1') {
+          receipt('onLoad');
+          if (active() && fs.existsSync(path.join(workspace.path, 'lane-adoption-mutate-later-source'))
+              && !fs.existsSync(path.join(workspace.path, 'lane-adoption-later-source-mutated'))) {
+            const laterSource = path.join(workspace.path, 'comp2/index.js');
+            fs.writeFileSync(laterSource, "require('react'); // earlier onLoad changed later source\n" + fs.readFileSync(laterSource));
+            fs.writeFileSync(path.join(workspace.path, 'lane-adoption-later-source-mutated'), 'comp1');
+          }
+          if (active() && fs.existsSync(path.join(workspace.path, 'lane-history-fail-load'))) {
+            throw new Error('lane history actual onLoad failure');
+          }
         }
-      }
-    });
+      });
+    }
     let retainedInstall;
     const throttleInstall = () => active() && fs.existsSync(path.join(workspace.path, 'lane-adoption-throttle-progress'));
     const throttleReceipt = (phase, args) => {
       if (!throttleInstall()) return;
       fs.appendFileSync(path.join(workspace.path, 'lane-adoption-throttle-receipts.jsonl'),
-        JSON.stringify({phase, throttleProgress: args.packageManagerOptions.throttleProgress}) + '\n');
+        JSON.stringify({phase, throttleProgress: args.packageManagerOptions.throttleProgress,
+          ...(args.packageManagerOptions.hidePackageManagerOutput ? {hidePackageManagerOutput: true} : {})}) + '\n');
     };
     const mutableInstall = () => active() && fs.existsSync(path.join(workspace.path, 'lane-adoption-mutate-install'));
     resolver.registerPreInstallSubscribers([(installer, args) => {
       receipt('preInstall');
       if (throttleInstall()) args.packageManagerOptions.throttleProgress = 60000;
+      if (active() && fs.existsSync(path.join(workspace.path, 'lane-adoption-hide-pm-output'))) {
+        args.packageManagerOptions.hidePackageManagerOutput = true;
+      }
       throttleReceipt('pre', args);
+      if (active() && fs.existsSync(path.join(workspace.path, 'lane-adoption-wrap-package-manager'))) {
+        const manager = installer.packageManager;
+        const original = manager.install;
+        manager.install = async function (...values) {
+          const result = await Reflect.apply(original, this, values);
+          fs.appendFileSync(path.join(workspace.path, 'lane-adoption-manager-receipts.jsonl'),
+            JSON.stringify({sameReceiver: this === manager, rebuildType: typeof result.rebuild,
+              rebuildName: result.rebuild?.name, rebuildConstructor: result.rebuild?.constructor.name,
+              rebuildSource: result.rebuild?.toString()}) + '\n');
+          return result;
+        };
+      }
       if (!mutableInstall()) return;
       retainedInstall = {installer, args, options: args.options, packageOptions: args.packageManagerOptions, root: args.rootDir};
       retainedInstall.packageOptions.includeOptionalDeps = false;
       const linked = args.options.linkedDependencies || (args.options.linkedDependencies = {});
       const rootLinks = linked[args.rootDir] || (linked[args.rootDir] = {});
-      rootLinks['@fixture/subscriber-linked'] = 'link:' + path.join(workspace.path, 'subscriber-linked');
+      const protocol = fs.existsSync(path.join(workspace.path, 'lane-adoption-invalid-local-package')) ? 'file:' : 'link:';
+      rootLinks['@fixture/subscriber-linked'] = protocol + path.join(workspace.path, 'subscriber-linked');
       args.rootDir = path.join(workspace.path, 'subscriber-ignored-root');
       args.packageManagerOptions = {...retainedInstall.packageOptions, includeOptionalDeps: true};
     }]);
@@ -77,6 +102,7 @@ class LaneAdoptionLifecycle {
     const getCompiler = env.getCompiler.bind(env);
     const wrapped = new WeakSet();
     env.getCompiler = (...args) => {
+      if (fs.existsSync(path.join(workspace.path, 'lane-adoption-record-compiler'))) receipt('getCompiler');
       const compiler = getCompiler(...args);
       if (!wrapped.has(compiler)) {
         const transpile = compiler.transpileFile;

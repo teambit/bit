@@ -136,7 +136,8 @@ fn split<'a>(args: &[&'a str]) -> Option<(Vec<String>, Vec<&'a str>)> {
 
 /// `bit fetch --components [ids...]`.
 fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
-    let allowed = ["--components", "-c", "--lanes", "-l", "--all-history"];
+    let allowed =
+        ["--components", "-c", "--lanes", "-l", "--all-history", "--from-original-scopes"];
     let components =
         usize::from(flags.contains(&"--components")) + usize::from(flags.contains(&"-c"));
     let lanes = usize::from(flags.contains(&"--lanes")) + usize::from(flags.contains(&"-l"));
@@ -165,6 +166,8 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
         },
         lanes: lanes == 1,
         output: OutputOptions::default(),
+        // The released FetchCmd advertises this flag but destructures the
+        // singular `fromOriginalScope`, so the public flag has no effect.
         selection: SelectionOptions::default(),
     })
 }

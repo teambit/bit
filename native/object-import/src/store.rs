@@ -138,7 +138,7 @@ impl Store {
                 copy_index_attributes(&original, &file)?;
             }
             check_index_metadata(&file, metadata.as_ref())?;
-            file.sync_all()?;
+            // ScopeIndex.writeIndex uses writeJson without a disk flush.
             drop(file);
             fs::rename(temporary, path)
         }

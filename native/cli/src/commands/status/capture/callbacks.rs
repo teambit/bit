@@ -115,3 +115,7 @@ pub(in crate::commands) fn take_callback_environment(
 ) -> Option<super::super::environments::Environments> {
     capture.cache.callbacks.host.take().map(super::super::environments::Environments::from_host)
 }
+
+pub(in crate::commands) fn restore_callback_host(capture: &mut Capture, host: crate::host::Host) {
+    capture.cache.callbacks.host = Some(host);
+}

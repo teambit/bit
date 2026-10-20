@@ -12,9 +12,18 @@ use bit_object_import::lane_remove::Plan;
 use std::{env, ffi::OsString, io};
 
 pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
-    let Some((names, force)) = parse(lane_args) else {
+    let Some((names, force, remote)) = parse(lane_args) else {
         return Ok(Outcome::Declined("outside the native local lane remove grammar".into()));
     };
+    if remote {
+        if names
+            .iter()
+            .any(|name| !name.contains('/'))
+        {
+            return Ok(Outcome::Declined("remote lane ID requires its scope".into()));
+        }
+        return crate::commands::delete::hard::lanes(args, &names, force);
+    }
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
@@ -42,21 +51,23 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
     workspace_command::execute_with(&root, args, "remove", &report, |_| plan.commit())
 }
 
-fn parse(args: &[&str]) -> Option<(Vec<String>, bool)> {
+fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {
     let mut names = Vec::new();
     let mut force = false;
     let mut silent = false;
+    let mut remote = false;
     for arg in args {
         match *arg {
             "-f" | "--force" if !force => force = true,
             "-s" | "--silent" if !silent => silent = true,
+            "-r" | "--remote" if !remote => remote = true,
             name if !name.starts_with('-') && name.len() <= 256 && names.len() < 32 => {
                 names.push(name.to_owned());
             }
             _ => return None,
         }
     }
-    (silent && !names.is_empty()).then_some((names, force))
+    (silent && !names.is_empty()).then_some((names, force, remote))
 }
 
 fn select(names: &[String], lanes: &[list::LaneData], force: bool) -> io::Result<Vec<String>> {

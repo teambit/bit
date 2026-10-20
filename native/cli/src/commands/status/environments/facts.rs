@@ -21,20 +21,52 @@ pub(super) fn read(
     };
     let (env_id, multiple) = selected_env(host, component)?;
     let manifest = reader.resolved(&env_id)?;
-    let env_policy = match &manifest {
-        Some(manifest) => manifest
-            .get("policy")
-            .cloned()
-            .unwrap_or_else(|| json!({})),
-        None => host.call("envPolicy", &json!({"envId":env_id}))?,
-    };
-    let dev_patterns = host.call("devPatterns", &json!({"envId":env_id}))?;
-    Ok(json!({"envId":env_id,"envPolicy":if env_policy.is_null(){json!({})}else{env_policy},
-        "compiler":if needs_issues {host.call("compilerFacts", &json!({"envId":env_id}))?} else {Value::Null},"nonLoaded":dev_patterns.is_null(),"devPatterns":dev_patterns,"multiple":multiple,
+    let provider = provider_facts(host, &env_id, manifest.as_ref(), needs_issues)?;
+    Ok(json!({"envId":env_id,"envPolicy":provider.env_policy,
+        "compiler":provider.compiler,"nonLoaded":provider.dev_patterns.is_null(),"devPatterns":provider.dev_patterns,"multiple":multiple,
         "manifestPatterns":manifest.as_ref().and_then(|manifest|manifest.get("patterns")),
         "registeredEnvPolicy":registered(component,&registrations),"aspectIds":aspects,
         "envOwnPolicy":own_policy(reader,component,host,aspects)?,
     }))
+}
+
+struct ProviderFacts {
+    env_policy: Value,
+    dev_patterns: Value,
+    compiler: Value,
+}
+
+fn provider_facts(
+    host: &Host,
+    env_id: &str,
+    manifest: Option<&Value>,
+    needs_issues: bool,
+) -> io::Result<ProviderFacts> {
+    let provider = host.call(
+        "providerFacts",
+        &json!({"envId":env_id,"needsEnvPolicy":manifest.is_none(),"needsIssues":needs_issues}),
+    )?;
+    let env_policy = match manifest {
+        Some(manifest) => manifest
+            .get("policy")
+            .cloned()
+            .unwrap_or_else(|| json!({})),
+        None => provider_fact(&provider, "envPolicy")?,
+    };
+    let dev_patterns = provider_fact(&provider, "devPatterns")?;
+    let compiler = if needs_issues { provider_fact(&provider, "compiler")? } else { Value::Null };
+    Ok(ProviderFacts {
+        env_policy: if env_policy.is_null() { json!({}) } else { env_policy },
+        dev_patterns,
+        compiler,
+    })
+}
+
+fn provider_fact(provider: &Value, name: &str) -> io::Result<Value> {
+    provider
+        .get(name)
+        .cloned()
+        .ok_or_else(|| io::Error::other(format!("provider facts omitted {name}")))
 }
 
 fn selected_env(host: &Host, component: &WorkspaceComponent) -> io::Result<(String, Value)> {

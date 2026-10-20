@@ -1,6 +1,7 @@
 //! Retain one refreshed history selection across complete checkout/install phases.
 pub(super) mod context;
 pub(super) mod heads;
+pub(in crate::workspace::engine) mod inspection;
 pub(super) mod planning;
 pub(super) mod progress;
 pub(in crate::workspace::engine) use prepare::run;
@@ -59,7 +60,8 @@ pub(super) struct Options {
 
 pub(super) fn resolve(request: &mut input::Prepare, state: &State) -> io::Result<()> {
     let Some(options) = &request.options.scope.lane_history else { return Ok(()) };
-    let retained = state.lane_history.as_ref().ok_or_else(|| invalid("history owner absent"))?;
+    let retained =
+        state.histories.checkout.as_ref().ok_or_else(|| invalid("history owner absent"))?;
     if options.phase != retained.next {
         return Err(invalid("history phase order changed"));
     }
@@ -97,7 +99,7 @@ pub(super) fn extend_proofs(
 ) -> io::Result<()> {
     if request.options.scope.lane_history.is_some() {
         let retained =
-            state.lane_history.as_ref().ok_or_else(|| invalid("history owner absent"))?;
+            state.histories.checkout.as_ref().ok_or_else(|| invalid("history owner absent"))?;
         proofs.extend(retained.proofs.iter().cloned());
     }
     Ok(())
@@ -113,7 +115,8 @@ pub(super) fn applied(
     receipt: &Value,
 ) -> io::Result<()> {
     let Some(options) = &request.options.scope.lane_history else { return Ok(()) };
-    let retained = state.lane_history.as_mut().ok_or_else(|| invalid("history owner absent"))?;
+    let retained =
+        state.histories.checkout.as_mut().ok_or_else(|| invalid("history owner absent"))?;
     if retained.next != options.phase {
         return Err(invalid("history apply phase order changed"));
     }
@@ -123,7 +126,7 @@ pub(super) fn applied(
     selection::accept_bitmap(&mut retained.proofs, receipt)?;
     retained.next += 1;
     if retained.next == retained.phases.len() {
-        state.lane_history = None;
+        state.histories.checkout = None;
     }
     Ok(())
 }

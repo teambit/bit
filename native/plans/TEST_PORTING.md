@@ -9,6 +9,39 @@ native yet, and asserts what the e2e case asserts.
 The list below names every case in `e2e/` with its file and line. It is a floor, not a
 ceiling: native-only cases for edge cases the e2e suite does not cover are welcome.
 
+| Additional released-CLI oracle | Native test |
+| --- | --- |
+| `ConsumerComponent.getLoadedFiles` checks the main file after loading every source and before starting any documentation parser; a missing later main file must leave earlier rich-source docs uncached. | `commands::cat::released_loader_rejects_missing_main_before_any_documentation_cache_write` |
+
+## Closeout supplemental VCS parity fixtures
+
+These source fixtures replay released Bit 2.2.94 against native commands on independent
+workspace and remote copies. They supplement the indexed original assertions below;
+their presence does not mark an unrelated original case as ported. These fixtures complement the required full-suite, platform and performance
+qualification.
+
+| Published behavior or original assertion | Native source fixture |
+| --- | --- |
+| `commands/export.e2e.ts:187`, shared Unix group ownership and all remote object bytes and modes | `commands::export::shared::shared_group_export_matches_released_objects_permissions_and_output` |
+| `harmony/delete.e2e.ts:481,485,493`, hard-delete confirmation and feature boundary | `commands::delete::hard::hard_delete_guard_preserves_the_remote_and_delegates_to_released_node` |
+| Published remote hard-delete selection, historical dependent rejection, `--force`, wildcard, output and object/index effects | `commands::delete::hard::{exported_component_hard_delete_matches_released_node,historical_version_dependent_blocks_hard_delete_like_node,forcing_historical_version_dependent_removes_only_model_refs_like_node,wildcard_hard_delete_selects_all_remote_components_like_node}` |
+| Published remote lane removal, force trash, merged lane, multiple scopes and acknowledged prefix after later failure | `commands::delete::hard::{remote_lane_force_remove_trashes_lane_like_node,remote_merged_lane_removal_matches_node_without_force,remote_lanes_in_two_file_scopes_are_both_removed_like_node,second_remote_failure_does_not_replay_the_acknowledged_file_lane_delete}` |
+| Published remote/local list JSON, IDs and table including deleted, namespace/scope filtering and lane/outdated versions, with inventory unchanged | `commands::list::parity::{remote_and_local_include_deleted_match_released_node_in_json_ids_and_table,workspace_scope_and_namespace_filters_match_released_node,outdated_lane_and_missing_remote_ids_match_released_node_without_importing,outdated_missing_remote_component_declines_before_any_inventory_write}` |
+| Published custom resolver callback once, owned failure, legitimate scope-config mutation and unconfigured hub inventory inside and outside a workspace | `commands::list::parity::{custom_resolver_lists_and_checks_outdated_without_importing_or_replaying,custom_resolver_failure_after_callback_is_owned_once,custom_resolver_scope_config_write_is_accepted_once_like_node,unconfigured_hub_remote_list_is_native_inside_and_outside_workspace}` |
+| Published lane soft tag bitmap, graph and missing `VersionHistory` population with full repeated-command state, plus ordinary lane tag rejection | `commands::tag::lane::{soft_tag_on_lane_keeps_lane_graph_and_matches_released_bitmap,soft_tag_populates_missing_lane_history_once_with_released_full_state,ordinary_lane_tag_delegates_to_released_rejection_without_native_graph_writes}` |
+| Published bare-scope and workspace remote lane inspection/history with custom resolver failure ownership | `commands::lane::{remote_history_refresh_matches_published_node_full_state,bare_scope_lane_inspection_matches_published_node_full_state,bare_scope_lane_history_refresh_matches_published_node_full_state,absent_remote_lane_after_custom_resolver_is_owned_once}` |
+| Published original-scope file/HTTP fetch and surviving prefix when a second HTTP scope fails | `commands::import::original_scopes::{fetch_reaches_original_scope_and_preserves_full_local_and_remote_state,http_fetch_reaches_original_scope_with_exact_published_state,unavailable_second_http_scope_preserves_published_failure_prefix}` |
+| Published active-lane import dependency heads, authored install and provider callbacks | `commands::import::lanes::active_lane_fetch_deps_preserves_lane_and_main_dependency_heads`; `commands::import::authored_install::authored_paths_and_installation_match_released_node_after_reinitialization`; `harmony::lane_import_callbacks::active_lane_import_with_configured_provider_matches_released_node` |
+| Published `log-file` historical component-loader cache effects with and without staged deprecation, and `blame` after staged deprecation, with exact output and full workspace, cache, history and remote state | `harmony::file_history::{log_file_loads_multiple_versions_with_exact_published_cache,log_file_loads_tagged_history_with_exact_published_cache,log_file_reads_staged_deprecation_with_exact_published_state,blame_reads_staged_deprecation_with_exact_published_state}` |
+
+The published `Remotes.resolve` uses the configured remote or calls the selected
+resolver function and returns the host URL. It does not reject mutations to
+`scope.json`, `index.json` or `.bitmap` made by that function. The native scalar
+adapter therefore owns the callback before invoking it and reads inventory after
+resolution without inventing a post-callback control-change error. CI custom
+resolver commands still delegate before invoking the callback when the exact
+published JavaScript diagnostic stack cannot be reproduced.
+
 ## Graph-aware lane reset acceptance
 
 `harmony::lane_graph_reset` adds strict same-absolute-path released-Node replay
@@ -95,7 +128,8 @@ and actual onLoad/pre-install/post-install/compiler receipts observing the old
 lane before finalization. A mutable-subscriber fixture verifies real local links,
 optional-dependency settings, retained installer/argument identity and the released
 difference between mutation of an original options object and reassignment of an
-argument-bundle field. CI variants cover core, provider and mutable-subscriber
+argument-bundle field. Package-manager wrappers retain their receiver and the
+published rebuild function, including its exact source. CI variants cover core, provider and mutable-subscriber
 installation with per-command environments shared by the independent Node oracle.
 Message-less completion retains the released loader status when CI suppresses
 status updates. Broader mutable package-manager options remain unfinished.
@@ -262,6 +296,20 @@ source and bitmap state, temporary-directory cleanup, and the dependency-cache
 prefix retained after a merge conflict, including subsequent forced switches.
 Unsupported HTTP transports decline before configured providers run.
 
+`harmony::lane_adoption::callbacks::switch_loads_configured_compiler_without_custom_onload`
+checks the actual grouped loader's compiler calls when the provider registers no
+custom onLoad slot. `switch_reads_later_source_after_earlier_onload` checks that a
+later component's source is read after an earlier onLoad callback changes it.
+`switch_loads_lane_provider_before_its_later_checkout_target` checks a provider
+stored after its consumer on the lane, which the published loader requests first.
+`switch_reports_batch_snapped_provider_in_published_order` separately checks the
+released report order when a batch snap places the provider first on the lane.
+
+`harmony::lane_adoption::subscribers::package_install_failure_resumes_original_lifecycle_without_replay`
+compares the actual package-engine failure, retained install subscribers, subsequent
+compilation and lane finalization. On Linux the default and mutable-subscriber
+cases also require the stock pnpm package step to execute in Rust.
+
 
 `harmony::checkout_platform` compares complete released Node/native checkout,
 reset, revert and lane-switch commands. It checks obsolete file deletion, missing
@@ -364,14 +412,14 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/commands/cat.e2e.ts`
 
-- [ ] `e2e/commands/cat.e2e.ts:23` bit cat command › basic usage › should show all source files with headers
-- [ ] `e2e/commands/cat.e2e.ts:29` bit cat command › basic usage › should show a specific file with --file (raw, no header)
-- [ ] `e2e/commands/cat.e2e.ts:35` bit cat command › basic usage › should error when --file references a non-existent file
-- [ ] `e2e/commands/cat.e2e.ts:40` bit cat command › basic usage › should show config with --config
-- [ ] `e2e/commands/cat.e2e.ts:45` bit cat command › basic usage › should show both files and config with --all
-- [ ] `e2e/commands/cat.e2e.ts:50` bit cat command › basic usage › should output valid JSON with --json
-- [ ] `e2e/commands/cat.e2e.ts:72` bit cat command › versioned component › should show files at a specific historical version
-- [ ] `e2e/commands/cat.e2e.ts:78` bit cat command › versioned component › should show the latest version when no version is specified
+- [x] `e2e/commands/cat.e2e.ts:23` bit cat command › basic usage › should show all source files with headers — `commands::cat::source_file_config_and_json_views_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:29` bit cat command › basic usage › should show a specific file with --file (raw, no header) — `commands::cat::source_file_config_and_json_views_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:35` bit cat command › basic usage › should error when --file references a non-existent file — `commands::cat::source_file_config_and_json_views_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:40` bit cat command › basic usage › should show config with --config — `commands::cat::source_file_config_and_json_views_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:45` bit cat command › basic usage › should show both files and config with --all — `commands::cat::source_file_config_and_json_views_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:50` bit cat command › basic usage › should output valid JSON with --json — `commands::cat::source_file_config_and_json_views_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:72` bit cat command › versioned component › should show files at a specific historical version — `commands::cat::explicit_historical_version_and_default_latest_match_released_cat`
+- [x] `e2e/commands/cat.e2e.ts:78` bit cat command › versioned component › should show the latest version when no version is specified — `commands::cat::explicit_historical_version_and_default_latest_match_released_cat`
 
 ### `e2e/commands/config.e2e.ts`
 
@@ -570,9 +618,9 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 - [x] `e2e/commands/list.e2e.ts:20` bit list command › when a component is created but not tagged › should display "found 0 components" — `commands::list::a_new_component_is_not_listed`
 - [x] `e2e/commands/list.e2e.ts:32` bit list command › when a component is created and tagged › should display "found 1 components" — `commands::list::a_tagged_component_is_listed`
-- [x] `e2e/commands/list.e2e.ts:60` bit list command › with --outdated flag › when a remote component has a higher version than the local component › should show that it has a later version in the remote — `commands::list::known_failures::a_later_remote_version_is_shown` (known failure)
-- [x] `e2e/commands/list.e2e.ts:79` bit list command › with --outdated flag › when a remote component has the same version as the local component › should display the same version for the local and remote — `commands::list::known_failures::the_same_remote_version_is_shown` (known failure)
-- [x] `e2e/commands/list.e2e.ts:93` bit list command › with --outdated flag › when a component is local only (never exported) › should show that the component does not have a remote version — `commands::list::known_failures::a_local_only_component_has_no_remote_version` (known failure)
+- [x] `e2e/commands/list.e2e.ts:60` bit list command › with --outdated flag › when a remote component has a higher version than the local component › should show that it has a later version in the remote — `commands::list::outdated::a_later_remote_version_is_shown`
+- [x] `e2e/commands/list.e2e.ts:79` bit list command › with --outdated flag › when a remote component has the same version as the local component › should display the same version for the local and remote — `commands::list::outdated::the_same_remote_version_is_shown`
+- [x] `e2e/commands/list.e2e.ts:93` bit list command › with --outdated flag › when a component is local only (never exported) › should show that the component does not have a remote version — `commands::list::outdated::a_local_only_component_has_no_remote_version`
 
 ### `e2e/commands/move.e2e.ts`
 
@@ -665,13 +713,13 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/commands/reset.e2e.ts`
 
-- [x] `e2e/commands/reset.e2e.ts:29` bit reset command › untag single component › with one version › should delete the entire component from the model — `commands::reset::known_failures::reset_head_of_a_single_version_deletes_the_component` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:44` bit reset command › untag single component › with multiple versions when specifying the version › should delete only the specified tag — `commands::reset::known_failures::reset_head_deletes_only_the_head_tag` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:51` bit reset command › untag single component › with multiple versions when specifying the version › should delete the specified version from the "state" attribute — `commands::reset::known_failures::reset_head_deletes_only_the_head_tag` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:58` bit reset command › untag single component › with multiple versions when specifying the version › bit show should work — `commands::reset::known_failures::reset_head_deletes_only_the_head_tag` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:62` bit reset command › untag single component › with multiple versions when specifying the version › bit status should show the component as staged — `commands::reset::known_failures::reset_head_deletes_only_the_head_tag` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:78` bit reset command › untag single component › with multiple versions when not specifying the version › and all versions are local › should delete the entire component from the model — `commands::reset::known_failures::reset_of_local_versions_deletes_the_component` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:99` bit reset command › untag single component › when some versions are exported, some are local › untagging without version › should delete only the local tag and leave the exported tag — `commands::reset::known_failures::reset_keeps_the_exported_tag` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:29` bit reset command › untag single component › with one version › should delete the entire component from the model — `commands::reset::reset_head_of_a_single_version_deletes_the_component`
+- [x] `e2e/commands/reset.e2e.ts:44` bit reset command › untag single component › with multiple versions when specifying the version › should delete only the specified tag — `commands::reset::reset_head_deletes_only_the_head_tag`
+- [x] `e2e/commands/reset.e2e.ts:51` bit reset command › untag single component › with multiple versions when specifying the version › should delete the specified version from the "state" attribute — `commands::reset::reset_head_deletes_only_the_head_tag`
+- [x] `e2e/commands/reset.e2e.ts:58` bit reset command › untag single component › with multiple versions when specifying the version › bit show should work — `commands::reset::reset_head_deletes_only_the_head_tag`
+- [x] `e2e/commands/reset.e2e.ts:62` bit reset command › untag single component › with multiple versions when specifying the version › bit status should show the component as staged — `commands::reset::reset_head_deletes_only_the_head_tag`
+- [x] `e2e/commands/reset.e2e.ts:78` bit reset command › untag single component › with multiple versions when not specifying the version › and all versions are local › should delete the entire component from the model — `commands::reset::reset_of_local_versions_deletes_the_component`
+- [x] `e2e/commands/reset.e2e.ts:99` bit reset command › untag single component › when some versions are exported, some are local › untagging without version › should delete only the local tag and leave the exported tag — `commands::reset::reset_keeps_the_exported_tag`
 - [x] `e2e/commands/reset.e2e.ts:109` bit reset command › untag single component › when tagging non-existing component › should show an descriptive error — `commands::reset::known_failures::reset_of_a_missing_component_fails` (known failure)
 - [x] `e2e/commands/reset.e2e.ts:137` bit reset command › untag multiple components (--all flag) › without specifying a version › should display a descriptive successful message — `commands::reset::reset_all_removes_only_local_components`
 - [x] `e2e/commands/reset.e2e.ts:140` bit reset command › untag multiple components (--all flag) › without specifying a version › should remove only local components from the model — `commands::reset::reset_all_removes_only_local_components`
@@ -681,9 +729,9 @@ row's fields, object path, header, logical identity, and remote index stay exact
 - [x] `e2e/commands/reset.e2e.ts:197` bit reset command › components with dependencies › untag only the dependency › with force flag › should untag successfully — `commands::reset::known_failures::reset_of_a_dependency_needs_force` (known failure)
 - [x] `e2e/commands/reset.e2e.ts:215` bit reset command › components with dependencies › untag only the dependency › after exporting the component and tagging the scope › should show an error — `commands::reset::known_failures::reset_of_an_exported_dependency_fails` (known failure)
 - [x] `e2e/commands/reset.e2e.ts:226` bit reset command › components with dependencies › untag all components › when all components have only local versions › should remove all the components because it does not leave a damaged component without dependency — `commands::reset::reset_all_of_local_dependencies_removes_all`
-- [x] `e2e/commands/reset.e2e.ts:238` bit reset command › components with dependencies › untag only the dependent › should untag successfully the dependent — `commands::reset::known_failures::reset_of_the_dependent_keeps_the_dependency` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:242` bit reset command › components with dependencies › untag only the dependent › should leave the dependency intact — `commands::reset::known_failures::reset_of_the_dependent_keeps_the_dependency` (known failure)
-- [x] `e2e/commands/reset.e2e.ts:265` bit reset command › components with dependencies › after import and tagging › untag using the id without scope-name › should untag successfully — `commands::reset::known_failures::reset_by_an_id_without_scope` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:238` bit reset command › components with dependencies › untag only the dependent › should untag successfully the dependent — `commands::reset::reset_of_the_dependent_keeps_the_dependency`
+- [x] `e2e/commands/reset.e2e.ts:242` bit reset command › components with dependencies › untag only the dependent › should leave the dependency intact — `commands::reset::reset_of_the_dependent_keeps_the_dependency`
+- [x] `e2e/commands/reset.e2e.ts:265` bit reset command › components with dependencies › after import and tagging › untag using the id without scope-name › should untag successfully — `commands::reset::reset_by_an_id_without_scope`
 - [x] `e2e/commands/reset.e2e.ts:277` bit reset command › components with dependencies › after import and tagging › modify, tag and then untag all › should show the component as modified — `commands::reset::reset_all_keeps_the_modification`
 - [x] `e2e/commands/reset.e2e.ts:297` bit reset command › components with config in the .bitmap file › bit reset should leave the config as they were before the tag — `commands::reset::reset_keeps_the_bitmap_config`
 - [x] `e2e/commands/reset.e2e.ts:301` bit reset command › components with config in the .bitmap file › bit export should remove the entries form the staged-config file — `commands::reset::reset_keeps_the_bitmap_config`
@@ -3825,10 +3873,10 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/untag-harmony.e2e.ts`
 
-- [ ] `e2e/harmony/untag-harmony.e2e.ts:29` untag components on Harmony › when an old version is missing from the scope › should untag successfully with no errors
-- [ ] `e2e/harmony/untag-harmony.e2e.ts:42` untag components on Harmony › untagging multiple versions › should show the component as new only, not as staged nor snapped
-- [ ] `e2e/harmony/untag-harmony.e2e.ts:57` untag components on Harmony › untagging multiple versions when the new head is exported › bit status should be clean
-- [ ] `e2e/harmony/untag-harmony.e2e.ts:60` untag components on Harmony › untagging multiple versions when the new head is exported › bitmap should show a version, not a hash
+- [x] `e2e/harmony/untag-harmony.e2e.ts:29` untag components on Harmony › when an old version is missing from the scope › should untag successfully with no errors — `harmony::untag::missing_old_exported_version_object_does_not_block_reset_all`
+- [x] `e2e/harmony/untag-harmony.e2e.ts:42` untag components on Harmony › untagging multiple versions › should show the component as new only, not as staged nor snapped — `harmony::untag::multiple_local_tags_reset_to_new_only`
+- [x] `e2e/harmony/untag-harmony.e2e.ts:57` untag components on Harmony › untagging multiple versions when the new head is exported › bit status should be clean — `harmony::untag::exported_boundary_resets_to_clean_status_and_semver_bitmap`
+- [x] `e2e/harmony/untag-harmony.e2e.ts:60` untag components on Harmony › untagging multiple versions when the new head is exported › bitmap should show a version, not a hash — `harmony::untag::exported_boundary_resets_to_clean_status_and_semver_bitmap`
 
 ### `e2e/harmony/update-cmd.e2e.ts`
 
@@ -3909,3 +3957,4 @@ row's fields, object path, header, logical identity, and remote index stay exact
 <!-- e2e-port-plan:end -->
 
 - Native stash checkout edge qualification: `native/cli/tests/e2e/harmony/stash/checkout_edges.rs::embedded_scope_restores_new_components_without_creating_model_heads` and `existing_new_identity_is_skipped_without_replacing_its_root_or_sources` compare exact released CLI output, bitmap/history, restored Sources and embedded-scope index preservation.
+- Native merge installation provider qualification: `native/cli/tests/e2e/harmony/install_compat.rs::configured_lane_merge_leaves_unloaded_provider_out_of_install` and `configured_lane_merge_does_not_invoke_unloaded_provider_failure` compare released output and full state while asserting lane merge does not register a configured provider before installation.

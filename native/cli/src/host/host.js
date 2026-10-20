@@ -30,6 +30,7 @@ let snapshotCommand = ['snap', 'tag'].includes(snapshotCommandName) || (cliArgum
 const laneHistoryCommand = cliArguments[0] === 'lane' && ['checkout', 'revert'].includes(cliArguments[1]);
 const checkoutCommand = laneHistoryCommand || (cliArguments[0] === 'merge' && cliArguments.includes('--abort')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge-abort') || ['checkout', 'U', 'revert', 'switch'].includes(cliArguments[0]) || (cliArguments[0] === 'lane' && cliArguments[1] === 'import');
 const laneSwitchCommand = laneHistoryCommand || cliArguments[0] === 'switch' || (cliArguments[0] === 'lane' && cliArguments[1] === 'import');
+const laneMergeCommand = cliArguments[0] === 'lane' && cliArguments[1] === 'merge';
 const mergeCommand = (cliArguments[0] === 'merge' && !cliArguments.includes('--abort') && !cliArguments.includes('--resolve')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge');
 const exportCommand = ['export', 'e', 'resume-export'].includes(cliArguments[0]);
 const bufferedCommand = snapshotCommand || checkoutCommand || mergeCommand || exportCommand || identityMutationCommand || ['stash', 'add', 'a'].includes(cliArguments[0]);
@@ -96,7 +97,7 @@ async function handle(line) {
     return;
   }
   try {
-    if (request.method === 'afterInstall' || readonlyStatus || bufferedOutputCommand) capturedStdout = [];
+    if (request.method === 'afterInstall' || request.method === 'inventoryResolve' || request.method === 'logFileLoad' || readonlyStatus || bufferedOutputCommand) capturedStdout = [];
     const result = await handler(request.params ?? {});
     const output = capturedStdout?.join('');
     capturedStdout = null;
@@ -111,6 +112,21 @@ async function handle(line) {
 }
 
 const handlers = {
+  inventoryResolve,
+  installCanonicalSupport,
+  prepareNativeBuildScriptsPath,
+  installCanonicalNeeded,
+  installCanonical,
+  installCanonicalResume,
+  installCanonicalEnginePrepare,
+  installImportWriter,
+  installCanonicalFinalize,
+  mergeLoadApps,
+  catSupport,
+  catMetadata,
+  catSemanticDocsSupport,
+  catSemanticDocs,
+  logFileLoad,
   identityScopeDefault: async ({ scope }) => {
     const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
     workspace.getWorkspaceConfig().setExtension('teambit.workspace/workspace', { defaultScope: scope }, { mergeIntoExisting: true, ignoreVersion: true });
@@ -190,11 +206,8 @@ const handlers = {
   switchInstallSubscribers,
   collationOrder: ({ ids }) => ids.map((_, index) => index).sort((left, right) => ids[left].localeCompare(ids[right])),
   envPolicy: ({ envId }) => envPolicy(envId),
-  compilerFacts: async ({ envId }) => {
-    const env = await loadEnv(envId) ?? await loadEnv('teambit.harmony/node');
-    const compiler = env?.getCompiler?.();
-    return { hasCompiler: Boolean(compiler), distDir: compiler?.getDistDir?.() ?? 'dist' };
-  },
+  compilerFacts: ({ envId }) => compilerFacts(envId),
+  providerFacts,
   environmentIds: async ({ ids }) => {
     const envs = (await loadHarmony()).get('teambit.envs/envs');
     return ids.map((id) => envs.getEnvDefinitionByStringId(id)).filter(Boolean).map((definition) => definition.id);
@@ -209,9 +222,15 @@ const handlers = {
     detectDependencies(envId, files, componentDir, aspectIds),
   parseDependencies,
   statusCallbackInfo,
+  statusDependencyCacheChecked: async () => Boolean((await loadHarmony()).get('teambit.workspace/workspace').consumer.componentLoader.invalidateDepsCachePromise),
   snapshotWorkspaceIssues: async () => (await loadHarmony()).get('teambit.workspace/workspace').getWorkspaceIssues({includeNonBlocking:false}).map((error)=>error.message),
   statusWorkspaceIssues: async () => (await loadHarmony()).get('teambit.workspace/workspace').getWorkspaceIssues().map((error) => error.message),
   statusLoadCallbacks,
+  switchStatusBegin,
+  switchStatusLoadOne,
+  switchStatusStageRow,
+  switchStatusResume,
+  switchStatusFinish,
   trackingCachedDocs: ({ entries }) => {
     for (const entry of entries) trackingDocumentation.set(entry.path, entry.docs);
     return true;
@@ -279,6 +298,14 @@ const handlers = {
         ? workspace.consumer.bitMap.components.find(component => component.id.isEqual(componentMap.id)
           && component.rootDir === componentMap.rootDir && component.mainFile === componentMap.mainFile)
         : undefined;
+      // The published import writer updates an existing ComponentMap in place.
+      // Its pre-import bitmap scan may have stored the actual missing-files
+      // error there; addComponent updates files and id without clearing it.
+      const importPrevious = cliArguments[0] === 'import' && retainLoaded
+        ? workspace.consumer.bitMap.components.find(component => component.id.fullName === componentMap.id.fullName
+          && component.rootDir === componentMap.rootDir && component.mainFile === componentMap.mainFile)
+        : undefined;
+      if (importPrevious?.noFilesError) componentMap.noFilesError = importPrevious.noFilesError;
       const files = new Map(receipt.files.map(file => [file.relativePath, file]));
       // ComponentWriter changes selected entries in the live bitmap. An untouched
       // provider keeps its existing inventory order, even when disk scanning sorts it.
@@ -343,24 +370,22 @@ const handlers = {
  */
 function hostInfo(terminal) {
   requireHelpers();
+  if (cliArguments[0] === 'switch' && terminal.canonicalOnly === true) {
+    switchCanonicalOnlyHostInfo = true;
+  }
   const { GLOBAL_CONFIG } = bitRequire('@teambit/legacy.constants');
   const { getBitVersion } = bitRequire('@teambit/bit.get-bit-version');
   const { findBvmDir } = bitRequire('@teambit/bvm.path/dist/path.js');
-  // Recent Bit releases shape PATH for lifecycle scripts with a pnpm helper.
-  // Older releases do not ship it; their CLI wrapper already puts this Node on PATH.
-  let buildScriptsPath;
-  try {
-    buildScriptsPath = bitRequire.resolve('@teambit/pnpm/dist/build-scripts-path.js');
-  } catch (error) {
-    if (error.code !== 'MODULE_NOT_FOUND') throw error;
-  }
-  if (buildScriptsPath) bitRequire(buildScriptsPath).prepareBuildScriptsPath();
+  // The published pnpm adapter prepares node-gyp only when it reaches a real
+  // install. Host bootstrap must not write a shim for a graceful early failure.
   const nodeDir = path.dirname(process.execPath);
   if ((process.env.PATH ?? '').split(path.delimiter)[0] !== nodeDir) {
     process.env.PATH = `${nodeDir}${path.delimiter}${process.env.PATH ?? ''}`;
   }
   return {
-    ...coreAspectsInfo(),
+    ...(terminal.canonicalOnly === true
+      ? { bitDir, coreAspects: [], corePackages: [], canonicalOnly: true }
+      : coreAspectsInfo()),
     bvmDir: findBvmDir(entry) ?? null,
     nodePath: process.execPath,
     globalConfigDir: GLOBAL_CONFIG,
@@ -462,6 +487,23 @@ async function envPolicy(envId) {
   return policy ?? null;
 }
 
+async function compilerFacts(envId) {
+  const env = await loadEnv(envId) ?? await loadEnv('teambit.harmony/node');
+  const compiler = env?.getCompiler?.();
+  return { hasCompiler: Boolean(compiler), distDir: compiler?.getDistDir?.() ?? 'dist' };
+}
+
+/** Run the same environment methods in their original order after the manifest read. */
+async function providerFacts({ envId, needsEnvPolicy, needsIssues }) {
+  if (typeof envId !== 'string' || typeof needsEnvPolicy !== 'boolean' || typeof needsIssues !== 'boolean') {
+    throw new Error('invalid provider facts request');
+  }
+  const policy = needsEnvPolicy ? await envPolicy(envId) : null;
+  const patterns = await devPatterns(envId);
+  const compiler = needsIssues ? await compilerFacts(envId) : null;
+  return { envPolicy: policy, devPatterns: patterns, compiler };
+}
+
 /**
  * The env's dev-file pattern methods, each `null` when the env does not implement it.
  * The node env implements none of them.
@@ -561,8 +603,22 @@ async function dependencyPolicies(extensionIds, bootstrap, startupAspectIds = []
   if (cliArguments[0] === 'import') extensionIds = extensionIds.filter(id => !importPrimedPolicies.has(id));
   snapshotBootstrapProgress = bootstrap === true && (['tag', 'checkout', 'add', 'a'].includes(cliArguments[0]) || cliArguments[0] === 'merge');
   try {
-    if(!beforePackageManager && extensionIds.length) {
-      await workspace.loadAspects(extensionIds, false, undefined, { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+    // MergeStatusProvider reads the selected components without loading their
+    // configured aspects. MergingMain loads application aspects after the write.
+    if(!beforePackageManager && !laneMergeCommand && extensionIds.length) {
+      if (cliArguments[0] === 'switch' && startupAspectIds.length
+          && (typeof workspace.resolveMultipleComponentIds !== 'function'
+            || typeof workspace.clearComponentCache !== 'function')) {
+        throw new Error('published switch aspect cache invalidation is unavailable');
+      }
+      const loadedAspects = await workspace.loadAspects(extensionIds, false, undefined,
+        { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+      if (cliArguments[0] === 'switch' && startupAspectIds.length) {
+        const startup = new Set(startupAspectIds.map(id => id.split('@')[0]));
+        const roots = loadedAspects.filter(id => startup.has(id.split('@')[0]));
+        const resolved = await workspace.resolveMultipleComponentIds(roots);
+        for (const id of resolved) workspace.clearComponentCache(id);
+      }
       if (cliArguments[0] === 'import') extensionIds.forEach(id => importPrimedPolicies.add(id));
     }
   } finally {snapshotBootstrapProgress = false;}
@@ -623,15 +679,48 @@ async function registeredEnvPolicy(envId, aspectIds) {
 }
 
 let workspaceAspectsLoaded = false;
+let switchCanonicalOnlyHostInfo = false;
 
 /** The workspace aspects the CLI loads on start (`getNotLoadedConfiguredExtensions`), once. */
 async function loadWorkspaceAspects(aspectIds) {
-  if (cliArguments[0] === 'scope') return;
+  if (cliArguments[0] === 'scope' || laneMergeCommand) return;
   if (workspaceAspectsLoaded || !aspectIds?.length) return;
   workspaceAspectsLoaded = true;
   const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
   aspectIds=snapshotFreshAspects(aspectIds);
-  if(aspectIds.length) await workspace.loadAspects(aspectIds, false, undefined, { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+  if (!aspectIds.length) return;
+  if (cliArguments[0] === 'switch'
+      && (typeof workspace.resolveMultipleComponentIds !== 'function'
+        || typeof workspace.clearComponentCache !== 'function')) {
+    throw new Error('published switch aspect cache invalidation is unavailable');
+  }
+  const aspects = await workspace.loadAspects(aspectIds, false, undefined,
+    { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+  if (cliArguments[0] === 'switch') {
+    const componentIds = await workspace.resolveMultipleComponentIds(aspects);
+    componentIds.forEach(id => workspace.clearComponentCache(id));
+  }
+}
+
+/** MergingMain.mergeSnaps loads application aspects after writing and before install. */
+async function mergeLoadApps({ componentIds }) {
+  const loaded = await loadHarmony();
+  const application = loaded.get('teambit.harmony/application');
+  if (typeof application?.loadAllAppsAsAspects !== 'function') throw new Error('published application loader unavailable');
+  const workspace = loaded.get('teambit.workspace/workspace');
+  const { ComponentID } = bitRequire('@teambit/component-id');
+  workspace.clearComponentsCache(componentIds.map(id => ComponentID.fromString(id)));
+  // Preserve the real workspace loader's status callbacks through this exact
+  // published app-loading step, including its ordinary-terminal loading line.
+  captureBootstrapProgress(workspace);
+  const previousProgress = snapshotBootstrapProgress;
+  snapshotBootstrapProgress = true;
+  try {
+    await application.loadAllAppsAsAspects();
+    return true;
+  } finally {
+    snapshotBootstrapProgress = previousProgress;
+  }
 }
 
 /**
@@ -930,6 +1019,7 @@ async function statusCallbackInfo({ coreIds, aspectIds }) {
   return {
     onLoad: Boolean(importClassMode) || loaded.get('teambit.workspace/workspace').onComponentLoadSlot.toArray().some(([id]) => custom(id)),
     issues: loaded.get('teambit.component/issues').addComponentsIssuesSlot.toArray().some(([id]) => custom(id)),
+    classLoad: cliArguments[0] === 'switch' && (switchCanonicalOnlyHostInfo || aspectIds.length > 0),
   };
 }
 
@@ -992,7 +1082,7 @@ async function hydrateStatusComponent(row, sourceConsumer) {
   return component;
 }
 
-async function statusLoadCallbacks({ components, directory, snapshot, checkout }) {
+async function statusLoadCallbacks({ components, directory, snapshot, checkout, configured, loadOrder }) {
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
   const envs = loaded.get('teambit.envs/envs');
@@ -1001,9 +1091,10 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout }
   statusComponents = [];
   const loadOutput = [];
   let outputStart = capturedStdout?.length ?? 0;
-  const importClasses = await importHydrateClasses(components);
-  if (importClasses) {
-    statusComponents = importClasses;
+  const importedClasses = await importHydrateClasses(components);
+  const switchClasses = importedClasses ? undefined : await switchStatusHydrateClasses(components, workspace, checkout && configured, loadOrder, directory);
+  if (importedClasses || switchClasses) {
+    statusComponents = importedClasses ?? switchClasses;
   } else {
   const tracking=['add','a'].includes(cliArguments[0]);
   if(tracking && !snapshotContinuation) {
@@ -1043,7 +1134,7 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout }
       }
       else {
         await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
-        if (laneHistoryCommand || ['remove', 'rm', 'delete'].includes(cliArguments[0])) {
+        if (laneHistoryCommand || ['remove', 'rm', 'delete', 'merge'].includes(cliArguments[0])) {
           workspace.componentLoader.saveInCache(component, { loadExtensions: true, executeLoadSlot: true });
           workspace.consumer.componentLoader.componentsCache.set(component.id.toString(), component.state._consumer);
         }

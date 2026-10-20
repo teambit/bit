@@ -126,6 +126,20 @@ impl Output {
         SWITCHED.store(SWITCHED_OFF, Ordering::SeqCst);
     }
 
+    /// Mirror a retained published package manager's `logger.off()` after it
+    /// failed: the Rust parent still renders the following graceful result.
+    pub fn external_loader_off() {
+        let mut spinner = lock();
+        spinner.spinning = false;
+        if spinner.drawn {
+            if let Some(sink) = &spinner.sink {
+                sink("\r\u{1b}[2K");
+            }
+            spinner.drawn = false;
+        }
+        SWITCHED.store(SWITCHED_OFF, Ordering::SeqCst);
+    }
+
     fn loader(&self) -> bool {
         match SWITCHED.load(Ordering::SeqCst) {
             SWITCHED_ON => true,
@@ -208,6 +222,13 @@ impl Output {
     pub fn success_status(&self) {
         let message = lock().text.clone();
         self.success(&message, None);
+    }
+
+    /// Carry the current native command's actual loader text into a retained
+    /// published class invocation, whose Node loader is in the same command.
+    #[must_use]
+    pub fn retained_text() -> String {
+        lock().text.clone()
     }
 
     /// `logger.consoleWarning(message)`.

@@ -98,18 +98,42 @@ fn apply_slots(entries: &mut Vec<Value>, defaults: &Defaults) -> io::Result<()> 
 
 fn configured_entries(stored: &Value, configs: &Value) -> io::Result<Vec<Value>> {
     let mut entries = Vec::new();
+    let stored = array(stored)?;
     for config in array(configs)? {
         let identity = super::scope::identity(config)?;
+        let source = stored_entry(stored, &identity);
         let mut entry = config.clone();
-        entry["data"] = array(stored)?
-            .iter()
-            .find(|row| super::scope::identity(row).is_ok_and(|id| id == identity))
+        if let Some(versioned) = source.and_then(|row| row.get("extensionId"))
+            && config.get("extensionId").is_some()
+            && !identity.contains('@')
+        {
+            entry["extensionId"] = versioned.clone();
+        }
+        entry["data"] = source
             .and_then(|row| row.get("data"))
             .cloned()
             .unwrap_or_else(|| json!({}));
         entries.push(entry);
     }
     Ok(entries)
+}
+
+fn stored_entry<'a>(stored: &'a [Value], identity: &str) -> Option<&'a Value> {
+    let exact = stored
+        .iter()
+        .find(|row| super::scope::identity(row).is_ok_and(|id| id == identity));
+    if exact.is_some() || identity.contains('@') {
+        return exact;
+    }
+    stored
+        .iter()
+        .find(|row| {
+            super::scope::identity(row)
+                .is_ok_and(|id| {
+                    id.rsplit_once('@')
+                        .is_some_and(|(base, _)| base == identity)
+                })
+        })
 }
 
 fn upsert(entries: &mut Vec<Value>, name: &str, data: &Value) -> io::Result<()> {

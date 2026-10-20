@@ -1,5 +1,8 @@
 //! `e2e/commands/export.e2e.ts`.
 
+#[cfg(unix)]
+mod shared;
+
 use crate::helper::{FOO_FIXTURE, Helper, config, parse, setup};
 use serde_json::Value;
 use std::{ffi::OsStr, fs, path::Path};
@@ -974,6 +977,7 @@ mod known_failures {
     use crate::{
         allow_known_failure,
         helper::{FOO_FIXTURE, Helper},
+        known_failure::Native,
     };
     use std::fs;
 
@@ -1060,7 +1064,7 @@ mod known_failures {
             .unwrap();
         let group = String::from_utf8(group.stdout).unwrap();
         let helper = tagged_for_shared_remote(group.trim());
-        let output = allow_known_failure!(helper.native_output_or_known("export"));
+        let output = helper.native_output_or_known("export").native();
         assert!(
             output.contains(if cfg!(windows) {
                 "nothing to export"

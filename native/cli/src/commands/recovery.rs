@@ -10,6 +10,7 @@ use report::format_result;
 mod tests;
 
 use super::{
+    add::ProjectedLinker,
     checkout,
     color::Chalk,
     engine::Engine,
@@ -27,9 +28,9 @@ use super::{
     workspace_command::{self, format::Formatter, progress::Progress, results::Report},
 };
 use crate::{native::Outcome, workspace};
-use bit_install::output::Output;
+use bit_install::{HostInfo, output::Output};
 use serde_json::{Value, json};
-use std::{env, ffi::OsString, io, path::Path};
+use std::{env, ffi::OsString, io, path::Path, sync::Arc};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Kind {
@@ -124,8 +125,9 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     if options.kind == Kind::Lane && !options.silent {
         return interactive::run(&root, args, options, installer);
     }
+    let (environment, installation) = installation_session(installer)?;
     let mut startup = Startup::default();
-    let prepared = match Prepared::plan(&root, options, &mut startup) {
+    let prepared = match Prepared::plan(&root, options, &mut startup, environment) {
         Ok(prepared) => prepared,
         Err(error) if failure::result(&error).is_some() => {
             return workspace_command::execute_then(&root, args, "merge-abort", |_output| {
@@ -142,7 +144,19 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
         }
         Err(error) => return Ok(Outcome::Declined(format!("merge recovery: {error}"))),
     };
-    execute_prepared(&root, args, options, &startup, prepared, installer)
+    execute_prepared(&root, args, options, &startup, prepared, installation)
+}
+
+fn installation_session(
+    installer: Option<Installer>,
+) -> io::Result<(Option<environments::Environments>, Option<HostInfo>)> {
+    match installer {
+        Some(installer) => {
+            let (environment, info) = installer.into_parts()?;
+            Ok((Some(environment), Some(info)))
+        }
+        None => Ok((None, None)),
+    }
 }
 
 fn execute_prepared(
@@ -151,7 +165,7 @@ fn execute_prepared(
     options: &Options,
     startup: &Startup,
     prepared: Prepared,
-    installer: Option<Installer>,
+    installation: Option<HostInfo>,
 ) -> io::Result<Outcome> {
     let command = if options.kind == Kind::Lane { "merge-abort" } else { "merge" };
     if options.kind == Kind::Component {
@@ -162,7 +176,7 @@ fn execute_prepared(
             workspace_command::checkout_lifecycle::before(startup)?;
         }
         workspace_command::checkout_lifecycle::loaded(startup);
-        let report = execute(root, args, output, prepared, installer)?;
+        let report = execute(root, args, output, prepared, installation)?;
         super::status::cleanup_temporary(root)?;
         Ok(report)
     })
@@ -187,17 +201,18 @@ impl Prepared {
             reason = "Existing CLI orchestration is retained until its operation is decomposed"
         )
     )]
-    fn plan(root: &Path, options: &Options, startup: &mut Startup) -> io::Result<Self> {
+    fn plan(
+        root: &Path,
+        options: &Options,
+        startup: &mut Startup,
+        mut inherited: Option<environments::Environments>,
+    ) -> io::Result<Self> {
         let home = workspace_command::home();
         let mut engine = Engine::new()?;
         let request = prepare_request(root, &home, options)?;
         preflight(&request)?;
         let environments = if options.kind == Kind::Component {
-            Some(
-                environments::read_context(&mut engine, root, &home, false, None, startup)?
-                    .1
-                    .for_checkout(),
-            )
+            Some(read_environment(&mut engine, root, &home, startup, inherited.take())?)
         } else {
             None
         };
@@ -222,9 +237,7 @@ impl Prepared {
         }
         let environments = match environments {
             Some(environment) => environment,
-            None => environments::read_context(&mut engine, root, &home, false, None, startup)?
-                .1
-                .for_checkout(),
+            None => read_environment(&mut engine, root, &home, startup, inherited.take())?,
         };
         let captured = capture::capture_with(
             &mut engine,
@@ -300,6 +313,22 @@ impl Prepared {
     }
 }
 
+fn read_environment(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    startup: &mut Startup,
+    inherited: Option<environments::Environments>,
+) -> io::Result<environments::Environments> {
+    let environment = match inherited {
+        Some(environment) => {
+            environments::read_inherited_context(engine, root, home, None, startup, environment)?.1
+        }
+        None => environments::read_context(engine, root, home, false, None, startup)?.1,
+    };
+    Ok(environment.for_checkout())
+}
+
 fn prepare_request(root: &Path, home: &Path, options: &Options) -> io::Result<Value> {
     let operation = if options.kind == Kind::Lane { "laneAbort" } else { "componentAbort" };
     let mut request = json!({
@@ -343,23 +372,50 @@ fn execute(
     args: &[OsString],
     output: &Output,
     mut prepared: Prepared,
-    installer: Option<Installer>,
+    installation: Option<HostInfo>,
 ) -> io::Result<Report> {
     if let Some(progress) = &prepared.progress {
         progress.render_merge(output);
     }
     let result = prepared.commit(root)?;
     let mut report = format_result(&result, prepared.kind, Chalk::detect(args))?;
-    if let Some(installer) = installer
+    if let Some(info) = installation
         && !prepared.ids.is_empty()
         && result.get("checkoutError").is_none()
-        && let Err(error) = installer.install(root, false, &prepared.ids)
     {
-        output.failure(&format!("installation failed with the following error: {error}"));
-        report.data = Formatter::join(&[
-            report.data,
-            installation::error_report(Chalk::detect(args), &error.to_string()),
-        ]);
+        let (installed, host) = install_retained(root, &mut prepared, info)?;
+        if let Err(error) = &installed {
+            output.failure(&format!("installation failed with the following error: {error}"));
+        }
+        host.call("installCanonicalFinalize", &json!({}))?;
+        print!("{}", host.take_stdout());
+        if let Err(error) = installed
+            && prepared.kind != Kind::Component
+        {
+            report.data = Formatter::join(&[
+                report.data,
+                installation::error_report(Chalk::detect(args), &error.to_string()),
+            ]);
+        }
     }
     Ok(report)
+}
+
+fn install_retained(
+    root: &Path,
+    prepared: &mut Prepared,
+    mut info: HostInfo,
+) -> io::Result<(io::Result<()>, Arc<crate::host::Host>)> {
+    let mut environment = capture::take_callback_environment(&mut prepared.capture)
+        .ok_or_else(|| io::Error::other("recovery installation provider session"))?;
+    print!("{}", ProjectedLinker::project_installation_workspace(root, &mut environment)?);
+    let host = environment
+        .into_tracking_host()
+        .ok_or_else(|| io::Error::other("recovery installation Host"))?;
+    info.file_id = workspace_command::file_id();
+    let host = Arc::new(host);
+    let installed = Installer::from_host(Arc::clone(&host), info)
+        .with_initialized_cache(!prepared.capture.components.is_empty())
+        .install(root, false, &prepared.ids);
+    Ok((installed, host))
 }

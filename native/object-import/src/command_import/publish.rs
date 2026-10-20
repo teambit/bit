@@ -139,14 +139,13 @@ impl PreparedImport {
 pub(super) fn write_file(path: &Path, bytes: &[u8]) -> io::Result<()> {
     let parent = path.parent().ok_or_else(|| invalid("import publication parent"))?;
     fs::create_dir_all(parent)?;
-    // Canonical outputFile preserves the existing inode and its owner/ACLs.
+    // Canonical outputFile preserves the inode and owner/ACLs without a disk flush.
     let mut file = fs::OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
         .open(path)?;
-    file.write_all(bytes)?;
-    file.sync_all()
+    file.write_all(bytes)
 }
 
 #[cfg(test)]

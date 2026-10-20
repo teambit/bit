@@ -20,7 +20,7 @@ pub(super) fn list(path: &Path, scope: &str, namespaces: &str) -> io::Result<Vec
     collect(path, scope, &matcher(scope, namespaces)?, &index(path)?)
 }
 
-fn index(path: &Path) -> io::Result<Vec<Value>> {
+pub(super) fn index(path: &Path) -> io::Result<Vec<Value>> {
     let index: Value = serde_json::from_slice(
         &Budget::new(4 * 1024 * 1024).read(File::open(path.join("index.json"))?)?,
     )?;
@@ -93,7 +93,11 @@ fn lane_hash(path: &Path, id: &lane::Id) -> io::Result<String> {
         .ok_or_else(|| invalid("inbound file lane hash"))
 }
 
-fn indexed(row: &Value, scope: &str, seen: &mut HashSet<String>) -> io::Result<(String, String)> {
+pub(super) fn indexed(
+    row: &Value,
+    scope: &str,
+    seen: &mut HashSet<String>,
+) -> io::Result<(String, String)> {
     let name = row["id"]["name"].as_str().ok_or_else(|| invalid("inbound file index name"))?;
     let hash = row["hash"].as_str().ok_or_else(|| invalid("inbound file index hash"))?;
     if row["id"]["scope"] != scope
@@ -106,7 +110,12 @@ fn indexed(row: &Value, scope: &str, seen: &mut HashSet<String>) -> io::Result<(
     Ok((name.to_owned(), hash.to_owned()))
 }
 
-fn object(path: &Path, hash: &str, kind: &str, compressed: &mut usize) -> io::Result<Value> {
+pub(super) fn object(
+    path: &Path,
+    hash: &str,
+    kind: &str,
+    compressed: &mut usize,
+) -> io::Result<Value> {
     let identity = crate::merge_history::hash(hash)?;
     let raw = repository::read(&path.join("objects"), identity, 32 * 1024 * 1024, compressed)?;
     let (_, body) = repository::split(&raw, identity, kind)?;
@@ -137,7 +146,7 @@ fn component(
     }))
 }
 
-fn extension(version: &Value, name: &str, flag: &str) -> bool {
+pub(super) fn extension(version: &Value, name: &str, flag: &str) -> bool {
     version["extensions"]
         .as_array()
         .is_some_and(|extensions| {

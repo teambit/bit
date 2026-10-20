@@ -17,7 +17,7 @@ use std::{
     path::{Component, Path},
 };
 
-pub(super) fn read(root: &Path, input: &str) -> io::Result<(String, Vec<Value>)> {
+pub(super) fn read(root: &Path, input: &str) -> io::Result<(String, String, Vec<Value>)> {
     let (identity, file, lane) = target(root, input)?;
     let mut engine = Engine::new()?;
     let result: Value = engine.request(&json!({
@@ -32,7 +32,7 @@ pub(super) fn read(root: &Path, input: &str) -> io::Result<(String, Vec<Value>)>
     for row in &mut rows {
         row["normalized"] = log::normalize(&row["log"])?;
     }
-    Ok((file, rows))
+    Ok((identity, file, rows))
 }
 
 fn target(root: &Path, input: &str) -> io::Result<(String, String, Option<Value>)> {
@@ -60,8 +60,5 @@ fn target(root: &Path, input: &str) -> io::Result<(String, String, Option<Value>
         })
         .max_by_key(|(entry, _)| entry.root_dir.len())
         .ok_or_else(|| decline("file history component absent"))?;
-    if target.0.staged_deprecation {
-        return Err(decline("file history staged deprecation"));
-    }
     Ok((target.0.identity.clone(), target.1.to_string(), bitmap.lane))
 }

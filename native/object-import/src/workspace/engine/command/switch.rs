@@ -3,6 +3,7 @@
 pub(super) mod progress;
 pub(super) mod validation;
 pub(super) use report::append_skipped;
+mod load_order;
 mod report;
 mod selection;
 #[cfg(test)]
@@ -41,6 +42,7 @@ pub(super) fn context(
     let mut context = selection.metadata(request, pool)?;
     prepare::extend_models(request, pool, &mut context, Some(&selection.imported))?;
     selection.remove_without_main_head(&mut context)?;
+    load_order::apply(&mut context, &entries(selection.lane.as_ref())?)?;
     selection::attach(&mut context, request)?;
     if selection.current.is_main() && staged_main(&request.root, &context)? {
         return Err(invalid("switch staged main components require export or reset"));
@@ -50,6 +52,7 @@ pub(super) fn context(
         progress::import_count(&request.root, &context, context["targets"].as_array().unwrap())?;
     context["switchImportCount"] = json!(count);
     context["switchCheckoutImport"] = progress::receipt(count);
+    context["switchRemoteWarning"] = json!(selection.imported.switch_warning());
     selection.imported.validate()?;
     Ok((context, Some(selection.imported)))
 }
@@ -91,7 +94,7 @@ impl LaneSelection {
             return Err(invalid("already checked out to requested lane"));
         }
         refresh_main(request, &bitmap, &mut imported)?;
-        let lane = imported.resolve_other_lane(
+        let lane = imported.resolve_switch_lane(
             &destination,
             request.options.lane.as_ref().unwrap().skip_fetch,
         )?;

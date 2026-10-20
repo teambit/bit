@@ -17,6 +17,10 @@ mod workspace;
 use std::{env, ffi::OsString, process::ExitCode};
 
 fn main() -> ExitCode {
+    // pnpm's cached umask read briefly changes the process-wide mask. Initialize
+    // it before workers can create directories with an unmasked mode.
+    #[cfg(unix)]
+    let _ = pnpm_fs::file_mode::current_umask();
     pnpm_diagnostics::enable_tracing_by_env();
     let args: Vec<OsString> = env::args_os().skip(1).collect();
     match run(&args) {

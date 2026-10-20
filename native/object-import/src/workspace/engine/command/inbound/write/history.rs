@@ -36,6 +36,7 @@ pub(super) fn prepare(root: &Path, file_id: Option<&str>) -> io::Result<History>
         backup_before,
         attributes,
         file_id: file_id.to_owned(),
+        post_write_backup: false,
     })
 }
 

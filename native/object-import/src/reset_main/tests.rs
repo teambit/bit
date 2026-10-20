@@ -127,6 +127,29 @@ fn reset_head_rewrites_model_and_bitmap_and_refuses_a_stale_plan() {
 }
 
 #[test]
+fn reset_all_records_both_pending_tags_in_version_history() {
+    let fixture = Fixture::new(false);
+    let plan = Plan::prepare(&fixture.root, "scope/alpha", false, false).expect("plan");
+    assert_eq!(
+        plan.selection.removed,
+        ["2222222222222222222222222222222222222222", "1111111111111111111111111111111111111111",],
+    );
+    plan.commit("2026-10-15-7-17-5").expect("commit");
+    let history_hash = hash("scope/alpha:VersionHistory");
+    let history =
+        outbound::read_object(&fixture.root.join(".bit/objects"), &history_hash, "VersionHistory")
+            .expect("history");
+    assert_eq!(
+        history["versions"],
+        json!([
+            {"hash":"2222222222222222222222222222222222222222", "parents":["1111111111111111111111111111111111111111"]},
+            {"hash":"1111111111111111111111111111111111111111", "parents":[]},
+        ]),
+    );
+    assert_eq!(history["graphCompleteRefs"], json!([]));
+}
+
+#[test]
 fn dependency_guard_declines_before_any_write_and_force_can_reset() {
     let fixture = Fixture::new(true);
     let before = fs::read(fixture.root.join(".bitmap")).expect("bitmap");

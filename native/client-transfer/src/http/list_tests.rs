@@ -81,6 +81,50 @@ fn lists_a_remote_scope_with_node_fetch_headers() {
 }
 
 #[test]
+fn inventories_deleted_components_with_published_graphql_fields() {
+    let (url, server) = serve_once(
+        r#"{"data":{"scope":{"components":[{"id":{"scope":"acme.ui","name":"old","version":"1.0.0"},"aspects":[{"id":"teambit.component/remove","config":{"removed":true}}],"deprecation":{"isDeprecate":false}}]}}}"#,
+    );
+    let network = Network::new(&GlobalConfig::new(), "2.2.94", None, None).unwrap();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let rows = runtime
+        .block_on(network.inventory(&url, None, true))
+        .unwrap();
+    assert_eq!(
+        rows,
+        vec![serde_json::json!({"id":"acme.ui/old@1.0.0","deprecated":false,"removed":true})],
+    );
+    let request = server.join().unwrap();
+    assert!(request.contains("includeDeleted: $includeDeleted"), "{request}");
+    assert!(request.contains("teambit.component/remove"), "{request}");
+    assert!(request.contains(r#""includeDeleted":true"#), "{request}");
+}
+
+#[test]
+fn fetches_latest_versions_without_transferring_objects() {
+    let (url, server) = serve_once(
+        r#"{"data":{"scope":{"_legacyLatestVersions":["acme.ui/button@2.0.0","acme.ui/old@1.0.0"]}}}"#,
+    );
+    let network = Network::new(&GlobalConfig::new(), "2.2.94", None, None).unwrap();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let ids = vec!["acme.ui/button@1.0.0".to_owned(), "acme.ui/old@1.0.0".to_owned()];
+    let result = runtime
+        .block_on(network.latest_versions(&url, &ids))
+        .unwrap();
+    assert_eq!(result, ["acme.ui/button@2.0.0", "acme.ui/old@1.0.0"]);
+    let request = server.join().unwrap();
+    assert!(request.contains("_legacyLatestVersions(ids: $ids)"), "{request}");
+    assert!(request.contains(r#""ids":["acme.ui/button@1.0.0","acme.ui/old@1.0.0"]"#), "{request}");
+    assert!(!request.contains("/api/scope/fetch"), "{request}");
+}
+
+#[test]
 fn lists_remote_lanes_with_node_projection() {
     let (url, server) = serve_once(
         r#"{"data":{"lanes":{"list":[{"id":{"name":"dev","scope":"acme.ui"},"components":[{"name":"button","scope":"acme.ui","version":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]},{"id":{"name":"main","scope":"acme.ui"},"components":[]}]}}}"#,

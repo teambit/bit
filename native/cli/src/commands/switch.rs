@@ -157,6 +157,12 @@ fn render_progress(
             import.render(output);
         }
     }
+    if let Some(warning) = startup.build_progress
+        .as_ref()
+        .and_then(|progress| progress["switchRemoteWarning"].as_str())
+    {
+        output.warning(warning);
+    }
     workspace_command::checkout_lifecycle::loaded(startup);
     for import in imports.iter().skip(prepared) {
         if import.requested > 0 {

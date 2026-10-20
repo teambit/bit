@@ -246,6 +246,7 @@ impl Reader {
         if let Some(startup) = startup {
             let mut progress = reader.context["commandProgress"].clone();
             progress["switchImportCount"] = reader.context["switchImportCount"].clone();
+            progress["switchRemoteWarning"] = reader.context["switchRemoteWarning"].clone();
             startup.build_progress = Some(progress);
         }
         Ok(reader)
@@ -270,7 +271,14 @@ impl Reader {
                 request,
                 preview,
             )?,
-        };
+        }
+        .map(|environment| {
+            if request.operation == "switch" {
+                environment.with_issue_facts(false)
+            } else {
+                environment
+            }
+        });
         let (token, context, targets) = prepare_owned(
             &mut engine,
             root,

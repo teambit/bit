@@ -6,15 +6,23 @@ use crate::{
         Command,
         color::Chalk,
         diff::files,
+        installation::Installer,
         log,
         status::js::{decline, text},
         workspace_command::{self, results::Report},
     },
+    discovery::{self, Target},
+    host::Host,
     native::Outcome,
     workspace,
 };
-use serde_json::Value;
-use std::{env, ffi::OsString, io, path::Path};
+use serde_json::{Value, json};
+use std::{
+    env,
+    ffi::OsString,
+    io::{self, Write},
+    path::Path,
+};
 
 pub(super) const COMMAND: Command = Command { name: "log-file", aliases: &[], run };
 
@@ -30,16 +38,65 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
-    let result = read(&root, path)
-        .and_then(|(file, rows)| {
-            if one_line { compact(&rows) } else { report(&rows, &file, Chalk::detect(args)) }
-        });
-    let data = match result {
-        Ok(data) => data,
+    if Installer::needs_canonical(&root) {
+        return Ok(Outcome::Declined("log-file custom component loader".into()));
+    }
+    let (identity, versions, report) = match prepare(&root, path, one_line, args) {
+        Ok(result) => result,
         Err(error) => return Ok(Outcome::Declined(format!("log-file: {error}"))),
     };
-    let report = Report { data, code: 0, details: None };
-    workspace_command::execute_with(&root, args, "log-file", &report, |_| Ok(()))
+    published_loader(&root, args, path, &identity, &versions, &report)
+}
+
+fn prepare(
+    root: &Path,
+    path: &str,
+    one_line: bool,
+    args: &[OsString],
+) -> io::Result<(String, Vec<String>, Report)> {
+    let (identity, file, rows) = read(root, path)?;
+    let data = if one_line { compact(&rows) } else { report(&rows, &file, Chalk::detect(args)) }?;
+    let versions = historical_versions(&rows)?;
+    Ok((identity, versions, Report { data, code: 0, details: None }))
+}
+
+fn published_loader(
+    root: &Path,
+    args: &[OsString],
+    path: &str,
+    identity: &str,
+    versions: &[String],
+    report: &Report,
+) -> io::Result<Outcome> {
+    let Target::Entry(cli) = discovery::find()? else {
+        return Ok(Outcome::Declined("log-file requires an installed published loader".into()));
+    };
+    let host = Host::new(cli, root.to_owned(), Chalk::detect(args).enabled());
+    workspace_command::execute_with(root, args, "log-file", report, |_| {
+        let loaded = host.call(
+            "logFileLoad",
+            &json!({
+                "filePath":path,"identity":identity,"versions":versions,
+            }),
+        );
+        io::stdout()
+            .lock()
+            .write_all(host.take_stdout().as_bytes())?;
+        loaded.map(|_| ())
+    })
+}
+
+fn historical_versions(rows: &[Value]) -> io::Result<Vec<String>> {
+    rows.iter()
+        .filter(|row| row["log"]["hidden"] != true)
+        .map(|row| {
+            row["log"]["tag"]
+                .as_str()
+                .or_else(|| row["log"]["hash"].as_str())
+                .map(str::to_string)
+                .ok_or_else(|| decline("log-file historical version"))
+        })
+        .collect()
 }
 
 fn compact(rows: &[Value]) -> io::Result<String> {

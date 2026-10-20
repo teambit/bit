@@ -28,6 +28,33 @@ pub fn execute_with(
     })
 }
 
+/// Report a lane inspection from a validated bare scope without workspace history.
+pub fn execute_with_scope(
+    scope: &Path,
+    args: &[OsString],
+    command: &str,
+    report: &Report,
+) -> io::Result<Outcome> {
+    execute_mode_at(scope, args, command, false, true, |_| {
+        Ok(Report { data: report.data.clone(), code: report.code, details: report.details.clone() })
+    })
+}
+
+/// An owned lane callback error uses the bare scope's loader without workspace history.
+pub fn execute_failure_scope(
+    scope: &Path,
+    args: &[OsString],
+    command: &str,
+    json: bool,
+    callback_output: &str,
+    error: io::Error,
+) -> io::Result<Outcome> {
+    execute_mode_at(scope, args, command, json, !json, |_| {
+        io::stdout().lock().write_all(callback_output.as_bytes())?;
+        Err(error)
+    })
+}
+
 /// [`execute_with`] for a command whose report depends on its work.
 pub fn execute_then(
     root: &Path,
@@ -66,8 +93,31 @@ fn execute_mode(
     newline: bool,
     work: impl FnOnce(&Output) -> io::Result<Report>,
 ) -> io::Result<Outcome> {
+    execute_mode_impl(root, None, args, command, quiet, newline, work)
+}
+
+fn execute_mode_at(
+    scope: &Path,
+    args: &[OsString],
+    command: &str,
+    quiet: bool,
+    newline: bool,
+    work: impl FnOnce(&Output) -> io::Result<Report>,
+) -> io::Result<Outcome> {
+    execute_mode_impl(scope, Some(scope), args, command, quiet, newline, work)
+}
+
+fn execute_mode_impl(
+    root: &Path,
+    scope: Option<&Path>,
+    args: &[OsString],
+    command: &str,
+    quiet: bool,
+    newline: bool,
+    work: impl FnOnce(&Output) -> io::Result<Report>,
+) -> io::Result<Outcome> {
     let chalk = Chalk::detect(args);
-    let history = History::start(root, args);
+    let history = scope.is_none().then(|| History::start(root, args));
     let output = loader_output(chalk, quiet);
     output.restart(&format!(r#"running command "{command}"..."#));
     let report = match work(&output) {
@@ -79,14 +129,18 @@ fn execute_mode(
         }
         Err(error) => {
             output.stop();
-            history.end(false);
+            if let Some(history) = &history {
+                history.end(false);
+            }
             eprintln!("{}", chalk.red(&error.to_string()));
             return Ok(Outcome::Exit(ExitCode::FAILURE));
         }
     };
     output.stop();
     print(&report, command, newline)?;
-    history.end(report.code == 0);
+    if let Some(history) = &history {
+        history.end(report.code == 0);
+    }
     Ok(Outcome::Exit(ExitCode::from(u8::try_from(report.code).unwrap_or(1))))
 }
 

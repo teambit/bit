@@ -20,7 +20,14 @@ pub(super) fn run(
     let mut environment = planned
         .take_environment()
         .ok_or_else(|| io::Error::other("switch installation provider session"))?;
-    print!("{}", ProjectedLinker::project_installation_workspace(root, &mut environment)?);
+    print!(
+        "{}",
+        ProjectedLinker::project_installation_workspace_with_engine(
+            root,
+            &mut environment,
+            planned.engine_mut(),
+        )?,
+    );
     let host = environment
         .into_tracking_host()
         .ok_or_else(|| io::Error::other("switch installation Host"))?;

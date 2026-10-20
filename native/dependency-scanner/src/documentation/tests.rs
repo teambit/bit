@@ -4,6 +4,8 @@ use super::proves_empty_docs;
 fn ordinary_commonjs_data_and_literal_dependency_modules_are_empty() {
     for source in [
         "module.exports = 42;",
+        "module.exports = require('inventory-dep') + 3;",
+        "module.exports = (1 + 2) * 3 === 9;",
         "'use strict'; const value = {name: 'ordinary', data: [1, true, null]}; module.exports=value;",
         "const dependency = require('./dependency'); module.exports = dependency;",
         "exports.settings = {enabled: true}; module.exports.other = require('other');",
@@ -21,6 +23,9 @@ fn documentation_and_react_component_shapes_always_defer() {
         "module.exports = '/** text inside a string */';",
         "module.exports = function Component() { return null; };",
         "module.exports = () => null;",
+        "module.exports = 1 + (() => null);",
+        "module.exports = 1 + function Component() {};",
+        "module.exports = 1 + React.createClass({render() {return null;}});",
         "class Component extends React.Component {} module.exports=Component;",
         "module.exports = <div/>;",
         "module.exports = React.createClass({render() { return null; }});",

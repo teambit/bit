@@ -2,11 +2,11 @@
 //! workspace commands: each selected component's files and
 //! dependencies, and the commit that writes what the command staged.
 
-pub(in crate::commands) use callbacks::take_callback_environment;
 pub use callbacks::{
     callback_issue_stdout, callback_load_stdout, callback_startup_stdout, issue_callbacks,
     workspace_issues,
 };
+pub(in crate::commands) use callbacks::{restore_callback_host, take_callback_environment};
 pub use commit::{commit, commit_checkout_dependencies};
 pub use snapshot::{
     snapshot_build, snapshot_control_reads, snapshot_data, snapshot_editor,
@@ -22,6 +22,7 @@ mod identities;
 mod missing;
 mod order;
 mod snapshot;
+mod switch;
 mod target;
 
 use super::{
@@ -220,26 +221,24 @@ fn capture_environment(
     behavior.callbacks |= snapshot || checkout;
     let mut captured = initialize(root, context, !targets.is_empty(), capture_options)?;
     let mut facts = None;
-    for target in targets {
-        let scan = Scan {
-            engine: &mut *engine,
-            root,
-            home,
-            context,
-            inventory: &inventory,
-            facts: &mut facts,
-            environments,
-            behavior,
-        };
-        scan.target(target, &mut captured)?;
-    }
+    let scan = Scan {
+        engine,
+        root,
+        home,
+        context,
+        inventory: &inventory,
+        facts: &mut facts,
+        environments,
+        behavior,
+    };
+    switch::scan(scan, targets, &mut captured)?;
     if snapshot {
         order::snapshot(root, &mut captured)?;
     }
     if environments.is_import() {
         commit::publish_import_dependencies(engine, root, &mut captured)?;
     }
-    if behavior.callbacks {
+    if behavior.callbacks && captured.cache.callbacks.host.is_none() {
         validate_documentation(engine, context)?;
         environments.callbacks(context, &mut captured, behavior.missing_status_invalid)?;
     }

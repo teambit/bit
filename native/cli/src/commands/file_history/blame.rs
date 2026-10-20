@@ -13,7 +13,7 @@ use crate::{
     workspace,
 };
 use serde_json::Value;
-use std::{collections::HashMap, env, ffi::OsString, io};
+use std::{collections::HashMap, env, ffi::OsString, io, path::Path};
 
 pub(super) const COMMAND: Command = Command { name: "blame", aliases: &[], run };
 
@@ -30,14 +30,50 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
     let data = match read(&root, path)
-        .and_then(|(_, rows)| report(&rows, include_message, Chalk::detect(args)))
-    {
+        .and_then(|(_, file, rows)| {
+            let chalk = Chalk::detect(args);
+            if published_file_matches(&root, path, &file)? {
+                report(&rows, include_message, chalk)
+            } else {
+                Ok(chalk.yellow("no results found"))
+            }
+        }) {
         Ok(data) => data,
         Err(error) => return Ok(Outcome::Declined(format!("blame: {error}"))),
     };
     let report = Report { data, code: 0, details: None };
     workspace_command::execute_with(&root, args, "blame", &report, |_| Ok(()))
 }
+
+fn published_file_matches(root: &Path, input: &str, file: &str) -> io::Result<bool> {
+    let normalized = input.replace('\\', "/");
+    let requested = normalized.strip_prefix("./").unwrap_or(&normalized);
+    let component_dir = requested
+        .strip_suffix(file)
+        .and_then(|prefix| prefix.strip_suffix('/'))
+        .ok_or_else(|| decline("blame component path"))?;
+    let raw_dir = root
+        .join(component_dir)
+        .to_string_lossy()
+        .to_string();
+    let raw_dir = if cfg!(windows) { raw_dir.replace('/', r"\") } else { raw_dir };
+    let absolute = root
+        .join(requested)
+        .to_string_lossy()
+        .replace('\\', "/");
+    // Published ComponentLogMain.getFileHistoryHashes normalizes only the
+    // absolute file path, then removes an unnormalized componentDir prefix.
+    // Windows path.join uses backslashes, so the replace leaves an absolute
+    // path which cannot equal a Version file's relativePath.
+    Ok(published_source_key(&raw_dir, &absolute) == file)
+}
+
+fn published_source_key(raw_dir: &str, normalized_absolute: &str) -> String {
+    normalized_absolute.replacen(&format!("{raw_dir}/"), "", 1)
+}
+
+#[cfg(test)]
+mod tests;
 
 fn report(rows: &[Value], include_message: bool, chalk: Chalk) -> io::Result<String> {
     let selected = selected(rows);
@@ -52,7 +88,7 @@ fn report(rows: &[Value], include_message: bool, chalk: Chalk) -> io::Result<Str
         .iter()
         .map(|row| row.iter().map(String::as_str).collect())
         .collect::<Vec<_>>();
-    Ok(log::table(&borrowed))
+    Ok(log::table_with_separator(&borrowed, &chalk.gray(" ")))
 }
 
 fn selected(rows: &[Value]) -> Vec<&Value> {

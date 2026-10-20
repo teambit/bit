@@ -5,6 +5,9 @@ mod deps;
 mod engine;
 mod env;
 
+#[cfg(test)]
+mod tests;
+
 use super::{array, invalid};
 use serde_json::{Value, json};
 use std::io;

@@ -1,11 +1,8 @@
-//! `importLanes(includeLaneHistory: true)` updates remote refs and merges history only.
+//! `importLanes(includeLaneHistory: true)` merges persisted history only.
 #[cfg(test)]
 mod tests;
 use super::{Id, PreparedImport, Record, invalid, remote_lane_hash};
-use crate::command_import::{
-    lane::{merge, validate_value},
-    publish,
-};
+use crate::command_import::{lane::validate_value, publish};
 use serde_json::Value;
 use std::io;
 
@@ -30,7 +27,6 @@ impl PreparedImport {
             .and_then(|object| object.value)
             .ok_or_else(|| invalid("remote lane history Lane missing"))?;
         validate_value(id, &incoming)?;
-        merge::remote_refs(self, &Record { hash: hash.clone(), value: incoming, is_new: false })?;
         self.merge_remote_history(&directory, &hash)?;
         self.validate()
     }

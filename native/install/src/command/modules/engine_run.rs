@@ -42,11 +42,14 @@ pub async fn run(
         restore: restore.cloned(),
         output: Some(OutputSink(output.sink())),
     };
-    let (plan, settings) =
+    let (plan, mut settings) =
         effective::apply(&session.root, calculated, loaded, receipt.as_ref(), &mut options)?;
     output.status(RUNNING);
     // `PnpmPackageManager.install` turns the logger off for the package manager's output.
     output.loader_off();
+    if let Some(path) = session.host.prepare_build_scripts_path().await? {
+        settings.set_build_scripts_path(path);
+    }
     let started = Instant::now();
     let result = engine::install(&plan, &settings, &options).await
         .map_err(|error| enrich(error, calculated, output))?;

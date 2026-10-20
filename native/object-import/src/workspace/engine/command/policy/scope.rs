@@ -71,19 +71,28 @@ pub(super) fn apply(
         if config == "-" {
             continue;
         }
-        let mut selected = original
-            .iter()
-            .chain(projection::array(&versions[2]["extensions"])?)
+        let incoming = projection::array(&versions[2]["extensions"])?;
+        let candidates = || original.iter().chain(incoming.iter());
+        let mut selected = candidates()
             .find(|entry| identity(entry).is_ok_and(|identity| identity == *id))
+            .or_else(|| candidates().find(|entry| same_base(entry, id)))
             .cloned()
             .ok_or_else(|| invalid("scope merged aspect identity"))?;
         selected["config"] = config.clone();
         output.push(selected);
     }
     for value in original {
-        if !configs.contains_key(&identity(value)?) {
+        if !configs.keys().any(|id| same_base(value, id)) {
             output.push(value.clone());
         }
     }
     Ok(Value::Array(output))
+}
+
+fn same_base(entry: &Value, id: &str) -> bool {
+    identity(entry)
+        .is_ok_and(|identity| {
+            identity.split_once('@').map_or(identity.as_str(), |(base, _)| base)
+                == id.split_once('@').map_or(id, |(base, _)| base)
+        })
 }

@@ -3,8 +3,10 @@
 
 use super::{
     super::{
+        add::ProjectedLinker,
         color::Chalk,
         engine::Engine,
+        installation::Installer,
         workspace_command::{self, format::Formatter, results::Report},
     },
     list,
@@ -22,11 +24,9 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
     if options.force_ours && options.force_theirs {
-        if root_callbacks(&root)? {
-            return Ok(Outcome::Declined(
-                "lane import validation requires configured provider startup".into(),
-            ));
-        }
+        // The published command loads configured aspects before it validates
+        // mutually exclusive strategies, even though it never fetches a lane.
+        let _providers = bootstrap(&root)?;
         return workspace_command::execute_then(&root, args, "import", |_| {
             Err(io::Error::other("please use either --force-ours or --force-theirs, not both"))
         });
@@ -38,12 +38,19 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     if current["name"] == "main" {
         return super::super::switch::lane_import(args, argv);
     }
-    if root_callbacks(&root)? {
-        return Ok(Outcome::Declined(
-            "active lane import requires configured provider startup".into(),
-        ));
+    let providers = bootstrap(&root)?;
+    active(&root, args, &options.lane, &current, providers)
+}
+
+fn bootstrap(root: &std::path::Path) -> io::Result<Option<ProjectedLinker>> {
+    // Main-lane import is handed to switch's own retained host. Active-lane
+    // import keeps this host alive across remote Prepare and Apply.
+    if !Installer::needs_canonical(root) {
+        return Ok(None);
     }
-    active(&root, args, &options.lane, &current)
+    let mut linker = ProjectedLinker::prepare(root)?;
+    print!("{}", linker.take_stdout());
+    Ok(Some(linker))
 }
 
 fn active(
@@ -51,7 +58,10 @@ fn active(
     args: &[OsString],
     lane: &str,
     current: &Value,
+    providers: Option<ProjectedLinker>,
 ) -> io::Result<Outcome> {
+    let owned = providers.is_some();
+    let _providers = providers;
     let current_id = format!(
         "{}/{}",
         current["scope"].as_str().unwrap_or_default(),
@@ -60,13 +70,23 @@ fn active(
     let mut engine = Engine::new()?;
     let prepared = match super::super::import::prepare_lane_import(&mut engine, root, lane) {
         Ok(prepared) => prepared,
-        Err(error) => return Ok(Outcome::Declined(format!("lane import: {error}"))),
+        Err(error) => return decline_or_fail(root, args, owned, error),
     };
     let Some(lane) = prepared["laneImportId"].as_str() else {
-        return Ok(Outcome::Declined("lane import resolved identity receipt".into()));
+        return decline_or_fail(
+            root,
+            args,
+            owned,
+            io::Error::other("lane import resolved identity receipt"),
+        );
     };
     let Some(rows) = validate(&prepared, lane) else {
-        return Ok(Outcome::Declined("lane import progress receipt".into()));
+        return decline_or_fail(
+            root,
+            args,
+            owned,
+            io::Error::other("lane import progress receipt"),
+        );
     };
     let report = report(lane, &current_id, Chalk::detect(args));
     workspace_command::execute_then(root, args, "import", |output| {
@@ -78,19 +98,17 @@ fn active(
     })
 }
 
-fn root_callbacks(root: &std::path::Path) -> io::Result<bool> {
-    let config = bit_install::config::WorkspaceConfig::load(root)?;
-    let core: Vec<String> = serde_json::from_str(include_str!(
-        "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
-    ))?;
-    Ok(config.aspects
-        .keys()
-        .any(|id| {
-            let id = bit_install::config::aspect_id_without_version(id);
-            id.contains('/')
-                && !core.iter().any(|core| core == id)
-                && !bit_install::policy::is_core_env(id)
-        }))
+fn decline_or_fail(
+    root: &std::path::Path,
+    args: &[OsString],
+    owned: bool,
+    error: io::Error,
+) -> io::Result<Outcome> {
+    if owned {
+        workspace_command::execute_then(root, args, "import", |_| Err(error))
+    } else {
+        Ok(Outcome::Declined(format!("lane import: {error}")))
+    }
 }
 
 fn validate(prepared: &Value, lane: &str) -> Option<Vec<Value>> {
@@ -121,7 +139,7 @@ fn validate(prepared: &Value, lane: &str) -> Option<Vec<Value>> {
 
 fn apply(engine: &mut Engine, prepared: &Value) -> io::Result<()> {
     let applied: Value =
-        engine.request(&json!({"kind":"commandInboundApply","token":prepared["token"]}))?;
+        engine.request(&json!({"kind":"commandInboundApply","token":prepared["token"],"omitOwnedWriteReceipts":true}))?;
     if applied["applied"] != true
         || applied["token"] != prepared["token"]
         || applied["laneImport"] != true

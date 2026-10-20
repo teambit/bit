@@ -154,6 +154,14 @@ fn expanded_imports(
         .zip(selections)
         .zip(&record.targets)
     {
+        // The bitmap's unscoped ID is projected through defaultScope for
+        // checkout selection. The released importer treats that ID as local
+        // until export, even when its Version has a pending build status.
+        // Importing it from its projected scope can require a remote that has
+        // never received this locally tagged component.
+        if record.request.options.revert && original["scoped"] == false {
+            continue;
+        }
         expanded.push(target.clone());
         if selection["merge"] == true {
             expanded.push(command_import::Target {

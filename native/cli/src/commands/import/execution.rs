@@ -1,5 +1,5 @@
 //! Pre-effect declines stop before providers; later failures belong to the retained import.
-use super::{Planned, lifecycle::Lifecycle, options::Options, output, patterns};
+use super::{Planned, cache, lifecycle::Lifecycle, options::Options, output, patterns};
 use crate::{
     commands::{color::Chalk, workspace_command::results::Report},
     native::Outcome,
@@ -38,6 +38,16 @@ fn execute_selected(
     chalk: Chalk,
     selection: &patterns::Selection,
 ) -> io::Result<Outcome> {
+    let cache = match cache::prepare(root, options, &selection.ids, lifecycle.started()) {
+        Ok(cache) => cache,
+        Err(error) => return failure(root, args, options, lifecycle.started(), error),
+    };
+    if let Some(cache) = cache {
+        lifecycle.own_cache();
+        if let Err(error) = cache.commit(root) {
+            return failure(root, args, options, true, error);
+        }
+    }
     if options.selection.dependents.active() {
         return output::execute(root, args, options, |output| {
             let started = Instant::now();

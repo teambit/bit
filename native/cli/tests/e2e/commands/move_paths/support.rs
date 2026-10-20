@@ -181,7 +181,7 @@ pub(crate) fn successful(helper: &Helper, command: &str) -> Run {
     assert!(output.status.success(), "{command}: {} {}", output.stdout, output.stderr);
     output
 }
-fn tree(root: &Path) -> BTreeMap<String, Vec<u8>> {
+pub(crate) fn tree(root: &Path) -> BTreeMap<String, Vec<u8>> {
     let mut output = BTreeMap::new();
     visit(root, root, &mut output);
     output

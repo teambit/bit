@@ -1,4 +1,5 @@
 //! RemoveMain.markRemoveComps: packages, one bitmap publication, then source removal.
+pub(in crate::commands) mod hard;
 pub(super) mod loading;
 mod options;
 mod policy;
@@ -17,6 +18,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".into()));
     };
+    if argv[1..].contains(&"--hard") {
+        return hard::run(args, &argv[1..]);
+    }
     let Some(options) = options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native delete grammar".into()));
     };

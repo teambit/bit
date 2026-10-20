@@ -1,5 +1,6 @@
 //! Bounded scope acquisition and listing across HTTP and file remotes.
-pub(in crate::workspace::engine::command) use history::history_remote;
+pub(in crate::workspace::engine) mod inventory;
+pub(in crate::workspace::engine::command) use history::{history_remote, history_remote_at};
 mod connection;
 mod file_list;
 mod history;
@@ -56,7 +57,14 @@ pub(super) fn lane_objects(
         let Remote::Http(url) = remotes.resolve(&id.scope, &network).await? else {
             return Ok(None);
         };
-        let (items, hash) = fetch_lane(&network, &url, id, input.options.all_history).await?;
+        let (items, hash) = fetch_lane(
+            &network,
+            &url,
+            id,
+            input.options.all_history,
+            input.options.dependencies.fetch_deps,
+        )
+        .await?;
         let (mut remotes, _) =
             collect((Vec::new(), 0), &input.root, id.scope.clone(), Some(items))?;
         let remote = remotes.pop().ok_or_else(|| invalid("inbound lane remote"))?;
@@ -205,6 +213,7 @@ async fn fetch_lane(
     url: &str,
     id: &lane::Id,
     all_history: bool,
+    fetch_deps: bool,
 ) -> io::Result<(Vec<ObjectItem>, String)> {
     let lane_id = format!("{}/{}", id.scope, id.name);
     let mut items = network.fetch_bounded(
@@ -218,6 +227,7 @@ async fn fetch_lane(
     if !components.is_empty() {
         let mut options = FetchOptions::with_dependencies(Some(lane_id), false);
         options.traversal.collect_parents = all_history;
+        options.traversal.prefer_dependency_graph = !fetch_deps;
         let mut more = network.fetch_bounded(url, &components, &options, MAX_INBOUND_BYTES).await?;
         items.append(&mut more);
     }
@@ -310,14 +320,14 @@ async fn fetch_groups(
     network: &Network,
     limit: usize,
 ) -> io::Result<Vec<VirtualRemote>> {
-    let (remotes, _) = stream::iter(groups)
+    stream::iter(groups)
         .map(|(scope, ids)| fetch_one(input, scope, ids, remotes, network))
         .buffered(limit)
         .try_fold((Vec::new(), 0usize), |retained, (scope, items)| async move {
             collect(retained, &input.root, scope, items)
         })
-        .await?;
-    Ok(remotes)
+        .await
+        .map(|(remotes, _)| remotes)
 }
 
 async fn fetch_one(

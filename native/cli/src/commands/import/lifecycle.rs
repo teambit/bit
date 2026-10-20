@@ -10,6 +10,8 @@ use std::{ffi::OsString, io, path::Path, time::Instant};
 pub(super) struct Lifecycle {
     linker: Option<ProjectedLinker>,
     workspace_order: Vec<String>,
+    cache_owned: bool,
+    json: bool,
 }
 impl Lifecycle {
     pub(super) fn required(root: &Path, options: &Options) -> io::Result<bool> {
@@ -38,13 +40,22 @@ impl Lifecycle {
         } else {
             Some(ProjectedLinker::prepare(root)?)
         };
-        Ok(Self { linker, workspace_order: Vec::new() })
+        Ok(Self {
+            linker,
+            workspace_order: Vec::new(),
+            cache_owned: false,
+            json: options.output.json,
+        })
     }
     pub(super) const fn started(&self) -> bool {
-        self.linker.is_some()
+        self.linker.is_some() || self.cache_owned
+    }
+    pub(super) fn own_cache(&mut self) {
+        self.cache_owned = true;
     }
     pub(super) fn take_stdout(&mut self) -> String {
-        self.linker.as_mut().map_or_else(String::new, ProjectedLinker::take_stdout)
+        let stdout = self.linker.as_mut().map_or_else(String::new, ProjectedLinker::take_stdout);
+        if self.json { String::new() } else { stdout }
     }
     pub(super) fn before_apply(&self) -> io::Result<()> {
         self.linker
@@ -93,10 +104,10 @@ impl Lifecycle {
         if mode == "graph" {
             // GraphIdsFromFsBuilder awaits each seed's get() before loading the next.
             for id in ids {
-                rows.extend(capture_group(linker, root, &bitmap, &[id], mode)?);
+                rows.extend(capture_group(linker, root, &bitmap, &[id], mode, self.json)?);
             }
         } else {
-            rows = capture_group(linker, root, &bitmap, &ids, mode)?;
+            rows = capture_group(linker, root, &bitmap, &ids, mode, self.json)?;
         }
         linker.validate_captures()?;
         Ok(json!({"rows":rows,"readSet":linker.captured_read_set()}))
@@ -106,7 +117,10 @@ impl Lifecycle {
         let linker =
             self.linker.as_mut().ok_or_else(|| io::Error::other("import class session"))?;
         let facts = linker.call(root, "importWriteDependencyFacts", &json!({}))?;
-        print!("{}", linker.take_stdout());
+        let stdout = linker.take_stdout();
+        if !self.json {
+            print!("{stdout}");
+        }
         linker.validate_captures()?;
         Ok(json!({"facts":facts,"readSet":captured["readSet"]}))
     }
@@ -139,7 +153,10 @@ impl Lifecycle {
                     progress_done,
                 )
             });
-            print!("{}", linker.take_stdout());
+            let stdout = linker.take_stdout();
+            if !options.output.json {
+                print!("{stdout}");
+            }
             result
         } else {
             render_with_progress(planned, options, output, started, None, root, progress_done)
@@ -161,9 +178,13 @@ fn graph_dependencies(
     linker: &mut ProjectedLinker,
     root: &Path,
     rows: &mut [Value],
+    json: bool,
 ) -> io::Result<()> {
     let facts = linker.call(root, "importGraphDependencyFacts", &json!({}))?;
-    print!("{}", linker.take_stdout());
+    let stdout = linker.take_stdout();
+    if !json {
+        print!("{stdout}");
+    }
     let facts = facts.as_array().ok_or_else(|| io::Error::other("import graph class facts"))?;
     if facts.len() != rows.len() {
         return Err(io::Error::other("import graph class count changed"));
@@ -187,6 +208,7 @@ fn capture_group(
     bitmap: &Value,
     ids: &[String],
     mode: &str,
+    json: bool,
 ) -> io::Result<Vec<Value>> {
     linker.call(root, "importClassLoad", &json!({"mode":mode,"ids":ids}))?;
     let captured = linker.capture_import(root, bitmap, ids, true);
@@ -196,12 +218,15 @@ fn capture_group(
         Ok(Value::Null)
     };
     let reset = linker.call(root, "importClassLoad", &json!({"mode":null}));
-    print!("{}", linker.take_stdout());
+    let stdout = linker.take_stdout();
+    if !json {
+        print!("{stdout}");
+    }
     let mut rows = captured?;
     completed?;
     reset?;
     if mode == "graph" {
-        graph_dependencies(linker, root, &mut rows)?;
+        graph_dependencies(linker, root, &mut rows, json)?;
     }
     Ok(rows)
 }

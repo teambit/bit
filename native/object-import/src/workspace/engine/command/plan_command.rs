@@ -116,19 +116,7 @@ fn prepare_checkout_policy(
 fn plan_output(record: &Record, planned: &planning::Planned) -> io::Result<Value> {
     let mut output = json!({"token":record.token,"result":planned.result,"progress":record.repository.progress()});
     if record.request.operation == input::Operation::Switch {
-        output["switchWriterIds"] = json!(
-            planned.materials
-                .iter()
-                .filter(|material| !material.keep_ours)
-                .map(|material| &material.output["id"])
-                .collect::<Vec<_>>()
-        );
-        output["switchCheckoutImport"] = record.context["switchCheckoutImport"].clone();
-        output["switchImportCount"] = json!(super::switch::progress::import_count(
-            &record.request.root,
-            &record.context,
-            &record.targets
-        )?);
+        switch_output(&mut output, record, planned)?;
     }
     if super::checkout_stash::loading(&record.request.options) {
         output["stashAdded"] = json!(
@@ -154,6 +142,28 @@ fn plan_output(record: &Record, planned: &planning::Planned) -> io::Result<Value
         output["lanePreparation"] = receipt;
     }
     Ok(output)
+}
+
+fn switch_output(
+    output: &mut Value,
+    record: &Record,
+    planned: &planning::Planned,
+) -> io::Result<()> {
+    output["switchWriterIds"] = json!(
+        planned.materials
+            .iter()
+            .filter(|material| !material.keep_ours)
+            .map(|material| &material.output["id"])
+            .collect::<Vec<_>>()
+    );
+    output["switchCheckoutImport"] = record.context["switchCheckoutImport"].clone();
+    output["switchRemoteWarning"] = record.context["switchRemoteWarning"].clone();
+    output["switchImportCount"] = json!(super::switch::progress::import_count(
+        &record.request.root,
+        &record.context,
+        &record.targets
+    )?);
+    Ok(())
 }
 
 fn snap_receipt(output: &mut Value, planned: &planning::Planned) -> io::Result<()> {

@@ -1,7 +1,7 @@
 //! Confirmation precedes restoration and any configured component callbacks.
 use super::{
     Chalk, Engine, Installer, Kind, Options, Outcome, Prepared, Startup, Value, array, execute,
-    failure, format_result, prepare_request, workspace_command,
+    failure, format_result, installation_session, prepare_request, workspace_command,
 };
 use crate::commands::install::confirm;
 use std::{ffi::OsString, io, path::Path};
@@ -21,12 +21,13 @@ pub(super) fn run(
         if !confirm(&prompt)? {
             return Err(io::Error::other("operation aborted"));
         }
+        let (environment, installation) = installation_session(installer)?;
         let mut startup = Startup::default();
-        let prepared = Prepared::plan(root, options, &mut startup);
+        let prepared = Prepared::plan(root, options, &mut startup, environment);
         workspace_command::checkout_lifecycle::before(&startup)?;
         workspace_command::checkout_lifecycle::loaded(&startup);
         let report = match prepared {
-            Ok(prepared) => execute(root, args, output, prepared, installer)?,
+            Ok(prepared) => execute(root, args, output, prepared, installation)?,
             Err(error) if failure::result(&error).is_some() => {
                 format_result(failure::result(&error).unwrap(), Kind::Lane, Chalk::detect(args))?
             }

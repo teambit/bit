@@ -27,6 +27,7 @@ fn history(root: &Path) -> History {
         backup_before: None,
         attributes: super::history::Attributes::default(),
         file_id: "2026-1-2-3-4-5".into(),
+        post_write_backup: false,
     }
 }
 #[test]
@@ -82,6 +83,32 @@ fn bitmap_replacement_preserves_old_bytes_in_history() {
     assert_eq!(
         fs::read(root.join(".bit/bitmap-history-metadata.txt")).unwrap(),
         b"2026-1-2-3-4-5 import\n",
+    );
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn lane_fetch_deps_repeats_bitmap_backup_after_workspace_write() {
+    let root = root();
+    fs::write(root.join(".bitmap"), b"before").unwrap();
+    let mut staged_history = history(&root);
+    staged_history.post_write_backup = true;
+    let plan = Prepared {
+        policy: None,
+        policy_input: None,
+        write_deps: None,
+        root: root.clone(),
+        bitmap_before: b"before".to_vec(),
+        bitmap_after: b"after".to_vec(),
+        changes: WorkspaceFiles::default(),
+        history: staged_history,
+    };
+    plan.commit().unwrap();
+    assert_eq!(fs::read(root.join(".bitmap")).unwrap(), b"after");
+    assert_eq!(fs::read(&plan.history.backup).unwrap(), b"after");
+    assert_eq!(
+        fs::read(&plan.history.metadata).unwrap(),
+        b"2026-1-2-3-4-5 import\n2026-1-2-3-4-5 import\n",
     );
     fs::remove_dir_all(root).unwrap();
 }

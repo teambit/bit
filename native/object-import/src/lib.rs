@@ -16,6 +16,7 @@ pub mod lane_create;
 pub mod lane_history;
 pub mod lane_manage;
 pub mod lane_remove;
+pub mod remote_delete;
 pub mod reset_lane;
 pub mod reset_main;
 pub mod reset_never_exported;

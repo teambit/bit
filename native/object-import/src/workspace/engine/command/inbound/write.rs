@@ -29,11 +29,11 @@ pub(super) struct Prepared {
 pub(super) struct Options<'a> {
     pub(super) override_existing: bool,
     pub(super) path: Option<&'a str>,
-    pub(super) install_requested: bool,
     pub(super) merge_strategy: Option<&'a str>,
     pub(super) track_only: bool,
     pub(super) write_to_empty_dir: bool,
     pub(super) write_deps: Option<&'a str>,
+    pub(super) post_write_bitmap_history: bool,
 }
 #[derive(Default)]
 struct WorkspaceFiles {
@@ -56,6 +56,7 @@ struct History {
     backup_before: Option<Vec<u8>>,
     attributes: history::Attributes,
     file_id: String,
+    post_write_backup: bool,
 }
 
 pub(super) fn prepare(
@@ -66,7 +67,8 @@ pub(super) fn prepare(
     options: Options<'_>,
 ) -> io::Result<Prepared> {
     import.retain_workspace_versions(targets)?;
-    let history = history::prepare(root, file_id)?;
+    let mut history = history::prepare(root, file_id)?;
+    history.post_write_backup = options.post_write_bitmap_history;
     let template = directories::default_directory(root)?;
     let bitmap_before = fs::read(root.join(".bitmap"))?;
     let mut bitmap = crate::recovery::jsonc::parse(&bitmap_before)?;
@@ -111,7 +113,6 @@ fn prepare_targets(
         root,
         imported: import,
         override_existing: options.override_existing,
-        install_requested: options.install_requested,
         merge_strategy: options.merge_strategy,
         track_only: options.track_only,
     };
@@ -170,7 +171,6 @@ struct Planning<'a> {
     root: &'a Path,
     imported: &'a PreparedImport,
     override_existing: bool,
-    install_requested: bool,
     merge_strategy: Option<&'a str>,
     track_only: bool,
 }
@@ -208,7 +208,6 @@ fn plan_target(
                 row: &row,
                 resolution: existing::Resolution {
                     override_existing: context.override_existing,
-                    install_requested: context.install_requested,
                     merge_strategy: context.merge_strategy,
                     track_only: context.track_only,
                 },

@@ -5,8 +5,11 @@
 //! HTTP remotes and lanes Node would migrate to the schema that records
 //! deleted components run on the Node.js CLI.
 
+pub(super) mod remote;
 pub(super) use metadata::components_report;
-pub(super) use remote::{http as read_http, project as project_http, read as read_remote};
+pub(super) use remote::project as project_http;
+mod merged;
+mod metadata;
 
 use crate::{
     commands::{
@@ -18,22 +21,16 @@ use crate::{
     },
     history::History,
     native::Outcome,
-    workspace,
 };
 use metadata::{readme, readme_report, updates};
 use serde_json::{Map, Value, json};
 use std::{
-    env,
     ffi::OsString,
     fs,
     io::{self, Write},
     path::Path,
     process::ExitCode,
 };
-
-mod merged;
-mod metadata;
-mod remote;
 
 /// The schema of lanes that record their deleted components.
 const DELETED_DATA_SCHEMA: &str = "1.0.0";
@@ -109,18 +106,33 @@ pub(super) fn run(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> 
     let Some((json, details, merged, remote)) = parse(list_args) else {
         return Ok(Outcome::Declined("lane list flags outside the native grammar".to_string()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".to_string()));
+    let scope_root = match super::scope_root::discover() {
+        Ok(Some(scope_root)) => scope_root,
+        Ok(None) => return Ok(Outcome::Declined("not inside a scope".to_string())),
+        Err(error) => return Ok(Outcome::Declined(format!("lane list scope: {error}"))),
     };
+    let root = scope_root.path;
     if let Some(scope) = remote {
-        return remote::run(&root, args, scope, json, details, merged);
+        return remote::run(&root, scope_root.bare, args, scope, json, details, merged);
     }
-    let (lanes, current) = match read_with_merge(&root, merged.is_some()) {
+    let selection = match read_for_scope(&root, scope_root.bare, merged.is_some()) {
         Ok(read) => read,
         Err(error) => return Ok(Outcome::Declined(format!("lane list: {error}"))),
     };
+    display_local(&root, scope_root.bare, args, json, details, merged, selection)
+}
+
+fn display_local(
+    root: &Path,
+    bare: bool,
+    args: &[OsString],
+    json: bool,
+    details: bool,
+    merged: Option<bool>,
+    (lanes, current): (Vec<LaneData>, (Value, String)),
+) -> io::Result<Outcome> {
     if json {
-        return emit_json(&root, args, &lanes, &current.1);
+        return emit_json(root, bare, args, &lanes, &current.1);
     }
     let report = Report {
         data: match merged {
@@ -130,25 +142,32 @@ pub(super) fn run(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> 
         code: 0,
         details: None,
     };
-    workspace_command::execute_with(&root, args, "list", &report, |_| Ok(()))
+    if bare {
+        workspace_command::execute_with_scope(root, args, "list", &report)
+    } else {
+        workspace_command::execute_with(root, args, "list", &report, |_| Ok(()))
+    }
 }
 
 fn emit_json(
     root: &Path,
+    bare: bool,
     args: &[OsString],
     lanes: &[LaneData],
     current: &str,
 ) -> io::Result<Outcome> {
-    let history = History::start(root, args);
+    let history = (!bare).then(|| History::start(root, args));
     let data = json!({
         "lanes": lanes.iter().map(LaneData::json).collect::<Vec<_>>(),
-        "currentLane": current,
+        "currentLane": if bare { Value::Null } else { json!(current) },
     });
     // `CommandRunner` writes `JSON.stringify(data, null, 2)` without a newline.
     let mut stdout = io::stdout().lock();
     stdout.write_all(serde_json::to_string_pretty(&data)?.as_bytes())?;
     stdout.flush()?;
-    history.end(true);
+    if let Some(history) = history {
+        history.end(true);
+    }
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
@@ -206,12 +225,20 @@ pub(super) fn read_with_merge(
     root: &Path,
     merge_data: bool,
 ) -> io::Result<(Vec<LaneData>, (Value, String))> {
-    let scope = scope(root)?;
+    read_for_scope(root, false, merge_data)
+}
+
+pub(super) fn read_for_scope(
+    root: &Path,
+    bare: bool,
+    merge_data: bool,
+) -> io::Result<(Vec<LaneData>, (Value, String))> {
+    let scope = scope_for(root, bare)?;
     let tracking = Tracking::read(&scope);
-    let bitmap = bitmap::read(root)?;
+    let bitmap = if bare { None } else { Some(bitmap::read(root)?) };
     let mut engine = Engine::new()?;
-    let listed: Value =
-        engine.request(&json!({"kind": "laneList", "root": root, "mergeData": merge_data}))?;
+    let listed: Value = engine.request(&json!({"kind": "laneList", "root": root,
+            "bareScope":bare, "mergeData": merge_data}))?;
     let mut lanes = array(listed.get("lanes"), "lanes")?
         .iter()
         .map(|row| lane(row, &tracking))
@@ -220,19 +247,48 @@ pub(super) fn read_with_merge(
     lanes.push(LaneData {
         id: main_id.clone(),
         alias: None,
-        components: main_components(&mut engine, root, &bitmap.entries)?,
+        components: if let Some(bitmap) = &bitmap {
+            main_components(&mut engine, root, &bitmap.entries)?
+        } else {
+            bare_main_components(&mut engine, root)?
+        },
         update_dependents: None,
         readme_component: None,
         is_merged: None,
         lane: None,
     });
-    let current = bitmap.lane.unwrap_or(main_id);
+    let current = bitmap.and_then(|bitmap| bitmap.lane).unwrap_or(main_id);
     Ok((lanes, with_alias(current, &tracking)?))
 }
 
 fn scope(root: &Path) -> io::Result<Value> {
-    serde_json::from_slice(&fs::read(bit_object_import::scope_path(root).join("scope.json"))?)
-        .map_err(io::Error::from)
+    scope_for(root, false)
+}
+
+fn scope_for(root: &Path, bare: bool) -> io::Result<Value> {
+    let path = if bare { root.to_owned() } else { bit_object_import::scope_path(root) };
+    serde_json::from_slice(&fs::read(path.join("scope.json"))?).map_err(io::Error::from)
+}
+
+fn bare_main_components(engine: &mut Engine, root: &Path) -> io::Result<Vec<Value>> {
+    let listed: Value = engine.request(&json!({"kind":"scopeList", "root":root,
+        "bareScope":true}))?;
+    let models = array(listed.get("components"), "bare scope models")?;
+    Ok(models
+        .iter()
+        .filter_map(|model| {
+            let head = model["head"].as_str()?;
+            let identity = format!("{}/{}", model["scope"].as_str()?, model["name"].as_str()?);
+            let label = model["versions"]
+                .as_object()
+                .and_then(|tags| {
+                    tags.iter()
+                        .find(|(_, hash)| hash.as_str() == Some(head))
+                })
+                .map_or(head, |(tag, _)| tag.as_str());
+            Some(json!({"id":format!("{identity}@{label}"),"head":label}))
+        })
+        .collect())
 }
 
 pub(super) fn read_current(root: &Path) -> io::Result<(Value, String)> {

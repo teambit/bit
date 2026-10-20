@@ -159,18 +159,20 @@ impl Receipt {
         chalk: Chalk,
         installation_error: Option<&str>,
     ) -> io::Result<String> {
+        self.import_report_with_errors(chalk, installation_error, None)
+    }
+
+    pub fn import_report_with_errors(
+        &self,
+        chalk: Chalk,
+        installation_error: Option<&str>,
+        compilation_error: Option<&str>,
+    ) -> io::Result<String> {
         if self.ids.is_empty() {
             return Ok(chalk.yellow("nothing to import"));
         }
         let format = Formatter::new(chalk);
-        let mut up_to_date = 0;
-        let mut items = Vec::new();
-        for id in &self.ids {
-            let id = Id::parse(id)?;
-            let details = self.details(&id)?;
-            up_to_date += usize::from(details.status == "up to date");
-            items.extend(import_item(&format, &id, details));
-        }
+        let (items, up_to_date) = self.import_items(&format)?;
         let prefix = match self.ids.len() {
             1 => "successfully imported one component".to_string(),
             count => format!("successfully imported {count} components"),
@@ -186,11 +188,32 @@ impl Receipt {
         let imported = format.section("imported components", "", &items);
         let summary = format.success_summary(&format!("{prefix}{up_to_date}"));
         let installation = installation_error_output(&format, installation_error);
+        let compilation = compilation_error_output(&format, compilation_error);
         let (logs, policy) = crate::commands::checkout::report::policy::format(
             self.workspace_policy.as_ref(),
             chalk,
         )?;
-        Ok(Formatter::join(&[logs, imported, self.removed(&format), policy, installation, summary]))
+        Ok(Formatter::join(&[
+            logs,
+            imported,
+            self.removed(&format),
+            policy,
+            installation,
+            compilation,
+            summary,
+        ]))
+    }
+
+    fn import_items(&self, format: &Formatter) -> io::Result<(Vec<String>, usize)> {
+        let mut items = Vec::new();
+        let mut up_to_date = 0;
+        for id in &self.ids {
+            let id = Id::parse(id)?;
+            let details = self.details(&id)?;
+            up_to_date += usize::from(details.status == "up to date");
+            items.extend(import_item(format, &id, details));
+        }
+        Ok((items, up_to_date))
     }
 
     /// `getRemovedWarning`.
@@ -235,6 +258,17 @@ fn installation_error_output(format: &Formatter, message: Option<&str>) -> Strin
         "The following error was thrown by the package manager:",
         &format.chalk.red(message),
         r#"Use "bit install" to complete the installation, remove the imported components using "bit remove <comp id>" or remove the missing dependencies from their source code"#,
+    ]
+    .join("\n")
+}
+
+fn compilation_error_output(format: &Formatter, message: Option<&str>) -> String {
+    let Some(message) = message else { return String::new() };
+    [
+        format!("{} {}", format.error_symbol(), format.title("Compilation Error")),
+        "The following error was thrown by the compiler".to_string(),
+        format.chalk.red(message),
+        r#"Please fix the issue and run "bit compile""#.to_string(),
     ]
     .join("\n")
 }

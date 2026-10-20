@@ -1,5 +1,10 @@
 //! Native cache publication around the published semantic documentation parser.
+pub(in crate::commands) use cat::{CatDocs, cat_prepare};
+
 mod cache_hits;
+mod cat;
+#[cfg(test)]
+mod cat_cache_tests;
 mod sources;
 
 use crate::commands::status::{cache, environments::Environments};

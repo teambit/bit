@@ -7,6 +7,7 @@
 //! `readPackage` hooks implemented natively instead of through a JavaScript
 //! callback.
 
+pub use canonical::CanonicalInstall;
 pub use cloud_user::{
     LOOKUP_TIMEOUT as CLOUD_LOOKUP_TIMEOUT, apply_cloud_username, cloud_username,
 };
@@ -22,6 +23,7 @@ pub use run::install;
 pub use scripts::ScriptPolicy;
 pub use settings::{EnvVars, settings};
 
+mod canonical;
 mod cloud_user;
 mod config_overlay;
 mod error;
@@ -68,6 +70,19 @@ pub struct EngineSettings {
     pub policy: PolicySettings,
     /// pnpm's rendered output; `None` hides it.
     pub reporter: Option<ReporterSettings>,
+}
+
+impl EngineSettings {
+    /// Supply the published build-script PATH to child processes without changing
+    /// the environment of already-running native workers.
+    pub(crate) fn set_build_scripts_path(&mut self, path: String) {
+        if !self.base.extra_env
+            .keys()
+            .any(|key| key.eq_ignore_ascii_case("PATH"))
+        {
+            self.base.extra_env.insert("PATH".to_string(), path);
+        }
+    }
 }
 
 /// Where packages come from and how to reach them.
