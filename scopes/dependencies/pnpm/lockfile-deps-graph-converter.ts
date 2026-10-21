@@ -2,7 +2,7 @@ import path from 'path';
 import { type ProjectManifest } from '@pnpm/types';
 import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import type * as Dp from '@pnpm/deps.path';
-import { pick, partition } from 'lodash';
+import { pick, partition, isEmpty, memoize } from 'lodash';
 import semver from 'semver';
 import pMap from 'p-map';
 import { BitError } from '@teambit/bit-error';
@@ -594,109 +594,93 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
 }
 
 /**
- * The root manifest (the capsules root during a build, the workspace root otherwise) is the one
- * provider of its dependencies for the whole install: pnpm resolves peer dependencies from it, and a
- * fresh install dedupes any regular dependency whose range the root's version satisfies to it. The
- * graph, however, was stored by a workspace whose root may have provided another version: e.g. the
- * workspace root provided `@types/react@18` while the env of the component being built pins
- * `@types/react@17`. Restored as-is, the graph keeps that second copy next to the root's one, and
- * pnpm then prefers it for every `*`-style range too. TypeScript ends up with two `@types/react` in
- * one program.
+ * The root manifest (the capsules root during a build, the workspace root otherwise) provides its
+ * dependencies to the whole install: pnpm resolves peer dependencies from it, and a fresh install
+ * dedupes to it any regular dependency whose range the root's version satisfies. The graph, though,
+ * was stored by a workspace whose root may have provided another version: e.g. that root provided
+ * `@types/react@18` while the env of the component being built pins `@types/react@17`. Restored
+ * as-is, the graph keeps that second copy next to the root's one, pnpm then prefers it for every
+ * `*`-style range too, and TypeScript ends up with two `@types/react` in one program.
  *
- * Drop every snapshot reference to another version of a package the root manifest provides:
- * - a peer dependency of the dependent: always, since pnpm resolves it from the root whatever the
- *   dependent's range says.
- * - a regular dependency: when the root pins an exact version the dependent's range accepts, so
- *   pnpm's preference for the root's version lands where a graph-less install would. A range the
- *   root's version can't satisfy stays locked: a duplicate there is inherent, and keeping the lock
- *   avoids a registry re-resolution. So does a range that can't be read, and a root range (or tag,
- *   link, alias) is left alone, since the version pnpm picks for it isn't known until the install.
- * The versions that lose their last reference are dropped from the lockfile with the other
- * unreachable entries, so pnpm doesn't see them as preferred versions either. A dependency map
- * that loses all its references is removed: the graph then states the snapshot has none, and
- * mergeGraphLockfileIntoExisting (pnpm.package-manager.ts) takes that over an existing lockfile's map.
+ * So drop every snapshot reference to another version of a package the root provides, whenever a
+ * fresh install would give the dependent the root's version (see rootVersionWins). The versions
+ * that lose their last reference go with the other unreachable entries, so pnpm doesn't see them
+ * as preferred versions either. A dependency map that loses all its entries is removed: the graph
+ * then states the snapshot has none, which mergeGraphLockfileIntoExisting (pnpm.package-manager.ts)
+ * takes over an existing lockfile's map.
  */
-async function dedupeSnapshotDepsToRootManifest(
-  lockfile: BitLockfileFile,
-  {
-    manifests,
-    rootDir,
-    resolve,
-  }: {
-    manifests: Record<string, ProjectManifest>;
-    rootDir: string;
-    resolve: ResolveFunction;
-  }
-): Promise<void> {
-  const rootManifest = manifests[rootDir];
-  if (!rootManifest) return;
-  // Every package the root provides, whatever its specifier: a peer is deduped to the root without
-  // looking at the specifier (a tag or a link provides the peer just the same), a regular dependency
-  // only when the specifier is an exact version. See shouldDedupeToRoot.
-  const rootSpecifiers = new Map<string, string>();
-  for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
-    for (const [name, specifier] of Object.entries(rootManifest[depType] ?? {})) {
-      rootSpecifiers.set(name, specifier);
-    }
-  }
-  if (rootSpecifiers.size === 0) return;
-  const manifestRanges = new Map<string, Promise<DependencyRanges | undefined>>();
-  const getRanges = (pkgId: string): Promise<DependencyRanges | undefined> => {
-    if (!manifestRanges.has(pkgId)) {
-      manifestRanges.set(pkgId, fetchDependencyRanges(pkgId, { manifests, rootDir, resolve }));
-    }
-    return manifestRanges.get(pkgId)!;
-  };
-  // The range lookups behind getRanges hit the registry metadata: keep the number in flight bounded.
+async function dedupeSnapshotDepsToRootManifest(lockfile: BitLockfileFile, opts: FetchRangesOptions): Promise<void> {
+  const rootDeps = allDependencies(opts.manifests[opts.rootDir]);
+  if (isEmpty(rootDeps)) return;
+  const getRanges = memoize((pkgId: string) => fetchDependencyRanges(pkgId, opts));
+  // The range lookups hit the registry metadata: keep the number in flight bounded.
   await pMap(
     Object.entries(lockfile.snapshots ?? {}),
-    async ([depPath, snapshot]) => {
+    ([depPath, snapshot]) => {
       const pkgId = dp.removeSuffix(depPath);
-      for (const depType of ['dependencies', 'optionalDependencies'] as const) {
-        const deps = snapshot[depType];
-        if (!deps) continue;
-        for (const [name, ref] of Object.entries(deps)) {
-          const rootSpecifier = rootSpecifiers.get(name);
-          if (rootSpecifier == null) continue;
-          const { version } = dp.parse(`${name}@${ref}`);
-          if (version == null || version === rootSpecifier) continue;
-          if (await shouldDedupeToRoot({ pkgId, name, rootSpecifier, lockfile, getRanges })) {
-            delete deps[name];
-          }
-        }
-        if (Object.keys(deps).length === 0) delete snapshot[depType];
-      }
+      const dependent: Dependent = {
+        peers: lockfile.packages?.[pkgId]?.peerDependencies,
+        getRanges: () => getRanges(pkgId),
+      };
+      return dropSnapshotDeps(
+        snapshot,
+        (name, ref) => name in rootDeps && rootVersionWins(name, ref, rootDeps[name], dependent)
+      );
     },
     { concurrency: 16 }
   );
 }
 
-async function shouldDedupeToRoot({
-  pkgId,
-  name,
-  rootSpecifier,
-  lockfile,
-  getRanges,
-}: {
-  pkgId: string;
-  name: string;
-  rootSpecifier: string;
-  lockfile: BitLockfileFile;
-  getRanges: (pkgId: string) => Promise<DependencyRanges | undefined>;
-}): Promise<boolean> {
-  // The graph keeps the peer dependencies of every package, so a peer is known without a lookup.
-  const lockedPeers = lockfile.packages?.[pkgId]?.peerDependencies;
-  if (lockedPeers?.[name] != null) return true;
-  // A regular dependency is deduped only to an exact root version, so a root range needs no lookup.
+function allDependencies(manifest: ProjectManifest | undefined): Record<string, string> {
+  return { ...manifest?.optionalDependencies, ...manifest?.devDependencies, ...manifest?.dependencies };
+}
+
+/** Delete the dependencies `shouldDrop` picks from the snapshot, and a dependency map left empty. */
+async function dropSnapshotDeps(
+  snapshot: NonNullable<BitLockfileFile['snapshots']>[string],
+  shouldDrop: (name: string, ref: string) => boolean | Promise<boolean>
+): Promise<void> {
+  for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+    const deps = snapshot[depType];
+    if (!deps) continue;
+    for (const [name, ref] of Object.entries(deps)) {
+      if (await shouldDrop(name, ref)) delete deps[name];
+    }
+    if (isEmpty(deps)) delete snapshot[depType];
+  }
+}
+
+type Dependent = {
+  peers?: Record<string, string>;
+  getRanges: () => Promise<DependencyRanges | undefined>;
+};
+
+/**
+ * Whether a fresh install would give the dependent the root's version of the dependency rather than
+ * the one the graph locked (`ref`).
+ */
+async function rootVersionWins(
+  name: string,
+  ref: string,
+  rootSpecifier: string,
+  dependent: Dependent
+): Promise<boolean> {
+  const lockedVersion = dp.parse(`${name}@${ref}`).version;
+  if (lockedVersion == null || lockedVersion === rootSpecifier) return false;
+  // pnpm resolves a peer from the root whatever the dependent's range says.
+  if (dependent.peers?.[name] != null) return true;
+  // A regular dependency is deduped only to an exact root version that the dependent's range
+  // accepts. A root range (or tag, link, alias) resolves to a version known only at install time,
+  // and a range that can't be read (the lookup failed, an unpublished component snap) may rule the
+  // root version out: both keep the lock.
   const rootVersion = semver.valid(rootSpecifier);
   if (rootVersion == null) return false;
-  const ranges = await getRanges(pkgId);
+  const ranges = await dependent.getRanges();
   const range = ranges?.dependencies?.[name] ?? ranges?.optionalDependencies?.[name];
-  // Unknown range (the lookup failed, or an unpublished component snap): keep the lock rather than
-  // discard a reference the root version may not satisfy.
-  if (range == null) return false;
-  return semver.satisfies(rootVersion, range);
+  return range != null && semver.satisfies(rootVersion, range);
 }
+
+type FetchRangesOptions = { manifests: Record<string, ProjectManifest>; rootDir: string; resolve: ResolveFunction };
 
 /**
  * The ranges a package declares for its dependencies: from the installing manifests when the
@@ -705,11 +689,7 @@ async function shouldDedupeToRoot({
  */
 async function fetchDependencyRanges(
   pkgId: string,
-  {
-    manifests,
-    rootDir,
-    resolve,
-  }: { manifests: Record<string, ProjectManifest>; rootDir: string; resolve: ResolveFunction }
+  { manifests, rootDir, resolve }: FetchRangesOptions
 ): Promise<DependencyRanges | undefined> {
   const { name, version } = dp.parse(pkgId);
   if (name == null || version == null) return undefined;

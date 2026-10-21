@@ -701,22 +701,19 @@ function mergeEntryRecords<T extends object>(
   return merged;
 }
 
-// A graph snapshot states the dependencies of its package in full, so its dependency maps replace
-// the existing lockfile's rather than overlay them, a missing map included: the converter drops a
-// map once it has deduped every reference in it to the root (see dedupeSnapshotDepsToRootManifest
-// in lockfile-deps-graph-converter.ts), and an overlay would bring the existing lockfile's copy of
-// the dropped reference back. The other snapshot fields keep the deep merge of mergeEntryRecords.
+// Like mergeEntryRecords, except that a graph snapshot's dependency maps replace the existing
+// ones instead of overlaying them, a missing map included. A graph snapshot states its
+// dependencies in full: the converter drops a map once it has deduped every entry in it to the
+// root (dedupeSnapshotDepsToRootManifest in lockfile-deps-graph-converter.ts), and an overlay
+// would bring the existing lockfile's copy of the dropped entry back.
 function mergeSnapshotRecords(
   existing: LockfileFile['snapshots'],
   graph: LockfileFile['snapshots']
 ): LockfileFile['snapshots'] {
-  const merged = mergeEntryRecords(existing, graph);
-  if (!existing || !graph || !merged) return merged;
+  if (!existing || !graph) return existing ?? graph;
+  const merged = { ...existing };
   for (const [key, graphSnapshot] of Object.entries(graph)) {
-    if (!existing[key]) continue;
-    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
-      if (graphSnapshot[depType] == null) delete merged[key][depType];
-    }
+    merged[key] = { ...omit(existing[key], ['dependencies', 'optionalDependencies']), ...graphSnapshot };
   }
   return merged;
 }
