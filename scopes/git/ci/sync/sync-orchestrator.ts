@@ -1,4 +1,5 @@
 import { formatTitle, formatWarningSummary } from '@teambit/cli';
+import fs from 'fs';
 import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
 import type { Logger } from '@teambit/logger';
@@ -11,6 +12,7 @@ import { git } from '../git';
 import type { CiSyncConfig } from './sync-config';
 import {
   branchToLaneName,
+  isValidGitBranchName,
   laneNameToBranch,
   parseLaneTarget,
   resolveSyncConfig,
@@ -21,7 +23,7 @@ import { HALT_SUMMARY_PREFIX, REFUSED_SUMMARY_PREFIX, LaneSyncExecutor } from '.
 import { MainSyncExecutor } from './main-sync-executor';
 import { selectGitHostProvider } from './git-host-provider';
 import { gitRepoRoot, isNonContentPath, listRemoteBranches } from './git-ops';
-import { deriveOwnerRepo, renderInitChecklist, scaffoldWorkflowFiles } from './init-scaffold';
+import { chooseInitDefaultBranch, deriveOwnerRepo, renderInitReport, scaffoldWorkflowFiles } from './init-scaffold';
 
 /**
  * Refuse a `--dry-run` whose plan would be computed by force-checking-out branches over uncommitted
@@ -207,11 +209,17 @@ export class SyncOrchestrator {
 
   /**
    * `bit ci sync --init` — one-command onboarding: scaffolds the two workflow files, adds the sync
-   * config block to workspace.jsonc if missing, and prints the manual-steps checklist. Safe to
+   * config block to workspace.jsonc if missing, and returns the report of the steps left. Safe to
    * re-run: existing files are skipped, an existing config block is left alone; it never reconciles.
    */
   private async syncInit(): Promise<string> {
-    const defaultBranch = await this.deps.ci.getDefaultBranchName();
+    const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
+    const origin = typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined;
+    // The remote knows the default branch. When it can't answer (no origin, a repository not pushed
+    // yet, a server out of reach), guess: the checked-out branch when it's main or master, else main.
+    // A feature branch is never the guess: it would go into the workflows' branch filters.
+    const detectedBranch = await this.deps.ci.detectDefaultBranchName();
+    const defaultBranch = chooseInitDefaultBranch(detectedBranch, await this.currentBranchOr(''));
 
     // Workflows belong to the repository, not the workspace: GitHub only discovers them at
     // `<repo-root>/.github/workflows`, and a bit workspace may be a subdirectory.
@@ -225,30 +233,89 @@ export class SyncOrchestrator {
       );
     }
 
-    const fileOutcomes = scaffoldWorkflowFiles(scaffoldRoot, defaultBranch);
-    // Report the path relative to where the user is standing, not to the workspace.
-    const displayPath = (relativePath: string) => {
-      const abs = path.join(scaffoldRoot, relativePath);
-      const fromCwd = path.relative(process.cwd(), abs);
-      return fromCwd && !fromCwd.startsWith('..') ? fromCwd : abs;
-    };
-    const fileLines = fileOutcomes.map((outcome) =>
-      outcome.status === 'written'
-        ? `wrote ${displayPath(outcome.relativePath)} (default branch: ${defaultBranch})`
-        : `skipped ${displayPath(outcome.relativePath)} (already exists — bit ci sync --init never overwrites)`
+    // A workspace below the repository root: the actions must chdir into it (`ws-dir`).
+    // Real paths: git reports the root with symlinks resolved (macOS `/tmp` is `/private/tmp`).
+    const realPath = (p: string) => (fs.existsSync(p) ? fs.realpathSync(p) : p);
+    const wsDir = path.relative(realPath(scaffoldRoot), realPath(this.deps.workspace.path)).split(path.sep).join('/');
+    const fileOutcomes = scaffoldWorkflowFiles(
+      scaffoldRoot,
+      defaultBranch,
+      wsDir && !wsDir.startsWith('..') ? wsDir : undefined
     );
-
+    // Report the path relative to where the user is standing (`../../.github/...` from a nested
+    // workspace), not to the workspace, so it is right to paste. Absolute only across drives.
+    const displayPath = (abs: string) => {
+      const fromCwd = path.relative(process.cwd(), abs);
+      return fromCwd && !path.isAbsolute(fromCwd) ? fromCwd : abs;
+    };
     const configAdded = await this.ensureSyncConfigBlock();
-    const configLine = configAdded
-      ? 'added "teambit.git/ci": { "sync": {} } to workspace.jsonc'
-      : 'workspace.jsonc already configures "teambit.git/ci".sync — left untouched';
+    // No commit yet: the first commit must take the whole workspace, not only the files --init wrote.
+    const repoHasCommits = await git
+      .raw(['rev-parse', '--verify', '--quiet', 'HEAD'])
+      .then((out) => out.trim().length > 0)
+      .catch(() => false);
 
-    const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
-    const ownerRepo = deriveOwnerRepo(typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined);
+    // What step 1 must stage: of the files --init handles, those git shows as new or changed. One that
+    // .gitignore matches is listed apart, because `git add` refuses an ignored path named on the command line.
+    const handled = [
+      ...fileOutcomes.map((outcome) => path.join(scaffoldRoot, outcome.relativePath)),
+      path.join(this.deps.workspace.path, 'workspace.jsonc'),
+    ];
+    const toStage: string[] = [];
+    const ignored: string[] = [];
+    if (repoRoot) {
+      for (const abs of handled) {
+        // Ignored first: `git status` hides an ignored file, so it would look unchanged. `check-ignore`
+        // skips tracked files and prints the path only when it is ignored (it exits 1 otherwise). It
+        // needs no commit, and the first commit's `git add -A` skips an ignored file too.
+        // oxlint-disable-next-line no-await-in-loop
+        const isIgnored = await git
+          .raw(['check-ignore', '--', abs])
+          .then((out) => out.trim().length > 0)
+          .catch(() => false);
+        if (isIgnored) {
+          ignored.push(displayPath(abs));
+          continue;
+        }
+        // the first commit stages everything with `git add -A`
+        if (!repoHasCommits) continue;
+        // oxlint-disable-next-line no-await-in-loop
+        const changed = await git
+          .raw(['status', '--porcelain', '--untracked-files=all', '--', abs])
+          .then((out) => out.trim().length > 0)
+          .catch(() => true);
+        if (changed) toStage.push(displayPath(abs));
+      }
+    }
 
-    const summary = ['bit ci sync --init', ...fileLines, configLine, renderInitChecklist(ownerRepo)].join('\n');
-    this.deps.logger.console(summary);
-    return summary;
+    // Returned, not logged: the command prints what `report()` returns.
+    return renderInitReport({
+      scopeId: this.deps.workspace.defaultScope,
+      ownerRepo: deriveOwnerRepo(origin),
+      originUrl: origin,
+      defaultBranch,
+      defaultBranchGuessed: !detectedBranch,
+      // the workflows live at the repository root, which may be above the workspace
+      repoRootFromCwd: path.relative(process.cwd(), scaffoldRoot) || '.',
+      repoHasCommits,
+      inGitRepo: Boolean(repoRoot),
+      files: fileOutcomes.map((outcome) => ({
+        ...outcome,
+        displayPath: displayPath(path.join(scaffoldRoot, outcome.relativePath)),
+      })),
+      configDisplayPath: displayPath(path.join(this.deps.workspace.path, 'workspace.jsonc')),
+      configAdded,
+      ...(repoRoot ? { toStage, ignored } : {}),
+    });
+  }
+
+  /** The checked-out branch when it is a usable name (not detached, not option-like), else `fallback`. */
+  private async currentBranchOr(fallback: string): Promise<string> {
+    const current = await git
+      .raw(['branch', '--show-current'])
+      .then((out) => out.trim())
+      .catch(() => '');
+    return current && isValidGitBranchName(current) ? current : fallback;
   }
 
   /**
