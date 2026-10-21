@@ -267,8 +267,10 @@ describe('init-scaffold', () => {
 
     it('starts with git init when the workspace is not in a git repository', () => {
       const out = report(undefined, { inGitRepo: false, repoHasCommits: false });
-      expect(out).to.match(/git init\n\s+git add -A\n\s+git commit -m/);
-      expect(report(undefined, { inGitRepo: false, repoRootFromCwd: '..' })).to.contain('git init ..\n');
+      expect(out).to.match(/git init -b main\n\s+git add -A\n\s+git commit -m/);
+      expect(report(undefined, { inGitRepo: false, repoRootFromCwd: '..' })).to.contain('git init -b main ..\n');
+      // the branch the workflows use, not git's own default (master when init.defaultBranch is unset)
+      expect(report(undefined, { inGitRepo: false, defaultBranch: 'trunk' })).to.contain('git init -b trunk\n');
       expect(report(undefined)).to.not.contain('git init');
     });
 

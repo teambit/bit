@@ -541,7 +541,8 @@ export function renderInitReport(input: InitReportInput): string {
   ];
   // Commit and push are separate: on a re-run nothing may be left to commit, and the push must still run.
   // Naming the paths keeps changes the user staged before out of the commit.
-  const gitInit = repoRootFromCwd === '.' ? 'git init' : `git init ${shellQuote(repoRootFromCwd)}`;
+  // `-b`: without init.defaultBranch, a bare `git init` makes `master`, a branch the workflows ignore
+  const gitInit = `git init -b ${shellQuote(defaultBranch)}${repoRootFromCwd === '.' ? '' : ` ${shellQuote(repoRootFromCwd)}`}`;
   const toCommit = [...toStage, ...ignored];
   const nothingToCommit = !firstCommit && !toCommit.length;
   const commitMessage = `git commit -m ${shellQuote(`Mirror ${scope}`)}`;
