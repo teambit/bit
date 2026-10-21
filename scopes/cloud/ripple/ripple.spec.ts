@@ -258,3 +258,29 @@ describe('RippleSimulateCmd', () => {
     expect(output).to.include('bit ripple log job-1');
   });
 });
+
+describe('RippleMain.getComponentBuildSummary()', () => {
+  const ciGraph = JSON.stringify({
+    nodes: [{ id: 'node-1', attr: JSON.stringify({ ids: ['org.scope/comp@abc123'], status: { phase: 'FAILURE' } }) }],
+  });
+  const job = { id: 'job-1', ciGraph };
+
+  async function getRequestedComponentId(componentId: string): Promise<string> {
+    const ripple = createRippleMain();
+    let requestedId = '';
+    (ripple as any).fetchRippleGQL = async (_query: string, variables: Record<string, any>) => {
+      requestedId = variables.componentId;
+      return { getComponentBuildSummary: { id: variables.componentId } };
+    };
+    await ripple.getComponentBuildSummary(job, componentId);
+    return requestedId;
+  }
+
+  it('should take the version from the job when the id has no version, as "bit ripple log" lists it', async () => {
+    expect(await getRequestedComponentId('org.scope/comp')).to.equal('org.scope/comp@abc123');
+  });
+
+  it('should keep the version when the id has one', async () => {
+    expect(await getRequestedComponentId('org.scope/comp@def456')).to.equal('org.scope/comp@def456');
+  });
+});
