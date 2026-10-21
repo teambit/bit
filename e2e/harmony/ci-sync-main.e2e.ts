@@ -451,7 +451,10 @@ describe('bit ci sync: main-scope reconciliation', function () {
       expect(output).to.include(add);
       expect(output).to.include(forceAdd);
       expect(output).to.include('.gitignore matches these');
-      expect(output).to.include(commit);
+      // printed with the paths on a continuation line
+      expect(output).to.match(
+        /git commit -m 'Mirror my-scope' -- \\\n\s+workspace\.jsonc \.github\/workflows\/bit-sync\.yml \.github\/workflows\/bit-release\.yml\n/
+      );
       // the printed commands really work: both workflows are committed, the unrelated file stays staged
       helper.command.runCmd(
         `${add} && ${forceAdd} && git -c user.email=e2e@bit.dev -c user.name=e2e ${commit.slice('git '.length)}`,

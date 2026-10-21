@@ -204,7 +204,7 @@ describe('init-scaffold', () => {
 
     it('commits and pushes in separate commands, so a re-run with nothing to commit still pushes', () => {
       const out = report('git@github.com:acme/shop.git');
-      expect(out).to.match(/git commit -m 'Mirror acme\.shop' -- [^\n]+\n\s+git push -u origin HEAD/);
+      expect(out).to.match(/git commit -m 'Mirror acme\.shop' -- \\\n\s+[^\n]+\n\s+git push -u origin HEAD/);
       expect(out).to.not.contain('&& git');
     });
 
@@ -245,7 +245,9 @@ describe('init-scaffold', () => {
         toStage: ['workspace.jsonc'],
         ignored: ['.github/workflows/bit-release.yml'],
       });
-      expect(out).to.contain("git commit -m 'Mirror acme.shop' -- workspace.jsonc .github/workflows/bit-release.yml\n");
+      expect(out).to.match(
+        /git commit -m 'Mirror acme\.shop' -- \\\n\s+workspace\.jsonc \.github\/workflows\/bit-release\.yml\n/
+      );
     });
 
     it('force-adds an ignored workflow file also for the first commit, which git add -A would skip', () => {

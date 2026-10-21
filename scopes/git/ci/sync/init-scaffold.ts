@@ -550,7 +550,10 @@ export function renderInitReport(input: InitReportInput): string {
     ...stage,
     ...(nothingToCommit
       ? [formatHint('nothing to commit: these files are already committed')]
-      : [cmd(firstCommit ? commitMessage : `${commitMessage} -- ${quoted(toCommit)}`)]),
+      : firstCommit
+        ? [cmd(commitMessage)]
+        : // the paths go on a continuation line, as in the permissions command, to keep lines short
+          [cmd(`${commitMessage} -- \\`), cmd(`  ${quoted(toCommit)}`)]),
   ];
 
   const steps: string[] = [];
