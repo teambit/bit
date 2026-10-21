@@ -1,4 +1,6 @@
 import fs from 'fs';
+import chalk from 'chalk';
+import { formatHint, formatItem, formatTitle, formatWarningSummary, joinSections, successSymbol } from '@teambit/cli';
 import path from 'path';
 import { parseGitHubRepo, isGitHubRemote, gitHubApiUrl, remoteHost } from './github-client';
 
@@ -7,9 +9,10 @@ import { parseGitHubRepo, isGitHubRemote, gitHubApiUrl, remoteHost } from './git
  *
  * TEMPLATE SOURCE OF TRUTH: `BIT_SYNC_WORKFLOW_RAW` / `BIT_RELEASE_WORKFLOW_RAW` are byte-for-byte
  * copies of the canonical templates in the `bit-git-sync` action workspace
- * (git-sync/git-sync/workflows/templates/) and MUST be kept in sync with them. The ONLY departure is
- * the two `DEFAULT_BRANCH_MARKER` substitution points; everything else — CHANGE-ME comments, the
- * placeholder action ref, `bit-sync/main` config defaults — stays untouched.
+ * (git-sync/git-sync/workflows/templates/) and MUST be kept in sync with them. The ONLY departures
+ * are the two `DEFAULT_BRANCH_MARKER` substitution points and, for a workspace below the repository
+ * root, the `WS_DIR_MARKER` line; everything else — CHANGE-ME comments, the placeholder action ref,
+ * `bit-sync/main` config defaults — stays untouched.
  */
 
 /** Where `scaffoldWorkflowFiles` writes each file, relative to the workspace root. */
@@ -235,14 +238,35 @@ function substituteDefaultBranch(raw: string, marker: string, defaultBranch: str
   return raw.replace(marker, () => substitutedMarker);
 }
 
-/** Render `bit-sync.yml` with the repository's actual default branch substituted. */
-export function renderBitSyncWorkflow(defaultBranch: string): string {
-  return substituteDefaultBranch(BIT_SYNC_WORKFLOW_RAW, DEFAULT_BRANCH_MARKER.sync, defaultBranch);
+/** The commented-out `ws-dir` input, once in each template. */
+const WS_DIR_MARKER = '# ws-dir: packages/my-workspace';
+
+/**
+ * Set the action's `ws-dir` input when the workspace is below the repository root (`wsDir` is the
+ * workspace directory relative to the root, `/`-separated). At the root, the line stays commented out.
+ */
+function substituteWsDir(raw: string, wsDir: string | undefined): string {
+  if (!wsDir || wsDir === '.') return raw;
+  if (!raw.includes(WS_DIR_MARKER)) {
+    throw new Error(`init-scaffold: expected marker "${WS_DIR_MARKER}" not found in its workflow template`);
+  }
+  return raw.replace(WS_DIR_MARKER, () => `ws-dir: ${yamlSingleQuoted(wsDir)}`);
 }
 
-/** Render `bit-release.yml` with the repository's actual default branch substituted. */
-export function renderBitReleaseWorkflow(defaultBranch: string): string {
-  return substituteDefaultBranch(BIT_RELEASE_WORKFLOW_RAW, DEFAULT_BRANCH_MARKER.release, defaultBranch);
+/** Render `bit-sync.yml` with the repository's actual default branch, and `ws-dir` for a nested workspace. */
+export function renderBitSyncWorkflow(defaultBranch: string, wsDir?: string): string {
+  return substituteWsDir(
+    substituteDefaultBranch(BIT_SYNC_WORKFLOW_RAW, DEFAULT_BRANCH_MARKER.sync, defaultBranch),
+    wsDir
+  );
+}
+
+/** Render `bit-release.yml` with the repository's actual default branch, and `ws-dir` for a nested workspace. */
+export function renderBitReleaseWorkflow(defaultBranch: string, wsDir?: string): string {
+  return substituteWsDir(
+    substituteDefaultBranch(BIT_RELEASE_WORKFLOW_RAW, DEFAULT_BRANCH_MARKER.release, defaultBranch),
+    wsDir
+  );
 }
 
 export interface ScaffoldFileOutcome {
@@ -262,11 +286,18 @@ function writeIfAbsent(workspaceDir: string, relativePath: string, content: stri
   return { relativePath, status: 'written' };
 }
 
-/** Scaffold both workflow files under `workspaceDir`. Never overwrites; creates `.github/workflows/` as needed. */
-export function scaffoldWorkflowFiles(workspaceDir: string, defaultBranch: string): ScaffoldFileOutcome[] {
+/**
+ * Scaffold both workflow files under `workspaceDir` (the repository root). `wsDir` is the bit workspace
+ * relative to it, when the workspace is a subdirectory. Never overwrites; creates `.github/workflows/`.
+ */
+export function scaffoldWorkflowFiles(
+  workspaceDir: string,
+  defaultBranch: string,
+  wsDir?: string
+): ScaffoldFileOutcome[] {
   return [
-    writeIfAbsent(workspaceDir, WORKFLOW_RELATIVE_PATHS.sync, renderBitSyncWorkflow(defaultBranch)),
-    writeIfAbsent(workspaceDir, WORKFLOW_RELATIVE_PATHS.release, renderBitReleaseWorkflow(defaultBranch)),
+    writeIfAbsent(workspaceDir, WORKFLOW_RELATIVE_PATHS.sync, renderBitSyncWorkflow(defaultBranch, wsDir)),
+    writeIfAbsent(workspaceDir, WORKFLOW_RELATIVE_PATHS.release, renderBitReleaseWorkflow(defaultBranch, wsDir)),
   ];
 }
 
@@ -294,52 +325,307 @@ export function deriveOwnerRepo(remoteUrl: string | undefined): OwnerRepo | unde
 
 /**
  * The bit.cloud custom webhook payload template, verified byte-perfect against a live delivery.
- * Lane vs. main export is discriminated by whether `laneId` is empty.
+ * Lane vs. main export is discriminated by whether `laneId` is empty. Used on GitHub Enterprise
+ * Server, where the webhook posts straight to the repository's `dispatches` API with a token.
  */
 const WEBHOOK_PAYLOAD_TEMPLATE =
   '{"event_type":"bit-export","client_payload":{"laneId":"{{laneId}}","componentIds":"{{componentIds}}","owner":"{{owner}}","actor":"{{username}}"}}';
 
 /**
- * The manual-steps checklist `bit ci sync --init` prints: everything the command itself cannot do
- * (secrets live in GitHub settings; the webhook lives on bit.cloud).
+ * On github.com, instant Bit -> Git goes through the hosted relay: the `bit-git-sync` GitHub App lets
+ * it send `repository_dispatch` to the repositories it is installed on, and its setup page hands out
+ * one webhook URL per repository. No personal token is involved.
  */
-export function renderInitChecklist(ownerRepo: OwnerRepo | undefined): string {
-  const repoSegment = ownerRepo ? `${ownerRepo.owner}/${ownerRepo.repo}` : '<owner>/<repo>';
-  const api = gitHubApiUrl(ownerRepo?.host);
-  const dispatchUrl = `${'error' in api ? '<GitHub API URL>' : api.url}/repos/${repoSegment}/dispatches`;
-  return [
-    '',
-    'Remaining manual steps (bit ci sync --init only scaffolds files -- these need a human):',
-    '',
-    '1. Secrets -- add in the repository (or org) Settings > Secrets and variables > Actions:',
-    '   - BIT_CONFIG_ACCESS_TOKEN (required): a bit.cloud service-account token with export rights on',
-    "     this scope. This account must also be exempt from the org's",
-    '     change-request/merge block -- it is the only identity that merges lanes.',
-    '   - BIT_SYNC_GH_TOKEN (optional): a GitHub PAT or App token. Without it, sync pushes/PRs use the',
-    '     default GITHUB_TOKEN, which does NOT trigger downstream workflow runs (loop-safe, but the',
-    '     sync PR then gets no CI checks).',
-    '',
-    '2. Permissions -- both scaffolded workflows already declare `contents: write` and',
-    '   `pull-requests: write`. Nothing to change unless an org-wide policy overrides workflow-level',
-    '   permissions (e.g. a default of "Read repository contents permission" for the GITHUB_TOKEN).',
-    '',
-    '3. bit.cloud webhook -- create ONE webhook (org Settings > Webhooks) on the "Components > Export',
-    '   succeeded" event:',
-    `   URL:     ${dispatchUrl}`,
-    ...('error' in api ? [`            (${api.error})`] : []),
-    '   Headers: Authorization: Bearer <PAT>',
-    '            Accept: application/vnd.github+json',
-    '   Custom payload template:',
-    `   ${WEBHOOK_PAYLOAD_TEMPLATE}`,
-    '   WARNING: create this webhook fresh -- editing an existing webhook drops its custom headers',
-    '   (known bit.cloud platform bug, verified 2026-07-29). If the URL, headers or template need to',
-    '   change later, delete the webhook and create a new one rather than editing it.',
-    '',
-    '4. Checkout depth -- both scaffolded workflows already check out with `fetch-depth: 0`. This is',
-    '   required: the reconciler reads full git history, and a shallow (--depth=1) clone fails sync',
-    '   safely but uselessly (HALTED, no writes). Keep `fetch-depth: 0` if you customize the workflow.',
-    '   Narrowing the REFSPEC is fine, though -- a single-branch clone is supported, because every',
-    '   fetch sync performs names +refs/heads/*:refs/remotes/origin/* explicitly.',
-    '',
-  ].join('\n');
+const BIT_GIT_SYNC_APP_URL = 'https://github.com/apps/bit-git-sync';
+const WEBHOOK_RELAY_SETUP_URL = 'https://webhook-relay-gggmal.r2.composed.app/setup';
+const SETUP_GUIDE_URL = 'https://github.com/teambit/acme-modular-store#set-it-up-for-your-own-scope';
+
+/** What each scaffolded file does, in the words the report shows next to it. */
+const FILE_PURPOSE: Record<string, string> = {
+  [WORKFLOW_RELATIVE_PATHS.sync]: 'syncs lanes and branches: on export, on push, and every 30 minutes',
+  [WORKFLOW_RELATIVE_PATHS.release]: 'releases the scope when a pull request merges',
+};
+
+export interface InitReportInput {
+  /** the workspace's default scope, the one this repository mirrors */
+  scopeId?: string;
+  /** derived from the `origin` remote; undefined when there is none, or it isn't a recognized GitHub host */
+  ownerRepo?: OwnerRepo;
+  /** the raw `origin` URL, to name a remote that exists but isn't recognized as GitHub */
+  originUrl?: string;
+  defaultBranch: string;
+  /** true when the remote didn't name its default branch and `defaultBranch` is a guess */
+  defaultBranchGuessed?: boolean;
+  /**
+   * The repository root as seen from where the user stands (`.` when they stand in it). The workflows
+   * live there, so the first commit and `gh repo create --source` must name it.
+   */
+  repoRootFromCwd?: string;
+  /**
+   * false when the repository has no commit yet. The first commit then takes the whole workspace;
+   * after that, the commit takes only the files `--init` touched, never unrelated local changes.
+   */
+  repoHasCommits?: boolean;
+  /** false when the workspace is not in a git repository yet: step 1 then starts with `git init` */
+  inGitRepo?: boolean;
+  /** scaffolded workflow files, with the path to show (relative to where the user stands) */
+  files: Array<ScaffoldFileOutcome & { displayPath: string }>;
+  /** workspace.jsonc, as seen from where the user stands */
+  configDisplayPath?: string;
+  /** whether `--init` added the sync block to workspace.jsonc, or found one already there */
+  configAdded: boolean;
+  /**
+   * Of the workflow files and workspace.jsonc, the ones git shows as new or changed, as displayed.
+   * Omitted: stage them all. Empty: nothing is left to commit (a re-run after the commit).
+   */
+  toStage?: string[];
+  /**
+   * Of those files, the untracked ones `.gitignore` matches, also before the first commit. `git add`
+   * refuses them by name and `git add -A` skips them.
+   */
+  ignored?: string[];
+}
+
+/**
+ * A remote that is a path on this machine (a bare repository, a `file://` URL), not a server. It has
+ * no host to suggest as a GitHub Enterprise Server. Git's own rule: a URL has a scheme, or is scp-like
+ * (`host:path`, with no slash before the first colon); anything else is a path, `remote.git` included.
+ */
+export function isLocalPathRemote(remoteUrl: string): boolean {
+  const url = remoteUrl.trim();
+  if (/^file:\/\//i.test(url)) return true;
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(url)) return false;
+  // a Windows drive (`C:\repos`) looks scp-like to the next check
+  if (/^[a-z]:[/\\]/i.test(url)) return true;
+  return !/^[^/\\]+:/.test(url);
+}
+
+/**
+ * The remote URL without the credentials a URL can carry (`https://user:token@host/...`), so the
+ * report never prints a token. An http(s) user name can itself be a token, so all of it goes; other
+ * schemes keep the user name (`ssh://git@host`) and lose only a password.
+ */
+export function redactRemoteUrl(remoteUrl: string): string {
+  const url = remoteUrl.trim();
+  if (/^https?:\/\//i.test(url)) return url.replace(/^(https?:\/\/)[^@/]*@/i, '$1');
+  return url.replace(/^([a-z][a-z0-9+.-]*:\/\/[^:@/]*):[^@/]*@/i, '$1@');
+}
+
+/** `value` with each control character written as `\xNN`, so printing it cannot move or restyle the terminal. */
+export function escapeControlChars(value: string): string {
+  // eslint-disable-next-line no-control-regex
+  return value.replace(/[\u0000-\u001f\u007f-\u009f]/g, (c) => `\\x${c.charCodeAt(0).toString(16).padStart(2, '0')}`);
+}
+
+/**
+ * Quote a value for a POSIX shell, so a command the report prints runs as shown when pasted. Plain
+ * names stay unquoted for readability; anything else is single-quoted. A git-valid branch such as
+ * `$(id)` must not run as a command substitution.
+ */
+export function shellQuote(value: string): string {
+  return /^[\w./@:+-]+$/.test(value) ? value : `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+/**
+ * The default branch `--init` writes into the workflows: the one the remote names, else a guess. The
+ * guess is the checked-out branch only when it is `main` or `master`: a feature branch in the branch
+ * filters would exclude itself from sync and point releases at the wrong base.
+ */
+export function chooseInitDefaultBranch(detected: string | undefined, current: string | undefined): string {
+  if (detected) return detected;
+  return current === 'main' || current === 'master' ? current : 'main';
+}
+
+/**
+ * The `GITHUB_SERVER_URL` to suggest for a remote bit doesn't recognize: an http(s) remote's own origin,
+ * port included, else https on the remote's host (an ssh port is not the web server's).
+ */
+export function suggestedServerUrl(remoteUrl: string): string {
+  if (/^https?:\/\//i.test(remoteUrl.trim())) {
+    try {
+      return new URL(remoteUrl.trim()).origin;
+    } catch {
+      // fall through to the host
+    }
+  }
+  return `https://${remoteHost(remoteUrl) ?? '<your-server>'}`;
+}
+
+/**
+ * The report `bit ci sync --init` prints: what it changed, then the steps that need a person, as
+ * commands to paste. Short by design; the setup guide carries the details. Commands are printed only
+ * for a resolved repository: a placeholder would not run when pasted.
+ */
+export function renderInitReport(input: InitReportInput): string {
+  const { ownerRepo, defaultBranch } = input;
+  const scope = input.scopeId ?? '<scope>';
+  // An origin that isn't recognized is most often a GitHub Enterprise Server the shell doesn't know about.
+  const redactedOrigin = !ownerRepo && input.originUrl ? redactRemoteUrl(input.originUrl) : undefined;
+  // Shown, so made inert: a control character (a newline, a terminal escape) must not reach the terminal.
+  const unrecognizedOrigin = redactedOrigin && escapeControlChars(redactedOrigin);
+  // Suggest a server only for a remote that names a host: a local path has none, and a URL with a
+  // control character in it has no trustworthy one.
+  const serverHost =
+    redactedOrigin && redactedOrigin === unrecognizedOrigin && !isLocalPathRemote(redactedOrigin)
+      ? remoteHost(redactedOrigin)
+      : undefined;
+  const repoRootFromCwd = input.repoRootFromCwd || '.';
+  const configDisplayPath = input.configDisplayPath || 'workspace.jsonc';
+
+  const target = ownerRepo
+    ? chalk.cyan(
+        ownerRepo.host === 'github.com'
+          ? `${ownerRepo.owner}/${ownerRepo.repo}`
+          : `${ownerRepo.host}/${ownerRepo.owner}/${ownerRepo.repo}`
+      )
+    : unrecognizedOrigin
+      ? `origin ${unrecognizedOrigin}`
+      : 'no GitHub remote yet';
+  const header = [
+    `${successSymbol()} ${formatTitle('Scaffolded bit ci sync')} for ${chalk.cyan(scope)}, mirrored to ${target} ${formatHint(
+      `(default branch: ${defaultBranch})`
+    )}`,
+  ];
+  if (input.defaultBranchGuessed) {
+    const why = input.originUrl ? "the remote didn't name its default branch" : 'no remote names the default branch';
+    header.push(
+      formatWarningSummary(
+        `${why}, so the workflows use "${defaultBranch}". If that's wrong,\n` +
+          `  edit the branch filters in both workflow files.`
+      )
+    );
+  }
+  if (serverHost && unrecognizedOrigin) {
+    header.push(
+      formatWarningSummary("origin isn't a GitHub remote bit recognizes. For GitHub Enterprise Server, run:")
+    );
+    header.push(
+      `  ${chalk.cyan(`GITHUB_SERVER_URL=${shellQuote(suggestedServerUrl(unrecognizedOrigin))} bit ci sync --init`)}`
+    );
+  }
+
+  const width = Math.max(...input.files.map((f) => f.displayPath.length), configDisplayPath.length) + 2;
+  const fileItem = (displayPath: string, note: string) => formatItem(`${displayPath.padEnd(width)}${formatHint(note)}`);
+  const files = [
+    ...input.files.map((file) =>
+      fileItem(
+        file.displayPath,
+        file.status === 'written' ? (FILE_PURPOSE[file.relativePath] ?? '') : 'already exists, left unchanged'
+      )
+    ),
+    fileItem(
+      configDisplayPath,
+      input.configAdded ? 'added "teambit.git/ci": { "sync": {} }' : 'already configures sync, left unchanged'
+    ),
+  ];
+
+  const step = (n: number, title: string, who: string, body: string[]) =>
+    [`${formatTitle(`${n}. ${title}`)} ${formatHint(`(${who})`)}`, ...body.map((line) => `   ${line}`)].join('\n');
+  const cmd = (text: string) => chalk.cyan(text);
+  // Stage and commit exactly what git shows as new or changed among the files `--init` handles, so
+  // unrelated local changes stay out: a re-run still stages files that were never committed, and a
+  // file already committed is not named. The first commit of a new repository is the exception: it
+  // must carry the whole workspace. `:/` stages from the repository root, where the workflows are,
+  // when the workspace is a subdirectory.
+  const firstCommit = input.repoHasCommits === false;
+  const toStage = firstCommit ? [] : (input.toStage ?? [...input.files.map((f) => f.displayPath), configDisplayPath]);
+  const ignored = input.ignored ?? [];
+  const quoted = (paths: string[]) => paths.map(shellQuote).join(' ');
+  const stage: string[] = [
+    ...(firstCommit ? [cmd(repoRootFromCwd === '.' ? 'git add -A' : 'git add -A :/')] : []),
+    ...(toStage.length ? [cmd(`git add -- ${quoted(toStage)}`)] : []),
+    // `git add` skips or refuses a path that .gitignore matches, and GitHub runs only committed workflows
+    ...(ignored.length
+      ? [cmd(`git add -f -- ${quoted(ignored)}`), formatHint('.gitignore matches these; -f adds them anyway')]
+      : []),
+  ];
+  // Commit and push are separate: on a re-run nothing may be left to commit, and the push must still run.
+  // Naming the paths keeps changes the user staged before out of the commit.
+  // `-b`: without init.defaultBranch, a bare `git init` makes `master`, a branch the workflows ignore
+  const gitInit = `git init -b ${shellQuote(defaultBranch)}${repoRootFromCwd === '.' ? '' : ` ${shellQuote(repoRootFromCwd)}`}`;
+  const toCommit = [...toStage, ...ignored];
+  const nothingToCommit = !firstCommit && !toCommit.length;
+  const commitMessage = `git commit -m ${shellQuote(`Mirror ${scope}`)}`;
+  const commit = [
+    ...(input.inGitRepo === false ? [cmd(gitInit)] : []),
+    ...stage,
+    ...(nothingToCommit
+      ? [formatHint('nothing to commit: these files are already committed')]
+      : firstCommit
+        ? [cmd(commitMessage)]
+        : // the paths go on a continuation line, as in the permissions command, to keep lines short
+          [cmd(`${commitMessage} -- \\`), cmd(`  ${quoted(toCommit)}`)]),
+  ];
+
+  const steps: string[] = [];
+  if (!ownerRepo) {
+    steps.push(
+      unrecognizedOrigin
+        ? step(1, 'Push it', 'you', [...commit, cmd('git push -u origin HEAD')])
+        : step(1, 'Create the repository and push it', 'you', [
+            ...commit,
+            cmd(`gh repo create --private --source ${shellQuote(repoRootFromCwd)} --remote origin --push`),
+            formatHint('names the repository after its root folder; add OWNER/NAME after "create" to choose'),
+          ]),
+      step(2, 'Run bit ci sync --init again', 'you', [
+        'Once origin is a GitHub remote bit recognizes, it prints the secret, permission and webhook',
+        'steps for your repository as commands.',
+      ])
+    );
+  } else {
+    const onGitHubCom = ownerRepo.host === 'github.com';
+    const repo = `${ownerRepo.owner}/${ownerRepo.repo}`;
+    // gh takes HOST/OWNER/REPO, or --hostname, for an enterprise server
+    const ghRepo = shellQuote(onGitHubCom ? repo : `${ownerRepo.host}/${repo}`);
+    const ghApi = onGitHubCom ? 'gh api' : `gh api --hostname ${shellQuote(ownerRepo.host)}`;
+    steps.push(
+      step(1, 'Push it', 'you', [...commit, cmd('git push -u origin HEAD')]),
+      step(2, 'Let the workflows publish to bit.cloud and open pull requests', 'repository admin', [
+        cmd(`gh secret set BIT_CONFIG_ACCESS_TOKEN -R ${ghRepo}`),
+        formatHint(`a bit.cloud access token with Write permission on ${scope}. If your organization`),
+        formatHint("requires change requests, exempt the token's account: it is the one that merges lanes."),
+        cmd(`${ghApi} -X PUT ${shellQuote(`repos/${repo}/actions/permissions/workflow`)} \\`),
+        cmd('  -f default_workflow_permissions=write -F can_approve_pull_request_reviews=true'),
+        formatHint(
+          'turns on "Read and write permissions" and "Allow GitHub Actions to create and approve pull requests".'
+        ),
+        formatHint('If they are greyed out in the settings, an organization owner must allow them first.'),
+        cmd(`gh secret set BIT_SYNC_GH_TOKEN -R ${ghRepo}`),
+        formatHint('optional: a GitHub token, so the pushes the sync makes start your other workflows (CI checks)'),
+      ])
+    );
+    if (onGitHubCom) {
+      steps.push(
+        step(3, 'Make Bit -> Git instant', 'organization admin, optional', [
+          `Install ${chalk.cyan(BIT_GIT_SYNC_APP_URL)} on ${repo}.`,
+          `Copy the repository's webhook URL from ${chalk.cyan(WEBHOOK_RELAY_SETUP_URL)}`,
+          `and add it to ${scope} on bit.cloud as an "Export succeeded" webhook.`,
+        ])
+      );
+    } else {
+      const api = gitHubApiUrl(ownerRepo.host);
+      const dispatchUrl = `${'error' in api ? '<GitHub API URL>' : api.url}/repos/${repo}/dispatches`;
+      steps.push(
+        step(3, 'Make Bit -> Git instant', 'optional', [
+          `On bit.cloud, add an "Export succeeded" webhook to ${scope}:`,
+          `  URL      ${chalk.cyan(dispatchUrl)}`,
+          ...('error' in api ? [chalk.yellow(`  (${api.error})`)] : []),
+          '  Headers  Authorization: Bearer <token with access to this repository>',
+          '           Accept: application/vnd.github+json',
+          `  Payload  ${WEBHOOK_PAYLOAD_TEMPLATE}`,
+          formatHint('Create it fresh: editing a bit.cloud webhook drops its custom headers.'),
+        ])
+      );
+    }
+  }
+
+  const footer = ownerRepo
+    ? `After step 2 the sync runs on pushes to feature branches and every 30 minutes; step 3 adds instant Bit -> Git.\nGuide: ${SETUP_GUIDE_URL}`
+    : `Guide: ${SETUP_GUIDE_URL}`;
+  return joinSections([
+    header.join('\n'),
+    files.join('\n'),
+    [formatTitle(`Next: ${steps.length} steps to go live`), '', steps.join('\n\n')].join('\n'),
+    formatHint(footer),
+  ]);
 }
