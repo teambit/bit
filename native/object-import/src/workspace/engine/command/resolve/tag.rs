@@ -88,7 +88,6 @@ fn candidate_selection(
         .ok_or_else(|| invalid("tag snapshot options"))?
         .clone();
     let mut candidates = super::snap::candidates(retained, captured, &snap)?;
-    append_pending(retained, captured, &mut candidates)?;
     let snapped = head_snaps(retained, captured)?;
     let load_count = candidates
         .iter()
@@ -119,26 +118,6 @@ fn select_persist(retained: &Retained, options: &Options, input: &Plan) -> io::R
         })
         .collect::<io::Result<Vec<_>>>()?;
     Ok(Selection::unique(selected))
-}
-
-fn append_pending(
-    retained: &Retained,
-    captured: &[capture::Captured],
-    candidates: &mut Vec<String>,
-) -> io::Result<()> {
-    for pending in &retained.pending {
-        let identity = super::selection::identity(&pending["id"])?;
-        if !captured
-            .iter()
-            .any(|current| current.target.identity == identity)
-        {
-            return Err(invalid("tag pending target outside capture"));
-        }
-        if !candidates.contains(&identity) {
-            candidates.push(identity);
-        }
-    }
-    Ok(())
 }
 
 fn head_snaps(retained: &Retained, captured: &[capture::Captured]) -> io::Result<Vec<String>> {

@@ -44,6 +44,7 @@ pub(super) struct ModelBytes {
 pub(super) struct HistoryBytes {
     pub(super) hash: String,
     pub(super) bytes: Vec<u8>,
+    pub(super) hashes: Vec<String>,
 }
 
 struct Identity {
@@ -66,22 +67,10 @@ pub(super) fn select(input: &Prepare) -> io::Result<Vec<Selected>> {
     if scope["lanes"]["current"] != "main" {
         return Err(invalid("outbound lane export"));
     }
-    let index_bytes = match fs::read(crate::scope_path(&input.root).join("index.json")) {
-        Ok(bytes) => bytes,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
-        Err(error) => return Err(error),
+    let Some(rows) = read_index_rows(&input.root)? else {
+        return Ok(Vec::new());
     };
-    let index: Value = serde_json::from_slice(&index_bytes)?;
-    let rows = index["components"].as_array().ok_or_else(|| invalid("outbound index"))?;
-    let candidates = if input.options.all
-        || input.options.all_versions
-        || input.options.head_only
-        || !input.ids.is_empty()
-    {
-        all_rows(&input.root, rows)?
-    } else {
-        staged_rows(&input.root, rows)?
-    };
+    let candidates = candidate_rows(input, &rows)?;
     if input.options.pattern_selection && input.ids.is_empty() {
         return Ok(Vec::new());
     }
@@ -90,12 +79,51 @@ pub(super) fn select(input: &Prepare) -> io::Result<Vec<Selected>> {
         candidates,
         input.options.all || input.options.all_versions || input.options.head_only,
     )?;
+    ensure_explicit_ids_in_bitmap(input, &selected)?;
     let mut components = Vec::new();
     for (row, model) in selected {
         let component = select_one(input, &row, model)?;
         components.push(component);
     }
     Ok(components)
+}
+
+fn read_index_rows(root: &Path) -> io::Result<Option<Vec<Value>>> {
+    let index_bytes = match fs::read(crate::scope_path(root).join("index.json")) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error),
+    };
+    let index: Value = serde_json::from_slice(&index_bytes)?;
+    let rows = index["components"].as_array().ok_or_else(|| invalid("outbound index"))?;
+    Ok(Some(rows.clone()))
+}
+
+fn candidate_rows(input: &Prepare, rows: &[Value]) -> io::Result<Vec<(Value, Value)>> {
+    if input.options.all
+        || input.options.all_versions
+        || input.options.head_only
+        || !input.ids.is_empty()
+    {
+        all_rows(&input.root, rows)
+    } else {
+        staged_rows(&input.root, rows)
+    }
+}
+
+fn ensure_explicit_ids_in_bitmap(input: &Prepare, selected: &[(Value, Value)]) -> io::Result<()> {
+    if input.ids.is_empty() {
+        return Ok(());
+    }
+    let bitmap = crate::recovery::jsonc::parse(&fs::read(input.root.join(".bitmap"))?)?;
+    for (row, _) in selected {
+        let scope = row["id"]["scope"].as_str().unwrap_or_default();
+        let name = row["id"]["name"].as_str().unwrap_or_default();
+        if !super::publication::reconcile_present(&bitmap, scope, name) {
+            return Err(invalid("outbound explicit id absent from bitmap"));
+        }
+    }
+    Ok(())
 }
 
 fn all_rows(root: &Path, rows: &[Value]) -> io::Result<Vec<(Value, Value)>> {

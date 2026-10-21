@@ -75,3 +75,72 @@ pub(in crate::commands::lane) fn components_report(lane: &LaneData, format: &For
         .collect();
     format.section("components", "", &items)
 }
+
+/// `LaneListCmd.report` for compact and detailed lane lists.
+pub(super) fn report(lanes: &[LaneData], current: &Value, chalk: Chalk, details: bool) -> String {
+    let format = Formatter::new(chalk);
+    let current_lane = lanes
+        .iter()
+        .find(|lane| lane.id == *current);
+    let current_output = report_current(current_lane, current, chalk, details, &format);
+    let others = report_others(lanes, current, chalk, details, &format);
+    let hints = if details {
+        "use --merged and --not-merged to see which of the lanes is fully merged\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'"
+    } else {
+        "use 'bit lane list --details' or 'bit lane show <lane-name>' for more info\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'"
+    };
+    Formatter::join(&[current_output, others, format.hint(hints)])
+}
+
+fn report_current(
+    current_lane: Option<&LaneData>,
+    current: &Value,
+    chalk: Chalk,
+    details: bool,
+    format: &Formatter,
+) -> String {
+    // A current lane missing from the index: `laneIdStr` without an alias.
+    let current_label = current_lane.map_or_else(
+        || {
+            let name = current["name"].as_str().unwrap_or_default();
+            format!("{}/{name}", current["scope"].as_str().unwrap_or_default())
+        },
+        LaneData::label,
+    );
+    let readme = current_lane.map_or_else(String::new, |lane| readme_report(lane, chalk));
+    let current_output = format!("current lane - {}{readme}", chalk.green(&current_label));
+    if !details || current_lane.is_none() {
+        return current_output;
+    }
+    let components = current_lane.map(|lane| components_report(lane, format)).unwrap_or_default();
+    format!("{current_output}\n{components}")
+}
+
+pub(super) fn report_others(
+    lanes: &[LaneData],
+    current: &Value,
+    chalk: Chalk,
+    details: bool,
+    format: &Formatter,
+) -> String {
+    let items: Vec<String> = lanes
+        .iter()
+        .filter(|lane| lane.id != *current)
+        .map(|lane| {
+            let readme = readme_report(lane, chalk);
+            if details {
+                return format!(
+                    "> {}{readme}\n{}",
+                    chalk.bold(&lane.label()),
+                    components_report(lane, format),
+                );
+            }
+            format.item(&format!(
+                "{} ({} components){readme}",
+                chalk.green(&lane.label()),
+                lane.components.len(),
+            ))
+        })
+        .collect();
+    if details { items.join("\n\n") } else { format.section("available lanes", "", &items) }
+}

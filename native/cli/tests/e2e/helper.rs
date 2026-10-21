@@ -147,6 +147,7 @@ impl Helper {
         config::update_scope_json(&remote.join("scope.json"), |scope| {
             scope.insert("name".into(), json!(self.scopes.remote));
         });
+        self.wire_all_bare_scopes();
     }
 
     /// `addRemoteScope()`: what `bit remote add file://<remote>` writes.
@@ -157,6 +158,7 @@ impl Helper {
     /// `addRemoteScope(remoteScopePath)`: registers `remote_path` in the workspace scope.
     pub fn add_remote(&self, remote_path: &Path) {
         Self::add_remote_to(remote_path, &self.scopes.local_path.join(".bit"));
+        self.wire_all_bare_scopes();
     }
 
     /// `getNewBareScope()`: creates a new bare scope in `e2e_dir` and returns `(scope_name, scope_path)`.
@@ -167,7 +169,29 @@ impl Helper {
         config::update_scope_json(&path.join("scope.json"), |scope| {
             scope.insert("name".into(), json!(name));
         });
+        self.wire_all_bare_scopes();
         (name, path)
+    }
+
+    fn wire_all_bare_scopes(&self) {
+        let scopes: Vec<PathBuf> = fs::read_dir(&self.scopes.e2e_dir)
+            .unwrap()
+            .filter_map(Result::ok)
+            .map(|e| e.path())
+            .filter(|path| {
+                path.file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name.ends_with("-remote"))
+                    && path.join("scope.json").is_file()
+            })
+            .collect();
+        for a in &scopes {
+            for b in &scopes {
+                if a != b {
+                    Self::add_remote_to(a, b);
+                }
+            }
+        }
     }
 
     /// Creates a new bare scope and connects it with both the workspace and `scopes.remote_path`.

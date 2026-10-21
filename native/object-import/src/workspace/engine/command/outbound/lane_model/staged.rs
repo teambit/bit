@@ -22,9 +22,7 @@ pub(super) fn lane_versions(
         if seen.len() > MAX_OBJECTS {
             return Err(invalid("outbound lane version budget"));
         }
-        if let Some(parents) =
-            selected_parents(dir, &hash, head, previous_head.is_some(), scope, name)?
-        {
+        if let Some(parents) = selected_parents(dir, &hash, head, scope, name)? {
             output.push(hash);
             pending.extend(parents.into_iter().rev());
         }
@@ -37,7 +35,6 @@ fn selected_parents(
     dir: &Path,
     hash: &str,
     head: &str,
-    has_remote_head: bool,
     scope: &str,
     name: &str,
 ) -> io::Result<Option<Vec<String>>> {
@@ -47,10 +44,9 @@ fn selected_parents(
     }
     let origin = &version["origin"]["lane"];
     let same_lane = origin["scope"] == scope && origin["name"] == name;
-    let any_lane = has_remote_head
-        && origin["scope"]
-            .as_str()
-            .is_some_and(|value| !value.is_empty())
+    let any_lane = origin["scope"]
+        .as_str()
+        .is_some_and(|value| !value.is_empty())
         && origin["name"]
             .as_str()
             .is_some_and(|value| !value.is_empty());

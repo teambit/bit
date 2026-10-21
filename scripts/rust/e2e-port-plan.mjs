@@ -121,14 +121,24 @@ function cases(file) {
   return found;
 }
 
-function generate(previous) {
-  const sections = [];
-  const used = new Set();
+function discoverCases() {
+  const byFile = new Map();
   for (const file of e2eFiles(path.join(ROOT, 'e2e'))) {
     const relative = path.relative(ROOT, file).split(path.sep).join('/');
+    byFile.set(
+      relative,
+      cases(file).map(({ line, titles }) => ({ line, text: titles.join(SEPARATOR) }))
+    );
+  }
+  return byFile;
+}
+
+function generate(discovered, previous) {
+  const sections = [];
+  const used = new Set();
+  for (const [relative, fileCases] of discovered) {
     const seen = new Map();
-    const lines = cases(file).map(({ line, titles }) => {
-      const text = titles.join(SEPARATOR);
+    const lines = fileCases.map(({ line, text }) => {
       const occurrence = (seen.get(text) ?? 0) + 1;
       seen.set(text, occurrence);
       const key = `${relative}\0${text}\0${occurrence}`;
@@ -143,16 +153,26 @@ function generate(previous) {
 }
 
 /** The listed cases by file, title and occurrence, with their state and note. */
-function parse(generated) {
+function parse(generated, discovered) {
   const items = new Map();
   const seen = new Map();
   for (const line of generated.split('\n')) {
     const match = /^- \[(.)\] `([^`]+):\d+` (.*)$/.exec(line);
     if (!match) continue;
     const [, state, file, rest] = match;
-    const noteAt = rest.indexOf(NOTE);
-    const text = noteAt === -1 ? rest : rest.slice(0, noteAt);
-    const note = noteAt === -1 ? '' : rest.slice(noteAt + NOTE.length);
+    const known = (discovered.get(file) ?? [])
+      .map((item) => item.text)
+      .find((candidate) => rest === candidate || rest.startsWith(candidate + NOTE));
+    let text;
+    let note;
+    if (known !== undefined) {
+      text = known;
+      note = rest === known ? '' : rest.slice(known.length + NOTE.length);
+    } else {
+      const noteAt = rest.indexOf(NOTE);
+      text = noteAt === -1 ? rest : rest.slice(0, noteAt);
+      note = noteAt === -1 ? '' : rest.slice(noteAt + NOTE.length);
+    }
     const occurrence = (seen.get(`${file}\0${text}`) ?? 0) + 1;
     seen.set(`${file}\0${text}`, occurrence);
     items.set(`${file}\0${text}\0${occurrence}`, { state, note, text: `${file}: ${text}` });
@@ -167,7 +187,8 @@ if (begin === -1 || end === -1) {
   console.error(`${PLAN} lacks the generated markers`);
   process.exit(1);
 }
-const { body, dropped } = generate(parse(plan.slice(begin + BEGIN.length, end)));
+const discovered = discoverCases();
+const { body, dropped } = generate(discovered, parse(plan.slice(begin + BEGIN.length, end), discovered));
 const updated = `${plan.slice(0, begin)}${BEGIN}\n\n${body}\n\n${plan.slice(end)}`;
 for (const [, item] of dropped) {
   console.error(`no longer in e2e/, was [${item.state}]: ${item.text}`);

@@ -6,6 +6,7 @@ mod cat;
 mod checkout;
 mod clear_cache;
 mod color;
+mod component_issues;
 mod config;
 mod debug_cat;
 mod delete;
@@ -79,6 +80,7 @@ pub const COMMANDS: &[Command] = &[
     checkout::COMMAND,
     checkout::REVERT,
     clear_cache::COMMAND,
+    component_issues::COMMAND,
     config::COMMAND,
     debug_cat::CAT_COMPONENT,
     debug_cat::CAT_LANE,

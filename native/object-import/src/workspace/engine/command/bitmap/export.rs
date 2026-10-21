@@ -39,7 +39,7 @@ impl Prepared {
 }
 
 fn promote_export_row(row: &mut Value, scope: &str, name: &str) -> io::Result<bool> {
-    if row["name"] != name {
+    if row["name"] != name || row["version"].as_str().is_none_or(str::is_empty) {
         return Err(invalid("export bitmap lifecycle"));
     }
     if row["scope"] == "" && row["defaultScope"] == scope {

@@ -7,7 +7,7 @@ use crate::{
     native::Outcome,
     workspace,
 };
-use bit_object_import::lane_manage::{Change, Plan};
+use bit_object_import::lane_manage::{Change, Plan, ReadmePlan};
 use std::{env, ffi::OsString, io};
 
 pub(super) fn rename(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
@@ -35,6 +35,77 @@ pub(super) fn change_scope(args: &[OsString], lane_args: &[&str]) -> io::Result<
             chalk.bold(new_scope),
         )
     })
+}
+
+pub(super) fn remove_readme(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
+    let lane_name = match lane_args {
+        [] => None,
+        [name] if !name.is_empty() && !name.starts_with('-') => Some(*name),
+        _ => return Ok(Outcome::Declined("outside the native lane remove-readme grammar".into())),
+    };
+    let Some(root) = workspace::root(&env::current_dir()?) else {
+        return Ok(Outcome::Declined("not inside a workspace".into()));
+    };
+    let user = workspace_command::User::load(&root)?;
+    let plan =
+        match ReadmePlan::prepare(&root, lane_name, user.log(), &workspace_command::uuid_v4()?) {
+            Ok(plan) => plan,
+            Err(error) => return Ok(Outcome::Declined(format!("lane remove-readme: {error}"))),
+        };
+    match plan {
+        ReadmePlan::NoReadme(label) => {
+            workspace_command::execute_then(&root, args, "remove-readme", |_| {
+                Err(io::Error::other(format!(
+                    "there is no readme component added to the lane {label}",
+                )))
+            })
+        }
+        ReadmePlan::Remove(ref removal) => {
+            let chalk = Chalk::detect(args);
+            let report = Report {
+                data: chalk.green(&format!(
+                    "the readme component has been successfully removed from the lane {}",
+                    removal.label(),
+                )),
+                code: 0,
+                details: None,
+            };
+            workspace_command::execute_with(&root, args, "remove-readme", &report, |_| {
+                plan.commit()
+            })
+        }
+    }
+}
+
+pub(super) fn remove_comp(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
+    if !valid_remove_comp_args(lane_args) {
+        return Ok(Outcome::Declined("outside the native lane remove-comp grammar".into()));
+    }
+    let Some(root) = workspace::root(&env::current_dir()?) else {
+        return Ok(Outcome::Declined("not inside a workspace".into()));
+    };
+    workspace_command::execute_then(&root, args, "remove-comp", |_| {
+        Err(io::Error::other(
+            r#"bit lane remove-comp has been removed. please use "bit remove" or "bit delete" instead"#,
+        ))
+    })
+}
+
+fn valid_remove_comp_args(args: &[&str]) -> bool {
+    let mut pattern_count = 0usize;
+    for &arg in args {
+        match arg {
+            "--workspace-only"
+            | "--workspace-only=true"
+            | "--workspace-only=false"
+            | "--update-main"
+            | "--update-main=true"
+            | "--update-main=false" => {}
+            _ if !arg.starts_with('-') && !arg.is_empty() => pattern_count += 1,
+            _ => return false,
+        }
+    }
+    pattern_count == 1
 }
 
 fn execute(

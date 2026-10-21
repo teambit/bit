@@ -1,4 +1,8 @@
 //! Publish a local, unexported lane rename or remote-scope change.
+pub use readme::{ReadmePlan, ReadmeRemoval};
+
+mod readme;
+
 use crate::{inspection, recovery, store::Store, workspace::engine::command::outbound};
 use serde_json::{Value, json};
 use std::{
@@ -102,6 +106,83 @@ impl Documents {
             return Err(invalid());
         }
         Ok(Original { name, scope })
+    }
+
+    fn current_or_default(&self) -> io::Result<(String, String)> {
+        let id = &self.bitmap["_bit_lane"]["id"];
+        if let (Some(name), Some(scope)) = (id["name"].as_str(), id["scope"].as_str())
+            && !name.is_empty()
+            && !scope.is_empty()
+        {
+            return Ok((name.to_owned(), scope.to_owned()));
+        }
+        let scope = self.scope_json["name"]
+            .as_str()
+            .ok_or_else(invalid)?
+            .to_owned();
+        Ok(("main".to_owned(), scope))
+    }
+
+    fn resolve_lane_id(&self, name: &str) -> io::Result<(String, String)> {
+        if let Some((scope, lane_name)) = name.split_once('/') {
+            if scope.is_empty() || lane_name.is_empty() || lane_name.contains('/') {
+                return Err(invalid());
+            }
+            return Ok((lane_name.to_owned(), scope.to_owned()));
+        }
+        if name == "main" {
+            let scope = self.scope_json["name"]
+                .as_str()
+                .ok_or_else(invalid)?
+                .to_owned();
+            return Ok(("main".to_owned(), scope));
+        }
+        if let Some(pair) = self.tracked_lane_id(name)? {
+            return Ok(pair);
+        }
+        self.indexed_lane_id(name)
+    }
+
+    fn tracked_lane_id(&self, name: &str) -> io::Result<Option<(String, String)>> {
+        let Some(tracked) = self.scope_json["lanes"]["tracking"]
+            .as_array()
+            .and_then(|rows| {
+                rows.iter()
+                    .find(|row| row["localLane"] == name)
+            })
+        else {
+            return Ok(None);
+        };
+        let remote_lane = tracked["remoteLane"]
+            .as_str()
+            .ok_or_else(invalid)?
+            .to_owned();
+        let remote_scope = tracked["remoteScope"]
+            .as_str()
+            .ok_or_else(invalid)?
+            .to_owned();
+        Ok(Some((remote_lane, remote_scope)))
+    }
+
+    fn indexed_lane_id(&self, name: &str) -> io::Result<(String, String)> {
+        let matches: Vec<&Value> = self.index["lanes"]
+            .as_array()
+            .ok_or_else(invalid)?
+            .iter()
+            .filter(|row| row["id"]["name"] == name)
+            .collect();
+        let [row] = matches.as_slice() else {
+            return Err(invalid());
+        };
+        let lane_name = row["id"]["name"]
+            .as_str()
+            .ok_or_else(invalid)?
+            .to_owned();
+        let scope = row["id"]["scope"]
+            .as_str()
+            .ok_or_else(invalid)?
+            .to_owned();
+        Ok((lane_name, scope))
     }
 
     fn lane_hash(&self, original: &Original) -> io::Result<String> {

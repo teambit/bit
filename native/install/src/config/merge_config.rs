@@ -10,10 +10,12 @@ const POLICY_FIELDS: [&str; 3] = ["dependencies", "devDependencies", "peerDepend
 
 /// The config-merge file a lane merge leaves at the workspace root
 /// (`merge-conflict`, `MergeConflictFile`): one JSON config per component id
-/// (without version), plus the deprecated `WORKSPACE` entry.
+/// (without version), plus the deprecated `WORKSPACE` entry and any resolved
+/// `mergedConfig` entries in `<scope>/unmerged.json`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct MergeConfig {
     conflicts: IndexMap<String, String>,
+    unmerged: IndexMap<String, Value>,
 }
 
 /// A component's config-merge entry after `adjustEnvsOnConfigObject` and
@@ -30,11 +32,13 @@ pub struct MergeConfigComponent {
 
 impl MergeConfig {
     pub fn load(root: &Path) -> io::Result<Self> {
-        match fs::read_to_string(root.join(FILE_NAME)) {
-            Ok(text) => Ok(Self::parse(&text)),
-            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Self::default()),
-            Err(error) => Err(error),
-        }
+        let mut config = match fs::read_to_string(root.join(FILE_NAME)) {
+            Ok(text) => Self::parse(&text),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Self::default(),
+            Err(error) => return Err(error),
+        };
+        config.unmerged = load_unmerged(&super::scope_path(root))?;
+        Ok(config)
     }
 
     /// `parseConflict`: drop divider and `#` lines, then split by `[*]`.
@@ -56,12 +60,12 @@ impl MergeConfig {
                 (!id.is_empty()).then(|| (id.to_owned(), rest.to_owned()))
             })
             .collect();
-        Self { conflicts }
+        Self { conflicts, unmerged: IndexMap::new() }
     }
 
     #[must_use]
     pub fn is_empty(&self) -> bool {
-        self.conflicts.is_empty()
+        self.conflicts.is_empty() && self.unmerged.is_empty()
     }
 
     /// `getConflictParsed`. `Ok(None)` when there is no entry or it still has
@@ -104,7 +108,15 @@ impl MergeConfig {
 
     /// The entry of a component, by id without version.
     pub fn component(&self, id: &str) -> io::Result<Option<MergeConfigComponent>> {
-        let Some(Value::Object(mut config)) = self.parsed(id)? else { return Ok(None) };
+        let combined = match (self.parsed(id)?, self.unmerged.get(id).cloned()) {
+            (None, None) => return Ok(None),
+            (Some(value), None) | (None, Some(value)) => value,
+            (Some(mut left), Some(right)) => {
+                merge_values(&mut left, &right);
+                left
+            }
+        };
+        let Value::Object(mut config) = combined else { return Ok(None) };
         adjust_envs(&mut config);
         let auto_deps = extract_auto_deps(&mut config);
         Ok(Some(MergeConfigComponent { config, auto_deps }))
@@ -128,6 +140,59 @@ impl MergeConfig {
             }
         }
         Ok(Some(policy))
+    }
+}
+
+fn load_unmerged(scope: &Path) -> io::Result<IndexMap<String, Value>> {
+    let text = match fs::read_to_string(scope.join("unmerged.json")) {
+        Ok(text) => text,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(IndexMap::new()),
+        Err(error) => return Err(error),
+    };
+    let Value::Array(entries) = serde_json::from_str(&text)
+        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?
+    else {
+        return Ok(IndexMap::new());
+    };
+    let mut unmerged = IndexMap::new();
+    for entry in entries {
+        let Some(id) = unmerged_id(&entry["id"]) else { continue };
+        if let Some(config) = entry.get("mergedConfig").filter(|config| config.is_object()) {
+            unmerged.insert(id, config.clone());
+        }
+    }
+    Ok(unmerged)
+}
+
+fn unmerged_id(id: &Value) -> Option<String> {
+    let name = id
+        .get("name")?
+        .as_str()
+        .filter(|name| !name.is_empty())?;
+    match id
+        .get("scope")
+        .and_then(Value::as_str)
+        .filter(|scope| !scope.is_empty())
+    {
+        Some(scope) => Some(format!("{scope}/{name}")),
+        None => Some(name.to_owned()),
+    }
+}
+
+fn merge_values(target: &mut Value, incoming: &Value) {
+    if let (Some(left), Some(right)) = (target.as_array_mut(), incoming.as_array()) {
+        left.extend(right.iter().cloned());
+    } else if let (Some(left), Some(right)) = (target.as_object_mut(), incoming.as_object()) {
+        for (name, value) in right {
+            match left.get_mut(name) {
+                Some(existing) => merge_values(existing, value),
+                None => {
+                    left.insert(name.clone(), value.clone());
+                }
+            }
+        }
+    } else {
+        *target = incoming.clone();
     }
 }
 

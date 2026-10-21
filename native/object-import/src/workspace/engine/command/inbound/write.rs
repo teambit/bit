@@ -74,7 +74,7 @@ pub(super) fn prepare(
     let mut bitmap = crate::recovery::jsonc::parse(&bitmap_before)?;
     let rows = bitmap.as_object_mut().ok_or_else(|| invalid("inbound bitmap object"))?;
     let (schema, lane) = metadata::bitmap_metadata(rows)?;
-    let changes = prepare_targets(root, targets, &template, import, rows, options)?;
+    let changes = prepare_targets(root, targets, &template, import, rows, options, lane.as_ref())?;
     // `sortObjectByKeys`: `Object.keys(...).sort()`, by UTF-16 code units.
     rows.sort_keys();
     rows.insert("$schema-version".into(), schema);
@@ -108,6 +108,7 @@ fn prepare_targets(
     import: &PreparedImport,
     rows: &mut Map<String, Value>,
     options: Options<'_>,
+    lane: Option<&Value>,
 ) -> io::Result<WorkspaceFiles> {
     let context = Planning {
         root,
@@ -115,6 +116,7 @@ fn prepare_targets(
         override_existing: options.override_existing,
         merge_strategy: options.merge_strategy,
         track_only: options.track_only,
+        lane,
     };
     let mut directories = target_directories(template, targets, rows, options.path)?;
     let mut changes = WorkspaceFiles::default();
@@ -173,6 +175,7 @@ struct Planning<'a> {
     override_existing: bool,
     merge_strategy: Option<&'a str>,
     track_only: bool,
+    lane: Option<&'a Value>,
 }
 
 fn plan_target(
@@ -206,6 +209,7 @@ fn plan_target(
                 target,
                 imported: context.imported,
                 row: &row,
+                lane: context.lane,
                 resolution: existing::Resolution {
                     override_existing: context.override_existing,
                     merge_strategy: context.merge_strategy,
@@ -232,7 +236,8 @@ fn plan_new_target(
     {
         changes.empty_directories.push(empty);
     }
-    let files = prepare_target(context.root, directory, target, context.imported, rows)?;
+    let files =
+        prepare_target(context.root, directory, target, context.imported, rows, context.lane)?;
     if context.track_only {
         return Ok(());
     }
@@ -245,6 +250,7 @@ fn prepare_target(
     target: &Target,
     import: &PreparedImport,
     rows: &mut Map<String, Value>,
+    lane: Option<&Value>,
 ) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
     let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound workspace scope"))?;
     unique_name(rows, &target.name)?;
@@ -253,6 +259,9 @@ fn prepare_target(
     let version = import.overlay
         .read(&hash, "Version")?
         .ok_or_else(|| invalid("inbound imported Version"))?;
+    if requires_canonical_history_check(lane, target, &model, &hash, version) {
+        return Err(invalid("inbound lane snap requires canonical history check"));
+    }
     crate::history_query::validate_version(version)?;
     let main = version["mainFile"].as_str().ok_or_else(|| invalid("inbound main file"))?;
     crate::checkout::plan::relative_path(main)?;
@@ -263,6 +272,20 @@ fn prepare_target(
         "version":version_name,"mainFile":main,"rootDir":directory}),
     );
     Ok(files)
+}
+
+pub(super) fn requires_canonical_history_check(
+    lane: Option<&Value>,
+    target: &Target,
+    model: &Value,
+    hash: &str,
+    version: &Value,
+) -> bool {
+    lane.is_none()
+        && target.version.len() == 40
+        && target.version.bytes().all(|b| b.is_ascii_hexdigit())
+        && (model["head"].as_str().is_none()
+            || (Some(hash) != model["head"].as_str() && version["origin"]["lane"].is_object()))
 }
 
 fn new_directory(

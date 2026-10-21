@@ -28,12 +28,16 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
     };
     match argv.get(1).copied() {
+        None => list::run_default(args, &argv[1..]),
+        Some(flag) if flag.starts_with('-') => list::run_default(args, &argv[1..]),
         Some("list") => list::run(args, &argv[2..]),
         Some("current") => current::current(args, &argv[2..]),
         Some("create") => create::run(args, &argv[2..]),
         Some("alias") => alias::run(args, &argv[2..]),
         Some("rename") => manage::rename(args, &argv[2..]),
         Some("change-scope") => manage::change_scope(args, &argv[2..]),
+        Some("remove-readme") => manage::remove_readme(args, &argv[2..]),
+        Some("remove-comp" | "rc") => manage::remove_comp(args, &argv[2..]),
         Some("history") => history::run(args, &argv[2..]),
         Some("checkout" | "revert") => restoration::run(args, &argv),
         Some("show") => show::show(args, &argv[2..]),

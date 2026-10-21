@@ -15,7 +15,7 @@ pub(super) fn prepare(
     snapshots: &mut snapshots::State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<Value> {
-    validate_capture(retained, &input)?;
+    validate_current(retained, &input.current, input.components.len())?;
     let captured = capture_for_snapshot(retained, input.current.clone(), snapshots, pool)?;
     let Selection { identities: selected, load_count } =
         select_current(retained, &captured, &input, snapshots)?;
@@ -254,25 +254,17 @@ fn progress(retained: &Retained, selected: usize, auto_loaded: bool) -> Value {
 }
 
 fn select(retained: &Retained, input: &Plan) -> io::Result<Vec<String>> {
-    let targets = &retained.record.targets;
-    let selected = if retained.record.request.options.pattern.is_some() {
-        selection::select(
-            targets,
-            &retained.pending,
-            Some(input.selected_ids.as_deref().ok_or_else(|| invalid("resolve pattern receipt"))?),
-        )?
-    } else {
-        if input.selected_ids.is_some() {
-            return Err(invalid("resolve unexpected selection receipt"));
-        }
-        retained.selected.clone()
-    };
-    Ok(selected)
+    if retained.record.request.options.pattern.is_some() {
+        let receipt =
+            input.selected_ids.as_deref().ok_or_else(|| invalid("resolve pattern receipt"))?;
+        return selection::select(&retained.record.targets, &retained.pending, Some(receipt));
+    }
+    if input.selected_ids.is_some() {
+        return Err(invalid("resolve unexpected selection receipt"));
+    }
+    Ok(retained.selected.clone())
 }
 
-fn validate_capture(retained: &Retained, input: &Plan) -> io::Result<()> {
-    validate_current(retained, &input.current, input.components.len())
-}
 pub(super) fn validate_current(
     retained: &Retained,
     current: &[Value],
@@ -318,11 +310,7 @@ pub(super) fn material(
     let version =
         projection::version(&stored, &current.target.current, &current.metadata, receipt)?;
     let head = current_head(retained, identity, &model)?;
-    if reference != head
-        && !retained.snap.as_ref().is_some_and(|options| options.policy.ignore_newest_version)
-    {
-        return Err(invalid("resolve detached component"));
-    }
+    let pending = ensure_attached_or_unrelated(retained, identity, &reference, &head)?;
     Ok(Material {
         identity: identity.clone(),
         model,
@@ -332,17 +320,35 @@ pub(super) fn material(
             .ok_or_else(|| invalid("resolve files"))?
             .clone(),
         version_state: VersionState { current_head: reference, tagged_version: None },
-        pending: retained.pending
-            .iter()
-            .find(|row| selection::identity(&row["id"]).ok().as_ref() == Some(identity))
-            .cloned(),
+        pending,
         hidden: false,
         participation,
     })
 }
 
+fn ensure_attached_or_unrelated(
+    retained: &Retained,
+    identity: &String,
+    reference: &str,
+    head: &str,
+) -> io::Result<Option<Value>> {
+    let pending = retained.pending
+        .iter()
+        .find(|row| selection::identity(&row["id"]).ok().as_ref() == Some(identity))
+        .cloned();
+    if reference != head
+        && pending
+            .as_ref()
+            .is_none_or(|row| row["unrelated"].is_null())
+        && !retained.snap.as_ref().is_some_and(|options| options.policy.ignore_newest_version)
+    {
+        return Err(invalid("resolve detached component"));
+    }
+    Ok(pending)
+}
+
 fn current_head(retained: &Retained, identity: &str, model: &Value) -> io::Result<String> {
-    let head = retained.record.context["lane"]["targets"]
+    retained.record.context["lane"]["targets"]
         .as_array()
         .and_then(|rows| {
             rows.iter()
@@ -350,9 +356,8 @@ fn current_head(retained: &Retained, identity: &str, model: &Value) -> io::Resul
         })
         .and_then(|row| row["currentHead"].as_str())
         .or_else(|| model["head"].as_str())
-        .ok_or_else(|| invalid("resolve current head"))?
-        .to_owned();
-    Ok(head)
+        .ok_or_else(|| invalid("resolve current head"))
+        .map(str::to_owned)
 }
 
 pub(super) fn preflight(

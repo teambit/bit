@@ -13,8 +13,8 @@ pub(super) fn prepare_history(
     let hash = crate::validate::hexadecimal(&Sha1::digest(
         format!("{scope}/{name}:VersionHistory").as_bytes(),
     ));
-    let bytes = history(dir, scope, name, head, &hash)?;
-    Ok(HistoryBytes { hash, bytes })
+    let (bytes, hashes) = history(dir, scope, name, head, &hash)?;
+    Ok(HistoryBytes { hash, bytes, hashes })
 }
 
 fn history(
@@ -23,7 +23,7 @@ fn history(
     name: &str,
     head: &str,
     history_hash: &str,
-) -> io::Result<Vec<u8>> {
+) -> io::Result<(Vec<u8>, Vec<String>)> {
     let path = dir
         .join(&history_hash[..2])
         .join(&history_hash[2..]);
@@ -38,7 +38,11 @@ fn history(
     let rows =
         value["versions"].as_array_mut().ok_or_else(|| invalid("outbound VersionHistory rows"))?;
     populate(rows, dir, head)?;
-    encode(history_hash, "VersionHistory", &value)
+    let hashes = rows
+        .iter()
+        .filter_map(|row| row["hash"].as_str().map(str::to_owned))
+        .collect();
+    Ok((encode(history_hash, "VersionHistory", &value)?, hashes))
 }
 fn version_row(dir: &Path, hash: &str) -> io::Result<Value> {
     let version = read_object(dir, hash, "Version")?;

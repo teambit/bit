@@ -1,4 +1,6 @@
 //! Publish all original-scope export batches locally after remote `ExportPersist`.
+pub(super) use reconcile::present as reconcile_present;
+
 mod reconcile;
 mod removed;
 
@@ -43,6 +45,7 @@ pub(super) struct Prepared {
     bitmap: super::super::bitmap::Prepared,
     file_id: String,
     expected_ids: HashSet<String>,
+    known_ids: HashSet<String>,
 }
 
 pub(super) fn prepare(
@@ -63,16 +66,10 @@ pub(super) fn prepare(
         .collect::<io::Result<BTreeMap<_, _>>>()?;
     let output = prepare_output(input, selected, &preimage, refs)?;
     let expected_ids = expected_ids(selected)?;
+    let known_ids = collect_known_ids(&expected_ids, selected);
     let components = selected
         .iter()
-        .map(|item| Component {
-            unchanged: item.labels.is_empty(),
-            model_hash: item.model.hash.clone(),
-            model_before: item.model.before.clone(),
-            model_after: item.model.after.clone(),
-            history_hash: item.history.hash.clone(),
-            history: item.history.bytes.clone(),
-        })
+        .map(Component::from_selected)
         .collect();
     Ok(Prepared {
         root: input.root.clone(),
@@ -82,7 +79,35 @@ pub(super) fn prepare(
         bitmap,
         file_id: input.transport.bitmap_history_file_id.clone(),
         expected_ids,
+        known_ids,
     })
+}
+
+impl Component {
+    fn from_selected(item: &Selected) -> Self {
+        Self {
+            unchanged: item.labels.is_empty(),
+            model_hash: item.model.hash.clone(),
+            model_before: item.model.before.clone(),
+            model_after: item.model.after.clone(),
+            history_hash: item.history.hash.clone(),
+            history: item.history.bytes.clone(),
+        }
+    }
+}
+
+fn collect_known_ids(expected_ids: &HashSet<String>, selected: &[Selected]) -> HashSet<String> {
+    let mut known_ids = expected_ids.clone();
+    known_ids.extend(
+        selected
+            .iter()
+            .flat_map(|item| {
+                item.history.hashes
+                    .iter()
+                    .map(|hash| format!("{}/{}@{hash}", item.scope, item.name))
+            }),
+    );
+    known_ids
 }
 
 fn prepare_output(
@@ -239,7 +264,7 @@ impl Prepared {
         if ids.len() != exported_ids.len()
             || exported_ids
                 .iter()
-                .any(|id| !self.expected_ids.contains(id))
+                .any(|id| !self.known_ids.contains(id))
         {
             return Err(invalid("outbound remote acknowledgement"));
         }

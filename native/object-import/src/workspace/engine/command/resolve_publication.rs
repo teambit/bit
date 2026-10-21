@@ -88,6 +88,18 @@ fn resolve_markers(value: &mut Value, heads: &HashMap<&str, &str>) -> io::Result
 }
 
 fn resolve_field(key: &str, value: &mut Value, heads: &HashMap<&str, &str>) -> io::Result<()> {
+    if key == "id"
+        && let Some((identity, suffix)) = value
+            .as_str()
+            .and_then(|text| text.rsplit_once('@'))
+        && suffix.strip_prefix("__bit_pending_snapshot__:") == Some(identity)
+    {
+        *value = json!(format!(
+            "{identity}@{}",
+            heads.get(identity).ok_or_else(|| invalid("resolve preflight batch identity"))?
+        ));
+        return Ok(());
+    }
     if key != "version" {
         return resolve_markers(value, heads);
     }

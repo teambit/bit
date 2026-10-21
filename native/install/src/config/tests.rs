@@ -205,6 +205,39 @@ fn merge_config_entries() {
 }
 
 #[test]
+fn merge_config_load_combines_unmerged_json() {
+    let dir = tempfile::tempdir().unwrap();
+    fs::create_dir_all(dir.path().join(".bit")).unwrap();
+    fs::write(
+        dir.path().join(".bit/unmerged.json"),
+        serde_json::to_string(&json!([
+            {
+                "id": { "scope": "org.s", "name": "comp" },
+                "mergedConfig": {
+                    "teambit.dependencies/dependency-resolver": {
+                        "policy": {
+                            "dependencies": [{ "name": "is-positive", "version": "3.1.0", "force": false }]
+                        }
+                    }
+                }
+            }
+        ]))
+        .unwrap(),
+    )
+    .unwrap();
+    let config = MergeConfig::load(dir.path()).unwrap();
+    assert!(!config.is_empty());
+    let component = config
+        .component("org.s/comp")
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        component.auto_deps["dependencies"],
+        json!([{ "name": "is-positive", "version": "3.1.0", "force": false }]),
+    );
+}
+
+#[test]
 fn effective_layer_order_filters_unsupported_globals_before_scope_overrides() {
     let global = GlobalConfig::from_iter([
         ("first".to_owned(), json!(["unsupported"])),

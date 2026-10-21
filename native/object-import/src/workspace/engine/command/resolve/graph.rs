@@ -63,7 +63,7 @@ fn traverse(
         if graph.len() >= 16384 || seen.len() >= 4096 {
             return Err(invalid("resolve graph budget"));
         }
-        let identity = project_target(&mut edge, versions)?;
+        let identity = project_target(&mut edge, versions, saved)?;
         let target = edge["target"].clone();
         retain_edge(&mut graph, edge);
         if !seen.insert(key(&target)?) {
@@ -78,10 +78,14 @@ fn traverse(
     Ok((flattened, graph))
 }
 
-fn project_target(edge: &mut Value, versions: &HashMap<String, Value>) -> io::Result<String> {
+fn project_target(
+    edge: &mut Value,
+    versions: &HashMap<String, Value>,
+    saved: &saved::Graph,
+) -> io::Result<String> {
     let identity = super::selection::identity(&edge["target"])?;
     if versions.contains_key(&identity) {
-        if !is_pending(&edge["source"]) {
+        if !is_pending(&edge["source"]) && saved.contains_key(&key(&edge["source"])?) {
             return Err(invalid("resolve retained graph reaches prior batch version"));
         }
         edge["target"] = pending(&identity)?;

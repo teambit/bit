@@ -40,7 +40,11 @@ fn stale_discovery_prevents_history_publication_even_without_transfer_batches() 
         fs::write(&path, b"original").unwrap();
         let mut prepared = Prepared {
             root: scratch.0.clone(),
-            histories: vec![HistoryBytes { hash: "a".repeat(40), bytes: b"new-history".to_vec() }],
+            histories: vec![HistoryBytes {
+                hash: "a".repeat(40),
+                bytes: b"new-history".to_vec(),
+                hashes: Vec::new(),
+            }],
             ..Prepared::default()
         };
         prepared.capture(path.clone()).unwrap();

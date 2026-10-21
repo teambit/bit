@@ -151,6 +151,11 @@ async function snapshotPackageManifests({ plans }) {
   // Canonical snapshot publication advances the in-memory map before linking;
   // its disk bitmap is committed only after every package callback succeeds.
   for(const plan of plans)workspace.consumer.bitMap.updateComponentId(ComponentID.fromObject(plan.manifest.componentId),undefined,undefined,true);
+  if(!snapshotBuiltComponents.length){
+    scope.legacyScope.objects.clearObjectsFromCache();
+    scope.componentLoader.clearCache();
+    workspace.clearAllComponentsCache();
+  }
   const result=[];
   for(const plan of plans) {
     const id=ComponentID.fromObject(plan.manifest.componentId);

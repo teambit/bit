@@ -12,6 +12,7 @@ pub(super) struct Input<'a> {
     pub(super) target: &'a Target,
     pub(super) imported: &'a PreparedImport,
     pub(super) row: &'a Value,
+    pub(super) lane: Option<&'a Value>,
     pub(super) resolution: Resolution<'a>,
 }
 
@@ -43,6 +44,10 @@ pub(super) fn prepare(
             .ok_or_else(|| invalid("inbound existing Version"))?;
         &local
     };
+    if super::requires_canonical_history_check(input.lane, input.target, model.as_ref(), &hash, new)
+    {
+        return Err(invalid("inbound lane snap requires canonical history check"));
+    }
     let main = validate_new(new)?;
     if !input.resolution.track_only {
         plan_files(input, &old, new, &name, changes)?;

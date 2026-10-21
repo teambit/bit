@@ -20,14 +20,16 @@ use std::{
 };
 
 pub(super) fn run(
-    root: &Path,
-    bare: bool,
+    scope_root: &super::super::scope_root::ScopeRoot,
     args: &[OsString],
+    command: &'static str,
     scope: &str,
     json: bool,
     details: bool,
     merged: Option<bool>,
 ) -> io::Result<Outcome> {
+    let root = &scope_root.path;
+    let bare = scope_root.bare;
     // Published LanesMain has no workspace consumer in a bare scope, so
     // getRemoteByName resolves against global remotes only.
     let mut session = if bare { Session::new(None, args) } else { Session::new(Some(root), args) };
@@ -48,9 +50,9 @@ pub(super) fn run(
     let text = text_report(&lanes, &current.0, raw.as_deref(), merged, details, args);
     let report = Report { data: text, code: 0, details: None };
     if bare {
-        workspace_command::execute_with_scope(root, args, "list", &report)
+        workspace_command::execute_with_scope(root, args, command, &report)
     } else {
-        workspace_command::execute_with(root, args, "list", &report, |_| Ok(()))
+        workspace_command::execute_with(root, args, command, &report, |_| Ok(()))
     }
 }
 

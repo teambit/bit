@@ -43,7 +43,8 @@ impl Prepared {
         self.bitmap.select_export_promotions(&tracked)?;
         self.output.staged_config =
             prepare_staged_config_ids(&self.preimage.staged_config, &promotions, true)?;
-        self.expected_ids = acknowledged;
+        self.expected_ids.clone_from(&acknowledged);
+        self.known_ids = acknowledged;
         Ok(())
     }
 
@@ -83,7 +84,7 @@ impl Prepared {
     }
 }
 
-pub(super) fn present(bitmap: &Value, scope: &str, name: &str) -> bool {
+pub(in super::super) fn present(bitmap: &Value, scope: &str, name: &str) -> bool {
     bitmap
         .as_object()
         .is_some_and(|rows| {

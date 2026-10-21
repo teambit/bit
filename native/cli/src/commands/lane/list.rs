@@ -22,7 +22,7 @@ use crate::{
     history::History,
     native::Outcome,
 };
-use metadata::{readme, readme_report, updates};
+use metadata::{readme, report, report_others, updates};
 use serde_json::{Map, Value, json};
 use std::{
     ffi::OsString,
@@ -103,34 +103,53 @@ impl LaneData {
 
 /// `args` starts after `list`.
 pub(super) fn run(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> {
+    run_with_command(args, list_args, "list")
+}
+
+/// `bit lane` without a subcommand delegates `report()` to `LaneListCmd` (`LaneCmd` has no `json()`).
+pub(super) fn run_default(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> {
+    run_with_command(args, list_args, "lane")
+}
+
+fn run_with_command(
+    args: &[OsString],
+    list_args: &[&str],
+    command: &'static str,
+) -> io::Result<Outcome> {
     let Some((json, details, merged, remote)) = parse(list_args) else {
         return Ok(Outcome::Declined("lane list flags outside the native grammar".to_string()));
     };
+    if command == "lane" && json {
+        return Ok(
+            Outcome::Declined("lane without subcommand does not implement json".to_string()),
+        );
+    }
     let scope_root = match super::scope_root::discover() {
         Ok(Some(scope_root)) => scope_root,
         Ok(None) => return Ok(Outcome::Declined("not inside a scope".to_string())),
         Err(error) => return Ok(Outcome::Declined(format!("lane list scope: {error}"))),
     };
-    let root = scope_root.path;
     if let Some(scope) = remote {
-        return remote::run(&root, scope_root.bare, args, scope, json, details, merged);
+        return remote::run(&scope_root, args, command, scope, json, details, merged);
     }
-    let selection = match read_for_scope(&root, scope_root.bare, merged.is_some()) {
+    let selection = match read_for_scope(&scope_root.path, scope_root.bare, merged.is_some()) {
         Ok(read) => read,
         Err(error) => return Ok(Outcome::Declined(format!("lane list: {error}"))),
     };
-    display_local(&root, scope_root.bare, args, json, details, merged, selection)
+    display_local(&scope_root, args, command, json, details, merged, selection)
 }
 
 fn display_local(
-    root: &Path,
-    bare: bool,
+    scope_root: &super::scope_root::ScopeRoot,
     args: &[OsString],
+    command: &'static str,
     json: bool,
     details: bool,
     merged: Option<bool>,
     (lanes, current): (Vec<LaneData>, (Value, String)),
 ) -> io::Result<Outcome> {
+    let root = &scope_root.path;
+    let bare = scope_root.bare;
     if json {
         return emit_json(root, bare, args, &lanes, &current.1);
     }
@@ -143,9 +162,9 @@ fn display_local(
         details: None,
     };
     if bare {
-        workspace_command::execute_with_scope(root, args, "list", &report)
+        workspace_command::execute_with_scope(root, args, command, &report)
     } else {
-        workspace_command::execute_with(root, args, "list", &report, |_| Ok(()))
+        workspace_command::execute_with(root, args, command, &report, |_| Ok(()))
     }
 }
 
@@ -377,75 +396,6 @@ fn main_components(
         components.push(json!({"id": format!("{}@{label}", entry.identity), "head": label}));
     }
     Ok(components)
-}
-
-/// `LaneListCmd.report` for compact and detailed lane lists.
-fn report(lanes: &[LaneData], current: &Value, chalk: Chalk, details: bool) -> String {
-    let format = Formatter::new(chalk);
-    let current_lane = lanes
-        .iter()
-        .find(|lane| lane.id == *current);
-    let current_output = report_current(current_lane, current, chalk, details, &format);
-    let others = report_others(lanes, current, chalk, details, &format);
-    let hints = if details {
-        "use --merged and --not-merged to see which of the lanes is fully merged\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'"
-    } else {
-        "use 'bit lane list --details' or 'bit lane show <lane-name>' for more info\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'"
-    };
-    Formatter::join(&[current_output, others, format.hint(hints)])
-}
-
-fn report_current(
-    current_lane: Option<&LaneData>,
-    current: &Value,
-    chalk: Chalk,
-    details: bool,
-    format: &Formatter,
-) -> String {
-    // A current lane missing from the index: `laneIdStr` without an alias.
-    let current_label = current_lane.map_or_else(
-        || {
-            let name = current["name"].as_str().unwrap_or_default();
-            format!("{}/{name}", current["scope"].as_str().unwrap_or_default())
-        },
-        LaneData::label,
-    );
-    let readme = current_lane.map_or_else(String::new, |lane| readme_report(lane, chalk));
-    let current_output = format!("current lane - {}{readme}", chalk.green(&current_label));
-    if !details || current_lane.is_none() {
-        return current_output;
-    }
-    let components = current_lane.map(|lane| components_report(lane, format)).unwrap_or_default();
-    format!("{current_output}\n{components}")
-}
-
-fn report_others(
-    lanes: &[LaneData],
-    current: &Value,
-    chalk: Chalk,
-    details: bool,
-    format: &Formatter,
-) -> String {
-    let items: Vec<String> = lanes
-        .iter()
-        .filter(|lane| lane.id != *current)
-        .map(|lane| {
-            let readme = readme_report(lane, chalk);
-            if details {
-                return format!(
-                    "> {}{readme}\n{}",
-                    chalk.bold(&lane.label()),
-                    components_report(lane, format),
-                );
-            }
-            format.item(&format!(
-                "{} ({} components){readme}",
-                chalk.green(&lane.label()),
-                lane.components.len(),
-            ))
-        })
-        .collect();
-    if details { items.join("\n\n") } else { format.section("available lanes", "", &items) }
 }
 
 #[cfg(test)]

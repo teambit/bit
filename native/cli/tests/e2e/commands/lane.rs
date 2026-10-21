@@ -1089,3 +1089,54 @@ fn create_cross_scope_fork_matches_node() {
         Helper::cmd_in_with(&node_root, "status --json", &[("BIT_NATIVE", OsStr::new("off"))]);
     assert_eq!(parse(&native_status.stdout), parse(&node_status.stdout));
 }
+
+#[test]
+fn bare_lane_and_component_issues_and_remove_comp_and_remove_readme_match_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    let node_root = helper.clone_workspace();
+    for cmd in [
+        "component-issues",
+        "component-issues --json",
+        "lane",
+        "lane -d",
+        "lane --merged",
+        "lane --not-merged",
+    ] {
+        let node = Helper::cmd_in_with(&node_root, cmd, &[("BIT_NATIVE", OsStr::new("off"))]);
+        let native = helper.native_run(cmd);
+        assert!(native.native, "{cmd}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{cmd}");
+        if cmd.ends_with("--json") {
+            assert_eq!(parse(&native.stdout), parse(&node.stdout), "{cmd}");
+        } else {
+            assert_eq!(native.stdout, node.stdout, "{cmd}");
+        }
+        assert_eq!(native.stderr, node.stderr, "{cmd}");
+    }
+
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    remote::publish(&helper);
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message lane");
+
+    let node_root2 = helper.clone_workspace();
+    let cmd_rc = "lane remove-comp bar/foo --workspace-only";
+    let node_rc = Helper::cmd_in_with(&node_root2, cmd_rc, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native_rc = helper.native_run(cmd_rc);
+    assert!(native_rc.native, "{}", native_rc.trace);
+    assert_eq!(native_rc.status.code(), node_rc.status.code());
+    assert_eq!(native_rc.stdout, node_rc.stdout);
+    assert_eq!(native_rc.stderr, node_rc.stderr);
+
+    let node_root3 = helper.clone_workspace();
+    let cmd_rr = "lane remove-readme";
+    let node_rr = Helper::cmd_in_with(&node_root3, cmd_rr, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native_rr = helper.native_run(cmd_rr);
+    assert!(native_rr.native, "{}", native_rr.trace);
+    assert_eq!(native_rr.status.code(), node_rr.status.code());
+    assert_eq!(native_rr.stdout, node_rr.stdout);
+    assert_eq!(native_rr.stderr, node_rr.stderr);
+}

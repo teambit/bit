@@ -123,28 +123,56 @@ fn select(
         let mut target = root.clone();
         let scope = root.scope.as_deref().ok_or_else(|| invalid("inbound lane target scope"))?;
         let key = format!("{scope}/{}", root.name);
-        if let Some(head) = visible.get(&key)
-            && (target.version == "latest" || target.version == *head)
-        {
-            let head_changed = bitmap
-                .get(&target.name)
-                .is_some_and(|row| row["version"] != *head);
-            if head_changed
-                && !input.options.resolution.override_existing
-                && input.options.resolution.merge_strategy.is_none()
-            {
-                return Err(invalid("inbound lane head update needs canonical conflict handling"));
-            }
+        if let Some(head) = visible_lane_head(visible, &key, &target.version) {
+            let head_changed = check_head_update(input, bitmap, &target.name, head)?;
             changed += usize::from(head_changed);
             target.version.clone_from(head);
             selected.push(target);
         } else {
+            if input.ids
+                .iter()
+                .any(|id| id.contains('@'))
+                && target.version.len() == 40
+                && target.version.bytes().all(|b| b.is_ascii_hexdigit())
+            {
+                return Err(invalid(
+                    "inbound explicit version on lane requires canonical history check",
+                ));
+            }
             main.push(key);
             main_targets.push(target);
         }
     }
     selected.extend(main_targets);
     Ok((selected, main, changed))
+}
+
+fn visible_lane_head<'a>(
+    visible: &'a HashMap<String, String>,
+    key: &str,
+    version: &str,
+) -> Option<&'a String> {
+    visible
+        .get(key)
+        .filter(|head| version == "latest" || version == head.as_str())
+}
+
+fn check_head_update(
+    input: &Prepare,
+    bitmap: &serde_json::Value,
+    name: &str,
+    head: &str,
+) -> io::Result<bool> {
+    let head_changed = bitmap
+        .get(name)
+        .is_some_and(|row| row["version"] != head);
+    if head_changed
+        && !input.options.resolution.override_existing
+        && input.options.resolution.merge_strategy.is_none()
+    {
+        return Err(invalid("inbound lane head update needs canonical conflict handling"));
+    }
+    Ok(head_changed)
 }
 
 fn progress(

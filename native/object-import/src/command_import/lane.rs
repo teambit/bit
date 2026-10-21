@@ -121,7 +121,7 @@ impl PreparedImport {
         {
             return Ok(old);
         }
-        let incoming = self.fetch_lane_contents(id)?;
+        let incoming = self.fetch_lane_components_at_hash(id, None)?;
         self.cache.fetched_lane = Some(incoming.clone());
         if old.is_none() {
             let previous_id = index_rows(&self.writes.index)?

@@ -139,7 +139,8 @@ fn outdated(
         .ok_or_else(|| invalid("status head"))?;
     let local = label(model, head)?;
     // setDivergeData retains the workspace-source distance established by staging.
-    let remote_ahead = !refs(&history["status"], "targetOnly")?.is_empty();
+    let remote_ahead =
+        history["remoteHead"].is_string() && !refs(&history["status"], "targetOnly")?.is_empty();
     let latest = if remote_ahead {
         label(model, history["remoteHead"].as_str().ok_or_else(|| invalid("status remote head"))?)?
     } else {

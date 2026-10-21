@@ -80,9 +80,9 @@ fn compare_lane(
 ) -> io::Result<(Value, Option<Value>)> {
     let [head, remote] = main;
     let lane_head = lane.heads.get(identity).ok_or_else(|| invalid("status lane head"))?;
-    let lane_remote = lane.remotes
-        .get(identity)
-        .map(String::as_str)
+    let merge_remote = lane.own_remotes.get(identity).map(String::as_str);
+    let lane_remote = merge_remote
+        .or_else(|| lane.remotes.get(identity).map(String::as_str))
         .or(remote)
         .or(head);
     let workspace = targets
@@ -99,6 +99,10 @@ fn compare_lane(
     let (mut result, pending) =
         distances(reader, model, identity, [Some(lane_head), Some(lane_head), lane_remote], stage)?;
     filter_lean_lane_refs(reader, &mut result["status"]["sourceOnly"], lane_head)?;
+    if merge_remote.is_none() {
+        result["merge"] = json!({"sourceOnly":[],"targetOnly":[],"noCommon":false});
+        result["remoteHead"] = Value::Null;
+    }
     result["laneHead"] = json!(lane_head);
     result["mainHead"] = json!(head);
     Ok((result, pending))

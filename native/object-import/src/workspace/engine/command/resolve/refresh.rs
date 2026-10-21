@@ -111,6 +111,9 @@ fn refresh(
         retained.materials.push(updated);
     }
     let mut materials = std::mem::take(&mut retained.materials);
+    if retained.tag.is_some() && !retained.tag.as_ref().is_some_and(|options| options.soft) {
+        super::tag_versions::update_ranges(&mut materials)?;
+    }
     super::root::provenance(retained, &mut materials)?;
     let checked = planning::preflight(retained, &mut materials, snapshots);
     retained.materials = materials;

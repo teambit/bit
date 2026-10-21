@@ -51,10 +51,32 @@ pub(super) fn candidates(
         // ComponentsList emits new IDs before modified IDs; scalar allocation follows this order.
         rows.sort_by_key(|current| !current.target.version.is_empty());
     }
-    Ok(rows
+    let mut candidates: Vec<_> = rows
         .into_iter()
         .map(|current| current.target.identity.clone())
-        .collect())
+        .collect();
+    append_pending(retained, captured, &mut candidates)?;
+    Ok(candidates)
+}
+
+fn append_pending(
+    retained: &Retained,
+    captured: &[capture::Captured],
+    candidates: &mut Vec<String>,
+) -> io::Result<()> {
+    for pending in &retained.pending {
+        let identity = selection::identity(&pending["id"])?;
+        if !captured
+            .iter()
+            .any(|current| current.target.identity == identity)
+        {
+            return Err(invalid("snap pending target outside capture"));
+        }
+        if !local_only(retained, &identity) && !candidates.contains(&identity) {
+            candidates.push(identity);
+        }
+    }
+    Ok(())
 }
 
 fn filter_pattern(

@@ -79,10 +79,14 @@ fn external(
         if seen.len() > 4096 {
             return Err(invalid("issue graph budget"));
         }
-        let edges = graph
-            .get(&identity)
-            .ok_or_else(|| invalid("issue graph unproven external adjacency"))?;
-        absent_model(&identity, repository)?;
+        let owned_edges;
+        let edges = if let Some(edges) = graph.get(&identity) {
+            absent_or_ordinary_model(&identity, repository)?;
+            edges
+        } else {
+            owned_edges = load_external_edges(&identity, repository)?;
+            &owned_edges
+        };
         let dependencies = edges
             .iter()
             .map(|edge| graph::key(&edge["target"]))
@@ -93,7 +97,32 @@ fn external(
     Ok(json!({"external":output}))
 }
 
-fn absent_model(identity: &str, repository: &mut Repository) -> io::Result<()> {
+fn load_external_edges(identity: &str, repository: &mut Repository) -> io::Result<Vec<Value>> {
+    let (name, version) =
+        identity.rsplit_once('@').ok_or_else(|| invalid("issue external version"))?;
+    if version.is_empty() {
+        return Err(invalid("issue external version"));
+    }
+    let (scope, component) =
+        name.split_once('/').ok_or_else(|| invalid("issue external identity"))?;
+    let source = json!({"scope":scope,"name":component,"version":version});
+    selection::identity(&source)?;
+    let model = repository
+        .read(&crate::workspace::engine::hash(name.as_bytes()), "Component")
+        .map_err(|_| invalid("issue graph unproven external adjacency"))?;
+    validate_ordinary_model(&model, repository)?;
+    let reference = if crate::merge_history::hash(version).is_ok() {
+        version.to_owned()
+    } else {
+        crate::workspace::engine::status_models::versions::reference(&model, version)?
+    };
+    let version_obj = repository.read(&reference, "Version")?;
+    validate_ordinary_version(&version_obj)?;
+    let projected = crate::workspace::engine::status_models::harmony::project(&version_obj)?;
+    graph::edges(&source, &projected)
+}
+
+fn absent_or_ordinary_model(identity: &str, repository: &mut Repository) -> io::Result<()> {
     let (name, version) =
         identity.rsplit_once('@').ok_or_else(|| invalid("issue external version"))?;
     if version.is_empty() {
@@ -105,8 +134,38 @@ fn absent_model(identity: &str, repository: &mut Repository) -> io::Result<()> {
     match repository.read(&crate::workspace::engine::hash(name.as_bytes()), "Component") {
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
         Err(error) => Err(error),
-        Ok(_) => Err(invalid("issue external model requires canonical callbacks")),
+        Ok(model) => validate_ordinary_model(&model, repository),
     }
+}
+
+fn validate_ordinary_model(model: &Value, repository: &mut Repository) -> io::Result<()> {
+    if model["deprecated"] == true {
+        return Err(invalid("issue external model requires canonical callbacks"));
+    }
+    if let Some(head) = model["head"].as_str() {
+        let head_version = repository.read(head, "Version")?;
+        validate_ordinary_version(&head_version)?;
+    }
+    Ok(())
+}
+
+fn validate_ordinary_version(version: &Value) -> io::Result<()> {
+    if version["extensions"]
+        .as_array()
+        .is_some_and(|extensions| {
+            extensions
+                .iter()
+                .any(|extension| {
+                    matches!(
+                        extension["name"].as_str(),
+                        Some("teambit.component/deprecation" | "teambit.component/remove"),
+                    )
+                })
+        })
+    {
+        return Err(invalid("issue external model requires canonical callbacks"));
+    }
+    Ok(())
 }
 
 #[cfg(test)]

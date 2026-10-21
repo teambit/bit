@@ -82,6 +82,11 @@ impl Chalk {
         self.apply(&[BOLD, WHITE], text)
     }
 
+    /// `chalk.yellow.bold`.
+    pub fn yellow_bold(self, text: &str) -> String {
+        self.apply(&[YELLOW, BOLD], text)
+    }
+
     /// `applyStyle` for a chain of styles, outermost first: reopen each style
     /// after its existing close codes (innermost first), close and reopen
     /// around every line break.

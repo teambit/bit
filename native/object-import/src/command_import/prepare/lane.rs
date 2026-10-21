@@ -111,10 +111,6 @@ impl PreparedImport {
         receive(self, &directory, &target, &model, head, true)?;
         Ok(())
     }
-    /// Capture a remote Lane and its component closure without publishing either.
-    pub(crate) fn fetch_lane_contents(&mut self, id: &Id) -> io::Result<Record> {
-        self.fetch_lane_contents_at_hash(id, None)
-    }
 }
 
 fn receive_prefer_graph(

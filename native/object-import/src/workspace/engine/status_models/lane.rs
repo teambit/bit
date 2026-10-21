@@ -14,6 +14,7 @@ pub(super) struct Lane {
     pub(super) forked_from: Option<String>,
     pub(super) update_dependents: Vec<String>,
     pub(super) heads: HashMap<String, String>,
+    pub(super) own_remotes: HashMap<String, String>,
     pub(super) remotes: HashMap<String, String>,
 }
 
@@ -31,6 +32,8 @@ pub(super) fn read(root: &Path, reader: &Reader<'_>, id: &str) -> io::Result<Opt
             return Err(invalid("status duplicate lane update-dependent"));
         }
     }
+    let own_remotes =
+        if lane["isNew"] == true { HashMap::new() } else { remote(root, scope, name)? };
     let remotes = remote_with_parent(root, scope, name, forked_from.as_deref())?;
     Ok(Some(Lane {
         scope: scope.to_owned(),
@@ -41,6 +44,7 @@ pub(super) fn read(root: &Path, reader: &Reader<'_>, id: &str) -> io::Result<Opt
             .map(|(identity, _)| identity)
             .collect(),
         heads,
+        own_remotes,
         remotes,
     }))
 }

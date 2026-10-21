@@ -15,6 +15,7 @@ fn selected(scope: &str, name: &str, head: &str) -> Selected {
         history: HistoryBytes {
             hash: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".to_owned(),
             bytes: Vec::new(),
+            hashes: Vec::new(),
         },
         head: head.to_owned(),
         labels: vec!["1.0.0".to_owned()],

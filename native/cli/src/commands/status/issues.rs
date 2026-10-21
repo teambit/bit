@@ -108,17 +108,19 @@ pub(super) fn collect_graph(
             .get("workspace")
             .and_then(|workspace| workspace.get(RESOLVER)),
     );
+    let filtered_graph = filter_graph_for_cycles(root, components, graph);
+    let circular = if context["ignoreCircularDependencies"] == true {
+        HashSet::new()
+    } else {
+        cyclic(&filtered_graph)
+    };
     let checks = Checks {
         root,
         context,
         targets: array(context.get("targets"), "targets")?,
         packages: workspace_packages(context, resolver),
         root_components: truthy(resolver.and_then(|resolver| resolver.get("rootComponents"))),
-        circular: if context["ignoreCircularDependencies"] == true {
-            HashSet::new()
-        } else {
-            cyclic(graph)
-        },
+        circular,
         ignored: ignored(context)?,
     };
     components
@@ -126,6 +128,35 @@ pub(super) fn collect_graph(
         .map(|component| checks.issues(component))
         .collect::<io::Result<Vec<_>>>()
         .map(Some)
+}
+
+fn filter_graph_for_cycles(
+    root: &Path,
+    components: &[Component],
+    graph: &[Component],
+) -> Vec<Component> {
+    let workspace_ids: HashSet<&str> = components
+        .iter()
+        .map(|component| component.identity.as_str())
+        .collect();
+    let unresolved: HashSet<&str> = components
+        .iter()
+        .filter(|component| has_unresolved_deps(root, component))
+        .map(|component| component.identity.as_str())
+        .collect();
+    graph
+        .iter()
+        .map(|component| {
+            if workspace_ids.contains(component.identity.as_str()) {
+                return component.clone();
+            }
+            let mut ext = component.clone();
+            ext.dependencies.retain(|dep| {
+                !workspace_ids.contains(dep.as_str()) || unresolved.contains(dep.as_str())
+            });
+            ext
+        })
+        .collect()
 }
 
 /// What the per-component checks share.
@@ -321,4 +352,32 @@ fn set(issues: &mut Vec<(Issue, Value)>, kind: Issue, data: Value) {
         Some((_, existing)) => *existing = data,
         None => issues.push((kind, data)),
     }
+}
+
+fn has_unresolved_deps(root: &Path, component: &Component) -> bool {
+    if !component.package_name.is_empty()
+        && !root
+            .join("node_modules")
+            .join(&component.package_name)
+            .exists()
+    {
+        return true;
+    }
+    component.issues
+        .as_array()
+        .is_some_and(|rows| {
+            rows.iter()
+                .any(|row| {
+                    matches!(
+                        row["type"].as_str(),
+                        Some(
+                            "MissingPackagesDependenciesOnFs"
+                                | "MissingDependenciesOnFs"
+                                | "UntrackedDependencies"
+                                | "ParseErrors"
+                                | "ResolveErrors",
+                        ),
+                    )
+                })
+        })
 }

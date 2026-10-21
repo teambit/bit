@@ -81,9 +81,6 @@ fn read_context_with(
     if let Some(build) = setup.snapshot {
         environments = environments.for_snapshot_build(build);
     }
-    if Environments::require_native_write_for(root, &context, &selected).is_err() {
-        startup.committed = true;
-    }
     bootstrap_owned(&mut environments, root, &context, &selected, startup)?;
     if let Some(build) = setup.snapshot
         && (build || super::snapshot::configured(engine, root, &context)?)
@@ -112,8 +109,17 @@ fn bootstrap_owned(
     targets: &[Value],
     startup: &mut crate::commands::status::autosync::Startup,
 ) -> io::Result<()> {
+    let components = targets
+        .iter()
+        .map(|target| component(root, context, target))
+        .collect::<io::Result<Vec<_>>>()?;
+    let core = core_ids()?;
+    let aspects = root_aspects(context, &core);
+    if components.iter().any(|component| needs_facts(component, &core, &aspects)) {
+        startup.committed = true;
+    }
     environments
-        .bootstrap(root, context, targets)
+        .prime(root, &components, &core, &aspects)
         .inspect_err(|_error| {
             if let Some(host) = &environments.host {
                 startup.stdout.push_str(&host.take_stdout());
@@ -122,20 +128,6 @@ fn bootstrap_owned(
 }
 
 impl Environments {
-    pub(super) fn bootstrap(
-        &mut self,
-        root: &Path,
-        context: &Value,
-        targets: &[Value],
-    ) -> io::Result<()> {
-        let components = targets
-            .iter()
-            .map(|target| component(root, context, target))
-            .collect::<io::Result<Vec<_>>>()?;
-        let core = core_ids()?;
-        self.prime(root, &components, &core, &root_aspects(context, &core))
-    }
-
     pub(super) fn prime(
         &mut self,
         root: &Path,
