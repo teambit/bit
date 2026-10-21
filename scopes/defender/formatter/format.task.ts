@@ -2,6 +2,7 @@ import type { BuildTask, BuiltTaskResult, BuildContext, ComponentResult } from '
 import type { Formatter } from './formatter';
 
 export class FormatTask implements BuildTask {
+  readonly description = 'Checking the formatting of components';
   constructor(
     readonly aspectId: string,
     readonly name = 'format'

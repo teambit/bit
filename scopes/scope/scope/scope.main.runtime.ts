@@ -38,7 +38,7 @@ import type { Scope as LegacyScope, Types } from '@teambit/legacy.scope';
 import { Scope, loadScopeIfExist } from '@teambit/legacy.scope';
 import type { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { ExportPersist, PostSign } from '@teambit/scope.remote-actions';
-import type { DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain, NodeLinker, VariantPolicy } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { Remotes } from '@teambit/scope.remotes';
 import { getScopeRemotes } from '@teambit/scope.remotes';
@@ -327,9 +327,12 @@ export class ScopeMain implements ComponentFactory {
     return scopeAspectsLoader.getResolvedAspects(components, opts);
   }
 
-  async executeOnCompAspectReCalcSlot(component: Component) {
+  /**
+   * @param policy the dependencies policy of the component, when the caller already calculated it.
+   */
+  async executeOnCompAspectReCalcSlot(component: Component, policy?: VariantPolicy) {
     const envsData = await this.envs.calcDescriptor(component, { skipWarnings: false });
-    const policy = await this.dependencyResolver.mergeVariantPolicies(
+    policy ??= await this.dependencyResolver.mergeVariantPolicies(
       component.config.extensions,
       component.id,
       component.state._consumer.files,
