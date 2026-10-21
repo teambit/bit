@@ -630,8 +630,10 @@ function dropSnapshotDeps(
 
 function rootVersionWins(name: string, ref: string, rootSpecifier: string, isPeer: boolean): boolean {
   const lockedVersion = dp.parse(`${name}@${ref}`).version;
-  if (lockedVersion == null || lockedVersion === rootSpecifier) return false;
-  return isPeer || semver.valid(rootSpecifier) != null;
+  if (lockedVersion == null) return false;
+  const rootVersion = semver.valid(rootSpecifier);
+  if (rootVersion != null) return lockedVersion !== rootVersion;
+  return isPeer;
 }
 
 function depPathToRef(depPath: Dp.DependencyPath): string {

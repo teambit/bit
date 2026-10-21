@@ -1270,9 +1270,16 @@ describe('convertGraphToLockfile with a root manifest that provides a package th
     }
   });
 
-  it('should keep the reference when it is already the root version', async () => {
-    const lockfile = await convert({ dependencies: { '@types/react': '18.2.23' } });
-    expect(lockfile.snapshots![helmetSnapshot]).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+  it('should keep the reference when it is already the root version, however the root spells it', async () => {
+    for (const specifier of ['18.2.23', 'v18.2.23']) {
+      const lockfile = await convert({ dependencies: { '@types/react': specifier } });
+      expect(lockfile.snapshots![helmetSnapshot], specifier).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+      const peerLockfile = await convert(
+        { dependencies: { '@types/react': specifier } },
+        createGraph({ peerKeyed: true })
+      );
+      expect(peerLockfile.snapshots![peerSnapshot], specifier).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+    }
   });
 
   it('should keep the reference when the root provides the package only as an optional dependency', async () => {
