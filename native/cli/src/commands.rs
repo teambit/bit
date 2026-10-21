@@ -3,16 +3,19 @@
 
 mod add;
 mod aspect;
+mod capsule;
 mod cat;
 mod cat_scope;
 mod checkout;
 mod clear_cache;
+mod cli_cmd;
 mod color;
 mod component_issues;
 mod config;
 mod debug_cat;
 mod delete;
 mod deprecate;
+mod deps;
 mod details;
 mod diff;
 mod doctor;
@@ -27,6 +30,7 @@ mod globals;
 mod ids;
 mod import;
 mod init;
+mod insights;
 mod install;
 mod installation;
 mod inventory;
@@ -53,6 +57,7 @@ mod scope_rename;
 mod scope_set;
 mod scope_trust;
 mod search;
+mod set_peer;
 mod snap;
 mod snap_distance;
 mod stash;
@@ -69,6 +74,7 @@ mod version;
 mod version_history;
 mod whoami;
 mod workspace_command;
+mod ws_config;
 
 use crate::native::Outcome;
 use std::{ffi::OsString, io};
@@ -83,11 +89,13 @@ pub struct Command {
 pub const COMMANDS: &[Command] = &[
     add::COMMAND,
     aspect::COMMAND,
+    capsule::COMMAND,
     cat::COMMAND,
     cat_scope::COMMAND,
     checkout::COMMAND,
     checkout::REVERT,
     clear_cache::COMMAND,
+    cli_cmd::COMMAND,
     component_issues::COMMAND,
     config::COMMAND,
     debug_cat::CAT_COMPONENT,
@@ -98,6 +106,7 @@ pub const COMMANDS: &[Command] = &[
     delete::COMMAND,
     deprecate::COMMAND,
     deprecate::UNDEPRECATE,
+    deps::COMMAND,
     details::COMMAND,
     doctor::COMMAND,
     eject_conf::COMMAND,
@@ -112,6 +121,7 @@ pub const COMMANDS: &[Command] = &[
     import::FETCH,
     import::IMPORT,
     init::COMMAND,
+    insights::COMMAND,
     install::COMMAND,
     lane::COMMAND,
     list::COMMAND,
@@ -131,6 +141,8 @@ pub const COMMANDS: &[Command] = &[
     rename::COMMAND,
     scope_rename::COMMAND,
     search::COMMAND,
+    set_peer::SET_PEER,
+    set_peer::UNSET_PEER,
     snap::COMMAND,
     snap_distance::COMMAND,
     stash::COMMAND,
@@ -144,6 +156,7 @@ pub const COMMANDS: &[Command] = &[
     version::COMMAND,
     version_history::COMMAND,
     whoami::COMMAND,
+    ws_config::COMMAND,
 ];
 
 pub fn find(name: &str) -> Option<&'static Command> {

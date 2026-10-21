@@ -24,23 +24,62 @@ pub(super) fn manifest(input: &Input<'_>, package_name: &str, snapshot: bool) ->
         "componentId".into(),
         value!({"name":name,"version":component_version,"scope":scope}),
     );
-    for (target, source) in [
-        ("dependencies", "packageDependencies"),
-        ("devDependencies", "devPackageDependencies"),
-        ("peerDependencies", "peerPackageDependencies"),
-    ] {
-        fields.insert(target.into(), input.version[source].clone());
-    }
+    insert_dependency_fields(&mut fields, input.version);
     fields.insert("license".into(), value!("SEE LICENSE IN UNLICENSED"));
     fields.insert("exported".into(), value!(false));
     fields.insert("optionalDependencies".into(), Value::Object(Map::new()));
     fields.insert("peerDependenciesMeta".into(), Value::Object(Map::new()));
+    if let Some(bit) = peer_bit_metadata(input.version) {
+        fields.insert("bit".into(), bit);
+    }
     if let Some(types) = types {
         fields.insert("types".into(), value!(types));
     }
     fields.insert("_bit_local".into(), value!(true));
     fields.insert("source".into(), value!(main_file));
     Ok(Value::Object(fields))
+}
+
+fn insert_dependency_fields(fields: &mut Map<String, Value>, version: &Value) {
+    for (target, source) in [
+        ("dependencies", "packageDependencies"),
+        ("devDependencies", "devPackageDependencies"),
+        ("peerDependencies", "peerPackageDependencies"),
+    ] {
+        fields.insert(target.into(), version[source].clone());
+    }
+}
+
+fn peer_bit_metadata(version: &Value) -> Option<Value> {
+    let config = version["extensions"]
+        .as_array()?
+        .iter()
+        .find(|row| row["name"] == "teambit.dependencies/dependency-resolver")?
+        .get("config")?;
+    if !truthy(config.get("peer")) {
+        return None;
+    }
+    let mut bit = Map::new();
+    bit.insert("peer".into(), value!(true));
+    if let Some(range) = config
+        .get("defaultPeerRange")
+        .filter(|range| truthy(Some(range)))
+    {
+        bit.insert("defaultPeerRange".into(), range.clone());
+    }
+    Some(Value::Object(bit))
+}
+
+fn truthy(value: Option<&Value>) -> bool {
+    match value {
+        None | Some(Value::Null) => false,
+        Some(Value::Bool(flag)) => *flag,
+        Some(Value::Number(number)) => number
+            .as_f64()
+            .is_some_and(|number| number != 0.0),
+        Some(Value::String(text)) => !text.is_empty(),
+        Some(_) => true,
+    }
 }
 
 fn validate_default_env(version: &Value) -> io::Result<()> {

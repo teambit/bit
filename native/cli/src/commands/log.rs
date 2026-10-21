@@ -140,6 +140,7 @@ fn read_remote(root: Option<&Path>, options: &Options<'_>) -> io::Result<Vec<Val
 }
 
 fn read(root: &Path, options: &Options<'_>) -> io::Result<Vec<Value>> {
+    super::status::autosync::run_if_enabled(root)?;
     let bitmap = bitmap::read(root)?;
     let id = options.id.ok_or_else(|| decline("log id"))?;
     let id = id.split_once('@').map_or(id, |(name, _)| name);

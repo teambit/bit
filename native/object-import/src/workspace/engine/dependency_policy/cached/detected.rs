@@ -17,8 +17,14 @@ pub(super) fn initial(detected: &Value, finish: &Value) -> io::Result<Value> {
         let rows = detected["allDependencies"].get(field).unwrap_or(&empty);
         for row in rows.as_array().ok_or_else(|| invalid("status cached component dependencies"))? {
             components[index].push(entries.len());
+            let range = row
+                .get("versionRange")
+                .filter(|val| !val.is_null())
+                .or_else(|| row.get("peerVersionRange"))
+                .cloned()
+                .unwrap_or(Value::Null);
             entries.push(json!({"identity":identity(&row["id"])? ,
-                "packageName":row["packageName"],"versionRange":row["versionRange"]}));
+                "packageName":row["packageName"],"versionRange":range}));
         }
     }
     let packages: Vec<_> =

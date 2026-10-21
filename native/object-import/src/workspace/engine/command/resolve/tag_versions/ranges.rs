@@ -1,6 +1,9 @@
 use super::{Material, invalid};
 use serde_json::{Value, json};
-use std::{collections::HashMap, io};
+use std::{
+    collections::{HashMap, HashSet},
+    io,
+};
 
 // Workspace-level range policy is guarded by context eligibility. This retained
 // projection carries the canonical stored/current resolver prefix.
@@ -19,7 +22,8 @@ pub(in super::super) fn update(materials: &mut [Material]) -> io::Result<()> {
     for material in materials {
         let prefix = prefix(&material.version)?;
         let Some(prefix) = prefix else { continue };
-        update_dependencies(&mut material.version, prefix, &versions)?;
+        let pinned = super::super::super::resolve_snapshot::pinned_dependencies(&material.version);
+        update_dependencies(&mut material.version, prefix, &versions, &pinned)?;
     }
     Ok(())
 }
@@ -28,6 +32,7 @@ fn update_dependencies(
     version: &mut Value,
     prefix: char,
     versions: &HashMap<String, String>,
+    pinned: &HashSet<String>,
 ) -> io::Result<()> {
     for field in ["dependencies", "devDependencies", "peerDependencies"] {
         let Some(rows) = version.get_mut(field) else { continue };
@@ -35,7 +40,11 @@ fn update_dependencies(
             let id = &row["id"];
             let scope = id["scope"].as_str().ok_or_else(|| invalid("tag dependency scope"))?;
             let name = id["name"].as_str().ok_or_else(|| invalid("tag dependency name"))?;
-            if let Some(version) = versions.get(&format!("{scope}/{name}")) {
+            let identity = format!("{scope}/{name}");
+            if pinned.contains(&identity) {
+                continue;
+            }
+            if let Some(version) = versions.get(&identity) {
                 row["versionRange"] = json!(format!("{prefix}{version}"));
             }
         }

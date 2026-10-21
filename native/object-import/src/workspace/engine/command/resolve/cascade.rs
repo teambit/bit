@@ -6,6 +6,7 @@ use std::{collections::HashSet, io};
 /// Candidate order precedes selected order, just like workspace.getAutoTagInfo.
 pub(super) fn reports(
     current: &[Value],
+    components: &[super::projection::Component],
     selected: &[String],
     semver: &Value,
 ) -> io::Result<Vec<Value>> {
@@ -14,10 +15,7 @@ pub(super) fn reports(
         .map(String::as_str)
         .collect();
     let ordered = ordered(current, selected, &selected_set)?;
-    let rows = ordered
-        .iter()
-        .map(|row| component(row))
-        .collect::<io::Result<Vec<_>>>()?;
+    let rows = build_rows(&ordered, components)?;
     let changed = ordered
         .iter()
         .filter(|row| selected_set.contains(row["identity"].as_str().unwrap_or_default()))
@@ -45,6 +43,24 @@ pub(super) fn reports(
         .collect()
 }
 
+fn build_rows(
+    ordered: &[&Value],
+    components: &[super::projection::Component],
+) -> io::Result<Vec<Value>> {
+    ordered
+        .iter()
+        .map(|row| {
+            let identity = row["identity"].as_str().unwrap_or_default();
+            let pinned = components
+                .iter()
+                .find(|comp| comp.identity == identity)
+                .map(super::projection::Component::pinned_from_config)
+                .unwrap_or_default();
+            component(row, &pinned)
+        })
+        .collect()
+}
+
 fn ordered<'a>(
     current: &'a [Value],
     selected: &[String],
@@ -65,16 +81,21 @@ fn ordered<'a>(
     Ok(ordered)
 }
 
-fn component(row: &Value) -> io::Result<Value> {
+fn component(row: &Value, pinned: &HashSet<String>) -> io::Result<Value> {
     let mut dependencies = Vec::new();
     for field in ["dependencies", "devDependencies", "peerDependencies"] {
-        dependencies.extend(
-            row["current"][field]
-                .as_array()
-                .into_iter()
-                .flatten()
-                .map(|entry| entry["id"].clone()),
-        );
+        for entry in row["current"][field]
+            .as_array()
+            .into_iter()
+            .flatten()
+        {
+            if let Ok(identity) = super::selection::identity(&entry["id"])
+                && pinned.contains(&identity)
+            {
+                continue;
+            }
+            dependencies.push(entry["id"].clone());
+        }
     }
     dependencies.extend(
         row["current"]["extensions"]

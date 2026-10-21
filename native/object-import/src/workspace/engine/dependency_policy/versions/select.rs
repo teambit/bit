@@ -5,12 +5,13 @@ use super::{
 use std::io;
 
 type Choice = Option<(String, Option<String>)>;
+type Selected = Option<(String, Option<String>, bool)>;
 pub(super) fn select(
     index: &super::index::Index<'_>,
     identity: &str,
     field: usize,
     package: Option<&str>,
-) -> io::Result<Choice> {
+) -> io::Result<Selected> {
     let request = index.request;
     let base = unversioned(identity);
     let bitmap = index.bitmap
@@ -21,30 +22,30 @@ pub(super) fn select(
         .get(base)
         .filter(|value| !value.is_empty())
     {
-        return Ok(Some((value.clone(), None)));
+        return Ok(Some((value.clone(), None, true)));
     }
     if let Some(name) = package
         && !(index.env.contains(name) && bitmap.is_some())
         && let Some(spec) = request.policy.manual[field]
             .get(name)
             .filter(|value| !value.is_empty())
-        && let Some(selected) = valid(request, spec)?
+        && let Some((version, range)) = valid(request, spec)?
     {
-        return Ok(Some(selected));
+        return Ok(Some((version, range, true)));
     }
     if let Some(value) = bitmap.or_else(|| index.lane.get(base).copied()) {
-        return Ok(Some((value.to_owned(), None)));
+        return Ok(Some((value.to_owned(), None, false)));
     }
     if let Some(name) = package
-        && let Some(selected) = package_policy(request, identity, name)?
+        && let Some((version, range)) = package_policy(request, identity, name)?
     {
-        return Ok(Some(selected));
+        return Ok(Some((version, range, false)));
     }
     Ok(index.model
         .get(base)
         .copied()
         .or_else(|| (version(identity) != "latest").then(|| version(identity)))
-        .map(|value| (value.to_owned(), None)))
+        .map(|value| (value.to_owned(), None, false)))
 }
 fn package_policy(request: &Request, identity: &str, name: &str) -> io::Result<Choice> {
     if let version = version(identity)

@@ -65,7 +65,7 @@ fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     Some(json)
 }
 
-fn resolve_capsules_dir(cwd: &Path) -> io::Result<String> {
+pub(in crate::commands) fn resolve_capsules_dir(cwd: &Path) -> io::Result<String> {
     if let Some(from_env) = environment_value(CAPSULES_KEY) {
         return Ok(from_env);
     }

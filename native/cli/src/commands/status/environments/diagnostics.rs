@@ -11,6 +11,7 @@ pub(in crate::commands::status) fn issues(
     dependencies: &mut Value,
 ) -> io::Result<()> {
     let identity = text(target.get("identity"))?;
+    load_failures(context, identity, dependencies)?;
     let facts = &context["environmentFacts"][identity];
     if facts["multiple"]
         .as_array()
@@ -32,6 +33,38 @@ pub(in crate::commands::status) fn issues(
         ("NonLoadedEnv", json!(env))
     };
     append_issue(dependencies, kind, &data)
+}
+
+fn load_failures(context: &Value, identity: &str, dependencies: &mut Value) -> io::Result<()> {
+    let Some(failures) = context["environmentFacts"]["loadFailures"]
+        .as_array()
+        .or_else(|| context["environmentFacts"][identity]["loadFailures"].as_array())
+    else {
+        return Ok(());
+    };
+    let already_has = dependencies["issues"]
+        .as_array()
+        .is_some_and(|issues| {
+            issues
+                .iter()
+                .any(|issue| issue["type"] == "LoadFailures")
+        });
+    if already_has {
+        return Ok(());
+    }
+    let matching = failures
+        .iter()
+        .filter(|entry| {
+            entry["failedId"]
+                .as_str()
+                .is_some_and(|failed| bit_install::policy::split_version(failed).0 == identity)
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    if !matching.is_empty() {
+        append_issue(dependencies, "LoadFailures", &Value::Array(matching))?;
+    }
+    Ok(())
 }
 
 fn removed(context: &Value, facts: &Value, dependencies: &mut Value) -> io::Result<()> {

@@ -9,6 +9,8 @@ pub(in crate::workspace::engine) struct Entry {
     pub(in crate::workspace::engine) identity: String,
     pub(in crate::workspace::engine) package_name: Option<String>,
     pub(in crate::workspace::engine) version_range: Option<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub(in crate::workspace::engine) version_from_config: bool,
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

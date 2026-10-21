@@ -12,5 +12,5 @@ fn transitive_cycle_preserves_candidate_order_and_excludes_selected() {
         {"id":"s/a","triggeredBy":["s/c@snap-c"]},
         {"id":"s/b","triggeredBy":["s/c@snap-c"]},
     ]);
-    assert_eq!(json!(reports(&rows, &["s/c".into()], &json!({})).unwrap()), expected);
+    assert_eq!(json!(reports(&rows, &[], &["s/c".into()], &json!({})).unwrap()), expected);
 }

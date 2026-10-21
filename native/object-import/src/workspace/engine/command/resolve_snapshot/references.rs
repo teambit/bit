@@ -1,46 +1,66 @@
 use super::invalid;
 use serde_json::{Map, Value, json};
-use std::{collections::HashMap, io};
+use std::{
+    collections::{HashMap, HashSet},
+    io,
+};
 
 pub(super) fn rewrite_batch_refs(
     value: &mut Value,
     hashes: &HashMap<&str, &str>,
+    pinned: &HashSet<String>,
 ) -> io::Result<()> {
     match value {
         Value::Array(rows) => {
             for row in rows {
-                rewrite_batch_refs(row, hashes)?;
+                rewrite_batch_refs(row, hashes, pinned)?;
             }
         }
-        Value::Object(fields) => update_object(fields, hashes)?,
+        Value::Object(fields) => update_object(fields, hashes, pinned)?,
         _ => {}
     }
     Ok(())
 }
 
-fn update_object(fields: &mut Map<String, Value>, hashes: &HashMap<&str, &str>) -> io::Result<()> {
-    update_scoped_id(fields, hashes);
-    update_string_id(fields, hashes);
+fn update_object(
+    fields: &mut Map<String, Value>,
+    hashes: &HashMap<&str, &str>,
+    pinned: &HashSet<String>,
+) -> io::Result<()> {
+    update_scoped_id(fields, hashes, pinned);
+    update_string_id(fields, hashes, pinned);
     update_root(fields, hashes)?;
     for (key, child) in fields {
         if key == "version" {
             update_marker(child, hashes)?;
+        } else if key == "extensionId" {
+            rewrite_batch_refs(child, hashes, &HashSet::new())?;
         } else {
-            rewrite_batch_refs(child, hashes)?;
+            rewrite_batch_refs(child, hashes, pinned)?;
         }
     }
     Ok(())
 }
 
-fn update_scoped_id(fields: &mut Map<String, Value>, hashes: &HashMap<&str, &str>) {
+fn update_scoped_id(
+    fields: &mut Map<String, Value>,
+    hashes: &HashMap<&str, &str>,
+    pinned: &HashSet<String>,
+) {
     let target = fields
         .get("scope")
         .and_then(Value::as_str)
         .zip(fields.get("name").and_then(Value::as_str))
         .and_then(|(scope, name)| {
-            hashes
-                .get(format!("{scope}/{name}").as_str())
-                .copied()
+            let identity = format!("{scope}/{name}");
+            let is_marker = fields
+                .get("version")
+                .and_then(Value::as_str)
+                .is_some_and(|ver| ver.starts_with("__bit_pending_snapshot__:"));
+            if !is_marker && pinned.contains(&identity) {
+                return None;
+            }
+            hashes.get(identity.as_str()).copied()
         });
     if let Some(hash) = target
         && fields.contains_key("version")
@@ -49,12 +69,19 @@ fn update_scoped_id(fields: &mut Map<String, Value>, hashes: &HashMap<&str, &str
     }
 }
 
-fn update_string_id(fields: &mut Map<String, Value>, hashes: &HashMap<&str, &str>) {
+fn update_string_id(
+    fields: &mut Map<String, Value>,
+    hashes: &HashMap<&str, &str>,
+    pinned: &HashSet<String>,
+) {
     let target = fields
         .get("id")
         .and_then(Value::as_str)
         .and_then(|text| text.rsplit_once('@'))
-        .and_then(|(identity, _)| {
+        .and_then(|(identity, ver)| {
+            if !ver.starts_with("__bit_pending_snapshot__:") && pinned.contains(identity) {
+                return None;
+            }
             hashes
                 .get(identity)
                 .map(|hash| (identity.to_owned(), *hash))

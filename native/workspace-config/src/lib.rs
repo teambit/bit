@@ -105,7 +105,13 @@ pub fn parse_jsonc(bytes: &[u8]) -> io::Result<Value> {
 pub fn scope_path(root: &std::path::Path) -> std::path::PathBuf {
     let hidden = root.join(".bit");
     let git = root.join(".git");
-    if git.is_dir() && !hidden.exists() { git.join("bit") } else { hidden }
+    if git.is_dir()
+        && (!hidden.exists() || (!hidden.join("objects").is_dir() && git.join("bit").is_dir()))
+    {
+        git.join("bit")
+    } else {
+        hidden
+    }
 }
 
 /// Locate the closest parent workspace.jsonc from an invocation directory.

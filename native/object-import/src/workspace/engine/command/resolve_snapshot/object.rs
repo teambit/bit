@@ -64,9 +64,10 @@ fn metadata(
     lane: Option<&Value>,
     hashes: &HashMap<&str, &str>,
 ) -> io::Result<Value> {
+    let pinned = super::pinned_dependencies(&material.version);
     let mut version = crate::workspace::engine::status_models::harmony::project(&material.version)?;
     version["schema"] = json!("2.0.0");
-    references::rewrite_batch_refs(&mut version, hashes)?;
+    references::rewrite_batch_refs(&mut version, hashes, &pinned)?;
     version["log"] = receipt["log"].clone();
     version["batchId"] = receipt["batchId"].clone();
     version["bitVersion"] = receipt["bitVersion"].clone();
@@ -81,6 +82,7 @@ fn metadata(
     let fields = version.as_object_mut().ok_or_else(|| invalid("resolve Version"))?;
     fields.remove("squashed");
     fields.remove("unrelated");
+    fields.remove("pinnedDependencies");
     // The graph is the snap's own, from the lockfile (`dependenciesGraph`).
     fields.remove("dependenciesGraphRef");
     empty_builder(&mut version)?;

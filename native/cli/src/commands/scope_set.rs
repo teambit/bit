@@ -25,6 +25,7 @@ struct Options {
     pattern: Option<String>,
 }
 
+#[derive(Debug)]
 pub(in crate::commands) enum Failure {
     Declined(String),
     User(String),

@@ -43,6 +43,16 @@ pub(super) fn is_removed(version: &Value) -> bool {
         })
 }
 
+pub(super) fn pinned_dependencies(version: &Value) -> HashSet<String> {
+    version["pinnedDependencies"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .map(str::to_owned)
+        .collect()
+}
+
 /// The previous object ref and the semantic alias planned for its successor.
 pub(super) struct VersionState {
     pub current_head: String,

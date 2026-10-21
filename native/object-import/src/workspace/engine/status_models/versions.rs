@@ -53,27 +53,43 @@ pub(super) fn read(
     pool.install(|| {
         references
             .par_iter()
-            .map(|reference| {
-                let value = match reader.read(reference, "Version") {
-                    Ok(value) => value,
-                    Err(error)
-                        if error.kind() == io::ErrorKind::NotFound
-                            && !required.contains(reference) =>
-                    {
-                        return Ok(None);
-                    }
-                    Err(error) => return Err(error),
-                };
-                crate::history_query::validate_version(&value)?;
-                crate::read_version::parents(&value)?;
-                if matches!(value["schema"].as_str(), Some("1.0.0" | "2.0.0")) {
-                    super::harmony::validate(&value)?;
-                }
-                Ok(Some((reference.clone(), value)))
-            })
+            .map(|reference| read_single(reader, reference, required))
             .collect::<io::Result<Vec<_>>>()
             .map(|values| values.into_iter().flatten().collect())
     })
+}
+
+fn read_single(
+    reader: &Reader<'_>,
+    reference: &String,
+    required: &[String],
+) -> io::Result<Option<(String, Value)>> {
+    let value = match reader.read(reference, "Version") {
+        Ok(value) => value,
+        Err(error) if error.kind() == io::ErrorKind::NotFound && !required.contains(reference) => {
+            return Ok(None);
+        }
+        Err(error) => return Err(error),
+    };
+    crate::history_query::validate_version(&value)?;
+    crate::read_version::parents(&value)?;
+    if matches!(value["schema"].as_str(), Some("1.0.0" | "2.0.0")) {
+        super::harmony::validate(&value)?;
+    }
+    if required.contains(reference) {
+        verify_required_sources(reader, &value)?;
+    }
+    Ok(Some((reference.clone(), value)))
+}
+
+fn verify_required_sources(reader: &Reader<'_>, value: &Value) -> io::Result<()> {
+    let Some(files) = value["files"].as_array() else { return Ok(()) };
+    for file in files {
+        if let Some(source) = file["file"].as_str() {
+            reader.verify_source(source)?;
+        }
+    }
+    Ok(())
 }
 
 pub(super) fn include_heads(models: &[Value], references: &mut Vec<String>) -> io::Result<()> {

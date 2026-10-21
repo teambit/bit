@@ -193,10 +193,10 @@ impl Environments {
             .cloned()
             .unwrap_or_default();
         proofs.extend(local_proofs(&components)?);
-        for component in &components {
-            if selected(component, targets) && needs_facts(component, &core, &aspects) {
+        for component in &selected_components {
+            if needs_facts(component, &core, &aspects) {
                 let facts = self.component_facts(root, &reader, component, &core, &aspects)?;
-                enriched["environmentFacts"][component.id.to_string_without_version()] = facts;
+                store_component_facts(&mut enriched, component, facts);
             }
         }
         if let Some(scope) = &reader.scope {
@@ -247,6 +247,16 @@ impl Environments {
     }
 }
 
+fn store_component_facts(enriched: &mut Value, component: &WorkspaceComponent, facts: Value) {
+    if facts["loadFailures"]
+        .as_array()
+        .is_some_and(|arr| !arr.is_empty())
+    {
+        enriched["environmentFacts"]["loadFailures"] = facts["loadFailures"].clone();
+    }
+    enriched["environmentFacts"][component.id.to_string_without_version()] = facts;
+}
+
 fn component(root: &Path, context: &Value, target: &Value) -> io::Result<WorkspaceComponent> {
     let target = super::policy::environment_target(context, target)?;
     let config = target["config"]["extensions"]
@@ -257,15 +267,6 @@ fn component(root: &Path, context: &Value, target: &Value) -> io::Result<Workspa
         .get("teambit.envs/envs")
         .and_then(|config| config["env"].as_str())
         .map_or_else(|| stored_env(context, &target), str::to_owned);
-    component_with(root, &target, config, env_id)
-}
-
-fn component_with(
-    root: &Path,
-    target: &Value,
-    config: serde_json::Map<String, Value>,
-    env_id: String,
-) -> io::Result<WorkspaceComponent> {
     let identity = text(target.get("identity"))?;
     let (scope, name) =
         identity.split_once('/').ok_or_else(|| decline("environment component identity"))?;

@@ -246,7 +246,17 @@ impl Helper {
                 str::to_owned,
             );
         let url = format!("file://{}", remote_path.display());
-        config::update_scope_json(&local_scope_dir.join("scope.json"), |scope| {
+        let scope_json = if local_scope_dir.join("scope.json").exists() {
+            local_scope_dir.join("scope.json")
+        } else if let Some(parent) = local_scope_dir.parent()
+            && local_scope_dir.file_name().and_then(|n| n.to_str()) == Some(".bit")
+            && parent.join(".git/bit/scope.json").exists()
+        {
+            parent.join(".git/bit/scope.json")
+        } else {
+            local_scope_dir.join("scope.json")
+        };
+        config::update_scope_json(&scope_json, |scope| {
             let remotes = scope
                 .entry("remotes")
                 .or_insert_with(|| json!({}));

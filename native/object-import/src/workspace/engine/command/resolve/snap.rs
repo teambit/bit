@@ -198,13 +198,15 @@ pub(super) fn prepare_graph_imports(
         };
     let mut targets = Vec::new();
     for material in materials {
+        let pinned = super::super::resolve_snapshot::pinned_dependencies(&material.version);
         let source = serde_json::json!({"scope":material.model["scope"],"name":material.model["name"],"version":material.version_state.current_head});
         for edge in super::graph::edges(&source, &material.version)? {
             let id = &edge["target"];
             let identity = selection::identity(id)?;
-            if materials
-                .iter()
-                .any(|material| material.identity == identity)
+            if (!pinned.contains(&identity)
+                && materials
+                    .iter()
+                    .any(|material| material.identity == identity))
                 || !known.insert(id_key(id)?)
             {
                 continue;

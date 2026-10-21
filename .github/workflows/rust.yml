@@ -128,9 +128,13 @@ jobs:
   e2e:
     # The e2e cases ported to the native CLI (native/plans/TEST_PORTING.md), with the
     # released Node.js CLI that cli/tests/e2e/bit-version names behind it.
-    name: Ported e2e cases
+    name: Ported e2e cases (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
-    # The complete suite also runs the reduced-stack regressions before saving caches.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    # Shard 1 also runs the reduced-stack regressions before saving caches.
     timeout-minutes: 90
     defaults:
       run:
@@ -174,8 +178,19 @@ jobs:
       - name: Prepare pinned pnpm engine sources
         run: node ../scripts/rust/prepare-pnpm-engine.mjs
       - name: Run the ported e2e cases
-        run: cargo test --locked -p bit-cli --features e2e --test e2e
+        env:
+          SHARD: ${{ matrix.shard }}
+          SHARDS: 4
+        run: |
+          mapfile -t shard_tests < <(
+            cargo test --locked -p bit-cli --features e2e --test e2e -- --list --format=terse \
+              | sed -n 's/: test$//p' \
+              | awk -v shard="$SHARD" -v shards="$SHARDS" '(NR - 1) % shards == (shard - 1)'
+          )
+          echo "Running ${#shard_tests[@]} e2e tests in shard $SHARD/$SHARDS"
+          cargo test --locked -p bit-cli --features e2e --test e2e -- --exact "${shard_tests[@]}"
       - name: Check lane imports with the Windows main-stack budget
+        if: matrix.shard == 1
         run: python3 ../scripts/rust/check-native-stack.py
 
   status-diff-windows:

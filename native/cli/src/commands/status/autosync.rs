@@ -18,6 +18,18 @@ pub(in crate::commands) struct Startup {
     pub(in crate::commands) snapshot_tail: Option<Value>,
 }
 
+pub(in crate::commands) fn run_if_enabled(root: &Path) -> io::Result<()> {
+    let config = bit_object_import::parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
+    if config["teambit.workspace/workspace"]["bitmapAutoSync"] != true
+        || !root.join(".git").exists()
+    {
+        return Ok(());
+    }
+    let mut engine = Engine::new()?;
+    let mut startup = Startup::default();
+    run(&mut engine, root, &mut startup)
+}
+
 pub(in crate::commands) fn run(
     engine: &mut Engine,
     root: &Path,

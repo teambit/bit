@@ -23,7 +23,7 @@ pub(in crate::workspace::engine) fn apply(request: &Request) -> io::Result<(usiz
             Ok(select::select(&index, identity, 1, None)?
                 .map_or_else(
                     || identity.clone(),
-                    |(version, _)| wire::identity(identity, &version),
+                    |(version, _, _)| wire::identity(identity, &version),
                 ))
         })
         .collect::<io::Result<Vec<_>>>()?;
@@ -35,11 +35,12 @@ fn update(
     field: usize,
 ) -> io::Result<()> {
     let request = index.request;
-    let Some((version, range)) =
+    let Some((version, range, from_config)) =
         select::select(index, &entry.identity, field, entry.package_name.as_deref())?
     else {
         return Ok(());
     };
+    entry.version_from_config = from_config;
     entry.identity = wire::identity(&entry.identity, &version);
     if request.policy.ranges() {
         entry.version_range = updated_range(request, entry.version_range.take(), range, &version);

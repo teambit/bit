@@ -135,36 +135,54 @@ impl Environments {
         core: &[String],
         aspects: &[String],
     ) -> io::Result<()> {
-        if components.iter().any(|component| needs_facts(component, core, aspects)) {
-            let mut ids = aspects
+        if !components.iter().any(|component| needs_facts(component, core, aspects)) {
+            return Ok(());
+        }
+        let mut ids = aspects
+            .iter()
+            .chain(components.iter().flat_map(|component| component.config.keys()))
+            .filter(|id| !core.contains(id) && !bit_install::policy::is_core_env(id))
+            .collect::<Vec<_>>();
+        let mut seen = std::collections::HashSet::new();
+        ids.retain(|id| seen.insert(*id));
+        let record = self.snapshot
+            && components
                 .iter()
-                .chain(components.iter().flat_map(|component| component.config.keys()))
-                .filter(|id| !core.contains(id) && !bit_install::policy::is_core_env(id))
-                .collect::<Vec<_>>();
-            let mut seen = std::collections::HashSet::new();
-            ids.retain(|id| seen.insert(*id));
-            let record = self.snapshot
-                && components
-                    .iter()
-                    .any(|component| {
-                        !bit_install::policy::is_core_env(&component.env_id)
-                            && !aspects.contains(&component.env_id)
-                    });
-            let host = self.host(root)?;
-            if record {
-                host.call("snapshotLoadFacts", &json!({}))?;
-            }
-            host.call(
-                "dependencyPolicies",
-                &json!({"extensionIds":ids,"bootstrap":ids.iter().any(|id|aspects.contains(id)),"startupAspectIds":aspects,"componentAspectIds":components.iter().flat_map(|component|component.config.keys()).collect::<Vec<_>>(),"componentIdentities":components.iter().map(|component|component.id.to_string_without_version()).collect::<Vec<_>>()}),
-            )?;
-            if record {
-                let facts = host.call("snapshotLoadFacts", &json!({}))?;
-                self.snapshot_loads.extend(
-                    array(Some(&facts), "snapshot environment loads")?.iter().cloned(),
-                );
-            }
+                .any(|component| {
+                    !bit_install::policy::is_core_env(&component.env_id)
+                        && !aspects.contains(&component.env_id)
+                });
+        let host = self.host(root)?;
+        if record {
+            host.call("snapshotLoadFacts", &json!({}))?;
+        }
+        let used_extensions = used_extensions(components);
+        host.call(
+            "dependencyPolicies",
+            &json!({"extensionIds":ids,"bootstrap":ids.iter().any(|id|aspects.contains(id)),"startupAspectIds":aspects,"componentAspectIds":components.iter().flat_map(|component|component.config.keys()).collect::<Vec<_>>(),"componentIdentities":components.iter().map(|component|component.id.to_string_without_version()).collect::<Vec<_>>(),"componentUsedExtensions":used_extensions}),
+        )?;
+        if record {
+            let facts = host.call("snapshotLoadFacts", &json!({}))?;
+            self.snapshot_loads.extend(
+                array(Some(&facts), "snapshot environment loads")?.iter().cloned(),
+            );
         }
         Ok(())
     }
+}
+
+fn used_extensions(components: &[WorkspaceComponent]) -> Vec<Value> {
+    components
+        .iter()
+        .map(|component| {
+            let mut used = component.config
+                .keys()
+                .cloned()
+                .collect::<Vec<_>>();
+            if !used.contains(&component.env_id) {
+                used.push(component.env_id.clone());
+            }
+            json!({"id":component.id.to_string_without_version(),"usedIds":used})
+        })
+        .collect()
 }

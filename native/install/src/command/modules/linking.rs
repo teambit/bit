@@ -64,10 +64,14 @@ pub async fn link_components(
     };
     let result = links::link_components(&session.root, components, session.host, &options).await?;
     if result.package_json_changed {
+        let cache = loaded.workspace.scope_path.join("cache/components/deps");
         let ids = components
             .iter()
             .map(super::super::session::installation_components::identity)
             .collect::<Vec<_>>();
+        for id in &ids {
+            let _ = crate::dependencies::cache::remove_entry(&cache, id);
+        }
         session.host.component_links_changed(&ids).await?;
     }
     Ok(())

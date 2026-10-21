@@ -314,7 +314,7 @@ fn row_matches_entry(key: &str, row: &Value, entry: &BitmapEntry) -> bool {
     row["name"].as_str().unwrap_or(key) == entry.id.name
 }
 
-pub(super) fn deep_merge(target: &mut Value, source: &Value) {
+pub(in crate::commands) fn deep_merge(target: &mut Value, source: &Value) {
     if let (Some(t_obj), Some(s_obj)) = (target.as_object_mut(), source.as_object()) {
         for (key, val) in s_obj {
             if let Some(existing) = t_obj.get_mut(key)

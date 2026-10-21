@@ -259,6 +259,36 @@ struct Reader<'a> {
     packed: Budget,
 }
 impl Reader<'_> {
+    pub(super) fn verify_source(&self, reference: &str) -> io::Result<()> {
+        if self.overlay.is_some() {
+            return Ok(());
+        }
+        crate::merge_history::hash(reference)?;
+        let path = self.directory
+            .join(&reference[..2])
+            .join(&reference[2..]);
+        let mut file = match std::fs::File::open(path) {
+            Ok(file) => file,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
+            Err(error) => return Err(error),
+        };
+        let mut compressed = [0u8; 256];
+        let count = io::Read::read(&mut file, &mut compressed)?;
+        if count == 0 {
+            return Err(invalid("status corrupted Source object"));
+        }
+        let mut inflated = [0u8; 256];
+        let mut decoder = flate2::Decompress::new(true);
+        decoder
+            .decompress(&compressed[..count], &mut inflated, flate2::FlushDecompress::Sync)
+            .map_err(|_| invalid("status corrupted Source object"))?;
+        let produced = usize::try_from(decoder.total_out()).unwrap_or(0);
+        if !inflated[..produced].starts_with(b"Source ") {
+            return Err(invalid("status corrupted Source object"));
+        }
+        Ok(())
+    }
+
     fn read(&self, reference: &str, kind: &str) -> io::Result<Value> {
         if let Some(overlay) = self.overlay
             && let Some(value) = overlay.read(reference, kind)?

@@ -205,6 +205,7 @@ struct Model {
 /// `localList`: the workspace's (or with `--local-scope`, the scope's) ids,
 /// filtered, sorted by `localeCompare` of their ids.
 fn list(root: &Path, options: &Options, session: &mut Session) -> io::Result<Vec<Row>> {
+    super::status::autosync::run_if_enabled(root)?;
     let bitmap::Bitmap { entries: bitmap, lane } = bitmap::read(root)?;
     let (models, lane) = models(root, lane.as_ref())?;
     let mut ids = all_ids(&bitmap, &models, options.local_scope);

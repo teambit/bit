@@ -246,12 +246,35 @@ pub(super) fn prepare_bitmap_bytes(
         planned.merge.as_ref().map_or_else(Vec::new, super::merge_planning::Prepared::removed_ids);
     let mut bitmap =
         bitmap::prepare_bytes(&record.request.root, original, &record.context, &updates, &removed)?;
-    if record.request.operation == input::Operation::Checkout
-        && record.request.options.to.as_deref() == Some("head")
-    {
-        bitmap.make_available_on_main(&record.context)?;
-    }
+    apply_checkout_mode(record, planned, &mut bitmap)?;
     Ok(bitmap)
+}
+
+fn apply_checkout_mode(
+    record: &Record,
+    planned: &planning::Planned,
+    bitmap: &mut bitmap::Prepared,
+) -> io::Result<()> {
+    if record.request.operation != input::Operation::Checkout {
+        return Ok(());
+    }
+    match record.request.options.to.as_deref() {
+        Some("head") => bitmap.make_available_on_main(&record.context),
+        Some("reset") => {
+            let identities = planned.materials
+                .iter()
+                .map(|material| {
+                    material.output["id"]
+                        .as_str()
+                        .and_then(|id| id.rsplit_once('@'))
+                        .map(|(identity, _)| identity.to_owned())
+                        .ok_or_else(|| invalid("reset written configuration identity"))
+                })
+                .collect::<io::Result<Vec<_>>>()?;
+            bitmap.clear_config(&record.context, &identities)
+        }
+        _ => Ok(()),
+    }
 }
 
 fn bitmap_update(

@@ -63,10 +63,59 @@ impl Policy {
 
     pub fn issues(&self, dependencies: &Value) -> io::Result<Value> {
         let mut issues = array(dependencies.get("issues"), "dependency issues")?.to_vec();
+        issues.retain(|issue| issue["type"] != "PinnedDependencies");
         if self.merge_conflict {
             issues.push(json!({"type":"MergeConfigHasConflict","data":"true"}));
         }
+        let pinned = self.pinned_dependencies(dependencies)?;
+        if !pinned.is_empty() {
+            let data = serde_json::to_string(&pinned).map_err(io::Error::other)?;
+            issues.push(json!({"type":"PinnedDependencies","data":data}));
+        }
         Ok(json!(issues))
+    }
+
+    fn workspace_base_ids(&self) -> io::Result<std::collections::HashSet<&str>> {
+        Ok(array(self.input["resolution"]["sources"].get("bitmap"), "bitmap sources")?
+            .iter()
+            .filter_map(Value::as_str)
+            .map(|id| {
+                id.rfind('@')
+                    .map_or(id, |sep| &id[..sep])
+            })
+            .collect())
+    }
+
+    fn pinned_dependencies(&self, dependencies: &Value) -> io::Result<Vec<String>> {
+        let workspace_ids = self.workspace_base_ids()?;
+        let state = &dependencies["state"];
+        let entries = array(state.get("entries"), "dependency entries")?;
+        let mut pinned = Vec::new();
+        for indices in array(state.get("components"), "dependency lifecycles")? {
+            for index in array(Some(indices), "dependency indices")? {
+                let entry = index
+                    .as_u64()
+                    .and_then(|index| entries.get(index as usize))
+                    .ok_or_else(|| decline("status dependency entry"))?;
+                if entry.get("versionFromConfig") != Some(&Value::Bool(true)) {
+                    continue;
+                }
+                let identity = text(entry.get("identity"))?;
+                let (base_id, version) = identity
+                    .rsplit_once('@')
+                    .unwrap_or((identity, ""));
+                if !workspace_ids.contains(base_id) {
+                    continue;
+                }
+                let package = entry
+                    .get("packageName")
+                    .and_then(Value::as_str)
+                    .filter(|pkg| !pkg.is_empty())
+                    .unwrap_or(base_id);
+                pinned.push(format!("{package}@{version}"));
+            }
+        }
+        Ok(pinned)
     }
 }
 

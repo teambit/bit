@@ -146,7 +146,11 @@ pub fn bit_command(shared: &Shared, cwd: &Path) -> Command {
         .env_remove("BIT_NATIVE")
         .env_remove("BIT_NATIVE_QUIET")
         .env_remove("BIT_FEATURES")
-        .env_remove("CI");
+        .env_remove("CI")
+        .env_remove("GITHUB_TOKEN")
+        .env_remove("BIT_GITHUB_TOKEN")
+        .env_remove("GITHUB_REPOSITORY")
+        .env_remove("GITHUB_HEAD_REF");
     command
 }
 

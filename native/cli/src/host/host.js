@@ -216,8 +216,8 @@ const handlers = {
   devPatterns: ({ envId }) => devPatterns(envId),
   prepareInstall: ({ aspectIds }) => prepareInstall(aspectIds),
   envFallsBack: ({ envId }) => envFallsBack(envId),
-  dependencyPolicies: ({ extensionIds, bootstrap, startupAspectIds, componentAspectIds, componentIdentities }) =>
-    dependencyPolicies(extensionIds, bootstrap, startupAspectIds, componentAspectIds, componentIdentities),
+  dependencyPolicies: ({ extensionIds, bootstrap, startupAspectIds, componentAspectIds, componentIdentities, componentUsedExtensions }) =>
+    dependencyPolicies(extensionIds, bootstrap, startupAspectIds, componentAspectIds, componentIdentities, componentUsedExtensions),
   detectDependencies: ({ envId, files, componentDir, aspectIds }) =>
     detectDependencies(envId, files, componentDir, aspectIds),
   parseDependencies,
@@ -501,7 +501,7 @@ async function providerFacts({ envId, needsEnvPolicy, needsIssues }) {
   const policy = needsEnvPolicy ? await envPolicy(envId) : null;
   const patterns = await devPatterns(envId);
   const compiler = needsIssues ? await compilerFacts(envId) : null;
-  return { envPolicy: policy, devPatterns: patterns, compiler };
+  return { envPolicy: policy, devPatterns: patterns, compiler, loadFailures: recordedLoadFailures };
 }
 
 /**
@@ -582,8 +582,33 @@ function snapshotFreshAspects(ids) {
   return ids.filter((id)=>{const key=id.split('@')[0];if(snapshotPrimedAspects.has(key))return false;snapshotPrimedAspects.add(key);return true;});
 }
 
+const recordedLoadFailures = [];
+
+async function runWithLoadTrace(entry, fn) {
+  let traceModule;
+  try {
+    traceModule = bitRequire('@teambit/harmony.modules.load-trace');
+  } catch {
+    return fn();
+  }
+  if (typeof traceModule?.startOrJoinLoadTrace !== 'function' || typeof traceModule?.currentLoadTrace !== 'function') {
+    return fn();
+  }
+  return traceModule.startOrJoinLoadTrace(entry, {}, async () => {
+    try {
+      return await fn();
+    } finally {
+      for (const failure of traceModule.currentLoadTrace()?.loadFailures ?? []) {
+        if (!recordedLoadFailures.some((existing) => existing.failedId === failure.failedId && existing.phase === failure.phase)) {
+          recordedLoadFailures.push(failure);
+        }
+      }
+    }
+  });
+}
+
 let snapshotBootstrapProgress = false;
-async function dependencyPolicies(extensionIds, bootstrap, startupAspectIds = [], componentAspectIds = [], componentIdentities = []) {
+async function dependencyPolicies(extensionIds, bootstrap, startupAspectIds = [], componentAspectIds = [], componentIdentities = [], componentUsedExtensions = []) {
   await loadInstallComponents();
   snapshotBootstrapProgress = bootstrap === true && (['tag', 'checkout', 'add', 'a'].includes(cliArguments[0]) || cliArguments[0] === 'merge');
   const loaded = await loadHarmony();
@@ -611,8 +636,10 @@ async function dependencyPolicies(extensionIds, bootstrap, startupAspectIds = []
             || typeof workspace.clearComponentCache !== 'function')) {
         throw new Error('published switch aspect cache invalidation is unavailable');
       }
-      const loadedAspects = await workspace.loadAspects(extensionIds, false, undefined,
-        { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+      const loadedAspects = await runWithLoadTrace('host.dependencyPolicies', () =>
+        workspace.loadAspects(extensionIds, false, undefined,
+          { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true })
+      );
       if (cliArguments[0] === 'switch' && startupAspectIds.length) {
         const startup = new Set(startupAspectIds.map(id => id.split('@')[0]));
         const roots = loadedAspects.filter(id => startup.has(id.split('@')[0]));
@@ -620,6 +647,20 @@ async function dependencyPolicies(extensionIds, bootstrap, startupAspectIds = []
         for (const id of resolved) workspace.clearComponentCache(id);
       }
       if (cliArguments[0] === 'import') extensionIds.forEach(id => importPrimedPolicies.add(id));
+    }
+    if (!workspace.inInstallContext && recordedLoadFailures.length && typeof workspace.registerAggregatedLoadFailure === 'function') {
+      const noVersion = (id) => id.split('@')[0];
+      for (const entry of componentUsedExtensions) {
+        const componentIdStr = entry?.id;
+        const usedIds = entry?.usedIds ?? [];
+        if (!componentIdStr) continue;
+        for (const failure of recordedLoadFailures) {
+          if (noVersion(failure.failedId) === noVersion(componentIdStr)) continue;
+          if (usedIds.some((usedId) => noVersion(usedId) === noVersion(failure.failedId))) {
+            workspace.registerAggregatedLoadFailure(failure, componentIdStr);
+          }
+        }
+      }
     }
   } finally {snapshotBootstrapProgress = false;}
   return loaded.get('teambit.dependencies/dependency-resolver').policiesRegistry.toArray();

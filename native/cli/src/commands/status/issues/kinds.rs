@@ -23,6 +23,7 @@ pub(super) enum Issue {
     MultipleEnvs,
     RemovedEnv,
     DeprecatedDependencies,
+    PinnedDependencies,
     Detected(detected::Issue),
 }
 
@@ -42,6 +43,7 @@ impl Issue {
             "MultipleEnvs" => Self::MultipleEnvs,
             "RemovedEnv" => Self::RemovedEnv,
             "DeprecatedDependencies" => Self::DeprecatedDependencies,
+            "PinnedDependencies" => Self::PinnedDependencies,
             _ => Self::Detected(detected::Issue::parse(name)?),
         })
     }
@@ -107,6 +109,7 @@ impl Issue {
             ),
             Self::NonLoadedEnv | Self::MultipleEnvs | Self::RemovedEnv => self.environment_class(),
             Self::DeprecatedDependencies => Self::deprecated_class(),
+            Self::PinnedDependencies => Self::pinned_class(),
             _ => unreachable!(),
         }
     }
@@ -116,6 +119,15 @@ impl Issue {
             "DeprecatedDependencies",
             "dependencies used in the code were deprecated",
             "replace them with alternative dependencies. or remove them if not needed anymore",
+            false,
+        )
+    }
+
+    const fn pinned_class() -> (&'static str, &'static str, &'static str, bool) {
+        (
+            "PinnedDependencies",
+            r#"dependencies on workspace components with a version set by config ("bit deps set", variants or env), not the workspace version"#,
+            r#"to use the workspace version, remove the version from the config, e.g. "bit deps unset <component> <package>""#,
             false,
         )
     }
@@ -165,7 +177,8 @@ impl Issue {
             Self::MissingManual
             | Self::RemovedDependencies
             | Self::MultipleEnvs
-            | Self::DeprecatedDependencies => Ok(format!("{SPACE}{}", join(data)?)),
+            | Self::DeprecatedDependencies
+            | Self::PinnedDependencies => Ok(format!("{SPACE}{}", join(data)?)),
             Self::Duplicate | Self::NonLoadedEnv | Self::RemovedEnv => {
                 Ok(format!("{SPACE}{}", text(Some(data))?))
             }

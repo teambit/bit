@@ -385,7 +385,8 @@ impl Helper {
                 .split('/')
                 .skip(1)
                 .collect::<Vec<_>>()
-                .join("/");
+                .join("/")
+                .replace('.', "/");
             obj["componentId"] = json!({
                 "scope": self.scopes.remote,
                 "name": comp_name,
@@ -673,6 +674,118 @@ impl Helper {
         let content = fs::read_to_string(&path).unwrap();
         let resolved = resolve_conflict_lines(&content, strategy == "ours");
         fs::write(&path, resolved).unwrap();
+    }
+
+    pub fn show_component_parsed_harmony(&self, id: &str) -> Value {
+        parse(&self.run(&format!("show {id} --json")))
+    }
+
+    pub fn show_aspect_config(&self, comp_id: &str, aspect_id: &str) -> Value {
+        let show = self.show_component_parsed_harmony(comp_id);
+        show.as_array()
+            .unwrap()
+            .iter()
+            .find(|item| item["title"].as_str() == Some("configuration"))
+            .and_then(|item| item["json"].as_array())
+            .and_then(|arr| {
+                arr.iter()
+                    .find(|item| item["id"].as_str() == Some(aspect_id))
+            })
+            .cloned()
+            .unwrap_or(Value::Null)
+    }
+
+    pub fn show_component_parsed_harmony_by_title(&self, comp_id: &str, title: &str) -> Value {
+        let show = self.show_component_parsed_harmony(comp_id);
+        show.as_array()
+            .unwrap()
+            .iter()
+            .find(|item| item["title"].as_str() == Some(title))
+            .map_or(Value::Null, |item| item["json"].clone())
+    }
+
+    pub fn get_comp_deps_ids_from_data(&self, comp_id: &str) -> Vec<String> {
+        let conf = self.show_aspect_config(comp_id, "teambit.dependencies/dependency-resolver");
+        conf["data"]["dependencies"]
+            .as_array()
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|dep| dep["id"].as_str().map(str::to_owned))
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    pub fn capsule_list_parsed(&self) -> Value {
+        parse(&self.native("capsule list -j"))
+    }
+
+    pub fn get_capsule_of_component(&self, id: &str) -> PathBuf {
+        let capsules = self.capsule_list_parsed();
+        let id_underscore = id.replacen('/', "_", 1);
+        let found = capsules["capsules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(Value::as_str)
+            .find(|c| c.ends_with(&id_underscore))
+            .unwrap_or_else(|| panic!("unable to find the capsule for {id} in {capsules}"));
+        PathBuf::from(found)
+    }
+
+    pub fn copy_fixture_components(&self, dir: &str) {
+        let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_path_buf();
+        let src =
+            repo_root.join("components/legacy/e2e-helper/excluded-fixtures/components").join(dir);
+        let dst = self.scopes.local_path.join(dir);
+        super::setup::copy_dir(&src, &dst);
+    }
+
+    pub fn set_custom_env(&self, folder: &str) -> String {
+        self.copy_fixture_extensions(folder);
+        self.add_component(folder, "");
+        self.add_extension_to_variant(folder, "teambit.envs/env", json!({}));
+        self.link("");
+        self.run("install");
+        self.compile();
+        folder.to_owned()
+    }
+
+    pub fn git(&self, line: &str) -> String {
+        Self::git_in(&self.scopes.local_path, line)
+    }
+
+    pub fn git_in(cwd: &std::path::Path, line: &str) -> String {
+        let args = super::split_args(line);
+        let output = std::process::Command::new("git")
+            .args(&args)
+            .current_dir(cwd)
+            .env("GIT_AUTHOR_NAME", "Tester")
+            .env("GIT_AUTHOR_EMAIL", "tester@example.com")
+            .env("GIT_COMMITTER_NAME", "Tester")
+            .env("GIT_COMMITTER_EMAIL", "tester@example.com")
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "`git {line}` failed in {} ({}):\n{}\n{}",
+            cwd.display(),
+            output.status,
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+        String::from_utf8_lossy(&output.stdout).into_owned()
+    }
+
+    pub fn init_new_git_repo(&self) {
+        self.git("init");
+        self.git("config user.name Tester");
+        self.git("config user.email tester@example.com");
     }
 }
 

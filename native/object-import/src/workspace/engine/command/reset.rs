@@ -33,18 +33,7 @@ pub(super) fn plan(
     plan_command::validate_versions(record)?;
     let plan = pool.install(|| planning::checkout_reset(record, current, semver, snapshots, pool))?;
     let configuration = configuration(record, &plan)?;
-    let mut bitmap = plan_command::prepare_bitmap_bytes(record, &plan, bitmap_bytes)?;
-    let identities = plan.materials
-        .iter()
-        .map(|material| {
-            material.output["id"]
-                .as_str()
-                .and_then(|id| id.rsplit_once('@'))
-                .map(|(identity, _)| identity.to_owned())
-                .ok_or_else(|| invalid("reset written configuration identity"))
-        })
-        .collect::<io::Result<Vec<_>>>()?;
-    bitmap.clear_config(&record.context, &identities)?;
+    let bitmap = plan_command::prepare_bitmap_bytes(record, &plan, bitmap_bytes)?;
     let prepared = PreparedPlan {
         plan,
         bitmap,

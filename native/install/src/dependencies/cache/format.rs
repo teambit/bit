@@ -51,6 +51,11 @@ fn dependency(dependency: &LegacyDependency) -> Value {
     if let Some(version) = &dependency.id.version {
         id.insert("version".to_owned(), Value::String(version.clone()));
     }
+    if dependency.id.scope.is_none()
+        && let Some(scope) = &dependency.id.default_scope
+    {
+        id.insert("scope".to_owned(), Value::String(scope.clone()));
+    }
     let mut value = Map::new();
     value.insert("id".to_owned(), Value::Object(id));
     value.insert("relativePaths".to_owned(), Value::Array(Vec::new()));

@@ -80,6 +80,7 @@ fn component(
         identity: identity.clone(),
         package_name: Some(resolved.name.clone()),
         version_range: value.as_str().map(str::to_owned),
+        version_from_config: false,
     });
     true
 }

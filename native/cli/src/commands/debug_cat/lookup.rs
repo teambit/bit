@@ -2,7 +2,7 @@ use crate::commands::lane::scope_root::ScopeRoot;
 use serde_json::Value;
 use std::{fs, path::Path};
 
-pub(super) fn load_cat_component(
+pub(in crate::commands) fn load_cat_component(
     root: &ScopeRoot,
     scope_dir: &Path,
     raw_id: &str,

@@ -64,7 +64,7 @@ fn prepare_list(
     let remotes = if global {
         load_global_remotes(&mut writes)?
     } else {
-        let (_, scope_source) = load_scope_json(cwd, chalk)?;
+        let (_, scope_source) = load_local_scope_json(cwd, chalk)?;
         let scope_remotes = extract_remotes(scope_source.get("remotes"))?;
         let mut combined = load_global_remotes(&mut writes)?;
         for (name, host) in scope_remotes {
@@ -91,7 +91,7 @@ fn prepare_add(url: &str, global: bool, cwd: &Path, chalk: Chalk) -> Result<Prep
         .strip_prefix("file://")
         .ok_or_else(|| Failure::Declined("non-file remote URL".to_owned()))?;
     let target_dir = resolve_path(cwd, raw_target);
-    let (_, target_scope) = load_scope_json(&target_dir, chalk)?;
+    let (_, target_scope) = load_remote_scope_json(&target_dir, chalk)?;
     let remote_name = target_scope
         .get("name")
         .and_then(Value::as_str)
@@ -104,7 +104,7 @@ fn prepare_add(url: &str, global: bool, cwd: &Path, chalk: Chalk) -> Result<Prep
         remotes.insert(remote_name.clone(), Value::String(url.to_owned()));
         writes.push((global_remotes_path(), render_json(&Value::Object(remotes))?));
     } else {
-        let (scope_dir, mut scope_source) = load_scope_json(cwd, chalk)?;
+        let (scope_dir, mut scope_source) = load_local_scope_json(cwd, chalk)?;
         let mut remotes = extract_remotes(scope_source.get("remotes"))?;
         remotes.insert(remote_name.clone(), Value::String(url.to_owned()));
         scope_source.insert("remotes".to_owned(), Value::Object(remotes));
@@ -130,7 +130,7 @@ fn prepare_del(name: &str, global: bool, cwd: &Path, chalk: Chalk) -> Result<Pre
         }
         writes.push((global_remotes_path(), render_json(&Value::Object(remotes))?));
     } else {
-        let (scope_dir, mut scope_source) = load_scope_json(cwd, chalk)?;
+        let (scope_dir, mut scope_source) = load_local_scope_json(cwd, chalk)?;
         let mut remotes = extract_remotes(scope_source.get("remotes"))?;
         if remotes.shift_remove(name).is_none() {
             return Err(Failure::User(format!(
@@ -166,11 +166,29 @@ fn load_global_remotes(
     extract_remotes(Some(&value))
 }
 
-fn load_scope_json(
+fn load_local_scope_json(
     from_path: &Path,
     chalk: Chalk,
 ) -> Result<(PathBuf, Map<String, Value>), Failure> {
+    load_scope_json(from_path, chalk, true)
+}
+
+fn load_remote_scope_json(
+    from_path: &Path,
+    chalk: Chalk,
+) -> Result<(PathBuf, Map<String, Value>), Failure> {
+    load_scope_json(from_path, chalk, false)
+}
+
+fn load_scope_json(
+    from_path: &Path,
+    chalk: Chalk,
+    allow_workspace_init: bool,
+) -> Result<(PathBuf, Map<String, Value>), Failure> {
     let Some(scope_dir) = find_scope_path(from_path) else {
+        if allow_workspace_init && crate::workspace::root(from_path).is_some() {
+            return Err(Failure::Declined("workspace scope not initialized yet".to_owned()));
+        }
         return Err(Failure::User(format!(
             "error: scope not found at {}",
             chalk.bold(&from_path.to_string_lossy()),

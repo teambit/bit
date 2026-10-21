@@ -1,6 +1,10 @@
 //! The snap and tag reports: the engine's result, validated, and
 //! `snapResultReport` and `tagResultReport` of `@teambit/snapping` format it.
 
+pub use labels::{Labels, PERSIST_TAG, SNAP, SOFT_TAG, TAG};
+
+mod labels;
+
 use super::{format::Formatter, results::Report};
 use crate::commands::{
     color::Chalk,
@@ -10,81 +14,6 @@ use crate::commands::{
 use serde_json::Value;
 use std::{cmp::Reverse, collections::HashSet, fmt::Write, io};
 
-/// What differs between the snap and the tag report.
-pub struct Labels {
-    /// `snappedComponents` or `taggedComponents`.
-    versioned: &'static str,
-    /// `autoSnappedResults` or `autoTaggedResults`.
-    automatic: &'static str,
-    /// The other keys a result may carry.
-    others: &'static [&'static str],
-    /// `NOTHING_TO_SNAP_MSG` or `NOTHING_TO_TAG_MSG`.
-    nothing: &'static str,
-    /// `AUTO_SNAPPED_MSG` or `AUTO_TAGGED_MSG`.
-    dependents: &'static str,
-    /// `snapped` or `tagged`.
-    verb: &'static str,
-    explanation: &'static str,
-    /// A tag: semver versions only, warnings, and uncounted dependents in
-    /// the detailed listing.
-    tag: bool,
-}
-
-pub const SNAP: Labels = Labels {
-    versioned: "snappedComponents",
-    automatic: "autoSnappedResults",
-    others: &["newComponents", "removedComponents", "laneName", "totalComponentsCount"],
-    nothing: "nothing to snap",
-    dependents: "auto-snapped dependents",
-    verb: "snapped",
-    explanation: "(use \"bit export\" to push these components to a remote)\n(use \"bit reset\" to unstage all local versions, or \"bit reset --head\" to only unstage the latest local snap)",
-    tag: false,
-};
-
-pub const TAG: Labels = Labels {
-    versioned: "taggedComponents",
-    automatic: "autoTaggedResults",
-    others: &["newComponents", "warnings", "totalComponentsCount"],
-    nothing: "nothing to tag",
-    dependents: "auto-tagged dependents",
-    verb: "tagged",
-    explanation: "(use \"bit export\" to push these components to a remote)\n(use \"bit reset\" to unstage versions)",
-    tag: true,
-};
-
-pub const SOFT_TAG: Labels = Labels {
-    versioned: "taggedComponents",
-    automatic: "autoTaggedResults",
-    others: &["newComponents", "warnings", "totalComponentsCount"],
-    nothing: "nothing to tag",
-    dependents: "auto-tagged dependents",
-    verb: "soft-tagged",
-    explanation: "(use \"bit tag --persist\" to persist the soft-tagged changes as a fully tagged version)\n(use \"bit reset --soft\" to remove the soft-tags)",
-    tag: true,
-};
-
-pub const PERSIST_TAG: Labels = Labels { nothing: "no soft-tag found", ..TAG };
-
-impl Labels {
-    fn soft(&self) -> bool {
-        self.verb == "soft-tagged"
-    }
-    fn section(&self, new: bool) -> (&'static str, &'static str) {
-        match (self.soft(), new) {
-            (true, true) => (
-                "soft-tagged new components",
-                "set to be tagged with first version for components when persisted",
-            ),
-            (true, false) => (
-                "soft-tagged changed components",
-                "components that are set to get a version bump when persisted",
-            ),
-            (false, true) => ("new components", "first version for components"),
-            (false, false) => ("changed components", "components that got a version bump"),
-        }
-    }
-}
-
 /// The engine's result, validated.
 struct Versioned<'l> {
     labels: &'l Labels,
@@ -93,9 +22,11 @@ struct Versioned<'l> {
     removed: Vec<Id>,
     /// Each automatic component and the components that triggered it.
     automatic: Vec<(Id, Vec<Id>)>,
-    lane: Option<String>,
+    /// Dependents whose config pins the version of a tagged/snapped dependency.
+    pinned: Vec<(Id, Vec<String>)>,
     warnings: Vec<String>,
-    total: u64,
+    /// `(laneName, totalComponentsCount)`.
+    summary: (Option<String>, u64),
 }
 
 pub fn format(result: &Value, chalk: Chalk, labels: &Labels) -> io::Result<Report> {
@@ -123,10 +54,8 @@ fn hydrate<'l>(value: &Value, labels: &'l Labels) -> io::Result<Versioned<'l>> {
         .collect();
     if added
         .iter()
+        .chain(&removed)
         .any(|id| !selected_names.contains(&id.without_version()))
-        || removed
-            .iter()
-            .any(|id| !selected_names.contains(&id.without_version()))
     {
         return Err(decline("native snap new components"));
     }
@@ -134,15 +63,41 @@ fn hydrate<'l>(value: &Value, labels: &'l Labels) -> io::Result<Versioned<'l>> {
         .iter()
         .map(|row| automatic_row(row, &selected_names, labels))
         .collect::<io::Result<Vec<_>>>()?;
+    let pinned = pinned_dependents(map.get("dependentsWithPinnedDeps"))?;
     let warnings = warnings(map.get("warnings"), labels)?;
-    let lane = map
-        .get("laneName")
-        .and_then(Value::as_str)
-        .map(str::to_string);
-    let versioned =
-        Versioned { labels, selected, added, removed, automatic, lane, warnings, total };
+    let versioned = Versioned {
+        labels,
+        selected,
+        added,
+        removed,
+        automatic,
+        pinned,
+        warnings,
+        summary: (
+            map.get("laneName")
+                .and_then(Value::as_str)
+                .map(str::to_string),
+            total,
+        ),
+    };
     versioned.validate_overlaps()?;
     Ok(versioned)
+}
+
+fn pinned_dependents(value: Option<&Value>) -> io::Result<Vec<(Id, Vec<String>)>> {
+    let Some(value) = value else { return Ok(Vec::new()) };
+    array(Some(value), "dependents with pinned dependencies")?
+        .iter()
+        .map(|row| {
+            let map = object(row)?;
+            let id = Id::parse(text(map.get("id"))?)?;
+            let deps = array(map.get("pinnedDependencies"), "pinned dependencies")?
+                .iter()
+                .map(|dep| text(Some(dep)).map(str::to_string))
+                .collect::<io::Result<Vec<_>>>()?;
+            Ok((id, deps))
+        })
+        .collect()
 }
 
 /// The result's keys, lane, total and (for a tag) `isSoftTag: false`.
@@ -256,7 +211,7 @@ impl Versioned<'_> {
             }
             persisted.insert(name);
         }
-        if persisted.len() as u64 != self.total {
+        if persisted.len() as u64 != self.summary.1 {
             return Err(decline("native snap component count"));
         }
         Ok(())
@@ -274,7 +229,7 @@ impl Versioned<'_> {
             );
             return Report { data, code: 0, details: None };
         }
-        let summary = vec![self.automatic_section(format), warnings.clone(), footer.clone()];
+        let summary = vec![warnings.clone(), footer.clone()];
         let data = Formatter::join(&[self.sections(format, false, &root), summary].concat());
         let details =
             Formatter::join(&[self.sections(format, true, &root), vec![warnings, footer]].concat());
@@ -314,8 +269,39 @@ impl Versioned<'_> {
             format.section(new_title, new_desc, &new),
             format.section(changed_title, changed_desc, &changed),
             root.to_string(),
+            if !detailed && !self.automatic.is_empty() {
+                self.automatic_section(format)
+            } else {
+                String::new()
+            },
+            self.pinned_section(format),
             format.section("removed components", "", &removed),
         ]
+    }
+
+    fn pinned_section(&self, format: &Formatter) -> String {
+        if self.pinned.is_empty() {
+            return String::new();
+        }
+        let action = if self.labels.tag { "tagged" } else { "snapped" };
+        let items: Vec<String> = self.pinned
+            .iter()
+            .map(|(id, deps)| {
+                let text = format!(
+                    "{} {}",
+                    in_bold(format.chalk, id),
+                    format.chalk.dim(&format!("({})", deps.join(", "))),
+                );
+                Formatter::item_with(&text, &format.warn_symbol())
+            })
+            .collect();
+        let section = format.section(
+            &format!("dependents not auto-{action}"),
+            &format!(r#"their config sets the version of the {action} dependency ("bit deps set", variants or env), so they keep using it"#),
+            &items,
+        );
+        let hint = format.hint(r#"(to use the workspace version, remove the version from the config, e.g. "bit deps unset <component> <package>")"#);
+        format!("{section}\n{hint}")
     }
 
     /// `formatCompDetailed`.
@@ -380,12 +366,12 @@ impl Versioned<'_> {
     }
 
     fn footer(&self, format: &Formatter) -> String {
-        let lane = self.lane
+        let lane = self.summary.0
             .as_ref()
             .map_or_else(String::new, |lane| format!(r#" on "{lane}" lane"#));
         let summary = format.success_summary(&format!(
             "{} component(s) {}{lane}",
-            self.total, self.labels.verb,
+            self.summary.1, self.labels.verb,
         ));
         let explanation = format.hint(self.labels.explanation);
         if self.labels.soft() {

@@ -57,6 +57,7 @@ impl Projection<'_> {
         let id = super::super::component_id::serialize(id, package.manifest["exported"] == false)?;
         let mut dependency = json!({"id":id,"relativePaths":[],"packageName":package.name});
         if let Some(range) = peer {
+            dependency["versionRange"] = range.clone();
             dependency["peerVersionRange"] = range;
         }
         self.dependencies[field].push(dependency);

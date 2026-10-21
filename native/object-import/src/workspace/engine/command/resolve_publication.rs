@@ -53,6 +53,9 @@ pub(super) fn preflight(
         .iter()
         .map(|material| {
             let mut version = material.version.clone();
+            if let Some(fields) = version.as_object_mut() {
+                fields.remove("pinnedDependencies");
+            }
             resolve_markers(&mut version, &heads)?;
             Ok(json!({"identity":material.identity,"hash":heads[material.identity.as_str()],"version":version}))
         })

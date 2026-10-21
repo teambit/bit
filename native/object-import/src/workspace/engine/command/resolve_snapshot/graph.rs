@@ -13,8 +13,9 @@ pub(super) fn graph(
     objects: &mut Vec<Value>,
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<()> {
+    let pinned = super::pinned_dependencies(&material.version);
     let mut rows = read(root, version, material, proofs)?;
-    rewrite_batch_refs(&mut rows, hashes)?;
+    rewrite_batch_refs(&mut rows, hashes, &pinned)?;
     rekey(&mut rows, &material.identity, hash)?;
     store(version, &rows, objects)
 }

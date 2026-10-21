@@ -37,8 +37,10 @@ fn saved_graph_leaf_does_not_require_external_model_or_version_objects() {
     super::saved::append(&mut graph, &json!([{"source":old,"target":external,"type":"prod"}]))
         .unwrap();
     let versions = std::collections::HashMap::from([("scope/root".to_owned(), version.clone())]);
+    let pinned = std::collections::HashSet::new();
     let (flattened, edges) =
-        super::traverse("scope/root", &version, &versions, &graph, &mut repository).unwrap();
+        super::traverse("scope/root", &version, &pinned, &versions, &graph, &mut repository)
+            .unwrap();
     assert_eq!(flattened, vec![external.clone()]);
     assert_eq!(edges[0]["target"], external);
     assert!(!directory.0.join(".bit/objects").exists());
@@ -61,7 +63,9 @@ fn retained_graph_cycle_declines_before_prior_selected_version_can_be_rewritten(
     )
     .unwrap();
     let versions = std::collections::HashMap::from([("scope/root".to_owned(), version.clone())]);
+    let pinned = std::collections::HashSet::new();
     let error =
-        super::traverse("scope/root", &version, &versions, &graph, &mut repository).unwrap_err();
+        super::traverse("scope/root", &version, &pinned, &versions, &graph, &mut repository)
+            .unwrap_err();
     assert_eq!(error.to_string(), "resolve retained graph reaches prior batch version");
 }

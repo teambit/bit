@@ -37,7 +37,7 @@ pub(super) fn prepare(
     )?;
     retain_proofs(retained, input.dependency_read_set)?;
     let mut result = report(retained, &input.semver, &selected, &materials, &automatic)?;
-    super::root::report(retained, &materials, &mut result);
+    projection::attach_pinned_dependents(retained, &input.components, &materials, &mut result);
     let mut output = response(retained, &selected, &materials, &result, (auto_loaded, load_count));
     if retained.snap.is_none() && retained.tag.is_none() {
         output["autoSnapResults"] = json!(automatic);
@@ -61,15 +61,18 @@ fn select_current(
     input: &Plan,
     snapshots: &snapshots::State,
 ) -> io::Result<Selection> {
-    let Selection {
-        identities: mut selected,
-        mut load_count,
-    } = selected(retained, captured, input)?;
-    if super::root::include(retained, captured, &mut selected)? {
-        load_count += 1;
+    let mut selection = if retained.tag.is_some() {
+        super::tag::select(retained, captured, input)?
+    } else if retained.snap.is_some() {
+        Selection::unique(super::snap::select(retained, captured, input.selected_ids.as_deref())?)
+    } else {
+        Selection::unique(select(retained, input)?)
+    };
+    if super::root::include(retained, captured, &mut selection.identities)? {
+        selection.load_count += 1;
     }
     retained.record.proofs.extend(super::source_proofs::capture(captured, snapshots)?);
-    Ok(Selection { identities: selected, load_count })
+    Ok(selection)
 }
 
 fn snapshot_metadata(retained: &Retained, materials: &[Material], output: &mut Value) {
@@ -88,30 +91,15 @@ fn report(
     materials: &[Material],
     automatic: &[Value],
 ) -> io::Result<Value> {
-    if retained.tag.is_some() {
-        super::tag::report(retained, semver, selected, materials, automatic)
+    let mut result = if retained.tag.is_some() {
+        super::tag::report(retained, semver, selected, materials, automatic)?
     } else if retained.snap.is_some() {
-        super::snap::report(retained, selected, materials, automatic)
+        super::snap::report(retained, selected, materials, automatic)?
     } else {
-        Ok(
-            json!({"resolvedComponents":selected.iter().map(|id| json!({"id":id})).collect::<Vec<_>>()}),
-        )
-    }
-}
-
-fn selected(
-    retained: &mut Retained,
-    captured: &[capture::Captured],
-    input: &Plan,
-) -> io::Result<Selection> {
-    if retained.tag.is_some() {
-        super::tag::select(retained, captured, input)
-    } else if retained.snap.is_some() {
-        super::snap::select(retained, captured, input.selected_ids.as_deref())
-            .map(Selection::unique)
-    } else {
-        select(retained, input).map(Selection::unique)
-    }
+        json!({"resolvedComponents":selected.iter().map(|id| json!({"id":id})).collect::<Vec<_>>()})
+    };
+    super::root::report(retained, materials, &mut result);
+    Ok(result)
 }
 
 fn retain_proofs(retained: &mut Retained, proofs: Vec<super::proof::Proof>) -> io::Result<()> {
@@ -131,7 +119,7 @@ fn materials(
     let mut automatic = if seeds.is_empty() {
         Vec::new()
     } else {
-        cascade::reports(&input.current, &seeds, &input.semver)?
+        cascade::reports(&input.current, &input.components, &seeds, &input.semver)?
     };
     let order = material_order(selected, &automatic);
     let mut components = input.components.clone();
@@ -309,8 +297,7 @@ pub(super) fn material(
     let stored = retained.record.repository.read(&reference, "Version")?;
     let version =
         projection::version(&stored, &current.target.current, &current.metadata, receipt)?;
-    let head = current_head(retained, identity, &model)?;
-    let pending = ensure_attached_or_unrelated(retained, identity, &reference, &head)?;
+    let pending = ensure_attached_or_unrelated(retained, identity, &reference, &model)?;
     Ok(Material {
         identity: identity.clone(),
         model,
@@ -330,8 +317,17 @@ fn ensure_attached_or_unrelated(
     retained: &Retained,
     identity: &String,
     reference: &str,
-    head: &str,
+    model: &Value,
 ) -> io::Result<Option<Value>> {
+    let head = retained.record.context["lane"]["targets"]
+        .as_array()
+        .and_then(|rows| {
+            rows.iter()
+                .find(|row| row["identity"] == *identity)
+        })
+        .and_then(|row| row["currentHead"].as_str())
+        .or_else(|| model["head"].as_str())
+        .ok_or_else(|| invalid("resolve current head"))?;
     let pending = retained.pending
         .iter()
         .find(|row| selection::identity(&row["id"]).ok().as_ref() == Some(identity))
@@ -347,19 +343,6 @@ fn ensure_attached_or_unrelated(
     Ok(pending)
 }
 
-fn current_head(retained: &Retained, identity: &str, model: &Value) -> io::Result<String> {
-    retained.record.context["lane"]["targets"]
-        .as_array()
-        .and_then(|rows| {
-            rows.iter()
-                .find(|row| row["identity"] == identity)
-        })
-        .and_then(|row| row["currentHead"].as_str())
-        .or_else(|| model["head"].as_str())
-        .ok_or_else(|| invalid("resolve current head"))
-        .map(str::to_owned)
-}
-
 pub(super) fn preflight(
     retained: &mut Retained,
     materials: &mut [Material],
@@ -370,11 +353,12 @@ pub(super) fn preflight(
     } else {
         graph::project(materials, &mut retained.record.repository)?;
     }
+    let is_snap = retained.snap.is_some() || retained.record.context["callbackLifecycle"] == true;
     super::super::resolve_snapshot::preflight(
         &retained.record.request.root,
         materials,
         snapshots,
-        retained.snap.is_some() || retained.record.context["callbackLifecycle"] == true,
+        is_snap,
     )?;
     super::super::resolve_publication::preflight(
         &retained.record.request.root,
@@ -382,9 +366,8 @@ pub(super) fn preflight(
         materials,
         &retained.pending,
         retained.record.repository.imported_index(),
-        retained.snap.is_some() || retained.record.context["callbackLifecycle"] == true,
-    )?;
-    Ok(())
+        is_snap,
+    )
 }
 
 fn project_materials(

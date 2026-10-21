@@ -27,6 +27,7 @@ pub(super) fn read(
         "manifestPatterns":manifest.as_ref().and_then(|manifest|manifest.get("patterns")),
         "registeredEnvPolicy":registered(component,&registrations),"aspectIds":aspects,
         "envOwnPolicy":own_policy(reader,component,host,aspects)?,
+        "loadFailures":provider.load_failures,
     }))
 }
 
@@ -34,6 +35,7 @@ struct ProviderFacts {
     env_policy: Value,
     dev_patterns: Value,
     compiler: Value,
+    load_failures: Value,
 }
 
 fn provider_facts(
@@ -55,10 +57,15 @@ fn provider_facts(
     };
     let dev_patterns = provider_fact(&provider, "devPatterns")?;
     let compiler = if needs_issues { provider_fact(&provider, "compiler")? } else { Value::Null };
+    let load_failures = provider
+        .get("loadFailures")
+        .cloned()
+        .unwrap_or_else(|| json!([]));
     Ok(ProviderFacts {
         env_policy: if env_policy.is_null() { json!({}) } else { env_policy },
         dev_patterns,
         compiler,
+        load_failures,
     })
 }
 

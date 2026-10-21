@@ -1174,9 +1174,9 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/artifacts.e2e.ts`
 
-- [ ] `e2e/harmony/artifacts.e2e.ts:23` bit artifacts command › staged component that was never exported › should not throw an error about missing scope
-- [ ] `e2e/harmony/artifacts.e2e.ts:26` bit artifacts command › staged component that was never exported › should be able to work when using the full component-id
-- [ ] `e2e/harmony/artifacts.e2e.ts:36` bit artifacts command › running the command on a snap › should not throw an error about non exist component
+- [x] `e2e/harmony/artifacts.e2e.ts:23` bit artifacts command › staged component that was never exported › should not throw an error about missing scope
+- [x] `e2e/harmony/artifacts.e2e.ts:26` bit artifacts command › staged component that was never exported › should be able to work when using the full component-id
+- [x] `e2e/harmony/artifacts.e2e.ts:36` bit artifacts command › running the command on a snap › should not throw an error about non exist component
 
 ### `e2e/harmony/aspect.e2e.ts`
 
@@ -1310,62 +1310,62 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/ci-bitmap-auto-sync.e2e.ts`
 
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:133` ci merge with bitmap auto-sync mode › regression: workspace WITHOUT bitmapAutoSync flag › should complete successfully
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:137` ci merge with bitmap auto-sync mode › regression: workspace WITHOUT bitmapAutoSync flag › should still create a CI commit on the default branch (existing behavior)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:143` ci merge with bitmap auto-sync mode › regression: workspace WITHOUT bitmapAutoSync flag › should still tag the component
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:183` ci merge with bitmap auto-sync mode › with bitmapAutoSync enabled and --no-bitmap-commit flag › should complete successfully
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:187` ci merge with bitmap auto-sync mode › with bitmapAutoSync enabled and --no-bitmap-commit flag › should explicitly indicate the bitmap commit was skipped in output
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:192` ci merge with bitmap auto-sync mode › with bitmapAutoSync enabled and --no-bitmap-commit flag › should NOT push any new commit to origin from the CI side
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:196` ci merge with bitmap auto-sync mode › with bitmapAutoSync enabled and --no-bitmap-commit flag › local HEAD should equal origin HEAD (no extra local commit either)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:202` ci merge with bitmap auto-sync mode › with bitmapAutoSync enabled and --no-bitmap-commit flag › should still tag the component locally
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:208` ci merge with bitmap auto-sync mode › with bitmapAutoSync enabled and --no-bitmap-commit flag › should still export the new version to the remote scope
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:252` ci merge with bitmap auto-sync mode › downstream developer workspace auto-syncs after git pull › before the developer has run `git pull` › local .bitmap reflects the old version
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:264` ci merge with bitmap auto-sync mode › downstream developer workspace auto-syncs after git pull › after `git pull` brings in the merge commit (no .bitmap delta in git) › the .bitmap on disk has not yet been updated by Bit
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:276` ci merge with bitmap auto-sync mode › downstream developer workspace auto-syncs after git pull › after `git pull` brings in the merge commit (no .bitmap delta in git) › the first bit command after pull (`bit status`) › triggers auto-sync, updating .bitmap to scope HEAD (0.0.2)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:282` ci merge with bitmap auto-sync mode › downstream developer workspace auto-syncs after git pull › after `git pull` brings in the merge commit (no .bitmap delta in git) › the first bit command after pull (`bit status`) › writes the sentinel file recording the synced git HEAD
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:290` ci merge with bitmap auto-sync mode › downstream developer workspace auto-syncs after git pull › after `git pull` brings in the merge commit (no .bitmap delta in git) › the first bit command after pull (`bit status`) › reports a clean status (no outdated, no modified)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:294` ci merge with bitmap auto-sync mode › downstream developer workspace auto-syncs after git pull › after `git pull` brings in the merge commit (no .bitmap delta in git) › the first bit command after pull (`bit status`) › leaves .bitmap as a local working-tree modification in git
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:354` ci merge with bitmap auto-sync mode › auto-sync works regardless of which command runs first › `bit list` as first command syncs bitmap
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:359` ci merge with bitmap auto-sync mode › auto-sync works regardless of which command runs first › `bit show` as first command syncs bitmap
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:364` ci merge with bitmap auto-sync mode › auto-sync works regardless of which command runs first › `bit log` as first command syncs bitmap
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:369` ci merge with bitmap auto-sync mode › auto-sync works regardless of which command runs first › `bit compile` as first command syncs bitmap
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:415` ci merge with bitmap auto-sync mode › sentinel caching across commands at the same git HEAD › sentinel file should be untouched after the second command (same git HEAD)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:453` ci merge with bitmap auto-sync mode › multiple sequential PR cycles › cycle 1: dev syncs to 0.0.2
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:465` ci merge with bitmap auto-sync mode › multiple sequential PR cycles › cycle 2: dev syncs to 0.0.3
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:511` ci merge with bitmap auto-sync mode › continuous developer flow — multiple sync cycles in the same workspace › cycle 1: bitmap syncs to 0.0.2
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:524` ci merge with bitmap auto-sync mode › continuous developer flow — multiple sync cycles in the same workspace › cycle 2: same workspace (already-modified .bitmap from cycle 1), syncs to 0.0.3
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:537` ci merge with bitmap auto-sync mode › continuous developer flow — multiple sync cycles in the same workspace › cycle 3: continues advancing without state corruption
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:550` ci merge with bitmap auto-sync mode › continuous developer flow — multiple sync cycles in the same workspace › the sentinel reflects the latest synced HEAD after the chain of cycles
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:611` ci merge with bitmap auto-sync mode › developer working on a git feature branch (Bit on main) — merging main in › before merging main: dev .bitmap is still at the original 0.0.1
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:621` ci merge with bitmap auto-sync mode › developer working on a git feature branch (Bit on main) — merging main in › dev merges origin/main into their feature branch › git status shows we are still on the feature branch (Bit lane is still main)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:633` ci merge with bitmap auto-sync mode › developer working on a git feature branch (Bit on main) — merging main in › dev merges origin/main into their feature branch › first bit command on the feature branch after the merge › auto-sync runs and updates .bitmap to scope HEAD (0.0.2)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:637` ci merge with bitmap auto-sync mode › developer working on a git feature branch (Bit on main) — merging main in › dev merges origin/main into their feature branch › first bit command on the feature branch after the merge › sentinel records the feature branch HEAD (the merge commit)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:697` ci merge with bitmap auto-sync mode › first bit command is `bit ci pr` on a stale feature branch › starts the test with .bitmap reflecting the post-sync version (0.0.2)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:704` ci merge with bitmap auto-sync mode › first bit command is `bit ci pr` on a stale feature branch › bit ci pr completes successfully despite the stale starting state
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:708` ci merge with bitmap auto-sync mode › first bit command is `bit ci pr` on a stale feature branch › creates the lane and exports it
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:715` ci merge with bitmap auto-sync mode › first bit command is `bit ci pr` on a stale feature branch › the sentinel was advanced (auto-sync ran during the bit ci pr bootstrap)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:770` ci merge with bitmap auto-sync mode › first sync after a PR introduces a brand-new component › after pull, .bitmap entry for comp-new has no scope or version yet (it is the merged-but-unsynced state)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:783` ci merge with bitmap auto-sync mode › first sync after a PR introduces a brand-new component › first bit command after pull triggers auto-sync › comp-new in .bitmap should be promoted to its tagged state (scope + version)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:790` ci merge with bitmap auto-sync mode › first sync after a PR introduces a brand-new component › first bit command after pull triggers auto-sync › `bit list` shows comp-new at 0.0.1
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:842` ci merge with bitmap auto-sync mode › fresh clone after a PR introduced a brand-new component (workspace2) › the freshly-cloned .bitmap shows comp-new-clone in its untagged form
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:854` ci merge with bitmap auto-sync mode › fresh clone after a PR introduced a brand-new component (workspace2) › first bit command in the fresh clone triggers auto-sync › comp-new-clone in .bitmap should be promoted to its tagged state
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:896` ci merge with bitmap auto-sync mode › developer on a Bit lane — auto-sync is skipped › we are on the Bit lane, not main
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:901` ci merge with bitmap auto-sync mode › developer on a Bit lane — auto-sync is skipped › sentinel did NOT advance to the lane-side git HEAD (lane guard suppressed sync)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:938` ci merge with bitmap auto-sync mode › --no-bitmap-commit CLI flag without the workspace flag › should skip the commit (CLI flag works standalone)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:942` ci merge with bitmap auto-sync mode › --no-bitmap-commit CLI flag without the workspace flag › should still tag and export to remote scope
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:948` ci merge with bitmap auto-sync mode › --no-bitmap-commit CLI flag without the workspace flag › should NOT create a sentinel file (workspace flag is off)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:989` ci merge with bitmap auto-sync mode › multiple components — all bitmap entries mirror scope HEAD after sync › every component in the bitmap should match its scope HEAD
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1003` ci merge with bitmap auto-sync mode › multiple components — all bitmap entries mirror scope HEAD after sync › the modified components (comp1, comp3) should be at the new tag (0.0.2)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1011` ci merge with bitmap auto-sync mode › multiple components — all bitmap entries mirror scope HEAD after sync › status should be clean across all components
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1031` ci merge with bitmap auto-sync mode › workspace without git: graceful skip › bit status should run successfully without erroring on the missing git
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1037` ci merge with bitmap auto-sync mode › workspace without git: graceful skip › should NOT create a sentinel file when there is no git
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1042` ci merge with bitmap auto-sync mode › workspace without git: graceful skip › bit list should report the locally-known version (no sync attempted)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1082` ci merge with bitmap auto-sync mode › git HEAD changed but no actual scope-vs-bitmap drift › .bitmap should be byte-identical to before the sync (no spurious rewrites)
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1087` ci merge with bitmap auto-sync mode › git HEAD changed but no actual scope-vs-bitmap drift › the sentinel should still advance to the current git HEAD
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1132` ci merge with bitmap auto-sync mode › graceful degradation when remote scope is unreachable › bit status should complete without throwing
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1137` ci merge with bitmap auto-sync mode › graceful degradation when remote scope is unreachable › local .bitmap should not be corrupted by the failed remote
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1174` ci merge with bitmap auto-sync mode › bitmapAutoSync enabled but legacy `bit ci merge` (commit + push) used › legacy commit+push still works when --no-bitmap-commit is omitted
-- [ ] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1180` ci merge with bitmap auto-sync mode › bitmapAutoSync enabled but legacy `bit ci merge` (commit + push) used › component is tagged and exported
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:133` ci merge with bitmap auto-sync mode › regression: workspace WITHOUT bitmapAutoSync flag › should complete successfully
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:137` ci merge with bitmap auto-sync mode › regression: workspace WITHOUT bitmapAutoSync flag › should still create a CI commit on the default branch (existing behavior)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:143` ci merge with bitmap auto-sync mode › regression: workspace WITHOUT bitmapAutoSync flag › should still tag the component
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:183` ci merge with bitmap auto-sync mode › with bitmapAutoSync enabled and --no-bitmap-commit flag › should complete successfully
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:187` ci merge with bitmap auto-sync mode › with bitmapAutoSync enabled and --no-bitmap-commit flag › should explicitly indicate the bitmap commit was skipped in output
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:192` ci merge with bitmap auto-sync mode › with bitmapAutoSync enabled and --no-bitmap-commit flag › should NOT push any new commit to origin from the CI side
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:196` ci merge with bitmap auto-sync mode › with bitmapAutoSync enabled and --no-bitmap-commit flag › local HEAD should equal origin HEAD (no extra local commit either)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:202` ci merge with bitmap auto-sync mode › with bitmapAutoSync enabled and --no-bitmap-commit flag › should still tag the component locally
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:208` ci merge with bitmap auto-sync mode › with bitmapAutoSync enabled and --no-bitmap-commit flag › should still export the new version to the remote scope
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:252` ci merge with bitmap auto-sync mode › downstream developer workspace auto-syncs after git pull › before the developer has run `git pull` › local .bitmap reflects the old version
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:264` ci merge with bitmap auto-sync mode › downstream developer workspace auto-syncs after git pull › after `git pull` brings in the merge commit (no .bitmap delta in git) › the .bitmap on disk has not yet been updated by Bit
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:276` ci merge with bitmap auto-sync mode › downstream developer workspace auto-syncs after git pull › after `git pull` brings in the merge commit (no .bitmap delta in git) › the first bit command after pull (`bit status`) › triggers auto-sync, updating .bitmap to scope HEAD (0.0.2)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:282` ci merge with bitmap auto-sync mode › downstream developer workspace auto-syncs after git pull › after `git pull` brings in the merge commit (no .bitmap delta in git) › the first bit command after pull (`bit status`) › writes the sentinel file recording the synced git HEAD
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:290` ci merge with bitmap auto-sync mode › downstream developer workspace auto-syncs after git pull › after `git pull` brings in the merge commit (no .bitmap delta in git) › the first bit command after pull (`bit status`) › reports a clean status (no outdated, no modified)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:294` ci merge with bitmap auto-sync mode › downstream developer workspace auto-syncs after git pull › after `git pull` brings in the merge commit (no .bitmap delta in git) › the first bit command after pull (`bit status`) › leaves .bitmap as a local working-tree modification in git
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:354` ci merge with bitmap auto-sync mode › auto-sync works regardless of which command runs first › `bit list` as first command syncs bitmap
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:359` ci merge with bitmap auto-sync mode › auto-sync works regardless of which command runs first › `bit show` as first command syncs bitmap
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:364` ci merge with bitmap auto-sync mode › auto-sync works regardless of which command runs first › `bit log` as first command syncs bitmap
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:369` ci merge with bitmap auto-sync mode › auto-sync works regardless of which command runs first › `bit compile` as first command syncs bitmap
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:415` ci merge with bitmap auto-sync mode › sentinel caching across commands at the same git HEAD › sentinel file should be untouched after the second command (same git HEAD)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:453` ci merge with bitmap auto-sync mode › multiple sequential PR cycles › cycle 1: dev syncs to 0.0.2
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:465` ci merge with bitmap auto-sync mode › multiple sequential PR cycles › cycle 2: dev syncs to 0.0.3
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:511` ci merge with bitmap auto-sync mode › continuous developer flow — multiple sync cycles in the same workspace › cycle 1: bitmap syncs to 0.0.2
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:524` ci merge with bitmap auto-sync mode › continuous developer flow — multiple sync cycles in the same workspace › cycle 2: same workspace (already-modified .bitmap from cycle 1), syncs to 0.0.3
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:537` ci merge with bitmap auto-sync mode › continuous developer flow — multiple sync cycles in the same workspace › cycle 3: continues advancing without state corruption
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:550` ci merge with bitmap auto-sync mode › continuous developer flow — multiple sync cycles in the same workspace › the sentinel reflects the latest synced HEAD after the chain of cycles
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:611` ci merge with bitmap auto-sync mode › developer working on a git feature branch (Bit on main) — merging main in › before merging main: dev .bitmap is still at the original 0.0.1
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:621` ci merge with bitmap auto-sync mode › developer working on a git feature branch (Bit on main) — merging main in › dev merges origin/main into their feature branch › git status shows we are still on the feature branch (Bit lane is still main)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:633` ci merge with bitmap auto-sync mode › developer working on a git feature branch (Bit on main) — merging main in › dev merges origin/main into their feature branch › first bit command on the feature branch after the merge › auto-sync runs and updates .bitmap to scope HEAD (0.0.2)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:637` ci merge with bitmap auto-sync mode › developer working on a git feature branch (Bit on main) — merging main in › dev merges origin/main into their feature branch › first bit command on the feature branch after the merge › sentinel records the feature branch HEAD (the merge commit)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:697` ci merge with bitmap auto-sync mode › first bit command is `bit ci pr` on a stale feature branch › starts the test with .bitmap reflecting the post-sync version (0.0.2)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:704` ci merge with bitmap auto-sync mode › first bit command is `bit ci pr` on a stale feature branch › bit ci pr completes successfully despite the stale starting state
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:708` ci merge with bitmap auto-sync mode › first bit command is `bit ci pr` on a stale feature branch › creates the lane and exports it
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:715` ci merge with bitmap auto-sync mode › first bit command is `bit ci pr` on a stale feature branch › the sentinel was advanced (auto-sync ran during the bit ci pr bootstrap)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:770` ci merge with bitmap auto-sync mode › first sync after a PR introduces a brand-new component › after pull, .bitmap entry for comp-new has no scope or version yet (it is the merged-but-unsynced state)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:783` ci merge with bitmap auto-sync mode › first sync after a PR introduces a brand-new component › first bit command after pull triggers auto-sync › comp-new in .bitmap should be promoted to its tagged state (scope + version)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:790` ci merge with bitmap auto-sync mode › first sync after a PR introduces a brand-new component › first bit command after pull triggers auto-sync › `bit list` shows comp-new at 0.0.1
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:842` ci merge with bitmap auto-sync mode › fresh clone after a PR introduced a brand-new component (workspace2) › the freshly-cloned .bitmap shows comp-new-clone in its untagged form
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:854` ci merge with bitmap auto-sync mode › fresh clone after a PR introduced a brand-new component (workspace2) › first bit command in the fresh clone triggers auto-sync › comp-new-clone in .bitmap should be promoted to its tagged state
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:896` ci merge with bitmap auto-sync mode › developer on a Bit lane — auto-sync is skipped › we are on the Bit lane, not main
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:901` ci merge with bitmap auto-sync mode › developer on a Bit lane — auto-sync is skipped › sentinel did NOT advance to the lane-side git HEAD (lane guard suppressed sync)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:938` ci merge with bitmap auto-sync mode › --no-bitmap-commit CLI flag without the workspace flag › should skip the commit (CLI flag works standalone)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:942` ci merge with bitmap auto-sync mode › --no-bitmap-commit CLI flag without the workspace flag › should still tag and export to remote scope
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:948` ci merge with bitmap auto-sync mode › --no-bitmap-commit CLI flag without the workspace flag › should NOT create a sentinel file (workspace flag is off)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:989` ci merge with bitmap auto-sync mode › multiple components — all bitmap entries mirror scope HEAD after sync › every component in the bitmap should match its scope HEAD
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1003` ci merge with bitmap auto-sync mode › multiple components — all bitmap entries mirror scope HEAD after sync › the modified components (comp1, comp3) should be at the new tag (0.0.2)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1011` ci merge with bitmap auto-sync mode › multiple components — all bitmap entries mirror scope HEAD after sync › status should be clean across all components
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1031` ci merge with bitmap auto-sync mode › workspace without git: graceful skip › bit status should run successfully without erroring on the missing git
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1037` ci merge with bitmap auto-sync mode › workspace without git: graceful skip › should NOT create a sentinel file when there is no git
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1042` ci merge with bitmap auto-sync mode › workspace without git: graceful skip › bit list should report the locally-known version (no sync attempted)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1082` ci merge with bitmap auto-sync mode › git HEAD changed but no actual scope-vs-bitmap drift › .bitmap should be byte-identical to before the sync (no spurious rewrites)
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1087` ci merge with bitmap auto-sync mode › git HEAD changed but no actual scope-vs-bitmap drift › the sentinel should still advance to the current git HEAD
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1132` ci merge with bitmap auto-sync mode › graceful degradation when remote scope is unreachable › bit status should complete without throwing
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1137` ci merge with bitmap auto-sync mode › graceful degradation when remote scope is unreachable › local .bitmap should not be corrupted by the failed remote
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1174` ci merge with bitmap auto-sync mode › bitmapAutoSync enabled but legacy `bit ci merge` (commit + push) used › legacy commit+push still works when --no-bitmap-commit is omitted
+- [x] `e2e/harmony/ci-bitmap-auto-sync.e2e.ts:1180` ci merge with bitmap auto-sync mode › bitmapAutoSync enabled but legacy `bit ci merge` (commit + push) used › component is tagged and exported
 
 ### `e2e/harmony/ci-commands.e2e.ts`
 
@@ -1460,112 +1460,112 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/ci-sync-branch-ownership.e2e.ts`
 
-- [ ] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:93` bit ci sync: branch ownership and first contact › branch ownership decides what close-pr may delete › should ignore a branch that INHERITED a sync trailer, on the structural evidence, twice over
-- [ ] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:113` bit ci sync: branch ownership and first contact › branch ownership decides what close-pr may delete › own-superseded (sync history merged, tip is not): should close the PR but keep the branch, unmoved
-- [ ] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:133` bit ci sync: branch ownership and first contact › branch ownership decides what close-pr may delete › own-merged (fully merged into the default branch): should close the PR and delete the branch
-- [ ] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:167` bit ci sync: branch ownership and first contact › a branch that advances between the ownership read and the delete is kept, not deleted › should keep the branch, name the race, and leave the racing commit as the tip
-- [ ] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:213` bit ci sync: branch ownership and first contact › a branch adopted into an existing lane on first contact (bit ci pr --keep-lane, then sync) › starts with no lane pointer at all on the branch — the exact pre-adoption shape
-- [ ] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:217` bit ci sync: branch ownership and first contact › a branch adopted into an existing lane on first contact (bit ci pr --keep-lane, then sync) › adopts the branch instead of halting, and writes the lane pointer to it
-- [ ] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:228` bit ci sync: branch ownership and first contact › a branch adopted into an existing lane on first contact (bit ci pr --keep-lane, then sync) › a second run sees the pair as converged and does nothing further
-- [ ] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:265` bit ci sync: branch ownership and first contact › a branch whose content would change the lane at first contact halts instead of adopting › halts instead of adopting, and leaves the lane content untouched
-- [ ] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:277` bit ci sync: branch ownership and first contact › a branch whose content would change the lane at first contact halts instead of adopting › leaves the local scope byte-clean — a repeat halt attempt creates no additional objects
-- [ ] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:313` bit ci sync: branch ownership and first contact › one lane halting during adoption does not affect a healthy lane in the same --all run › the healthy lane converges and the halting one is left untouched, in the same run
-- [ ] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:322` bit ci sync: branch ownership and first contact › one lane halting during adoption does not affect a healthy lane in the same --all run › a follow-up targeted run confirms the healthy lane converged cleanly — no residue tripped it
+- [x] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:93` bit ci sync: branch ownership and first contact › branch ownership decides what close-pr may delete › should ignore a branch that INHERITED a sync trailer, on the structural evidence, twice over
+- [x] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:113` bit ci sync: branch ownership and first contact › branch ownership decides what close-pr may delete › own-superseded (sync history merged, tip is not): should close the PR but keep the branch, unmoved
+- [x] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:133` bit ci sync: branch ownership and first contact › branch ownership decides what close-pr may delete › own-merged (fully merged into the default branch): should close the PR and delete the branch
+- [x] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:167` bit ci sync: branch ownership and first contact › a branch that advances between the ownership read and the delete is kept, not deleted › should keep the branch, name the race, and leave the racing commit as the tip
+- [x] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:213` bit ci sync: branch ownership and first contact › a branch adopted into an existing lane on first contact (bit ci pr --keep-lane, then sync) › starts with no lane pointer at all on the branch — the exact pre-adoption shape
+- [x] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:217` bit ci sync: branch ownership and first contact › a branch adopted into an existing lane on first contact (bit ci pr --keep-lane, then sync) › adopts the branch instead of halting, and writes the lane pointer to it
+- [x] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:228` bit ci sync: branch ownership and first contact › a branch adopted into an existing lane on first contact (bit ci pr --keep-lane, then sync) › a second run sees the pair as converged and does nothing further
+- [x] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:265` bit ci sync: branch ownership and first contact › a branch whose content would change the lane at first contact halts instead of adopting › halts instead of adopting, and leaves the lane content untouched
+- [x] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:277` bit ci sync: branch ownership and first contact › a branch whose content would change the lane at first contact halts instead of adopting › leaves the local scope byte-clean — a repeat halt attempt creates no additional objects
+- [x] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:313` bit ci sync: branch ownership and first contact › one lane halting during adoption does not affect a healthy lane in the same --all run › the healthy lane converges and the halting one is left untouched, in the same run
+- [x] `e2e/harmony/ci-sync-branch-ownership.e2e.ts:322` bit ci sync: branch ownership and first contact › one lane halting during adoption does not affect a healthy lane in the same --all run › a follow-up targeted run confirms the healthy lane converged cleanly — no residue tripped it
 
 ### `e2e/harmony/ci-sync-convergence.e2e.ts`
 
-- [ ] `e2e/harmony/ci-sync-convergence.e2e.ts:71` bit ci sync: what counts as work, and what converges › a rejected sync-commit push reports a benign race, not a conflict › reports a plain race instead of halting, and a follow-up run converges cleanly
-- [ ] `e2e/harmony/ci-sync-convergence.e2e.ts:149` bit ci sync: what counts as work, and what converges › a commit bundling a source edit with a .bitmap write is dev work, not convergence › exports the bundled edit onto the lane instead of declaring convergence
-- [ ] `e2e/harmony/ci-sync-convergence.e2e.ts:157` bit ci sync: what counts as work, and what converges › a commit bundling a source edit with a .bitmap write is dev work, not convergence › a second run reads the truly converged pair as converged
-- [ ] `e2e/harmony/ci-sync-convergence.e2e.ts:193` bit ci sync: what counts as work, and what converges › a probe that finds nothing pending settles without writing anything › exports nothing and pushes nothing — the developer commit stays the tip
-- [ ] `e2e/harmony/ci-sync-convergence.e2e.ts:200` bit ci sync: what counts as work, and what converges › a probe that finds nothing pending settles without writing anything › the repeat probe is just as write-free
-- [ ] `e2e/harmony/ci-sync-convergence.e2e.ts:252` bit ci sync: what counts as work, and what converges › a squash commit whose body quotes the sync marker is dev work, not convergence › exports the squashed work onto the lane instead of declaring convergence
-- [ ] `e2e/harmony/ci-sync-convergence.e2e.ts:260` bit ci sync: what counts as work, and what converges › a squash commit whose body quotes the sync marker is dev work, not convergence › a second run converges without pushing anything to the branch
-- [ ] `e2e/harmony/ci-sync-convergence.e2e.ts:288` bit ci sync: what counts as work, and what converges › a commit that touches no bit-tracked file probes without writing, run after run › finds nothing to export and pushes nothing — twice, the docs commit staying the tip
-- [ ] `e2e/harmony/ci-sync-convergence.e2e.ts:302` bit ci sync: what counts as work, and what converges › a commit that touches no bit-tracked file probes without writing, run after run › a real dev commit on top of the settled tip exports again
-- [ ] `e2e/harmony/ci-sync-convergence.e2e.ts:333` bit ci sync: what counts as work, and what converges › sync.onConflict resolves a same-line divergence without a human (git-wins / lane-wins) › git-wins: should keep the branch’s contested line, take the lane’s rest, advance the lane, converge
-- [ ] `e2e/harmony/ci-sync-convergence.e2e.ts:369` bit ci sync: what counts as work, and what converges › sync.onConflict resolves a same-line divergence without a human (git-wins / lane-wins) › lane-wins: should take the LANE’s version of the contested line onto the branch, with no markers
-- [ ] `e2e/harmony/ci-sync-convergence.e2e.ts:417` bit ci sync: what counts as work, and what converges › a lane component that the workspace tracks as new and unexported (first lane export) › imports the lane instead of halting on "the component was not found"
+- [x] `e2e/harmony/ci-sync-convergence.e2e.ts:71` bit ci sync: what counts as work, and what converges › a rejected sync-commit push reports a benign race, not a conflict › reports a plain race instead of halting, and a follow-up run converges cleanly
+- [x] `e2e/harmony/ci-sync-convergence.e2e.ts:149` bit ci sync: what counts as work, and what converges › a commit bundling a source edit with a .bitmap write is dev work, not convergence › exports the bundled edit onto the lane instead of declaring convergence
+- [x] `e2e/harmony/ci-sync-convergence.e2e.ts:157` bit ci sync: what counts as work, and what converges › a commit bundling a source edit with a .bitmap write is dev work, not convergence › a second run reads the truly converged pair as converged
+- [x] `e2e/harmony/ci-sync-convergence.e2e.ts:193` bit ci sync: what counts as work, and what converges › a probe that finds nothing pending settles without writing anything › exports nothing and pushes nothing — the developer commit stays the tip
+- [x] `e2e/harmony/ci-sync-convergence.e2e.ts:200` bit ci sync: what counts as work, and what converges › a probe that finds nothing pending settles without writing anything › the repeat probe is just as write-free
+- [x] `e2e/harmony/ci-sync-convergence.e2e.ts:252` bit ci sync: what counts as work, and what converges › a squash commit whose body quotes the sync marker is dev work, not convergence › exports the squashed work onto the lane instead of declaring convergence
+- [x] `e2e/harmony/ci-sync-convergence.e2e.ts:260` bit ci sync: what counts as work, and what converges › a squash commit whose body quotes the sync marker is dev work, not convergence › a second run converges without pushing anything to the branch
+- [x] `e2e/harmony/ci-sync-convergence.e2e.ts:288` bit ci sync: what counts as work, and what converges › a commit that touches no bit-tracked file probes without writing, run after run › finds nothing to export and pushes nothing — twice, the docs commit staying the tip
+- [x] `e2e/harmony/ci-sync-convergence.e2e.ts:302` bit ci sync: what counts as work, and what converges › a commit that touches no bit-tracked file probes without writing, run after run › a real dev commit on top of the settled tip exports again
+- [x] `e2e/harmony/ci-sync-convergence.e2e.ts:333` bit ci sync: what counts as work, and what converges › sync.onConflict resolves a same-line divergence without a human (git-wins / lane-wins) › git-wins: should keep the branch’s contested line, take the lane’s rest, advance the lane, converge
+- [x] `e2e/harmony/ci-sync-convergence.e2e.ts:369` bit ci sync: what counts as work, and what converges › sync.onConflict resolves a same-line divergence without a human (git-wins / lane-wins) › lane-wins: should take the LANE’s version of the contested line onto the branch, with no markers
+- [x] `e2e/harmony/ci-sync-convergence.e2e.ts:417` bit ci sync: what counts as work, and what converges › a lane component that the workspace tracks as new and unexported (first lane export) › imports the lane instead of halting on "the component was not found"
 
 ### `e2e/harmony/ci-sync-lane-cycle.e2e.ts`
 
-- [ ] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:66` bit ci sync: the lane/branch reconcile cycle › lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted) › A: a remote lane with no branch is imported onto a new branch, PR-less, content and pointer committed
-- [ ] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:91` bit ci sync: the lane/branch reconcile cycle › lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted) › B: re-running with nothing moved is a converged no-op that pushes nothing
-- [ ] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:101` bit ci sync: the lane/branch reconcile cycle › lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted) › C: a dev commit on the branch is snapped onto the lane under a fresh trailer, then converges
-- [ ] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:128` bit ci sync: the lane/branch reconcile cycle › lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted) › D1: both sides moved on DIFFERENT files -> merged into the branch before snapping, then converges
-- [ ] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:160` bit ci sync: the lane/branch reconcile cycle › lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted) › D2: both sides edited the SAME line -> halts non-zero, naming the component, writing to neither side
-- [ ] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:190` bit ci sync: the lane/branch reconcile cycle › lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted) › a lane removed remotely while its branch holds unexported work: close-pr keeps the branch, twice
-- [ ] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:251` bit ci sync: the lane/branch reconcile cycle › --all across two lanes (deleted-lane cleanup, halt isolation, cross-lane isolation) › should import both lanes onto their own branches, leaving an ordinary developer branch alone
-- [ ] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:275` bit ci sync: the lane/branch reconcile cycle › --all across two lanes (deleted-lane cleanup, halt isolation, cross-lane isolation) › should halt the conflicting lane, leave it untouched, and still reconcile the lane after it
-- [ ] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:306` bit ci sync: the lane/branch reconcile cycle › --all across two lanes (deleted-lane cleanup, halt isolation, cross-lane isolation) › should retire a lane deleted on bit.cloud, keep the rest of the run, and drop it from the next run
-- [ ] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:352` bit ci sync: the lane/branch reconcile cycle › --all across two lanes (deleted-lane cleanup, halt isolation, cross-lane isolation) › should read the branch’s OWN sync commit when a Bit-Lane-Head commit is merged in from elsewhere
+- [x] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:66` bit ci sync: the lane/branch reconcile cycle › lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted) › A: a remote lane with no branch is imported onto a new branch, PR-less, content and pointer committed
+- [x] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:91` bit ci sync: the lane/branch reconcile cycle › lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted) › B: re-running with nothing moved is a converged no-op that pushes nothing
+- [x] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:101` bit ci sync: the lane/branch reconcile cycle › lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted) › C: a dev commit on the branch is snapped onto the lane under a fresh trailer, then converges
+- [x] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:128` bit ci sync: the lane/branch reconcile cycle › lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted) › D1: both sides moved on DIFFERENT files -> merged into the branch before snapping, then converges
+- [x] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:160` bit ci sync: the lane/branch reconcile cycle › lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted) › D2: both sides edited the SAME line -> halts non-zero, naming the component, writing to neither side
+- [x] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:190` bit ci sync: the lane/branch reconcile cycle › lane <-> branch reconcile cycle (scenarios A, B, C, D1, D2, lane-deleted) › a lane removed remotely while its branch holds unexported work: close-pr keeps the branch, twice
+- [x] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:251` bit ci sync: the lane/branch reconcile cycle › --all across two lanes (deleted-lane cleanup, halt isolation, cross-lane isolation) › should import both lanes onto their own branches, leaving an ordinary developer branch alone
+- [x] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:275` bit ci sync: the lane/branch reconcile cycle › --all across two lanes (deleted-lane cleanup, halt isolation, cross-lane isolation) › should halt the conflicting lane, leave it untouched, and still reconcile the lane after it
+- [x] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:306` bit ci sync: the lane/branch reconcile cycle › --all across two lanes (deleted-lane cleanup, halt isolation, cross-lane isolation) › should retire a lane deleted on bit.cloud, keep the rest of the run, and drop it from the next run
+- [x] `e2e/harmony/ci-sync-lane-cycle.e2e.ts:352` bit ci sync: the lane/branch reconcile cycle › --all across two lanes (deleted-lane cleanup, halt isolation, cross-lane isolation) › should read the branch’s OWN sync commit when a Bit-Lane-Head commit is merged in from elsewhere
 
 ### `e2e/harmony/ci-sync-main.e2e.ts`
 
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:79` bit ci sync: main-scope reconciliation › main-scope sync and --dry-run (scenarios E, F) › F: --all --dry-run plans an action per target and leaves every ref on the git remote untouched
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:96` bit ci sync: main-scope reconciliation › main-scope sync and --dry-run (scenarios E, F) › F2: a --dry-run that plans a first-contact adoption reports it and exits 0
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:118` bit ci sync: main-scope reconciliation › main-scope sync and --dry-run (scenarios E, F) › E: --main pushes the scope-resolved drift onto the sync branch, never the default branch, then converges
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:147` bit ci sync: main-scope reconciliation › main-scope sync and --dry-run (scenarios E, F) › --all reconciles the lane and the main scope in one run
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:159` bit ci sync: main-scope reconciliation › main-scope sync and --dry-run (scenarios E, F) › --main --dry-run over uncommitted work refuses, and leaves that work exactly as it was
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:212` bit ci sync: main-scope reconciliation › main sync recovers from a .bitmap entry whose main file no longer exists › should repair both entries instead of failing, and open the sync PR
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:226` bit ci sync: main-scope reconciliation › main sync recovers from a .bitmap entry whose main file no longer exists › should leave a loadable workspace on the sync branch: comp1 in place, comp2 re-imported
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:236` bit ci sync: main-scope reconciliation › main sync recovers from a .bitmap entry whose main file no longer exists › a second run is converged - the heal is not re-applied every run
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:259` bit ci sync: main-scope reconciliation › main-scope direct push (mainSync: direct-push) › should push the drift onto the default branch itself, never creating the sync branch, then converge
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:311` bit ci sync: main-scope reconciliation › a stale bit-sync/main that conflicts with the default branch › re-forks the machine-owned branch from the default branch and pushes the remaining drift
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:331` bit ci sync: main-scope reconciliation › a stale bit-sync/main that conflicts with the default branch › keeps the halt when a human commit sits on the sync branch
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:371` bit ci sync: main-scope reconciliation › bit ci sync --init (onboarding scaffolding) › scaffolds both workflow files with the real default branch substituted, adds the sync config block, prints the checklist, and exits 0
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:399` bit ci sync: main-scope reconciliation › bit ci sync --init (onboarding scaffolding) › is idempotent: a second run skips both files and the config block, and still exits 0
-- [ ] `e2e/harmony/ci-sync-main.e2e.ts:413` bit ci sync: main-scope reconciliation › bit ci sync --init (onboarding scaffolding) › should write the workflows at the REPOSITORY root when the workspace is in a subdirectory
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:79` bit ci sync: main-scope reconciliation › main-scope sync and --dry-run (scenarios E, F) › F: --all --dry-run plans an action per target and leaves every ref on the git remote untouched
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:96` bit ci sync: main-scope reconciliation › main-scope sync and --dry-run (scenarios E, F) › F2: a --dry-run that plans a first-contact adoption reports it and exits 0
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:118` bit ci sync: main-scope reconciliation › main-scope sync and --dry-run (scenarios E, F) › E: --main pushes the scope-resolved drift onto the sync branch, never the default branch, then converges
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:147` bit ci sync: main-scope reconciliation › main-scope sync and --dry-run (scenarios E, F) › --all reconciles the lane and the main scope in one run
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:159` bit ci sync: main-scope reconciliation › main-scope sync and --dry-run (scenarios E, F) › --main --dry-run over uncommitted work refuses, and leaves that work exactly as it was
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:212` bit ci sync: main-scope reconciliation › main sync recovers from a .bitmap entry whose main file no longer exists › should repair both entries instead of failing, and open the sync PR
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:226` bit ci sync: main-scope reconciliation › main sync recovers from a .bitmap entry whose main file no longer exists › should leave a loadable workspace on the sync branch: comp1 in place, comp2 re-imported
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:236` bit ci sync: main-scope reconciliation › main sync recovers from a .bitmap entry whose main file no longer exists › a second run is converged - the heal is not re-applied every run
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:259` bit ci sync: main-scope reconciliation › main-scope direct push (mainSync: direct-push) › should push the drift onto the default branch itself, never creating the sync branch, then converge
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:311` bit ci sync: main-scope reconciliation › a stale bit-sync/main that conflicts with the default branch › re-forks the machine-owned branch from the default branch and pushes the remaining drift
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:331` bit ci sync: main-scope reconciliation › a stale bit-sync/main that conflicts with the default branch › keeps the halt when a human commit sits on the sync branch
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:371` bit ci sync: main-scope reconciliation › bit ci sync --init (onboarding scaffolding) › scaffolds both workflow files with the real default branch substituted, adds the sync config block, prints the checklist, and exits 0
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:399` bit ci sync: main-scope reconciliation › bit ci sync --init (onboarding scaffolding) › is idempotent: a second run skips both files and the config block, and still exits 0
+- [x] `e2e/harmony/ci-sync-main.e2e.ts:413` bit ci sync: main-scope reconciliation › bit ci sync --init (onboarding scaffolding) › should write the workflows at the REPOSITORY root when the workspace is in a subdirectory
 
 ### `e2e/harmony/ci-sync-scopes.e2e.ts`
 
-- [ ] `e2e/harmony/ci-sync-scopes.e2e.ts:108` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › targeted explicitly: mirrors the own-scope slice onto a branch and leaves the foreign component out
-- [ ] `e2e/harmony/ci-sync-scopes.e2e.ts:126` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › a lane change that touches only the foreign component leaves the mirror untouched, converged and green
-- [ ] `e2e/harmony/ci-sync-scopes.e2e.ts:135` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › a lane change to an own component moves the mirror, still leaving the foreign component out
-- [ ] `e2e/harmony/ci-sync-scopes.e2e.ts:149` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › a dev commit on the branch exports only own components; the foreign lane entry keeps its head
-- [ ] `e2e/harmony/ci-sync-scopes.e2e.ts:162` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › a lane with NO own-scope components, targeted explicitly: refused, nothing written
-- [ ] `e2e/harmony/ci-sync-scopes.e2e.ts:186` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › an --all run: the mirrored lane converges, the foreign-only one is skipped, and the run stays green
-- [ ] `e2e/harmony/ci-sync-scopes.e2e.ts:198` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › a lane whose configured branch is the default branch: should be skipped before it is even read
-- [ ] `e2e/harmony/ci-sync-scopes.e2e.ts:240` bit ci sync: lanes whose scopes differ from this repository › a lane hosted on another scope, with content in this repo scope, syncs when targeted by its id › targeted by its scope-qualified id: should mirror onto the branch its NAME maps to, id and all
-- [ ] `e2e/harmony/ci-sync-scopes.e2e.ts:267` bit ci sync: lanes whose scopes differ from this repository › a lane hosted on another scope, with content in this repo scope, syncs when targeted by its id › the same branch reached by NAME: should leave it alone rather than retire it
-- [ ] `e2e/harmony/ci-sync-scopes.e2e.ts:277` bit ci sync: lanes whose scopes differ from this repository › a lane hosted on another scope, with content in this repo scope, syncs when targeted by its id › a same-named lane in THIS scope: should halt under --dry-run and for real, leaving the owner’s branch
+- [x] `e2e/harmony/ci-sync-scopes.e2e.ts:108` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › targeted explicitly: mirrors the own-scope slice onto a branch and leaves the foreign component out
+- [x] `e2e/harmony/ci-sync-scopes.e2e.ts:126` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › a lane change that touches only the foreign component leaves the mirror untouched, converged and green
+- [x] `e2e/harmony/ci-sync-scopes.e2e.ts:135` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › a lane change to an own component moves the mirror, still leaving the foreign component out
+- [x] `e2e/harmony/ci-sync-scopes.e2e.ts:149` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › a dev commit on the branch exports only own components; the foreign lane entry keeps its head
+- [x] `e2e/harmony/ci-sync-scopes.e2e.ts:162` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › a lane with NO own-scope components, targeted explicitly: refused, nothing written
+- [x] `e2e/harmony/ci-sync-scopes.e2e.ts:186` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › an --all run: the mirrored lane converges, the foreign-only one is skipped, and the run stays green
+- [x] `e2e/harmony/ci-sync-scopes.e2e.ts:198` bit ci sync: lanes whose scopes differ from this repository › a lane whose components span two scopes is mirrored over its own-scope slice › a lane whose configured branch is the default branch: should be skipped before it is even read
+- [x] `e2e/harmony/ci-sync-scopes.e2e.ts:240` bit ci sync: lanes whose scopes differ from this repository › a lane hosted on another scope, with content in this repo scope, syncs when targeted by its id › targeted by its scope-qualified id: should mirror onto the branch its NAME maps to, id and all
+- [x] `e2e/harmony/ci-sync-scopes.e2e.ts:267` bit ci sync: lanes whose scopes differ from this repository › a lane hosted on another scope, with content in this repo scope, syncs when targeted by its id › the same branch reached by NAME: should leave it alone rather than retire it
+- [x] `e2e/harmony/ci-sync-scopes.e2e.ts:277` bit ci sync: lanes whose scopes differ from this repository › a lane hosted on another scope, with content in this repo scope, syncs when targeted by its id › a same-named lane in THIS scope: should halt under --dry-run and for real, leaving the owner’s branch
 
 ### `e2e/harmony/ci-sync-state.e2e.ts`
 
-- [ ] `e2e/harmony/ci-sync-state.e2e.ts:63` bit ci sync — state model v2 › a developer who snaps and exports from the branch advances the branch's own state › should read the pair as CONVERGED when the developer already did the sync, and write nothing
-- [ ] `e2e/harmony/ci-sync-state.e2e.ts:96` bit ci sync — state model v2 › a developer who snaps and exports from the branch advances the branch's own state › should still export a plain dev commit made on top of that new state, then settle
-- [ ] `e2e/harmony/ci-sync-state.e2e.ts:122` bit ci sync — state model v2 › a developer who snaps and exports from the branch advances the branch's own state › should export an unsnapped edit riding along with a .bitmap commit, immediately
-- [ ] `e2e/harmony/ci-sync-state.e2e.ts:147` bit ci sync — state model v2 › a developer who snaps and exports from the branch advances the branch's own state › should settle a plain non-component commit with a ledger commit, moving nothing on the lane
-- [ ] `e2e/harmony/ci-sync-state.e2e.ts:186` bit ci sync — state model v2 › a source edit hidden under a later .bitmap-only commit is dev work, not convergence › exports the hidden edit onto the lane instead of declaring convergence
-- [ ] `e2e/harmony/ci-sync-state.e2e.ts:194` bit ci sync — state model v2 › a source edit hidden under a later .bitmap-only commit is dev work, not convergence › a second run converges without pushing anything
-- [ ] `e2e/harmony/ci-sync-state.e2e.ts:217` bit ci sync — state model v2 › a developer's own .bitmap commit must not launder a branch into deletion › should KEEP a branch whose tip is a developer’s .bitmap commit when the lane is removed, twice
-- [ ] `e2e/harmony/ci-sync-state.e2e.ts:256` bit ci sync — state model v2 › a developer's own .bitmap commit must not launder a branch into deletion › should ignore a branch whose .bitmap points at a never-exported lane, not read it as removed
-- [ ] `e2e/harmony/ci-sync-state.e2e.ts:299` bit ci sync — state model v2 › a cold runner (fresh clone, empty local scope) reconciles a diverged pair › should merge both sides on a scope that had never seen the lane, then converge warm
-- [ ] `e2e/harmony/ci-sync-state.e2e.ts:335` bit ci sync — state model v2 › a cold runner (fresh clone, empty local scope) reconciles a diverged pair › should bring the lane onto the existing branch, also cold, instead of halting
-- [ ] `e2e/harmony/ci-sync-state.e2e.ts:350` bit ci sync — state model v2 › a cold runner (fresh clone, empty local scope) reconciles a diverged pair › should export the branch, also cold, instead of halting on a phantom failed switch
-- [ ] `e2e/harmony/ci-sync-state.e2e.ts:393` bit ci sync — state model v2 › a single-branch clone reconciles a lane branch its refspec never tracked › should converge on a remote-tracking ref the refspec omitted, populating it and carrying the move
-- [ ] `e2e/harmony/ci-sync-state.e2e.ts:437` bit ci sync — state model v2 › untracked files in the workspace are discarded rather than pushed onto the branch › should discard the planted paths from the branch and the working tree, keeping the local scope
+- [x] `e2e/harmony/ci-sync-state.e2e.ts:63` bit ci sync — state model v2 › a developer who snaps and exports from the branch advances the branch's own state › should read the pair as CONVERGED when the developer already did the sync, and write nothing
+- [x] `e2e/harmony/ci-sync-state.e2e.ts:96` bit ci sync — state model v2 › a developer who snaps and exports from the branch advances the branch's own state › should still export a plain dev commit made on top of that new state, then settle
+- [x] `e2e/harmony/ci-sync-state.e2e.ts:122` bit ci sync — state model v2 › a developer who snaps and exports from the branch advances the branch's own state › should export an unsnapped edit riding along with a .bitmap commit, immediately
+- [x] `e2e/harmony/ci-sync-state.e2e.ts:147` bit ci sync — state model v2 › a developer who snaps and exports from the branch advances the branch's own state › should settle a plain non-component commit with a ledger commit, moving nothing on the lane
+- [x] `e2e/harmony/ci-sync-state.e2e.ts:186` bit ci sync — state model v2 › a source edit hidden under a later .bitmap-only commit is dev work, not convergence › exports the hidden edit onto the lane instead of declaring convergence
+- [x] `e2e/harmony/ci-sync-state.e2e.ts:194` bit ci sync — state model v2 › a source edit hidden under a later .bitmap-only commit is dev work, not convergence › a second run converges without pushing anything
+- [x] `e2e/harmony/ci-sync-state.e2e.ts:217` bit ci sync — state model v2 › a developer's own .bitmap commit must not launder a branch into deletion › should KEEP a branch whose tip is a developer’s .bitmap commit when the lane is removed, twice
+- [x] `e2e/harmony/ci-sync-state.e2e.ts:256` bit ci sync — state model v2 › a developer's own .bitmap commit must not launder a branch into deletion › should ignore a branch whose .bitmap points at a never-exported lane, not read it as removed
+- [x] `e2e/harmony/ci-sync-state.e2e.ts:299` bit ci sync — state model v2 › a cold runner (fresh clone, empty local scope) reconciles a diverged pair › should merge both sides on a scope that had never seen the lane, then converge warm
+- [x] `e2e/harmony/ci-sync-state.e2e.ts:335` bit ci sync — state model v2 › a cold runner (fresh clone, empty local scope) reconciles a diverged pair › should bring the lane onto the existing branch, also cold, instead of halting
+- [x] `e2e/harmony/ci-sync-state.e2e.ts:350` bit ci sync — state model v2 › a cold runner (fresh clone, empty local scope) reconciles a diverged pair › should export the branch, also cold, instead of halting on a phantom failed switch
+- [x] `e2e/harmony/ci-sync-state.e2e.ts:393` bit ci sync — state model v2 › a single-branch clone reconciles a lane branch its refspec never tracked › should converge on a remote-tracking ref the refspec omitted, populating it and carrying the move
+- [x] `e2e/harmony/ci-sync-state.e2e.ts:437` bit ci sync — state model v2 › untracked files in the workspace are discarded rather than pushed onto the branch › should discard the planted paths from the branch and the working tree, keeping the local scope
 
 ### `e2e/harmony/compile.e2e.ts`
 
-- [ ] `e2e/harmony/compile.e2e.ts:33` compile extension › workspace with a new compile extension › compile from the cmd (compilation for development) › should not create a capsule as it is not needed for development
-- [ ] `e2e/harmony/compile.e2e.ts:38` compile extension › workspace with a new compile extension › compile from the cmd (compilation for development) › should write the dists files inside the node-modules of the component
-- [ ] `e2e/harmony/compile.e2e.ts:50` compile extension › workspace with a new compile extension › compile from the cmd (compilation for development) › the app should work
-- [ ] `e2e/harmony/compile.e2e.ts:59` compile extension › workspace with a new compile extension › tag the components (compilation for release) › should write dists files inside the capsule as it is needed for release
-- [ ] `e2e/harmony/compile.e2e.ts:64` compile extension › workspace with a new compile extension › tag the components (compilation for release) › should delete previous capsules before the tag (this test is not related to compile)
-- [ ] `e2e/harmony/compile.e2e.ts:67` compile extension › workspace with a new compile extension › tag the components (compilation for release) › should save the dists in the objects
-- [ ] `e2e/harmony/compile.e2e.ts:84` compile extension › workspace with a new compile extension › tag the components (compilation for release) › export and import to another scope › should not show the component as modified
-- [ ] `e2e/harmony/compile.e2e.ts:87` compile extension › workspace with a new compile extension › tag the components (compilation for release) › export and import to another scope › should save the artifacts and package.json on node_modules
-- [ ] `e2e/harmony/compile.e2e.ts:93` compile extension › workspace with a new compile extension › tag the components (compilation for release) › export and import to another scope › running compile on the imported component › should generate dists also after deleting the dists from the workspace
-- [ ] `e2e/harmony/compile.e2e.ts:120` compile extension › workspace with a new compile extension › add another component that does not need any compilation › should be able to tag
-- [ ] `e2e/harmony/compile.e2e.ts:123` compile extension › workspace with a new compile extension › add another component that does not need any compilation › should still save the dists on the component with the compiler
-- [ ] `e2e/harmony/compile.e2e.ts:143` compile extension › component with unsupported compiler files › should copy non-supported files to the dists
-- [ ] `e2e/harmony/compile.e2e.ts:163` compile extension › component with unsupported compiler files › tag the components › should copy unsupported files inside the capsule
-- [ ] `e2e/harmony/compile.e2e.ts:177` compile extension › component with nested directories › the sourceMap should include the path to the nested dir properly
-- [ ] `e2e/harmony/compile.e2e.ts:192` compile extension › compile by directory path › should compile a component when given its rootDir path
-- [ ] `e2e/harmony/compile.e2e.ts:196` compile extension › compile by directory path › should compile when mixing directory path and component id
-- [ ] `e2e/harmony/compile.e2e.ts:201` compile extension › compile by directory path › should compile when path has ./ prefix
-- [ ] `e2e/harmony/compile.e2e.ts:214` compile extension › a component whose env provides no compiler › should say the component was not compiled and why, and not report a successful compilation
+- [x] `e2e/harmony/compile.e2e.ts:33` compile extension › workspace with a new compile extension › compile from the cmd (compilation for development) › should not create a capsule as it is not needed for development
+- [x] `e2e/harmony/compile.e2e.ts:38` compile extension › workspace with a new compile extension › compile from the cmd (compilation for development) › should write the dists files inside the node-modules of the component
+- [x] `e2e/harmony/compile.e2e.ts:50` compile extension › workspace with a new compile extension › compile from the cmd (compilation for development) › the app should work
+- [x] `e2e/harmony/compile.e2e.ts:59` compile extension › workspace with a new compile extension › tag the components (compilation for release) › should write dists files inside the capsule as it is needed for release
+- [x] `e2e/harmony/compile.e2e.ts:64` compile extension › workspace with a new compile extension › tag the components (compilation for release) › should delete previous capsules before the tag (this test is not related to compile)
+- [x] `e2e/harmony/compile.e2e.ts:67` compile extension › workspace with a new compile extension › tag the components (compilation for release) › should save the dists in the objects
+- [x] `e2e/harmony/compile.e2e.ts:84` compile extension › workspace with a new compile extension › tag the components (compilation for release) › export and import to another scope › should not show the component as modified
+- [x] `e2e/harmony/compile.e2e.ts:87` compile extension › workspace with a new compile extension › tag the components (compilation for release) › export and import to another scope › should save the artifacts and package.json on node_modules
+- [x] `e2e/harmony/compile.e2e.ts:93` compile extension › workspace with a new compile extension › tag the components (compilation for release) › export and import to another scope › running compile on the imported component › should generate dists also after deleting the dists from the workspace
+- [x] `e2e/harmony/compile.e2e.ts:120` compile extension › workspace with a new compile extension › add another component that does not need any compilation › should be able to tag
+- [x] `e2e/harmony/compile.e2e.ts:123` compile extension › workspace with a new compile extension › add another component that does not need any compilation › should still save the dists on the component with the compiler
+- [x] `e2e/harmony/compile.e2e.ts:143` compile extension › component with unsupported compiler files › should copy non-supported files to the dists
+- [x] `e2e/harmony/compile.e2e.ts:163` compile extension › component with unsupported compiler files › tag the components › should copy unsupported files inside the capsule
+- [x] `e2e/harmony/compile.e2e.ts:177` compile extension › component with nested directories › the sourceMap should include the path to the nested dir properly
+- [x] `e2e/harmony/compile.e2e.ts:192` compile extension › compile by directory path › should compile a component when given its rootDir path
+- [x] `e2e/harmony/compile.e2e.ts:196` compile extension › compile by directory path › should compile when mixing directory path and component id
+- [x] `e2e/harmony/compile.e2e.ts:201` compile extension › compile by directory path › should compile when path has ./ prefix
+- [x] `e2e/harmony/compile.e2e.ts:214` compile extension › a component whose env provides no compiler › should say the component was not compiled and why, and not report a successful compilation
 
 ### `e2e/harmony/component-config.e2e.ts`
 
@@ -1589,8 +1589,8 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/corrupted-objects.e2e.ts`
 
-- [ ] `e2e/harmony/corrupted-objects.e2e.ts:24` objects in scope are corrupted › objects are empty, which are invalid zlib › bit status should throw an error with a suggestion how to fix
-- [ ] `e2e/harmony/corrupted-objects.e2e.ts:27` objects in scope are corrupted › objects are empty, which are invalid zlib › bit import --all-history should fix it
+- [x] `e2e/harmony/corrupted-objects.e2e.ts:24` objects in scope are corrupted › objects are empty, which are invalid zlib › bit status should throw an error with a suggestion how to fix
+- [x] `e2e/harmony/corrupted-objects.e2e.ts:27` objects in scope are corrupted › objects are empty, which are invalid zlib › bit import --all-history should fix it
 
 ### `e2e/harmony/create.e2e.ts`
 
@@ -1744,30 +1744,30 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/dependencies-cmd.e2e.ts`
 
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:21` bit dependencies command › bit deps get › running the command on a new component › should not throw an error saying the id is missing from the graph
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:33` bit dependencies command › bit deps set › adding prod dep › bit show should show the newly added dep
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:37` bit dependencies command › bit deps set › adding prod dep › bit status should not show a package with a version set in the config as a pinned dependency
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:46` bit dependencies command › bit deps set › adding prod dep › adding another dep as a devDep › should save the dev in the devDependencies
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:51` bit dependencies command › bit deps set › adding prod dep › adding another dep as a devDep › should not remove the dep that was added before
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:61` bit dependencies command › bit deps set › adding prod dep › adding another dep as a devDep › ejecting config and changing a dependency › should not remove the dep that was added before
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:74` bit dependencies command › bit deps set › adding multiple deps › should set them all
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:85` bit dependencies command › bit deps set › adding multiple deps › removing them with and without version › should remove them all
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:100` bit dependencies command › bit deps set › adding scoped package › should set it correctly
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:113` bit dependencies command › bit deps set › adding prod dep, tagging then adding devDep › should not remove the previously added dependencies
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:126` bit dependencies command › bit deps set › adding itself as a dep › should ignore it and not consider it as a dependency
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:141` bit dependencies command › bit deps set › setting an old version of a workspace component › should keep the version from the config when tagging the dependency with it
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:146` bit dependencies command › bit deps set › setting an old version of a workspace component › bit status should show the version set by the config as an issue that does not block the tag
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:153` bit dependencies command › bit deps set › setting an old version of a workspace component › tagging the dependency › should not auto-tag the dependent
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:157` bit dependencies command › bit deps set › setting an old version of a workspace component › tagging the dependency › should show the dependent that was not auto-tagged and the version it keeps
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:191` bit dependencies command › bit deps set › adding a component dependency when it is not installed locally › bit status should show it as missing
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:194` bit dependencies command › bit deps set › adding a component dependency when it is not installed locally › bit install should fix it
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:198` bit dependencies command › bit deps set › adding a component dependency when it is not installed locally › should recognize it as a component after the installation
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:213` bit dependencies command › bit deps remove - removing components › removing a component › should support component-id syntax
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:219` bit dependencies command › bit deps remove - removing components › removing a component › should support package-name syntax
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:234` bit dependencies command › bit deps remove - when other deps were set previously before tag › should remove only the dependency specified and leave the rest
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:254` bit dependencies command › bit deps unset › one dep was specifically set and one dep was auto-detected › unset the auto-detected › should not remove the dependency
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:265` bit dependencies command › bit deps unset › one dep was specifically set and one dep was auto-detected › unset the previously deps-set › should remove the dependency
-- [ ] `e2e/harmony/dependencies-cmd.e2e.ts:280` bit dependencies command › bit deps usage › finding a dependnecy › should return paths to subdependency
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:21` bit dependencies command › bit deps get › running the command on a new component › should not throw an error saying the id is missing from the graph
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:33` bit dependencies command › bit deps set › adding prod dep › bit show should show the newly added dep
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:37` bit dependencies command › bit deps set › adding prod dep › bit status should not show a package with a version set in the config as a pinned dependency
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:46` bit dependencies command › bit deps set › adding prod dep › adding another dep as a devDep › should save the dev in the devDependencies
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:51` bit dependencies command › bit deps set › adding prod dep › adding another dep as a devDep › should not remove the dep that was added before
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:61` bit dependencies command › bit deps set › adding prod dep › adding another dep as a devDep › ejecting config and changing a dependency › should not remove the dep that was added before
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:74` bit dependencies command › bit deps set › adding multiple deps › should set them all
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:85` bit dependencies command › bit deps set › adding multiple deps › removing them with and without version › should remove them all
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:100` bit dependencies command › bit deps set › adding scoped package › should set it correctly
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:113` bit dependencies command › bit deps set › adding prod dep, tagging then adding devDep › should not remove the previously added dependencies
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:126` bit dependencies command › bit deps set › adding itself as a dep › should ignore it and not consider it as a dependency
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:141` bit dependencies command › bit deps set › setting an old version of a workspace component › should keep the version from the config when tagging the dependency with it
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:146` bit dependencies command › bit deps set › setting an old version of a workspace component › bit status should show the version set by the config as an issue that does not block the tag
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:153` bit dependencies command › bit deps set › setting an old version of a workspace component › tagging the dependency › should not auto-tag the dependent
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:157` bit dependencies command › bit deps set › setting an old version of a workspace component › tagging the dependency › should show the dependent that was not auto-tagged and the version it keeps
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:191` bit dependencies command › bit deps set › adding a component dependency when it is not installed locally › bit status should show it as missing
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:194` bit dependencies command › bit deps set › adding a component dependency when it is not installed locally › bit install should fix it
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:198` bit dependencies command › bit deps set › adding a component dependency when it is not installed locally › should recognize it as a component after the installation
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:213` bit dependencies command › bit deps remove - removing components › removing a component › should support component-id syntax
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:219` bit dependencies command › bit deps remove - removing components › removing a component › should support package-name syntax
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:234` bit dependencies command › bit deps remove - when other deps were set previously before tag › should remove only the dependency specified and leave the rest
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:254` bit dependencies command › bit deps unset › one dep was specifically set and one dep was auto-detected › unset the auto-detected › should not remove the dependency
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:265` bit dependencies command › bit deps unset › one dep was specifically set and one dep was auto-detected › unset the previously deps-set › should remove the dependency
+- [x] `e2e/harmony/dependencies-cmd.e2e.ts:280` bit dependencies command › bit deps usage › finding a dependnecy › should return paths to subdependency
 
 ### `e2e/harmony/dependencies.e2e.ts`
 
@@ -1875,44 +1875,44 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/dependency-resolver.e2e.ts`
 
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:55` dependency-resolver extension › policies changes › policies added by the user › should have the updated dependencies for bar/foo
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:60` dependency-resolver extension › policies changes › policies added by the user › should not put the dependencies for not configured component
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:79` dependency-resolver extension › policies changes › policies added by an env › policies added core env › should have the updated dependencies for bar/foo from the env
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:103` dependency-resolver extension › policies changes › policies added by an env › policies added by custom env › should have the updated dependencies for bar/foo from the env
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:107` dependency-resolver extension › policies changes › policies added by an env › policies added by custom env › auto detect peers policy › should resolve version for auto detected peers when used by the component from the env
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:110` dependency-resolver extension › policies changes › policies added by an env › policies added by custom env › auto detect peers policy › should not add peers when component is not using them
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:143` dependency-resolver extension › policies changes › policies added by extension › extension that add simple dependency policy › should have the updated dependencies for bar/foo
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:148` dependency-resolver extension › policies changes › policies added by extension › extension that add simple dependency policy › should not put the dependencies for not configured component
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:168` dependency-resolver extension › should save the packageName data into the dependencyResolver extension in the model
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:183` dependency-resolver extension › exporting the component › should change the component id to include the scope name
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:225` dependency-resolver extension › overrides › using pnpm as a package manager › should force a newer version of a subdependency using just the dependency name
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:229` dependency-resolver extension › overrides › using pnpm as a package manager › should force a newer version of a subdependency using the dependency name and version
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:232` dependency-resolver extension › overrides › using pnpm as a package manager › should not change the version of the package if the parent package does not match the pattern
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:235` dependency-resolver extension › overrides › using pnpm as a package manager › should change the version of the package if the parent package matches the pattern
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:254` dependency-resolver extension › hoist patterns › should run pnpm with the specified hoist pattern
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:264` dependency-resolver extension › hoist patterns › hoist injected dependencies › should run pnpm with the specified hoist pattern
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:283` dependency-resolver extension › install without readPackage hooks › should record no pnpmfileChecksum
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:286` dependency-resolver extension › install without readPackage hooks › should record the override that removes @teambit/legacy from the dependencies
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:289` dependency-resolver extension › install without readPackage hooks › should not mark a readPackage hook as untracked
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:339` dependency-resolver extension › should not break and save the policy correctly with the plus
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:347` dependency-resolver extension › making a new version of the env dep › should update the dep in the env model
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:350` dependency-resolver extension › making a new version of the env dep › should be able to install the env on a new workspace with no errors
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:361` dependency-resolver extension › making a new version of the env dep › should be able to import the env on a new workspace and tag with no errors
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:393` dependency-resolver extension › env.jsonc with policy.peer version="+" and a dependent › should not break bit build and should resolve the "+" version to the actual component version in the manifest
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:447` dependency-resolver extension › should not break and save the policy correctly with the *
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:456` dependency-resolver extension › publishing a new version of the package and re-tagging › should update the dep in the env model
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:459` dependency-resolver extension › publishing a new version of the package and re-tagging › should be able to install the env on a new workspace with no errors and install the latest of the pkg dep
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:503` dependency-resolver extension › should save the dependencies with rangePrefix
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:510` dependency-resolver extension › installing a component should have the dependencies with range in the package.json
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:528` dependency-resolver extension › workspace with only the dependent › should keep the dependency with the range
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:551` dependency-resolver extension › component-package exists in workspace.jsonc › should keep the dependency with the range
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:565` dependency-resolver extension › removing componentRangePrefix from the workspace › should keep the dependency with the range
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:579` dependency-resolver extension › revert the range by setting the prefix to minus › should save the dependency without the range
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:598` dependency-resolver extension › range in config conflicts the actual range in policy › the range in policy should win
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:638` dependency-resolver extension › tagging the dependent only › should save the prefix according to how the user saved it via bit-deps-set
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:652` dependency-resolver extension › tagging both the dependent and the dependency › should not save any prefix
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:672` dependency-resolver extension › component range support with snaps › when snapping with ^ prefix › should not apply ^ prefix to snap versions in dependency data
-- [ ] `e2e/harmony/dependency-resolver.e2e.ts:682` dependency-resolver extension › component range support with snaps › when snapping with ^ prefix › generated package.json should not have invalid semver with ^ prefix
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:55` dependency-resolver extension › policies changes › policies added by the user › should have the updated dependencies for bar/foo
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:60` dependency-resolver extension › policies changes › policies added by the user › should not put the dependencies for not configured component
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:79` dependency-resolver extension › policies changes › policies added by an env › policies added core env › should have the updated dependencies for bar/foo from the env
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:103` dependency-resolver extension › policies changes › policies added by an env › policies added by custom env › should have the updated dependencies for bar/foo from the env
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:107` dependency-resolver extension › policies changes › policies added by an env › policies added by custom env › auto detect peers policy › should resolve version for auto detected peers when used by the component from the env
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:110` dependency-resolver extension › policies changes › policies added by an env › policies added by custom env › auto detect peers policy › should not add peers when component is not using them
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:143` dependency-resolver extension › policies changes › policies added by extension › extension that add simple dependency policy › should have the updated dependencies for bar/foo
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:148` dependency-resolver extension › policies changes › policies added by extension › extension that add simple dependency policy › should not put the dependencies for not configured component
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:168` dependency-resolver extension › should save the packageName data into the dependencyResolver extension in the model
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:183` dependency-resolver extension › exporting the component › should change the component id to include the scope name
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:225` dependency-resolver extension › overrides › using pnpm as a package manager › should force a newer version of a subdependency using just the dependency name
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:229` dependency-resolver extension › overrides › using pnpm as a package manager › should force a newer version of a subdependency using the dependency name and version
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:232` dependency-resolver extension › overrides › using pnpm as a package manager › should not change the version of the package if the parent package does not match the pattern
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:235` dependency-resolver extension › overrides › using pnpm as a package manager › should change the version of the package if the parent package matches the pattern
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:254` dependency-resolver extension › hoist patterns › should run pnpm with the specified hoist pattern
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:264` dependency-resolver extension › hoist patterns › hoist injected dependencies › should run pnpm with the specified hoist pattern
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:283` dependency-resolver extension › install without readPackage hooks › should record no pnpmfileChecksum
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:286` dependency-resolver extension › install without readPackage hooks › should record the override that removes @teambit/legacy from the dependencies
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:289` dependency-resolver extension › install without readPackage hooks › should not mark a readPackage hook as untracked
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:339` dependency-resolver extension › should not break and save the policy correctly with the plus
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:347` dependency-resolver extension › making a new version of the env dep › should update the dep in the env model
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:350` dependency-resolver extension › making a new version of the env dep › should be able to install the env on a new workspace with no errors
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:361` dependency-resolver extension › making a new version of the env dep › should be able to import the env on a new workspace and tag with no errors
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:393` dependency-resolver extension › env.jsonc with policy.peer version="+" and a dependent › should not break bit build and should resolve the "+" version to the actual component version in the manifest
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:447` dependency-resolver extension › should not break and save the policy correctly with the *
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:456` dependency-resolver extension › publishing a new version of the package and re-tagging › should update the dep in the env model
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:459` dependency-resolver extension › publishing a new version of the package and re-tagging › should be able to install the env on a new workspace with no errors and install the latest of the pkg dep
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:503` dependency-resolver extension › should save the dependencies with rangePrefix
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:510` dependency-resolver extension › installing a component should have the dependencies with range in the package.json
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:528` dependency-resolver extension › workspace with only the dependent › should keep the dependency with the range
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:551` dependency-resolver extension › component-package exists in workspace.jsonc › should keep the dependency with the range
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:565` dependency-resolver extension › removing componentRangePrefix from the workspace › should keep the dependency with the range
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:579` dependency-resolver extension › revert the range by setting the prefix to minus › should save the dependency without the range
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:598` dependency-resolver extension › range in config conflicts the actual range in policy › the range in policy should win
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:638` dependency-resolver extension › tagging the dependent only › should save the prefix according to how the user saved it via bit-deps-set
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:652` dependency-resolver extension › tagging both the dependent and the dependency › should not save any prefix
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:672` dependency-resolver extension › component range support with snaps › when snapping with ^ prefix › should not apply ^ prefix to snap versions in dependency data
+- [x] `e2e/harmony/dependency-resolver.e2e.ts:682` dependency-resolver extension › component range support with snaps › when snapping with ^ prefix › generated package.json should not have invalid semver with ^ prefix
 
 ### `e2e/harmony/deprecate.e2e.ts`
 
@@ -2116,19 +2116,19 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/git-worktree.e2e.ts`
 
-- [ ] `e2e/harmony/git-worktree.e2e.ts:68` git worktree support › running bit commands from a git worktree › the worktree should have .git as a file, not a directory (sanity)
-- [ ] `e2e/harmony/git-worktree.e2e.ts:73` git worktree support › running bit commands from a git worktree › the first bit command should not throw ENOTDIR
-- [ ] `e2e/harmony/git-worktree.e2e.ts:77` git worktree support › running bit commands from a git worktree › should auto-init a standalone ".bit" scope inside the worktree (never compose .git/bit)
-- [ ] `e2e/harmony/git-worktree.e2e.ts:89` git worktree support › running bit commands from a git worktree › bit import and bit status in the worktree › bit status should run successfully (no ENOTDIR crash)
-- [ ] `e2e/harmony/git-worktree.e2e.ts:93` git worktree support › running bit commands from a git worktree › bit import and bit status in the worktree › bit list should show the components with their exported version
-- [ ] `e2e/harmony/git-worktree.e2e.ts:112` git worktree support › running bit commands from a git worktree › snapping in the worktree › the snap should land in the worktree scope
-- [ ] `e2e/harmony/git-worktree.e2e.ts:117` git worktree support › running bit commands from a git worktree › snapping in the worktree › the main workspace scope should be unaffected
-- [ ] `e2e/harmony/git-worktree.e2e.ts:122` git worktree support › running bit commands from a git worktree › snapping in the worktree › the main workspace status should remain clean
-- [ ] `e2e/harmony/git-worktree.e2e.ts:132` git worktree support › running bit commands from a git worktree › lanes are independent per worktree › the worktree should be on the new lane
-- [ ] `e2e/harmony/git-worktree.e2e.ts:137` git worktree support › running bit commands from a git worktree › lanes are independent per worktree › the main workspace should stay on main and not know the lane
-- [ ] `e2e/harmony/git-worktree.e2e.ts:151` git worktree support › running bit commands from a git worktree › git worktree remove cleans up the scope › the worktree directory (including its .bit scope) should be gone
-- [ ] `e2e/harmony/git-worktree.e2e.ts:175` git worktree support › a worktree nested inside the main workspace directory › bit init --reset-scope as the first command in the fresh worktree should not wipe the main scope
-- [ ] `e2e/harmony/git-worktree.e2e.ts:183` git worktree support › a worktree nested inside the main workspace directory › bit commands in the nested worktree should use its own scope, not the main one
+- [x] `e2e/harmony/git-worktree.e2e.ts:68` git worktree support › running bit commands from a git worktree › the worktree should have .git as a file, not a directory (sanity)
+- [x] `e2e/harmony/git-worktree.e2e.ts:73` git worktree support › running bit commands from a git worktree › the first bit command should not throw ENOTDIR
+- [x] `e2e/harmony/git-worktree.e2e.ts:77` git worktree support › running bit commands from a git worktree › should auto-init a standalone ".bit" scope inside the worktree (never compose .git/bit)
+- [x] `e2e/harmony/git-worktree.e2e.ts:89` git worktree support › running bit commands from a git worktree › bit import and bit status in the worktree › bit status should run successfully (no ENOTDIR crash)
+- [x] `e2e/harmony/git-worktree.e2e.ts:93` git worktree support › running bit commands from a git worktree › bit import and bit status in the worktree › bit list should show the components with their exported version
+- [x] `e2e/harmony/git-worktree.e2e.ts:112` git worktree support › running bit commands from a git worktree › snapping in the worktree › the snap should land in the worktree scope
+- [x] `e2e/harmony/git-worktree.e2e.ts:117` git worktree support › running bit commands from a git worktree › snapping in the worktree › the main workspace scope should be unaffected
+- [x] `e2e/harmony/git-worktree.e2e.ts:122` git worktree support › running bit commands from a git worktree › snapping in the worktree › the main workspace status should remain clean
+- [x] `e2e/harmony/git-worktree.e2e.ts:132` git worktree support › running bit commands from a git worktree › lanes are independent per worktree › the worktree should be on the new lane
+- [x] `e2e/harmony/git-worktree.e2e.ts:137` git worktree support › running bit commands from a git worktree › lanes are independent per worktree › the main workspace should stay on main and not know the lane
+- [x] `e2e/harmony/git-worktree.e2e.ts:151` git worktree support › running bit commands from a git worktree › git worktree remove cleans up the scope › the worktree directory (including its .bit scope) should be gone
+- [x] `e2e/harmony/git-worktree.e2e.ts:175` git worktree support › a worktree nested inside the main workspace directory › bit init --reset-scope as the first command in the fresh worktree should not wipe the main scope
+- [x] `e2e/harmony/git-worktree.e2e.ts:183` git worktree support › a worktree nested inside the main workspace directory › bit commands in the nested worktree should use its own scope, not the main one
 
 ### `e2e/harmony/global-virtual-store.e2e.ts`
 
@@ -2146,7 +2146,7 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/harmony-workspace.e2e.ts`
 
-- [ ] `e2e/harmony/harmony-workspace.e2e.ts:40` workspace aspect › tag a component twice › ask the workspace for the first tag › should contain the files of the first tag not the second
+- [x] `e2e/harmony/harmony-workspace.e2e.ts:40` workspace aspect › tag a component twice › ask the workspace for the first tag › should contain the files of the first tag not the second
 
 ### `e2e/harmony/http.e2e.ts`
 
@@ -2283,18 +2283,18 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/internalize.e2e.ts`
 
-- [ ] `e2e/harmony/internalize.e2e.ts:21` bit internalize command › internalize a tagged component › bit show should show the component as internal
-- [ ] `e2e/harmony/internalize.e2e.ts:25` bit internalize command › internalize a tagged component › the "internal" show-fragment should report isInternal true
-- [ ] `e2e/harmony/internalize.e2e.ts:29` bit internalize command › internalize a tagged component › bit status should show the component as modified
-- [ ] `e2e/harmony/internalize.e2e.ts:34` bit internalize command › internalize a tagged component › bit internalize --list should include only the internal component
-- [ ] `e2e/harmony/internalize.e2e.ts:39` bit internalize command › internalize a tagged component › the "$internal" pattern should match the internal component
-- [ ] `e2e/harmony/internalize.e2e.ts:48` bit internalize command › internalize a tagged component › tagging the component › the component should not be modified
-- [ ] `e2e/harmony/internalize.e2e.ts:52` bit internalize command › internalize a tagged component › tagging the component › .bitmap should not contain the config
-- [ ] `e2e/harmony/internalize.e2e.ts:56` bit internalize command › internalize a tagged component › tagging the component › bit show should still show the component as internal
-- [ ] `e2e/harmony/internalize.e2e.ts:67` bit internalize command › internalize a tagged component › tagging the component › exporting and importing into a new workspace › the imported (remote) component should be marked as internal
-- [ ] `e2e/harmony/internalize.e2e.ts:82` bit internalize command › uninternalize a component (--revert) › bit show should show the component as not internal
-- [ ] `e2e/harmony/internalize.e2e.ts:86` bit internalize command › uninternalize a component (--revert) › bit internalize --list should be empty
-- [ ] `e2e/harmony/internalize.e2e.ts:103` bit internalize command › reverting the internalize by "bit checkout reset" › should remove the internalize config
+- [x] `e2e/harmony/internalize.e2e.ts:21` bit internalize command › internalize a tagged component › bit show should show the component as internal
+- [x] `e2e/harmony/internalize.e2e.ts:25` bit internalize command › internalize a tagged component › the "internal" show-fragment should report isInternal true
+- [x] `e2e/harmony/internalize.e2e.ts:29` bit internalize command › internalize a tagged component › bit status should show the component as modified
+- [x] `e2e/harmony/internalize.e2e.ts:34` bit internalize command › internalize a tagged component › bit internalize --list should include only the internal component
+- [x] `e2e/harmony/internalize.e2e.ts:39` bit internalize command › internalize a tagged component › the "$internal" pattern should match the internal component
+- [x] `e2e/harmony/internalize.e2e.ts:48` bit internalize command › internalize a tagged component › tagging the component › the component should not be modified
+- [x] `e2e/harmony/internalize.e2e.ts:52` bit internalize command › internalize a tagged component › tagging the component › .bitmap should not contain the config
+- [x] `e2e/harmony/internalize.e2e.ts:56` bit internalize command › internalize a tagged component › tagging the component › bit show should still show the component as internal
+- [x] `e2e/harmony/internalize.e2e.ts:67` bit internalize command › internalize a tagged component › tagging the component › exporting and importing into a new workspace › the imported (remote) component should be marked as internal
+- [x] `e2e/harmony/internalize.e2e.ts:82` bit internalize command › uninternalize a component (--revert) › bit show should show the component as not internal
+- [x] `e2e/harmony/internalize.e2e.ts:86` bit internalize command › uninternalize a component (--revert) › bit internalize --list should be empty
+- [x] `e2e/harmony/internalize.e2e.ts:103` bit internalize command › reverting the internalize by "bit checkout reset" › should remove the internalize config
 
 ### `e2e/harmony/isolate-cyclic-deps.e2e.ts`
 
@@ -3155,11 +3155,11 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/load-failures-issue.e2e.ts`
 
-- [ ] `e2e/harmony/load-failures-issue.e2e.ts:26` surfacing swallowed load errors as component issues › an aspect that throws on require, configured on a component › bit status should complete without throwing
-- [ ] `e2e/harmony/load-failures-issue.e2e.ts:29` surfacing swallowed load errors as component issues › an aspect that throws on require, configured on a component › the failing aspect component itself should have a LoadFailures issue
-- [ ] `e2e/harmony/load-failures-issue.e2e.ts:36` surfacing swallowed load errors as component issues › an aspect that throws on require, configured on a component › components using the failing aspect should NOT each carry the issue (avoid noise)
-- [ ] `e2e/harmony/load-failures-issue.e2e.ts:42` surfacing swallowed load errors as component issues › an aspect that throws on require, configured on a component › instead, a single workspace-level issue should aggregate the affected components
-- [ ] `e2e/harmony/load-failures-issue.e2e.ts:49` surfacing swallowed load errors as component issues › an aspect that throws on require, configured on a component › the LoadFailures issue should not block tagging
+- [x] `e2e/harmony/load-failures-issue.e2e.ts:26` surfacing swallowed load errors as component issues › an aspect that throws on require, configured on a component › bit status should complete without throwing
+- [x] `e2e/harmony/load-failures-issue.e2e.ts:29` surfacing swallowed load errors as component issues › an aspect that throws on require, configured on a component › the failing aspect component itself should have a LoadFailures issue
+- [x] `e2e/harmony/load-failures-issue.e2e.ts:36` surfacing swallowed load errors as component issues › an aspect that throws on require, configured on a component › components using the failing aspect should NOT each carry the issue (avoid noise)
+- [x] `e2e/harmony/load-failures-issue.e2e.ts:42` surfacing swallowed load errors as component issues › an aspect that throws on require, configured on a component › instead, a single workspace-level issue should aggregate the affected components
+- [x] `e2e/harmony/load-failures-issue.e2e.ts:49` surfacing swallowed load errors as component issues › an aspect that throws on require, configured on a component › the LoadFailures issue should not block tagging
 
 ### `e2e/harmony/local-head-not-found.e2e.ts`
 
@@ -3460,16 +3460,16 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/relative-paths.e2e.ts`
 
-- [ ] `e2e/harmony/relative-paths.e2e.ts:23` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › bit status should show it as an invalid component
-- [ ] `e2e/harmony/relative-paths.e2e.ts:28` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › should block bit tag
-- [ ] `e2e/harmony/relative-paths.e2e.ts:39` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › should rewire successfully
-- [ ] `e2e/harmony/relative-paths.e2e.ts:42` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › should not show the component as an invalid anymore
-- [ ] `e2e/harmony/relative-paths.e2e.ts:52` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › tagging the component › should allow tagging the component
-- [ ] `e2e/harmony/relative-paths.e2e.ts:55` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › tagging the component › bitmap record should have rootDir and files relative to the rootDir
-- [ ] `e2e/harmony/relative-paths.e2e.ts:61` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › tagging the component › app should work after rewiring
-- [ ] `e2e/harmony/relative-paths.e2e.ts:72` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › tagging the component › should work after importing to another workspace › should write the component files with the short dirs (without rootDir)
-- [ ] `e2e/harmony/relative-paths.e2e.ts:75` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › tagging the component › should work after importing to another workspace › should not generate link files
-- [ ] `e2e/harmony/relative-paths.e2e.ts:78` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › tagging the component › should work after importing to another workspace › app should work
+- [x] `e2e/harmony/relative-paths.e2e.ts:23` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › bit status should show it as an invalid component
+- [x] `e2e/harmony/relative-paths.e2e.ts:28` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › should block bit tag
+- [x] `e2e/harmony/relative-paths.e2e.ts:39` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › should rewire successfully
+- [x] `e2e/harmony/relative-paths.e2e.ts:42` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › should not show the component as an invalid anymore
+- [x] `e2e/harmony/relative-paths.e2e.ts:52` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › tagging the component › should allow tagging the component
+- [x] `e2e/harmony/relative-paths.e2e.ts:55` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › tagging the component › bitmap record should have rootDir and files relative to the rootDir
+- [x] `e2e/harmony/relative-paths.e2e.ts:61` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › tagging the component › app should work after rewiring
+- [x] `e2e/harmony/relative-paths.e2e.ts:72` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › tagging the component › should work after importing to another workspace › should write the component files with the short dirs (without rootDir)
+- [x] `e2e/harmony/relative-paths.e2e.ts:75` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › tagging the component › should work after importing to another workspace › should not generate link files
+- [x] `e2e/harmony/relative-paths.e2e.ts:78` relative paths flow (components requiring each other by relative paths) › adding directories and using relative-paths › replacing relative paths by module paths › tagging the component › should work after importing to another workspace › app should work
 
 ### `e2e/harmony/released-bit-core-exports.e2e.ts`
 

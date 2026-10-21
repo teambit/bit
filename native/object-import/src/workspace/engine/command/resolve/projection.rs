@@ -15,6 +15,108 @@ pub(in crate::workspace::engine::command) struct Component {
     pub(in crate::workspace::engine::command) dependency_state: Value,
 }
 
+impl Component {
+    fn config_pinned_entries(&self) -> impl Iterator<Item = &Value> {
+        let entries = self.dependency_state["entries"].as_array();
+        (0..3)
+            .flat_map(|index| {
+                self.dependency_state["components"][index]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .filter_map(Value::as_u64)
+            })
+            .filter_map(move |entry_idx| entries?.get(entry_idx as usize))
+            .filter(|entry| entry["versionFromConfig"] == true)
+    }
+
+    pub(in crate::workspace::engine::command) fn pinned_from_config(&self) -> HashSet<String> {
+        self.config_pinned_entries()
+            .filter_map(|entry| entry["identity"].as_str())
+            .map(|identity| {
+                identity
+                    .rsplit_once('@')
+                    .map_or(identity, |(base, _)| base)
+                    .to_owned()
+            })
+            .collect()
+    }
+
+    pub(in crate::workspace::engine::command) fn pinned_packages_for(
+        &self,
+        filter_ids: &HashSet<&str>,
+    ) -> Vec<String> {
+        self.config_pinned_entries()
+            .filter_map(|entry| {
+                let identity = entry["identity"].as_str()?;
+                let (base, version) = identity
+                    .rsplit_once('@')
+                    .unwrap_or((identity, ""));
+                if !filter_ids.contains(base) {
+                    return None;
+                }
+                let pkg = entry["packageName"]
+                    .as_str()
+                    .filter(|pkg| !pkg.is_empty())
+                    .unwrap_or(base);
+                Some(format!("{pkg}@{version}"))
+            })
+            .collect()
+    }
+}
+
+pub(super) fn attach_pinned_dependents(
+    retained: &super::Retained,
+    components: &[Component],
+    materials: &[super::super::resolve_snapshot::Material],
+    result: &mut Value,
+) {
+    if retained.tag.is_none() && retained.snap.is_none() {
+        return;
+    }
+    let ids_to_tag: HashSet<&str> = materials
+        .iter()
+        .map(|material| material.identity.as_str())
+        .collect();
+    let ids_with_new_version: HashSet<&str> = materials
+        .iter()
+        .filter(|material| !super::super::resolve_snapshot::is_removed(&material.version))
+        .map(|material| material.identity.as_str())
+        .collect();
+    let pinned: Vec<Value> = retained.record.targets
+        .iter()
+        .filter(|target| target["locallyRemoved"] != true)
+        .filter_map(|target| {
+            pinned_dependent_row(target, components, &ids_to_tag, &ids_with_new_version)
+        })
+        .collect();
+    if !pinned.is_empty() {
+        result["dependentsWithPinnedDeps"] = json!(pinned);
+    }
+}
+
+fn pinned_dependent_row(
+    target: &Value,
+    components: &[Component],
+    ids_to_tag: &HashSet<&str>,
+    ids_with_new_version: &HashSet<&str>,
+) -> Option<Value> {
+    let identity = target["identity"].as_str()?;
+    if ids_to_tag.contains(identity) {
+        return None;
+    }
+    let component = components
+        .iter()
+        .find(|comp| comp.identity == identity)?;
+    let pinned = component.pinned_packages_for(ids_with_new_version);
+    if pinned.is_empty() {
+        return None;
+    }
+    let version = target["version"].as_str().unwrap_or_default();
+    let id = if version.is_empty() { identity.to_owned() } else { format!("{identity}@{version}") };
+    Some(json!({"id": id, "pinnedDependencies": pinned}))
+}
+
 pub(in crate::workspace::engine::command) fn version(
     stored: &Value,
     current: &Value,
@@ -42,6 +144,10 @@ pub(in crate::workspace::engine::command) fn version(
             &receipt.package_name,
         )?
     };
+    let pinned = receipt.pinned_from_config();
+    if !pinned.is_empty() {
+        version["pinnedDependencies"] = json!(pinned);
+    }
     Ok(version)
 }
 

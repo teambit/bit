@@ -26,15 +26,22 @@ fn project_with_saved(
         .map(|material| (material.identity.clone(), material.version.clone()))
         .collect();
     for material in materials {
-        let (flattened, graph) =
-            traverse(&material.identity, &material.version, &versions, &saved, repository)?;
+        let pinned = super::super::resolve_snapshot::pinned_dependencies(&material.version);
+        let (flattened, graph) = traverse(
+            &material.identity,
+            &material.version,
+            &pinned,
+            &versions,
+            &saved,
+            repository,
+        )?;
         material.version["flattenedDependencies"] = json!(flattened);
         material.version["flattenedEdges"] = json!(graph);
         material.version
             .as_object_mut()
             .ok_or_else(|| invalid("resolve Version"))?
             .remove("flattenedEdgesRef");
-        mark_dependencies(&mut material.version, &versions)?;
+        mark_dependencies(&mut material.version, &versions, &pinned)?;
     }
     Ok(())
 }
@@ -49,6 +56,7 @@ pub(super) fn previous_graph(
 fn traverse(
     identity: &str,
     version: &Value,
+    pinned: &HashSet<String>,
     versions: &HashMap<String, Value>,
     saved: &saved::Graph,
     repository: &mut Repository,
@@ -63,7 +71,7 @@ fn traverse(
         if graph.len() >= 16384 || seen.len() >= 4096 {
             return Err(invalid("resolve graph budget"));
         }
-        let identity = project_target(&mut edge, versions, saved)?;
+        let identity = project_target(&mut edge, &root, pinned, versions, saved)?;
         let target = edge["target"].clone();
         retain_edge(&mut graph, edge);
         if !seen.insert(key(&target)?) {
@@ -80,10 +88,15 @@ fn traverse(
 
 fn project_target(
     edge: &mut Value,
+    root: &Value,
+    pinned: &HashSet<String>,
     versions: &HashMap<String, Value>,
     saved: &saved::Graph,
 ) -> io::Result<String> {
     let identity = super::selection::identity(&edge["target"])?;
+    if edge["source"] == *root && pinned.contains(&identity) {
+        return Ok(identity);
+    }
     if versions.contains_key(&identity) {
         if !is_pending(&edge["source"]) && saved.contains_key(&key(&edge["source"])?) {
             return Err(invalid("resolve retained graph reaches prior batch version"));
@@ -124,22 +137,30 @@ fn children(
     Ok(children)
 }
 
-fn mark_dependencies(version: &mut Value, versions: &HashMap<String, Value>) -> io::Result<()> {
+fn mark_dependencies(
+    version: &mut Value,
+    versions: &HashMap<String, Value>,
+    pinned: &HashSet<String>,
+) -> io::Result<()> {
     for field in ["dependencies", "devDependencies", "peerDependencies"] {
         for dependency in version[field]
             .as_array_mut()
             .into_iter()
             .flatten()
         {
-            mark_dependency(dependency, versions)?;
+            mark_dependency(dependency, versions, pinned)?;
         }
     }
     Ok(())
 }
 
-fn mark_dependency(dependency: &mut Value, versions: &HashMap<String, Value>) -> io::Result<()> {
+fn mark_dependency(
+    dependency: &mut Value,
+    versions: &HashMap<String, Value>,
+    pinned: &HashSet<String>,
+) -> io::Result<()> {
     let identity = super::selection::identity(&dependency["id"])?;
-    if versions.contains_key(&identity) {
+    if !pinned.contains(&identity) && versions.contains_key(&identity) {
         dependency["id"]["version"] = pending(&identity)?["version"].clone();
     }
     Ok(())
