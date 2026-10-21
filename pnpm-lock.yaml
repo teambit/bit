@@ -18549,6 +18549,9 @@ importers:
 
   scopes/dependencies/pnpm:
     dependencies:
+      '@pnpm/config.parse-overrides':
+        specifier: 1100.1.2
+        version: 1100.1.2
       '@pnpm/deps.path':
         specifier: 1100.1.0
         version: 1100.1.0
@@ -75695,6 +75698,7 @@ snapshots:
 
   '@teambit/pnpm@file:scopes/dependencies/pnpm(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@4.3.0)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
+      '@pnpm/config.parse-overrides': 1100.1.2
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
       '@pnpm/napi': 12.13.0
@@ -75733,6 +75737,7 @@ snapshots:
 
   '@teambit/pnpm@file:scopes/dependencies/pnpm(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
+      '@pnpm/config.parse-overrides': 1100.1.2
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
       '@pnpm/napi': 12.13.0
@@ -75771,6 +75776,7 @@ snapshots:
 
   '@teambit/pnpm@file:scopes/dependencies/pnpm(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@5.2.1)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
+      '@pnpm/config.parse-overrides': 1100.1.2
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
       '@pnpm/napi': 12.13.0
