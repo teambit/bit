@@ -439,14 +439,44 @@ describe('bit ci sync: main-scope reconciliation', function () {
         'git add -A && git -c user.email=e2e@bit.dev -c user.name=e2e commit -q -m "workspace"',
         repoDir
       );
+      // a change the user staged before: the printed commit must leave it out
+      fs.writeFileSync(path.join(repoDir, 'unrelated.txt'), 'staged before --init\n');
+      helper.command.runCmd('git add unrelated.txt', repoDir);
       const { output, exitCode } = runBit('bit ci sync --init', repoDir);
       expect(exitCode, output).to.equal(0);
-      expect(output).to.include('git add -- workspace.jsonc');
-      expect(output).to.include('git add -f -- .github/workflows/bit-sync.yml .github/workflows/bit-release.yml');
+      const add = 'git add -- workspace.jsonc';
+      const forceAdd = 'git add -f -- .github/workflows/bit-sync.yml .github/workflows/bit-release.yml';
+      const commit =
+        "git commit -m 'Mirror my-scope' -- workspace.jsonc .github/workflows/bit-sync.yml .github/workflows/bit-release.yml";
+      expect(output).to.include(add);
+      expect(output).to.include(forceAdd);
       expect(output).to.include('.gitignore matches these');
-      // the printed commands really work: git accepts them, and both workflows end up committed
+      expect(output).to.include(commit);
+      // the printed commands really work: both workflows are committed, the unrelated file stays staged
       helper.command.runCmd(
-        'git add -- workspace.jsonc && git add -f -- .github/workflows/bit-sync.yml .github/workflows/bit-release.yml',
+        `${add} && ${forceAdd} && git -c user.email=e2e@bit.dev -c user.name=e2e ${commit.slice('git '.length)}`,
+        repoDir
+      );
+      const committed = helper.command.runCmd('git show --name-only --format= HEAD', repoDir);
+      expect(committed).to.include('.github/workflows/bit-sync.yml');
+      expect(committed).to.include('.github/workflows/bit-release.yml');
+      expect(committed).to.include('workspace.jsonc');
+      expect(committed).to.not.include('unrelated.txt');
+      expect(helper.command.runCmd('git diff --cached --name-only', repoDir)).to.include('unrelated.txt');
+    });
+
+    it('force-adds ignored workflow files also before the first commit, which git add -A would skip', () => {
+      const repoDir = helper.fs.createNewDirectory();
+      helper.command.runCmd('git init', repoDir);
+      helper.command.runCmd('bit init --skip-interactive', repoDir);
+      fs.appendFileSync(path.join(repoDir, '.gitignore'), '\n.github/\n');
+      const { output, exitCode } = runBit('bit ci sync --init', repoDir);
+      expect(exitCode, output).to.equal(0);
+      expect(output).to.match(
+        /git add -A\n\s+git add -f -- \.github\/workflows\/bit-sync\.yml \.github\/workflows\/bit-release\.yml\n/
+      );
+      helper.command.runCmd(
+        'git add -A && git add -f -- .github/workflows/bit-sync.yml .github/workflows/bit-release.yml',
         repoDir
       );
       const staged = helper.command.runCmd('git diff --cached --name-only', repoDir);

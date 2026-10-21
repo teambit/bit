@@ -379,7 +379,10 @@ export interface InitReportInput {
    * Omitted: stage them all. Empty: nothing is left to commit (a re-run after the commit).
    */
   toStage?: string[];
-  /** Of those files, the untracked ones `.gitignore` matches. `git add` refuses them by name. */
+  /**
+   * Of those files, the untracked ones `.gitignore` matches, also before the first commit. `git add`
+   * refuses them by name and `git add -A` skips them.
+   */
   ignored?: string[];
 }
 
@@ -519,33 +522,35 @@ export function renderInitReport(input: InitReportInput): string {
   const step = (n: number, title: string, who: string, body: string[]) =>
     [`${formatTitle(`${n}. ${title}`)} ${formatHint(`(${who})`)}`, ...body.map((line) => `   ${line}`)].join('\n');
   const cmd = (text: string) => chalk.cyan(text);
-  // Stage only what `--init` touched, so unrelated local changes stay out of the commit. The first
-  // commit of a new repository is the exception: it must carry the whole workspace. `:/` stages from
-  // the repository root, where the workflows are, when the workspace is a subdirectory.
-  // Stage exactly what git shows as new or changed among the files `--init` handles: a re-run still
-  // stages files that exist but were never committed, and a file already committed is not named.
+  // Stage and commit exactly what git shows as new or changed among the files `--init` handles, so
+  // unrelated local changes stay out: a re-run still stages files that were never committed, and a
+  // file already committed is not named. The first commit of a new repository is the exception: it
+  // must carry the whole workspace. `:/` stages from the repository root, where the workflows are,
+  // when the workspace is a subdirectory.
   const firstCommit = input.repoHasCommits === false;
-  const toStage = input.toStage ?? [...input.files.map((f) => f.displayPath), configDisplayPath];
-  const ignored = firstCommit ? [] : (input.ignored ?? []);
+  const toStage = firstCommit ? [] : (input.toStage ?? [...input.files.map((f) => f.displayPath), configDisplayPath]);
+  const ignored = input.ignored ?? [];
   const quoted = (paths: string[]) => paths.map(shellQuote).join(' ');
-  const stage: string[] = firstCommit
-    ? [cmd(repoRootFromCwd === '.' ? 'git add -A' : 'git add -A :/')]
-    : [
-        ...(toStage.length ? [cmd(`git add -- ${quoted(toStage)}`)] : []),
-        // `git add` refuses a named path that .gitignore matches, and GitHub runs only committed workflows
-        ...(ignored.length
-          ? [cmd(`git add -f -- ${quoted(ignored)}`), formatHint('.gitignore matches these; -f adds them anyway')]
-          : []),
-      ];
+  const stage: string[] = [
+    ...(firstCommit ? [cmd(repoRootFromCwd === '.' ? 'git add -A' : 'git add -A :/')] : []),
+    ...(toStage.length ? [cmd(`git add -- ${quoted(toStage)}`)] : []),
+    // `git add` skips or refuses a path that .gitignore matches, and GitHub runs only committed workflows
+    ...(ignored.length
+      ? [cmd(`git add -f -- ${quoted(ignored)}`), formatHint('.gitignore matches these; -f adds them anyway')]
+      : []),
+  ];
   // Commit and push are separate: on a re-run nothing may be left to commit, and the push must still run.
+  // Naming the paths keeps changes the user staged before out of the commit.
   const gitInit = repoRootFromCwd === '.' ? 'git init' : `git init ${shellQuote(repoRootFromCwd)}`;
-  const nothingToCommit = !firstCommit && !toStage.length && !ignored.length;
+  const toCommit = [...toStage, ...ignored];
+  const nothingToCommit = !firstCommit && !toCommit.length;
+  const commitMessage = `git commit -m ${shellQuote(`Mirror ${scope}`)}`;
   const commit = [
     ...(input.inGitRepo === false ? [cmd(gitInit)] : []),
     ...stage,
     ...(nothingToCommit
       ? [formatHint('nothing to commit: these files are already committed')]
-      : [cmd(`git commit -m ${shellQuote(`Mirror ${scope}`)}`)]),
+      : [cmd(firstCommit ? commitMessage : `${commitMessage} -- ${quoted(toCommit)}`)]),
   ];
 
   const steps: string[] = [];

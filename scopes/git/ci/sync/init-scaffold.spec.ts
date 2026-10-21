@@ -204,7 +204,7 @@ describe('init-scaffold', () => {
 
     it('commits and pushes in separate commands, so a re-run with nothing to commit still pushes', () => {
       const out = report('git@github.com:acme/shop.git');
-      expect(out).to.match(/git commit -m 'Mirror acme\.shop'\n\s+git push -u origin HEAD/);
+      expect(out).to.match(/git commit -m 'Mirror acme\.shop' -- [^\n]+\n\s+git push -u origin HEAD/);
       expect(out).to.not.contain('&& git');
     });
 
@@ -238,6 +238,21 @@ describe('init-scaffold', () => {
       expect(out).to.contain('git add -f -- .github/workflows/bit-release.yml\n');
       expect(out).to.contain('.gitignore matches these');
       expect(out).to.contain("git commit -m 'Mirror acme.shop'");
+    });
+
+    it('commits only the files it stages, so changes staged before stay out of the commit', () => {
+      const out = report('git@github.com:acme/shop.git', {
+        toStage: ['workspace.jsonc'],
+        ignored: ['.github/workflows/bit-release.yml'],
+      });
+      expect(out).to.contain("git commit -m 'Mirror acme.shop' -- workspace.jsonc .github/workflows/bit-release.yml\n");
+    });
+
+    it('force-adds an ignored workflow file also for the first commit, which git add -A would skip', () => {
+      const out = report(undefined, { repoHasCommits: false, ignored: ['.github/workflows/bit-sync.yml'] });
+      expect(out).to.match(/git add -A\n\s+git add -f -- \.github\/workflows\/bit-sync\.yml\n/);
+      // the first commit takes the whole workspace, so it names no paths
+      expect(out).to.match(/git commit -m 'Mirror acme\.shop'\n/);
     });
 
     it('prints no commit when nothing is left to commit, and still pushes', () => {

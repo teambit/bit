@@ -263,10 +263,11 @@ export class SyncOrchestrator {
     ];
     const toStage: string[] = [];
     const ignored: string[] = [];
-    if (repoRoot && repoHasCommits) {
+    if (repoRoot) {
       for (const abs of handled) {
         // Ignored first: `git status` hides an ignored file, so it would look unchanged. `check-ignore`
-        // skips tracked files and prints the path only when it is ignored (it exits 1 otherwise).
+        // skips tracked files and prints the path only when it is ignored (it exits 1 otherwise). It
+        // needs no commit, and the first commit's `git add -A` skips an ignored file too.
         // oxlint-disable-next-line no-await-in-loop
         const isIgnored = await git
           .raw(['check-ignore', '--', abs])
@@ -276,6 +277,8 @@ export class SyncOrchestrator {
           ignored.push(displayPath(abs));
           continue;
         }
+        // the first commit stages everything with `git add -A`
+        if (!repoHasCommits) continue;
         // oxlint-disable-next-line no-await-in-loop
         const changed = await git
           .raw(['status', '--porcelain', '--untracked-files=all', '--', abs])
@@ -302,7 +305,7 @@ export class SyncOrchestrator {
       })),
       configDisplayPath: displayPath(path.join(this.deps.workspace.path, 'workspace.jsonc')),
       configAdded,
-      ...(repoRoot && repoHasCommits ? { toStage, ignored } : {}),
+      ...(repoRoot ? { toStage, ignored } : {}),
     });
   }
 
