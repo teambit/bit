@@ -221,4 +221,36 @@ describe('ExtensionDataList', () => {
       });
     });
   });
+  describe('without the env replaced by a config object', () => {
+    let prevEnvsCoreName: string | undefined;
+    let list: ExtensionDataList;
+    before(() => {
+      // a core extension at runtime, see component-config-merger.spec.ts
+      prevEnvsCoreName = ExtensionDataList.coreExtensionsNames.get('teambit.envs/envs');
+      ExtensionDataList.registerCoreExtensionName('teambit.envs/envs');
+      list = ExtensionDataList.fromConfigObject({
+        'teambit.envs/envs': { env: 'my-scope/old-env', __specific: true },
+        'my-scope/old-env@1.0.0': { __specific: true },
+        'my-scope/ext1': { conf1: 'val1' },
+      });
+    });
+    after(() => {
+      if (prevEnvsCoreName === undefined) ExtensionDataList.coreExtensionsNames.delete('teambit.envs/envs');
+      else ExtensionDataList.coreExtensionsNames.set('teambit.envs/envs', prevEnvsCoreName);
+    });
+    const withoutEnvReplacedBy = (env?: string) => {
+      const conf: Record<string, any> = env ? { 'teambit.envs/envs': { env } } : { 'my-scope/ext1': {} };
+      ExtensionDataList.adjustEnvsOnConfigObject(conf);
+      return list.withoutEnvReplacedBy(conf).ids;
+    };
+    it('should remove the entry of the previous env when the config sets another env', () => {
+      expect(withoutEnvReplacedBy('my-scope/new-env@2.0.0')).to.deep.equal(['teambit.envs/envs', 'my-scope/ext1']);
+    });
+    it('should keep the env entry when the config sets another version of the same env', () => {
+      expect(withoutEnvReplacedBy('my-scope/old-env@2.0.0')).to.deep.equal(list.ids);
+    });
+    it('should keep the env entry when the config does not set an env', () => {
+      expect(withoutEnvReplacedBy()).to.deep.equal(list.ids);
+    });
+  });
 });

@@ -236,6 +236,22 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     conf[EnvsAspect.id] = { env: id, ...specificProp };
     conf[env] = { ...specificProp };
   }
+
+  /**
+   * when the given config object sets an env other than the env of this list, returns this list without the entry of
+   * its env. same as a workspace, which drops the env of a config with a lower precedence (see
+   * AspectsMerger.filterEnvsFromExtensionsIfNeeded). otherwise, the previous env stays as an aspect of the component.
+   */
+  withoutEnvReplacedBy(conf: Record<string, any>): ExtensionDataList {
+    const idWithoutVersion = (id?: string) => id?.split('@')[0];
+    const newEnv = idWithoutVersion(conf[EnvsAspect.id]?.env);
+    const envsEntry = this.findCoreExtension(EnvsAspect.id);
+    const currentEnv = idWithoutVersion(envsEntry?.config.env || envsEntry?.data.id);
+    if (!newEnv || !currentEnv || newEnv === currentEnv) return this;
+    return this.filter(
+      (entry) => entry.stringId !== currentEnv && entry.extensionId?.toStringWithoutVersion() !== currentEnv
+    );
+  }
 }
 
 function getMergeReducer(ignoreVersion = true) {
