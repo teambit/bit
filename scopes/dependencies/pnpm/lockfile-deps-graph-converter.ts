@@ -3,7 +3,7 @@ import { type ProjectManifest } from '@pnpm/types';
 import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import type * as Dp from '@pnpm/deps.path';
 import { pick, partition } from 'lodash';
-import { parseOverrides } from '@pnpm/config.parse-overrides';
+import type * as ParseOverridesModule from '@pnpm/config.parse-overrides';
 import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
@@ -37,6 +37,7 @@ type ResolveFunction = (
 // import. Call `init()` once before invoking the public converters; helpers
 // reach for this module-level slot synchronously.
 let dp!: typeof Dp;
+let parseOverrides!: typeof ParseOverridesModule.parseOverrides;
 let loading: Promise<void> | undefined;
 
 function ensureInitialized(): void {
@@ -48,10 +49,11 @@ function ensureInitialized(): void {
 export function init(): Promise<void> {
   loading ??= (async () => {
     const { loadEsm } = require('./load-pnpm-esm.cjs') as {
-      loadEsm: () => Promise<{ dp: typeof Dp }>;
+      loadEsm: () => Promise<{ dp: typeof Dp; parseOverrides: typeof ParseOverridesModule.parseOverrides }>;
     };
     const m = await loadEsm();
     dp = m.dp;
+    parseOverrides = m.parseOverrides;
   })();
   return loading;
 }
