@@ -6,7 +6,7 @@ import { formatSuccessSummary, formatWarningSummary, formatItem, formatHint, joi
 import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import type { RippleMain, RippleJob, CiGraphNode, SimulateNetwork } from './ripple.main.runtime';
-import { colorPhase, isFailedPhase, stripAnsi, resolveJobId, formatAge } from './ripple-utils';
+import { colorPhase, isFailedPhase, isSuccessPhase, stripAnsi, resolveJobId, formatAge } from './ripple-utils';
 
 /**
  * a last-export entry matches the target context when its saved lane equals the current lane
@@ -327,7 +327,7 @@ export class RippleLogCmd implements Command {
         if (shown >= 30) break;
         const icon = isFailedPhase(node.phase)
           ? chalk.red('✗')
-          : node.phase === 'SUCCESS'
+          : isSuccessPhase(node.phase)
             ? chalk.green('✓')
             : chalk.yellow('○');
         lines.push(`  ${icon} ${compId}`);
@@ -404,8 +404,8 @@ export class RippleErrorsCmd implements Command {
     }
 
     const failedNodes = ciNodes.filter((n) => isFailedPhase(n.phase));
-    const succeededNodes = ciNodes.filter((n) => n.phase === 'SUCCESS');
-    const otherNodes = ciNodes.filter((n) => !isFailedPhase(n.phase) && n.phase !== 'SUCCESS');
+    const succeededNodes = ciNodes.filter((n) => isSuccessPhase(n.phase));
+    const otherNodes = ciNodes.filter((n) => !isFailedPhase(n.phase) && !isSuccessPhase(n.phase));
 
     const totalComponents = ciNodes.reduce((sum, n) => sum + n.componentIds.length, 0);
     const failedComponents = failedNodes.flatMap((n) => n.componentIds);
