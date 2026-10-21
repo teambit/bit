@@ -1205,11 +1205,16 @@ describe('convertGraphToLockfile on invalid graph', () => {
 describe('convertGraphToLockfile with a root manifest that pins a version the graph resolved differently', () => {
   const rootDir = process.cwd();
   const compDir = path.resolve('comps/comp1');
-  function createGraph(opts: { peerKeyed?: boolean; overrides?: Record<string, string> } = {}) {
+  function createGraph(
+    opts: { peerKeyed?: boolean; overrides?: Record<string, string>; typesReactUnresolved?: boolean } = {}
+  ) {
     const typesReactDep = opts.peerKeyed ? 'react-types-peer@1.0.0(@types/react@18.2.23)' : '@types/react@18.2.23';
     const packages: PackagesMap = new Map([
       ['@types/react-helmet@6.1.6', { resolution: { integrity: 'sha512-helmet' } } as any],
-      ['@types/react@18.2.23', { resolution: { integrity: 'sha512-react18' } } as any],
+      [
+        '@types/react@18.2.23',
+        (opts.typesReactUnresolved ? {} : { resolution: { integrity: 'sha512-react18' } }) as any,
+      ],
       [
         'react-types-peer@1.0.0',
         { resolution: { integrity: 'sha512-peer' }, peerDependencies: { '@types/react': '*' } } as any,
@@ -1436,6 +1441,45 @@ describe('convertGraphToLockfile with a root manifest that pins a version the gr
       expect(resolved).to.not.include('@types/react-helmet@6.1.6');
       expect(lockfile.snapshots!['@types/react-helmet@6.1.6']).to.eql({ dependencies: { '@types/react': '18.2.23' } });
     }
+  });
+
+  it('should not send a package the dedupe orphaned to the resolver', async () => {
+    const { resolve } = createResolve('*');
+    const lockfile = await convertGraphToLockfile(createGraph({ typesReactUnresolved: true }), {
+      manifests: {
+        [rootDir]: { dependencies: { '@types/react': '17.0.87' } },
+        [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+      },
+      rootDir,
+      resolve: async (wantedDep, opts) => {
+        if (wantedDep.alias === '@types/react') throw new Error('ENOTFOUND');
+        return resolve(wantedDep, opts);
+      },
+    });
+    expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
+  });
+
+  it('should not take an inherited object property name, e.g. "constructor", for a package the root provides', async () => {
+    const packages: PackagesMap = new Map([
+      ['dependent@1.0.0', { resolution: { integrity: 'sha512-dependent' }, peerDependencies: { react: '*' } } as any],
+      ['constructor@1.0.0', { resolution: { integrity: 'sha512-constructor' } } as any],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [{ id: 'dependent@1.0.0', name: 'dependent', specifier: '1.0.0', lifecycle: 'runtime' }],
+      },
+      { id: 'dependent@1.0.0', neighbours: [{ id: 'constructor@1.0.0' }] },
+    ];
+    const lockfile = await convertGraphToLockfile(new DependenciesGraph({ packages, edges }), {
+      manifests: {
+        [rootDir]: { dependencies: { '@types/react': '17.0.87' } },
+        [compDir]: { dependencies: { dependent: '1.0.0' } },
+      },
+      rootDir,
+      resolve: createResolve('*').resolve,
+    });
+    expect(lockfile.snapshots!['dependent@1.0.0']).to.eql({ dependencies: { constructor: '1.0.0' } });
   });
 
   it('should leave the graph alone when the root has no such dependency', async () => {

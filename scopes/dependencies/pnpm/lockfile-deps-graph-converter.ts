@@ -2,7 +2,7 @@ import path from 'path';
 import { type ProjectManifest } from '@pnpm/types';
 import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import type * as Dp from '@pnpm/deps.path';
-import { pick, partition, isEmpty, memoize, omit } from 'lodash';
+import { pick, partition, memoize } from 'lodash';
 import { parseOverrides } from '@pnpm/config.parse-overrides';
 import semver from 'semver';
 import pMap from 'p-map';
@@ -418,6 +418,7 @@ export async function convertGraphToLockfile(
     }
   }
   await dedupeSnapshotDepsToRootManifest(lockfile, { manifests, rootDir, resolve });
+  dropUnreachableLockfileEntries(lockfile);
   const pkgsToResolve = getPkgsToResolve(lockfile, manifests);
   const failedWorkspaceComponentPkgs = new Set<string>();
   await Promise.all(
@@ -595,23 +596,23 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
 }
 
 async function dedupeSnapshotDepsToRootManifest(lockfile: BitLockfileFile, opts: FetchRangesOptions): Promise<void> {
-  const rootDeps = omit(
-    nonOptionalDependencies(opts.manifests[opts.rootDir]),
-    overriddenPackageNames(lockfile.overrides)
+  const overridden = new Set(overriddenPackageNames(lockfile.overrides));
+  const rootDeps = new Map(
+    Object.entries(nonOptionalDependencies(opts.manifests[opts.rootDir])).filter(([name]) => !overridden.has(name))
   );
-  if (isEmpty(rootDeps)) return;
+  if (rootDeps.size === 0) return;
   const getRanges = memoize((pkgId: string) => fetchDependencyRanges(pkgId, opts));
   await pMap(
     Object.entries(lockfile.snapshots ?? {}),
     ([depPath, snapshot]) => {
       const pkgId = dp.removeSuffix(depPath);
       const dependent: Dependent = {
-        peers: lockfile.packages?.[pkgId]?.peerDependencies,
+        peers: new Set(Object.keys(lockfile.packages?.[pkgId]?.peerDependencies ?? {})),
         getRanges: () => getRanges(pkgId),
       };
       return dropSnapshotDeps(
         snapshot,
-        (name, ref) => name in rootDeps && rootVersionWins(name, ref, rootDeps[name], dependent)
+        (name, ref) => rootDeps.has(name) && rootVersionWins(name, ref, rootDeps.get(name)!, dependent)
       );
     },
     { concurrency: 16 }
@@ -640,7 +641,7 @@ async function dropSnapshotDeps(
 }
 
 type Dependent = {
-  peers?: Record<string, string>;
+  peers: Set<string>;
   getRanges: () => Promise<DependencyRanges | undefined>;
 };
 
@@ -652,7 +653,7 @@ async function rootVersionWins(
 ): Promise<boolean> {
   const lockedVersion = dp.parse(`${name}@${ref}`).version;
   if (lockedVersion == null || lockedVersion === rootSpecifier) return false;
-  if (dependent.peers?.[name] != null) return true;
+  if (dependent.peers.has(name)) return true;
   const rootVersion = semver.valid(rootSpecifier);
   if (rootVersion == null) return false;
   const ranges = await dependent.getRanges();
