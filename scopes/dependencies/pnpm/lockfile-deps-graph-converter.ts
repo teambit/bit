@@ -593,27 +593,10 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
   }
 }
 
-/**
- * The root manifest (the capsules root during a build, the workspace root otherwise) provides its
- * dependencies to the whole install: pnpm resolves peer dependencies from it, and a fresh install
- * dedupes to it any regular dependency whose range the root's version satisfies. The graph, though,
- * was stored by a workspace whose root may have provided another version: e.g. that root provided
- * `@types/react@18` while the env of the component being built pins `@types/react@17`. Restored
- * as-is, the graph keeps that second copy next to the root's one, pnpm then prefers it for every
- * `*`-style range too, and TypeScript ends up with two `@types/react` in one program.
- *
- * So drop every snapshot reference to another version of a package the root provides, whenever a
- * fresh install would give the dependent the root's version (see rootVersionWins). The versions
- * that lose their last reference go with the other unreachable entries, so pnpm doesn't see them
- * as preferred versions either. A dependency map that loses all its entries is removed: the graph
- * then states the snapshot has none, which mergeGraphLockfileIntoExisting (pnpm.package-manager.ts)
- * takes over an existing lockfile's map.
- */
 async function dedupeSnapshotDepsToRootManifest(lockfile: BitLockfileFile, opts: FetchRangesOptions): Promise<void> {
   const rootDeps = allDependencies(opts.manifests[opts.rootDir]);
   if (isEmpty(rootDeps)) return;
   const getRanges = memoize((pkgId: string) => fetchDependencyRanges(pkgId, opts));
-  // The range lookups hit the registry metadata: keep the number in flight bounded.
   await pMap(
     Object.entries(lockfile.snapshots ?? {}),
     ([depPath, snapshot]) => {
@@ -635,7 +618,6 @@ function allDependencies(manifest: ProjectManifest | undefined): Record<string, 
   return { ...manifest?.optionalDependencies, ...manifest?.devDependencies, ...manifest?.dependencies };
 }
 
-/** Delete the dependencies `shouldDrop` picks from the snapshot, and a dependency map left empty. */
 async function dropSnapshotDeps(
   snapshot: NonNullable<BitLockfileFile['snapshots']>[string],
   shouldDrop: (name: string, ref: string) => boolean | Promise<boolean>
@@ -655,10 +637,6 @@ type Dependent = {
   getRanges: () => Promise<DependencyRanges | undefined>;
 };
 
-/**
- * Whether a fresh install would give the dependent the root's version of the dependency rather than
- * the one the graph locked (`ref`).
- */
 async function rootVersionWins(
   name: string,
   ref: string,
@@ -667,12 +645,7 @@ async function rootVersionWins(
 ): Promise<boolean> {
   const lockedVersion = dp.parse(`${name}@${ref}`).version;
   if (lockedVersion == null || lockedVersion === rootSpecifier) return false;
-  // pnpm resolves a peer from the root whatever the dependent's range says.
   if (dependent.peers?.[name] != null) return true;
-  // A regular dependency is deduped only to an exact root version that the dependent's range
-  // accepts. A root range (or tag, link, alias) resolves to a version known only at install time,
-  // and a range that can't be read (the lookup failed, an unpublished component snap) may rule the
-  // root version out: both keep the lock.
   const rootVersion = semver.valid(rootSpecifier);
   if (rootVersion == null) return false;
   const ranges = await dependent.getRanges();
@@ -682,11 +655,6 @@ async function rootVersionWins(
 
 type FetchRangesOptions = { manifests: Record<string, ProjectManifest>; rootDir: string; resolve: ResolveFunction };
 
-/**
- * The ranges a package declares for its dependencies: from the installing manifests when the
- * package is one of them (a workspace component), from the registry metadata otherwise.
- * Undefined when neither is available, e.g. an unpublished component snap.
- */
 async function fetchDependencyRanges(
   pkgId: string,
   { manifests, rootDir, resolve }: FetchRangesOptions

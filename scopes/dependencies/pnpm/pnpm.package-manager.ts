@@ -609,8 +609,7 @@ const RESOLUTION_CONTEXT_KEYS = ['pnpmfileChecksum', 'settings', 'overrides'] as
 //
 // Packages and snapshots are deep-merged per key so that pnpm-managed metadata the graph
 // doesn't round-trip (e.g. `optional`, `transitivePeerDependencies`, `dev`) survives on
-// entries the graph also knows about. The dependency maps of a snapshot are the exception:
-// the graph's replace the existing ones, see mergeSnapshotRecords.
+// entries the graph also knows about.
 export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileFile): LockfileFile {
   const importers: NonNullable<LockfileFile['importers']> = { ...existing.importers };
   for (const [importerId, graphImporter] of Object.entries(graph.importers ?? {})) {
@@ -701,11 +700,6 @@ function mergeEntryRecords<T extends object>(
   return merged;
 }
 
-// Like mergeEntryRecords, except that a graph snapshot's dependency maps replace the existing
-// ones instead of overlaying them, a missing map included. A graph snapshot states its
-// dependencies in full: the converter drops a map once it has deduped every entry in it to the
-// root (dedupeSnapshotDepsToRootManifest in lockfile-deps-graph-converter.ts), and an overlay
-// would bring the existing lockfile's copy of the dropped entry back.
 function mergeSnapshotRecords(
   existing: LockfileFile['snapshots'],
   graph: LockfileFile['snapshots']
