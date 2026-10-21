@@ -4,6 +4,7 @@ import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.typ
 import type * as Dp from '@pnpm/deps.path';
 import { pick, partition } from 'lodash';
 import semver from 'semver';
+import pMap from 'p-map';
 import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
 import {
@@ -31,7 +32,7 @@ type ResolveFunction = (
   opts: { lockfileDir?: string; projectDir?: string; preferredVersions?: Record<string, unknown> }
 ) => Promise<{ resolution?: Record<string, unknown>; manifest?: DependencyRanges }>;
 
-type DependencyRanges = Pick<ProjectManifest, 'dependencies' | 'optionalDependencies' | 'peerDependencies'>;
+type DependencyRanges = Pick<ProjectManifest, 'dependencies' | 'optionalDependencies'>;
 
 // @pnpm/deps.path is ESM-only; load it through a .cjs shim so the require()
 // chain in the build capsule's mocha runner doesn't trip on the transitive ESM
@@ -608,8 +609,8 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
  * - a regular dependency: when the root pins an exact version the dependent's range accepts, so
  *   pnpm's preference for the root's version lands where a graph-less install would. A range the
  *   root's version can't satisfy stays locked: a duplicate there is inherent, and keeping the lock
- *   avoids a registry re-resolution. A root range is left alone, since the version pnpm picks for it
- *   isn't known until the install.
+ *   avoids a registry re-resolution. So does a range that can't be read, and a root range is left
+ *   alone, since the version pnpm picks for it isn't known until the install.
  * The versions that lose their last reference are dropped from the lockfile with the other
  * unreachable entries, so pnpm doesn't see them as preferred versions either.
  */
@@ -641,8 +642,10 @@ async function dedupeSnapshotDepsToRootManifest(
     }
     return manifestRanges.get(pkgId)!;
   };
-  await Promise.all(
-    Object.entries(lockfile.snapshots ?? {}).map(async ([depPath, snapshot]) => {
+  // The range lookups behind getRanges hit the registry metadata: keep the number in flight bounded.
+  await pMap(
+    Object.entries(lockfile.snapshots ?? {}),
+    async ([depPath, snapshot]) => {
       const pkgId = dp.removeSuffix(depPath);
       for (const depType of ['dependencies', 'optionalDependencies'] as const) {
         const deps = snapshot[depType];
@@ -658,7 +661,8 @@ async function dedupeSnapshotDepsToRootManifest(
         }
         if (Object.keys(deps).length === 0) delete snapshot[depType];
       }
-    })
+    },
+    { concurrency: 16 }
   );
 }
 
@@ -678,16 +682,15 @@ async function shouldDedupeToRoot({
   // The graph keeps the peer dependencies of every package, so a peer is known without a lookup.
   const lockedPeers = lockfile.packages?.[pkgId]?.peerDependencies;
   if (lockedPeers?.[name] != null) return true;
+  // A regular dependency is deduped only to an exact root version, so a root range needs no lookup.
   const rootVersion = semver.valid(rootSpecifier);
+  if (rootVersion == null) return false;
   const ranges = await getRanges(pkgId);
   const range = ranges?.dependencies?.[name] ?? ranges?.optionalDependencies?.[name];
-  if (range == null) {
-    if (ranges?.peerDependencies?.[name] != null) return true;
-    // Unknown how the dependent declares it (e.g. an unpublished component snap). Dedupe to an exact
-    // root version, which is the path a graph-less install takes for that one dep.
-    return rootVersion != null;
-  }
-  return rootVersion != null && semver.satisfies(rootVersion, range);
+  // Unknown range (the lookup failed, or an unpublished component snap): keep the lock rather than
+  // discard a reference the root version may not satisfy.
+  if (range == null) return false;
+  return semver.satisfies(rootVersion, range);
 }
 
 /**

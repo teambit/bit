@@ -1288,8 +1288,28 @@ describe('convertGraphToLockfile with a root manifest that pins a version the gr
     expect(lockfile.packages!['@types/react@18.2.23']).to.not.equal(undefined);
   });
 
-  it('should keep a regular dependency when the root specifier is a range, since its version is not known yet', async () => {
-    const { resolve } = createResolve('*');
+  it('should keep the reference when the dependent range is unknown, e.g. the metadata lookup failed', async () => {
+    for (const resolve of [
+      createResolve(undefined).resolve,
+      async () => {
+        throw new Error('ENOTFOUND');
+      },
+    ]) {
+      const lockfile = await convertGraphToLockfile(createGraph(), {
+        manifests: {
+          [rootDir]: { dependencies: { '@types/react': '17.0.87' } },
+          [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+        },
+        rootDir,
+        resolve: resolve as any,
+      });
+      expect(lockfile.snapshots!['@types/react-helmet@6.1.6']).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+      expect(lockfile.packages!['@types/react@18.2.23']).to.not.equal(undefined);
+    }
+  });
+
+  it('should keep a regular dependency when the root specifier is a range, without looking its range up', async () => {
+    const { resolve, resolved } = createResolve('*');
     const lockfile = await convertGraphToLockfile(createGraph(), {
       manifests: {
         [rootDir]: { dependencies: { '@types/react': '^17.0.0' } },
@@ -1298,6 +1318,7 @@ describe('convertGraphToLockfile with a root manifest that pins a version the gr
       rootDir,
       resolve,
     });
+    expect(resolved).to.not.include('@types/react-helmet@6.1.6');
     expect(lockfile.snapshots!['@types/react-helmet@6.1.6']).to.eql({ dependencies: { '@types/react': '18.2.23' } });
   });
 
