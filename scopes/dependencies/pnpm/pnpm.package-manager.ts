@@ -609,7 +609,8 @@ const RESOLUTION_CONTEXT_KEYS = ['pnpmfileChecksum', 'settings', 'overrides'] as
 //
 // Packages and snapshots are deep-merged per key so that pnpm-managed metadata the graph
 // doesn't round-trip (e.g. `optional`, `transitivePeerDependencies`, `dev`) survives on
-// entries the graph also knows about.
+// entries the graph also knows about. The dependency maps of a snapshot are the exception:
+// the graph's replace the existing ones, see mergeSnapshotRecords.
 export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileFile): LockfileFile {
   const importers: NonNullable<LockfileFile['importers']> = { ...existing.importers };
   for (const [importerId, graphImporter] of Object.entries(graph.importers ?? {})) {
@@ -642,7 +643,7 @@ export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: Lo
     lockfileVersion: existing.lockfileVersion ?? graph.lockfileVersion,
     importers,
     packages: mergeEntryRecords(existing.packages, graph.packages),
-    snapshots: mergeEntryRecords(existing.snapshots, graph.snapshots),
+    snapshots: mergeSnapshotRecords(existing.snapshots, graph.snapshots),
   };
   // The merged lockfile mixes resolutions from both sides, so it can only
   // claim the readPackage hooks checksum, the resolution settings and the
@@ -696,6 +697,26 @@ function mergeEntryRecords<T extends object>(
   for (const [key, graphEntry] of Object.entries(graph)) {
     const existingEntry = merged[key];
     merged[key] = existingEntry ? ({ ...existingEntry, ...graphEntry } as T) : graphEntry;
+  }
+  return merged;
+}
+
+// A graph snapshot states the dependencies of its package in full, so its dependency maps replace
+// the existing lockfile's rather than overlay them, a missing map included: the converter drops a
+// map once it has deduped every reference in it to the root (see dedupeSnapshotDepsToRootManifest
+// in lockfile-deps-graph-converter.ts), and an overlay would bring the existing lockfile's copy of
+// the dropped reference back. The other snapshot fields keep the deep merge of mergeEntryRecords.
+function mergeSnapshotRecords(
+  existing: LockfileFile['snapshots'],
+  graph: LockfileFile['snapshots']
+): LockfileFile['snapshots'] {
+  const merged = mergeEntryRecords(existing, graph);
+  if (!existing || !graph || !merged) return merged;
+  for (const [key, graphSnapshot] of Object.entries(graph)) {
+    if (!existing[key]) continue;
+    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+      if (graphSnapshot[depType] == null) delete merged[key][depType];
+    }
   }
   return merged;
 }

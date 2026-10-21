@@ -1336,6 +1336,40 @@ describe('convertGraphToLockfile with a root manifest that pins a version the gr
     expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
   });
 
+  it('should drop a peer resolution when the root provides the peer through a tag or a link', async () => {
+    for (const specifier of ['latest', 'link:../types-react', 'npm:@types/react@17.0.87']) {
+      const { resolve } = createResolve('*');
+      const lockfile = await convertGraphToLockfile(createGraph({ peerKeyed: true }), {
+        manifests: {
+          [rootDir]: { dependencies: { '@types/react': specifier } },
+          [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+        },
+        rootDir,
+        resolve,
+      });
+      expect(lockfile.snapshots!['react-types-peer@1.0.0(@types/react@18.2.23)'], specifier).to.eql({});
+      expect(lockfile.packages!['@types/react@18.2.23'], specifier).to.equal(undefined);
+    }
+  });
+
+  it('should keep a regular dependency when the root specifier is a tag or a link, without looking its range up', async () => {
+    for (const specifier of ['latest', 'link:../types-react']) {
+      const { resolve, resolved } = createResolve('*');
+      const lockfile = await convertGraphToLockfile(createGraph(), {
+        manifests: {
+          [rootDir]: { dependencies: { '@types/react': specifier } },
+          [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+        },
+        rootDir,
+        resolve,
+      });
+      expect(resolved, specifier).to.not.include('@types/react-helmet@6.1.6');
+      expect(lockfile.snapshots!['@types/react-helmet@6.1.6'], specifier).to.eql({
+        dependencies: { '@types/react': '18.2.23' },
+      });
+    }
+  });
+
   it('should leave the graph alone when the root has no such dependency', async () => {
     const { resolve, resolved } = createResolve('*');
     const lockfile = await convertGraphToLockfile(createGraph(), {

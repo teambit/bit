@@ -609,10 +609,12 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
  * - a regular dependency: when the root pins an exact version the dependent's range accepts, so
  *   pnpm's preference for the root's version lands where a graph-less install would. A range the
  *   root's version can't satisfy stays locked: a duplicate there is inherent, and keeping the lock
- *   avoids a registry re-resolution. So does a range that can't be read, and a root range is left
- *   alone, since the version pnpm picks for it isn't known until the install.
+ *   avoids a registry re-resolution. So does a range that can't be read, and a root range (or tag,
+ *   link, alias) is left alone, since the version pnpm picks for it isn't known until the install.
  * The versions that lose their last reference are dropped from the lockfile with the other
- * unreachable entries, so pnpm doesn't see them as preferred versions either.
+ * unreachable entries, so pnpm doesn't see them as preferred versions either. A dependency map
+ * that loses all its references is removed: the graph then states the snapshot has none, and
+ * mergeGraphLockfileIntoExisting (pnpm.package-manager.ts) takes that over an existing lockfile's map.
  */
 async function dedupeSnapshotDepsToRootManifest(
   lockfile: BitLockfileFile,
@@ -628,10 +630,13 @@ async function dedupeSnapshotDepsToRootManifest(
 ): Promise<void> {
   const rootManifest = manifests[rootDir];
   if (!rootManifest) return;
+  // Every package the root provides, whatever its specifier: a peer is deduped to the root without
+  // looking at the specifier (a tag or a link provides the peer just the same), a regular dependency
+  // only when the specifier is an exact version. See shouldDedupeToRoot.
   const rootSpecifiers = new Map<string, string>();
   for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
     for (const [name, specifier] of Object.entries(rootManifest[depType] ?? {})) {
-      if (semver.validRange(specifier)) rootSpecifiers.set(name, specifier);
+      rootSpecifiers.set(name, specifier);
     }
   }
   if (rootSpecifiers.size === 0) return;
