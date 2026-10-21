@@ -1,6 +1,7 @@
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
-import { isEqual, union } from 'lodash';
+import { compact, isEqual, union } from 'lodash';
 import type { ComponentIdList } from '@teambit/component-id';
+import type { ImportedPackages } from '@teambit/dependencies';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 import { ModelComponent } from '@teambit/objects';
@@ -40,15 +41,30 @@ export function getDependenciesOfVersion(
 }
 
 /**
+ * the packages imported by the files of a merge, see detectImportedPackages().
+ */
+export type ImportsOfMerge = {
+  merged: ImportedPackages; // imported by the merged files
+  sides: Set<string>; // imported by the files of base, current or other
+  isOfPolicy?: (name: string) => boolean; // whether the merged policy decides on the package, see withPolicyOfMerge()
+};
+
+/**
  * 3-way merge of the resolved dependencies of a component: base (the common snap), current (the target lane) and
  * other (the merged lane/main).
  *
  * a workspace merge gets the dependencies of the merged component by re-detecting them from the merged files. a bare
  * scope has no node_modules to resolve imports against, so it merges the dependencies that each side resolved when it
  * was snapped instead: a dependency added or removed on one side, or whose version or type (runtime/dev/peer) changed
- * on one side, is taken from that side. it's close to what the detection finds, not identical. e.g. when one side
- * removed an import of a dependency from one file and the other side added an import of it to another file, the
- * dependency is removed, although the merged files still import it.
+ * on one side, is taken from that side.
+ *
+ * when `imports` is given, the dependencies that come from imports follow the merged files, same as the detection: a
+ * dependency that no merged file imports is removed, one that a merged file imports is kept (taken from the side that
+ * has it when the 3-way merge removed it), and it's a runtime or dev dependency according to the files that import it.
+ * the version is still the one of the 3-way merge. a dependency that no side imports (e.g. one added by a policy) keeps
+ * the 3-way result. without `imports`, it's close to the detection, not identical. e.g. when one side removed an
+ * import of a dependency from one file and the other side added an import of it to another file, the dependency is
+ * removed, although the merged files still import it.
  *
  * each dependency is keyed by its name, and its field (runtime/dev/peer) is part of what is compared, so a dependency
  * that moved between fields on one side is taken from that side, and it's never added to two fields.
@@ -65,7 +81,8 @@ export function mergeDependencies(
   current: DependenciesSnapshot,
   other: DependenciesSnapshot,
   mergeStrategy?: MergeStrategy,
-  laneComponentIds?: ComponentIdList
+  laneComponentIds?: ComponentIdList,
+  imports?: ImportsOfMerge
 ): DependenciesSnapshot {
   const componentDeps = (snapshot: DependenciesSnapshot) =>
     new Map(
@@ -73,6 +90,12 @@ export function mergeDependencies(
         snapshot[field].get().map((dep) => [dep.id.toStringWithoutVersion(), { field, value: dep }] as const)
       )
     );
+  const applyImportsIfNeeded = <Field extends string, Value>(
+    entries: Array<MergedEntry<Field, Value>>,
+    sides: Array<Map<string, FieldEntry<Field, Value>>>,
+    nameOf: (key: string, value: Value) => string | undefined,
+    fields: DepTypeFields<Field>
+  ) => (imports ? applyImports(entries, sides, nameOf, fields, imports) : entries);
   // all the persisted data is compared (e.g. the import paths and the version range), not only the id, so a change of
   // any of them on one side is not lost. (no methods are called, a loaded component has the dependencies as plain objects)
   const isSameDep = (a: Dependency, b: Dependency) =>
@@ -80,12 +103,12 @@ export function mergeDependencies(
     a.packageName === b.packageName &&
     a.versionRange === b.versionRange &&
     isEqual(a.relativePaths, b.relativePaths);
-  const mergedCompDeps = mergeEntries(
-    componentDeps(base),
-    componentDeps(current),
-    componentDeps(other),
-    mergeStrategy,
-    isSameDep
+  const [baseCompDeps, currentCompDeps, otherCompDeps] = [base, current, other].map(componentDeps);
+  const mergedCompDeps = applyImportsIfNeeded(
+    mergeEntries(baseCompDeps, currentCompDeps, otherCompDeps, mergeStrategy, isSameDep),
+    [otherCompDeps, currentCompDeps, baseCompDeps],
+    (_key, dep) => dep.packageName,
+    { runtime: 'dependencies', dev: 'devDependencies', peer: 'peerDependencies' }
   );
   const packageDeps = (snapshot: DependenciesSnapshot) =>
     new Map(
@@ -93,12 +116,12 @@ export function mergeDependencies(
         Object.entries(snapshot[field] || {}).map(([name, version]) => [name, { field, value: version }] as const)
       )
     );
-  const mergedPkgDeps = mergeEntries(
-    packageDeps(base),
-    packageDeps(current),
-    packageDeps(other),
-    mergeStrategy,
-    (a, b) => a === b
+  const [basePkgDeps, currentPkgDeps, otherPkgDeps] = [base, current, other].map(packageDeps);
+  const mergedPkgDeps = applyImportsIfNeeded(
+    mergeEntries(basePkgDeps, currentPkgDeps, otherPkgDeps, mergeStrategy, (a, b) => a === b),
+    [otherPkgDeps, currentPkgDeps, basePkgDeps],
+    (key) => key,
+    { runtime: 'packageDependencies', dev: 'devPackageDependencies', peer: 'peerPackageDependencies' }
   );
   const compDepsOf = (field: ComponentDepsField) =>
     new Dependencies(
@@ -116,7 +139,142 @@ export function mergeDependencies(
   };
 }
 
+/**
+ * the dependencies of one side of a merge, and the packages that its dependencies policy ignores ("-") or forces (adds
+ * even when no file imports them, e.g. the own peers of an env).
+ */
+export type SideOfMerge = {
+  dependencies: DependenciesSnapshot;
+  ignoredPackages: Set<string>;
+  forcedPackages: Set<string>;
+};
+
+/**
+ * packages that the merged files import, that the merged policy doesn't ignore, and that no side has as a dependency,
+ * because the sides that import them ignored them. (e.g. one side imports a package while it's ignored, and the other
+ * side removes the "-"). a workspace adds such a package with the version installed in node_modules, a bare scope has
+ * no version for it. a types package of it (e.g. @types/foo) is not a version of it.
+ */
+export function getImportedPackagesWithoutVersion(
+  base: SideOfMerge,
+  current: SideOfMerge,
+  other: SideOfMerge,
+  importedByMergedFiles: Iterable<string>
+): string[] {
+  const sides = [base, current, other];
+  const dependencyNames = new Set(sides.flatMap(({ dependencies }) => namesOfDependencies(dependencies)));
+  return [...importedByMergedFiles].filter(
+    (name) =>
+      !dependencyNames.has(name) &&
+      sides.some((side) => side.ignoredPackages.has(name)) &&
+      !isSetOnMerge(base, current, other, (side) => side.ignoredPackages.has(name))
+  );
+}
+
+/**
+ * the imports of a merge, with the packages that the merged policy ignores ("-") or forces. these keep the 3-way
+ * result, which follows the policy of each side, the imports don't change them. e.g. when one side adds a "-" for a
+ * package that the files import, the 3-way merge removes it, and the imports don't restore it. and an env keeps its
+ * own peers when no file imports them anymore.
+ */
+export function withPolicyOfMerge(
+  imports: ImportsOfMerge,
+  base: SideOfMerge,
+  current: SideOfMerge,
+  other: SideOfMerge
+): ImportsOfMerge {
+  const isOfPolicy = (name: string) =>
+    isSetOnMerge(base, current, other, (side) => side.ignoredPackages.has(name)) ||
+    isSetOnMerge(base, current, other, (side) => side.forcedPackages.has(name));
+  return { ...imports, isOfPolicy };
+}
+
+/**
+ * whether the merged policy sets something for a package (e.g. ignores it), by a 3-way merge of whether the policy of
+ * each side sets it.
+ */
+function isSetOnMerge(
+  base: SideOfMerge,
+  current: SideOfMerge,
+  other: SideOfMerge,
+  isSet: (side: SideOfMerge) => boolean
+): boolean {
+  const [onBase, onCurrent, onOther] = [base, current, other].map(isSet);
+  return Boolean(mergeValue(onBase, onCurrent, onOther, undefined, (a, b) => a === b));
+}
+
+function namesOfDependencies(dependencies: DependenciesSnapshot): string[] {
+  const componentDeps = COMPONENT_DEPS_FIELDS.flatMap((field) => dependencies[field].get());
+  const packageNames = PACKAGE_DEPS_FIELDS.flatMap((field) => Object.keys(dependencies[field] || {}));
+  return [...compact(componentDeps.map((dep) => dep.packageName)), ...packageNames];
+}
+
 type FieldEntry<Field, Value> = { field: Field; value: Value };
+type MergedEntry<Field, Value> = FieldEntry<Field, Value> & { key: string };
+type DepTypeFields<Field> = { runtime: Field; dev: Field; peer: Field };
+
+/**
+ * make the dependencies that come from imports follow the merged files, see mergeDependencies().
+ * `sides` are the entries of other, current and base, in this order of preference, to take a dependency from when the
+ * 3-way merge removed it.
+ */
+function applyImports<Field extends string, Value>(
+  entries: Array<MergedEntry<Field, Value>>,
+  sides: Array<Map<string, FieldEntry<Field, Value>>>,
+  nameOf: (key: string, value: Value) => string | undefined,
+  fields: DepTypeFields<Field>,
+  imports: ImportsOfMerge
+): Array<MergedEntry<Field, Value>> {
+  // a types package (e.g. @types/foo) follows the package it types, see AutoDetectDeps._addTypesPackagesForTypeScript
+  const importedName = (name: string) => typedPackageName(name) || name;
+  const isFromImports = (name: string) =>
+    imports.merged.has(importedName(name)) || imports.sides.has(importedName(name));
+  const isOfPolicy = (name: string) => Boolean(imports.isOfPolicy?.(name));
+  const withFieldOfImports = (entry: MergedEntry<Field, Value>, name: string): MergedEntry<Field, Value> => {
+    const importedAs = imports.merged.get(name);
+    // a peer is set by a policy or by the dependency itself, not by the files that import it
+    if (!importedAs || entry.field === fields.peer) return entry;
+    return { ...entry, field: fields[importedAs] };
+  };
+  const result: Array<MergedEntry<Field, Value>> = [];
+  const names = new Set<string>();
+  entries.forEach((entry) => {
+    const name = nameOf(entry.key, entry.value);
+    if (!name || isOfPolicy(name)) {
+      result.push(entry);
+      return;
+    }
+    if (isFromImports(name) && !imports.merged.has(importedName(name))) return; // no merged file imports it
+    names.add(name);
+    result.push(withFieldOfImports(entry, name));
+  });
+  const sidesByName = sides.map(
+    (side) => new Map([...side].map(([key, entry]) => [nameOf(key, entry.value), { key, ...entry }]))
+  );
+  const importedNames = [...imports.merged.keys()].flatMap((name) => [name, toTypesPackageName(name)]);
+  importedNames.forEach((name) => {
+    if (names.has(name) || isOfPolicy(name)) return;
+    // when no side has it, it's e.g. a core aspect, or a package that a policy ignores
+    const fromSide = sidesByName.map((side) => side.get(name)).find(Boolean);
+    if (!fromSide) return;
+    names.add(name);
+    result.push(withFieldOfImports(fromSide, name));
+  });
+  return result;
+}
+
+/**
+ * e.g. "@types/foo" => "foo", "@types/scope__foo" => "@scope/foo". undefined when it's not a types package.
+ */
+function typedPackageName(name: string): string | undefined {
+  if (!name.startsWith('@types/')) return undefined;
+  const typed = name.slice('@types/'.length);
+  return typed.includes('__') ? `@${typed.replace('__', '/')}` : typed;
+}
+
+function toTypesPackageName(name: string): string {
+  return `@types/${name.replace(/^@([^/]+)\//, '$1__')}`;
+}
 
 /**
  * 3-way merge of the entries of each key. an entry is unchanged between two sides when it's in the same field with an
@@ -128,7 +286,7 @@ function mergeEntries<Field, Value>(
   other: Map<string, FieldEntry<Field, Value>>,
   mergeStrategy: MergeStrategy | undefined,
   isEqualValue: (a: Value, b: Value) => boolean
-): Array<FieldEntry<Field, Value> & { key: string }> {
+): Array<MergedEntry<Field, Value>> {
   return union([...current.keys()], [...other.keys()]).flatMap((key) => {
     const merged = mergeValue(
       base.get(key),
