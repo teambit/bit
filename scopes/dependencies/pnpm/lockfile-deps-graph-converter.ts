@@ -3,6 +3,7 @@ import { type ProjectManifest } from '@pnpm/types';
 import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import type * as Dp from '@pnpm/deps.path';
 import { pick, partition } from 'lodash';
+import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
 import {
@@ -28,7 +29,9 @@ import { type BitLockfileFile } from './lynx';
 type ResolveFunction = (
   wantedDependency: { alias?: string; bareSpecifier?: string },
   opts: { lockfileDir?: string; projectDir?: string; preferredVersions?: Record<string, unknown> }
-) => Promise<{ resolution?: Record<string, unknown> }>;
+) => Promise<{ resolution?: Record<string, unknown>; manifest?: DependencyRanges }>;
+
+type DependencyRanges = Pick<ProjectManifest, 'dependencies' | 'optionalDependencies' | 'peerDependencies'>;
 
 // @pnpm/deps.path is ESM-only; load it through a .cjs shim so the require()
 // chain in the build capsule's mocha runner doesn't trip on the transitive ESM
@@ -412,6 +415,7 @@ export async function convertGraphToLockfile(
       }
     }
   }
+  await dedupeSnapshotDepsToRootManifest(lockfile, { manifests, rootDir, resolve });
   const pkgsToResolve = getPkgsToResolve(lockfile, manifests);
   const failedWorkspaceComponentPkgs = new Set<string>();
   await Promise.all(
@@ -585,6 +589,132 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
     lockfile.bit.depsRequiringBuild = lockfile.bit.depsRequiringBuild.filter((depPath) =>
       reachablePackages.has(dp.removeSuffix(depPath))
     );
+  }
+}
+
+/**
+ * The root manifest (the capsules root during a build, the workspace root otherwise) is the one
+ * provider of its dependencies for the whole install: pnpm resolves peer dependencies from it, and a
+ * fresh install dedupes any regular dependency whose range the root's version satisfies to it. The
+ * graph, however, was stored by a workspace whose root may have provided another version: e.g. the
+ * workspace root provided `@types/react@18` while the env of the component being built pins
+ * `@types/react@17`. Restored as-is, the graph keeps that second copy next to the root's one, and
+ * pnpm then prefers it for every `*`-style range too. TypeScript ends up with two `@types/react` in
+ * one program.
+ *
+ * Drop every snapshot reference to another version of a package the root manifest provides:
+ * - a peer dependency of the dependent: always, since pnpm resolves it from the root whatever the
+ *   dependent's range says.
+ * - a regular dependency: when the root pins an exact version the dependent's range accepts, so
+ *   pnpm's preference for the root's version lands where a graph-less install would. A range the
+ *   root's version can't satisfy stays locked: a duplicate there is inherent, and keeping the lock
+ *   avoids a registry re-resolution. A root range is left alone, since the version pnpm picks for it
+ *   isn't known until the install.
+ * The versions that lose their last reference are dropped from the lockfile with the other
+ * unreachable entries, so pnpm doesn't see them as preferred versions either.
+ */
+async function dedupeSnapshotDepsToRootManifest(
+  lockfile: BitLockfileFile,
+  {
+    manifests,
+    rootDir,
+    resolve,
+  }: {
+    manifests: Record<string, ProjectManifest>;
+    rootDir: string;
+    resolve: ResolveFunction;
+  }
+): Promise<void> {
+  const rootManifest = manifests[rootDir];
+  if (!rootManifest) return;
+  const rootSpecifiers = new Map<string, string>();
+  for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
+    for (const [name, specifier] of Object.entries(rootManifest[depType] ?? {})) {
+      if (semver.validRange(specifier)) rootSpecifiers.set(name, specifier);
+    }
+  }
+  if (rootSpecifiers.size === 0) return;
+  const manifestRanges = new Map<string, Promise<DependencyRanges | undefined>>();
+  const getRanges = (pkgId: string): Promise<DependencyRanges | undefined> => {
+    if (!manifestRanges.has(pkgId)) {
+      manifestRanges.set(pkgId, fetchDependencyRanges(pkgId, { manifests, rootDir, resolve }));
+    }
+    return manifestRanges.get(pkgId)!;
+  };
+  await Promise.all(
+    Object.entries(lockfile.snapshots ?? {}).map(async ([depPath, snapshot]) => {
+      const pkgId = dp.removeSuffix(depPath);
+      for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+        const deps = snapshot[depType];
+        if (!deps) continue;
+        for (const [name, ref] of Object.entries(deps)) {
+          const rootSpecifier = rootSpecifiers.get(name);
+          if (rootSpecifier == null) continue;
+          const { version } = dp.parse(`${name}@${ref}`);
+          if (version == null || version === rootSpecifier) continue;
+          if (await shouldDedupeToRoot({ pkgId, name, rootSpecifier, lockfile, getRanges })) {
+            delete deps[name];
+          }
+        }
+        if (Object.keys(deps).length === 0) delete snapshot[depType];
+      }
+    })
+  );
+}
+
+async function shouldDedupeToRoot({
+  pkgId,
+  name,
+  rootSpecifier,
+  lockfile,
+  getRanges,
+}: {
+  pkgId: string;
+  name: string;
+  rootSpecifier: string;
+  lockfile: BitLockfileFile;
+  getRanges: (pkgId: string) => Promise<DependencyRanges | undefined>;
+}): Promise<boolean> {
+  // The graph keeps the peer dependencies of every package, so a peer is known without a lookup.
+  const lockedPeers = lockfile.packages?.[pkgId]?.peerDependencies;
+  if (lockedPeers?.[name] != null) return true;
+  const rootVersion = semver.valid(rootSpecifier);
+  const ranges = await getRanges(pkgId);
+  const range = ranges?.dependencies?.[name] ?? ranges?.optionalDependencies?.[name];
+  if (range == null) {
+    if (ranges?.peerDependencies?.[name] != null) return true;
+    // Unknown how the dependent declares it (e.g. an unpublished component snap). Dedupe to an exact
+    // root version, which is the path a graph-less install takes for that one dep.
+    return rootVersion != null;
+  }
+  return rootVersion != null && semver.satisfies(rootVersion, range);
+}
+
+/**
+ * The ranges a package declares for its dependencies: from the installing manifests when the
+ * package is one of them (a workspace component), from the registry metadata otherwise.
+ * Undefined when neither is available, e.g. an unpublished component snap.
+ */
+async function fetchDependencyRanges(
+  pkgId: string,
+  {
+    manifests,
+    rootDir,
+    resolve,
+  }: { manifests: Record<string, ProjectManifest>; rootDir: string; resolve: ResolveFunction }
+): Promise<DependencyRanges | undefined> {
+  const { name, version } = dp.parse(pkgId);
+  if (name == null || version == null) return undefined;
+  const local = Object.values(manifests).find((manifest) => manifest.name === name && manifest.version === version);
+  if (local) return local;
+  try {
+    const { manifest } = await resolve(
+      { alias: name, bareSpecifier: version },
+      { lockfileDir: rootDir, projectDir: rootDir, preferredVersions: {} }
+    );
+    return manifest;
+  } catch {
+    return undefined;
   }
 }
 

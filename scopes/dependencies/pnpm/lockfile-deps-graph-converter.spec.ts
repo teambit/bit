@@ -1198,6 +1198,138 @@ describe('convertGraphToLockfile on invalid graph', () => {
   });
 });
 
+// A graph is stored by a workspace whose root may provide a different version of a package than
+// the root of the install restoring it (the capsules root pins the env's peers). pnpm resolves
+// peers from the root and dedupes satisfiable ranges to it, so the restored lockfile must not keep
+// the workspace's other version next to the root's one.
+describe('convertGraphToLockfile with a root manifest that pins a version the graph resolved differently', () => {
+  const rootDir = process.cwd();
+  const compDir = path.resolve('comps/comp1');
+  function createGraph(opts: { peerKeyed?: boolean } = {}) {
+    const typesReactDep = opts.peerKeyed ? 'react-types-peer@1.0.0(@types/react@18.2.23)' : '@types/react@18.2.23';
+    const packages: PackagesMap = new Map([
+      ['@types/react-helmet@6.1.6', { resolution: { integrity: 'sha512-helmet' } } as any],
+      ['@types/react@18.2.23', { resolution: { integrity: 'sha512-react18' } } as any],
+      [
+        'react-types-peer@1.0.0',
+        { resolution: { integrity: 'sha512-peer' }, peerDependencies: { '@types/react': '*' } } as any,
+      ],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [
+          { id: '@types/react-helmet@6.1.6', name: '@types/react-helmet', specifier: '6.1.6', lifecycle: 'dev' },
+        ],
+      },
+      { id: '@types/react-helmet@6.1.6', neighbours: [{ id: typesReactDep }] },
+      {
+        id: 'react-types-peer@1.0.0(@types/react@18.2.23)',
+        attr: { pkgId: 'react-types-peer@1.0.0' },
+        neighbours: [{ id: '@types/react@18.2.23' }],
+      },
+    ];
+    return new DependenciesGraph({ packages, edges });
+  }
+  function createResolve(helmetRange: string | undefined) {
+    const resolved: string[] = [];
+    const resolve = async ({ alias, bareSpecifier }: { alias?: string; bareSpecifier?: string }) => {
+      resolved.push(`${alias}@${bareSpecifier}`);
+      return {
+        resolution: { integrity: '0000' },
+        manifest:
+          alias === '@types/react-helmet' && helmetRange ? { dependencies: { '@types/react': helmetRange } } : {},
+      };
+    };
+    return { resolve: resolve as any, resolved };
+  }
+
+  it('should drop the reference when the dependent accepts the root version, so pnpm dedupes to the root', async () => {
+    const { resolve, resolved } = createResolve('*');
+    const lockfile = await convertGraphToLockfile(createGraph(), {
+      manifests: {
+        [rootDir]: { dependencies: { '@types/react': '17.0.87' } },
+        [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+      },
+      rootDir,
+      resolve,
+    });
+    expect(resolved).to.include('@types/react-helmet@6.1.6');
+    expect(lockfile.snapshots!['@types/react-helmet@6.1.6']).to.eql({});
+    expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
+    expect(lockfile.snapshots!['@types/react@18.2.23']).to.equal(undefined);
+  });
+
+  it('should drop a peer resolution of the other version', async () => {
+    const { resolve } = createResolve('*');
+    const lockfile = await convertGraphToLockfile(createGraph({ peerKeyed: true }), {
+      manifests: {
+        [rootDir]: { dependencies: { '@types/react': '17.0.87' } },
+        [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+      },
+      rootDir,
+      resolve,
+    });
+    expect(lockfile.snapshots!['react-types-peer@1.0.0(@types/react@18.2.23)']).to.eql({});
+    expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
+  });
+
+  it('should keep the reference when the dependent rules out the root version', async () => {
+    const { resolve } = createResolve('^18.0.0');
+    const lockfile = await convertGraphToLockfile(createGraph(), {
+      manifests: {
+        [rootDir]: { dependencies: { '@types/react': '17.0.87' } },
+        [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+      },
+      rootDir,
+      resolve,
+    });
+    expect(lockfile.snapshots!['@types/react-helmet@6.1.6']).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+    expect(lockfile.packages!['@types/react@18.2.23']).to.not.equal(undefined);
+  });
+
+  it('should keep a regular dependency when the root specifier is a range, since its version is not known yet', async () => {
+    const { resolve } = createResolve('*');
+    const lockfile = await convertGraphToLockfile(createGraph(), {
+      manifests: {
+        [rootDir]: { dependencies: { '@types/react': '^17.0.0' } },
+        [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+      },
+      rootDir,
+      resolve,
+    });
+    expect(lockfile.snapshots!['@types/react-helmet@6.1.6']).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+  });
+
+  it('should drop a peer resolution even when the root specifier is a range, since pnpm resolves peers from the root', async () => {
+    const { resolve } = createResolve('*');
+    const lockfile = await convertGraphToLockfile(createGraph({ peerKeyed: true }), {
+      manifests: {
+        [rootDir]: { dependencies: { '@types/react': '^17.0.0' } },
+        [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+      },
+      rootDir,
+      resolve,
+    });
+    expect(lockfile.snapshots!['react-types-peer@1.0.0(@types/react@18.2.23)']).to.eql({});
+    expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
+  });
+
+  it('should leave the graph alone when the root has no such dependency', async () => {
+    const { resolve, resolved } = createResolve('*');
+    const lockfile = await convertGraphToLockfile(createGraph(), {
+      manifests: {
+        [rootDir]: { dependencies: { react: '18.3.1' } },
+        [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+      },
+      rootDir,
+      resolve,
+    });
+    expect(resolved).to.not.include('@types/react-helmet@6.1.6');
+    expect(lockfile.snapshots!['@types/react-helmet@6.1.6']).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+  });
+});
+
 describe('pnpmfileChecksum', () => {
   const componentDir = 'comps/comp1';
 
