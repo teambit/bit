@@ -63257,6 +63257,7 @@ snapshots:
       '@teambit/styling.deps-detectors.detective-sass': 0.0.9(postcss@8.4.45)(supports-color@9.4.0)
       '@teambit/styling.deps-detectors.detective-scss': 0.0.9(postcss@8.4.45)(supports-color@9.4.0)
       '@teambit/styling.deps-lookups.lookup-styling': 0.0.4
+      '@teambit/toolbox.crypto.sha1': file:components/crypto/sha1
       '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
@@ -63370,6 +63371,7 @@ snapshots:
       '@teambit/styling.deps-detectors.detective-sass': 0.0.9(postcss@8.4.45)(supports-color@9.4.0)
       '@teambit/styling.deps-detectors.detective-scss': 0.0.9(postcss@8.4.45)(supports-color@9.4.0)
       '@teambit/styling.deps-lookups.lookup-styling': 0.0.4
+      '@teambit/toolbox.crypto.sha1': file:components/crypto/sha1
       '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
@@ -63483,6 +63485,7 @@ snapshots:
       '@teambit/styling.deps-detectors.detective-sass': 0.0.9(postcss@8.4.45)(supports-color@9.4.0)
       '@teambit/styling.deps-detectors.detective-scss': 0.0.9(postcss@8.4.45)(supports-color@9.4.0)
       '@teambit/styling.deps-lookups.lookup-styling': 0.0.4
+      '@teambit/toolbox.crypto.sha1': file:components/crypto/sha1
       '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
@@ -63596,6 +63599,7 @@ snapshots:
       '@teambit/styling.deps-detectors.detective-sass': 0.0.9(postcss@8.4.45)(supports-color@9.4.0)
       '@teambit/styling.deps-detectors.detective-scss': 0.0.9(postcss@8.4.45)(supports-color@9.4.0)
       '@teambit/styling.deps-lookups.lookup-styling': 0.0.4
+      '@teambit/toolbox.crypto.sha1': file:components/crypto/sha1
       '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
@@ -74636,6 +74640,7 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component.modules.merge-helper': file:scopes/component/modules/merge-helper(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.snap-distance': file:scopes/component/snap-distance(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/lane-id': 0.0.312
@@ -74646,6 +74651,7 @@ snapshots:
       '@teambit/legacy.extension-data': file:components/legacy/extension-data
       '@teambit/legacy.scope': file:components/legacy/scope(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/pkg.modules.component-package-name': file:components/modules/component-package-name
+      '@teambit/toolbox.path.match-patterns': file:scopes/toolbox/path/match-patterns
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@types/node': 22.10.5
@@ -74669,6 +74675,7 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component.modules.merge-helper': file:scopes/component/modules/merge-helper(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.snap-distance': file:scopes/component/snap-distance(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/lane-id': 0.0.312
@@ -74679,6 +74686,7 @@ snapshots:
       '@teambit/legacy.extension-data': file:components/legacy/extension-data
       '@teambit/legacy.scope': file:components/legacy/scope(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/pkg.modules.component-package-name': file:components/modules/component-package-name
+      '@teambit/toolbox.path.match-patterns': file:scopes/toolbox/path/match-patterns
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@types/node': 22.10.5
