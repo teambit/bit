@@ -48,7 +48,7 @@ pub(super) fn context(
         return Err(invalid("switch staged main components require export or reset"));
     }
     attach_versions(&mut context)?;
-    reject_removed_targets(&request.root, &context, &selection.imported)?;
+    validation::reject_removed_targets(&request.root, &context, &selection.imported)?;
     let count =
         progress::import_count(&request.root, &context, context["targets"].as_array().unwrap())?;
     context["switchImportCount"] = json!(count);
@@ -294,33 +294,6 @@ fn attach_versions(context: &mut Value) -> io::Result<()> {
         .zip(versions)
     {
         target["switchVersion"] = json!(version);
-    }
-    Ok(())
-}
-
-fn reject_removed_targets(
-    root: &std::path::Path,
-    context: &Value,
-    imported: &command_import::PreparedImport,
-) -> io::Result<()> {
-    let scope = crate::scope_path(root);
-    for target in context["targets"].as_array().ok_or_else(|| invalid("switch targets"))? {
-        let identity = target["identity"].as_str().ok_or_else(|| invalid("switch identity"))?;
-        let Some(model) = repository::model(context, identity)? else { continue };
-        let version =
-            target["switchVersion"].as_str().ok_or_else(|| invalid("switch target version"))?;
-        let Ok(hash) = super::selection::versions::reference(&model, version) else { continue };
-        let value = if let Some(value) = imported.overlay.read(&hash, "Version")? {
-            Some(value.clone())
-        } else {
-            crate::read_scope_object(&scope, &hash)?
-                .and_then(|(kind, value)| (kind == "Version").then_some(value))
-        };
-        if let Some(value) = value
-            && super::selection::removed(&value)?
-        {
-            return Err(invalid("switch target version removed"));
-        }
     }
     Ok(())
 }

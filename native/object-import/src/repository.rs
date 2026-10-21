@@ -19,10 +19,47 @@ pub fn read_scope_object(scope: &Path, identity: &str) -> io::Result<Option<(Str
         .and_then(|bytes| std::str::from_utf8(bytes).ok())
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "invalid object header"))?;
     let (_, body) = repository::split(&raw, hash, kind)?;
-    let value = if matches!(kind, "Component" | "Symlink" | "Version" | "Lane") {
+    let value = if matches!(
+        kind,
+        "Component"
+            | "Symlink"
+            | "Version"
+            | "Lane"
+            | "ScopeMeta"
+            | "VersionHistory"
+            | "LaneHistory",
+    ) {
         serde_json::from_slice(body).map_err(io::Error::other)?
     } else {
         Value::Null
     };
     Ok(Some((kind.to_owned(), value)))
+}
+
+/// Read the raw header parts and uncompressed body of a scope object by 40-char hex hash.
+pub fn read_raw_scope_object(
+    scope: &Path,
+    identity: &str,
+) -> io::Result<Option<(Vec<String>, Vec<u8>)>> {
+    let hash = merge_history::hash(identity)?;
+    let raw = match repository::read(&scope.join("objects"), hash, 32 * 1024 * 1024, &mut 0) {
+        Ok(raw) => raw,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error),
+    };
+    let end = raw
+        .iter()
+        .position(|byte| *byte == 0)
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing object header"))?;
+    let header_str = std::str::from_utf8(&raw[..end])
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "object header is not UTF-8"))?;
+    let headers = header_str
+        .split(' ')
+        .map(str::to_owned)
+        .collect::<Vec<_>>();
+    let kind = headers
+        .first()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "invalid object header"))?;
+    let (_, body) = repository::split(&raw, hash, kind)?;
+    Ok(Some((headers, body.to_vec())))
 }

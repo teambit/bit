@@ -210,7 +210,7 @@ impl Prepared {
         let home = workspace_command::home();
         let mut engine = Engine::new()?;
         let request = prepare_request(root, &home, options)?;
-        preflight(&request)?;
+        failure::preflight(&request)?;
         let environments = if options.kind == Kind::Component {
             Some(read_environment(&mut engine, root, &home, startup, inherited.take())?)
         } else {
@@ -342,15 +342,6 @@ fn prepare_request(root: &Path, home: &Path, options: &Options) -> io::Result<Va
         request["options"]["pattern"] = json!(pattern);
     }
     Ok(request)
-}
-
-fn preflight(request: &Value) -> io::Result<()> {
-    let mut engine = Engine::new()?;
-    let result = engine.request::<Value>(request);
-    match result {
-        Err(error) if !super::engine::is_canonical(&error) => Err(error),
-        _ => Ok(()),
-    }
 }
 
 fn install_ids(result: &Value, kind: Kind) -> io::Result<Vec<String>> {

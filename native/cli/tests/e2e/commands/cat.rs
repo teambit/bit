@@ -271,11 +271,13 @@ fn current_workspace_sources_follow_modified_added_and_deleted_files() {
     assert!(
         files
             .iter()
-            .any(|file| file["path"] == "new.js"
-                && file["content"]
-                    .as_str()
-                    .unwrap()
-                    .contains("new")),
+            .any(|file| {
+                file["path"] == "new.js"
+                    && file["content"]
+                        .as_str()
+                        .unwrap()
+                        .contains("new")
+            }),
     );
 
     fs::remove_file(helper.scopes.local_path.join("bar/old.js")).unwrap();

@@ -50,7 +50,14 @@ impl PreparedImport {
         let targets = seeds(&remote_targets, bitmap);
         let remotes = self.environment.remotes.clone();
         self.checkout_off_lane(&targets, &remote_targets, &remotes)?;
-        self.retain_remote_lane_refs(&record)?;
+        if self.load_lane(id)?.is_some() {
+            self.publish_imported_lane(id, &record)?;
+            if !self.lane_import_histories().is_empty() {
+                return Err(super::invalid("fetch lane history merge"));
+            }
+        } else {
+            self.retain_remote_lane_refs(&record)?;
+        }
         if let Some(row) = self.progress.last_mut() {
             row.reason = Some(format!("of their latest on lane {}/{}", id.scope, id.name));
         }

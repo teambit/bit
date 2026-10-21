@@ -126,7 +126,10 @@ fn remove_on_main(version: &Value) -> bool {
         .is_some_and(|rows| {
             rows.iter()
                 .any(|row| {
-                    row["name"] == "teambit.component/remove"
+                    row["name"]
+                        .as_str()
+                        .or_else(|| row["extensionId"].as_str())
+                        .is_some_and(|id| id.split('@').next() == Some("teambit.component/remove"))
                         && row["config"]["removeOnMain"] == true
                 })
         })

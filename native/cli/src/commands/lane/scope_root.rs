@@ -7,12 +7,12 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub(super) struct ScopeRoot {
-    pub(super) path: PathBuf,
-    pub(super) bare: bool,
+pub(crate) struct ScopeRoot {
+    pub(crate) path: PathBuf,
+    pub(crate) bare: bool,
 }
 
-pub(super) fn discover() -> io::Result<Option<ScopeRoot>> {
+pub(crate) fn discover() -> io::Result<Option<ScopeRoot>> {
     let cwd = env::current_dir()?;
     if let Some(path) = workspace::root(&cwd) {
         return read(&path, false).map(Some);

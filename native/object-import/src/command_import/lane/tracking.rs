@@ -1,5 +1,5 @@
 //! A fetched switch adds a local alias only when that remote lane is not already tracked.
-use super::{Id, PreparedImport, invalid};
+use super::{Id, PreparedImport, Record, invalid};
 use serde_json::{Value, json};
 use std::{fs, io, path::PathBuf};
 
@@ -26,6 +26,34 @@ impl SwitchTracking {
 }
 
 impl PreparedImport {
+    pub(crate) fn resolve_switch_lane(
+        &mut self,
+        id: &Id,
+        skip_fetch: bool,
+    ) -> io::Result<Option<Record>> {
+        let local = self.load_lane(id)?;
+        if !id.is_main() && skip_fetch && local.is_none() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!(
+                    r#"unable to switch to lane "{}/{}" with --skip-fetch: the lane doesn't exist in the local scope. run without --skip-fetch to fetch it from the remote."#,
+                    id.scope, id.name,
+                ),
+            ));
+        }
+        match self.resolve_other_lane_with_policy(id, skip_fetch, true) {
+            Err(error) if local.is_some() && error.kind() == io::ErrorKind::NotFound => {
+                self.writes.switch_warning = Some(format!(
+                    r#"failed to fetch lane "{}/{}" from the remote, falling back to local state. {}
+use --skip-fetch to skip this step."#,
+                    id.scope, id.name, error,
+                ));
+                Ok(local)
+            }
+            result => result,
+        }
+    }
+
     pub(crate) fn defer_switch_tracking(&mut self) -> io::Result<Option<SwitchTracking>> {
         let Some(after) = self.writes.switch_tracking.take() else { return Ok(None) };
         let path = self.environment.local_directory

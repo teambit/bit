@@ -217,3 +217,22 @@ pub(super) fn validate_roots(directory: &str, rows: &[Value]) -> io::Result<()> 
     }
     Ok(())
 }
+
+pub(super) fn make_available_on_main(entries: &mut [Value], context: &Value) -> io::Result<bool> {
+    let mut changed = false;
+    for entry in entries {
+        if entry["isAvailableOnCurrentLane"] != false
+            || entry["config"]["teambit.component/remove"]["removed"] == true
+        {
+            continue;
+        }
+        let id = identity(entry)?;
+        if repository::model(context, &id)?.is_some_and(|model| model["head"].is_string()) {
+            let fields = entry.as_object_mut().ok_or_else(|| invalid("command bitmap entry"))?;
+            fields.shift_remove("isAvailableOnCurrentLane");
+            fields.shift_remove("onLanesOnly");
+            changed = true;
+        }
+    }
+    Ok(changed)
+}

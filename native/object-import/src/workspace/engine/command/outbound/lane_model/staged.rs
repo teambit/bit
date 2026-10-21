@@ -107,3 +107,40 @@ pub(super) fn missing_remote_head(host: &str, head: &str) -> io::Result<bool> {
         Err(error) => Err(error),
     }
 }
+
+pub(super) fn check_new_cross_scope_conflict(
+    context: &ComponentContext<'_>,
+    id: &ComponentId<'_>,
+    component: &Value,
+) -> io::Result<()> {
+    if id.scope == context.scope
+        || component["remotes"]
+            .as_array()
+            .is_some_and(|list| !list.is_empty())
+        || component["head"].is_string()
+    {
+        return Ok(());
+    }
+    let Ok(host) = super::remote::configured_host(context.input, id.scope) else {
+        return Ok(());
+    };
+    let bit_client_transfer::remotes::Remote::File(root) =
+        bit_client_transfer::remotes::Remote::from_host(&host)?
+    else {
+        return Ok(());
+    };
+    let Ok(bytes) = std::fs::read(root.join("index.json")) else {
+        return Ok(());
+    };
+    let index: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+    if index["components"]
+        .as_array()
+        .is_some_and(|rows| {
+            rows.iter()
+                .any(|row| id.matches(row) && row["isSymlink"] != true)
+        })
+    {
+        return Err(invalid("outbound cross-scope new component conflict"));
+    }
+    Ok(())
+}

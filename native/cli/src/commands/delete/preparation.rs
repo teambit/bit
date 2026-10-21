@@ -21,7 +21,8 @@ impl Prepared {
         validate(&bitmap, ids, options)?;
         let lane = !bitmap["_bit_lane"].is_null();
         let facts = None;
-        let plan = Batch::prepare(root, ids, &options.scope, lane, options.update_main, facts)?;
+        let plan = Batch::prepare(root, ids, &options.scope, lane, options.update_main, facts)
+            .map_err(|error| io::Error::other(error.to_string()))?;
         let pins = plan
             .plans()
             .iter()
@@ -40,7 +41,8 @@ impl Prepared {
         let lane = !bitmap["_bit_lane"].is_null();
         let facts = dependency_facts(rows)?;
         let mut plan =
-            Batch::prepare(root, ids, &options.scope, lane, options.update_main, Some(&facts))?;
+            Batch::prepare(root, ids, &options.scope, lane, options.update_main, Some(&facts))
+                .map_err(|error| io::Error::other(error.to_string()))?;
         plan.packages(&selection::facts(rows))?;
         let pins = plan
             .plans()

@@ -105,24 +105,7 @@ impl PreparedImport {
     ) -> io::Result<Option<Record>> {
         self.resolve_other_lane_with_policy(id, skip_fetch, false)
     }
-    pub(crate) fn resolve_switch_lane(
-        &mut self,
-        id: &Id,
-        skip_fetch: bool,
-    ) -> io::Result<Option<Record>> {
-        let local = self.load_lane(id)?;
-        match self.resolve_other_lane_with_policy(id, skip_fetch, true) {
-            Err(error) if local.is_some() && error.kind() == io::ErrorKind::NotFound => {
-                self.writes.switch_warning = Some(format!(
-                    "failed to fetch lane \"{}/{}\" from the remote, falling back to local state. {}\nuse --skip-fetch to skip this step.",
-                    id.scope, id.name, error,
-                ));
-                Ok(local)
-            }
-            result => result,
-        }
-    }
-    fn resolve_other_lane_with_policy(
+    pub(super) fn resolve_other_lane_with_policy(
         &mut self,
         id: &Id,
         skip_fetch: bool,

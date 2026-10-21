@@ -244,7 +244,14 @@ pub(super) fn prepare_bitmap_bytes(
     }
     let removed =
         planned.merge.as_ref().map_or_else(Vec::new, super::merge_planning::Prepared::removed_ids);
-    bitmap::prepare_bytes(&record.request.root, original, &record.context, &updates, &removed)
+    let mut bitmap =
+        bitmap::prepare_bytes(&record.request.root, original, &record.context, &updates, &removed)?;
+    if record.request.operation == input::Operation::Checkout
+        && record.request.options.to.as_deref() == Some("head")
+    {
+        bitmap.make_available_on_main(&record.context)?;
+    }
+    Ok(bitmap)
 }
 
 fn bitmap_update(

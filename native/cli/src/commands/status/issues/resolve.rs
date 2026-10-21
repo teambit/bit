@@ -8,7 +8,13 @@ use std::collections::{HashMap, HashSet};
 /// `ordinaryResolveIssueHeads(context, receipt)`: one row per model with
 /// its head (and its lane head), none deprecated or removed. A `null`
 /// version is an absent object, which counts as ordinary.
-pub fn ordinary_heads(context: &Value, receipt: &Value) -> bool {
+pub fn ordinary_heads_for(context: &Value, receipt: &Value, graph: Option<&[Component]>) -> bool {
+    let referenced = graph.map(|components| {
+        components
+            .iter()
+            .map(|component| super::without_version(&component.identity))
+            .collect::<HashSet<_>>()
+    });
     let (Some(models), Some(rows)) = (context["models"].as_array(), receipt.as_array()) else {
         return false;
     };
@@ -16,17 +22,23 @@ pub fn ordinary_heads(context: &Value, receipt: &Value) -> bool {
         && models
             .iter()
             .zip(rows)
-            .all(|(model, row)| ordinary_model(context, model, row))
+            .all(|(model, row)| ordinary_model(context, model, row, referenced.as_ref()))
 }
 
-fn ordinary_model(context: &Value, model: &Value, row: &Value) -> bool {
-    if truthy(model.get("deprecated")) {
-        return false;
-    }
+fn ordinary_model(
+    context: &Value,
+    model: &Value,
+    row: &Value,
+    referenced: Option<&HashSet<&str>>,
+) -> bool {
     let (Some(scope), Some(name)) = (model["scope"].as_str(), model["name"].as_str()) else {
         return false;
     };
     let identity = format!("{scope}/{name}");
+    let check_issues = referenced.is_none_or(|set| set.contains(identity.as_str()));
+    if check_issues && truthy(model.get("deprecated")) {
+        return false;
+    }
     let lane = context["lane"]["targets"]
         .as_array()
         .and_then(|targets| {
@@ -50,10 +62,10 @@ fn ordinary_model(context: &Value, model: &Value, row: &Value) -> bool {
         .into_iter()
         .flatten()
         .zip(expected)
-        .all(|(head, expected)| ordinary_head(head, expected))
+        .all(|(head, expected)| ordinary_head(head, expected, check_issues))
 }
 
-fn ordinary_head(head: &Value, expected: &Value) -> bool {
+fn ordinary_head(head: &Value, expected: &Value, check_issues: bool) -> bool {
     let hash = head["hash"].as_str();
     let valid = hash.is_some_and(|hash| {
         hash.len() == 40
@@ -74,14 +86,15 @@ fn ordinary_head(head: &Value, expected: &Value) -> bool {
     };
     version.is_object()
         && extensions.is_some_and(|extensions| {
-            !extensions
-                .iter()
-                .any(|extension| {
-                    matches!(
-                        extension["name"].as_str(),
-                        Some("teambit.component/deprecation" | "teambit.component/remove"),
-                    )
-                })
+            !check_issues
+                || !extensions
+                    .iter()
+                    .any(|extension| {
+                        matches!(
+                            extension["name"].as_str(),
+                            Some("teambit.component/deprecation" | "teambit.component/remove"),
+                        )
+                    })
         })
 }
 

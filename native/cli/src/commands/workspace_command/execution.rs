@@ -85,6 +85,16 @@ pub fn execute_without_loader(
     execute_mode(root, args, command, true, true, work)
 }
 
+/// A bare-scope text command whose registry has no loader.
+pub fn execute_without_loader_scope(
+    scope: &Path,
+    args: &[OsString],
+    command: &str,
+    work: impl FnOnce(&Output) -> io::Result<Report>,
+) -> io::Result<Outcome> {
+    execute_mode_at(scope, args, command, true, true, work)
+}
+
 fn execute_mode(
     root: &Path,
     args: &[OsString],

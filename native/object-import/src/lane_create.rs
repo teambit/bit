@@ -143,7 +143,14 @@ impl Documents {
 impl Origin {
     fn read(root: &Path, documents: &Documents, scope: &str, new_scope: bool) -> io::Result<Self> {
         if let Some(parent) = documents.bitmap.get("_bit_lane") {
-            return Self::from_parent(root, &documents.index, parent, scope, new_scope);
+            return Self::from_parent(
+                root,
+                &documents.index,
+                &documents.bitmap,
+                parent,
+                scope,
+                new_scope,
+            );
         }
         check_main_staged(root, &documents.index)?;
         Ok(Self { parent_name: None, components: Vec::new(), forked_from: None })
@@ -152,6 +159,7 @@ impl Origin {
     fn from_parent(
         root: &Path,
         index: &Value,
+        bitmap: &Value,
         parent: &Value,
         scope: &str,
         new_scope: bool,
@@ -174,7 +182,7 @@ impl Origin {
         let hash = row["hash"].as_str().ok_or_else(invalid)?;
         let objects_dir = bit_workspace_config::scope_path(root).join("objects");
         let lane = outbound::read_object(&objects_dir, hash, "Lane")?;
-        let components = active_lane_components(&objects_dir, &lane)?;
+        let components = active_lane_components(&objects_dir, &lane, bitmap)?;
         let forked_from = if parent["exported"] == true {
             Some(parent_id.clone())
         } else {
@@ -184,7 +192,11 @@ impl Origin {
     }
 }
 
-fn active_lane_components(objects_dir: &Path, lane: &Value) -> io::Result<Vec<Value>> {
+fn active_lane_components(
+    objects_dir: &Path,
+    lane: &Value,
+    bitmap: &Value,
+) -> io::Result<Vec<Value>> {
     let mut components = Vec::new();
     for entry in lane["components"].as_array().ok_or_else(invalid)? {
         let head = entry["head"].as_str().ok_or_else(invalid)?;
@@ -199,10 +211,32 @@ fn active_lane_components(objects_dir: &Path, lane: &Value) -> io::Result<Vec<Va
                     })
             });
         if !removed {
-            components.push(entry.clone());
+            let mut next = entry.clone();
+            if let Some(bitmap_head) = bitmap_snap_head(bitmap, &entry["id"]) {
+                next["head"] = json!(bitmap_head);
+            }
+            components.push(next);
         }
     }
     Ok(components)
+}
+
+fn bitmap_snap_head<'a>(bitmap: &'a Value, id: &Value) -> Option<&'a str> {
+    let scope = id["scope"].as_str()?;
+    let name = id["name"].as_str()?;
+    let row = bitmap
+        .get(name)
+        .or_else(|| bitmap.get(format!("{scope}/{name}")))?;
+    if row["isAvailableOnCurrentLane"].as_bool() == Some(false) {
+        return None;
+    }
+    if let Some(row_scope) = row["scope"].as_str()
+        && !row_scope.is_empty()
+        && row_scope != scope
+    {
+        return None;
+    }
+    row["version"].as_str().filter(|ver| valid_hash(ver))
 }
 
 impl Objects {

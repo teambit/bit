@@ -71,14 +71,14 @@ pub fn collect_resolved(
     let Some(external) = resolve::external_vertices(components, issue_graph) else {
         return Ok(None);
     };
-    if !resolve::ordinary_heads(context, heads) {
-        return Ok(None);
-    }
     let graph: Vec<Component> = components
         .iter()
         .cloned()
         .chain(external)
         .collect();
+    if !resolve::ordinary_heads_for(context, heads, Some(&graph)) {
+        return Ok(None);
+    }
     collect_graph(root, context, components, &graph)
 }
 

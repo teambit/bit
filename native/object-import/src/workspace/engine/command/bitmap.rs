@@ -134,6 +134,22 @@ impl Prepared {
             render_rows(entries, &bitmap["$schema-version"], lane::header(context, &bitmap)?)?;
         Ok(())
     }
+
+    pub(super) fn make_available_on_main(&mut self, context: &Value) -> io::Result<()> {
+        if lane::on_lane(context) {
+            return Ok(());
+        }
+        let bitmap = crate::recovery::jsonc::parse(&self.output)?;
+        if bitmap.get("_bit_lane").is_some() {
+            return Ok(());
+        }
+        let mut entries = rows(&bitmap)?;
+        if lane::make_available_on_main(&mut entries, context)? {
+            self.output = render_rows(entries, &bitmap["$schema-version"], None)?;
+            self.changed = true;
+        }
+        Ok(())
+    }
 }
 pub(super) fn prepare_after(
     previous: &Prepared,

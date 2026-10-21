@@ -102,7 +102,55 @@ fn detail(
     });
     Ok(json!({"id":format!("{scope}/{}", target.name),"versions":added,
         "latestVersion":latest,"status":status,"filesStatus":files_status,"missingDeps":[],
-        "deprecated":deprecated(root, model, imported)?,"removed":false}))
+        "deprecated":deprecated(root, model, imported)?,"removed":removed(root, target, model, imported)?}))
+}
+
+fn removed(
+    root: &Path,
+    target: &Target,
+    model: &Value,
+    imported: &command_import::PreparedImport,
+) -> io::Result<bool> {
+    let lane_head = super::remote::active_lane(root)?
+        .and_then(|_| {
+            crate::merge_history::hash(&target.version).is_ok().then_some(target.version.as_str())
+        });
+    let Some(head) = lane_head.or_else(|| model["head"].as_str()) else {
+        return Ok(false);
+    };
+    let local;
+    let version = match imported.overlay.read(head, "Version")? {
+        Some(version) => version,
+        None => match local_object(root, head, "Version")? {
+            Some(version) => {
+                local = version;
+                &local
+            }
+            None => return Ok(false),
+        },
+    };
+    let aspect = version["extensions"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .find(|extension| {
+            extension["name"] == "teambit.component/remove"
+                || extension["extensionId"] == "teambit.component/remove"
+        });
+    let Some(config) = aspect.map(|aspect| &aspect["config"]) else { return Ok(false) };
+    if config["removed"] == true {
+        return Ok(true);
+    }
+    if config
+        .get("range")
+        .is_some_and(|range| !range.is_null())
+        || config
+            .get("snaps")
+            .is_some_and(|snaps| !snaps.is_null())
+    {
+        return Err(invalid("inbound remove range"));
+    }
+    Ok(false)
 }
 
 /// `ModelComponent.isDeprecated`: the legacy flag, else the deprecation aspect

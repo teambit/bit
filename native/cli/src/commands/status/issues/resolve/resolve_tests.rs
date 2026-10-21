@@ -1,7 +1,11 @@
-use super::{Component, external_vertices, ordinary_heads, versioned};
-use serde_json::json;
+use super::{Component, external_vertices, ordinary_heads_for, versioned};
+use serde_json::{Value, json};
 
 const HEAD: &str = "0123456789abcdef0123456789abcdef01234567";
+
+fn ordinary_heads(context: &Value, receipt: &Value) -> bool {
+    ordinary_heads_for(context, receipt, None)
+}
 
 fn component(identity: &str, dependencies: &[&str]) -> Component {
     Component {

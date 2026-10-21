@@ -155,7 +155,7 @@ fn component_heads(lane: &Value) -> io::Result<HashMap<String, String>> {
         let head = row["head"].as_str().ok_or_else(|| invalid("status lane component head"))?;
         crate::merge_history::hash(head)?;
         let identity = format!("{component_scope}/{component_name}");
-        if row["isDeleted"] == true || row["isRemoved"] == true || row["isHidden"] == true {
+        if row["isHidden"] == true {
             continue;
         }
         if heads.insert(identity, head.to_owned()).is_some() {

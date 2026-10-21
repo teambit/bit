@@ -21,15 +21,14 @@ pub(super) fn append(output: &mut Value, model: &Value, request: &Request) -> io
     if target.is_some_and(|target| target.version.is_empty()) {
         return Err(invalid("status out of sync bitmap requires canonical persistence"));
     }
-    let staged =
-        is_staged(model, target.is_some(), request.update_dependents.contains(&identity), source);
+    let staged = is_staged(
+        model,
+        target.is_some() || history["laneHead"].is_string(),
+        request.update_dependents.contains(&identity),
+        source,
+    );
     if staged {
-        if request.update_dependents.contains(&identity) {
-            push(output, "pendingUpdateDependents", json!(identity));
-        } else {
-            let labels = local_labels(model, history)?;
-            push(output, "stagedComponents", json!({"id":identity,"versions":labels}));
-        }
+        append_staged(output, model, history, request, &identity)?;
     }
     if let Some(target) = target {
         tracked(
@@ -40,6 +39,24 @@ pub(super) fn append(output: &mut Value, model: &Value, request: &Request) -> io
             &request.semver,
             request.during_merge.contains(&identity),
         )?;
+    }
+    Ok(())
+}
+fn append_staged(
+    output: &mut Value,
+    model: &Value,
+    history: &Value,
+    request: &Request,
+    identity: &str,
+) -> io::Result<()> {
+    if request.update_dependents
+        .iter()
+        .any(|item| item == identity)
+    {
+        push(output, "pendingUpdateDependents", json!(identity));
+    } else {
+        let labels = local_labels(model, history)?;
+        push(output, "stagedComponents", json!({"id":identity,"versions":labels}));
     }
     Ok(())
 }

@@ -151,12 +151,81 @@ impl Helper {
 
     /// `addRemoteScope()`: what `bit remote add file://<remote>` writes.
     pub fn add_remote_scope(&self) {
-        let url = format!("file://{}", self.scopes.remote_path.display());
-        config::update_scope_json(&self.scopes.local_path.join(".bit/scope.json"), |scope| {
+        self.add_remote(&self.scopes.remote_path);
+    }
+
+    /// `addRemoteScope(remoteScopePath)`: registers `remote_path` in the workspace scope.
+    pub fn add_remote(&self, remote_path: &Path) {
+        Self::add_remote_to(remote_path, &self.scopes.local_path.join(".bit"));
+    }
+
+    /// `getNewBareScope()`: creates a new bare scope in `e2e_dir` and returns `(scope_name, scope_path)`.
+    pub fn new_bare_scope(&self) -> (String, PathBuf) {
+        let name = format!("{}-remote", random_str());
+        let path = self.scopes.e2e_dir.join(&name);
+        setup::copy_dir(&setup::shared().bare_scope_template, &path);
+        config::update_scope_json(&path.join("scope.json"), |scope| {
+            scope.insert("name".into(), json!(name));
+        });
+        (name, path)
+    }
+
+    /// Creates a new bare scope and connects it with both the workspace and `scopes.remote_path`.
+    pub fn new_bare_scope_connected(&self) -> (String, PathBuf) {
+        let (name, path) = self.new_bare_scope();
+        self.add_remote(&path);
+        Self::add_remote_to(&path, &self.scopes.remote_path);
+        Self::add_remote_to(&self.scopes.remote_path, &path);
+        (name, path)
+    }
+
+    /// `getHead(id)`: `head` from `cat-component <id> --json`.
+    pub fn head(&self, comp: &str) -> String {
+        let comp_json = parse(&self.native(&format!("cat-component {comp} --json")));
+        comp_json["head"]
+            .as_str()
+            .unwrap_or_else(|| panic!("missing head on {comp}: {comp_json}"))
+            .to_owned()
+    }
+
+    /// `getHeadOfLane(laneName, componentName)`.
+    pub fn head_of_lane(&self, lane: &str, comp: &str) -> String {
+        let lane_json = parse(&self.native(&format!("cat-lane {lane}")));
+        lane_json["components"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|item| {
+                item["id"]["name"].as_str() == Some(comp)
+                    || item["id"]
+                        .as_str()
+                        .is_some_and(|id| id == comp || id.ends_with(&format!("/{comp}")))
+            })
+            .and_then(|item| item["head"].as_str())
+            .unwrap_or_else(|| panic!("missing {comp} in lane {lane}: {lane_json}"))
+            .to_owned()
+    }
+
+    /// `addRemoteScope(remoteScopePath, localScopePath)`: registers `remote_path` in `local_scope_dir/scope.json`.
+    pub fn add_remote_to(remote_path: &Path, local_scope_dir: &Path) {
+        let name = config::read_jsonc(&remote_path.join("scope.json"))["name"]
+            .as_str()
+            .map_or_else(
+                || {
+                    remote_path
+                        .file_name()
+                        .unwrap()
+                        .to_string_lossy()
+                        .into_owned()
+                },
+                str::to_owned,
+            );
+        let url = format!("file://{}", remote_path.display());
+        config::update_scope_json(&local_scope_dir.join("scope.json"), |scope| {
             let remotes = scope
                 .entry("remotes")
                 .or_insert_with(|| json!({}));
-            remotes[&self.scopes.remote] = Value::String(url);
+            remotes[&name] = Value::String(url);
         });
     }
 

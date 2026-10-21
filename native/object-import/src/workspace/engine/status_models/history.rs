@@ -98,9 +98,61 @@ fn compare_lane(
     }
     let (mut result, pending) =
         distances(reader, model, identity, [Some(lane_head), Some(lane_head), lane_remote], stage)?;
+    filter_lean_lane_refs(reader, &mut result["status"]["sourceOnly"], lane_head)?;
     result["laneHead"] = json!(lane_head);
     result["mainHead"] = json!(head);
     Ok((result, pending))
+}
+
+fn filter_lean_lane_refs(
+    reader: &Reader<'_>,
+    source_only: &mut Value,
+    lane_head: &str,
+) -> io::Result<()> {
+    let Some(refs) = source_only.as_array_mut() else {
+        return Ok(());
+    };
+    let mut kept = Vec::with_capacity(refs.len());
+    for entry in std::mem::take(refs) {
+        if keep_lane_ref(reader, &entry, lane_head)? {
+            kept.push(entry);
+        }
+    }
+    *refs = kept;
+    Ok(())
+}
+
+fn keep_lane_ref(reader: &Reader<'_>, entry: &Value, lane_head: &str) -> io::Result<bool> {
+    let Some(hash) = entry.as_str() else {
+        return Ok(false);
+    };
+    if hash == lane_head {
+        return Ok(true);
+    }
+    let version = match reader.read(hash, "Version") {
+        Ok(version) => version,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
+        Err(error) => return Err(error),
+    };
+    Ok(has_lane_origin(&version) || is_locally_mutated(&version))
+}
+
+fn has_lane_origin(version: &Value) -> bool {
+    version["origin"]["lane"]["scope"]
+        .as_str()
+        .is_some_and(|scope| !scope.is_empty())
+        && version["origin"]["lane"]["name"]
+            .as_str()
+            .is_some_and(|name| !name.is_empty())
+}
+
+fn is_locally_mutated(version: &Value) -> bool {
+    version
+        .get("squashed")
+        .is_some_and(|value| !value.is_null() && *value != false)
+        || version
+            .get("unrelated")
+            .is_some_and(|value| !value.is_null() && *value != false)
 }
 
 fn distances(

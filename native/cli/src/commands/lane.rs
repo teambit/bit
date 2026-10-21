@@ -3,6 +3,8 @@
 //! merge report; and `bit lane list` (`list`). Other `bit lane` commands are
 //! left to the Node.js CLI.
 
+pub(crate) mod scope_root;
+
 mod alias;
 mod create;
 mod current;
@@ -13,7 +15,6 @@ mod manage;
 mod options;
 mod remove;
 mod restoration;
-mod scope_root;
 mod show;
 
 use super::{merge::report, workspace_command};

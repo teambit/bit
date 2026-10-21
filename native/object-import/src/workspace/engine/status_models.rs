@@ -168,7 +168,10 @@ fn relevant_models(request: &Request, models: &[Value], lane: Option<&lane::Lane
                     .iter()
                     .any(|target| target.identity == identity)
                 || (!request.history_targets_only
-                    && lane.is_some_and(|lane| lane.update_dependents.contains(&identity)))
+                    && lane.is_some_and(|lane| {
+                        lane.heads.contains_key(&identity)
+                            || lane.update_dependents.contains(&identity)
+                    }))
         })
         .cloned()
         .collect()
@@ -211,16 +214,7 @@ fn selected_references(
         return Ok(references);
     }
     if let Some(lane) = lane {
-        let heads = lane.heads
-            .iter()
-            .filter(|(id, _)| {
-                request.targets
-                    .iter()
-                    .any(|target| &target.identity == *id)
-            })
-            .map(|(id, head)| (id.clone(), head.clone()))
-            .collect();
-        versions::include_lane_heads(&heads, &mut references)?;
+        versions::include_lane_heads(&lane.heads, &mut references)?;
     }
     let selected = relevant_models(request, models, lane);
     versions::include_heads(&selected, &mut references)?;

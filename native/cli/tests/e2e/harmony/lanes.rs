@@ -2,9 +2,25 @@
 
 mod abort_merge_lane;
 mod bit_checkout_on_lanes;
+mod bit_import_on_lanes;
+mod bit_remove_on_lanes;
+mod import_lanes;
 mod lane_basic_operations;
+mod lane_export;
+mod lane_forking;
+mod lane_from_lane;
+mod lane_history_merge;
 mod lane_management;
+mod lane_merge;
+mod lane_multiple_scopes;
+mod lane_snapping;
 mod lanes_with_issues;
+mod merge_lanes_diverge;
 mod merge_lanes_partial;
+mod merge_lanes_remote;
+mod merge_lanes_squash;
+mod multiple_comps_same_name_on_lane;
 mod remove_lanes;
 mod rename_lane;
+mod switch_lanes;
+mod unrelated_and_removed;

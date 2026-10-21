@@ -337,6 +337,7 @@ fn select_component(
     if component["scope"] != id.scope || component["name"] != id.name {
         return Err(invalid("outbound component identity"));
     }
+    staged::check_new_cross_scope_conflict(context, id, &component)?;
     let before = read_compressed(dir, hash)?;
     model::clear_and_mark_exported(
         &mut component,

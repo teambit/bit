@@ -30,7 +30,7 @@ pub use command_import::lane::resolve_lane_identity;
 pub use json_stringify::stringify_json;
 /// Native import merge decisions (`kind: component | version | versionHistory | ...`).
 pub use operation::plan as plan_import_operation;
-pub use repository::read_scope_object;
+pub use repository::{read_raw_scope_object, read_scope_object};
 pub use scope::path as scope_path;
 pub use session::WorkspaceSession;
 pub use snapshot_transaction::next_published_version;

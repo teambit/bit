@@ -7,6 +7,7 @@ mod checkout;
 mod clear_cache;
 mod color;
 mod config;
+mod debug_cat;
 mod delete;
 mod deprecate;
 mod details;
@@ -79,6 +80,11 @@ pub const COMMANDS: &[Command] = &[
     checkout::REVERT,
     clear_cache::COMMAND,
     config::COMMAND,
+    debug_cat::CAT_COMPONENT,
+    debug_cat::CAT_LANE,
+    debug_cat::CAT_LANE_HISTORY,
+    debug_cat::CAT_OBJECT,
+    debug_cat::CAT_VERSION_HISTORY,
     delete::COMMAND,
     deprecate::COMMAND,
     deprecate::UNDEPRECATE,
