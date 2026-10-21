@@ -83,7 +83,12 @@ pub(super) fn status_invalid_files(
     captured: &mut Capture,
 ) -> io::Result<bool> {
     if directory != "." && files.is_empty() {
-        record_status_invalid(target, component_not_found(directory), captured)?;
+        let error = if has_any_file(&root.join(directory))? {
+            json!({"isUserError":true,"name":"IgnoredDirectory"})
+        } else {
+            component_not_found(directory)
+        };
+        record_status_invalid(target, error, captured)?;
         return Ok(true);
     }
     let main = text(target.get("mainFile"))?;
@@ -99,6 +104,25 @@ pub(super) fn status_invalid_files(
         captured,
     )?;
     Ok(true)
+}
+
+fn has_any_file(dir: &Path) -> io::Result<bool> {
+    let entries = match std::fs::read_dir(dir) {
+        Ok(entries) => entries,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
+        Err(error) => return Err(error),
+    };
+    for entry in entries {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        if file_type.is_file() || file_type.is_symlink() {
+            return Ok(true);
+        }
+        if file_type.is_dir() && has_any_file(&entry.path())? {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
 fn component_not_found(directory: &str) -> Value {

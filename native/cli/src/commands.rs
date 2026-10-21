@@ -2,7 +2,9 @@
 //! one of its aliases, exactly as the Node.js CLI spells them.
 
 mod add;
+mod aspect;
 mod cat;
+mod cat_scope;
 mod checkout;
 mod clear_cache;
 mod color;
@@ -14,7 +16,9 @@ mod deprecate;
 mod details;
 mod diff;
 mod doctor;
+mod eject_conf;
 mod engine;
+mod envs;
 mod export;
 mod file_history;
 mod fork;
@@ -50,6 +54,7 @@ mod scope_set;
 mod scope_trust;
 mod search;
 mod snap;
+mod snap_distance;
 mod stash;
 mod status;
 mod switch;
@@ -61,6 +66,7 @@ mod uninstall;
 mod unuse_cmd;
 mod use_cmd;
 mod version;
+mod version_history;
 mod whoami;
 mod workspace_command;
 
@@ -76,7 +82,9 @@ pub struct Command {
 
 pub const COMMANDS: &[Command] = &[
     add::COMMAND,
+    aspect::COMMAND,
     cat::COMMAND,
+    cat_scope::COMMAND,
     checkout::COMMAND,
     checkout::REVERT,
     clear_cache::COMMAND,
@@ -92,6 +100,8 @@ pub const COMMANDS: &[Command] = &[
     deprecate::UNDEPRECATE,
     details::COMMAND,
     doctor::COMMAND,
+    eject_conf::COMMAND,
+    envs::COMMAND,
     file_history::BLAME,
     fork::COMMAND,
     diff::COMMAND,
@@ -122,6 +132,7 @@ pub const COMMANDS: &[Command] = &[
     scope_rename::COMMAND,
     search::COMMAND,
     snap::COMMAND,
+    snap_distance::COMMAND,
     stash::COMMAND,
     status::COMMAND,
     switch::COMMAND,
@@ -131,6 +142,7 @@ pub const COMMANDS: &[Command] = &[
     unuse_cmd::COMMAND,
     use_cmd::COMMAND,
     version::COMMAND,
+    version_history::COMMAND,
     whoami::COMMAND,
 ];
 

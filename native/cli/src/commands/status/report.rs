@@ -325,6 +325,7 @@ impl<'r> Status<'r> {
                     Some("ComponentNotFoundInPath") => r#"component files were deleted (use "bit remove [component_id]") or moved (use "bit move <old-dir> <new-dir>"). to restore use "bit checkout reset [component_id]""#,
                     Some("MainFileRemoved") => r#"main-file was removed (use "bit add" with "--main" and "--id" flags to add a main file)"#,
                     Some("ComponentsPendingImport") => r#"component objects are missing from the scope (use "bit import [component_id] --objects" to get them back)"#,
+                    Some("IgnoredDirectory") => "component files or directory were ignored (probably by .gitignore)",
                     _ => return Err(decline("status report invalid component type")),
                 };
                 let text = format!("{} ... {}", self.format.chalk.cyan(identity), self.format.chalk.yellow(label));

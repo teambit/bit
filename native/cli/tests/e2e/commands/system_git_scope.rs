@@ -158,3 +158,58 @@ fn scope_trust_and_unrecognized_scope_subcommand_run_natively() {
     let ws_after_disable = config::read_jsonc(&helper.scopes.local_path.join("workspace.jsonc"));
     assert!(ws_after_disable["teambit.workspace/workspace"].get("trustedScopes").is_none());
 }
+
+#[test]
+fn cat_scope_version_history_and_snap_distance_run_natively() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("snap --skip-tests");
+    let first_head = helper.get_head("comp1");
+    helper.output_file("comp1/index.js", "module.exports = () => 'comp1 v2';");
+    helper.native("snap --skip-tests");
+    let second_head = helper.get_head("comp1");
+
+    let cat_scope_table = helper.native("cat-scope");
+    assert!(cat_scope_table.contains("Component"), "{cat_scope_table}");
+    assert!(cat_scope_table.contains("comp1"), "{cat_scope_table}");
+
+    let cat_scope_json = parse(&helper.native("cat-scope --json"));
+    assert!(
+        cat_scope_json
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|item| item["name"].as_str() == Some("comp1")),
+    );
+
+    let cat_scope_extra = parse(&helper.native("cat-scope --json --json-extra"));
+    assert!(
+        cat_scope_extra
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|item| item["hash"].is_string() && item["name"].as_str() == Some("comp1")),
+    );
+
+    let vh_json = parse(&helper.native("version-history show comp1 --json"));
+    assert_eq!(vh_json["name"].as_str(), Some("comp1"), "{vh_json}");
+    let vh_short = parse(&helper.native("vh show comp1 --short-hash --json"));
+    assert_eq!(vh_short["name"].as_str(), Some("comp1"), "{vh_short}");
+    assert!(vh_short["hash"].is_string(), "{vh_short}");
+
+    let vh_bad = helper.native("version-history unknown-sub");
+    assert!(
+        vh_bad.contains(r#""unknown-sub" is not a subcommand of "version-history""#),
+        "{vh_bad}",
+    );
+
+    let dist_out = helper.native(&format!("snap-distance comp1 {first_head} {second_head}"));
+    let dist_body = dist_out
+        .find('{')
+        .map_or(dist_out.as_str(), |idx| &dist_out[idx..]);
+    let dist_json = parse(dist_body);
+    assert_eq!(dist_json["commonSnapBeforeDiverge"]["hash"].as_str(), Some(first_head.as_str()));
+    assert_eq!(dist_json["snapsOnSourceOnly"], json!([]));
+    assert_eq!(dist_json["snapsOnTargetOnly"], json!([{ "hash": second_head }]));
+}

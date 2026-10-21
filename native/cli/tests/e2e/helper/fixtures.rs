@@ -470,4 +470,234 @@ impl Helper {
         }
         self.run("compile");
     }
+
+    pub fn disable_preview(&self) {
+        let mut ws = self.read_workspace_jsonc();
+        ws["teambit.preview/preview"] = json!({ "disabled": true });
+        self.write_workspace_jsonc(&ws);
+    }
+
+    pub fn copy_fixture_extensions(&self, dir: &str) {
+        let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_path_buf();
+        let src =
+            repo_root.join("components/legacy/e2e-helper/excluded-fixtures/extensions").join(dir);
+        let dst = self.scopes.local_path.join(dir);
+        fs::create_dir_all(&dst).unwrap();
+        for entry in fs::read_dir(&src).unwrap() {
+            let entry = entry.unwrap();
+            let path = entry.path();
+            if path.is_file() {
+                let file_name = entry.file_name();
+                let dst_file = dst.join(&file_name);
+                fs::copy(&path, &dst_file).unwrap();
+                let name_str = file_name.to_string_lossy();
+                if name_str.ends_with(".ts") || name_str.ends_with(".js") {
+                    let content = fs::read_to_string(&dst_file).unwrap();
+                    fs::write(&dst_file, content.replace("// @bit-no-check", "")).unwrap();
+                }
+            }
+        }
+    }
+
+    pub fn populate_extensions(&self, count: usize) {
+        for index in 1..=count {
+            let aspect_file = format!("ext{index}.aspect.ts");
+            let aspect_src = format!(
+                "import {{ Aspect }} from '@teambit/harmony';\n\
+                 export const Ext{index}Aspect = Aspect.create({{\n\
+                   id: 'my-scope/ext{index}',\n\
+                   dependencies: [],\n\
+                   defaultConfig: {{}},\n\
+                 }});\n\
+                 export default Ext{index}Aspect;\n",
+            );
+            let main_src = format!(
+                "import {{ MainRuntime }} from '@teambit/cli';\n\
+                 import {{ Ext{index}Aspect }} from './ext{index}.aspect';\n\
+                 export class Ext{index}Main {{\n\
+                   static runtime: any = MainRuntime;\n\
+                   static dependencies: any = [];\n\
+                   constructor(public config: any) {{}}\n\
+                   printName() {{ console.log('ext {index}'); }}\n\
+                   static async provider(_deps, config) {{ return new Ext{index}Main(config); }}\n\
+                 }}\n\
+                 export default Ext{index}Main;\n\
+                 Ext{index}Aspect.addRuntime(Ext{index}Main);\n",
+            );
+            self.output_file(&format!("extensions/ext{index}/{aspect_file}"), &aspect_src);
+            self.output_file(
+                &format!("extensions/ext{index}/ext{index}.main.runtime.ts"),
+                &main_src,
+            );
+            self.run(&format!("add extensions/ext{index} -m {aspect_file}"));
+        }
+    }
+
+    pub fn create_aspect(&self, name: &str) {
+        let ws = self.read_workspace_jsonc();
+        let scope = ws["teambit.workspace/workspace"]["defaultScope"]
+            .as_str()
+            .filter(|text| !text.is_empty())
+            .unwrap_or(&self.scopes.remote)
+            .to_owned();
+        let scope_without_owner = scope
+            .split('.')
+            .nth(1)
+            .unwrap_or(&scope);
+        let dir = format!("{scope_without_owner}/{name}");
+        let pascal = name
+            .split('-')
+            .map(|part| {
+                let mut chars = part.chars();
+                match chars.next() {
+                    Some(first) => {
+                        let mut word = first.to_uppercase().collect::<String>();
+                        word.push_str(chars.as_str());
+                        word
+                    }
+                    None => String::new(),
+                }
+            })
+            .collect::<String>();
+        self.output_file(
+            &format!("{dir}/index.ts"),
+            &format!(
+                "import {{ {pascal}Aspect }} from './{name}.aspect';\n\n\
+                 export type {{ {pascal}Main }} from './{name}.main.runtime';\n\
+                 export default {pascal}Aspect;\n\
+                 export {{ {pascal}Aspect }};\n",
+            ),
+        );
+        self.output_file(
+            &format!("{dir}/{name}.aspect.ts"),
+            &format!(
+                "import {{ Aspect }} from '@teambit/harmony';\n\n\
+                 export const {pascal}Aspect = Aspect.create({{\n\
+                   id: '{scope}/{name}',\n\
+                 }});\n",
+            ),
+        );
+        self.output_file(
+            &format!("{dir}/{name}.main.runtime.ts"),
+            &format!(
+                "import {{ MainRuntime }} from '@teambit/cli';\n\
+                 import {{ {pascal}Aspect }} from './{name}.aspect';\n\n\
+                 export class {pascal}Main {{\n\
+                   static slots = [];\n\
+                   static dependencies = [];\n\
+                   static runtime = MainRuntime;\n\n\
+                   static async provider() {{\n\
+                     return new {pascal}Main();\n\
+                   }}\n\
+                 }}\n\n\
+                 {pascal}Aspect.addRuntime({pascal}Main);\n\n\
+                 export default {pascal}Main;\n",
+            ),
+        );
+        self.run(&format!("add {dir} -i {name}"));
+        self.run(&format!("env set {name} teambit.harmony/aspect"));
+    }
+
+    pub fn set_empty_env(&self) {
+        self.output_file(
+            "empty-env/empty-env.bit-env.ts",
+            "export class EmptyEnv {}\nexport default new EmptyEnv();\n",
+        );
+        self.output_file("empty-env/index.ts", "export { EmptyEnv } from './empty-env.bit-env';");
+        self.run("add empty-env");
+        self.run("env set empty-env teambit.envs/env");
+    }
+
+    pub fn get_component_env(&self, id: &str) -> String {
+        let show = parse(&self.run(&format!("show {id} --json")));
+        show.as_array()
+            .unwrap()
+            .iter()
+            .find(|frag| frag["title"].as_str() == Some("env"))
+            .and_then(|frag| frag["json"].as_str())
+            .unwrap_or_default()
+            .to_owned()
+    }
+
+    pub fn read_component_json(&self, dir: &str) -> Value {
+        let path = self.scopes.local_path.join(dir).join("component.json");
+        if path.exists() { config::read_jsonc(&path) } else { json!({}) }
+    }
+
+    pub fn write_component_json(&self, dir: &str, value: &Value) {
+        let path = self.scopes.local_path.join(dir).join("component.json");
+        config::write_json(&path, value, b"  ");
+    }
+
+    pub fn delete_component_json_if_exist(&self, dir: &str) {
+        let path = self.scopes.local_path.join(dir).join("component.json");
+        if path.exists() {
+            fs::remove_file(path).unwrap();
+        }
+    }
+
+    pub fn set_component_json_extension(&self, dir: &str, ext_id: &str, ext_config: Value) {
+        let mut comp_json = self.read_component_json(dir);
+        if comp_json.get("extensions").is_none() {
+            comp_json["extensions"] = json!({});
+        }
+        comp_json["extensions"][ext_id] = ext_config;
+        self.write_component_json(dir, &comp_json);
+    }
+
+    pub fn remove_component_json_extension(&self, dir: &str, ext_id: &str) {
+        let mut comp_json = self.read_component_json(dir);
+        if let Some(exts) = comp_json["extensions"].as_object_mut() {
+            exts.remove(ext_id);
+        }
+        self.write_component_json(dir, &comp_json);
+    }
+
+    pub fn set_component_json_propagate(&self, dir: &str, propagate: bool) {
+        let mut comp_json = self.read_component_json(dir);
+        comp_json["propagate"] = json!(propagate);
+        self.write_component_json(dir, &comp_json);
+    }
+
+    pub fn get_config_merge_path(&self) -> PathBuf {
+        self.scopes.local_path.join("merge-conflict")
+    }
+
+    pub fn fix_merge_config_conflict(&self, strategy: &str) {
+        let path = self.get_config_merge_path();
+        let content = fs::read_to_string(&path).unwrap();
+        let resolved = resolve_conflict_lines(&content, strategy == "ours");
+        fs::write(&path, resolved).unwrap();
+    }
+}
+
+fn resolve_conflict_lines(content: &str, prefer_ours: bool) -> String {
+    let mut state = 0_u8;
+    let want_state = if prefer_ours { 1 } else { 2 };
+    let mut out_lines = Vec::new();
+    for line in content.lines() {
+        if let Some(next_state) = conflict_marker_state(line) {
+            state = next_state;
+        } else if (state == 0 || state == want_state) && !line.is_empty() {
+            out_lines.push(line);
+        }
+    }
+    out_lines.join("\n")
+}
+
+fn conflict_marker_state(line: &str) -> Option<u8> {
+    if line.starts_with("<<<<<<<") {
+        Some(1)
+    } else if line.starts_with("=======") {
+        Some(2)
+    } else if line.starts_with(">>>>>>>") {
+        Some(0)
+    } else {
+        None
+    }
 }

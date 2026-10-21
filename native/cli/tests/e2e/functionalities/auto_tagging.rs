@@ -14,11 +14,22 @@ fn with_dependencies_of_dependencies() {
     assert!(status_output.contains("components pending auto-tag"));
 
     let before_auto_tag = helper.clone_workspace();
-    let tag_output = helper.tag_Without_Build_id("comp3", "");
+    let globals = helper.own_global_config("analytics_reporting", "false");
+    let tag_output = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "tag comp3 --skip-tests",
+        &[("BIT_GLOBALS_DIR", globals.as_os_str())],
+    )
+    .stdout;
 
     // 1. should auto tag the dependencies and the nested dependencies
     assert!(tag_output.contains("auto-tagged dependents"));
-    let details = helper.run_cmd("details");
+    let details = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "details",
+        &[("BIT_GLOBALS_DIR", globals.as_os_str())],
+    )
+    .stdout;
     assert!(details.contains("comp1@0.0.2"));
     assert!(details.contains("comp2@0.0.2"));
 
@@ -113,12 +124,23 @@ fn with_cyclic_dependencies() {
     );
 
     // tagging the components with auto-version-bump
-    let tag_output = helper.tag_all_without_build("--ignore-issues=CircularDependencies");
+    let globals = helper.own_global_config("analytics_reporting", "false");
+    let tag_output = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "tag --skip-tests --ignore-issues=CircularDependencies",
+        &[("BIT_GLOBALS_DIR", globals.as_os_str())],
+    )
+    .stdout;
     // 2. should auto tag all dependents
     assert!(tag_output.contains("3 component(s) tagged"));
     assert!(tag_output.contains("a/c@0.0.2"));
     assert!(tag_output.contains("auto-tagged dependents"));
-    let details = helper.run_cmd("details");
+    let details = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "details",
+        &[("BIT_GLOBALS_DIR", globals.as_os_str())],
+    )
+    .stdout;
     assert!(details.contains("a/a@0.0.2"));
     assert!(details.contains("a/b@0.0.2"));
 
@@ -143,13 +165,23 @@ fn with_cyclic_dependencies() {
 
     // tagging the components with a specific version
     helper.get_cloned_workspace(&before_tag);
-    let tag_output =
-        helper.tag_all_without_build("--ver 2.0.0 --ignore-issues=CircularDependencies");
+    let globals = helper.own_global_config("analytics_reporting", "false");
+    let tag_output = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "tag --skip-tests --ver 2.0.0 --ignore-issues=CircularDependencies",
+        &[("BIT_GLOBALS_DIR", globals.as_os_str())],
+    )
+    .stdout;
     // 5. should auto tag all dependents
     assert!(tag_output.contains("3 component(s) tagged"));
     assert!(tag_output.contains("a/c@2.0.0"));
     assert!(tag_output.contains("auto-tagged dependents"));
-    let details = helper.run_cmd("details");
+    let details = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "details",
+        &[("BIT_GLOBALS_DIR", globals.as_os_str())],
+    )
+    .stdout;
     assert!(details.contains("a/a@0.0.2"));
     assert!(details.contains("a/b@0.0.2"));
 

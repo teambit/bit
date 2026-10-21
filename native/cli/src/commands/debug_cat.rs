@@ -1,7 +1,7 @@
 //! Native `cat-object`, `cat-component` (`cmp`), `cat-lane` (`cl`),
 //! `cat-version-history` (`cvh`), and `cat-lane-history` (`clh`).
 
-mod lookup;
+pub(in crate::commands) mod lookup;
 
 use self::lookup::{load_cat_component, resolve_component_entry, resolve_lane_entry};
 use super::{
@@ -203,11 +203,17 @@ fn run_version_history(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("cat-version-history component lookup delegated".into()));
     };
     let vh_hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
-    let Ok(Some((kind, mut val))) = bit_object_import::read_scope_object(&scope_dir, &vh_hash)
-    else {
-        return Ok(Outcome::Declined("cat-version-history object missing".into()));
+    let mut val = match bit_object_import::read_scope_object(&scope_dir, &vh_hash) {
+        Ok(Some((kind, val))) if kind == "VersionHistory" => val,
+        Ok(None) => json!({
+            "name": name,
+            "scope": scope,
+            "versions": [],
+            "graphCompleteRefs": [],
+        }),
+        _ => return Ok(Outcome::Declined("cat-version-history object invalid".into())),
     };
-    let Some(map) = (kind == "VersionHistory").then(|| val.as_object_mut()).flatten() else {
+    let Some(map) = val.as_object_mut() else {
         return Ok(Outcome::Declined("cat-version-history object invalid".into()));
     };
     map.insert("hash".into(), Value::String(vh_hash));
@@ -231,15 +237,15 @@ fn run_component(args: &[OsString]) -> io::Result<Outcome> {
     emit_value(&root, args, "cat-component", opts.json, &val)
 }
 
-fn scope_dir_for(root: &ScopeRoot) -> PathBuf {
+pub(in crate::commands) fn scope_dir_for(root: &ScopeRoot) -> PathBuf {
     if root.bare { root.path.clone() } else { bit_object_import::scope_path(&root.path) }
 }
 
-fn sha1_hex(input: &str) -> String {
+pub(in crate::commands) fn sha1_hex(input: &str) -> String {
     format!("{:x}", Sha1::digest(input.as_bytes()))
 }
 
-fn format_json_4(val: &Value) -> io::Result<String> {
+pub(in crate::commands) fn format_json_4(val: &Value) -> io::Result<String> {
     let mut buf = Vec::new();
     let mut ser =
         serde_json::Serializer::with_formatter(&mut buf, PrettyFormatter::with_indent(b"    "));
@@ -247,7 +253,7 @@ fn format_json_4(val: &Value) -> io::Result<String> {
     String::from_utf8(buf).map_err(io::Error::other)
 }
 
-fn emit_value(
+pub(in crate::commands) fn emit_value(
     root: &ScopeRoot,
     args: &[OsString],
     command: &str,
@@ -268,7 +274,7 @@ fn emit_value(
     emit_text(root, args, command, false, data)
 }
 
-fn emit_text(
+pub(in crate::commands) fn emit_text(
     root: &ScopeRoot,
     args: &[OsString],
     command: &str,

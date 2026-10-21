@@ -80,9 +80,10 @@ fn scope_policy(merged: &mut Value, current: &Value) -> io::Result<()> {
             object.remove(name);
             continue;
         }
+        let existing = original.get(name).unwrap_or(&Value::Null);
         let rows = projection::array(&field["retain"])?
             .iter()
-            .map(|entry| retained_policy_row(&original[name], field, entry))
+            .map(|entry| retained_policy_row(existing, field, entry))
             .collect::<io::Result<Vec<_>>>()?;
         object.insert(name.into(), json!(rows));
     }

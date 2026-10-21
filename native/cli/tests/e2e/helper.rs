@@ -78,6 +78,7 @@ impl Helper {
             );
             scope.insert("remotes".into(), Value::Object(remotes));
         });
+        let _ = Self::cmd_in(&seed, &format!("fetch {lane_id} --lanes"));
         let output = Command::new("node")
             .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/e2e/helper/snap_from_scope.js"))
             .arg(&shared.node_cli)
@@ -490,23 +491,24 @@ pub fn issue_types(status: &Value) -> Vec<String> {
         .collect()
 }
 
-/// The arguments of a command line: whitespace separates them, double quotes group.
+/// The arguments of a command line: whitespace separates them, single or double quotes group.
 fn split_args(line: &str) -> Vec<String> {
     let mut args = Vec::new();
     let mut current = String::new();
-    let mut quoted = false;
+    let mut quote: Option<char> = None;
     let mut started = false;
-    for char in line.chars() {
-        match char {
-            '"' => (quoted, started) = (!quoted, true),
-            char if char.is_whitespace() && !quoted => {
+    for ch in line.chars() {
+        match (quote, ch) {
+            (Some(active), ch) if ch == active => (quote, started) = (None, true),
+            (None, '"' | '\'') => (quote, started) = (Some(ch), true),
+            (None, ch) if ch.is_whitespace() => {
                 if started {
                     args.push(std::mem::take(&mut current));
+                    started = false;
                 }
-                started = false;
             }
-            char => {
-                current.push(char);
+            (_, ch) => {
+                current.push(ch);
                 started = true;
             }
         }

@@ -73,3 +73,17 @@ mod import_non_main_files;
 mod init_harmony;
 mod recover;
 mod set_default_owner_and_scope;
+
+mod aspect;
+mod component_config;
+mod env;
+mod extensions_config;
+mod extensions_config_diff;
+mod local_head_not_found;
+mod merge_config;
+mod new_component_id_exists_on_remote;
+mod no_files;
+mod out_of_sync_components_harmony;
+mod scope_trust;
+mod track_directories_harmony;
+mod updates_from_main_and_lane;

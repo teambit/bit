@@ -131,7 +131,7 @@ fn find_lane_in_index(
     Some((scope.to_owned(), name.to_owned(), row["hash"].as_str()?.to_owned()))
 }
 
-pub(super) fn resolve_component_entry(
+pub(in crate::commands) fn resolve_component_entry(
     scope_dir: &Path,
     bare_id: &str,
 ) -> Option<(Option<String>, String, String)> {
