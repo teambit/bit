@@ -180,8 +180,9 @@ pub(super) fn graphs(
             Ok(graph::Snapped {
                 directory,
                 package_name: package_name(capture, identity)?,
-                env_id: context["environmentFacts"][identity]["envId"]
+                env_id: capture.environment_facts[identity]["envId"]
                     .as_str()
+                    .or_else(|| context["environmentFacts"][identity]["envId"].as_str())
                     .unwrap_or("teambit.harmony/node"),
             })
         })

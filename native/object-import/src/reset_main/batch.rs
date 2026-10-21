@@ -14,6 +14,7 @@ pub struct Batch {
     items: Vec<Plan>,
     bitmap: BytesChange,
     index: Option<BytesChange>,
+    controls: Vec<crate::reset_lane::controls::Control>,
 }
 
 #[derive(Clone)]
@@ -61,7 +62,8 @@ impl Batch {
             .collect::<io::Result<Vec<_>>>()?;
         let bitmap = project_bitmap(root, &items)?;
         let index = project_index(root, &items)?;
-        Ok(Self { root: root.to_owned(), head_only, selected, items, bitmap, index })
+        let controls = crate::reset_lane::controls::prepare(root, &ids)?;
+        Ok(Self { root: root.to_owned(), head_only, selected, items, bitmap, index, controls })
     }
 
     pub fn results(&self) -> impl Iterator<Item = (&str, &[String])> {
@@ -75,6 +77,7 @@ impl Batch {
         let fresh = Self::prepare_with(&self.root, self.head_only, self.selected.clone())?;
         if self.bitmap != fresh.bitmap
             || self.index != fresh.index
+            || self.controls != fresh.controls
             || self.items
                 .iter()
                 .map(|item| &item.object)
@@ -103,6 +106,7 @@ impl Batch {
         if let Some(index) = &self.index {
             fs::write(crate::scope_path(&self.root).join("index.json"), &index.after)?;
         }
+        crate::reset_lane::controls::publish(&self.controls)?;
         super::backup_bitmap(&self.root, file_id)?;
         fs::write(self.root.join(".bitmap"), &self.bitmap.after)
     }

@@ -38,6 +38,7 @@ pub(super) fn append(output: &mut Value, model: &Value, request: &Request) -> io
             target,
             &request.semver,
             request.during_merge.contains(&identity),
+            request.current_lane_id.ends_with("/main"),
         )?;
     }
     Ok(())
@@ -70,20 +71,23 @@ fn tracked(
     target: &super::Target,
     semver: &Value,
     during_merge: bool,
+    on_main: bool,
 ) -> io::Result<()> {
     let head = history["laneHead"]
         .as_str()
         .or_else(|| model["head"].as_str())
         .ok_or_else(|| invalid("status model missing head"))?;
-    if history["laneHead"].is_null()
+    if during_merge {
+        return Ok(());
+    }
+    if on_main
+        && history["laneHead"].is_null()
+        && !target.bitmap_state.local_only
         && !tags(model, "versions")?
             .values()
             .any(|value| value.as_str() == Some(head))
     {
         push(output, "snappedComponents", json!(target.identity));
-    }
-    if during_merge {
-        return Ok(());
     }
     let distance = &history["merge"];
     if !refs(distance, "sourceOnly")?.is_empty() && !refs(distance, "targetOnly")?.is_empty() {

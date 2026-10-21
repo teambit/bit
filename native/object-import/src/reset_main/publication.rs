@@ -19,6 +19,7 @@ pub(super) fn commit(plan: &Plan, file_id: &str) -> io::Result<()> {
         || fresh.bitmap != plan.bitmap
         || fresh.index != plan.index
         || fresh.history != plan.history
+        || fresh.controls != plan.controls
     {
         return Err(invalid("reset workspace changed during preparation"));
     }
@@ -29,6 +30,7 @@ pub(super) fn commit(plan: &Plan, file_id: &str) -> io::Result<()> {
     if let Some(index) = &plan.index {
         fs::write(plan.input.root.join(".bit/index.json"), &index.after)?;
     }
+    crate::reset_lane::controls::publish(&plan.controls)?;
     backup_bitmap(&plan.input.root, file_id)?;
     fs::write(plan.input.root.join(".bitmap"), &plan.bitmap.after)
 }

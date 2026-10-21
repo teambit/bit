@@ -1,11 +1,12 @@
 //! Reset graph-selected local lane snapshots without changing workspace sources.
 
+pub(crate) mod controls;
+
 pub use batch::Batch;
 pub use diagnostics::{apply_error_prefix, diagnostic};
 
 mod batch;
 mod bitmap;
-mod controls;
 mod dependents;
 mod diagnostics;
 #[cfg(test)]

@@ -7,13 +7,13 @@ use std::{
 };
 
 #[derive(Clone, PartialEq)]
-pub(super) struct Control {
+pub(crate) struct Control {
     path: PathBuf,
     before: Vec<u8>,
     after: Vec<u8>,
 }
 
-pub(super) fn prepare(root: &Path, identities: &[String]) -> io::Result<Vec<Control>> {
+pub(crate) fn prepare(root: &Path, identities: &[String]) -> io::Result<Vec<Control>> {
     let path = crate::scope_path(root).join("unmerged.json");
     let before = match fs::read(&path) {
         Ok(bytes) => bytes,
@@ -39,7 +39,7 @@ pub(super) fn prepare(root: &Path, identities: &[String]) -> io::Result<Vec<Cont
     Ok(vec![Control { path, before, after: serde_json::to_vec_pretty(&value)? }])
 }
 
-pub(super) fn publish(controls: &[Control]) -> io::Result<()> {
+pub(crate) fn publish(controls: &[Control]) -> io::Result<()> {
     for control in controls {
         if fs::read(&control.path)? != control.before {
             return Err(invalid("lane reset unmerged changed"));

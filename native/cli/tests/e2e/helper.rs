@@ -388,7 +388,7 @@ impl Helper {
     pub fn append_file(&self, relative: &str, data: &str) {
         let path = self.scopes.local_path.join(relative);
         let mut content = fs::read_to_string(&path).unwrap_or_default();
-        content.push_str(data);
+        content.push_str(if data.is_empty() { " " } else { data });
         fs::write(path, content).unwrap();
     }
 

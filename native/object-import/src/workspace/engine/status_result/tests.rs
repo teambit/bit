@@ -84,6 +84,8 @@ fn current_lane_stages_only_lane_heads_and_keeps_main_components_clean() {
     let mut input = fixture();
     input["currentLaneId"] = json!("scope/study");
     input["targets"][0]["version"] = json!("ccc");
+    input["targets"][1]["version"] = json!("bbb");
+    input["models"][1]["versions"] = json!({});
     input["histories"][0]["laneHead"] = json!("ccc");
     input["histories"][0]["mainHead"] = json!("aaa");
     input["histories"][0]["status"]["sourceOnly"] = json!(["ccc"]);

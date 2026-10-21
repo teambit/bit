@@ -80,7 +80,80 @@ impl Helper {
     }
 
     pub fn run_cmd(&self, line: &str) -> String {
-        self.run(line)
+        if let Some(rest) = line.strip_prefix("node ") {
+            let args = super::split_args(rest);
+            let output = std::process::Command::new("node")
+                .args(&args)
+                .current_dir(&self.scopes.local_path)
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "`{line}` failed: {}\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr),
+            );
+            return String::from_utf8_lossy(&output.stdout).into_owned();
+        }
+        self.run(line.strip_prefix("bit ").unwrap_or(line))
+    }
+
+    #[expect(
+        clippy::unused_self,
+        reason = "called as method on Helper matching TS helper.command.runCmd"
+    )]
+    pub fn run_cmd_in(&self, line: &str, cwd: &std::path::Path) -> String {
+        let stripped = line.strip_prefix("bit ").unwrap_or(line);
+        super::succeeded(stripped, Self::cmd_in(cwd, stripped))
+    }
+
+    pub fn run_with_try_catch(&self, line: &str) -> String {
+        let stripped = line.strip_prefix("bit ").unwrap_or(line);
+        let run = self.try_cmd(stripped);
+        format!("{}\n{}", run.stdout, run.stderr)
+    }
+
+    #[expect(
+        non_snake_case,
+        reason = "mirrors TypeScript GeneralHelper.runWithTryCatch method name"
+    )]
+    pub fn run_With_try_catch(&self, line: &str) -> String {
+        self.run_with_try_catch(line)
+    }
+
+    #[expect(
+        clippy::unused_self,
+        reason = "called as method on Helper matching TS helper.general.runWithTryCatch"
+    )]
+    pub fn run_with_try_catch_in(&self, line: &str, cwd: &std::path::Path) -> String {
+        let stripped = line.strip_prefix("bit ").unwrap_or(line);
+        let run = Self::cmd_in(cwd, stripped);
+        format!("{}\n{}", run.stdout, run.stderr)
+    }
+
+    pub fn local_path(&self) -> &std::path::Path {
+        &self.scopes.local_path
+    }
+
+    pub fn remote_path(&self) -> &std::path::Path {
+        &self.scopes.remote_path
+    }
+
+    pub fn remote_scope(&self) -> &str {
+        &self.scopes.remote
+    }
+
+    pub fn e2e_dir(&self) -> &std::path::Path {
+        &self.scopes.e2e_dir
+    }
+
+    pub fn clean_workspace(&self) {
+        let _ = fs::remove_dir_all(&self.scopes.local_path);
+        fs::create_dir_all(&self.scopes.local_path).unwrap();
+    }
+
+    pub fn add_key_val_to_workspace(&self, key: &str, val: Value) {
+        config::set_workspace_aspect_key(&self.scopes.local_path, key, val);
     }
 
     pub fn try_cmd(&self, line: &str) -> Run {
@@ -99,10 +172,42 @@ impl Helper {
         self.run("compile")
     }
 
+    pub fn tag_all_components(&self, flags: &str) -> String {
+        let output = self.run(&format!("tag --build {flags}"));
+        assert!(!output.contains("nothing to tag"), "{output}");
+        output
+    }
+
     pub fn tag_all_without_build(&self, flags: &str) -> String {
         let output = self.run(&format!("tag --skip-tests {flags}"));
         assert!(!output.contains("nothing to tag"), "{output}");
         output
+    }
+
+    pub fn tag_include_unmodified(&self, ver: &str, flags: &str) -> String {
+        let ver_arg = if ver.is_empty() { String::new() } else { format!("--ver {ver}") };
+        let output = self.run(&format!("tag {ver_arg} --unmodified --build {flags}"));
+        assert!(!output.contains("nothing to tag"), "{output}");
+        output
+    }
+
+    pub fn tag_include_unmodified_without_build(&self, ver: &str, flags: &str) -> String {
+        let ver_arg = if ver.is_empty() { String::new() } else { format!("--ver {ver}") };
+        let output = self.run(&format!("tag {ver_arg} --unmodified --skip-tests {flags}"));
+        assert!(!output.contains("nothing to tag"), "{output}");
+        output
+    }
+
+    pub fn soft_tag(&self, flags: &str) -> String {
+        self.run(&format!("tag --soft {flags}"))
+    }
+
+    pub fn persist_tag_without_build(&self, flags: &str) -> String {
+        self.run(&format!("tag --persist --skip-tests {flags}"))
+    }
+
+    pub fn reset_soft(&self, flags: &str) -> String {
+        self.run(&format!("reset --soft {flags}"))
     }
 
     #[expect(
@@ -122,6 +227,10 @@ impl Helper {
         reason = "mirrors TypeScript CommandHelper.snapComponentWithoutBuild method name"
     )]
     pub fn snap_Component_without_build(&self, id: &str, flags: &str) -> String {
+        self.run(&format!("snap {id} --skip-tests {flags}"))
+    }
+
+    pub fn snap_component_without_build(&self, id: &str, flags: &str) -> String {
         self.run(&format!("snap {id} --skip-tests {flags}"))
     }
 
@@ -145,6 +254,10 @@ impl Helper {
         }
     }
 
+    pub fn merge_lane_without_build(&self, name: &str, flags: &str) -> String {
+        self.merge_lane(name, flags)
+    }
+
     pub fn import_lane(&self, name: &str, flags: &str) -> String {
         if name.contains('/') {
             self.run(&format!("lane import {name} {flags}"))
@@ -153,8 +266,16 @@ impl Helper {
         }
     }
 
+    pub fn import(&self) -> String {
+        self.run("import")
+    }
+
     pub fn import_and_get_objects(&self) -> String {
         self.run("import --objects")
+    }
+
+    pub fn import_component_without_install(&self, id: &str, flags: &str) -> String {
+        self.import_component(id, &format!("-x {flags}"))
     }
 
     pub fn import_component(&self, id: &str, flags: &str) -> String {
@@ -174,6 +295,50 @@ impl Helper {
 
     pub fn checkout(&self, flags: &str) -> String {
         self.run(&format!("checkout {flags}"))
+    }
+
+    pub fn checkout_version(&self, ver: &str, ids: &str, flags: &str) -> String {
+        self.run(&format!("checkout {ver} {ids} {flags}"))
+    }
+
+    pub fn checkout_head(&self, flags: &str) -> String {
+        self.run(&format!("checkout head {flags}"))
+    }
+
+    pub fn checkout_reset(&self, flags: &str) -> String {
+        self.run(&format!("checkout reset {flags}"))
+    }
+
+    pub fn checkout_latest(&self, flags: &str) -> String {
+        self.run(&format!("checkout latest {flags}"))
+    }
+
+    pub fn eject_conf(&self, id: &str) -> String {
+        self.run(&format!("eject-conf {id}"))
+    }
+
+    pub fn list_parsed(&self) -> Value {
+        parse(&self.run("list --json"))
+    }
+
+    pub fn cat_component_parsed(&self, id: &str) -> Value {
+        parse(&self.cat_component(id))
+    }
+
+    pub fn cat_component_in_parsed(&self, id: &str, cwd: &std::path::Path) -> Value {
+        parse(&self.run_cmd_in(&format!("cat-component {id} --json"), cwd))
+    }
+
+    #[expect(
+        clippy::unused_self,
+        reason = "called as method on Helper matching TS helper.scopeHelper.getHashPathOfObject"
+    )]
+    pub fn get_hash_path_of_object(&self, hash: &str) -> String {
+        format!(".bit/objects/{}/{}", &hash[..2], &hash[2..])
+    }
+
+    pub fn delete_object(&self, rel_path: &str) {
+        self.delete_path(rel_path);
     }
 
     pub fn checkout_all_updated(&self, flags: &str) -> String {

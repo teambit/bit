@@ -50,6 +50,7 @@ pub struct Plan {
     bitmap: BytesChange,
     index: Option<BytesChange>,
     history: Option<ObjectChange>,
+    controls: Vec<crate::reset_lane::controls::Control>,
     pub selection: Selection,
 }
 
@@ -76,9 +77,10 @@ impl Plan {
         let history = history::pending(root, identity, &repository.component, &selection)?;
         let bitmap = bitmap.project(version)?;
         let (object, index) = repository.project(&selection)?;
+        let controls = crate::reset_lane::controls::prepare(root, &[identity.to_owned()])?;
         let input =
             Input { root: root.to_owned(), identity: identity.to_owned(), head_only, force };
-        Ok(Self { input, object, bitmap, index, history, selection })
+        Ok(Self { input, object, bitmap, index, history, controls, selection })
     }
 
     pub fn commit(&self, file_id: &str) -> io::Result<()> {

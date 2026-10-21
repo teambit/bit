@@ -7,6 +7,7 @@ mod capsule;
 mod cat;
 mod cat_scope;
 mod checkout;
+mod ci;
 mod clear_cache;
 mod cli_cmd;
 mod color;
@@ -14,6 +15,7 @@ mod component_issues;
 mod config;
 mod debug_cat;
 mod delete;
+mod dependents;
 mod deprecate;
 mod deps;
 mod details;
@@ -25,6 +27,7 @@ mod envs;
 mod export;
 mod file_history;
 mod fork;
+mod gc;
 mod git;
 mod globals;
 mod ids;
@@ -33,12 +36,14 @@ mod init;
 mod insights;
 mod install;
 mod installation;
+mod internalize;
 mod inventory;
 mod lane;
 mod list;
 mod local_only;
 mod log;
 mod logout;
+mod mcp_server;
 mod merge;
 mod mini_status;
 mod move_paths;
@@ -53,6 +58,7 @@ mod remote_resolution;
 mod remove;
 mod rename;
 mod reset;
+mod ripple;
 mod scope_rename;
 mod scope_set;
 mod scope_trust;
@@ -94,6 +100,7 @@ pub const COMMANDS: &[Command] = &[
     cat_scope::COMMAND,
     checkout::COMMAND,
     checkout::REVERT,
+    ci::COMMAND,
     clear_cache::COMMAND,
     cli_cmd::COMMAND,
     component_issues::COMMAND,
@@ -104,6 +111,7 @@ pub const COMMANDS: &[Command] = &[
     debug_cat::CAT_OBJECT,
     debug_cat::CAT_VERSION_HISTORY,
     delete::COMMAND,
+    dependents::COMMAND,
     deprecate::COMMAND,
     deprecate::UNDEPRECATE,
     deps::COMMAND,
@@ -113,6 +121,7 @@ pub const COMMANDS: &[Command] = &[
     envs::COMMAND,
     file_history::BLAME,
     fork::COMMAND,
+    gc::COMMAND,
     diff::COMMAND,
     export::COMMAND,
     file_history::LOG_FILE,
@@ -123,11 +132,13 @@ pub const COMMANDS: &[Command] = &[
     init::COMMAND,
     insights::COMMAND,
     install::COMMAND,
+    internalize::COMMAND,
     lane::COMMAND,
     list::COMMAND,
     local_only::COMMAND,
     log::COMMAND,
     logout::COMMAND,
+    mcp_server::COMMAND,
     merge::COMMAND,
     mini_status::COMMAND,
     move_paths::COMMAND,
@@ -139,6 +150,7 @@ pub const COMMANDS: &[Command] = &[
     remove::COMMAND,
     reset::COMMAND,
     rename::COMMAND,
+    ripple::COMMAND,
     scope_rename::COMMAND,
     search::COMMAND,
     set_peer::SET_PEER,

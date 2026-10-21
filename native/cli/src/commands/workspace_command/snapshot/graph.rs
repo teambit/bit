@@ -71,6 +71,14 @@ fn graph(
         return Ok(None);
     }
     let has_root = importers.get(environment).is_some();
+    if has_root
+        && component.directory == "."
+        && importers[environment]["dependencies"][component.package_name]["version"]
+            .as_str()
+            .is_none()
+    {
+        return Ok(None);
+    }
     let mut ids = vec![importer.to_string()];
     if has_root && environment != importer {
         ids.push(environment.to_string());

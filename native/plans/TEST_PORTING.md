@@ -1111,38 +1111,38 @@ row's fields, object path, header, logical identity, and remote index stay exact
 - [x] `e2e/harmony/add-harmony.e2e.ts:63` add command on Harmony › adding the workspace root as a component › should track .bitmap, so a git-free workspace can be restored from the scope — `harmony::add::root::root_tracking_keeps_nested_ownership_bitmap_and_scope_boundaries`
 - [x] `e2e/harmony/add-harmony.e2e.ts:66` add command on Harmony › adding the workspace root as a component › should not claim the local scope directory — `harmony::add::root::root_tracking_keeps_nested_ownership_bitmap_and_scope_boundaries`
 - [x] `e2e/harmony/add-harmony.e2e.ts:69` add command on Harmony › adding the workspace root as a component › should not be linked into node_modules, unlike a regular component — `harmony::add::root::root_tracking_keeps_nested_ownership_bitmap_and_scope_boundaries`
-- [ ] `e2e/harmony/add-harmony.e2e.ts:89` add command on Harmony › workspace-root component and .bitmap › should not be modified right after snapping, despite tracking .bitmap
-- [ ] `e2e/harmony/add-harmony.e2e.ts:94` add command on Harmony › workspace-root component and .bitmap › should not be modified on the quick-status path either, which hashes the files on disk
+- [x] `e2e/harmony/add-harmony.e2e.ts:89` add command on Harmony › workspace-root component and .bitmap › should not be modified right after snapping, despite tracking .bitmap
+- [x] `e2e/harmony/add-harmony.e2e.ts:94` add command on Harmony › workspace-root component and .bitmap › should not be modified on the quick-status path either, which hashes the files on disk
 - [x] `e2e/harmony/add-harmony.e2e.ts:98` add command on Harmony › workspace-root component and .bitmap › should record on the nested component the root it was snapped in, at the version the root got in that snap — `commands::tag::root::modified_root_snap_records_allocated_hash_without_package_materialization`
 - [x] `e2e/harmony/add-harmony.e2e.ts:107` add command on Harmony › workspace-root component and .bitmap › should mark the root component itself as such in its aspect data — `commands::tag::root::explicit_member_version_brings_modified_root_with_its_own_patch`
-- [ ] `e2e/harmony/add-harmony.e2e.ts:121` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › should let the new component take the files from the root component
-- [ ] `e2e/harmony/add-harmony.e2e.ts:125` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › should mark the root component as modified, because the map changed
-- [ ] `e2e/harmony/add-harmony.e2e.ts:133` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › snapping only the new component › should snap the modified root along, and say so
-- [ ] `e2e/harmony/add-harmony.e2e.ts:138` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › snapping only the new component › should record the root on the new component at the version it got in that snap
-- [ ] `e2e/harmony/add-harmony.e2e.ts:145` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › snapping only the new component › should converge again
+- [x] `e2e/harmony/add-harmony.e2e.ts:121` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › should let the new component take the files from the root component
+- [x] `e2e/harmony/add-harmony.e2e.ts:125` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › should mark the root component as modified, because the map changed
+- [x] `e2e/harmony/add-harmony.e2e.ts:133` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › snapping only the new component › should snap the modified root along, and say so
+- [x] `e2e/harmony/add-harmony.e2e.ts:138` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › snapping only the new component › should record the root on the new component at the version it got in that snap
+- [x] `e2e/harmony/add-harmony.e2e.ts:145` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › snapping only the new component › should converge again
 - [x] `e2e/harmony/add-harmony.e2e.ts:156` add command on Harmony › workspace-root component and .bitmap › tagging a member with an explicit version while the root is modified › should give the root a patch bump of its own rather than the version meant for the member — `commands::tag::root::explicit_member_version_brings_modified_root_with_its_own_patch`
-- [ ] `e2e/harmony/add-harmony.e2e.ts:177` add command on Harmony › removing the workspace-root component › should not drop a package.json dependency that shares its derived package name
-- [ ] `e2e/harmony/add-harmony.e2e.ts:183` add command on Harmony › removing the workspace-root component › should not delete the workspace
-- [ ] `e2e/harmony/add-harmony.e2e.ts:191` add command on Harmony › removing the workspace-root component › should keep the other component tracked
-- [ ] `e2e/harmony/add-harmony.e2e.ts:194` add command on Harmony › removing the workspace-root component › should not delete a dependency that shares its derived package name
+- [x] `e2e/harmony/add-harmony.e2e.ts:177` add command on Harmony › removing the workspace-root component › should not drop a package.json dependency that shares its derived package name
+- [x] `e2e/harmony/add-harmony.e2e.ts:183` add command on Harmony › removing the workspace-root component › should not delete the workspace
+- [x] `e2e/harmony/add-harmony.e2e.ts:191` add command on Harmony › removing the workspace-root component › should keep the other component tracked
+- [x] `e2e/harmony/add-harmony.e2e.ts:194` add command on Harmony › removing the workspace-root component › should not delete a dependency that shares its derived package name
 - [x] `e2e/harmony/add-harmony.e2e.ts:214` add command on Harmony › writing the workspace-root component to the filesystem › should check out an earlier version of it without throwing — `harmony::checkout_platform::root_checkout_restores_readme_without_rewinding_live_bitmap_or_nested_components`
-- [ ] `e2e/harmony/add-harmony.e2e.ts:225` add command on Harmony › writing the workspace-root component to the filesystem › importing it into another workspace › should not write a .bitmap outside the workspace root
-- [ ] `e2e/harmony/add-harmony.e2e.ts:231` add command on Harmony › writing the workspace-root component to the filesystem › importing it into another workspace › should not be modified by the map it left behind
-- [ ] `e2e/harmony/add-harmony.e2e.ts:243` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should write its files at the workspace root
-- [ ] `e2e/harmony/add-harmony.e2e.ts:246` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should record "." as its rootDir
-- [ ] `e2e/harmony/add-harmony.e2e.ts:249` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should keep the empty env, which its version carries
-- [ ] `e2e/harmony/add-harmony.e2e.ts:252` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should leave the live .bitmap alone rather than overwrite it with the exported one
-- [ ] `e2e/harmony/add-harmony.e2e.ts:256` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should refuse to move it out of the workspace root, which would take the workspace with it
-- [ ] `e2e/harmony/add-harmony.e2e.ts:264` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should refuse a second import without --override once the user changed a root file, not overwrite it
-- [ ] `e2e/harmony/add-harmony.e2e.ts:272` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should refuse to write through a symlink in the way of a root file even with --override, as it does for --path .
-- [ ] `e2e/harmony/add-harmony.e2e.ts:291` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of a fresh workspace that has its own files › should refuse to overwrite them without --override, even though nothing is tracked yet
-- [ ] `e2e/harmony/add-harmony.e2e.ts:307` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root with a directory in the way › should report a directory at a file path as a conflict rather than fail reading it
-- [ ] `e2e/harmony/add-harmony.e2e.ts:321` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of a workspace that already tracks components › should refuse to overwrite the root files without --override
-- [ ] `e2e/harmony/add-harmony.e2e.ts:327` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of a workspace that already tracks components › should overwrite them with --override
-- [ ] `e2e/harmony/add-harmony.e2e.ts:353` add command on Harmony › a member imported on its own into a workspace that has no root › should carry the root it was tagged in as aspect data on the version it imported
-- [ ] `e2e/harmony/add-harmony.e2e.ts:356` add command on Harmony › a member imported on its own into a workspace that has no root › should not bring the root component along, the pointer is provenance and not a dependency
-- [ ] `e2e/harmony/add-harmony.e2e.ts:364` add command on Harmony › a member imported on its own into a workspace that has no root › tagging it here, where there is no root to record › should drop the root of the workspace it came from, not carry it into the new version
-- [ ] `e2e/harmony/add-harmony.e2e.ts:370` add command on Harmony › a member imported on its own into a workspace that has no root › tagging it here, where there is no root to record › should leave the version it was imported at untouched
+- [x] `e2e/harmony/add-harmony.e2e.ts:225` add command on Harmony › writing the workspace-root component to the filesystem › importing it into another workspace › should not write a .bitmap outside the workspace root
+- [x] `e2e/harmony/add-harmony.e2e.ts:231` add command on Harmony › writing the workspace-root component to the filesystem › importing it into another workspace › should not be modified by the map it left behind
+- [x] `e2e/harmony/add-harmony.e2e.ts:243` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should write its files at the workspace root
+- [x] `e2e/harmony/add-harmony.e2e.ts:246` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should record "." as its rootDir
+- [x] `e2e/harmony/add-harmony.e2e.ts:249` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should keep the empty env, which its version carries
+- [x] `e2e/harmony/add-harmony.e2e.ts:252` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should leave the live .bitmap alone rather than overwrite it with the exported one
+- [x] `e2e/harmony/add-harmony.e2e.ts:256` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should refuse to move it out of the workspace root, which would take the workspace with it
+- [x] `e2e/harmony/add-harmony.e2e.ts:264` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should refuse a second import without --override once the user changed a root file, not overwrite it
+- [x] `e2e/harmony/add-harmony.e2e.ts:272` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should refuse to write through a symlink in the way of a root file even with --override, as it does for --path .
+- [x] `e2e/harmony/add-harmony.e2e.ts:291` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of a fresh workspace that has its own files › should refuse to overwrite them without --override, even though nothing is tracked yet
+- [x] `e2e/harmony/add-harmony.e2e.ts:307` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root with a directory in the way › should report a directory at a file path as a conflict rather than fail reading it
+- [x] `e2e/harmony/add-harmony.e2e.ts:321` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of a workspace that already tracks components › should refuse to overwrite the root files without --override
+- [x] `e2e/harmony/add-harmony.e2e.ts:327` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of a workspace that already tracks components › should overwrite them with --override
+- [x] `e2e/harmony/add-harmony.e2e.ts:353` add command on Harmony › a member imported on its own into a workspace that has no root › should carry the root it was tagged in as aspect data on the version it imported
+- [x] `e2e/harmony/add-harmony.e2e.ts:356` add command on Harmony › a member imported on its own into a workspace that has no root › should not bring the root component along, the pointer is provenance and not a dependency
+- [x] `e2e/harmony/add-harmony.e2e.ts:364` add command on Harmony › a member imported on its own into a workspace that has no root › tagging it here, where there is no root to record › should drop the root of the workspace it came from, not carry it into the new version
+- [x] `e2e/harmony/add-harmony.e2e.ts:370` add command on Harmony › a member imported on its own into a workspace that has no root › tagging it here, where there is no root to record › should leave the version it was imported at untouched
 - [x] `e2e/harmony/add-harmony.e2e.ts:390` add command on Harmony › env of the workspace-root component › should be tracked with the empty env, not the regular default env — `harmony::add::policy::native_root_tracking_keeps_environment_policy_and_dependency_issues_empty`
 - [x] `e2e/harmony/add-harmony.e2e.ts:395` add command on Harmony › env of the workspace-root component › should record that env in .bitmap as explicit config — `harmony::add::policy::root_env_is_explicit_empty_while_regular_component_keeps_default_env`
 - [x] `e2e/harmony/add-harmony.e2e.ts:399` add command on Harmony › env of the workspace-root component › should get no dependency policy from an env, unlike a regular component — `harmony::add::policy::native_root_tracking_keeps_environment_policy_and_dependency_issues_empty`
@@ -1151,21 +1151,21 @@ row's fields, object path, header, logical identity, and remote index stay exact
 - [x] `e2e/harmony/add-harmony.e2e.ts:416` add command on Harmony › env of the workspace-root component › should not report missing links from node_modules, it is never linked there — `harmony::add::policy::native_root_tracking_keeps_environment_policy_and_dependency_issues_empty`
 - [x] `e2e/harmony/add-harmony.e2e.ts:420` add command on Harmony › env of the workspace-root component › should not report a duplicate component-and-package issue for the root, it is not a package — `harmony::add::policy::native_root_tracking_keeps_environment_policy_and_dependency_issues_empty`
 - [x] `e2e/harmony/add-harmony.e2e.ts:432` add command on Harmony › env of the workspace-root component › when a root file has a relative import into a component and requires a missing package › should report no issue, the root files are not parsed for dependencies — `harmony::add::policy::native_root_tracking_keeps_environment_policy_and_dependency_issues_empty`
-- [ ] `e2e/harmony/add-harmony.e2e.ts:437` add command on Harmony › env of the workspace-root component › when a root file has a relative import into a component and requires a missing package › should snap with no dependencies
-- [ ] `e2e/harmony/add-harmony.e2e.ts:474` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should report the root version and the number of components
-- [ ] `e2e/harmony/add-harmony.e2e.ts:478` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should write the root files, the manifests included, so the workspace can be installed and built
-- [ ] `e2e/harmony/add-harmony.e2e.ts:484` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should take the workspace.jsonc of the root over the one the init generates
-- [ ] `e2e/harmony/add-harmony.e2e.ts:487` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should write every component the root lists into the directory it records
-- [ ] `e2e/harmony/add-harmony.e2e.ts:492` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should come out clean, the workspace it reproduces is the one the root was versioned from
-- [ ] `e2e/harmony/add-harmony.e2e.ts:500` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should refuse a component that is not a workspace-root component, leaving no directory behind
-- [ ] `e2e/harmony/add-harmony.e2e.ts:507` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should refuse a component the remote does not have, pointing at the export
-- [ ] `e2e/harmony/add-harmony.e2e.ts:561` add command on Harmony › cloning a workspace as it is on a lane › should come out on the lane
-- [ ] `e2e/harmony/add-harmony.e2e.ts:564` add command on Harmony › cloning a workspace as it is on a lane › should write the components the lane has at their heads on the lane, the root included
-- [ ] `e2e/harmony/add-harmony.e2e.ts:569` add command on Harmony › cloning a workspace as it is on a lane › should write a component the lane does not have at its head on main
-- [ ] `e2e/harmony/add-harmony.e2e.ts:572` add command on Harmony › cloning a workspace as it is on a lane › should come out clean, the root converging on the .bitmap the clone built
-- [ ] `e2e/harmony/add-harmony.e2e.ts:591` add command on Harmony › cloning a workspace as it is on a lane › with a version on the root id, which pins the root files only › should write the root files of the version asked for, not of its head on the lane
-- [ ] `e2e/harmony/add-harmony.e2e.ts:597` add command on Harmony › cloning a workspace as it is on a lane › with a version on the root id, which pins the root files only › should still take the members at their heads on the lane
-- [ ] `e2e/harmony/add-harmony.e2e.ts:602` add command on Harmony › cloning a workspace as it is on a lane › with a version on the root id, which pins the root files only › should still come out on the lane
+- [x] `e2e/harmony/add-harmony.e2e.ts:437` add command on Harmony › env of the workspace-root component › when a root file has a relative import into a component and requires a missing package › should snap with no dependencies
+- [x] `e2e/harmony/add-harmony.e2e.ts:474` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should report the root version and the number of components
+- [x] `e2e/harmony/add-harmony.e2e.ts:478` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should write the root files, the manifests included, so the workspace can be installed and built
+- [x] `e2e/harmony/add-harmony.e2e.ts:484` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should take the workspace.jsonc of the root over the one the init generates
+- [x] `e2e/harmony/add-harmony.e2e.ts:487` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should write every component the root lists into the directory it records
+- [x] `e2e/harmony/add-harmony.e2e.ts:492` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should come out clean, the workspace it reproduces is the one the root was versioned from
+- [x] `e2e/harmony/add-harmony.e2e.ts:500` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should refuse a component that is not a workspace-root component, leaving no directory behind
+- [x] `e2e/harmony/add-harmony.e2e.ts:507` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should refuse a component the remote does not have, pointing at the export
+- [x] `e2e/harmony/add-harmony.e2e.ts:561` add command on Harmony › cloning a workspace as it is on a lane › should come out on the lane
+- [x] `e2e/harmony/add-harmony.e2e.ts:564` add command on Harmony › cloning a workspace as it is on a lane › should write the components the lane has at their heads on the lane, the root included
+- [x] `e2e/harmony/add-harmony.e2e.ts:569` add command on Harmony › cloning a workspace as it is on a lane › should write a component the lane does not have at its head on main
+- [x] `e2e/harmony/add-harmony.e2e.ts:572` add command on Harmony › cloning a workspace as it is on a lane › should come out clean, the root converging on the .bitmap the clone built
+- [x] `e2e/harmony/add-harmony.e2e.ts:591` add command on Harmony › cloning a workspace as it is on a lane › with a version on the root id, which pins the root files only › should write the root files of the version asked for, not of its head on the lane
+- [x] `e2e/harmony/add-harmony.e2e.ts:597` add command on Harmony › cloning a workspace as it is on a lane › with a version on the root id, which pins the root files only › should still take the members at their heads on the lane
+- [x] `e2e/harmony/add-harmony.e2e.ts:602` add command on Harmony › cloning a workspace as it is on a lane › with a version on the root id, which pins the root files only › should still come out on the lane
 
 ### `e2e/harmony/add-missing-deps-custom-detector.e2e.ts`
 
@@ -1233,80 +1233,80 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/checkout-harmony.e2e.ts`
 
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:28` bit checkout command › for non existing component › show an error saying the component was not found
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:41` bit checkout command › after the component was created › before tagging it should show an error saying the component was not tagged yet
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:50` bit checkout command › after the component was created › after the component was tagged › using a non-exist version › should show an error saying the version does not exist
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:59` bit checkout command › after the component was created › after the component was tagged › and component was modified › should show an error saying the component already uses that version
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:69` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › should display a successful message
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:74` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › should revert to v1
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:78` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › should update bitmap with the used version
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:83` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › should not show the component as modified
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:87` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › bit list should show the currently used version and latest local version
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:98` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › trying to tag when using an old version › should throw an error NewerVersionFound
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:105` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › trying to tag when using an old version › should allow tagging when --ignore-newest-version flag is used
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:125` bit checkout command › components with dependencies with multiple versions › as an intermediate step, make sure all components have v2
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:136` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should display a successful message
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:141` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should write the files of that version for the main component only and not its dependencies
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:145` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should update bitmap of the main component with the used version
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:148` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should not change the dependencies in bitmap file
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:152` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should show the main component as modified because its dependencies are now having different version
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:156` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should not write package.json and package-lock.json files
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:174` bit checkout command › components with dependencies with multiple versions › missing the latest Version object from the filesystem › should not throw an error
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:28` bit checkout command › for non existing component › show an error saying the component was not found — `harmony::checkout_harmony::non_existing_and_after_component_created`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:41` bit checkout command › after the component was created › before tagging it should show an error saying the component was not tagged yet — `harmony::checkout_harmony::non_existing_and_after_component_created`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:50` bit checkout command › after the component was created › after the component was tagged › using a non-exist version › should show an error saying the version does not exist — `harmony::checkout_harmony::non_existing_and_after_component_created`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:59` bit checkout command › after the component was created › after the component was tagged › and component was modified › should show an error saying the component already uses that version — `harmony::checkout_harmony::non_existing_and_after_component_created`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:69` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › should display a successful message — `harmony::checkout_harmony::non_existing_and_after_component_created`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:74` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › should revert to v1 — `harmony::checkout_harmony::non_existing_and_after_component_created`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:78` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › should update bitmap with the used version — `harmony::checkout_harmony::non_existing_and_after_component_created`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:83` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › should not show the component as modified — `harmony::checkout_harmony::non_existing_and_after_component_created`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:87` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › bit list should show the currently used version and latest local version — `harmony::checkout_harmony::non_existing_and_after_component_created`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:98` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › trying to tag when using an old version › should throw an error NewerVersionFound — `harmony::checkout_harmony::non_existing_and_after_component_created`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:105` bit checkout command › after the component was created › after the component was tagged › and component was modified › and tagged again › trying to tag when using an old version › should allow tagging when --ignore-newest-version flag is used — `harmony::checkout_harmony::non_existing_and_after_component_created`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:125` bit checkout command › components with dependencies with multiple versions › as an intermediate step, make sure all components have v2 — `harmony::checkout_harmony::components_with_dependencies_with_multiple_versions`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:136` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should display a successful message — `harmony::checkout_harmony::components_with_dependencies_with_multiple_versions`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:141` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should write the files of that version for the main component only and not its dependencies — `harmony::checkout_harmony::components_with_dependencies_with_multiple_versions`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:145` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should update bitmap of the main component with the used version — `harmony::checkout_harmony::components_with_dependencies_with_multiple_versions`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:148` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should not change the dependencies in bitmap file — `harmony::checkout_harmony::components_with_dependencies_with_multiple_versions`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:152` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should show the main component as modified because its dependencies are now having different version — `harmony::checkout_harmony::components_with_dependencies_with_multiple_versions`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:156` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should not write package.json and package-lock.json files — `harmony::checkout_harmony::components_with_dependencies_with_multiple_versions`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:174` bit checkout command › components with dependencies with multiple versions › missing the latest Version object from the filesystem › should not throw an error — `harmony::checkout_harmony::components_with_dependencies_with_multiple_versions`
 - [x] `e2e/harmony/checkout-harmony.e2e.ts:190` bit checkout command › when the current version has new files › should delete the new files — `harmony::checkout_platform::checkout_stored_sources_preserves_binary_and_platform_eol_and_removes_obsolete_files`
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:207` bit checkout command › when the component is modified and a file was changed in the checked out version › should update the file according to the checked out version
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:233` bit checkout command › when a file was deleted locally but not in the base and the new version › bit checkout head › should leave the file deleted
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:243` bit checkout command › when a file was deleted locally but not in the base and the new version › bit checkout reset › should re-create the file
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:265` bit checkout command › when a file was added in the new version (and not exists locally) › should write the new files
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:287` bit checkout command › modified component with conflicts › using manual strategy › should indicate that the file has conflicts
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:293` bit checkout command › modified component with conflicts › using manual strategy › should rewrite the file with the conflicts segments labeled according to the versions
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:299` bit checkout command › modified component with conflicts › using manual strategy › should not strip the last line
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:303` bit checkout command › modified component with conflicts › using manual strategy › should update bitmap with the specified version
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:306` bit checkout command › modified component with conflicts › using manual strategy › should show the component as modified
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:310` bit checkout command › modified component with conflicts › using manual strategy › should not try to compile the files
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:314` bit checkout command › modified component with conflicts › using manual strategy › should not run the package installation
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:326` bit checkout command › modified component with conflicts › using theirs strategy › should indicate that the file has updated
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:332` bit checkout command › modified component with conflicts › using theirs strategy › should rewrite the file according to the used version
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:336` bit checkout command › modified component with conflicts › using theirs strategy › should update bitmap with the used version
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:339` bit checkout command › modified component with conflicts › using theirs strategy › should not show the component as modified
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:350` bit checkout command › modified component with conflicts › using ours strategy › should indicate that the version was switched
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:355` bit checkout command › modified component with conflicts › using ours strategy › should indicate that the file was not changed
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:358` bit checkout command › modified component with conflicts › using ours strategy › should leave the file intact
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:362` bit checkout command › modified component with conflicts › using ours strategy › should update bitmap with the used version
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:367` bit checkout command › modified component with conflicts › using ours strategy › should show the component as modified
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:384` bit checkout command › modified component with conflicts › when new files are added › using manual strategy › should indicate that a new file was added
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:388` bit checkout command › modified component with conflicts › when new files are added › using manual strategy › should not delete the file
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:398` bit checkout command › modified component with conflicts › when new files are added › using theirs strategy › should indicate that the new file was removed
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:402` bit checkout command › modified component with conflicts › when new files are added › using theirs strategy › should delete the file
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:412` bit checkout command › modified component with conflicts › when new files are added › using ours strategy › should indicate that the new file was not changed
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:415` bit checkout command › modified component with conflicts › when new files are added › using ours strategy › should not delete the file
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:438` bit checkout command › checkout-head when the local head is not up to date › should checkout to the remote head and not to the local head
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:456` bit checkout command › sync new components › bit checkout head should sync the exported components
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:474` bit checkout command › checkout latest vs head › bit status should show both, head and latest
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:480` bit checkout command › checkout latest vs head › bit checkout latest should checkout to the semver latest and not to the head snap
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:485` bit checkout command › checkout latest vs head › bit checkout head should checkout to the head snap and not to the semver latest
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:508` bit checkout command › checkout latest when there is no tag › should checkout to the head
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:527` bit checkout command › checkout to a version that does not exist locally › intermediate step - make sure the import does not bring older versions
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:530` bit checkout command › checkout to a version that does not exist locally › should be able to checkout to a non-exist older version
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:548` bit checkout command › modified component without conflicts › without any flag should merge successfully
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:555` bit checkout command › modified component without conflicts › with --force-ours flag, should keep the file as is
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:563` bit checkout command › modified component without conflicts › with --force-theirs flag, should write the files according to the head
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:207` bit checkout command › when the component is modified and a file was changed in the checked out version › should update the file according to the checked out version — `harmony::checkout_harmony::file_changes_and_deletions_and_additions_on_checkout`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:233` bit checkout command › when a file was deleted locally but not in the base and the new version › bit checkout head › should leave the file deleted — `harmony::checkout_harmony::file_changes_and_deletions_and_additions_on_checkout`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:243` bit checkout command › when a file was deleted locally but not in the base and the new version › bit checkout reset › should re-create the file — `harmony::checkout_harmony::file_changes_and_deletions_and_additions_on_checkout`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:265` bit checkout command › when a file was added in the new version (and not exists locally) › should write the new files — `harmony::checkout_harmony::file_changes_and_deletions_and_additions_on_checkout`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:287` bit checkout command › modified component with conflicts › using manual strategy › should indicate that the file has conflicts — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:293` bit checkout command › modified component with conflicts › using manual strategy › should rewrite the file with the conflicts segments labeled according to the versions — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:299` bit checkout command › modified component with conflicts › using manual strategy › should not strip the last line — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:303` bit checkout command › modified component with conflicts › using manual strategy › should update bitmap with the specified version — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:306` bit checkout command › modified component with conflicts › using manual strategy › should show the component as modified — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:310` bit checkout command › modified component with conflicts › using manual strategy › should not try to compile the files — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:314` bit checkout command › modified component with conflicts › using manual strategy › should not run the package installation — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:326` bit checkout command › modified component with conflicts › using theirs strategy › should indicate that the file has updated — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:332` bit checkout command › modified component with conflicts › using theirs strategy › should rewrite the file according to the used version — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:336` bit checkout command › modified component with conflicts › using theirs strategy › should update bitmap with the used version — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:339` bit checkout command › modified component with conflicts › using theirs strategy › should not show the component as modified — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:350` bit checkout command › modified component with conflicts › using ours strategy › should indicate that the version was switched — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:355` bit checkout command › modified component with conflicts › using ours strategy › should indicate that the file was not changed — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:358` bit checkout command › modified component with conflicts › using ours strategy › should leave the file intact — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:362` bit checkout command › modified component with conflicts › using ours strategy › should update bitmap with the used version — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:367` bit checkout command › modified component with conflicts › using ours strategy › should show the component as modified — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:384` bit checkout command › modified component with conflicts › when new files are added › using manual strategy › should indicate that a new file was added — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:388` bit checkout command › modified component with conflicts › when new files are added › using manual strategy › should not delete the file — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:398` bit checkout command › modified component with conflicts › when new files are added › using theirs strategy › should indicate that the new file was removed — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:402` bit checkout command › modified component with conflicts › when new files are added › using theirs strategy › should delete the file — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:412` bit checkout command › modified component with conflicts › when new files are added › using ours strategy › should indicate that the new file was not changed — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:415` bit checkout command › modified component with conflicts › when new files are added › using ours strategy › should not delete the file — `harmony::checkout_harmony::modified_component_with_conflicts`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:438` bit checkout command › checkout-head when the local head is not up to date › should checkout to the remote head and not to the local head — `harmony::checkout_harmony::extra::checkout_head_and_latest_and_non_existing_local_version`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:456` bit checkout command › sync new components › bit checkout head should sync the exported components — `harmony::checkout_harmony::extra::checkout_head_and_latest_and_non_existing_local_version`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:474` bit checkout command › checkout latest vs head › bit status should show both, head and latest — `harmony::checkout_harmony::extra::checkout_head_and_latest_and_non_existing_local_version`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:480` bit checkout command › checkout latest vs head › bit checkout latest should checkout to the semver latest and not to the head snap — `harmony::checkout_harmony::extra::checkout_head_and_latest_and_non_existing_local_version`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:485` bit checkout command › checkout latest vs head › bit checkout head should checkout to the head snap and not to the semver latest — `harmony::checkout_harmony::extra::checkout_head_and_latest_and_non_existing_local_version`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:508` bit checkout command › checkout latest when there is no tag › should checkout to the head — `harmony::checkout_harmony::extra::checkout_head_and_latest_and_non_existing_local_version`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:527` bit checkout command › checkout to a version that does not exist locally › intermediate step - make sure the import does not bring older versions — `harmony::checkout_harmony::extra::checkout_head_and_latest_and_non_existing_local_version`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:530` bit checkout command › checkout to a version that does not exist locally › should be able to checkout to a non-exist older version — `harmony::checkout_harmony::extra::checkout_head_and_latest_and_non_existing_local_version`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:548` bit checkout command › modified component without conflicts › without any flag should merge successfully — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:555` bit checkout command › modified component without conflicts › with --force-ours flag, should keep the file as is — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:563` bit checkout command › modified component without conflicts › with --force-theirs flag, should write the files according to the head — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
 - [x] `e2e/harmony/checkout-harmony.e2e.ts:601` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a lower range, it should update workspace.jsonc with the new range
 - [x] `e2e/harmony/checkout-harmony.e2e.ts:607` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a higher range, it should not update
 - [x] `e2e/harmony/checkout-harmony.e2e.ts:613` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a lower exact version, it should write a conflict
 - [x] `e2e/harmony/checkout-harmony.e2e.ts:622` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a lower exact version, and merge strategy is "theirs" it should update according to the head
 - [x] `e2e/harmony/checkout-harmony.e2e.ts:628` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a lower exact version, and merge strategy is "ours" it should keep the workspace.jsonc intact
 - [x] `e2e/harmony/checkout-harmony.e2e.ts:636` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has an exact version higher than the comp range, it should not throw
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:656` bit checkout command › checkout reset with changes in component.json › status should not show the component as modified
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:672` bit checkout command › checkout with a short hash › bitmap should contain the full hash, not the short one
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:676` bit checkout command › checkout with a short hash › bit status should not throw an error
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:690` bit checkout command › checkout main component when on a lane › should checkout the component successfully
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:705` bit checkout command › checkout reset of main component when on a lane and the component-dir is deleted › should re-write the component
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:708` bit checkout command › checkout reset of main component when on a lane and the component-dir is deleted › status should not have invalid components
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:734` bit checkout command › checkout head --include-new-from-scope › without the flag › should NOT import new components from the scope
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:745` bit checkout command › checkout head --include-new-from-scope › with the flag › should import the new components from the defaultScope
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:749` bit checkout command › checkout head --include-new-from-scope › with the flag › should show the new components in the output
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:754` bit checkout command › checkout head --include-new-from-scope › with the flag › should include the new-from-scope count in the summary
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:762` bit checkout command › checkout head --include-new-from-scope › using the flag with a non-head target › should throw an error
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:656` bit checkout command › checkout reset with changes in component.json › status should not show the component as modified — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:672` bit checkout command › checkout with a short hash › bitmap should contain the full hash, not the short one — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:676` bit checkout command › checkout with a short hash › bit status should not throw an error — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:690` bit checkout command › checkout main component when on a lane › should checkout the component successfully — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:705` bit checkout command › checkout reset of main component when on a lane and the component-dir is deleted › should re-write the component — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:708` bit checkout command › checkout reset of main component when on a lane and the component-dir is deleted › status should not have invalid components — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:734` bit checkout command › checkout head --include-new-from-scope › without the flag › should NOT import new components from the scope — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:745` bit checkout command › checkout head --include-new-from-scope › with the flag › should import the new components from the defaultScope — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:749` bit checkout command › checkout head --include-new-from-scope › with the flag › should show the new components in the output — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:754` bit checkout command › checkout head --include-new-from-scope › with the flag › should include the new-from-scope count in the summary — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:762` bit checkout command › checkout head --include-new-from-scope › using the flag with a non-head target › should throw an error — `harmony::checkout_harmony::extra::modified_without_conflicts_and_reset_and_short_hash_and_lanes`
 
 ### `e2e/harmony/ci-bitmap-auto-sync.e2e.ts`
 
@@ -2005,11 +2005,11 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/dev-files.e2e.ts`
 
-- [ ] `e2e/harmony/dev-files.e2e.ts:38` dev files › custom env that changes dev files patterns › should show registered custom dev file as dev file
-- [ ] `e2e/harmony/dev-files.e2e.ts:44` dev files › custom env that changes dev files patterns › test files › should show registered custom test file as dev file
-- [ ] `e2e/harmony/dev-files.e2e.ts:48` dev files › custom env that changes dev files patterns › test files › should not show default test file as dev file
-- [ ] `e2e/harmony/dev-files.e2e.ts:53` dev files › custom env that changes dev files patterns › should show registered custom docs file as dev file
-- [ ] `e2e/harmony/dev-files.e2e.ts:57` dev files › custom env that changes dev files patterns › should show registered custom composition file as dev file
+- [x] `e2e/harmony/dev-files.e2e.ts:38` dev files › custom env that changes dev files patterns › should show registered custom dev file as dev file — `harmony::workspace_misc::dev_files_custom_env`
+- [x] `e2e/harmony/dev-files.e2e.ts:44` dev files › custom env that changes dev files patterns › test files › should show registered custom test file as dev file — `harmony::workspace_misc::dev_files_custom_env`
+- [x] `e2e/harmony/dev-files.e2e.ts:48` dev files › custom env that changes dev files patterns › test files › should not show default test file as dev file — `harmony::workspace_misc::dev_files_custom_env`
+- [x] `e2e/harmony/dev-files.e2e.ts:53` dev files › custom env that changes dev files patterns › should show registered custom docs file as dev file — `harmony::workspace_misc::dev_files_custom_env`
+- [x] `e2e/harmony/dev-files.e2e.ts:57` dev files › custom env that changes dev files patterns › should show registered custom composition file as dev file — `harmony::workspace_misc::dev_files_custom_env`
 
 ### `e2e/harmony/diff-component-peer.e2e.ts`
 
@@ -2142,7 +2142,7 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/graph-harmony.e2e.ts`
 
-- [ ] `e2e/harmony/graph-harmony.e2e.ts:38` graph aspect › tag a few components › ask the graph aspect for the graph ids › should include the dependencies correctly
+- [x] `e2e/harmony/graph-harmony.e2e.ts:38` graph aspect › tag a few components › ask the graph aspect for the graph ids › should include the dependencies correctly — `harmony::workspace_misc::graph_aspect_and_workspace_aspect_and_import_resolves_missing_deps`
 
 ### `e2e/harmony/harmony-workspace.e2e.ts`
 
@@ -2213,7 +2213,7 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/import-resolves-missing-deps-from-model.e2e.ts`
 
-- [ ] `e2e/harmony/import-resolves-missing-deps-from-model.e2e.ts:37` bit import: missing-package issue suppressed when the model lists the package › does not report MissingPackagesDependenciesOnFs for a package present in the model
+- [x] `e2e/harmony/import-resolves-missing-deps-from-model.e2e.ts:37` bit import: missing-package issue suppressed when the model lists the package › does not report MissingPackagesDependenciesOnFs for a package present in the model — `harmony::workspace_misc::graph_aspect_and_workspace_aspect_and_import_resolves_missing_deps`
 
 ### `e2e/harmony/imported-component-deps.e2e.ts`
 
@@ -3132,16 +3132,16 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/link.e2e.ts`
 
-- [ ] `e2e/harmony/link.e2e.ts:25` linking components to a target, with and without a pattern › should link the scecified component to the target directory
-- [ ] `e2e/harmony/link.e2e.ts:28` linking components to a target, with and without a pattern › should not link the not specified component to the target directory
-- [ ] `e2e/harmony/link.e2e.ts:31` linking components to a target, with and without a pattern › without a pattern, it should link every component to the target directory
-- [ ] `e2e/harmony/link.e2e.ts:49` linking to a target including peers › should link the components to the target directory
-- [ ] `e2e/harmony/link.e2e.ts:52` linking to a target including peers › should link the peers of the component components to the target directory
+- [x] `e2e/harmony/link.e2e.ts:25` linking components to a target, with and without a pattern › should link the scecified component to the target directory — `harmony::workspace_misc::link_to_target_with_and_without_pattern_and_peers`
+- [x] `e2e/harmony/link.e2e.ts:28` linking components to a target, with and without a pattern › should not link the not specified component to the target directory — `harmony::workspace_misc::link_to_target_with_and_without_pattern_and_peers`
+- [x] `e2e/harmony/link.e2e.ts:31` linking components to a target, with and without a pattern › without a pattern, it should link every component to the target directory — `harmony::workspace_misc::link_to_target_with_and_without_pattern_and_peers`
+- [x] `e2e/harmony/link.e2e.ts:49` linking to a target including peers › should link the components to the target directory — `harmony::workspace_misc::link_to_target_with_and_without_pattern_and_peers`
+- [x] `e2e/harmony/link.e2e.ts:52` linking to a target including peers › should link the peers of the component components to the target directory — `harmony::workspace_misc::link_to_target_with_and_without_pattern_and_peers`
 
 ### `e2e/harmony/load-bit.e2e.ts`
 
-- [ ] `e2e/harmony/load-bit.e2e.ts:24` loadBit() › should load a valid workspace and create and load three different scopes
-- [ ] `e2e/harmony/load-bit.e2e.ts:38` loadBit() › should throw when defaultScope is invalid
+- [x] `e2e/harmony/load-bit.e2e.ts:24` loadBit() › should load a valid workspace and create and load three different scopes — `harmony::workspace_misc::load_bit_scopes_and_invalid_default_scope`
+- [x] `e2e/harmony/load-bit.e2e.ts:38` loadBit() › should throw when defaultScope is invalid — `harmony::workspace_misc::load_bit_scopes_and_invalid_default_scope`
 
 ### `e2e/harmony/load-extensions.e2e.ts`
 
@@ -3295,8 +3295,8 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/node-linker.e2e.ts`
 
-- [ ] `e2e/harmony/node-linker.e2e.ts:22` installing with non-default nodeLinker › using pnpm as a package manager › setting nodeLinker to "hoisted" › should create a hoisted node_modules
-- [ ] `e2e/harmony/node-linker.e2e.ts:34` installing with non-default nodeLinker › using pnpm as a package manager › setting nodeLinker to "isolated" › should symlink into the virtual store rather than hoisting
+- [x] `e2e/harmony/node-linker.e2e.ts:22` installing with non-default nodeLinker › using pnpm as a package manager › setting nodeLinker to "hoisted" › should create a hoisted node_modules — `harmony::workspace_misc::node_linker_hoisted_and_isolated`
+- [x] `e2e/harmony/node-linker.e2e.ts:34` installing with non-default nodeLinker › using pnpm as a package manager › setting nodeLinker to "isolated" › should symlink into the virtual store rather than hoisting — `harmony::workspace_misc::node_linker_hoisted_and_isolated`
 
 ### `e2e/harmony/out-of-sync-components-harmony.e2e.ts`
 
@@ -3311,8 +3311,8 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/patched-dependencies.e2e.ts`
 
-- [ ] `e2e/harmony/patched-dependencies.e2e.ts:50` patched dependencies › a patch configured with a workspace-relative path › should apply the patch in the workspace
-- [ ] `e2e/harmony/patched-dependencies.e2e.ts:54` patched dependencies › a patch configured with a workspace-relative path › should apply the patch in the capsule too
+- [x] `e2e/harmony/patched-dependencies.e2e.ts:50` patched dependencies › a patch configured with a workspace-relative path › should apply the patch in the workspace — `harmony::workspace_misc::patched_dependencies_in_workspace_and_capsule`
+- [x] `e2e/harmony/patched-dependencies.e2e.ts:54` patched dependencies › a patch configured with a workspace-relative path › should apply the patch in the capsule too — `harmony::workspace_misc::patched_dependencies_in_workspace_and_capsule`
 
 ### `e2e/harmony/pkg-manager-config.e2e.ts`
 
@@ -3320,9 +3320,9 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/pkg-manager-errors.e2e.ts`
 
-- [ ] `e2e/harmony/pkg-manager-errors.e2e.ts:27` commands that install, when the package-manager fails › component with a non-exist package dependency which triggers the package-manager to fail › bit checkout › should not throw, instead, should show the error in the output
-- [ ] `e2e/harmony/pkg-manager-errors.e2e.ts:41` commands that install, when the package-manager fails › component with a non-exist package dependency which triggers the package-manager to fail › bit switch › should not throw
-- [ ] `e2e/harmony/pkg-manager-errors.e2e.ts:52` commands that install, when the package-manager fails › component with a non-exist package dependency which triggers the package-manager to fail › bit import › should not throw
+- [x] `e2e/harmony/pkg-manager-errors.e2e.ts:27` commands that install, when the package-manager fails › component with a non-exist package dependency which triggers the package-manager to fail › bit checkout › should not throw, instead, should show the error in the output — `harmony::workspace_misc::pkg_manager_errors_on_checkout_switch_and_import`
+- [x] `e2e/harmony/pkg-manager-errors.e2e.ts:41` commands that install, when the package-manager fails › component with a non-exist package dependency which triggers the package-manager to fail › bit switch › should not throw — `harmony::workspace_misc::pkg_manager_errors_on_checkout_switch_and_import`
+- [x] `e2e/harmony/pkg-manager-errors.e2e.ts:52` commands that install, when the package-manager fails › component with a non-exist package dependency which triggers the package-manager to fail › bit import › should not throw — `harmony::workspace_misc::pkg_manager_errors_on_checkout_switch_and_import`
 
 ### `e2e/harmony/pkg.e2e.ts`
 
@@ -3334,12 +3334,12 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/pnpm-default-hoisting.e2e.ts`
 
-- [ ] `e2e/harmony/pnpm-default-hoisting.e2e.ts:21` pnpm install with default settings › should run pnpm with hoist-pattern=*
-- [ ] `e2e/harmony/pnpm-default-hoisting.e2e.ts:24` pnpm install with default settings › should run pnpm with public-hoist-pattern set
+- [x] `e2e/harmony/pnpm-default-hoisting.e2e.ts:21` pnpm install with default settings › should run pnpm with hoist-pattern=* — `harmony::workspace_misc::pnpm_default_hoisting_settings`
+- [x] `e2e/harmony/pnpm-default-hoisting.e2e.ts:24` pnpm install with default settings › should run pnpm with public-hoist-pattern set — `harmony::workspace_misc::pnpm_default_hoisting_settings`
 
 ### `e2e/harmony/preview.e2e.ts`
 
-- [ ] `e2e/harmony/preview.e2e.ts:41` preview feature (during build) › jsx component › bit build should run successfully without preview errors
+- [x] `e2e/harmony/preview.e2e.ts:41` preview feature (during build) › jsx component › bit build should run successfully without preview errors — `harmony::workspace_misc::preview_and_released_bit_core_exports_and_require_resolve`
 
 ### `e2e/harmony/publish.e2e.ts`
 
@@ -3356,9 +3356,9 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/readme-env.e2e.ts`
 
-- [ ] `e2e/harmony/readme-env.e2e.ts:26` readme env › set readme env › should not identify the .docs. file as the docs file
-- [ ] `e2e/harmony/readme-env.e2e.ts:29` readme env › set readme env › should have the index as the docs file entry point
-- [ ] `e2e/harmony/readme-env.e2e.ts:40` readme env › set readme env › unset readme env and set default env › should identify the .docs. file as the docs file
+- [x] `e2e/harmony/readme-env.e2e.ts:26` readme env › set readme env › should not identify the .docs. file as the docs file — `harmony::workspace_misc::readme_env_set_and_unset`
+- [x] `e2e/harmony/readme-env.e2e.ts:29` readme env › set readme env › should have the index as the docs file entry point — `harmony::workspace_misc::readme_env_set_and_unset`
+- [x] `e2e/harmony/readme-env.e2e.ts:40` readme env › set readme env › unset readme env and set default env › should identify the .docs. file as the docs file — `harmony::workspace_misc::readme_env_set_and_unset`
 
 ### `e2e/harmony/recover.e2e.ts`
 
@@ -3473,7 +3473,7 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/released-bit-core-exports.e2e.ts`
 
-- [ ] `e2e/harmony/released-bit-core-exports.e2e.ts:55` bit build (TypescriptCompile) should not fail from type-checking ${CORE_ASPECT_PKG}
+- [x] `e2e/harmony/released-bit-core-exports.e2e.ts:55` bit build (TypescriptCompile) should not fail from type-checking ${CORE_ASPECT_PKG} — `harmony::workspace_misc::preview_and_released_bit_core_exports_and_require_resolve`
 
 ### `e2e/harmony/rename.e2e.ts`
 
@@ -3511,7 +3511,7 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/require-resolve.e2e.ts`
 
-- [ ] `e2e/harmony/require-resolve.e2e.ts:23` require.resolve detection › when a dependency is inside require.resolve statement › should detect it
+- [x] `e2e/harmony/require-resolve.e2e.ts:23` require.resolve detection › when a dependency is inside require.resolve statement › should detect it — `harmony::workspace_misc::preview_and_released_bit_core_exports_and_require_resolve`
 
 ### `e2e/harmony/revert.e2e.ts`
 
@@ -3624,93 +3624,93 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/show-harmony.e2e.ts`
 
-- [ ] `e2e/harmony/show-harmony.e2e.ts:24` bit show command › running bit show --remote on an empty workspace › should show the remote component successfully
-- [ ] `e2e/harmony/show-harmony.e2e.ts:27` bit show command › running bit show --remote on an empty workspace › should show Harmony data such as the env
-- [ ] `e2e/harmony/show-harmony.e2e.ts:31` bit show command › running bit show --remote on an empty workspace › should not import any object to the local scope
+- [x] `e2e/harmony/show-harmony.e2e.ts:24` bit show command › running bit show --remote on an empty workspace › should show the remote component successfully — `harmony::workspace_misc::bit_show_remote_on_empty_workspace`
+- [x] `e2e/harmony/show-harmony.e2e.ts:27` bit show command › running bit show --remote on an empty workspace › should show Harmony data such as the env — `harmony::workspace_misc::bit_show_remote_on_empty_workspace`
+- [x] `e2e/harmony/show-harmony.e2e.ts:31` bit show command › running bit show --remote on an empty workspace › should not import any object to the local scope — `harmony::workspace_misc::bit_show_remote_on_empty_workspace`
 
 ### `e2e/harmony/snap.e2e.ts`
 
-- [ ] `e2e/harmony/snap.e2e.ts:28` bit snap command › snap before tag › should snap successfully
-- [ ] `e2e/harmony/snap.e2e.ts:31` bit snap command › snap before tag › should save the snap head in the component object
-- [ ] `e2e/harmony/snap.e2e.ts:37` bit snap command › snap before tag › should save the snap hash as a version in .bitmap file
-- [ ] `e2e/harmony/snap.e2e.ts:42` bit snap command › snap before tag › bit status should show the snap as staged
-- [ ] `e2e/harmony/snap.e2e.ts:52` bit snap command › snap before tag › then tag › should tag successfully
-- [ ] `e2e/harmony/snap.e2e.ts:55` bit snap command › snap before tag › then tag › should change the snap head to the newly created version
-- [ ] `e2e/harmony/snap.e2e.ts:66` bit snap command › snap before tag › then tag › then snap and tag again › should tag the next version
-- [ ] `e2e/harmony/snap.e2e.ts:69` bit snap command › snap before tag › then tag › then snap and tag again › should change the snap head to the newly created version
-- [ ] `e2e/harmony/snap.e2e.ts:83` bit snap command › components with dependencies › should save the dependencies successfully with their snaps as versions
-- [ ] `e2e/harmony/snap.e2e.ts:88` bit snap command › components with dependencies › bit status should show them in the "snapped" section
-- [ ] `e2e/harmony/snap.e2e.ts:97` bit snap command › components with dependencies › tagging the components › --all flag should include the snapped components
-- [ ] `e2e/harmony/snap.e2e.ts:101` bit snap command › components with dependencies › tagging the components › --snapped flag should include the snapped components
-- [ ] `e2e/harmony/snap.e2e.ts:123` bit snap command › untag a snap › untag the head snap › should change the head to the first snap
-- [ ] `e2e/harmony/snap.e2e.ts:127` bit snap command › untag a snap › untag the head snap › should remove the snap from the state.versions array
-- [ ] `e2e/harmony/snap.e2e.ts:156` bit snap command › local and remote do not have the same head › when the local is behind the remote › import only objects › should write the head of the remote component
-- [ ] `e2e/harmony/snap.e2e.ts:165` bit snap command › local and remote do not have the same head › when the local is behind the remote › import only objects › should not change the version/snap in .bitmap
-- [ ] `e2e/harmony/snap.e2e.ts:168` bit snap command › local and remote do not have the same head › when the local is behind the remote › import only objects › bit status should show pending updates
-- [ ] `e2e/harmony/snap.e2e.ts:180` bit snap command › local and remote do not have the same head › when the local is behind the remote › import (and merge) › should write the head of the remote component
-- [ ] `e2e/harmony/snap.e2e.ts:189` bit snap command › local and remote do not have the same head › when the local is behind the remote › import (and merge) › should change the version/snap in .bitmap
-- [ ] `e2e/harmony/snap.e2e.ts:192` bit snap command › local and remote do not have the same head › when the local is behind the remote › import (and merge) › bit status should be clean
-- [ ] `e2e/harmony/snap.e2e.ts:208` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › should prevent exporting the component
-- [ ] `e2e/harmony/snap.e2e.ts:218` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › importing with --object flag › should not change the head in the Component object
-- [ ] `e2e/harmony/snap.e2e.ts:222` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › importing with --object flag › should write the head of the remote component
-- [ ] `e2e/harmony/snap.e2e.ts:231` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › importing with --object flag › bit status should show the component as pending merge
-- [ ] `e2e/harmony/snap.e2e.ts:244` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › import without any flag › should stop the process and throw a descriptive error suggesting to use --merge flag
-- [ ] `e2e/harmony/snap.e2e.ts:266` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › without --no-snap flag › should succeed and indicate that the files were not changed
-- [ ] `e2e/harmony/snap.e2e.ts:269` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › without --no-snap flag › should indicate that a component was snapped
-- [ ] `e2e/harmony/snap.e2e.ts:272` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › without --no-snap flag › should not change the files on the filesystem
-- [ ] `e2e/harmony/snap.e2e.ts:276` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › without --no-snap flag › should generate a snap-merge snap with two parents, the local and the remote
-- [ ] `e2e/harmony/snap.e2e.ts:282` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › without --no-snap flag › should add a descriptive message about the merge
-- [ ] `e2e/harmony/snap.e2e.ts:287` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › without --no-snap flag › should update bitmap snap
-- [ ] `e2e/harmony/snap.e2e.ts:298` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › should succeed and indicate that the files were not changed
-- [ ] `e2e/harmony/snap.e2e.ts:301` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › should not show a message about merge-snapped components
-- [ ] `e2e/harmony/snap.e2e.ts:304` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › should not change the files on the filesystem
-- [ ] `e2e/harmony/snap.e2e.ts:308` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › should not generate a snap-merge snap with two parents
-- [ ] `e2e/harmony/snap.e2e.ts:312` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › should leave the components in a state of resolved but not snapped
-- [ ] `e2e/harmony/snap.e2e.ts:318` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › should not update bitmap
-- [ ] `e2e/harmony/snap.e2e.ts:326` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › generating merge-snap by merge --resolve flag › should resolve successfully
-- [ ] `e2e/harmony/snap.e2e.ts:329` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › generating merge-snap by merge --resolve flag › bit status should not show the component as during merge state
-- [ ] `e2e/harmony/snap.e2e.ts:337` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › generating merge-snap by merge --resolve flag › should generate a snap-merge snap with two parents, the local and the remote
-- [ ] `e2e/harmony/snap.e2e.ts:341` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › generating merge-snap by merge --resolve flag › should update bitmap snap
-- [ ] `e2e/harmony/snap.e2e.ts:355` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=theirs flag › should succeed and indicate that the files were updated
-- [ ] `e2e/harmony/snap.e2e.ts:358` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=theirs flag › should change the files on the filesystem according to the remote version
-- [ ] `e2e/harmony/snap.e2e.ts:362` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=theirs flag › should generate a snap-merge snap with two parents, the local and the remote
-- [ ] `e2e/harmony/snap.e2e.ts:368` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=theirs flag › should add a descriptive message about the merge
-- [ ] `e2e/harmony/snap.e2e.ts:373` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=theirs flag › should update bitmap snap
-- [ ] `e2e/harmony/snap.e2e.ts:387` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › should succeed and indicate that the files were left in a conflict state
-- [ ] `e2e/harmony/snap.e2e.ts:390` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › should change the files on the filesystem and mark the conflicts properly
-- [ ] `e2e/harmony/snap.e2e.ts:398` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › should not change bitmap version
-- [ ] `e2e/harmony/snap.e2e.ts:401` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › should not generate a new merge-snap
-- [ ] `e2e/harmony/snap.e2e.ts:405` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › bit status should show it as component with conflict and modified but not as pending update
-- [ ] `e2e/harmony/snap.e2e.ts:412` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › should block checking out the component
-- [ ] `e2e/harmony/snap.e2e.ts:424` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › tagging or snapping the component › should allow tagging the component successfully and add two parents to the Version object
-- [ ] `e2e/harmony/snap.e2e.ts:433` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › tagging or snapping the component › should include the component when running bit tag --all
-- [ ] `e2e/harmony/snap.e2e.ts:442` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › tagging or snapping the component › should allow snapping the component successfully and add two parents to the Version object
-- [ ] `e2e/harmony/snap.e2e.ts:456` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › removing the component › bit status should not show the component
-- [ ] `e2e/harmony/snap.e2e.ts:468` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › un-tagging the component › bit status should not show the component as a component with conflicts but as modified
-- [ ] `e2e/harmony/snap.e2e.ts:483` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › resolving the merge › should resolve the conflicts successfully
-- [ ] `e2e/harmony/snap.e2e.ts:486` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › resolving the merge › bit status should not show the component as if it has conflicts
-- [ ] `e2e/harmony/snap.e2e.ts:494` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › resolving the merge › should generate a snap-merge snap with two parents, the local and the remote
-- [ ] `e2e/harmony/snap.e2e.ts:500` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › resolving the merge › should update bitmap snap
-- [ ] `e2e/harmony/snap.e2e.ts:511` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › aborting the merge › should abort the merge successfully
-- [ ] `e2e/harmony/snap.e2e.ts:514` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › aborting the merge › bit status should show the same state as before the merge
-- [ ] `e2e/harmony/snap.e2e.ts:522` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › aborting the merge › should not change the version in .bitmap
-- [ ] `e2e/harmony/snap.e2e.ts:525` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › aborting the merge › should reset the changes the merge done on the filesystem
-- [ ] `e2e/harmony/snap.e2e.ts:547` bit snap command › bit checkout and bit diff for snaps › snap, change and then snap › bit diff should show the differences
-- [ ] `e2e/harmony/snap.e2e.ts:561` bit snap command › bit checkout and bit diff for snaps › snap, change and then snap › bit checkout › should checkout to the first snap
-- [ ] `e2e/harmony/snap.e2e.ts:568` bit snap command › bit checkout and bit diff for snaps › snap, change and then snap › bit checkout › bit checkout head › should checkout to the latest (second) snap
-- [ ] `e2e/harmony/snap.e2e.ts:595` bit snap command › auto snap › should auto snap the dependencies and the nested dependencies
-- [ ] `e2e/harmony/snap.e2e.ts:598` bit snap command › auto snap › should update the dependencies and the flattenedDependencies of the dependent with the new versions
-- [ ] `e2e/harmony/snap.e2e.ts:609` bit snap command › auto snap › should update the dependencies and the flattenedDependencies of the dependent of the dependent with the new versions
-- [ ] `e2e/harmony/snap.e2e.ts:626` bit snap command › auto snap › bit-status should show them all as staged and not modified
-- [ ] `e2e/harmony/snap.e2e.ts:643` bit snap command › auto snap › importing the component to another scope › should use the updated dependencies and print the results from the latest versions
-- [ ] `e2e/harmony/snap.e2e.ts:667` bit snap command › tag after tag › should not fetch previous version files for performance reasons, only the latest
-- [ ] `e2e/harmony/snap.e2e.ts:692` bit snap command › merge tags › should prevent exporting the component
-- [ ] `e2e/harmony/snap.e2e.ts:703` bit snap command › merge tags › bit status should suggest running either "bit reset" or "bit merge"
-- [ ] `e2e/harmony/snap.e2e.ts:720` bit snap command › merge tags › bit reset a diverge component › reset all local versions › should change the head to point to the parent of the untagged version not to the remote head
-- [ ] `e2e/harmony/snap.e2e.ts:726` bit snap command › merge tags › bit reset a diverge component › reset all local versions › bit status after untag should show the component not only as modified but also as outdated
-- [ ] `e2e/harmony/snap.e2e.ts:738` bit snap command › merge tags › bit reset a diverge component › reset only head › should change the head to point to the parent of the head and not to the remote head
-- [ ] `e2e/harmony/snap.e2e.ts:757` bit snap command › snap with --unmodified after soft-remove › should indicate that the component was removed successfully
-- [ ] `e2e/harmony/snap.e2e.ts:760` bit snap command › snap with --unmodified after soft-remove › should not show the component as changed (because the new snap isnt relevant for a deleted component
+- [x] `e2e/harmony/snap.e2e.ts:28` bit snap command › snap before tag › should snap successfully — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:31` bit snap command › snap before tag › should save the snap head in the component object — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:37` bit snap command › snap before tag › should save the snap hash as a version in .bitmap file — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:42` bit snap command › snap before tag › bit status should show the snap as staged — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:52` bit snap command › snap before tag › then tag › should tag successfully — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:55` bit snap command › snap before tag › then tag › should change the snap head to the newly created version — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:66` bit snap command › snap before tag › then tag › then snap and tag again › should tag the next version — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:69` bit snap command › snap before tag › then tag › then snap and tag again › should change the snap head to the newly created version — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:83` bit snap command › components with dependencies › should save the dependencies successfully with their snaps as versions — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:88` bit snap command › components with dependencies › bit status should show them in the "snapped" section — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:97` bit snap command › components with dependencies › tagging the components › --all flag should include the snapped components — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:101` bit snap command › components with dependencies › tagging the components › --snapped flag should include the snapped components — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:123` bit snap command › untag a snap › untag the head snap › should change the head to the first snap — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:127` bit snap command › untag a snap › untag the head snap › should remove the snap from the state.versions array — `harmony::snap::snap_before_tag_and_dependencies_and_untag`
+- [x] `e2e/harmony/snap.e2e.ts:156` bit snap command › local and remote do not have the same head › when the local is behind the remote › import only objects › should write the head of the remote component — `harmony::snap::local_behind_and_diverged_from_remote`
+- [x] `e2e/harmony/snap.e2e.ts:165` bit snap command › local and remote do not have the same head › when the local is behind the remote › import only objects › should not change the version/snap in .bitmap — `harmony::snap::local_behind_and_diverged_from_remote`
+- [x] `e2e/harmony/snap.e2e.ts:168` bit snap command › local and remote do not have the same head › when the local is behind the remote › import only objects › bit status should show pending updates — `harmony::snap::local_behind_and_diverged_from_remote`
+- [x] `e2e/harmony/snap.e2e.ts:180` bit snap command › local and remote do not have the same head › when the local is behind the remote › import (and merge) › should write the head of the remote component — `harmony::snap::local_behind_and_diverged_from_remote`
+- [x] `e2e/harmony/snap.e2e.ts:189` bit snap command › local and remote do not have the same head › when the local is behind the remote › import (and merge) › should change the version/snap in .bitmap — `harmony::snap::local_behind_and_diverged_from_remote`
+- [x] `e2e/harmony/snap.e2e.ts:192` bit snap command › local and remote do not have the same head › when the local is behind the remote › import (and merge) › bit status should be clean — `harmony::snap::local_behind_and_diverged_from_remote`
+- [x] `e2e/harmony/snap.e2e.ts:208` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › should prevent exporting the component — `harmony::snap::local_behind_and_diverged_from_remote`
+- [x] `e2e/harmony/snap.e2e.ts:218` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › importing with --object flag › should not change the head in the Component object — `harmony::snap::local_behind_and_diverged_from_remote`
+- [x] `e2e/harmony/snap.e2e.ts:222` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › importing with --object flag › should write the head of the remote component — `harmony::snap::local_behind_and_diverged_from_remote`
+- [x] `e2e/harmony/snap.e2e.ts:231` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › importing with --object flag › bit status should show the component as pending merge — `harmony::snap::local_behind_and_diverged_from_remote`
+- [x] `e2e/harmony/snap.e2e.ts:244` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › import without any flag › should stop the process and throw a descriptive error suggesting to use --merge flag — `harmony::snap::local_behind_and_diverged_from_remote`
+- [x] `e2e/harmony/snap.e2e.ts:266` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › without --no-snap flag › should succeed and indicate that the files were not changed — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:269` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › without --no-snap flag › should indicate that a component was snapped — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:272` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › without --no-snap flag › should not change the files on the filesystem — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:276` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › without --no-snap flag › should generate a snap-merge snap with two parents, the local and the remote — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:282` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › without --no-snap flag › should add a descriptive message about the merge — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:287` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › without --no-snap flag › should update bitmap snap — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:298` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › should succeed and indicate that the files were not changed — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:301` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › should not show a message about merge-snapped components — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:304` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › should not change the files on the filesystem — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:308` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › should not generate a snap-merge snap with two parents — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:312` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › should leave the components in a state of resolved but not snapped — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:318` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › should not update bitmap — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:326` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › generating merge-snap by merge --resolve flag › should resolve successfully — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:329` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › generating merge-snap by merge --resolve flag › bit status should not show the component as during merge state — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:337` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › generating merge-snap by merge --resolve flag › should generate a snap-merge snap with two parents, the local and the remote — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:341` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=ours flag › with --no-snap flag › generating merge-snap by merge --resolve flag › should update bitmap snap — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:355` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=theirs flag › should succeed and indicate that the files were updated — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:358` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=theirs flag › should change the files on the filesystem according to the remote version — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:362` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=theirs flag › should generate a snap-merge snap with two parents, the local and the remote — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:368` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=theirs flag › should add a descriptive message about the merge — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:373` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=theirs flag › should update bitmap snap — `harmony::snap::merge_ours_without_and_with_no_snap_and_theirs`
+- [x] `e2e/harmony/snap.e2e.ts:387` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › should succeed and indicate that the files were left in a conflict state — `harmony::snap::merge_manual_tag_snap_remove_untag`
+- [x] `e2e/harmony/snap.e2e.ts:390` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › should change the files on the filesystem and mark the conflicts properly — `harmony::snap::merge_manual_tag_snap_remove_untag`
+- [x] `e2e/harmony/snap.e2e.ts:398` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › should not change bitmap version — `harmony::snap::merge_manual_tag_snap_remove_untag`
+- [x] `e2e/harmony/snap.e2e.ts:401` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › should not generate a new merge-snap — `harmony::snap::merge_manual_tag_snap_remove_untag`
+- [x] `e2e/harmony/snap.e2e.ts:405` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › bit status should show it as component with conflict and modified but not as pending update — `harmony::snap::merge_manual_tag_snap_remove_untag`
+- [x] `e2e/harmony/snap.e2e.ts:412` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › should block checking out the component — `harmony::snap::merge_manual_tag_snap_remove_untag`
+- [x] `e2e/harmony/snap.e2e.ts:424` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › tagging or snapping the component › should allow tagging the component successfully and add two parents to the Version object — `harmony::snap::merge_manual_tag_snap_remove_untag`
+- [x] `e2e/harmony/snap.e2e.ts:433` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › tagging or snapping the component › should include the component when running bit tag --all — `harmony::snap::merge_manual_tag_snap_remove_untag`
+- [x] `e2e/harmony/snap.e2e.ts:442` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › tagging or snapping the component › should allow snapping the component successfully and add two parents to the Version object — `harmony::snap::merge_manual_tag_snap_remove_untag`
+- [x] `e2e/harmony/snap.e2e.ts:456` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › removing the component › bit status should not show the component — `harmony::snap::merge_manual_tag_snap_remove_untag`
+- [x] `e2e/harmony/snap.e2e.ts:468` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › un-tagging the component › bit status should not show the component as a component with conflicts but as modified — `harmony::snap::merge_manual_tag_snap_remove_untag`
+- [x] `e2e/harmony/snap.e2e.ts:483` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › resolving the merge › should resolve the conflicts successfully — `harmony::snap::merge_manual_resolve_and_abort`
+- [x] `e2e/harmony/snap.e2e.ts:486` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › resolving the merge › bit status should not show the component as if it has conflicts — `harmony::snap::merge_manual_resolve_and_abort`
+- [x] `e2e/harmony/snap.e2e.ts:494` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › resolving the merge › should generate a snap-merge snap with two parents, the local and the remote — `harmony::snap::merge_manual_resolve_and_abort`
+- [x] `e2e/harmony/snap.e2e.ts:500` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › resolving the merge › should update bitmap snap — `harmony::snap::merge_manual_resolve_and_abort`
+- [x] `e2e/harmony/snap.e2e.ts:511` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › aborting the merge › should abort the merge successfully — `harmony::snap::merge_manual_resolve_and_abort`
+- [x] `e2e/harmony/snap.e2e.ts:514` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › aborting the merge › bit status should show the same state as before the merge — `harmony::snap::merge_manual_resolve_and_abort`
+- [x] `e2e/harmony/snap.e2e.ts:522` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › aborting the merge › should not change the version in .bitmap — `harmony::snap::merge_manual_resolve_and_abort`
+- [x] `e2e/harmony/snap.e2e.ts:525` bit snap command › local and remote do not have the same head › when the local is diverged from the remote › merge with merge=manual flag › aborting the merge › should reset the changes the merge done on the filesystem — `harmony::snap::merge_manual_resolve_and_abort`
+- [x] `e2e/harmony/snap.e2e.ts:547` bit snap command › bit checkout and bit diff for snaps › snap, change and then snap › bit diff should show the differences — `harmony::snap::checkout_and_diff_for_snaps`
+- [x] `e2e/harmony/snap.e2e.ts:561` bit snap command › bit checkout and bit diff for snaps › snap, change and then snap › bit checkout › should checkout to the first snap — `harmony::snap::checkout_and_diff_for_snaps`
+- [x] `e2e/harmony/snap.e2e.ts:568` bit snap command › bit checkout and bit diff for snaps › snap, change and then snap › bit checkout › bit checkout head › should checkout to the latest (second) snap — `harmony::snap::checkout_and_diff_for_snaps`
+- [x] `e2e/harmony/snap.e2e.ts:595` bit snap command › auto snap › should auto snap the dependencies and the nested dependencies — `harmony::snap::auto_snap_and_import_to_another_scope`
+- [x] `e2e/harmony/snap.e2e.ts:598` bit snap command › auto snap › should update the dependencies and the flattenedDependencies of the dependent with the new versions — `harmony::snap::auto_snap_and_import_to_another_scope`
+- [x] `e2e/harmony/snap.e2e.ts:609` bit snap command › auto snap › should update the dependencies and the flattenedDependencies of the dependent of the dependent with the new versions — `harmony::snap::auto_snap_and_import_to_another_scope`
+- [x] `e2e/harmony/snap.e2e.ts:626` bit snap command › auto snap › bit-status should show them all as staged and not modified — `harmony::snap::auto_snap_and_import_to_another_scope`
+- [x] `e2e/harmony/snap.e2e.ts:643` bit snap command › auto snap › importing the component to another scope › should use the updated dependencies and print the results from the latest versions — `harmony::snap::auto_snap_and_import_to_another_scope`
+- [x] `e2e/harmony/snap.e2e.ts:667` bit snap command › tag after tag › should not fetch previous version files for performance reasons, only the latest — `harmony::snap::tag_after_tag_does_not_fetch_previous_version_files`
+- [x] `e2e/harmony/snap.e2e.ts:692` bit snap command › merge tags › should prevent exporting the component — `harmony::snap::merge_tags_and_snap_with_unmodified_after_soft_remove`
+- [x] `e2e/harmony/snap.e2e.ts:703` bit snap command › merge tags › bit status should suggest running either "bit reset" or "bit merge" — `harmony::snap::merge_tags_and_snap_with_unmodified_after_soft_remove`
+- [x] `e2e/harmony/snap.e2e.ts:720` bit snap command › merge tags › bit reset a diverge component › reset all local versions › should change the head to point to the parent of the untagged version not to the remote head — `harmony::snap::merge_tags_and_snap_with_unmodified_after_soft_remove`
+- [x] `e2e/harmony/snap.e2e.ts:726` bit snap command › merge tags › bit reset a diverge component › reset all local versions › bit status after untag should show the component not only as modified but also as outdated — `harmony::snap::merge_tags_and_snap_with_unmodified_after_soft_remove`
+- [x] `e2e/harmony/snap.e2e.ts:738` bit snap command › merge tags › bit reset a diverge component › reset only head › should change the head to point to the parent of the head and not to the remote head — `harmony::snap::merge_tags_and_snap_with_unmodified_after_soft_remove`
+- [x] `e2e/harmony/snap.e2e.ts:757` bit snap command › snap with --unmodified after soft-remove › should indicate that the component was removed successfully — `harmony::snap::merge_tags_and_snap_with_unmodified_after_soft_remove`
+- [x] `e2e/harmony/snap.e2e.ts:760` bit snap command › snap with --unmodified after soft-remove › should not show the component as changed (because the new snap isnt relevant for a deleted component — `harmony::snap::merge_tags_and_snap_with_unmodified_after_soft_remove`
 
 ### `e2e/harmony/stash.e2e.ts`
 
@@ -3745,74 +3745,74 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/tag-harmony.e2e.ts`
 
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:33` tag components on Harmony › workspace with standard components › should import successfully with the schema prop
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:38` tag components on Harmony › workspace with standard components › bit status should work and not show modified
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:46` tag components on Harmony › workspace with standard components › tag without build after full tag › should not save the builder data from the previous version
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:52` tag components on Harmony › workspace with standard components › tag without build after full tag › should be able to export successfully
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:65` tag components on Harmony › tag on Harmony › should not show the component as modified
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:71` tag components on Harmony › tag on Harmony › should not show the dependency with an older version
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:77` tag components on Harmony › tag on Harmony › should not save the build data twice
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:88` tag components on Harmony › tag on Harmony › auto-tag › should save the artifacts/dists to the auto-tagged components
+- [x] `e2e/harmony/tag-harmony.e2e.ts:33` tag components on Harmony › workspace with standard components › should import successfully with the schema prop — `harmony::tag_harmony::workspace_with_standard_components_and_tag_on_harmony`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:38` tag components on Harmony › workspace with standard components › bit status should work and not show modified — `harmony::tag_harmony::workspace_with_standard_components_and_tag_on_harmony`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:46` tag components on Harmony › workspace with standard components › tag without build after full tag › should not save the builder data from the previous version — `harmony::tag_harmony::workspace_with_standard_components_and_tag_on_harmony`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:52` tag components on Harmony › workspace with standard components › tag without build after full tag › should be able to export successfully — `harmony::tag_harmony::workspace_with_standard_components_and_tag_on_harmony`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:65` tag components on Harmony › tag on Harmony › should not show the component as modified — `harmony::tag_harmony::workspace_with_standard_components_and_tag_on_harmony`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:71` tag components on Harmony › tag on Harmony › should not show the dependency with an older version — `harmony::tag_harmony::workspace_with_standard_components_and_tag_on_harmony`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:77` tag components on Harmony › tag on Harmony › should not save the build data twice — `harmony::tag_harmony::workspace_with_standard_components_and_tag_on_harmony`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:88` tag components on Harmony › tag on Harmony › auto-tag › should save the artifacts/dists to the auto-tagged components — `harmony::tag_harmony::workspace_with_standard_components_and_tag_on_harmony`
 - [x] `e2e/harmony/tag-harmony.e2e.ts:103` tag components on Harmony › soft tag › should add a property of nextVersion in .bitmap file — `commands::tag::soft::soft_tag_then_persist_matches_node`
 - [x] `e2e/harmony/tag-harmony.e2e.ts:111` tag components on Harmony › soft tag › bit status should show the new components as soft tagged — `commands::tag::soft::soft_tag_then_persist_matches_node`
 - [x] `e2e/harmony/tag-harmony.e2e.ts:119` tag components on Harmony › soft tag › tagging with --persist flag › should tag and remove the nextVersion property in .bitmap file — `commands::tag::soft::soft_tag_then_persist_matches_node`
 - [x] `e2e/harmony/tag-harmony.e2e.ts:128` tag components on Harmony › soft tag › tagging with --persist flag › bit status should not show as soft-tagged — `commands::tag::soft::soft_tag_then_persist_matches_node`
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:137` tag components on Harmony › soft tag › tagging with --persist flag › modify a component that has dependents and soft-tag it › should save the nextVersion data into potential auto-tag bitmap entries
+- [x] `e2e/harmony/tag-harmony.e2e.ts:137` tag components on Harmony › soft tag › tagging with --persist flag › modify a component that has dependents and soft-tag it › should save the nextVersion data into potential auto-tag bitmap entries — `harmony::tag_harmony::soft_tag_dependents_specific_version_untag_and_minor_auto_tag`
 - [x] `e2e/harmony/tag-harmony.e2e.ts:148` tag components on Harmony › soft tag › soft tag with specific version and message › should save the version and the message into the .bitmap file — `commands::tag::soft::exact_soft_tag_then_persist_matches_node`
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:164` tag components on Harmony › soft tag › soft tag with specific version attached to a component-id › should save the version into the .bitmap file
+- [x] `e2e/harmony/tag-harmony.e2e.ts:164` tag components on Harmony › soft tag › soft tag with specific version attached to a component-id › should save the version into the .bitmap file — `harmony::tag_harmony::soft_tag_dependents_specific_version_untag_and_minor_auto_tag`
 - [x] `e2e/harmony/tag-harmony.e2e.ts:177` tag components on Harmony › soft tag › soft tag after soft tag › should show the output according to the new soft-tag — `commands::tag::soft::repeated_soft_tag_replaces_pending_version_and_message`
 - [x] `e2e/harmony/tag-harmony.e2e.ts:181` tag components on Harmony › soft tag › soft tag after soft tag › should save the version and the message into the .bitmap file — `commands::tag::soft::repeated_soft_tag_replaces_pending_version_and_message`
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:194` tag components on Harmony › soft tag › untag › should remove the nextVersion from the .bitmap file
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:218` tag components on Harmony › tag scope › without version › should bump each component by patch
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:230` tag components on Harmony › tag scope › without version and --minor flag › should bump each component by patch
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:255` tag components on Harmony › with failing tests › should fail without --skip-tests
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:262` tag components on Harmony › with failing tests › should succeed with --skip-tests
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:266` tag components on Harmony › with failing tests › should succeed with --ignore-build-errors
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:270` tag components on Harmony › with failing tests › should not throw with --build --loose when only test failures occur and set buildStatus to succeed
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:294` tag components on Harmony › modified one component, the rest are auto-tag pending › tag with specific version › should set the specified version to the modified component and bumped by patch the auto-tagged
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:306` tag components on Harmony › modified one component, the rest are auto-tag pending › tag with --scope flag › should set all components versions to the scope flag
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:319` tag components on Harmony › modified one component, the rest are auto-tag pending › auto-tag with pre-release › should auto-tag dependents according to the pre-release version
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:331` tag components on Harmony › modified one component, the rest are auto-tag pending › with --auto-tag-increment › should bump the auto-tagged dependents by the given level rather than by patch
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:344` tag components on Harmony › modified one component, the rest are auto-tag pending › with --auto-tag-increment different than the modified level › should bump the modified and the auto-tagged by their own levels
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:357` tag components on Harmony › modified one component, the rest are auto-tag pending › --auto-tag-increment along with --skip-auto-tag › should throw an error
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:368` tag components on Harmony › modified one component, the rest are auto-tag pending › --auto-tag-increment with a pre-release level and --prerelease-id › should use the prerelease identifier for the auto-tagged dependents
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:389` tag components on Harmony › using --incremented-by flag › increment the default (patch) › should set the specified version to the modified component and bumped by patch the auto-tagged
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:402` tag components on Harmony › using --incremented-by flag › increment the default (minor) › should set the specified version to the modified component and bumped by patch the auto-tagged
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:416` tag components on Harmony › using --incremented-by flag › auto-tag › should set the specified version to the modified component and bumped by patch the auto-tagged
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:431` tag components on Harmony › tag pre-release › should tag all components according to the pre-release version
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:439` tag components on Harmony › tag pre-release › increment pre-release › should use the last pre-release identifier and increment it
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:452` tag components on Harmony › invalid --auto-tag-increment level › should throw an error
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:464` tag components on Harmony › invalid pre-release after normal tag › should throw an error
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:467` tag components on Harmony › invalid pre-release after normal tag › should not create a new version
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:473` tag components on Harmony › invalid pre-release after normal tag › should update package.json on the workspace with the new tag
+- [x] `e2e/harmony/tag-harmony.e2e.ts:194` tag components on Harmony › soft tag › untag › should remove the nextVersion from the .bitmap file — `harmony::tag_harmony::soft_tag_dependents_specific_version_untag_and_minor_auto_tag`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:218` tag components on Harmony › tag scope › without version › should bump each component by patch — `harmony::tag_harmony::tag_scope_and_failing_tests_and_tiny_cache`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:230` tag components on Harmony › tag scope › without version and --minor flag › should bump each component by patch — `harmony::tag_harmony::tag_scope_and_failing_tests_and_tiny_cache`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:255` tag components on Harmony › with failing tests › should fail without --skip-tests — `harmony::tag_harmony::tag_scope_and_failing_tests_and_tiny_cache`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:262` tag components on Harmony › with failing tests › should succeed with --skip-tests — `harmony::tag_harmony::tag_scope_and_failing_tests_and_tiny_cache`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:266` tag components on Harmony › with failing tests › should succeed with --ignore-build-errors — `harmony::tag_harmony::tag_scope_and_failing_tests_and_tiny_cache`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:270` tag components on Harmony › with failing tests › should not throw with --build --loose when only test failures occur and set buildStatus to succeed — `harmony::tag_harmony::tag_scope_and_failing_tests_and_tiny_cache`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:294` tag components on Harmony › modified one component, the rest are auto-tag pending › tag with specific version › should set the specified version to the modified component and bumped by patch the auto-tagged — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:306` tag components on Harmony › modified one component, the rest are auto-tag pending › tag with --scope flag › should set all components versions to the scope flag — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:319` tag components on Harmony › modified one component, the rest are auto-tag pending › auto-tag with pre-release › should auto-tag dependents according to the pre-release version — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:331` tag components on Harmony › modified one component, the rest are auto-tag pending › with --auto-tag-increment › should bump the auto-tagged dependents by the given level rather than by patch — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:344` tag components on Harmony › modified one component, the rest are auto-tag pending › with --auto-tag-increment different than the modified level › should bump the modified and the auto-tagged by their own levels — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:357` tag components on Harmony › modified one component, the rest are auto-tag pending › --auto-tag-increment along with --skip-auto-tag › should throw an error — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:368` tag components on Harmony › modified one component, the rest are auto-tag pending › --auto-tag-increment with a pre-release level and --prerelease-id › should use the prerelease identifier for the auto-tagged dependents — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:389` tag components on Harmony › using --incremented-by flag › increment the default (patch) › should set the specified version to the modified component and bumped by patch the auto-tagged — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:402` tag components on Harmony › using --incremented-by flag › increment the default (minor) › should set the specified version to the modified component and bumped by patch the auto-tagged — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:416` tag components on Harmony › using --incremented-by flag › auto-tag › should set the specified version to the modified component and bumped by patch the auto-tagged — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:431` tag components on Harmony › tag pre-release › should tag all components according to the pre-release version — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:439` tag components on Harmony › tag pre-release › increment pre-release › should use the last pre-release identifier and increment it — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:452` tag components on Harmony › invalid --auto-tag-increment level › should throw an error — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:464` tag components on Harmony › invalid pre-release after normal tag › should throw an error — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:467` tag components on Harmony › invalid pre-release after normal tag › should not create a new version — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:473` tag components on Harmony › invalid pre-release after normal tag › should update package.json on the workspace with the new tag — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
 - [x] `e2e/harmony/tag-harmony.e2e.ts:488` tag components on Harmony › soft-tag pre-release › should save the pre-release name in the .bitmap file — `commands::tag::soft::soft_prerelease_matches_node_and_persist_delegates`
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:498` tag components on Harmony › soft-tag pre-release › persist the soft-tag › should use the data in the .bitmap file and tag as a pre-release version
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:511` tag components on Harmony › soft tag --minor with auto-tag › should not bump the auto-tagged with minor but with patch
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:529` tag components on Harmony › with tiny cache › should not throw
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:542` tag components on Harmony › tagging a snapped component by specifying the id › should tag successfully without needing to add --unmodified
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:559` tag components on Harmony › tag with versions file › should tag components according to the versions file
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:565` tag components on Harmony › tag with versions file › should show correct output with versions from file
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:590` tag components on Harmony › maintain two main branches 1.x and 2.x, tagging the older branch 1.x with a patch › should keep the head as 2.x and not change it to 1.0.1
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:594` tag components on Harmony › maintain two main branches 1.x and 2.x, tagging the older branch 1.x with a patch › should update the .bitmap according to the patch version and not the head
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:604` tag components on Harmony › maintain two main branches 1.x and 2.x, tagging the older branch 1.x with a patch › importing the component to a new workspace › should import the latest: 2.x and not the patch 1.01
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:637` tag components on Harmony › export with detached-head when head was not exported yet › should have exported both head (2.0.0) and detached-head (2.0.1) to the remote
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:642` tag components on Harmony › export with detached-head when head was not exported yet › should have the version object for 2.0.0 on the remote
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:645` tag components on Harmony › export with detached-head when head was not exported yet › should have the version object for 2.0.1 on the remote
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:653` tag components on Harmony › export with detached-head when head was not exported yet › importing the component to a new workspace › should successfully import without errors
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:656` tag components on Harmony › export with detached-head when head was not exported yet › importing the component to a new workspace › should have version 2.0.0 available (the head)
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:660` tag components on Harmony › export with detached-head when head was not exported yet › importing the component to a new workspace › should have the version object for 2.0.0
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:705` tag components on Harmony › export with detached-head when head and its parent were not exported yet › should have exported all versions: 2.0.0, snap, 2.0.1 (head), and 2.0.2 (detached-head)
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:713` tag components on Harmony › export with detached-head when head and its parent were not exported yet › should have the version object for 2.0.0 on the remote
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:716` tag components on Harmony › export with detached-head when head and its parent were not exported yet › should have the version object for the snap on the remote
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:719` tag components on Harmony › export with detached-head when head and its parent were not exported yet › should have the version object for 2.0.1 on the remote
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:722` tag components on Harmony › export with detached-head when head and its parent were not exported yet › should have the version object for 2.0.2 on the remote
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:730` tag components on Harmony › export with detached-head when head and its parent were not exported yet › importing the component to a new workspace › should successfully import without errors
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:733` tag components on Harmony › export with detached-head when head and its parent were not exported yet › importing the component to a new workspace › should have all versions in the component metadata
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:739` tag components on Harmony › export with detached-head when head and its parent were not exported yet › importing the component to a new workspace › should have the version object for 2.0.1 (the head that was imported)
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:742` tag components on Harmony › export with detached-head when head and its parent were not exported yet › importing the component to a new workspace › should be able to import the snap directly by hash
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:777` tag components on Harmony › export with --detach-head after merging a lane › should have exported the unexported main head (2.0.0)
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:781` tag components on Harmony › export with --detach-head after merging a lane › should have the version object for 2.0.0 on the remote
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:784` tag components on Harmony › export with --detach-head after merging a lane › should have the lane snaps on the remote (they were already exported on the lane)
+- [x] `e2e/harmony/tag-harmony.e2e.ts:498` tag components on Harmony › soft-tag pre-release › persist the soft-tag › should use the data in the .bitmap file and tag as a pre-release version — `harmony::tag_harmony::soft_tag_dependents_specific_version_untag_and_minor_auto_tag`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:511` tag components on Harmony › soft tag --minor with auto-tag › should not bump the auto-tagged with minor but with patch — `harmony::tag_harmony::soft_tag_dependents_specific_version_untag_and_minor_auto_tag`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:529` tag components on Harmony › with tiny cache › should not throw — `harmony::tag_harmony::tag_scope_and_failing_tests_and_tiny_cache`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:542` tag components on Harmony › tagging a snapped component by specifying the id › should tag successfully without needing to add --unmodified — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:559` tag components on Harmony › tag with versions file › should tag components according to the versions file — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:565` tag components on Harmony › tag with versions file › should show correct output with versions from file — `harmony::tag_harmony::auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:590` tag components on Harmony › maintain two main branches 1.x and 2.x, tagging the older branch 1.x with a patch › should keep the head as 2.x and not change it to 1.0.1 — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:594` tag components on Harmony › maintain two main branches 1.x and 2.x, tagging the older branch 1.x with a patch › should update the .bitmap according to the patch version and not the head — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:604` tag components on Harmony › maintain two main branches 1.x and 2.x, tagging the older branch 1.x with a patch › importing the component to a new workspace › should import the latest: 2.x and not the patch 1.01 — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:637` tag components on Harmony › export with detached-head when head was not exported yet › should have exported both head (2.0.0) and detached-head (2.0.1) to the remote — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:642` tag components on Harmony › export with detached-head when head was not exported yet › should have the version object for 2.0.0 on the remote — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:645` tag components on Harmony › export with detached-head when head was not exported yet › should have the version object for 2.0.1 on the remote — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:653` tag components on Harmony › export with detached-head when head was not exported yet › importing the component to a new workspace › should successfully import without errors — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:656` tag components on Harmony › export with detached-head when head was not exported yet › importing the component to a new workspace › should have version 2.0.0 available (the head) — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:660` tag components on Harmony › export with detached-head when head was not exported yet › importing the component to a new workspace › should have the version object for 2.0.0 — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:705` tag components on Harmony › export with detached-head when head and its parent were not exported yet › should have exported all versions: 2.0.0, snap, 2.0.1 (head), and 2.0.2 (detached-head) — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:713` tag components on Harmony › export with detached-head when head and its parent were not exported yet › should have the version object for 2.0.0 on the remote — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:716` tag components on Harmony › export with detached-head when head and its parent were not exported yet › should have the version object for the snap on the remote — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:719` tag components on Harmony › export with detached-head when head and its parent were not exported yet › should have the version object for 2.0.1 on the remote — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:722` tag components on Harmony › export with detached-head when head and its parent were not exported yet › should have the version object for 2.0.2 on the remote — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:730` tag components on Harmony › export with detached-head when head and its parent were not exported yet › importing the component to a new workspace › should successfully import without errors — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:733` tag components on Harmony › export with detached-head when head and its parent were not exported yet › importing the component to a new workspace › should have all versions in the component metadata — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:739` tag components on Harmony › export with detached-head when head and its parent were not exported yet › importing the component to a new workspace › should have the version object for 2.0.1 (the head that was imported) — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:742` tag components on Harmony › export with detached-head when head and its parent were not exported yet › importing the component to a new workspace › should be able to import the snap directly by hash — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:777` tag components on Harmony › export with --detach-head after merging a lane › should have exported the unexported main head (2.0.0) — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:781` tag components on Harmony › export with --detach-head after merging a lane › should have the version object for 2.0.0 on the remote — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:784` tag components on Harmony › export with --detach-head after merging a lane › should have the lane snaps on the remote (they were already exported on the lane) — `harmony::tag_harmony::extra::detached_head_branches_and_export_flows`
 
 ### `e2e/harmony/test-harmony.e2e.ts`
 
@@ -3916,21 +3916,21 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/validate.e2e.ts`
 
-- [ ] `e2e/harmony/validate.e2e.ts:23` validate command › validating components without errors › should pass all validation checks
-- [ ] `e2e/harmony/validate.e2e.ts:30` validate command › validating components without errors › with the deprecated --continue-on-error flag, should show a deprecation warning and still run successfully
-- [ ] `e2e/harmony/validate.e2e.ts:43` validate command › validating components with type errors › should continue to run all checks by default
-- [ ] `e2e/harmony/validate.e2e.ts:50` validate command › validating components with type errors › with --fail-fast, should stop at the first failure and not run subsequent checks
-- [ ] `e2e/harmony/validate.e2e.ts:66` validate command › validating components with lint errors › should continue to run all checks by default and show the lint error details
-- [ ] `e2e/harmony/validate.e2e.ts:74` validate command › validating components with lint errors › with --fail-fast, should stop at linting and not run testing
-- [ ] `e2e/harmony/validate.e2e.ts:82` validate command › validating components with lint errors › with --skip-tasks flag › should pass when skipping the lint task
-- [ ] `e2e/harmony/validate.e2e.ts:87` validate command › validating components with lint errors › with --skip-tasks flag › should support comma-separated skip-tasks
-- [ ] `e2e/harmony/validate.e2e.ts:93` validate command › validating components with lint errors › with --skip-tasks flag › should show warning when all tasks are skipped
-- [ ] `e2e/harmony/validate.e2e.ts:97` validate command › validating components with lint errors › with --skip-tasks flag › should error on invalid skip-tasks value
-- [ ] `e2e/harmony/validate.e2e.ts:110` validate command › validating with --unmodified flag › should validate no components by default when all components are unmodified
-- [ ] `e2e/harmony/validate.e2e.ts:114` validate command › validating with --unmodified flag › should validate all components with --unmodified
-- [ ] `e2e/harmony/validate.e2e.ts:119` validate command › validating with --unmodified flag › should still support the deprecated --all flag and show a deprecation warning
-- [ ] `e2e/harmony/validate.e2e.ts:132` validate command › validating with component pattern › should validate only matching components
-- [ ] `e2e/harmony/validate.e2e.ts:143` validate command › validating with no components › should show no components message
+- [x] `e2e/harmony/validate.e2e.ts:23` validate command › validating components without errors › should pass all validation checks
+- [x] `e2e/harmony/validate.e2e.ts:30` validate command › validating components without errors › with the deprecated --continue-on-error flag, should show a deprecation warning and still run successfully
+- [x] `e2e/harmony/validate.e2e.ts:43` validate command › validating components with type errors › should continue to run all checks by default
+- [x] `e2e/harmony/validate.e2e.ts:50` validate command › validating components with type errors › with --fail-fast, should stop at the first failure and not run subsequent checks
+- [x] `e2e/harmony/validate.e2e.ts:66` validate command › validating components with lint errors › should continue to run all checks by default and show the lint error details
+- [x] `e2e/harmony/validate.e2e.ts:74` validate command › validating components with lint errors › with --fail-fast, should stop at linting and not run testing
+- [x] `e2e/harmony/validate.e2e.ts:82` validate command › validating components with lint errors › with --skip-tasks flag › should pass when skipping the lint task
+- [x] `e2e/harmony/validate.e2e.ts:87` validate command › validating components with lint errors › with --skip-tasks flag › should support comma-separated skip-tasks
+- [x] `e2e/harmony/validate.e2e.ts:93` validate command › validating components with lint errors › with --skip-tasks flag › should show warning when all tasks are skipped
+- [x] `e2e/harmony/validate.e2e.ts:97` validate command › validating components with lint errors › with --skip-tasks flag › should error on invalid skip-tasks value
+- [x] `e2e/harmony/validate.e2e.ts:110` validate command › validating with --unmodified flag › should validate no components by default when all components are unmodified
+- [x] `e2e/harmony/validate.e2e.ts:114` validate command › validating with --unmodified flag › should validate all components with --unmodified
+- [x] `e2e/harmony/validate.e2e.ts:119` validate command › validating with --unmodified flag › should still support the deprecated --all flag and show a deprecation warning
+- [x] `e2e/harmony/validate.e2e.ts:132` validate command › validating with component pattern › should validate only matching components
+- [x] `e2e/harmony/validate.e2e.ts:143` validate command › validating with no components › should show no components message
 
 ### `e2e/harmony/workspace-config.e2e.ts`
 

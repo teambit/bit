@@ -4,7 +4,12 @@ use super::{
 };
 use crate::{checkout, command_import::PreparedImport};
 use serde_json::{Map, Value};
-use std::{borrow::Cow, collections::HashMap, fs, io, path::Path};
+use std::{
+    borrow::Cow,
+    collections::{HashMap, HashSet},
+    fs, io,
+    path::Path,
+};
 
 pub(super) struct Input<'a> {
     pub(super) root: &'a Path,
@@ -45,6 +50,7 @@ pub(super) fn prepare(
         &local
     };
     if super::requires_canonical_history_check(input.lane, input.target, model.as_ref(), &hash, new)
+        || has_diverged_local_versions(input, model.as_ref())?
     {
         return Err(invalid("inbound lane snap requires canonical history check"));
     }
@@ -100,6 +106,66 @@ fn imported_model<'a>(
         return Err(invalid("inbound existing workspace identity"));
     }
     details::model(input.root, input.imported, scope, &input.target.name)
+}
+
+fn has_diverged_local_versions(input: &Input<'_>, model: &Value) -> io::Result<bool> {
+    let has_local = model["state"]["versions"]
+        .as_object()
+        .is_some_and(|versions| {
+            versions
+                .values()
+                .any(|entry| entry["local"] == true)
+        });
+    if !has_local {
+        return Ok(false);
+    }
+    if input.resolution.merge_strategy.is_some() {
+        return Ok(true);
+    }
+    let Some(scope) = input.target.scope.as_deref() else { return Ok(false) };
+    let Some(remote_head) = input.imported.overlay
+        .refs(scope)
+        .and_then(|rows| {
+            rows.iter()
+                .find(|row| {
+                    row["id"]["scope"] == scope
+                        && row["id"]["name"] == input.target.name
+                })
+        })
+        .and_then(|row| row["head"].as_str())
+    else {
+        return Ok(false);
+    };
+    let Some(local_head) = model["head"].as_str() else { return Ok(false) };
+    Ok(!is_ancestor_version(input, local_head, remote_head)?)
+}
+
+fn is_ancestor_version(input: &Input<'_>, start: &str, target: &str) -> io::Result<bool> {
+    let mut stack = vec![start.to_owned()];
+    let mut visited = HashSet::new();
+    while let Some(cur) = stack.pop() {
+        if cur == target {
+            return Ok(true);
+        }
+        if visited.insert(cur.clone()) && visited.len() <= 4096 {
+            stack.extend(version_parents(input, &cur)?);
+        }
+    }
+    Ok(false)
+}
+
+fn version_parents(input: &Input<'_>, hash: &str) -> io::Result<Vec<String>> {
+    let version = if let Some(ver) = details::local_object(input.root, hash, "Version")? {
+        Some(ver)
+    } else {
+        input.imported.overlay.read(hash, "Version")?.cloned()
+    };
+    Ok(version
+        .and_then(|ver| ver["parents"].as_array().cloned())
+        .into_iter()
+        .flatten()
+        .filter_map(|val| val.as_str().map(String::from))
+        .collect())
 }
 
 fn versions(input: &Input<'_>, model: &Value) -> io::Result<(Value, String, String)> {

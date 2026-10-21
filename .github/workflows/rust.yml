@@ -215,7 +215,7 @@ jobs:
           - group: stash
             filters: harmony::stash
           - group: tracking
-            filters: commands::add harmony::add
+            filters: "commands::add:: harmony::add::"
           - group: identity
             filters: commands::move_paths harmony::rename harmony::deprecation
           - group: mutation
