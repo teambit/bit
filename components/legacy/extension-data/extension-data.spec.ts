@@ -222,24 +222,12 @@ describe('ExtensionDataList', () => {
     });
   });
   describe('without the env replaced by a config object', () => {
-    let prevEnvsCoreName: string | undefined;
-    let list: ExtensionDataList;
-    before(() => {
-      // a core extension at runtime, see component-config-merger.spec.ts
-      prevEnvsCoreName = ExtensionDataList.coreExtensionsNames.get('teambit.envs/envs');
-      ExtensionDataList.registerCoreExtensionName('teambit.envs/envs');
-      list = ExtensionDataList.fromConfigObject({
-        'teambit.envs/envs': { env: 'my-scope/old-env', __specific: true },
-        'my-scope/old-env@1.0.0': { __specific: true },
-        'my-scope/ext1': { conf1: 'val1' },
-      });
-    });
-    after(() => {
-      if (prevEnvsCoreName === undefined) ExtensionDataList.coreExtensionsNames.delete('teambit.envs/envs');
-      else ExtensionDataList.coreExtensionsNames.set('teambit.envs/envs', prevEnvsCoreName);
-    });
+    const list = ExtensionDataList.fromArray([
+      new ExtensionDataEntry(undefined, undefined, 'teambit.envs/envs', { env: 'my-scope/old-env' }),
+      ...ExtensionDataList.fromConfigObject({ 'my-scope/old-env@1.0.0': {}, 'my-scope/ext1': { conf1: 'val1' } }),
+    ]);
     const withoutEnvReplacedBy = (env?: string) => {
-      const conf: Record<string, any> = env ? { 'teambit.envs/envs': { env } } : { 'my-scope/ext1': {} };
+      const conf: Record<string, any> = env ? { 'teambit.envs/envs': { env } } : {};
       ExtensionDataList.adjustEnvsOnConfigObject(conf);
       return list.withoutEnvReplacedBy(conf).ids;
     };
