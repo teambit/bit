@@ -2,7 +2,8 @@ import path from 'path';
 import { type ProjectManifest } from '@pnpm/types';
 import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import type * as Dp from '@pnpm/deps.path';
-import { pick, partition, isEmpty, memoize } from 'lodash';
+import { pick, partition, isEmpty, memoize, omit } from 'lodash';
+import { parseOverrides } from '@pnpm/config.parse-overrides';
 import semver from 'semver';
 import pMap from 'p-map';
 import { BitError } from '@teambit/bit-error';
@@ -594,7 +595,10 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
 }
 
 async function dedupeSnapshotDepsToRootManifest(lockfile: BitLockfileFile, opts: FetchRangesOptions): Promise<void> {
-  const rootDeps = allDependencies(opts.manifests[opts.rootDir]);
+  const rootDeps = omit(
+    nonOptionalDependencies(opts.manifests[opts.rootDir]),
+    overriddenPackageNames(lockfile.overrides)
+  );
   if (isEmpty(rootDeps)) return;
   const getRanges = memoize((pkgId: string) => fetchDependencyRanges(pkgId, opts));
   await pMap(
@@ -614,8 +618,12 @@ async function dedupeSnapshotDepsToRootManifest(lockfile: BitLockfileFile, opts:
   );
 }
 
-function allDependencies(manifest: ProjectManifest | undefined): Record<string, string> {
-  return { ...manifest?.optionalDependencies, ...manifest?.devDependencies, ...manifest?.dependencies };
+function nonOptionalDependencies(manifest: ProjectManifest | undefined): Record<string, string> {
+  return { ...manifest?.devDependencies, ...manifest?.dependencies };
+}
+
+function overriddenPackageNames(overrides: Record<string, string> | undefined): string[] {
+  return parseOverrides(overrides ?? {}).map((override) => override.targetPkg.name);
 }
 
 async function dropSnapshotDeps(

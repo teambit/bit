@@ -1205,7 +1205,7 @@ describe('convertGraphToLockfile on invalid graph', () => {
 describe('convertGraphToLockfile with a root manifest that pins a version the graph resolved differently', () => {
   const rootDir = process.cwd();
   const compDir = path.resolve('comps/comp1');
-  function createGraph(opts: { peerKeyed?: boolean } = {}) {
+  function createGraph(opts: { peerKeyed?: boolean; overrides?: Record<string, string> } = {}) {
     const typesReactDep = opts.peerKeyed ? 'react-types-peer@1.0.0(@types/react@18.2.23)' : '@types/react@18.2.23';
     const packages: PackagesMap = new Map([
       ['@types/react-helmet@6.1.6', { resolution: { integrity: 'sha512-helmet' } } as any],
@@ -1229,7 +1229,7 @@ describe('convertGraphToLockfile with a root manifest that pins a version the gr
         neighbours: [{ id: '@types/react@18.2.23' }],
       },
     ];
-    return new DependenciesGraph({ packages, edges });
+    return new DependenciesGraph({ packages, edges, overrides: opts.overrides });
   }
   function createResolve(helmetRange: string | undefined) {
     const resolved: string[] = [];
@@ -1401,6 +1401,39 @@ describe('convertGraphToLockfile with a root manifest that pins a version the gr
     });
     expect(resolved).to.not.include('@types/react-helmet@6.1.6');
     expect(lockfile.snapshots!['@types/react-helmet@6.1.6']).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+  });
+
+  it('should keep the reference when the root provides the package only as an optional dependency', async () => {
+    const { resolve, resolved } = createResolve('*');
+    const lockfile = await convertGraphToLockfile(createGraph(), {
+      manifests: {
+        [rootDir]: { optionalDependencies: { '@types/react': '17.0.87' } },
+        [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+      },
+      rootDir,
+      resolve,
+    });
+    expect(resolved).to.not.include('@types/react-helmet@6.1.6');
+    expect(lockfile.snapshots!['@types/react-helmet@6.1.6']).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+  });
+
+  it('should keep the reference when an override targets the package, without looking the range up', async () => {
+    for (const overrides of [
+      { '@types/react-helmet>@types/react': '^18.0.0' },
+      { '@types/react@*': '18.2.23' },
+    ] as Record<string, string>[]) {
+      const { resolve, resolved } = createResolve('*');
+      const lockfile = await convertGraphToLockfile(createGraph({ overrides }), {
+        manifests: {
+          [rootDir]: { dependencies: { '@types/react': '17.0.87' } },
+          [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+        },
+        rootDir,
+        resolve,
+      });
+      expect(resolved).to.not.include('@types/react-helmet@6.1.6');
+      expect(lockfile.snapshots!['@types/react-helmet@6.1.6']).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+    }
   });
 
   it('should leave the graph alone when the root has no such dependency', async () => {
