@@ -35,14 +35,14 @@ jest.mock('@teambit/component.ui.component-compare.context', () => ({
 
 const FILE = 'index.ts';
 
-function renderWithStatus(status?: string) {
+function renderWithStatus(status?: string, { base = 'same\n', compare = 'same\n' } = {}) {
   mockEditorProps.length = 0;
 
   mockUseCodeCompare.mockReturnValue({
     baseId: undefined,
     compareId: undefined,
-    originalFileContent: 'same\n',
-    modifiedFileContent: 'same\n',
+    originalFileContent: base,
+    modifiedFileContent: compare,
     originalPath: `base-${FILE}`,
     modifiedPath: `compare-${FILE}`,
     loading: false,
@@ -65,10 +65,15 @@ describe('CodeCompareView', () => {
   });
 
   it('keeps diff-only on for a file that has changes', () => {
-    expect(renderWithStatus('MODIFIED').diffOnly).toBe(true);
+    expect(renderWithStatus('MODIFIED', { compare: 'changed\n' }).diffOnly).toBe(true);
   });
 
-  it('keeps diff-only on when the file has no status information', () => {
-    expect(renderWithStatus(undefined).diffOnly).toBe(true);
+  it('turns diff-only off when the status is missing but both sides are identical', () => {
+    // Bit skips the compare query when a version is compared with itself, so there is no status.
+    expect(renderWithStatus(undefined).diffOnly).toBe(false);
+  });
+
+  it('keeps diff-only on when the status is missing and the contents differ', () => {
+    expect(renderWithStatus(undefined, { compare: 'changed\n' }).diffOnly).toBe(true);
   });
 });
