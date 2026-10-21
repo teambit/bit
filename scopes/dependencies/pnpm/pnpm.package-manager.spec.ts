@@ -155,10 +155,7 @@ describe('mergeGraphLockfileIntoExisting', () => {
     expect(merged.settings).to.eql(settings);
   });
 
-  it("takes the graph snapshot's dependency maps over the existing ones, a dropped map included", () => {
-    // The converter dedupes the only dependency of @types/react-helmet to the root and drops the
-    // map. The existing lockfile still references the other version: that reference must not
-    // come back through the merge, or the duplicate it brings survives the pruning.
+  it("takes a graph snapshot's emptied dependency map over the existing one", () => {
     const importers = { '.': { dependencies: { '@types/react-helmet': { specifier: '6.1.6', version: '6.1.6' } } } };
     const merged = mergeGraphLockfileIntoExisting(
       {
@@ -180,10 +177,13 @@ describe('mergeGraphLockfileIntoExisting', () => {
         ...lockfile(),
         importers,
         packages: { '@types/react-helmet@6.1.6': { resolution: { integrity: 'sha512-helmet' } } },
-        snapshots: { '@types/react-helmet@6.1.6': {} },
+        snapshots: { '@types/react-helmet@6.1.6': { dependencies: {} } },
       }
     );
-    expect(merged.snapshots!['@types/react-helmet@6.1.6']).to.eql({ transitivePeerDependencies: ['react'] });
+    expect(merged.snapshots!['@types/react-helmet@6.1.6']).to.eql({
+      dependencies: {},
+      transitivePeerDependencies: ['react'],
+    });
     expect(merged.snapshots).to.not.have.property('@types/react@18.2.23');
     expect(merged.packages).to.not.have.property('@types/react@18.2.23');
   });

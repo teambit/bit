@@ -1255,7 +1255,7 @@ describe('convertGraphToLockfile with a root manifest that pins a version the gr
       resolve,
     });
     expect(resolved).to.include('@types/react-helmet@6.1.6');
-    expect(lockfile.snapshots!['@types/react-helmet@6.1.6']).to.eql({});
+    expect(lockfile.snapshots!['@types/react-helmet@6.1.6']).to.eql({ dependencies: {} });
     expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
     expect(lockfile.snapshots!['@types/react@18.2.23']).to.equal(undefined);
   });
@@ -1270,7 +1270,7 @@ describe('convertGraphToLockfile with a root manifest that pins a version the gr
       rootDir,
       resolve,
     });
-    expect(lockfile.snapshots!['react-types-peer@1.0.0(@types/react@18.2.23)']).to.eql({});
+    expect(lockfile.snapshots!['react-types-peer@1.0.0(@types/react@18.2.23)']).to.eql({ dependencies: {} });
     expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
   });
 
@@ -1332,7 +1332,7 @@ describe('convertGraphToLockfile with a root manifest that pins a version the gr
       rootDir,
       resolve,
     });
-    expect(lockfile.snapshots!['react-types-peer@1.0.0(@types/react@18.2.23)']).to.eql({});
+    expect(lockfile.snapshots!['react-types-peer@1.0.0(@types/react@18.2.23)']).to.eql({ dependencies: {} });
     expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
   });
 
@@ -1347,7 +1347,9 @@ describe('convertGraphToLockfile with a root manifest that pins a version the gr
         rootDir,
         resolve,
       });
-      expect(lockfile.snapshots!['react-types-peer@1.0.0(@types/react@18.2.23)'], specifier).to.eql({});
+      expect(lockfile.snapshots!['react-types-peer@1.0.0(@types/react@18.2.23)'], specifier).to.eql({
+        dependencies: {},
+      });
       expect(lockfile.packages!['@types/react@18.2.23'], specifier).to.equal(undefined);
     }
   });

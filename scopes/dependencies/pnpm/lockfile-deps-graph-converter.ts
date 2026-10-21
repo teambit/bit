@@ -636,7 +636,6 @@ async function dropSnapshotDeps(
     for (const [name, ref] of Object.entries(deps)) {
       if (await shouldDrop(name, ref)) delete deps[name];
     }
-    if (isEmpty(deps)) delete snapshot[depType];
   }
 }
 

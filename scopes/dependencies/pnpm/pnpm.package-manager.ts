@@ -642,7 +642,7 @@ export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: Lo
     lockfileVersion: existing.lockfileVersion ?? graph.lockfileVersion,
     importers,
     packages: mergeEntryRecords(existing.packages, graph.packages),
-    snapshots: mergeSnapshotRecords(existing.snapshots, graph.snapshots),
+    snapshots: mergeEntryRecords(existing.snapshots, graph.snapshots),
   };
   // The merged lockfile mixes resolutions from both sides, so it can only
   // claim the readPackage hooks checksum, the resolution settings and the
@@ -696,18 +696,6 @@ function mergeEntryRecords<T extends object>(
   for (const [key, graphEntry] of Object.entries(graph)) {
     const existingEntry = merged[key];
     merged[key] = existingEntry ? ({ ...existingEntry, ...graphEntry } as T) : graphEntry;
-  }
-  return merged;
-}
-
-function mergeSnapshotRecords(
-  existing: LockfileFile['snapshots'],
-  graph: LockfileFile['snapshots']
-): LockfileFile['snapshots'] {
-  if (!existing || !graph) return existing ?? graph;
-  const merged = { ...existing };
-  for (const [key, graphSnapshot] of Object.entries(graph)) {
-    merged[key] = { ...omit(existing[key], ['dependencies', 'optionalDependencies']), ...graphSnapshot };
   }
   return merged;
 }
