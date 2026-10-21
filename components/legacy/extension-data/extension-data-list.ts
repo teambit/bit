@@ -231,8 +231,10 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     const env = conf[EnvsAspect.id]?.env;
     if (!env) return;
     const [id] = env.split('@');
-    conf[EnvsAspect.id] = { env: id };
-    conf[env] = {};
+    // keep the env set as specific to the component (e.g. by "bit env set"), so it keeps taking precedence over variants
+    const specificProp = conf[EnvsAspect.id].__specific ? { __specific: true } : {};
+    conf[EnvsAspect.id] = { env: id, ...specificProp };
+    conf[env] = { ...specificProp };
   }
 }
 

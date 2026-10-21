@@ -27,6 +27,7 @@ import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { MessagePerComponent } from './message-per-component';
 import { MessagePerComponentFetcher } from './message-per-component';
 import { VersionFileParser } from './version-file-parser';
+import { throwForPlusRangeVersions } from './plus-range-versions';
 import type { VersionCandidate } from './published-versions';
 import { createIsVersionPublished, skipPublishedVersions } from './published-versions';
 import type { DependencyResolverMain, ComponentRangePrefix } from '@teambit/dependency-resolver';
@@ -141,10 +142,12 @@ export class VersionMaker {
     this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
     const componentsToTag = this.getUniqCompsToTag();
     const idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
-    const autoTagData = await this.getAutoTagData(idsToTag);
+    // a component that is tagged explicitly is not auto-tagged too (the scope flow may find it as both)
+    const autoTagData = (await this.getAutoTagData(idsToTag)).filter(
+      (autoTagItem) => !idsToTag.has(autoTagItem.component.id)
+    );
     const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
-    const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
-    const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
+    const autoTagIds = ComponentIdList.fromArray(autoTagComponents.map((autoTag) => autoTag.id));
 
     // Validate component issues for auto-tag components
     if (this.allWorkspaceComps && autoTagIds.length) {
@@ -153,7 +156,9 @@ export class VersionMaker {
     }
 
     await this.triggerOnPreSnap(autoTagIds);
-    this.allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
+    this.allComponentsToTag = [...componentsToTag, ...autoTagComponents];
+    // in a bare scope (e.g. bit.cloud), the components were already snapped in a workspace, so they passed this check
+    if (this.workspace) throwForPlusRangeVersions(this.allComponentsToTag);
     await this.parseVersionsFile(idsToTag, autoTagIds);
     const messagePerId = await this.getMessagePerId(idsToTag, autoTagIds);
     await this.checkForNewerVersions();
@@ -515,7 +520,9 @@ export class VersionMaker {
     if (Object.keys(dependentsMap).length === 0) return [];
     const allDependentsIds = ComponentIdList.uniqFromArray(Object.values(dependentsMap).flat());
     const allDependents = await this.legacyScope.getManyConsumerComponents(allDependentsIds);
-    return allDependents.map((dependent) => {
+    // a component that was removed from the lane is not snapped again, same as in a workspace, where it's not loaded
+    const notRemovedDependents = allDependents.filter((dependent) => !dependent.isRemoved());
+    return notRemovedDependents.map((dependent) => {
       const triggeredByIds = Object.keys(dependentsMap).filter((id) => dependentsMap[id].has(dependent.id));
       const triggeredBy = ComponentIdList.fromStringArray(triggeredByIds);
       return { component: dependent, triggeredBy };

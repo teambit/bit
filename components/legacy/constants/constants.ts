@@ -515,6 +515,12 @@ export const MANUALLY_REMOVE_ENVIRONMENT = '-';
 
 export const MANUALLY_ADD_DEPENDENCY = '+';
 
+/**
+ * placeholders for the version a dependency resolves to, optionally with a range prefix. e.g. "+^" => "^1.2.3".
+ * see resolvePlusVersion() of the dependency-resolver aspect.
+ */
+export const PLUS_VERSIONS = [MANUALLY_ADD_DEPENDENCY, '+^', '+~'];
+
 export const OVERRIDE_COMPONENT_PREFIX = '@bit/';
 
 export const ACCEPTABLE_NPM_VERSIONS = '>=5.0.0';
