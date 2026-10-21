@@ -2,10 +2,9 @@ import path from 'path';
 import { type ProjectManifest } from '@pnpm/types';
 import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import type * as Dp from '@pnpm/deps.path';
-import { pick, partition, memoize } from 'lodash';
+import { pick, partition } from 'lodash';
 import { parseOverrides } from '@pnpm/config.parse-overrides';
 import semver from 'semver';
-import pMap from 'p-map';
 import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
 import {
@@ -31,9 +30,7 @@ import { type BitLockfileFile } from './lynx';
 type ResolveFunction = (
   wantedDependency: { alias?: string; bareSpecifier?: string },
   opts: { lockfileDir?: string; projectDir?: string; preferredVersions?: Record<string, unknown> }
-) => Promise<{ resolution?: Record<string, unknown>; manifest?: DependencyRanges }>;
-
-type DependencyRanges = Pick<ProjectManifest, 'dependencies' | 'optionalDependencies'>;
+) => Promise<{ resolution?: Record<string, unknown> }>;
 
 // @pnpm/deps.path is ESM-only; load it through a .cjs shim so the require()
 // chain in the build capsule's mocha runner doesn't trip on the transitive ESM
@@ -417,7 +414,7 @@ export async function convertGraphToLockfile(
       }
     }
   }
-  await dedupeSnapshotDepsToRootManifest(lockfile, { manifests, rootDir, resolve });
+  dedupeSnapshotDepsToRootManifest(lockfile, manifests[rootDir]);
   dropUnreachableLockfileEntries(lockfile);
   const pkgsToResolve = getPkgsToResolve(lockfile, manifests);
   const failedWorkspaceComponentPkgs = new Set<string>();
@@ -595,28 +592,19 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
   }
 }
 
-async function dedupeSnapshotDepsToRootManifest(lockfile: BitLockfileFile, opts: FetchRangesOptions): Promise<void> {
+function dedupeSnapshotDepsToRootManifest(lockfile: BitLockfileFile, rootManifest: ProjectManifest | undefined): void {
   const overridden = new Set(overriddenPackageNames(lockfile.overrides));
   const rootDeps = new Map(
-    Object.entries(nonOptionalDependencies(opts.manifests[opts.rootDir])).filter(([name]) => !overridden.has(name))
+    Object.entries(nonOptionalDependencies(rootManifest)).filter(([name]) => !overridden.has(name))
   );
   if (rootDeps.size === 0) return;
-  const getRanges = memoize((pkgId: string) => fetchDependencyRanges(pkgId, opts));
-  await pMap(
-    Object.entries(lockfile.snapshots ?? {}),
-    ([depPath, snapshot]) => {
-      const pkgId = dp.removeSuffix(depPath);
-      const dependent: Dependent = {
-        peers: new Set(Object.keys(lockfile.packages?.[pkgId]?.peerDependencies ?? {})),
-        getRanges: () => getRanges(pkgId),
-      };
-      return dropSnapshotDeps(
-        snapshot,
-        (name, ref) => rootDeps.has(name) && rootVersionWins(name, ref, rootDeps.get(name)!, dependent)
-      );
-    },
-    { concurrency: 16 }
-  );
+  for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
+    const peers = new Set(Object.keys(lockfile.packages?.[dp.removeSuffix(depPath)]?.peerDependencies ?? {}));
+    dropSnapshotDeps(
+      snapshot,
+      (name, ref) => rootDeps.has(name) && rootVersionWins(name, ref, rootDeps.get(name)!, peers.has(name))
+    );
+  }
 }
 
 function nonOptionalDependencies(manifest: ProjectManifest | undefined): Record<string, string> {
@@ -627,59 +615,23 @@ function overriddenPackageNames(overrides: Record<string, string> | undefined): 
   return parseOverrides(overrides ?? {}).map((override) => override.targetPkg.name);
 }
 
-async function dropSnapshotDeps(
+function dropSnapshotDeps(
   snapshot: NonNullable<BitLockfileFile['snapshots']>[string],
-  shouldDrop: (name: string, ref: string) => boolean | Promise<boolean>
-): Promise<void> {
+  shouldDrop: (name: string, ref: string) => boolean
+): void {
   for (const depType of ['dependencies', 'optionalDependencies'] as const) {
     const deps = snapshot[depType];
     if (!deps) continue;
     for (const [name, ref] of Object.entries(deps)) {
-      if (await shouldDrop(name, ref)) delete deps[name];
+      if (shouldDrop(name, ref)) delete deps[name];
     }
   }
 }
 
-type Dependent = {
-  peers: Set<string>;
-  getRanges: () => Promise<DependencyRanges | undefined>;
-};
-
-async function rootVersionWins(
-  name: string,
-  ref: string,
-  rootSpecifier: string,
-  dependent: Dependent
-): Promise<boolean> {
+function rootVersionWins(name: string, ref: string, rootSpecifier: string, isPeer: boolean): boolean {
   const lockedVersion = dp.parse(`${name}@${ref}`).version;
   if (lockedVersion == null || lockedVersion === rootSpecifier) return false;
-  if (dependent.peers.has(name)) return true;
-  const rootVersion = semver.valid(rootSpecifier);
-  if (rootVersion == null) return false;
-  const ranges = await dependent.getRanges();
-  const range = ranges?.dependencies?.[name] ?? ranges?.optionalDependencies?.[name];
-  return range != null && semver.satisfies(rootVersion, range);
-}
-
-type FetchRangesOptions = { manifests: Record<string, ProjectManifest>; rootDir: string; resolve: ResolveFunction };
-
-async function fetchDependencyRanges(
-  pkgId: string,
-  { manifests, rootDir, resolve }: FetchRangesOptions
-): Promise<DependencyRanges | undefined> {
-  const { name, version } = dp.parse(pkgId);
-  if (name == null || version == null) return undefined;
-  const local = Object.values(manifests).find((manifest) => manifest.name === name && manifest.version === version);
-  if (local) return local;
-  try {
-    const { manifest } = await resolve(
-      { alias: name, bareSpecifier: version },
-      { lockfileDir: rootDir, projectDir: rootDir, preferredVersions: {} }
-    );
-    return manifest;
-  } catch {
-    return undefined;
-  }
+  return isPeer || semver.valid(rootSpecifier) != null;
 }
 
 function depPathToRef(depPath: Dp.DependencyPath): string {
