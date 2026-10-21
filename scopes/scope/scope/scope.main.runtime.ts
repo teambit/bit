@@ -370,6 +370,9 @@ export class ScopeMain implements ComponentFactory {
     const entries = this.OnCompAspectReCalcSlot.toArray();
     await mapSeries(entries, async ([extension, onLoad]) => {
       const data = await onLoad(component);
+      // no data, e.g. of an app that was not loaded as an aspect. keep the stored one. (the aspect entry shares its
+      // data object with the extension, so upserting it with no data would empty the extension data as well)
+      if (!data) return;
       await this.upsertExtensionData(component, extension, data);
       // Update the aspect list to have changes happened during the on load slot (new data added above)
       component.state.aspects.upsertEntry(await this.resolveComponentId(extension), data);
@@ -947,8 +950,8 @@ export class ScopeMain implements ComponentFactory {
     return compact(components);
   }
 
-  async loadManyCompsAspects(components: Component[], lane?: Lane): Promise<Component[]> {
-    const loadedComponents = await mapSeries(components, (id) => this.loadCompAspects(id, lane));
+  async loadManyCompsAspects(components: Component[], lane?: Lane, opts?: LoadOptions): Promise<Component[]> {
+    const loadedComponents = await mapSeries(components, (id) => this.loadCompAspects(id, lane, opts));
     return compact(loadedComponents);
   }
 
