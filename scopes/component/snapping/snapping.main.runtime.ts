@@ -627,7 +627,11 @@ export class SnappingMain {
       ? components.filter((c) => loadAspectOnlyForIds.hasWithoutVersion(c.id))
       : components;
 
-    await this.scope.loadManyCompsAspects(compsToLoadAspects);
+    // an app is loaded as an aspect only when building, for its build tasks (e.g. the deploy task). otherwise, it's not
+    // needed: it's loaded from its stored version, the one before this snap, so the app data it calculates may be
+    // older than the merged one. also, its capsule installs its dependencies, and a lane snap of a dependency is not
+    // published to the registry until it is built, so the install fails while the build of the lane is pending.
+    await this.scope.loadManyCompsAspects(compsToLoadAspects, undefined, { loadApps: Boolean(params.build) });
 
     const policyPerComp = new Map<Component, VariantPolicy>();
     if (params.recalcDependencies) {
