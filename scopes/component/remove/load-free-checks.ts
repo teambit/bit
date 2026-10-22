@@ -45,9 +45,12 @@ export async function getStatusWithoutLoading(
     // a pending merge may carry merged config. same as above.
     if (consumer.scope.objects.unmergedComponents.getEntry(id)) return undefined;
 
+    if (!componentMap.id.hasVersion()) return { newlyCreated: true, modified: false };
+    const versionStr = componentMap.id.version as string;
     const modelComponent = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
-    const versionStr = componentMap.id.version;
-    if (!modelComponent || modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true) === VERSION_ZERO || !versionStr) {
+    // versioned but missing from the scope - pending import, not new. let the full status handle it.
+    if (!modelComponent) return undefined;
+    if (modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true) === VERSION_ZERO) {
       return { newlyCreated: true, modified: false };
     }
     const version = await modelComponent.loadVersion(versionStr, consumer.scope.objects, false);
