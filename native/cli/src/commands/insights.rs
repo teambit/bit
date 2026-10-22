@@ -1,6 +1,6 @@
 //! Native insight listing and `bit insights circular` (`scopes/explorer/insights/insights.cmd.ts`).
 
-mod render;
+pub(super) mod render;
 #[cfg(test)]
 mod tests;
 
@@ -92,13 +92,12 @@ fn run_circular(args: &[OsString], opts: &Options) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("insights circular requires a workspace".into()));
     };
-    let (graph, seeders) = match insight_graph(&root) {
-        Ok(graph) => graph,
+    let cycles = match workspace_cycles(&root, opts.include_deps) {
+        Ok(cycles) => cycles,
         Err(Failure::Declined(reason) | Failure::User(reason)) => {
             return Ok(Outcome::Declined(format!("insights circular: {reason}")));
         }
     };
-    let cycles = find_cycles(&graph, &seeders, opts.include_deps);
     let count = cycles.len();
     let message = format!("Found {count} cycle{}.", if count == 1 { "" } else { "s" });
     if !opts.json {
@@ -120,6 +119,15 @@ fn run_circular(args: &[OsString], opts: &Options) -> io::Result<Outcome> {
     workspace_command::execute_json(&root, args, "insights", |_| {
         Ok(Report { data, code: 0, details: None })
     })
+}
+
+/// Shared `GraphMain.getGraphIds().findCycles` projection for the two CLI commands.
+pub(super) fn workspace_cycles(
+    root: &std::path::Path,
+    include_deps: bool,
+) -> Result<Vec<Vec<String>>, Failure> {
+    let (graph, seeders) = insight_graph(root)?;
+    Ok(find_cycles(&graph, &seeders, include_deps))
 }
 
 /// `ComponentIdGraph.findCycles` reverses the Tarjan component order to show

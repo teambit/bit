@@ -9,6 +9,9 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
         .copied()
         .filter(|arg| *arg != "--no-color")
         .collect::<Vec<_>>();
+    if filtered.first() == Some(&"circular") && args.contains(&"--no-color") {
+        return None;
+    }
     match filtered.as_slice() {
         ["set", rest @ ..] => parse_set(rest),
         ["remove", rest @ ..] => parse_remove_or_unset(rest, false),
@@ -23,12 +26,26 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
             Some(Subcommand::Get { id: (*id).to_owned() })
         }
         ["usage", rest @ ..] => parse_usage(rest),
+        ["circular", rest @ ..] => parse_circular(rest),
         ["write", rest @ ..] => parse_write(rest),
         [sub] if !sub.starts_with('-') && !is_known_deps_subcommand(sub) => {
             Some(Subcommand::Unrecognized((*sub).to_owned()))
         }
         _ => None,
     }
+}
+
+fn parse_circular(rest: &[&str]) -> Option<Subcommand> {
+    let mut json = false;
+    let mut include_deps = false;
+    for &arg in rest {
+        match arg {
+            "-j" | "--json" => json = true,
+            "--include-deps" => include_deps = true,
+            _ => return None,
+        }
+    }
+    Some(Subcommand::Circular { json, include_deps })
 }
 
 fn is_known_deps_subcommand(sub: &str) -> bool {

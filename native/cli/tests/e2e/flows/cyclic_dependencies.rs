@@ -16,7 +16,14 @@ fn insights_circular_two_workspace_cycles_match_node() {
         helper.add_component(id, "");
     }
     helper.link("");
-    for command in ["insights circular --json", "insights circular"] {
+    for command in [
+        "insights circular --json",
+        "insights circular",
+        "deps circular --json",
+        "deps circular",
+        "deps circular --include-deps --json",
+        "dependencies circular --json",
+    ] {
         let native = helper.native_run(command);
         let node = Helper::cmd_in_with(
             &helper.scopes.local_path,
@@ -54,6 +61,16 @@ fn insights_circular_empty_workspace_matches_node() {
         &[("BIT_NATIVE", OsStr::new("off"))],
     );
     assert_eq!(native_text.stdout, node_text.stdout);
+
+    for command in ["deps circular --json", "deps circular"] {
+        let native = helper.native_run(command);
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        assert_eq!(native.stdout, node.stdout);
+    }
 
     let colored = Helper::cmd_in_with(
         &helper.scopes.local_path,
@@ -225,6 +242,13 @@ fn complex_case_with_a_long_chain_of_dependencies() {
         &[("BIT_NATIVE", OsStr::new("off"))],
     );
     assert_eq!(parse(&native_deps.stdout), parse(&node_deps.stdout));
+    let deps_cycles = helper.native_run("deps circular --json");
+    let node_cycles = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps circular --json",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert_eq!(parse(&deps_cycles.stdout), parse(&node_cycles.stdout));
     let cycle = insights[0]["data"][0].as_array().unwrap();
     assert_eq!(
         cycle,

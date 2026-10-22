@@ -7,7 +7,7 @@ const ARROW: &str = "  ───>  ";
 const ARROW_LEN: usize = 8;
 const MAX_HORIZONTAL_WIDTH: usize = 90;
 
-pub(super) fn cycles(cycles: &[Vec<String>], chalk: Chalk) -> String {
+pub(crate) fn cycles(cycles: &[Vec<String>], chalk: Chalk) -> String {
     if cycles.is_empty() {
         return "No circular dependencies found".into();
     }

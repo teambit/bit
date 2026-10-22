@@ -1,4 +1,4 @@
-//! Native `bit deps <set|remove|unset|reset|eject|get|usage|write>` (`bit dependencies`)
+//! Native `bit deps <set|remove|unset|reset|eject|get|usage|write|circular>` (`bit dependencies`)
 //! (`scopes/dependencies/dependencies/dependencies-cmd.ts`).
 
 pub(super) use self::parse::parse_subcommand;
@@ -28,6 +28,7 @@ use self::{
 use super::{
     Command,
     color::Chalk,
+    insights,
     lane::scope_root,
     scope_set::Failure,
     workspace_command::{self, format::Formatter, results::Report},
@@ -54,6 +55,7 @@ pub(super) enum Subcommand {
     Eject { pattern: String },
     Get { id: String },
     Usage { dep_name: String, depth: Option<usize> },
+    Circular { json: bool, include_deps: bool },
     Write { target: WriteTarget },
     Unrecognized(String),
 }
@@ -76,6 +78,7 @@ impl Subcommand {
             Self::Eject { .. } => "eject",
             Self::Get { .. } => "get",
             Self::Usage { .. } => "usage",
+            Self::Circular { .. } => "circular",
             Self::Write { .. } => "write",
             Self::Unrecognized(_) => "deps",
         }
@@ -96,6 +99,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("deps requires a workspace".into()));
     };
+    if let Subcommand::Circular { json, include_deps } = &subcommand {
+        return run_circular(&root, args, chalk, *json, *include_deps);
+    }
     let label = subcommand.loader_label();
     match prepare(&root, &subcommand, chalk) {
         Ok(prepared) => {
@@ -110,6 +116,32 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             })
         }
         Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("deps: {reason}"))),
+    }
+}
+
+fn run_circular(
+    root: &Path,
+    args: &[OsString],
+    chalk: Chalk,
+    json: bool,
+    include_deps: bool,
+) -> io::Result<Outcome> {
+    let cycles = match insights::workspace_cycles(root, include_deps) {
+        Ok(cycles) => cycles,
+        Err(Failure::Declined(reason) | Failure::User(reason)) => {
+            return Ok(Outcome::Declined(format!("deps circular: {reason}")));
+        }
+    };
+    if json {
+        let data = serde_json::to_string_pretty(&cycles)?;
+        workspace_command::execute_json(root, args, "circular", |_| {
+            Ok(Report { data, code: 0, details: None })
+        })
+    } else {
+        let data = insights::render::cycles(&cycles, chalk);
+        workspace_command::execute_then(root, args, "circular", |_| {
+            Ok(Report { data, code: 0, details: None })
+        })
     }
 }
 

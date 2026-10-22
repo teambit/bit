@@ -68,6 +68,12 @@ fn parses_deps_subcommands() {
         Some(Subcommand::Usage { dep_name: "is-number".into(), depth: Some(2) }),
     );
     assert_eq!(
+        parse_subcommand(&["circular", "-j", "--include-deps"]),
+        Some(Subcommand::Circular { json: true, include_deps: true }),
+    );
+    assert_eq!(parse_subcommand(&["circular", "--unknown"]), None);
+    assert_eq!(parse_subcommand(&["circular", "--no-color"]), None);
+    assert_eq!(
         parse_subcommand(&["write", "--target=package.json"]),
         Some(Subcommand::Write { target: WriteTarget::PackageJson }),
     );
