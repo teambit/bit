@@ -335,7 +335,6 @@ describe('merge lanes - main lane operations', function () {
   });
 
   describe('merging main into a lane when main added a types package of an imported package', () => {
-    const devPackagesOf = (hash: string) => helper.command.catComponent(`comp1@${hash}`).devPackageDependencies;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.npm.addFakeNpmPackage('foo', '1.0.0');
@@ -345,21 +344,19 @@ describe('merge lanes - main lane operations', function () {
       helper.command.export();
       helper.command.createLane('dev');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.export();
       const laneWs = helper.scopeHelper.cloneWorkspace();
       // main adds @types/foo by its workspace policy. the policy of the lane workspace doesn't have it
       helper.command.switchLocalLane('main', '-x');
       helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { '@types/foo': '1.0.0' } });
-      helper.npm.addFakeNpmPackage('@types/foo', '1.0.0');
       helper.command.tagAllWithoutBuild('--unmodified');
       helper.command.export();
-      expect(devPackagesOf(helper.command.getHead('comp1'))).to.have.property('@types/foo');
       helper.scopeHelper.getClonedWorkspace(laneWs);
       helper.command.mergeLaneWithoutBuild('main', '-x');
     });
     it('should keep the types package in the merge snap', () => {
-      const head = helper.command.getHeadOfLane(`${helper.scopes.remote}/dev`, 'comp1');
-      expect(devPackagesOf(head)).to.have.property('@types/foo', '1.0.0');
+      const head = helper.command.getHeadOfLane('dev', 'comp1');
+      const devPackages = helper.command.catComponent(`comp1@${head}`).devPackageDependencies;
+      expect(devPackages).to.have.property('@types/foo', '1.0.0');
     });
   });
 });

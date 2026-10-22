@@ -8,7 +8,7 @@ import type { IssuesList } from '@teambit/component-issues';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { RelativePath, ImportSpecifier, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { Dependency } from '@teambit/legacy.consumer-component';
-import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
+import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
 import { getExt } from '@teambit/toolbox.fs.extension-getter';
@@ -682,28 +682,19 @@ export class AutoDetectDeps {
     const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
     const depsHost = this.depsResolver.getWorkspacePolicyManifest();
-    // a policy here is an object of dependency fields, each maps package names to versions
-    const addFromPolicy = (policy: Record<string, any> | undefined, packageName: string): boolean => {
-      const typesPackage = packageToDefinetlyTyped(packageName);
-      const version = DEPENDENCIES_FIELDS.map((depField) => policy?.[depField]?.[typesPackage]).find(Boolean);
-      // "-" is a removal of a dependency from the config, not a version
-      if (!version || version === '-') return false;
-      Object.assign(this.allPackagesDependencies.devPackageDependencies, { [typesPackage]: version });
-      return true;
-    };
-    const addFromModel = (packageName: string) => {
-      if (!this.componentFromModel) return;
-      const typesPackage = packageToDefinetlyTyped(packageName);
-      const typedPackageFromModel = this.componentFromModel.devPackageDependencies[typesPackage];
-      if (!typedPackageFromModel) return;
-      Object.assign(this.allPackagesDependencies.devPackageDependencies, {
-        [typesPackage]: typedPackageFromModel,
-      });
-    };
+    const versionFromPolicy = (policy: Record<string, any>, typesPackage: string): string | undefined =>
+      DEPENDENCIES_FIELDS.map((depField) => policy[depField]?.[typesPackage]).find(Boolean);
 
     packageNames.forEach((packageName) => {
-      const added = addFromPolicy(depsHost, packageName) || addFromPolicy(this.autoDetectConfigMerge, packageName);
-      if (!added) addFromModel(packageName);
+      const typesPackage = packageToDefinetlyTyped(packageName);
+      const version =
+        versionFromPolicy(depsHost, typesPackage) ||
+        versionFromPolicy(this.autoDetectConfigMerge, typesPackage) ||
+        this.componentFromModel?.devPackageDependencies[typesPackage];
+      // a removal in a policy stops the fallback, so the package is not added from the model
+      if (version && version !== MANUALLY_REMOVE_DEPENDENCY) {
+        this.allPackagesDependencies.devPackageDependencies[typesPackage] = version;
+      }
     });
   }
 
