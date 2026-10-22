@@ -80,6 +80,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
+    if has_conflicting_external_pm_root_component(&root) {
+        return workspace_command::execute_without_loader(&root, args, "status", |_| {
+            Err(io::Error::other(
+                "rootComponent cannot be true when externalPackageManager is enabled",
+            ))
+        });
+    }
     let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
     match mode {
         Mode::Json(flags) => json_status(&root, Path::new(&home), args, &flags),
@@ -90,6 +97,17 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 /// `bit status --json`.
+fn has_conflicting_external_pm_root_component(root: &Path) -> bool {
+    let Ok(bytes) = std::fs::read(root.join("workspace.jsonc")) else {
+        return false;
+    };
+    let Ok(ws) = bit_object_import::parse_jsonc(&bytes) else {
+        return false;
+    };
+    let dep_resolver = &ws["teambit.dependencies/dependency-resolver"];
+    dep_resolver["externalPackageManager"] == true && dep_resolver["rootComponent"] == true
+}
+
 fn json_status(
     root: &Path,
     home: &Path,

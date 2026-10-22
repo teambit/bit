@@ -106,3 +106,15 @@ mod track_directories_harmony;
 mod updates_from_main_and_lane;
 mod validate;
 mod workspace_misc;
+
+mod build_and_compilers_harmony;
+mod ci_commands_harmony;
+mod dependencies_policies_and_scripts;
+mod deps_graph_suite;
+mod http_harmony;
+mod init_and_import_misc;
+mod install_harmony;
+mod root_components_harmony;
+mod testers_harmony;
+mod ui_and_watch_harmony;
+mod update_and_publish_harmony;

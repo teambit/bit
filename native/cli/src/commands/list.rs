@@ -205,6 +205,10 @@ struct Model {
 /// `localList`: the workspace's (or with `--local-scope`, the scope's) ids,
 /// filtered, sorted by `localeCompare` of their ids.
 fn list(root: &Path, options: &Options, session: &mut Session) -> io::Result<Vec<Row>> {
+    let scope = workspace::scope_path(root);
+    if !scope.is_dir() {
+        std::fs::create_dir_all(scope.join("objects"))?;
+    }
     super::status::autosync::run_if_enabled(root)?;
     let bitmap::Bitmap { entries: bitmap, lane } = bitmap::read(root)?;
     let (models, lane) = models(root, lane.as_ref())?;

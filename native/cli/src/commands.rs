@@ -2,16 +2,22 @@
 //! one of its aliases, exactly as the Node.js CLI spells them.
 
 mod add;
+mod app_cmd;
+mod artifacts_cmd;
 mod aspect;
+mod build_cmd;
 mod capsule;
 mod cat;
 mod cat_scope;
+mod check_types;
 mod checkout;
 mod ci;
 mod clear_cache;
 mod cli_cmd;
 mod clone;
 mod color;
+mod compile_cmd;
+mod completion_cmd;
 mod component_issues;
 mod config;
 mod create;
@@ -31,9 +37,11 @@ mod envs;
 mod export;
 mod file_history;
 mod fork;
+mod format_cmd;
 mod gc;
 mod git;
 mod globals;
+mod graph_cmd;
 mod ids;
 mod import;
 mod init;
@@ -43,6 +51,8 @@ mod installation;
 mod internalize;
 mod inventory;
 mod lane;
+mod link_cmd;
+mod lint_cmd;
 mod list;
 mod local_only;
 mod log;
@@ -54,8 +64,11 @@ mod mini_status;
 mod move_paths;
 mod new_cmd;
 mod npmrc;
+mod pack_cmd;
 mod pattern;
 mod patterns;
+mod preview_cmd;
+mod publish_cmd;
 mod recover;
 mod recovery;
 mod refactor;
@@ -64,15 +77,22 @@ mod remote_resolution;
 mod remove;
 mod rename;
 mod reset;
+mod resume_export;
 mod ripple;
+mod run_action;
+mod run_cmd;
+mod schema_cmd;
 mod scope_rename;
 mod scope_set;
 mod scope_trust;
 mod script;
 mod search;
+mod server_cmd;
 mod set_peer;
+mod show_cmd;
 mod snap;
 mod snap_distance;
+mod start_cmd;
 mod stash;
 mod status;
 mod switch;
@@ -82,12 +102,15 @@ mod templates;
 mod test_cmd;
 #[cfg(test)]
 mod test_support;
+mod ui_build;
 mod uninstall;
 mod unuse_cmd;
+mod update_cmd;
 mod use_cmd;
 mod validate;
 mod version;
 mod version_history;
+mod watch_cmd;
 mod whoami;
 mod workspace_command;
 mod ws_config;
@@ -104,16 +127,22 @@ pub struct Command {
 
 pub const COMMANDS: &[Command] = &[
     add::COMMAND,
+    app_cmd::COMMAND,
+    artifacts_cmd::COMMAND,
     aspect::COMMAND,
+    build_cmd::COMMAND,
     capsule::COMMAND,
     cat::COMMAND,
     cat_scope::COMMAND,
+    check_types::COMMAND,
     checkout::COMMAND,
     checkout::REVERT,
     ci::COMMAND,
     clear_cache::COMMAND,
     cli_cmd::COMMAND,
     clone::COMMAND,
+    compile_cmd::COMMAND,
+    completion_cmd::COMMAND,
     component_issues::COMMAND,
     config::COMMAND,
     create::COMMAND,
@@ -135,12 +164,14 @@ pub const COMMANDS: &[Command] = &[
     envs::COMMAND,
     file_history::BLAME,
     fork::COMMAND,
+    format_cmd::COMMAND,
     gc::COMMAND,
     diff::COMMAND,
     export::COMMAND,
     file_history::LOG_FILE,
     git::COMMAND,
     globals::COMMAND,
+    graph_cmd::COMMAND,
     import::FETCH,
     import::IMPORT,
     init::COMMAND,
@@ -148,6 +179,8 @@ pub const COMMANDS: &[Command] = &[
     install::COMMAND,
     internalize::COMMAND,
     lane::COMMAND,
+    link_cmd::COMMAND,
+    lint_cmd::COMMAND,
     list::COMMAND,
     local_only::COMMAND,
     log::COMMAND,
@@ -159,21 +192,32 @@ pub const COMMANDS: &[Command] = &[
     move_paths::COMMAND,
     new_cmd::COMMAND,
     npmrc::COMMAND,
+    pack_cmd::COMMAND,
     pattern::COMMAND,
+    preview_cmd::GENERATE_PREVIEW,
+    preview_cmd::SERVE_PREVIEW,
+    publish_cmd::COMMAND,
     recover::COMMAND,
     refactor::COMMAND,
     remote::COMMAND,
     remove::COMMAND,
     reset::COMMAND,
+    resume_export::COMMAND,
     rename::COMMAND,
     ripple::COMMAND,
+    run_action::COMMAND,
+    run_cmd::COMMAND,
+    schema_cmd::COMMAND,
     scope_rename::COMMAND,
     script::COMMAND,
     search::COMMAND,
+    server_cmd::COMMAND,
     set_peer::SET_PEER,
     set_peer::UNSET_PEER,
+    show_cmd::COMMAND,
     snap::COMMAND,
     snap_distance::COMMAND,
+    start_cmd::COMMAND,
     stash::COMMAND,
     status::COMMAND,
     switch::COMMAND,
@@ -181,12 +225,15 @@ pub const COMMANDS: &[Command] = &[
     tag::COMMAND,
     templates::COMMAND,
     test_cmd::COMMAND,
+    ui_build::COMMAND,
     uninstall::COMMAND,
     unuse_cmd::COMMAND,
+    update_cmd::COMMAND,
     use_cmd::COMMAND,
     validate::COMMAND,
     version::COMMAND,
     version_history::COMMAND,
+    watch_cmd::COMMAND,
     whoami::COMMAND,
     ws_config::COMMAND,
 ];
