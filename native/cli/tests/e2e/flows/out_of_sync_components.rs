@@ -9,17 +9,17 @@ fn consumer_with_a_new_component_and_scope_with_the_same_component_as_staged() {
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
     let new_state = helper.clone_bit_map();
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     helper.restore_bit_map(&new_state);
     let out_of_sync = helper.clone_workspace();
 
     // 1. bit tag: should tag the component to the next version of what the scope has
-    let output = helper.run_cmd("tag bar/foo --unmodified --patch");
+    let output = helper.run("tag bar/foo --unmodified --patch");
     assert!(output.contains("0.0.2"));
 
     // 2. bit status: should sync .bitmap according to the scope
     helper.get_cloned_workspace(&out_of_sync);
-    let output = helper.status();
+    let output = helper.run("status");
     assert!(output.contains("staged"));
     let bitmap = helper.read_bit_map();
     assert_eq!(bitmap["bar/foo"]["version"].as_str().unwrap(), "0.0.1");
@@ -27,13 +27,13 @@ fn consumer_with_a_new_component_and_scope_with_the_same_component_as_staged() {
     // 3. bit export with id: should export the component successfully
     helper.get_cloned_workspace(&out_of_sync);
     helper.re_init_remote_scope();
-    let output = helper.export("bar/foo");
+    let output = helper.run("export bar/foo");
     assert!(output.contains("exported components (1)"), "{output}");
 
     // 4. bit export all: should export the component successfully
     helper.get_cloned_workspace(&out_of_sync);
     helper.re_init_remote_scope();
-    let output = helper.export("");
+    let output = helper.run("export");
     assert!(output.contains("exported components (1)"), "{output}");
 }
 
@@ -43,19 +43,19 @@ fn consumer_with_a_tagged_component_and_scope_with_the_same_component_as_exporte
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     let tagged_state = helper.clone_bit_map();
-    helper.export("");
+    helper.native("export");
     helper.restore_bit_map(&tagged_state);
     let out_of_sync = helper.clone_workspace();
 
     // 1. bit tag: should tag the component to the next version of what the scope has
-    let output = helper.run_cmd("tag bar/foo --unmodified --patch");
+    let output = helper.run("tag bar/foo --unmodified --patch");
     assert!(output.contains("0.0.2"));
 
     // 2. bit status: should sync .bitmap according to the scope
     helper.get_cloned_workspace(&out_of_sync);
-    let status = helper.status();
+    let status = helper.run("status");
     helper.expect_status_to_be_clean_from_output(&status);
     let bitmap = helper.read_bit_map();
     assert_eq!(bitmap["bar/foo"]["version"].as_str().unwrap(), "0.0.1");
@@ -68,16 +68,16 @@ fn consumer_with_no_components_and_scope_with_staged_or_exported_components() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     helper.delete_path(".bitmap");
-    helper.run_cmd("init --force");
+    helper.native("init --force");
     let out_of_sync = helper.clone_workspace();
 
     // 1. bit show: should not throw because "bit show" supports showing components from the scope
-    assert!(helper.try_cmd("show bar/foo").status.success());
+    assert!(helper.cmd("show bar/foo").status.success());
 
     // 2. bit export all: should export the component successfully and tell the user that no local changes have been made
-    let output = helper.export("");
+    let output = helper.native("export");
     let ls_remote = helper.list_remote_scope_parsed("");
     assert_eq!(ls_remote.as_array().unwrap().len(), 1);
     assert!(output.contains(
@@ -87,7 +87,7 @@ fn consumer_with_no_components_and_scope_with_staged_or_exported_components() {
     // 3. bit export id: should throw an error saying the component does not exist
     helper.get_cloned_workspace(&out_of_sync);
     helper.re_init_remote_scope();
-    let err = helper.try_cmd("export bar/foo");
+    let err = helper.cmd("export bar/foo");
     assert!(!err.status.success());
     let combined = format!("{}{}", err.stdout, err.stderr);
     assert!(combined.contains("bar/foo"), "{combined}");
@@ -97,10 +97,10 @@ fn consumer_with_no_components_and_scope_with_staged_or_exported_components() {
     helper2.set_workspace_with_remote_scope();
     helper2.create_component_bar_foo("");
     helper2.add_component_bar_foo();
-    helper2.tag_all_without_build("");
-    helper2.export("");
+    helper2.native("tag --skip-tests");
+    helper2.native("export");
     helper2.delete_path(".bitmap");
-    helper2.run_cmd("init --force");
+    helper2.native("init --force");
     helper2.add_component_bar_foo();
     let bitmap = helper2.read_bit_map();
     assert_eq!(bitmap["bar/foo"]["version"].as_str().unwrap(), "0.0.1");
@@ -113,20 +113,20 @@ fn consumer_has_exported_components_and_scope_is_empty() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
     helper.delete_path(".bit");
     let out_of_sync = helper.clone_workspace();
 
     // 1. bit tag: should stop the tagging process and throw an error suggesting to import the components
-    let err = helper.try_cmd("tag bar/foo --unmodified");
+    let err = helper.cmd("tag bar/foo --unmodified");
     assert!(!err.status.success());
     let combined = format!("{}{}", err.stdout, err.stderr);
     assert!(combined.to_lowercase().contains("your workspace has outdated objects"), "{combined}");
 
     // 2. bit status: should show a message suggesting to import the components
     helper.get_cloned_workspace(&out_of_sync);
-    let output = helper.status();
+    let output = helper.run("status");
     assert!(output.to_lowercase().contains("your workspace has outdated objects"), "{output}");
 }
 
@@ -137,18 +137,18 @@ fn consumer_has_tagged_or_exported_component_with_a_version_that_not_exist_in_th
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
-    helper.tag_all_without_build("");
-    helper.run_cmd("tag --unmodified --ver 2.0.0");
+    helper.native("tag --skip-tests");
+    helper.native("tag --unmodified --ver 2.0.0");
     let bitmap_v2 = helper.clone_bit_map();
-    helper.run_cmd("reset bar/foo --head");
+    helper.native("reset bar/foo --head");
     helper.restore_bit_map(&bitmap_v2);
     let out_of_sync = helper.clone_workspace();
 
-    let output = helper.run_cmd("tag bar/foo --unmodified --patch");
+    let output = helper.run("tag bar/foo --unmodified --patch");
     assert!(output.contains("0.0.2"));
 
     helper.get_cloned_workspace(&out_of_sync);
-    let output = helper.status();
+    let output = helper.run("status");
     assert!(output.contains("staged components"));
     let bitmap = helper.read_bit_map();
     assert_eq!(bitmap["bar/foo"]["version"].as_str().unwrap(), "0.0.1");
@@ -158,11 +158,11 @@ fn consumer_has_tagged_or_exported_component_with_a_version_that_not_exist_in_th
     helper2.set_workspace_with_remote_scope();
     helper2.create_component_bar_foo("");
     helper2.add_component_bar_foo();
-    helper2.tag_all_without_build("");
-    helper2.export("");
+    helper2.native("tag --skip-tests");
+    helper2.native("export");
     let scope_after_v1 = helper2.clone_workspace();
-    helper2.run_cmd("tag --unmodified --ver 2.0.0");
-    helper2.export("");
+    helper2.native("tag --unmodified --ver 2.0.0");
+    helper2.native("export");
     let bitmap_v2_2 = helper2.clone_bit_map();
     helper2.get_cloned_workspace(&scope_after_v1);
     helper2.restore_bit_map(&bitmap_v2_2);
@@ -171,7 +171,7 @@ fn consumer_has_tagged_or_exported_component_with_a_version_that_not_exist_in_th
     // when the remote component has this missing version
     for cmd in ["status", "show bar/foo", "tag"] {
         helper2.get_cloned_workspace(&out_of_sync2);
-        let err = helper2.try_cmd(cmd);
+        let err = helper2.cmd(cmd);
         assert!(!err.status.success(), "{cmd} should have failed");
         let combined = format!("{}{}", err.stdout, err.stderr);
         assert!(
@@ -183,13 +183,13 @@ fn consumer_has_tagged_or_exported_component_with_a_version_that_not_exist_in_th
     // when the remote component does not exist or does not have this missing version
     helper2.get_cloned_workspace(&out_of_sync2);
     helper2.re_init_remote_scope();
-    let status = helper2.status();
+    let status = helper2.run("status");
     helper2.expect_status_to_be_clean_from_output(&status);
     let bitmap = helper2.read_bit_map();
     assert_eq!(bitmap["bar/foo"]["version"].as_str().unwrap(), "0.0.1");
 
     helper2.get_cloned_workspace(&out_of_sync2);
     helper2.re_init_remote_scope();
-    let output = helper2.run_cmd("tag bar/foo --unmodified --patch");
+    let output = helper2.run("tag bar/foo --unmodified --patch");
     assert!(output.contains("0.0.2"));
 }

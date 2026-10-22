@@ -46,15 +46,15 @@ fn importing_objects_from_another_scope_status_new() {
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
     helper.native(&format!("scope set {other_name} bar/foo"));
-    helper.run("tag bar/foo");
-    helper.run("tag --unmodified --ver 0.0.2");
-    helper.run(&format!("export {other_name}/bar/foo"));
+    helper.native("tag bar/foo");
+    helper.native("tag --unmodified --ver 0.0.2");
+    helper.native(&format!("export {other_name}/bar/foo"));
 
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
     add_remote(&helper, &other_name, &other_path);
-    helper.run(&format!("import {other_name}/bar/foo --objects"));
+    helper.native(&format!("import {other_name}/bar/foo --objects"));
 
     let status = parse(&helper.native("status --json"));
     let new_components = status["newComponents"].as_array().unwrap();
@@ -73,8 +73,8 @@ fn importing_and_using_both_bitmap_keys() {
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
     helper.native(&format!("scope set {other_name} bar/foo"));
-    helper.run("tag bar/foo");
-    helper.run(&format!("export {other_name}/bar/foo"));
+    helper.native("tag bar/foo");
+    helper.native(&format!("export {other_name}/bar/foo"));
 
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo(FOO_FIXTURE);
@@ -101,8 +101,8 @@ fn importing_and_using_both_status_new() {
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
     helper.native(&format!("scope set {other_name} bar/foo"));
-    helper.run("tag bar/foo");
-    helper.run(&format!("export {other_name}/bar/foo"));
+    helper.native("tag bar/foo");
+    helper.native(&format!("export {other_name}/bar/foo"));
 
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo(FOO_FIXTURE);
@@ -128,8 +128,8 @@ fn both_components_imported_clean_workspace() {
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
     helper.native(&format!("scope set {other_name} bar/foo"));
-    helper.run("tag bar/foo");
-    helper.run(&format!("export {other_name}/bar/foo"));
+    helper.native("tag bar/foo");
+    helper.native(&format!("export {other_name}/bar/foo"));
 
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo(FOO_FIXTURE);
@@ -177,8 +177,8 @@ fn creating_two_new_components_list() {
 
     helper.output_file("scope1/comp1/index.ts", "export const a = 1;");
     helper.output_file("scope2/comp1/index.ts", "export const b = 2;");
-    helper.run("add scope1/comp1 --id comp1");
-    helper.run(&format!("add scope2/comp1 --id comp1 --scope {other_name}"));
+    helper.native("add scope1/comp1 --id comp1");
+    helper.native(&format!("add scope2/comp1 --id comp1 --scope {other_name}"));
 
     let list = parse(&helper.native("list --json"));
     let array = list.as_array().unwrap();
@@ -196,10 +196,10 @@ fn creating_two_new_components_tag_both() {
 
     helper.output_file("scope1/comp1/index.ts", "export const a = 1;");
     helper.output_file("scope2/comp1/index.ts", "export const b = 2;");
-    helper.run("add scope1/comp1 --id comp1");
-    helper.run(&format!("add scope2/comp1 --id comp1 --scope {other_name}"));
+    helper.native("add scope1/comp1 --id comp1");
+    helper.native(&format!("add scope2/comp1 --id comp1 --scope {other_name}"));
 
-    helper.run("tag");
+    helper.native("tag");
     let status = parse(&helper.native("status --json"));
     let staged = status["stagedComponents"].as_array().unwrap();
     assert_eq!(staged.len(), 2, "expected 2 staged components: {staged:?}");
@@ -216,9 +216,9 @@ fn creating_two_new_components_export_both() {
 
     helper.output_file("scope1/comp1/index.ts", "export const a = 1;");
     helper.output_file("scope2/comp1/index.ts", "export const b = 2;");
-    helper.run("add scope1/comp1 --id comp1");
-    helper.run(&format!("add scope2/comp1 --id comp1 --scope {other_name}"));
+    helper.native("add scope1/comp1 --id comp1");
+    helper.native(&format!("add scope2/comp1 --id comp1 --scope {other_name}"));
 
-    helper.run("tag");
+    helper.native("tag");
     helper.run("export");
 }

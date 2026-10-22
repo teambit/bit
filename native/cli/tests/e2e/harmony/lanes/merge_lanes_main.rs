@@ -7,26 +7,26 @@ fn merging_main_into_local_lane_and_when_deleted_or_tagged() {
     // 1. merging main into local lane: should not throw an error that main lane doesn't exist
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.create_lane("dev", "");
+    helper.native("lane create dev");
     helper.populate_components(1, false, "");
-    helper.snap_all_components_without_build("");
-    let merge_output = helper.merge_lane("main", "-x");
+    helper.native("snap --skip-tests");
+    let merge_output = helper.native("lane merge main -x");
     assert!(!merge_output.contains(r#"unable to switch to "main", the lane was not found"#));
 
     // 2. merge main into a lane when it is locally deleted on the lane: should show a descriptive error explaining why it cannot be merged
     let helper2 = Helper::new();
     helper2.set_workspace_with_remote_scope();
-    helper2.create_lane("dev", "");
+    helper2.native("lane create dev");
     helper2.populate_components(1, false, "");
-    helper2.snap_all_components_without_build("");
-    helper2.export("");
-    helper2.switch_local_lane("main", "-x");
-    helper2.merge_lane("dev", "-x");
-    helper2.tag_all_without_build("");
-    helper2.export("");
-    helper2.switch_local_lane("dev", "-x");
-    helper2.run_cmd("delete comp1 --silent --lane");
-    let err = helper2.try_cmd("lane merge main -x");
+    helper2.native("snap --skip-tests");
+    helper2.native("export");
+    helper2.native("switch main -x");
+    helper2.native(&format!("lane merge {}/dev -x", helper2.scopes.remote));
+    helper2.native("tag --skip-tests");
+    helper2.native("export");
+    helper2.native("switch dev -x");
+    helper2.native("delete comp1 --silent --lane");
+    let err = helper2.cmd("lane merge main -x");
     assert!(!err.status.success());
     let combined = format!("{}{}", err.stdout, err.stderr);
     assert!(combined.contains("component is locally deleted"));
@@ -35,12 +35,12 @@ fn merging_main_into_local_lane_and_when_deleted_or_tagged() {
     let helper3 = Helper::new();
     helper3.set_workspace_with_remote_scope();
     helper3.populate_components(1, false, "");
-    helper3.tag_all_without_build("");
-    helper3.export("");
-    helper3.create_lane("dev", "");
+    helper3.native("tag --skip-tests");
+    helper3.native("export");
+    helper3.native("lane create dev");
     helper3.populate_components(1, false, " version2");
-    helper3.snap_all_components_without_build("");
-    let merge_output = helper3.merge_lane("main", "-x");
+    helper3.native("snap --skip-tests");
+    let merge_output = helper3.native("lane merge main -x");
     assert!(!merge_output.contains("getDivergeData: unable to find Version 0.0.1 of comp1"));
 }
 
@@ -50,30 +50,30 @@ fn merging_main_when_on_lane_and_some_workspace_components_belong_to_the_lane_so
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.tag_all_without_build("");
-    helper.export("");
-    helper.create_lane("dev", "");
-    helper.snap_Component_without_build("comp1", "--unmodified");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
+    helper.native("lane create dev");
+    helper.native("snap comp1 --skip-tests --unmodified");
+    helper.native("export");
     let head_comp1_on_lane = helper.get_head_from_lane("dev", "comp1");
     let lane_ws = helper.clone_workspace();
 
-    helper.switch_local_lane("main", "-x");
+    helper.native("switch main -x");
     helper.populate_components(2, true, "version2");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     let comp1_tag2 = helper.get_head("comp1");
     let comp2_tag2 = helper.get_head("comp2");
-    helper.tag_all_without_build("--unmodified");
+    helper.native("tag --skip-tests --unmodified");
     let comp1_tag3 = helper.get_head("comp1");
     let comp2_tag3 = helper.get_head("comp2");
-    helper.tag_all_without_build("--unmodified");
+    helper.native("tag --skip-tests --unmodified");
     let comp1_head = helper.get_head("comp1");
-    helper.export("");
+    helper.native("export");
 
     // with --exclude-non-lane-comps flag
     helper.get_cloned_workspace(&lane_ws);
-    helper.merge_lane("main", "--exclude-non-lane-comps -x");
-    let lane = parse(&helper.run_cmd("lane show dev --json"));
+    helper.native("lane merge main --exclude-non-lane-comps -x");
+    let lane = parse(&helper.native("lane show dev --json"));
     // 1. should not add non-lane components into the lane
     assert_eq!(
         lane["components"]
@@ -97,8 +97,8 @@ fn merging_main_when_on_lane_and_some_workspace_components_belong_to_the_lane_so
 
     // without --exclude-non-lane-comps flag
     helper.get_cloned_workspace(&lane_ws);
-    helper.merge_lane("main", "-x");
-    let lane = parse(&helper.run_cmd("lane show dev --json"));
+    helper.native("lane merge main -x");
+    let lane = parse(&helper.native("lane show dev --json"));
     // 5. should not add non-lane components into the lane
     assert_eq!(
         lane["components"]
@@ -121,19 +121,19 @@ fn merging_main_when_on_lane_and_some_workspace_components_belong_to_the_lane_so
     assert!(helper.read_file("comp2/index.js").contains("version2"));
 
     // 9. should import the head of main
-    let cat1 = helper.try_cmd(&format!("cat-object {comp1_head}"));
+    let cat1 = helper.cmd(&format!("cat-object {comp1_head}"));
     assert!(cat1.status.success());
 
     // 10. should not import the main-history gap between the common-snap and the head of main
     assert!(
         !helper
-            .try_cmd(&format!("cat-object {comp1_tag2}"))
+            .cmd(&format!("cat-object {comp1_tag2}"))
             .status
             .success(),
     );
     assert!(
         !helper
-            .try_cmd(&format!("cat-object {comp1_tag3}"))
+            .cmd(&format!("cat-object {comp1_tag3}"))
             .status
             .success(),
     );
@@ -141,19 +141,19 @@ fn merging_main_when_on_lane_and_some_workspace_components_belong_to_the_lane_so
     // 11. should not import the history of workspace components that are not on the lane
     assert!(
         !helper
-            .try_cmd(&format!("cat-object {comp2_tag2}"))
+            .cmd(&format!("cat-object {comp2_tag2}"))
             .status
             .success(),
     );
     assert!(
         !helper
-            .try_cmd(&format!("cat-object {comp2_tag3}"))
+            .cmd(&format!("cat-object {comp2_tag3}"))
             .status
             .success(),
     );
 
     // 12. should export the lane successfully after the merge
-    let export = helper.try_cmd("export");
+    let export = helper.native_run("export");
     assert!(export.status.success(), "{export:?}");
 }
 
@@ -163,8 +163,8 @@ fn merging_main_lane_with_no_snapped_components_and_merging_lane_into_empty_main
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, false, "");
-    helper.create_lane("dev", "");
-    let merge_output = helper.merge_lane("main", "-x");
+    helper.native("lane create dev");
+    let merge_output = helper.native("lane merge main -x");
     assert!(!merge_output.contains(
         "component comp1 is on the lane but its objects were not found, please re-import the lane"
     ));
@@ -173,10 +173,10 @@ fn merging_main_lane_with_no_snapped_components_and_merging_lane_into_empty_main
     let helper2 = Helper::new();
     helper2.set_workspace_with_remote_scope();
     helper2.populate_components(1, false, "");
-    helper2.create_lane("dev", "");
-    helper2.snap_all_components_without_build("");
-    helper2.switch_local_lane("main", "-x");
-    let merge_output = helper2.merge_lane("dev", "-x");
+    helper2.native("lane create dev");
+    helper2.native("snap --skip-tests");
+    helper2.native("switch main -x");
+    let merge_output = helper2.native(&format!("lane merge {}/dev -x", helper2.scopes.remote));
     assert!(merge_output.contains("successfully merged"));
     let list = helper2.list_local_scope_parsed("");
     assert_eq!(list.as_array().unwrap().len(), 1);
@@ -188,19 +188,19 @@ fn merge_main_to_lane_when_they_are_diverged_with_dependencies_update_auto_after
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.run_cmd("deps set comp1 lodash@^4.17.21");
+    helper.native("deps set comp1 lodash@^4.17.21");
     helper.npm_add_fake_package("lodash", "4.17.21", false);
-    helper.tag_all_without_build("");
-    helper.export("");
-    helper.create_lane("dev", "");
-    helper.snap_Component_without_build("comp1", "--unmodified");
-    helper.export("");
-    helper.switch_local_lane("main", "-x");
-    helper.run_cmd("deps unset comp1 lodash");
-    helper.tag_all_without_build(r#"--unmodified -m "second tag on main""#);
-    helper.export("");
-    helper.switch_local_lane("dev", "-x");
-    helper.merge_lane("main", "-x --ignore-config-changes");
+    helper.native("tag --skip-tests");
+    helper.native("export");
+    helper.native("lane create dev");
+    helper.native("snap comp1 --skip-tests --unmodified");
+    helper.native("export");
+    helper.native("switch main -x");
+    helper.native("deps unset comp1 lodash");
+    helper.native(r#"tag --skip-tests --unmodified -m "second tag on main""#);
+    helper.native("export");
+    helper.native("switch dev -x");
+    helper.run("lane merge main -x --ignore-config-changes");
 
     let comp1_head_on_lane =
         helper.get_head_from_lane(&format!("{}/dev", helper.scopes.remote), "comp1");
@@ -244,21 +244,21 @@ fn bit_merge_on_main_when_the_remote_main_has_advanced_by_multiple_snaps_diverge
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, false, "");
-    helper.snap_all_components_without_build("");
-    helper.export("");
+    helper.native("snap --skip-tests");
+    helper.native("export");
     let ws1 = helper.clone_workspace();
 
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native("snap --skip-tests --unmodified");
     let remote_gap_snap = helper.get_head("comp1");
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native("snap --skip-tests --unmodified");
     let remote_head_snap = helper.get_head("comp1");
-    helper.export("");
+    helper.native("export");
 
     helper.get_cloned_workspace(&ws1);
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native("snap --skip-tests --unmodified");
     let local_snap = helper.get_head("comp1");
-    helper.import_component("comp1", "--objects");
-    helper.run_cmd("merge comp1 --auto-merge-resolve theirs -x");
+    helper.native(&format!("import {}/comp1 --objects", helper.scopes.remote));
+    helper.native("merge comp1 --auto-merge-resolve theirs -x");
 
     // 1. should generate a snap-merge snap with two parents, the local and the remote
     let head = helper.get_head("comp1");
@@ -266,15 +266,15 @@ fn bit_merge_on_main_when_the_remote_main_has_advanced_by_multiple_snaps_diverge
     assert_eq!(cat_ver["parents"], serde_json::json!([local_snap, remote_head_snap]));
 
     // 2. should not import the gap between the common-snap and the remote head
-    let cat_gap = helper.try_cmd(&format!("cat-object {remote_gap_snap}"));
+    let cat_gap = helper.cmd(&format!("cat-object {remote_gap_snap}"));
     assert!(!cat_gap.status.success());
 
     // 3. should export the merge-snap successfully
-    let export = helper.try_cmd("export");
+    let export = helper.native_run("export");
     assert!(export.status.success(), "{export:?}");
 
     // 4. bit log should show the full history including the gap snap
-    let log = parse(&helper.run_cmd("log comp1 --json"));
+    let log = parse(&helper.run("log comp1 --json"));
     let hashes: Vec<&str> = log
         .as_array()
         .unwrap()
@@ -298,27 +298,27 @@ fn merging_main_into_a_lane_when_main_added_a_new_package_dependency() {
     let base_file = format!("{filler}\nmodule.exports = () => 'comp1';\n");
     helper.populate_components(1, false, "");
     helper.write_file("comp1/index.js", &base_file);
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
 
-    helper.create_lane("dev", "");
+    helper.native("lane create dev");
     helper.write_file("comp1/index.js", &format!("{base_file}// lane-only change\n"));
-    helper.snap_all_components_without_build("");
-    helper.export("");
-    helper.run_cmd("install");
+    helper.native("snap --skip-tests");
+    helper.native("export");
+    helper.run("install");
     let lane_ws = helper.clone_workspace();
 
-    helper.switch_local_lane("main", "-x");
-    helper.run_cmd(&format!("install {pkg_name}@3.1.0"));
+    helper.native("switch main -x");
+    helper.run(&format!("install {pkg_name}@3.1.0"));
     helper.write_file(
         "comp1/index.js",
         &format!("const isPositive = require('{pkg_name}');\n{base_file}"),
     );
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
 
     helper.get_cloned_workspace(&lane_ws);
-    let merge_output = helper.merge_lane("main", "");
+    let merge_output = helper.native("lane merge main");
 
     // 1. should install the dependency added on main and complete the auto-snap
     assert!(!merge_output.contains("snap error"), "{merge_output}");

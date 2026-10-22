@@ -12,8 +12,8 @@ fn multiple_components_with_same_name_on_lane_keep_both_and_import() {
 
     helper.populate_components(2, true, "");
     helper.native("lane create lane-a");
-    helper.run("snap -m s1");
-    helper.run("export");
+    helper.native("snap -m s1");
+    helper.native("export");
 
     helper.re_init_workspace();
     helper.add_remote_scope();
@@ -26,19 +26,19 @@ fn multiple_components_with_same_name_on_lane_keep_both_and_import() {
         json!(&another_remote),
     );
     helper.populate_components(1, true, "");
-    helper.run("snap -m s1");
-    helper.run("export");
+    helper.native("snap -m s1");
+    helper.native("export");
 
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.add_remote(&another_remote_path);
-    helper.run(&format!(
+    helper.native(&format!(
         "lane import {}/lane-a --pattern {}/comp2 -x",
         helper.scopes.remote, helper.scopes.remote,
     ));
-    helper.run(&format!("import {another_remote}/comp1 -x"));
-    helper.run("snap --unmodified -m s2");
-    helper.run("export");
+    helper.native(&format!("import {another_remote}/comp1 -x"));
+    helper.native("snap --unmodified -m s2");
+    helper.native("export");
 
     let remote_lane = Helper::cmd_in(&helper.scopes.remote_path, "cat-lane lane-a");
     assert!(remote_lane.status.success(), "{remote_lane:?}");
@@ -54,7 +54,7 @@ fn multiple_components_with_same_name_on_lane_keep_both_and_import() {
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.add_remote(&another_remote_path);
-    helper.run(&format!("lane import {}/lane-a -x", helper.scopes.remote));
+    helper.native(&format!("lane import {}/lane-a -x", helper.scopes.remote));
     let status = parse(&helper.native("status --json"));
     assert_eq!(
         status["invalidComponents"]
@@ -66,7 +66,7 @@ fn multiple_components_with_same_name_on_lane_keep_both_and_import() {
 
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!(
+    helper.native(&format!(
         "lane import {}/lane-a --pattern !{another_remote}/comp1 -x",
         helper.scopes.remote,
     ));

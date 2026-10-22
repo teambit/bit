@@ -9,12 +9,12 @@ fn fetching_lanes_objects_without_writing_to_workspace() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
     helper.native("lane create dev");
-    helper.run("snap -m s1");
-    helper.run("export");
+    helper.native("snap -m s1");
+    helper.native("export");
 
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("fetch {}/dev --lanes", helper.scopes.remote));
+    helper.native(&format!("fetch {}/dev --lanes", helper.scopes.remote));
 
     assert!(!helper.scopes.local_path.join("components/bar/foo").exists());
     let bitmap = config::read_jsonc(&helper.scopes.local_path.join(".bitmap"));
@@ -29,7 +29,7 @@ fn fetching_lanes_objects_without_writing_to_workspace() {
     let list = parse(&helper.native("list --local-scope --json"));
     assert_eq!(list.as_array().unwrap().len(), 3);
     assert!(helper.native("status").contains("nothing to tag or export"));
-    helper.run("fetch --lanes");
+    helper.native("fetch --lanes");
 }
 
 /// import lanes › importing lanes › importing the lane and checking out by bit switch
@@ -40,8 +40,8 @@ fn importing_lane_and_checking_out_by_switch_and_with_alias() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
     helper.native("lane create dev");
-    helper.run("snap -m s1");
-    helper.run("export");
+    helper.native("snap -m s1");
+    helper.native("export");
     let lane_hash = parse(&helper.native("cat-lane dev"))["hash"]
         .as_str()
         .unwrap()
@@ -49,8 +49,8 @@ fn importing_lane_and_checking_out_by_switch_and_with_alias() {
 
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("switch {}/dev -x", helper.scopes.remote));
-    helper.run("link");
+    helper.native(&format!("switch {}/dev -x", helper.scopes.remote));
+    helper.native("link");
 
     let bitmap = config::read_jsonc(&helper.scopes.local_path.join(".bitmap"));
     assert_eq!(bitmap["_bit_lane"]["id"]["name"].as_str(), Some("dev"));
@@ -91,7 +91,7 @@ fn importing_lane_and_checking_out_by_switch_and_with_alias() {
     );
     assert_eq!(parse(&helper.native("cat-lane dev"))["hash"].as_str(), Some(lane_hash.as_str()));
 
-    helper.run("switch main -x");
+    helper.native("switch main -x");
     let bitmap_main = config::read_jsonc(&helper.scopes.local_path.join(".bitmap"));
     assert!(bitmap_main.get("_bit_lane").is_none());
     assert_eq!(helper.native("lane current").trim(), "main");
@@ -100,7 +100,7 @@ fn importing_lane_and_checking_out_by_switch_and_with_alias() {
 
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("switch {}/dev --alias my-new-lane -x", helper.scopes.remote));
+    helper.native(&format!("switch {}/dev --alias my-new-lane -x", helper.scopes.remote));
     let aliased_lane = parse(&helper.native("lane show my-new-lane --json"));
     assert_eq!(
         aliased_lane["components"]

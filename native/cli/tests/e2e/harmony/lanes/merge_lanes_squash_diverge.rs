@@ -7,29 +7,32 @@ fn single_scope_two_diverged_lanes_squash_on_merge() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, false, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     let common_ancestor = helper.get_head("comp1");
-    helper.export("");
+    helper.native("export");
 
-    helper.create_lane("lane-a", "");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native("lane create lane-a");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
     let head_on_lane_a = helper.get_head_from_lane("lane-a", "comp1");
-    helper.export("");
+    helper.native("export");
     let lane_a_workspace = helper.clone_workspace();
 
-    helper.switch_local_lane("main", "-x");
-    helper.create_lane("lane-b", "");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native("switch main -x");
+    helper.native("lane create lane-b");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
     let head_on_lane_b = helper.get_head_from_lane("lane-b", "comp1");
-    helper.export("");
+    helper.native("export");
 
     helper.get_cloned_workspace(&lane_a_workspace);
-    helper.import_and_get_objects();
-    helper.merge_lane("lane-b", "--squash --auto-merge-resolve theirs -x");
+    helper.run("import --objects");
+    helper.native(&format!(
+        "lane merge {}/lane-b --squash --auto-merge-resolve theirs -x",
+        helper.scopes.remote,
+    ));
     let merge_snap = helper.get_head_from_lane("lane-a", "comp1");
 
     // 1. merge snap should have a single parent pointing to lane-a head
@@ -47,7 +50,7 @@ fn single_scope_two_diverged_lanes_squash_on_merge() {
     );
 
     // 3. bit log should show a clean history without lane-b intermediate snaps
-    let log = parse(&helper.run_cmd("log comp1 --json"));
+    let log = parse(&helper.native("log comp1 --json"));
     let hashes: Vec<&str> = log
         .as_array()
         .unwrap()
@@ -70,30 +73,30 @@ fn multi_scope_lane_a_on_scope_a_lane_b_on_scope_b_diverged_squash() {
     helper.add_remote_scope_with(&scope_b_path);
 
     helper.populate_components(1, false, "");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
 
-    helper.create_lane("lane-a", "");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native("lane create lane-a");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
     let head_on_lane_a = helper.get_head_from_lane("lane-a", "comp1");
-    helper.export("");
+    helper.native("export");
     let lane_a_workspace = helper.clone_workspace();
 
-    helper.switch_local_lane("main", "-x");
-    helper.create_lane("lane-b", &format!("--scope {scope_b} --fork-lane-new-scope"));
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native("switch main -x");
+    helper.native(&format!("lane create lane-b --scope {scope_b} --fork-lane-new-scope"));
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
     let head_on_lane_b = helper.get_head_from_lane("lane-b", "comp1");
-    helper.export("--fork-lane-new-scope");
+    helper.run("export --fork-lane-new-scope");
 
     helper.get_cloned_workspace(&lane_a_workspace);
-    helper.import_and_get_objects();
-    helper.merge_lane(&format!("{scope_b}/lane-b"), "--squash --auto-merge-resolve theirs -x");
+    helper.run("import --objects");
+    helper.native(&format!("lane merge {scope_b}/lane-b --squash --auto-merge-resolve theirs -x"));
     let merge_snap = helper.get_head_from_lane("lane-a", "comp1");
-    helper.export("");
+    helper.native("export");
     let scope_a_after_export = helper.clone_workspace();
 
     // 1. merge snap should have a single parent pointing to lane-a head
@@ -126,10 +129,10 @@ fn multi_scope_lane_a_on_scope_a_lane_b_on_scope_b_diverged_squash() {
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.add_remote_scope_with(&scope_b_path);
-    helper.import_lane("lane-a", "-x");
+    helper.native(&format!("lane import {}/lane-a -x", helper.scopes.remote));
 
     // 6. bit log should show the merge snap and lane-a chain, not lane-b intermediates
-    let log = parse(&helper.run_cmd("log comp1 --json"));
+    let log = parse(&helper.run("log comp1 --json"));
     let hashes: Vec<&str> = log
         .as_array()
         .unwrap()
@@ -141,22 +144,22 @@ fn multi_scope_lane_a_on_scope_a_lane_b_on_scope_b_diverged_squash() {
     assert!(!hashes.contains(&head_on_lane_b.as_str()));
 
     // 7. bit status should not throw
-    let status = helper.try_cmd("status");
+    let status = helper.native_run("status");
     assert!(status.status.success(), "{status:?}");
 
     // re-merge of lane-b after it advances with new snaps
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.add_remote_scope_with(&scope_b_path);
-    helper.import_lane(&format!("{scope_b}/lane-b"), "-x");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native(&format!("lane import {scope_b}/lane-b -x"));
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
     let head_on_lane_b_after = helper.get_head_from_lane(&format!("{scope_b}/lane-b"), "comp1");
-    helper.export("");
+    helper.native("export");
 
     helper.get_cloned_workspace(&scope_a_after_export);
-    helper.import_and_get_objects();
-    helper.merge_lane(&format!("{scope_b}/lane-b"), "--squash --auto-merge-resolve theirs -x");
+    helper.run("import --objects");
+    helper.native(&format!("lane merge {scope_b}/lane-b --squash --auto-merge-resolve theirs -x"));
     let second_merge_snap = helper.get_head_from_lane("lane-a", "comp1");
 
     // 8. second merge snap should have a single parent pointing to the previous merge snap
@@ -174,7 +177,7 @@ fn multi_scope_lane_a_on_scope_a_lane_b_on_scope_b_diverged_squash() {
     assert!(!prev_parents.contains(&head_on_lane_b.as_str()));
 
     // 10. bit log after re-merge should show two merge snaps in the chain, no lane-b intermediates
-    let log = parse(&helper.run_cmd("log comp1 --json"));
+    let log = parse(&helper.native("log comp1 --json"));
     let hashes: Vec<&str> = log
         .as_array()
         .unwrap()
@@ -187,7 +190,7 @@ fn multi_scope_lane_a_on_scope_a_lane_b_on_scope_b_diverged_squash() {
     assert!(!hashes.contains(&head_on_lane_b_after.as_str()));
 
     // 11. re-merge should export to scope-a without errors
-    let export = helper.try_cmd("export");
+    let export = helper.native_run("export");
     assert!(export.status.success(), "{export:?}");
 }
 
@@ -196,25 +199,28 @@ fn lane_into_main_diverged_squash() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, false, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     let common_ancestor = helper.get_head("comp1");
-    helper.export("");
+    helper.native("export");
 
-    helper.create_lane("dev", "");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native("lane create dev");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
     let head_on_lane = helper.get_head_from_lane("dev", "comp1");
-    helper.export("");
+    helper.native("export");
 
-    helper.switch_local_lane("main", "-x");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native("switch main -x");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
     let head_on_main = helper.get_head("comp1");
-    helper.export("");
+    helper.native("export");
 
-    helper.merge_lane("dev", "--squash --auto-merge-resolve theirs -x");
+    helper.native(&format!(
+        "lane merge {}/dev --squash --auto-merge-resolve theirs -x",
+        helper.scopes.remote,
+    ));
     let merge_snap = helper.get_head("comp1");
 
     // 1. merge snap on main should have a single parent pointing to the previous main head
@@ -232,7 +238,7 @@ fn lane_into_main_diverged_squash() {
     );
 
     // 3. bit log on main should show the main chain + merge snap, not the lane intermediates
-    let log = parse(&helper.run_cmd("log comp1 --json"));
+    let log = parse(&helper.native("log comp1 --json"));
     let hashes: Vec<&str> = log
         .as_array()
         .unwrap()
@@ -245,7 +251,7 @@ fn lane_into_main_diverged_squash() {
     assert!(!hashes.contains(&head_on_lane.as_str()));
 
     // 4. exporting main after the merge should succeed
-    let export = helper.try_cmd("export");
+    let export = helper.native_run("export");
     assert!(export.status.success(), "{export:?}");
 }
 
@@ -260,29 +266,29 @@ fn lane_into_main_cross_scope_diverged_squash_with_fresh_consumer() {
 
     let comp_full_id = format!("{}/comp1", helper.scopes.remote);
     helper.populate_components(1, false, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     let common_ancestor_hash = helper.get_head("comp1");
-    helper.export("");
+    helper.native("export");
 
-    helper.create_lane("dev", &format!("--scope {scope_b} --fork-lane-new-scope"));
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native(&format!("lane create dev --scope {scope_b} --fork-lane-new-scope"));
+    helper.native("snap --skip-tests --unmodified");
     let lane_snap1 = helper.get_head_from_lane("dev", "comp1");
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native("snap --skip-tests --unmodified");
     let lane_snap2 = helper.get_head_from_lane("dev", "comp1");
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native("snap --skip-tests --unmodified");
     let lane_head = helper.get_head_from_lane("dev", "comp1");
-    helper.export("--fork-lane-new-scope");
+    helper.run("export --fork-lane-new-scope");
 
-    helper.switch_local_lane("main", "-x");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
+    helper.native("switch main -x");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
     let main_head2 = helper.get_head("comp1");
-    helper.export("");
+    helper.native("export");
 
-    helper.merge_lane(&format!("{scope_b}/dev"), "--squash --auto-merge-resolve theirs -x");
+    helper.run(&format!("lane merge {scope_b}/dev --squash --auto-merge-resolve theirs -x"));
     let merge_head = helper.get_head("comp1");
-    helper.export("");
+    helper.native("export");
 
     // 1. merge snap on main should have a single parent pointing to the previous main head
     let snap = parse(&helper.cat_component(&format!("comp1@{merge_head}")));
@@ -301,14 +307,14 @@ fn lane_into_main_cross_scope_diverged_squash_with_fresh_consumer() {
     // fresh consumer imports comp1 from scope-a (no scope-b in remotes)
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.import_component("comp1", "-x");
+    helper.native(&format!("import {}/comp1 -x", helper.scopes.remote));
 
     // 3. bit status should not throw
-    let status = helper.try_cmd("status");
+    let status = helper.native_run("status");
     assert!(status.status.success(), "{status:?}");
 
     // 4. bit log should show common ancestor + main chain + merge snap
-    let log = parse(&helper.run_cmd(&format!("log {comp_full_id} --json")));
+    let log = parse(&helper.run(&format!("log {comp_full_id} --json")));
     let hashes: Vec<&str> = log
         .as_array()
         .unwrap()
@@ -330,22 +336,25 @@ fn sanity_squash_on_non_diverged_fast_forward_lane_to_lane_merge() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, false, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     let common_head = helper.get_head("comp1");
-    helper.export("");
+    helper.native("export");
 
-    helper.create_lane("lane-a", "");
-    helper.export("");
+    helper.native("lane create lane-a");
+    helper.native("export");
 
-    helper.switch_local_lane("main", "-x");
-    helper.create_lane("lane-b", "");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.export("");
+    helper.native("switch main -x");
+    helper.native("lane create lane-b");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("export");
 
-    helper.switch_local_lane("lane-a", "-x");
-    helper.merge_lane("lane-b", "--squash --auto-merge-resolve theirs -x");
+    helper.native("switch lane-a -x");
+    helper.native(&format!(
+        "lane merge {}/lane-b --squash --auto-merge-resolve theirs -x",
+        helper.scopes.remote,
+    ));
     let merge_snap = helper.get_head_from_lane("lane-a", "comp1");
 
     // 1. squashed snap on lane-a should have a single parent pointing to the common head
@@ -353,6 +362,6 @@ fn sanity_squash_on_non_diverged_fast_forward_lane_to_lane_merge() {
     assert_eq!(snap["parents"], serde_json::json!([common_head]));
 
     // 2. bit log should not throw
-    let log = helper.try_cmd("log comp1");
+    let log = helper.native_run("log comp1");
     assert!(log.status.success(), "{log:?}");
 }

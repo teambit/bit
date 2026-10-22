@@ -7,18 +7,18 @@ fn setup_diverged_lane() -> (Helper, String, PathBuf) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.run("tag -m v1");
-    helper.run("export");
+    helper.native("tag -m v1");
+    helper.native("export");
     helper.native("lane create dev");
     helper.populate_components(2, true, "version2");
-    helper.run("snap -m s1");
-    helper.run("export");
+    helper.native("snap -m s1");
+    helper.native("export");
     let ws_on_lane = helper.clone_workspace();
-    helper.run("switch main -x");
+    helper.native("switch main -x");
     helper.populate_components(2, true, "version3");
-    helper.run("snap -m s2");
+    helper.native("snap -m s2");
     let comp2_head_on_main = helper.head(&format!("{}/comp2", helper.scopes.remote));
-    helper.run("export");
+    helper.native("export");
     helper.get_cloned_workspace(&ws_on_lane);
     helper.run("import -x");
     let before_merge = helper.clone_workspace();
@@ -41,7 +41,7 @@ fn getting_updates_from_main_when_lane_is_diverged() {
         "{status_lanes}",
     );
 
-    helper.run("lane merge main --auto-merge-resolve theirs -x");
+    helper.native("lane merge main --auto-merge-resolve theirs -x");
     let status = parse(&helper.native("status --json"));
     let after_merge_to_main = helper.clone_workspace();
     let comp2_id = format!("{}/comp2", helper.scopes.remote);
@@ -62,16 +62,16 @@ fn getting_updates_from_main_when_lane_is_diverged() {
         0,
     );
 
-    helper.run("switch main -x");
-    helper.run("lane merge dev --no-squash -x");
+    helper.native("switch main -x");
+    helper.native("lane merge dev --no-squash -x");
     let cat = parse(&helper.native("cat-component comp1@latest --json"));
     assert_eq!(cat["parents"].as_array().unwrap().len(), 2);
     helper.run("reset --all");
 
     helper.get_cloned_workspace(&after_merge_to_main);
-    helper.run("switch main -x");
+    helper.native("switch main -x");
     let before_merge_head = helper.head("comp1");
-    helper.run("lane merge dev -x");
+    helper.native("lane merge dev -x");
     let cat_squashed = parse(&helper.native("cat-component comp1@latest --json"));
     assert_eq!(
         cat_squashed["parents"]
@@ -83,7 +83,7 @@ fn getting_updates_from_main_when_lane_is_diverged() {
     assert_eq!(cat_squashed["parents"][0].as_str(), Some(before_merge_head.as_str()));
 
     helper.get_cloned_workspace(&before_merge);
-    helper.run("lane merge main --auto-merge-resolve theirs --no-auto-snap -x");
+    helper.native("lane merge main --auto-merge-resolve theirs --no-auto-snap -x");
     let status_no_snap = parse(&helper.native("status --json"));
     assert_eq!(
         status_no_snap["modifiedComponents"]
@@ -104,18 +104,18 @@ fn merge_file_changes_from_one_lane_to_another() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
     helper.native("lane create dev");
-    helper.run("snap -m s1");
-    helper.run("export");
+    helper.native("snap -m s1");
+    helper.native("export");
     let author_scope = helper.clone_workspace();
 
     helper.native("lane create dev2");
     helper.populate_components(3, true, " v2");
     helper.output_file("comp1/new-file.ts", "");
-    helper.run("snap -m s2");
-    helper.run("export");
+    helper.native("snap -m s2");
+    helper.native("export");
 
     helper.get_cloned_workspace(&author_scope);
-    helper.run(&format!("lane merge {}/dev2 -x", helper.scopes.remote));
+    helper.native(&format!("lane merge {}/dev2 -x", helper.scopes.remote));
     helper.run("compile");
 
     assert!(helper.scopes.local_path.join("comp1/new-file.ts").exists());

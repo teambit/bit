@@ -34,7 +34,7 @@ fn wildcard_tag_remove_and_untag() {
         "{tag_none_combined}",
     );
 
-    let tag_out = helper.run(r#"tag "**/utils/is/*" --message v1"#);
+    let tag_out = helper.native(r#"tag "**/utils/is/*" --message v1"#);
     assert!(tag_out.contains("2 component(s) tagged"));
     assert!(tag_out.contains("utils/is/string"));
     assert!(tag_out.contains("utils/is/type"));
@@ -56,7 +56,7 @@ fn wildcard_tag_remove_and_untag() {
 
     // remove with wildcard
     helper.get_cloned_workspace(&scope_after_add);
-    helper.run("tag --message all");
+    helper.native("tag --message all");
     let rm_none = helper.cmd(r#"remove "none/*" --silent"#);
     assert!(!rm_none.status.success());
     let rm_none_combined = format!("{}{}", rm_none.stdout, rm_none.stderr);
@@ -79,7 +79,7 @@ fn wildcard_tag_remove_and_untag() {
 
     // untag (reset) with wildcard
     helper.get_cloned_workspace(&scope_after_add);
-    helper.run("tag --message all");
+    helper.native("tag --message all");
     let reset_none = helper.cmd(r#"reset "none/*""#);
     assert!(!reset_none.status.success());
     let reset_none_combined = format!("{}{}", reset_none.stdout, reset_none.stderr);
@@ -115,7 +115,7 @@ fn wildcard_tag_remove_and_untag() {
 #[test]
 fn wildcard_remote_remove_and_export() {
     let (helper, scope_after_add) = setup_wildcard_workspace();
-    helper.run("tag --message all");
+    helper.native("tag --message all");
     remote::publish(&helper);
 
     let hard_none = Helper::cmd_in_with(
@@ -139,7 +139,7 @@ fn wildcard_remote_remove_and_export() {
     // remove from remote after removed locally
     helper.get_cloned_workspace(&scope_after_add);
     helper.re_init_remote_scope();
-    helper.run("tag --message all");
+    helper.native("tag --message all");
     remote::publish(&helper);
     helper.native(&format!(r#"remove "{}/**" --silent"#, helper.scopes.remote));
     let hard_after_local = Helper::cmd_in_with(
@@ -156,7 +156,7 @@ fn wildcard_remote_remove_and_export() {
     // export with wildcard
     helper.get_cloned_workspace(&scope_after_add);
     helper.re_init_remote_scope();
-    helper.run("tag --message all");
+    helper.native("tag --message all");
     let exp_none = helper.native(r#"export "none/*""#);
     assert!(exp_none.contains("nothing to export"));
 
@@ -181,8 +181,8 @@ fn wildcard_remote_remove_and_export() {
 #[test]
 fn wildcard_checkout_diff_and_list() {
     let (helper, scope_after_add) = setup_wildcard_workspace();
-    helper.run("tag --message v1");
-    helper.run("tag --unmodified --ver 0.0.5 --message v5");
+    helper.native("tag --message v1");
+    helper.native("tag --unmodified --ver 0.0.5 --message v5");
 
     let co_none = helper.cmd(r#"checkout 0.0.1 "none/*""#);
     assert!(!co_none.status.success());
@@ -198,7 +198,7 @@ fn wildcard_checkout_diff_and_list() {
 
     // diff with wildcard
     helper.get_cloned_workspace(&scope_after_add);
-    helper.run("tag --message v1");
+    helper.native("tag --message v1");
     helper.output_file("utils/is/string/string.js", "");
     helper.output_file("utils/is/type/type.js", "");
     helper.output_file("utils/fs/read/read.js", "");
@@ -222,7 +222,7 @@ fn wildcard_checkout_diff_and_list() {
 
     // list remote with wildcard
     helper.get_cloned_workspace(&scope_after_add);
-    helper.run("tag --message v1");
+    helper.native("tag --message v1");
     helper.re_init_remote_scope();
     remote::publish(&helper);
     let list_remote =

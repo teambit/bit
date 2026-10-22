@@ -11,12 +11,12 @@ fn multiple_scopes_when_a_component_in_the_origin_is_different_than_on_the_lane(
     let origin_path = origin_env.scope_path;
     helper.add_remote_scope_with(&origin_path);
 
-    helper.create_lane("dev", "");
+    helper.native("lane create dev");
     helper.add_default_scope(&origin_remote);
     helper.populate_components(1, false, "on-lane");
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
     let lane_scope_head = helper.get_head_from_lane("dev", "comp1");
-    helper.export("");
+    helper.native("export");
     let after_lane_export = helper.clone_workspace();
     let remote_scope_after_export = helper.clone_remote_scope();
 
@@ -24,15 +24,15 @@ fn multiple_scopes_when_a_component_in_the_origin_is_different_than_on_the_lane(
     helper.add_remote_scope_with(&origin_path);
     helper.add_default_scope(&origin_remote);
     helper.populate_components(1, false, "on-origin");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     let main_head = helper.get_head("comp1");
-    helper.export("");
+    helper.native("export");
 
     helper.get_cloned_workspace(&after_lane_export);
-    helper.import_and_get_objects();
+    helper.run("import --objects");
 
     // 1. bit status should have the component as pendingUpdatesFromMain with an noCommonSnap error
-    let status = parse(&helper.run_cmd("status --json --lanes"));
+    let status = parse(&helper.run("status --json --lanes"));
     assert_eq!(
         status["pendingUpdatesFromMain"]
             .as_array()
@@ -46,13 +46,13 @@ fn multiple_scopes_when_a_component_in_the_origin_is_different_than_on_the_lane(
     );
 
     // 2. bit lane merge without --resolve-unrelated flag: should throw
-    let err = helper.try_cmd("lane merge main -x");
+    let err = helper.native_run("lane merge main -x");
     assert!(!err.status.success());
     let combined = format!("{}{}", err.stdout, err.stderr);
     assert!(combined.contains("don't have any snap in common"));
 
     // bit lane merge with --resolve-unrelated
-    let merge_output = helper.merge_lane("main", "--resolve-unrelated -x");
+    let merge_output = helper.native("lane merge main --resolve-unrelated -x");
 
     // 3. should merge successfully
     assert!(merge_output.contains("successfully merged"), "{merge_output}");
@@ -75,24 +75,24 @@ fn multiple_scopes_when_a_component_in_the_origin_is_different_than_on_the_lane(
     assert_eq!(cat_obj["unrelated"]["head"].as_str().unwrap(), lane_scope_head);
 
     // 8. should export the component successfully
-    let export = helper.try_cmd("export");
+    let export = helper.native_run("export");
     assert!(export.status.success(), "{export:?}");
 
     // bit lane merge with --resolve-unrelated and --no-auto-snap
     helper.get_cloned_remote_scope(&remote_scope_after_export);
     helper.get_cloned_workspace(&after_lane_export);
-    helper.import_and_get_objects();
-    helper.merge_lane("main", "--resolve-unrelated --no-auto-snap -x");
+    helper.run("import --objects");
+    helper.native("lane merge main --resolve-unrelated --no-auto-snap -x");
 
     // 9. bit status should show the component as during-merge and staged and not everywhere else
     helper.expect_status_to_be_clean_except(&["componentsDuringMergeState", "stagedComponents"]);
 
     // 10. bit import should not throw
-    let import = helper.try_cmd("import");
+    let import = helper.cmd("import");
     assert!(import.status.success(), "{import:?}");
 
     // snapping the component
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
 
     // 11. head on lane should point to the main head to preserve the history of the origin
     let lane_head = helper.get_head_from_lane("dev", "comp1");
@@ -103,14 +103,14 @@ fn multiple_scopes_when_a_component_in_the_origin_is_different_than_on_the_lane(
     assert_eq!(cat_obj["unrelated"]["head"].as_str().unwrap(), lane_scope_head);
 
     // 13. should export the component successfully
-    let export = helper.try_cmd("export");
+    let export = helper.native_run("export");
     assert!(export.status.success(), "{export:?}");
 
     // 14. bit lane merge with --resolve-unrelated and "theirs" merge-strategy
     helper.get_cloned_remote_scope(&remote_scope_after_export);
     helper.get_cloned_workspace(&after_lane_export);
-    helper.import_and_get_objects();
-    helper.merge_lane("main", "--resolve-unrelated theirs --no-auto-snap -x");
+    helper.run("import --objects");
+    helper.native("lane merge main --resolve-unrelated theirs --no-auto-snap -x");
     let file = helper.read_file("comp1/index.js");
     assert!(file.contains("on-origin"));
     assert!(!file.contains("on-lane"));
@@ -118,21 +118,22 @@ fn multiple_scopes_when_a_component_in_the_origin_is_different_than_on_the_lane(
     // bit lane merge of another lane that was not resolved yet
     helper.get_cloned_remote_scope(&remote_scope_after_export);
     helper.get_cloned_workspace(&after_lane_export);
-    helper.create_lane("dev2", &format!("--remote-scope {}", helper.scopes.remote));
-    helper.snap_all_components_without_build("--unmodified");
-    helper.export("");
-    helper.switch_local_lane("dev", "-x");
-    helper.import_and_get_objects();
-    let merge_main_out = helper.merge_lane("main", "--resolve-unrelated -x");
+    helper.native(&format!("lane create dev2 --remote-scope {}", helper.scopes.remote));
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("export");
+    helper.native("switch dev -x");
+    helper.run("import --objects");
+    let merge_main_out = helper.native("lane merge main --resolve-unrelated -x");
     assert!(!merge_main_out.contains("snap error"), "merge main output: {merge_main_out}");
     let lane_head_after_merge = helper.get_head_from_lane("dev", "comp1");
-    helper.export("");
+    helper.native("export");
     let before_merging_second_lane = helper.clone_workspace();
-    let merge_dev2_out = helper.merge_lane("dev2", "--resolve-unrelated -x");
+    let merge_dev2_out =
+        helper.native(&format!("lane merge {}/dev2 --resolve-unrelated -x", helper.scopes.remote));
     assert!(!merge_dev2_out.contains("snap error"), "merge dev2 output: {merge_dev2_out}");
 
     // 15. should keep the local history and not the dev2 history because the current history has been already resolved
-    let log = parse(&helper.run_cmd("log comp1 --json"));
+    let log = parse(&helper.native("log comp1 --json"));
     let hashes_in_history: Vec<&str> = log
         .as_array()
         .unwrap()
@@ -155,20 +156,20 @@ fn multiple_scopes_when_a_component_in_the_origin_is_different_than_on_the_lane(
     // 17. when main got another tag meanwhile: should be able to merge with no errors
     helper.re_init_workspace();
     helper.add_remote_scope_with(&origin_path);
-    helper.import_component(&format!("{origin_remote}/comp1"), "-x");
-    helper.tag_all_without_build("--unmodified");
-    helper.export("");
+    helper.native(&format!("import {origin_remote}/comp1 -x"));
+    helper.native("tag --skip-tests --unmodified");
+    helper.native("export");
 
     helper.get_cloned_workspace(&before_merging_second_lane);
-    helper.import_and_get_objects();
-    let merge = helper.try_cmd("lane merge dev2 --resolve-unrelated -x");
+    helper.run("import --objects");
+    let merge = helper.native_run("lane merge dev2 --resolve-unrelated -x");
     assert!(merge.status.success(), "{merge:?}");
 
     // 18. switching to main and checking out to head: should make the component available and checkout to main version
     helper.get_cloned_remote_scope(&remote_scope_after_export);
     helper.get_cloned_workspace(&after_lane_export);
-    helper.switch_local_lane("main", "-x");
-    helper.run_cmd("checkout head comp1 -x");
+    helper.native("switch main -x");
+    helper.native("checkout head comp1 -x");
     let list = helper.list_local_scope_parsed("");
     let arr = list.as_array().unwrap();
     assert_eq!(arr.len(), 1);
@@ -188,21 +189,21 @@ fn multiple_scopes_when_a_component_in_the_origin_is_different_than_on_the_lane(
     // 19. bit lane merge after soft-removed the unrelated component: should not throw
     helper.get_cloned_remote_scope(&remote_scope_after_export);
     helper.get_cloned_workspace(&after_lane_export);
-    helper.import_and_get_objects();
-    helper.run_cmd("delete comp1 --silent --lane");
-    helper.snap_all_components_without_build("");
-    helper.export("");
-    let merge = helper.try_cmd("lane merge main -x");
+    helper.run("import --objects");
+    helper.native("delete comp1 --silent --lane");
+    helper.run("snap --skip-tests");
+    helper.native("export");
+    let merge = helper.native_run("lane merge main -x");
     assert!(merge.status.success(), "{merge:?}");
 
     // 20. when the resolved unrelated is not a direct parent: bit status should not throw
     helper.get_cloned_remote_scope(&remote_scope_after_export);
     helper.get_cloned_workspace(&after_lane_export);
-    helper.import_and_get_objects();
-    helper.snap_all_components_without_build("--unmodified");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.merge_lane("main", "--resolve-unrelated -x");
-    let status = helper.try_cmd("status");
+    helper.run("import --objects");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("lane merge main --resolve-unrelated -x");
+    let status = helper.native_run("status");
     assert!(status.status.success(), "{status:?}");
 }
 
@@ -216,24 +217,24 @@ fn multiple_scopes_when_a_component_in_the_origin_is_different_than_on_the_lane_
     let origin_path = origin_env.scope_path;
     helper.add_remote_scope_with(&origin_path);
 
-    helper.create_lane("lane-a", "");
+    helper.native("lane create lane-a");
     helper.add_default_scope(&origin_remote);
     helper.populate_components(1, false, "on-lane");
-    helper.snap_all_components_without_build("");
-    helper.export("");
+    helper.native("snap --skip-tests");
+    helper.native("export");
 
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.add_remote_scope_with(&origin_path);
-    helper.create_lane("lane-b", "");
+    helper.native("lane create lane-b");
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
-    helper.snap_all_components_without_build("");
-    helper.export("");
+    helper.native("snap --skip-tests");
+    helper.native("export");
 
-    helper.merge_lane("lane-a", "-x");
+    helper.native(&format!("lane merge {}/lane-a -x", helper.scopes.remote));
 
-    let import = helper.try_cmd("import");
+    let import = helper.cmd("import");
     assert!(import.status.success(), "{import:?}");
 }
 
@@ -241,26 +242,26 @@ fn multiple_scopes_when_a_component_in_the_origin_is_different_than_on_the_lane_
 fn merge_unrelated_between_two_lanes_with_resolve_unrelated() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.create_lane("lane-a", "");
+    helper.native("lane create lane-a");
     helper.populate_components(1, false, "lane-a-v1");
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
     helper.populate_components(1, false, "lane-a-v2");
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
     let head_on_lane_a = helper.get_head_from_lane("lane-a", "comp1");
-    helper.export("");
+    helper.native("export");
 
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.create_lane("lane-b", "");
+    helper.native("lane create lane-b");
     helper.populate_components(1, false, "lane-b-v1");
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
     helper.populate_components(1, false, "lane-b-v2");
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
     let head_on_lane_b = helper.get_head_from_lane("lane-b", "comp1");
     let before_merge = helper.clone_workspace();
 
     // without specifying strategy, which defaults to "ours"
-    helper.merge_lane("lane-a", "--resolve-unrelated -x");
+    helper.native(&format!("lane merge {}/lane-a --resolve-unrelated -x", helper.scopes.remote));
 
     // 1. should resolve by default by ours
     let file = helper.read_file("comp1/index.js");
@@ -276,7 +277,10 @@ fn merge_unrelated_between_two_lanes_with_resolve_unrelated() {
 
     // with strategy theirs
     helper.get_cloned_workspace(&before_merge);
-    helper.merge_lane("lane-a", "--resolve-unrelated theirs -x");
+    helper.native(&format!(
+        "lane merge {}/lane-a --resolve-unrelated theirs -x",
+        helper.scopes.remote,
+    ));
 
     // 4. should get the file content according to their
     let file = helper.read_file("comp1/index.js");
@@ -297,19 +301,19 @@ fn merge_lanes_when_local_lane_has_soft_removed_components() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.create_lane("dev", "");
-    helper.snap_all_components_without_build("");
-    helper.export("");
-    helper.create_lane("dev2", "");
-    helper.snap_Component_without_build("comp1", "--unmodified");
-    helper.export("");
-    helper.switch_local_lane("dev", "-x");
-    helper.run_cmd("delete comp2 --silent --lane");
+    helper.native("lane create dev");
+    helper.native("snap --skip-tests");
+    helper.native("export");
+    helper.native("lane create dev2");
+    helper.native("snap comp1 --skip-tests --unmodified");
+    helper.native("export");
+    helper.native("switch dev -x");
+    helper.native("delete comp2 --silent --lane");
     helper.write_file("comp1/index.js", "");
-    helper.snap_all_components_without_build("");
-    helper.export("");
+    helper.run("snap --skip-tests");
+    helper.native("export");
 
-    helper.merge_lane("dev2", "-x");
+    helper.run(&format!("lane merge {}/dev2 -x", helper.scopes.remote));
     let bitmap = helper.read_bit_map();
     assert!(bitmap.get("comp2").is_none());
 
@@ -317,20 +321,20 @@ fn merge_lanes_when_local_lane_has_soft_removed_components() {
     let helper2 = Helper::new();
     helper2.set_workspace_with_remote_scope();
     helper2.populate_components(2, true, "");
-    helper2.create_lane("dev", "");
-    helper2.snap_all_components_without_build("");
-    helper2.export("");
-    helper2.create_lane("dev2", "");
-    helper2.snap_all_components_without_build("--unmodified");
-    helper2.export("");
-    helper2.switch_local_lane("dev", "-x");
-    helper2.run_cmd("delete comp2 --silent --lane");
+    helper2.native("lane create dev");
+    helper2.native("snap --skip-tests");
+    helper2.native("export");
+    helper2.native("lane create dev2");
+    helper2.native("snap --skip-tests --unmodified");
+    helper2.native("export");
+    helper2.native("switch dev -x");
+    helper2.native("delete comp2 --silent --lane");
     helper2.write_file("comp1/index.js", "");
-    helper2.snap_all_components_without_build("");
-    helper2.export("");
-    helper2.merge_lane("dev2", "-x");
+    helper2.run("snap --skip-tests");
+    helper2.native("export");
+    helper2.run(&format!("lane merge {}/dev2 -x", helper2.scopes.remote));
 
-    let log = parse(&helper2.run_cmd("log comp2 --json"));
+    let log = parse(&helper2.run("log comp2 --json"));
     let hashes: Vec<&str> = log
         .as_array()
         .unwrap()

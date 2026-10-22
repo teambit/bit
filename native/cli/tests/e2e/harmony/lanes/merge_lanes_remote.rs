@@ -8,8 +8,8 @@ fn setup_exported_dev_lane() -> (Helper, PathBuf) {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
     helper.native("lane create dev");
-    helper.run("snap -m s1");
-    helper.run("export");
+    helper.native("snap -m s1");
+    helper.native("export");
     let author_scope = helper.clone_workspace();
     (helper, author_scope)
 }
@@ -20,7 +20,7 @@ fn merging_remote_lane_into_main_and_exporting() {
     let (helper, _) = setup_exported_dev_lane();
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("lane merge {}/dev -x", helper.scopes.remote));
+    helper.native(&format!("lane merge {}/dev -x", helper.scopes.remote));
 
     let comp1_path = helper.scopes.local_path.join(&helper.scopes.remote).join("comp1/index.js");
     assert!(comp1_path.exists());
@@ -68,7 +68,7 @@ fn merging_remote_lane_into_main_with_workspace_flag_skips_non_workspace_compone
     helper.re_init_workspace();
     helper.add_remote_scope();
     let merge_out =
-        helper.run(&format!("lane merge {}/dev --workspace --verbose -x", helper.scopes.remote));
+        helper.native(&format!("lane merge {}/dev --workspace --verbose -x", helper.scopes.remote));
     assert!(merge_out.contains("merge skipped"), "{merge_out}");
     assert!(merge_out.contains("not in the workspace"), "{merge_out}");
 
@@ -106,16 +106,16 @@ fn importing_remote_lane_ahead_of_local_lane_and_creating_same_name_lane() {
     let (helper, author_scope) = setup_exported_dev_lane();
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("switch {}/dev -x", helper.scopes.remote));
+    helper.native(&format!("switch {}/dev -x", helper.scopes.remote));
     let imported_scope = helper.clone_workspace();
 
     helper.get_cloned_workspace(&author_scope);
     helper.populate_components(3, true, " v2");
-    helper.run("snap -m s2");
-    helper.run("export");
+    helper.native("snap -m s2");
+    helper.native("export");
 
     helper.get_cloned_workspace(&imported_scope);
-    helper.run(&format!("fetch {}/dev --lanes", helper.scopes.remote));
+    helper.native(&format!("fetch {}/dev --lanes", helper.scopes.remote));
     let status = parse(&helper.run("status --json"));
     assert_eq!(
         status["outdatedComponents"]
@@ -125,8 +125,8 @@ fn importing_remote_lane_ahead_of_local_lane_and_creating_same_name_lane() {
         3,
     );
 
-    helper.run("checkout head -x");
-    helper.run("link");
+    helper.native("checkout head -x");
+    helper.native("link");
     let comp1_file = std::fs::read_to_string(
         helper.scopes.local_path.join(&helper.scopes.remote).join("comp1/index.js"),
     )
@@ -177,8 +177,8 @@ fn importing_remote_lane_ahead_of_local_lane_and_creating_same_name_lane() {
     helper.native("lane create dev");
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.run("snap -m s1");
-    let run = helper.cmd("export");
+    helper.native("snap -m s1");
+    let run = helper.native_run("export");
     assert!(!run.status.success());
     let combined = format!("{}{}", run.stdout, run.stderr);
     assert!(combined.contains("unable to merge"), "{combined}");
