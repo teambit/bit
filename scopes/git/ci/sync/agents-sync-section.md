@@ -41,7 +41,7 @@ git push -u origin add-gift-wrap
 gh pr create --fill
 ```
 
-Commit `.bitmap` together with your source changes. Never edit `.bitmap` by hand. After the PR merges, run `git switch {{branch}} && git pull` before you start the next change.
+Commit `.bitmap` together with your source changes. Never edit `.bitmap` by hand. After the PR merges, run `git switch {{branch-sh}} && git pull` before you start the next change.
 
 #### Bit-first (from another Bit workspace)
 

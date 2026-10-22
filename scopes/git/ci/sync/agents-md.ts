@@ -39,12 +39,28 @@ export interface AgentsSectionValues {
   defaultBranch: string;
 }
 
-/** The sync section, with the scope, the repository and the default branch filled in. */
+/**
+ * The sync section, with the scope, the repository and the default branch filled in. `{{branch-sh}}`
+ * is the branch as a shell word, for commands: a git branch name can hold `$` or a quote.
+ */
 export function renderAgentsSection(values: AgentsSectionValues): string {
   const raw = fs.readFileSync(path.join(__dirname, 'agents-sync-section.md'), 'utf8');
-  const byKey: Record<string, string> = { scope: values.scope, repo: values.repo, branch: values.defaultBranch };
+  const byKey: Record<string, string> = {
+    scope: values.scope,
+    repo: values.repo,
+    branch: values.defaultBranch,
+    'branch-sh': shellWord(values.defaultBranch),
+  };
   // A function replacement inserts the value verbatim: `$` is legal in a branch name.
-  return raw.replace(/\{\{(scope|repo|branch)\}\}/g, (_match, key: string) => byKey[key]);
+  return raw.replace(/\{\{(scope|repo|branch|branch-sh)\}\}/g, (_match, key: string) => byKey[key]);
+}
+
+/**
+ * `value` as one POSIX shell word: plain names as they are, anything else single-quoted. The same
+ * rule as `shellQuote` in init-scaffold.ts, which imports this module, so it is not imported here.
+ */
+function shellWord(value: string): string {
+  return /^[\w./@:+-]+$/.test(value) ? value : `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
 /**

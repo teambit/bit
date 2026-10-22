@@ -505,8 +505,8 @@ export function renderInitReport(input: InitReportInput): string {
     const why = input.originUrl ? "the remote didn't name its default branch" : 'no remote names the default branch';
     header.push(
       formatWarningSummary(
-        `${why}, so the workflows use "${defaultBranch}". If that's wrong,\n` +
-          `  edit the branch filters in both workflow files.`
+        `${why}, so the workflows and AGENTS.md use "${defaultBranch}". If that's wrong,\n` +
+          `  edit the branch filters in both workflow files and the branch in the AGENTS.md sync section.`
       )
     );
   }

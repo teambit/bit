@@ -30,6 +30,8 @@ describe('agents-md', () => {
     it('inserts a branch name with `$` in it verbatim', () => {
       const rendered = renderAgentsSection({ ...VALUES, defaultBranch: "a$'b$&" });
       expect(rendered).to.include("Never push to `a$'b$&`");
+      // in a command, the branch is one shell word: `$` does not expand and the quote does not end it
+      expect(rendered).to.include(`git switch 'a$'\\''b$&' && git pull`);
     });
 
     it('opens and closes with the markers', () => {
