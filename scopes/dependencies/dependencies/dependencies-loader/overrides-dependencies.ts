@@ -1,5 +1,6 @@
-import { DEPENDENCIES_FIELDS, MANUALLY_ADD_DEPENDENCY, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
+import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
+import { isPlusVersion, resolvePlusVersion } from '@teambit/dependency-resolver';
 import type { ConsumerComponent as Component, ManuallyChangedDependencies } from '@teambit/legacy.consumer-component';
 import type { FileType } from './auto-detect-deps';
 
@@ -75,14 +76,15 @@ export default class OverridesDependencies {
     packageJson: Record<string, any> | null | undefined
   ): Record<string, any> | null | undefined {
     const packageVersionToAdd = (): string | null | undefined => {
-      if (dependencyValue !== MANUALLY_ADD_DEPENDENCY) {
+      // "+", "+^" and "+~" take the version from the package.json
+      if (!isPlusVersion(dependencyValue)) {
         return dependencyValue;
       }
       if (!packageJson) return null;
       for (const depField of DEPENDENCIES_FIELDS) {
         if (packageJson[depField]) {
           const found = Object.keys(packageJson[depField]).find((pkg) => pkg === dependency);
-          if (found) return packageJson[depField][dependency];
+          if (found) return resolvePlusVersion(dependencyValue, packageJson[depField][dependency]);
         }
       }
       return null;

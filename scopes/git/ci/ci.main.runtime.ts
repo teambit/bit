@@ -50,7 +50,7 @@ export type CiSwitchLaneOptions = SwitchLaneOptions & {
 import type { CiSyncConfig } from './sync/sync-config';
 import { SyncOrchestrator } from './sync/sync-orchestrator';
 import type { GitHostProvider } from './sync/git-host-provider';
-import { GitHubHostProvider } from './sync/github-client';
+import { GitHubHostProvider, gitHubApiUrl } from './sync/github-client';
 import { addAllExceptScopeAndModules, parseOriginHeadRef, remoteHeadBranch } from './sync/git-ops';
 import { isValidGitBranchName } from './sync/sync-config';
 import { NO_CHANGES_TO_SNAP, statusReportsUnsyncedWork } from './sync/sync-state';
@@ -272,9 +272,12 @@ export class CiMain {
     if (!pullRequestUrl) return undefined;
 
     try {
-      const { pathname } = new URL(pullRequestUrl);
+      const { hostname, pathname } = new URL(pullRequestUrl);
       const [, owner, repo, pullSegment, pullNumber] = pathname.split('/');
       if (!owner || !repo || pullSegment !== 'pull' || !pullNumber) return undefined;
+      // an enterprise API the environment can't vouch for gets no token, and no request
+      const api = gitHubApiUrl(hostname);
+      if ('error' in api) return undefined;
 
       const headers: Record<string, string> = {
         Accept: 'application/vnd.github+json',
@@ -285,7 +288,7 @@ export class CiMain {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5_000);
       try {
-        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`, {
+        const response = await fetch(`${api.url}/repos/${owner}/${repo}/pulls/${pullNumber}`, {
           headers,
           signal: controller.signal,
         });
@@ -317,9 +320,22 @@ export class CiMain {
 
   /**
    * The repository's default branch name, whole — slashes included (see `parseOriginHeadRef`).
-   * Local `origin/HEAD` symref first, then the remote's own answer, then the conventional probe.
+   * What `detectDefaultBranchName` finds, else `master`, with a warning that names it.
    */
   async getDefaultBranchName(): Promise<string> {
+    const detected = await this.detectDefaultBranchName();
+    if (detected) return detected;
+    this.logger.console(chalk.yellow(`Unable to detect default branch, using 'master'`));
+    return 'master';
+  }
+
+  /**
+   * The default branch as the repository itself states it: the local `origin/HEAD` symref, then the
+   * remote's own answer, then `main`/`master` among the remote branches. Undefined when none of them
+   * answers (no origin, a repository not pushed yet, a server out of reach), so a caller can tell a
+   * detected branch from a guess.
+   */
+  async detectDefaultBranchName(): Promise<string | undefined> {
     try {
       const result = await git.raw(['symbolic-ref', 'refs/remotes/origin/HEAD']);
       const local = parseOriginHeadRef(result);
@@ -332,25 +348,16 @@ export class CiMain {
     }
     const remote = await remoteHeadBranch();
     if (remote && isValidGitBranchName(remote)) return remote;
-    return this.probeDefaultBranchName();
-  }
-
-  /**
-   * Last-resort fallback: the two conventional names among the remote branches, then `master`.
-   * Deliberately only `main`/`master` — any wider guess risks protecting the wrong branch.
-   */
-  private async probeDefaultBranchName(originalError?: Error): Promise<string> {
+    // Deliberately only `main`/`master` — any wider guess risks protecting the wrong branch.
     try {
       const branches = await git.branch(['-r']);
       if (branches.all.includes('origin/main')) return 'main';
       if (branches.all.includes('origin/master')) return 'master';
-      return 'master';
-    } catch {
-      this.logger.console(
-        chalk.yellow(`Unable to detect default branch, using 'master'${originalError ? `: ${originalError}` : ''}`)
-      );
-      return 'master';
+    } catch (err) {
+      // debug only: the caller decides what to say, and what to use instead
+      this.logger.debug(`detectDefaultBranchName: "git branch -r" failed: ${(err as Error).message}`);
     }
+    return undefined;
   }
 
   async getGitCommitMessage() {

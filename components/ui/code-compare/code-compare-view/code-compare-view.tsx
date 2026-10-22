@@ -47,26 +47,35 @@ export function CodeCompareView({
   const baseIdString = baseId?.toString();
   const compareIdString = compareId?.toString();
 
+  // The status alone is not enough: it is missing when the compare data is not there, e.g. when a
+  // version is compared with itself and Bit skips the compare query. Identical contents on both
+  // sides mean the same thing.
+  const isUnchanged =
+    fileStatus === 'UNCHANGED' || (originalFileContent !== undefined && originalFileContent === modifiedFileContent);
+
   let defaultView: EditorViewMode = 'split';
   if (
     !baseId ||
     (compareId && baseId.isEqual(compareId)) ||
     !originalFileContent ||
     !modifiedFileContent ||
-    fileStatus === 'UNCHANGED'
+    isUnchanged
   ) {
     defaultView = 'inline';
   }
 
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(false);
-  const [view, setView] = useState<EditorViewMode>(defaultView);
   const [wrap, setWrap] = useState(true);
   const [diffOnly, setDiffOnly] = useState(true);
 
-  React.useEffect(() => {
-    setView(defaultView);
-  }, [defaultView, fileName, baseIdString, compareIdString, originalFileContent, modifiedFileContent, fileStatus]);
+  // The view follows `defaultView` until the reader picks one. A pick is kept per file and versions, so
+  // going back to a file shows the view chosen for it. It is derived on render: copying `defaultView`
+  // into state from an effect painted one frame in the loading-time view (unified) before split.
+  const viewKey = `${fileName}|${baseIdString}|${compareIdString}`;
+  const [chosenViews, setChosenViews] = useState<Record<string, EditorViewMode>>({});
+  const view = chosenViews[viewKey] ?? defaultView;
+  const setView = (next: EditorViewMode) => setChosenViews((prev) => ({ ...prev, [viewKey]: next }));
 
   const codeNavFiles = useMemo(() => {
     return files.filter((file) => {
@@ -80,8 +89,9 @@ export function CodeCompareView({
   const isFullScreen = Boolean(componentCompareContext?.isFullScreen);
 
   return (
+    // No key on fileName here: it remounted the file tabs on every file switch, so they re-measured and
+    // reloaded their icons and the whole bar flashed. Only the editor below is keyed per file.
     <div
-      key={`component-compare-code-view-${fileName}`}
       className={classNames(styles.componentCompareCodeViewContainer, className, isFullScreen && styles.isFullScreen)}
     >
       {files.length > 0 && (
@@ -117,6 +127,8 @@ export function CodeCompareView({
           <CodeCompareViewLoader className={classNames(isFullScreen && styles.isFullScreen, styles.fullHeight)} />
         ) : (
           <CodeCompareEditor
+            // a new file starts with fresh expand and scroll state
+            key={`${originalPath}|${modifiedPath}`}
             language={langFromFileName(fileName)}
             modifiedPath={modifiedPath}
             originalPath={originalPath}
@@ -127,9 +139,9 @@ export function CodeCompareView({
             wordWrap={wrap}
             // A file with no changes has nothing to collapse *toward*: diff-only would hide 100% of
             // it and leave a pane containing only an "Expand N unchanged lines" button, which reads
-            // as a broken view. The file tree only surfaces an UNCHANGED file when it is explicitly
+            // as a broken view. The file tree only surfaces an unchanged file when it is explicitly
             // selected, so that is exactly when the reader wants to see it.
-            diffOnly={diffOnly && fileStatus !== 'UNCHANGED'}
+            diffOnly={diffOnly && !isUnchanged}
             Loader={<CodeCompareViewLoader />}
             fullScreen={isFullScreen}
           />

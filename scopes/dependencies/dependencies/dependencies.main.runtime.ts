@@ -16,6 +16,7 @@ import { cloneDeep, compact, set, uniq } from 'lodash';
 import pMapSeries from 'p-map-series';
 import type { ConsumerComponent, DependencyLoaderOpts } from '@teambit/legacy.consumer-component';
 import { ComponentLoader } from '@teambit/legacy.consumer-component';
+import type { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
 import type { DevFilesMain } from '@teambit/dev-files';
 import { DevFilesAspect } from '@teambit/dev-files';
 import type { ComponentIdGraph, GraphMain } from '@teambit/graph';
@@ -364,7 +365,11 @@ export class DependenciesMain {
    * are calculated here.
    * eventually all these dependencies are added to the ConsumerComponent object.
    */
-  async loadDependenciesFromScope(component: ConsumerComponent, dependenciesData: Partial<DependenciesData>) {
+  async loadDependenciesFromScope(
+    component: ConsumerComponent,
+    dependenciesData: Partial<DependenciesData>,
+    autoDetectOverrides?: DependenciesOverridesData
+  ) {
     const dependenciesLoader = new DependenciesLoader(
       component,
       this.dependencyResolver,
@@ -372,7 +377,7 @@ export class DependenciesMain {
       this.aspectLoader,
       this.logger
     );
-    return dependenciesLoader.loadFromScope(dependenciesData);
+    return dependenciesLoader.loadFromScope(dependenciesData, autoDetectOverrides);
   }
 
   async debugDependencies(id: string): Promise<DependenciesResultsDebug> {

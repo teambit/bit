@@ -15,7 +15,7 @@ import type { Workspace, AutoTagResult } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { ReleaseType } from 'semver';
 import semver from 'semver';
-import { compact, difference, uniq } from 'lodash';
+import { compact, difference, isEmpty, pickBy, uniq } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { findWorkspaceRootMap } from '@teambit/workspace-root';
 import type { BuildStatus } from '@teambit/legacy.constants';
@@ -41,7 +41,9 @@ import type { Repository, Lane, ModelComponent, DepEdge, DepEdgeType, Log, AddVe
 import { BitObject, Ref, Version } from '@teambit/objects';
 import type { Component, ConsumerComponent } from '@teambit/component';
 import type { DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
+import type { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
+import { ComponentOverrides } from '@teambit/legacy.consumer-config';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { BuilderMain, LegacyOnTagResult } from '@teambit/builder';
 import { BuilderAspect } from '@teambit/builder';
@@ -355,7 +357,7 @@ export class SnappingMain {
 
     const extensionDataList = ExtensionDataList.mergeConfigs([
       extensionsFromConfigObject,
-      consumerComponent.extensions,
+      consumerComponent.extensions.withoutEnvReplacedBy(configObject),
     ]).filterRemovedExtensions();
 
     // Restore data fields from the original extensions after merging configs.
@@ -380,6 +382,55 @@ export class SnappingMain {
     return autoDeps;
   }
 
+  /**
+   * re-calculate the dependencies policy of the component and its overrides from its config and env, the same way a
+   * workspace calculates them when it loads a component, rather than keeping the ones of the version it was loaded from.
+   * returns the policy and the overrides of the auto-detected dependencies (versions only, see
+   * ApplyOverrides.autoDetectOverrides), which include the deps of the merge-config, same as
+   * workspace.getAutoDetectOverrides().
+   */
+  private async recalcDependenciesPolicy(
+    component: Component,
+    componentsInSnap: Component[],
+    mergeConfigAutoDeps?: VariantPolicyConfigArr
+  ): Promise<{ policy: VariantPolicy; autoDetectOverrides: DependenciesOverridesData }> {
+    const legacyComponent: ConsumerComponent = component.state._consumer;
+    const { extensions } = legacyComponent;
+    const depResolverExt = extensions.findCoreExtension(DependencyResolverAspect.id);
+    // an env that defines its policy in code is loaded only when it changed: a changed env is a changed (or missing)
+    // extension, which mergeExtensionsData() reports as a data conflict (see loadAspectOnlyForIds). when it's not
+    // loaded, it didn't change, so the env part of the stored policy is still valid. (the other parts, such as the
+    // policies of aspects and the config, are calculated by mergeVariantPolicies() from the current config)
+    const storedPolicy = VariantPolicy.parse(depResolverExt?.data.policy || []);
+    const storedEnvPolicy = storedPolicy.filter((entry) => entry.source === 'env');
+    // an env.jsonc env that is snapped along (e.g. merged as well) has its policy in its new files, like a workspace
+    // that loads the env from its files. otherwise, the policy is read from the stored version of the env.
+    const envPolicy =
+      (await this.dependencyResolver.getEnvPolicyFromComponents(extensions, componentsInSnap)) ??
+      (await this.dependencyResolver.getComponentEnvPolicyFromExtension(extensions, storedEnvPolicy));
+    // when the component is an env, its own policy (its own peers) is calculated from its env.jsonc or from the loaded
+    // env. same as above, an env that defines it in code and is not loaded didn't change, so the stored one is valid.
+    const envExtendsDeps = legacyComponent.dependencies.get();
+    const storedEnvOwnPolicy = storedPolicy.filter((entry) => entry.source === 'env-own');
+    const isEnvOwnPolicyMissing =
+      storedEnvOwnPolicy.length > 0 &&
+      !(await this.dependencyResolver.getPoliciesFromEnvForItself(component.id, legacyComponent.files, envExtendsDeps));
+    const policy = await this.dependencyResolver.mergeVariantPolicies(
+      extensions,
+      component.id,
+      legacyComponent.files,
+      envExtendsDeps,
+      // merged right after the env policy, same as mergeVariantPolicies() merges a calculated own policy
+      isEnvOwnPolicyMissing ? VariantPolicy.mergePolices([envPolicy, storedEnvOwnPolicy]) : envPolicy
+    );
+    // the "source" of each dependency in the dependency-resolver data is determined by this policy
+    if (depResolverExt) depResolverExt.data.policy = policy.serialize();
+    legacyComponent.overrides = new ComponentOverrides(pickBy(policy.toLegacyDepsOverrides(), (val) => !isEmpty(val)));
+    const mergeConfigPolicy = VariantPolicy.fromConfigObject(mergeConfigAutoDeps || {}, { source: 'auto' });
+    const autoDetectOverrides = VariantPolicy.mergePolices([policy, mergeConfigPolicy]).toLegacyAutoDetectOverrides();
+    return { policy, autoDetectOverrides };
+  }
+
   async snapFromScope(
     snapDataPerCompRaw: SnapDataPerCompRaw[],
     params: {
@@ -391,6 +442,9 @@ export class SnappingMain {
       // in case of merging lanes, the component files are updated in-memory
       updatedLegacyComponents?: ConsumerComponent[];
       loadAspectOnlyForIds?: ComponentIdList; // if undefined, load aspects for all components
+      // re-calculate the dependencies policy/overrides from the config and env, like a workspace does on load, instead
+      // of keeping the ones stored in the snapped version. needed when the config was merged from another lane/main.
+      recalcDependencies?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<SnapFromScopeResults> {
     if (this.workspace) {
@@ -503,12 +557,30 @@ export class SnappingMain {
 
     const components = [...existingComponents, ...newComponents];
 
+    const autoDepsPerComp = new Map<Component, VariantPolicyConfigArr | undefined>();
+    const addDepsToComp = (component: Component, autoDetectOverrides?: DependenciesOverridesData) =>
+      addDeps(
+        component,
+        getSnapData(component.id),
+        this.scope,
+        this.deps,
+        this.dependencyResolver,
+        this,
+        autoDepsPerComp.get(component),
+        autoDetectOverrides
+      );
     // this must be done before we load component aspects later on, because this updated deps may update aspects.
     await pMapSeries(components, async (component) => {
       const snapData = getSnapData(component.id);
-      const autoDeps = await this.addAspectsFromConfigObject(component, snapData.aspects);
+      autoDepsPerComp.set(component, await this.addAspectsFromConfigObject(component, snapData.aspects));
+      if (params.recalcDependencies) {
+        // the dependencies are added once the aspects are loaded, see below. only update the versions of aspects that
+        // are part of the snap (e.g. an env merged into the lane), so the correct versions get loaded.
+        await this.updateAspectsVersions(component, snapData.dependencies);
+        return;
+      }
       // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
-      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver, this, autoDeps);
+      await addDepsToComp(component);
     });
 
     // for new components these are not needed. coz when generating them we already add the aspects and the files.
@@ -555,10 +627,31 @@ export class SnappingMain {
       ? components.filter((c) => loadAspectOnlyForIds.hasWithoutVersion(c.id))
       : components;
 
-    await this.scope.loadManyCompsAspects(compsToLoadAspects);
+    // an app is loaded as an aspect only when building, for its build tasks (e.g. the deploy task). otherwise, it's not
+    // needed: it's loaded from its stored version, the one before this snap, so the app data it calculates may be
+    // older than the merged one. also, its capsule installs its dependencies, and a lane snap of a dependency is not
+    // published to the registry until it is built, so the install fails while the build of the lane is pending.
+    await this.scope.loadManyCompsAspects(compsToLoadAspects, undefined, { loadApps: Boolean(params.build) });
+
+    const policyPerComp = new Map<Component, VariantPolicy>();
+    if (params.recalcDependencies) {
+      // the config (and with it, the env) may differ from the one stored in the version the components were loaded
+      // from. now that the env is loaded, the dependencies are calculated according to it.
+      await pMapSeries(components, async (component) => {
+        const { policy, autoDetectOverrides } = await this.recalcDependenciesPolicy(
+          component,
+          components,
+          autoDepsPerComp.get(component)
+        );
+        policyPerComp.set(component, policy);
+        await addDepsToComp(component, autoDetectOverrides);
+      });
+    }
 
     // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
-    await pMapSeries(compsToLoadAspects, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
+    await pMapSeries(compsToLoadAspects, async (comp) =>
+      this.scope.executeOnCompAspectReCalcSlot(comp, policyPerComp.get(comp))
+    );
 
     const ids = ComponentIdList.fromArray(allCompIds);
     const shouldTag = Boolean(params.tag);
@@ -1426,8 +1519,13 @@ another option, in case this dependency is not in main yet is to remove all refe
     const updatedIds = ComponentIdList.fromArray([...currentBitIds, ...dependencies]);
     const componentIdStr = component.id.toString();
     const legacyComponent: ConsumerComponent = component.state._consumer;
-    const deps = [...legacyComponent.dependencies.get(), ...legacyComponent.devDependencies.get()];
-    const dependenciesList = this.dependencyResolver.getDependencies(component);
+    const deps = [
+      ...legacyComponent.dependencies.get(),
+      ...legacyComponent.devDependencies.get(),
+      ...legacyComponent.peerDependencies.get(),
+    ];
+    // peers can be hidden, and they're part of the legacy peers
+    const dependenciesList = this.dependencyResolver.getDependencies(component, { includeHidden: true });
     deps.forEach((dep) => {
       const updatedBitId = updatedIds.searchWithoutVersion(dep.id);
       if (updatedBitId) {
@@ -1452,6 +1550,21 @@ another option, in case this dependency is not in main yet is to remove all refe
    * 2. save all dependencies data from the legacy into DependencyResolver aspect.
    */
   async UpdateDepsAspectsSaveIntoDepsResolver(component: Component, updatedIds: string[]) {
+    await this.updateAspectsVersions(component, updatedIds);
+    const dependenciesListSerialized = (await this.dependencyResolver.extractDepsFromLegacy(component)).serialize();
+    const extId = DependencyResolverAspect.id;
+    const data = { dependencies: dependenciesListSerialized };
+    const existingExtension = component.config.extensions.findExtension(extId);
+    if (existingExtension) {
+      // Only merge top level of extension data
+      Object.assign(existingExtension.data, data);
+      return;
+    }
+    const extension = new ExtensionDataEntry(undefined, undefined, extId, undefined, data);
+    component.config.extensions.push(extension);
+  }
+
+  private async updateAspectsVersions(component: Component, updatedIds: string[]) {
     const legacyComponent: ConsumerComponent = component.state._consumer;
     legacyComponent.extensions.forEach((ext) => {
       const extId = ext.extensionId;
@@ -1468,18 +1581,6 @@ another option, in case this dependency is not in main yet is to remove all refe
     });
 
     component.state.aspects = await this.scope.createAspectListFromExtensionDataList(legacyComponent.extensions);
-
-    const dependenciesListSerialized = (await this.dependencyResolver.extractDepsFromLegacy(component)).serialize();
-    const extId = DependencyResolverAspect.id;
-    const data = { dependencies: dependenciesListSerialized };
-    const existingExtension = component.config.extensions.findExtension(extId);
-    if (existingExtension) {
-      // Only merge top level of extension data
-      Object.assign(existingExtension.data, data);
-      return;
-    }
-    const extension = new ExtensionDataEntry(undefined, undefined, extId, undefined, data);
-    component.config.extensions.push(extension);
   }
 
   /**
