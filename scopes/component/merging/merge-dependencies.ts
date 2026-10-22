@@ -92,7 +92,7 @@ export function mergeDependencies(
     );
   const applyImportsIfNeeded = <Field extends string, Value>(
     entries: Array<MergedEntry<Field, Value>>,
-    sides: Array<Map<string, FieldEntry<Field, Value>>>,
+    sides: EntriesOfSides<Field, Value>,
     nameOf: (key: string, value: Value) => string | undefined,
     fields: DepTypeFields<Field>
   ) => (imports ? applyImports(entries, sides, nameOf, fields, imports) : entries);
@@ -106,7 +106,7 @@ export function mergeDependencies(
   const [baseCompDeps, currentCompDeps, otherCompDeps] = [base, current, other].map(componentDeps);
   const mergedCompDeps = applyImportsIfNeeded(
     mergeEntries(baseCompDeps, currentCompDeps, otherCompDeps, mergeStrategy, isSameDep),
-    [otherCompDeps, currentCompDeps, baseCompDeps],
+    { base: baseCompDeps, current: currentCompDeps, other: otherCompDeps },
     (_key, dep) => dep.packageName,
     { runtime: 'dependencies', dev: 'devDependencies', peer: 'peerDependencies' }
   );
@@ -119,7 +119,7 @@ export function mergeDependencies(
   const [basePkgDeps, currentPkgDeps, otherPkgDeps] = [base, current, other].map(packageDeps);
   const mergedPkgDeps = applyImportsIfNeeded(
     mergeEntries(basePkgDeps, currentPkgDeps, otherPkgDeps, mergeStrategy, (a, b) => a === b),
-    [otherPkgDeps, currentPkgDeps, basePkgDeps],
+    { base: basePkgDeps, current: currentPkgDeps, other: otherPkgDeps },
     (key) => key,
     { runtime: 'packageDependencies', dev: 'devPackageDependencies', peer: 'peerPackageDependencies' }
   );
@@ -212,15 +212,16 @@ function namesOfDependencies(dependencies: DependenciesSnapshot): string[] {
 type FieldEntry<Field, Value> = { field: Field; value: Value };
 type MergedEntry<Field, Value> = FieldEntry<Field, Value> & { key: string };
 type DepTypeFields<Field> = { runtime: Field; dev: Field; peer: Field };
+type EntriesOfSides<Field, Value> = Record<'base' | 'current' | 'other', Map<string, FieldEntry<Field, Value>>>;
 
 /**
  * make the dependencies that come from imports follow the merged files, see mergeDependencies().
- * `sides` are the entries of other, current and base, in this order of preference, to take a dependency from when the
- * 3-way merge removed it.
+ * `sides` are the entries of each side, to take a dependency from when the 3-way merge removed it (other first, then
+ * current, then base).
  */
 function applyImports<Field extends string, Value>(
   entries: Array<MergedEntry<Field, Value>>,
-  sides: Array<Map<string, FieldEntry<Field, Value>>>,
+  sides: EntriesOfSides<Field, Value>,
   nameOf: (key: string, value: Value) => string | undefined,
   fields: DepTypeFields<Field>,
   imports: ImportsOfMerge
@@ -248,14 +249,17 @@ function applyImports<Field extends string, Value>(
     names.add(name);
     result.push(withFieldOfImports(entry, name));
   });
-  const sidesByName = sides.map(
+  const [other, current, base] = [sides.other, sides.current, sides.base].map(
     (side) => new Map([...side].map(([key, entry]) => [nameOf(key, entry.value), { key, ...entry }]))
   );
   const importedNames = [...imports.merged.keys()].flatMap((name) => [name, toTypesPackageName(name)]);
   importedNames.forEach((name) => {
     if (names.has(name) || isOfPolicy(name)) return;
+    // a workspace takes a types package from the model version, which is current, or from the root policy, which a bare
+    // scope doesn't have. so it doesn't add one that only another side has.
+    const sidesOfName = typedPackageName(name) ? [current] : [other, current, base];
     // when no side has it, it's e.g. a core aspect, or a package that a policy ignores
-    const fromSide = sidesByName.map((side) => side.get(name)).find(Boolean);
+    const fromSide = sidesOfName.map((side) => side.get(name)).find(Boolean);
     if (!fromSide) return;
     names.add(name);
     result.push(withFieldOfImports(fromSide, name));

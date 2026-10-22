@@ -265,15 +265,25 @@ describe('mergeDependencies', () => {
     describe('a types package', () => {
       const base = snapshot({ pkgs: { '@scope/foo': '1.0.0' }, devPkgs: { '@types/scope__foo': '1.0.0' } });
       const current = snapshot({});
+      const imports = importsOf({ '@scope/foo': 'runtime' }, ['@scope/foo']);
       it('should be removed with the package it types', () => {
         const merged = mergeDependencies(base, base, base, 'manual', undefined, importsOf({}, ['@scope/foo']));
         expect(merged.devPackageDependencies).to.deep.equal({});
       });
-      it('should be kept with the package it types', () => {
-        const imports = importsOf({ '@scope/foo': 'runtime' }, ['@scope/foo']);
-        const merged = mergeDependencies(base, current, base, 'manual', undefined, imports);
+      it('should be kept with the package it types, when current has it', () => {
+        // other removed both, the merged files import the package
+        const merged = mergeDependencies(base, base, current, 'manual', undefined, imports);
         expect(merged.packageDependencies).to.deep.equal({ '@scope/foo': '1.0.0' });
         expect(merged.devPackageDependencies).to.deep.equal({ '@types/scope__foo': '1.0.0' });
+      });
+      it('should not be taken from other, when current removed it', () => {
+        // a workspace adds a types package only from the root policy or from current (the model version)
+        const merged = mergeDependencies(base, current, base, 'manual', undefined, imports);
+        expect(merged.packageDependencies).to.deep.equal({ '@scope/foo': '1.0.0' });
+        expect(merged.devPackageDependencies).to.deep.equal({});
+        const currentWithPackageOnly = snapshot({ pkgs: { '@scope/foo': '1.0.0' } });
+        const mergedWithPackage = mergeDependencies(base, currentWithPackageOnly, base, 'manual', undefined, imports);
+        expect(mergedWithPackage.devPackageDependencies).to.deep.equal({});
       });
     });
   });
