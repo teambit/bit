@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { formatHint, formatItem, formatTitle, formatWarningSummary, joinSections, successSymbol } from '@teambit/cli';
 import path from 'path';
 import { parseGitHubRepo, isGitHubRemote, gitHubApiUrl, remoteHost } from './github-client';
+import { AGENTS_MD_RELATIVE_PATH } from './agents-md';
 
 /**
  * `bit ci sync --init` — pure scaffolding logic, unit-testable without a live workspace/git checkout.
@@ -272,7 +273,8 @@ export function renderBitReleaseWorkflow(defaultBranch: string, wsDir?: string):
 export interface ScaffoldFileOutcome {
   /** relative to the workspace root, e.g. `.github/workflows/bit-sync.yml` */
   relativePath: string;
-  status: 'written' | 'skipped';
+  /** `updated`: the file existed and `--init` added to it (the AGENTS.md sync section) */
+  status: 'written' | 'updated' | 'skipped';
 }
 
 // Never overwrites an existing file — `--init` must be safe to re-run after hand-edits.
@@ -344,7 +346,17 @@ const SETUP_GUIDE_URL = 'https://github.com/teambit/acme-modular-store#set-it-up
 const FILE_PURPOSE: Record<string, string> = {
   [WORKFLOW_RELATIVE_PATHS.sync]: 'syncs lanes and branches: on export, on push, and every 30 minutes',
   [WORKFLOW_RELATIVE_PATHS.release]: 'releases the scope when a pull request merges',
+  [AGENTS_MD_RELATIVE_PATH]: 'tells coding agents how the sync works in this repository',
 };
+
+/** The note the report shows next to a file. */
+function fileNote(file: ScaffoldFileOutcome): string {
+  if (file.status === 'written') return FILE_PURPOSE[file.relativePath] ?? '';
+  if (file.status === 'updated') return 'added the sync rules at the top';
+  return file.relativePath === AGENTS_MD_RELATIVE_PATH
+    ? 'already has the sync rules, left unchanged'
+    : 'already exists, left unchanged';
+}
 
 export interface InitReportInput {
   /** the workspace's default scope, the one this repository mirrors */
@@ -368,7 +380,7 @@ export interface InitReportInput {
   repoHasCommits?: boolean;
   /** false when the workspace is not in a git repository yet: step 1 then starts with `git init` */
   inGitRepo?: boolean;
-  /** scaffolded workflow files, with the path to show (relative to where the user stands) */
+  /** scaffolded files (the workflows, AGENTS.md), with the path to show (relative to where the user stands) */
   files: Array<ScaffoldFileOutcome & { displayPath: string }>;
   /** workspace.jsonc, as seen from where the user stands */
   configDisplayPath?: string;
@@ -507,12 +519,7 @@ export function renderInitReport(input: InitReportInput): string {
   const width = Math.max(...input.files.map((f) => f.displayPath.length), configDisplayPath.length) + 2;
   const fileItem = (displayPath: string, note: string) => formatItem(`${displayPath.padEnd(width)}${formatHint(note)}`);
   const files = [
-    ...input.files.map((file) =>
-      fileItem(
-        file.displayPath,
-        file.status === 'written' ? (FILE_PURPOSE[file.relativePath] ?? '') : 'already exists, left unchanged'
-      )
-    ),
+    ...input.files.map((file) => fileItem(file.displayPath, fileNote(file))),
     fileItem(
       configDisplayPath,
       input.configAdded ? 'added "teambit.git/ci": { "sync": {} }' : 'already configures sync, left unchanged'
