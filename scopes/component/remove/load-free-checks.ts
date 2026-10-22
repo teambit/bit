@@ -45,6 +45,10 @@ export async function getStatusWithoutLoading(
     // a pending merge may carry merged config. same as above.
     if (consumer.scope.objects.unmergedComponents.getEntry(id)) return undefined;
 
+    await consumer.bitMap.trackDirectoryChanges(componentMap);
+    // without the main file, the component is invalid. the full status knows to let it be removed.
+    if (!componentMap.getAllFilesPaths().includes(componentMap.mainFile)) return undefined;
+
     if (!componentMap.id.hasVersion()) return { newlyCreated: true, modified: false };
     const versionStr = componentMap.id.version as string;
     const modelComponent = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
@@ -56,9 +60,6 @@ export async function getStatusWithoutLoading(
     const version = await modelComponent.loadVersion(versionStr, consumer.scope.objects, false);
     if (!version) return undefined;
 
-    await consumer.bitMap.trackDirectoryChanges(componentMap);
-    // without the main file, the component is invalid. the full status knows to let it be removed.
-    if (!componentMap.getAllFilesPaths().includes(componentMap.mainFile)) return undefined;
     const modified =
       pathNormalizeToLinux(componentMap.mainFile) !== version.mainFile ||
       (await workspace.getFilesModification(id)).isModified();
