@@ -215,7 +215,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "2.2.135",
+        "version": "2.2.136",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -271,7 +271,7 @@
     "ci": {
         "name": "ci",
         "scope": "teambit.git",
-        "version": "1.0.644",
+        "version": "1.0.645",
         "mainFile": "index.ts",
         "rootDir": "scopes/git/ci"
     },
@@ -495,7 +495,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.1344",
+        "version": "2.0.1345",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
@@ -1799,14 +1799,26 @@
         "scope": "teambit.component",
         "version": "0.0.19",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/compare-aspects/compare-aspect-view"
+        "rootDir": "components/ui/component-compare/compare-aspects/compare-aspect-view",
+        "config": {
+            "teambit.harmony/envs/core-react-env@1.0.2": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-react-env"
+            }
+        }
     },
     "ui/component-compare/compare-aspects/compare-aspects": {
         "name": "ui/component-compare/compare-aspects/compare-aspects",
         "scope": "teambit.component",
         "version": "0.0.164",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/compare-aspects/compare-aspects"
+        "rootDir": "components/ui/component-compare/compare-aspects/compare-aspects",
+        "config": {
+            "teambit.harmony/envs/core-react-env@1.0.2": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-react-env"
+            }
+        }
     },
     "ui/component-compare/component-compare": {
         "name": "ui/component-compare/component-compare",
