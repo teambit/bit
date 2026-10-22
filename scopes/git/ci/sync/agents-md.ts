@@ -18,6 +18,15 @@ export const AGENTS_MD_RELATIVE_PATH = 'AGENTS.md';
 /** The marker that opens the section. Its presence means the section is there: a re-run leaves the file alone. */
 export const AGENTS_SECTION_START = '<!-- bit-ci-sync:start';
 
+/** The marker that closes the section. */
+export const AGENTS_SECTION_END = '<!-- bit-ci-sync:end -->';
+
+/**
+ * The repository value when `--init` runs before origin is a GitHub remote. It differs from the
+ * `<org>/<repo>` examples in the section, so a later run can fill in this one and leave those alone.
+ */
+export const UNKNOWN_REPO = '<org>/<this-repo>';
+
 /** The title of an AGENTS.md that `--init` creates. */
 const NEW_FILE_TITLE = '# Agent instructions';
 
@@ -69,6 +78,7 @@ export function insertAgentsSection(existing: string, section: string): string {
 /**
  * Write the sync section into `<workspaceDir>/AGENTS.md`. A missing file is created, an existing file
  * gets the section at the top, and a file that already has it is left unchanged, hand edits included.
+ * One exception: a section written before the repository was known gets the repository filled in.
  */
 export function scaffoldAgentsMd(workspaceDir: string, values: AgentsSectionValues): ScaffoldFileOutcome {
   const relativePath = AGENTS_MD_RELATIVE_PATH;
@@ -79,7 +89,26 @@ export function scaffoldAgentsMd(workspaceDir: string, values: AgentsSectionValu
     return { relativePath, status: 'written' };
   }
   const existing = fs.readFileSync(absPath, 'utf8');
-  if (existing.includes(AGENTS_SECTION_START)) return { relativePath, status: 'skipped' };
+  if (existing.includes(AGENTS_SECTION_START)) {
+    const filled = fillInRepo(existing, values.repo);
+    if (filled === existing) return { relativePath, status: 'skipped' };
+    fs.writeFileSync(absPath, filled);
+    return { relativePath, status: 'updated', note: 'filled in the repository in the sync rules' };
+  }
   fs.writeFileSync(absPath, insertAgentsSection(existing, section));
   return { relativePath, status: 'updated' };
+}
+
+/**
+ * `content` with `UNKNOWN_REPO` replaced by `repo` inside the sync section only. Unchanged when the
+ * repository is still unknown, or the section has no placeholder left.
+ */
+export function fillInRepo(content: string, repo: string): string {
+  if (repo === UNKNOWN_REPO) return content;
+  const start = content.indexOf(AGENTS_SECTION_START);
+  const end = content.indexOf(AGENTS_SECTION_END, start);
+  if (start < 0 || end < 0) return content;
+  const section = content.slice(start, end);
+  if (!section.includes(UNKNOWN_REPO)) return content;
+  return content.slice(0, start) + section.split(UNKNOWN_REPO).join(repo) + content.slice(end);
 }

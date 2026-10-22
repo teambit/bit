@@ -275,6 +275,8 @@ export interface ScaffoldFileOutcome {
   relativePath: string;
   /** `updated`: the file existed and `--init` added to it (the AGENTS.md sync section) */
   status: 'written' | 'updated' | 'skipped';
+  /** what `--init` did, when the status alone does not say it */
+  note?: string;
 }
 
 // Never overwrites an existing file — `--init` must be safe to re-run after hand-edits.
@@ -351,6 +353,7 @@ const FILE_PURPOSE: Record<string, string> = {
 
 /** The note the report shows next to a file. */
 function fileNote(file: ScaffoldFileOutcome): string {
+  if (file.note) return file.note;
   if (file.status === 'written') return FILE_PURPOSE[file.relativePath] ?? '';
   if (file.status === 'updated') return 'added the sync rules at the top';
   return file.relativePath === AGENTS_MD_RELATIVE_PATH

@@ -350,7 +350,9 @@ describe('haltCommentBody', () => {
       branch: LANE_NAME,
       laneId: `acme.shop/${LANE_NAME}`,
     });
-    expect(body).to.include(`git fetch origin && git checkout '${LANE_NAME}'`);
+    expect(body).to.include(
+      `git fetch origin && git checkout '${LANE_NAME}' && git merge --ff-only 'origin/${LANE_NAME}'`
+    );
     expect(body).to.include(`bit lane import 'acme.shop/${LANE_NAME}'`);
     expect(body).to.include(`git push origin '${LANE_NAME}'`);
     // the reason is prose, not a command, and the runbook still reads as one

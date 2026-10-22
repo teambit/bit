@@ -24,7 +24,7 @@ import { MainSyncExecutor } from './main-sync-executor';
 import { selectGitHostProvider } from './git-host-provider';
 import { gitRepoRoot, isNonContentPath, listRemoteBranches } from './git-ops';
 import { chooseInitDefaultBranch, deriveOwnerRepo, renderInitReport, scaffoldWorkflowFiles } from './init-scaffold';
-import { scaffoldAgentsMd } from './agents-md';
+import { UNKNOWN_REPO, scaffoldAgentsMd } from './agents-md';
 
 /**
  * Refuse a `--dry-run` whose plan would be computed by force-checking-out branches over uncommitted
@@ -257,7 +257,7 @@ export class SyncOrchestrator {
       scope: this.deps.workspace.defaultScope ?? '<owner>.<scope>',
       repo: ownerRepo
         ? `${ownerRepo.host === 'github.com' ? '' : `${ownerRepo.host}/`}${ownerRepo.owner}/${ownerRepo.repo}`
-        : '<org>/<repo>',
+        : UNKNOWN_REPO,
       defaultBranch,
     });
     // No commit yet: the first commit must take the whole workspace, not only the files --init wrote.

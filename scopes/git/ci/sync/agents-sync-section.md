@@ -20,14 +20,16 @@
 
 ### Make a change: pick a path
 
-| You are…                                                        | Path          | What you do                                                           | What appears                                                                          |
-| --------------------------------------------------------------- | ------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| In this repository (Copilot, an IDE, a plain git user)          | **Git-first** | branch → edit → `bit validate` → commit → push → open a PR            | `bit-adopt-pr` turns the PR into a lane. From then on every push snaps onto the lane. |
-| In any other Bit workspace (Claude Code with the Bit Cloud MCP) | **Bit-first** | `bit lane create` → edit → `bit validate` → `bit snap` → `bit export` | A branch and a PR named after the lane appear in this repository within a minute.     |
+| You are…                                                        | Path          | What you do                                                           | What appears                                                                                                                               |
+| --------------------------------------------------------------- | ------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| In this repository (Copilot, an IDE, a plain git user)          | **Git-first** | branch → edit → `bit validate` → commit → push → open a PR            | With the optional `bit-adopt-pr` workflow, the PR becomes a lane, and every push snaps onto it. Without it, the sync ignores the branch.   |
+| In any other Bit workspace (Claude Code with the Bit Cloud MCP) | **Bit-first** | `bit lane create` → edit → `bit validate` → `bit snap` → `bit export` | A branch and a PR named after the lane appear in this repository: within a minute with the scope webhook, else at the next scheduled sync. |
 
 Both paths end with the same PR and the same release.
 
 #### Git-first (in this repository)
+
+This path needs the `bit-adopt-pr` workflow in `.github/workflows/`. `bit ci sync --init` does not write it. Without it, a branch that has no lane stays out of the sync: use the Bit-first path.
 
 ```bash
 git switch -c add-gift-wrap                 # the branch name becomes the lane name; no "/"
@@ -85,6 +87,7 @@ The lane and the branch changed the same lines. The lane stays paused while the 
 
 ```bash
 git fetch origin && git checkout '<branch>'
+git merge --ff-only 'origin/<branch>'         # stops if your local copy has commits that are not on origin: keep them, or reset to origin
 bit install
 bit lane import '<host-scope>/<lane>'         # brings the lane's side in; conflicts appear as conflict markers
 # resolve every conflicted file. When the intent is unclear, ask the user which side wins. Don't guess.

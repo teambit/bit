@@ -1932,7 +1932,7 @@ export function haltCommentBody({
   const resolution =
     note ??
     `To resolve locally:
-  git fetch origin && git checkout ${shellQuote(branch)}
+  git fetch origin && git checkout ${shellQuote(branch)} && git merge --ff-only ${shellQuote(`origin/${branch}`)}
   bit lane import ${shellQuote(laneId)}
   # resolve conflicts, commit the result, then:
   git push origin ${shellQuote(branch)}`;

@@ -5,6 +5,8 @@ import path from 'path';
 import {
   AGENTS_MD_RELATIVE_PATH,
   AGENTS_SECTION_START,
+  UNKNOWN_REPO,
+  fillInRepo,
   insertAgentsSection,
   renderAgentsSection,
   scaffoldAgentsMd,
@@ -69,6 +71,20 @@ describe('agents-md', () => {
     });
   });
 
+  describe('fillInRepo', () => {
+    const doc = `before ${UNKNOWN_REPO}\n${AGENTS_SECTION_START} -->\nrun -R ${UNKNOWN_REPO}\n<!-- bit-ci-sync:end -->\nafter ${UNKNOWN_REPO}\n`;
+
+    it('replaces the placeholder inside the section only', () => {
+      expect(fillInRepo(doc, 'acme/billing')).to.equal(
+        `before ${UNKNOWN_REPO}\n${AGENTS_SECTION_START} -->\nrun -R acme/billing\n<!-- bit-ci-sync:end -->\nafter ${UNKNOWN_REPO}\n`
+      );
+    });
+
+    it('changes nothing while the repository is still unknown', () => {
+      expect(fillInRepo(doc, UNKNOWN_REPO)).to.equal(doc);
+    });
+  });
+
   describe('scaffoldAgentsMd', () => {
     let workspaceDir: string;
     const agentsPath = () => path.join(workspaceDir, AGENTS_MD_RELATIVE_PATH);
@@ -100,6 +116,24 @@ describe('agents-md', () => {
       expect(updated).to.include('submit a change request');
     });
 
+    it('fills in the repository on a re-run once origin is known, and changes nothing else', () => {
+      scaffoldAgentsMd(workspaceDir, { ...VALUES, repo: UNKNOWN_REPO });
+      const first = fs.readFileSync(agentsPath(), 'utf8');
+      expect(first).to.include(`gh pr list -R ${UNKNOWN_REPO}`);
+      expect(scaffoldAgentsMd(workspaceDir, VALUES)).to.deep.equal({
+        relativePath: AGENTS_MD_RELATIVE_PATH,
+        status: 'updated',
+        note: 'filled in the repository in the sync rules',
+      });
+      const second = fs.readFileSync(agentsPath(), 'utf8');
+      expect(second).to.not.include(UNKNOWN_REPO);
+      expect(second).to.include('gh pr list -R acme/billing --head <lane-name>');
+      // the examples for other repositories keep their placeholder
+      expect(second).to.include('gh repo create <org>/<repo>');
+      expect(second.split(UNKNOWN_REPO).join('acme/billing')).to.equal(first.split(UNKNOWN_REPO).join('acme/billing'));
+      expect(scaffoldAgentsMd(workspaceDir, VALUES).status).to.equal('skipped');
+    });
+
     it('leaves a file that already has the section unchanged on a re-run', () => {
       scaffoldAgentsMd(workspaceDir, VALUES);
       const edited = `${fs.readFileSync(agentsPath(), 'utf8')}\nhand edit\n`;
@@ -110,12 +144,12 @@ describe('agents-md', () => {
   });
 
   describe('in the init report', () => {
-    const report = (status: 'written' | 'updated' | 'skipped') =>
+    const report = (status: 'written' | 'updated' | 'skipped', note?: string) =>
       renderInitReport({
         scopeId: 'acme.billing',
         ownerRepo: { owner: 'acme', repo: 'billing', host: 'github.com' },
         defaultBranch: 'main',
-        files: [{ relativePath: AGENTS_MD_RELATIVE_PATH, status, displayPath: 'AGENTS.md' }],
+        files: [{ relativePath: AGENTS_MD_RELATIVE_PATH, status, note, displayPath: 'AGENTS.md' }],
         configAdded: true,
       });
 
@@ -123,6 +157,9 @@ describe('agents-md', () => {
       expect(report('written')).to.include('tells coding agents how the sync works in this repository');
       expect(report('updated')).to.include('added the sync rules at the top');
       expect(report('skipped')).to.include('already has the sync rules, left unchanged');
+      expect(report('updated', 'filled in the repository in the sync rules')).to.include(
+        'filled in the repository in the sync rules'
+      );
     });
 
     it('stages AGENTS.md with the other files', () => {
