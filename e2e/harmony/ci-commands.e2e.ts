@@ -932,6 +932,47 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
     });
   });
 
+  describe('bit ci merge when the merged lane has no change against main', () => {
+    let mergeOutput: string;
+    let defaultBranch: string;
+    let bareRepoPath: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      bareRepoPath = setupGitRemote();
+      defaultBranch = setupComponentsAndInitialCommit();
+
+      helper.command.createLane('no-change-lane');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.command.runCmd('git checkout -b no-change-lane');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "chore: lane state"');
+
+      // Simulate the PR merge: the default branch gets the lane's .bitmap
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge no-change-lane');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      expect(helper.command.runCmd('git show HEAD:.bitmap')).to.include('"_bit_lane"');
+
+      mergeOutput = helper.command.runCmd('bit ci merge');
+    });
+    it('should tag nothing', () => {
+      expect(mergeOutput).to.include('No components were tagged');
+      const comp1 = helper.command.listParsed().find((comp) => comp.id.includes('comp1'));
+      expect(comp1?.currentVersion).to.equal('0.0.1');
+    });
+    it("should commit and push main's .bitmap: no lane pointer, the main versions", () => {
+      const pushed = helper.command.runCmd(`git --git-dir=${bareRepoPath} show ${defaultBranch}:.bitmap`);
+      expect(pushed).to.not.include('"_bit_lane"');
+      expect(pushed).to.include('"version": "0.0.1"');
+    });
+    it('should leave a clean workspace on main', () => {
+      expect(helper.command.runCmd('git status --porcelain').trim()).to.equal('');
+      helper.command.expectStatusToBeClean();
+    });
+  });
+
   describe('bit ci merge when lane has config changes (env-set)', () => {
     let mergeOutput: string;
     before(() => {
