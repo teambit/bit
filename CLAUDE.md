@@ -6,6 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 For comprehensive Bit MCP workflow instructions and core principles, see: `.github/instructions/bit.instructions.md`
 
+## Public Repo Hygiene
+
+This repo is open source. Commits, branch names, PR titles/descriptions, and PR comments are public.
+
+- **No private data**: Never use real component-ids, package names, scope/org names, or people's names (these often come from the prompt or from a bug report) in commits, PRs, or PR comments — they may be private. Use made-up placeholders instead (e.g. `my-org.my-scope/button`).
+- **No private commands**: Some internal `bit` commands are defined outside this repo and must not be mentioned publicly. Before naming a `bit` command in a commit, branch, or PR, verify it's defined here (`grep -rn "name = '<command>" scopes components`). If it isn't, describe the behavior instead (e.g. "a lane merge from a bare scope", "snapping from a scope"). Internal API names that live in this repo (e.g. `snapFromScope`, `mergeSnaps`) are fine to mention.
+
 ## CLI Output Style Guide
 
 When modifying CLI command output, follow the style guide: `scopes/harmony/cli/cli-output-style-guide.md`

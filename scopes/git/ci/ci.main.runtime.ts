@@ -322,9 +322,22 @@ export class CiMain {
 
   /**
    * The repository's default branch name, whole — slashes included (see `parseOriginHeadRef`).
-   * Local `origin/HEAD` symref first, then the remote's own answer, then the conventional probe.
+   * What `detectDefaultBranchName` finds, else `master`, with a warning that names it.
    */
   async getDefaultBranchName(): Promise<string> {
+    const detected = await this.detectDefaultBranchName();
+    if (detected) return detected;
+    this.logger.console(chalk.yellow(`Unable to detect default branch, using 'master'`));
+    return 'master';
+  }
+
+  /**
+   * The default branch as the repository itself states it: the local `origin/HEAD` symref, then the
+   * remote's own answer, then `main`/`master` among the remote branches. Undefined when none of them
+   * answers (no origin, a repository not pushed yet, a server out of reach), so a caller can tell a
+   * detected branch from a guess.
+   */
+  async detectDefaultBranchName(): Promise<string | undefined> {
     try {
       const result = await git.raw(['symbolic-ref', 'refs/remotes/origin/HEAD']);
       const local = parseOriginHeadRef(result);
@@ -337,25 +350,16 @@ export class CiMain {
     }
     const remote = await remoteHeadBranch();
     if (remote && isValidGitBranchName(remote)) return remote;
-    return this.probeDefaultBranchName();
-  }
-
-  /**
-   * Last-resort fallback: the two conventional names among the remote branches, then `master`.
-   * Deliberately only `main`/`master` — any wider guess risks protecting the wrong branch.
-   */
-  private async probeDefaultBranchName(originalError?: Error): Promise<string> {
+    // Deliberately only `main`/`master` — any wider guess risks protecting the wrong branch.
     try {
       const branches = await git.branch(['-r']);
       if (branches.all.includes('origin/main')) return 'main';
       if (branches.all.includes('origin/master')) return 'master';
-      return 'master';
-    } catch {
-      this.logger.console(
-        chalk.yellow(`Unable to detect default branch, using 'master'${originalError ? `: ${originalError}` : ''}`)
-      );
-      return 'master';
+    } catch (err) {
+      // debug only: the caller decides what to say, and what to use instead
+      this.logger.debug(`detectDefaultBranchName: "git branch -r" failed: ${(err as Error).message}`);
     }
+    return undefined;
   }
 
   async getGitCommitMessage() {
@@ -1738,6 +1742,10 @@ export class CiMain {
       } else {
         await this.commitAndPushBitmapChanges({ verbose, skipPush, defaultBranch });
       }
+    } else if (currentLane && !noBitmapCommit) {
+      // the switch to main rewrote the lane's .bitmap; without this commit, the default branch keeps the lane's
+      this.logger.console(chalk.yellow("No components were tagged; committing main's .bitmap"));
+      await this.commitAndPushBitmapChanges({ verbose, skipPush, defaultBranch });
     } else {
       this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
     }

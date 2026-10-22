@@ -1573,7 +1573,7 @@
           ],
           [
             "",
-            "log",
+            "full-log",
             "show full build log for failed containers (not just the error summary)"
           ],
           [
