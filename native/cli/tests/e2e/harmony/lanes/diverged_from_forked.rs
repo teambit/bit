@@ -8,16 +8,16 @@ fn lane_b_was_forked_from_lane_a_and_they_are_now_diverged() {
     helper.set_workspace_with_remote_scope();
     helper.create_lane("lane-a", "");
     helper.populate_components(1, false, "");
-    helper.snap_all_components_without_build("");
-    helper.export("");
+    helper.native("snap --skip-tests");
+    helper.native("export");
     helper.create_lane("lane-b", "");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.export("");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("export");
     helper.switch_local_lane("lane-a", "");
     helper.write_file("comp1/new-file.ts", "");
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
     let head_on_lane_a = helper.get_head_from_lane("lane-a", "comp1");
-    helper.export("");
+    helper.native("export");
     helper.switch_local_lane("lane-b", "");
     let head_on_lane_b = helper.get_head_from_lane("lane-b", "comp1");
 

@@ -15,8 +15,8 @@ fn init_git_workspace_with_exported_components(
     helper.set_workspace_with_remote_scope();
     helper.init_new_git_repo();
     helper.populate_components(num_components, true, "");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
     helper.output_file(".gitignore", &format!("{}\n", git_ignore.join("\n")));
     helper.git("add .");
     helper.git(r#"commit -m "initial commit""#);
@@ -176,7 +176,7 @@ fn bit_internalize_command_workflow() -> KnownResult<()> {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     helper.run("internalize comp2");
 
     // bit show should show the component as internal
@@ -215,7 +215,7 @@ fn bit_internalize_command_workflow() -> KnownResult<()> {
     assert!(!pattern_out.contains("comp1"), "{pattern_out}");
 
     // tagging the component
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
 
     // the component should not be modified
     let status_after = helper.status_json();
@@ -236,7 +236,7 @@ fn bit_internalize_command_workflow() -> KnownResult<()> {
     assert_eq!(frag_after["isInternal"].as_bool(), Some(true));
 
     // exporting and importing into a new workspace
-    helper.export("");
+    helper.native("export");
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.import_component("comp2", "");
@@ -248,7 +248,7 @@ fn bit_internalize_command_workflow() -> KnownResult<()> {
     // uninternalize a component (--revert)
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     helper.run("internalize comp1");
     helper.run("internalize comp1 --revert");
 
@@ -263,7 +263,7 @@ fn bit_internalize_command_workflow() -> KnownResult<()> {
     // reverting the internalize by "bit checkout reset"
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     helper.run("internalize comp1");
     helper.checkout("reset comp1");
 
@@ -317,7 +317,7 @@ fn relative_paths_flow_and_rewire() -> KnownResult<()> {
 
     // tagging the component
     helper.compile();
-    let tag_output = helper.tag_all_without_build("");
+    let tag_output = helper.native("tag --skip-tests");
 
     // should allow tagging the component
     assert!(tag_output.contains("2 component(s) tagged"), "{tag_output}");
@@ -338,7 +338,7 @@ fn relative_paths_flow_and_rewire() -> KnownResult<()> {
     assert!(app_str.contains("comp1 and comp2"), "{app_str}");
 
     // should work after importing to another workspace
-    helper.export("");
+    helper.native("export");
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.import_component("*", "");

@@ -30,11 +30,11 @@ fn lane_eject_when_no_main_version() {
     helper.add_default_scope(&dot_remote);
 
     helper.populate_components(3, true, "");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
     helper.create_lane("dev", "");
-    helper.snap_all_components_without_build("--unmodified");
-    helper.export("");
+    helper.native("snap --skip-tests --unmodified");
+    helper.native("export");
     config::update_scope_json(&helper.scopes.local_path.join(".bit/scope.json"), |scope| {
         scope.insert("remotes".into(), json!({}));
     });
@@ -79,8 +79,8 @@ fn lane_eject_when_no_main_version() {
     helper2.set_workspace_with_remote_scope();
     helper2.populate_components(1, true, "");
     helper2.create_lane("dev", "");
-    helper2.snap_all_components_without_build("");
-    helper2.export("");
+    helper2.native("snap --skip-tests");
+    helper2.native("export");
 
     let err = helper2.run_with_try_catch("bit lane eject comp1");
     assert!(err.contains("it has no main version"), "{err}");

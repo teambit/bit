@@ -24,8 +24,8 @@ fn setup_git_remote(helper: &Helper) -> PathBuf {
 
 fn setup_components_and_initial_commit(helper: &Helper, num_components: usize) -> String {
     helper.populate_components(num_components, true, "");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
     helper.output_file(".gitignore", "node_modules/\n.bit/\n");
     helper.git("add .");
     helper.git(r#"commit -m "initial commit""#);
@@ -752,8 +752,8 @@ fn ci_bitmap_auto_sync_edge_cases_and_guards() -> KnownResult<()> {
     // 15. workspace without git: graceful skip
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
     enable_bitmap_auto_sync(&helper);
 
     // bit status should run successfully without erroring on the missing git
