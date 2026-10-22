@@ -1,4 +1,4 @@
-import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
+import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey, compact } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
@@ -23,7 +23,6 @@ import { getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-h
 import type { SnapsDistance } from '@teambit/component.snap-distance';
 import {
   getDivergeData,
-  getAllVersionHashes,
   getAllVersionParents,
   getAllVersionsInfo,
   getVersionParentsFromVersion,
@@ -1392,28 +1391,9 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
    * main snaps/tags that were never exported (e.g. snapped on main, then a lane was created and snapped on top).
    * `getLocalHashes` with a lane drops them as main-origin, but unlike other main-origin refs, they're not on the
    * component's home scope, so a lane export must push them.
-   * expects `populateLocalAndRemoteHeads` to be called first, so `this.remoteHead` is the main remote head.
    */
-  async getUnexportedMainRefs(repo: Repository): Promise<Ref[]> {
-    if (!this.head) return [];
-    // main was never exported. (getDivergeData with no target traverses the lane head, not the main head)
-    if (!this.remoteHead)
-      return getAllVersionHashes({ modelComponent: this, repo, throws: false, startFrom: this.head });
-    if (this.head.isEqual(this.remoteHead)) return [];
-    try {
-      const mainDivergeData = await getDivergeData({
-        repo,
-        modelComponent: this,
-        sourceHead: this.head,
-        targetHead: this.remoteHead,
-        throws: false,
-      });
-      return mainDivergeData.snapsOnSourceOnly;
-    } catch (err: any) {
-      // e.g. a lean lane consumer doesn't always have the main remote head locally. keep the previous behavior.
-      logger.debug(`getUnexportedMainRefs, failed calculating the main divergence of ${this.id()}: ${err.message}`);
-      return [];
-    }
+  getUnexportedMainRefs(): Ref[] {
+    return compact(this.getLocalVersions().map((version) => this.getRef(version)));
   }
 
   /**
