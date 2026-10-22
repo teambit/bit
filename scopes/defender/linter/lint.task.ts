@@ -6,6 +6,7 @@ import type { Linter } from './linter';
 import type { LinterContext } from './linter-context';
 
 export class LintTask implements BuildTask {
+  readonly description = 'Linting components';
   constructor(
     readonly aspectId: string,
     readonly name = 'lint'
