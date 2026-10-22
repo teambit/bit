@@ -28,6 +28,7 @@ export type ComponentDependenciesManifest = {
 export interface ComponentDependencyList {
   readonly dependencies: ComponentDependencyEntry[];
   forEach(predicate: (dep: ComponentDependencyEntry, index?: number) => void): void;
+  filter(predicate: (dep: ComponentDependencyEntry, index?: number) => boolean): ComponentDependencyList;
   map(predicate: (dep: ComponentDependencyEntry, index?: number) => any): any[];
   toDependenciesManifest(): ComponentDependenciesManifest;
 }
