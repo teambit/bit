@@ -93,6 +93,7 @@ export class AutoDetectDeps {
     this.processedFiles = [];
     this.issues = component.issues;
     this.debugDependenciesData = { components: [] };
+    this.autoDetectConfigMerge = workspace.getAutoDetectConfigMerge(component.id) || {};
   }
 
   get consumer(): Consumer {
@@ -668,6 +669,8 @@ export class AutoDetectDeps {
    * when requiring packages in typescript, sometimes there are the types packages with the same
    * name, which the user probably wants as well. for example, requiring `foo` package, will also
    * add `@types/foo` to the devDependencies if it has been found in the user `package.json` file.
+   * otherwise, it's taken from the merge config (during a merge, e.g. when the other side added it), and then from the
+   * model.
    *
    * ideally this should be in bit-javascript. however, the decision where to put these `@types`
    * packages (dependencies/devDependencies) is done here according to the user `package.json`
@@ -679,17 +682,14 @@ export class AutoDetectDeps {
     const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
     const depsHost = this.depsResolver.getWorkspacePolicyManifest();
-    const addFromConfig = (packageName: string): boolean => {
-      if (!depsHost) return false;
-      return DEPENDENCIES_FIELDS.some((depField) => {
-        if (!depsHost[depField]) return false;
-        const typesPackage = packageToDefinetlyTyped(packageName);
-        if (!depsHost[depField][typesPackage]) return false;
-        Object.assign(this.allPackagesDependencies.devPackageDependencies, {
-          [typesPackage]: depsHost[depField][typesPackage],
-        });
-        return true;
-      });
+    // a policy here is an object of dependency fields, each maps package names to versions
+    const addFromPolicy = (policy: Record<string, any> | undefined, packageName: string): boolean => {
+      const typesPackage = packageToDefinetlyTyped(packageName);
+      const version = DEPENDENCIES_FIELDS.map((depField) => policy?.[depField]?.[typesPackage]).find(Boolean);
+      // "-" is a removal of a dependency from the config, not a version
+      if (!version || version === '-') return false;
+      Object.assign(this.allPackagesDependencies.devPackageDependencies, { [typesPackage]: version });
+      return true;
     };
     const addFromModel = (packageName: string) => {
       if (!this.componentFromModel) return;
@@ -702,7 +702,7 @@ export class AutoDetectDeps {
     };
 
     packageNames.forEach((packageName) => {
-      const added = addFromConfig(packageName);
+      const added = addFromPolicy(depsHost, packageName) || addFromPolicy(this.autoDetectConfigMerge, packageName);
       if (!added) addFromModel(packageName);
     });
   }
