@@ -357,7 +357,7 @@ export class SnappingMain {
 
     const extensionDataList = ExtensionDataList.mergeConfigs([
       extensionsFromConfigObject,
-      consumerComponent.extensions,
+      consumerComponent.extensions.withoutEnvReplacedBy(configObject),
     ]).filterRemovedExtensions();
 
     // Restore data fields from the original extensions after merging configs.
