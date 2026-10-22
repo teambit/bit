@@ -398,6 +398,7 @@ describe('the default dir of a component whose dir is used by a component of ano
       value: {
         bitMap: {
           getComponentIdByRootPath: (rootDir: string) => (rootDirs[rootDir] ? idOf(rootDirs[rootDir]) : undefined),
+          getAllTrackDirs: () => rootDirs,
         },
         composeRelativeComponentPath,
         toAbsolutePath: (relativePath: string) => path.join(workspacePath, relativePath),
@@ -431,6 +432,10 @@ describe('the default dir of a component whose dir is used by a component of ano
   it('should keep the default dir when the owner dir is not empty, so the conflict check reports it', async () => {
     await fs.outputFile(path.join(workspacePath, 'org2/ui/button/index.js'), '');
     const { main } = runtimeTracking({ 'ui/button': 'org1.ui/button' }, workspacePath);
+    expect(main.getDefaultDir(componentOf('org2.ui/button'), true)).to.equal('ui/button');
+  });
+  it('should keep the default dir when the owner dir is nested in a tracked dir, which would move it unchecked', () => {
+    const { main } = runtimeTracking({ 'ui/button': 'org1.ui/button', 'org2/ui': 'org2.misc/ui' }, workspacePath);
     expect(main.getDefaultDir(componentOf('org2.ui/button'), true)).to.equal('ui/button');
   });
   it('should keep the default dir when the scope has no owner', () => {

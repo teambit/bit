@@ -243,7 +243,11 @@ export class ComponentWriterMain {
     const ownerName = getOwnerName(component);
     if (!ownerName || defaultDir.startsWith(`${ownerName}/`)) return defaultDir;
     const ownerDir = `${ownerName}/${defaultDir}`;
-    if (this.getDirUnavailableReason(ownerDir, undefined)) return defaultDir;
+    // a dir nested in a tracked rootDir (or containing one) would be moved later by fixDirsIfNested, past this check
+    const isNestedWithTrackedDir = Object.keys(this.consumer.bitMap.getAllTrackDirs()).some(
+      (rootDir) => rootDir.startsWith(`${ownerDir}/`) || ownerDir.startsWith(`${rootDir}/`)
+    );
+    if (isNestedWithTrackedDir || this.getDirUnavailableReason(ownerDir, undefined)) return defaultDir;
     this.logger.consoleWarning(
       `"${defaultDir}" is already used by ${usedByComponent.toString()}, importing ${component.id.toStringWithoutVersion()} into "${ownerDir}" instead`
     );
