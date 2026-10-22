@@ -58,7 +58,7 @@ fn bar_foo(helper: &Helper, implementation: &str) {
 
 /// `getHead(id)`.
 fn head(helper: &Helper, id: &str) -> String {
-    let component = parse(&helper.run(&format!("cat-component {id} --json")));
+    let component = parse(&helper.native(&format!("cat-component {id} --json")));
     component["head"]
         .as_str()
         .unwrap()
@@ -69,7 +69,7 @@ fn tagged() -> Helper {
     let helper = Helper::new();
     helper.re_init_workspace();
     bar_foo(&helper, BAR_FOO_V1);
-    helper.run("tag --ver 0.0.5");
+    helper.native("tag --ver 0.0.5");
     helper
 }
 
@@ -84,9 +84,9 @@ fn several_modified() -> Helper {
     helper.re_init_workspace();
     bar_foo(&helper, BAR_FOO_V1);
     helper.output_file("is-type/is-type.js", IS_TYPE);
-    helper.run("add is-type -i utils/is-type");
+    helper.native("add is-type -i utils/is-type");
     helper.output_file("is-string/is-string.js", "");
-    helper.run("add is-string -i utils/is-string");
+    helper.native("add is-string -i utils/is-string");
     helper.tag_without_build("", "");
     helper.create_component_bar_foo(BAR_FOO_V2);
     helper.append_file("is-type/is-type.js", "\n");
@@ -100,8 +100,8 @@ fn replaced_file() -> Helper {
     helper.tag_without_build("", "");
     helper.output_file("bar/foo2.js", BAR_FOO_V2);
     helper.delete_path("bar/foo.js");
-    helper.run("add bar -i bar/foo -m bar/foo2.js");
-    helper.run("status");
+    helper.native("add bar -i bar/foo -m bar/foo2.js");
+    helper.native("status");
     helper
 }
 
@@ -140,11 +140,11 @@ fn agent_flags() -> Helper {
     helper.re_init_workspace();
     bar_foo(&helper, BAR_FOO_V1);
     helper.output_file("is-type/is-type.js", IS_TYPE);
-    helper.run("add is-type -i utils/is-type");
+    helper.native("add is-type -i utils/is-type");
     helper.tag_without_build("", "");
     helper.create_component_bar_foo(BAR_FOO_V2);
     helper.output_file("is-type/extra.js", "module.exports = 'extra';\n");
-    helper.run("add is-type -i utils/is-type -m is-type.js");
+    helper.native("add is-type -i utils/is-type -m is-type.js");
     helper
 }
 
@@ -181,10 +181,10 @@ fn with_snaps(helper: &Helper) -> (String, String) {
     helper.create_component_bar_foo(BAR_FOO_V2);
     helper.tag_without_build("", "");
     helper.create_component_bar_foo(BAR_FOO_V3);
-    helper.run("snap");
+    helper.native("snap");
     let first = head(helper, "bar/foo");
     helper.create_component_bar_foo(BAR_FOO_V4);
-    helper.run("snap");
+    helper.native("snap");
     (first, head(helper, "bar/foo"))
 }
 
@@ -423,12 +423,12 @@ fn parent_diffs_against_the_parent_version() {
 fn parent_skips_identical_snaps_but_not_tags() {
     let helper = Helper::new();
     let (first, _) = with_snaps(&helper);
-    helper.run("tag --unmodified");
+    helper.native("tag --unmodified");
     let output = diff(&helper, "bar/foo 0.0.3 --parent").native();
     v3_to_v4(&output, &first, "0.0.3");
-    helper.run("tag --unmodified");
-    helper.run("tag --unmodified");
-    let component = parse(&helper.run("cat-component bar/foo --json"));
+    helper.native("tag --unmodified");
+    helper.native("tag --unmodified");
+    let component = parse(&helper.native("cat-component bar/foo --json"));
     let versions = component["versions"].as_object().unwrap();
     let tag = versions.keys().next_back().unwrap();
     has(&diff(&helper, &format!("bar/foo {tag} --parent")).native(), NO_DIFF);
@@ -441,9 +441,9 @@ fn parent_of_a_tag_over_an_identical_snap() {
     let helper = Helper::new();
     helper.re_init_workspace();
     helper.output_file("comp2/index.js", r#"console.log("hello");"#);
-    helper.run("add comp2");
-    helper.run("snap comp2");
-    helper.run("tag comp2 --unmodified");
+    helper.native("add comp2");
+    helper.native("snap comp2");
+    helper.native("tag comp2 --unmodified");
     let output = diff(&helper, "comp2 0.0.1 --parent").native();
     lacks(&output, NO_DIFF);
     has(&output, "--- index.js (no parent)");
@@ -530,9 +530,9 @@ fn parent_of_a_soft_deleted_component() {
     let helper = Helper::new();
     with_snaps(&helper);
     for _ in 0..3 {
-        helper.run("tag --unmodified");
+        helper.native("tag --unmodified");
     }
-    helper.run("delete bar/foo --silent");
+    helper.native("delete bar/foo --silent");
     let output = diff(&helper, "--parent").native();
     lacks(&output, "-module.exports = function foo() { return 'got foo v4'; };");
     has(&output, NO_DIFF);

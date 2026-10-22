@@ -31,7 +31,7 @@ fn soft_tag_then_persist_matches_node() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.run("link");
+    helper.native("link");
     let node_workspace = helper.clone_workspace();
 
     compare_command(&helper, &node_workspace, "tag --soft bar/foo --message probe");
@@ -61,7 +61,7 @@ fn soft_prerelease_persist_preserves_node_rejection() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.run("link");
+    helper.native("link");
     let node_workspace = helper.clone_workspace();
 
     compare_command(
@@ -92,7 +92,7 @@ fn repeated_soft_tag_replaces_pending_version_and_message() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.run("link");
+    helper.native("link");
     let node_workspace = helper.clone_workspace();
 
     compare_command(&helper, &node_workspace, "tag --soft bar/foo --message first");
@@ -110,7 +110,7 @@ fn exact_soft_tag_then_persist_matches_node() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.run("link");
+    helper.native("link");
     let node_workspace = helper.clone_workspace();
 
     compare_command(&helper, &node_workspace, "tag --soft bar/foo --ver 2.4.0 --message planned");
@@ -124,7 +124,7 @@ fn versions_file_explicit_and_default_apply_to_dependents() {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);
     helper.populate_components(2, true, "");
-    helper.run("tag --message initial");
+    helper.native("tag --message initial");
     helper.append_file("comp2/index.js", "\n// changed dependency");
     std::fs::write(
         helper.scopes.local_path.join("versions.txt"),
@@ -147,7 +147,7 @@ fn modified_state_selector_preserves_automatic_dependents() {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);
     helper.populate_components(2, true, "");
-    helper.run("tag --message initial");
+    helper.native("tag --message initial");
     helper.append_file("comp2/index.js", "\n// changed dependency");
     let node_workspace = helper.clone_workspace();
     compare_command(&helper, &node_workspace, r#"tag "$modified AND comp*" --message modified"#);
@@ -162,7 +162,7 @@ fn soft_versions_file_then_persist_matches_node() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.run("link");
+    helper.native("link");
     std::fs::write(helper.scopes.local_path.join("versions.txt"), "DEFAULT: 3.2.1\n").unwrap();
     let node_workspace = helper.clone_workspace();
     compare_command(
@@ -179,7 +179,7 @@ fn dependency_graph_policy_flags_match_node() {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);
     helper.populate_components(2, true, "");
-    helper.run("tag --message initial");
+    helper.native("tag --message initial");
     helper.append_file("comp2/index.js", "\n// graph rebuilt");
     let node_workspace = helper.clone_workspace();
     compare_command(
@@ -187,7 +187,7 @@ fn dependency_graph_policy_flags_match_node() {
         &node_workspace,
         "tag --rebuild-deps-graph --no-lock-deps --message graph",
     );
-    let native = parse(&helper.run("cat-component comp1@latest --json"));
+    let native = parse(&helper.native("cat-component comp1@latest --json"));
     let node = Helper::cmd_in_with(
         &node_workspace,
         "cat-component comp1@latest --json",
@@ -204,10 +204,10 @@ fn ignore_newest_version_allows_tagging_an_old_checkout() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.run("tag --message first");
+    helper.native("tag --message first");
     helper.append_file("bar/foo.js", "\n// second");
-    helper.run("tag --message second");
-    helper.run("checkout 0.0.1 bar/foo -x");
+    helper.native("tag --message second");
+    helper.native("checkout 0.0.1 bar/foo -x");
     helper.append_file("bar/foo.js", "\n// hotfix");
     let node_workspace = helper.clone_workspace();
     compare_command(
@@ -224,7 +224,7 @@ fn ignored_missing_package_issue_matches_node() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo("require('missing-snapshot-fixture-package');\n");
     helper.add_component_bar_foo();
-    helper.run("link");
+    helper.native("link");
     let node_workspace = helper.clone_workspace();
     compare_command(
         &helper,
@@ -240,7 +240,7 @@ fn numeric_increment_by_matches_node() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.run("tag --message initial");
+    helper.native("tag --message initial");
     for (count, expected) in [("1.5", "0.0.3"), ("0", "0.0.4"), ("1e1", "0.0.14")] {
         helper.append_file("bar/foo.js", &format!("\n// increment {count}"));
         let node_workspace = helper.clone_workspace();
@@ -298,7 +298,7 @@ fs.writeFileSync(file,text);
     compare_command(&helper, &node_workspace, "tag --persist=skip-build");
     for id in ["comp1", "comp2"] {
         let command = format!("cat-component {id}@latest --json");
-        let native = parse(&helper.run(&command));
+        let native = parse(&helper.native(&command));
         let node =
             Helper::cmd_in_with(&node_workspace, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
         assert_eq!(native["log"]["message"], parse(&node.stdout)["log"]["message"]);

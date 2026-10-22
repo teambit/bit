@@ -15,9 +15,9 @@ fn with_tagged_components_and_track_false() {
     assert!(output.contains("removed components") || output.contains("bar/foo"));
     let bit_map = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
     assert!(!bit_map.contains("bar/foo"));
-    let list_output = helper.run("list");
+    let list_output = helper.native("list");
     assert!(!list_output.contains("bar/foo"));
-    let status = helper.run("status");
+    let status = helper.native("status");
     assert!(!status.contains("bar/foo"));
 }
 
@@ -32,7 +32,7 @@ fn with_tagged_components_and_track_true() {
     helper.native("remove bar/foo -t --keep-files --silent");
     let bit_map = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
     assert!(bit_map.contains("bar/foo"));
-    let list_output = helper.run("list --local-scope");
+    let list_output = helper.native("list --local-scope");
     assert!(!list_output.contains("bar/foo"));
     let status = helper.run("status");
     assert!(status.contains("new components") || status.contains("bar/foo"));
@@ -48,11 +48,11 @@ fn with_remote_scope_without_dependencies() {
     helper.tag_component_bar_foo();
     remote::publish(&helper);
 
-    let output = helper.run(&format!("remove {}/bar/foo --silent", helper.scopes.remote));
+    let output = helper.native(&format!("remove {}/bar/foo --silent", helper.scopes.remote));
     assert!(output.contains("removed components") || output.contains("bar/foo"));
-    let ls_local = helper.run("list --local-scope");
+    let ls_local = helper.native("list --local-scope");
     assert!(ls_local.contains("found 0 components") || !ls_local.contains("bar/foo"));
-    let ls_remote = helper.run(&format!("list {}", helper.scopes.remote));
+    let ls_remote = helper.native(&format!("list {}", helper.scopes.remote));
     assert!(!ls_remote.contains("found 0 components"));
 }
 
@@ -68,8 +68,8 @@ fn with_imported_components_no_dependencies() {
 
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/bar/foo", helper.scopes.remote));
-    let output = helper.run(&format!("remove {}/bar/foo --silent", helper.scopes.remote));
+    helper.native(&format!("import {}/bar/foo", helper.scopes.remote));
+    let output = helper.native(&format!("remove {}/bar/foo --silent", helper.scopes.remote));
     assert!(output.contains("removed components") || output.contains("bar/foo"));
     let bit_map = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
     assert!(!bit_map.contains(r#""bar/foo""#));
@@ -84,7 +84,7 @@ fn remove_modified_component() {
     helper.add_component_bar_foo();
     helper.tag_component_bar_foo();
     helper.output_file("bar/foo.js", "module.exports = 'modified';");
-    let output = helper.cmd("remove bar/foo@0.0.1 --silent");
+    let output = helper.native_run("remove bar/foo@0.0.1 --silent");
     let combined = format!("{}{}", output.stdout, output.stderr);
     assert!(
         combined.contains("unable to remove modified components")
@@ -101,12 +101,12 @@ fn remove_a_component_when_the_main_file_is_missing() {
     helper.re_init_workspace();
     helper.output_file("bar/foo.js", "module.exports = 'foo';");
     helper.output_file("bar/foo-main.js", "module.exports = 'main';");
-    helper.run("add bar -m foo-main.js -i bar/foo");
-    helper.run("tag --message first");
+    helper.native("add bar -m foo-main.js -i bar/foo");
+    helper.native("tag --message first");
     fs::remove_file(helper.scopes.local_path.join("bar/foo-main.js")).unwrap();
-    let status = helper.run("status");
+    let status = helper.native("status");
     assert!(status.contains("main-file was removed") || status.contains("issues found"));
-    let output = helper.cmd("remove bar/foo --silent");
+    let output = helper.native_run("remove bar/foo --silent");
     let combined = format!("{}{}", output.stdout, output.stderr);
     assert!(
         combined.contains("successfully removed") || combined.contains("removed components"),
@@ -123,19 +123,19 @@ fn remove_a_component_when_a_dependency_has_same_content_file() {
     let is_type = "module.exports = () => true;";
     helper.output_file("comp2/index.js", is_type);
     helper.output_file("comp2-b/index.js", is_type);
-    helper.run("add comp2-b");
-    helper.run("tag --message first");
-    helper.run("tag --unmodified --ver 1.0.0 --message second");
+    helper.native("add comp2-b");
+    helper.native("tag --message first");
+    helper.native("tag --unmodified --ver 1.0.0 --message second");
     remote::publish(&helper);
 
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/comp1 -x", helper.scopes.remote));
-    helper.run(&format!("import {}/comp2 -x", helper.scopes.remote));
+    helper.native(&format!("import {}/comp1 -x", helper.scopes.remote));
+    helper.native(&format!("import {}/comp2 -x", helper.scopes.remote));
     let output = helper.cmd("remove comp1 --silent");
     let combined = format!("{}{}", output.stdout, output.stderr);
     assert!(combined.contains("removed components") || combined.contains("comp1"), "{combined}");
-    let status = helper.run("status");
+    let status = helper.native("status");
     assert!(!status.contains("error"));
 }
 
@@ -145,13 +145,13 @@ fn soft_remove_workflow() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.run("tag --message first");
+    helper.native("tag --message first");
     remote::publish(&helper);
 
     helper.native("delete comp2 --silent");
-    let status = helper.run("status");
+    let status = helper.native("status");
     assert!(status.contains("deleted") || status.contains("comp2"));
-    let list = helper.run("list");
+    let list = helper.native("list");
     assert!(!list.contains("comp2"));
     let show = helper.run("show comp2");
     assert!(show.contains("removed") || show.contains("true"));
@@ -162,7 +162,7 @@ fn soft_remove_workflow() {
 
     helper.re_init_workspace();
     helper.add_remote_scope();
-    let import_out = helper.run(&format!("import {}/comp2 -x", helper.scopes.remote));
+    let import_out = helper.native(&format!("import {}/comp2 -x", helper.scopes.remote));
     assert!(import_out.contains("deleted") || import_out.contains("comp2"));
 }
 
@@ -172,10 +172,10 @@ fn removing_from_workspace_when_it_had_dependents_previously_in_old_tags() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.run("tag --message first");
+    helper.native("tag --message first");
     remote::publish(&helper);
     helper.output_file("comp1/index.js", "module.exports = 'no dep';");
-    helper.run("tag --message second");
+    helper.native("tag --message second");
     remote::publish(&helper);
     helper.native("remove comp2 --silent");
     let bit_map = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
@@ -188,7 +188,7 @@ fn soft_remove_then_snap_with_ignore_issues() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.run("snap --message first");
+    helper.native("snap --message first");
     helper.native("delete comp1 --silent");
     helper.run("snap --message second --ignore-issues=*");
     let show = helper.run("show comp1");
@@ -201,12 +201,12 @@ fn remove_when_a_lane_is_new() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.run("lane create dev");
-    helper.run("snap --message first");
+    helper.native("lane create dev");
+    helper.native("snap --message first");
     helper.native("remove comp1 --silent");
-    let lane_show = helper.run("lane show dev");
+    let lane_show = helper.native("lane show dev");
     assert!(!lane_show.contains("comp1"));
-    let list = helper.run("list");
+    let list = helper.native("list");
     assert!(!list.contains("comp1"));
 }
 
@@ -215,12 +215,12 @@ fn remove_when_a_lane_is_new() {
 fn soft_remove_then_import() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.populate_components(2, true, "");
-    helper.run("snap --message first");
+    helper.native("snap --message first");
     remote::publish(&helper);
-    helper.run("delete comp2 --lane --silent");
-    let import_out = helper.run(&format!("import {}/comp2 -x", helper.scopes.remote));
+    helper.native("delete comp2 --lane --silent");
+    let import_out = helper.native(&format!("import {}/comp2 -x", helper.scopes.remote));
     assert!(!import_out.contains("error"));
 }
 
@@ -230,10 +230,10 @@ fn soft_remove_dependent_issues() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.run("tag --message first");
+    helper.native("tag --message first");
     remote::publish(&helper);
     helper.native("delete comp2 --silent");
-    let status = helper.run("status");
+    let status = helper.native("status");
     assert!(
         status.contains("RemovedDependencies")
             || status.contains("issues found")
@@ -249,9 +249,9 @@ fn remove_component_that_exists_in_workspace_jsonc() {
     let remote = &helper.scopes.remote;
     let dir = format!("{remote}/my-aspect");
     helper.output_file(&format!("{dir}/index.ts"), "export default {};\n");
-    helper.run(&format!("add {dir} -i my-aspect"));
-    helper.run("envs set my-aspect teambit.harmony/aspect");
-    helper.run(&format!("use {remote}/my-aspect"));
+    helper.native(&format!("add {dir} -i my-aspect"));
+    helper.native("envs set my-aspect teambit.harmony/aspect");
+    helper.native(&format!("use {remote}/my-aspect"));
     helper.native("remove my-aspect --silent");
     let ws = fs::read_to_string(helper.scopes.local_path.join("workspace.jsonc")).unwrap();
     assert!(!ws.contains(&format!("{remote}/my-aspect")));

@@ -1,7 +1,7 @@
 use super::{
     Options, missing_host_error, parse_options,
     render::{harmony_json, legacy_json, text_report},
-    workspace_show::load_target,
+    workspace_show::{TargetOutcome, load_target_outcome},
 };
 use serde_json::json;
 use std::{fs, path::Path};
@@ -66,7 +66,9 @@ fn renders_legacy_harmony_and_text_for_workspace_component() {
     write_fixture_workspace(temp.path());
 
     let opts = parse_options(&["comp1", "--json", "--legacy"]).unwrap();
-    let loaded = load_target(temp.path(), &opts).unwrap();
+    let TargetOutcome::Loaded(loaded) = load_target_outcome(temp.path(), &opts) else {
+        panic!("fixture component should load");
+    };
     let legacy = legacy_json(&loaded);
     assert_eq!(legacy["name"], "comp1");
     assert_eq!(

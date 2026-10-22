@@ -82,7 +82,7 @@ fn eject_config_for_tagged_component() {
     helper.run("install");
     helper.compile();
     helper.native("tag --skip-tests");
-    helper.run("eject-conf bar/foo");
+    helper.native("eject-conf bar/foo");
     let comp_json = helper.read_component_json("bar");
     assert_eq!(comp_json["extensions"]["my-scope/dummy-extension@0.0.1"], json!({ "key": "val" }));
 }

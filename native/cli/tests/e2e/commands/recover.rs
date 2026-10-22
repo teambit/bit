@@ -64,7 +64,7 @@ fn tagged_component_recovery_matches_node() {
     helper.create_component_bar_foo("module.exports = 'new';");
     helper.add_component_bar_foo();
     helper.tag_without_build("bar/foo", "");
-    helper.run("delete bar/foo --silent");
+    helper.native("delete bar/foo --silent");
     let baseline = helper.clone_workspace();
     compare_result(&helper, &baseline, "recover bar/foo", "bar/foo.js", None);
 }
@@ -79,8 +79,8 @@ fn imported_component_recovery_matches_node() {
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
-    helper.run(&format!("delete {}/bar/foo --silent", helper.scopes.remote));
+    helper.native(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    helper.native(&format!("delete {}/bar/foo --silent", helper.scopes.remote));
     let baseline = helper.clone_workspace();
     let command = format!("recover {}/bar/foo", helper.scopes.remote);
     let files = format!("{}/bar/foo/foo.js", helper.scopes.remote);
@@ -94,7 +94,7 @@ fn ranged_component_recovery_matches_node() {
     helper.create_component_bar_foo("module.exports = 'new';");
     helper.add_component_bar_foo();
     helper.tag_without_build("bar/foo", "");
-    helper.run("delete bar/foo --silent --range ^0.0.1");
+    helper.native("delete bar/foo --silent --range ^0.0.1");
     let baseline = helper.clone_workspace();
     compare_result(&helper, &baseline, "recover bar/foo -x", "bar/foo.js", None);
 }
@@ -105,7 +105,7 @@ fn snap_selection_recovery_matches_node() {
     helper.re_init_workspace();
     helper.create_component_bar_foo("module.exports = 'new';");
     helper.add_component_bar_foo();
-    helper.run("snap --message one");
+    helper.native("snap --message one");
     let bitmap = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
     let version = bitmap
         .lines()
@@ -114,7 +114,7 @@ fn snap_selection_recovery_matches_node() {
         .split('"')
         .nth(3)
         .unwrap();
-    helper.run(&format!("delete bar/foo --silent --snaps {version}"));
+    helper.native(&format!("delete bar/foo --silent --snaps {version}"));
     let baseline = helper.clone_workspace();
     compare_result(&helper, &baseline, "recover bar/foo -x", "bar/foo.js", None);
 }
@@ -126,7 +126,7 @@ fn modified_ranged_component_recovery_matches_node() {
     helper.create_component_bar_foo("module.exports = 'new';");
     helper.add_component_bar_foo();
     helper.tag_without_build("bar/foo", "");
-    helper.run("delete bar/foo --silent --range ^0.0.1");
+    helper.native("delete bar/foo --silent --range ^0.0.1");
     fs::write(helper.scopes.local_path.join("bar/foo.js"), "module.exports = 'edit';").unwrap();
     let actual = crate::commands::add::support::compare(&helper, "recover bar/foo -x");
     assert!(actual.status.success());
@@ -154,7 +154,7 @@ fn ci_recovery_matches_node() {
     helper.create_component_bar_foo("module.exports = 'new';");
     helper.add_component_bar_foo();
     helper.tag_without_build("bar/foo", "");
-    helper.run("delete bar/foo --silent");
+    helper.native("delete bar/foo --silent");
     let node_root = helper.clone_workspace();
     let command = "recover bar/foo -x";
     let node = Helper::cmd_in_with(
@@ -190,7 +190,7 @@ fn exported_lane_recovery_case(selected_snap: bool) {
     } else {
         "delete bar/foo --lane --silent".to_owned()
     };
-    helper.run(&command);
+    helper.native(&command);
     let baseline = helper.clone_workspace();
     let remote = helper.clone_remote_scope();
     compare_result(&helper, &baseline, "recover bar/foo", "bar/foo.js", Some(&remote));

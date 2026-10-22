@@ -9,6 +9,109 @@ use bit_install::{
 use serde_json::Value;
 use std::{fs, path::Path};
 
+pub(super) fn apply_version_dependencies(
+    ver_val: &Value,
+    model: &ModelData,
+    identity: &Identity<'_>,
+    deps: &mut Vec<DepEntry>,
+) {
+    apply_legacy_pkg_fields(ver_val, identity, deps);
+    apply_legacy_comp_fields(ver_val, identity, deps);
+    apply_model_dependencies(model, identity, deps);
+}
+
+fn apply_legacy_pkg_fields(ver_val: &Value, identity: &Identity<'_>, deps: &mut Vec<DepEntry>) {
+    let pkg_fields = [
+        ("packageDependencies", "runtime"),
+        ("devPackageDependencies", "dev"),
+        ("peerPackageDependencies", "peer"),
+    ];
+    for (field, lifecycle) in pkg_fields {
+        if let Some(pkg_map) = ver_val[field].as_object() {
+            for (pkg_name, ver_item) in pkg_map {
+                apply_legacy_pkg_dep(pkg_name, ver_item, lifecycle, identity, deps);
+            }
+        }
+    }
+}
+
+fn apply_legacy_comp_fields(ver_val: &Value, identity: &Identity<'_>, deps: &mut Vec<DepEntry>) {
+    let comp_fields =
+        [("dependencies", "runtime"), ("devDependencies", "dev"), ("peerDependencies", "peer")];
+    for (field, lifecycle) in comp_fields {
+        if let Some(comp_arr) = ver_val[field].as_array() {
+            for item in comp_arr {
+                apply_legacy_comp_dep(item, lifecycle, identity, deps);
+            }
+        }
+    }
+}
+
+fn apply_legacy_pkg_dep(
+    pkg_name: &str,
+    ver_item: &Value,
+    lifecycle: &'static str,
+    identity: &Identity<'_>,
+    deps: &mut Vec<DepEntry>,
+) {
+    if identity.is_self(pkg_name) {
+        return;
+    }
+    let Some(ver) = ver_item.as_str() else {
+        return;
+    };
+    upsert_dep(
+        deps,
+        DepEntry {
+            id: pkg_name.to_owned(),
+            package_name: Some(pkg_name.to_owned()),
+            version: ver.to_owned(),
+            lifecycle,
+            dep_type: "package",
+            optional: false,
+            relative_paths: Vec::new(),
+        },
+    );
+}
+
+fn apply_legacy_comp_dep(
+    item: &Value,
+    lifecycle: &'static str,
+    identity: &Identity<'_>,
+    deps: &mut Vec<DepEntry>,
+) {
+    let id_obj = &item["id"];
+    let Some(name) = id_obj["name"].as_str() else {
+        return;
+    };
+    let scope = id_obj["scope"].as_str().unwrap_or_default();
+    let ver = id_obj["version"].as_str().unwrap_or_default();
+    let bare_id = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
+    if identity.is_self(&bare_id) {
+        return;
+    }
+    let full_id = if ver.is_empty() { bare_id } else { format!("{bare_id}@{ver}") };
+    let pkg_name = item["packageName"]
+        .as_str()
+        .map_or_else(|| format!("@{scope}/{}", name.replace('/', ".")), str::to_owned);
+    let relative_paths = item["relativePaths"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
+    upsert_dep(
+        deps,
+        DepEntry {
+            id: full_id,
+            package_name: Some(pkg_name),
+            version: ver.to_owned(),
+            lifecycle,
+            dep_type: "component",
+            optional: false,
+            relative_paths,
+        },
+    );
+}
+
 pub(super) fn apply_model_dependencies(
     model: &ModelData,
     identity: &Identity<'_>,
@@ -72,38 +175,52 @@ fn apply_model_policy_item(item: &Value, identity: &Identity<'_>, deps: &mut Vec
 }
 
 fn apply_model_dep_item(item: &Value, identity: &Identity<'_>, deps: &mut Vec<DepEntry>) {
-    let Some(dep_id) = item["packageName"]
-        .as_str()
-        .or_else(|| item["id"].as_str())
-    else {
-        return;
-    };
-    if identity.is_self(dep_id) {
-        return;
+    if let Some(dep) = model_dep_entry(item, identity) {
+        upsert_dep(deps, dep);
     }
-    let Some(ver) = item["version"].as_str() else {
-        return;
+}
+
+fn model_dep_entry(item: &Value, identity: &Identity<'_>) -> Option<DepEntry> {
+    let is_comp = item["__type"].as_str() == Some("component");
+    let raw_id = if is_comp {
+        item["id"]
+            .as_str()
+            .or_else(|| item["packageName"].as_str())
+    } else {
+        item["packageName"]
+            .as_str()
+            .or_else(|| item["id"].as_str())
+    };
+    let dep_id = raw_id?;
+    if identity.is_self(dep_id) {
+        return None;
+    }
+    let ver = item["version"].as_str()?;
+    let pkg_name = item["packageName"]
+        .as_str()
+        .unwrap_or(dep_id)
+        .to_owned();
+    let full_id = if is_comp && !dep_id.contains('@') && !ver.is_empty() {
+        format!("{dep_id}@{ver}")
+    } else {
+        dep_id.to_owned()
     };
     let lifecycle = match item["lifecycle"].as_str() {
         Some("dev") => "dev",
         Some("peer") => "peer",
         _ => "runtime",
     };
-    let dep_type =
-        if item["__type"].as_str() == Some("component") { "component" } else { "package" };
+    let dep_type = if is_comp { "component" } else { "package" };
     let optional = item["optional"].as_bool().unwrap_or(false);
-    upsert_dep(
-        deps,
-        DepEntry {
-            id: dep_id.to_owned(),
-            package_name: Some(dep_id.to_owned()),
-            version: ver.to_owned(),
-            lifecycle,
-            dep_type,
-            optional,
-            relative_paths: Vec::new(),
-        },
-    );
+    Some(DepEntry {
+        id: full_id,
+        package_name: Some(pkg_name),
+        version: ver.to_owned(),
+        lifecycle,
+        dep_type,
+        optional,
+        relative_paths: Vec::new(),
+    })
 }
 
 pub(super) fn apply_variant_policies(

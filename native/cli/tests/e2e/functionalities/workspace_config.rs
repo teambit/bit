@@ -19,10 +19,10 @@ fn ignoring_components_and_packages_dependencies() {
     helper.write_file("foo1/foo1.js", "");
     helper.write_file("foo2/foo2.js", "");
     helper.write_file("bar/bar.js", "require('../foo1/foo1'); require('../foo2/foo2'); ");
-    helper.add_component("foo1", "-i utils/foo/foo1");
-    helper.add_component("foo2", "-i utils/foo/foo2");
-    helper.add_component("bar", "");
-    helper.link("--rewire");
+    helper.native("add foo1 -i utils/foo/foo1");
+    helper.native("add foo2 -i utils/foo/foo2");
+    helper.native("add bar");
+    helper.native("link --rewire");
     set_policy_to_variant(
         &helper,
         "bar",
@@ -46,8 +46,8 @@ fn ignoring_components_and_packages_dependencies() {
     let helper2 = Helper::new();
     helper2.set_workspace_with_remote_scope();
     helper2.write_file("bar/bar.js", "require('non-exist-package')");
-    helper2.add_component("bar", "");
-    helper2.compile();
+    helper2.native("add bar");
+    helper2.native("compile");
     set_policy_to_variant(
         &helper2,
         "bar",
@@ -57,7 +57,7 @@ fn ignoring_components_and_packages_dependencies() {
             }
         }),
     );
-    let status = helper2.status();
+    let status = helper2.native("status");
     assert!(!status.contains("MissingPackagesDependenciesOnFs"));
 
     // 3. ignoring an existing package
@@ -69,7 +69,7 @@ fn ignoring_components_and_packages_dependencies() {
         "bar/bar.js",
         "require('existing-package'); require('another-existing-package');",
     );
-    helper3.add_component("bar", "");
+    helper3.native("add bar");
     set_policy_to_variant(
         &helper3,
         "bar",
@@ -101,7 +101,7 @@ fn ignoring_components_and_packages_dependencies() {
         "bar/bar.spec.js",
         "require('existing-package'); require('another-existing-package');",
     );
-    helper4.add_component("bar", "");
+    helper4.native("add bar");
     set_policy_to_variant(
         &helper4,
         "bar",
@@ -132,12 +132,12 @@ fn ignoring_dependencies_components_entire_flow() {
     helper.write_file("foo1/foo1.js", "");
     helper.write_file("foo2/foo2.js", "");
     helper.write_file("bar/bar.js", "require('../foo1/foo1'); require('../foo2/foo2'); ");
-    helper.add_component("foo1", "-i utils/foo/foo1");
-    helper.add_component("foo2", "-i utils/foo/foo2");
-    helper.add_component("bar", "");
-    helper.link("--rewire");
+    helper.native("add foo1 -i utils/foo/foo1");
+    helper.native("add foo2 -i utils/foo/foo2");
+    helper.native("add bar");
+    helper.native("link --rewire");
     helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("export");
     set_policy_to_variant(
         &helper,
         "bar",
@@ -148,7 +148,7 @@ fn ignoring_dependencies_components_entire_flow() {
         }),
     );
     helper.tag_Without_Build_id("bar", "");
-    let cat_bar = parse(&helper.cat_component("bar@latest"));
+    let cat_bar = parse(&helper.native("cat-component bar@latest --json"));
 
     // 1. should remove the dependency from the model
     assert_eq!(
@@ -166,26 +166,26 @@ fn ignoring_dependencies_components_entire_flow() {
     );
 
     // 3. should not show the component as modified
-    let status = helper.status();
+    let status = helper.native("status");
     assert!(!status.contains("modified components"));
 
     // importing the component
-    helper.export("");
+    helper.native("export");
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.import_component("*", "-x");
-    helper.link("");
+    helper.native("link");
     helper.compile();
 
     // 4. bit status should not show the component as modified
     helper.expect_status_to_be_clean();
 
     // 5. bit diff should not show any diff
-    let diff = helper.diff("bar");
+    let diff = helper.native("diff bar");
     assert!(diff.contains("no diff"));
 
     // changing the imported component to not ignore the dependency
-    helper.run_cmd("eject-conf bar");
+    helper.native("eject-conf bar");
     let comp_json_path =
         helper.scopes.local_path.join(&helper.scopes.remote).join("bar/component.json");
     let mut comp_json = crate::helper::config::read_jsonc(&comp_json_path);
@@ -196,11 +196,11 @@ fn ignoring_dependencies_components_entire_flow() {
     crate::helper::config::write_json(&comp_json_path, &comp_json, b"  ");
 
     // 6. bit status should show the component as modified
-    let status = helper.status();
+    let status = helper.native("status");
     assert!(status.contains("modified components"));
 
     // 7. bit diff should show the overrides differences
-    let diff = helper.diff("bar --verbose");
+    let diff = helper.native("diff bar --verbose");
     assert!(diff.contains("--- Overrides Dependencies (0.0.2 original)"), "{diff}");
     assert!(diff.contains("+++ Overrides Dependencies (0.0.2 modified)"), "{diff}");
     assert!(diff.contains(&format!("- [ @{remote}/utils.foo.foo2@-")), "{diff}");
@@ -276,7 +276,7 @@ fn manually_adding_dependencies() {
     );
     let show_output = helper3.run_cmd("show bar/foo");
     assert!(!show_output.contains(r#"chai""#));
-    let status_out = strip_ansi(&helper3.status()).replace('\n', "");
+    let status_out = strip_ansi(&helper3.native("status")).replace('\n', "");
     helper3.expect_status_to_have_issue("MissingPackagesDependenciesOnFs");
     assert!(status_out.contains("foo.js -> chai"), "{status_out}");
 }

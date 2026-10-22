@@ -5,13 +5,20 @@ mod tests;
 
 use super::{
     Command,
-    aspect::{find_bitmap_row_mut, is_supported_pattern, workspace_default_scope},
+    aspect::{CORE_ASPECT_IDS, find_bitmap_row_mut, is_supported_pattern, workspace_default_scope},
     color::Chalk,
     scope_set::{Failure, selection},
     workspace_command::{self, format::Formatter, results::Report},
 };
 use crate::{history::History, native::Outcome, workspace};
-use bit_install::workspace::{Bitmap, BitmapEntry};
+use bit_install::{
+    model::ComponentId,
+    workspace::{
+        Bitmap, BitmapEntry, ScopeObjects,
+        aspects::{self, Merger, Origin, Resolver},
+        sha1_hex,
+    },
+};
 use serde_json::{Map, Value, json};
 use std::{
     env,
@@ -44,6 +51,16 @@ struct Prepared {
     bitmap_before: Vec<u8>,
     bitmap_val: Value,
     bitmap_changed: bool,
+}
+
+struct PrepareCtx<'a> {
+    root: &'a Path,
+    bitmap: &'a Bitmap,
+    default_scope: &'a str,
+    opts: &'a Options,
+    objects: ScopeObjects,
+    core_ids: Vec<String>,
+    ws_ids: Vec<ComponentId>,
 }
 
 fn parse_options(args: &[&str]) -> Option<Options> {
@@ -130,49 +147,83 @@ fn prepare(root: &Path, opts: &Options, chalk: Chalk) -> Result<Prepared, Failur
     let default_scope = workspace_default_scope(&workspace_val)?;
     let bitmap = Bitmap::load(root, Some(&default_scope))?;
     let matched = selection::resolve_pattern_entries(root, &bitmap, &opts.pattern, chalk)?;
+    let ctx = build_prepare_ctx(root, &bitmap, &default_scope, opts)?;
+    let (files, bitmap_changed) = prepare_selected(&ctx, &mut bitmap_val, &matched)?;
+    Ok(Prepared { root: root.to_path_buf(), files, bitmap_before, bitmap_val, bitmap_changed })
+}
+
+fn prepare_selected(
+    ctx: &PrepareCtx<'_>,
+    bitmap_val: &mut Value,
+    matched: &[&BitmapEntry],
+) -> Result<(Vec<EjectedFile>, bool), Failure> {
     let mut files = Vec::with_capacity(matched.len());
     let mut bitmap_changed = false;
     for entry in matched {
-        let (file, changed) =
-            prepare_entry(root, &bitmap, &mut bitmap_val, &default_scope, opts, entry)?;
+        let (file, changed) = prepare_entry(ctx, bitmap_val, entry)?;
         if changed {
             bitmap_changed = true;
         }
         files.push(file);
     }
-    Ok(Prepared { root: root.to_path_buf(), files, bitmap_before, bitmap_val, bitmap_changed })
+    Ok((files, bitmap_changed))
+}
+
+fn build_prepare_ctx<'a>(
+    root: &'a Path,
+    bitmap: &'a Bitmap,
+    default_scope: &'a str,
+    opts: &'a Options,
+) -> Result<PrepareCtx<'a>, Failure> {
+    let core_ids: Vec<String> =
+        serde_json::from_str(CORE_ASPECT_IDS).map_err(|err| Failure::Declined(err.to_string()))?;
+    let ws_ids = bitmap.entries
+        .iter()
+        .map(|entry| entry.id.clone())
+        .collect();
+    let objects = ScopeObjects::new(&workspace::scope_path(root));
+    Ok(PrepareCtx { root, bitmap, default_scope, opts, objects, core_ids, ws_ids })
 }
 
 fn prepare_entry(
-    root: &Path,
-    bitmap: &Bitmap,
+    ctx: &PrepareCtx<'_>,
     bitmap_val: &mut Value,
-    default_scope: &str,
-    opts: &Options,
     entry: &BitmapEntry,
 ) -> Result<(EjectedFile, bool), Failure> {
-    if entry.id.version
-        .as_deref()
-        .is_some_and(|ver| !ver.is_empty())
-    {
-        return Err(Failure::Declined("versioned component on eject-conf".into()));
-    }
     if entry.root_dir.is_empty() {
         return Err(Failure::Declined("empty root_dir on eject-conf".into()));
     }
-    let abs_path = root.join(&entry.root_dir).join("component.json");
-    validate_existing_comp_json(&abs_path, opts.override_existing)?;
-    let row = find_bitmap_row_mut(bitmap_val, entry)?;
-    let extensions = build_ejected_extensions(bitmap, row.get("config"))?;
-    let changed = row
-        .as_object_mut()
-        .is_some_and(|row_obj| row_obj.remove("config").is_some());
+    let abs_path = ctx.root.join(&entry.root_dir).join("component.json");
+    validate_existing_comp_json(&abs_path, ctx.opts.override_existing)?;
     let scope = entry.id.scope
         .as_deref()
         .filter(|text| !text.is_empty())
-        .unwrap_or(default_scope);
+        .unwrap_or(ctx.default_scope);
+    let row = find_bitmap_row_mut(bitmap_val, entry)?;
+    let extensions = build_ejected_extensions(ctx, entry, scope, row.get("config"))?;
+    let changed = row
+        .as_object_mut()
+        .is_some_and(|row_obj| row_obj.remove("config").is_some());
+    let file = render_ejected_file(&abs_path, entry, scope, ctx.opts, &extensions)?;
+    Ok((file, changed))
+}
+
+fn render_ejected_file(
+    abs_path: &Path,
+    entry: &BitmapEntry,
+    scope: &str,
+    opts: &Options,
+    extensions: &Value,
+) -> Result<EjectedFile, Failure> {
+    let comp_id = match entry.id.version
+        .as_deref()
+        .filter(|ver| !ver.is_empty())
+    {
+        Some(ver) => json!({ "scope": scope, "name": entry.id.name, "version": ver }),
+        None => json!({ "scope": scope, "name": entry.id.name }),
+    };
     let comp_json = json!({
-        "componentId": { "scope": scope, "name": entry.id.name },
+        "componentId": comp_id,
         "propagate": opts.propagate,
         "extensions": extensions,
     });
@@ -184,7 +235,7 @@ fn prepare_entry(
         .join("component.json")
         .to_string_lossy()
         .into_owned();
-    Ok((EjectedFile { abs_path, rel_path, bytes: rendered.into_bytes() }, changed))
+    Ok(EjectedFile { abs_path: abs_path.to_path_buf(), rel_path, bytes: rendered.into_bytes() })
 }
 
 fn validate_existing_comp_json(abs_path: &Path, override_existing: bool) -> Result<(), Failure> {
@@ -208,31 +259,96 @@ fn validate_existing_comp_json(abs_path: &Path, override_existing: bool) -> Resu
     Ok(())
 }
 
-fn build_ejected_extensions(bitmap: &Bitmap, raw_cfg: Option<&Value>) -> Result<Value, Failure> {
-    let mut out = Map::new();
-    let Some(cfg_obj) = raw_cfg.and_then(Value::as_object) else {
-        return Ok(Value::Object(out));
+fn build_ejected_extensions(
+    ctx: &PrepareCtx<'_>,
+    entry: &BitmapEntry,
+    scope: &str,
+    raw_cfg: Option<&Value>,
+) -> Result<Value, Failure> {
+    let model_exts = load_version_extensions(&ctx.objects, scope, entry)?;
+    let mut merger = Merger::new(Resolver { component: &entry.id, workspace: &ctx.ws_ids });
+    if let Some(cfg_obj) = raw_cfg.and_then(Value::as_object) {
+        merger.add(aspects::from_config_object(cfg_obj, &ctx.core_ids), Origin::BitmapFile);
+    }
+    if !model_exts.is_empty() {
+        let (specific, non_specific): (Vec<_>, Vec<_>) =
+            aspects::from_model(&model_exts).into_iter().partition(aspects::is_specific);
+        merger.add(specific, Origin::ModelSpecific);
+        merger.add(non_specific, Origin::ModelNonSpecific);
+    }
+    let merged = merger.finish();
+    let cfg_map = aspects::to_config(&merged);
+    Ok(Value::Object(strip_local_env_version(ctx.bitmap, cfg_map)))
+}
+
+fn load_version_extensions(
+    objects: &ScopeObjects,
+    scope: &str,
+    entry: &BitmapEntry,
+) -> Result<Vec<Value>, Failure> {
+    let Some(ver) = entry.id.version
+        .as_deref()
+        .filter(|ver| !ver.is_empty())
+    else {
+        return Ok(Vec::new());
     };
-    let env_bare = cfg_obj
+    let ver_hash = if ver.len() == 40 && ver.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        ver.to_owned()
+    } else {
+        let model = read_model_object(objects, scope, &entry.id.name)?;
+        model["versions"]
+            .get(ver)
+            .and_then(Value::as_str)
+            .map(str::to_owned)
+            .ok_or_else(|| Failure::Declined("missing version in model on eject-conf".into()))?
+    };
+    let version_obj = objects
+        .read(&ver_hash)
+        .map_err(|err| Failure::Declined(err.to_string()))?
+        .ok_or_else(|| Failure::Declined("missing version object on eject-conf".into()))?;
+    Ok(version_obj["extensions"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default())
+}
+
+fn read_model_object(objects: &ScopeObjects, scope: &str, name: &str) -> Result<Value, Failure> {
+    let scoped = objects
+        .read(&sha1_hex(&format!("{scope}/{name}")))
+        .map_err(|err| Failure::Declined(err.to_string()))?;
+    if let Some(model) = scoped {
+        return Ok(model);
+    }
+    objects
+        .read(&sha1_hex(name))
+        .map_err(|err| Failure::Declined(err.to_string()))?
+        .ok_or_else(|| Failure::Declined("missing model object on eject-conf".into()))
+}
+
+fn strip_local_env_version(bitmap: &Bitmap, cfg_map: Map<String, Value>) -> Map<String, Value> {
+    let env_bare = cfg_map
         .get("teambit.envs/envs")
         .and_then(|val| val["env"].as_str())
         .filter(|text| !text.is_empty());
-    let local_env = env_bare.filter(|bare| {
-        bitmap.entries
-            .iter()
-            .any(|entry| entry.owns_its_dir() && entry.id.to_string_without_version() == *bare)
-    });
-    for (key, val) in cfg_obj {
+    let local_env = env_bare
+        .filter(|bare| {
+            bitmap.entries
+                .iter()
+                .any(|entry| entry.owns_its_dir() && entry.id.to_string_without_version() == *bare)
+        })
+        .map(str::to_owned);
+    let mut out = Map::new();
+    for (key, val) in cfg_map {
         if val.as_str() == Some("-") {
             continue;
         }
-        let target_key = match local_env {
+        let target_key = match local_env.as_deref() {
             Some(bare) if key.starts_with(&format!("{bare}@")) => bare.to_owned(),
-            _ => key.clone(),
+            _ => key,
         };
-        out.insert(target_key, val.clone());
+        out.insert(target_key, val);
     }
-    Ok(Value::Object(out))
+    out
 }
 
 impl Prepared {

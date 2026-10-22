@@ -11,9 +11,9 @@ fn soft_tag_populates_missing_lane_history_once_with_released_full_state() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.run("link");
-    helper.run("lane create dev");
-    helper.run("snap bar/foo --message seed");
+    helper.native("link");
+    helper.native("lane create dev");
+    helper.native("snap bar/foo --message seed");
     helper.append_file("bar/foo.js", "\n// changed on lane");
     let hash = format!("{:x}", Sha1::digest(b"my-scope/bar/foo:VersionHistory"));
     let history = helper.scopes.local_path
@@ -32,9 +32,9 @@ fn soft_tag_on_lane_keeps_lane_graph_and_matches_released_bitmap() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.run("link");
-    helper.run("lane create dev");
-    helper.run("snap bar/foo --message seed");
+    helper.native("link");
+    helper.native("lane create dev");
+    helper.native("snap bar/foo --message seed");
     helper.append_file("bar/foo.js", "\n// changed on lane");
     let node_root = helper.clone_workspace();
     let before_index = fs::read(helper.scopes.local_path.join(".bit/index.json")).unwrap();
@@ -64,9 +64,9 @@ fn ordinary_lane_tag_delegates_to_released_rejection_without_native_graph_writes
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.run("link");
-    helper.run("lane create dev");
-    helper.run("snap bar/foo --message seed");
+    helper.native("link");
+    helper.native("lane create dev");
+    helper.native("snap bar/foo --message seed");
     helper.append_file("bar/foo.js", "\n// changed on lane");
     let before = fs::read(helper.scopes.local_path.join(".bit/index.json")).unwrap();
     let run = helper.cmd("tag bar/foo --message blocked");

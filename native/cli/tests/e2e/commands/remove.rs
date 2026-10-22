@@ -83,15 +83,15 @@ fn tagged_removal_matches_node_with_and_without_files() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo("module.exports = 'new';");
     helper.add_component_bar_foo();
-    helper.run("link");
-    helper.run("tag --soft bar/foo --message probe");
-    helper.run("tag --persist=skip-build");
+    helper.native("link");
+    helper.native("tag --soft bar/foo --message probe");
+    helper.native("tag --persist=skip-build");
     let root = &helper.scopes.local_path;
     let index: serde_json::Value =
         serde_json::from_slice(&fs::read(root.join(".bit/index.json")).unwrap()).unwrap();
     let model_hash = index["components"][0]["hash"].as_str().unwrap();
     let model_wire: String =
-        serde_json::from_str(&helper.run(&format!("cat-object {model_hash} -s"))).unwrap();
+        serde_json::from_str(&helper.native(&format!("cat-object {model_hash} -s"))).unwrap();
     let model: serde_json::Value = serde_json::from_str(&model_wire).unwrap();
     let version_hash = model["versions"]["0.0.1"].as_str().unwrap();
     let baseline = helper.clone_workspace();
@@ -141,18 +141,18 @@ fn removal_of_multiple_local_tags_matches_node() {
     );
     helper.create_component_bar_foo("module.exports = 'first';");
     helper.add_component_bar_foo();
-    helper.run("link");
-    helper.run("tag --soft bar/foo --message first");
-    helper.run("tag --persist=skip-build");
+    helper.native("link");
+    helper.native("tag --soft bar/foo --message first");
+    helper.native("tag --persist=skip-build");
     helper.output_file("bar/foo.js", "module.exports = 'second';");
-    helper.run("tag --soft bar/foo --message second");
-    helper.run("tag --persist=skip-build");
+    helper.native("tag --soft bar/foo --message second");
+    helper.native("tag --persist=skip-build");
     let root = &helper.scopes.local_path;
     let index: serde_json::Value =
         serde_json::from_slice(&fs::read(root.join(".bit/index.json")).unwrap()).unwrap();
     let model_hash = index["components"][0]["hash"].as_str().unwrap();
     let model_wire: String =
-        serde_json::from_str(&helper.run(&format!("cat-object {model_hash} -s"))).unwrap();
+        serde_json::from_str(&helper.native(&format!("cat-object {model_hash} -s"))).unwrap();
     let model: serde_json::Value = serde_json::from_str(&model_wire).unwrap();
     let version_hashes = model["versions"]
         .as_object()
@@ -198,10 +198,10 @@ fn tagged_removal_preserves_another_staged_component() {
     helper.create_component_bar_foo("module.exports = 'foo';");
     helper.add_component_bar_foo();
     helper.output_file("baz/qux.js", "module.exports = 'qux';");
-    helper.run("add baz -i baz/qux");
-    helper.run("link");
-    helper.run("tag --soft --message probe");
-    helper.run("tag --persist=skip-build");
+    helper.native("add baz -i baz/qux");
+    helper.native("link");
+    helper.native("tag --soft --message probe");
+    helper.native("tag --persist=skip-build");
     let root = &helper.scopes.local_path;
     let index_before: serde_json::Value =
         serde_json::from_slice(&fs::read(root.join(".bit/index.json")).unwrap()).unwrap();
@@ -244,14 +244,14 @@ fn tagged_missing_main_file_delegates_before_removal() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo("module.exports = 'new';");
     helper.add_component_bar_foo();
-    helper.run("link");
-    helper.run("tag --soft bar/foo --message probe");
-    helper.run("tag --persist=skip-build");
+    helper.native("link");
+    helper.native("tag --soft bar/foo --message probe");
+    helper.native("tag --persist=skip-build");
     fs::remove_file(helper.scopes.local_path.join("bar/foo.js")).unwrap();
     let node_root = helper.clone_workspace();
     let command = "remove bar/foo --silent --force";
     let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
-    let delegated = helper.cmd(command);
+    let delegated = helper.native_run(command);
     assert!(delegated.native, "{}", delegated.trace);
     assert_eq!(delegated.status.code(), node.status.code());
     assert_eq!(delegated.stdout, node.stdout);
@@ -272,14 +272,14 @@ fn modified_tagged_component_delegates_without_force() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo("module.exports = 'new';");
     helper.add_component_bar_foo();
-    helper.run("link");
-    helper.run("tag --soft bar/foo --message probe");
-    helper.run("tag --persist=skip-build");
+    helper.native("link");
+    helper.native("tag --soft bar/foo --message probe");
+    helper.native("tag --persist=skip-build");
     helper.output_file("bar/foo.js", "module.exports = 'modified';");
     let node_root = helper.clone_workspace();
     let command = "remove bar/foo --silent";
     let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
-    let delegated = helper.cmd(command);
+    let delegated = helper.native_run(command);
     assert!(delegated.native, "{}", delegated.trace);
     assert_eq!(delegated.status.code(), node.status.code());
     assert_eq!(delegated.stdout, node.stdout);
@@ -303,13 +303,13 @@ fn clean_imported_removal_matches_node_with_force_and_keep_files() {
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    helper.native(&format!("import {}/bar/foo -x", helper.scopes.remote));
     let root = &helper.scopes.local_path;
     let index: serde_json::Value =
         serde_json::from_slice(&fs::read(root.join(".bit/index.json")).unwrap()).unwrap();
     let model_hash = index["components"][0]["hash"].as_str().unwrap();
     let model_wire: String =
-        serde_json::from_str(&helper.run(&format!("cat-object {model_hash} -s"))).unwrap();
+        serde_json::from_str(&helper.native(&format!("cat-object {model_hash} -s"))).unwrap();
     let model: serde_json::Value = serde_json::from_str(&model_wire).unwrap();
     let version_hash = model["versions"]["0.0.1"].as_str().unwrap();
     let baseline = helper.clone_workspace();
@@ -350,7 +350,7 @@ fn imported_package_removal_matches_node() {
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/bar/foo", helper.scopes.remote));
+    helper.native(&format!("import {}/bar/foo", helper.scopes.remote));
     let root = &helper.scopes.local_path;
     let package = format!("node_modules/@{}/bar.foo", helper.scopes.remote);
     assert!(root.join(&package).exists());
@@ -383,7 +383,7 @@ fn modified_imported_component_delegates_unless_forced() {
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    helper.native(&format!("import {}/bar/foo -x", helper.scopes.remote));
     let files = format!("{}/bar/foo/foo.js", helper.scopes.remote);
     helper.output_file(&files, "module.exports = 'changed';");
     let baseline = helper.clone_workspace();
@@ -392,7 +392,7 @@ fn modified_imported_component_delegates_unless_forced() {
         let node_root = helper.clone_workspace();
         let command = format!("remove {}/bar/foo --silent{suffix}", helper.scopes.remote);
         let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
-        let actual = helper.cmd(&command);
+        let actual = helper.native_run(&command);
         assert_eq!(actual.native, native_expected, "{}", actual.trace);
         assert_eq!(actual.status.code(), node.status.code());
         assert_eq!(actual.stdout, node.stdout);
@@ -412,7 +412,7 @@ fn modified_imported_component_delegates_unless_forced() {
 fn new_component_on_lane_removal_matches_node() {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.create_component_bar_foo("module.exports = 'lane';");
     helper.add_component_bar_foo();
     let baseline = helper.clone_workspace();
@@ -444,10 +444,10 @@ fn new_component_on_lane_removal_matches_node() {
 fn snapped_component_on_lane_removal_matches_node() {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.create_component_bar_foo("module.exports = 'lane';");
     helper.add_component_bar_foo();
-    helper.run("snap --message lane");
+    helper.native("snap --message lane");
     let baseline = helper.clone_workspace();
     for suffix in ["", " --force", " --keep-files"] {
         helper.get_cloned_workspace(&baseline);
@@ -522,10 +522,10 @@ pub(super) fn scope_objects(
 fn modified_lane_component_delegates_unless_forced() {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.create_component_bar_foo("module.exports = 'lane';");
     helper.add_component_bar_foo();
-    helper.run("snap --message lane");
+    helper.native("snap --message lane");
     helper.output_file("bar/foo.js", "module.exports = 'modified';");
     let baseline = helper.clone_workspace();
     for (suffix, native_expected) in [("", true), (" --force", true)] {
@@ -533,7 +533,7 @@ fn modified_lane_component_delegates_unless_forced() {
         let node_root = helper.clone_workspace();
         let command = format!("remove bar/foo --silent{suffix}");
         let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
-        let actual = helper.cmd(&command);
+        let actual = helper.native_run(&command);
         assert_eq!(actual.native, native_expected, "{}", actual.trace);
         assert_eq!(actual.status.code(), node.status.code());
         assert_eq!(actual.stdout, node.stdout);
@@ -552,12 +552,12 @@ fn modified_lane_component_delegates_unless_forced() {
 fn linear_lane_snap_removal_matches_node() {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.create_component_bar_foo("module.exports = 'one';");
     helper.add_component_bar_foo();
-    helper.run("snap --message one");
+    helper.native("snap --message one");
     helper.output_file("bar/foo.js", "module.exports = 'two';");
-    helper.run("snap --message two");
+    helper.native("snap --message two");
     let baseline = helper.clone_workspace();
     for suffix in ["", " --force", " --keep-files"] {
         helper.get_cloned_workspace(&baseline);
@@ -595,12 +595,12 @@ fn linear_lane_snap_removal_matches_node() {
 fn populated_lane_version_history_removal_matches_node() {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.create_component_bar_foo("module.exports = 'one';");
     helper.add_component_bar_foo();
-    helper.run("snap --message one");
+    helper.native("snap --message one");
     helper.output_file("bar/foo.js", "module.exports = 'two';");
-    helper.run("snap --message two");
+    helper.native("snap --message two");
     let root = &helper.scopes.local_path;
     let status = Helper::cmd_in_with(root, "status --json", &[("BIT_NATIVE", OsStr::new("off"))]);
     assert!(status.status.success());

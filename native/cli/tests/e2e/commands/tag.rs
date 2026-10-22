@@ -54,7 +54,7 @@ mod qualification {
         for name in ["patch", "minor", "major", "exact"] {
             create_file(&helper, &format!("components/{name}"), &format!("{name}.js"));
         }
-        helper.run("add components/* -n components");
+        helper.native("add components/* -n components");
         helper.tag_without_build("", "");
         helper
     }
@@ -89,15 +89,15 @@ mod qualification {
         helper.re_init_workspace();
         helper.create_component_bar_foo(FOO_FIXTURE);
         create_file(&helper, "bar", "index.js");
-        helper.run("add bar -i bar/foo");
+        helper.native("add bar -i bar/foo");
         helper.output_file("bar/foo.js", "");
         helper.output_file("bar/index.js", r#"var foo = require("./foo.js")"#);
-        helper.run("add bar/ -i bar/foo");
+        helper.native("add bar/ -i bar/foo");
         helper.delete_path("bar/foo.js");
         let output = failure(&helper.native_run("tag"));
         let expected = "error: issues found with the following components";
         assert!(output.contains(expected), "{output}");
-        let list = helper.run("list --local-scope");
+        let list = helper.native("list --local-scope");
         assert!(!list.contains("bar/foo"), "{list}");
     }
 
@@ -121,8 +121,8 @@ mod qualification {
         helper.re_init_workspace();
         helper.output_file("comp1/index.js", "module.exports = () => 'comp1';");
         helper.output_file("comp2/index.js", "module.exports = () => 'comp2';");
-        helper.run("add comp1");
-        helper.run("add comp2");
+        helper.native("add comp1");
+        helper.native("add comp2");
         helper.tag_without_build("", "");
         let relative =
             "const comp2 = require('../comp2');\nmodule.exports = () => 'comp1 and ' + comp2();";
@@ -137,7 +137,7 @@ mod qualification {
     fn invalid_semver_is_rejected() {
         let helper = semver_workspace();
         create_file(&helper, "components/default", "default.js");
-        helper.run("add components/default -i components/default");
+        helper.native("add components/default -i components/default");
         let output = failure(&helper.native_run("tag components/default --ver invalidVersion"));
         let invalid = "error: version invalidVersion is not a valid semantic version. learn more: https://semver.org";
         assert!(output.contains(invalid), "{output}");
@@ -147,7 +147,7 @@ mod qualification {
     fn release_type_flags_bump_the_version() {
         let helper = semver_workspace();
         create_file(&helper, "components/default", "default.js");
-        helper.run("add components/default -i components/default");
+        helper.native("add components/default -i components/default");
         let bumps = [
             ("components/default", "", "components/default@0.0.1"),
             ("components/patch", "--patch", "components/patch@0.0.2"),
@@ -164,7 +164,7 @@ mod qualification {
     fn an_exact_version_tags_a_new_component() {
         let helper = semver_workspace();
         create_file(&helper, "components/exact2", "exact-new.js");
-        helper.run("add components/exact2 -i components/exact-new");
+        helper.native("add components/exact2 -i components/exact-new");
         let output = tag(&helper, "components/exact-new@5.12.10", "--unmodified");
         assert!(output.contains("components/exact-new@5.12.10"), "{output}");
     }
@@ -177,11 +177,11 @@ mod qualification {
             "components/dependent/dependent.js",
             "import foo from '../dependency/dependency'",
         );
-        helper.run("add components/dependency components/dependent -n components");
-        helper.run("link --rewire");
+        helper.native("add components/dependency components/dependent -n components");
+        helper.native("link --rewire");
         helper.tag_without_build("", "");
         tag(&helper, "components/dependency", "--unmodified --major");
-        let list = parse(&helper.run("list --local-scope --json"));
+        let list = parse(&helper.native("list --local-scope --json"));
         for (id, version) in [("dependency", "1.0.0"), ("dependent", "0.0.2")] {
             let entry = listed(&list, &format!("my-scope/components/{id}"));
             assert_eq!(entry["localVersion"], version, "{entry}");
@@ -198,12 +198,12 @@ mod qualification {
         helper.create_component_bar_foo("hello\r\n world\r\n");
         helper.add_component_bar_foo();
         tag(&helper, "bar/foo", "");
-        let component = parse(&helper.run("cat-component bar/foo@latest --json"));
+        let component = parse(&helper.native("cat-component bar/foo@latest --json"));
         let hash = component["files"][0]["file"]
             .as_str()
             .unwrap()
             .to_string();
-        let content = helper.run(&format!("cat-object {hash} -s"));
+        let content = helper.native(&format!("cat-object {hash} -s"));
         assert!(content.contains(r#""hello\n world\n""#), "{content}");
     }
 
@@ -220,14 +220,14 @@ mod qualification {
         let helper = Helper::new();
         helper.re_init_workspace();
         helper.output_file("components/comp1/comp1.js", "module.exports = { test: true };");
-        helper.run("add components/comp1 -i components/comp1");
+        helper.native("add components/comp1 -i components/comp1");
         helper.tag_without_build("", "");
         let modified = "module.exports = { test: true, modified: true };";
         helper.output_file("components/comp1/comp1.js", modified);
         let requires = "const comp1 = require('../comp1/comp1');";
         helper.output_file("components/comp2/comp2.js", requires);
-        helper.run("add components/comp2 -i components/comp2");
-        helper.run("link --rewire");
+        helper.native("add components/comp2 -i components/comp2");
+        helper.native("link --rewire");
         let output = tag(&helper, "", "");
         assert!(output.contains("2 component(s) tagged"), "{output}");
         assert!(!output.contains("3 component(s) tagged"), "{output}");

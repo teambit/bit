@@ -16,7 +16,7 @@ fn head_only_main_export_matches_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'head';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message first");
+    helper.native("tag bar/foo --message first");
     let before = helper.clone_remote_scope();
     let node_root = helper.clone_workspace();
     let command = "export --head-only";
@@ -38,7 +38,7 @@ fn head_only_main_export_matches_node() {
         parse(&fs::read_to_string(node_root.join(".bit/index.json")).unwrap()),
     );
     helper.create_component_bar_foo("module.exports = () => 'second';");
-    helper.run("tag bar/foo --message second");
+    helper.native("tag bar/foo --message second");
     assert_head_only_main_export(&helper);
 }
 
@@ -67,10 +67,10 @@ fn head_only_lane_reexport_matches_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'head';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
     crate::helper::remote::publish(&helper);
     let before = helper.clone_remote_scope();
     let node_root = helper.clone_workspace();
@@ -96,10 +96,10 @@ fn head_only_lane_first_and_advanced_export_match_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'head';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message first");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message first");
     if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_HEAD_ONLY_BENCH_FIXTURE") {
         let destination = std::path::PathBuf::from(destination);
         assert!(!destination.exists());
@@ -110,7 +110,7 @@ fn head_only_lane_first_and_advanced_export_match_node() {
         setup::copy_dir(&setup::shared().root.join("globals"), &destination.join("globals"));
     }
     assert_head_only_lane_export(&helper);
-    helper.run("snap --unmodified --message second");
+    helper.native("snap --unmodified --message second");
     assert_head_only_lane_export(&helper);
 }
 
@@ -139,7 +139,7 @@ fn selected_staged_export_matches_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("// selected");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message selected");
+    helper.native("tag bar/foo --message selected");
     if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_SELECTED_BENCH_FIXTURE") {
         let destination = std::path::PathBuf::from(destination);
         assert!(!destination.exists());
@@ -236,7 +236,7 @@ fn mixed_staged_and_unmodified_selection_matches_node() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
     helper.tag_without_build("", "");
-    helper.run("export comp2");
+    helper.native("export comp2");
     let remote_before = helper.clone_remote_scope();
     let node_root = helper.clone_workspace();
     let command = "export comp2 comp1";
@@ -335,10 +335,10 @@ fn all_versions_reexports_full_history_like_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("// v1");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message first");
+    helper.native("tag bar/foo --message first");
     crate::helper::remote::publish(&helper);
     helper.create_component_bar_foo("// v2");
-    helper.run("tag bar/foo --message second");
+    helper.native("tag bar/foo --message second");
     crate::helper::remote::publish(&helper);
     helper.re_init_remote_scope();
     if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_ALL_BENCH_FIXTURE") {
@@ -448,13 +448,13 @@ fn cross_scope_forked_lane_export_matches_node() {
             serde_json::json!(format!("file://{}", fork_remote.display()));
     });
     helper.populate_components(2, true, "");
-    helper.run("tag");
+    helper.native("tag");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create parent");
-    helper.run("snap --unmodified --message parent");
+    helper.native("lane create parent");
+    helper.native("snap --unmodified --message parent");
     crate::helper::remote::publish(&helper);
-    helper.run(&format!("lane create child --scope {fork_scope} --fork-lane-new-scope"));
-    helper.run("snap comp1 --unmodified --message child");
+    helper.native(&format!("lane create child --scope {fork_scope} --fork-lane-new-scope"));
+    helper.native("snap comp1 --unmodified --message child");
     if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_BENCH_FIXTURE") {
         let destination = std::path::PathBuf::from(destination);
         assert!(!destination.exists());
@@ -543,13 +543,13 @@ fn forked_lane_export_matches_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create parent");
-    helper.run("snap --unmodified --message parent");
+    helper.native("lane create parent");
+    helper.native("snap --unmodified --message parent");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create child");
-    helper.run("snap --unmodified --message child");
+    helper.native("lane create child");
+    helper.native("snap --unmodified --message child");
     let remote_before = helper.clone_remote_scope();
     let node_root = helper.clone_workspace();
     let node = Helper::cmd_in_with(&node_root, "export", &[("BIT_NATIVE", OsStr::new("off"))]);
@@ -581,12 +581,12 @@ fn lane_full_history_case(command: &str, with_lane_snap: bool) {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     if with_lane_snap {
-        helper.run("snap --unmodified --message lane-first");
-        helper.run("snap --unmodified --message lane-second");
+        helper.native("snap --unmodified --message lane-first");
+        helper.native("snap --unmodified --message lane-second");
     }
     if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_LANE_ALL_BENCH_FIXTURE") {
         let destination = std::path::PathBuf::from(destination);
@@ -649,10 +649,10 @@ fn all_versions_repeats_an_exported_lane_like_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
     crate::helper::remote::publish(&helper);
     assert_full_lane_export(&helper, "export --all-versions");
 }
@@ -663,11 +663,11 @@ fn all_exports_a_renamed_lane_like_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
-    helper.run("lane rename renamed");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
+    helper.native("lane rename renamed");
     assert_full_lane_export(&helper, "export --all");
 }
 
@@ -677,9 +677,9 @@ fn ordinary_export_after_lane_rename_matches_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("lane create dev");
-    helper.run("snap --message lane");
-    helper.run("lane rename renamed");
+    helper.native("lane create dev");
+    helper.native("snap --message lane");
+    helper.native("lane rename renamed");
     assert_full_lane_export(&helper, "export");
 }
 
@@ -690,12 +690,12 @@ fn all_exports_lane_and_inherited_main_components_like_node() {
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
     helper.output_file("baz/qux.js", "module.exports = () => 'qux';");
-    helper.run("add baz -i baz/qux");
-    helper.run("tag --message base");
+    helper.native("add baz -i baz/qux");
+    helper.native("tag --message base");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.create_component_bar_foo("module.exports = () => 'lane foo';");
-    helper.run("snap --message lane");
+    helper.native("snap --message lane");
     assert_full_lane_export(&helper, "export --all");
 }
 
@@ -705,12 +705,12 @@ fn deleted_lane_component_export_matches_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
     crate::helper::remote::publish(&helper);
-    helper.run("delete bar/foo --silent --lane");
+    helper.native("delete bar/foo --silent --lane");
     helper.run("snap --unmodified --message removal");
     let remote_before = helper.clone_remote_scope();
     let node_root = helper.clone_workspace();
@@ -741,8 +741,8 @@ fn fresh_lane_component_export_matches_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("lane create dev");
-    helper.run("snap --message first");
+    helper.native("lane create dev");
+    helper.native("snap --message first");
     let remote_before = helper.clone_remote_scope();
     let node_root = helper.clone_workspace();
     let node = Helper::cmd_in_with(&node_root, "export", &[("BIT_NATIVE", OsStr::new("off"))]);
@@ -793,10 +793,10 @@ fn hidden_lane_update_dependent_exports_like_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.run("tag");
+    helper.native("tag");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap comp2 --skip-auto-snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap comp2 --skip-auto-snap --unmodified --message lane");
     crate::helper::remote::publish(&helper);
     helper.seed_hidden_update_dependent(
         &format!("{}/comp1", helper.scopes.remote),
@@ -805,7 +805,7 @@ fn hidden_lane_update_dependent_exports_like_node() {
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.run(&format!("lane import {}/dev -x", helper.scopes.remote));
-    helper.run(&format!("import {}/comp2 -x", helper.scopes.remote));
+    helper.native(&format!("import {}/comp2 -x", helper.scopes.remote));
     helper.output_file(
         &format!("{}/comp2/index.js", helper.scopes.remote),
         "module.exports = () => 'comp2-v2';",
@@ -861,10 +861,10 @@ fn exporting_an_older_checked_out_version_keeps_it() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("// v2");
     helper.add_component_bar_foo();
-    helper.run("tag --unmodified --ver 2.0.0");
+    helper.native("tag --unmodified --ver 2.0.0");
     helper.native("export");
     helper.create_component_bar_foo("// v1");
-    helper.run("tag --unmodified --ver 1.0.0");
+    helper.native("tag --unmodified --ver 1.0.0");
     helper.native("export");
     let bitmap = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
     let bitmap = parse(&bitmap[bitmap.find('{').unwrap()..]);
@@ -926,7 +926,7 @@ fn multiple_versions_are_exported() {
     export_ids(&helper, "bar/foo");
     helper.tag_without_build("bar/foo", "--unmodified");
     export_ids(&helper, "bar/foo");
-    let output = helper.run(&format!("list {}", helper.scopes.remote));
+    let output = helper.native(&format!("list {}", helper.scopes.remote));
     assert!(output.contains("found 1 components"), "{output}");
     assert!(output.contains("bar/foo"), "{output}");
     assert!(output.contains('2'), "{output}");
@@ -939,14 +939,14 @@ fn an_imported_component_is_exported_twice() {
     helper.re_init_workspace();
     helper.add_remote_scope();
     let remote = &helper.scopes.remote;
-    helper.run(&format!("import {remote}/bar/foo --path components/bar/foo"));
+    helper.native(&format!("import {remote}/bar/foo --path components/bar/foo"));
     helper.output_file("components/bar/foo/foo.js", r#"console.log("got foo v2")"#);
     helper.tag_component_bar_foo();
     export_ids(&helper, "bar/foo");
     helper.output_file("components/bar/foo/foo.js", r#"console.log("got foo v3")"#);
     helper.tag_component_bar_foo();
     export_ids(&helper, "bar/foo");
-    let output = helper.run(&format!("list {remote} --ids"));
+    let output = helper.native(&format!("list {remote} --ids"));
     assert!(output.contains(&format!("{remote}/bar/foo@0.0.3")), "{output}");
 }
 
@@ -992,14 +992,14 @@ fn a_png_file_keeps_its_size() {
     let png = helper.scopes.local_path.join("bar/png_fixture.png");
     fs::copy(source, &png).unwrap();
     let size = fs::metadata(&png).unwrap().len();
-    helper.run("add bar -m foo.js -i bar/foo");
+    helper.native("add bar -m foo.js -i bar/foo");
     helper.tag_without_build("", "");
     helper.native("export");
     if cfg!(windows) {
         crate::helper::remote::seed_after_export_at(&helper, &helper.scopes.local_path);
     }
     let remote = &helper.scopes.remote;
-    let output = helper.run(&format!("list {remote}"));
+    let output = helper.native(&format!("list {remote}"));
     assert!(output.contains("found 1 components"), "{output}");
     assert!(output.contains("bar/foo"), "{output}");
     let import = format!("import {remote}/bar/foo");

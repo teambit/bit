@@ -9,7 +9,7 @@ fn populate_three_components(helper: &Helper) {
             &format!("comp{index}/index.js"),
             &format!("module.exports = () => 'comp{index}';"),
         );
-        helper.run(&format!("add comp{index}"));
+        helper.native(&format!("add comp{index}"));
     }
 }
 
@@ -84,7 +84,7 @@ fn pattern_exclusion_with_negation() {
             &format!("comp{index}/index.js"),
             &format!("module.exports = () => 'comp{index}';"),
         );
-        helper.run(&format!("add comp{index}"));
+        helper.native(&format!("add comp{index}"));
     }
     let scope = &helper.scopes.remote;
 
@@ -112,9 +112,9 @@ fn pattern_with_remote_flag() {
     helper.output_file("utils/is/string/string.js", FOO_FIXTURE);
     helper.output_file("utils/is/type/type.js", FOO_FIXTURE);
     helper.output_file("utils/fs/read/read.js", FOO_FIXTURE);
-    helper.run(r#"add "utils/is/*" -n utils/is"#);
-    helper.run(r#"add "utils/fs/*" -n utils/fs"#);
-    helper.run("tag --unmodified");
+    helper.native(r#"add "utils/is/*" -n utils/is"#);
+    helper.native(r#"add "utils/fs/*" -n utils/fs"#);
+    helper.native("tag --unmodified");
     crate::helper::remote::publish(&helper);
     let scope = helper.scopes.remote.clone();
 
@@ -154,9 +154,9 @@ fn pattern_with_remote_flag() {
         "teambit.workspace/variants",
         json!({ "other/comp": { "defaultScope": another_remote } }),
     );
-    helper.run("add other/comp");
-    helper.run("tag --unmodified");
-    helper.run("export");
+    helper.native("add other/comp");
+    helper.native("tag --unmodified");
+    helper.native("export");
 
     let multi =
         helper.native(&format!(r#"pattern "{scope}/utils/is/*, {another_remote}/**" --remote"#));

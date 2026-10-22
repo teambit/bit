@@ -29,10 +29,10 @@ fn lane_import_on_main_and_same_lane_matches_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
     remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
@@ -64,14 +64,14 @@ fn lane_import_from_another_lane_matches_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
     remote::publish(&helper);
     let producer = helper.clone_workspace();
-    helper.run("switch main -x");
-    helper.run("lane create other");
+    helper.native("switch main -x");
+    helper.native("lane create other");
     fs::write(producer.join("bar/foo.js"), "module.exports = () => 'advanced';").unwrap();
     let snap = Helper::cmd_in_with(
         &producer,
@@ -114,11 +114,11 @@ fn local_lane_remove_moves_lane_to_trash_like_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
-    helper.run("switch main -x");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
+    helper.native("switch main -x");
     let node_root = helper.clone_workspace();
     let before_index: serde_json::Value = serde_json::from_slice(
         &fs::read(helper.scopes.local_path.join(".bit/index.json")).unwrap(),
@@ -164,8 +164,8 @@ fn local_lane_remove_merged_batch_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     for name in ["first", "second"] {
-        helper.run(&format!("lane create {name}"));
-        helper.run("switch main -x");
+        helper.native(&format!("lane create {name}"));
+        helper.native("switch main -x");
     }
     let node_root = helper.clone_workspace();
     let command = "lane remove first second --silent";
@@ -186,7 +186,7 @@ fn local_lane_remove_merged_batch_matches_node() {
 fn local_lane_remove_current_lane_declines_without_writing() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     let before = fs::read(helper.scopes.local_path.join(".bit/index.json")).unwrap();
     let command = "lane remove dev --silent --force";
     let result = helper.cmd(command);
@@ -201,10 +201,10 @@ fn http_remote_lane_inspection_matches_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
     remote::publish(&helper);
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();
@@ -293,10 +293,10 @@ fn configured_file_remote_lane_inspection_matches_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
     remote::publish(&helper);
     let remote = &helper.scopes.remote;
     for command in [
@@ -315,7 +315,7 @@ fn configured_file_remote_lane_inspection_matches_node() {
         assert_eq!(native.stdout, node.stdout, "{command}");
         assert_eq!(native.stderr, node.stderr, "{command}");
     }
-    helper.run("switch main -x");
+    helper.native("switch main -x");
     for command in [
         format!("lane list --remote {remote}"),
         format!("lane list --remote {remote} --details"),
@@ -360,10 +360,10 @@ fn lane_inspection_keeps_hidden_update_dependents_out_of_visible_components() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.run("tag");
+    helper.native("tag");
     remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap comp2 --skip-auto-snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap comp2 --skip-auto-snap --unmodified --message lane");
     remote::publish(&helper);
     helper.seed_hidden_update_dependent(
         &format!("{}/comp1", helper.scopes.remote),
@@ -397,18 +397,18 @@ fn lane_merged_filters_follow_main_head_ancestry() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     remote::publish(&helper);
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     assert_lane_filters_match_node(&helper);
-    helper.run("snap --unmodified --message lane");
+    helper.native("snap --unmodified --message lane");
     if let Some(destination) = std::env::var_os("BIT_NATIVE_LANE_LIST_BENCH_FIXTURE") {
         let destination = std::path::PathBuf::from(destination);
         assert!(!destination.exists());
         setup::copy_dir(&helper.scopes.local_path, &destination);
     }
     assert_lane_filters_match_node(&helper);
-    helper.run("switch main");
+    helper.native("switch main");
     helper.run("lane merge dev -x");
     assert_lane_filters_match_node(&helper);
 }
@@ -534,7 +534,7 @@ fn create_case(command: &str) {
 fn local_history_reports_match_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     let node_root = helper.clone_workspace();
     let history = object(
         &helper.scopes.local_path,
@@ -576,8 +576,8 @@ fn remote_history_refresh_matches_published_node_full_state() {
     helper.add_component_bar_foo();
     helper.tag_component_bar_foo();
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message remote-history");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message remote-history");
     crate::helper::remote::publish(&helper);
     let index =
         parse(&fs::read_to_string(helper.scopes.local_path.join(".bit/index.json")).unwrap());
@@ -614,8 +614,8 @@ fn bare_scope_lane_inspection_matches_published_node_full_state() {
     helper.add_component_bar_foo();
     helper.tag_component_bar_foo();
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message bare-lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message bare-lane");
     crate::helper::remote::publish(&helper);
     let native_scope = helper.scopes.remote_path.clone();
     let node_scope = helper.clone_remote_scope();
@@ -681,8 +681,8 @@ fn bare_scope_lane_history_refresh_matches_published_node_full_state() {
     helper.add_component_bar_foo();
     helper.tag_component_bar_foo();
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message first-bare-history");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message first-bare-history");
     crate::helper::remote::publish(&helper);
     let native_scope = helper.clone_remote_scope();
     let node_scope = helper.clone_remote_scope();
@@ -700,7 +700,7 @@ fn bare_scope_lane_history_refresh_matches_published_node_full_state() {
         "module.exports = 'bare history advance';",
     )
     .unwrap();
-    helper.run("snap bar/foo --message second-bare-history");
+    helper.native("snap bar/foo --message second-bare-history");
     crate::helper::remote::publish(&helper);
     let before_remote = state(&helper.scopes.remote_path);
     for command in ["lane history dev --json", "lane history dev"] {
@@ -850,7 +850,7 @@ fn command_history(root: &Path) -> Vec<String> {
 fn local_alias_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     let node_root = helper.clone_workspace();
     let command = "lane alias dev work";
     let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
@@ -873,11 +873,11 @@ fn local_alias_matches_node() {
 fn metadata_change_case(command: &str, with_component: bool) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     if with_component {
         helper.create_component_bar_foo("// lane component");
         helper.add_component_bar_foo();
-        helper.run("snap --message on-lane");
+        helper.native("snap --message on-lane");
     }
     let node_root = helper.clone_workspace();
     let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
@@ -974,7 +974,7 @@ fn create_after_export_matches_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("// lane base");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     remote::publish(&helper);
     let node_root = helper.clone_workspace();
     let node =
@@ -998,7 +998,7 @@ fn create_after_export_matches_node() {
 fn create_from_an_unexported_lane_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.run("lane create parent");
+    helper.native("lane create parent");
     let node_root = helper.clone_workspace();
     let node =
         Helper::cmd_in_with(&node_root, "lane create child", &[("BIT_NATIVE", OsStr::new("off"))]);
@@ -1031,10 +1031,10 @@ fn create_from_an_unexported_lane_matches_node() {
 fn create_from_an_exported_lane_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.run("lane create parent");
+    helper.native("lane create parent");
     helper.create_component_bar_foo("// on parent");
     helper.add_component_bar_foo();
-    helper.run("snap --message parent");
+    helper.native("snap --message parent");
     remote::publish(&helper);
     let node_root = helper.clone_workspace();
     let node =
@@ -1062,10 +1062,10 @@ fn create_from_an_exported_lane_matches_node() {
 fn create_cross_scope_fork_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.run("lane create parent");
+    helper.native("lane create parent");
     helper.create_component_bar_foo("// on parent");
     helper.add_component_bar_foo();
-    helper.run("snap --message parent");
+    helper.native("snap --message parent");
     remote::publish(&helper);
     let node_root = helper.clone_workspace();
     let command = "lane create child --scope other-scope --fork-lane-new-scope";
@@ -1117,10 +1117,10 @@ fn bare_lane_and_component_issues_and_remove_comp_and_remove_readme_match_node()
 
     helper.create_component_bar_foo("module.exports = () => 'foo';");
     helper.add_component_bar_foo();
-    helper.run("tag bar/foo --message base");
+    helper.native("tag bar/foo --message base");
     remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
 
     let node_root2 = helper.clone_workspace();
     let cmd_rc = "lane remove-comp bar/foo --workspace-only";

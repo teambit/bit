@@ -9,12 +9,12 @@ const IS_STRING: &str = "const isType = require('../is-type/is-type.js'); module
 
 /// `catComponent(id)`.
 fn cat_component(helper: &Helper, id: &str) -> Value {
-    parse(&helper.run(&format!("cat-component {id} --json")))
+    parse(&helper.native(&format!("cat-component {id} --json")))
 }
 
 /// `listLocalScope()`.
 fn list_local_scope(helper: &Helper) -> String {
-    helper.run("list --local-scope")
+    helper.native("list --local-scope")
 }
 
 /// `bitMap.read()`: `.bitmap` without its leading comment.
@@ -53,7 +53,7 @@ fn failure_output(run: &Run) -> String {
 
 /// `snapAllComponentsWithoutBuild(options)`.
 fn snap_all(helper: &Helper, options: &str) {
-    let output = helper.run(&format!("snap {options}"));
+    let output = helper.native(&format!("snap {options}"));
     assert!(!output.contains("nothing to snap"), "{output}");
 }
 
@@ -85,11 +85,11 @@ fn three_components() -> (Helper, PathBuf) {
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
     helper.output_file("bar2/foo2.js", FOO_FIXTURE);
-    helper.run("add bar2 -i bar/foo2");
+    helper.native("add bar2 -i bar/foo2");
     helper.output_file("bar3/foo3.js", FOO_FIXTURE);
-    helper.run("add bar3 -i bar/foo3");
-    helper.run("tag");
-    helper.run("export bar/foo3");
+    helper.native("add bar3 -i bar/foo3");
+    helper.native("tag");
+    helper.native("export bar/foo3");
     let local_scope = helper.clone_workspace();
     assert!(list_local_scope(&helper).contains("found 3 components"));
     (helper, local_scope)
@@ -112,7 +112,7 @@ fn reset_all_removes_only_local_components() {
 fn reset_all_head_removes_only_the_head() {
     let (helper, local_scope) = three_components();
     helper.get_cloned_workspace(&local_scope);
-    helper.run("tag --unmodified --ver 0.0.5");
+    helper.native("tag --unmodified --ver 0.0.5");
     let output = helper.native("reset --head --silent");
     assert!(output.contains("3 component(s) reset successfully"), "{output}");
     let list = list_local_scope(&helper);
@@ -125,11 +125,11 @@ fn with_dependencies() -> (Helper, PathBuf) {
     let helper = Helper::new();
     helper.re_init_workspace();
     helper.output_file("is-type/is-type.js", FOO_FIXTURE);
-    helper.run("add is-type -i utils/is-type");
+    helper.native("add is-type -i utils/is-type");
     helper.output_file("is-string/is-string.js", IS_STRING);
-    helper.run("add is-string -i utils/is-string");
-    helper.run("link --rewire");
-    helper.run("tag");
+    helper.native("add is-string -i utils/is-string");
+    helper.native("link --rewire");
+    helper.native("tag");
     let local_scope = helper.clone_workspace();
     (helper, local_scope)
 }
@@ -152,11 +152,11 @@ fn imported_and_tagged() -> (Helper, PathBuf) {
     helper.get_cloned_workspace(&local_scope);
     helper.re_init_remote_scope();
     helper.add_remote_scope();
-    helper.run("export");
+    helper.native("export");
     helper.re_init_workspace();
     helper.add_remote_scope();
     let remote = &helper.scopes.remote;
-    helper.run(&format!("import {remote}/utils/is-string --path components/utils/is-string"));
+    helper.native(&format!("import {remote}/utils/is-string --path components/utils/is-string"));
     let after_import = helper.clone_workspace();
     helper.tag_without_build("utils/is-string", r#"--unmodified --ignore-issues "*""#);
     (helper, after_import)
@@ -171,9 +171,9 @@ fn reset_all_keeps_the_modification() {
     let path = "components/utils/is-string/is-string.js";
     let content = fs::read_to_string(helper.scopes.local_path.join(path)).unwrap();
     helper.output_file(path, &format!("\n{content}"));
-    helper.run(r#"tag --ignore-issues "*""#);
+    helper.native(r#"tag --ignore-issues "*""#);
     helper.native("reset --silent");
-    let status = helper.run("status");
+    let status = helper.native("status");
     assert!(!status.contains("no modified components"), "{status}");
     assert!(status.contains("modified components") && status.contains("utils/is-string"));
 }
@@ -185,14 +185,14 @@ fn reset_keeps_the_bitmap_config() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.run("tag");
-    helper.run("deprecate comp1");
-    helper.run("tag");
+    helper.native("tag");
+    helper.native("deprecate comp1");
+    helper.native("tag");
     assert!(is_deprecated(&helper, "comp1"));
     helper.native("reset --silent");
     assert!(is_deprecated(&helper, "comp1"));
-    helper.run("tag --unmodified");
-    helper.run("export");
+    helper.native("tag --unmodified");
+    helper.native("export");
     let staged = helper.scopes.local_path.join(".bit/staged-config/main.json");
     let staged: Value = parse(&fs::read_to_string(staged).unwrap());
     assert_eq!(crate::helper::len(&staged), 0);
@@ -216,7 +216,7 @@ fn env_after_snaps(between: &str) -> Helper {
         if let Some(env) = between.strip_prefix("envs set comp1 ") {
             crate::helper::config::set_component_env(&helper.scopes.local_path, "comp1", env);
         } else {
-            helper.run(between);
+            helper.native(between);
         }
         snap_all(&helper, "");
     }
@@ -275,7 +275,7 @@ fn reset_head_deletes_only_the_head_tag() {
     }
     let show = parse(&helper.run("show bar/foo --json --legacy"));
     assert_eq!(show["name"], "bar/foo");
-    assert!(helper.run("status").contains("staged components"));
+    assert!(helper.native("status").contains("staged components"));
 }
 
 /// Resetting all local tags removes the component from the scope index.
@@ -293,7 +293,7 @@ fn reset_keeps_the_exported_tag() {
     helper.get_cloned_workspace(&local_scope);
     helper.re_init_remote_scope();
     helper.add_remote_scope();
-    helper.run("export");
+    helper.native("export");
     helper.tag_without_build("bar/foo", "--unmodified");
     assert!(cat_component(&helper, "bar/foo")["versions"].get("0.0.2").is_some());
     helper.native("reset bar/foo");
@@ -355,8 +355,8 @@ fn reset_of_an_exported_dependency_fails() {
     helper.get_cloned_workspace(&local_scope);
     helper.re_init_remote_scope();
     helper.add_remote_scope();
-    helper.run("export");
-    helper.run("tag --unmodified --ver 1.0.5");
+    helper.native("export");
+    helper.native("tag --unmodified --ver 1.0.5");
     let run = helper.native_run("reset utils/is-type");
     let output = format!("{}\n{}", run.stdout, run.stderr);
     let expected = format!("unable to reset {}/utils/is-type", helper.scopes.remote);
@@ -372,16 +372,16 @@ fn reset_of_a_detached_head() {
     helper.set_workspace_with_remote_scope();
     for version in ["", "version2", "version3"] {
         helper.populate_components(1, false, version);
-        helper.run("tag");
+        helper.native("tag");
     }
-    helper.run("export");
-    helper.run("checkout 0.0.2 comp1 -x");
+    helper.native("export");
+    helper.native("checkout 0.0.2 comp1 -x");
     helper.run("snap comp1 --unmodified --detach-head");
     let comp = cat_component(&helper, "comp1");
     assert!(!comp["detachedHeads"]["current"].is_null(), "{comp}");
     helper.native("reset --silent");
     assert_eq!(read_bitmap(&helper)["comp1"]["version"], "0.0.2");
-    let status = parse(&helper.run("status --json"));
+    let status = parse(&helper.native("status --json"));
     assert_eq!(crate::helper::len(&status["modifiedComponents"]), 0);
     assert!(cat_component(&helper, "comp1").get("detachedHeads").is_none());
 }

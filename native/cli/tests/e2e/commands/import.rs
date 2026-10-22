@@ -98,7 +98,7 @@ fn exported_simple() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.output_file("global/simple.js", FOO_FIXTURE);
-    helper.run("add global -i global/simple");
+    helper.native("add global -i global/simple");
     helper.tag_without_build("global/simple", "");
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
@@ -121,7 +121,7 @@ fn modified_bar_foo() -> (Helper, std::path::PathBuf) {
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/bar/foo", helper.scopes.remote));
+    helper.native(&format!("import {}/bar/foo", helper.scopes.remote));
     let remote = helper.scopes.remote.clone();
     let v2 = "module.exports = function foo() { return 'got foo v2'; };";
     helper.output_file(&format!("{remote}/bar/foo/foo.js"), v2);
@@ -180,7 +180,7 @@ fn a_clean_imported_component_updates_like_node() {
     let source = helper.clone_workspace();
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    helper.native(&format!("import {}/bar/foo -x", helper.scopes.remote));
     fs::write(source.join("bar/foo.js"), "module.exports = () => 'second';").unwrap();
     let command = "tag bar/foo --message second";
     let run = Helper::cmd_in_with(&source, command, &[("BIT_NATIVE", OsStr::new("off"))]);
@@ -233,13 +233,13 @@ fn a_clean_import_updates_added_and_deleted_files_like_node() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = () => 'first';");
     helper.output_file("bar/old.js", "module.exports = 'old';");
-    helper.run("add bar -i bar/foo -m bar/foo.js");
+    helper.native("add bar -i bar/foo -m bar/foo.js");
     helper.tag_without_build("bar/foo", "");
     crate::helper::remote::publish(&helper);
     let source = helper.clone_workspace();
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    helper.native(&format!("import {}/bar/foo -x", helper.scopes.remote));
     fs::remove_file(source.join("bar/old.js")).unwrap();
     fs::write(source.join("bar/new.js"), "module.exports = 'new';").unwrap();
     fs::write(source.join("bar/foo.js"), "module.exports = () => 'second';").unwrap();
@@ -297,7 +297,7 @@ fn a_locally_modified_import_updates_to_a_newer_version_like_node() {
     let source = helper.clone_workspace();
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    helper.native(&format!("import {}/bar/foo -x", helper.scopes.remote));
     helper.output_file(&format!("{}/bar/foo/foo.js", helper.scopes.remote), "local edit");
     fs::write(source.join("bar/foo.js"), "module.exports = () => 'second';").unwrap();
     let command = "tag bar/foo --message second";
@@ -311,7 +311,7 @@ fn a_locally_modified_import_updates_to_a_newer_version_like_node() {
 fn a_clean_reimport_is_up_to_date_like_node() {
     let helper = exported_simple();
     let command = format!("import {}/global/simple -x", helper.scopes.remote);
-    helper.run(&command);
+    helper.native(&command);
     // Bitmap history names have one-second resolution.
     std::thread::sleep(std::time::Duration::from_millis(1100));
     let node_root = helper.clone_workspace();
@@ -332,7 +332,7 @@ fn a_clean_reimport_is_up_to_date_like_node() {
 fn a_physically_deleted_import_is_restored_like_node() {
     let helper = exported_simple();
     let command = format!("import {}/global/simple -x", helper.scopes.remote);
-    helper.run(&command);
+    helper.native(&command);
     std::thread::sleep(std::time::Duration::from_millis(1100));
     fs::remove_dir_all(simple_dir(&helper)).unwrap();
     let node_root = helper.clone_workspace();
@@ -488,7 +488,7 @@ fn a_local_tag_survives_reimport_like_node() {
     helper.re_init_workspace();
     helper.add_remote_scope();
     let remote = helper.scopes.remote.clone();
-    helper.run(&format!("import {remote}/bar/foo --path components/bar/foo -x"));
+    helper.native(&format!("import {remote}/bar/foo --path components/bar/foo -x"));
     helper.output_file("components/bar/foo/foo.js", "v2");
     assert!(helper.tag_without_build("", "").contains("0.0.2"));
     // Bitmap history names have one-second resolution.
@@ -586,7 +586,7 @@ fn a_newer_import_resolves_local_edits_like_node() {
     let source = helper.clone_workspace();
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    helper.native(&format!("import {}/bar/foo -x", helper.scopes.remote));
     helper.output_file(
         &format!("{}/bar/foo/foo.js", helper.scopes.remote),
         "module.exports = () => 'local edit';",
@@ -660,7 +660,7 @@ fn files_keep_their_relative_paths() {
     helper.output_file("src/imprel.js", FOO_FIXTURE);
     helper.output_file("src/imprel.spec.js", FOO_FIXTURE);
     helper.output_file("src/utils/myUtil.js", FOO_FIXTURE);
-    helper.run("add src -m src/imprel.js -i imprel/imprel");
+    helper.native("add src -m src/imprel.js -i imprel/imprel");
     helper.tag_without_build("imprel/imprel", "");
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
@@ -827,9 +827,9 @@ fn lane_wildcard_selection_matches_node() {
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.populate_components(1, false, "");
-    helper.run("snap --message lane");
+    helper.native("snap --message lane");
     crate::helper::remote::publish(&helper);
     std::thread::sleep(std::time::Duration::from_millis(1100));
     if let Some(destination) = std::env::var_os("BIT_NATIVE_IMPORT_LANE_FIXTURE") {
@@ -873,9 +873,9 @@ fn http_lane_wildcard_import_matches_node() {
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.populate_components(1, false, "");
-    helper.run("snap --message lane");
+    helper.native("snap --message lane");
     crate::helper::remote::publish(&helper);
 
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -947,16 +947,16 @@ fn http_lane_wildcard_import_matches_node() {
 fn deprecated_lane_component_stays_in_lane_only_wildcard() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.populate_components(1, false, "");
-    helper.run("snap --message first");
+    helper.native("snap --message first");
     crate::helper::remote::publish(&helper);
-    helper.run("deprecate comp1");
-    helper.run("snap --message deprecated");
+    helper.native("deprecate comp1");
+    helper.native("snap --message deprecated");
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     let node_root = helper.clone_workspace();
     let command = format!("import {}/** --lane-only -x", helper.scopes.remote);
     let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
@@ -994,13 +994,13 @@ fn changed_remote_lane_head_merges_or_declines_like_node() {
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.populate_components(1, false, "");
-    helper.run("snap --message first");
+    helper.native("snap --message first");
     crate::helper::remote::publish(&helper);
     let baseline = helper.clone_workspace();
     helper.append_file("comp1/index.js", "\n// second lane snap");
-    helper.run("snap --message second");
+    helper.native("snap --message second");
     crate::helper::remote::publish(&helper);
     if let Some(destination) = std::env::var_os("BIT_NATIVE_IMPORT_LANE_UPDATE_FIXTURE") {
         let destination = std::path::PathBuf::from(destination);
@@ -1082,13 +1082,13 @@ fn lane_wildcard_imports_missing_lane_component_like_node() {
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.populate_components(1, false, "");
-    helper.run("snap --message first");
+    helper.native("snap --message first");
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     std::thread::sleep(std::time::Duration::from_millis(1100));
     let node_root = helper.clone_workspace();
     let command = format!("import {}/** --lane-only -x", helper.scopes.remote);
@@ -1317,11 +1317,11 @@ fn a_local_tag_survives_an_import() {
     helper.re_init_workspace();
     helper.add_remote_scope();
     let remote = helper.scopes.remote.clone();
-    helper.run(&format!("import {remote}/bar/foo --path components/bar/foo"));
+    helper.native(&format!("import {remote}/bar/foo --path components/bar/foo"));
     helper.output_file("components/bar/foo/foo.js", "v2");
     assert!(helper.tag_without_build("", "").contains("0.0.2"));
     import(&helper, "bar/foo").native();
-    let cat = parse(&helper.run(&format!("cat-component {remote}/bar/foo --json")));
+    let cat = parse(&helper.native(&format!("cat-component {remote}/bar/foo --json")));
     assert!(cat["versions"].get("0.0.1").is_some(), "{cat}");
     assert!(cat["versions"].get("0.0.2").is_some(), "{cat}");
     assert!(cat["state"]["versions"].get("0.0.2").is_some(), "{cat}");

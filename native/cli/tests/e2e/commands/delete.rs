@@ -68,7 +68,7 @@ fn imported_component_delete_matches_node() {
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    helper.native(&format!("import {}/bar/foo -x", helper.scopes.remote));
     let baseline = helper.clone_workspace();
     let command = format!("delete {}/bar/foo --silent", helper.scopes.remote);
     let files = format!("{}/bar/foo/foo.js", helper.scopes.remote);
@@ -92,7 +92,7 @@ fn snap_selection_delete_matches_node() {
     helper.re_init_workspace();
     helper.create_component_bar_foo("module.exports = 'new';");
     helper.add_component_bar_foo();
-    helper.run("snap --message one");
+    helper.native("snap --message one");
     let bitmap = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
     let version = bitmap
         .lines()
@@ -119,7 +119,7 @@ fn new_component_delete_delegates_untouched() {
     let node_root = helper.clone_workspace();
     let command = "delete bar/foo --silent";
     let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
-    let actual = helper.cmd(command);
+    let actual = helper.native_run(command);
     assert!(actual.native, "{}", actual.trace);
     assert_eq!(actual.status.code(), node.status.code());
     assert_eq!(actual.stdout, node.stdout);
@@ -134,14 +134,14 @@ fn new_component_delete_delegates_untouched() {
 fn unexported_lane_delete_delegates_untouched() {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.create_component_bar_foo("module.exports = 'lane';");
     helper.add_component_bar_foo();
-    helper.run("snap --message lane");
+    helper.native("snap --message lane");
     let node_root = helper.clone_workspace();
     let command = "delete bar/foo --silent --lane";
     let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
-    let actual = helper.cmd(command);
+    let actual = helper.native_run(command);
     assert!(actual.native, "{}", actual.trace);
     assert_eq!(actual.status.code(), node.status.code());
     assert_eq!(actual.stdout, node.stdout);
@@ -158,13 +158,13 @@ pub(super) fn exported_lane_setup(helper: &Helper, extra_snap: bool) {
     helper.add_component_bar_foo();
     helper.tag_without_build("bar/foo", "");
     crate::helper::remote::publish(helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
     crate::helper::remote::publish(helper);
     if extra_snap {
         fs::write(helper.scopes.local_path.join("bar/foo.js"), "module.exports = 'second';")
             .unwrap();
-        helper.run("snap --message second");
+        helper.native("snap --message second");
         crate::helper::remote::publish(helper);
     }
 }
@@ -280,7 +280,7 @@ fn exported_lane_with_dependent_pins_main_version_like_node() {
         "baz/qux.js",
         &format!("module.exports = require('@{}/bar.foo');", helper.scopes.remote),
     );
-    helper.run("add baz -i baz/qux");
+    helper.native("add baz -i baz/qux");
     compare_dependency_delete(&helper);
 }
 
@@ -292,7 +292,7 @@ fn compare_dependency_delete(helper: &Helper) {
     helper.restore_remote_scope(&remote);
     let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
     helper.restore_remote_scope(&remote);
-    let actual = helper.cmd(command);
+    let actual = helper.native_run(command);
     assert!(actual.native, "{}", actual.trace);
     assert_eq!(actual.status.code(), node.status.code());
     assert_eq!(actual.stdout, node.stdout);
@@ -324,7 +324,7 @@ fn exported_lane_independent_component_delete_matches_node() {
     let helper = Helper::new();
     exported_lane_setup(&helper, false);
     helper.output_file("baz/qux.js", "module.exports = 'independent';");
-    helper.run("add baz -i baz/qux");
+    helper.native("add baz -i baz/qux");
     compare_dependency_delete(&helper);
 }
 
@@ -336,7 +336,7 @@ fn exported_lane_only_dependency_delete_without_main_tag_matches_node() {
         "baz/qux.js",
         &format!("module.exports = require('@{}/bar.foo');", helper.scopes.remote),
     );
-    helper.run("add baz -i baz/qux");
+    helper.native("add baz -i baz/qux");
     compare_dependency_delete(&helper);
 }
 
@@ -348,7 +348,7 @@ fn exported_lane_delete_preserves_existing_peer_policy_like_node() {
         "baz/qux.js",
         &format!("module.exports = require('@{}/bar.foo');", helper.scopes.remote),
     );
-    helper.run("add baz -i baz/qux");
+    helper.native("add baz -i baz/qux");
     let path = helper.scopes.local_path.join("workspace.jsonc");
     let mut document =
         bit_install::jsonc::Document::parse(&fs::read_to_string(&path).unwrap()).unwrap();
@@ -368,7 +368,7 @@ fn exported_lane_delete_uses_configured_save_prefix_like_node() {
         "baz/qux.js",
         &format!("module.exports = require('@{}/bar.foo');", helper.scopes.remote),
     );
-    helper.run("add baz -i baz/qux");
+    helper.native("add baz -i baz/qux");
     let path = helper.scopes.local_path.join("workspace.jsonc");
     let mut document =
         bit_install::jsonc::Document::parse(&fs::read_to_string(&path).unwrap()).unwrap();
@@ -388,7 +388,7 @@ fn exported_lane_dependency_delete_ci_color_output_matches_node() {
         "baz/qux.js",
         &format!("module.exports = require('@{}/bar.foo');", helper.scopes.remote),
     );
-    helper.run("add baz -i baz/qux");
+    helper.native("add baz -i baz/qux");
     let node_root = helper.clone_workspace();
     let command = "delete bar/foo --lane --silent";
     let node = Helper::cmd_in_with(
@@ -452,10 +452,10 @@ fn exported_lane_delete_and_recover_reject_changed_index_before_writes() {
 
 pub(super) fn exported_lane_only_setup(helper: &Helper) {
     helper.set_workspace_with_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.create_component_bar_foo("module.exports = 'lane only';");
     helper.add_component_bar_foo();
-    helper.run("snap --message lane");
+    helper.native("snap --message lane");
     crate::helper::remote::publish(helper);
 }
 

@@ -2,6 +2,7 @@
 
 mod deps;
 mod deps_policy;
+mod remote_show;
 mod render;
 #[cfg(test)]
 mod tests;
@@ -42,7 +43,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Err(io::Error::other(err))
         });
     }
-    if let Some(outcome) = workspace_show::try_run(&cwd, args, &options)? {
+    let outcome_opt = if options.remote {
+        remote_show::try_run(&cwd, args, &options)?
+    } else {
+        workspace_show::try_run(&cwd, args, &options)?
+    };
+    if let Some(outcome) = outcome_opt {
         return Ok(outcome);
     }
     Ok(Outcome::Declined("show execution delegated".into()))

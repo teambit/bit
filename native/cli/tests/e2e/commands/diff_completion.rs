@@ -14,7 +14,7 @@ fn workspace() -> Helper {
     helper.create_component_bar_foo("module.exports = 'one';");
     helper.add_component_bar_foo();
     helper.output_file("baz/qux.js", "module.exports = 'two';");
-    helper.run("add baz -i baz/qux");
+    helper.native("add baz -i baz/qux");
     helper.tag_without_build("", "");
     helper.create_component_bar_foo("module.exports = 'changed one';");
     helper.output_file("baz/qux.js", "module.exports = 'changed two';");
@@ -24,7 +24,7 @@ fn workspace() -> Helper {
 fn parity(helper: &Helper, command: &str) {
     let baseline = helper.clone_workspace();
     let expected = Helper::cmd_in_with(&baseline, command, &[("BIT_NATIVE", OsStr::new("off"))]);
-    let actual = helper.cmd(command);
+    let actual = helper.native_run(command);
     assert!(actual.native, "{}", actual.trace);
     assert_eq!(actual.status.code(), expected.status.code(), "{}", actual.stderr);
     assert_eq!(actual.stdout, expected.stdout);
@@ -44,21 +44,21 @@ fn comma_and_negated_globs_select_diff_components() {
 #[test]
 fn dependency_table_matches_node() {
     let helper = workspace();
-    helper.run("deps set bar/foo lodash@1.0.0 --dev");
+    helper.native("deps set bar/foo lodash@1.0.0 --dev");
     parity(&helper, "diff bar/foo --table");
 }
 
 #[test]
 fn dependency_table_json_matches_node() {
     let helper = workspace();
-    helper.run("deps set bar/foo lodash@1.0.0 --dev");
+    helper.native("deps set bar/foo lodash@1.0.0 --dev");
     parity(&helper, "diff bar/foo --table --json");
 }
 
 #[test]
 fn verbose_diff_matches_node() {
     let helper = workspace();
-    helper.run("deps set bar/foo lodash@1.0.0 --dev");
+    helper.native("deps set bar/foo lodash@1.0.0 --dev");
     parity(&helper, "diff bar/foo --verbose --json");
 }
 
@@ -92,7 +92,7 @@ fn stored_custom_package_name_matches_node() {
     let baseline = helper.clone_workspace();
     let expected =
         Helper::cmd_in_with(&baseline, "diff bar/foo --json", &[("BIT_NATIVE", OsStr::new("off"))]);
-    let actual = helper.cmd("diff bar/foo --json");
+    let actual = helper.native_run("diff bar/foo --json");
     assert!(actual.native, "{}", actual.trace);
     assert_eq!(actual.status.code(), expected.status.code());
     assert_eq!(actual.stdout, expected.stdout);
@@ -116,7 +116,7 @@ fn parent_diff_selects_multiple_components() {
 #[test]
 fn colored_dependency_table_matches_node() {
     let helper = workspace();
-    helper.run("deps set bar/foo lodash@1.0.0 --dev");
+    helper.native("deps set bar/foo lodash@1.0.0 --dev");
     let baseline = helper.clone_workspace();
     let expected = color_run(&baseline, true);
     let actual = color_run(&helper.scopes.local_path, false);
@@ -150,12 +150,12 @@ fn nested_files_and_crlf_match_node() {
     ] {
         helper.output_file(file, body);
     }
-    helper.run("add bar -i bar/foo");
-    helper.run("deps set bar/foo lodash@1.0.0 --dev");
+    helper.native("add bar -i bar/foo");
+    helper.native("deps set bar/foo lodash@1.0.0 --dev");
     let baseline = helper.clone_workspace();
     let expected =
         Helper::cmd_in_with(&baseline, "diff bar/foo --json", &[("BIT_NATIVE", OsStr::new("off"))]);
-    let actual = helper.cmd("diff bar/foo --json");
+    let actual = helper.native_run("diff bar/foo --json");
     assert!(actual.native, "{}", actual.trace);
     assert_eq!(actual.status.code(), expected.status.code());
     assert_eq!(
@@ -178,7 +178,7 @@ fn changed_custom_package_name_matches_node() {
     let baseline = helper.clone_workspace();
     let expected =
         Helper::cmd_in_with(&baseline, "diff bar/foo --json", &[("BIT_NATIVE", OsStr::new("off"))]);
-    let actual = helper.cmd("diff bar/foo --json");
+    let actual = helper.native_run("diff bar/foo --json");
     assert!(actual.native, "{}", actual.trace);
     assert_eq!(actual.status.code(), expected.status.code());
     assert_eq!(actual.stdout, expected.stdout);
@@ -223,7 +223,7 @@ fn remote_parity_with(helper: &Helper, command: &str) {
     let remote = helper.clone_remote_scope();
     let expected = Helper::cmd_in_with(&baseline, command, &[("BIT_NATIVE", OsStr::new("off"))]);
     helper.restore_remote_scope(&remote);
-    let actual = helper.cmd(command);
+    let actual = helper.native_run(command);
     assert!(actual.native, "{}", actual.trace);
     assert!(actual.status.success(), "{}", actual.stderr);
     assert_eq!(actual.status.code(), expected.status.code());
@@ -322,7 +322,7 @@ fn headless_tagged_model_diff_matches_node() {
     let baseline = helper.clone_workspace();
     let expected =
         Helper::cmd_in_with(&baseline, "diff bar/foo --json", &[("BIT_NATIVE", OsStr::new("off"))]);
-    let actual = helper.cmd("diff bar/foo --json");
+    let actual = helper.native_run("diff bar/foo --json");
     assert!(actual.native, "{}", actual.trace);
     assert_eq!(actual.status.code(), expected.status.code());
     assert_eq!(actual.stdout, expected.stdout);
@@ -339,7 +339,7 @@ fn inflate(bytes: &[u8]) -> String {
 #[test]
 fn locally_deleted_diff_matches_node() {
     let helper = missing_remote_version();
-    helper.run("delete bar/foo --silent");
+    helper.native("delete bar/foo --silent");
     let baseline = helper.clone_workspace();
     let expected =
         Helper::cmd_in_with(&baseline, "diff bar/foo --json", &[("BIT_NATIVE", OsStr::new("off"))]);

@@ -5,7 +5,7 @@ use super::deps_policy::{
     apply_variant_policies,
 };
 use bit_install::{
-    config::{DEPENDENCY_RESOLVER_ASPECT, WorkspaceConfig},
+    config::{DEPENDENCY_RESOLVER_ASPECT, WorkspaceConfig, aspect_id_without_version},
     model::WorkspaceComponent,
     workspace::{BitmapEntry, ModelData, Workspace},
 };
@@ -64,24 +64,30 @@ fn strip_pkg_version(raw: &str) -> &str {
     }
 }
 
-pub(super) fn collect_dependencies(
-    root: &Path,
-    ws_config: &WorkspaceConfig,
-    ws: &Workspace,
-    entry: &BitmapEntry,
-    component: &WorkspaceComponent,
-    model: Option<&ModelData>,
-    scope: &str,
-) -> Vec<DepEntry> {
-    let identity = Identity { scope, name: &entry.id.name, package_name: &component.package_name };
+pub(super) struct CompContext<'a> {
+    pub root: &'a Path,
+    pub ws_config: &'a WorkspaceConfig,
+    pub ws: &'a Workspace,
+    pub entry: &'a BitmapEntry,
+    pub component: &'a WorkspaceComponent,
+    pub model: Option<&'a ModelData>,
+    pub scope: &'a str,
+}
+
+pub(super) fn collect_dependencies(ctx: &CompContext<'_>) -> Vec<DepEntry> {
+    let identity = Identity {
+        scope: ctx.scope,
+        name: &ctx.entry.id.name,
+        package_name: &ctx.component.package_name,
+    };
     let mut deps = Vec::new();
-    scan_component_files(root, ws_config, ws, entry, component, &identity, &mut deps);
-    if let Some(model_data) = model {
+    if let Some(model_data) = ctx.model {
         apply_model_dependencies(model_data, &identity, &mut deps);
     }
-    apply_variant_policies(ws_config, entry, &identity, &mut deps);
-    apply_component_json_policy(&component.dir, &identity, &mut deps);
-    if let Some(cfg) = entry.config
+    scan_component_files(ctx, &identity, &mut deps);
+    apply_variant_policies(ctx.ws_config, ctx.entry, &identity, &mut deps);
+    apply_component_json_policy(&ctx.component.dir, &identity, &mut deps);
+    if let Some(cfg) = ctx.entry.config
         .as_ref()
         .and_then(|map| map.get(DEPENDENCY_RESOLVER_ASPECT))
     {
@@ -90,26 +96,40 @@ pub(super) fn collect_dependencies(
     deps
 }
 
-fn scan_component_files(
-    root: &Path,
-    ws_config: &WorkspaceConfig,
-    ws: &Workspace,
-    entry: &BitmapEntry,
-    component: &WorkspaceComponent,
+fn is_dev_file(rel_file: &str, env_id: &str) -> bool {
+    let is_readme = aspect_id_without_version(env_id) == "teambit.mdx/readme";
+    rel_file.contains(".spec.")
+        || rel_file.contains(".test.")
+        || (!is_readme && rel_file.contains(".docs."))
+        || rel_file.contains(".composition.")
+        || rel_file.contains(".compositions.")
+}
+
+fn scan_component_files(ctx: &CompContext<'_>, identity: &Identity<'_>, deps: &mut Vec<DepEntry>) {
+    for rel_file in &ctx.component.files {
+        let file_lifecycle =
+            if is_dev_file(rel_file, &ctx.component.env_id) { "dev" } else { "runtime" };
+        for raw_spec in scanned_specifiers(&ctx.component.dir, rel_file) {
+            apply_scanned_specifier(ctx, identity, rel_file, &raw_spec, file_lifecycle, deps);
+        }
+    }
+}
+
+fn apply_scanned_specifier(
+    ctx: &CompContext<'_>,
     identity: &Identity<'_>,
+    rel_file: &str,
+    raw_spec: &str,
+    lifecycle: &'static str,
     deps: &mut Vec<DepEntry>,
 ) {
-    for rel_file in &component.files {
-        for raw_spec in scanned_specifiers(&component.dir, rel_file) {
-            if identity.is_self(&raw_spec) {
-                continue;
-            }
-            if raw_spec.starts_with('.') {
-                resolve_relative_import(ws, entry, rel_file, &raw_spec, deps);
-            } else {
-                resolve_package_import(root, ws_config, ws, identity, &raw_spec, deps);
-            }
-        }
+    if identity.is_self(raw_spec) {
+        return;
+    }
+    if raw_spec.starts_with('.') {
+        resolve_relative_import(ctx.ws, ctx.entry, rel_file, raw_spec, deps);
+    } else {
+        resolve_package_import(ctx, identity, raw_spec, lifecycle, deps);
     }
 }
 
@@ -141,9 +161,9 @@ fn resolve_relative_import(
     if !entry.root_dir.is_empty() && resolved.starts_with(entry.root_dir.trim_end_matches('/')) {
         return;
     }
-    let Some(other) = ws.components
-        .iter()
-        .find(|comp| {
+    let Some((_, other)) = ws
+        .active()
+        .find(|(_, comp)| {
             comp.id != entry.id
                 && !comp.root_dir.is_empty()
                 && resolved.starts_with(comp.root_dir.trim_end_matches('/'))
@@ -169,20 +189,19 @@ fn normalize_rel_path(path: &Path) -> String {
 }
 
 fn resolve_package_import(
-    root: &Path,
-    ws_config: &WorkspaceConfig,
-    ws: &Workspace,
+    ctx: &CompContext<'_>,
     identity: &Identity<'_>,
     raw_spec: &str,
+    file_lifecycle: &'static str,
     deps: &mut Vec<DepEntry>,
 ) {
     let pkg_name = extract_package_name(raw_spec);
     if identity.is_self(pkg_name) || pkg_name.starts_with("@teambit/") {
         return;
     }
-    if let Some(other) = ws.components
-        .iter()
-        .find(|comp| {
+    if let Some((_, other)) = ctx.ws
+        .active()
+        .find(|(_, comp)| {
             let other_scope = comp.id.effective_scope().unwrap_or_default();
             comp.package_name == pkg_name || format!("@{other_scope}/{}", comp.id.name) == pkg_name
         })
@@ -190,14 +209,25 @@ fn resolve_package_import(
         add_workspace_component_dep(other, None, deps);
         return;
     }
-    if let Some(ver) = lookup_package_version(root, ws_config, pkg_name) {
+    if let Some(ver) = lookup_package_version(ctx.root, &ctx.component.dir, ctx.ws_config, pkg_name)
+    {
+        let existing_lifecycle = deps
+            .iter()
+            .find(|dep| dep.id == pkg_name || dep.package_name.as_deref() == Some(pkg_name))
+            .map(|dep| dep.lifecycle);
+        let lifecycle = match existing_lifecycle {
+            Some("runtime" | "peer") if file_lifecycle == "dev" => {
+                existing_lifecycle.unwrap_or("runtime")
+            }
+            _ => file_lifecycle,
+        };
         upsert_dep(
             deps,
             DepEntry {
                 id: pkg_name.to_owned(),
                 package_name: Some(pkg_name.to_owned()),
                 version: ver,
-                lifecycle: "runtime",
+                lifecycle,
                 dep_type: "package",
                 optional: false,
                 relative_paths: Vec::new(),
@@ -257,23 +287,33 @@ fn add_workspace_component_dep(
 
 fn lookup_package_version(
     root: &Path,
+    comp_dir: &Path,
     ws_config: &WorkspaceConfig,
     pkg_name: &str,
 ) -> Option<String> {
-    let ws_policy = &ws_config.dependency_resolver.policy["dependencies"][pkg_name];
-    if let Some(ver) = ws_policy
-        .as_str()
-        .or_else(|| ws_policy["version"].as_str())
-    {
-        return Some(ver.to_owned());
+    for field in ["dependencies", "devDependencies", "peerDependencies"] {
+        let ws_policy = &ws_config.dependency_resolver.policy[field][pkg_name];
+        if let Some(ver) = ws_policy
+            .as_str()
+            .or_else(|| ws_policy["version"].as_str())
+            .filter(|ver| *ver != "-")
+        {
+            return Some(ver.to_owned());
+        }
     }
-    let pkg_json_path = root
-        .join("node_modules")
-        .join(pkg_name)
-        .join("package.json");
-    let text = fs::read_to_string(pkg_json_path).ok()?;
-    let parsed: Value = serde_json::from_str(&text).ok()?;
-    parsed["version"].as_str().map(str::to_owned)
+    for base in [comp_dir, root] {
+        let pkg_json_path = base
+            .join("node_modules")
+            .join(pkg_name)
+            .join("package.json");
+        if let Ok(text) = fs::read_to_string(pkg_json_path)
+            && let Ok(parsed) = serde_json::from_str::<Value>(&text)
+            && let Some(ver) = parsed["version"].as_str()
+        {
+            return Some(ver.to_owned());
+        }
+    }
+    None
 }
 
 pub(super) fn remove_dep(deps: &mut Vec<DepEntry>, target: &str) {
@@ -285,6 +325,16 @@ pub(super) fn upsert_dep(deps: &mut Vec<DepEntry>, entry: DepEntry) {
         .iter_mut()
         .find(|dep| dep.id == entry.id || dep.package_name == entry.package_name)
     {
+        if entry.dep_type == "component" {
+            existing.id = entry.id;
+            existing.dep_type = "component";
+        } else if existing.dep_type == "component" && !entry.version.is_empty() {
+            let bare = existing.id
+                .split('@')
+                .next()
+                .unwrap_or(&existing.id);
+            existing.id = format!("{bare}@{}", entry.version);
+        }
         existing.version = entry.version;
         existing.lifecycle = entry.lifecycle;
         existing.optional = entry.optional;

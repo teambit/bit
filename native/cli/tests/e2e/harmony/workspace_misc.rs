@@ -349,7 +349,7 @@ fn bit_show_remote_on_empty_workspace() -> KnownResult<()> {
     helper.re_init_workspace();
     helper.add_remote_scope();
 
-    let show_output = helper.run(&format!("show {}/comp1 --remote", helper.scopes.remote));
+    let show_output = helper.native(&format!("show {}/comp1 --remote", helper.scopes.remote));
 
     // should show the remote component successfully
     assert!(
@@ -360,6 +360,11 @@ fn bit_show_remote_on_empty_workspace() -> KnownResult<()> {
     // should show Harmony data such as the env
     assert!(show_output.contains("env"), "{show_output}");
     assert!(show_output.contains("teambit.harmony/node"), "{show_output}");
+
+    let remote_json =
+        parse(&helper.native(&format!("show {}/comp1 --remote --json", helper.scopes.remote)));
+    assert!(remote_json.as_array().is_some());
+    assert_eq!(remote_json[0]["json"], format!("{}/comp1@0.0.1", helper.scopes.remote));
 
     // should not import any object to the local scope
     let objects = parse(&helper.native("cat-scope --json"));
