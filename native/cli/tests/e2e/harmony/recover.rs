@@ -8,14 +8,14 @@ fn recover_before_snapping() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.run("tag --message first");
+    helper.native("tag --message first");
     remote::publish(&helper);
 
     helper.native("delete comp2 --silent");
     helper.native("recover comp2");
-    helper.run("link");
+    helper.native("link");
 
-    let status = parse(&helper.run("status --json"));
+    let status = parse(&helper.native("status --json"));
     assert_eq!(
         status["locallySoftRemoved"]
             .as_array()
@@ -23,7 +23,7 @@ fn recover_before_snapping() {
             .len(),
         0,
     );
-    let list = parse(&helper.run("list --json"));
+    let list = parse(&helper.native("list --json"));
     assert_eq!(list.as_array().unwrap().len(), 2);
 }
 
@@ -34,7 +34,7 @@ fn recover_after_snapping_and_remove_after_recovering() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.run("tag --message first");
+    helper.native("tag --message first");
     remote::publish(&helper);
 
     helper.native("delete comp2 --silent");
@@ -44,7 +44,7 @@ fn recover_after_snapping_and_remove_after_recovering() {
 
     let bitmap = config::read_jsonc(&helper.scopes.local_path.join(".bitmap"));
     assert!(!bitmap["comp2"].is_null());
-    let status = parse(&helper.run("status --json"));
+    let status = parse(&helper.native("status --json"));
     assert_eq!(
         status["remotelySoftRemoved"]
             .as_array()
@@ -59,9 +59,9 @@ fn recover_after_snapping_and_remove_after_recovering() {
             .iter()
             .any(|id| id
                 .as_str()
-                .is_some_and(|s| s.contains("comp2"))),
+                .is_some_and(|text| text.contains("comp2"))),
     );
-    let list = parse(&helper.run("list --json"));
+    let list = parse(&helper.native("list --json"));
     assert_eq!(list.as_array().unwrap().len(), 2);
 
     helper.run("tag --message third");
@@ -78,7 +78,7 @@ fn export_soft_removed_and_recover_or_import() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.run("tag --message first");
+    helper.native("tag --message first");
     remote::publish(&helper);
 
     helper.native("delete comp2 --silent");
@@ -89,9 +89,9 @@ fn export_soft_removed_and_recover_or_import() {
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.native(&format!("recover {}/comp2", helper.scopes.remote));
-    let list = parse(&helper.run("list --json"));
+    let list = parse(&helper.native("list --json"));
     assert_eq!(list.as_array().unwrap().len(), 1);
-    let status = parse(&helper.run("status --json"));
+    let status = parse(&helper.native("status --json"));
     assert!(
         status["modifiedComponents"]
             .as_array()
@@ -99,13 +99,13 @@ fn export_soft_removed_and_recover_or_import() {
             .iter()
             .any(|id| id
                 .as_str()
-                .is_some_and(|s| s.contains("comp2"))),
+                .is_some_and(|text| text.contains("comp2"))),
     );
 
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/comp2 -x", helper.scopes.remote));
-    let status_imported = parse(&helper.run("status --json"));
+    helper.native(&format!("import {}/comp2 -x", helper.scopes.remote));
+    let status_imported = parse(&helper.native("status --json"));
     assert_eq!(
         status_imported["remotelySoftRemoved"]
             .as_array()
@@ -122,7 +122,7 @@ fn export_soft_removed_and_recover_or_import() {
     );
 
     helper.native("recover comp2");
-    let status_recovered = parse(&helper.run("status --json"));
+    let status_recovered = parse(&helper.native("status --json"));
     assert_eq!(
         status_recovered["remotelySoftRemoved"]
             .as_array()
@@ -144,15 +144,15 @@ fn export_soft_removed_and_recover_or_import() {
 fn recover_on_a_lane() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.populate_components(2, true, "");
-    helper.run("snap --message s1");
+    helper.native("snap --message s1");
     remote::publish(&helper);
 
     helper.native("delete comp2 --lane --silent");
     helper.native("recover comp2");
-    helper.run("link");
-    let status = parse(&helper.run("status --json"));
+    helper.native("link");
+    let status = parse(&helper.native("status --json"));
     assert_eq!(
         status["locallySoftRemoved"]
             .as_array()
@@ -160,7 +160,7 @@ fn recover_on_a_lane() {
             .len(),
         0,
     );
-    let list = parse(&helper.run("list --json"));
+    let list = parse(&helper.native("list --json"));
     assert_eq!(list.as_array().unwrap().len(), 2);
 
     helper.native("delete comp2 --lane --silent");
@@ -169,7 +169,7 @@ fn recover_on_a_lane() {
     helper.native(&format!("recover {}/comp2", helper.scopes.remote));
     let bitmap = config::read_jsonc(&helper.scopes.local_path.join(".bitmap"));
     assert!(!bitmap["comp2"].is_null());
-    let status_after = parse(&helper.run("status --json"));
+    let status_after = parse(&helper.native("status --json"));
     assert_eq!(
         status_after["remotelySoftRemoved"]
             .as_array()
@@ -184,7 +184,7 @@ fn recover_on_a_lane() {
             .iter()
             .any(|id| id
                 .as_str()
-                .is_some_and(|s| s.contains("comp2"))),
+                .is_some_and(|text| text.contains("comp2"))),
     );
 
     helper.native("delete comp2 --lane --silent");
@@ -194,7 +194,7 @@ fn recover_on_a_lane() {
     helper.add_remote_scope();
     helper.run(&format!("lane import {}/dev -x", helper.scopes.remote));
     helper.native(&format!("recover {}/comp2", helper.scopes.remote));
-    let list_imported = parse(&helper.run("list --json"));
+    let list_imported = parse(&helper.native("list --json"));
     assert_eq!(list_imported.as_array().unwrap().len(), 2);
 }
 
@@ -204,16 +204,16 @@ fn recover_on_a_lane() {
 fn recover_across_lanes_and_empty_lane_error() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.run("lane create lane-a");
+    helper.native("lane create lane-a");
     helper.populate_components(2, true, "");
-    helper.run("snap --message s1");
+    helper.native("snap --message s1");
     remote::publish(&helper);
 
-    helper.run("lane create lane-b");
-    helper.run("snap --unmodified --message s2");
+    helper.native("lane create lane-b");
+    helper.native("snap --unmodified --message s2");
     remote::publish(&helper);
 
-    helper.run("switch lane-a -x");
+    helper.native("switch lane-a -x");
     helper.native("delete comp1 --lane --silent");
     helper.run("snap --message s3");
     remote::publish(&helper);
@@ -225,14 +225,14 @@ fn recover_across_lanes_and_empty_lane_error() {
     remote::publish(&helper);
     helper.run("switch lane-a -x");
     helper.run("lane merge lane-b --message m2");
-    let list = parse(&helper.run("list --json"));
+    let list = parse(&helper.native("list --json"));
     assert_eq!(list.as_array().unwrap().len(), 2);
 
     helper.native("delete comp1 --lane --silent");
     helper.run("snap --message s5");
     remote::publish(&helper);
-    helper.run("lane create lane-empty");
-    let err = helper.cmd(&format!("recover {}/comp1", helper.scopes.remote));
+    helper.native("lane create lane-empty");
+    let err = helper.native_run(&format!("recover {}/comp1", helper.scopes.remote));
     assert!(!err.status.success());
     let combined = format!("{}{}", err.stdout, err.stderr);
     assert!(combined.contains("unable to find the component"), "{combined}");
@@ -245,7 +245,7 @@ fn recover_diverged_and_pattern_matching() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
-    helper.run("tag --message first");
+    helper.native("tag --message first");
     remote::publish(&helper);
 
     helper.native("delete comp1 --silent");
@@ -260,10 +260,10 @@ fn recover_diverged_and_pattern_matching() {
     helper.output_file("comp3/index.js", "");
     helper.run("tag --message second");
     helper.native(&format!("recover {}/*", helper.scopes.remote));
-    let list = parse(&helper.run("list --json"));
+    let list = parse(&helper.native("list --json"));
     assert_eq!(list.as_array().unwrap().len(), 3);
 
-    let err = helper.cmd("recover nonexistent*");
+    let err = helper.native_run("recover nonexistent*");
     assert!(!err.status.success());
     let combined = format!("{}{}", err.stdout, err.stderr);
     assert!(combined.contains("no soft-deleted components found"), "{combined}");

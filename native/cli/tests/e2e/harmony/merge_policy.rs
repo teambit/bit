@@ -11,8 +11,8 @@ fn removed_lane() -> Helper {
     helper.populate_components(1, true, "");
     helper.tag_without_build("", "--message first");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create incoming-removal");
-    helper.run("delete comp1 --update-main --silent");
+    helper.native("lane create incoming-removal");
+    helper.native("delete comp1 --update-main --silent");
     helper.run("snap --message removed");
     helper.run("switch main --skip-fetch -x");
     helper
@@ -126,7 +126,7 @@ fn removed_main(mark_main: bool, diverged: bool) -> Helper {
     helper.tag_without_build("", "--message first");
     crate::helper::remote::publish(&helper);
     let baseline = helper.clone_workspace();
-    helper.run("delete comp1 --silent");
+    helper.native("delete comp1 --silent");
     if mark_main {
         let path = helper.scopes.local_path.join(".bitmap");
         let mut bitmap = config::read_jsonc(&path);
@@ -139,9 +139,9 @@ fn removed_main(mark_main: bool, diverged: bool) -> Helper {
     helper.get_cloned_workspace(&baseline);
     if diverged {
         helper.append_file("comp1/index.js", "\n// local branch\n");
-        helper.run("tag comp1@0.0.3 --message local");
+        helper.native("tag comp1@0.0.3 --message local");
     }
-    helper.run(&format!("fetch -c {}/comp1", helper.scopes.remote));
+    helper.native(&format!("fetch -c {}/comp1", helper.scopes.remote));
     helper
 }
 
@@ -166,8 +166,8 @@ fn hidden_workspace() -> (Helper, std::path::PathBuf) {
     helper.tag_without_build("", "--message first");
     crate::helper::remote::publish(&helper);
     let main = helper.clone_workspace();
-    helper.run("lane create hidden-policy");
-    helper.run("snap comp2 --skip-auto-snap --unmodified --message lane");
+    helper.native("lane create hidden-policy");
+    helper.native("snap comp2 --skip-auto-snap --unmodified --message lane");
     crate::helper::remote::publish(&helper);
     helper.seed_hidden_update_dependent(
         &format!("{}/comp1", helper.scopes.remote),
@@ -194,7 +194,7 @@ fn hidden_lane_merge_preserves_scope_configuration_without_workspace_files() {
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.run(&format!("lane import {}/hidden-policy -x", helper.scopes.remote));
-    helper.run(&format!("import {}/comp2 -x", helper.scopes.remote));
+    helper.native(&format!("import {}/comp2 -x", helper.scopes.remote));
     compare(&helper, "lane merge main --no-auto-snap -x");
 }
 
@@ -219,13 +219,13 @@ fn workspace_policy(current: &str) -> Helper {
     package(&helper, "4.4.1");
     helper.tag_without_build("", "--message first");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create policy-update");
+    helper.native("lane create policy-update");
     package(&helper, "4.4.2");
-    helper.run("snap comp1 --message incoming");
-    helper.run("switch main --skip-fetch -x");
+    helper.native("snap comp1 --message incoming");
+    helper.native("switch main --skip-fetch -x");
     package(&helper, current);
     helper.append_file("comp1/index.js", "\n// current branch\n");
-    helper.run("snap comp1 --message current");
+    helper.native("snap comp1 --message current");
     let path = helper.scopes.local_path.join("workspace.jsonc");
     fs::write(&path, format!("// retain policy comment\n{}", fs::read_to_string(&path).unwrap()))
         .unwrap();
@@ -266,12 +266,12 @@ fn lane_merge_materializes_component_configuration_conflicts() {
     set("base");
     helper.tag_without_build("", "--message first");
     crate::helper::remote::publish(&helper);
-    helper.run("lane create configuration-conflict");
+    helper.native("lane create configuration-conflict");
     set("incoming");
-    helper.run("snap comp1 --message incoming");
-    helper.run("switch main --skip-fetch -x");
+    helper.native("snap comp1 --message incoming");
+    helper.native("switch main --skip-fetch -x");
     set("current");
-    helper.run("snap comp1 --message current");
+    helper.native("snap comp1 --message current");
     compare(&helper, "lane merge configuration-conflict --no-squash --no-auto-snap -x");
 }
 

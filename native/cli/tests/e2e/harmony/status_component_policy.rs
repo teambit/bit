@@ -116,9 +116,9 @@ fn duplicate_lifecycle_component_policy_matches_status_and_diff() {
 fn bitmap_component_policy_matches_status_and_diff() {
     let helper = workspace(&json!({}));
     helper.delete_path("bar/component.json");
-    helper.run("deps set bar/foo runtime-package@^1.0.0");
-    helper.run("deps set bar/foo dev-package@~2.0.0 --dev");
-    helper.run("deps set bar/foo peer-package@^3.0.0 --peer");
+    helper.native("deps set bar/foo runtime-package@^1.0.0");
+    helper.native("deps set bar/foo dev-package@~2.0.0 --dev");
+    helper.native("deps set bar/foo peer-package@^3.0.0 --peer");
     parity(&helper, "status --json");
     parity(&helper, "diff bar/foo --json");
 }
@@ -154,7 +154,7 @@ fn variant_component_policy_matches_status_and_diff() {
     );
     parity(&helper, "status --json");
     parity(&helper, "diff bar/foo --json");
-    helper.run("deps set bar/foo specific-package@4.0.0 --dev");
+    helper.native("deps set bar/foo specific-package@4.0.0 --dev");
     parity(&helper, "status --json");
     parity(&helper, "diff bar/foo --json");
 }
@@ -264,8 +264,9 @@ fn component_issue_ignores_match_status_and_diff() {
 #[test]
 fn workspace_and_install_metadata_match_status_and_diff() {
     let helper = workspace(&json!({}));
+    let root = &helper.scopes.local_path;
     set_workspace_key(
-        &helper.scopes.local_path,
+        root,
         "teambit.workspace/workspace",
         json!({
             "defaultScope":helper.scopes.remote,"defaultDirectory":"components/{name}",
@@ -275,7 +276,7 @@ fn workspace_and_install_metadata_match_status_and_diff() {
         }),
     );
     set_workspace_key(
-        &helper.scopes.local_path,
+        root,
         "teambit.dependencies/dependency-resolver",
         json!({
             "packageManager":"teambit.dependencies/pnpm","nodeLinker":"isolated",
@@ -284,29 +285,26 @@ fn workspace_and_install_metadata_match_status_and_diff() {
         }),
     );
     set_workspace_key(
-        &helper.scopes.local_path,
+        root,
         "teambit.preview/preview",
         json!({"disabled":true,"maxChunkSize":10,"onlyOverview":true}),
     );
     set_workspace_key(
-        &helper.scopes.local_path,
+        root,
         "teambit.pkg/pkg",
         json!({"avoidPublishToNPM":true,"packageManagerPublishArgs":["--dry-run"]}),
     );
-    let path = helper.scopes.local_path.join("bar/component.json");
+    let path = root.join("bar/component.json");
     let mut component = crate::helper::config::read_jsonc(&path);
     component["extensions"]["teambit.preview/preview"] = json!({"isScaling":true});
     component["extensions"]["teambit.pkg/pkg"] =
         json!({"packageJson":{"description":"native metadata"}});
     crate::helper::config::write_json(&path, &component, b"  ");
-    crate::helper::config::update_scope_json(
-        &helper.scopes.local_path.join(".bit/scope.json"),
-        |scope| {
-            scope.insert("license".into(), json!("MIT"));
-            scope.insert("icon".into(), json!("https://example.com/icon.svg"));
-        },
-    );
-    parity(&helper, "status --json");
-    parity(&helper, "status");
-    parity(&helper, "diff bar/foo --json");
+    crate::helper::config::update_scope_json(&root.join(".bit/scope.json"), |scope| {
+        scope.insert("license".into(), json!("MIT"));
+        scope.insert("icon".into(), json!("https://example.com/icon.svg"));
+    });
+    for command in ["status --json", "status", "diff bar/foo --json"] {
+        parity(&helper, command);
+    }
 }

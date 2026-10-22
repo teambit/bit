@@ -30,11 +30,11 @@ fn non_existing_and_after_component_created() {
     assert!(non_exist_ver.contains("bar/foo doesn't have version 1.0.0"));
 
     helper.create_component_bar_foo(BAR_FOO_V2);
-    let already_ver = helper.run_with_try_catch("bit checkout 0.0.5 bar/foo");
+    let already_ver = helper.native("checkout 0.0.5 bar/foo");
     assert!(already_ver.contains("bar/foo is already at version 0.0.5"));
 
     helper.tag_all_without_build("--ver 0.0.10");
-    let output = helper.run_with_try_catch("bit checkout 0.0.5 bar/foo");
+    let output = helper.native("checkout 0.0.5 bar/foo");
     assert!(output.contains(SUCCESS_OUTPUT));
     assert!(output.contains("0.0.5"));
     assert!(output.contains("bar/foo"));
@@ -43,7 +43,7 @@ fn non_existing_and_after_component_created() {
     let bitmap = helper.read_bit_map();
     assert_eq!(bitmap["bar/foo"]["version"].as_str(), Some("0.0.5"));
 
-    let status_output = helper.run_cmd("bit status");
+    let status_output = helper.native("status");
     assert!(!status_output.contains("modified components"));
 
     let list_output = helper.list_local_scope_parsed("--outdated");
@@ -85,7 +85,7 @@ fn components_with_dependencies_with_multiple_versions() {
     assert_eq!(bitmap["comp2"]["version"].as_str(), Some("0.0.2"));
     assert_eq!(bitmap["comp3"]["version"].as_str(), Some("0.0.2"));
 
-    let status_output = helper.run_cmd("bit status");
+    let status_output = helper.native("status");
     assert!(status_output.contains("modified components"));
     assert!(
         !helper
@@ -196,7 +196,7 @@ fn modified_component_with_conflicts() {
     assert!(manual_content.contains(">>>>>>> 0.0.1"));
     assert!(manual_content.ends_with('\n'));
     assert_eq!(helper.read_bit_map()["bar/foo"]["version"].as_str(), Some("0.0.1"));
-    assert!(helper.run_cmd("bit status").contains("modified components"));
+    assert!(helper.native("status").contains("modified components"));
     assert!(!manual_out.contains("compilation failed"));
     assert!(!manual_out.contains("Merge conflict marker encountered"));
     assert!(!manual_out.contains("installing dependencies"));
@@ -211,7 +211,7 @@ fn modified_component_with_conflicts() {
     assert!(theirs_out.contains("updated"));
     assert_eq!(helper.read_file("bar/foo.js"), format!("{BAR_FOO_V1}\n"));
     assert_eq!(helper.read_bit_map()["bar/foo"]["version"].as_str(), Some("0.0.1"));
-    assert!(!helper.run_cmd("bit status").contains("modified components"));
+    assert!(!helper.native("status").contains("modified components"));
 
     helper.get_cloned_workspace(&local_scope);
     let ours_out = helper.checkout_version("0.0.1", "bar/foo", "--auto-merge-resolve ours");
@@ -221,7 +221,7 @@ fn modified_component_with_conflicts() {
     assert!(!ours_out.contains("added, removed, updated or merged"));
     assert_eq!(helper.read_file("bar/foo.js"), format!("{BAR_FOO_V3}\n"));
     assert_eq!(helper.read_bit_map()["bar/foo"]["version"].as_str(), Some("0.0.1"));
-    assert!(helper.run_cmd("bit status").contains("modified components"));
+    assert!(helper.native("status").contains("modified components"));
 
     assert_conflicts_with_added_files(&helper, &local_scope);
 }

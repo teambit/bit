@@ -103,11 +103,11 @@ fn deprecated_dependencies_are_reported_and_self_deprecation_suppresses_them() {
     helper.re_init_workspace_with(false);
     helper.populate_components(2, true, "");
     helper.tag_without_build("", "");
-    helper.run("deprecate comp2");
+    helper.native("deprecate comp2");
     for command in ["status --json", "status --warnings", "diff comp2 --json"] {
         compare(&helper, command, &[]);
     }
-    helper.run("deprecate comp1");
+    helper.native("deprecate comp1");
     compare(&helper, "status --json", &[]);
 }
 
@@ -122,15 +122,15 @@ fn merge_workspace_with(publish: fn(&Helper)) -> Helper {
     helper.add_component_bar_foo();
     helper.tag_without_build("", "");
     publish(&helper);
-    helper.run("lane create dev");
+    helper.native("lane create dev");
     helper.output_file("bar/foo.js", "module.exports = 'lane';");
-    helper.run("snap --message lane");
+    helper.native("snap --message lane");
     publish(&helper);
-    helper.run("switch main -x");
+    helper.native("switch main -x");
     helper.output_file("bar/foo.js", "module.exports = 'main';");
     helper.tag_without_build("", "");
     publish(&helper);
-    helper.run("lane merge dev --manual --no-snap -x");
+    helper.native("lane merge dev --manual --no-snap -x");
     helper
 }
 
@@ -202,7 +202,7 @@ fn binary_file_changes_match_node_status_and_diff() {
     helper.create_component_bar_foo("module.exports = 'binary asset';");
     let path = helper.scopes.local_path.join("bar/image.bin");
     fs::write(&path, [0, 255, 192, 128, 1]).unwrap();
-    helper.run("add bar -i bar/foo -m foo.js");
+    helper.native("add bar -i bar/foo -m foo.js");
     helper.tag_without_build("", "");
     fs::write(path, [0, 255, 192, 128, 2]).unwrap();
     compare(&helper, "status --json", &[]);
@@ -215,7 +215,7 @@ fn tailored_locale_uses_intl_order_without_delegating_status() {
     helper.re_init_workspace_with(false);
     for name in ["charlie", "hotel"] {
         helper.output_file(&format!("{name}/index.js"), "module.exports = 'locale';");
-        helper.run(&format!("add {name} -i {name}"));
+        helper.native(&format!("add {name} -i {name}"));
     }
     for locale in ["cs_CZ.UTF-8", "da_DK.UTF-8"] {
         let environment = [("LC_ALL", OsStr::new(locale))];

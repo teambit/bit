@@ -119,8 +119,8 @@ fn new_and_test_and_typescript() -> KnownResult<()> {
         "import {Item} from '../item/item';\nexport class List { render() { return <Item />; } }\n",
     );
     helper.output_file("item/item.tsx", "export const Item = () => null;\n");
-    helper.run("add list -i list/list");
-    helper.run("add item -i item/item");
+    helper.native("add list -i list/list");
+    helper.native("add item -i item/item");
     let show = parse(&helper.show_component_parsed("list/list"));
     assert_eq!(
         show["dependencies"]

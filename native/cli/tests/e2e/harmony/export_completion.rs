@@ -10,7 +10,7 @@ fn pending() -> Helper {
     helper.add_component_bar_foo();
     for message in ["first", "second", "third"] {
         helper.create_component_bar_foo(&format!("module.exports = '{message}';\n"));
-        helper.run(&format!("tag bar/foo --message {message}"));
+        helper.native(&format!("tag bar/foo --message {message}"));
     }
     helper
 }
@@ -79,8 +79,8 @@ fn empty_json_export_matches_node() {
 fn explicit_component_on_lane_preserves_canonical_stack_before_effects() {
     let helper = pending();
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
     compare(&helper, "export bar/foo", false);
 }
 
@@ -132,8 +132,8 @@ fn resume_multiple_main_versions_matches_node() {
 fn resume_current_lane_matches_node() {
     let helper = pending();
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
     stage_pending(&helper);
     parity(&helper, "export --resume resume-fixture --verbose");
 }
@@ -158,8 +158,8 @@ fn readme(helper: &Helper, missing: bool) {
 fn snapped_lane_readme_exports_like_node() {
     let helper = pending();
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
     readme(&helper, false);
     parity(&helper, "export --verbose");
 }
@@ -168,8 +168,8 @@ fn snapped_lane_readme_exports_like_node() {
 fn unsnapped_lane_readme_preserves_canonical_stack_before_effects() {
     let helper = pending();
     crate::helper::remote::publish(&helper);
-    helper.run("lane create dev");
-    helper.run("snap --unmodified --message lane");
+    helper.native("lane create dev");
+    helper.native("snap --unmodified --message lane");
     readme(&helper, true);
     compare(&helper, "export", false);
 }
@@ -179,8 +179,8 @@ fn missing_actual_build_artifacts_can_be_ignored_like_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.output_file("bar/foo.ts", "export const value: number = 1;\n");
-    helper.run("add bar -i bar/foo --main foo.ts");
-    helper.run("tag bar/foo --build --message first");
+    helper.native("add bar -i bar/foo --main foo.ts");
+    helper.native("tag bar/foo --build --message first");
     let shared = crate::helper::setup::shared();
     let result = std::process::Command::new("node")
         .arg(concat!(
@@ -215,7 +215,7 @@ fn scope_only_pending_component_exports_with_untracked_warning_like_node() {
 fn removed_pending() -> Helper {
     let helper = pending();
     crate::helper::remote::publish(&helper);
-    helper.run("delete bar/foo --silent");
+    helper.native("delete bar/foo --silent");
     helper.run("tag --unmodified --message removed");
     helper
 }

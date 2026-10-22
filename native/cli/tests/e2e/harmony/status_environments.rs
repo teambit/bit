@@ -112,10 +112,10 @@ fn custom_workspace(source: &str, compiled: bool, manifest: Option<Value>) -> He
     if let Some(manifest) = manifest {
         helper.output_file("custom-env/env.jsonc", &manifest.to_string());
     }
-    helper.run("add custom-env -i env/custom");
+    helper.native("add custom-env -i env/custom");
     set_env(&helper, "env/custom", "teambit.envs/env");
     if compiled {
-        helper.run("link");
+        helper.native("link");
         helper.output_file("custom-env/dist/index.js", source);
     }
     set_env(&helper, "bar/foo", &format!("{}/env/custom", helper.scopes.remote));
@@ -239,14 +239,14 @@ module.exports = {default:CallbackAspect};
 fn callback_workspace() -> Helper {
     let helper = workspace();
     helper.output_file("bar/removed.js", "module.exports = 'original file';");
-    helper.run("add bar -i bar/foo");
+    helper.native("add bar -i bar/foo");
     helper.tag_component_bar_foo();
     let id = format!("{}/callbacks/hook", helper.scopes.remote);
     let source = CUSTOM_CALLBACK_SOURCE.replace("__ASPECT__", &id);
     helper.output_file("custom-hook/index.js", &source);
-    helper.run("add custom-hook -i callbacks/hook");
+    helper.native("add custom-hook -i callbacks/hook");
     set_env(&helper, "callbacks/hook", "teambit.harmony/aspect");
-    helper.run("link");
+    helper.native("link");
     helper.output_file("custom-hook/dist/index.js", &source);
     helper.output_file(&format!("node_modules/.bit_roots/teambit.harmony_aspect/node_modules/@{}/callbacks.hook/dist/index.js", helper.scopes.remote), &source);
     crate::helper::config::set_workspace_key(&helper.scopes.local_path, &id, json!({}));

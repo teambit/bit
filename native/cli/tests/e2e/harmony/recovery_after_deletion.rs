@@ -92,7 +92,7 @@ fn copy_objects_between_scopes(src_objects: &Path, dst_scope: &Path) {
 fn cat_scope_items(helper: &Helper, scope_path: Option<&Path>) -> Vec<Value> {
     let out = match scope_path {
         Some(path) => helper.run_cmd_in("bit cat-scope --json --json-extra", path),
-        None => helper.run_cmd("bit cat-scope --json --json-extra"),
+        None => helper.native("cat-scope --json --json-extra"),
     };
     serde_json::from_str::<Vec<Value>>(&out).unwrap()
 }
@@ -409,36 +409,36 @@ fn recovery_after_deletion_recreated_with_different_version_and_orphaned_version
     // Importing both comp1 and comp3: 1) comp1 first then comp3
     helper.get_cloned_workspace(&before_import_scope);
     helper.import_component("comp1", "-x --fetch-deps");
-    helper.run_cmd(&format!("bit import {remote2_name}/comp3 -x"));
+    helper.native(&format!("import {remote2_name}/comp3 -x"));
     assert_orphaned_comp3(&helper, &remote2_name);
 
     // 2) comp3 first then comp1
     helper.get_cloned_workspace(&before_import_scope);
-    helper.run_cmd(&format!("bit import {remote2_name}/comp3 -x"));
+    helper.native(&format!("import {remote2_name}/comp3 -x"));
     helper.import_component("comp1", "-x --fetch-deps");
     assert_orphaned_comp3(&helper, &remote2_name);
 
     // 3) comp1 and comp3 at the same time
     helper.get_cloned_workspace(&before_import_scope);
-    helper.run_cmd(&format!("bit import {remote_name}/comp1 {remote2_name}/comp3 -x --fetch-deps"));
+    helper.native(&format!("import {remote_name}/comp1 {remote2_name}/comp3 -x --fetch-deps"));
     assert_orphaned_comp3(&helper, &remote2_name);
 
     // Importing both comp2 and comp3: 1) comp2 first then comp3
     helper.get_cloned_workspace(&before_import_scope);
     helper.import_component("comp2", "-x --fetch-deps");
-    helper.run_cmd(&format!("bit import {remote2_name}/comp3 -x"));
+    helper.native(&format!("import {remote2_name}/comp3 -x"));
     assert_orphaned_comp3(&helper, &remote2_name);
 
     // 2) comp3 first then comp2
     helper.get_cloned_workspace(&before_import_scope);
-    helper.run_cmd(&format!("bit import {remote2_name}/comp3 -x"));
+    helper.native(&format!("import {remote2_name}/comp3 -x"));
     helper.import_component("comp2", "-x --fetch-deps");
     assert_orphaned_comp3(&helper, &remote2_name);
 
     // 3) comp3 and comp2 at the same time + tag
     helper.get_cloned_workspace(&before_import_scope);
     write_comp_pkg_in_nm(&helper.scopes.local_path, &remote2_name, "comp3", "0.0.2");
-    helper.run_cmd(&format!("bit import {remote_name}/comp2 {remote2_name}/comp3 -x --fetch-deps"));
+    helper.native(&format!("import {remote_name}/comp2 {remote2_name}/comp3 -x --fetch-deps"));
     assert_orphaned_comp3(&helper, &remote2_name);
     let tag_both = helper.tag_all_without_build("--unmodified");
     assert!(tag_both.contains("component(s) tagged"), "{tag_both}");

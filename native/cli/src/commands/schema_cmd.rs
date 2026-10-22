@@ -1,11 +1,25 @@
 //! Native `bit schema <pattern>` (`scopes/semantics/schema/schema.cmd.ts`, alias `api`).
 
+mod extractor;
 #[cfg(test)]
 mod tests;
 
-use super::{Command, workspace_command};
+use self::extractor::{
+    WorkspaceSchemaOutcome, resolve_scope_schema_json, resolve_workspace_schema,
+};
+use super::{
+    Command,
+    lane::scope_root,
+    workspace_command::{self, results::Report},
+};
 use crate::{native::Outcome, workspace};
-use std::{env, ffi::OsString, io, path::Path};
+use std::{
+    env,
+    ffi::OsString,
+    io::{self, Write},
+    path::Path,
+    process::ExitCode,
+};
 
 pub const COMMAND: Command = Command { name: "schema", aliases: &["api"], run };
 
@@ -34,7 +48,51 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Err(io::Error::other(HOST_NOT_FOUND_ERR))
         });
     }
+    if !options.remote
+        && let Some(outcome) = try_run_local(&cwd, args, &options)?
+    {
+        return Ok(outcome);
+    }
     Ok(Outcome::Declined("schema extraction delegated".into()))
+}
+
+fn try_run_local(cwd: &Path, args: &[OsString], options: &Options) -> io::Result<Option<Outcome>> {
+    if let Some(root) = workspace::root(cwd) {
+        return match resolve_workspace_schema(&root, &options.pattern, options.json) {
+            WorkspaceSchemaOutcome::Empty if options.json => {
+                workspace_command::execute_json(&root, args, "schema", |_| {
+                    Ok(Report { data: "[]".into(), code: 0, details: None })
+                })
+                .map(Some)
+            }
+            WorkspaceSchemaOutcome::Empty => {
+                workspace_command::execute_then(&root, args, "schema", |_| {
+                    Ok(Report { data: String::new(), code: 0, details: None })
+                })
+                .map(Some)
+            }
+            WorkspaceSchemaOutcome::Schemas(schemas) => {
+                let data = serde_json::to_string_pretty(&schemas).map_err(io::Error::other)?;
+                workspace_command::execute_json(&root, args, "schema", |_| {
+                    Ok(Report { data, code: 0, details: None })
+                })
+                .map(Some)
+            }
+            WorkspaceSchemaOutcome::Declined => Ok(None),
+        };
+    }
+    if options.json
+        && let Some(scope) = scope_root::discover().ok().flatten()
+        && scope.bare
+        && let Some(schemas) = resolve_scope_schema_json(&scope.path, &options.pattern)
+    {
+        let data = serde_json::to_string_pretty(&schemas).map_err(io::Error::other)?;
+        let mut stdout = io::stdout().lock();
+        stdout.write_all(data.as_bytes())?;
+        stdout.flush()?;
+        return Ok(Some(Outcome::Exit(ExitCode::SUCCESS)));
+    }
+    Ok(None)
 }
 
 pub(super) fn is_missing_host(cwd: &Path, options: &Options) -> bool {
@@ -52,7 +110,9 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         match arg {
             "--no-color" => {}
             "-r" | "--remote" => remote = true,
+            "--no-remote" => remote = false,
             "-j" | "--json" => json = true,
+            "--no-json" => json = false,
             val if !val.starts_with('-') && !val.is_empty() && pattern.is_none() => {
                 pattern = Some(val.to_owned());
             }

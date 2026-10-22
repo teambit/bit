@@ -1,5 +1,6 @@
-//! Native `bit pack <componentId> [scopePath]` (`scopes/pkg/pkg/pack.cmd.ts`).
+//! Native `bit pack <componentId> [scopePath]` (`scopes/pkg/pkg/pack.cmd.tsx`).
 
+mod packer;
 #[cfg(test)]
 mod tests;
 
@@ -37,6 +38,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return workspace_command::execute_without_loader_scope(&cwd, args, "pack", |_| {
             Err(io::Error::other(SCOPE_NOT_FOUND_ERR))
         });
+    }
+    if let Some(outcome) = packer::try_pack(&cwd, args, &options)? {
+        return Ok(outcome);
     }
     Ok(Outcome::Declined("pack execution delegated".into()))
 }

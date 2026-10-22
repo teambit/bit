@@ -66,7 +66,7 @@ fn persist_third_party_extension_config_tag_export_and_import() {
     let local_before_tag = helper.clone_workspace();
 
     // 1. Tagging bar/foo without tagging extension fails
-    let tag_err = helper.cmd("tag bar/foo --skip-tests");
+    let tag_err = helper.native_run("tag bar/foo --skip-tests");
     assert_ne!(tag_err.status.code(), Some(0));
     let combined = format!("{}\n{}", tag_err.stdout, tag_err.stderr);
     assert!(
@@ -100,7 +100,7 @@ fn persist_third_party_extension_config_tag_export_and_import() {
     // 3. Tagging extension and component together
     helper.get_cloned_workspace(&local_before_tag);
     helper.disable_preview();
-    helper.run("tag --skip-tests");
+    helper.native("tag --skip-tests");
     let comp_model = parse(&helper.native("cat-component bar/foo@0.0.1 --json"));
     assert_eq!(comp_model["extensions"][0]["extensionId"]["version"], json!("0.0.1"));
     assert_eq!(comp_model["extensions"][0]["config"], json!({ "key": "val" }));
@@ -120,14 +120,14 @@ fn persist_third_party_extension_config_tag_export_and_import() {
     );
     assert_eq!(comp_model["flattenedDependencies"][0]["name"].as_str(), Some(ext_folder));
 
-    let retag_out = helper.run(&format!("tag {ext_folder} --unmodified --skip-tests"));
+    let retag_out = helper.native(&format!("tag {ext_folder} --unmodified --skip-tests"));
     assert!(retag_out.contains("2 component(s) tagged"), "{retag_out}");
     assert!(retag_out.contains("auto-tagged dependents"), "{retag_out}");
 
     // 4. Tagging extension then component
     helper.get_cloned_workspace(&local_before_tag);
-    helper.run(&format!("tag {ext_folder} --skip-tests"));
-    helper.run("tag bar/foo --skip-tests");
+    helper.native(&format!("tag {ext_folder} --skip-tests"));
+    helper.native("tag bar/foo --skip-tests");
     let comp_model2 = parse(&helper.native("cat-component bar/foo@0.0.1 --json"));
     assert_eq!(comp_model2["extensions"][0]["extensionId"]["version"], json!("0.0.1"));
     assert_eq!(
@@ -144,25 +144,25 @@ fn persist_third_party_extension_config_tag_export_and_import() {
     let local_before_export = helper.clone_workspace();
     let remote_before_export = helper.clone_remote_scope();
 
-    let exp_err = helper.cmd("export bar/foo");
+    let exp_err = helper.native_run("export bar/foo");
     assert_ne!(exp_err.status.code(), Some(0));
 
-    helper.run("export");
+    helper.native("export");
     let comp_model_exp = parse(&helper.native("cat-component bar/foo@0.0.1 --json"));
     assert_eq!(comp_model_exp["extensions"][0]["extensionId"]["scope"], json!(remote));
 
     // Export extension then component
     helper.get_cloned_workspace(&local_before_export);
     helper.get_cloned_remote_scope(&remote_before_export);
-    helper.run(&format!("export {ext_folder}"));
-    helper.run("export bar/foo");
+    helper.native(&format!("export {ext_folder}"));
+    helper.native("export bar/foo");
     let comp_model_exp2 = parse(&helper.native("cat-component bar/foo@0.0.1 --json"));
     assert_eq!(comp_model_exp2["extensions"][0]["extensionId"]["scope"], json!(remote));
 
     // 6. Imported component auto-imports the extension
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {remote}/bar/foo"));
+    helper.native(&format!("import {remote}/bar/foo"));
     let scope_list = parse(&helper.native("list --local-scope --json"));
     let ids: Vec<&str> = scope_list
         .as_array()

@@ -1,8 +1,16 @@
 //! Native `bit gc` (`scopes/workspace/clear-cache/gc-cmd.ts`).
 
+mod collector;
+mod format;
+mod graph;
+mod inventory;
 #[cfg(test)]
 mod tests;
 
+use self::{
+    collector::collect_workspace_garbage,
+    format::{GcResult, GcRunFlags, format_gc_report},
+};
 use super::{
     Command,
     color::Chalk,
@@ -59,10 +67,37 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = root_opt else {
         return emit_error(&cwd, None, args, options.json, NO_SCOPE_ERR);
     };
-    if !root.bare && is_workspace_scope_empty(&workspace::scope_path(&root.path)) {
-        return run_empty_workspace_gc(&root, args, &options);
+    if !root.bare {
+        return run_workspace_gc(&cwd, &root, args, &options);
     }
-    Ok(Outcome::Declined("gc with objects delegated".into()))
+    Ok(Outcome::Declined("bare scope gc delegated".into()))
+}
+
+fn run_workspace_gc(
+    cwd: &Path,
+    root: &ScopeRoot,
+    args: &[OsString],
+    options: &Options,
+) -> io::Result<Outcome> {
+    let scope_dir = workspace::scope_path(&root.path);
+    if is_workspace_scope_empty(&scope_dir) {
+        return run_empty_workspace_gc(root, args, options);
+    }
+    if options.verbose {
+        return Ok(Outcome::Declined("verbose gc with objects delegated".into()));
+    }
+    match collect_workspace_garbage(&root.path, &scope_dir, options) {
+        Ok(Some(result)) if options.json => {
+            let payload = serde_json::to_value(&result).map_err(io::Error::other)?;
+            emit_json(root, args, &payload)
+        }
+        Ok(Some(result)) => {
+            let chalk = Chalk::detect(args);
+            emit_report(root, args, format_gc_report(&result, chalk))
+        }
+        Ok(None) => Ok(Outcome::Declined("gc workspace config delegated".into())),
+        Err(msg) => emit_error(cwd, Some(root), args, options.json, &msg),
+    }
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
@@ -192,6 +227,7 @@ fn is_workspace_scope_empty(scope_dir: &Path) -> bool {
     !dir_has_any_file(&scope_dir.join("objects"))
         && !dir_has_any_file(&scope_dir.join("deleted-objects"))
         && !dir_has_any_file(&scope_dir.join("stash"))
+        && !dir_has_any_file(&scope_dir.join("trash"))
 }
 
 fn dir_has_any_file(dir: &Path) -> bool {
@@ -212,21 +248,12 @@ fn run_empty_workspace_gc(
     args: &[OsString],
     options: &Options,
 ) -> io::Result<Outcome> {
+    let empty_res = GcResult {
+        flags: GcRunFlags { dry_run: options.dry_run, backup: options.backup, backup_dir: None },
+        ..GcResult::default()
+    };
     if options.json {
-        let payload = json!({
-            "dryRun": options.dry_run,
-            "backup": options.backup,
-            "totalObjects": 0,
-            "totalSize": 0,
-            "deletedObjects": 0,
-            "deletedSize": 0,
-            "deletedByType": {},
-            "keptVersions": 0,
-            "strayFiles": 0,
-            "strayFilesSize": 0,
-            "backupDirSize": 0,
-            "retainedDirsSize": 0,
-        });
+        let payload = serde_json::to_value(&empty_res).map_err(io::Error::other)?;
         return emit_json(root, args, &payload);
     }
     let chalk = Chalk::detect(args);
@@ -235,43 +262,9 @@ fn run_empty_workspace_gc(
 }
 
 pub(super) fn format_empty_gc_report(dry_run: bool, backup: bool, chalk: Chalk) -> String {
-    let formatter = Formatter::new(chalk);
-    let header = empty_gc_header(&formatter, dry_run, backup);
-    let size_line = empty_gc_size_line(&formatter, chalk, dry_run, backup);
-    let kept_line = formatter.item("keeping 0 versions and everything they point at");
-    format!("{header}\n{size_line}\n{kept_line}")
-}
-
-fn empty_gc_header(formatter: &Formatter, dry_run: bool, backup: bool) -> String {
-    match (dry_run, backup) {
-        (true, true) => {
-            formatter.title("[dry-run] 0 of 0 objects can be moved to the backup directory")
-        }
-        (true, false) => formatter.title("[dry-run] 0 of 0 objects can be removed"),
-        (false, true) => formatter.success_summary("moved 0 objects (0 B) to the backup directory"),
-        (false, false) => formatter.success_summary("removed 0 objects, freed 0 B"),
-    }
-}
-
-fn empty_gc_size_line(formatter: &Formatter, chalk: Chalk, dry_run: bool, backup: bool) -> String {
-    match (dry_run, backup) {
-        (true, true) => formatter.item(&format!(
-            "scope: {} {}",
-            chalk.bold("0 B"),
-            chalk.dim("(0 B of it would move to the backup directory)"),
-        )),
-        (false, true) => formatter.item(&format!(
-            "scope: {} {}",
-            chalk.bold("0 B"),
-            chalk.dim("(0 B of it is in the backup directory)"),
-        )),
-        (true, false) => formatter.item(&format!(
-            "scope: 0 B \u{2192} {} {}",
-            chalk.bold("0 B"),
-            chalk.dim("(would free 0 B)"),
-        )),
-        (false, false) => formatter.item(&format!("scope: 0 B \u{2192} {}", chalk.bold("0 B"))),
-    }
+    let empty_res =
+        GcResult { flags: GcRunFlags { dry_run, backup, backup_dir: None }, ..GcResult::default() };
+    format_gc_report(&empty_res, chalk)
 }
 
 fn emit_json(root: &ScopeRoot, args: &[OsString], payload: &Value) -> io::Result<Outcome> {

@@ -8,7 +8,7 @@ fn import_a_scope_with_deleted_components() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
-    helper.run("tag --message first");
+    helper.native("tag --message first");
     remote::publish(&helper);
     helper.native("delete comp1 --silent");
     helper.run("tag --message second");
@@ -16,14 +16,14 @@ fn import_a_scope_with_deleted_components() {
 
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/* -x", helper.scopes.remote));
-    let list = helper.run("list");
+    helper.native(&format!("import {}/* -x", helper.scopes.remote));
+    let list = helper.native("list");
     assert!(!list.contains("comp1"));
     assert!(list.contains("comp2"));
     assert!(list.contains("comp3"));
 
-    helper.run(&format!("import {}/comp1 -x", helper.scopes.remote));
-    let list_after = helper.run("list");
+    helper.native(&format!("import {}/comp1 -x", helper.scopes.remote));
+    let list_after = helper.native("list");
     assert!(list_after.contains("comp1"));
 }
 
@@ -33,12 +33,12 @@ fn checkout_reset_after_local_delete() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.run("tag --message first");
+    helper.native("tag --message first");
     helper.native("delete comp1 --silent");
-    let status_before = helper.run("status");
+    let status_before = helper.native("status");
     assert!(status_before.contains("deleted") || status_before.contains("comp1"));
     helper.run("checkout reset comp1");
-    let status_after = helper.run("status");
+    let status_after = helper.native("status");
     assert!(!status_after.contains("deleted components"));
 }
 
@@ -48,7 +48,7 @@ fn deleting_component_then_creating_a_new_one_with_same_name() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.run("tag --message first");
+    helper.native("tag --message first");
     remote::publish(&helper);
     helper.native("delete comp1 --silent");
     helper.run("tag --message second");
@@ -57,8 +57,8 @@ fn deleting_component_then_creating_a_new_one_with_same_name() {
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.populate_components(1, true, "");
-    helper.run("tag --message recreated");
-    let output = helper.cmd("export");
+    helper.native("tag --message recreated");
+    let output = helper.native_run("export");
     assert!(
         output.stdout.contains("were marked as deleted on the remote scope")
             || output.stderr.contains("were marked as deleted on the remote scope"),
@@ -72,12 +72,12 @@ fn delete_and_then_remove() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.run("tag --message first");
+    helper.native("tag --message first");
     remote::publish(&helper);
     helper.native("delete comp1 --silent");
     helper.run("tag --message second");
-    helper.run(&format!("import {}/comp1 -x", helper.scopes.remote));
+    helper.native(&format!("import {}/comp1 -x", helper.scopes.remote));
     helper.run("remove comp1 --silent");
-    let status = helper.run("status");
+    let status = helper.native("status");
     assert!(!status.contains("error"));
 }

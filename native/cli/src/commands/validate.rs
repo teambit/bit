@@ -1,5 +1,7 @@
 //! Native `bit validate [component-pattern]` (`scopes/defender/validator/validate.cmd.ts`).
 
+mod lint_and_types;
+mod runner;
 #[cfg(test)]
 mod tests;
 
@@ -51,6 +53,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             emit_fast(&options, fast, &formatter, output)
         });
     }
+    if let Some(outcome) = runner::try_run(&root, args, &options)? {
+        return Ok(outcome);
+    }
     Ok(Outcome::Declined("validate runner execution delegated".into()))
 }
 
@@ -67,20 +72,14 @@ fn emit_fast(
     formatter: &Formatter,
     output: &bit_install::output::Output,
 ) -> io::Result<Report> {
-    if options.all {
-        output.warning("--all is deprecated, use --unmodified instead");
-    }
-    if options.continue_on_error {
-        output.warning(
-            "--continue-on-error is deprecated and will be removed in a future version. This is now the default behavior.",
-        );
-    }
-    output.console(&format!("\n{}\n", formatter.title("Running validation checks...")));
+    let mut lines = collect_deprecation_warnings(options, formatter, output);
+    lines.push(format!("\n{}\n", formatter.title("Running validation checks...")));
     match fast {
         FastOutcome::Empty => {
             let msg = "No components found to validate";
-            output.console(&formatter.hint(msg));
-            Ok(Report { data: msg.into(), code: 0, details: None })
+            lines.push(formatter.hint(msg));
+            lines.push(msg.into());
+            Ok(Report { data: lines.join("\n"), code: 0, details: None })
         }
         FastOutcome::InvalidSkipTasks { count, invalid } => {
             output.console(&format!("Validating {count} component(s)\n"));
@@ -91,15 +90,36 @@ fn emit_fast(
             )))
         }
         FastOutcome::SkippedAll { count } => {
-            output.console(&format!("Validating {count} component(s)\n"));
-            output.console(&format!(
+            lines.push(format!("Validating {count} component(s)\n"));
+            lines.push(format!(
                 "\n{} {}\n",
                 formatter.warn_symbol(),
                 formatter.chalk.yellow("All validation tasks were skipped"),
             ));
-            Ok(Report { data: "All validation tasks were skipped".into(), code: 0, details: None })
+            lines.push("All validation tasks were skipped".into());
+            Ok(Report { data: lines.join("\n"), code: 0, details: None })
         }
     }
+}
+
+fn collect_deprecation_warnings(
+    options: &Options,
+    formatter: &Formatter,
+    output: &bit_install::output::Output,
+) -> Vec<String> {
+    let mut lines = Vec::new();
+    if options.all {
+        output.warning("--all is deprecated, use --unmodified instead");
+        lines.push(formatter.chalk.yellow(
+            "warning: --all is deprecated, use --unmodified instead",
+        ));
+    }
+    if options.continue_on_error {
+        let msg = "--continue-on-error is deprecated and will be removed in a future version. This is now the default behavior.";
+        output.warning(msg);
+        lines.push(formatter.chalk.yellow(&format!("warning: {msg}")));
+    }
+    lines
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {

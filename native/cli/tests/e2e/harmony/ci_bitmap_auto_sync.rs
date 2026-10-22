@@ -101,7 +101,7 @@ fn ci_bitmap_auto_sync_regression_and_no_bitmap_commit_and_downstream() -> Known
         || helper.output_file("comp1/comp1.js", r#"console.log("regression");"#),
         "fix: comp1 update",
     );
-    let merge_output = helper.run("ci merge");
+    let merge_output = helper.native("ci merge");
     let log_after_merge = helper.git(&format!("log {branch} --oneline -n 5"));
 
     // should complete successfully
@@ -147,7 +147,7 @@ fn ci_bitmap_auto_sync_regression_and_no_bitmap_commit_and_downstream() -> Known
         .git(&format!("rev-parse origin/{branch}"))
         .trim()
         .to_owned();
-    let merge_output2 = helper.run(r#"ci merge --no-bitmap-commit --message "test""#);
+    let merge_output2 = helper.native(r#"ci merge --no-bitmap-commit --message "test""#);
     let origin_head_after = helper
         .git(&format!("rev-parse origin/{branch}"))
         .trim()
@@ -216,7 +216,7 @@ fn ci_bitmap_auto_sync_regression_and_no_bitmap_commit_and_downstream() -> Known
         || helper.output_file("comp1/comp1.js", r#"console.log("downstream");"#),
         "feat: comp1 update for downstream sync",
     );
-    helper.run(r#"ci merge --no-bitmap-commit --message "downstream""#);
+    helper.native(r#"ci merge --no-bitmap-commit --message "downstream""#);
     helper.get_cloned_workspace(&dev_clone);
 
     // local .bitmap reflects the old version
@@ -275,26 +275,30 @@ fn ci_bitmap_auto_sync_first_commands_and_sentinel_and_cycles() -> KnownResult<(
         || helper.output_file("comp1/comp1.js", r#"console.log("first-cmd");"#),
         "feat: comp1 update",
     );
-    helper.run("ci merge --no-bitmap-commit");
+    helper.native("ci merge --no-bitmap-commit");
 
-    let run_as_first = |cmd: &str| -> Option<String> {
+    let run_as_first = |cmd: &str, native: bool| -> Option<String> {
         helper.get_cloned_workspace(&dev_clone);
         helper.git(&format!("pull origin {branch}"));
-        helper.run(cmd);
+        if native {
+            helper.native(cmd);
+        } else {
+            helper.run(cmd);
+        }
         bitmap_version(&helper, "comp1")
     };
 
     // `bit list` as first command syncs bitmap
-    assert_eq!(run_as_first("list").as_deref(), Some("0.0.2"));
+    assert_eq!(run_as_first("list", true).as_deref(), Some("0.0.2"));
 
     // `bit show` as first command syncs bitmap
-    assert_eq!(run_as_first("show comp1").as_deref(), Some("0.0.2"));
+    assert_eq!(run_as_first("show comp1", false).as_deref(), Some("0.0.2"));
 
     // `bit log` as first command syncs bitmap
-    assert_eq!(run_as_first("log comp1").as_deref(), Some("0.0.2"));
+    assert_eq!(run_as_first("log comp1", true).as_deref(), Some("0.0.2"));
 
     // `bit compile` as first command syncs bitmap
-    assert_eq!(run_as_first("compile").as_deref(), Some("0.0.2"));
+    assert_eq!(run_as_first("compile", false).as_deref(), Some("0.0.2"));
 
     // 5. sentinel caching across commands at the same git HEAD
     helper.get_cloned_workspace(&dev_clone);
@@ -333,7 +337,7 @@ fn ci_bitmap_auto_sync_first_commands_and_sentinel_and_cycles() -> KnownResult<(
         || helper.output_file("comp1/comp1.js", r#"console.log("cycle-1");"#),
         "feat: cycle 1",
     );
-    helper.run("ci merge --no-bitmap-commit");
+    helper.native("ci merge --no-bitmap-commit");
     helper.get_cloned_workspace(&dev_clone);
     helper.git(&format!("pull origin {branch}"));
     helper.status();
@@ -347,7 +351,7 @@ fn ci_bitmap_auto_sync_first_commands_and_sentinel_and_cycles() -> KnownResult<(
         || helper.output_file("comp1/comp1.js", r#"console.log("cycle-2");"#),
         "feat: cycle 2",
     );
-    helper.run("ci merge --no-bitmap-commit");
+    helper.native("ci merge --no-bitmap-commit");
     helper.get_cloned_workspace(&dev_clone);
     helper.git(&format!("pull origin {branch}"));
     helper.status();
@@ -368,7 +372,7 @@ fn ci_bitmap_auto_sync_first_commands_and_sentinel_and_cycles() -> KnownResult<(
         || helper.output_file("comp1/comp1.js", r#"console.log("c1");"#),
         "feat: cycle 1",
     );
-    helper.run("ci merge --no-bitmap-commit");
+    helper.native("ci merge --no-bitmap-commit");
     helper.status();
     assert_eq!(bitmap_version(&helper, "comp1").as_deref(), Some("0.0.2"));
 
@@ -380,7 +384,7 @@ fn ci_bitmap_auto_sync_first_commands_and_sentinel_and_cycles() -> KnownResult<(
         || helper.output_file("comp1/comp1.js", r#"console.log("c2");"#),
         "feat: cycle 2",
     );
-    helper.run("ci merge --no-bitmap-commit");
+    helper.native("ci merge --no-bitmap-commit");
     helper.status();
     assert_eq!(bitmap_version(&helper, "comp1").as_deref(), Some("0.0.3"));
 
@@ -392,7 +396,7 @@ fn ci_bitmap_auto_sync_first_commands_and_sentinel_and_cycles() -> KnownResult<(
         || helper.output_file("comp1/comp1.js", r#"console.log("c3");"#),
         "feat: cycle 3",
     );
-    helper.run("ci merge --no-bitmap-commit");
+    helper.native("ci merge --no-bitmap-commit");
     helper.status();
     assert_eq!(bitmap_version(&helper, "comp1").as_deref(), Some("0.0.4"));
 
@@ -428,7 +432,7 @@ fn ci_bitmap_auto_sync_feature_branches_and_new_components() -> KnownResult<()> 
         || helper.output_file("comp1/comp1.js", r#"console.log("teammate");"#),
         "feat: teammate update",
     );
-    helper.run("ci merge --no-bitmap-commit");
+    helper.native("ci merge --no-bitmap-commit");
 
     helper.get_cloned_workspace(&dev_clone);
     helper.git("checkout -b feature/dev-work");
@@ -474,7 +478,7 @@ fn ci_bitmap_auto_sync_feature_branches_and_new_components() -> KnownResult<()> 
         || helper.output_file("comp1/comp1.js", r#"console.log("teammate");"#),
         "feat: teammate update",
     );
-    helper.run("ci merge --no-bitmap-commit");
+    helper.native("ci merge --no-bitmap-commit");
 
     helper.get_cloned_workspace(&dev_clone);
     helper.git("checkout -b feature/no-local-bit");
@@ -482,7 +486,7 @@ fn ci_bitmap_auto_sync_feature_branches_and_new_components() -> KnownResult<()> 
     helper.git("add .");
     helper.git(r#"commit -m "feat: dev change""#);
     helper.git("push -u origin feature/no-local-bit");
-    let pr_output = helper.run(r#"ci pr --message "stale-branch PR""#);
+    let pr_output = helper.native(r#"ci pr --message "stale-branch PR""#);
 
     // starts the test with .bitmap reflecting the post-sync version (0.0.2)
     let ver = bitmap_version(&helper, "comp1").unwrap();
@@ -534,7 +538,7 @@ fn ci_bitmap_auto_sync_feature_branches_and_new_components() -> KnownResult<()> 
     helper.git(&format!("checkout {main_branch}"));
     helper.git(r#"merge feature/add-new-comp --no-ff -m "Merge add-new-comp""#);
     helper.git(&format!("push origin {main_branch}"));
-    helper.run("ci merge --no-bitmap-commit");
+    helper.native("ci merge --no-bitmap-commit");
 
     helper.get_cloned_workspace(&dev_clone);
     helper.git(&format!("pull origin {main_branch}"));
@@ -584,11 +588,11 @@ fn ci_bitmap_auto_sync_feature_branches_and_new_components() -> KnownResult<()> 
     helper.git(&format!("checkout {main_branch}"));
     helper.git(r#"merge feature/add-new-comp-clone --no-ff -m "Merge add-new-comp-clone""#);
     helper.git(&format!("push origin {main_branch}"));
-    helper.run("ci merge --no-bitmap-commit");
+    helper.native("ci merge --no-bitmap-commit");
 
     let _ = fs::remove_dir_all(helper.scopes.local_path.join(".bit"));
     let _ = fs::remove_dir_all(helper.scopes.local_path.join("node_modules"));
-    helper.run("init");
+    helper.native("init");
     helper.git(&format!("fetch origin {main_branch}"));
     helper.git(&format!("reset --hard origin/{main_branch}"));
     helper.add_remote_scope();
@@ -658,7 +662,7 @@ fn ci_bitmap_auto_sync_edge_cases_and_guards() -> KnownResult<()> {
         .git(&format!("rev-parse origin/{branch}"))
         .trim()
         .to_owned();
-    helper.run("ci merge --no-bitmap-commit");
+    helper.native("ci merge --no-bitmap-commit");
     let origin_head_after = helper
         .git(&format!("rev-parse origin/{branch}"))
         .trim()
@@ -701,7 +705,7 @@ fn ci_bitmap_auto_sync_edge_cases_and_guards() -> KnownResult<()> {
         },
         "feat: update components",
     );
-    helper.run("ci merge --no-bitmap-commit");
+    helper.native("ci merge --no-bitmap-commit");
     helper.get_cloned_workspace(&dev_clone);
     helper.git(&format!("pull origin {branch}"));
     helper.status();
@@ -815,7 +819,7 @@ fn ci_bitmap_auto_sync_edge_cases_and_guards() -> KnownResult<()> {
         || helper.output_file("comp1/comp1.js", r#"console.log("unreachable");"#),
         "feat: simulate remote loss",
     );
-    helper.run("ci merge --no-bitmap-commit");
+    helper.native("ci merge --no-bitmap-commit");
     helper.get_cloned_workspace(&dev_clone);
     helper.git(&format!("pull origin {branch}"));
     let _ = fs::remove_dir_all(&helper.scopes.remote_path);
@@ -827,13 +831,13 @@ fn ci_bitmap_auto_sync_edge_cases_and_guards() -> KnownResult<()> {
 
     // local .bitmap should not be corrupted by the failed remote
     let bitmap_after_cmd = helper.read_bit_map();
-    for k in bitmap_before_cmd
+    for key in bitmap_before_cmd
         .as_object()
         .unwrap()
         .keys()
     {
-        if !k.starts_with('$') {
-            assert!(bitmap_after_cmd.get(k).is_some());
+        if !key.starts_with('$') {
+            assert!(bitmap_after_cmd.get(key).is_some());
         }
     }
 
@@ -850,7 +854,7 @@ fn ci_bitmap_auto_sync_edge_cases_and_guards() -> KnownResult<()> {
         || helper.output_file("comp1/comp1.js", r#"console.log("transitional");"#),
         "feat: transitional path",
     );
-    let merge_legacy = helper.run(r#"ci merge --message "transitional""#);
+    let merge_legacy = helper.native(r#"ci merge --message "transitional""#);
 
     // legacy commit+push still works when --no-bitmap-commit is omitted
     assert!(merge_legacy.contains("Merged PR"), "{merge_legacy}");

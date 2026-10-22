@@ -10,9 +10,9 @@ fn updates_policies_added_by_user_to_latest_versions() {
     helper.set_workspace_with_remote_scope();
     helper.output_file("comp1/index.js", "const isPositive = require('is-positive');\n");
     helper.output_file("comp2/index.js", "const isOdd = require('is-odd');\n");
-    helper.run("add comp1");
-    helper.run("add comp2");
-    helper.run("eject-conf comp2");
+    helper.native("add comp1");
+    helper.native("add comp2");
+    helper.native("eject-conf comp2");
     helper.set_component_json_extension(
         "comp2",
         "teambit.dependencies/dependency-resolver",

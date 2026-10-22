@@ -13,12 +13,9 @@ fn refactoring_with_refactor_command() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
 
-    let rename = helper.cmd("rename comp2 new-comp2");
-    assert!(rename.native, "{}", rename.trace);
-    assert!(rename.status.success(), "{}\n{}", rename.stdout, rename.stderr);
+    helper.native("rename comp2 new-comp2");
 
-    let invalid = helper.cmd("refactor dependency-name comp2 new-comp2");
-    assert!(invalid.native, "{}", invalid.trace);
+    let invalid = helper.native_run("refactor dependency-name comp2 new-comp2");
     assert!(!invalid.status.success());
     let combined = format!("{}{}", invalid.stdout, invalid.stderr);
     assert!(
@@ -28,11 +25,11 @@ fn refactoring_with_refactor_command() {
         "{combined}",
     );
 
-    let refactor =
-        helper.cmd(&format!("refactor dependency-name @{}/comp2 new-comp2", helper.scopes.remote));
-    assert!(refactor.native, "{}", refactor.trace);
-    assert!(refactor.status.success(), "{}\n{}", refactor.stdout, refactor.stderr);
-    assert!(refactor.stdout.contains(&format!("{}/comp1", helper.scopes.remote)));
+    let refactor = helper.native(&format!(
+        "refactor dependency-name @{}/comp2 new-comp2",
+        helper.scopes.remote,
+    ));
+    assert!(refactor.contains(&format!("{}/comp1", helper.scopes.remote)));
 
     let file = read_comp1(&helper);
     assert!(file.contains("new-comp2"), "{file}");
@@ -44,9 +41,7 @@ fn rename_a_new_component_with_refactor_flag() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
 
-    let rename = helper.cmd("rename comp2 new-comp2 --refactor");
-    assert!(rename.native, "{}", rename.trace);
-    assert!(rename.status.success(), "{}\n{}", rename.stdout, rename.stderr);
+    helper.native("rename comp2 new-comp2 --refactor");
 
     let file = read_comp1(&helper);
     assert!(file.contains("new-comp2"), "{file}");
@@ -60,9 +55,7 @@ fn rename_an_exported_component_with_refactor_flag() {
     helper.tag_without_build("", "");
     remote::publish(&helper);
 
-    let rename = helper.cmd("rename comp2 new-comp2 --refactor");
-    assert!(rename.native, "{}", rename.trace);
-    assert!(rename.status.success(), "{}\n{}", rename.stdout, rename.stderr);
+    helper.native("rename comp2 new-comp2 --refactor");
 
     let file = read_comp1(&helper);
     assert!(file.contains("new-comp2"), "{file}");
@@ -76,19 +69,16 @@ fn fork_command_with_refactor_flag() {
     helper.tag_without_build("", "");
     remote::publish(&helper);
 
-    let fork_local = helper.cmd("fork comp2 forked-comp2 --refactor");
-    assert!(fork_local.native, "{}", fork_local.trace);
-    assert!(fork_local.status.success(), "{}\n{}", fork_local.stdout, fork_local.stderr);
+    helper.native("fork comp2 forked-comp2 --refactor");
 
     let file = read_comp1(&helper);
     assert!(file.contains("forked-comp2"), "{file}");
 
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/comp2 -x", helper.scopes.remote));
+    helper.native(&format!("import {}/comp2 -x", helper.scopes.remote));
 
-    let fork_remote = helper.cmd(&format!("fork {}/comp1 --refactor", helper.scopes.remote));
-    assert!(fork_remote.native, "{}", fork_remote.trace);
+    let fork_remote = helper.native_run(&format!("fork {}/comp1 --refactor", helper.scopes.remote));
     assert!(!fork_remote.status.success());
     let combined = format!("{}{}", fork_remote.stdout, fork_remote.stderr);
     assert!(combined.contains("you can't use the --refactor flag"), "{combined}");

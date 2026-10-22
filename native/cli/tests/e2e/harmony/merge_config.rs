@@ -113,22 +113,22 @@ fn diverge_with_different_dependencies_config() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.run("deps set comp1 lodash@3.3.1");
+    helper.native("deps set comp1 lodash@3.3.1");
     helper.native("tag --skip-tests");
     helper.native("export");
     let main_before_diverge = helper.clone_workspace();
 
     helper.native("lane create dev");
     helper.native("deprecate comp1");
-    helper.run("deps set comp1 ramda@0.0.20 --dev");
+    helper.native("deps set comp1 ramda@0.0.20 --dev");
     helper.run("snap --skip-tests");
     helper.native("export");
 
     helper.get_cloned_workspace(&main_before_diverge);
     helper.native("deprecate comp1");
-    helper.run("snap --skip-tests");
+    helper.native("snap --skip-tests");
     helper.native("undeprecate comp1");
-    helper.run("deps set comp1 ramda@0.0.21 --dev");
+    helper.native("deps set comp1 ramda@0.0.21 --dev");
     helper.run("snap --skip-tests");
     helper.native("export");
 

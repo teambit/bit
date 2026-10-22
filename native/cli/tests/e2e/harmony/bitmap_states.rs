@@ -29,7 +29,7 @@ fn local_only_component_is_reported_without_losing_its_other_status() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.run("local-only set bar/foo");
+    helper.native("local-only set bar/foo");
     let status = parity(&helper);
     assert_eq!(status["localOnly"], serde_json::json!(["my-scope/bar/foo"]));
     assert_eq!(status["newComponents"], serde_json::json!(["my-scope/bar/foo"]));
@@ -42,7 +42,7 @@ fn soft_tagged_component_is_reported_without_a_version() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.run("tag --soft bar/foo");
+    helper.native("tag --soft bar/foo");
     let status = parity(&helper);
     assert_eq!(status["softTaggedComponents"], serde_json::json!(["my-scope/bar/foo"]));
     text_parity(&helper);
@@ -55,8 +55,8 @@ fn locally_soft_removed_component_is_reported() {
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
     helper.tag_component_bar_foo();
-    helper.run("export bar/foo");
-    helper.run("delete bar/foo --silent");
+    helper.native("export bar/foo");
+    helper.native("delete bar/foo --silent");
     let status = parity(&helper);
     assert_eq!(
         status["locallySoftRemoved"]
@@ -74,8 +74,8 @@ fn a_dependent_reports_issues_after_its_dependency_is_soft_removed() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
     helper.tag_without_build("", "");
-    helper.run("export");
-    helper.run("delete comp2 --silent");
+    helper.native("export");
+    helper.native("delete comp2 --silent");
     let status = parity(&helper);
     assert_eq!(
         status["locallySoftRemoved"]
@@ -124,14 +124,14 @@ fn an_imported_component_deleted_on_the_remote_is_reported() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
     helper.tag_without_build("", "");
-    helper.run("export");
-    helper.run("delete comp2 --silent");
+    helper.native("export");
+    helper.native("delete comp2 --silent");
     helper.output_file("comp1/index.js", "");
     helper.tag_without_build("", "");
-    helper.run("export");
+    helper.native("export");
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/comp2 -x", helper.scopes.remote));
+    helper.native(&format!("import {}/comp2 -x", helper.scopes.remote));
 
     let status = parity(&helper);
     assert_eq!(

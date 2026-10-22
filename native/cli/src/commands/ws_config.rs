@@ -1,8 +1,16 @@
 //! Native `bit ws-config <sub-command>` (`bit workspace-config`) (`scopes/workspace/workspace-config-files/ws-config.cmd.ts`).
 
+mod clean;
+mod format;
 #[cfg(test)]
 mod tests;
+mod write;
 
+use self::{
+    clean::{clean_workspace_configs, format_clean_output, format_list_json, format_list_output},
+    format::format_write_output,
+    write::write_workspace_configs,
+};
 use super::{
     Command,
     color::Chalk,
@@ -15,9 +23,7 @@ use bit_install::{config::aspect_id_without_version, workspace::Workspace};
 use std::{
     env,
     ffi::OsString,
-    fs,
     io::{self, Write},
-    path::Path,
     process::ExitCode,
 };
 
@@ -33,17 +39,42 @@ const STANDARD_WRITER_ENVS: &[&str] = &[
     "teambit.mdx/mdx",
 ];
 
-const STANDARD_WRITERS: &[(&str, &str, &str)] = &[
-    ("typescript", "tsconfig.json", "// bit-generated-typescript-config"),
-    ("eslint", ".eslintrc.json", "// bit-generated-eslint-config"),
-    ("prettier", ".prettierrc.cjs", "// bit-generated-prettier-config"),
-];
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(super) struct WriteOptions {
+    pub clean: bool,
+    pub writers: Option<Vec<String>>,
+    pub no_dedupe: bool,
+    pub dry_run: DryRunMode,
+    pub verbose: bool,
+    pub silent: bool,
+    pub force: bool,
+    pub json: bool,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub(super) enum DryRunMode {
+    #[default]
+    Off,
+    PathsOnly,
+    WithContent,
+}
+
+impl DryRunMode {
+    pub const fn is_dry(self) -> bool {
+        !matches!(self, Self::Off)
+    }
+
+    pub const fn with_content(self) -> bool {
+        matches!(self, Self::WithContent)
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
     Unrecognized(String),
     List { json: bool },
     Clean { silent: bool, dry_run: bool, writers: Option<Vec<String>>, json: bool },
+    Write(WriteOptions),
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -60,6 +91,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Subcommand::Clean { silent, dry_run, writers, json } => {
             run_clean(args, silent, dry_run, writers.as_deref(), json)
         }
+        Subcommand::Write(opts) => run_write(args, &opts, chalk),
     }
 }
 
@@ -96,11 +128,9 @@ fn run_list(args: &[OsString], json_flag: bool, chalk: Chalk) -> io::Result<Outc
         return Ok(Outcome::Declined("ws-config list non-standard env delegated".into()));
     };
     if json_flag {
-        if !env_ids.is_empty() {
-            return Ok(Outcome::Declined("ws-config list --json with envs delegated".into()));
-        }
+        let data = format_list_json(&env_ids)?;
         return workspace_command::execute_json(&root, args, "list", |_| {
-            Ok(Report { data: "[]".into(), code: 0, details: None })
+            Ok(Report { data, code: 0, details: None })
         });
     }
     let data = format_list_output(&env_ids, chalk);
@@ -146,6 +176,38 @@ fn run_clean(
     })
 }
 
+fn run_write(args: &[OsString], opts: &WriteOptions, chalk: Chalk) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI ws-config write delegated".into()));
+    }
+    let Some(root) = workspace::root(&env::current_dir()?) else {
+        return Ok(Outcome::Declined("ws-config write requires a workspace".into()));
+    };
+    let Ok((_, ws)) = resolve_workspace_components(&root) else {
+        return Ok(Outcome::Declined("ws-config write workspace resolution delegated".into()));
+    };
+    let Some(env_ids) = collect_standard_env_ids(&ws) else {
+        return Ok(Outcome::Declined("ws-config write non-standard env delegated".into()));
+    };
+    if opts.dry_run.with_content() && !opts.json {
+        return workspace_command::execute_then(&root, args, "write", |_| {
+            Err(io::Error::other("use --json flag along with --dry-run-with-content"))
+        });
+    }
+    let comp_dirs = collect_active_component_dirs(&ws);
+    let result = write_workspace_configs(&root, &env_ids, &comp_dirs, opts)?;
+    if opts.json {
+        let data = serde_json::to_string_pretty(&result).map_err(io::Error::other)?;
+        return workspace_command::execute_json(&root, args, "write", |_| {
+            Ok(Report { data, code: 0, details: None })
+        });
+    }
+    let data = format_write_output(&result, opts, chalk);
+    workspace_command::execute_then(&root, args, "write", |_| {
+        Ok(Report { data, code: 0, details: None })
+    })
+}
+
 pub(super) fn collect_standard_env_ids(ws: &Workspace) -> Option<Vec<String>> {
     let mut env_ids = Vec::new();
     for (_, comp) in ws.active() {
@@ -163,112 +225,11 @@ pub(super) fn collect_standard_env_ids(ws: &Workspace) -> Option<Vec<String>> {
     Some(env_ids)
 }
 
-pub(super) fn format_list_output(env_ids: &[String], chalk: Chalk) -> String {
-    env_ids
-        .iter()
-        .map(|env_id| {
-            format!(
-                "{}\n  TypescriptConfigWriter (typescript)\n  EslintConfigWriter (eslint)\n  PrettierConfigWriter (prettier)",
-                chalk.bold(env_id),
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n\n")
-}
-
-pub(super) fn format_clean_output(paths: &[String], dry_run: bool, chalk: Chalk) -> String {
-    let verb = if dry_run { "will be" } else { "were" };
-    let header = chalk.green(&format!("{} config files {verb} deleted", paths.len()));
-    format!("{header}\n  {}\n", paths.join("\n  "))
-}
-
-pub(super) fn clean_workspace_configs(
-    root: &Path,
-    writers: Option<&[String]>,
-    dry_run: bool,
-) -> io::Result<Vec<String>> {
-    let mut found_by_writer: Vec<Vec<String>> = vec![Vec::new(); STANDARD_WRITERS.len()];
-    scan_config_dir(root, root, writers, &mut found_by_writer)?;
-    let mut paths = Vec::new();
-    for writer_paths in found_by_writer {
-        append_writer_paths(root, writer_paths, dry_run, &mut paths);
-    }
-    Ok(paths)
-}
-
-fn append_writer_paths(
-    root: &Path,
-    mut writer_paths: Vec<String>,
-    dry_run: bool,
-    paths: &mut Vec<String>,
-) {
-    writer_paths.sort();
-    for rel_path in writer_paths {
-        if !paths.contains(&rel_path) {
-            if !dry_run {
-                let _ = fs::remove_file(root.join(&rel_path));
-            }
-            paths.push(rel_path);
-        }
-    }
-}
-
-fn scan_config_dir(
-    root: &Path,
-    dir: &Path,
-    writers: Option<&[String]>,
-    found_by_writer: &mut [Vec<String>],
-) -> io::Result<()> {
-    let Ok(read_dir) = fs::read_dir(dir) else {
-        return Ok(());
-    };
-    for entry_res in read_dir {
-        let entry = entry_res?;
-        let file_name = entry.file_name();
-        let Some(name_str) = file_name.to_str() else {
-            continue;
-        };
-        if matches!(name_str, "node_modules" | ".git" | ".bit") {
-            continue;
-        }
-        let path = entry.path();
-        if path.is_dir() {
-            scan_config_dir(root, &path, writers, found_by_writer)?;
-        } else if path.is_file() {
-            check_config_file(root, &path, name_str, writers, found_by_writer);
-        }
-    }
-    Ok(())
-}
-
-fn check_config_file(
-    root: &Path,
-    path: &Path,
-    name_str: &str,
-    writers: Option<&[String]>,
-    found_by_writer: &mut [Vec<String>],
-) {
-    for (idx, &(writer_id, target_file, marker)) in STANDARD_WRITERS.iter().enumerate() {
-        if name_str != target_file {
-            continue;
-        }
-        if let Some(filter) = writers
-            && !filter
-                .iter()
-                .any(|item| item == writer_id)
-        {
-            continue;
-        }
-        let Ok(content) = fs::read_to_string(path) else {
-            continue;
-        };
-        if content.contains(marker)
-            && let Ok(rel) = path.strip_prefix(root)
-        {
-            let rel_str = rel.to_string_lossy().replace('\\', "/");
-            found_by_writer[idx].push(rel_str);
-        }
-    }
+fn collect_active_component_dirs(ws: &Workspace) -> Vec<String> {
+    ws.active()
+        .map(|(_, comp)| comp.root_dir.clone())
+        .filter(|dir| !dir.is_empty())
+        .collect()
 }
 
 pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
@@ -283,6 +244,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     match filtered.as_slice() {
         ["list", rest @ ..] => parse_list(rest),
         ["clean", rest @ ..] => parse_clean(rest),
+        ["write", rest @ ..] => parse_write(rest),
         _ => None,
     }
 }
@@ -304,6 +266,7 @@ fn parse_list(rest: &[&str]) -> Option<Subcommand> {
     for &arg in rest {
         match arg {
             "-j" | "--json" => json = true,
+            "--no-json" => json = false,
             _ => return None,
         }
     }
@@ -319,8 +282,11 @@ fn parse_clean(rest: &[&str]) -> Option<Subcommand> {
     while idx < rest.len() {
         match rest[idx] {
             "-s" | "--silent" => silent = true,
+            "--no-silent" => silent = false,
             "--dry-run" => dry_run = true,
+            "--no-dry-run" => dry_run = false,
             "-j" | "--json" => json = true,
+            "--no-json" => json = false,
             "-w" | "--writers" => {
                 idx += 1;
                 writers = Some(split_writers(rest.get(idx)?)?);
@@ -333,6 +299,58 @@ fn parse_clean(rest: &[&str]) -> Option<Subcommand> {
         idx += 1;
     }
     Some(Subcommand::Clean { silent, dry_run, writers, json })
+}
+
+fn parse_write(rest: &[&str]) -> Option<Subcommand> {
+    let mut opts = WriteOptions::default();
+    let mut idx = 0usize;
+    while idx < rest.len() {
+        if !apply_write_flag(rest[idx], &mut opts) {
+            apply_write_value_flag(rest, &mut idx, &mut opts)?;
+        }
+        idx += 1;
+    }
+    Some(Subcommand::Write(opts))
+}
+
+fn apply_write_flag(token: &str, opts: &mut WriteOptions) -> bool {
+    match token {
+        "-c" | "--clean" => opts.clean = true,
+        "--no-clean" => opts.clean = false,
+        "-n" | "--no-dedupe" => opts.no_dedupe = true,
+        "--dedupe" => opts.no_dedupe = false,
+        "--dry-run" => {
+            if opts.dry_run == DryRunMode::Off {
+                opts.dry_run = DryRunMode::PathsOnly;
+            }
+        }
+        "--no-dry-run" | "--no-dry-run-with-content" => opts.dry_run = DryRunMode::Off,
+        "--dry-run-with-content" => opts.dry_run = DryRunMode::WithContent,
+        "-v" | "--verbose" => opts.verbose = true,
+        "--no-verbose" => opts.verbose = false,
+        "-s" | "--silent" => opts.silent = true,
+        "--no-silent" => opts.silent = false,
+        "-f" | "--force" => opts.force = true,
+        "--no-force" => opts.force = false,
+        "-j" | "--json" => opts.json = true,
+        "--no-json" => opts.json = false,
+        _ => return false,
+    }
+    true
+}
+
+fn apply_write_value_flag(rest: &[&str], idx: &mut usize, opts: &mut WriteOptions) -> Option<()> {
+    match rest[*idx] {
+        "-w" | "--writers" => {
+            *idx += 1;
+            opts.writers = Some(split_writers(rest.get(*idx)?)?);
+        }
+        arg if let Some(val) = arg.strip_prefix("--writers=") => {
+            opts.writers = Some(split_writers(val)?);
+        }
+        _ => return None,
+    }
+    Some(())
 }
 
 fn split_writers(raw: &str) -> Option<Vec<String>> {

@@ -10,7 +10,7 @@ fn workspace() -> Helper {
     helper.add_component_bar_foo();
     helper.tag_component_bar_foo();
     helper.output_file("baz/card.js", FOO_FIXTURE);
-    helper.run("add baz -i baz/card");
+    helper.native("add baz -i baz/card");
     helper.append_file("bar/foo.js", "\n// changed");
     helper
 }
@@ -36,7 +36,7 @@ fn parity(helper: &Helper, pattern: &str) {
 fn advanced_component_globs_match_native_diff() {
     let helper = workspace();
     helper.output_file("extra/card2.js", FOO_FIXTURE);
-    helper.run("add extra -i baz/card2");
+    helper.native("add extra -i baz/card2");
     for pattern in
         ["**/[fc]*", "**/+(foo|card)", "**, !**/foo, **/foo", "**/card{1..3}", "**/!(foo)*"]
     {
@@ -65,9 +65,9 @@ fn modified_new_and_environment_selectors_match_diff() {
 #[test]
 fn bitmap_and_snapshot_selectors_match_diff() {
     let helper = workspace();
-    helper.run("tag bar/foo --soft");
+    helper.native("tag bar/foo --soft");
     parity(&helper, "$softTagged");
-    helper.run("local-only set baz/card");
+    helper.native("local-only set baz/card");
     parity(&helper, "$localOnly");
 }
 
@@ -100,11 +100,11 @@ fn state_selector_text_matches_native_diff_progress() {
 #[test]
 fn model_and_internal_state_selectors_match_diff() {
     let helper = workspace();
-    helper.run("snap bar/foo --skip-auto-snap");
+    helper.native("snap bar/foo --skip-auto-snap");
     parity(&helper, "$snappedOnMain");
     helper.run("internalize bar/foo");
     parity(&helper, "$internal");
-    helper.run("deprecate bar/foo");
+    helper.native("deprecate bar/foo");
     helper.tag_without_build("bar/foo", "");
     parity(&helper, "$deprecated");
 }
@@ -114,7 +114,7 @@ fn model_and_internal_state_selectors_match_diff() {
 #[test]
 fn locally_removed_components_are_not_deleted_selector_matches() {
     let helper = workspace();
-    helper.run("delete bar/foo --silent");
+    helper.native("delete bar/foo --silent");
     let output = helper.cmd(r#"diff "$deleted" --json"#);
     assert!(!output.native, "{}", output.trace);
     assert_eq!(output.status.code(), Some(1));
@@ -129,13 +129,13 @@ fn deleted_state_selector_matches_diff() {
     helper.populate_components(2, true, "");
     helper.tag_without_build("", "");
     crate::helper::remote::publish(&helper);
-    helper.run("delete comp2 --silent");
+    helper.native("delete comp2 --silent");
     helper.output_file("comp1/index.js", "");
     helper.tag_without_build("", "");
     crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run(&format!("import {}/comp2 -x", helper.scopes.remote));
+    helper.native(&format!("import {}/comp2 -x", helper.scopes.remote));
     parity(&helper, "$deleted");
     text_parity(&helper, "$deleted", false);
     text_parity(&helper, "$deleted", true);

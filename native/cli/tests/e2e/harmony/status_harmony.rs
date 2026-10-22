@@ -150,7 +150,7 @@ fn a_dynamic_import_is_not_a_missing_package() {
     helper.re_init_workspace();
     helper.output_file("bar/foo.js", r#"const a = "./b"; import(a); require(a);"#);
     helper.add_component_bar_foo();
-    helper.run("compile");
+    helper.native("compile");
     let output = helper.native_or_known("status").native().stdout;
     assert!(!output.contains(STATUS_FAILURE_MSG), "{output}");
 }
@@ -163,9 +163,9 @@ fn a_linked_package_is_not_missing() {
     helper.re_init_workspace_with(false);
     helper.output_file("comp1/comp1.ts", "require('@my-scope/comp2');");
     helper.output_file("comp2/comp2.ts", "");
-    helper.run("add comp1");
-    helper.run("add comp2");
-    helper.run("link");
+    helper.native("add comp1");
+    helper.native("add comp2");
+    helper.native("link");
     status_json_parity(&helper);
     let issues = helper.status_issues_or_known().native();
     assert!(!issues.contains(&"MissingPackagesDependenciesOnFs".into()), "{issues:?}");
@@ -197,8 +197,8 @@ fn missing_dependency_files_are_shown() {
         helper.output_file(&format!("{name}/{name}.js"), "");
     }
     helper.output_file("comp5/comp5.js", r#"require("./comp6");"#);
-    helper.run("add comp1 -i comp1");
-    helper.run("add comp5 -i comp5");
+    helper.native("add comp1 -i comp1");
+    helper.native("add comp5 -i comp5");
     status_json_parity(&helper);
     status_text_parity(&helper);
     let output = helper.native_or_known("status").native().stdout;
@@ -225,7 +225,7 @@ fn importing_the_index_directory_is_an_issue() {
     helper.output_file("comp1/index.ts", "export { hello } from './foo';");
     helper.output_file("comp1/foo.ts", "export const hello = 'world';");
     helper.output_file("comp1/bar.ts", "import { hello } from '.';");
-    helper.run("add comp1");
+    helper.native("add comp1");
     status_json_parity(&helper);
     status_text_parity(&helper);
     let issues = helper.status_issues_or_known().native();
@@ -239,7 +239,7 @@ fn a_deleted_dependency_directory_does_not_throw() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
     helper.tag_without_build("", "");
-    helper.run("export");
+    helper.native("export");
     helper.delete_path("comp2");
     helper.append_file("comp1/index.js", "\n");
     status_json_parity(&helper);
@@ -277,8 +277,8 @@ fn a_component_importing_itself_is_not_its_own_dependency() {
     helper.output_file("bar/index.js", r#"export const a = "b";"#);
     let remote = &helper.scopes.remote;
     helper.output_file("bar/foo.js", &format!("import {{ a }} from '@{remote}/bar';"));
-    helper.run("add bar");
-    helper.run("link");
+    helper.native("add bar");
+    helper.native("link");
     let show = helper.native("show bar --json --legacy");
     assert_eq!(len(&parse(&show)["dependencies"]), 0);
 }

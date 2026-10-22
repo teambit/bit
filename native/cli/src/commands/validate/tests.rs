@@ -1,4 +1,8 @@
-use super::{FastOutcome, Options, classify_workspace, parse_options};
+use super::{
+    FastOutcome, Options, classify_workspace,
+    lint_and_types::{check_ts_content, lint_source_content},
+    parse_options,
+};
 use std::fs;
 
 #[test]
@@ -70,4 +74,13 @@ fn classifies_empty_workspace_and_skip_tasks() {
         .unwrap(),
         Some(FastOutcome::InvalidSkipTasks { count: 1, invalid: vec!["invalid-task".into()] }),
     );
+}
+
+#[test]
+fn checks_ts_types_and_js_lint() {
+    assert!(check_ts_content("const x: number = 42;\n").is_empty());
+    assert!(!check_ts_content("const x: number = \"string\";\n").is_empty());
+    let valid_js = "const comp2 = require('../comp2');\nconsole.log(comp2);\n";
+    assert!(lint_source_content(valid_js).is_empty());
+    assert!(!lint_source_content("console.log(undefinedVariable);\n").is_empty());
 }

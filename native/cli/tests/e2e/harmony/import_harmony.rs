@@ -21,7 +21,7 @@ fn workspace_with_ts_components_import_and_build_one_graph() -> KnownResult<()> 
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.import_component("comp1", "-x --fetch-deps");
-    let cat_scope = parse(&helper.run("cat-scope --json"));
+    let cat_scope = parse(&helper.native("cat-scope --json"));
     let find_by_name = |name: &str| {
         cat_scope
             .as_array()
@@ -76,12 +76,12 @@ fn tag_export_clean_scope_objects_and_import_delta() -> KnownResult<()> {
     helper.tag_all_components("");
     helper.export("");
     helper.delete_path(".bit");
-    helper.run("init");
+    helper.native("init");
     helper.add_remote_scope();
-    helper.run("import");
+    helper.native("import");
     helper.populate_components(1, false, " v2");
     helper.tag_all_without_build("");
-    let exp = helper.try_cmd("export");
+    let exp = helper.native_run("export");
     assert!(exp.status.success(), "{exp:?}");
 
     // import delta (bit import without ids) when local is behind -> should not fetch existing versions, only the missing
@@ -91,7 +91,7 @@ fn tag_export_clean_scope_objects_and_import_delta() -> KnownResult<()> {
     helper.populate_components(1, false, " v2");
     helper.tag_all_without_build("");
     helper.export("");
-    helper.run("import");
+    helper.native("import");
     let after_first_export = helper.clone_workspace();
     helper.populate_components(1, false, " v3");
     helper.tag_all_without_build("");
@@ -99,7 +99,7 @@ fn tag_export_clean_scope_objects_and_import_delta() -> KnownResult<()> {
     let bit_map = helper.clone_bit_map();
     helper.get_cloned_workspace(&after_first_export);
     helper.restore_bit_map(&bit_map);
-    let import_output = helper.run("import");
+    let import_output = helper.native("import");
     assert!(!import_output.contains("3 new version"), "{import_output}");
     assert!(
         import_output.contains("1 new version(s) available, latest 0.0.3")
@@ -115,8 +115,8 @@ fn multiple_components_some_are_directory_of_others_and_prerelease_import() -> K
     helper.set_workspace_with_remote_scope();
     helper.output_file("foo/index.js", "");
     helper.output_file("bar/index.js", "");
-    helper.run("add foo");
-    helper.run("add bar -n foo");
+    helper.native("add foo");
+    helper.native("add bar -n foo");
     helper.tag_all_without_build("");
     helper.export("");
     helper.re_init_workspace();
@@ -139,7 +139,7 @@ fn multiple_components_some_are_directory_of_others_and_prerelease_import() -> K
     // import the parent dir first and then the child -> should not throw when importing the child and should increment its base-path and preserve the suffix
     helper.get_cloned_workspace(&empty_ws);
     helper.import_component("foo", "-x");
-    helper.run(&format!("import {}/foo/bar -x", helper.scopes.remote));
+    helper.native(&format!("import {}/foo/bar -x", helper.scopes.remote));
     assert!(
         helper.scopes.local_path
             .join(format!("{}/foo_1/bar", helper.scopes.remote))
@@ -148,7 +148,7 @@ fn multiple_components_some_are_directory_of_others_and_prerelease_import() -> K
 
     // import the child dir first and then the parent -> should not throw when importing the parent and should increment the path
     helper.get_cloned_workspace(&empty_ws);
-    helper.run(&format!("import {}/foo/bar -x", helper.scopes.remote));
+    helper.native(&format!("import {}/foo/bar -x", helper.scopes.remote));
     helper.import_component("foo", "-O -x");
     assert!(
         helper.scopes.local_path
@@ -204,7 +204,7 @@ fn default_directory_placeholders_and_types_dependency_and_policy_merge() -> Kno
     let mut ws = helper.read_workspace_jsonc();
     ws["teambit.workspace/workspace"]["defaultDirectory"] = json!("{owner}/{name}");
     helper.write_workspace_jsonc(&ws);
-    helper.run(&format!("import {dotted_name}/comp1 -x"));
+    helper.native(&format!("import {dotted_name}/comp1 -x"));
     assert!(helper.scopes.local_path.join("my-owner/comp1").exists());
 
     // {scope-id} placeholder ({scopeId})
@@ -212,7 +212,7 @@ fn default_directory_placeholders_and_types_dependency_and_policy_merge() -> Kno
     let mut ws = helper.read_workspace_jsonc();
     ws["teambit.workspace/workspace"]["defaultDirectory"] = json!("{scopeId}/{name}");
     helper.write_workspace_jsonc(&ws);
-    helper.run(&format!("import {dotted_name}/comp1 -x"));
+    helper.native(&format!("import {dotted_name}/comp1 -x"));
     assert!(
         helper.scopes.local_path
             .join(format!("{dotted_name}/comp1"))
@@ -224,7 +224,7 @@ fn default_directory_placeholders_and_types_dependency_and_policy_merge() -> Kno
     let mut ws = helper.read_workspace_jsonc();
     ws["teambit.workspace/workspace"]["defaultDirectory"] = json!("{hello}/{name}");
     helper.write_workspace_jsonc(&ws);
-    let bad = helper.try_cmd(&format!("import {dotted_name}/comp1 -x"));
+    let bad = helper.native_run(&format!("import {dotted_name}/comp1 -x"));
     assert!(!bad.status.success());
     let err = format!("{}\n{}", bad.stdout, bad.stderr);
     assert!(err.contains("hello"), "{err}");
@@ -234,13 +234,13 @@ fn default_directory_placeholders_and_types_dependency_and_policy_merge() -> Kno
     let mut ws = helper.read_workspace_jsonc();
     ws["teambit.workspace/workspace"]["defaultDirectory"] = json!("{scope}/{name}");
     helper.write_workspace_jsonc(&ws);
-    helper.run(&format!("import {dotted_name}/comp1 -p custom -x"));
+    helper.native(&format!("import {dotted_name}/comp1 -p custom -x"));
     assert!(helper.scopes.local_path.join("custom").exists());
 
     // importing a component with @types dependency when current workspace does not have it
     helper.set_workspace_with_remote_scope();
     helper.output_file("bar/foo.ts", "import cors from 'cors'; console.log(cors);\n");
-    helper.run("add bar");
+    helper.native("add bar");
     helper.npm_add_fake_package("cors", "2.8.5", false);
     helper.npm_add_fake_package("@types/cors", "2.8.10", false);
     helper.add_key_val_to_dependency_resolver_policy("cors", "^2.8.5");
@@ -317,7 +317,7 @@ fn import_with_local_env_in_component_json_and_flattened_deps_in_separate_object
     let env_id = helper.set_custom_env("node-env");
     helper.populate_components(1, false, "");
     helper.run("env set comp1 node-env");
-    helper.run("eject-conf comp1");
+    helper.native("eject-conf comp1");
     helper.tag_all_without_build("");
     helper.export("");
     helper.import_component("comp1", "-x");
@@ -364,12 +364,12 @@ fn import_with_local_env_in_component_json_and_flattened_deps_in_separate_object
     // should import the object with the flattened dependencies
     let local_ver = parse(&helper.cat_component(&format!("{}/comp1@0.0.1", helper.scopes.remote)));
     if let Some(ref_hash) = local_ver["flattenedDependenciesRef"].as_str() {
-        let flattened = parse(&helper.run(&format!("cat-object {ref_hash} --json")));
+        let flattened = parse(&helper.native(&format!("cat-object {ref_hash} --json")));
         let members: Vec<&str> = flattened
             .as_array()
             .unwrap()
             .iter()
-            .filter_map(|v| v.as_str())
+            .filter_map(|val| val.as_str())
             .collect();
         let exp2 = format!("{}/comp2@0.0.1", helper.scopes.remote);
         let exp3 = format!("{}/comp3@0.0.1", helper.scopes.remote);

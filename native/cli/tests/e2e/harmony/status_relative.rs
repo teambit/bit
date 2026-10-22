@@ -7,12 +7,7 @@ fn parity(helper: &Helper) {
     let root = helper.clone_workspace();
     let expected =
         Helper::cmd_in_with(&root, "status --json", &[("BIT_NATIVE", OsStr::new("off"))]);
-    let actual = helper.cmd("status --json");
-    assert!(
-        actual.native,
-        "{}\nNode stdout:{}\nNode stderr:{}",
-        actual.trace, expected.stdout, expected.stderr,
-    );
+    let actual = helper.native_run("status --json");
     assert_eq!(actual.status.code(), expected.status.code());
     assert_eq!(actual.stdout, expected.stdout);
     assert_eq!(actual.stderr, expected.stderr);
@@ -26,7 +21,7 @@ fn nested_and_repeated_untracked_files_match_node() {
     helper.output_file("bar/second.js", "require('../shared');");
     helper.output_file("shared.js", "module.exports = require('./deep');");
     helper.output_file("deep.js", "module.exports = 1;");
-    helper.run("add bar -i bar/foo -m bar/foo.js");
+    helper.native("add bar -i bar/foo -m bar/foo.js");
     parity(&helper);
 }
 
@@ -35,7 +30,7 @@ fn relative_component_commonjs_matches_node() {
     let helper = Helper::new();
     helper.re_init_workspace();
     helper.output_file("baz/qux.js", "module.exports = 1;");
-    helper.run("add baz -i baz/qux");
+    helper.native("add baz -i baz/qux");
     helper.create_component_bar_foo("module.exports = require('../baz/qux');");
     helper.add_component_bar_foo();
     parity(&helper);
@@ -46,7 +41,7 @@ fn relative_component_named_import_matches_node() {
     let helper = Helper::new();
     helper.re_init_workspace();
     helper.output_file("baz/qux.js", "export const qux = 1;");
-    helper.run("add baz -i baz/qux");
+    helper.native("add baz -i baz/qux");
     helper.create_component_bar_foo("import { qux } from '../baz/qux.js'; export const foo = qux;");
     helper.add_component_bar_foo();
     parity(&helper);
@@ -75,7 +70,7 @@ fn non_main_component_import_matches_node() {
     let helper = Helper::new();
     helper.re_init_workspace();
     helper.output_file("baz/qux.js", "module.exports = 1;");
-    helper.run("add baz -i baz/qux");
+    helper.native("add baz -i baz/qux");
     helper.create_component_bar_foo("module.exports = require('external-component/dist/private');");
     helper.add_component_bar_foo();
     helper.output_file("node_modules/external-component/dist/private.js", "module.exports = 1;");
@@ -96,7 +91,7 @@ fn peer_component_metadata_matches_node() {
     let helper = Helper::new();
     helper.re_init_workspace();
     helper.output_file("baz/qux.js", "module.exports = 1;");
-    helper.run("add baz -i baz/qux");
+    helper.native("add baz -i baz/qux");
     helper.create_component_bar_foo("module.exports = require('peer-component');");
     helper.add_component_bar_foo();
     helper.output_file("node_modules/peer-component/index.js", "module.exports = 1;");
