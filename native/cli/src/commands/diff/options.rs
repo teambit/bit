@@ -33,18 +33,21 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
         index += 1;
         parse_arg(&mut options, arg, args, &mut index)?;
     }
-    if invalid_output(&options)
-        || options.versions.parent && options.versions.to.is_some()
-    {
-        return None;
-    }
     Some(options)
 }
 
-fn invalid_output(options: &Options) -> bool {
-    options.output.configs_only
-        && (options.output.files_only || !options.output.files.is_empty())
-        || options.output.name_only && options.output.stat
+/// Mutually exclusive output flag error reported by `DiffCmd.parseOutputOpts`.
+pub(super) fn output_error(options: &Options) -> Option<&'static str> {
+    if options.output.files_only && options.output.configs_only {
+        return Some("--files-only and --configs-only are mutually exclusive");
+    }
+    if options.output.configs_only && !options.output.files.is_empty() {
+        return Some("--file and --configs-only are mutually exclusive");
+    }
+    if options.output.name_only && options.output.stat {
+        return Some("--name-only and --stat are mutually exclusive");
+    }
+    None
 }
 
 fn parse_arg(options: &mut Options, arg: &str, args: &[&str], index: &mut usize) -> Option<()> {

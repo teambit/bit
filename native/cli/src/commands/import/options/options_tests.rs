@@ -35,7 +35,8 @@ fn override_requires_a_component_write() {
     let options = parse(&["import", "s/a", "--override", "-x"]).unwrap();
     assert!(options.write.override_existing);
     assert_eq!(options.request()["overrideExisting"], true);
-    for args in [&["import", "--override"][..], &["import", "s/a", "--override", "-o"]] {
+    assert!(parse(&["import", "--override"]).is_some());
+    for args in [&["import", "--override", "-o"][..], &["import", "s/a", "--override", "-o"]] {
         assert!(parse(args).is_none(), "{args:?}");
     }
     assert!(parse(&["import", "s/**", "--override", "-x"]).is_some());
@@ -68,8 +69,10 @@ fn merge_requires_one_component_write() {
         let options = parse(&["import", "s/a", &flag, "-x"]).unwrap();
         assert_eq!(options.request()["mergeStrategy"], strategy);
     }
+    assert!(parse(&["import", "--merge"]).is_some());
+    assert!(parse(&["import", "--merge=manual"]).is_some());
     for args in [
-        &["import", "--merge=manual"][..],
+        &["import", "--merge=manual", "-o"][..],
         &["import", "s/a", "--merge=manual", "-o"],
         &["import", "s/a", "s/b", "--merge=manual"],
         &["import", "s/a", "--merge=manual", "--override"],
@@ -144,13 +147,16 @@ fn dependent_paths_require_noninteractive_selection_without_losing_raw_ids() {
 fn semantic_adoption_errors_parse_for_owned_validation_after_provider_startup() {
     for (args, error) in semantic_errors() {
         let options = parse(args).unwrap();
-        assert_eq!(options.validation_error(), Some(error));
+        assert_eq!(options.validation_error().as_deref(), Some(error));
         assert!(!options.requires_facts());
         assert!(!options.needs_installer());
     }
     assert!(parse(&["import", "scope/comp", "--write-deps"]).is_none());
     assert_eq!(
-        parse(&["import", "--dependents"]).unwrap().validation_error(),
+        parse(&["import", "--dependents"])
+            .unwrap()
+            .validation_error()
+            .as_deref(),
         Some(r#"you have to specify ids to use "--dependents" flag"#),
     );
 }
@@ -173,6 +179,18 @@ fn semantic_errors() -> Vec<(&'static [&'static str], &'static str)> {
         (
             &["import", "scope/comp", "--write-to-empty-dir", "--path", "target"],
             "--path and --write-to-empty-dir cannot be used together",
+        ),
+        (
+            &["import", "scope/comp", "--dependencies-depth", "1"],
+            r#""--dependencies-depth" flag requires "--dependencies" or "--dependencies-head""#,
+        ),
+        (
+            &["import", "scope/comp", "--dependencies", "--dependencies-depth", "0"],
+            r#""--dependencies-depth" must be a positive integer, got "0""#,
+        ),
+        (
+            &["import", "scope/comp", "--dependencies", "--dependencies-depth", "abc"],
+            r#""--dependencies-depth" must be a positive integer, got "abc""#,
         ),
     ]
 }

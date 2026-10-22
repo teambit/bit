@@ -30,6 +30,7 @@ pub(super) const CORE_ENVS: &[&str] = &[
 pub(super) enum Subcommand {
     Set { pattern: String, env: String },
     Unset { pattern: String },
+    Replace { old_env: String, new_env: String },
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -65,6 +66,7 @@ impl Subcommand {
         match self {
             Self::Set { .. } => "set",
             Self::Unset { .. } => "unset",
+            Self::Replace { .. } => "replace",
         }
     }
 }
@@ -83,6 +85,17 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         }
         ["unset", pattern] if is_supported_pattern(pattern) => {
             Some(Subcommand::Unset { pattern: (*pattern).to_owned() })
+        }
+        ["replace", old_env, new_env]
+            if !old_env.is_empty()
+                && !old_env.starts_with('-')
+                && !new_env.is_empty()
+                && !new_env.starts_with('-') =>
+        {
+            Some(Subcommand::Replace {
+                old_env: (*old_env).to_owned(),
+                new_env: (*new_env).to_owned(),
+            })
         }
         _ => None,
     }

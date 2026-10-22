@@ -1,9 +1,6 @@
 //! `e2e/harmony/lanes/merge-lanes-partial.e2e.ts`.
 
-use crate::{
-    allow_known_failure,
-    helper::{Helper, parse, remote},
-};
+use crate::helper::{Helper, parse, remote};
 
 fn head_of_lane(helper: &Helper, lane: &str, name: &str) -> String {
     let lane_obj = parse(&helper.native(&format!("lane show {lane} --json")));
@@ -59,29 +56,25 @@ fn partial_merge_from_a_lane_to_main_with_include_deps() {
     assert_eq!(model_head(&helper, &format!("{scope}/comp3")), comp3_head_on_lane);
 }
 
-mod known_failures {
-    use super::{Helper, allow_known_failure, remote};
+/// merge lanes - partial merge functionality › partial merge › from a lane to main › without --include-deps › should throw an error asking to enter --include-deps flag
+#[test]
+fn partial_merge_from_a_lane_to_main_without_include_deps() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(3, true, "");
+    helper.run("tag");
+    remote::publish(&helper);
+    helper.native("lane create dev");
+    helper.populate_components(3, true, "version2");
+    helper.run("snap");
+    remote::publish(&helper);
+    helper.native("switch main -x");
 
-    /// merge lanes - partial merge functionality › partial merge › from a lane to main › without --include-deps › should throw an error asking to enter --include-deps flag
-    #[test]
-    fn partial_merge_from_a_lane_to_main_without_include_deps() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.populate_components(3, true, "");
-        helper.run("tag");
-        remote::publish(&helper);
-        helper.native("lane create dev");
-        helper.populate_components(3, true, "version2");
-        helper.run("snap");
-        remote::publish(&helper);
-        helper.native("switch main -x");
-
-        let scope = helper.scopes.remote.clone();
-        let without_deps = allow_known_failure!(helper.native_or_known(&format!(
-            "lane merge dev --pattern {scope}/comp2 --skip-dependency-installation",
-        )));
-        assert!(!without_deps.status.success());
-        let err_out = format!("{}{}", without_deps.stdout, without_deps.stderr);
-        assert!(err_out.contains(r#"consider adding "--include-deps" flag"#), "{err_out}");
-    }
+    let scope = helper.scopes.remote.clone();
+    let without_deps = helper.native_run(&format!(
+        "lane merge dev --pattern {scope}/comp2 --skip-dependency-installation",
+    ));
+    assert!(!without_deps.status.success());
+    let err_out = format!("{}{}", without_deps.stdout, without_deps.stderr);
+    assert!(err_out.contains(r#"consider adding "--include-deps" flag"#), "{err_out}");
 }

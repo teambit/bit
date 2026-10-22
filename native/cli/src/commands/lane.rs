@@ -8,6 +8,7 @@ pub(crate) mod scope_root;
 mod alias;
 mod create;
 mod current;
+mod diff;
 mod history;
 mod import;
 mod list;
@@ -42,6 +43,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Some("eject") => manage::eject(args, &argv[2..]),
         Some("updates") => manage::updates(args, &argv[2..]),
         Some("history-diff") => manage::history_diff(args, &argv[2..]),
+        Some("diff") => diff::run(args, &argv[2..]),
         Some("merge-move") => create::merge_move(args, &argv[2..]),
         Some("history") => history::run(args, &argv[2..]),
         Some("checkout" | "revert") => restoration::run(args, &argv),
@@ -68,7 +70,7 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
-    super::merge::lifecycle::run(
+    match super::merge::lifecycle::run(
         &root,
         args,
         argv,
@@ -79,5 +81,16 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
             skip_install: options.skip_install,
             workflow,
         },
-    )
+    )? {
+        Outcome::Declined(reason)
+            if reason.contains("lane filter excludes a required lane dependency") =>
+        {
+            workspace_command::execute_then(&root, args, "merge", |_| {
+                Err(io::Error::other(
+                    "Failed to merge the lane partially as some components have dependencies which were not included.\nconsider adding \"--include-deps\" flag to include them.",
+                ))
+            })
+        }
+        outcome => Ok(outcome),
+    }
 }

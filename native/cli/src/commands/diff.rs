@@ -18,10 +18,12 @@ mod progress;
 mod remote;
 mod report;
 mod result_files;
+mod validation;
 
 use presentation::run_report;
 use result_files::rows;
 use selection::select;
+use validation::{command_error, diff_failure, model, validate_requested_versions};
 
 use super::{
     color::Chalk,
@@ -62,17 +64,26 @@ fn run_workspace(
     args: &[OsString],
     options: &options::Options,
 ) -> io::Result<Outcome> {
+    if let Some(message) = options::output_error(options) {
+        return diff_failure(root, args, options, message);
+    }
     let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
+    let chalk = Chalk::detect(args);
     let mut startup = super::status::autosync::Startup::default();
-    let mut prepared =
-        match read(root, Path::new(&home), options, Chalk::detect(args), &mut startup) {
-            Ok(result) => result,
-            Err(error) if startup.committed => {
+    let mut prepared = match read(root, Path::new(&home), options, chalk, &mut startup) {
+        Ok(result) => result,
+        Err(error) => {
+            if let Some(message) = command_error(root, options, &error) {
+                io::stdout().write_all(startup.stdout.as_bytes())?;
+                return diff_failure(root, args, options, &message);
+            }
+            if startup.committed {
                 io::stdout().write_all(startup.stdout.as_bytes())?;
                 return Err(error);
             }
-            Err(error) => return Ok(Outcome::Declined(format!("diff: {error}"))),
-        };
+            return Ok(Outcome::Declined(format!("diff: {error}")));
+        }
+    };
     let mut result = report::filtered(&prepared.result, options)?;
     if !options.output.json {
         io::stdout().write_all(startup.stdout.as_bytes())?;
@@ -222,6 +233,13 @@ fn render_selection(
     let pattern = options.pattern.as_deref();
     let from_version = options.versions.from.as_deref();
     let to_version = options.versions.to.as_deref();
+    validate_requested_versions(
+        context,
+        selected,
+        options,
+        import_token(capture).is_some(),
+        chalk,
+    )?;
     let output = if options.versions.parent {
         parent::read(parent::Request {
             engine,
@@ -281,23 +299,6 @@ fn comparison(
         "color": true,
         "modifiedOnly": pattern.is_none(),
     }))
-}
-
-fn model<'c>(context: &'c Value, target: &Value) -> Option<&'c Value> {
-    let identity = target.get("identity")?.as_str()?;
-    context
-        .get("models")?
-        .as_array()?
-        .iter()
-        .find(|model| {
-            let part = |key| {
-                model
-                    .get(key)
-                    .and_then(Value::as_str)
-                    .unwrap_or("undefined")
-            };
-            format!("{}/{}", part("scope"), part("name")) == identity
-        })
 }
 
 /// A captured row as `workspaceDiff` takes it: without its peers, files in

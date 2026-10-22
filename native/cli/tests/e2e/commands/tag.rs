@@ -7,17 +7,14 @@ mod soft;
 mod states;
 mod unlinked;
 
-/// Public semver and dependency behavior, with malformed-input delegations marked inline.
-mod known_failures {
-    use crate::{
-        allow_known_failure,
-        helper::{FOO_FIXTURE, Helper, Run, parse},
-    };
+/// Public semver and dependency behavior.
+mod qualification {
+    use crate::helper::{FOO_FIXTURE, Helper, Run, parse};
     use serde_json::Value;
     use std::fs;
 
     /// `tagWithoutBuild(id, options)`, natively: something must be tagged.
-    pub(super) fn tag(helper: &Helper, id: &str, options: &str) -> String {
+    fn tag(helper: &Helper, id: &str, options: &str) -> String {
         let output = helper.native(&format!("tag {id} {options}"));
         assert!(!output.contains("nothing to tag"), "{output}");
         output
@@ -30,7 +27,7 @@ mod known_failures {
     }
 
     /// `createFile(folder, name)` with `fixtures.fooFixture`.
-    pub(super) fn create_file(helper: &Helper, folder: &str, name: &str) {
+    fn create_file(helper: &Helper, folder: &str, name: &str) {
         helper.output_file(&format!("{folder}/{name}"), FOO_FIXTURE);
     }
 
@@ -46,12 +43,12 @@ mod known_failures {
         let mut bitmap = parse(&text[text.find('{').unwrap()..]);
         bitmap["bar/foo"]["mainFile"] = Value::String(String::new());
         fs::write(&path, serde_json::to_string_pretty(&bitmap).unwrap()).unwrap();
-        let output = failure(&allow_known_failure!(helper.native_or_known("tag bar/foo")));
+        let output = failure(&helper.native_run("tag bar/foo"));
         assert!(output.contains("error: main file") && output.contains("was removed"), "{output}");
     }
 
     /// `components/{patch,minor,major,exact}` tagged under the `components` namespace.
-    pub(super) fn semver_workspace() -> Helper {
+    fn semver_workspace() -> Helper {
         let helper = Helper::new();
         helper.re_init_workspace_with(false);
         for name in ["patch", "minor", "major", "exact"] {
@@ -63,7 +60,7 @@ mod known_failures {
     }
 
     /// The entry of `id` in `bit list --local-scope --json`.
-    pub(super) fn listed(list: &Value, id: &str) -> Value {
+    fn listed(list: &Value, id: &str) -> Value {
         let entry = list
             .as_array()
             .unwrap()
@@ -80,9 +77,7 @@ mod known_failures {
     fn an_existing_version_is_not_tagged_again() {
         let helper = semver_workspace();
         tag(&helper, "components/exact --ver 5.5.5", "--unmodified");
-        let output = failure(&allow_known_failure!(helper.native_or_known(
-            "tag components/exact --ver 5.5.5 --unmodified"
-        )));
+        let output = failure(&helper.native_run("tag components/exact --ver 5.5.5 --unmodified"));
         let expected = "error: version 5.5.5 already exists for my-scope/components/exact";
         assert!(output.contains(expected), "{output}");
     }
@@ -99,7 +94,7 @@ mod known_failures {
         helper.output_file("bar/index.js", r#"var foo = require("./foo.js")"#);
         helper.run("add bar/ -i bar/foo");
         helper.delete_path("bar/foo.js");
-        let output = failure(&allow_known_failure!(helper.native_or_known("tag")));
+        let output = failure(&helper.native_run("tag"));
         let expected = "error: issues found with the following components";
         assert!(output.contains(expected), "{output}");
         let list = helper.run("list --local-scope");
@@ -112,7 +107,7 @@ mod known_failures {
         let helper = Helper::new();
         helper.re_init_workspace();
         helper.populate_components(2, true, "");
-        let run = allow_known_failure!(helper.native_or_known("tag comp1"));
+        let run = helper.native_run("tag comp1");
         let output = format!("{}{}", run.stdout, run.stderr);
         let expected = "this dependency was not included in the tag command";
         assert!(output.contains(expected), "{output}");
@@ -132,28 +127,22 @@ mod known_failures {
         let relative =
             "const comp2 = require('../comp2');\nmodule.exports = () => 'comp1 and ' + comp2();";
         helper.output_file("comp1/index.js", relative);
-        let output =
-            failure(&allow_known_failure!(helper.native_or_known("tag comp2 --unmodified")));
+        let output = failure(&helper.native_run("tag comp2 --unmodified"));
         assert!(output.contains("issues found") && output.contains("relative import"), "{output}");
         assert!(!output.contains("unable to save Version object"), "{output}");
         assert!(!output.contains("should not have relativePaths"), "{output}");
     }
+
     #[test]
     fn invalid_semver_is_rejected() {
         let helper = semver_workspace();
         create_file(&helper, "components/default", "default.js");
         helper.run("add components/default -i components/default");
-        let output = failure(&allow_known_failure!(helper.native_or_known(
-            "tag components/default --ver invalidVersion"
-        )));
+        let output = failure(&helper.native_run("tag components/default --ver invalidVersion"));
         let invalid = "error: version invalidVersion is not a valid semantic version. learn more: https://semver.org";
         assert!(output.contains(invalid), "{output}");
     }
-}
 
-mod qualification {
-    use super::known_failures::{create_file, listed, semver_workspace, tag};
-    use crate::helper::{Helper, parse};
     #[test]
     fn release_type_flags_bump_the_version() {
         let helper = semver_workspace();

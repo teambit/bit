@@ -36,6 +36,7 @@ pub(super) enum Subcommand {
     ListCore { json: bool },
     Set { pattern: String, aspect_id: String, config: Value, merge: bool },
     Unset { pattern: String, aspect_id: String },
+    Update { aspect_id: String, pattern: Option<String> },
     Unrecognized(String),
 }
 
@@ -76,6 +77,7 @@ impl Subcommand {
             Self::ListCore { .. } => "list-core",
             Self::Set { .. } => "set",
             Self::Unset { .. } => "unset",
+            Self::Update { .. } => "update",
             Self::Unrecognized(_) => "aspect",
         }
     }
@@ -120,16 +122,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         .filter(|arg| *arg != "--no-color")
         .collect::<Vec<_>>();
     match filtered.as_slice() {
-        ["list-core", rest @ ..] => {
-            let mut json = false;
-            for &arg in rest {
-                match arg {
-                    "-j" | "--json" => json = true,
-                    _ => return None,
-                }
-            }
-            Some(Subcommand::ListCore { json })
-        }
+        ["list-core", rest @ ..] => parse_list_core(rest),
         ["set", rest @ ..] => parse_set(rest),
         ["unset", pattern, aspect_id]
             if is_supported_pattern(pattern)
@@ -141,11 +134,42 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
                 aspect_id: (*aspect_id).to_owned(),
             })
         }
+        ["update", rest @ ..] => parse_update(rest),
         [sub]
             if !sub.starts_with('-')
                 && !matches!(*sub, "list" | "list-core" | "get" | "set" | "unset" | "update") =>
         {
             Some(Subcommand::Unrecognized((*sub).to_owned()))
+        }
+        _ => None,
+    }
+}
+
+fn parse_list_core(rest: &[&str]) -> Option<Subcommand> {
+    let mut json = false;
+    for &arg in rest {
+        match arg {
+            "-j" | "--json" => json = true,
+            _ => return None,
+        }
+    }
+    Some(Subcommand::ListCore { json })
+}
+
+fn parse_update(rest: &[&str]) -> Option<Subcommand> {
+    match rest {
+        [aspect_id] if !aspect_id.is_empty() && !aspect_id.starts_with('-') => {
+            Some(Subcommand::Update { aspect_id: (*aspect_id).to_owned(), pattern: None })
+        }
+        [aspect_id, pattern]
+            if !aspect_id.is_empty()
+                && !aspect_id.starts_with('-')
+                && is_supported_pattern(pattern) =>
+        {
+            Some(Subcommand::Update {
+                aspect_id: (*aspect_id).to_owned(),
+                pattern: Some((*pattern).to_owned()),
+            })
         }
         _ => None,
     }

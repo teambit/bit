@@ -451,107 +451,89 @@ fn parent_of_a_tag_over_an_identical_snap() {
     has(&output, r#"+console.log("hello");"#);
 }
 
-/// What native `bit diff` still leaves to the Node.js CLI: several ids or a pattern
-/// matching none, a version the local scope lacks, a configured git executable,
-/// mutually exclusive flags, two versions with `--parent`, and a soft-deleted component.
-mod known_failures {
-    use super::{
-        IS_STRING, NO_DIFF, agent_flags, combined, diff, diff_any, has, lacks, modified,
-        several_modified, three_versions, with_snaps,
-    };
-    use crate::{
-        allow_known_failure,
-        helper::{Helper, known},
-    };
+/// for non existing component › show an error saying the component was not found
+#[test]
+fn a_missing_component_is_not_found() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    let output = diff_any(&helper, "utils/non-exist").native();
+    has(&output, r#"error: component "utils/non-exist" was not found on your local workspace."#);
+}
 
-    /// for non existing component › show an error saying the component was not found
-    #[test]
-    fn a_missing_component_is_not_found() {
-        let helper = Helper::new();
-        helper.re_init_workspace();
-        let output = allow_known_failure!(diff_any(&helper, "utils/non-exist"));
-        has(
-            &output,
-            r#"error: component "utils/non-exist" was not found on your local workspace."#,
-        );
-    }
+/// when git path is configured incorrectly › should throw an error `GitNotFound`
+#[test]
+fn a_wrong_git_path_fails() {
+    let helper = modified();
+    let globals = helper.own_global_config("git_path", "/non/exist/location");
+    let env = [("BIT_GLOBALS_DIR", globals.as_os_str())];
+    let run = Helper::cmd_in_with(&helper.scopes.local_path, "diff bar/foo", &env);
+    let output = combined(&known(run).native());
+    has(&output, "unable to run command because git executable not found");
+}
 
-    /// when git path is configured incorrectly › should throw an error `GitNotFound`
-    #[test]
-    fn a_wrong_git_path_fails() {
-        let helper = modified();
-        let globals = helper.own_global_config("git_path", "/non/exist/location");
-        let env = [("BIT_GLOBALS_DIR", globals.as_os_str())];
-        let run = Helper::cmd_in_with(&helper.scopes.local_path, "diff bar/foo", &env);
-        let output = combined(&allow_known_failure!(known(run)));
-        has(&output, "unable to run command because git executable not found");
-    }
+/// running bit diff with multiple ids › should not show diff for non modified components;
+/// should mention the components with no diff
+#[test]
+fn a_diff_of_several_ids_mentions_the_unmodified() {
+    let helper = several_modified();
+    let ids = r#""**/utils/is-type, **/utils/is-string""#;
+    let output = diff(&helper, ids).native();
+    lacks(&output, IS_STRING);
+    has(&output, "utils/is-string");
+    has(&output, NO_DIFF);
+}
 
-    /// running bit diff with multiple ids › should not show diff for non modified components;
-    /// should mention the components with no diff
-    #[test]
-    fn a_diff_of_several_ids_mentions_the_unmodified() {
-        let helper = several_modified();
-        let ids = r#""**/utils/is-type, **/utils/is-string""#;
-        let output = allow_known_failure!(diff(&helper, ids));
-        lacks(&output, IS_STRING);
-        has(&output, "utils/is-string");
-        has(&output, NO_DIFF);
-    }
+/// component with multiple versions › diff between a non-exist version and current
+/// version › should throw an `VersionNotFound` error
+#[test]
+fn a_missing_version_is_not_found() {
+    let helper = three_versions();
+    let output = diff_any(&helper, "bar/foo 1.0.6").native();
+    let remote = &helper.scopes.remote;
+    let error = format!(r#"error: version "1.0.6" of component {remote}/bar/foo was not found."#);
+    has(&output, &error);
+}
 
-    /// component with multiple versions › diff between a non-exist version and current
-    /// version › should throw an `VersionNotFound` error
-    #[test]
-    fn a_missing_version_is_not_found() {
-        let helper = three_versions();
-        let output = allow_known_failure!(diff_any(&helper, "bar/foo 1.0.6"));
-        let remote = &helper.scopes.remote;
-        let error =
-            format!(r#"error: version "1.0.6" of component {remote}/bar/foo was not found."#);
-        has(&output, &error);
+/// mutually exclusive flags › --files-only + --configs-only should error; --name-only +
+/// --stat should error; --configs-only + --file should error
+#[test]
+fn exclusive_flags_fail() {
+    let helper = agent_flags();
+    let flags =
+        ["--files-only --configs-only", "--name-only --stat", "--configs-only --file foo.js"];
+    for flags in flags {
+        let output = diff_any(&helper, &format!("bar/foo {flags}")).native();
+        has(&output, "mutually exclusive");
     }
+}
 
-    /// mutually exclusive flags › --files-only + --configs-only should error; --name-only +
-    /// --stat should error; --configs-only + --file should error
-    #[test]
-    fn exclusive_flags_fail() {
-        let helper = agent_flags();
-        let flags =
-            ["--files-only --configs-only", "--name-only --stat", "--configs-only --file foo.js"];
-        for flags in flags {
-            let output = allow_known_failure!(diff_any(&helper, &format!("bar/foo {flags}")));
-            has(&output, "mutually exclusive");
-        }
-    }
+/// diff with --parent flag › when the version is the first version › should show all files
+/// as added; when two versions are specified along with --parent › should throw an error
+#[test]
+fn parent_of_the_first_version_adds_everything() {
+    let helper = Helper::new();
+    with_snaps(&helper);
+    let output = diff(&helper, "bar/foo 0.0.1 --parent").native();
+    lacks(&output, NO_DIFF);
+    has(&output, "--- foo.js (no parent)");
+    has(&output, "+++ foo.js (0.0.1)");
+    has(&output, "+module.exports = function foo() { return 'got foo'; };");
+    lacks(&output, "-module.exports");
+    let output = diff_any(&helper, "bar/foo 0.0.1 0.0.2 --parent").native();
+    has(&output, "--parent flag expects to get only one version");
+}
 
-    /// diff with --parent flag › when the version is the first version › should show all files
-    /// as added; when two versions are specified along with --parent › should throw an error
-    #[test]
-    fn parent_of_the_first_version_adds_everything() {
-        let helper = Helper::new();
-        with_snaps(&helper);
-        let output = allow_known_failure!(diff(&helper, "bar/foo 0.0.1 --parent"));
-        lacks(&output, NO_DIFF);
-        has(&output, "--- foo.js (no parent)");
-        has(&output, "+++ foo.js (0.0.1)");
-        has(&output, "+module.exports = function foo() { return 'got foo'; };");
-        lacks(&output, "-module.exports");
-        let output = allow_known_failure!(diff_any(&helper, "bar/foo 0.0.1 0.0.2 --parent"));
-        has(&output, "--parent flag expects to get only one version");
+/// diff with --parent flag › when the component is soft-deleted in the workspace › should
+/// still compare the stored versions rather than showing the files as deleted
+#[test]
+fn parent_of_a_soft_deleted_component() {
+    let helper = Helper::new();
+    with_snaps(&helper);
+    for _ in 0..3 {
+        helper.run("tag --unmodified");
     }
-
-    /// diff with --parent flag › when the component is soft-deleted in the workspace › should
-    /// still compare the stored versions rather than showing the files as deleted
-    #[test]
-    fn parent_of_a_soft_deleted_component() {
-        let helper = Helper::new();
-        with_snaps(&helper);
-        for _ in 0..3 {
-            helper.run("tag --unmodified");
-        }
-        helper.run("delete bar/foo --silent");
-        let output = allow_known_failure!(diff(&helper, "--parent"));
-        lacks(&output, "-module.exports = function foo() { return 'got foo v4'; };");
-        has(&output, NO_DIFF);
-    }
+    helper.run("delete bar/foo --silent");
+    let output = diff(&helper, "--parent").native();
+    lacks(&output, "-module.exports = function foo() { return 'got foo v4'; };");
+    has(&output, NO_DIFF);
 }

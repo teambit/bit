@@ -79,6 +79,19 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     validate(&flags)
 }
 
+/// When `args` only fails `parse` because `--ver` is not a valid semver string,
+/// return the parsed options (with a placeholder version) and the invalid `--ver` value.
+pub fn invalid_ver(args: &[&str]) -> Option<(Options, String)> {
+    let mut flags = read(args)?;
+    let ver = flags.string("--ver")?.to_owned();
+    if node_semver::npm::valid(&ver).is_some() {
+        return None;
+    }
+    flags.values.insert("--ver".to_string(), json!("0.0.1"));
+    let options = validate(&flags)?;
+    Some((options, ver))
+}
+
 fn read(args: &[&str]) -> Option<Flags> {
     let mut flags = Flags::default();
     let mut index = 0;
@@ -268,6 +281,20 @@ impl Options {
             options["persist"] = json!(true);
         }
         options
+    }
+
+    /// Return the first `<pattern>@<version>` suffix that is not a valid semver string.
+    pub fn invalid_pattern_version(&self) -> Option<&str> {
+        for pattern in &self.selection.patterns {
+            if let Some((base, ver)) = pattern.rsplit_once('@')
+                && !base.is_empty()
+                && !ver.is_empty()
+                && node_semver::npm::valid(ver).is_none()
+            {
+                return Some(ver);
+            }
+        }
+        None
     }
 }
 

@@ -1,9 +1,6 @@
 //! `e2e/harmony/workspace-config.e2e.ts`.
 
-use crate::{
-    allow_known_failure,
-    helper::{Helper, config},
-};
+use crate::helper::{Helper, config};
 use serde_json::json;
 use std::fs;
 
@@ -36,43 +33,39 @@ fn comment_preservation_in_workspace_jsonc() {
     assert!(after.contains(r#""name": "test-workspace""#), "{after}");
 }
 
-mod known_failures {
-    use super::{Helper, allow_known_failure, config, json};
+/// workspace config (workspace.jsonc) › adding a non-component key › any command should throw a descriptive error
+#[test]
+fn adding_a_non_component_key() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    config::set_workspace_key(&helper.scopes.local_path, "non-comp", json!({}));
 
-    /// workspace config (workspace.jsonc) › adding a non-component key › any command should throw a descriptive error
-    #[test]
-    fn adding_a_non_component_key() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        config::set_workspace_key(&helper.scopes.local_path, "non-comp", json!({}));
+    let run = helper.native_run("status");
+    assert!(!run.status.success());
+    let output = format!("{}{}", run.stdout, run.stderr);
+    assert!(
+        output.contains(
+            r#"unable to parse the component-id "non-comp" from the workspace.jsonc file"#
+        ),
+        "{output}",
+    );
+}
 
-        let run = allow_known_failure!(helper.native_or_known("status"));
-        assert!(!run.status.success());
-        let output = format!("{}{}", run.stdout, run.stderr);
-        assert!(
-            output.contains(
-                r#"unable to parse the component-id "non-comp" from the workspace.jsonc file"#
-            ),
-            "{output}",
-        );
-    }
+/// workspace config (workspace.jsonc) › adding a non-existing component to a variant › any command should throw a `ComponentNotFound` error with specific suggestions for the workspace.jsonc file
+#[test]
+fn adding_a_non_existing_component_to_a_variant() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.output_file("comp1/index.js", "module.exports = () => 'comp1';");
+    helper.run("add comp1");
+    config::set_workspace_key(
+        &helper.scopes.local_path,
+        "teambit.workspace/variants",
+        json!({ "*": { "teambit.harmony/non-exist": {} } }),
+    );
 
-    /// workspace config (workspace.jsonc) › adding a non-existing component to a variant › any command should throw a `ComponentNotFound` error with specific suggestions for the workspace.jsonc file
-    #[test]
-    fn adding_a_non_existing_component_to_a_variant() {
-        let helper = Helper::new();
-        helper.re_init_workspace();
-        helper.output_file("comp1/index.js", "module.exports = () => 'comp1';");
-        helper.run("add comp1");
-        config::set_workspace_key(
-            &helper.scopes.local_path,
-            "teambit.workspace/variants",
-            json!({ "*": { "teambit.harmony/non-exist": {} } }),
-        );
-
-        let run = allow_known_failure!(helper.native_or_known("status"));
-        assert!(!run.status.success());
-        let output = format!("{}{}", run.stdout, run.stderr);
-        assert!(output.contains("your workspace.jsonc has this component-id set"), "{output}");
-    }
+    let run = helper.native_run("status");
+    assert!(!run.status.success());
+    let output = format!("{}{}", run.stdout, run.stderr);
+    assert!(output.contains("your workspace.jsonc has this component-id set"), "{output}");
 }

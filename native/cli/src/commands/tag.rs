@@ -1,6 +1,7 @@
 //! Native `bit tag [component-patterns...]`: the engine plans and writes the
 //! tags (`workspace_command::resolve`), with the tag options and report.
 
+mod diagnostics;
 mod options;
 mod version_file;
 
@@ -47,13 +48,39 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside the native snapshot policy grammar".to_string()));
     };
     let Some(options) = options::parse(&command_args) else {
+        if let Some((options, ver)) = options::invalid_ver(&command_args)
+            && let Some(root) = workspace::root(&env::current_dir()?)
+        {
+            workflow.configure(&root, &argv[1..], resolve::Kind::Tag)?;
+            return invalid_version_failure(&root, args, &options, &workflow, &ver);
+        }
         return Ok(Outcome::Declined("outside the native tag grammar".to_string()));
     };
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
     workflow.configure(&root, &argv[1..], resolve::Kind::Tag)?;
+    if let Some(ver) = options.invalid_pattern_version() {
+        return invalid_version_failure(&root, args, &options, &workflow, ver);
+    }
     run_workspace(&root, args, &options, &workflow, &policy)
+}
+
+fn invalid_version_failure(
+    root: &Path,
+    args: &[OsString],
+    options: &Options,
+    workflow: &resolve::workflow::Workflow,
+    ver: &str,
+) -> io::Result<Outcome> {
+    let warn = options.message.is_none()
+        && options.mode != Mode::Persist
+        && workflow.editor.is_none();
+    let startup = super::status::autosync::Startup::default();
+    let error = io::Error::other(format!(
+        "error: version {ver} is not a valid semantic version. learn more: https://semver.org",
+    ));
+    failure(root, args, warn, options.mode == Mode::Soft || workflow.build, &startup, error)
 }
 
 fn run_workspace(
@@ -68,19 +95,18 @@ fn run_workspace(
     let warn = options.message.is_none()
         && options.mode != Mode::Persist
         && workflow.editor.is_none();
+    let soft = options.mode == Mode::Soft || workflow.build;
     let (mut planned, report, progress) = match prepared {
         Ok(prepared) => prepared,
         Err(error) if startup.committed => {
-            return failure(
-                root,
-                args,
-                warn,
-                options.mode == Mode::Soft || workflow.build,
-                &startup,
-                error,
-            );
+            return failure(root, args, warn, soft, &startup, error);
         }
-        Err(error) => return Ok(Outcome::Declined(format!("tag: {error}"))),
+        Err(error) => {
+            if let Ok(Some(diag)) = diagnostics::diagnose(root, args, options, policy, &error) {
+                return failure(root, args, warn, soft, &startup, diag);
+            }
+            return Ok(Outcome::Declined(format!("tag: {error}")));
+        }
     };
     use std::io::Write as _;
     io::stdout().write_all(startup.stdout.as_bytes())?;

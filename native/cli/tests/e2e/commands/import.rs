@@ -9,7 +9,7 @@ mod original_scopes;
 mod policy;
 
 use crate::{
-    helper::{FOO_FIXTURE, Helper, Run, config, parse, setup},
+    helper::{FOO_FIXTURE, Helper, Run, config, len, parse, setup},
     known_failure::{KnownResult, Native},
 };
 use serde_json::Value;
@@ -1105,349 +1105,318 @@ fn lane_wildcard_imports_missing_lane_component_like_node() {
     );
 }
 
-/// Source-suite cases that may still delegate when installation or unsupported
-/// component layouts are involved: authored components, some merge layouts,
-/// and dependency traversal flags.
-mod known_failures {
-    use super::{
-        chain, combined, consumer_files, expect_id, exported_simple, import, import_chain,
-        modified_bar_foo, read_bitmap, set_components_dir, simple_dir,
-    };
-    use crate::{
-        allow_known_failure,
-        helper::{FOO_FIXTURE, Helper, len, parse},
-        known_failure::Native,
-    };
+/// stand alone component (without dependencies) › when the default component directory
+/// already exist › when the destination is an existing empty directory › should write the
+/// component to the specified path
+#[test]
+fn an_existing_empty_directory_is_written() {
+    let helper = exported_simple();
+    fs::create_dir_all(simple_dir(&helper)).unwrap();
+    import(&helper, "global/simple").native();
+    assert!(simple_dir(&helper).join("simple.js").is_file());
+}
 
-    use std::fs;
+/// stand alone component (without dependencies) › when the default component directory
+/// already exist › when the destination directory is not empty › should not import the
+/// component; should not delete the existing file; should throw an error; should import
+/// successfully if the --override flag is used
+#[test]
+fn a_non_empty_directory_is_not_overwritten() {
+    let helper = exported_simple();
+    let existing = simple_dir(&helper).join("my-file.js");
+    fs::create_dir_all(simple_dir(&helper)).unwrap();
+    fs::write(&existing, "console.log()").unwrap();
+    let remote = &helper.scopes.remote;
+    let run = helper
+        .native_or_known(&format!("import {remote}/global/simple"))
+        .native();
+    assert!(
+        simple_dir(&helper)
+            .join("simple.js")
+            .symlink_metadata()
+            .is_err(),
+    );
+    assert!(existing.is_file());
+    assert!(combined(&run).contains("unable to import"), "{}", combined(&run));
+    helper
+        .native_output_or_known(&format!("import {remote}/global/simple --override"))
+        .native();
+    assert!(simple_dir(&helper).join("simple.js").is_file());
+}
 
-    /// stand alone component (without dependencies) › when the default component directory
-    /// already exist › when the destination is an existing empty directory › should write the
-    /// component to the specified path
-    #[test]
-    fn an_existing_empty_directory_is_written() {
-        let helper = exported_simple();
-        fs::create_dir_all(simple_dir(&helper)).unwrap();
-        allow_known_failure!(import(&helper, "global/simple"));
-        assert!(simple_dir(&helper).join("simple.js").is_file());
+/// stand alone component (without dependencies) › when the default component directory
+/// already exist › when the destination is a file › should not import the component;
+/// should not delete the existing file; should throw an error; should throw an error also
+/// when the --override flag is used
+#[test]
+fn a_file_at_the_directory_is_not_overwritten() {
+    let helper = exported_simple();
+    let dir = simple_dir(&helper);
+    fs::create_dir_all(dir.parent().unwrap()).unwrap();
+    fs::write(&dir, "console.log()").unwrap();
+    let remote = &helper.scopes.remote;
+    let run = helper
+        .native_or_known(&format!("import {remote}/global/simple"))
+        .native();
+    assert!(
+        dir.join("simple.js")
+            .symlink_metadata()
+            .is_err(),
+    );
+    assert!(dir.is_file());
+    assert!(combined(&run).contains("unable to import"), "{}", combined(&run));
+    let run = helper
+        .native_or_known(&format!("import {remote}/global/simple --override"))
+        .native();
+    assert!(combined(&run).contains("unable to import"), "{}", combined(&run));
+}
+
+/// stand alone component (without dependencies) › with a specific path, using -p flag › as
+/// imported › when the destination is a non-exist directory › should write the component
+/// to the specified path
+#[test]
+fn the_path_flag_sets_the_directory() {
+    let helper = exported_simple();
+    let remote = &helper.scopes.remote;
+    helper
+        .native_output_or_known(&format!("import {remote}/global/simple -p my-custom-location"))
+        .native();
+    assert!(helper.scopes.local_path.join("my-custom-location/simple.js").is_file());
+}
+
+/// stand alone component (without dependencies) › re-import after deleting the component
+/// physically › should import the component successfully
+#[test]
+fn a_physically_deleted_component_is_imported_again() {
+    let helper = exported_simple();
+    import(&helper, "global/simple").native();
+    helper.delete_path("components");
+    let output = import(&helper, "global/simple").native();
+    assert!(output.contains("successfully imported one component"), "{output}");
+}
+
+/// stand alone component (without dependencies) › import component with custom dsl as
+/// destination dir for import › when the DSL is valid › should import the component
+/// successfully; should import the component into new dir structure according to dsl;
+/// bitmap should contain component with correct rootDir according to dsl
+#[test]
+fn a_valid_default_directory_dsl_places_the_component() {
+    let helper = exported_simple();
+    set_components_dir(&helper, "{scope}/-{name}-");
+    import(&helper, "global/simple").native();
+    let output = import(&helper, "global/simple").native();
+    assert!(output.contains("successfully imported one component"), "{output}");
+    let remote = &helper.scopes.remote;
+    let dir = helper.scopes.local_path.join(remote).join("-global/simple-");
+    assert!(
+        fs::read_dir(&dir)
+            .unwrap()
+            .next()
+            .is_some(),
+        "{dir:?} is empty",
+    );
+    let root_dir = format!("{remote}/-global/simple-");
+    assert_eq!(read_bitmap(&helper)["global/simple"]["rootDir"], root_dir);
+}
+
+/// stand alone component (without dependencies) › import component with custom dsl as
+/// destination dir for import › when the DSL has invalid parameters › should throw an error
+/// saying it has an invalid parameter
+#[test]
+fn an_invalid_default_directory_dsl_fails() {
+    let helper = exported_simple();
+    set_components_dir(&helper, "{non-exist-param}/{name}");
+    let run = helper
+        .native_or_known(&format!("import {}/global/simple", helper.scopes.remote))
+        .native();
+    let expected = r#"the "non-exist-param" part of the component structure "{non-exist-param}/{name}" is invalid"#;
+    assert!(combined(&run).contains(expected), "{}", combined(&run));
+}
+
+/// with an existing component in bit.map (as author) › should write the component to the
+/// paths specified in bit.map; should not remove the originallySharedDir (because it is an
+/// AUTHORED component); should not write any file into components directory; importing the
+/// component again › should not create an "undefined" package on `node_modules`
+#[test]
+fn an_authored_component_keeps_its_bitmap_paths() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.tag_without_build("", "");
+    crate::helper::remote::publish(&helper);
+    let bitmap = fs::read(helper.scopes.local_path.join(".bitmap")).unwrap();
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    fs::write(helper.scopes.local_path.join(".bitmap"), bitmap).unwrap();
+    import(&helper, "bar/foo").native();
+    let files = consumer_files(&helper);
+    assert!(files.contains(&"bar/foo.js".to_string()), "{files:?}");
+    assert!(!files.contains(&"foo.js".to_string()), "{files:?}");
+    assert!(
+        !files
+            .iter()
+            .any(|file| file.starts_with("components")),
+        "{files:?}",
+    );
+    import(&helper, "bar/foo").native();
+    let files = consumer_files(&helper);
+    assert!(
+        !files
+            .iter()
+            .any(|file| file.starts_with("node_modules/undefined")),
+        "{files:?}",
+    );
+}
+
+/// import a component when the local version is modified › without --override flag › should
+/// display a warning saying it was unable to import; with --override flag › should display a
+/// successful message
+#[test]
+fn a_modified_component_needs_override() {
+    let (helper, _clone) = modified_bar_foo();
+    let run = helper
+        .native_or_known(&format!("import {}/bar/foo", helper.scopes.remote))
+        .native();
+    assert!(!run.status.success());
+    assert!(combined(&run).contains("unable to import"), "{}", combined(&run));
+    let output = import(&helper, "bar/foo --override").native();
+    assert!(output.contains("successfully imported"), "{output}");
+}
+
+/// import a component when the local version is modified › with --merge=manual › should
+/// display a successful message
+#[test]
+fn a_modified_component_merges_manually() {
+    let (helper, _clone) = modified_bar_foo();
+    let output = import(&helper, "bar/foo --merge=manual").native();
+    assert!(output.contains("successfully imported"), "{output}");
+}
+
+/// import a component when the local version is modified › re-import a component after
+/// tagging the component › should import successfully
+#[test]
+fn a_tagged_modification_is_imported_again() {
+    let (helper, _clone) = modified_bar_foo();
+    helper.tag_without_build("", "");
+    let output = import(&helper, "bar/foo").native();
+    assert!(output.contains("successfully imported"), "{output}");
+}
+
+/// importing a component when it has a local tag › as imported › should not remove the local
+/// version; should not override the local component; importing a specific version › should
+/// not throw an error saying the component was not found
+#[test]
+fn a_local_tag_survives_an_import() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.tag_without_build("", "");
+    crate::helper::remote::publish(&helper);
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    let remote = helper.scopes.remote.clone();
+    helper.run(&format!("import {remote}/bar/foo --path components/bar/foo"));
+    helper.output_file("components/bar/foo/foo.js", "v2");
+    assert!(helper.tag_without_build("", "").contains("0.0.2"));
+    import(&helper, "bar/foo").native();
+    let cat = parse(&helper.run(&format!("cat-component {remote}/bar/foo --json")));
+    assert!(cat["versions"].get("0.0.1").is_some(), "{cat}");
+    assert!(cat["versions"].get("0.0.2").is_some(), "{cat}");
+    assert!(cat["state"]["versions"].get("0.0.2").is_some(), "{cat}");
+    let output = import(&helper, "bar/foo@0.0.1").native();
+    assert!(output.contains("successfully imported"), "{output}");
+}
+
+/// import with wildcards › import the entire scope › should import all components from the
+/// remote scope; bit ls should show that all components from the remote scope were imported
+#[test]
+fn a_wildcard_imports_the_whole_scope() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(3, true, "");
+    helper.tag_without_build("", "");
+    crate::helper::remote::publish(&helper);
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    let output = import(&helper, "*").native();
+    for comp in ["comp1", "comp2", "comp3"] {
+        assert!(output.contains(comp), "{comp} in {output}");
     }
+    let list = parse(&helper.native("list --local-scope --json"));
+    assert_eq!(len(&list), 3);
+}
 
-    /// stand alone component (without dependencies) › when the default component directory
-    /// already exist › when the destination directory is not empty › should not import the
-    /// component; should not delete the existing file; should throw an error; should import
-    /// successfully if the --override flag is used
-    #[test]
-    fn a_non_empty_directory_is_not_overwritten() {
-        let helper = exported_simple();
-        let existing = simple_dir(&helper).join("my-file.js");
-        fs::create_dir_all(simple_dir(&helper)).unwrap();
-        fs::write(&existing, "console.log()").unwrap();
-        let remote = &helper.scopes.remote;
-        let run =
-            allow_known_failure!(helper.native_or_known(&format!("import {remote}/global/simple")));
-        assert!(
-            simple_dir(&helper)
-                .join("simple.js")
-                .symlink_metadata()
-                .is_err(),
-        );
-        assert!(existing.is_file());
-        assert!(combined(&run).contains("unable to import"), "{}", combined(&run));
-        allow_known_failure!(helper.native_output_or_known(&format!(
-            "import {remote}/global/simple --override"
-        )));
-        assert!(simple_dir(&helper).join("simple.js").is_file());
+/// import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) ›
+/// --dependencies-depth 1 › should import only the direct dep at the version comp1
+/// references (comp2@0.0.1); --dependencies-depth 2 › should import direct deps and their
+/// direct deps (comp2, comp3) but not deeper
+#[test]
+fn dependencies_depth_limits_the_import() {
+    let helper = chain();
+    import_chain(&helper, "comp1@0.0.1", "--dependencies --dependencies-depth 1").native();
+    expect_id(&helper, "comp1", Some("0.0.1"));
+    expect_id(&helper, "comp2", Some("0.0.1"));
+    expect_id(&helper, "comp3", None);
+    expect_id(&helper, "comp4", None);
+    import_chain(&helper, "comp1@0.0.1", "--dependencies --dependencies-depth 2").native();
+    expect_id(&helper, "comp2", Some("0.0.1"));
+    expect_id(&helper, "comp3", Some("0.0.1"));
+    expect_id(&helper, "comp4", None);
+}
+
+/// import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) ›
+/// --dependencies-depth with versionless input › should resolve the root to head
+/// (comp1@0.0.2) and import its direct dep at the referenced version (comp2@0.0.2);
+/// --dependencies-head --dependencies-depth 1 › should import the direct dep at head
+/// (comp2@0.0.2), not the version comp1@0.0.1 references
+#[test]
+fn dependencies_depth_resolves_heads() {
+    let helper = chain();
+    import_chain(&helper, "comp1", "--dependencies --dependencies-depth 1").native();
+    expect_id(&helper, "comp1", Some("0.0.2"));
+    expect_id(&helper, "comp2", Some("0.0.2"));
+    expect_id(&helper, "comp3", None);
+    import_chain(&helper, "comp1@0.0.1", "--dependencies-head --dependencies-depth 1").native();
+    expect_id(&helper, "comp1", Some("0.0.1"));
+    expect_id(&helper, "comp2", Some("0.0.2"));
+    expect_id(&helper, "comp3", None);
+    expect_id(&helper, "comp4", None);
+}
+
+/// import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) ›
+/// --dependencies without depth › should import all transitive dependencies
+#[test]
+fn dependencies_imports_the_whole_chain() {
+    let helper = chain();
+    import_chain(&helper, "comp1@0.0.1", "--dependencies").native();
+    for comp in ["comp1", "comp2", "comp3", "comp4"] {
+        expect_id(&helper, comp, Some("0.0.1"));
     }
+}
 
-    /// stand alone component (without dependencies) › when the default component directory
-    /// already exist › when the destination is a file › should not import the component;
-    /// should not delete the existing file; should throw an error; should throw an error also
-    /// when the --override flag is used
-    #[test]
-    fn a_file_at_the_directory_is_not_overwritten() {
-        let helper = exported_simple();
-        let dir = simple_dir(&helper);
-        fs::create_dir_all(dir.parent().unwrap()).unwrap();
-        fs::write(&dir, "console.log()").unwrap();
-        let remote = &helper.scopes.remote;
-        let run =
-            allow_known_failure!(helper.native_or_known(&format!("import {remote}/global/simple")));
-        assert!(
-            dir.join("simple.js")
-                .symlink_metadata()
-                .is_err(),
-        );
-        assert!(dir.is_file());
-        assert!(combined(&run).contains("unable to import"), "{}", combined(&run));
-        let run = allow_known_failure!(helper.native_or_known(&format!(
-            "import {remote}/global/simple --override"
-        )));
-        assert!(combined(&run).contains("unable to import"), "{}", combined(&run));
-    }
-
-    /// stand alone component (without dependencies) › with a specific path, using -p flag › as
-    /// imported › when the destination is a non-exist directory › should write the component
-    /// to the specified path
-    #[test]
-    fn the_path_flag_sets_the_directory() {
-        let helper = exported_simple();
-        let remote = &helper.scopes.remote;
-        allow_known_failure!(helper.native_output_or_known(&format!(
-            "import {remote}/global/simple -p my-custom-location"
-        )));
-        assert!(helper.scopes.local_path.join("my-custom-location/simple.js").is_file());
-    }
-
-    /// stand alone component (without dependencies) › re-import after deleting the component
-    /// physically › should import the component successfully
-    #[test]
-    fn a_physically_deleted_component_is_imported_again() {
-        let helper = exported_simple();
-        allow_known_failure!(import(&helper, "global/simple"));
-        helper.delete_path("components");
-        let output = allow_known_failure!(import(&helper, "global/simple"));
-        assert!(output.contains("successfully imported one component"), "{output}");
-    }
-
-    /// stand alone component (without dependencies) › import component with custom dsl as
-    /// destination dir for import › when the DSL is valid › should import the component
-    /// successfully; should import the component into new dir structure according to dsl;
-    /// bitmap should contain component with correct rootDir according to dsl
-    #[test]
-    fn a_valid_default_directory_dsl_places_the_component() {
-        let helper = exported_simple();
-        set_components_dir(&helper, "{scope}/-{name}-");
-        allow_known_failure!(import(&helper, "global/simple"));
-        let output = allow_known_failure!(import(&helper, "global/simple"));
-        assert!(output.contains("successfully imported one component"), "{output}");
-        let remote = &helper.scopes.remote;
-        let dir = helper.scopes.local_path.join(remote).join("-global/simple-");
-        assert!(
-            fs::read_dir(&dir)
-                .unwrap()
-                .next()
-                .is_some(),
-            "{dir:?} is empty",
-        );
-        let root_dir = format!("{remote}/-global/simple-");
-        assert_eq!(read_bitmap(&helper)["global/simple"]["rootDir"], root_dir);
-    }
-
-    /// stand alone component (without dependencies) › import component with custom dsl as
-    /// destination dir for import › when the DSL has invalid parameters › should throw an error
-    /// saying it has an invalid parameter
-    #[test]
-    fn an_invalid_default_directory_dsl_fails() {
-        let helper = exported_simple();
-        set_components_dir(&helper, "{non-exist-param}/{name}");
-        let run = allow_known_failure!(helper.native_or_known(&format!(
-            "import {}/global/simple",
-            helper.scopes.remote
-        )));
-        let expected = r#"the "non-exist-param" part of the component structure "{non-exist-param}/{name}" is invalid"#;
-        assert!(combined(&run).contains(expected), "{}", combined(&run));
-    }
-
-    /// with an existing component in bit.map (as author) › should write the component to the
-    /// paths specified in bit.map; should not remove the originallySharedDir (because it is an
-    /// AUTHORED component); should not write any file into components directory; importing the
-    /// component again › should not create an "undefined" package on `node_modules`
-    #[test]
-    fn an_authored_component_keeps_its_bitmap_paths() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.create_component_bar_foo(FOO_FIXTURE);
-        helper.add_component_bar_foo();
-        helper.tag_without_build("", "");
-        crate::helper::remote::publish(&helper);
-        let bitmap = fs::read(helper.scopes.local_path.join(".bitmap")).unwrap();
-        helper.re_init_workspace();
-        helper.add_remote_scope();
-        fs::write(helper.scopes.local_path.join(".bitmap"), bitmap).unwrap();
-        allow_known_failure!(import(&helper, "bar/foo"));
-        let files = consumer_files(&helper);
-        assert!(files.contains(&"bar/foo.js".to_string()), "{files:?}");
-        assert!(!files.contains(&"foo.js".to_string()), "{files:?}");
-        assert!(
-            !files
-                .iter()
-                .any(|file| file.starts_with("components")),
-            "{files:?}",
-        );
-        allow_known_failure!(import(&helper, "bar/foo"));
-        let files = consumer_files(&helper);
-        assert!(
-            !files
-                .iter()
-                .any(|file| file.starts_with("node_modules/undefined")),
-            "{files:?}",
-        );
-    }
-
-    /// import a component when the local version is modified › without --override flag › should
-    /// display a warning saying it was unable to import; with --override flag › should display a
-    /// successful message
-    #[test]
-    fn a_modified_component_needs_override() {
-        let (helper, _clone) = modified_bar_foo();
-        let run = allow_known_failure!(helper.native_or_known(&format!(
-            "import {}/bar/foo",
-            helper.scopes.remote
-        )));
-        assert!(!run.status.success());
-        assert!(combined(&run).contains("unable to import"), "{}", combined(&run));
-        let output = allow_known_failure!(import(&helper, "bar/foo --override"));
-        assert!(output.contains("successfully imported"), "{output}");
-    }
-
-    /// import a component when the local version is modified › with --merge=manual › should
-    /// display a successful message
-    #[test]
-    fn a_modified_component_merges_manually() {
-        let (helper, _clone) = modified_bar_foo();
-        let output = allow_known_failure!(import(&helper, "bar/foo --merge=manual"));
-        assert!(output.contains("successfully imported"), "{output}");
-    }
-
-    /// import a component when the local version is modified › re-import a component after
-    /// tagging the component › should import successfully
-    #[test]
-    fn a_tagged_modification_is_imported_again() {
-        let (helper, _clone) = modified_bar_foo();
-        helper.tag_without_build("", "");
-        let output = allow_known_failure!(import(&helper, "bar/foo"));
-        assert!(output.contains("successfully imported"), "{output}");
-    }
-
-    /// importing a component when it has a local tag › as imported › should not remove the local
-    /// version; should not override the local component; importing a specific version › should
-    /// not throw an error saying the component was not found
-    #[test]
-    fn a_local_tag_survives_an_import() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.create_component_bar_foo(FOO_FIXTURE);
-        helper.add_component_bar_foo();
-        helper.tag_without_build("", "");
-        crate::helper::remote::publish(&helper);
-        helper.re_init_workspace();
-        helper.add_remote_scope();
-        let remote = helper.scopes.remote.clone();
-        helper.run(&format!("import {remote}/bar/foo --path components/bar/foo"));
-        helper.output_file("components/bar/foo/foo.js", "v2");
-        assert!(helper.tag_without_build("", "").contains("0.0.2"));
-        allow_known_failure!(import(&helper, "bar/foo"));
-        let cat = parse(&helper.run(&format!("cat-component {remote}/bar/foo --json")));
-        assert!(cat["versions"].get("0.0.1").is_some(), "{cat}");
-        assert!(cat["versions"].get("0.0.2").is_some(), "{cat}");
-        assert!(cat["state"]["versions"].get("0.0.2").is_some(), "{cat}");
-        let output = allow_known_failure!(import(&helper, "bar/foo@0.0.1"));
-        assert!(output.contains("successfully imported"), "{output}");
-    }
-
-    /// import with wildcards › import the entire scope › should import all components from the
-    /// remote scope; bit ls should show that all components from the remote scope were imported
-    #[test]
-    fn a_wildcard_imports_the_whole_scope() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.populate_components(3, true, "");
-        helper.tag_without_build("", "");
-        crate::helper::remote::publish(&helper);
-        helper.re_init_workspace();
-        helper.add_remote_scope();
-        let output = import(&helper, "*").native();
-        for comp in ["comp1", "comp2", "comp3"] {
-            assert!(output.contains(comp), "{comp} in {output}");
-        }
-        let list = parse(&helper.native("list --local-scope --json"));
-        assert_eq!(len(&list), 3);
-    }
-
-    /// import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) ›
-    /// --dependencies-depth 1 › should import only the direct dep at the version comp1
-    /// references (comp2@0.0.1); --dependencies-depth 2 › should import direct deps and their
-    /// direct deps (comp2, comp3) but not deeper
-    #[test]
-    fn dependencies_depth_limits_the_import() {
-        let helper = chain();
-        allow_known_failure!(import_chain(
-            &helper,
-            "comp1@0.0.1",
-            "--dependencies --dependencies-depth 1"
-        ));
-        expect_id(&helper, "comp1", Some("0.0.1"));
-        expect_id(&helper, "comp2", Some("0.0.1"));
-        expect_id(&helper, "comp3", None);
-        expect_id(&helper, "comp4", None);
-        allow_known_failure!(import_chain(
-            &helper,
-            "comp1@0.0.1",
-            "--dependencies --dependencies-depth 2"
-        ));
-        expect_id(&helper, "comp2", Some("0.0.1"));
-        expect_id(&helper, "comp3", Some("0.0.1"));
-        expect_id(&helper, "comp4", None);
-    }
-
-    /// import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) ›
-    /// --dependencies-depth with versionless input › should resolve the root to head
-    /// (comp1@0.0.2) and import its direct dep at the referenced version (comp2@0.0.2);
-    /// --dependencies-head --dependencies-depth 1 › should import the direct dep at head
-    /// (comp2@0.0.2), not the version comp1@0.0.1 references
-    #[test]
-    fn dependencies_depth_resolves_heads() {
-        let helper = chain();
-        allow_known_failure!(import_chain(
-            &helper,
-            "comp1",
-            "--dependencies --dependencies-depth 1"
-        ));
-        expect_id(&helper, "comp1", Some("0.0.2"));
-        expect_id(&helper, "comp2", Some("0.0.2"));
-        expect_id(&helper, "comp3", None);
-        allow_known_failure!(import_chain(
-            &helper,
-            "comp1@0.0.1",
-            "--dependencies-head --dependencies-depth 1"
-        ));
-        expect_id(&helper, "comp1", Some("0.0.1"));
-        expect_id(&helper, "comp2", Some("0.0.2"));
-        expect_id(&helper, "comp3", None);
-        expect_id(&helper, "comp4", None);
-    }
-
-    /// import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) ›
-    /// --dependencies without depth › should import all transitive dependencies
-    #[test]
-    fn dependencies_imports_the_whole_chain() {
-        let helper = chain();
-        allow_known_failure!(import_chain(&helper, "comp1@0.0.1", "--dependencies"));
-        for comp in ["comp1", "comp2", "comp3", "comp4"] {
-            expect_id(&helper, comp, Some("0.0.1"));
-        }
-    }
-
-    /// import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › validation
-    /// errors › should error when --dependencies-depth is used without
-    /// --dependencies/--dependencies-head; should error when --dependencies-depth is not a
-    /// positive integer
-    #[test]
-    fn dependencies_depth_is_validated() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        let remote = &helper.scopes.remote;
-        let output = combined(&allow_known_failure!(helper.native_or_known(&format!(
-            "import {remote}/comp1 --dependencies-depth 1"
-        ))));
-        assert!(
-            output.contains("--dependencies-depth") && output.contains("--dependencies"),
-            "{output}",
-        );
-        for depth in ["0", "abc", "1.5"] {
-            let line = format!("import {remote}/comp1 --dependencies --dependencies-depth {depth}");
-            let output = combined(&allow_known_failure!(helper.native_or_known(&line)));
-            assert!(output.contains("positive integer"), "{depth}: {output}");
-        }
+/// import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › validation
+/// errors › should error when --dependencies-depth is used without
+/// --dependencies/--dependencies-head; should error when --dependencies-depth is not a
+/// positive integer
+#[test]
+fn dependencies_depth_is_validated() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    let remote = &helper.scopes.remote;
+    let output = combined(
+        &helper
+            .native_or_known(&format!("import {remote}/comp1 --dependencies-depth 1"))
+            .native(),
+    );
+    assert!(
+        output.contains("--dependencies-depth") && output.contains("--dependencies"),
+        "{output}",
+    );
+    for depth in ["0", "abc", "1.5"] {
+        let line = format!("import {remote}/comp1 --dependencies --dependencies-depth {depth}");
+        let output = combined(&helper.native_or_known(&line).native());
+        assert!(output.contains("positive integer"), "{depth}: {output}");
     }
 }

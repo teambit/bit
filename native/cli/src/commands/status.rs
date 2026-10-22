@@ -54,11 +54,12 @@ enum Mode {
 
 fn mode(args: &[OsString]) -> Option<Mode> {
     let arguments = workspace_command::utf8_args(args)?;
-    let json = arguments
+    let (filtered, _) = strip_log_flags(&arguments[1..]);
+    let json = filtered
         .iter()
         .any(|arg| matches!(*arg, "--json" | "-j"));
-    let quick = arguments.contains(&"--quick");
-    let report_args = arguments[1..]
+    let quick = filtered.contains(&"--quick");
+    let report_args = filtered
         .iter()
         .copied()
         .filter(|arg| !matches!(*arg, "--json" | "-j" | "--quick"))
@@ -73,6 +74,45 @@ fn mode(args: &[OsString]) -> Option<Mode> {
     }
 }
 
+/// Strip `--log`, `--log=<level>`, or `--log <level>` from `args` and return whether logging was enabled.
+fn strip_log_flags<'a>(args: &[&'a str]) -> (Vec<&'a str>, bool) {
+    let mut out = Vec::with_capacity(args.len());
+    let mut logged = false;
+    let mut iter = args.iter().copied().peekable();
+    while let Some(arg) = iter.next() {
+        if arg == "--log" {
+            logged = true;
+            if iter
+                .peek()
+                .is_some_and(|next| {
+                    matches!(
+                        *next,
+                        "trace"
+                            | "debug"
+                            | "info"
+                            | "warn"
+                            | "error"
+                            | "fatal"
+                            | "10"
+                            | "20"
+                            | "30"
+                            | "40"
+                            | "50"
+                            | "60",
+                    )
+                })
+            {
+                iter.next();
+            }
+        } else if arg.starts_with("--log=") {
+            logged = true;
+        } else {
+            out.push(arg);
+        }
+    }
+    (out, logged)
+}
+
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(mode) = mode(args) else {
         return Ok(Outcome::Declined("flags outside the native `status` grammar".to_string()));
@@ -80,12 +120,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
-    if has_conflicting_external_pm_root_component(&root) {
+    if let Some(err_msg) = workspace_config_error(&root) {
         return workspace_command::execute_without_loader(&root, args, "status", |_| {
-            Err(io::Error::other(
-                "rootComponent cannot be true when externalPackageManager is enabled",
-            ))
+            Err(io::Error::other(err_msg))
         });
+    }
+    if workspace_command::utf8_args(args).is_some_and(|argv| strip_log_flags(&argv[1..]).1) {
+        writeln!(io::stdout(), r#"[*] started a new command: "status" with the following args:"#)?;
     }
     let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
     match mode {
@@ -96,16 +137,54 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
-/// `bit status --json`.
-fn has_conflicting_external_pm_root_component(root: &Path) -> bool {
-    let Ok(bytes) = std::fs::read(root.join("workspace.jsonc")) else {
-        return false;
-    };
-    let Ok(ws) = bit_object_import::parse_jsonc(&bytes) else {
-        return false;
-    };
+/// Validate `workspace.jsonc` for invalid top-level keys, conflicting rootComponent, or unknown core harmony aspects in variants.
+fn workspace_config_error(root: &Path) -> Option<String> {
+    let bytes = std::fs::read(root.join("workspace.jsonc")).ok()?;
+    let ws = bit_object_import::parse_jsonc(&bytes).ok()?;
     let dep_resolver = &ws["teambit.dependencies/dependency-resolver"];
-    dep_resolver["externalPackageManager"] == true && dep_resolver["rootComponent"] == true
+    if dep_resolver["externalPackageManager"] == true && dep_resolver["rootComponent"] == true {
+        return Some(
+            "rootComponent cannot be true when externalPackageManager is enabled".to_owned(),
+        );
+    }
+    let obj = ws.as_object()?;
+    invalid_top_level_key(obj).or_else(|| unknown_variant_harmony_aspect(obj))
+}
+
+fn invalid_top_level_key(obj: &serde_json::Map<String, Value>) -> Option<String> {
+    let key = obj
+        .keys()
+        .find(|key| *key != "$schema" && !key.contains('/'))?;
+    Some(format!(r#"unable to parse the component-id "{key}" from the workspace.jsonc file"#))
+}
+
+fn unknown_variant_harmony_aspect(obj: &serde_json::Map<String, Value>) -> Option<String> {
+    let variants = obj.get("teambit.workspace/variants")?.as_object()?;
+    let core: Vec<String> = serde_json::from_str(include_str!(
+        "../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
+    ))
+    .unwrap_or_default();
+    let aspect_key = variants
+        .values()
+        .filter_map(Value::as_object)
+        .flat_map(serde_json::Map::keys)
+        .find(|aspect_key| is_unknown_harmony_aspect(aspect_key, &core))?;
+    Some(format!(
+        r#"error: component "{aspect_key}" was not found.
+your workspace.jsonc has this component-id set in the "teambit.workspace/variants" section"#,
+    ))
+}
+
+fn is_unknown_harmony_aspect(aspect_key: &str, core: &[String]) -> bool {
+    let bare = aspect_key
+        .split('@')
+        .next()
+        .unwrap_or(aspect_key);
+    bare.starts_with("teambit.harmony/")
+        && !core
+            .iter()
+            .any(|core_id| core_id == bare)
+        && !matches!(bare, "teambit.harmony/bit-custom-aspect" | "teambit.harmony/harmony")
 }
 
 fn json_status(

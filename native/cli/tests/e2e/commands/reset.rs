@@ -322,79 +322,66 @@ fn reset_by_an_id_without_scope() {
     assert!(output.contains("utils/is-string"), "{output}");
 }
 
-/// These error and detached-head cases still delegate to the published CLI.
-mod known_failures {
-    use super::{
-        Helper, cat_component, failure_output, parse, read_bitmap, single_component,
-        with_dependencies,
-    };
-    use crate::allow_known_failure;
+/// untag single component › when tagging non-existing component › should show an
+/// descriptive error
+#[test]
+fn reset_of_a_missing_component_fails() {
+    let (helper, _) = single_component();
+    let output = failure_output(&helper.native_run("reset non-exist-scope/non-exist-comp"));
+    let expected = r#"error: component "non-exist-scope/non-exist-comp" was not found on your local workspace."#;
+    assert!(output.contains(expected), "{output}");
+}
 
-    /// untag single component › when tagging non-existing component › should show an
-    /// descriptive error
-    #[test]
-    fn reset_of_a_missing_component_fails() {
-        let (helper, _) = single_component();
-        let output = failure_output(&allow_known_failure!(helper.native_or_known(
-            "reset non-exist-scope/non-exist-comp"
-        )));
-        let expected = r#"error: component "non-exist-scope/non-exist-comp" was not found on your local workspace."#;
-        assert!(output.contains(expected), "{output}");
-    }
+/// components with dependencies › untag only the dependency › without force flag › should
+/// throw a descriptive error; with force flag › should untag successfully
+#[test]
+fn reset_of_a_dependency_needs_force() {
+    let (helper, _) = with_dependencies();
+    let remote = &helper.scopes.remote;
+    let output = failure_output(&helper.native_run("reset utils/is-type"));
+    let expected = format!(
+        "unable to reset {remote}/utils/is-type, the version 0.0.1 has the following dependent(s) {remote}/utils/is-string@0.0.1",
+    );
+    assert!(output.contains(&expected), "{output}");
+    let output = helper.native("reset utils/is-type --force");
+    assert!(output.contains("1 component(s) reset successfully"), "{output}");
+}
 
-    /// components with dependencies › untag only the dependency › without force flag › should
-    /// throw a descriptive error; with force flag › should untag successfully
-    #[test]
-    fn reset_of_a_dependency_needs_force() {
-        let (helper, _) = with_dependencies();
-        let remote = &helper.scopes.remote;
-        let output =
-            failure_output(&allow_known_failure!(helper.native_or_known("reset utils/is-type")));
-        let expected = format!(
-            "unable to reset {remote}/utils/is-type, the version 0.0.1 has the following dependent(s) {remote}/utils/is-string@0.0.1",
-        );
-        assert!(output.contains(&expected), "{output}");
-        let output =
-            allow_known_failure!(helper.native_output_or_known("reset utils/is-type --force"));
-        assert!(output.contains("1 component(s) reset successfully"), "{output}");
-    }
+/// components with dependencies › untag only the dependency › after exporting the
+/// component and tagging the scope › should show an error
+#[test]
+fn reset_of_an_exported_dependency_fails() {
+    let (helper, local_scope) = with_dependencies();
+    helper.get_cloned_workspace(&local_scope);
+    helper.re_init_remote_scope();
+    helper.add_remote_scope();
+    helper.run("export");
+    helper.run("tag --unmodified --ver 1.0.5");
+    let run = helper.native_run("reset utils/is-type");
+    let output = format!("{}\n{}", run.stdout, run.stderr);
+    let expected = format!("unable to reset {}/utils/is-type", helper.scopes.remote);
+    assert!(output.contains(&expected), "{output}");
+}
 
-    /// components with dependencies › untag only the dependency › after exporting the
-    /// component and tagging the scope › should show an error
-    #[test]
-    fn reset_of_an_exported_dependency_fails() {
-        let (helper, local_scope) = with_dependencies();
-        helper.get_cloned_workspace(&local_scope);
-        helper.re_init_remote_scope();
-        helper.add_remote_scope();
-        helper.run("export");
-        helper.run("tag --unmodified --ver 1.0.5");
-        let run = allow_known_failure!(helper.native_or_known("reset utils/is-type"));
-        let output = format!("{}\n{}", run.stdout, run.stderr);
-        let expected = format!("unable to reset {}/utils/is-type", helper.scopes.remote);
-        assert!(output.contains(&expected), "{output}");
+/// when checked out to a non-head version with detach-head functionality › expect .bitmap
+/// to point to the same version as it was before the reset, and not the latest; should
+/// not show the component as modified; should clear the detached head
+#[test]
+fn reset_of_a_detached_head() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    for version in ["", "version2", "version3"] {
+        helper.populate_components(1, false, version);
+        helper.run("tag");
     }
-
-    /// when checked out to a non-head version with detach-head functionality › expect .bitmap
-    /// to point to the same version as it was before the reset, and not the latest; should
-    /// not show the component as modified; should clear the detached head
-    #[test]
-    fn reset_of_a_detached_head() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        for version in ["", "version2", "version3"] {
-            helper.populate_components(1, false, version);
-            helper.run("tag");
-        }
-        helper.run("export");
-        helper.run("checkout 0.0.2 comp1 -x");
-        helper.run("snap comp1 --unmodified --detach-head");
-        let comp = cat_component(&helper, "comp1");
-        assert!(!comp["detachedHeads"]["current"].is_null(), "{comp}");
-        allow_known_failure!(helper.native_output_or_known("reset --silent"));
-        assert_eq!(read_bitmap(&helper)["comp1"]["version"], "0.0.2");
-        let status = parse(&helper.run("status --json"));
-        assert_eq!(crate::helper::len(&status["modifiedComponents"]), 0);
-        assert!(cat_component(&helper, "comp1").get("detachedHeads").is_none());
-    }
+    helper.run("export");
+    helper.run("checkout 0.0.2 comp1 -x");
+    helper.run("snap comp1 --unmodified --detach-head");
+    let comp = cat_component(&helper, "comp1");
+    assert!(!comp["detachedHeads"]["current"].is_null(), "{comp}");
+    helper.native("reset --silent");
+    assert_eq!(read_bitmap(&helper)["comp1"]["version"], "0.0.2");
+    let status = parse(&helper.run("status --json"));
+    assert_eq!(crate::helper::len(&status["modifiedComponents"]), 0);
+    assert!(cat_component(&helper, "comp1").get("detachedHeads").is_none());
 }

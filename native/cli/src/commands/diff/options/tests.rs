@@ -1,4 +1,4 @@
-use super::parse;
+use super::{output_error, parse};
 
 #[test]
 fn accepts_workspace_diff_output_modes() {
@@ -15,15 +15,18 @@ fn accepts_workspace_diff_output_modes() {
 }
 
 #[test]
-fn rejects_ambiguous_or_unimplemented_inputs() {
+fn detects_mutually_exclusive_flags_and_rejects_unimplemented_inputs() {
     for args in [
-        &["one", "1.0.0", "2.0.0", "3.0.0"][..],
-        &["--files-only", "--configs-only"],
+        &["--files-only", "--configs-only"][..],
         &["--file", "a", "--configs-only"],
         &["--name-only", "--stat"],
-        &["one", "1.0.0", "2.0.0", "--parent"],
-        &["--file"],
     ] {
+        let options = parse(args).unwrap();
+        assert!(output_error(&options).is_some(), "{args:?}");
+    }
+    let parent_two = parse(&["one", "1.0.0", "2.0.0", "--parent"]).unwrap();
+    assert!(parent_two.versions.parent && parent_two.versions.to.is_some());
+    for args in [&["one", "1.0.0", "2.0.0", "3.0.0"][..], &["--file"]] {
         assert!(parse(args).is_none(), "{args:?}");
     }
 }

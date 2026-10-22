@@ -1,3 +1,6 @@
+mod replace;
+
+use self::replace::prepare_replace;
 use super::{CORE_ENVS, Subcommand};
 use crate::commands::{
     aspect::{
@@ -32,14 +35,15 @@ pub(super) struct EnvBatch {
 pub(super) enum Prepared {
     Set { env_display_id: String, batch: EnvBatch },
     Unset(EnvBatch),
+    Replace { env_display_id: String, batch: EnvBatch },
 }
 
-struct BitmapContext {
-    root: PathBuf,
-    bitmap: Bitmap,
-    bitmap_before: Vec<u8>,
-    bitmap_val: Value,
-    chalk: Chalk,
+pub(super) struct BitmapContext {
+    pub root: PathBuf,
+    pub bitmap: Bitmap,
+    pub bitmap_before: Vec<u8>,
+    pub bitmap_val: Value,
+    pub chalk: Chalk,
 }
 
 impl BitmapContext {
@@ -63,6 +67,7 @@ pub(super) fn prepare(
     match subcommand {
         Subcommand::Set { pattern, env } => prepare_set(ctx, pattern, env),
         Subcommand::Unset { pattern } => prepare_unset(ctx, pattern),
+        Subcommand::Replace { old_env, new_env } => prepare_replace(ctx, old_env, new_env),
     }
 }
 
@@ -98,7 +103,10 @@ fn prepare_set(mut ctx: BitmapContext, pattern: &str, env: &str) -> Result<Prepa
     })
 }
 
-fn set_env_in_comp_json(path: PathBuf, env_no_ver: &str) -> Result<CompJsonEdit, Failure> {
+pub(super) fn set_env_in_comp_json(
+    path: PathBuf,
+    env_no_ver: &str,
+) -> Result<CompJsonEdit, Failure> {
     let content = fs::read_to_string(&path)?;
     let mut parsed: Value =
         serde_json::from_str(&content).map_err(|err| Failure::Declined(err.to_string()))?;
@@ -111,7 +119,7 @@ fn set_env_in_comp_json(path: PathBuf, env_no_ver: &str) -> Result<CompJsonEdit,
     Ok(CompJsonEdit { path, bytes: serialize_json_preserving_newline(&content, &parsed)? })
 }
 
-fn set_env_in_bitmap_row(
+pub(super) fn set_env_in_bitmap_row(
     bitmap_val: &mut Value,
     entry: &BitmapEntry,
     env_no_ver: &str,
@@ -217,7 +225,7 @@ pub(super) fn remove_env_from_map(map: &mut Map<String, Value>) -> bool {
     true
 }
 
-fn resolve_verified_env(
+pub(super) fn resolve_verified_env(
     root: &Path,
     bitmap: &Bitmap,
     bitmap_val: &Value,
@@ -338,25 +346,38 @@ impl Prepared {
                     install_hint,
                 ])
             }
-            Self::Unset(batch) => {
-                batch.persist("env-unset")?;
-                if batch.ids.is_empty() {
-                    formatter.hint(
-                        "unable to find components matching the pattern with env configured in the .bitmap file",
-                    )
-                } else {
-                    Formatter::join(&[
-                        formatter.success_summary(
-                            "removed .bitmap env configuration from the following component(s)",
-                        ),
-                        render_items(&formatter, &batch.ids),
-                        install_hint,
-                    ])
-                }
+            Self::Unset(batch) => commit_unset(&batch, &formatter, install_hint)?,
+            Self::Replace { env_display_id, batch } => {
+                batch.persist(&format!("env-set ({env_display_id})"))?;
+                format!(
+                    "added {} env to the following component(s):\n{}\n\n{install_hint}",
+                    chalk.bold(&env_display_id),
+                    batch.ids.join("\n"),
+                )
             }
         };
         Ok(Report { data, code: 0, details: None })
     }
+}
+
+fn commit_unset(
+    batch: &EnvBatch,
+    formatter: &Formatter,
+    install_hint: String,
+) -> io::Result<String> {
+    batch.persist("env-unset")?;
+    if batch.ids.is_empty() {
+        return Ok(formatter.hint(
+            "unable to find components matching the pattern with env configured in the .bitmap file",
+        ));
+    }
+    Ok(Formatter::join(&[
+        formatter.success_summary(
+            "removed .bitmap env configuration from the following component(s)",
+        ),
+        render_items(formatter, &batch.ids),
+        install_hint,
+    ]))
 }
 
 fn render_items(formatter: &Formatter, ids: &[String]) -> String {

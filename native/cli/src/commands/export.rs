@@ -282,37 +282,49 @@ fn prepare(
     let cli = NodeCli::find()?;
     let ids = selection::ids(engine, root, options)?;
     let config = cache_root().join("config");
-    let prepared: Value = engine.request(&json!({
-        "kind": "commandOutboundPrepare",
-        "skipRemoteResolution": preflight,
-        "nativePackages": native_packages,
-        "root": root,
-        "home": workspace_command::home(),
-        "globalRemotesFile": config.join("global-remotes.json"),
-        "globalConfigDir": config,
-        "nodeExecutable": cli.node,
-        "bitDir": cli.bit_dir,
-        "bitVersion": cli.version,
-        "bitmapHistoryFileId": workspace_command::file_id(),
-        "clientId": options.resume.clone().map_or_else(client_id, Ok)?,
-        "exportDate": now_ms().to_string(),
-        "operation": "export",
-        "ids": ids,
-        "options": {
-            "originDirectly": options.origin_directly,
-            "all": options.all,
-            "allVersions": options.all_versions,
-            "headOnly": options.head_only && !options.json,
-            "forkLaneNewScope": options.fork_lane_new_scope && !options.json,
-            "ignoreMissingArtifacts": options.ignore_missing_artifacts,
-            "resume": options.resume,
-            "patternSelection": options.ids.iter().any(|id| options::is_pattern(id)),
-        },
-    }))?;
+    let prepared: Value = engine
+        .request(&json!({
+            "kind": "commandOutboundPrepare",
+            "skipRemoteResolution": preflight,
+            "nativePackages": native_packages,
+            "root": root,
+            "home": workspace_command::home(),
+            "globalRemotesFile": config.join("global-remotes.json"),
+            "globalConfigDir": config,
+            "nodeExecutable": cli.node,
+            "bitDir": cli.bit_dir,
+            "bitVersion": cli.version,
+            "bitmapHistoryFileId": workspace_command::file_id(),
+            "clientId": options.resume.clone().map_or_else(client_id, Ok)?,
+            "exportDate": now_ms().to_string(),
+            "operation": "export",
+            "ids": ids,
+            "options": {
+                "originDirectly": options.origin_directly,
+                "all": options.all,
+                "allVersions": options.all_versions,
+                "headOnly": options.head_only && !options.json,
+                "forkLaneNewScope": options.fork_lane_new_scope && !options.json,
+                "ignoreMissingArtifacts": options.ignore_missing_artifacts,
+                "resume": options.resume,
+                "patternSelection": options.ids.iter().any(|id| options::is_pattern(id)),
+            },
+        }))
+        .map_err(canonical_prepare_error)?;
     if native_packages {
         packages::validate(&prepared)?;
     }
     report::prepared(&prepared)
+}
+
+fn canonical_prepare_error(error: io::Error) -> io::Error {
+    if let Some(message) =
+        error.to_string().strip_prefix("the engine declined commandOutboundPrepare: ")
+        && message.starts_with("unable to resolve group id of ")
+    {
+        return super::engine::canonical_error(message.to_owned());
+    }
+    error
 }
 
 /// `the engine declined commandOutboundApply: outbound persist failed:

@@ -14,28 +14,29 @@ pub(super) struct Lifecycle {
     json: bool,
 }
 impl Lifecycle {
-    pub(super) fn required(root: &Path, options: &Options) -> io::Result<bool> {
+    pub(super) fn required(root: &Path, options: &Options, preflight_ok: bool) -> io::Result<bool> {
         if options.operation != "import" {
             return Ok(false);
         }
         let config = WorkspaceConfig::load(root)?;
-        if options.needs_installer() {
+        if preflight_ok && options.needs_installer() {
             Installer::validate_workspace(root)?;
         }
         let core: Vec<String> = serde_json::from_str(include_str!(
             "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
         ))?;
-        Ok(options.requires_facts() || root_providers(&config, &core))
+        Ok((preflight_ok && options.requires_facts()) || root_providers(&config, &core))
     }
     pub(super) fn bootstrap(
         root: &Path,
         args: &[OsString],
         options: &Options,
         required: bool,
+        preflight_ok: bool,
     ) -> io::Result<Self> {
         let linker = if !required {
             None
-        } else if options.needs_installer() {
+        } else if preflight_ok && options.needs_installer() {
             Some(ProjectedLinker::prepare_with_installation(root, args)?)
         } else {
             Some(ProjectedLinker::prepare(root)?)

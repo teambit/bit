@@ -28,6 +28,7 @@ pub struct WriteOptions {
     pub skip_write_config_files: bool,
     pub skip_dependency_installation: bool,
     pub override_existing: bool,
+    pub merge: bool,
     pub path: Option<String>,
     pub merge_strategy: Option<String>,
     pub dependencies: DependencyOptions,
@@ -53,6 +54,7 @@ pub struct DependencyOptions {
     pub import_dependencies: bool,
     pub import_head_dependencies: bool,
     pub depth: Option<usize>,
+    pub raw_depth: Option<String>,
 }
 
 /// `args` starts with the command name.
@@ -74,20 +76,17 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     }
 }
 
-fn take_depth<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, Option<usize>)> {
+fn take_depth<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, Option<String>)> {
     let mut remaining = Vec::with_capacity(args.len());
     let mut depth = None;
     let mut position = 0;
     while position < args.len() {
         if args[position] == "--dependencies-depth" {
-            let value = args
-                .get(position + 1)?
-                .parse::<usize>()
-                .ok()?;
-            if depth.is_some() || value == 0 || value > 4096 {
+            let value = *args.get(position + 1)?;
+            if depth.is_some() || value.is_empty() || value.starts_with('-') || value.len() > 4096 {
                 return None;
             }
-            depth = Some(value);
+            depth = Some(value.to_owned());
             position += 2;
         } else {
             remaining.push(args[position]);
@@ -159,6 +158,7 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
             skip_write_config_files: false,
             skip_dependency_installation: false,
             override_existing: false,
+            merge: false,
             path: None,
             merge_strategy: None,
             dependencies: DependencyOptions::default(),
@@ -177,7 +177,7 @@ fn import(
     ids: Vec<String>,
     flags: &[&str],
     path: Option<String>,
-    depth: Option<usize>,
+    raw_depth: Option<String>,
     values: adoption::Values<'_>,
 ) -> Option<Options> {
     let has = |flag: &str| flags.contains(&flag);
@@ -195,7 +195,7 @@ fn import(
     if ids.is_empty() {
         dependents.all = false;
     }
-    let write = import_write(flags, path, depth, adoption, &ids, objects_only)?;
+    let write = import_write(flags, path, raw_depth, adoption, &ids, objects_only)?;
     Some(Options {
         operation: "import",
         ids,
@@ -211,38 +211,37 @@ fn import(
 fn import_write(
     flags: &[&str],
     path: Option<String>,
-    depth: Option<usize>,
+    raw_depth: Option<String>,
     adoption: AdoptionOptions,
     ids: &[String],
     objects_only: bool,
 ) -> Option<WriteOptions> {
     let has = |flag: &str| flags.contains(&flag);
     let merge_strategy = merge_strategy(flags)?;
+    let merge = has("--merge") || merge_strategy.is_some();
+    let depth = raw_depth
+        .as_deref()
+        .and_then(|value| value.parse::<usize>().ok())
+        .filter(|&value| (1..=4096).contains(&value));
     let dependencies = DependencyOptions {
         fetch_deps: has("--fetch-deps"),
         import_dependencies: has("--dependencies"),
         import_head_dependencies: has("--dependencies-head"),
         depth,
+        raw_depth,
     };
-    if !validation::mode(
-        &dependencies,
-        ids,
-        objects_only,
-        has("--override"),
-        merge_strategy.as_deref(),
-        path.as_deref(),
-    ) {
-        return None;
-    }
-    Some(WriteOptions {
+    let explicit_objects = has("--objects") || has("-o");
+    let write = WriteOptions {
         skip_write_config_files: has("--skip-write-config-files"),
         skip_dependency_installation: has("--skip-dependency-installation") || has("-x"),
         override_existing: has("--override"),
+        merge,
         path,
         merge_strategy,
         dependencies,
         adoption,
-    })
+    };
+    validation::mode(&write, ids, objects_only, explicit_objects).then_some(write)
 }
 
 fn valid_import_flags(flags: &[&str]) -> bool {
@@ -259,6 +258,7 @@ fn valid_import_flags(flags: &[&str]) -> bool {
         "--skip-write-config-files",
         "--include-deprecated",
         "--override",
+        "--merge",
         "--fetch-deps",
         "--dependencies",
         "--dependencies-head",
@@ -285,7 +285,7 @@ fn merge_strategy(flags: &[&str]) -> Option<Option<String>> {
     let mut strategy = None;
     for flag in flags {
         if let Some(value) = flag.strip_prefix("--merge=") {
-            if strategy.is_some() {
+            if strategy.is_some() || flags.contains(&"--merge") {
                 return None;
             }
             strategy = Some(value.to_owned());
@@ -308,7 +308,7 @@ fn valid_pattern(id: &str) -> bool {
 }
 
 impl Options {
-    pub fn validation_error(&self) -> Option<&'static str> {
+    pub fn validation_error(&self) -> Option<String> {
         semantic::error(self)
     }
     pub fn needs_installer(&self) -> bool {

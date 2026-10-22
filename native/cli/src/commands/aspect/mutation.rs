@@ -1,3 +1,6 @@
+mod update;
+
+use self::update::{UpdatePlan, prepare_update, unset_in_bitmap_row};
 use super::{Subcommand, is_supported_pattern};
 use crate::commands::{
     color::Chalk,
@@ -42,6 +45,7 @@ pub(super) enum Prepared {
         bitmap_changed: bool,
         comp_json_edits: Vec<CompJsonEdit>,
     },
+    Update(UpdatePlan),
     Unrecognized(String),
 }
 
@@ -90,6 +94,9 @@ pub(super) fn prepare(
             prepare_set(ctx, pattern, aspect_id, config, *merge)
         }
         Subcommand::Unset { pattern, aspect_id } => prepare_unset(ctx, pattern, aspect_id),
+        Subcommand::Update { aspect_id, pattern } => {
+            prepare_update(ctx, aspect_id, pattern.as_deref())
+        }
         Subcommand::Unrecognized(sub) => Ok(Prepared::Unrecognized(sub.clone())),
         Subcommand::ListCore { .. } => Err(Failure::Declined("handled earlier".into())),
     }
@@ -180,7 +187,7 @@ fn prepare_unset(
         if let Some(path) = comp_json_path {
             comp_json_edits.push(unset_in_comp_json(path, &bare_aspect)?);
         } else {
-            unset_in_bitmap_row(&mut ctx.bitmap_val, entry, &bare_aspect)?;
+            unset_in_bitmap_row(&ctx.root, &mut ctx.bitmap_val, entry, &bare_aspect)?;
             bitmap_changed = true;
         }
         ids.push(selection::entry_full_id(entry));
@@ -214,30 +221,6 @@ fn unset_in_comp_json(path: PathBuf, bare_aspect: &str) -> Result<CompJsonEdit, 
     Ok(CompJsonEdit { path, bytes })
 }
 
-fn unset_in_bitmap_row(
-    bitmap_val: &mut Value,
-    entry: &BitmapEntry,
-    bare_aspect: &str,
-) -> Result<(), Failure> {
-    let row = find_bitmap_row_mut(bitmap_val, entry)?;
-    let Some(cfg_obj) = row.get_mut("config").and_then(Value::as_object_mut) else {
-        return Err(Failure::Declined("aspect not in bitmap config".into()));
-    };
-    let Some(found_key) = find_matching_aspect_key(cfg_obj, bare_aspect) else {
-        return Err(Failure::Declined("aspect not in bitmap config".into()));
-    };
-    if cfg_obj.get(&found_key).and_then(Value::as_str) == Some("-") {
-        return Err(Failure::Declined("aspect already minus in bitmap".into()));
-    }
-    cfg_obj.remove(&found_key);
-    if cfg_obj.is_empty()
-        && let Some(row_obj) = row.as_object_mut()
-    {
-        row_obj.remove("config");
-    }
-    Ok(())
-}
-
 pub(in crate::commands) fn serialize_json_preserving_newline(
     original: &str,
     parsed: &Value,
@@ -254,7 +237,10 @@ pub(in crate::commands) fn serialize_json_preserving_newline(
     })
 }
 
-fn resolve_aspect_identity(bitmap: &Bitmap, raw: &str) -> Result<(String, String), Failure> {
+pub(super) fn resolve_aspect_identity(
+    bitmap: &Bitmap,
+    raw: &str,
+) -> Result<(String, String), Failure> {
     let bare = raw.split('@').next().unwrap_or(raw);
     if let Some(entry) = bitmap.entries
         .iter()
@@ -274,7 +260,10 @@ fn resolve_aspect_identity(bitmap: &Bitmap, raw: &str) -> Result<(String, String
     Err(Failure::Declined("unscoped non-workspace aspect id".into()))
 }
 
-fn find_matching_aspect_key(map: &Map<String, Value>, bare_aspect: &str) -> Option<String> {
+pub(super) fn find_matching_aspect_key(
+    map: &Map<String, Value>,
+    bare_aspect: &str,
+) -> Option<String> {
     if map.contains_key(bare_aspect) {
         return Some(bare_aspect.to_owned());
     }
@@ -366,6 +355,7 @@ impl Prepared {
                 )?;
                 render_updated(&formatter, &ids)
             }
+            Self::Update(plan) => plan.commit(&formatter, chalk)?,
             Self::Unrecognized(sub) => chalk.red(&format!(
                 r#""{sub}" is not a subcommand of "aspect", please run "bit aspect --help" to list the subcommands"#,
             )),
@@ -394,7 +384,7 @@ pub(in crate::commands) fn write_bitmap_if_changed(
     Ok(())
 }
 
-fn render_updated(formatter: &Formatter, ids: &[String]) -> String {
+pub(super) fn render_updated(formatter: &Formatter, ids: &[String]) -> String {
     let items = ids
         .iter()
         .map(|id| formatter.item(id))

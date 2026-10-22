@@ -6,7 +6,13 @@ use crate::commands::{
     workspace_command::{self, NodeCli},
 };
 use serde_json::{Value, json};
-use std::{io, path::Path};
+use std::{fs, io, path::Path};
+
+pub(super) enum Preflight {
+    Ready,
+    Empty,
+    Fail(String),
+}
 
 pub(super) fn prepare_into(
     engine: &mut Engine,
@@ -26,6 +32,10 @@ pub(super) fn prepare_into_with(
     let mut request = request(root, options, ids)?;
     if recovery {
         request["options"]["recoveryLocal"] = json!(true);
+    } else if options.write.merge_strategy.is_some()
+        && unmodified_local_tag_merge(engine, root, options, ids)?
+    {
+        request["options"]["mergeStrategy"] = Value::Null;
     }
     if !options.objects_only {
         request["bitmapHistoryFileId"] = json!(workspace_command::file_id());
@@ -33,18 +43,296 @@ pub(super) fn prepare_into_with(
     engine.request(&request)
 }
 
-pub(super) fn local_preflight(root: &Path, options: &Options) -> io::Result<()> {
+pub(super) fn local_preflight(root: &Path, options: &Options) -> io::Result<Preflight> {
     if options.validation_error().is_some() {
-        return Ok(());
+        return Ok(Preflight::Ready);
+    }
+    if let Some(preflight) = empty_ids_write_preflight(root, options)? {
+        return Ok(preflight);
     }
     let mut request = request(root, options, &options.ids)?;
     request["kind"] = json!("commandInboundLocalPreflight");
-    let response: Value = Engine::new()?.request(&request)?;
-    if response["eligible"] != true {
-        return Err(io::Error::other("native import local eligibility"));
+    let mut engine = Engine::new()?;
+    match engine.request::<Value>(&request) {
+        Ok(response) if response["eligible"] == true => Ok(Preflight::Ready),
+        Ok(_) => Err(io::Error::other("native import local eligibility")),
+        Err(error) => classify_preflight_error(&mut engine, root, options, &mut request, error),
     }
-    Ok(())
 }
+
+fn empty_ids_write_preflight(root: &Path, options: &Options) -> io::Result<Option<Preflight>> {
+    if !options.ids.is_empty()
+        || (!options.write.override_existing && !options.write.merge)
+    {
+        return Ok(None);
+    }
+    if !bitmap_has_exported_components(root)? {
+        return Ok(Some(Preflight::Empty));
+    }
+    let flag = if options.write.merge { "--merge" } else { "--override" };
+    Ok(Some(Preflight::Fail(format!(
+        "bit import with no ids and {flag} flag is not supported.\nto write the components from .bitmap file according to the their remote, please use \"bit checkout reset --all\"",
+    ))))
+}
+
+fn classify_preflight_error(
+    engine: &mut Engine,
+    root: &Path,
+    options: &Options,
+    request: &mut Value,
+    error: io::Error,
+) -> io::Result<Preflight> {
+    let message = error.to_string();
+    if retry_clean_local_tag(engine, options, request, &message) {
+        return Ok(Preflight::Ready);
+    }
+    if let Some(fail) = preflight_failure_message(engine, root, options, &message)? {
+        return Ok(Preflight::Fail(fail));
+    }
+    Err(error)
+}
+
+fn retry_clean_local_tag(
+    engine: &mut Engine,
+    options: &Options,
+    request: &mut Value,
+    message: &str,
+) -> bool {
+    if !message.ends_with("inbound existing component has local versions")
+        || options.write.merge_strategy.is_none()
+    {
+        return false;
+    }
+    request["options"]["mergeStrategy"] = Value::Null;
+    engine
+        .request::<Value>(request)
+        .is_ok_and(|res| res["eligible"] == true)
+}
+
+fn preflight_failure_message(
+    engine: &mut Engine,
+    root: &Path,
+    options: &Options,
+    message: &str,
+) -> io::Result<Option<String>> {
+    if message.ends_with("inbound unsupported workspace directory template") {
+        return invalid_directory_template_error(root);
+    }
+    if message.ends_with("inbound existing workspace file changed") {
+        return modified_components_error(engine, root, options);
+    }
+    if message.ends_with("inbound workspace destination occupied or linked")
+        || message.ends_with("inbound workspace destination occupied")
+    {
+        return destination_error(root, options);
+    }
+    Ok(None)
+}
+
+fn unmodified_local_tag_merge(
+    engine: &mut Engine,
+    root: &Path,
+    options: &Options,
+    ids: &[String],
+) -> io::Result<bool> {
+    let mut preflight = request(root, options, ids)?;
+    preflight["kind"] = json!("commandInboundLocalPreflight");
+    let Err(error) = engine.request::<Value>(&preflight) else {
+        return Ok(false);
+    };
+    if !error.to_string().ends_with("inbound existing component has local versions") {
+        return Ok(false);
+    }
+    preflight["options"]["mergeStrategy"] = Value::Null;
+    Ok(engine
+        .request::<Value>(&preflight)
+        .is_ok_and(|res| res["eligible"] == true))
+}
+
+fn bitmap_has_exported_components(root: &Path) -> io::Result<bool> {
+    let path = root.join(".bitmap");
+    if !path.exists() {
+        return Ok(false);
+    }
+    let bitmap = bit_object_import::parse_jsonc(&fs::read(path)?)?;
+    let Some(rows) = bitmap.as_object() else { return Ok(false) };
+    Ok(rows
+        .iter()
+        .any(|(key, row)| {
+            !key.starts_with('$')
+                && key != "_bit_lane"
+                && row["scope"]
+                    .as_str()
+                    .is_some_and(|scope| !scope.is_empty())
+        }))
+}
+
+fn invalid_directory_template_error(root: &Path) -> io::Result<Option<String>> {
+    let bytes = fs::read(root.join("workspace.jsonc"))?;
+    let ws = bit_object_import::parse_jsonc(&bytes)?;
+    let Some(default_dir) = ws["teambit.workspace/workspace"]["defaultDirectory"].as_str() else {
+        return Ok(None);
+    };
+    let valid = ["name", "scope", "scopeId", "owner"];
+    for part in default_dir.split('/') {
+        if let Some(param) = part
+            .strip_prefix('{')
+            .and_then(|rest| rest.strip_suffix('}'))
+            && !valid.contains(&param)
+        {
+            return Ok(Some(format!(
+                r#"the "{param}" part of the component structure "{default_dir}" is invalid, it must be one of the following: {}"#,
+                valid.join(", "),
+            )));
+        }
+    }
+    Ok(None)
+}
+
+fn modified_components_error(
+    engine: &mut Engine,
+    root: &Path,
+    options: &Options,
+) -> io::Result<Option<String>> {
+    if options.write.override_existing
+        || options.write.merge_strategy.is_some()
+        || options.objects_only
+        || options.write.adoption.track_only
+    {
+        return Ok(None);
+    }
+    let bitmap = bit_object_import::parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
+    let Some(rows) = bitmap.as_object() else { return Ok(None) };
+    let mut modified = Vec::new();
+    for id in &options.ids {
+        if id.contains('*') {
+            continue;
+        }
+        if options.ids.len() > 1 && !id_is_modified(engine, root, options, id)? {
+            continue;
+        }
+        let Some(formatted) = bitmap_component_id(rows, id) else { return Ok(None) };
+        modified.push(formatted);
+    }
+    Ok((!modified.is_empty()).then(|| {
+        format!(
+            "unable to import the following components due to local changes, use --merge flag to merge your local changes or --override to override them\n{} ",
+            modified.join("\n"),
+        )
+    }))
+}
+
+fn id_is_modified(
+    engine: &mut Engine,
+    root: &Path,
+    options: &Options,
+    id: &str,
+) -> io::Result<bool> {
+    let mut req = request(root, options, &[id.to_owned()])?;
+    req["kind"] = json!("commandInboundLocalPreflight");
+    Ok(engine
+        .request::<Value>(&req)
+        .is_err_and(|err| err.to_string().ends_with("inbound existing workspace file changed")))
+}
+
+fn bitmap_component_id(rows: &serde_json::Map<String, Value>, id: &str) -> Option<String> {
+    let without_ver = id.rsplit_once('@').map_or(id, |(base, _)| base);
+    let (_, name) = without_ver.split_once('/')?;
+    let row = rows
+        .iter()
+        .find(|(key, row)| row["name"].as_str().unwrap_or(key) == name)?
+        .1;
+    let scope = row["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())?;
+    let version = row["version"]
+        .as_str()
+        .filter(|val| !val.is_empty())?;
+    Some(format!("{scope}/{name}@{version}"))
+}
+
+fn destination_error(root: &Path, options: &Options) -> io::Result<Option<String>> {
+    if options.write.adoption.track_only {
+        return Ok(None);
+    }
+    let bitmap = bit_object_import::parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
+    let Some(rows) = bitmap.as_object() else { return Ok(None) };
+    let template = default_directory_template(root)?;
+    for id in &options.ids {
+        let Some(abs_dir) = new_target_directory(root, options, rows, &template, id) else {
+            continue;
+        };
+        if let Some(err) = check_target_directory(&abs_dir, options) {
+            return Ok(Some(err));
+        }
+    }
+    Ok(None)
+}
+
+fn new_target_directory(
+    root: &Path,
+    options: &Options,
+    rows: &serde_json::Map<String, Value>,
+    template: &str,
+    id: &str,
+) -> Option<std::path::PathBuf> {
+    if id.contains('*') {
+        return None;
+    }
+    let without_ver = id.rsplit_once('@').map_or(id, |(base, _)| base);
+    let (scope, name) = without_ver.split_once('/')?;
+    if rows
+        .iter()
+        .any(|(key, row)| row["name"].as_str().unwrap_or(key) == name)
+    {
+        return None;
+    }
+    let rel_dir =
+        options.write.path.clone().unwrap_or_else(|| expand_directory(template, scope, name));
+    Some(root.join(rel_dir))
+}
+
+fn check_target_directory(abs_dir: &Path, options: &Options) -> Option<String> {
+    if fs::symlink_metadata(abs_dir).is_ok_and(|meta| meta.is_file()) {
+        return Some(format!("unable to import to {} because it's a file", abs_dir.display()));
+    }
+    if options.installs()
+        && !options.write.override_existing
+        && !options.write.adoption.write_to_empty_dir
+        && fs::read_dir(abs_dir).is_ok_and(|mut entries| entries.next().is_some())
+    {
+        return Some(format!(
+            "unable to import to {}, the directory is not empty. use --override flag to delete the directory and then import",
+            abs_dir.display(),
+        ));
+    }
+    None
+}
+
+fn default_directory_template(root: &Path) -> io::Result<String> {
+    let bytes = fs::read(root.join("workspace.jsonc"))?;
+    let ws = bit_object_import::parse_jsonc(&bytes)?;
+    let template = ws["teambit.workspace/workspace"]["defaultDirectory"]
+        .as_str()
+        .unwrap_or("components/{name}");
+    Ok(if template.contains("{name}") {
+        template.to_owned()
+    } else {
+        format!("{template}/{{name}}")
+    })
+}
+
+fn expand_directory(template: &str, scope: &str, name: &str) -> String {
+    let (owner, short) = scope
+        .rsplit_once('.')
+        .unwrap_or(("", scope));
+    template
+        .replace("{scopeId}", scope)
+        .replace("{scope}", short)
+        .replace("{owner}", owner)
+        .replace("{name}", name)
+}
+
 fn request(root: &Path, options: &Options, ids: &[String]) -> io::Result<Value> {
     let cli = NodeCli::find()?;
     let config = cache_root().join("config");

@@ -1,8 +1,11 @@
 //! `ImportCmd.importComponents` validates these known modes after provider startup.
 use super::Options;
 
-pub(super) fn error(options: &Options) -> Option<&'static str> {
-    directories(options).or_else(|| missing_ids(options))
+pub(super) fn error(options: &Options) -> Option<String> {
+    directories(options)
+        .or_else(|| missing_ids(options))
+        .map(str::to_owned)
+        .or_else(|| dependencies_depth(options))
 }
 fn directories(options: &Options) -> Option<&'static str> {
     if !options.write.adoption.write_to_empty_dir {
@@ -27,4 +30,17 @@ fn missing_ids(options: &Options) -> Option<&'static str> {
     options.write.adoption.track_only.then_some(
         r#"you have to specify ids to use "--track-only" flag"#,
     )
+}
+fn dependencies_depth(options: &Options) -> Option<String> {
+    let raw = options.write.dependencies.raw_depth.as_deref()?;
+    let deps = &options.write.dependencies;
+    if !deps.import_dependencies && !deps.import_head_dependencies {
+        return Some(
+            r#""--dependencies-depth" flag requires "--dependencies" or "--dependencies-head""#
+                .to_owned(),
+        );
+    }
+    deps.depth
+        .is_none()
+        .then(|| format!(r#""--dependencies-depth" must be a positive integer, got "{raw}""#))
 }

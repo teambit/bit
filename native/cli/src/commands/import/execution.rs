@@ -7,19 +7,24 @@ use crate::{
 use std::{ffi::OsString, io, path::Path, time::Instant};
 
 pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
-    if let Err(error) = super::preparation::local_preflight(root, options) {
-        return Ok(Outcome::Declined(format!("import: {error}")));
-    }
-    let required = match Lifecycle::required(root, options) {
+    let preflight = match super::preparation::local_preflight(root, options) {
+        Ok(preflight) => preflight,
+        Err(error) => return Ok(Outcome::Declined(format!("import: {error}"))),
+    };
+    let preflight_ok = matches!(preflight, super::preparation::Preflight::Ready);
+    let required = match Lifecycle::required(root, options, preflight_ok) {
         Ok(required) => required,
         Err(error) => return Ok(Outcome::Declined(format!("import: {error}"))),
     };
-    let mut lifecycle = Lifecycle::bootstrap(root, args, options, required)?;
+    let mut lifecycle = Lifecycle::bootstrap(root, args, options, required, preflight_ok)?;
     print!("{}", lifecycle.take_stdout());
     if let Some(error) = options.validation_error() {
         return output::execute(root, args, options, |_| Err(io::Error::other(error)));
     }
     let chalk = Chalk::detect(args);
+    if let Some(outcome) = preflight_outcome(root, args, options, preflight, chalk)? {
+        return Ok(outcome);
+    }
     let selected = patterns::select(root, options);
     let selection = match selected {
         Ok(selection) => selection,
@@ -29,6 +34,24 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         return output::empty(root, args, options, &selection, chalk);
     }
     execute_selected(root, args, options, lifecycle, chalk, &selection)
+}
+fn preflight_outcome(
+    root: &Path,
+    args: &[OsString],
+    options: &Options,
+    preflight: super::preparation::Preflight,
+    chalk: Chalk,
+) -> io::Result<Option<Outcome>> {
+    match preflight {
+        super::preparation::Preflight::Ready => Ok(None),
+        super::preparation::Preflight::Empty => {
+            let empty = patterns::Selection { ids: Vec::new(), warnings: Vec::new() };
+            output::empty(root, args, options, &empty, chalk).map(Some)
+        }
+        super::preparation::Preflight::Fail(error) => {
+            output::execute(root, args, options, |_| Err(io::Error::other(error))).map(Some)
+        }
+    }
 }
 fn execute_selected(
     root: &Path,

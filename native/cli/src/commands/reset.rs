@@ -1,9 +1,10 @@
 //! Native reset of local main and lane histories while preserving working-tree bytes.
 
+mod main_ext;
 mod reports;
 mod selection;
 
-use reports::{report, soft_report};
+use reports::{batch_report, report, soft_report};
 
 use super::{
     color::Chalk,
@@ -165,6 +166,13 @@ fn route_hard(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Resu
     }
     let (identity, on_lane) = match identity(root, pattern) {
         Ok(identity) => identity,
+        Err(_) if main_ext::missing_component(root, pattern) => {
+            return workspace_command::execute_then(root, args, "reset", |_| {
+                Err(io::Error::other(format!(
+                    r#"error: component "{pattern}" was not found on your local workspace."#,
+                )))
+            });
+        }
         Err(error) => return Ok(Outcome::Declined(format!("reset identity: {error}"))),
     };
     if on_lane {
@@ -182,6 +190,14 @@ fn run_main(
 ) -> io::Result<Outcome> {
     let plan = match Plan::prepare(root, identity, head, force) {
         Ok(plan) => plan,
+        Err(error) if !force && error.to_string() == "reset version has a dependent" => {
+            if let Some(message) = main_ext::dependent_error(root, identity, head) {
+                return workspace_command::execute_then(root, args, "reset", |_| {
+                    Err(io::Error::other(message))
+                });
+            }
+            return Ok(Outcome::Declined(format!("reset: {error}")));
+        }
         Err(error) => return Ok(Outcome::Declined(format!("reset: {error}"))),
     };
     let report = report(args, identity, &plan.selection.labels);
@@ -242,33 +258,32 @@ fn run_batch(
         |ids| Batch::prepare_selected(root, &ids.identities, head_only, force),
     ) {
         Ok(batch) => batch,
+        Err(_) if !head_only && selected.is_none() => {
+            if let Ok(detached) = main_ext::DetachedBatch::prepare(root) {
+                return run_detached_batch(args, root, &detached);
+            }
+            return Ok(Outcome::Declined("reset batch: detached fallback failed".into()));
+        }
         Err(error) => return Ok(Outcome::Declined(format!("reset batch: {error}"))),
     };
-    let formatter = Formatter::new(Chalk::detect(args));
-    let items: Vec<_> = batch
-        .results()
-        .map(|(identity, labels)| {
-            formatter.item(&format!(
-                "{} - version(s): {}",
-                formatter.chalk.cyan(identity),
-                labels.join(", "),
-            ))
-        })
-        .collect();
-    let count = items.len();
-    let report = Report {
-        data: Formatter::join(&[
-            formatter.section("reset components", "", &items),
-            formatter.success_summary(&format!("{count} component(s) reset successfully")),
-        ]),
-        code: 0,
-        details: None,
-    };
+    let report = batch_report(args, batch.results());
     workspace_command::execute_with(root, args, "reset", &report, |output| {
         if let Some(selected) = selected {
             selected.render(output);
             selected.verify()?;
         }
+        batch.commit(&workspace_command::file_id())
+    })
+}
+
+/// Format and commit a prepared detached-head main-lane batch reset.
+fn run_detached_batch(
+    args: &[OsString],
+    root: &Path,
+    batch: &main_ext::DetachedBatch,
+) -> io::Result<Outcome> {
+    let report = batch_report(args, batch.results());
+    workspace_command::execute_with(root, args, "reset", &report, |_| {
         batch.commit(&workspace_command::file_id())
     })
 }
@@ -290,26 +305,7 @@ fn run_lane_batch(
         }
         Err(error) => return Ok(Outcome::Declined(format!("lane reset batch: {error}"))),
     };
-    let formatter = Formatter::new(Chalk::detect(args));
-    let items: Vec<_> = batch
-        .results()
-        .map(|(identity, labels)| {
-            formatter.item(&format!(
-                "{} - version(s): {}",
-                formatter.chalk.cyan(identity),
-                labels.join(", "),
-            ))
-        })
-        .collect();
-    let count = items.len();
-    let report = Report {
-        data: Formatter::join(&[
-            formatter.section("reset components", "", &items),
-            formatter.success_summary(&format!("{count} component(s) reset successfully")),
-        ]),
-        code: 0,
-        details: None,
-    };
+    let report = batch_report(args, batch.results());
     workspace_command::execute_with(root, args, "reset", &report, |output| {
         if let Some(selected) = selected {
             selected.render(output);

@@ -77,8 +77,13 @@ fn validate_objects(value: &Value, scope: &Path, options: &Options) -> io::Resul
         || options.resets.new
         || options.resets.lane_new;
     if !options.flags.force && !clears_scope && empty(value) && retained_objects(scope)? {
+        if options.resets.repair {
+            return Err(io::Error::other(
+                "init empty bitmap with retained objects requires --force or --reset-hard",
+            ));
+        }
         return Err(io::Error::other(
-            "init empty bitmap with retained objects requires --force or --reset-hard",
+            "error: unable to init a bit workspace, the scope already has objects. please use --force if you want to init an empty workspace",
         ));
     }
     Ok(())

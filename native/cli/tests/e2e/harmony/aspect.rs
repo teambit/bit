@@ -92,39 +92,29 @@ fn aspect_set_merge_and_unset_on_bitmap() {
     assert!(bitmap_after["comp1"]["config"].get(&aspect_id).is_none(), "{bitmap_after}");
 }
 
-mod known_failures {
-    use crate::{allow_known_failure, helper::Helper};
+#[test]
+fn aspect_update_and_unset_versioned_aspect() {
+    let helper = Helper::new();
+    let ext_folder = "dummy-extension-without-logs";
+    helper.set_workspace_with_remote_scope();
+    helper.disable_preview();
+    helper.copy_fixture_extensions(ext_folder);
+    helper.add_component(ext_folder, "");
+    helper.add_extension_to_variant(ext_folder, "teambit.harmony/aspect", serde_json::json!({}));
+    helper.link("");
+    helper.compile();
+    helper.tag_all_without_build("");
+    helper.populate_components(1, true, "");
+    let aspect_id = format!("{}/{ext_folder}", helper.scopes.remote);
+    helper.native(&format!("aspect set comp1 {aspect_id}"));
+    helper.tag_without_build("comp1", "--skip-tests");
+    helper.tag_without_build(ext_folder, "--unmodified --skip-auto-tag --skip-tests");
+    helper.export("");
 
-    #[test]
-    fn aspect_update_and_unset_versioned_aspect() {
-        let helper = Helper::new();
-        let ext_folder = "dummy-extension-without-logs";
-        helper.set_workspace_with_remote_scope();
-        helper.disable_preview();
-        helper.copy_fixture_extensions(ext_folder);
-        helper.add_component(ext_folder, "");
-        helper.add_extension_to_variant(
-            ext_folder,
-            "teambit.harmony/aspect",
-            serde_json::json!({}),
-        );
-        helper.link("");
-        helper.compile();
-        helper.tag_all_without_build("");
-        helper.populate_components(1, true, "");
-        let aspect_id = format!("{}/{ext_folder}", helper.scopes.remote);
-        helper.native(&format!("aspect set comp1 {aspect_id}"));
-        helper.tag_without_build("comp1", "--skip-tests");
-        helper.tag_without_build(ext_folder, "--unmodified --skip-auto-tag --skip-tests");
-        helper.export("");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.import_component("comp1", "-x");
 
-        helper.re_init_workspace();
-        helper.add_remote_scope();
-        helper.import_component("comp1", "-x");
-
-        let run =
-            allow_known_failure!(helper.native_or_known(&format!("aspect update {aspect_id}")));
-        assert_eq!(run.status.code(), Some(0));
-        assert!(run.stdout.contains(&format!("{}/comp1@0.0.1", helper.scopes.remote)));
-    }
+    let out = helper.native(&format!("aspect update {aspect_id}"));
+    assert!(out.contains(&format!("{}/comp1@0.0.1", helper.scopes.remote)), "{out}");
 }

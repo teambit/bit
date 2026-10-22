@@ -40,6 +40,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         });
     let (plan, assets) = match prepared {
         Ok(prepared) => prepared,
+        Err(error) if error.to_string().starts_with("error: unable to init a bit workspace") => {
+            return failure(args, &error.to_string());
+        }
         Err(error) => return Ok(Outcome::Declined(format!("init: {error}"))),
     };
     execute(args, &options, plan, assets)

@@ -49,3 +49,29 @@ pub(super) fn report(args: &[OsString], identity: &str, labels: &[String]) -> Re
         details: None,
     }
 }
+
+/// Format a multi-component reset report from `(identity, version_labels)` pairs.
+pub(super) fn batch_report<'a>(
+    args: &[OsString],
+    results: impl Iterator<Item = (&'a str, &'a [String])>,
+) -> Report {
+    let formatter = Formatter::new(Chalk::detect(args));
+    let items: Vec<_> = results
+        .map(|(identity, labels)| {
+            formatter.item(&format!(
+                "{} - version(s): {}",
+                formatter.chalk.cyan(identity),
+                labels.join(", "),
+            ))
+        })
+        .collect();
+    let count = items.len();
+    Report {
+        data: Formatter::join(&[
+            formatter.section("reset components", "", &items),
+            formatter.success_summary(&format!("{count} component(s) reset successfully")),
+        ]),
+        code: 0,
+        details: None,
+    }
+}

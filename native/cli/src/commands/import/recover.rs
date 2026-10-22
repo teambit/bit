@@ -67,6 +67,7 @@ fn import_options(ids: &[String], skip_config: bool, skip_installation: bool) ->
             skip_write_config_files: skip_config,
             skip_dependency_installation: skip_installation,
             override_existing: true,
+            merge: false,
             path: None,
             merge_strategy: None,
             dependencies: options::DependencyOptions::default(),

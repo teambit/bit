@@ -3,7 +3,10 @@
 #[cfg(unix)]
 mod shared;
 
-use crate::helper::{FOO_FIXTURE, Helper, config, parse, setup};
+use crate::{
+    helper::{FOO_FIXTURE, Helper, config, parse, setup},
+    known_failure::Native,
+};
 use serde_json::Value;
 use std::{ffi::OsStr, fs, path::Path};
 
@@ -969,109 +972,96 @@ fn reexporting_by_name_without_scope() {
     );
 }
 
-/// Native `bit export` declines an empty workspace (`commandOutboundPrepare: No such file or
-/// directory`), and a remote init with `--shared` (`outbound file remote group ownership
-/// requires canonical export`); native `bit import` declines the e2e workspace (`status
-/// configured extensions require Harmony`).
-mod known_failures {
-    use crate::{
-        allow_known_failure,
-        helper::{FOO_FIXTURE, Helper},
-        known_failure::Native,
-    };
-    use std::fs;
+/// with no components to export › should print nothing to export
+#[test]
+fn nothing_to_export() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    let output = helper.native_output_or_known("export").native();
+    assert!(output.contains("nothing to export"), "{output}");
+}
 
-    /// with no components to export › should print nothing to export
-    #[test]
-    fn nothing_to_export() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        let output = allow_known_failure!(helper.native_output_or_known("export"));
-        assert!(output.contains("nothing to export"), "{output}");
+/// with a PNG file › should export it with no errors; after importing the file › the
+/// size of the binary file should not be changed
+#[test]
+fn a_png_file_keeps_its_size() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    let source = concat!(env!("CARGO_MANIFEST_DIR"), "/../../e2e/fixtures/png_fixture.png");
+    let png = helper.scopes.local_path.join("bar/png_fixture.png");
+    fs::copy(source, &png).unwrap();
+    let size = fs::metadata(&png).unwrap().len();
+    helper.run("add bar -m foo.js -i bar/foo");
+    helper.tag_without_build("", "");
+    helper.native("export");
+    if cfg!(windows) {
+        crate::helper::remote::seed_after_export_at(&helper, &helper.scopes.local_path);
     }
+    let remote = &helper.scopes.remote;
+    let output = helper.run(&format!("list {remote}"));
+    assert!(output.contains("found 1 components"), "{output}");
+    assert!(output.contains("bar/foo"), "{output}");
+    let import = format!("import {remote}/bar/foo");
+    helper.native_output_or_known(&import).native();
+    assert_eq!(fs::metadata(&png).unwrap().len(), size);
+}
 
-    /// with a PNG file › should export it with no errors; after importing the file › the
-    /// size of the binary file should not be changed
-    #[test]
-    fn a_png_file_keeps_its_size() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.create_component_bar_foo(FOO_FIXTURE);
-        let source = concat!(env!("CARGO_MANIFEST_DIR"), "/../../e2e/fixtures/png_fixture.png");
-        let png = helper.scopes.local_path.join("bar/png_fixture.png");
-        fs::copy(source, &png).unwrap();
-        let size = fs::metadata(&png).unwrap().len();
-        helper.run("add bar -m foo.js -i bar/foo");
-        helper.tag_without_build("", "");
-        helper.native("export");
-        if cfg!(windows) {
-            crate::helper::remote::seed_after_export_at(&helper, &helper.scopes.local_path);
-        }
-        let remote = &helper.scopes.remote;
-        let output = helper.run(&format!("list {remote}"));
-        assert!(output.contains("found 1 components"), "{output}");
-        assert!(output.contains("bar/foo"), "{output}");
-        let import = format!("import {remote}/bar/foo");
-        allow_known_failure!(helper.native_output_or_known(&import));
-        assert_eq!(fs::metadata(&png).unwrap().len(), size);
-    }
+/// `bit init --bare --shared <group>` as the remote scope.
+#[cfg(unix)]
+fn shared_remote(helper: &Helper, group: &str) {
+    let remote = &helper.scopes.remote_path;
+    let _ = fs::remove_dir_all(remote);
+    fs::create_dir_all(remote).unwrap();
+    let run = Helper::cmd_in(remote, &format!("init --bare --shared {group}"));
+    assert!(run.status.success(), "{}", run.stderr);
+    helper.add_remote_scope();
+}
 
-    /// `bit init --bare --shared <group>` as the remote scope.
-    #[cfg(unix)]
-    fn shared_remote(helper: &Helper, group: &str) {
-        let remote = &helper.scopes.remote_path;
-        let _ = fs::remove_dir_all(remote);
-        fs::create_dir_all(remote).unwrap();
-        let run = Helper::cmd_in(remote, &format!("init --bare --shared {group}"));
-        assert!(run.status.success(), "{}", run.stderr);
-        helper.add_remote_scope();
-    }
+/// A tagged `bar/foo` whose remote was init with `--shared <group>`.
+#[cfg(unix)]
+fn tagged_for_shared_remote(group: &str) -> Helper {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    shared_remote(&helper, "nonExistGroup");
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.tag_without_build("", "");
+    shared_remote(&helper, group);
+    helper
+}
 
-    /// A tagged `bar/foo` whose remote was init with `--shared <group>`.
-    #[cfg(unix)]
-    fn tagged_for_shared_remote(group: &str) -> Helper {
-        let helper = Helper::new();
-        helper.re_init_workspace();
-        shared_remote(&helper, "nonExistGroup");
-        helper.create_component_bar_foo(FOO_FIXTURE);
-        helper.add_component_bar_foo();
-        helper.tag_without_build("", "");
-        shared_remote(&helper, group);
-        helper
-    }
+/// applying permissions on the remote scope when was init with shared flag › when the
+/// group name does not exist › should throw an error indicating that the group does not
+/// exist (unless it is Windows)
+#[cfg(unix)]
+#[test]
+fn a_missing_shared_group_fails_the_export() {
+    let helper = tagged_for_shared_remote("nonExistGroup");
+    let run = helper.native_or_known("export").native();
+    let output = format!("{}{}", run.stdout, run.stderr);
+    assert!(output.contains(r#"unable to resolve group id of "nonExistGroup""#), "{output}");
+}
 
-    /// applying permissions on the remote scope when was init with shared flag › when the
-    /// group name does not exist › should throw an error indicating that the group does not
-    /// exist (unless it is Windows)
-    #[cfg(unix)]
-    #[test]
-    fn a_missing_shared_group_fails_the_export() {
-        let helper = tagged_for_shared_remote("nonExistGroup");
-        let run = allow_known_failure!(helper.native_or_known("export"));
-        let output = format!("{}{}", run.stdout, run.stderr);
-        assert!(output.contains(r#"unable to resolve group id of "nonExistGroup""#), "{output}");
-    }
-
-    /// applying permissions on the remote scope when was init with shared flag › when the
-    /// group exists and the current user has permission to that group › should export the
-    /// component successfully and change the owner to that group
-    #[cfg(unix)]
-    #[test]
-    fn an_existing_shared_group_owns_the_export() {
-        let group = std::process::Command::new("id")
-            .arg("-gn")
-            .output()
-            .unwrap();
-        let group = String::from_utf8(group.stdout).unwrap();
-        let helper = tagged_for_shared_remote(group.trim());
-        let output = helper.native_output_or_known("export").native();
-        assert!(
-            output.contains(if cfg!(windows) {
-                "nothing to export"
-            } else {
-                "exported components (1)"
-            }),
-            "{output}",
-        );
-    }
+/// applying permissions on the remote scope when was init with shared flag › when the
+/// group exists and the current user has permission to that group › should export the
+/// component successfully and change the owner to that group
+#[cfg(unix)]
+#[test]
+fn an_existing_shared_group_owns_the_export() {
+    let group = std::process::Command::new("id")
+        .arg("-gn")
+        .output()
+        .unwrap();
+    let group = String::from_utf8(group.stdout).unwrap();
+    let helper = tagged_for_shared_remote(group.trim());
+    let output = helper.native_output_or_known("export").native();
+    assert!(
+        output.contains(if cfg!(windows) {
+            "nothing to export"
+        } else {
+            "exported components (1)"
+        }),
+        "{output}",
+    );
 }

@@ -173,26 +173,21 @@ fn js_env_using_core_empty_env_end_to_end() {
     helper.native("export");
 }
 
-mod known_failures {
-    use crate::{allow_known_failure, helper::Helper};
+/// - `env command › bit env replace › replacing a failed-loaded env › should be able to replace with no errors`
+#[test]
+fn env_replace_failed_loaded_env() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.set_empty_env();
+    helper.populate_components(1, false, "");
+    helper.native("env set comp1 empty-env");
+    helper.output_file("empty-env/empty-env.bit-env.ts", r#"throw new Error("my-error");"#);
+    helper.compile();
+    helper.expect_status_to_have_issue("NonLoadedEnv");
 
-    /// - `env command › bit env replace › replacing a failed-loaded env › should be able to replace with no errors`
-    #[test]
-    fn env_replace_failed_loaded_env() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.set_empty_env();
-        helper.populate_components(1, false, "");
-        helper.native("env set comp1 empty-env");
-        helper.output_file("empty-env/empty-env.bit-env.ts", r#"throw new Error("my-error");"#);
-        helper.compile();
-        helper.expect_status_to_have_issue("NonLoadedEnv");
-
-        let run = allow_known_failure!(helper.native_or_known(&format!(
-            "env replace {}/empty-env teambit.react/react",
-            helper.scopes.remote
-        )));
-        assert_eq!(run.status.code(), Some(0));
-        assert!(run.stdout.contains("added teambit.react/react env"));
-    }
+    let out = helper.native(&format!(
+        "env replace {}/empty-env teambit.react/react",
+        helper.scopes.remote,
+    ));
+    assert!(out.contains("added teambit.react/react env"), "{out}");
 }
