@@ -35,7 +35,6 @@ import { Ref } from '@teambit/objects';
 import type { LaneId } from '@teambit/lane-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { LaneCleanup } from './lane-cleanup';
-import { untrackedLaneComponentsSummary, workspaceLaneSlice } from './lane-slice';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
@@ -1575,15 +1574,7 @@ export class CiMain {
     }
 
     const currentLane = await this.lanes.getCurrentLane();
-    // This workspace's slice of the lane: the lane components it tracks. It merges, restores config
-    // for, tags and exports only those; a lane's other components (of other scopes) are merged by the
-    // workspaces that track them. "Tracked", not sync's scope === defaultScope (`ownLaneComponents`):
-    // a multi-scope workspace tracks other scopes too. Read before the switch to main rewrites .bitmap.
-    const laneSlice = workspaceLaneSlice(currentLane?.components ?? [], (id) =>
-      Boolean(this.workspace.bitMap.getBitmapEntryIfExist(id, { ignoreVersion: true }))
-    );
-    const untrackedSummary = untrackedLaneComponentsSummary(laneSlice);
-    if (untrackedSummary) this.logger.console(chalk.gray(untrackedSummary));
+    const laneComponents = currentLane?.components;
     if (currentLane) {
       // this doesn't normally happen. we expect this mergePr to be called from the default branch, which normally checks
       // out to main lane.
@@ -1642,8 +1633,8 @@ export class CiMain {
     await this.workspace.bitMap.write('checkout head');
     this.logger.console(reportToString(checkoutOutput(checkoutResults, checkoutProps)));
 
-    if (laneSlice.tracked.length) {
-      await this.restoreLaneConfigChanges(laneSlice.tracked);
+    if (laneComponents?.length) {
+      await this.restoreLaneConfigChanges(laneComponents);
     }
 
     // Check for workspace.jsonc conflicts
@@ -1856,17 +1847,18 @@ export class CiMain {
    * Compare lane Version extensions with main Version extensions for each component.
    * Any config differences (e.g. env-set, deps-set) are saved to .bitmap so they survive
    * the switch from lane to main and get included in the subsequent tag.
-   *
-   * Receives only this workspace's slice of the lane (see `workspaceLaneSlice`): active components
-   * that have a .bitmap entry to write config into.
    */
-  private async restoreLaneConfigChanges(trackedLaneComponents: LaneComponent[]) {
+  private async restoreLaneConfigChanges(laneComponents: LaneComponent[]) {
     const scope = this.workspace.scope.legacyScope;
     const repo = scope.objects;
     let hasChanges = false;
 
+    // a cross-scope lane carries components this workspace doesn't track; their own workspaces release them
+    const activeComponents = laneComponents.filter(
+      (c) => !c.isDeleted && this.workspace.bitMap.getBitmapEntryIfExist(c.id, { ignoreVersion: true })
+    );
     await Promise.all(
-      trackedLaneComponents.map(async (laneComp) => {
+      activeComponents.map(async (laneComp) => {
         const laneVersion = (await repo.load(laneComp.head)) as Version;
         if (!laneVersion) {
           this.logger.console(chalk.yellow(`Warning: could not load Version object for ${laneComp.id.toString()}`));
