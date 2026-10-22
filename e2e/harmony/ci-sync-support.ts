@@ -107,11 +107,16 @@ export function syncE2eHelpers(getHelper: () => Helper) {
 
   /**
    * Run a bit command capturing stdout, stderr AND the exit code — `bit ci sync` reports halts by
-   * exiting non-zero with the summary on stderr, and `runCmd` throws on non-zero.
+   * exiting non-zero with the summary on stderr, and `runCmd` throws on non-zero. `env` is added to the
+   * inherited environment.
    */
-  function runBit(cmd: string, cwd: string = h().scopes.localPath): { output: string; exitCode: number } {
+  function runBit(
+    cmd: string,
+    cwd: string = h().scopes.localPath,
+    env?: Record<string, string>
+  ): { output: string; exitCode: number } {
     const full = cmd.startsWith('bit ') ? `${h().command.bitBin} ${cmd.slice(4)}` : cmd;
-    const res = execa.sync(full, { cwd, shell: true, reject: false });
+    const res = execa.sync(full, { cwd, shell: true, reject: false, env });
     const combined = `${res.stdout || ''}\n${res.stderr || ''}`;
     return { output: (removeChalkCharacters(combined) as string) || '', exitCode: res.exitCode ?? -1 };
   }

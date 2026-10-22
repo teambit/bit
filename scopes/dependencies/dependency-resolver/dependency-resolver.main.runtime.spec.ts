@@ -5,17 +5,18 @@ import { ComponentID } from '@teambit/component';
 import path from 'path';
 import { Http } from '@teambit/scope.network';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
+import { VariantPolicy } from './policy';
 
 const logger = {
   debug: () => {},
 };
 
-function createDependencyResolverMain() {
+function createDependencyResolverMain(envs: Record<string, any> = {}) {
   return new DependencyResolverMain(
     {} as any,
     {} as any,
     {} as any,
-    {} as any,
+    envs as any,
     logger as any,
     {} as any,
     {} as any,
@@ -49,6 +50,83 @@ describe('DepenendencyResolverMain.validateAspectData()', () => {
         ],
       } as any)
     ).to.equal(undefined);
+  });
+  for (const version of ['+', '+^', '+~']) {
+    it(`should accept "${version}" as a policy version of a component`, () => {
+      const depResolver = createDependencyResolverMain();
+      expect(
+        depResolver.validateAspectData({
+          dependencies: [
+            {
+              __type: 'component',
+              id: 'org.scope/comp@0.0.1',
+              version: '0.0.1',
+              packageName: '@org/scope.comp',
+              versionRange: version,
+            },
+          ],
+          policy: [{ dependencyId: '@org/scope.comp', value: { version } }],
+        } as any)
+      ).to.equal(undefined);
+    });
+  }
+  it('should reject an unknown "+" spec as a policy version', () => {
+    const depResolver = createDependencyResolverMain();
+    const result = depResolver.validateAspectData({
+      dependencies: [],
+      policy: [{ dependencyId: 'some-pkg', value: { version: '+>' } }],
+    } as any);
+    expect(result?.errorMsg).to.include('"+>"');
+  });
+});
+
+describe('DependencyResolverMain.getComponentEnvPolicyFromExtension()', () => {
+  const envId = 'some-scope/envs/code-env@1.0.0';
+  // an env that defines its policy in code (no env.jsonc). when it's not loaded, the env definition is the default env.
+  const createWithEnv = (envDefinitionId: string) =>
+    createDependencyResolverMain({
+      calculateEnvIdFromExtensions: async () => envId,
+      isCoreEnv: () => false,
+      getEnvComponentByEnvId: async () => ({}),
+      getOrCalculateEnvManifest: async () => undefined,
+      calculateEnvFromExtensions: async () => ({ id: envDefinitionId, env: {} }),
+    });
+  const storedPolicy = VariantPolicy.fromConfigObject({ dependencies: { 'some-pkg': '1.0.0' } }, { source: 'env' });
+  it('should return the given policy when the env is not loaded', async () => {
+    const depResolver = createWithEnv('teambit.harmony/node');
+    expect(await depResolver.getComponentEnvPolicyFromExtension({} as any, storedPolicy)).to.equal(storedPolicy);
+  });
+  it('should return the policy of the env when it is loaded', async () => {
+    const depResolver = createWithEnv(envId);
+    expect(await depResolver.getComponentEnvPolicyFromExtension({} as any, storedPolicy)).to.not.equal(storedPolicy);
+  });
+});
+
+describe('DependencyResolverMain.getEnvPolicyFromComponents()', () => {
+  // the env of the component is stored as 1.0.0, while its files in memory (e.g. merged) are of another version
+  const envFiles = [{ basename: 'env.jsonc' }];
+  const createEnvComponent = (files: Array<{ basename: string }>) => ({
+    id: ComponentID.fromString('some-scope/envs/jsonc-env@2.0.0'),
+    state: { _consumer: { files, dependencies: { get: () => [] } } },
+  });
+  const depResolver = createDependencyResolverMain({
+    calculateEnvIdFromExtensions: async () => 'some-scope/envs/jsonc-env@1.0.0',
+    isCoreEnv: () => false,
+    // the env.jsonc is read from the given files, not from the stored env
+    calculateEnvManifest: async (_envComponent, legacyFiles) =>
+      legacyFiles === envFiles ? { policy: { dev: [{ name: 'some-pkg', version: '2.0.0' }] } } : undefined,
+  });
+  it('should return the policy of the env.jsonc of the env component in memory', async () => {
+    const policy = await depResolver.getEnvPolicyFromComponents({} as any, [createEnvComponent(envFiles) as any]);
+    expect(policy?.find('some-pkg')?.value.version).to.equal('2.0.0');
+  });
+  it('should return undefined when the env is not one of the given components', async () => {
+    const otherComponent = { ...createEnvComponent(envFiles), id: ComponentID.fromString('some-scope/other@1.0.0') };
+    expect(await depResolver.getEnvPolicyFromComponents({} as any, [otherComponent as any])).to.equal(undefined);
+  });
+  it('should return undefined when the env component has no env.jsonc', async () => {
+    const envComponent = createEnvComponent([{ basename: 'index.ts' }]);
+    expect(await depResolver.getEnvPolicyFromComponents({} as any, [envComponent as any])).to.equal(undefined);
   });
 });
 
@@ -588,5 +666,42 @@ describe('DepenendencyResolverMain.getComponentEnvPolicyFromEnv()', () => {
         'Peer "@teambit/community.ui.bit-cli.commands-provider" has an empty supportedRange'
       );
     }
+  });
+});
+
+describe('DepenendencyResolverMain.getEnvJsoncPolicyPkgs()', () => {
+  it('should not return env.jsonc entries with a plus version, as they follow the workspace version', () => {
+    const depResolver = new DependencyResolverMain(
+      {} as any,
+      {} as any,
+      {} as any,
+      { isEnv: () => true } as any,
+      logger as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any
+    );
+    const envJsonc = {
+      policy: {
+        peers: [
+          { name: 'plus-pkg', version: '+', supportedRange: '+^' },
+          { name: 'plus-caret-pkg', version: '+^', supportedRange: '+^' },
+          { name: 'fixed-pkg', version: '1.0.0', supportedRange: '^1.0.0' },
+        ],
+        runtime: [{ name: 'plus-runtime-pkg', version: '+~' }],
+      },
+    };
+    const component = {
+      id: ComponentID.fromString('scope/my-env'),
+      filesystem: { files: [{ relative: 'env.jsonc', contents: Buffer.from(JSON.stringify(envJsonc)) }] },
+    };
+    const pkgs = depResolver.getEnvJsoncPolicyPkgs([component as any]);
+    expect(pkgs.map((pkg) => pkg.name)).to.deep.equal(['fixed-pkg']);
   });
 });

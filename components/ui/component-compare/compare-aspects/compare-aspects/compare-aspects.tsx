@@ -12,8 +12,6 @@ import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { ComponentCompareAspectsContext } from '@teambit/component.ui.component-compare.compare-aspects.context';
 import { useCompareAspectsQuery } from '@teambit/component.ui.component-compare.compare-aspects.hooks.use-compare-aspects';
 import { CompareAspectView } from '@teambit/component.ui.component-compare.compare-aspects.compare-aspect-view';
-import { DarkTheme } from '@teambit/design.themes.dark-theme';
-import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
 
 import { Widget } from './compare-aspects.widgets';
 
@@ -43,7 +41,9 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
   };
 
   return (
-    <ThemeSwitcher themes={[DarkTheme]} className={classNames(styles.themeContainer, className)}>
+    // No theme override: the view inherits the page theme. It used to force DarkTheme, from when Monaco
+    // rendered these diffs and its editor was always dark; the Shiki DiffViewer paints with theme tokens.
+    <div className={classNames(styles.themeContainer, className)}>
       <ComponentCompareAspectsContext.Provider value={context}>
         <SplitPane
           layout={sidebarOpenness}
@@ -68,7 +68,7 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
               className={styles.collapser}
             />
           </HoverSplitter>
-          <Pane className={classNames(styles.right, styles.dark)}>
+          <Pane className={styles.right}>
             <CodeCompareTree
               fileTree={aspectNames}
               currentFile={selected}
@@ -81,6 +81,6 @@ export function ComponentCompareAspects({ host, className }: ComponentCompareAsp
           </Pane>
         </SplitPane>
       </ComponentCompareAspectsContext.Provider>
-    </ThemeSwitcher>
+    </div>
   );
 }

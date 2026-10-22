@@ -65,6 +65,8 @@ import {
   DependencyResolverAspect,
   ComponentDependency,
   ensureHoistedDependencyResolution,
+  isPlusVersion,
+  resolvePlusVersion,
 } from '@teambit/dependency-resolver';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
@@ -1431,7 +1433,7 @@ export class InstallMain {
 
   /**
    * Get the env's own peer dependencies from its policy (env.jsonc).
-   * Resolves "+" version placeholders using workspaceDeps.
+   * Resolves "+" (and "+^"/"+~") version placeholders using workspaceDeps.
    */
   private async _getEnvDependencies(
     envId: ComponentID,
@@ -1444,13 +1446,8 @@ export class InstallMain {
       policy.selfPolicy.entries
         .filter(({ force, value }) => force && value.version !== '-')
         .map(({ dependencyId, value }) => {
-          let version = value.version;
           // Resolve "+" version placeholders using workspace dependencies
-          // Similar to WorkspaceManifest._resolvePlusVersions
-          if (version === '+') {
-            version = workspaceDeps[dependencyId] || '*';
-          }
-          return [dependencyId, version];
+          return [dependencyId, resolvePlusVersion(value.version, workspaceDeps[dependencyId])];
         })
     );
   }
@@ -1589,7 +1586,8 @@ export class InstallMain {
             const depEntry = deps.find(({ name }) => name === pkg.name);
             if (depEntry) {
               depEntry.version = pkg.latestRange;
-              if (field === 'peers' && depEntry.supportedRange) {
+              // a plus supportedRange follows the version, so it doesn't need to be widened.
+              if (field === 'peers' && depEntry.supportedRange && !isPlusVersion(depEntry.supportedRange)) {
                 if (!semver.intersects(pkg.latestRange, depEntry.supportedRange)) {
                   depEntry.supportedRange = `${depEntry.supportedRange} || ${pkg.latestRange}`;
                 }

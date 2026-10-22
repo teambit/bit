@@ -38,7 +38,7 @@ import type { Scope as LegacyScope, Types } from '@teambit/legacy.scope';
 import { Scope, loadScopeIfExist } from '@teambit/legacy.scope';
 import type { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { ExportPersist, PostSign } from '@teambit/scope.remote-actions';
-import type { DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain, NodeLinker, VariantPolicy } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { Remotes } from '@teambit/scope.remotes';
 import { getScopeRemotes } from '@teambit/scope.remotes';
@@ -334,9 +334,12 @@ export class ScopeMain implements ComponentFactory {
     return scopeAspectsLoader.getResolvedAspects(components, opts);
   }
 
-  async executeOnCompAspectReCalcSlot(component: Component) {
+  /**
+   * @param policy the dependencies policy of the component, when the caller already calculated it.
+   */
+  async executeOnCompAspectReCalcSlot(component: Component, policy?: VariantPolicy) {
     const envsData = await this.envs.calcDescriptor(component, { skipWarnings: false });
-    const policy = await this.dependencyResolver.mergeVariantPolicies(
+    policy ??= await this.dependencyResolver.mergeVariantPolicies(
       component.config.extensions,
       component.id,
       component.state._consumer.files,
@@ -374,6 +377,9 @@ export class ScopeMain implements ComponentFactory {
     const entries = this.OnCompAspectReCalcSlot.toArray();
     await mapSeries(entries, async ([extension, onLoad]) => {
       const data = await onLoad(component);
+      // no data, e.g. of an app that was not loaded as an aspect. keep the stored one. (the aspect entry shares its
+      // data object with the extension, so upserting it with no data would empty the extension data as well)
+      if (!data) return;
       await this.upsertExtensionData(component, extension, data);
       // Update the aspect list to have changes happened during the on load slot (new data added above)
       component.state.aspects.upsertEntry(await this.resolveComponentId(extension), data);
@@ -951,8 +957,8 @@ export class ScopeMain implements ComponentFactory {
     return compact(components);
   }
 
-  async loadManyCompsAspects(components: Component[], lane?: Lane): Promise<Component[]> {
-    const loadedComponents = await mapSeries(components, (id) => this.loadCompAspects(id, lane));
+  async loadManyCompsAspects(components: Component[], lane?: Lane, opts?: LoadOptions): Promise<Component[]> {
+    const loadedComponents = await mapSeries(components, (id) => this.loadCompAspects(id, lane, opts));
     return compact(loadedComponents);
   }
 

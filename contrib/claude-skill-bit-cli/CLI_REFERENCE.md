@@ -807,7 +807,7 @@ Flags: --lane <lane>, --component <component>, --json
 ## bit ripple errors [job-id]
 
 show build errors for a Ripple CI job (auto-detects current lane, or your last export when on main)
-Flags: --lane <lane>, --log, --json
+Flags: --lane <lane>, --full-log, --json
 
 ## bit ripple retry [job-id]
 

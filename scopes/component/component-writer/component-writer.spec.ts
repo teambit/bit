@@ -377,3 +377,73 @@ describe('the destination of an already tracked workspace-root component', () =>
     expect(writer.writeToPath).to.equal(WORKSPACE_ROOT_DIR);
   });
 });
+
+describe('the default dir of a component whose dir is used by a component of another owner', () => {
+  const idOf = (id: string) => ({
+    scope: id.split('/')[0],
+    toString: () => id,
+    toStringWithoutVersion: () => id,
+    isEqualWithoutVersion: (other: { toString: () => string }) => other.toString() === id,
+  });
+  const componentOf = (id: string) => ({ id: idOf(id) }) as any;
+  /** the default "defaultDirectory" template, {scope}/{name}, which omits the owner */
+  const composeRelativeComponentPath = (id: { toString: () => string }) => {
+    const [scopeId, ...name] = id.toString().split('/');
+    return [scopeId.split('.').pop(), ...name].join('/');
+  };
+  function runtimeTracking(rootDirs: Record<string, string>, workspacePath: string) {
+    const main = Object.create(ComponentWriterMain.prototype);
+    const warnings: string[] = [];
+    Object.defineProperty(main, 'consumer', {
+      value: {
+        bitMap: {
+          getComponentIdByRootPath: (rootDir: string) => (rootDirs[rootDir] ? idOf(rootDirs[rootDir]) : undefined),
+          getAllTrackDirs: () => rootDirs,
+        },
+        composeRelativeComponentPath,
+        toAbsolutePath: (relativePath: string) => path.join(workspacePath, relativePath),
+      },
+    });
+    Object.defineProperty(main, 'logger', { value: { consoleWarning: (msg: string) => warnings.push(msg) } });
+    return { main, warnings };
+  }
+
+  let workspacePath: string;
+  beforeEach(async () => {
+    workspacePath = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-default-dir-'));
+  });
+  afterEach(async () => {
+    await fs.remove(workspacePath);
+  });
+
+  it('should prefix the dir with the owner name and warn about it', () => {
+    const { main, warnings } = runtimeTracking({ 'ui/button': 'org1.ui/button' }, workspacePath);
+    expect(main.getDefaultDir(componentOf('org2.ui/button'), true)).to.equal('org2/ui/button');
+    expect(warnings[0]).to.have.string('org1.ui/button');
+  });
+  it('should keep the default dir when it is free', () => {
+    const { main } = runtimeTracking({}, workspacePath);
+    expect(main.getDefaultDir(componentOf('org2.ui/button'), true)).to.equal('ui/button');
+  });
+  it('should keep the default dir when it is used by the same component', () => {
+    const { main } = runtimeTracking({ 'ui/button': 'org2.ui/button' }, workspacePath);
+    expect(main.getDefaultDir(componentOf('org2.ui/button'), true)).to.equal('ui/button');
+  });
+  it('should keep the default dir when the owner dir is not empty, so the conflict check reports it', async () => {
+    await fs.outputFile(path.join(workspacePath, 'org2/ui/button/index.js'), '');
+    const { main } = runtimeTracking({ 'ui/button': 'org1.ui/button' }, workspacePath);
+    expect(main.getDefaultDir(componentOf('org2.ui/button'), true)).to.equal('ui/button');
+  });
+  it('should keep the default dir when the owner dir is nested in a tracked dir, which would move it unchecked', () => {
+    const { main } = runtimeTracking({ 'ui/button': 'org1.ui/button', 'org2/ui': 'org2.misc/ui' }, workspacePath);
+    expect(main.getDefaultDir(componentOf('org2.ui/button'), true)).to.equal('ui/button');
+  });
+  it('should keep the default dir when the scope has no owner', () => {
+    const { main } = runtimeTracking({ 'my-scope/button': 'other-scope/button' }, workspacePath);
+    expect(main.getDefaultDir(componentOf('my-scope/button'), true)).to.equal('my-scope/button');
+  });
+  it('should not look for another dir when asked not to, e.g. the component is already in .bitmap', () => {
+    const { main } = runtimeTracking({ 'ui/button': 'org1.ui/button' }, workspacePath);
+    expect(main.getDefaultDir(componentOf('org2.ui/button'), false)).to.equal('ui/button');
+  });
+});

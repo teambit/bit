@@ -21,6 +21,7 @@ import type { ComponentID } from '@teambit/component-id';
 import type { Version } from '@teambit/objects';
 import { Ref } from '@teambit/objects';
 import { mockComponents } from '@teambit/component.testing.mock-components';
+import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { SnapDataPerCompRaw, SnappingMain } from './snapping.main.runtime';
 import { SnappingAspect } from './snapping.aspect';
 import type { Workspace } from '@teambit/workspace';
@@ -203,6 +204,54 @@ describe('Snapping aspect', function () {
       expect(docs).to.have.lengthOf(1);
       expect(docs[0].description).to.equal('returns the greeting.');
       expect(docs[0].filePath).to.equal('index.js');
+    });
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+  });
+  describe('snap from scope an app without a build', () => {
+    let workspaceData: WorkspaceData;
+    let compId: string;
+    let loadedAspectIds: string[];
+    let appData: Record<string, any> | undefined;
+    before(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath);
+      const harmony = await loadManyAspects([SnappingAspect, ExportAspect, ScopeAspect], workspacePath);
+      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
+      const results = await snapping.snap({ pattern: 'comp1', build: false, message: 'first snap' });
+      // make it an app, as the data of a component whose app was loaded when it was snapped
+      const { objects } = harmony.get<ScopeMain>(ScopeAspect.id).legacyScope;
+      const snapped = (await objects.load(Ref.from(results!.snappedComponents[0].id.version!))) as Version;
+      snapped.extensions.push(
+        new ExtensionDataEntry(undefined, undefined, 'teambit.harmony/application', {}, { appName: 'my-app' })
+      );
+      objects.add(snapped);
+      await objects.persist();
+      await harmony.get<ExportMain>(ExportAspect.id).export();
+
+      const bareScope = mockBareScope(workspaceData.remoteScopePath, 'bare-for-snap');
+      const harmonyBareScope = await loadManyAspects([SnappingAspect, ScopeAspect], bareScope.scopePath);
+      const scope = harmonyBareScope.get<ScopeMain>(ScopeAspect.id);
+      loadedAspectIds = [];
+      scope.loadAspects = async (ids: string[]) => {
+        loadedAspectIds.push(...ids);
+        return [];
+      };
+      compId = `${workspaceData.remoteScopeName}/comp1`;
+      const snappingScope = harmonyBareScope.get<SnappingMain>(SnappingAspect.id);
+      const scopeResults = await snappingScope.snapFromScope([{ componentId: compId, message: 'snap from scope' }], {});
+      const scopeSnap = scopeResults.snappedIds[0].version;
+      const versionObj = (await scope.legacyScope.objects.load(Ref.from(scopeSnap))) as Version;
+      appData = versionObj.extensions.findCoreExtension('teambit.harmony/application')?.data;
+    });
+    it('should not load the app itself as an aspect, only its aspects', () => {
+      expect(loadedAspectIds).to.not.be.empty;
+      expect(loadedAspectIds.filter((id) => id.startsWith(compId))).to.be.empty;
+    });
+    it('should keep the app data of the previous version', () => {
+      expect(appData).to.deep.equal({ appName: 'my-app' });
     });
     after(async () => {
       await destroyWorkspace(workspaceData);
