@@ -106,9 +106,11 @@ export class ExportValidate implements Action<Options> {
         const head = modelComponent.getHead();
         if (!head) return;
         const refsToValidate = this.getFirstNotIncomingAncestors(head, incomingVersions);
-        for (const startFrom of refsToValidate) {
-          await getAllVersionHashes({ modelComponent, repo: this.scope.objects, throws: true, startFrom });
-        }
+        await Promise.all(
+          refsToValidate.map((startFrom) =>
+            getAllVersionHashes({ modelComponent, repo: this.scope.objects, throws: true, startFrom })
+          )
+        );
       },
       { concurrency: concurrentComponentsLimit() }
     );

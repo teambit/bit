@@ -23,6 +23,7 @@ import { getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-h
 import type { SnapsDistance } from '@teambit/component.snap-distance';
 import {
   getDivergeData,
+  getAllVersionHashes,
   getAllVersionParents,
   getAllVersionsInfo,
   getVersionParentsFromVersion,
@@ -1395,15 +1396,24 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
    */
   async getUnexportedMainRefs(repo: Repository): Promise<Ref[]> {
     if (!this.head) return [];
-    if (this.remoteHead && this.head.isEqual(this.remoteHead)) return [];
-    const mainDivergeData = await getDivergeData({
-      repo,
-      modelComponent: this,
-      sourceHead: this.head,
-      targetHead: this.remoteHead || null,
-      throws: false,
-    });
-    return mainDivergeData.snapsOnSourceOnly;
+    // main was never exported. (getDivergeData with no target traverses the lane head, not the main head)
+    if (!this.remoteHead)
+      return getAllVersionHashes({ modelComponent: this, repo, throws: false, startFrom: this.head });
+    if (this.head.isEqual(this.remoteHead)) return [];
+    try {
+      const mainDivergeData = await getDivergeData({
+        repo,
+        modelComponent: this,
+        sourceHead: this.head,
+        targetHead: this.remoteHead,
+        throws: false,
+      });
+      return mainDivergeData.snapsOnSourceOnly;
+    } catch (err: any) {
+      // e.g. a lean lane consumer doesn't always have the main remote head locally. keep the previous behavior.
+      logger.debug(`getUnexportedMainRefs, failed calculating the main divergence of ${this.id()}: ${err.message}`);
+      return [];
+    }
   }
 
   /**
