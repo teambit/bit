@@ -81,8 +81,7 @@ export function CodeCompareEditor({
   // and the anchor's parent is that container, which useDiffHeight measures.
   const anchorRef = useRef<HTMLDivElement>(null);
   const maxHeight = useDiffHeight(fullScreen, anchorRef);
-  const isLargeFile =
-    Math.max(lineCount(originalFileContent), lineCount(modifiedFileContent)) > LARGE_FILE_LINES;
+  const isLargeFile = Math.max(lineCount(originalFileContent), lineCount(modifiedFileContent)) > LARGE_FILE_LINES;
   return (
     <div ref={anchorRef} style={{ display: 'contents' }}>
       <DiffViewer

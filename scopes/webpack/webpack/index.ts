@@ -13,12 +13,10 @@ export type {
   WebpackConfigDevServerTransformContext,
   GlobalWebpackConfigTransformContext,
   WebpackConfigDevServerTransformer,
+  WebpackConfigWithDevServer,
 } from './webpack.main.runtime';
 export { runTransformersWithContext } from './run-transformer';
 export { WebpackAspect } from './webpack.aspect';
-export { WebpackDevServer } from './webpack.dev-server';
-export { WebpackBundler } from './webpack.bundler';
-export type { WebpackConfigWithDevServer } from './webpack.dev-server';
 export { WebpackCompilationDoneEvent, WebpackCompilationStartedEvent } from './events';
 /**
  * @deprecated import directly from `webpack` instead.
@@ -36,7 +34,6 @@ export {
   GenerateBodyInjectionTransformer,
   BodyInjectionOptions,
   generateAddAliasesFromPeersTransformer,
-  generateExposePeersTransformer,
   generateExternalsTransformer,
   GenerateHeadInjectionTransformer,
   HeadInjectionOptions,

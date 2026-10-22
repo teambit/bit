@@ -45,7 +45,17 @@ jest.mock('@teambit/ui-foundation.ui.react-router.use-query', () => ({ useQuery:
 type Files = Record<string, string | undefined>;
 
 /** Renders the compare for one base tree, one compare tree and per-file statuses. */
-function render({ base, compare, statuses, mainFile }: { base?: string[]; compare: string[]; statuses: Files; mainFile: string }) {
+function render({
+  base,
+  compare,
+  statuses,
+  mainFile,
+}: {
+  base?: string[];
+  compare: string[];
+  statuses: Files;
+  mainFile: string;
+}) {
   mockViewProps.length = 0;
   mockUseCode.mockImplementation((id?: string) => {
     if (id === 'base') return { fileTree: base, mainFile, loading: false };

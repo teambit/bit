@@ -35,7 +35,7 @@ function renderSection(result: Parameters<typeof ComponentApiDiffSection>[0]['re
 describe('ComponentApiDiffSection', () => {
   it('shows a neutral notice when the server has no API diff support', () => {
     const markup = renderSection(UNSUPPORTED_API_DIFF);
-    expect(markup).toContain("API diff isn&#x27;t available");
+    expect(markup).toContain('API diff isn&#x27;t available');
     expect(markup).not.toContain('API diff failed');
   });
 

@@ -61,7 +61,7 @@ type LaneDiffForIDEResult = {
   failures: { id: string; msg: string }[];
 };
 
-type PathLinux = string; // problematic to get it from @teambit/legacy/dist/utils/path.
+type PathLinux = string;
 
 type PathFromLastSnap = { [relativeToWorkspace: PathLinux]: string };
 type ObjectPathsFromLastSnap = { [relativeToWorkspace: PathLinux]: string };

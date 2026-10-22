@@ -2,7 +2,17 @@ import * as path from 'path';
 import { homedir, platform } from 'os';
 
 import type { PathOsBased } from '@teambit/toolbox.path.path';
-import { getConfig } from '@teambit/config-store';
+
+// config-store and this module form a require cycle (config-store's files import constants from
+// here, while getCloudDomain below runs at module scope). a top-level import crashes when the
+// cycle is entered from the config-store side - its getConfig export is not installed yet at the
+// time this module initializes - so resolve it lazily at call time instead.
+const getConfig = (key: string): string | undefined => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const configStore = require('@teambit/config-store');
+  // mid-cycle the export is not installed yet; callers treat undefined as "use the default"
+  return typeof configStore.getConfig === 'function' ? configStore.getConfig(key) : undefined;
+};
 
 export const IS_WINDOWS = platform() === 'win32';
 
@@ -158,7 +168,11 @@ export const DEFAULT_CLOUD_DOMAIN = 'bit.cloud';
 let resolvedCloudDomain;
 export const getCloudDomain = (): string => {
   if (resolvedCloudDomain) return resolvedCloudDomain;
-  resolvedCloudDomain = getConfig(CFG_CLOUD_DOMAIN_KEY) || DEFAULT_CLOUD_DOMAIN;
+  const fromConfig = getConfig(CFG_CLOUD_DOMAIN_KEY);
+  // when called mid-cycle (module-scope callers below) the config is not readable yet - return
+  // the default without caching, so a later call still picks up a configured custom domain
+  if (fromConfig === undefined) return DEFAULT_CLOUD_DOMAIN;
+  resolvedCloudDomain = fromConfig || DEFAULT_CLOUD_DOMAIN;
   return resolvedCloudDomain;
 };
 

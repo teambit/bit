@@ -248,7 +248,10 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 // virtualized rows aligned.
 .unifiedRow {
   display: grid;
-  grid-template-columns: var(--diff-gutter-width, 50px) var(--diff-gutter-width, 50px) 22px minmax(var(--diff-code-width, 60ch), 1fr);
+  grid-template-columns: var(--diff-gutter-width, 50px) var(--diff-gutter-width, 50px) 22px minmax(
+      var(--diff-code-width, 60ch),
+      1fr
+    );
 
   // Let unusually wide glyphs extend the shared `ch`-based estimate. The body owns horizontal
   // scrolling, so visible overflow remains reachable without widening the page.

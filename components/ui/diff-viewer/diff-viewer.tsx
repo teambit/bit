@@ -7,7 +7,13 @@ import { useHighlightedLines } from './highlighter';
 import { langFromFileName, normalizeLanguage } from './language';
 import { resolveTokenColor } from './shiki-bit-theme';
 import type { AnnotationIndex, DiffAnnotation, DiffLineContext, DiffLineSide } from './annotations';
-import { EMPTY_ANNOTATION_INDEX, buildAnnotationIndex, captureDiffSelection, lineAttribute, lineKey } from './annotations';
+import {
+  EMPTY_ANNOTATION_INDEX,
+  buildAnnotationIndex,
+  captureDiffSelection,
+  lineAttribute,
+  lineKey,
+} from './annotations';
 import styles from './diff-viewer.module.scss';
 
 export type DiffViewMode = 'unified' | 'split';
@@ -69,7 +75,6 @@ const COLLAPSED_GAPS: Record<string, GapState> = {};
 const GUTTER_SLOT_WIDTH = 28;
 const GUTTER_DIGIT_WIDTH = 7;
 const GUTTER_MIN_WIDTH = 50;
-
 
 /** a single rendered row: a code line (or a left/right pair), a collapsed-gap expander, or a
  * host-supplied full-width block anchored under a line. */
