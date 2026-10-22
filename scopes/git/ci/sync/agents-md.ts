@@ -63,7 +63,8 @@ export function insertAgentsSection(existing: string, section: string): string {
   const lines = existing.split('\n');
   let at = 0;
   if (lines[0]?.trim() === '---') {
-    const end = lines.findIndex((line, i) => i > 0 && line.trim() === '---');
+    // YAML closes a document with `---` or `...`.
+    const end = lines.findIndex((line, i) => i > 0 && (line.trim() === '---' || line.trim() === '...'));
     if (end > 0) at = end + 1;
   }
   let next = at;

@@ -9,7 +9,7 @@
 1. **One repository mirrors one scope.** Components from other scopes arrive as package dependencies, never as source.
 2. **`{{branch}}` equals the scope's main.** The workflows own it. Never push to `{{branch}}` by hand.
 3. **Each lane is a branch plus a pull request.** The sync keeps them equal in both directions. By default, the branch has the lane's name. A lane name has no `/`, so the default mapping ignores a branch such as `feature/x`. The `branchPrefix` and `branches` keys of the `teambit.git/ci` sync config in `workspace.jsonc` can map a lane to a different branch name, such as `lane/x`. Read them before you name a branch.
-4. **Merging the pull request is the release.** `bit-release` merges the lane into the scope, exports new versions, archives the lane and commits the new `.bitmap` to `{{branch}}`.
+4. **Merging the pull request is the release.** `bit-release` merges the lane into the scope, exports new versions, commits the new `.bitmap` to `{{branch}}` and archives the lane. A lane with components of other scopes stays open until each of those scopes releases its slice.
 5. **The workflows do the work.** You change code, and then you either push a branch or export a lane.
 
 ### Rules that override generic Bit guidance
@@ -89,7 +89,8 @@ The lane and the branch changed the same lines. The lane stays paused while the 
 git fetch origin && git checkout '<branch>'
 git merge --ff-only 'origin/<branch>'         # stops if your local copy has commits that are not on origin: keep them, or reset to origin
 bit install
-bit lane import '<host-scope>/<lane>'         # brings the lane's side in; conflicts appear as conflict markers
+bit lane import '<host-scope>/<lane>'         # fetches the lane. If .bitmap is on main, it also switches to the lane
+bit checkout head --manual                    # merges the lane's head into the files; conflicts appear as conflict markers
 # resolve every conflicted file. When the intent is unclear, ask the user which side wins. Don't guess.
 bit validate
 git add -A && git commit -m "fix: resolve sync conflict"
@@ -104,7 +105,7 @@ The log of the next run shows `merge-diverged` or `export-branch`, then a later 
 
 Prefer one lane per scope: one change, one repository, one PR.
 
-A lane _can_ carry components from several scopes. Each scope's repository then mirrors only its own slice, consumes the other scopes' lane versions as packages, and releases its slice when its PR merges. Until automatic fan-out ships, only the repository of the lane's host scope hears about the lane. Start the others by hand:
+A lane _can_ carry components from several scopes. Each scope's repository then mirrors only its own slice, consumes the other scopes' lane versions as packages, and releases its slice when its PR merges. The lane stays open until the last slice is released. Until automatic fan-out ships, only the repository of the lane's host scope hears about the lane. Start the others by hand:
 
 ```bash
 gh workflow run bit-sync -R <org>/<repo> -f lane=<host-scope>/<lane-name>

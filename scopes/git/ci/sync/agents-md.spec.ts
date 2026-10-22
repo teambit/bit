@@ -80,6 +80,13 @@ describe('agents-md', () => {
       );
     });
 
+    it('keeps front matter that closes with `...` first', () => {
+      const existing = '---\nalwaysApply: true\n...\n\n# Title\n';
+      expect(insertAgentsSection(existing, SECTION)).to.equal(
+        `---\nalwaysApply: true\n...\n\n# Title\n\n${SECTION.trim()}\n`
+      );
+    });
+
     it('fills an empty file', () => {
       expect(insertAgentsSection('', SECTION)).to.equal(`${SECTION.trim()}\n`);
     });
