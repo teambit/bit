@@ -68,6 +68,9 @@ pub(super) fn prepare(
         Subcommand::Set { pattern, env } => prepare_set(ctx, pattern, env),
         Subcommand::Unset { pattern } => prepare_unset(ctx, pattern),
         Subcommand::Replace { old_env, new_env } => prepare_replace(ctx, old_env, new_env),
+        Subcommand::List { .. } | Subcommand::Get { .. } => {
+            Err(Failure::Declined("handled by inspect".into()))
+        }
     }
 }
 

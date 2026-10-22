@@ -1,4 +1,8 @@
-use super::{Options, fast_graph_error, parse_options};
+use super::{
+    Options, fast_graph_error,
+    model::{CompGraph, GraphEdge},
+    parse_options,
+};
 
 #[test]
 fn parses_graph_options_and_validates_remote_or_host() {
@@ -24,5 +28,41 @@ fn parses_graph_options_and_validates_remote_or_host() {
     assert_eq!(
         fast_graph_error(temp.path(), &empty_remote),
         Some("please specify remote scope name or enter an id"),
+    );
+}
+
+#[test]
+fn filters_graph_seeders_local_only_and_cycles() {
+    let mut graph = CompGraph::default();
+    graph.add_edge("scope/a@0.0.1".into(), "scope/b@0.0.1".into(), "prod");
+    graph.add_edge("scope/b@0.0.1".into(), "scope/c@0.0.1".into(), "prod");
+    graph.add_edge("scope/b@0.0.1".into(), "scope/a@0.0.1".into(), "dev");
+    graph.sort_deterministic();
+
+    assert_eq!(graph.nodes, vec!["scope/a@0.0.1", "scope/b@0.0.1", "scope/c@0.0.1"]);
+    assert_eq!(graph.edges.len(), 3);
+
+    let mut cyclic = graph.clone();
+    cyclic.filter_cycles();
+    cyclic.sort_deterministic();
+    assert_eq!(cyclic.nodes, vec!["scope/a@0.0.1", "scope/b@0.0.1"]);
+    assert_eq!(
+        cyclic.edges,
+        vec![
+            GraphEdge {
+                id: "scope/a@0.0.1 -> scope/b@0.0.1".into(),
+                source_id: "scope/a@0.0.1".into(),
+                target_id: "scope/b@0.0.1".into(),
+                attr: "prod".into(),
+                bidirectional: false,
+            },
+            GraphEdge {
+                id: "scope/b@0.0.1 -> scope/a@0.0.1".into(),
+                source_id: "scope/b@0.0.1".into(),
+                target_id: "scope/a@0.0.1".into(),
+                attr: "dev".into(),
+                bidirectional: false,
+            },
+        ],
     );
 }

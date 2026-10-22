@@ -235,11 +235,11 @@ fn bit_artifacts_command_on_staged_and_snap() -> KnownResult<()> {
     helper.tag_all_without_build("");
 
     // should not throw an error about missing scope
-    let out1 = helper.run("artifacts comp1");
+    let out1 = helper.native("artifacts comp1");
     assert!(!out1.is_empty());
 
     // should be able to work when using the full component-id
-    let out2 = helper.run(&format!("artifacts {}/comp1", helper.scopes.remote));
+    let out2 = helper.native(&format!("artifacts {}/comp1", helper.scopes.remote));
     assert!(!out2.is_empty());
 
     // running the command on a snap -> should not throw an error about non exist component
@@ -247,7 +247,7 @@ fn bit_artifacts_command_on_staged_and_snap() -> KnownResult<()> {
     helper.populate_components(1, true, "");
     helper.snap_all_components_without_build("");
     let head = helper.get_head("comp1");
-    let out3 = helper.run(&format!("artifacts comp1@{head}"));
+    let out3 = helper.native(&format!("artifacts comp1@{head}"));
     assert!(!out3.is_empty());
     Ok(())
 }
@@ -546,8 +546,8 @@ fn link_to_target_with_and_without_pattern_and_peers() -> KnownResult<()> {
     fs::create_dir_all(&target_dir).unwrap();
     fs::create_dir_all(&all_target_dir).unwrap();
 
-    helper.run(&format!("link comp1 --target={}", target_dir.display()));
-    helper.run(&format!("link --target={}", all_target_dir.display()));
+    helper.native(&format!("link comp1 --target={}", target_dir.display()));
+    helper.native(&format!("link --target={}", all_target_dir.display()));
 
     // should link the scecified component to the target directory
     assert!(
@@ -581,7 +581,7 @@ fn link_to_target_with_and_without_pattern_and_peers() -> KnownResult<()> {
     helper.run("install");
     let peers_target = helper.scopes.e2e_dir.join("link-target-peers");
     fs::create_dir_all(&peers_target).unwrap();
-    helper.run(&format!("link --target={} --peers", peers_target.display()));
+    helper.native(&format!("link --target={} --peers", peers_target.display()));
 
     // should link the components to the target directory
     assert!(

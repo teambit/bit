@@ -243,7 +243,7 @@ fn deps_in_capsules_and_isolating_cyclic_dependencies() {
     helper.output_file("comp2/index.js", "module.exports = () => require('@my-scope/comp1');\n");
     helper.native("add comp1");
     helper.native("add comp2");
-    helper.run("link");
+    helper.native("link");
 
     let run = helper.native_run("capsule create --seeders-only comp1 -j");
     assert!(run.status.success(), "{}{}", run.stdout, run.stderr);

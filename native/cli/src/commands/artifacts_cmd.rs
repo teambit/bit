@@ -1,11 +1,15 @@
 //! Native `bit artifacts <component-pattern>` (`scopes/pipelines/builder/artifact/artifacts.cmd.ts`).
 
+mod extractor;
+mod render;
 #[cfg(test)]
 mod tests;
 
+use self::extractor::extract_and_render;
 use super::{
     Command,
     color::Chalk,
+    scope_set::Failure,
     script::active_component_count,
     workspace_command::{self, format::Formatter, results::Report},
 };
@@ -38,8 +42,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&cwd) else {
         return Ok(Outcome::Declined("artifacts outside workspace delegated".into()));
     };
+    let formatter = Formatter::new(Chalk::detect(args));
     if is_empty_workspace(&root).unwrap_or(false) {
-        let formatter = Formatter::new(Chalk::detect(args));
         let pattern = options.pattern;
         return workspace_command::execute_without_loader(&root, args, "artifacts", move |_| {
             let msg = format!(
@@ -50,7 +54,26 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Ok(Report { data: msg, code: 0, details: None })
         });
     }
-    Ok(Outcome::Declined("artifacts extraction delegated".into()))
+    finish_artifacts(&root, args, &options, &formatter)
+}
+
+fn finish_artifacts(
+    root: &Path,
+    args: &[OsString],
+    options: &Options,
+    formatter: &Formatter,
+) -> io::Result<Outcome> {
+    match extract_and_render(root, options, formatter) {
+        Ok(data) => workspace_command::execute_then(root, args, "artifacts", move |_| {
+            Ok(Report { data, code: 0, details: None })
+        }),
+        Err(Failure::User(message)) => {
+            workspace_command::execute_then(root, args, "artifacts", move |_| {
+                Err(io::Error::other(message))
+            })
+        }
+        Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("artifacts: {reason}"))),
+    }
 }
 
 pub(super) fn is_empty_workspace(root: &Path) -> io::Result<bool> {

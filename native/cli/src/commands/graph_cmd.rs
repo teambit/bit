@@ -1,9 +1,17 @@
 //! Native `bit graph [id]` (`scopes/component/graph/graph-cmd.ts`).
 
+mod builder;
+mod model;
 #[cfg(test)]
 mod tests;
 
-use super::{Command, workspace_command};
+use self::builder::execute_workspace_graph;
+use super::{
+    Command,
+    color::Chalk,
+    scope_set::Failure,
+    workspace_command::{self, format::Formatter, results::Report},
+};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
@@ -36,16 +44,51 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
     let cwd = env::current_dir()?;
     if let Some(err) = fast_graph_error(&cwd, &options) {
-        if let Some(root) = workspace::root(&cwd) {
-            return workspace_command::execute_without_loader(&root, args, "graph", |_| {
-                Err(io::Error::other(err))
-            });
-        }
-        return workspace_command::execute_without_loader_scope(&cwd, args, "graph", |_| {
+        return emit_fast_graph_error(&cwd, args, err);
+    }
+    if options.remote.is_some() || options.png {
+        return Ok(Outcome::Declined("remote/png graph delegated".into()));
+    }
+    let Some(root) = workspace::root(&cwd) else {
+        return Ok(Outcome::Declined("bare scope graph delegated".into()));
+    };
+    finish_graph(&root, args, &options)
+}
+
+fn emit_fast_graph_error(cwd: &Path, args: &[OsString], err: &'static str) -> io::Result<Outcome> {
+    if let Some(root) = workspace::root(cwd) {
+        return workspace_command::execute_without_loader(&root, args, "graph", |_| {
             Err(io::Error::other(err))
         });
     }
-    Ok(Outcome::Declined("graph generation delegated".into()))
+    workspace_command::execute_without_loader_scope(cwd, args, "graph", |_| {
+        Err(io::Error::other(err))
+    })
+}
+
+fn finish_graph(root: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
+    let formatter = Formatter::new(Chalk::detect(args));
+    match execute_workspace_graph(root, options, &formatter) {
+        Ok(data) if options.json => {
+            workspace_command::execute_json(root, args, "graph", move |_| {
+                Ok(Report { data, code: 0, details: None })
+            })
+        }
+        Ok(data) => workspace_command::execute_then(root, args, "graph", move |_| {
+            Ok(Report { data, code: 0, details: None })
+        }),
+        Err(Failure::User(message)) if options.json => {
+            workspace_command::execute_json(root, args, "graph", move |_| {
+                Err(io::Error::other(message))
+            })
+        }
+        Err(Failure::User(message)) => {
+            workspace_command::execute_then(root, args, "graph", move |_| {
+                Err(io::Error::other(message))
+            })
+        }
+        Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("graph: {reason}"))),
+    }
 }
 
 pub(super) fn fast_graph_error(cwd: &Path, options: &Options) -> Option<&'static str> {

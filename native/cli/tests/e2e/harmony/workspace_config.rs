@@ -57,7 +57,7 @@ fn adding_a_non_existing_component_to_a_variant() {
     let helper = Helper::new();
     helper.re_init_workspace();
     helper.output_file("comp1/index.js", "module.exports = () => 'comp1';");
-    helper.run("add comp1");
+    helper.native("add comp1");
     config::set_workspace_key(
         &helper.scopes.local_path,
         "teambit.workspace/variants",

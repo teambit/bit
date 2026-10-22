@@ -1,8 +1,16 @@
 //! Native `bit script [script-name]` (`scopes/workspace/scripts/script.cmd.ts`).
 
+pub(in crate::commands) use self::{
+    parser::{ScriptHandler, parse_env_scripts_in_dir},
+    runner::{find_workspace_env_component, resolve_workspace_components},
+};
+
+mod parser;
+mod runner;
 #[cfg(test)]
 mod tests;
 
+use self::runner::{ScriptFailure, execute, read_allowed_envs};
 use super::{
     Command,
     color::Chalk,
@@ -35,15 +43,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         && options.script_name.is_none()
         && env::var_os("CI").is_none_or(|val| val.is_empty())
     {
-        let cwd = env::current_dir()?;
-        if let Some(root) = workspace::root(&cwd) {
-            return workspace_command::execute_without_loader(&root, args, "script", |_| {
-                Err(io::Error::other(MISSING_SCRIPT_ERR))
-            });
-        }
-        return workspace_command::execute_without_loader_scope(&cwd, args, "script", |_| {
-            Err(io::Error::other(MISSING_SCRIPT_ERR))
-        });
+        return missing_script_outcome(args);
     }
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
@@ -55,7 +55,40 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Ok(Report { data: msg, code: 0, details: None })
         });
     }
-    Ok(Outcome::Declined("script execution delegated".into()))
+    finish_script_outcome(&root, args, execute(&root, &options, chalk))
+}
+
+fn missing_script_outcome(args: &[OsString]) -> io::Result<Outcome> {
+    let cwd = env::current_dir()?;
+    if let Some(root) = workspace::root(&cwd) {
+        return workspace_command::execute_without_loader(&root, args, "script", |_| {
+            Err(io::Error::other(MISSING_SCRIPT_ERR))
+        });
+    }
+    workspace_command::execute_without_loader_scope(&cwd, args, "script", |_| {
+        Err(io::Error::other(MISSING_SCRIPT_ERR))
+    })
+}
+
+fn finish_script_outcome(
+    root: &Path,
+    args: &[OsString],
+    result: Result<String, ScriptFailure>,
+) -> io::Result<Outcome> {
+    match result {
+        Ok(data) => workspace_command::execute_without_loader(root, args, "script", |_| {
+            Ok(Report { data, code: 0, details: None })
+        }),
+        Err(ScriptFailure::User(message)) => {
+            if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+                return Ok(Outcome::Declined("CI script error stack".into()));
+            }
+            workspace_command::execute_without_loader(root, args, "script", |_| {
+                Err(io::Error::other(message))
+            })
+        }
+        Err(ScriptFailure::Declined(reason)) => Ok(Outcome::Declined(format!("script: {reason}"))),
+    }
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
@@ -79,10 +112,7 @@ pub(super) fn fast_workspace_message(root: &Path, chalk: Chalk) -> io::Result<Op
     if ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
         return Ok(None);
     }
-    let has_envs = ws_config["teambit.workspace/scripts"]["envs"]
-        .as_array()
-        .is_some_and(|envs| !envs.is_empty());
-    if !has_envs {
+    if read_allowed_envs(&ws_config).is_empty() {
         return Ok(Some(chalk.yellow(NO_ENVS_CONFIG_MSG)));
     }
     let bitmap = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;

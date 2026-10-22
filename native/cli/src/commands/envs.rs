@@ -1,15 +1,19 @@
-//! Native `bit envs <set|unset>` (`bit env <set|unset>`) (`scopes/workspace/workspace/envs-subcommands/`).
+//! Native `bit envs <list|get|set|unset|replace>` (`bit env ...`) (`scopes/envs/envs/envs.cmd.ts`).
 
+mod inspect;
 mod mutation;
 #[cfg(test)]
 mod tests;
 
-use self::mutation::prepare;
+use self::{
+    inspect::{run_get, run_list},
+    mutation::prepare,
+};
 use super::{
     Command, aspect::is_supported_pattern, color::Chalk, scope_set::Failure, workspace_command,
 };
 use crate::{native::Outcome, workspace};
-use std::{env, ffi::OsString, io};
+use std::{env, ffi::OsString, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "envs", aliases: &["env"], run };
 
@@ -28,6 +32,8 @@ pub(super) const CORE_ENVS: &[&str] = &[
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
+    List { json: bool, table_only: bool },
+    Get { component: String, services: Option<Vec<String>> },
     Set { pattern: String, env: String },
     Unset { pattern: String },
     Replace { old_env: String, new_env: String },
@@ -44,16 +50,47 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("envs requires a workspace".into()));
     };
     let chalk = Chalk::detect(args);
-    let label = subcommand.loader_label();
-    match prepare(&root, &subcommand, chalk) {
-        Ok(prepared) => {
-            workspace_command::execute_then(&root, args, label, |_output| prepared.commit(chalk))
+    match &subcommand {
+        Subcommand::List { json, table_only } => {
+            return finish_outcome(
+                &root,
+                args,
+                "envs",
+                run_list(&root, args, *json, *table_only, chalk),
+            );
         }
+        Subcommand::Get { component, services } => {
+            return finish_outcome(
+                &root,
+                args,
+                "get",
+                run_get(&root, args, component, services.as_deref(), chalk),
+            );
+        }
+        Subcommand::Set { .. } | Subcommand::Unset { .. } | Subcommand::Replace { .. } => {}
+    }
+    let label = subcommand.loader_label();
+    let result = prepare(&root, &subcommand, chalk)
+        .and_then(|prepared| {
+            workspace_command::execute_then(&root, args, label, |_output| prepared.commit(chalk))
+                .map_err(|err| Failure::Declined(err.to_string()))
+        });
+    finish_outcome(&root, args, label, result)
+}
+
+fn finish_outcome(
+    root: &Path,
+    args: &[OsString],
+    label: &str,
+    result: Result<Outcome, Failure>,
+) -> io::Result<Outcome> {
+    match result {
+        Ok(outcome) => Ok(outcome),
         Err(Failure::User(message)) => {
             if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
                 return Ok(Outcome::Declined("CI envs error stack".into()));
             }
-            workspace_command::execute_then(&root, args, label, |_output| {
+            workspace_command::execute_then(root, args, label, |_output| {
                 Err(io::Error::other(message))
             })
         }
@@ -64,6 +101,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 impl Subcommand {
     const fn loader_label(&self) -> &'static str {
         match self {
+            Self::List { .. } => "envs",
+            Self::Get { .. } => "get",
             Self::Set { .. } => "set",
             Self::Unset { .. } => "unset",
             Self::Replace { .. } => "replace",
@@ -78,6 +117,10 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         .filter(|arg| *arg != "--no-color")
         .collect::<Vec<_>>();
     match filtered.as_slice() {
+        [] => Some(Subcommand::List { json: false, table_only: true }),
+        ["-j" | "--json"] => Some(Subcommand::List { json: true, table_only: true }),
+        ["list", rest @ ..] => parse_list(rest),
+        ["get", rest @ ..] => parse_get(rest),
         ["set", pattern, env]
             if is_supported_pattern(pattern) && !env.is_empty() && !env.starts_with('-') =>
         {
@@ -99,4 +142,51 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         }
         _ => None,
     }
+}
+
+fn parse_list(rest: &[&str]) -> Option<Subcommand> {
+    let mut json = false;
+    for &arg in rest {
+        match arg {
+            "-j" | "--json" => json = true,
+            _ => return None,
+        }
+    }
+    Some(Subcommand::List { json, table_only: false })
+}
+
+fn parse_get(rest: &[&str]) -> Option<Subcommand> {
+    let mut component = None;
+    let mut services = None;
+    let mut idx = 0usize;
+    while idx < rest.len() {
+        match rest[idx] {
+            "--services" => {
+                idx += 1;
+                let val = *rest.get(idx)?;
+                services = Some(
+                    val.split(',')
+                        .map(str::trim)
+                        .filter(|item| !item.is_empty())
+                        .map(str::to_owned)
+                        .collect(),
+                );
+            }
+            arg if let Some(val) = arg.strip_prefix("--services=") => {
+                services = Some(
+                    val.split(',')
+                        .map(str::trim)
+                        .filter(|item| !item.is_empty())
+                        .map(str::to_owned)
+                        .collect(),
+                );
+            }
+            val if !val.starts_with('-') && !val.is_empty() && component.is_none() => {
+                component = Some(val.to_owned());
+            }
+            _ => return None,
+        }
+        idx += 1;
+    }
+    Some(Subcommand::Get { component: component?, services })
 }

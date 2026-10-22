@@ -47,7 +47,7 @@ fn script_command_list_execute_env_get_and_version_mismatch() {
     helper.link("");
     helper.compile();
 
-    let list_out = helper.run_cmd("bit script --list");
+    let list_out = helper.native("script --list");
     assert!(list_out.contains("Available scripts"), "{list_out}");
     assert!(list_out.contains(&env_id), "{list_out}");
     assert!(list_out.contains("test-script"), "{list_out}");
@@ -55,18 +55,18 @@ fn script_command_list_execute_env_get_and_version_mismatch() {
     assert!(list_out.contains("echo hello from script"), "{list_out}");
     assert!(list_out.contains("echo another output"), "{list_out}");
 
-    let run_out = helper.run_cmd("bit script test-script");
+    let run_out = helper.native("script test-script");
     assert!(run_out.contains(r#"Running script "test-script""#), "{run_out}");
     assert!(run_out.contains("hello from script"), "{run_out}");
     assert!(run_out.contains(&env_id), "{run_out}");
 
-    let async_out = helper.run_cmd("bit script async-script");
+    let async_out = helper.native("script async-script");
     assert!(async_out.contains(r#"Running script "async-script""#), "{async_out}");
     assert!(async_out.contains("async script executed"), "{async_out}");
     assert!(async_out.contains("executed for 3 component(s)"), "{async_out}");
     assert!(async_out.contains("✓ Script function executed successfully"), "{async_out}");
 
-    let env_get_out = helper.run_cmd("bit env get comp1");
+    let env_get_out = helper.native("env get comp1");
     assert!(env_get_out.contains("available scripts"), "{env_get_out}");
     assert!(env_get_out.contains("test-script"), "{env_get_out}");
     assert!(env_get_out.contains("echo hello from script"), "{env_get_out}");
@@ -82,13 +82,13 @@ fn script_command_list_execute_env_get_and_version_mismatch() {
         json!({ "envs": [env_id_with_ver] }),
     );
 
-    let mismatch_list = helper.run_cmd("bit script --list");
+    let mismatch_list = helper.native("script --list");
     assert!(
         mismatch_list.contains("no scripts defined in the configured environments"),
         "{mismatch_list}",
     );
 
-    let mismatch_run = helper.run_cmd("bit script test-script");
+    let mismatch_run = helper.native("script test-script");
     assert!(!mismatch_run.contains("Running script"), "{mismatch_run}");
     assert!(!mismatch_run.contains("hello from script"), "{mismatch_run}");
 }

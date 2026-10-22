@@ -106,7 +106,7 @@ fn forked_env_with_plus_dependency_markers_has_no_missing_deps_issues() {
     helper.native("add base-env -i base-env");
     helper.native("env set base-env teambit.envs/env");
     helper.native("deps set base-env is-positive@1.0.0 --dev");
-    helper.run("install is-positive@1.0.0");
+    helper.native("install is-positive@1.0.0");
     helper.tag_without_build("", "");
     crate::helper::remote::publish(&helper);
 
@@ -114,7 +114,7 @@ fn forked_env_with_plus_dependency_markers_has_no_missing_deps_issues() {
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.native(&format!("fork {remote}/base-env custom-env"));
-    helper.run("install");
+    helper.native("install");
     helper.expect_status_to_not_have_issues();
 }
 
@@ -219,7 +219,7 @@ fn optional_dependencies_affect_component_capsule_and_deps_set_optional() {
     let r2 = helper.native_run("deps set comp1 is-odd@1.0.0 --optional");
     assert!(r2.status.success(), "{}{}", r2.stdout, r2.stderr);
 
-    let show = helper.run("show comp1");
+    let show = helper.native("show comp1");
     assert!(show.contains("is-positive@1.0.0- (package)(optional)"), "{show}");
     assert!(show.contains("is-odd@1.0.0------ (package)(optional)"), "{show}");
 

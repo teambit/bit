@@ -1,5 +1,9 @@
 //! Native `bit link [component-names...]` (`scopes/workspace/install/link/link.cmd.ts`).
 
+mod format;
+mod rewire;
+mod runner;
+mod target;
 #[cfg(test)]
 mod tests;
 
@@ -27,17 +31,20 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("link arguments are not UTF-8".into()));
     };
-    if parse_options(&argv[1..]).is_none() {
+    let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native link grammar".into()));
-    }
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-        return Ok(Outcome::Declined("CI link delegated".into()));
-    }
+    };
     let cwd = env::current_dir()?;
-    if workspace::root(&cwd).is_none() {
+    let Some(root) = workspace::root(&cwd) else {
+        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            return Ok(Outcome::Declined("CI link delegated".into()));
+        }
         return workspace_command::execute_without_loader_scope(&cwd, args, "link", |_| {
             Err(io::Error::other(OUTSIDE_WORKSPACE_ERR))
         });
+    };
+    if let Some(outcome) = runner::try_run(&root, &cwd, args, &options)? {
+        return Ok(outcome);
     }
     Ok(Outcome::Declined("link execution delegated".into()))
 }
@@ -59,7 +66,7 @@ fn apply_token<'a>(
     match arg {
         "--no-color" => {}
         "-j" | "--json" => options.json = true,
-        "--verbose" => options.verbose = true,
+        "-v" | "--verbose" => options.verbose = true,
         "-r" | "--rewire" => options.rewire = true,
         "--skip-fetching-objects" => options.skip_fetching_objects = true,
         "--peers" => options.peers = true,

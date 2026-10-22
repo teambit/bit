@@ -1,15 +1,19 @@
-//! Native `bit aspect <list-core|set|unset>` (`scopes/harmony/aspect/aspect.cmd.ts`).
+//! Native `bit aspect <list|list-core|get|set|unset|update>` (`scopes/harmony/aspect/aspect.cmd.ts`).
 
 pub(in crate::commands) use self::mutation::{
     deep_merge, find_bitmap_row_mut, find_bitmap_row_ref, serialize_json_preserving_newline,
     workspace_default_scope, write_bitmap_if_changed,
 };
 
+mod inspect;
 mod mutation;
 #[cfg(test)]
 mod tests;
 
-use self::mutation::prepare;
+use self::{
+    inspect::{get::run_get, run_list},
+    mutation::prepare,
+};
 use super::{
     Command,
     color::Chalk,
@@ -23,17 +27,35 @@ use std::{
     env,
     ffi::OsString,
     io::{self, Write},
+    path::Path,
     process::ExitCode,
 };
 
 pub const COMMAND: Command = Command { name: "aspect", aliases: &[], run };
 
-const CORE_ASPECT_IDS: &str =
+pub(super) const CORE_ASPECT_IDS: &str =
     include_str!("../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct ListOpts {
+    pub pattern: Option<String>,
+    pub debug: bool,
+    pub json: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct GetOpts {
+    pub component: String,
+    pub aspect_id: Option<String>,
+    pub debug: bool,
+    pub json: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
+    List(ListOpts),
     ListCore { json: bool },
+    Get(GetOpts),
     Set { pattern: String, aspect_id: String, config: Value, merge: bool },
     Unset { pattern: String, aspect_id: String },
     Update { aspect_id: String, pattern: Option<String> },
@@ -54,16 +76,41 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("aspect requires a workspace".into()));
     };
     let chalk = Chalk::detect(args);
-    let label = subcommand.loader_label();
-    match prepare(&root, &subcommand, chalk) {
-        Ok(prepared) => {
-            workspace_command::execute_then(&root, args, label, |_output| prepared.commit(chalk))
+    match &subcommand {
+        Subcommand::List(opts) => {
+            return finish_outcome(&root, args, "list", run_list(&root, args, opts, chalk));
         }
+        Subcommand::Get(opts) => {
+            return finish_outcome(&root, args, "get", run_get(&root, args, opts, chalk));
+        }
+        Subcommand::ListCore { .. }
+        | Subcommand::Set { .. }
+        | Subcommand::Unset { .. }
+        | Subcommand::Update { .. }
+        | Subcommand::Unrecognized(_) => {}
+    }
+    let label = subcommand.loader_label();
+    let result = prepare(&root, &subcommand, chalk)
+        .and_then(|prepared| {
+            workspace_command::execute_then(&root, args, label, |_output| prepared.commit(chalk))
+                .map_err(|err| Failure::Declined(err.to_string()))
+        });
+    finish_outcome(&root, args, label, result)
+}
+
+fn finish_outcome(
+    root: &Path,
+    args: &[OsString],
+    label: &str,
+    result: Result<Outcome, Failure>,
+) -> io::Result<Outcome> {
+    match result {
+        Ok(outcome) => Ok(outcome),
         Err(Failure::User(message)) => {
             if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
                 return Ok(Outcome::Declined("CI aspect error stack".into()));
             }
-            workspace_command::execute_then(&root, args, label, |_output| {
+            workspace_command::execute_then(root, args, label, |_output| {
                 Err(io::Error::other(message))
             })
         }
@@ -74,7 +121,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 impl Subcommand {
     const fn loader_label(&self) -> &'static str {
         match self {
+            Self::List(_) => "list",
             Self::ListCore { .. } => "list-core",
+            Self::Get(_) => "get",
             Self::Set { .. } => "set",
             Self::Unset { .. } => "unset",
             Self::Update { .. } => "update",
@@ -122,7 +171,9 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         .filter(|arg| *arg != "--no-color")
         .collect::<Vec<_>>();
     match filtered.as_slice() {
+        ["list", rest @ ..] => parse_list(rest),
         ["list-core", rest @ ..] => parse_list_core(rest),
+        ["get", rest @ ..] => parse_get(rest),
         ["set", rest @ ..] => parse_set(rest),
         ["unset", pattern, aspect_id]
             if is_supported_pattern(pattern)
@@ -143,6 +194,45 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         }
         _ => None,
     }
+}
+
+fn parse_list(rest: &[&str]) -> Option<Subcommand> {
+    let mut pattern = None;
+    let mut debug = false;
+    let mut json = false;
+    for &arg in rest {
+        match arg {
+            "-d" | "--debug" => debug = true,
+            "-j" | "--json" => json = true,
+            val if !val.starts_with('-') && pattern.is_none() && is_supported_pattern(val) => {
+                pattern = Some(val.to_owned());
+            }
+            _ => return None,
+        }
+    }
+    Some(Subcommand::List(ListOpts { pattern, debug, json }))
+}
+
+fn parse_get(rest: &[&str]) -> Option<Subcommand> {
+    let mut debug = false;
+    let mut json = false;
+    let mut positional = Vec::new();
+    for &arg in rest {
+        match arg {
+            "-d" | "--debug" => debug = true,
+            "-j" | "--json" => json = true,
+            val if !val.starts_with('-') && !val.is_empty() => positional.push(val),
+            _ => return None,
+        }
+    }
+    let (component, aspect_id) = match positional.as_slice() {
+        [comp] if is_supported_pattern(comp) => ((*comp).to_owned(), None),
+        [comp, aspect] if is_supported_pattern(comp) => {
+            ((*comp).to_owned(), Some((*aspect).to_owned()))
+        }
+        _ => return None,
+    };
+    Some(Subcommand::Get(GetOpts { component, aspect_id, debug, json }))
 }
 
 fn parse_list_core(rest: &[&str]) -> Option<Subcommand> {

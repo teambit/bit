@@ -98,7 +98,9 @@ pub(super) fn prepare(
             prepare_update(ctx, aspect_id, pattern.as_deref())
         }
         Subcommand::Unrecognized(sub) => Ok(Prepared::Unrecognized(sub.clone())),
-        Subcommand::ListCore { .. } => Err(Failure::Declined("handled earlier".into())),
+        Subcommand::ListCore { .. } | Subcommand::List(_) | Subcommand::Get(_) => {
+            Err(Failure::Declined("handled earlier".into()))
+        }
     }
 }
 

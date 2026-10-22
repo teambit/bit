@@ -1,13 +1,17 @@
 //! Native `bit dependents <component-name>` (`scopes/dependencies/dependencies/dependents-cmd.ts`).
 
+mod query;
+mod render;
 #[cfg(test)]
 mod tests;
 
+use self::query::run_dependents_query;
 use super::{
     Command,
     aspect::{find_bitmap_row_ref, workspace_default_scope},
-    scope_set::selection,
-    workspace_command,
+    color::Chalk,
+    scope_set::{Failure, selection},
+    workspace_command::{self, results::Report},
 };
 use crate::{native::Outcome, workspace};
 use bit_install::workspace::{Bitmap, BitmapEntry};
@@ -32,15 +36,49 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("dependents requires a workspace".into()));
     };
-    if options.json || env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-        return Ok(Outcome::Declined("CI/json dependents delegated".into()));
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI dependents delegated".into()));
     }
     if let Ok(Some(err_msg)) = check_new_component(&root, &options.id) {
-        return workspace_command::execute_then(&root, args, "dependents", |_output| {
+        return emit_dependents_err(&root, args, options.json, err_msg);
+    }
+    finish_dependents(&root, args, &options, Chalk::detect(args))
+}
+
+fn finish_dependents(
+    root: &Path,
+    args: &[OsString],
+    options: &Options,
+    chalk: Chalk,
+) -> io::Result<Outcome> {
+    match run_dependents_query(root, options, chalk) {
+        Ok(data) if options.json => {
+            workspace_command::execute_json(root, args, "dependents", move |_| {
+                Ok(Report { data, code: 0, details: None })
+            })
+        }
+        Ok(data) => workspace_command::execute_then(root, args, "dependents", move |_| {
+            Ok(Report { data, code: 0, details: None })
+        }),
+        Err(Failure::User(message)) => emit_dependents_err(root, args, options.json, message),
+        Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("dependents: {reason}"))),
+    }
+}
+
+fn emit_dependents_err(
+    root: &Path,
+    args: &[OsString],
+    json_flag: bool,
+    err_msg: String,
+) -> io::Result<Outcome> {
+    if json_flag {
+        return workspace_command::execute_json(root, args, "dependents", move |_| {
             Err(io::Error::other(err_msg))
         });
     }
-    Ok(Outcome::Declined("dependents graph query delegated".into()))
+    workspace_command::execute_then(root, args, "dependents", move |_| {
+        Err(io::Error::other(err_msg))
+    })
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {

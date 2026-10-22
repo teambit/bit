@@ -81,6 +81,10 @@ fn aspect_set_merge_and_unset_on_bitmap() {
     helper.native(&format!(
         r#"aspect set comp1 {aspect_id} '{{"b":2,"nested":{{"y":2}}}}' --merge"#,
     ));
+    let list_out = helper.native("aspect list comp1 --debug");
+    assert!(list_out.contains(&aspect_id), "{list_out}");
+    let get_out = parse(&helper.native(&format!("aspect get comp1 {aspect_id} --json")));
+    assert_eq!(get_out["config"], json!({ "a": 1, "b": 2, "nested": { "x": 1, "y": 2 } }));
     let bitmap = helper.read_bit_map();
     assert_eq!(
         bitmap["comp1"]["config"][&aspect_id],

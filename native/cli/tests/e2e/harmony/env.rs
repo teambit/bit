@@ -54,6 +54,8 @@ fn env_set_replaces_previous_env() {
     helper.populate_components(1, true, "");
     helper.native("env set comp1 teambit.harmony/aspect");
     helper.native("env set comp1 teambit.react/react");
+    let env_list_out = helper.native("env list");
+    assert!(env_list_out.contains("teambit.react/react"), "{env_list_out}");
 
     let bitmap = helper.read_bit_map();
     assert!(bitmap["comp1"]["config"].get("teambit.harmony/aspect").is_none());
