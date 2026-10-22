@@ -52,7 +52,12 @@ export function renderAgentsSection(values: AgentsSectionValues): string {
  * table, a quote, or a bulleted or numbered list item?
  */
 function startsBlock(line: string): boolean {
-  return /^\s*(#|---|```|~~~|<!--|\||>|[-*+](\s|$)|\d+[.)](\s|$))/.test(line);
+  return /^\s*(#{1,6}(\s|$)|---|```|~~~|<!--|\||>|[-*+](\s|$)|\d+[.)](\s|$))/.test(line);
+}
+
+/** Is `line` a level-one ATX heading? Markdown permits up to three spaces before the `#`. */
+function isTitle(line: string): boolean {
+  return /^ {0,3}#(\s|$)/.test(line);
 }
 
 /**
@@ -69,7 +74,7 @@ export function insertAgentsSection(existing: string, section: string): string {
   }
   let next = at;
   while (next < lines.length && !lines[next].trim()) next++;
-  if (next < lines.length && lines[next].startsWith('# ')) {
+  if (next < lines.length && isTitle(lines[next])) {
     next++;
     while (next < lines.length && !lines[next].trim()) next++;
     // The paragraph under the title introduces the file; it stays with the title. A list, a heading or

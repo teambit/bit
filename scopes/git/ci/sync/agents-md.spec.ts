@@ -68,6 +68,20 @@ describe('agents-md', () => {
       );
     });
 
+    it('keeps a paragraph line that starts with `#` but is no heading in the intro', () => {
+      const existing = '# Rules\n\nTag the PR with\n#not-a-heading for triage.\n\n## More\n';
+      expect(insertAgentsSection(existing, SECTION)).to.equal(
+        `# Rules\n\nTag the PR with\n#not-a-heading for triage.\n\n${SECTION.trim()}\n\n---\n\n## More\n`
+      );
+    });
+
+    it('finds a title indented by up to three spaces', () => {
+      const existing = '   # Title\n\nIntro.\n\n## First\n';
+      expect(insertAgentsSection(existing, SECTION)).to.equal(
+        `   # Title\n\nIntro.\n\n${SECTION.trim()}\n\n---\n\n## First\n`
+      );
+    });
+
     it('goes at the top of a file with no title', () => {
       const existing = '## Rules\n\n- one\n';
       expect(insertAgentsSection(existing, SECTION)).to.equal(`${SECTION.trim()}\n\n---\n\n## Rules\n\n- one\n`);
