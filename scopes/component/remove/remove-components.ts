@@ -3,6 +3,7 @@ import groupArray from 'group-array';
 import partition from 'lodash.partition';
 import type { Workspace } from '@teambit/workspace';
 import { ComponentIdList } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { compact, isEmpty } from 'lodash';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
@@ -18,11 +19,11 @@ import type { Consumer } from '@teambit/legacy.consumer';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { getNodeModulesPathOfComponent } from '@teambit/pkg.modules.component-package-name';
 import { RemovedLocalObjects } from './removed-local-objects';
-import type { PackageNameData } from './load-free-checks';
+import type { PackageNameData, RemoveStatus } from './load-free-checks';
 import {
   findComponentUsingAsAspect,
   getPackageNameDataWithoutLoading,
-  isModifiedWithoutLoading,
+  getStatusWithoutLoading,
 } from './load-free-checks';
 
 export type RemoveComponentsResult = { localResult: RemovedLocalObjects; remoteResult: RemovedObjects[] };
@@ -124,30 +125,10 @@ async function removeLocal(
   if (!force) {
     const newIds: string[] = [];
     await pMapSeries(bitIds, async (id) => {
-      const modifiedWithoutLoading = await isModifiedWithoutLoading(workspace, id);
-      if (modifiedWithoutLoading === 'newlyCreated') {
-        newIds.push(id.toStringWithoutVersion());
-        nonModifiedComponents.push(id);
-        return;
-      }
-      if (modifiedWithoutLoading !== undefined) {
-        if (modifiedWithoutLoading) modifiedComponents.push(id);
-        else nonModifiedComponents.push(id);
-        return;
-      }
-      try {
-        const componentStatus = await workspace.getComponentStatusById(id);
-        if (componentStatus.newlyCreated) newIds.push(id.toStringWithoutVersion());
-        if (componentStatus.modified) modifiedComponents.push(id);
-        else nonModifiedComponents.push(id);
-      } catch (err: any) {
-        // if a component has an error, such as, missing main file, we do want to allow removing that component
-        if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
-          nonModifiedComponents.push(id);
-        } else {
-          throw err;
-        }
-      }
+      const status = (await getStatusWithoutLoading(workspace, id)) ?? (await getStatusByLoading(workspace, id));
+      if (status.newlyCreated) newIds.push(id.toStringWithoutVersion());
+      if (status.modified) modifiedComponents.push(id);
+      else nonModifiedComponents.push(id);
     });
     if (newIds.length) {
       // the ones being removed are excluded, they get deleted anyway
@@ -197,6 +178,17 @@ If you understand the risks and wish to proceed with the removal, please use the
     dependentBits,
     removedFromLane
   );
+}
+
+async function getStatusByLoading(workspace: Workspace, id: ComponentID): Promise<RemoveStatus> {
+  try {
+    const { newlyCreated = false, modified = false } = await workspace.getComponentStatusById(id);
+    return { newlyCreated, modified };
+  } catch (err: any) {
+    // if a component has an error, such as, missing main file, we do want to allow removing that component
+    if (ConsumerComponent.isComponentInvalidByErrorType(err)) return { newlyCreated: false, modified: false };
+    throw err;
+  }
 }
 
 /**

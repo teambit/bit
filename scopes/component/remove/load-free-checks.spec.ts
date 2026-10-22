@@ -13,7 +13,7 @@ import { mockComponents } from '@teambit/component.testing.mock-components';
 import {
   findComponentUsingAsAspect,
   getPackageNameDataWithoutLoading,
-  isModifiedWithoutLoading,
+  getStatusWithoutLoading,
 } from './load-free-checks';
 
 describe('remove load-free checks', function () {
@@ -35,8 +35,8 @@ describe('remove load-free checks', function () {
     await destroyWorkspace(workspaceData);
   });
   describe('when the components are new', () => {
-    it('isModifiedWithoutLoading should return "newlyCreated"', async () => {
-      expect(await isModifiedWithoutLoading(workspace, comp1)).to.equal('newlyCreated');
+    it('getStatusWithoutLoading should return newlyCreated', async () => {
+      expect(await getStatusWithoutLoading(workspace, comp1)).to.deep.equal({ newlyCreated: true, modified: false });
     });
     it('findComponentUsingAsAspect should find a component configured with a new component as an aspect', async () => {
       const aspectId = comp2.toStringWithoutVersion();

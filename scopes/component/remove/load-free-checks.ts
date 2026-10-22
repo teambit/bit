@@ -2,10 +2,9 @@ import path from 'path';
 import fs from 'fs-extra';
 import type { Workspace } from '@teambit/workspace';
 import type { ComponentID } from '@teambit/component-id';
-import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
-import { SourceFile } from '@teambit/component.sources';
 import { VERSION_ZERO } from '@teambit/objects';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { logger } from '@teambit/legacy.logger';
@@ -13,12 +12,9 @@ import { logger } from '@teambit/legacy.logger';
 /**
  * the data needed to calculate the package name of a component (see componentIdToPackageName).
  */
-export type PackageNameData = {
-  id: ComponentID;
-  bindingPrefix?: string;
-  defaultScope?: string | null;
-  extensions: ExtensionDataList;
-};
+export type PackageNameData = Parameters<typeof componentIdToPackageName>[0];
+
+export type RemoveStatus = { newlyCreated: boolean; modified: boolean };
 
 /**
  * the helpers below let "bit remove" avoid loading the removed components. loading a component loads its env, and
@@ -28,15 +24,14 @@ export type PackageNameData = {
  */
 
 /**
- * whether removing the component loses local work: true when its files differ from the checked-out version.
- * "newlyCreated" when it was never tagged/snapped.
+ * whether removing the component loses local work ("modified"): its files differ from the checked-out version.
  * unlike the component status, dependencies are not compared. they are derived from the files (and the env), so
  * comparing them requires loading the env, and when the packages are not installed they differ anyway.
  */
-export async function isModifiedWithoutLoading(
+export async function getStatusWithoutLoading(
   workspace: Workspace,
   id: ComponentID
-): Promise<boolean | 'newlyCreated' | undefined> {
+): Promise<RemoveStatus | undefined> {
   const consumer = workspace.consumer;
   try {
     const componentMap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true });
@@ -51,27 +46,22 @@ export async function isModifiedWithoutLoading(
     if (consumer.scope.objects.unmergedComponents.getEntry(id)) return undefined;
 
     const modelComponent = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
-    if (!modelComponent || modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true) === VERSION_ZERO) {
-      return 'newlyCreated';
-    }
     const versionStr = componentMap.id.version;
-    if (!versionStr) return 'newlyCreated';
+    if (!modelComponent || modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true) === VERSION_ZERO || !versionStr) {
+      return { newlyCreated: true, modified: false };
+    }
     const version = await modelComponent.loadVersion(versionStr, consumer.scope.objects, false);
     if (!version) return undefined;
 
     await consumer.bitMap.trackDirectoryChanges(componentMap);
     // without the main file, the component is invalid. the full status knows to let it be removed.
     if (!componentMap.getAllFilesPaths().includes(componentMap.mainFile)) return undefined;
-    if (pathNormalizeToLinux(componentMap.mainFile) !== version.mainFile) return true;
-    if (componentMap.files.length !== version.files.length) return true;
-    const modelHashes = new Map(version.files.map((file) => [file.relativePath, file.file.toString()]));
-    return componentMap.files.some((file) => {
-      const sourceFile = SourceFile.load(path.join(compDirAbs, file.relativePath), compDirAbs, consumer.getPath());
-      const fsHash = sourceFile.toSourceAsLinuxEOL().hash().toString();
-      return modelHashes.get(pathNormalizeToLinux(file.relativePath)) !== fsHash;
-    });
+    const modified =
+      pathNormalizeToLinux(componentMap.mainFile) !== version.mainFile ||
+      (await workspace.getFilesModification(id)).isModified();
+    return { newlyCreated: false, modified };
   } catch (err: any) {
-    logger.debug(`isModifiedWithoutLoading, failed for ${id.toString()}, falling back to the full status`, err);
+    logger.debug(`getStatusWithoutLoading, failed for ${id.toString()}, falling back to the full status`, err);
     return undefined;
   }
 }
@@ -88,12 +78,7 @@ export async function getPackageNameDataWithoutLoading(
     const { extensions } = await workspace.componentExtensions(compId, componentFromScope, [], {
       loadExtensions: false,
     });
-    return {
-      id: compId,
-      bindingPrefix: componentFromScope?.state._consumer.bindingPrefix,
-      defaultScope: compId.scope,
-      extensions,
-    };
+    return { id: compId, bindingPrefix: componentFromScope?.state._consumer.bindingPrefix, extensions };
   } catch (err: any) {
     logger.debug(`getPackageNameDataWithoutLoading, failed for ${id.toString()}, falling back to loading`, err);
     return undefined;
@@ -110,7 +95,8 @@ export async function findComponentUsingAsAspect(
   newIds: string[],
   idsToExclude: ComponentID[]
 ): Promise<{ user: ComponentID; usedId: string } | undefined> {
-  const ids = workspace.listIds().filter((id) => !idsToExclude.some((excluded) => excluded.isEqualWithoutVersion(id)));
+  const idsToExcludeStr = new Set(idsToExclude.map((id) => id.toStringWithoutVersion()));
+  const ids = workspace.listIds().filter((id) => !idsToExcludeStr.has(id.toStringWithoutVersion()));
   for (const id of ids) {
     const { extensions } = await workspace.componentExtensions(id, undefined, [], { loadExtensions: false });
     const usedId = newIds.find((newId) =>
