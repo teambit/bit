@@ -114,7 +114,7 @@ fn bit_deps_set_multiple_and_remove_and_scoped() -> KnownResult<()> {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
     helper.native("deps set comp1 lodash@3.3.1");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     helper.native("deps set comp1 ramda@0.0.20 --dev");
     let show_tagged = helper.run("show comp1");
     assert!(show_tagged.contains("lodash"), "{show_tagged}");
@@ -122,7 +122,7 @@ fn bit_deps_set_multiple_and_remove_and_scoped() -> KnownResult<()> {
     // adding itself as a dep -> should ignore it and not consider it as a dependency
     helper.re_init_workspace();
     helper.populate_components(1, true, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     let pkg_name = format!("@{}/comp1", helper.scopes.remote);
     helper.native(&format!("deps set comp1 {pkg_name}@0.0.1"));
     let dep_ids = helper.get_comp_deps_ids_from_data("comp1");
@@ -135,10 +135,10 @@ fn bit_deps_set_old_version_of_workspace_component() -> KnownResult<()> {
     let helper = Helper::new();
     helper.re_init_workspace();
     helper.populate_components(2, true, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     let comp2_pkg = format!("@{}/comp2", helper.scopes.remote);
     helper.native(&format!("deps set comp1 {comp2_pkg}@0.0.1"));
-    helper.tag_all_without_build("--unmodified");
+    helper.native("tag --skip-tests --unmodified");
 
     // should keep the version from the config when tagging the dependency with it
     let comp1 = parse(&helper.cat_component("comp1@latest"));
@@ -181,8 +181,8 @@ fn bit_deps_set_component_dependency_not_installed_locally() -> KnownResult<()> 
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
     helper.compile();
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
 
     helper.re_init_workspace();
     let mut ws = helper.read_workspace_jsonc();
@@ -236,7 +236,7 @@ fn bit_deps_remove_and_unset_and_usage() -> KnownResult<()> {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
     helper.native("deps set comp1 ramda@0.20.0 lodash@3.3.1");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     // should remove only the dependency specified and leave the rest
     helper.native("deps remove comp1 ramda");
     let show_after_rm = helper.show_aspect_config("comp1", DEP_RESOLVER);
@@ -248,7 +248,7 @@ fn bit_deps_remove_and_unset_and_usage() -> KnownResult<()> {
     helper.write_file("comp1/index.js", "import lodash from 'lodash';");
     helper.npm_add_fake_package("lodash", "3.3.1", false);
     helper.native("deps set comp1 ramda@0.20.0");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
 
     // unset the auto-detected -> should not remove the dependency
     helper.native("deps unset comp1 lodash");
@@ -297,8 +297,8 @@ fn deps_write_and_import_write_deps() -> KnownResult<()> {
     helper.write_workspace_jsonc(&ws);
     helper.output_file("comp1/index.js", r#"const React = require("react"); require("is-odd");"#);
     helper.native("install --add-missing-deps");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
 
     // using deps write command
     helper.re_init_workspace();
@@ -333,7 +333,7 @@ fn diff_with_component_level_peer_dependency() -> KnownResult<()> {
     helper.populate_components(2, true, "");
     helper.native("set-peer comp2 0");
     helper.native("install");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
 
     // bit status should not show the component as modified
     let status = helper.status_json();

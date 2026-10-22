@@ -20,7 +20,7 @@ fn environment_with_compiler_and_tester() {
     let cloned_scope = helper.clone_workspace();
 
     // with dev-dependencies same as dependencies
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     let bar_foo = parse(&helper.cat_component("comp1@0.0.1"));
 
     // 1. should not save the dev-dependencies because they are the same as dependencies
@@ -61,7 +61,7 @@ fn environment_with_compiler_and_tester() {
     // without dependencies and with dev-dependencies
     helper.get_cloned_workspace(&cloned_scope);
     helper.write_file("comp1/index.js", r#"console.log("foo")"#);
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     let bar_foo = parse(&helper.cat_component("comp1@0.0.1"));
 
     // 6. should save the dev-dependencies
@@ -115,8 +115,8 @@ fn dev_dependency_nested_chains_and_deps_remove() {
     helper.populate_components(4, true, "");
     helper.move_sync("comp2/index.js", "comp2/foo.spec.js");
     helper.write_file("comp2/index.js", "module.exports = () => 'comp2';");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
 
     helper.re_init_workspace();
     helper.add_remote_scope();
@@ -141,7 +141,7 @@ fn dev_dependency_nested_chains_and_deps_remove() {
     helper2.write_file("comp1/index.js", "module.exports = () => 'comp1';");
     helper2.move_sync("comp2/index.js", "comp2/foo.spec.js");
     helper2.write_file("comp2/index.js", "module.exports = () => 'comp2';");
-    helper2.tag_all_without_build("");
+    helper2.native("tag --skip-tests");
     let bar = parse(&helper2.cat_component("comp1@latest"));
     let names: Vec<&str> = bar["flattenedDependencies"]
         .as_array()
@@ -158,7 +158,7 @@ fn dev_dependency_nested_chains_and_deps_remove() {
     helper3.populate_components(3, true, "");
     helper3.move_sync("comp1/index.js", "comp1/foo.spec.js");
     helper3.write_file("comp1/index.js", "");
-    helper3.tag_all_without_build("");
+    helper3.native("tag --skip-tests");
     let bar_foo = parse(&helper3.cat_component("comp1@latest"));
     assert_eq!(
         bar_foo["dependencies"]
