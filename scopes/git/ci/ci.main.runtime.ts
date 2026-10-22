@@ -1739,6 +1739,10 @@ export class CiMain {
       } else {
         await this.commitAndPushBitmapChanges({ verbose, skipPush, defaultBranch });
       }
+    } else if (currentLane && !noBitmapCommit) {
+      // the switch to main rewrote the lane's .bitmap; without this commit, the default branch keeps the lane's
+      this.logger.console(chalk.yellow("No components were tagged; committing main's .bitmap"));
+      await this.commitAndPushBitmapChanges({ verbose, skipPush, defaultBranch });
     } else {
       this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
     }
