@@ -79,7 +79,7 @@ Headless or CI agents can call the Bit Cloud MCP with a bit.cloud token, without
 - The PR body lists the mirrored components and the foreign ones (other scopes, "not mirrored").
 - The bot's **run summary** comment lists the components that the sync last snapped onto the lane from this branch, with the branch and lane heads. A run that exports nothing does not change it.
 - The run log says what each run did: `import-lane`, `export-branch`, `merge-diverged`, `adopt-branch`, `noop (converged)`. Runs: `gh run list --workflow bit-sync` and `gh run view <id> --log`.
-- `Lane sync: <scope>/<lane>` PRs are lanes. `Bit sync: update to latest main scope versions` (branch `bit-sync/main`) brings `{{branch}}` up to the scope. Merging that one releases nothing.
+- `Lane sync: <scope>/<lane>` PRs are lanes. `Bit sync: update to latest main scope versions` brings `{{branch}}` up to the scope. Merging that one releases nothing. Its branch is `bit-sync/main`, or the `mainSyncBranch` of the sync config. With `mainSync: "direct-push"` there is no such PR: the sync commits to `{{branch}}` itself.
 
 ### Fix a halt (`bit-sync-conflict` label)
 
@@ -90,7 +90,7 @@ git fetch origin && git checkout '<branch>'
 git merge --ff-only 'origin/<branch>'         # stops if your local copy has commits that are not on origin: keep them, or reset to origin
 bit install
 bit lane import '<host-scope>/<lane>'         # fetches the lane. If .bitmap is on main, it also switches to the lane
-bit checkout head --manual                    # merges the lane's head into the files; conflicts appear as conflict markers
+bit checkout head --manual --workspace-only   # merges the lane's head into the files; conflicts appear as conflict markers
 # resolve every conflicted file. When the intent is unclear, ask the user which side wins. Don't guess.
 bit validate
 git add -A && git commit -m "fix: resolve sync conflict"
@@ -99,7 +99,7 @@ gh pr edit <pr> --remove-label bit-sync-conflict
 gh workflow run bit-sync -f lane=<host-scope>/<lane>
 ```
 
-The log of the next run shows `merge-diverged` or `export-branch`, then a later run shows `noop (converged)`. Never resolve by force-pushing over the bot's commits. Never delete the lane to "start fresh".
+`--workspace-only` keeps the components of other scopes out of this repository. The next run adds the lane's new components of `{{scope}}`. Its log shows `merge-diverged` or `export-branch`, then a later run shows `noop (converged)`. Never resolve by force-pushing over the bot's commits. Never delete the lane to "start fresh".
 
 ### Change several scopes at once (preview)
 
@@ -124,7 +124,7 @@ Then follow the steps `bit ci sync --init` prints. Some of them need a repositor
 
 ### Never
 
-- Push to `{{branch}}`, or merge `bit-sync/main` and lane PRs out of order to "fix" history.
+- Push to `{{branch}}`, or merge the main-sync PR and lane PRs out of order to "fix" history.
 - Run `bit build`, `tsc`, `npm install` or `pnpm install` here. Use `bit validate` and `bit install`.
 - Export a lane from another workspace while a Git-first PR is open for the same change. Pick one path.
 - Remove a `bit-sync-conflict` label without resolving the conflict.

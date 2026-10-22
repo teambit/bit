@@ -1934,7 +1934,7 @@ export function haltCommentBody({
     `To resolve locally:
   git fetch origin && git checkout ${shellQuote(branch)} && git merge --ff-only ${shellQuote(`origin/${branch}`)}
   bit lane import ${shellQuote(laneId)}
-  bit checkout head --manual    # merges the lane's head into the files; conflicts get conflict markers
+  bit checkout head --manual --workspace-only   # merges the lane's head into the files; conflicts get conflict markers
   # resolve conflicts, commit the result, then:
   git push origin ${shellQuote(branch)}`;
   return `bit-git-sync could not reconcile this branch automatically: ${reason}
