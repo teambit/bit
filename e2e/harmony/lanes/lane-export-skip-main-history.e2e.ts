@@ -915,4 +915,39 @@ describe('lane export skips main history objects', function () {
       expect(dangling, `dangling parent refs in scope-M VH for comp2:\n${dangling.join('\n')}`).to.have.lengthOf(0);
     });
   });
+
+  // a main snap that was never exported is not part of what scope-C has. creating a lane from main
+  // carries it over as the lane head, but once the lane is snapped on top of it, it's no longer the lane
+  // head and the lean filter must not drop it (it's not on scope-C, so scope-L can't resolve it).
+  describe('lane in scope-L created from main that has an unexported snap, then snapped and exported', () => {
+    let laneScopePath: string;
+    let unexportedMainSnap: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const newScope = helper.scopeHelper.getNewBareScope();
+      const laneScope = newScope.scopeName;
+      laneScopePath = newScope.scopePath;
+      helper.scopeHelper.addRemoteScope(laneScopePath);
+      helper.scopeHelper.addRemoteScope(laneScopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, laneScopePath);
+
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // not exported
+      unexportedMainSnap = helper.command.getHead('comp1');
+
+      helper.command.createLane('dev', `--scope ${laneScope}`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    it('bit export should not throw', () => {
+      expect(() => helper.command.export()).to.not.throw();
+    });
+    it('the lane scope should contain the unexported main snap and have a closed VersionHistory', () => {
+      expect(() => helper.command.catObject(unexportedMainSnap, false, laneScopePath)).to.not.throw();
+      const vh = helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`, laneScopePath);
+      const dangling = danglingParentsIn(vh);
+      expect(dangling, `dangling parent refs in scope-L VH:\n${dangling.join('\n')}`).to.have.lengthOf(0);
+    });
+  });
 });

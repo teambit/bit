@@ -426,6 +426,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         if (laneHead && !localTagsOrHashes.find((r) => r.isEqual(laneHead))) {
           localTagsOrHashes.push(laneHead);
         }
+        const unexportedMainRefs = await modelComponent.getUnexportedMainRefs(scope.objects);
+        unexportedMainRefs.forEach((ref) => {
+          if (!localTagsOrHashes.find((r) => r.isEqual(ref))) localTagsOrHashes.push(ref);
+        });
       }
       if (!allVersions) {
         return localTagsOrHashes;

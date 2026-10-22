@@ -1388,6 +1388,25 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
   }
 
   /**
+   * main snaps/tags that were never exported (e.g. snapped on main, then a lane was created and snapped on top).
+   * `getLocalHashes` with a lane drops them as main-origin, but unlike other main-origin refs, they're not on the
+   * component's home scope, so a lane export must push them.
+   * expects `populateLocalAndRemoteHeads` to be called first, so `this.remoteHead` is the main remote head.
+   */
+  async getUnexportedMainRefs(repo: Repository): Promise<Ref[]> {
+    if (!this.head) return [];
+    if (this.remoteHead && this.head.isEqual(this.remoteHead)) return [];
+    const mainDivergeData = await getDivergeData({
+      repo,
+      modelComponent: this,
+      sourceHead: this.head,
+      targetHead: this.remoteHead || null,
+      throws: false,
+    });
+    return mainDivergeData.snapsOnSourceOnly;
+  }
+
+  /**
    * for most cases, use `isLocallyChanged`, which takes into account lanes.
    * this is for cases when we only care about the versions exist in the `state` prop.
    */

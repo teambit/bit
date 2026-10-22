@@ -6,7 +6,7 @@ import { PENDING_OBJECTS_DIR } from '@teambit/legacy.constants';
 import { mergeObjects } from '@teambit/export';
 import type { Action } from './action';
 import { logger } from '@teambit/legacy.logger';
-import type { BitObjectList, ModelComponent } from '@teambit/objects';
+import type { BitObjectList, ModelComponent, Ref, Version } from '@teambit/objects';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
 import { ComponentIdList } from '@teambit/component-id';
 import type { LaneId } from '@teambit/lane-id';
@@ -68,7 +68,8 @@ export class ExportValidate implements Action<Options> {
    *  - Otherwise: from each external component's home scope.
    *
    * After the fetch, `getAllVersionHashes(throws: true)` walks each component's VH from
-   * `modelComponent.head` and throws if any parent is missing.
+   * `modelComponent.head` (or from its first ancestors that weren't sent, see `getFirstNotIncomingAncestors`)
+   * and throws if any parent is missing.
    */
   private async importAndThrowForMissingHistoryOnLane(bitObjectList: BitObjectList) {
     const modelComponents = bitObjectList.getComponents();
@@ -96,11 +97,41 @@ export class ExportValidate implements Action<Options> {
     if (!forkedFromFetched) {
       await this.scope.scopeImporter.importMissingVersionHistory(externalComponents);
     }
+    const incomingVersions = new Map(
+      bitObjectList.getVersions().map((version) => [version.hash().toString(), version])
+    );
     await pMapPool(
       externalComponents,
-      (modelComponent) => getAllVersionHashes({ modelComponent, repo: this.scope.objects, throws: true }),
+      async (modelComponent) => {
+        const head = modelComponent.getHead();
+        if (!head) return;
+        const refsToValidate = this.getFirstNotIncomingAncestors(head, incomingVersions);
+        for (const startFrom of refsToValidate) {
+          await getAllVersionHashes({ modelComponent, repo: this.scope.objects, throws: true, startFrom });
+        }
+      },
       { concurrency: concurrentComponentsLimit() }
     );
+  }
+
+  /**
+   * the main head may be a snap that was never exported to the home scope (e.g. snapped on main, then a lane was
+   * created and snapped on top of it). such snaps are sent as part of this export, so they're not in the repo yet.
+   * walk past them and return the first ancestors that weren't sent, which must be resolvable from the home scope.
+   */
+  private getFirstNotIncomingAncestors(head: Ref, incomingVersions: Map<string, Version>): Ref[] {
+    const results: Ref[] = [];
+    const visited = new Set<string>();
+    const queue: Ref[] = [head];
+    while (queue.length) {
+      const ref = queue.shift() as Ref;
+      if (visited.has(ref.toString())) continue;
+      visited.add(ref.toString());
+      const incomingVersion = incomingVersions.get(ref.toString());
+      if (incomingVersion) queue.push(...incomingVersion.parents);
+      else results.push(ref);
+    }
+    return results;
   }
 
   private async fetchVersionHistoryFromForkedFromScope(externalComponents: ModelComponent[], forkedFromLaneId: LaneId) {
