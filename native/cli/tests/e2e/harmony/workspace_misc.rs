@@ -32,8 +32,8 @@ fn corrupted_objects_status_and_import_fix() -> KnownResult<()> {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, false, "");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
 
     let comp = parse(&helper.cat_component("comp1@latest"));
     let file_hash = comp["files"][0]["file"].as_str().unwrap();
@@ -232,7 +232,7 @@ fn bit_artifacts_command_on_staged_and_snap() -> KnownResult<()> {
     let helper = Helper::new();
     helper.re_init_workspace();
     helper.populate_components(1, true, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
 
     // should not throw an error about missing scope
     let out1 = helper.native("artifacts comp1");
@@ -245,7 +245,7 @@ fn bit_artifacts_command_on_staged_and_snap() -> KnownResult<()> {
     // running the command on a snap -> should not throw an error about non exist component
     helper.re_init_workspace();
     helper.populate_components(1, true, "");
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
     let head = helper.get_head("comp1");
     let out3 = helper.native(&format!("artifacts comp1@{head}"));
     assert!(!out3.is_empty());
@@ -344,8 +344,8 @@ fn bit_show_remote_on_empty_workspace() -> KnownResult<()> {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
     helper.re_init_workspace();
     helper.add_remote_scope();
 

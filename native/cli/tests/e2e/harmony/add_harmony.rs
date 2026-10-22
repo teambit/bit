@@ -12,7 +12,7 @@ fn workspace_root_component_bitmap_convergence_and_removing() {
     helper.add_component("comp1", "-i comp1");
     helper.output_file("README.md", "# workspace root\n");
     helper.add_component(".", "-i ws-root --root");
-    helper.snap_all_components_without_build(r#"--ignore-issues "*""#);
+    helper.native(r#"snap --skip-tests --ignore-issues "*""#);
 
     // should not be modified right after snapping, despite tracking .bitmap
     let status = helper.status_json();
@@ -39,7 +39,7 @@ fn workspace_root_component_bitmap_convergence_and_removing() {
     assert_eq!(status["modifiedComponents"].as_array().map(Vec::len), Some(1));
 
     // snapping only the new component
-    let output = helper.snap_component_without_build("comp2", r#"--ignore-issues "*""#);
+    let output = helper.native(r#"snap comp2 --skip-tests --ignore-issues "*""#);
     let root_head_after = helper.get_head("ws-root");
     assert_ne!(root_head_after, root_head_before);
     assert!(output.contains("is the workspace-root component"));
@@ -122,10 +122,10 @@ fn writing_workspace_root_component_to_filesystem_and_member_imported_without_ro
     helper.output_file("README.md", "# workspace root\n");
     helper.output_file("docs/guide.md", "# guide\n");
     helper.add_component(".", "-i ws-root --root");
-    helper.snap_all_components_without_build(r#"--ignore-issues "*""#);
+    helper.native(r#"snap --skip-tests --ignore-issues "*""#);
     helper.output_file("README.md", "# workspace root v2\n");
-    helper.snap_all_components_without_build(r#"--ignore-issues "*""#);
-    helper.export("");
+    helper.native(r#"snap --skip-tests --ignore-issues "*""#);
+    helper.native("export");
 
     // importing it into another workspace
     helper.re_init_workspace();
@@ -242,8 +242,8 @@ fn writing_workspace_root_component_to_filesystem_and_member_imported_without_ro
     helper.add_component("comp1", "-i comp1");
     helper.output_file("README.md", "# workspace root\n");
     helper.add_component(".", "-i ws-root --root");
-    helper.tag_all_without_build(r#"--ignore-issues "*""#);
-    helper.export("");
+    helper.native(r#"tag --skip-tests --ignore-issues "*""#);
+    helper.native("export");
     let root_id_with_version = format!("{}/ws-root@0.0.1", helper.remote_scope());
 
     helper.re_init_workspace();
@@ -271,7 +271,7 @@ fn writing_workspace_root_component_to_filesystem_and_member_imported_without_ro
     assert_eq!(list_ids, vec![format!("{}/comp1", helper.remote_scope())]);
 
     // tagging it here, where there is no root to record
-    helper.tag_all_without_build("--unmodified");
+    helper.native("tag --skip-tests --unmodified");
     let comp1_v2 = helper.cat_component_parsed("comp1@0.0.2");
     let root_data_v2 = comp1_v2["extensions"]
         .as_array()

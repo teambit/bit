@@ -208,9 +208,9 @@ fn recovery_after_deletion_indirect_and_direct_missing_scenarios() {
     write_comp_pkg_in_nm(&helper.scopes.local_path, &remote_name, "comp2", "0.0.1");
     write_comp_pkg_in_nm(&helper.scopes.local_path, &remote2_name, "comp3", "0.0.1");
 
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     mark_versions_built(&helper.scopes.local_path.join(".bit/objects"));
-    helper.export("");
+    helper.native("export");
 
     // Cache comp3's objects inside `remote` (equivalent to FetchMissingDeps on remote).
     copy_objects_between_scopes(&remote2_path.join("objects"), &remote_path);
@@ -361,9 +361,9 @@ fn recovery_after_deletion_recreated_with_different_version_and_orphaned_version
     write_comp_pkg_in_nm(&helper.scopes.local_path, &remote_name, "comp2", "0.0.1");
     write_comp_pkg_in_nm(&helper.scopes.local_path, &remote2_name, "comp3", "0.0.1");
 
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     mark_versions_built(&helper.scopes.local_path.join(".bit/objects"));
-    helper.export("");
+    helper.native("export");
 
     // Cache comp3@0.0.1 inside `remote`, then re-init `remote2` and re-create comp3@0.0.2.
     copy_objects_between_scopes(&remote2_path.join("objects"), &remote_path);
@@ -377,8 +377,8 @@ fn recovery_after_deletion_recreated_with_different_version_and_orphaned_version
     helper.output_file("comp3/index.js", "");
     helper.add_extension_to_variant("comp3", "defaultScope", json!(remote2_name));
     helper.add_component("comp3", "");
-    helper.tag_all_without_build("--ver 0.0.2");
-    helper.export("");
+    helper.native("tag --skip-tests --ver 0.0.2");
+    helper.native("export");
 
     helper.re_init_workspace();
     helper.add_remote_scope();

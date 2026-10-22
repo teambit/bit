@@ -7,7 +7,7 @@ fn with_dependencies_of_dependencies() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     helper.write_file("comp3/index.js", "module.exports = () => 'comp3 v2';");
 
     let status_output = helper.status();
@@ -205,7 +205,7 @@ fn with_cyclic_dependencies() {
     );
 
     // 8. exporting the component: should be successful
-    let export_output = helper.export("");
+    let export_output = helper.native("export");
     assert!(export_output.contains("exported components (3)"), "{export_output}");
 }
 
@@ -219,8 +219,8 @@ fn with_same_component_as_direct_and_indirect_dependent() {
     helper.write_file("a/c/c.js", "console.log('im c v1');");
     helper.add_component("a/*", "--namespace a");
     helper.link("");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
 
     helper.write_file("a/c/c.js", "console.log('im c v2');");
 

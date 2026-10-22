@@ -22,18 +22,18 @@ fn setup_diverged() -> DivergedSetup {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
-    helper.snap_Component_without_build("bar/foo", "");
+    helper.native("snap bar/foo --skip-tests");
     let first_snap = helper.get_head("bar/foo");
-    helper.export("");
+    helper.native("export");
     let scope_after_first_snap = helper.clone_workspace();
     helper.create_component_bar_foo(FOO_V2);
-    helper.snap_Component_without_build("bar/foo", "");
+    helper.native("snap bar/foo --skip-tests");
     let second_snap = helper.get_head("bar/foo");
-    helper.export("");
+    helper.native("export");
 
     helper.get_cloned_workspace(&scope_after_first_snap);
     helper.create_component_bar_foo(FOO_V3);
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
     let local_head = helper.get_head("bar/foo");
     let local_scope = helper.clone_workspace();
 
@@ -236,7 +236,7 @@ fn assert_manual_tag_snap_remove_reset(state: &DivergedSetup, scope_with_conflic
 
     helper.get_cloned_workspace(scope_with_conflicts);
     helper.create_component_bar_foo("");
-    helper.snap_Component_without_build("bar/foo", "");
+    helper.native("snap bar/foo --skip-tests");
     assert_two_parents(helper, &state.local_head, &state.second_snap);
 
     helper.get_cloned_workspace(scope_with_conflicts);

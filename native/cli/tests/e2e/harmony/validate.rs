@@ -81,7 +81,7 @@ fn validate_clean_type_errors_lint_errors_skip_tasks_unmodified_pattern_and_empt
     // validating with --unmodified flag
     helper.re_init_workspace();
     helper.populate_components(2, true, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
 
     let output = helper.native("validate");
     assert!(output.contains("No components found to validate"));

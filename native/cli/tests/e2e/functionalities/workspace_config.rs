@@ -136,7 +136,7 @@ fn ignoring_dependencies_components_entire_flow() {
     helper.native("add foo2 -i utils/foo/foo2");
     helper.native("add bar");
     helper.native("link --rewire");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     helper.native("export");
     set_policy_to_variant(
         &helper,

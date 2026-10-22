@@ -10,7 +10,7 @@ fn workspace_with_standard_components_and_tag_on_harmony() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
     helper.tag_all_components("");
-    helper.export("");
+    helper.native("export");
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.import_component("*", "");
@@ -24,7 +24,7 @@ fn workspace_with_standard_components_and_tag_on_harmony() {
     assert_eq!(status["modifiedComponents"].as_array().map(Vec::len), Some(0));
 
     // tag without build after full tag
-    helper.tag_all_without_build("--ver 1.0.0 --unmodified");
+    helper.native("tag --skip-tests --ver 1.0.0 --unmodified");
     let comp = helper.cat_component_parsed(&format!("{}/comp1@latest", helper.remote_scope()));
     let builder = comp["extensions"]
         .as_array()
@@ -35,13 +35,13 @@ fn workspace_with_standard_components_and_tag_on_harmony() {
         .expect("builder extension");
     assert!(builder["data"].get("pipeline").is_none());
     assert!(builder["data"].get("artifacts").is_none());
-    helper.export("");
+    helper.native("export");
 
     // tag on Harmony
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
     helper.tag_all_components("");
-    helper.export("");
+    helper.native("export");
     helper.tag_include_unmodified("0.0.2", "");
 
     let status = helper.status_json();
@@ -131,7 +131,7 @@ fn soft_tag_dependents_specific_version_untag_and_minor_auto_tag() {
     // soft tag --minor with auto-tag
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     helper.append_file("comp2/index.js", "");
     helper.soft_tag("--minor");
     let bitmap = helper.read_bit_map();
@@ -144,9 +144,9 @@ fn tag_scope_and_failing_tests_and_tiny_cache() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
-    helper.tag_without_build("comp3@0.0.3", "--skip-tests");
-    helper.tag_without_build("comp2@0.0.2", "--skip-tests");
-    helper.tag_without_build("comp1@0.0.1", "--skip-tests");
+    helper.native("tag comp3@0.0.3 --skip-tests");
+    helper.native("tag comp2@0.0.2 --skip-tests");
+    helper.native("tag comp1@0.0.1 --skip-tests");
     let before_tag_scope = helper.clone_workspace();
 
     // without version
@@ -197,7 +197,7 @@ fn tag_scope_and_failing_tests_and_tiny_cache() {
     // with tiny cache
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, false, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     helper.populate_components(1, false, "v2");
     helper.run_cmd("bit config set cache.max.objects 1");
     helper.tag_all_components("");
@@ -209,13 +209,13 @@ fn auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     helper.append_file("comp3/index.js", "");
     let auto_tag_pending_ws = helper.clone_workspace();
 
     // tag with specific version
     helper.get_cloned_workspace(&auto_tag_pending_ws);
-    helper.tag_all_without_build("--ver 1.0.0");
+    helper.native("tag --skip-tests --ver 1.0.0");
     let bitmap = helper.read_bit_map();
     assert_eq!(bitmap["comp3"]["version"].as_str(), Some("1.0.0"));
     assert_eq!(bitmap["comp1"]["version"].as_str(), Some("0.0.2"));
@@ -242,7 +242,7 @@ fn auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file() {
 
     // with --auto-tag-increment
     helper.get_cloned_workspace(&auto_tag_pending_ws);
-    helper.tag_all_without_build("--major --auto-tag-increment major");
+    helper.native("tag --skip-tests --major --auto-tag-increment major");
     let bitmap = helper.read_bit_map();
     assert_eq!(bitmap["comp3"]["version"].as_str(), Some("1.0.0"));
     assert_eq!(bitmap["comp2"]["version"].as_str(), Some("1.0.0"));
@@ -250,7 +250,7 @@ fn auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file() {
 
     // with --auto-tag-increment different than the modified level
     helper.get_cloned_workspace(&auto_tag_pending_ws);
-    helper.tag_all_without_build("--major --auto-tag-increment minor");
+    helper.native("tag --skip-tests --major --auto-tag-increment minor");
     let bitmap = helper.read_bit_map();
     assert_eq!(bitmap["comp3"]["version"].as_str(), Some("1.0.0"));
     assert_eq!(bitmap["comp2"]["version"].as_str(), Some("0.1.0"));
@@ -265,7 +265,7 @@ fn auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file() {
 
     // --auto-tag-increment with a pre-release level and --prerelease-id
     helper.get_cloned_workspace(&auto_tag_pending_ws);
-    helper.tag_all_without_build("--major --auto-tag-increment prerelease --prerelease-id dev");
+    helper.native("tag --skip-tests --major --auto-tag-increment prerelease --prerelease-id dev");
     let bitmap = helper.read_bit_map();
     assert_eq!(bitmap["comp3"]["version"].as_str(), Some("1.0.0"));
     assert_eq!(bitmap["comp2"]["version"].as_str(), Some("0.0.2-dev.0"));
@@ -274,11 +274,11 @@ fn auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file() {
     // using --incremented-by flag
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     let after_first_tag = helper.clone_workspace();
 
     helper.populate_components(3, true, "v2-patch");
-    helper.tag_all_without_build("--increment-by 4");
+    helper.native("tag --skip-tests --increment-by 4");
     let bitmap = helper.read_bit_map();
     assert_eq!(bitmap["comp1"]["version"].as_str(), Some("0.0.5"));
     assert_eq!(bitmap["comp2"]["version"].as_str(), Some("0.0.5"));
@@ -286,7 +286,7 @@ fn auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file() {
 
     helper.get_cloned_workspace(&after_first_tag);
     helper.populate_components(3, true, "v2-minor");
-    helper.tag_all_without_build("--minor --increment-by 2");
+    helper.native("tag --skip-tests --minor --increment-by 2");
     let bitmap = helper.read_bit_map();
     assert_eq!(bitmap["comp1"]["version"].as_str(), Some("0.2.0"));
     assert_eq!(bitmap["comp2"]["version"].as_str(), Some("0.2.0"));
@@ -294,7 +294,7 @@ fn auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file() {
 
     helper.get_cloned_workspace(&after_first_tag);
     helper.append_file("comp3/index.js", "");
-    helper.tag_all_without_build("--increment-by 3");
+    helper.native("tag --skip-tests --increment-by 3");
     let bitmap = helper.read_bit_map();
     assert_eq!(bitmap["comp1"]["version"].as_str(), Some("0.0.4"));
     assert_eq!(bitmap["comp2"]["version"].as_str(), Some("0.0.4"));
@@ -303,16 +303,16 @@ fn auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file() {
     // tag pre-release + increment pre-release
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
-    let tag_output = helper.tag_all_without_build("--increment prerelease --prerelease-id dev");
+    let tag_output = helper.native("tag --skip-tests --increment prerelease --prerelease-id dev");
     assert!(tag_output.contains("comp1@0.0.1-dev.0"));
     helper.populate_components(3, true, "v2");
-    let tag_output = helper.tag_all_without_build("--increment prerelease");
+    let tag_output = helper.run("tag --skip-tests --increment prerelease");
     assert!(tag_output.contains("comp1@0.0.1-dev.1"));
 
     // invalid --auto-tag-increment level & invalid pre-release after normal tag
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     let result = helper.run_with_try_catch("bit tag --unmodified --auto-tag-increment nope");
     assert!(result.contains(r#"invalid auto-tag-increment level "nope""#));
 
@@ -344,7 +344,7 @@ fn auto_tag_pending_and_incremented_by_and_prerelease_and_versions_file() {
         helper.remote_scope(),
     );
     helper.output_file("versions.txt", &versions_file_content);
-    helper.tag_all_without_build("--versions-file versions.txt");
+    helper.native("tag --skip-tests --versions-file versions.txt");
     let bitmap = helper.read_bit_map();
     assert_eq!(bitmap["comp1"]["version"].as_str(), Some("2.0.0"));
     assert_eq!(bitmap["comp2"]["version"].as_str(), Some("0.1.0"));

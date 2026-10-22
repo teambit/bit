@@ -46,7 +46,7 @@ fn component_a_requires_b_component_b_requires_a() {
     );
 
     // 4. exporting the component: should export successfully with no errors
-    let export = helper.try_cmd("export");
+    let export = helper.native_run("export");
     assert!(export.status.success(), "{export:?}");
 
     // 5. importing to a new environment: should import successfully and not throw any error
@@ -231,7 +231,7 @@ fn complex_case_with_a_long_chain_of_dependencies() {
     );
 
     // 10. exporting the component: should export successfully with no errors
-    assert!(helper.try_cmd("export").status.success());
+    assert!(helper.native_run("export").status.success());
 
     // 11. importing to a new environment
     helper.re_init_workspace();
@@ -251,8 +251,8 @@ fn same_component_require_itself_and_modified_component_depends_on_previous_vers
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
     helper.create_component_bar_foo(&format!("require('@{}/bar.foo');", helper.scopes.remote));
 
     // should block the tag by default
