@@ -19,7 +19,7 @@ pub(super) fn read(
     } else {
         host.call("dependencyPolicies", &json!({"extensionIds":configured}))?
     };
-    let (env_id, multiple) = selected_env(host, component)?;
+    let (env_id, multiple) = selected_env(host, reader, component)?;
     let manifest = reader.resolved(&env_id)?;
     let provider = provider_facts(host, &env_id, manifest.as_ref(), needs_issues)?;
     Ok(json!({"envId":env_id,"envPolicy":provider.env_policy,
@@ -76,7 +76,11 @@ fn provider_fact(provider: &Value, name: &str) -> io::Result<Value> {
         .ok_or_else(|| io::Error::other(format!("provider facts omitted {name}")))
 }
 
-fn selected_env(host: &Host, component: &WorkspaceComponent) -> io::Result<(String, Value)> {
+fn selected_env(
+    host: &Host,
+    reader: &EnvJsoncReader<'_>,
+    component: &WorkspaceComponent,
+) -> io::Result<(String, Value)> {
     let envs =
         host.call("environmentIds", &json!({"ids":component.config.keys().collect::<Vec<_>>()}))?;
     let explicit = component.config
@@ -87,6 +91,7 @@ fn selected_env(host: &Host, component: &WorkspaceComponent) -> io::Result<(Stri
             || {
                 envs.get(0)
                     .and_then(Value::as_str)
+                    .or_else(|| non_loaded_workspace_env(reader, component))
                     .unwrap_or(&component.env_id)
             },
             |env| {
@@ -101,6 +106,30 @@ fn selected_env(host: &Host, component: &WorkspaceComponent) -> io::Result<(Stri
         )
         .to_owned();
     Ok((selected, if explicit.is_some() { json!([]) } else { envs }))
+}
+
+fn non_loaded_workspace_env<'a>(
+    reader: &EnvJsoncReader<'_>,
+    component: &'a WorkspaceComponent,
+) -> Option<&'a str> {
+    if component.env_id != "teambit.harmony/node" {
+        return None;
+    }
+    component.config
+        .keys()
+        .find(|id| {
+            let base = bit_install::policy::split_version(id).0;
+            reader.components
+                .iter()
+                .any(|other| {
+                    other.id.to_string_without_version() == base
+                        && (other.is_env
+                            || other.env_id == "teambit.envs/env"
+                            || other.config.contains_key("teambit.envs/env"))
+                        && !other.dir.join("dist").exists()
+                })
+        })
+        .map(String::as_str)
 }
 
 fn registered(component: &WorkspaceComponent, registrations: &Value) -> Vec<Value> {

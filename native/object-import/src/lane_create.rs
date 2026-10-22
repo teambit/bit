@@ -1,4 +1,8 @@
 //! Create a local lane and publish its object, history and workspace metadata.
+
+mod origin;
+
+use self::origin::{Origin, read_merge_move_backup};
 use crate::{inspection, recovery, store::Store, workspace::engine::command::outbound};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
@@ -13,6 +17,7 @@ pub struct Plan {
     parent_name: Option<String>,
     objects: Objects,
     documents: Documents,
+    restored_parent: Option<(String, Vec<u8>)>,
 }
 
 struct Objects {
@@ -26,12 +31,6 @@ struct Documents {
     index: Value,
     scope_json: Value,
     bitmap: Value,
-}
-
-struct Origin {
-    parent_name: Option<String>,
-    components: Vec<Value>,
-    forked_from: Option<Value>,
 }
 
 #[derive(Clone, Copy)]
@@ -62,12 +61,43 @@ impl Plan {
             parent_name: origin.parent_name,
             objects,
             documents,
+            restored_parent: None,
+        })
+    }
+
+    /// Prepare `MergeLanesMain.mergeMove`: restore the pre-merge lane object and create the new lane.
+    pub fn prepare_merge_move(
+        root: &Path,
+        name: &str,
+        scope: &str,
+        log: Value,
+        lane_hash: &str,
+        history_key: &str,
+    ) -> io::Result<Self> {
+        let options = Options { alias: name, fork_lane_new_scope: false };
+        validate(name, scope, options, lane_hash, history_key)?;
+        let mut documents = Documents::read(root)?;
+        let (parent_hash, backup_bytes, backup_lane) =
+            read_merge_move_backup(root, &documents.index, &documents.bitmap)?;
+        let origin = Origin::from_backup_lane(root, &documents.bitmap, &backup_lane, scope)?;
+        let objects = Objects::new(name, scope, log, lane_hash, history_key, &origin)?;
+        documents.add(name, scope, name, lane_hash)?;
+        Ok(Self {
+            root: root.to_path_buf(),
+            scope: scope.into(),
+            parent_name: origin.parent_name,
+            objects,
+            documents,
+            restored_parent: Some((parent_hash, backup_bytes)),
         })
     }
 
     /// Publish the validated `Lane` and `LaneHistory` before their metadata references.
     pub fn commit(&self) -> io::Result<()> {
         let store = Store::new(bit_workspace_config::scope_path(&self.root).join("objects"), None)?;
+        if let Some((parent_hash, backup_bytes)) = &self.restored_parent {
+            store.write(parent_hash, backup_bytes)?;
+        }
         self.objects.persist(&store)?;
         self.documents.publish(&self.root, &store)
     }
@@ -140,105 +170,6 @@ impl Documents {
     }
 }
 
-impl Origin {
-    fn read(root: &Path, documents: &Documents, scope: &str, new_scope: bool) -> io::Result<Self> {
-        if let Some(parent) = documents.bitmap.get("_bit_lane") {
-            return Self::from_parent(
-                root,
-                &documents.index,
-                &documents.bitmap,
-                parent,
-                scope,
-                new_scope,
-            );
-        }
-        check_main_staged(root, &documents.index)?;
-        Ok(Self { parent_name: None, components: Vec::new(), forked_from: None })
-    }
-
-    fn from_parent(
-        root: &Path,
-        index: &Value,
-        bitmap: &Value,
-        parent: &Value,
-        scope: &str,
-        new_scope: bool,
-    ) -> io::Result<Self> {
-        let parent_id = &parent["id"];
-        let parent_name = parent_id["name"]
-            .as_str()
-            .ok_or_else(invalid)?
-            .to_owned();
-        let parent_scope = parent_id["scope"].as_str().ok_or_else(invalid)?;
-        if scope != parent_scope && !new_scope {
-            return Err(invalid());
-        }
-        let row = index["lanes"]
-            .as_array()
-            .ok_or_else(invalid)?
-            .iter()
-            .find(|row| row["id"] == *parent_id)
-            .ok_or_else(invalid)?;
-        let hash = row["hash"].as_str().ok_or_else(invalid)?;
-        let objects_dir = bit_workspace_config::scope_path(root).join("objects");
-        let lane = outbound::read_object(&objects_dir, hash, "Lane")?;
-        let components = active_lane_components(&objects_dir, &lane, bitmap)?;
-        let forked_from = if parent["exported"] == true {
-            Some(parent_id.clone())
-        } else {
-            lane.get("forkedFrom").cloned()
-        };
-        Ok(Self { parent_name: Some(parent_name), components, forked_from })
-    }
-}
-
-fn active_lane_components(
-    objects_dir: &Path,
-    lane: &Value,
-    bitmap: &Value,
-) -> io::Result<Vec<Value>> {
-    let mut components = Vec::new();
-    for entry in lane["components"].as_array().ok_or_else(invalid)? {
-        let head = entry["head"].as_str().ok_or_else(invalid)?;
-        let version = outbound::read_object(objects_dir, head, "Version")?;
-        let removed = version["extensions"]
-            .as_array()
-            .is_some_and(|rows| {
-                rows.iter()
-                    .any(|row| {
-                        row["name"] == "teambit.component/remove"
-                            && row["config"]["removed"] == true
-                    })
-            });
-        if !removed {
-            let mut next = entry.clone();
-            if let Some(bitmap_head) = bitmap_snap_head(bitmap, &entry["id"]) {
-                next["head"] = json!(bitmap_head);
-            }
-            components.push(next);
-        }
-    }
-    Ok(components)
-}
-
-fn bitmap_snap_head<'a>(bitmap: &'a Value, id: &Value) -> Option<&'a str> {
-    let scope = id["scope"].as_str()?;
-    let name = id["name"].as_str()?;
-    let row = bitmap
-        .get(name)
-        .or_else(|| bitmap.get(format!("{scope}/{name}")))?;
-    if row["isAvailableOnCurrentLane"].as_bool() == Some(false) {
-        return None;
-    }
-    if let Some(row_scope) = row["scope"].as_str()
-        && !row_scope.is_empty()
-        && row_scope != scope
-    {
-        return None;
-    }
-    row["version"].as_str().filter(|ver| valid_hash(ver))
-}
-
 impl Objects {
     fn new(
         name: &str,
@@ -276,27 +207,6 @@ impl Objects {
         }
         store.finish_batch()
     }
-}
-
-fn check_main_staged(root: &Path, index: &Value) -> io::Result<()> {
-    for row in index["components"].as_array().ok_or_else(invalid)? {
-        let hash = row["hash"].as_str().ok_or_else(invalid)?;
-        let model = outbound::read_object(
-            &bit_workspace_config::scope_path(root).join("objects"),
-            hash,
-            "Component",
-        )?;
-        if model["state"]["versions"]
-            .as_object()
-            .is_some_and(|rows| {
-                rows.values()
-                    .any(|row| row["local"] == true)
-            })
-        {
-            return Err(invalid());
-        }
-    }
-    Ok(())
 }
 
 fn history_components(components: &[Value]) -> io::Result<Vec<String>> {

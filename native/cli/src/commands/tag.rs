@@ -26,6 +26,15 @@ const REMOTE_BUILD_WARNING: &str = r#"tagging components on "main" lane when usi
 To undo local tag use the "bit reset" command."#;
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
+    if env::var("BIT_FEATURES")
+        .is_ok_and(|features| {
+            features
+                .split(',')
+                .any(|feature| feature.trim() == "flattened-deps-in-source")
+        })
+    {
+        return Ok(Outcome::Declined("flattened-deps-in-source feature toggle".to_string()));
+    }
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
     };

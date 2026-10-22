@@ -1594,101 +1594,101 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/create.e2e.ts`
 
-- [ ] `e2e/harmony/create.e2e.ts:19` create extension › when running outside the workspace › should throw ConsumerNotFound error
-- [ ] `e2e/harmony/create.e2e.ts:30` create extension › name with namespace as part of the name and namespace flag › should create the directories properly
-- [ ] `e2e/harmony/create.e2e.ts:37` create extension › name with namespace as part of the name and namespace flag › should add the component correctly
-- [ ] `e2e/harmony/create.e2e.ts:47` create extension › when a component already exist on that dir › should throw an error
-- [ ] `e2e/harmony/create.e2e.ts:62` create extension › when an error is thrown during the add/track phase › should not leave the generated component in the filesystem
-- [ ] `e2e/harmony/create.e2e.ts:71` create extension › with an invalid scope-name › should throw InvalidScopeName error
-- [ ] `e2e/harmony/create.e2e.ts:83` create extension › with --scope flag › should add the component to the .bitmap file with a new defaultScope prop
-- [ ] `e2e/harmony/create.e2e.ts:89` create extension › with --scope flag › bit show should show this scope as the defaultScope
-- [ ] `e2e/harmony/create.e2e.ts:100` create extension › with --scope flag › exporting the component › should delete the defaultScope prop from .bitmap
-- [ ] `e2e/harmony/create.e2e.ts:114` create extension › with scope as part of the component name (bit.cloud format) › should create the directories properly under the parsed scope
-- [ ] `e2e/harmony/create.e2e.ts:121` create extension › with scope as part of the component name (bit.cloud format) › should add the component with the correct name (without scope prefix)
-- [ ] `e2e/harmony/create.e2e.ts:125` create extension › with scope as part of the component name (bit.cloud format) › should set the defaultScope to the parsed scope from the component name
-- [ ] `e2e/harmony/create.e2e.ts:137` create extension › with env defined inside the template different than the variants › should set the env according to the variant
-- [ ] `e2e/harmony/create.e2e.ts:148` create extension › with env defined inside the template when there is no variant › should set the env according to the template env
-- [ ] `e2e/harmony/create.e2e.ts:159` create extension › from an inner dir › should not throw
-- [ ] `e2e/harmony/create.e2e.ts:179` create extension › external package manager mode › should write dependencies of the component to package.json
-- [ ] `e2e/harmony/create.e2e.ts:182` create extension › external package manager mode › should not write dependencies of the env to package.json
-- [ ] `e2e/harmony/create.e2e.ts:185` create extension › external package manager mode › should not run installation
+- [x] `e2e/harmony/create.e2e.ts:19` create extension › when running outside the workspace › should throw ConsumerNotFound error — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:30` create extension › name with namespace as part of the name and namespace flag › should create the directories properly — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:37` create extension › name with namespace as part of the name and namespace flag › should add the component correctly — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:47` create extension › when a component already exist on that dir › should throw an error — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:62` create extension › when an error is thrown during the add/track phase › should not leave the generated component in the filesystem — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:71` create extension › with an invalid scope-name › should throw InvalidScopeName error — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:83` create extension › with --scope flag › should add the component to the .bitmap file with a new defaultScope prop — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:89` create extension › with --scope flag › bit show should show this scope as the defaultScope — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:100` create extension › with --scope flag › exporting the component › should delete the defaultScope prop from .bitmap — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:114` create extension › with scope as part of the component name (bit.cloud format) › should create the directories properly under the parsed scope — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:121` create extension › with scope as part of the component name (bit.cloud format) › should add the component with the correct name (without scope prefix) — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:125` create extension › with scope as part of the component name (bit.cloud format) › should set the defaultScope to the parsed scope from the component name — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:137` create extension › with env defined inside the template different than the variants › should set the env according to the variant — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:148` create extension › with env defined inside the template when there is no variant › should set the env according to the template env — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:159` create extension › from an inner dir › should not throw — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:179` create extension › external package manager mode › should write dependencies of the component to package.json — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:182` create extension › external package manager mode › should not write dependencies of the env to package.json — `harmony::generator_and_test`
+- [x] `e2e/harmony/create.e2e.ts:185` create extension › external package manager mode › should not run installation — `harmony::generator_and_test`
 
 ### `e2e/harmony/custom-aspects.e2e.ts`
 
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:70` custom aspects › should load the env correctly and use it for the consuming component
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:78` custom aspects › when the aspect dependency is loaded from the workspace but the main dependency is loaded from the scope › should load the env correctly and use it for the consuming component
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:109` custom aspects › aspect with another aspect as regular dep › when the dep aspect is not configured in workspace.jsonc › should run main aspect provider
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:112` custom aspects › aspect with another aspect as regular dep › when the dep aspect is not configured in workspace.jsonc › should not load nor run aspect which is static dep but not configured in workspace.jsonc
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:116` custom aspects › aspect with another aspect as regular dep › when the dep aspect is not configured in workspace.jsonc › should not load nor run aspect which is regular dep provider
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:127` custom aspects › aspect with another aspect as regular dep › when the dep aspect is configured in workspace.jsonc › should run main aspect provider
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:130` custom aspects › aspect with another aspect as regular dep › when the dep aspect is configured in workspace.jsonc › should load and run aspect dep provider
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:134` custom aspects › aspect with another aspect as regular dep › when the dep aspect is configured in workspace.jsonc › should not load nor run aspect which is regular dep provider
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:166` custom aspects › bit use › should save the aspect in the workspace.jsonc with a version
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:228` custom aspects › should load slot-owner once, in the version app-aspect depends on
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:232` custom aspects › should let app-aspect read what registrar registered
+- [x] `e2e/harmony/custom-aspects.e2e.ts:70` custom aspects › should load the env correctly and use it for the consuming component — `harmony::generator_and_test`
+- [x] `e2e/harmony/custom-aspects.e2e.ts:78` custom aspects › when the aspect dependency is loaded from the workspace but the main dependency is loaded from the scope › should load the env correctly and use it for the consuming component — `harmony::generator_and_test`
+- [x] `e2e/harmony/custom-aspects.e2e.ts:109` custom aspects › aspect with another aspect as regular dep › when the dep aspect is not configured in workspace.jsonc › should run main aspect provider — `harmony::generator_and_test`
+- [x] `e2e/harmony/custom-aspects.e2e.ts:112` custom aspects › aspect with another aspect as regular dep › when the dep aspect is not configured in workspace.jsonc › should not load nor run aspect which is static dep but not configured in workspace.jsonc — `harmony::generator_and_test`
+- [x] `e2e/harmony/custom-aspects.e2e.ts:116` custom aspects › aspect with another aspect as regular dep › when the dep aspect is not configured in workspace.jsonc › should not load nor run aspect which is regular dep provider — `harmony::generator_and_test`
+- [x] `e2e/harmony/custom-aspects.e2e.ts:127` custom aspects › aspect with another aspect as regular dep › when the dep aspect is configured in workspace.jsonc › should run main aspect provider — `harmony::generator_and_test`
+- [x] `e2e/harmony/custom-aspects.e2e.ts:130` custom aspects › aspect with another aspect as regular dep › when the dep aspect is configured in workspace.jsonc › should load and run aspect dep provider — `harmony::generator_and_test`
+- [x] `e2e/harmony/custom-aspects.e2e.ts:134` custom aspects › aspect with another aspect as regular dep › when the dep aspect is configured in workspace.jsonc › should not load nor run aspect which is regular dep provider — `harmony::generator_and_test`
+- [x] `e2e/harmony/custom-aspects.e2e.ts:166` custom aspects › bit use › should save the aspect in the workspace.jsonc with a version — `harmony::generator_and_test`
+- [x] `e2e/harmony/custom-aspects.e2e.ts:228` custom aspects › should load slot-owner once, in the version app-aspect depends on — `harmony::generator_and_test`
+- [x] `e2e/harmony/custom-aspects.e2e.ts:232` custom aspects › should let app-aspect read what registrar registered — `harmony::generator_and_test`
 
 ### `e2e/harmony/custom-env-operations.e2e.ts`
 
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:30` custom env (config and versioning scenarios) › when the env is tagged and set in workspace.jsonc without exporting it › should be able to re-tag with no errors
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:49` custom env (config and versioning scenarios) › when the env is exported to a remote scope and is not exist locally › bit env-set should not throw any error
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:71` custom env (config and versioning scenarios) › custom-env is 0.0.2 on the workspace, but comp1 is using it in the model with 0.0.1 › bit show should show the correct env
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:75` custom env (config and versioning scenarios) › custom-env is 0.0.2 on the workspace, but comp1 is using it in the model with 0.0.1 › bit show should not show the previous version of the env
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:89` custom env (config and versioning scenarios) › rename custom env › should update components using the custom-env with the new name
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:105` custom env (config and versioning scenarios) › tag custom env then env-set the comp uses it to another non-core env › bit status should not show it as an issue because the previous env was removed
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:122` custom env (config and versioning scenarios) › circular dependencies between an env and a component › should not enter into an infinite loop on any command
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:174` custom env (config and versioning scenarios) › circular dependencies between an env and a theme component used in env mounter › bit status should not enter into an infinite loop
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:188` custom env (config and versioning scenarios) › ejecting conf when current env exists locally › should write the env aspect without a version to the component.json file
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:205` custom env (config and versioning scenarios) › an empty env. nothing is configured, not even a compiler › bit compile should not compile the component and should say why
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:211` custom env (config and versioning scenarios) › an empty env. nothing is configured, not even a compiler › should not create dist dir in the node_modules
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:215` custom env (config and versioning scenarios) › an empty env. nothing is configured, not even a compiler › bit build should not fail
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:219` custom env (config and versioning scenarios) › an empty env. nothing is configured, not even a compiler › bit format should not show an error
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:223` custom env (config and versioning scenarios) › an empty env. nothing is configured, not even a compiler › bit lint should not show an error
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:227` custom env (config and versioning scenarios) › an empty env. nothing is configured, not even a compiler › bit test should not show an error
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:245` custom env (config and versioning scenarios) › an env with a preview/bundler but without a compiler › bit build should not fail generating the preview, and the GeneratePreview task should have run
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:264` custom env (config and versioning scenarios) › custom env with invalid env.jsonc › should throw a descriptive error when a policy entry is not an object
-- [ ] `e2e/harmony/custom-env-operations.e2e.ts:280` custom env (config and versioning scenarios) › custom env with invalid env.jsonc › should throw a descriptive error when a policy entry object has no "version" field
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:30` custom env (config and versioning scenarios) › when the env is tagged and set in workspace.jsonc without exporting it › should be able to re-tag with no errors — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:49` custom env (config and versioning scenarios) › when the env is exported to a remote scope and is not exist locally › bit env-set should not throw any error — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:71` custom env (config and versioning scenarios) › custom-env is 0.0.2 on the workspace, but comp1 is using it in the model with 0.0.1 › bit show should show the correct env — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:75` custom env (config and versioning scenarios) › custom-env is 0.0.2 on the workspace, but comp1 is using it in the model with 0.0.1 › bit show should not show the previous version of the env — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:89` custom env (config and versioning scenarios) › rename custom env › should update components using the custom-env with the new name — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:105` custom env (config and versioning scenarios) › tag custom env then env-set the comp uses it to another non-core env › bit status should not show it as an issue because the previous env was removed — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:122` custom env (config and versioning scenarios) › circular dependencies between an env and a component › should not enter into an infinite loop on any command — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:174` custom env (config and versioning scenarios) › circular dependencies between an env and a theme component used in env mounter › bit status should not enter into an infinite loop — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:188` custom env (config and versioning scenarios) › ejecting conf when current env exists locally › should write the env aspect without a version to the component.json file — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:205` custom env (config and versioning scenarios) › an empty env. nothing is configured, not even a compiler › bit compile should not compile the component and should say why — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:211` custom env (config and versioning scenarios) › an empty env. nothing is configured, not even a compiler › should not create dist dir in the node_modules — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:215` custom env (config and versioning scenarios) › an empty env. nothing is configured, not even a compiler › bit build should not fail — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:219` custom env (config and versioning scenarios) › an empty env. nothing is configured, not even a compiler › bit format should not show an error — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:223` custom env (config and versioning scenarios) › an empty env. nothing is configured, not even a compiler › bit lint should not show an error — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:227` custom env (config and versioning scenarios) › an empty env. nothing is configured, not even a compiler › bit test should not show an error — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:245` custom env (config and versioning scenarios) › an env with a preview/bundler but without a compiler › bit build should not fail generating the preview, and the GeneratePreview task should have run — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:264` custom env (config and versioning scenarios) › custom env with invalid env.jsonc › should throw a descriptive error when a policy entry is not an object — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env-operations.e2e.ts:280` custom env (config and versioning scenarios) › custom env with invalid env.jsonc › should throw a descriptive error when a policy entry object has no "version" field — `harmony::custom_env`
 
 ### `e2e/harmony/custom-env.e2e.ts`
 
-- [ ] `e2e/harmony/custom-env.e2e.ts:29` custom env › non existing env › bit status should show a descriptive error
-- [ ] `e2e/harmony/custom-env.e2e.ts:48` custom env › non loaded env › should show the correct env in bit show (with no loaded indication)
-- [ ] `e2e/harmony/custom-env.e2e.ts:54` custom env › non loaded env › should show the correct env in bit envs (with no loaded indication)
-- [ ] `e2e/harmony/custom-env.e2e.ts:58` custom env › non loaded env › should show a component issue in bit status
-- [ ] `e2e/harmony/custom-env.e2e.ts:79` custom env › custom env with 3 components › tag › should have the correct env in the envs aspect data
-- [ ] `e2e/harmony/custom-env.e2e.ts:89` custom env › custom env with 3 components › tag › tag again › should have the correct env in the envs aspect data after additional tag
-- [ ] `e2e/harmony/custom-env.e2e.ts:102` custom env › custom env with 3 components › untag › should untag successfully
-- [ ] `e2e/harmony/custom-env.e2e.ts:114` custom env › custom env with 3 components › out-of-sync scenario where the id is changed during the process › bit status should not throw ComponentNotFound error
-- [ ] `e2e/harmony/custom-env.e2e.ts:131` custom env › change an env after tag › bit status should show it as an issue because the previous env was not removed
-- [ ] `e2e/harmony/custom-env.e2e.ts:152` custom env › change an env after tag2 and then change it back to the custom-env in the workspace › should have the correct env
-- [ ] `e2e/harmony/custom-env.e2e.ts:204` custom env › should load the env without issue
-- [ ] `e2e/harmony/custom-env.e2e.ts:210` custom env › should have the env installed in its root
-- [ ] `e2e/harmony/custom-env.e2e.ts:218` custom env › should not create scope aspect capsule
-- [ ] `e2e/harmony/custom-env.e2e.ts:229` custom env › another component uses an env version that is not installed › bit status should show the NonLoadedEnv issue rather than loading the installed 0.0.1 as 0.0.2
-- [ ] `e2e/harmony/custom-env.e2e.ts:232` custom env › another component uses an env version that is not installed › bit snap should be blocked
-- [ ] `e2e/harmony/custom-env.e2e.ts:236` custom env › another component uses an env version that is not installed › bit install should install the requested version and fix the issue
-- [ ] `e2e/harmony/custom-env.e2e.ts:273` custom env › setting up the external env without a version › should show a descriptive error when tagging the component
-- [ ] `e2e/harmony/custom-env.e2e.ts:286` custom env › set up the env using bit env set without a version › should save it with the latest version in root
-- [ ] `e2e/harmony/custom-env.e2e.ts:298` custom env › set up the env using bit env set with a version › should save it with a version in root but without version in envs/envs
-- [ ] `e2e/harmony/custom-env.e2e.ts:310` custom env › set up the env using bit create --env with a version › should save it with a version in root but without version in envs/envs
-- [ ] `e2e/harmony/custom-env.e2e.ts:324` custom env › set up the env and then unset it › should remove the env not only from envs/envs but also from root
-- [ ] `e2e/harmony/custom-env.e2e.ts:339` custom env › set up the env and then replace it with another env without mentioning the version › should save it with a version in root but without version in envs/envs
-- [ ] `e2e/harmony/custom-env.e2e.ts:355` custom env › set up the same env with two different versions, then replace with another env › should replace the env for both components
-- [ ] `e2e/harmony/custom-env.e2e.ts:372` custom env › tag and change the env version › bit status should show it as modified
-- [ ] `e2e/harmony/custom-env.e2e.ts:390` custom env › snapping the env on the lane and then deleting it › bit status should show the RemovedEnv issue
-- [ ] `e2e/harmony/custom-env.e2e.ts:393` custom env › snapping the env on the lane and then deleting it › bit envs should show the env as deleted
-- [ ] `e2e/harmony/custom-env.e2e.ts:398` custom env › snapping the env on the lane and then deleting it › replacing the env should fix the issue
-- [ ] `e2e/harmony/custom-env.e2e.ts:415` custom env › missing modules in the env capsule › should re-create the capsule dir and should not show any warning/error about loading the env
-- [ ] `e2e/harmony/custom-env.e2e.ts:419` custom env › missing modules in the env capsule › bit show should show the correct env
-- [ ] `e2e/harmony/custom-env.e2e.ts:436` custom env › core-env was set in previous tag and another non-core env is set now › bit status should not show it as an issue
+- [x] `e2e/harmony/custom-env.e2e.ts:29` custom env › non existing env › bit status should show a descriptive error — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:48` custom env › non loaded env › should show the correct env in bit show (with no loaded indication) — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:54` custom env › non loaded env › should show the correct env in bit envs (with no loaded indication) — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:58` custom env › non loaded env › should show a component issue in bit status — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:79` custom env › custom env with 3 components › tag › should have the correct env in the envs aspect data — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:89` custom env › custom env with 3 components › tag › tag again › should have the correct env in the envs aspect data after additional tag — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:102` custom env › custom env with 3 components › untag › should untag successfully — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:114` custom env › custom env with 3 components › out-of-sync scenario where the id is changed during the process › bit status should not throw ComponentNotFound error — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:131` custom env › change an env after tag › bit status should show it as an issue because the previous env was not removed — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:152` custom env › change an env after tag2 and then change it back to the custom-env in the workspace › should have the correct env — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:204` custom env › should load the env without issue — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:210` custom env › should have the env installed in its root — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:218` custom env › should not create scope aspect capsule — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:229` custom env › another component uses an env version that is not installed › bit status should show the NonLoadedEnv issue rather than loading the installed 0.0.1 as 0.0.2 — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:232` custom env › another component uses an env version that is not installed › bit snap should be blocked — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:236` custom env › another component uses an env version that is not installed › bit install should install the requested version and fix the issue — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:273` custom env › setting up the external env without a version › should show a descriptive error when tagging the component — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:286` custom env › set up the env using bit env set without a version › should save it with the latest version in root — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:298` custom env › set up the env using bit env set with a version › should save it with a version in root but without version in envs/envs — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:310` custom env › set up the env using bit create --env with a version › should save it with a version in root but without version in envs/envs — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:324` custom env › set up the env and then unset it › should remove the env not only from envs/envs but also from root — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:339` custom env › set up the env and then replace it with another env without mentioning the version › should save it with a version in root but without version in envs/envs — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:355` custom env › set up the same env with two different versions, then replace with another env › should replace the env for both components — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:372` custom env › tag and change the env version › bit status should show it as modified — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:390` custom env › snapping the env on the lane and then deleting it › bit status should show the RemovedEnv issue — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:393` custom env › snapping the env on the lane and then deleting it › bit envs should show the env as deleted — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:398` custom env › snapping the env on the lane and then deleting it › replacing the env should fix the issue — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:415` custom env › missing modules in the env capsule › should re-create the capsule dir and should not show any warning/error about loading the env — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:419` custom env › missing modules in the env capsule › bit show should show the correct env — `harmony::custom_env`
+- [x] `e2e/harmony/custom-env.e2e.ts:436` custom env › core-env was set in previous tag and another non-core env is set now › bit status should not show it as an issue — `harmony::custom_env`
 
 ### `e2e/harmony/debug-load.e2e.ts`
 
-- [ ] `e2e/harmony/debug-load.e2e.ts:25` bit debug-load command › component with an env set via workspace variants › human output › should print all four sections
-- [ ] `e2e/harmony/debug-load.e2e.ts:31` bit debug-load command › component with an env set via workspace variants › human output › should attribute the env to the variants source
-- [ ] `e2e/harmony/debug-load.e2e.ts:35` bit debug-load command › component with an env set via workspace variants › human output › should show load stages with cache info
-- [ ] `e2e/harmony/debug-load.e2e.ts:46` bit debug-load command › component with an env set via workspace variants › json output › should emit a valid trace tree with durations
-- [ ] `e2e/harmony/debug-load.e2e.ts:51` bit debug-load command › component with an env set via workspace variants › json output › should emit extension sources, env resolution and issues
-- [ ] `e2e/harmony/debug-load.e2e.ts:59` bit debug-load command › component with an env set via workspace variants › unknown component id › should fail with a clear error and no stack trace
+- [x] `e2e/harmony/debug-load.e2e.ts:25` bit debug-load command › component with an env set via workspace variants › human output › should print all four sections — `harmony::debug_load`
+- [x] `e2e/harmony/debug-load.e2e.ts:31` bit debug-load command › component with an env set via workspace variants › human output › should attribute the env to the variants source — `harmony::debug_load`
+- [x] `e2e/harmony/debug-load.e2e.ts:35` bit debug-load command › component with an env set via workspace variants › human output › should show load stages with cache info — `harmony::debug_load`
+- [x] `e2e/harmony/debug-load.e2e.ts:46` bit debug-load command › component with an env set via workspace variants › json output › should emit a valid trace tree with durations — `harmony::debug_load`
+- [x] `e2e/harmony/debug-load.e2e.ts:51` bit debug-load command › component with an env set via workspace variants › json output › should emit extension sources, env resolution and issues — `harmony::debug_load`
+- [x] `e2e/harmony/debug-load.e2e.ts:59` bit debug-load command › component with an env set via workspace variants › unknown component id › should fail with a clear error and no stack trace — `harmony::debug_load`
 
 ### `e2e/harmony/deduplication.e2e.ts`
 
@@ -1771,16 +1771,16 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/dependencies.e2e.ts`
 
-- [ ] `e2e/harmony/dependencies.e2e.ts:41` dependencies › import without --fetch-deps › should bring only the imported component, not its dependencies
-- [ ] `e2e/harmony/dependencies.e2e.ts:45` dependencies › import without --fetch-deps › bit status should not bring the dependencies during find-cycle process
-- [ ] `e2e/harmony/dependencies.e2e.ts:56` dependencies › import with --fetch-deps › should bring not only the imported component, but also its dependencies
-- [ ] `e2e/harmony/dependencies.e2e.ts:78` dependencies › a dependency is both in the workspace and set with deps-set › should show the dependency according to the deps-set and not the .bitmap
-- [ ] `e2e/harmony/dependencies.e2e.ts:94` dependencies › new dependent using exported dependency › should convert the flattened edge of itself to an id with scope-name
-- [ ] `e2e/harmony/dependencies.e2e.ts:114` dependencies › ignoring a dependency using // @bit-ignore › without bit-ignore it should show an issue
-- [ ] `e2e/harmony/dependencies.e2e.ts:117` dependencies › ignoring a dependency using // @bit-ignore › with bit-ignore it should not show an issue
-- [ ] `e2e/harmony/dependencies.e2e.ts:125` dependencies › ignoring a dependency using // @bit-ignore › with bit-no-check it should ignore the entire file
-- [ ] `e2e/harmony/dependencies.e2e.ts:145` dependencies › a file-dependency exists with a different extension › should not show an issue of missing-files because the file could exist later in the dist
-- [ ] `e2e/harmony/dependencies.e2e.ts:164` dependencies › changing files to be dev-files from env.jsonc › should clear all components caches and show the dep as a dev-dep
+- [x] `e2e/harmony/dependencies.e2e.ts:41` dependencies › import without --fetch-deps › should bring only the imported component, not its dependencies — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/dependencies.e2e.ts:45` dependencies › import without --fetch-deps › bit status should not bring the dependencies during find-cycle process — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/dependencies.e2e.ts:56` dependencies › import with --fetch-deps › should bring not only the imported component, but also its dependencies — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/dependencies.e2e.ts:78` dependencies › a dependency is both in the workspace and set with deps-set › should show the dependency according to the deps-set and not the .bitmap — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/dependencies.e2e.ts:94` dependencies › new dependent using exported dependency › should convert the flattened edge of itself to an id with scope-name — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/dependencies.e2e.ts:114` dependencies › ignoring a dependency using // @bit-ignore › without bit-ignore it should show an issue — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/dependencies.e2e.ts:117` dependencies › ignoring a dependency using // @bit-ignore › with bit-ignore it should not show an issue — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/dependencies.e2e.ts:125` dependencies › ignoring a dependency using // @bit-ignore › with bit-no-check it should ignore the entire file — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/dependencies.e2e.ts:145` dependencies › a file-dependency exists with a different extension › should not show an issue of missing-files because the file could exist later in the dist — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/dependencies.e2e.ts:164` dependencies › changing files to be dev-files from env.jsonc › should clear all components caches and show the dep as a dev-dep — `harmony::dependencies_harmony`
 
 ### `e2e/harmony/dependencies/allow-scripts.e2e.ts`
 
@@ -1793,50 +1793,50 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts`
 
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:154` env-jsonc-policies › env-jsonc base policies › affect env › should add peers as runtime deps of the env
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:165` env-jsonc-policies › env-jsonc base policies › affect component › peers effect › should take supported range from env.jsonc for used peers
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:168` env-jsonc-policies › env-jsonc base policies › affect component › peers effect › should not add unused peer deps from env.jsonc
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:177` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › used deps › should remove hidden devs deps configured by env.jsonc
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:183` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › used deps › should save used dep as hidden in the deps resolver deps
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:192` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › used deps › should have used dev deps with the version configured in the env.jsonc in the legacy dev deps
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:195` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › used deps › should install used dev deps specified by the env dev deps
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:203` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › not used deps › should save forced unused dep as hidden in the deps resolver deps
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:212` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › not used deps › should have forced unused dev deps with the version configured in the env.jsonc in the legacy dev deps
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:215` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › not used deps › should install forced unused dev deps specified by the env dev deps
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:227` env-jsonc-policies › env-jsonc base policies › runtime effect › not forced › detected (used) deps › should take version from env.jsonc for used deps without force
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:230` env-jsonc-policies › env-jsonc base policies › runtime effect › not forced › detected (used) deps › should install is-positive specified by the env
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:239` env-jsonc-policies › env-jsonc base policies › runtime effect › not forced › not detected (not used) deps › should not add the dep to the component deps
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:247` env-jsonc-policies › env-jsonc base policies › runtime effect › forced › should take version from env.jsonc for unused deps
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:250` env-jsonc-policies › env-jsonc base policies › runtime effect › forced › should install is-odd specified by the env
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:327` env-jsonc-policies › env-jsonc-extends › new envs › patterns merges › should respect patterns that exists only on first level env
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:330` env-jsonc-policies › env-jsonc-extends › new envs › patterns merges › should respect patterns that exists only on second level env
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:333` env-jsonc-policies › env-jsonc-extends › new envs › patterns merges › should respect (custom) patterns that exists only on third level env
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:337` env-jsonc-policies › env-jsonc-extends › new envs › patterns merges › should not use patterns that defined by the second level and overriden by third level
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:340` env-jsonc-policies › env-jsonc-extends › new envs › patterns merges › should respect patterns that overriden by the third level
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:345` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should respect peers that exists only on first level env
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:348` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should respect dev deps that exists only on first level env
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:351` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should respect peers that overriden by the second level
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:354` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should respect deps that only defined by the second level
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:357` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should respect deps that defined by first and overridden by third but not by second
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:360` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should remove deps added by second, and removed by third
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:363` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should respect removed by third that added as different dep type
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:390` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › first level env › should store the resolved env.jsonc in the model
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:395` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › second level env › should have entries resolved from first level
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:403` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › second level env › should have entries resolved from self
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:414` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › second level env › should not have extends in resolved manifest
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:419` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › third level env › should have entries resolved from first level
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:425` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › third level env › should have entries resolved from second level
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:431` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › third level env › should have entries resolved from self
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:448` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › third level env › should not have extends in resolved manifest
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:463` env-jsonc-policies › env-jsonc-extends › tagged envs › change tagged envs › should update the resolved env.jsonc in the ws data
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:472` env-jsonc-policies › env-jsonc-extends › tagged envs › change tagged envs › re-tag modified env (only) › should have the updated version in the model
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:488` env-jsonc-policies › env-jsonc-extends › tagged envs › change tagged envs › re-tag modified env (only) › after import › extends old version of env level2 › should use the old version (and policy) of the env
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:501` env-jsonc-policies › env-jsonc-extends › tagged envs › change tagged envs › re-tag modified env (only) › after import › when importing the updated version of env level2 › should use the old version (and policy) of the env
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:545` env-jsonc-policies › bit update › should update env.jsonc dependency to latest version
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:556` env-jsonc-policies › bit update › should update supportedRange for peerDependencies when new version is outside existing range
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:615` env-jsonc-policies › @types/* package listed as a peer in env.jsonc › should still add regular (non-@types/*) peer deps from env.jsonc to the component
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:618` env-jsonc-policies › @types/* package listed as a peer in env.jsonc › should not add auto-detected @types/* peers to the component peer deps
-- [ ] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:621` env-jsonc-policies › @types/* package listed as a peer in env.jsonc › should not leak auto-detected @types/* peers into the component runtime or dev deps
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:154` env-jsonc-policies › env-jsonc base policies › affect env › should add peers as runtime deps of the env — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:165` env-jsonc-policies › env-jsonc base policies › affect component › peers effect › should take supported range from env.jsonc for used peers — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:168` env-jsonc-policies › env-jsonc base policies › affect component › peers effect › should not add unused peer deps from env.jsonc — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:177` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › used deps › should remove hidden devs deps configured by env.jsonc — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:183` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › used deps › should save used dep as hidden in the deps resolver deps — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:192` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › used deps › should have used dev deps with the version configured in the env.jsonc in the legacy dev deps — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:195` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › used deps › should install used dev deps specified by the env dev deps — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:203` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › not used deps › should save forced unused dep as hidden in the deps resolver deps — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:212` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › not used deps › should have forced unused dev deps with the version configured in the env.jsonc in the legacy dev deps — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:215` env-jsonc-policies › env-jsonc base policies › affect component › devs effect › not used deps › should install forced unused dev deps specified by the env dev deps — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:227` env-jsonc-policies › env-jsonc base policies › runtime effect › not forced › detected (used) deps › should take version from env.jsonc for used deps without force — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:230` env-jsonc-policies › env-jsonc base policies › runtime effect › not forced › detected (used) deps › should install is-positive specified by the env — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:239` env-jsonc-policies › env-jsonc base policies › runtime effect › not forced › not detected (not used) deps › should not add the dep to the component deps — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:247` env-jsonc-policies › env-jsonc base policies › runtime effect › forced › should take version from env.jsonc for unused deps — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:250` env-jsonc-policies › env-jsonc base policies › runtime effect › forced › should install is-odd specified by the env — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:327` env-jsonc-policies › env-jsonc-extends › new envs › patterns merges › should respect patterns that exists only on first level env — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:330` env-jsonc-policies › env-jsonc-extends › new envs › patterns merges › should respect patterns that exists only on second level env — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:333` env-jsonc-policies › env-jsonc-extends › new envs › patterns merges › should respect (custom) patterns that exists only on third level env — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:337` env-jsonc-policies › env-jsonc-extends › new envs › patterns merges › should not use patterns that defined by the second level and overriden by third level — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:340` env-jsonc-policies › env-jsonc-extends › new envs › patterns merges › should respect patterns that overriden by the third level — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:345` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should respect peers that exists only on first level env — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:348` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should respect dev deps that exists only on first level env — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:351` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should respect peers that overriden by the second level — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:354` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should respect deps that only defined by the second level — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:357` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should respect deps that defined by first and overridden by third but not by second — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:360` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should remove deps added by second, and removed by third — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:363` env-jsonc-policies › env-jsonc-extends › new envs › policies merges › should respect removed by third that added as different dep type — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:390` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › first level env › should store the resolved env.jsonc in the model — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:395` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › second level env › should have entries resolved from first level — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:403` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › second level env › should have entries resolved from self — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:414` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › second level env › should not have extends in resolved manifest — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:419` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › third level env › should have entries resolved from first level — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:425` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › third level env › should have entries resolved from second level — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:431` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › third level env › should have entries resolved from self — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:448` env-jsonc-policies › env-jsonc-extends › tagged envs › store resolved env manifest (env.jsonc) in the model › third level env › should not have extends in resolved manifest — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:463` env-jsonc-policies › env-jsonc-extends › tagged envs › change tagged envs › should update the resolved env.jsonc in the ws data — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:472` env-jsonc-policies › env-jsonc-extends › tagged envs › change tagged envs › re-tag modified env (only) › should have the updated version in the model — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:488` env-jsonc-policies › env-jsonc-extends › tagged envs › change tagged envs › re-tag modified env (only) › after import › extends old version of env level2 › should use the old version (and policy) of the env — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:501` env-jsonc-policies › env-jsonc-extends › tagged envs › change tagged envs › re-tag modified env (only) › after import › when importing the updated version of env level2 › should use the old version (and policy) of the env — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:545` env-jsonc-policies › bit update › should update env.jsonc dependency to latest version — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:556` env-jsonc-policies › bit update › should update supportedRange for peerDependencies when new version is outside existing range — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:615` env-jsonc-policies › @types/* package listed as a peer in env.jsonc › should still add regular (non-@types/*) peer deps from env.jsonc to the component — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:618` env-jsonc-policies › @types/* package listed as a peer in env.jsonc › should not add auto-detected @types/* peers to the component peer deps — `harmony::env_jsonc_policies`
+- [x] `e2e/harmony/dependencies/env-jsonc-policies.e2e.ts:621` env-jsonc-policies › @types/* package listed as a peer in env.jsonc › should not leak auto-detected @types/* peers into the component runtime or dev deps — `harmony::env_jsonc_policies`
 
 ### `e2e/harmony/dependencies/forked-env-missing-deps.e2e.ts`
 
@@ -1999,9 +1999,9 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/deps-write.e2e.ts`
 
-- [ ] `e2e/harmony/deps-write.e2e.ts:35` dependencies write › using deps write command › should add dependencies to workspace.jsonc
-- [ ] `e2e/harmony/deps-write.e2e.ts:38` dependencies write › using deps write command › should add dependencies to package.json
-- [ ] `e2e/harmony/deps-write.e2e.ts:48` dependencies write › using import command › should add dependencies to package.json
+- [x] `e2e/harmony/deps-write.e2e.ts:35` dependencies write › using deps write command › should add dependencies to workspace.jsonc — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/deps-write.e2e.ts:38` dependencies write › using deps write command › should add dependencies to package.json — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/deps-write.e2e.ts:48` dependencies write › using import command › should add dependencies to package.json — `harmony::dependencies_harmony`
 
 ### `e2e/harmony/dev-files.e2e.ts`
 
@@ -2013,19 +2013,19 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/diff-component-peer.e2e.ts`
 
-- [ ] `e2e/harmony/diff-component-peer.e2e.ts:27` bit diff with a component-level peer dependency › bit status should not show the component as modified
-- [ ] `e2e/harmony/diff-component-peer.e2e.ts:30` bit diff with a component-level peer dependency › bit diff should not show a phantom peer-dependency change
+- [x] `e2e/harmony/diff-component-peer.e2e.ts:27` bit diff with a component-level peer dependency › bit status should not show the component as modified — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/diff-component-peer.e2e.ts:30` bit diff with a component-level peer dependency › bit diff should not show a phantom peer-dependency change — `harmony::dependencies_harmony`
 
 ### `e2e/harmony/eject-harmony.e2e.ts`
 
-- [ ] `e2e/harmony/eject-harmony.e2e.ts:45` eject command on Harmony › eject with the default options › should indicate that the eject was successful
-- [ ] `e2e/harmony/eject-harmony.e2e.ts:48` eject command on Harmony › eject with the default options › should save the component in workspace.jsonc
-- [ ] `e2e/harmony/eject-harmony.e2e.ts:54` eject command on Harmony › eject with the default options › should have the component files as a package (in node_modules)
-- [ ] `e2e/harmony/eject-harmony.e2e.ts:58` eject command on Harmony › eject with the default options › should delete the original component files from the file-system
-- [ ] `e2e/harmony/eject-harmony.e2e.ts:61` eject command on Harmony › eject with the default options › should delete the component from bit.map
-- [ ] `e2e/harmony/eject-harmony.e2e.ts:65` eject command on Harmony › eject with the default options › bit status should show a clean state
-- [ ] `e2e/harmony/eject-harmony.e2e.ts:68` eject command on Harmony › eject with the default options › should not delete the objects from the scope
-- [ ] `e2e/harmony/eject-harmony.e2e.ts:81` eject command on Harmony › eject with --keep-files flag › should keep the original component files from the file-system intact
+- [x] `e2e/harmony/eject-harmony.e2e.ts:45` eject command on Harmony › eject with the default options › should indicate that the eject was successful — `harmony::eject_harmony`
+- [x] `e2e/harmony/eject-harmony.e2e.ts:48` eject command on Harmony › eject with the default options › should save the component in workspace.jsonc — `harmony::eject_harmony`
+- [x] `e2e/harmony/eject-harmony.e2e.ts:54` eject command on Harmony › eject with the default options › should have the component files as a package (in node_modules) — `harmony::eject_harmony`
+- [x] `e2e/harmony/eject-harmony.e2e.ts:58` eject command on Harmony › eject with the default options › should delete the original component files from the file-system — `harmony::eject_harmony`
+- [x] `e2e/harmony/eject-harmony.e2e.ts:61` eject command on Harmony › eject with the default options › should delete the component from bit.map — `harmony::eject_harmony`
+- [x] `e2e/harmony/eject-harmony.e2e.ts:65` eject command on Harmony › eject with the default options › bit status should show a clean state — `harmony::eject_harmony`
+- [x] `e2e/harmony/eject-harmony.e2e.ts:68` eject command on Harmony › eject with the default options › should not delete the objects from the scope — `harmony::eject_harmony`
+- [x] `e2e/harmony/eject-harmony.e2e.ts:81` eject command on Harmony › eject with --keep-files flag › should keep the original component files from the file-system intact — `harmony::eject_harmony`
 
 ### `e2e/harmony/env.e2e.ts`
 
@@ -2168,41 +2168,41 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/import-harmony.e2e.ts`
 
-- [ ] `e2e/harmony/import-harmony.e2e.ts:53` import functionality on Harmony › workspace with TS components › installing dependencies as packages, requiring them and then running build-one-graph › the scope should have the dependencies and the flattened dependencies
-- [ ] `e2e/harmony/import-harmony.e2e.ts:64` import functionality on Harmony › workspace with TS components › importing the components › should not save the dependencies as components
-- [ ] `e2e/harmony/import-harmony.e2e.ts:70` import functionality on Harmony › workspace with TS components › importing the components › bit status should be clean with no errors
-- [ ] `e2e/harmony/import-harmony.e2e.ts:87` import functionality on Harmony › workspace with TS components › installing a component as a package and then importing it directly › should remove the package from workspace.jsonc
-- [ ] `e2e/harmony/import-harmony.e2e.ts:101` import functionality on Harmony › workspace with TS components › importing a component, modify it and then importing its dependent › should not throw an error asking to use --override flag
-- [ ] `e2e/harmony/import-harmony.e2e.ts:119` import functionality on Harmony › tag, export, clean scope objects, tag and export › should export with no errors about missing artifacts (pkg file) from the first tag
-- [ ] `e2e/harmony/import-harmony.e2e.ts:141` import functionality on Harmony › import delta (bit import without ids) when local is behind › should not fetch existing versions, only the missing
+- [x] `e2e/harmony/import-harmony.e2e.ts:53` import functionality on Harmony › workspace with TS components › installing dependencies as packages, requiring them and then running build-one-graph › the scope should have the dependencies and the flattened dependencies — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:64` import functionality on Harmony › workspace with TS components › importing the components › should not save the dependencies as components — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:70` import functionality on Harmony › workspace with TS components › importing the components › bit status should be clean with no errors — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:87` import functionality on Harmony › workspace with TS components › installing a component as a package and then importing it directly › should remove the package from workspace.jsonc — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:101` import functionality on Harmony › workspace with TS components › importing a component, modify it and then importing its dependent › should not throw an error asking to use --override flag — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:119` import functionality on Harmony › tag, export, clean scope objects, tag and export › should export with no errors about missing artifacts (pkg file) from the first tag — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:141` import functionality on Harmony › import delta (bit import without ids) when local is behind › should not fetch existing versions, only the missing — `harmony::import_harmony`
 - [x] `e2e/harmony/import-harmony.e2e.ts:167` import functionality on Harmony › import into a non-empty directory that is not tracked in .bitmap (with --write-to-empty-dir) › without the flag › should throw an error about the directory not being empty — `commands::import::adoption::destinations::an_untracked_nonempty_destination_is_rejected_without_the_relocation_flag` (explicit pre-effect delegation control; ordinary occupied destinations remain unsupported)
 - [x] `e2e/harmony/import-harmony.e2e.ts:172` import functionality on Harmony › import into a non-empty directory that is not tracked in .bitmap (with --write-to-empty-dir) › combined with --override › should throw an error that the two flags cannot be used together — `commands::import::adoption::destinations::write_to_empty_directory_rejects_override_and_explicit_path`
 - [x] `e2e/harmony/import-harmony.e2e.ts:179` import functionality on Harmony › import into a non-empty directory that is not tracked in .bitmap (with --write-to-empty-dir) › combined with --path › should throw an error that the two flags cannot be used together — `commands::import::adoption::destinations::write_to_empty_directory_rejects_override_and_explicit_path`
 - [x] `e2e/harmony/import-harmony.e2e.ts:190` import functionality on Harmony › import into a non-empty directory that is not tracked in .bitmap (with --write-to-empty-dir) › with --write-to-empty-dir flag › should import the component successfully — `commands::import::adoption::destinations::write_to_empty_directory_increments_the_destination_and_preserves_all_original_bytes`
 - [x] `e2e/harmony/import-harmony.e2e.ts:193` import functionality on Harmony › import into a non-empty directory that is not tracked in .bitmap (with --write-to-empty-dir) › with --write-to-empty-dir flag › should import into an incremented empty dir — `commands::import::adoption::destinations::write_to_empty_directory_increments_the_destination_and_preserves_all_original_bytes`
 - [x] `e2e/harmony/import-harmony.e2e.ts:196` import functionality on Harmony › import into a non-empty directory that is not tracked in .bitmap (with --write-to-empty-dir) › with --write-to-empty-dir flag › should leave the original directory untouched — `commands::import::adoption::destinations::write_to_empty_directory_increments_the_destination_and_preserves_all_original_bytes`
-- [ ] `e2e/harmony/import-harmony.e2e.ts:220` import functionality on Harmony › multiple components some are directory of others › import them all at the same time › should change the parent directory path and add _1 to the path
-- [ ] `e2e/harmony/import-harmony.e2e.ts:232` import functionality on Harmony › multiple components some are directory of others › import the parent dir first and then the child › should not throw when importing the child and should increment its base-path and preserve the suffix
-- [ ] `e2e/harmony/import-harmony.e2e.ts:242` import functionality on Harmony › multiple components some are directory of others › import the child dir first and then the parent › should not throw when importing the parent and should increment the path
-- [ ] `e2e/harmony/import-harmony.e2e.ts:271` import functionality on Harmony › install as packages › should be able to install the package with no errors
-- [ ] `e2e/harmony/import-harmony.e2e.ts:283` import functionality on Harmony › importing the components › should import the component with the pre-release correctly
-- [ ] `e2e/harmony/import-harmony.e2e.ts:287` import functionality on Harmony › importing the components › bit status should be clean with no errors
-- [ ] `e2e/harmony/import-harmony.e2e.ts:304` import functionality on Harmony › controlling where the component is written (defaultDirectory placeholders and --path) › should import with no errors when defaultDirectory has "{owner}" placeholder
-- [ ] `e2e/harmony/import-harmony.e2e.ts:308` import functionality on Harmony › controlling where the component is written (defaultDirectory placeholders and --path) › should import with no errors when defaultDirectory has "{scope-id}" placeholder
-- [ ] `e2e/harmony/import-harmony.e2e.ts:313` import functionality on Harmony › controlling where the component is written (defaultDirectory placeholders and --path) › should throw an error when the placeholder is not supported
-- [ ] `e2e/harmony/import-harmony.e2e.ts:318` import functionality on Harmony › controlling where the component is written (defaultDirectory placeholders and --path) › should write to the given path when --path is used
-- [ ] `e2e/harmony/import-harmony.e2e.ts:343` import functionality on Harmony › importing a component with @types dependency when current workspace does not have it › bit status should not show it as modified
-- [ ] `e2e/harmony/import-harmony.e2e.ts:346` import functionality on Harmony › importing a component with @types dependency when current workspace does not have it › bit show should show the typed dependency
+- [x] `e2e/harmony/import-harmony.e2e.ts:220` import functionality on Harmony › multiple components some are directory of others › import them all at the same time › should change the parent directory path and add _1 to the path — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:232` import functionality on Harmony › multiple components some are directory of others › import the parent dir first and then the child › should not throw when importing the child and should increment its base-path and preserve the suffix — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:242` import functionality on Harmony › multiple components some are directory of others › import the child dir first and then the parent › should not throw when importing the parent and should increment the path — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:271` import functionality on Harmony › install as packages › should be able to install the package with no errors — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:283` import functionality on Harmony › importing the components › should import the component with the pre-release correctly — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:287` import functionality on Harmony › importing the components › bit status should be clean with no errors — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:304` import functionality on Harmony › controlling where the component is written (defaultDirectory placeholders and --path) › should import with no errors when defaultDirectory has "{owner}" placeholder — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:308` import functionality on Harmony › controlling where the component is written (defaultDirectory placeholders and --path) › should import with no errors when defaultDirectory has "{scope-id}" placeholder — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:313` import functionality on Harmony › controlling where the component is written (defaultDirectory placeholders and --path) › should throw an error when the placeholder is not supported — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:318` import functionality on Harmony › controlling where the component is written (defaultDirectory placeholders and --path) › should write to the given path when --path is used — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:343` import functionality on Harmony › importing a component with @types dependency when current workspace does not have it › bit status should not show it as modified — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:346` import functionality on Harmony › importing a component with @types dependency when current workspace does not have it › bit show should show the typed dependency — `harmony::import_harmony`
 - [x] `e2e/harmony/import-harmony.e2e.ts:368` import functionality on Harmony › with --track-only flag › should only add the entries to the .bitmap without writing files — `commands::import::adoption::track_only_restores_entries_without_overwriting_existing_or_extra_source_files`
-- [ ] `e2e/harmony/import-harmony.e2e.ts:398` import functionality on Harmony › import with deps having different versions than workspace.jsonc › if the ws has a lower range, it should update workspace.jsonc with the new range
-- [ ] `e2e/harmony/import-harmony.e2e.ts:404` import functionality on Harmony › import with deps having different versions than workspace.jsonc › if the ws has a higher range, it should not update
-- [ ] `e2e/harmony/import-harmony.e2e.ts:410` import functionality on Harmony › import with deps having different versions than workspace.jsonc › if the ws has a lower exact version, it should write a conflict
+- [x] `e2e/harmony/import-harmony.e2e.ts:398` import functionality on Harmony › import with deps having different versions than workspace.jsonc › if the ws has a lower range, it should update workspace.jsonc with the new range — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:404` import functionality on Harmony › import with deps having different versions than workspace.jsonc › if the ws has a higher range, it should not update — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:410` import functionality on Harmony › import with deps having different versions than workspace.jsonc › if the ws has a lower exact version, it should write a conflict — `harmony::import_harmony`
 - [x] `e2e/harmony/import-harmony.e2e.ts:456` import functionality on Harmony › import with --dependents › without "through" should import all graphs between the given component and the workspace — `commands::import::adoption::dependents::silent_dependents_imports_all_paths_to_the_workspace_without_unrelated_branches`
 - [x] `e2e/harmony/import-harmony.e2e.ts:466` import functionality on Harmony › import with --dependents › with --dependents-via should limit to graph traversing through the given id — `commands::import::adoption::dependents::silent_dependents_via_limits_paths_to_the_requested_intermediate_component`
-- [ ] `e2e/harmony/import-harmony.e2e.ts:492` import functionality on Harmony › import when component.json has a local env › should not modified the component.json of the other component to add invalid env info
-- [ ] `e2e/harmony/import-harmony.e2e.ts:511` import functionality on Harmony › flattened dependencies saved in a separate object › the remote should have only the ref to the flattened dependencies in the Version
-- [ ] `e2e/harmony/import-harmony.e2e.ts:516` import functionality on Harmony › flattened dependencies saved in a separate object › should import the object with the flattened dependencies
-- [ ] `e2e/harmony/import-harmony.e2e.ts:521` import functionality on Harmony › flattened dependencies saved in a separate object › should import the flattened dependencies into the scope
+- [x] `e2e/harmony/import-harmony.e2e.ts:492` import functionality on Harmony › import when component.json has a local env › should not modified the component.json of the other component to add invalid env info — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:511` import functionality on Harmony › flattened dependencies saved in a separate object › the remote should have only the ref to the flattened dependencies in the Version — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:516` import functionality on Harmony › flattened dependencies saved in a separate object › should import the object with the flattened dependencies — `harmony::import_harmony`
+- [x] `e2e/harmony/import-harmony.e2e.ts:521` import functionality on Harmony › flattened dependencies saved in a separate object › should import the flattened dependencies into the scope — `harmony::import_harmony`
 
 ### `e2e/harmony/import-non-main-files.e2e.ts`
 
@@ -2217,9 +2217,9 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/imported-component-deps.e2e.ts`
 
-- [ ] `e2e/harmony/imported-component-deps.e2e.ts:44` should install component dependencies from their respective models to the imported components
-- [ ] `e2e/harmony/imported-component-deps.e2e.ts:53` should install package dependencies from their respective models to the imported components
-- [ ] `e2e/harmony/imported-component-deps.e2e.ts:103` should not show the imported component as modified
+- [x] `e2e/harmony/imported-component-deps.e2e.ts:44` should install component dependencies from their respective models to the imported components — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/imported-component-deps.e2e.ts:53` should install package dependencies from their respective models to the imported components — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/imported-component-deps.e2e.ts:103` should not show the imported component as modified — `harmony::dependencies_harmony`
 
 ### `e2e/harmony/init-harmony.e2e.ts`
 
@@ -2242,10 +2242,10 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/install-missing-dependencies.e2e.ts`
 
-- [ ] `e2e/harmony/install-missing-dependencies.e2e.ts:38` install missing dependencies › when all packages exist › should install the missing peer dependencies to node_modules
-- [ ] `e2e/harmony/install-missing-dependencies.e2e.ts:42` install missing dependencies › when all packages exist › should add the missing peer dependencies to workspace.jsonc
-- [ ] `e2e/harmony/install-missing-dependencies.e2e.ts:61` install missing dependencies › skip unavailable packages › should install the missing available dependencies to node_modules
-- [ ] `e2e/harmony/install-missing-dependencies.e2e.ts:64` install missing dependencies › skip unavailable packages › should not install the unavailable packages
+- [x] `e2e/harmony/install-missing-dependencies.e2e.ts:38` install missing dependencies › when all packages exist › should install the missing peer dependencies to node_modules — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/install-missing-dependencies.e2e.ts:42` install missing dependencies › when all packages exist › should add the missing peer dependencies to workspace.jsonc — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/install-missing-dependencies.e2e.ts:61` install missing dependencies › skip unavailable packages › should install the missing available dependencies to node_modules — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/install-missing-dependencies.e2e.ts:64` install missing dependencies › skip unavailable packages › should not install the unavailable packages — `harmony::dependencies_harmony`
 
 ### `e2e/harmony/install.e2e.ts`
 
@@ -2277,9 +2277,9 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/installing-component-dependency.e2e.ts`
 
-- [ ] `e2e/harmony/installing-component-dependency.e2e.ts:35` should install the version of the component dependency from the model, when it is not in the workspace policies
-- [ ] `e2e/harmony/installing-component-dependency.e2e.ts:38` should not install the version of the component dependency from the model, when the component dependency is in the workspace policies
-- [ ] `e2e/harmony/installing-component-dependency.e2e.ts:45` should not install the version of the component dependency from the model, when the component dependency is in the bitmap config
+- [x] `e2e/harmony/installing-component-dependency.e2e.ts:35` should install the version of the component dependency from the model, when it is not in the workspace policies — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/installing-component-dependency.e2e.ts:38` should not install the version of the component dependency from the model, when the component dependency is in the workspace policies — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/installing-component-dependency.e2e.ts:45` should not install the version of the component dependency from the model, when the component dependency is in the bitmap config — `harmony::dependencies_harmony`
 
 ### `e2e/harmony/internalize.e2e.ts`
 
@@ -3251,12 +3251,12 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/multiple-envs.e2e.ts`
 
-- [ ] `e2e/harmony/multiple-envs.e2e.ts:58` multiple envs › bit status should not show the MultipleEnvs issue because the previous env was replaced
-- [ ] `e2e/harmony/multiple-envs.e2e.ts:61` multiple envs › the env should be the newly set one
-- [ ] `e2e/harmony/multiple-envs.e2e.ts:79` multiple envs › env in the variants and env in the .bitmap › bit status should not show it as an issue because the previous env was removed
-- [ ] `e2e/harmony/multiple-envs.e2e.ts:82` multiple envs › env in the variants and env in the .bitmap › expect the env to be the one that was set in the .bitmap file
-- [ ] `e2e/harmony/multiple-envs.e2e.ts:95` multiple envs › env in the variants global (*) and env in the variants more specific › bit status should show it as an issue
-- [ ] `e2e/harmony/multiple-envs.e2e.ts:98` multiple envs › env in the variants global (*) and env in the variants more specific › bit env set should fix the issue
+- [x] `e2e/harmony/multiple-envs.e2e.ts:58` multiple envs › bit status should not show the MultipleEnvs issue because the previous env was replaced — `harmony::generator_and_test`
+- [x] `e2e/harmony/multiple-envs.e2e.ts:61` multiple envs › the env should be the newly set one — `harmony::generator_and_test`
+- [x] `e2e/harmony/multiple-envs.e2e.ts:79` multiple envs › env in the variants and env in the .bitmap › bit status should not show it as an issue because the previous env was removed — `harmony::generator_and_test`
+- [x] `e2e/harmony/multiple-envs.e2e.ts:82` multiple envs › env in the variants and env in the .bitmap › expect the env to be the one that was set in the .bitmap file — `harmony::generator_and_test`
+- [x] `e2e/harmony/multiple-envs.e2e.ts:95` multiple envs › env in the variants global (*) and env in the variants more specific › bit status should show it as an issue — `harmony::generator_and_test`
+- [x] `e2e/harmony/multiple-envs.e2e.ts:98` multiple envs › env in the variants global (*) and env in the variants more specific › bit env set should fix the issue — `harmony::generator_and_test`
 
 ### `e2e/harmony/multiple-testers.e2e.ts`
 
@@ -3278,11 +3278,11 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/new.e2e.ts`
 
-- [ ] `e2e/harmony/new.e2e.ts:14` new command › entering a non-exist workspace, should throw a descriptive error
-- [ ] `e2e/harmony/new.e2e.ts:52` new command › export a workspace-template aspect › should generate a new workspace, import components and add with no issues
-- [ ] `e2e/harmony/new.e2e.ts:58` new command › export a workspace-template aspect › should not add env dependencies to the workspace.jsonc
-- [ ] `e2e/harmony/new.e2e.ts:71` new command › running inside workspace › should throw an error
-- [ ] `e2e/harmony/new.e2e.ts:80` new command › creating a new react workspace › bit status should be clean
+- [x] `e2e/harmony/new.e2e.ts:14` new command › entering a non-exist workspace, should throw a descriptive error — `harmony::generator_and_test`
+- [x] `e2e/harmony/new.e2e.ts:52` new command › export a workspace-template aspect › should generate a new workspace, import components and add with no issues — `harmony::generator_and_test`
+- [x] `e2e/harmony/new.e2e.ts:58` new command › export a workspace-template aspect › should not add env dependencies to the workspace.jsonc — `harmony::generator_and_test`
+- [x] `e2e/harmony/new.e2e.ts:71` new command › running inside workspace › should throw an error — `harmony::generator_and_test`
+- [x] `e2e/harmony/new.e2e.ts:80` new command › creating a new react workspace › bit status should be clean — `harmony::generator_and_test`
 
 ### `e2e/harmony/no-files.e2e.ts`
 
@@ -3326,11 +3326,11 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/pkg.e2e.ts`
 
-- [ ] `e2e/harmony/pkg.e2e.ts:38` pkg extension › config added by the user › should have the updated config in the package.json of the configured component in capsule
-- [ ] `e2e/harmony/pkg.e2e.ts:42` pkg extension › config added by the user › should not have the updated config in the package.json of another component in capsule
-- [ ] `e2e/harmony/pkg.e2e.ts:54` pkg extension › config added by the user › after import › should have the updated config in the package.json of the configured component in capsule
-- [ ] `e2e/harmony/pkg.e2e.ts:93` pkg extension › config added by extension › extension that add simple config › should have the updated config in the package.json of the component with the defined extension in capsule
-- [ ] `e2e/harmony/pkg.e2e.ts:97` pkg extension › config added by extension › extension that add simple config › should not have the updated config in the package.json of another component without the defined extension in capsule
+- [x] `e2e/harmony/pkg.e2e.ts:38` pkg extension › config added by the user › should have the updated config in the package.json of the configured component in capsule — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/pkg.e2e.ts:42` pkg extension › config added by the user › should not have the updated config in the package.json of another component in capsule — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/pkg.e2e.ts:54` pkg extension › config added by the user › after import › should have the updated config in the package.json of the configured component in capsule — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/pkg.e2e.ts:93` pkg extension › config added by extension › extension that add simple config › should have the updated config in the package.json of the component with the defined extension in capsule — `harmony::dependencies_harmony`
+- [x] `e2e/harmony/pkg.e2e.ts:97` pkg extension › config added by extension › extension that add simple config › should not have the updated config in the package.json of another component without the defined extension in capsule — `harmony::dependencies_harmony`
 
 ### `e2e/harmony/pnpm-default-hoisting.e2e.ts`
 
@@ -3397,57 +3397,57 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/recovery-after-deletion.e2e.ts`
 
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:87` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › an intermediate check. the scope should not have the comp3 object
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:98` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency exists as cache inside the dependent scope › bit tag without --rebuild-deps-graph › should succeed
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:101` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency exists as cache inside the dependent scope › bit tag without --rebuild-deps-graph › should not bring the missing dep from the dependent
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:112` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency exists as cache inside the dependent scope › bit tag with --rebuild-deps-graph › should succeed
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:115` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency exists as cache inside the dependent scope › bit tag with --rebuild-deps-graph › should bring the missing dep from the dependent
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:126` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency exists as cache inside the dependent scope › bit import › should bring the missing dep from the dependent
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:151` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency exists as cache inside the dependent scope › bit export to another remote › this new remote should bring the flattened dependency (comp3) from the dependent scope
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:166` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency is missing in the dependent scope as well › an intermediate check. the scope should not have the comp3 object
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:176` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency is missing in the dependent scope as well › bit import › should not throw an error and not bring the missing dep
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:183` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency is missing in the dependent scope as well › bit tag --rebuild-deps-graph › should throw an error about missing dependencies
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:194` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency is missing in the dependent scope as well › bit tag without --rebuild-deps-graph › should succeed
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:218` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › an intermediate check. the scope should not have the comp3 object
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:229` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency exists as cache inside the dependent scope › bit tag without --rebuild-deps-graph › should succeed
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:232` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency exists as cache inside the dependent scope › bit tag without --rebuild-deps-graph › should not bring the missing dep from the dependent
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:243` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency exists as cache inside the dependent scope › bit tag with --rebuild-deps-graph › should succeed
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:246` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency exists as cache inside the dependent scope › bit tag with --rebuild-deps-graph › should bring the missing dep from the dependent
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:257` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency exists as cache inside the dependent scope › bit import › should bring the missing dep from the dependent
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:271` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency is missing in the dependent scope as well › an intermediate check. the scope should not have the comp3 object
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:281` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency is missing in the dependent scope as well › bit import › should not throw an error and not bring the missing dep
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:288` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency is missing in the dependent scope as well › bit tag --rebuild-deps-graph › should throw an error about missing dependencies
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:299` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency is missing in the dependent scope as well › bit tag without --rebuild-deps-graph › should succeed
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:319` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › an intermediate check. the scope should not have the comp3 object
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:330` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency exists as cache inside the dependent scope › bit import › should bring the missing dep from the dependent
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:342` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency exists as cache inside the dependent scope › bit tag › should succeed
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:345` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency exists as cache inside the dependent scope › bit tag › should bring the missing dep from the dependent
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:361` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency is missing in the dependent scope as well › an intermediate check. the scope should not have the comp3 object
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:371` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency is missing in the dependent scope as well › bit import › should not throw an error and not bring the missing dep
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:376` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency is missing in the dependent scope as well › bit import › should indicate the dependencies are missing
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:386` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency is missing in the dependent scope as well › bit tag --rebuild-deps-graph › should throw ComponentNotFound error because it is a direct dependency
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:418` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › should import comp1 successfully and bring comp3@0.0.1 from the cache of comp1
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:426` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › should import comp2 successfully and bring comp3@0.0.1 from the cache of comp2
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:436` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › comp3: should save 0.0.1 of in the orphanedVersions prop
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:441` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › comp3: should not have 0.0.1 in the versions object, only 0.0.2
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:446` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › comp3: the head should be the same as 0.0.2 not as 0.0.1
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:451` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › comp3: the remote ref hash should be the same as 0.0.2 not as 0.0.1
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:518` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › importing both: comp2 and direct-dep comp3 to the same workspace › importing comp3 and comp2 at the same time › should be able to tag
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:534` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › comp3: should save 0.0.1 of in the orphanedVersions prop on the remote
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:539` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › comp3: should not have 0.0.1 in the versions object, only 0.0.2 on the remote
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:544` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › comp3: the head should be the same as 0.0.2 not as 0.0.1 on the remote
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:549` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › should not change the remote of comp3
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:562` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › importing comp3 and then comp1 which brings comp3 with orphaned › should not indicate that dependencies are missing
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:565` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › importing comp3 and then comp1 which brings comp3 with orphaned › should save the orphaned version of comp3 locally
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:570` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › importing comp3 and then comp1 which brings comp3 with orphaned › should not throw an error on bit-tag of comp1
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:585` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › re-export comp3 when locally it has orphanedVersions prop › the remote of comp3 should not get this orphanedVersions prop
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:622` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › should import comp1 successfully and bring comp3@0.0.1 from the cache of comp1
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:630` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › should import comp2 successfully and bring comp3@0.0.1 from the cache of comp2
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:640` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › comp3: should save 0.0.1 of in the orphanedVersions prop
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:645` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › comp3: should not have 0.0.1 in the versions object
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:649` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › comp3: the head should be different than 0.0.1
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:654` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › comp3: the remote ref hash should be the same as the current head, not as 0.0.1
-- [ ] `e2e/harmony/recovery-after-deletion.e2e.ts:718` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › importing both: comp2 and direct-dep comp3 to the same workspace › importing comp3 and comp2 at the same time › should be able to tag
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:87` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › an intermediate check. the scope should not have the comp3 object — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:98` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency exists as cache inside the dependent scope › bit tag without --rebuild-deps-graph › should succeed — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:101` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency exists as cache inside the dependent scope › bit tag without --rebuild-deps-graph › should not bring the missing dep from the dependent — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:112` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency exists as cache inside the dependent scope › bit tag with --rebuild-deps-graph › should succeed — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:115` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency exists as cache inside the dependent scope › bit tag with --rebuild-deps-graph › should bring the missing dep from the dependent — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:126` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency exists as cache inside the dependent scope › bit import › should bring the missing dep from the dependent — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:151` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency exists as cache inside the dependent scope › bit export to another remote › this new remote should bring the flattened dependency (comp3) from the dependent scope — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:166` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency is missing in the dependent scope as well › an intermediate check. the scope should not have the comp3 object — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:176` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency is missing in the dependent scope as well › bit import › should not throw an error and not bring the missing dep — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:183` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency is missing in the dependent scope as well › bit tag --rebuild-deps-graph › should throw an error about missing dependencies — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:194` recovery after component/scope deletion › indirect dependency is missing (import comp1 while comp3 is missing) › the indirect dependency is missing in the dependent scope as well › bit tag without --rebuild-deps-graph › should succeed — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:218` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › an intermediate check. the scope should not have the comp3 object — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:229` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency exists as cache inside the dependent scope › bit tag without --rebuild-deps-graph › should succeed — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:232` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency exists as cache inside the dependent scope › bit tag without --rebuild-deps-graph › should not bring the missing dep from the dependent — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:243` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency exists as cache inside the dependent scope › bit tag with --rebuild-deps-graph › should succeed — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:246` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency exists as cache inside the dependent scope › bit tag with --rebuild-deps-graph › should bring the missing dep from the dependent — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:257` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency exists as cache inside the dependent scope › bit import › should bring the missing dep from the dependent — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:271` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency is missing in the dependent scope as well › an intermediate check. the scope should not have the comp3 object — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:281` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency is missing in the dependent scope as well › bit import › should not throw an error and not bring the missing dep — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:288` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency is missing in the dependent scope as well › bit tag --rebuild-deps-graph › should throw an error about missing dependencies — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:299` recovery after component/scope deletion › indirect dependency scope is down (import comp1 while remote2 is down) › the indirect dependency is missing in the dependent scope as well › bit tag without --rebuild-deps-graph › should succeed — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:319` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › an intermediate check. the scope should not have the comp3 object — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:330` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency exists as cache inside the dependent scope › bit import › should bring the missing dep from the dependent — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:342` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency exists as cache inside the dependent scope › bit tag › should succeed — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:345` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency exists as cache inside the dependent scope › bit tag › should bring the missing dep from the dependent — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:361` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency is missing in the dependent scope as well › an intermediate check. the scope should not have the comp3 object — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:371` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency is missing in the dependent scope as well › bit import › should not throw an error and not bring the missing dep — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:376` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency is missing in the dependent scope as well › bit import › should indicate the dependencies are missing — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:386` recovery after component/scope deletion › direct dependency is missing (import comp2 while comp3 is missing) › the direct dependency is missing in the dependent scope as well › bit tag --rebuild-deps-graph › should throw ComponentNotFound error because it is a direct dependency — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:418` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › should import comp1 successfully and bring comp3@0.0.1 from the cache of comp1 — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:426` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › should import comp2 successfully and bring comp3@0.0.1 from the cache of comp2 — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:436` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › comp3: should save 0.0.1 of in the orphanedVersions prop — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:441` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › comp3: should not have 0.0.1 in the versions object, only 0.0.2 — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:446` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › comp3: the head should be the same as 0.0.2 not as 0.0.1 — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:451` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › comp3: the remote ref hash should be the same as 0.0.2 not as 0.0.1 — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:518` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › importing both: comp2 and direct-dep comp3 to the same workspace › importing comp3 and comp2 at the same time › should be able to tag — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:534` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › comp3: should save 0.0.1 of in the orphanedVersions prop on the remote — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:539` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › comp3: should not have 0.0.1 in the versions object, only 0.0.2 on the remote — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:544` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › comp3: the head should be the same as 0.0.2 not as 0.0.1 on the remote — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:549` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › should not change the remote of comp3 — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:562` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › importing comp3 and then comp1 which brings comp3 with orphaned › should not indicate that dependencies are missing — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:565` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › importing comp3 and then comp1 which brings comp3 with orphaned › should save the orphaned version of comp3 locally — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:570` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1) › importing comp3 and then comp1 which brings comp3 with orphaned › should not throw an error on bit-tag of comp1 — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:585` recovery after component/scope deletion › indirect dependency (comp3) has re-created with a different version › re-export comp3 when locally it has orphanedVersions prop › the remote of comp3 should not get this orphanedVersions prop — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:622` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › should import comp1 successfully and bring comp3@0.0.1 from the cache of comp1 — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:630` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › should import comp2 successfully and bring comp3@0.0.1 from the cache of comp2 — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:640` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › comp3: should save 0.0.1 of in the orphanedVersions prop — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:645` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › comp3: should not have 0.0.1 in the versions object — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:649` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › comp3: the head should be different than 0.0.1 — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:654` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › comp3: the remote ref hash should be the same as the current head, not as 0.0.1 — `harmony::recovery_after_deletion`
+- [x] `e2e/harmony/recovery-after-deletion.e2e.ts:718` recovery after component/scope deletion › dealing with snaps, indirect dependency (comp3) has re-created with a new snap › importing both: comp2 and direct-dep comp3 to the same workspace › importing comp3 and comp2 at the same time › should be able to tag — `harmony::recovery_after_deletion`
 
 ### `e2e/harmony/refactor.e2e.ts`
 
@@ -3594,23 +3594,23 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/scripts.e2e.ts`
 
-- [ ] `e2e/harmony/scripts.e2e.ts:38` script command › custom env with scripts defined › bit script --list › should list all available scripts
-- [ ] `e2e/harmony/scripts.e2e.ts:41` script command › custom env with scripts defined › bit script --list › should show the environment id
-- [ ] `e2e/harmony/scripts.e2e.ts:44` script command › custom env with scripts defined › bit script --list › should show the script names
-- [ ] `e2e/harmony/scripts.e2e.ts:48` script command › custom env with scripts defined › bit script --list › should show the script commands
-- [ ] `e2e/harmony/scripts.e2e.ts:59` script command › custom env with scripts defined › bit script test-script › should run the script successfully
-- [ ] `e2e/harmony/scripts.e2e.ts:62` script command › custom env with scripts defined › bit script test-script › should show the script output
-- [ ] `e2e/harmony/scripts.e2e.ts:69` script command › custom env with scripts defined › bit script test-script › should mention the env in the output
-- [ ] `e2e/harmony/scripts.e2e.ts:79` script command › custom env with scripts defined › bit script async-script › should run the async script successfully
-- [ ] `e2e/harmony/scripts.e2e.ts:82` script command › custom env with scripts defined › bit script async-script › should show the async script output
-- [ ] `e2e/harmony/scripts.e2e.ts:85` script command › custom env with scripts defined › bit script async-script › should show the component count in the context
-- [ ] `e2e/harmony/scripts.e2e.ts:88` script command › custom env with scripts defined › bit script async-script › should show success message
-- [ ] `e2e/harmony/scripts.e2e.ts:98` script command › custom env with scripts defined › bit env get should show scripts › should show scripts section
-- [ ] `e2e/harmony/scripts.e2e.ts:101` script command › custom env with scripts defined › bit env get should show scripts › should list the scripts
-- [ ] `e2e/harmony/scripts.e2e.ts:108` script command › custom env with scripts defined › running non-existent script › should throw an error
-- [ ] `e2e/harmony/scripts.e2e.ts:127` script command › environment without scripts config › bit script --list without config › should show config warning
-- [ ] `e2e/harmony/scripts.e2e.ts:163` script command › env version mismatch › bit script --list with version mismatch › should not list scripts from env with different version
-- [ ] `e2e/harmony/scripts.e2e.ts:173` script command › env version mismatch › bit script test-script with version mismatch › should not run scripts
+- [x] `e2e/harmony/scripts.e2e.ts:38` script command › custom env with scripts defined › bit script --list › should list all available scripts — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:41` script command › custom env with scripts defined › bit script --list › should show the environment id — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:44` script command › custom env with scripts defined › bit script --list › should show the script names — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:48` script command › custom env with scripts defined › bit script --list › should show the script commands — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:59` script command › custom env with scripts defined › bit script test-script › should run the script successfully — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:62` script command › custom env with scripts defined › bit script test-script › should show the script output — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:69` script command › custom env with scripts defined › bit script test-script › should mention the env in the output — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:79` script command › custom env with scripts defined › bit script async-script › should run the async script successfully — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:82` script command › custom env with scripts defined › bit script async-script › should show the async script output — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:85` script command › custom env with scripts defined › bit script async-script › should show the component count in the context — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:88` script command › custom env with scripts defined › bit script async-script › should show success message — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:98` script command › custom env with scripts defined › bit env get should show scripts › should show scripts section — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:101` script command › custom env with scripts defined › bit env get should show scripts › should list the scripts — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:108` script command › custom env with scripts defined › running non-existent script › should throw an error — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:127` script command › environment without scripts config › bit script --list without config › should show config warning — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:163` script command › env version mismatch › bit script --list with version mismatch › should not list scripts from env with different version — `harmony::scripts_cmd`
+- [x] `e2e/harmony/scripts.e2e.ts:173` script command › env version mismatch › bit script test-script with version mismatch › should not run scripts — `harmony::scripts_cmd`
 
 ### `e2e/harmony/set-default-owner-and-scope.e2e.ts`
 
@@ -3816,10 +3816,10 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/test-harmony.e2e.ts`
 
-- [ ] `e2e/harmony/test-harmony.e2e.ts:19` test command on Harmony › component with an empty test file › --junit should show the error
-- [ ] `e2e/harmony/test-harmony.e2e.ts:36` test command on Harmony › passing test-file paths instead of a component pattern › should throw a descriptive error when the file is not a test file of the component
-- [ ] `e2e/harmony/test-harmony.e2e.ts:41` test command on Harmony › passing test-file paths instead of a component pattern › should throw when the file does not belong to any component
-- [ ] `e2e/harmony/test-harmony.e2e.ts:46` test command on Harmony › passing test-file paths instead of a component pattern › should throw when mixing test-file paths with component patterns
+- [x] `e2e/harmony/test-harmony.e2e.ts:19` test command on Harmony › component with an empty test file › --junit should show the error — `harmony::generator_and_test`
+- [x] `e2e/harmony/test-harmony.e2e.ts:36` test command on Harmony › passing test-file paths instead of a component pattern › should throw a descriptive error when the file is not a test file of the component — `harmony::generator_and_test`
+- [x] `e2e/harmony/test-harmony.e2e.ts:41` test command on Harmony › passing test-file paths instead of a component pattern › should throw when the file does not belong to any component — `harmony::generator_and_test`
+- [x] `e2e/harmony/test-harmony.e2e.ts:46` test command on Harmony › passing test-file paths instead of a component pattern › should throw when mixing test-file paths with component patterns — `harmony::generator_and_test`
 
 ### `e2e/harmony/track-directories-harmony.e2e.ts`
 
@@ -3950,9 +3950,9 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/typescript/typescript.e2e.ts`
 
-- [ ] `e2e/typescript/typescript.e2e.ts:44` typescript › react style => .tsx extension › should be able to parse .tsx syntax successfully and recognize the dependencies
-- [ ] `e2e/typescript/typescript.e2e.ts:71` typescript › auto recognizing @types packages › should find the @types in the package.json file and automatically add it to the dependencies
-- [ ] `e2e/typescript/typescript.e2e.ts:88` typescript › auto recognizing @types packages › when the types package set to be ignored in the overrides › should not show the @types package anymore
+- [x] `e2e/typescript/typescript.e2e.ts:44` typescript › react style => .tsx extension › should be able to parse .tsx syntax successfully and recognize the dependencies — `harmony::generator_and_test`
+- [x] `e2e/typescript/typescript.e2e.ts:71` typescript › auto recognizing @types packages › should find the @types in the package.json file and automatically add it to the dependencies — `harmony::generator_and_test`
+- [x] `e2e/typescript/typescript.e2e.ts:88` typescript › auto recognizing @types packages › when the types package set to be ignored in the overrides › should not show the @types package anymore — `harmony::generator_and_test`
 
 <!-- e2e-port-plan:end -->
 

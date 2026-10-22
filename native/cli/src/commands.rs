@@ -10,10 +10,13 @@ mod checkout;
 mod ci;
 mod clear_cache;
 mod cli_cmd;
+mod clone;
 mod color;
 mod component_issues;
 mod config;
+mod create;
 mod debug_cat;
+mod debug_load;
 mod delete;
 mod dependents;
 mod deprecate;
@@ -21,6 +24,7 @@ mod deps;
 mod details;
 mod diff;
 mod doctor;
+mod eject;
 mod eject_conf;
 mod engine;
 mod envs;
@@ -42,11 +46,13 @@ mod lane;
 mod list;
 mod local_only;
 mod log;
+mod login;
 mod logout;
 mod mcp_server;
 mod merge;
 mod mini_status;
 mod move_paths;
+mod new_cmd;
 mod npmrc;
 mod pattern;
 mod patterns;
@@ -62,6 +68,7 @@ mod ripple;
 mod scope_rename;
 mod scope_set;
 mod scope_trust;
+mod script;
 mod search;
 mod set_peer;
 mod snap;
@@ -71,11 +78,14 @@ mod status;
 mod switch;
 mod system;
 mod tag;
+mod templates;
+mod test_cmd;
 #[cfg(test)]
 mod test_support;
 mod uninstall;
 mod unuse_cmd;
 mod use_cmd;
+mod validate;
 mod version;
 mod version_history;
 mod whoami;
@@ -103,13 +113,16 @@ pub const COMMANDS: &[Command] = &[
     ci::COMMAND,
     clear_cache::COMMAND,
     cli_cmd::COMMAND,
+    clone::COMMAND,
     component_issues::COMMAND,
     config::COMMAND,
+    create::COMMAND,
     debug_cat::CAT_COMPONENT,
     debug_cat::CAT_LANE,
     debug_cat::CAT_LANE_HISTORY,
     debug_cat::CAT_OBJECT,
     debug_cat::CAT_VERSION_HISTORY,
+    debug_load::COMMAND,
     delete::COMMAND,
     dependents::COMMAND,
     deprecate::COMMAND,
@@ -117,6 +130,7 @@ pub const COMMANDS: &[Command] = &[
     deps::COMMAND,
     details::COMMAND,
     doctor::COMMAND,
+    eject::COMMAND,
     eject_conf::COMMAND,
     envs::COMMAND,
     file_history::BLAME,
@@ -137,11 +151,13 @@ pub const COMMANDS: &[Command] = &[
     list::COMMAND,
     local_only::COMMAND,
     log::COMMAND,
+    login::COMMAND,
     logout::COMMAND,
     mcp_server::COMMAND,
     merge::COMMAND,
     mini_status::COMMAND,
     move_paths::COMMAND,
+    new_cmd::COMMAND,
     npmrc::COMMAND,
     pattern::COMMAND,
     recover::COMMAND,
@@ -152,6 +168,7 @@ pub const COMMANDS: &[Command] = &[
     rename::COMMAND,
     ripple::COMMAND,
     scope_rename::COMMAND,
+    script::COMMAND,
     search::COMMAND,
     set_peer::SET_PEER,
     set_peer::UNSET_PEER,
@@ -162,9 +179,12 @@ pub const COMMANDS: &[Command] = &[
     switch::COMMAND,
     system::COMMAND,
     tag::COMMAND,
+    templates::COMMAND,
+    test_cmd::COMMAND,
     uninstall::COMMAND,
     unuse_cmd::COMMAND,
     use_cmd::COMMAND,
+    validate::COMMAND,
     version::COMMAND,
     version_history::COMMAND,
     whoami::COMMAND,

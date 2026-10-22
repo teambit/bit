@@ -74,6 +74,93 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
     workspace_command::execute_with(&root, args, "create", &report, |_| plan.commit())
 }
 
+pub(super) fn merge_move(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
+    let Some(options) =
+        parse(lane_args).filter(|opt| opt.alias.is_none() && !opt.fork_lane_new_scope)
+    else {
+        return Ok(Outcome::Declined("outside the native lane merge-move grammar".into()));
+    };
+    let Some(root) = workspace::root(&env::current_dir()?) else {
+        return Ok(Outcome::Declined("not inside a workspace".into()));
+    };
+    if let Some(err_msg) = validate_merge_move_state(&root)? {
+        return workspace_command::execute_then(&root, args, "merge-move", |_| {
+            Err(io::Error::other(err_msg))
+        });
+    }
+    let scope =
+        if let Some(scope) = options.scope { scope.to_string() } else { default_scope(&root)? };
+    let Some(scope) = (!scope.is_empty()).then_some(scope) else {
+        return Ok(Outcome::Declined("lane merge-move needs a default scope".into()));
+    };
+    let user = workspace_command::User::load(&root)?;
+    let lane_hash = format!("{:x}", Sha1::digest(workspace_command::uuid_v4()?.as_bytes()));
+    let plan = match Plan::prepare_merge_move(
+        &root,
+        options.name,
+        &scope,
+        user.log(),
+        &lane_hash,
+        &workspace_command::uuid_v4()?,
+    ) {
+        Ok(plan) => plan,
+        Err(error) => return Ok(Outcome::Declined(format!("lane merge-move: {error}"))),
+    };
+    let report = merge_move_report(&plan, &options, Chalk::detect(args));
+    workspace_command::execute_with(&root, args, "merge-move", &report, |_| plan.commit())
+}
+
+fn validate_merge_move_state(root: &Path) -> io::Result<Option<String>> {
+    let bitmap: Value = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
+    if bitmap["_bit_lane"].is_null() || bitmap["_bit_lane"]["id"]["name"] == "main" {
+        return Ok(Some(
+            "this command makes sense only when checked out to a lane. otherwise, there is no lane to revert to.\nin order to move all local merge changes to a new lane, you can simply create a new lane (bit lane create)".to_owned(),
+        ));
+    }
+    let last_merged = bit_object_import::scope_path(root).join("last-merged");
+    if !last_merged.exists() {
+        return Ok(Some(
+            r#"unable to abort the last lane-merge because "bit export" was running since then"#
+                .to_owned(),
+        ));
+    }
+    if !last_merged.join("lane").is_file() {
+        return Ok(Some(format!(
+            "unable to revert the last lane-merge because the lane is missing from {}",
+            last_merged.display(),
+        )));
+    }
+    Ok(None)
+}
+
+fn merge_move_report(plan: &Plan, options: &Options<'_>, chalk: Chalk) -> Report {
+    let formatter = crate::commands::workspace_command::format::Formatter::new(chalk);
+    let scope = chalk.bold(plan.scope());
+    let remote_scope_or_default = if options.scope.is_some() {
+        format!("the remote scope {scope}")
+    } else {
+        format!(
+            r#"the default-scope {scope}. you can change the lane's scope, before it is exported, with the "bit lane change-scope" command"#,
+        )
+    };
+    let parent_name = plan.parent_name().unwrap_or_default();
+    let title = formatter.success_summary(&format!(
+        "added and checked out to the new lane {} based on lane {}",
+        chalk.bold(options.name),
+        chalk.bold(parent_name),
+    ));
+    let remote_scope_output =
+        formatter.hint(&format!("this lane will be exported to {remote_scope_or_default}"));
+    Report {
+        data: crate::commands::workspace_command::format::Formatter::join(&[
+            title,
+            remote_scope_output,
+        ]),
+        code: 0,
+        details: None,
+    }
+}
+
 fn report(plan: &Plan, options: &Options<'_>, chalk: Chalk) -> Report {
     let display = chalk.bold(options.alias.unwrap_or(options.name));
     let formatter = crate::commands::workspace_command::format::Formatter::new(chalk);

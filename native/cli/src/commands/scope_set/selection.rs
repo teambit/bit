@@ -115,7 +115,7 @@ fn valid_id_chunk(chunk: &str) -> bool {
             })
 }
 
-pub(super) fn valid_scope_str(scope: &str) -> bool {
+pub(in crate::commands) fn valid_scope_str(scope: &str) -> bool {
     scope.len() >= 2
         && !scope.starts_with('.')
         && !scope.ends_with('.')

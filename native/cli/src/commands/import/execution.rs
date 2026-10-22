@@ -99,7 +99,52 @@ fn complete(
         planned.write_dependencies(root, options, lifecycle)?;
     }
     lifecycle.render(root, planned, options, output, started, advanced)?;
+    if !options.objects_only {
+        remove_imported_packages_from_root_policy(root, &planned.receipt.ids)?;
+    }
     Ok(Report { data: planned.report.clone(), code: 0, details: None })
+}
+
+fn remove_imported_packages_from_root_policy(root: &Path, ids: &[String]) -> io::Result<()> {
+    let packages = ids
+        .iter()
+        .filter_map(|id| imported_package_name(id))
+        .collect::<Vec<_>>();
+    if packages.is_empty() || !root_policy_has_any(root, &packages) {
+        return Ok(());
+    }
+    bit_install::command::edit_workspace_config(
+        root,
+        &crate::workspace::scope_path(root),
+        &crate::commands::workspace_command::file_id(),
+        "import (remove package)",
+        move |document| {
+            bit_install::command::remove_root_policy_entries(document, &packages);
+        },
+    )
+}
+
+fn imported_package_name(id: &str) -> Option<String> {
+    let without_ver = id.rsplit_once('@').map_or(id, |(base, _)| base);
+    let (scope, name) = without_ver.split_once('/')?;
+    let name_dots = name.replace('/', ".");
+    if let Some((owner, scope_name)) = scope.split_once('.') {
+        Some(format!("@{owner}/{scope_name}.{name_dots}"))
+    } else {
+        Some(format!("@{scope}/{name_dots}"))
+    }
+}
+
+fn root_policy_has_any(root: &Path, packages: &[String]) -> bool {
+    let Ok(bytes) = std::fs::read(root.join("workspace.jsonc")) else { return false };
+    let Ok(ws) = bit_object_import::parse_jsonc(&bytes) else { return false };
+    let policy = &ws["teambit.dependencies/dependency-resolver"]["policy"];
+    packages
+        .iter()
+        .any(|pkg| {
+            policy["dependencies"].get(pkg).is_some()
+                || policy["peerDependencies"].get(pkg).is_some()
+        })
 }
 fn failure(
     root: &Path,

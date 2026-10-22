@@ -33,6 +33,17 @@ use std::{env, ffi::OsString, io, path::Path, time::Instant};
 pub const IMPORT: Command = Command { name: "import", aliases: &[], run };
 pub const FETCH: Command = Command { name: "fetch", aliases: &[], run };
 
+pub(in crate::commands) fn lane_fetch(
+    root: &Path,
+    args: &[OsString],
+    fetch_argv: &[&str],
+) -> io::Result<Outcome> {
+    let Some(options) = options::parse(fetch_argv) else {
+        return Ok(Outcome::Declined("outside the native lane fetch grammar".to_string()));
+    };
+    execution::run(root, args, &options)
+}
+
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
