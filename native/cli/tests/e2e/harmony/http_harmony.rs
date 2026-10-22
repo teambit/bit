@@ -1,6 +1,6 @@
+use crate::helper::{Helper, config};
+use serde_json::json;
 use std::ffi::OsStr;
-
-use crate::helper::Helper;
 
 #[test]
 fn http_export_log_import_remove_and_lane_list() {
@@ -164,75 +164,66 @@ fn import_pattern_with_nested_namespaces() {
     assert_eq!(keys[0].as_str(), "examples/hello-world");
 }
 
-mod known_failures {
-    use crate::{
-        allow_known_failure,
-        helper::{Helper, config},
-    };
-    use serde_json::json;
+#[test]
+fn workspace_extension_with_options_and_legacy_merging() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.copy_fixture_extensions("dummy-extension");
+    helper.add_component("dummy-extension", "--id dummy-extension");
+    config::set_workspace_key(
+        &helper.scopes.local_path,
+        &format!("{}/dummy-extension", helper.scopes.remote),
+        json!({ "my-option": "custom-val" }),
+    );
+    helper.populate_components(1, false, "");
+    helper.add_extension_to_variant(
+        "*",
+        &format!("{}/dummy-extension", helper.scopes.remote),
+        json!({ "first": "val" }),
+    );
+    let show = helper.native("show comp1 --json");
+    assert!(show.contains("comp1"));
+}
 
-    #[test]
-    fn workspace_extension_with_options_and_legacy_merging() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.copy_fixture_extensions("dummy-extension");
-        helper.add_component("dummy-extension", "--id dummy-extension");
-        config::set_workspace_key(
-            &helper.scopes.local_path,
-            &format!("{}/dummy-extension", helper.scopes.remote),
-            json!({ "my-option": "custom-val" }),
-        );
-        helper.populate_components(1, false, "");
-        helper.add_extension_to_variant(
-            "*",
-            &format!("{}/dummy-extension", helper.scopes.remote),
-            json!({ "first": "val" }),
-        );
-        let show = allow_known_failure!(helper.native_output_or_known("show comp1 --json"));
-        assert!(show.contains("comp1"));
-    }
+#[test]
+fn loading_core_legacy_convertor_extension() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, false, "");
+    helper.add_extension_to_variant(
+        "*",
+        "teambit.pkg/pkg",
+        json!({
+            "packageJson": {
+                "private": true
+            }
+        }),
+    );
+    let show = helper.native("show comp1 --legacy --json");
+    assert!(show.contains("private"));
+}
 
-    #[test]
-    fn loading_core_legacy_convertor_extension() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.populate_components(1, false, "");
-        helper.add_extension_to_variant(
-            "*",
-            "teambit.pkg/pkg",
-            json!({
-                "packageJson": {
-                    "private": true
-                }
-            }),
-        );
-        let show =
-            allow_known_failure!(helper.native_output_or_known("show comp1 --legacy --json"));
-        assert!(show.contains("private"));
-    }
+#[test]
+fn loading_defective_workflows_does_not_throw_on_status() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.copy_fixture_extensions("non-requireable-aspect");
+    helper.add_component("non-requireable-aspect", "--id non-requireable-aspect");
+    config::set_workspace_key(
+        &helper.scopes.local_path,
+        &format!("{}/non-requireable-aspect", helper.scopes.remote),
+        json!({}),
+    );
+    let status1 = helper.native("status");
+    assert!(!status1.is_empty());
 
-    #[test]
-    fn loading_defective_workflows_does_not_throw_on_status() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.copy_fixture_extensions("non-requireable-aspect");
-        helper.add_component("non-requireable-aspect", "--id non-requireable-aspect");
-        config::set_workspace_key(
-            &helper.scopes.local_path,
-            &format!("{}/non-requireable-aspect", helper.scopes.remote),
-            json!({}),
-        );
-        let status1 = allow_known_failure!(helper.native_output_or_known("status"));
-        assert!(!status1.is_empty());
-
-        helper.copy_fixture_extensions("extension-provider-error");
-        helper.add_component("extension-provider-error", "--id extension-provider-error");
-        config::set_workspace_key(
-            &helper.scopes.local_path,
-            &format!("{}/extension-provider-error", helper.scopes.remote),
-            json!({}),
-        );
-        let status2 = allow_known_failure!(helper.native_output_or_known("status"));
-        assert!(!status2.is_empty());
-    }
+    helper.copy_fixture_extensions("extension-provider-error");
+    helper.add_component("extension-provider-error", "--id extension-provider-error");
+    config::set_workspace_key(
+        &helper.scopes.local_path,
+        &format!("{}/extension-provider-error", helper.scopes.remote),
+        json!({}),
+    );
+    let status2 = helper.native("status");
+    assert!(!status2.is_empty());
 }

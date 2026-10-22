@@ -92,7 +92,7 @@ pub async fn env_policy(
     }
     let default_env = host.env_falls_back(env_id).await?;
     let config = host.env_policy(env_id).await?;
-    let failed_to_load = config.is_none();
+    let failed_to_load = default_env || config.is_none();
     let mut policy =
         config.map_or_else(|| Ok(EnvPolicy::default()), |config| env::from_config(&config, false))?;
     policy.without_manifest = true;

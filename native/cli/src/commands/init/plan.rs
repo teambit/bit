@@ -2,7 +2,8 @@
 use super::{options::Options, scope};
 use crate::commands::workspace_command::{self, NodeCli};
 use std::{
-    fs, io,
+    fs,
+    io::{self, IsTerminal},
     path::{Component, Path, PathBuf},
 };
 
@@ -192,7 +193,9 @@ fn validate_root(root: &Path, cwd: &Path, options: &Options) -> io::Result<()> {
 }
 
 fn validate_interactive(root: &Path, options: &Options, git: bool) -> io::Result<()> {
-    let skip_wizard = options.flags.skip_interactive
+    let interactive = io::stdin().is_terminal() && io::stdout().is_terminal();
+    let skip_wizard = !interactive
+        || options.flags.skip_interactive
         || options.flags.standalone
         || options.flags.external_pm;
     let existing_workspace = || has_workspace(root) || resets(options);

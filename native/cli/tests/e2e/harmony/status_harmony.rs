@@ -269,24 +269,16 @@ fn a_removed_main_file_with_other_files_is_an_invalid_component() {
     status_text_parity(&helper);
 }
 
-/// Remaining known fallback: `bit show`.
-mod known_failures {
-    use crate::{
-        allow_known_failure,
-        helper::{Helper, len, parse},
-    };
-
-    /// components that imports itself › should not add itself as a dependency
-    #[test]
-    fn a_component_importing_itself_is_not_its_own_dependency() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.output_file("bar/index.js", r#"export const a = "b";"#);
-        let remote = &helper.scopes.remote;
-        helper.output_file("bar/foo.js", &format!("import {{ a }} from '@{remote}/bar';"));
-        helper.run("add bar");
-        helper.run("link");
-        let show = allow_known_failure!(helper.native_output_or_known("show bar --json --legacy"));
-        assert_eq!(len(&parse(&show)["dependencies"]), 0);
-    }
+/// components that imports itself › should not add itself as a dependency
+#[test]
+fn a_component_importing_itself_is_not_its_own_dependency() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.output_file("bar/index.js", r#"export const a = "b";"#);
+    let remote = &helper.scopes.remote;
+    helper.output_file("bar/foo.js", &format!("import {{ a }} from '@{remote}/bar';"));
+    helper.run("add bar");
+    helper.run("link");
+    let show = helper.native("show bar --json --legacy");
+    assert_eq!(len(&parse(&show)["dependencies"]), 0);
 }

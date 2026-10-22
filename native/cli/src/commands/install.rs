@@ -1,9 +1,10 @@
 //! Native `bit install` (`docs/rust/native-install.md`): the `bit-install`
 //! crate runs the command; the JavaScript host serves what aspects implement.
 
-mod request;
+pub(super) mod request;
 
-use self::request::lane_installation;
+pub(super) use self::request::confirm;
+use self::request::{lane_installation, needs_canonical_install};
 use crate::{
     commands::Command,
     discovery::{self, NodeCli, Target},
@@ -34,7 +35,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(prepared) => prepared,
         Err(reason) => return Ok(Outcome::Declined(reason)),
     };
-    if super::installation::Installer::needs_canonical(&root) {
+    if needs_canonical_install(&root) {
         return Ok(Outcome::Declined(
             "configured installation callbacks use InstallMain.install".into(),
         ));
@@ -390,28 +391,7 @@ impl bit_install::Host for JsHost {
     /// The terminal is this process's, so the question is asked here.
     async fn confirm(&self, question: &str) -> io::Result<bool> {
         let question = question.to_string();
-        tokio::task::spawn_blocking(move || confirm(&question)).await.map_err(io::Error::other)?
-    }
-}
-
-/// The `yesno` package: repeat until a yes or no answer; end of input is no.
-pub(super) fn confirm(question: &str) -> io::Result<bool> {
-    let stdin = io::stdin();
-    loop {
-        print!("{question} ");
-        io::stdout().flush()?;
-        let mut line = String::new();
-        if stdin.read_line(&mut line)? == 0 {
-            return Ok(false);
-        }
-        match line
-            .trim()
-            .to_ascii_lowercase()
-            .as_str()
-        {
-            "y" | "yes" => return Ok(true),
-            "n" | "no" => return Ok(false),
-            _ => println!("\nInvalid Response.\nAnswer either yes : (y, yes) \nOr no: (n, no) \n"),
-        }
+        tokio::task::spawn_blocking(move || request::confirm(&question)).await
+            .map_err(io::Error::other)?
     }
 }

@@ -1,7 +1,11 @@
 //! Native `bit show <component-name>` (`scopes/component/component/show/show.cmd.ts`).
 
+mod deps;
+mod deps_policy;
+mod render;
 #[cfg(test)]
 mod tests;
+mod workspace_show;
 
 use super::{Command, workspace_command};
 use crate::{native::Outcome, workspace};
@@ -37,6 +41,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return workspace_command::execute_without_loader_scope(&cwd, args, "show", |_| {
             Err(io::Error::other(err))
         });
+    }
+    if let Some(outcome) = workspace_show::try_run(&cwd, args, &options)? {
+        return Ok(outcome);
     }
     Ok(Outcome::Declined("show execution delegated".into()))
 }

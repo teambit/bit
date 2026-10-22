@@ -3,9 +3,9 @@
 //! - `e2e/commands/init.e2e.ts`
 //! - `e2e/performance/filesystem-read.e2e.ts`
 
-use crate::helper::{FOO_FIXTURE, Helper, config};
+use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use serde_json::json;
-use std::{ffi::OsStr, time::Instant};
+use std::{ffi::OsStr, fs, time::Instant};
 
 fn extract_metric(output: &str, prefix: &str) -> Option<u64> {
     let idx = output.find(prefix)?;
@@ -146,93 +146,71 @@ fn filesystem_read_and_execution_time_for_help_and_status() {
     assert!(status_start.elapsed().as_millis() < 2000);
 }
 
-mod known_failures {
-    use crate::{
-        allow_known_failure,
-        helper::{Helper, parse},
-    };
-    use serde_json::json;
-    use std::fs;
+/// Covers:
+/// - `e2e/commands/import.e2e.ts:524`
+///   bit import › external package manager mode › should write dependencies to package.json
+/// - `e2e/commands/import.e2e.ts:528`
+///   bit import › external package manager mode › should not run installation
+#[test]
+fn import_in_external_package_manager_mode_writes_package_json_without_installing() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("require('is-odd');");
+    helper.add_component_bar_foo();
+    helper.npm_add_fake_package("is-odd", "1.0.0", false);
+    helper.output_file("package.json", r#"{"name": "ws1", "dependencies": {"is-odd": "1.0.0"}}"#);
+    helper.tag_without_build("", "");
+    crate::helper::remote::publish(&helper);
 
-    /// Covers:
-    /// - `e2e/commands/import.e2e.ts:524`
-    ///   bit import › external package manager mode › should write dependencies to package.json
-    /// - `e2e/commands/import.e2e.ts:528`
-    ///   bit import › external package manager mode › should not run installation
-    #[test]
-    fn import_in_external_package_manager_mode_writes_package_json_without_installing() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.create_component_bar_foo("require('is-odd');");
-        helper.add_component_bar_foo();
-        helper.npm_add_fake_package("is-odd", "1.0.0", false);
-        helper.output_file(
-            "package.json",
-            &serde_json::to_string_pretty(
-                &json!({ "name": "ws1", "dependencies": { "is-odd": "1.0.0" } }),
-            )
-            .unwrap(),
-        );
-        helper.tag_without_build("", "");
-        crate::helper::remote::publish(&helper);
+    let (scope2_name, scope2_path) = helper.new_bare_scope();
+    helper.re_init_workspace();
+    helper.add_remote(&scope2_path);
+    helper.add_default_scope(&scope2_name);
+    helper.output_file("global2/simple.js", "require('is-odd');");
+    helper.native("add global2 -i global2/simple");
+    helper.npm_add_fake_package("is-odd", "2.0.0", false);
+    helper.output_file("package.json", r#"{"name": "ws2", "dependencies": {"is-odd": "2.0.0"}}"#);
+    helper.tag_without_build("", "");
+    helper.native("export");
 
-        let (scope2_name, scope2_path) = helper.new_bare_scope();
-        helper.re_init_workspace();
-        helper.add_remote(&scope2_path);
-        helper.add_default_scope(&scope2_name);
-        helper.output_file("global2/simple.js", "require('is-odd');");
-        helper.native("add global2 -i global2/simple");
-        helper.npm_add_fake_package("is-odd", "2.0.0", false);
-        helper.output_file(
-            "package.json",
-            &serde_json::to_string_pretty(
-                &json!({ "name": "ws2", "dependencies": { "is-odd": "2.0.0" } }),
-            )
-            .unwrap(),
-        );
-        helper.tag_without_build("", "");
-        let _ = allow_known_failure!(helper.native_or_known("export"));
+    helper.clean_workspace();
+    helper.native("init --external-package-manager");
+    helper.add_remote_scope();
+    helper.add_remote(&scope2_path);
+    let cmd = format!("import {}/bar/foo {scope2_name}/global2/simple", helper.scopes.remote);
+    let run = helper.native_run(&cmd);
+    assert!(run.status.success(), "{}{}", run.stdout, run.stderr);
 
-        helper.clean_workspace();
-        helper.native("init --external-package-manager");
-        helper.add_remote_scope();
-        helper.add_remote(&scope2_path);
-        let cmd = format!("import {}/bar/foo {scope2_name}/global2/simple", helper.scopes.remote);
-        let run = allow_known_failure!(helper.native_or_known(&cmd));
-        assert!(run.status.success(), "{}{}", run.stdout, run.stderr);
+    let pkg = parse(&fs::read_to_string(helper.scopes.local_path.join("package.json")).unwrap());
+    assert_eq!(pkg["dependencies"]["is-odd"], "2.0.0");
+    assert!(!helper.scopes.local_path.join("node_modules/is-odd").exists());
+}
 
-        let pkg =
-            parse(&fs::read_to_string(helper.scopes.local_path.join("package.json")).unwrap());
-        assert_eq!(pkg["dependencies"]["is-odd"], "2.0.0");
-        assert!(!helper.scopes.local_path.join("node_modules/is-odd").exists());
-    }
+/// Covers:
+/// - `e2e/commands/init.e2e.ts:328`
+///   run bit init › external package manager mode › bit install in external package manager mode › should throw error when answering no to prompt
+/// - `e2e/commands/init.e2e.ts:332`
+///   run bit init › external package manager mode › bit install in external package manager mode › should switch to Bit package manager when answering yes to prompt
+#[test]
+fn install_in_external_package_manager_mode_prompt_and_switch() {
+    let helper = Helper::new();
+    helper.clean_workspace();
+    helper.native("init --external-package-manager");
+    let run = helper.native_run("install");
+    assert!(!run.status.success());
+    let combined = format!("{}{}", run.stdout, run.stderr);
+    assert!(combined.contains("External package manager mode is enabled"), "{combined}");
+}
 
-    /// Covers:
-    /// - `e2e/commands/init.e2e.ts:328`
-    ///   run bit init › external package manager mode › bit install in external package manager mode › should throw error when answering no to prompt
-    /// - `e2e/commands/init.e2e.ts:332`
-    ///   run bit init › external package manager mode › bit install in external package manager mode › should switch to Bit package manager when answering yes to prompt
-    #[test]
-    fn install_in_external_package_manager_mode_prompt_and_switch() {
-        let helper = Helper::new();
-        helper.clean_workspace();
-        helper.native("init --external-package-manager");
-        let run = allow_known_failure!(helper.native_or_known("install"));
-        assert!(!run.status.success());
-        let combined = format!("{}{}", run.stdout, run.stderr);
-        assert!(combined.contains("External package manager mode is enabled"), "{combined}");
-    }
-
-    /// Covers:
-    /// - `e2e/commands/init.e2e.ts:451`
-    ///   run bit init › interactive mode › when git repository exists and workspace is not initialized › should run interactive mode by default in git repository
-    #[test]
-    fn init_interactive_mode_by_default_in_git_repository() {
-        let helper = Helper::new();
-        helper.clean_workspace();
-        helper.init_new_git_repo();
-        let run = allow_known_failure!(helper.native_or_known("init"));
-        assert!(run.status.success(), "{}{}", run.stdout, run.stderr);
-        assert!(helper.scopes.local_path.join("workspace.jsonc").is_file());
-    }
+/// Covers:
+/// - `e2e/commands/init.e2e.ts:451`
+///   run bit init › interactive mode › when git repository exists and workspace is not initialized › should run interactive mode by default in git repository
+#[test]
+fn init_interactive_mode_by_default_in_git_repository() {
+    let helper = Helper::new();
+    helper.clean_workspace();
+    helper.init_new_git_repo();
+    let run = helper.native_run("init");
+    assert!(run.status.success(), "{}{}", run.stdout, run.stderr);
+    assert!(helper.scopes.local_path.join("workspace.jsonc").is_file());
 }

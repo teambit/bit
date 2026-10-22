@@ -1,5 +1,8 @@
 //! Native `bit update [package-patterns...]` (`scopes/workspace/install/update.cmd.tsx`, alias `up`).
 
+mod apply;
+mod collect;
+mod resolve;
 #[cfg(test)]
 mod tests;
 
@@ -11,11 +14,19 @@ use super::{
 use crate::{native::Outcome, workspace};
 use bit_object_import::parse_jsonc;
 use serde_json::Value;
-use std::{env, ffi::OsString, fs, io, path::Path};
+use std::{
+    env,
+    ffi::OsString,
+    fs,
+    io::{self, Write},
+    path::Path,
+    process::ExitCode,
+};
 
 pub const COMMAND: Command = Command { name: "update", aliases: &["up"], run };
 
 const NO_DEPS_FOUND_MSG: &str = "No dependencies found that match the patterns";
+const NO_OUTDATED_MSG: &str = "No outdated dependencies found";
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
@@ -31,15 +42,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("update arguments are not UTF-8".into()));
     };
-    if parse_options(&argv[1..]).is_none() {
+    let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native update grammar".into()));
-    }
+    };
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("CI update delegated".into()));
     }
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        return Ok(Outcome::Declined("update outside workspace delegated".into()));
+        return run_outside_workspace(&options);
     };
     if has_no_workspace_dependencies(&root).unwrap_or(false) {
         return workspace_command::execute_then(&root, args, "update", |output| {
@@ -47,7 +58,51 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Ok(Report { data: String::new(), code: 0, details: None })
         });
     }
-    Ok(Outcome::Declined("update execution delegated".into()))
+    if !options.yes {
+        return Ok(Outcome::Declined("interactive update delegated".into()));
+    }
+    execute_update(&root, args, &options)
+}
+
+fn run_outside_workspace(options: &Options) -> io::Result<Outcome> {
+    if !options.yes {
+        return Ok(Outcome::Declined("update outside workspace delegated".into()));
+    }
+    let mut stdout = io::stdout().lock();
+    writeln!(stdout, "{NO_DEPS_FOUND_MSG}")?;
+    stdout.flush()?;
+    Ok(Outcome::Exit(ExitCode::SUCCESS))
+}
+
+fn execute_update(root: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
+    let collected = match collect::collect_candidates(root, &options.patterns) {
+        Ok(val) => val,
+        Err(reason) => return Ok(Outcome::Declined(format!("update: {reason}"))),
+    };
+    if collected.candidates.is_empty() {
+        return workspace_command::execute_then(root, args, "update", |output| {
+            output.failure(NO_DEPS_FOUND_MSG);
+            Ok(Report { data: String::new(), code: 0, details: None })
+        });
+    }
+    let updates = resolve::resolve_updates(
+        root,
+        &collected.candidates,
+        options,
+        collected.save_prefix.as_deref(),
+    );
+    if updates.is_empty() {
+        return workspace_command::execute_then(root, args, "update", |output| {
+            output.success(NO_OUTDATED_MSG, None);
+            Ok(Report { data: String::new(), code: 0, details: None })
+        });
+    }
+    let root_buf = root.to_path_buf();
+    workspace_command::execute_then(root, args, "update", move |output| {
+        apply::apply_updates(&root_buf, &updates)?;
+        output.success("successfully updated dependencies", None);
+        Ok(Report { data: String::new(), code: 0, details: None })
+    })
 }
 
 pub(super) fn has_no_workspace_dependencies(root: &Path) -> io::Result<bool> {
@@ -79,13 +134,22 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "-y" | "--yes" => options.yes = true,
             "--patch" => options.patch = true,
             "--minor" => options.minor = true,
-            "--major" => options.major = true,
+            "--major" | "--latest" => options.major = true,
             "--semver" => options.semver = true,
             val if !val.starts_with('-') && !val.is_empty() => {
-                options.patterns.push(val.to_owned());
+                push_patterns(&mut options.patterns, val);
             }
             _ => return None,
         }
     }
     Some(options)
+}
+
+fn push_patterns(patterns: &mut Vec<String>, raw: &str) {
+    for part in raw.split(',') {
+        let trimmed = part.trim();
+        if !trimmed.is_empty() {
+            patterns.push(trimmed.to_owned());
+        }
+    }
 }

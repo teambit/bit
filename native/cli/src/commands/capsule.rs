@@ -1,5 +1,6 @@
-//! Native `bit capsule [list|delete]` (`scopes/workspace/workspace/capsule.cmd.ts`).
+//! Native `bit capsule [list|delete|create]` (`scopes/workspace/workspace/capsule.cmd.ts`).
 
+mod create;
 #[cfg(test)]
 mod tests;
 
@@ -38,6 +39,7 @@ pub(super) enum Subcommand {
     BareList,
     List { json: bool },
     Delete { all: bool, scope_aspects: bool },
+    Create(create::CreateArgs),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -53,6 +55,7 @@ impl Subcommand {
             Self::BareList => "capsule",
             Self::List { .. } => "list",
             Self::Delete { .. } => "delete",
+            Self::Create(_) => "create",
         }
     }
 }
@@ -79,6 +82,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         }
         Subcommand::Delete { all, scope_aspects } => {
             run_delete(&cwd, &root, args, chalk, subcommand.loader_label(), *all, *scope_aspects)
+        }
+        Subcommand::Create(create_args) => {
+            create::run_create(&cwd, &root, args, chalk, create_args)
         }
     }
 }
@@ -143,6 +149,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         [] => Some(Subcommand::BareList),
         ["list", rest @ ..] => parse_list_flags(rest),
         ["delete", rest @ ..] => parse_delete_flags(rest),
+        ["create", rest @ ..] => create::parse_create_flags(rest),
         _ => None,
     }
 }

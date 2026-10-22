@@ -1,4 +1,4 @@
-use super::{Subcommand, object_hash_short, parse_subcommand};
+use super::{Subcommand, create::CreateArgs, object_hash_short, parse_subcommand};
 
 #[test]
 fn parses_capsule_subcommands() {
@@ -14,7 +14,14 @@ fn parses_capsule_subcommands() {
         Some(Subcommand::Delete { all: true, scope_aspects: false }),
     );
     assert_eq!(parse_subcommand(&["list", "--with-stats"]), None);
-    assert_eq!(parse_subcommand(&["create"]), None);
+    assert_eq!(
+        parse_subcommand(&["create", "--seeders-only", "comp1", "-j"]),
+        Some(Subcommand::Create(CreateArgs {
+            ids: vec!["comp1".into()],
+            seeders_only: true,
+            json: true,
+        })),
+    );
     assert_eq!(parse_subcommand(&["prune"]), None);
 }
 
