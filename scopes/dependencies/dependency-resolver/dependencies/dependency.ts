@@ -1,3 +1,4 @@
+import type { SemverVersion } from '@teambit/envs';
 import type { DependencySource } from '../policy/variant-policy/variant-policy';
 
 export type WorkspaceDependencyLifecycleType = 'runtime' | 'peer';
@@ -16,10 +17,7 @@ export interface SerializedDependency {
   packageName?: string;
 }
 
-/**
- * Allowed values are valid semver values and the "-" sign.
- */
-export type SemverVersion = string;
+export type { SemverVersion };
 export type PackageName = string;
 
 export type DependencyManifest = {
