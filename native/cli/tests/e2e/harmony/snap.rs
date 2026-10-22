@@ -14,7 +14,7 @@ fn snap_before_tag_and_untag_a_snap() {
     helper.re_init_workspace();
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
-    let output = helper.snap_Component_without_build("bar/foo", "");
+    let output = helper.native("snap bar/foo --skip-tests");
     assert!(output.contains("1 component(s) snapped"));
 
     let foo = parse(&helper.cat_component("bar/foo"));
@@ -30,13 +30,13 @@ fn snap_before_tag_and_untag_a_snap() {
     assert!(status.contains("staged components"));
 
     helper.create_component_bar_foo(FOO_V2);
-    let tag_output = helper.tag_all_without_build("");
+    let tag_output = helper.native("tag --skip-tests");
     assert!(tag_output.contains("1 component(s) tagged"));
     let foo_tagged = parse(&helper.cat_component("bar/foo"));
     assert_eq!(foo_tagged["head"], foo_tagged["versions"]["0.0.1"]);
 
-    helper.snap_Component_without_build("bar/foo", "--unmodified");
-    let second_tag = helper.tag_Without_Build_id("bar/foo", "--unmodified");
+    helper.native("snap bar/foo --skip-tests --unmodified");
+    let second_tag = helper.native("tag bar/foo --skip-tests --unmodified");
     assert!(second_tag.contains("0.0.2"));
     let foo_tagged_v2 = parse(&helper.cat_component("bar/foo"));
     assert_eq!(foo_tagged_v2["head"], foo_tagged_v2["versions"]["0.0.2"]);
@@ -48,9 +48,9 @@ fn assert_untag_head_snap(helper: &Helper) {
     helper.re_init_workspace();
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
-    helper.snap_Component_without_build("bar/foo", "--unmodified");
+    helper.native("snap bar/foo --skip-tests --unmodified");
     let first_snap = helper.get_head("bar/foo");
-    helper.snap_Component_without_build("bar/foo", "--unmodified");
+    helper.native("snap bar/foo --skip-tests --unmodified");
     helper.untag("bar/foo --head");
     let after_untag = parse(&helper.cat_component("bar/foo"));
     assert_eq!(after_untag["head"].as_str(), Some(first_snap.as_str()));
@@ -68,7 +68,7 @@ fn components_with_dependencies() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
 
     let comp1 = parse(&helper.cat_component("comp1@latest"));
     let deps = comp1["dependencies"].as_array().unwrap();
@@ -85,11 +85,11 @@ fn components_with_dependencies() {
     assert_eq!(len(&status["snappedComponents"]), 3);
 
     let before_tag = helper.clone_workspace();
-    let tag_all = helper.tag_all_without_build("");
+    let tag_all = helper.native("tag --skip-tests");
     assert!(tag_all.contains("3 component(s) tagged"));
 
     helper.get_cloned_workspace(&before_tag);
-    let tag_snapped = helper.tag_all_without_build("--snapped");
+    let tag_snapped = helper.native("tag --skip-tests --snapped");
     assert!(tag_snapped.contains("3 component(s) tagged"));
 }
 
@@ -99,10 +99,10 @@ fn checkout_and_diff_for_snaps() {
     helper.re_init_workspace();
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
     let first_snap = helper.get_head("bar/foo");
     helper.create_component_bar_foo(FOO_V2);
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
     let second_snap = helper.get_head("bar/foo");
 
     let diff = helper.diff(&format!("bar/foo {first_snap}"));
@@ -127,13 +127,13 @@ fn auto_snap_and_import() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
 
     helper.output_file("comp3/index.js", COMP3_V2);
     let status_out = helper.status();
     assert!(status_out.contains("components pending auto-tag"));
 
-    let snap_output = helper.snap_Component_without_build("comp3", "");
+    let snap_output = helper.native("snap comp3 --skip-tests");
     assert!(snap_output.contains("auto-snapped dependents"));
     let comp3_head = helper.get_head("comp3");
     let comp2_head = helper.get_head("comp2");
@@ -175,7 +175,7 @@ fn assert_auto_snap_comp1_status_and_import(helper: &Helper, comp2_head: &str, c
     assert_eq!(len(&status["modifiedComponents"]), 0);
     assert_eq!(len(&status["stagedComponents"]), 3);
 
-    helper.export("");
+    helper.native("export");
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.import_component("*", "");
@@ -194,10 +194,10 @@ fn tag_after_tag_and_snap_after_soft_remove() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.tag_all_without_build("");
+    helper.native("tag --skip-tests");
     helper.populate_components(1, true, " v2");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.import_component("comp1", "");
@@ -206,10 +206,10 @@ fn tag_after_tag_and_snap_after_soft_remove() {
 
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.snap_all_components_without_build("");
-    helper.export("");
+    helper.native("snap --skip-tests");
+    helper.native("export");
     helper.run("delete comp1 --silent");
-    let snap_out = helper.snap_all_components_without_build("--unmodified");
+    let snap_out = helper.run("snap --skip-tests --unmodified");
     assert!(snap_out.contains("removed components"));
     assert!(!snap_out.contains("changed components"));
 }
@@ -219,16 +219,16 @@ fn merge_tags_and_reset_diverged() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
     let head_before_diverge = helper.get_head("comp1");
     let author_first_tag = helper.clone_workspace();
     helper.populate_components(1, true, " v2");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
     helper.get_cloned_workspace(&author_first_tag);
     helper.populate_components(1, false, " v3");
-    helper.tag_all_without_build("--ver 0.0.3");
+    helper.native("tag --skip-tests --ver 0.0.3");
     helper.run("import");
 
     let export_run = helper.try_cmd("export");
@@ -248,7 +248,7 @@ fn merge_tags_and_reset_diverged() {
 
 fn assert_reset_diverged(helper: &Helper, head_before_diverge: &str) {
     let local_head_v3 = helper.get_head("comp1");
-    helper.tag_all_without_build("--ver 0.0.4 --unmodified");
+    helper.native("tag --skip-tests --ver 0.0.4 --unmodified");
     let before_untag = helper.clone_workspace();
 
     helper.untag("--all");
