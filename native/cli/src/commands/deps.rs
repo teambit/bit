@@ -1,8 +1,9 @@
-//! Native `bit deps <set|remove|unset|reset|eject|get|usage|write|circular>` (`bit dependencies`)
+//! Native `bit deps <set|remove|unset|reset|eject|get|usage|diagnose|write|circular>` (`bit dependencies`)
 //! (`scopes/dependencies/dependencies/dependencies-cmd.ts`).
 
 pub(super) use self::parse::parse_subcommand;
 
+mod diagnose;
 mod get;
 mod mutation;
 mod parse;
@@ -55,6 +56,7 @@ pub(super) enum Subcommand {
     Eject { pattern: String },
     Get { id: String },
     Usage { dep_name: String, depth: Option<usize> },
+    DiagnosePackage { package: String },
     Circular { json: bool, include_deps: bool },
     Write { target: WriteTarget },
     Unrecognized(String),
@@ -78,6 +80,7 @@ impl Subcommand {
             Self::Eject { .. } => "eject",
             Self::Get { .. } => "get",
             Self::Usage { .. } => "usage",
+            Self::DiagnosePackage { .. } => "diagnose",
             Self::Circular { .. } => "circular",
             Self::Write { .. } => "write",
             Self::Unrecognized(_) => "deps",
@@ -102,16 +105,28 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if let Subcommand::Circular { json, include_deps } = &subcommand {
         return run_circular(&root, args, chalk, *json, *include_deps);
     }
+    if let Subcommand::DiagnosePackage { package } = &subcommand {
+        return diagnose::run_package(&root, args, package, chalk);
+    }
+    run_prepared(&root, args, &subcommand, chalk)
+}
+
+fn run_prepared(
+    root: &Path,
+    args: &[OsString],
+    subcommand: &Subcommand,
+    chalk: Chalk,
+) -> io::Result<Outcome> {
     let label = subcommand.loader_label();
-    match prepare(&root, &subcommand, chalk) {
+    match prepare(root, subcommand, chalk) {
         Ok(prepared) => {
-            workspace_command::execute_then(&root, args, label, |_output| prepared.commit(chalk))
+            workspace_command::execute_then(root, args, label, |_output| prepared.commit(chalk))
         }
         Err(Failure::User(message)) => {
             if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
                 return Ok(Outcome::Declined("CI deps error stack".into()));
             }
-            workspace_command::execute_then(&root, args, label, |_output| {
+            workspace_command::execute_then(root, args, label, |_output| {
                 Err(io::Error::other(message))
             })
         }

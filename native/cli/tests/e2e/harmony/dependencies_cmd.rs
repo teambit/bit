@@ -6,8 +6,41 @@ use crate::{
     known_failure::KnownResult,
 };
 use serde_json::json;
+use std::{ffi::OsStr, fs};
 
 const DEP_RESOLVER: &str = "teambit.dependencies/dependency-resolver";
+
+#[test]
+fn bit_deps_diagnose_package_matches_node() -> KnownResult<()> {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    let store = helper.scopes.local_path.join("node_modules/.pnpm");
+    fs::create_dir_all(store.join("foo@1.0.0")).unwrap();
+    fs::create_dir_all(store.join("foo@2.0.0_react@18.0.0")).unwrap();
+    fs::create_dir_all(store.join("@scope+bar@3.0.0")).unwrap();
+    for command in [
+        "deps diagnose --package foo",
+        "deps diagnose --package @scope/bar",
+        "deps diagnose --package missing",
+    ] {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run(command);
+        assert!(
+            node.status.success(),
+            "{}: stdout={} stderr={}",
+            command,
+            node.stdout,
+            node.stderr,
+        );
+        assert!(native.status.success(), "{}: {}", command, native.stderr);
+        assert_eq!(native.stdout, node.stdout, "{command}");
+    }
+    Ok(())
+}
 
 #[test]
 fn bit_deps_get_new_component() -> KnownResult<()> {

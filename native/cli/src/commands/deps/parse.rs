@@ -26,6 +26,7 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
             Some(Subcommand::Get { id: (*id).to_owned() })
         }
         ["usage", rest @ ..] => parse_usage(rest),
+        ["diagnose", rest @ ..] => parse_diagnose(rest),
         ["circular", rest @ ..] => parse_circular(rest),
         ["write", rest @ ..] => parse_write(rest),
         [sub] if !sub.starts_with('-') && !is_known_deps_subcommand(sub) => {
@@ -33,6 +34,18 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
         }
         _ => None,
     }
+}
+
+fn parse_diagnose(rest: &[&str]) -> Option<Subcommand> {
+    let package = match rest {
+        ["--package", package] => *package,
+        [arg] if arg.starts_with("--package=") => arg.strip_prefix("--package=")?,
+        _ => return None,
+    };
+    if package.is_empty() || package.starts_with('-') {
+        return None;
+    }
+    Some(Subcommand::DiagnosePackage { package: package.to_owned() })
 }
 
 fn parse_circular(rest: &[&str]) -> Option<Subcommand> {
