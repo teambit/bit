@@ -54,6 +54,20 @@ describe('agents-md', () => {
       );
     });
 
+    it('goes before a numbered list under the title', () => {
+      const existing = '# Rules\n\n1. Always submit a change request.\n2. Tag on main.\n';
+      expect(insertAgentsSection(existing, SECTION)).to.equal(
+        `# Rules\n\n${SECTION.trim()}\n\n---\n\n1. Always submit a change request.\n2. Tag on main.\n`
+      );
+    });
+
+    it('goes before a list that follows the intro paragraph with no blank line', () => {
+      const existing = '# Rules\n\nFollow these:\n1) Submit a change request.\n+ Tag on main.\n';
+      expect(insertAgentsSection(existing, SECTION)).to.equal(
+        `# Rules\n\nFollow these:\n\n${SECTION.trim()}\n\n---\n\n1) Submit a change request.\n+ Tag on main.\n`
+      );
+    });
+
     it('goes at the top of a file with no title', () => {
       const existing = '## Rules\n\n- one\n';
       expect(insertAgentsSection(existing, SECTION)).to.equal(`${SECTION.trim()}\n\n---\n\n## Rules\n\n- one\n`);

@@ -8,7 +8,7 @@
 
 1. **One repository mirrors one scope.** Components from other scopes arrive as package dependencies, never as source.
 2. **`{{branch}}` equals the scope's main.** The workflows own it. Never push to `{{branch}}` by hand.
-3. **Each lane is a branch with the same name, plus a pull request.** The sync keeps them equal in both directions. A lane name has no `/`, so the sync ignores a branch such as `feature/x`.
+3. **Each lane is a branch plus a pull request.** The sync keeps them equal in both directions. By default, the branch has the lane's name. A lane name has no `/`, so the default mapping ignores a branch such as `feature/x`. The `branchPrefix` and `branches` keys of the `teambit.git/ci` sync config in `workspace.jsonc` can map a lane to a different branch name, such as `lane/x`. Read them before you name a branch.
 4. **Merging the pull request is the release.** `bit-release` merges the lane into the scope, exports new versions, archives the lane and commits the new `.bitmap` to `{{branch}}`.
 5. **The workflows do the work.** You change code, and then you either push a branch or export a lane.
 
@@ -29,10 +29,10 @@ Both paths end with the same PR and the same release.
 
 #### Git-first (in this repository)
 
-This path needs the `bit-adopt-pr` workflow in `.github/workflows/`. `bit ci sync --init` does not write it. Without it, a branch that has no lane stays out of the sync: use the Bit-first path.
+This path needs the `bit-adopt-pr` workflow in `.github/workflows/`. On each push to a PR, it runs `bit ci pr --keep-lane`: this creates and exports a lane with the branch's name, and pushes the lane pointer back to the branch. `bit ci sync --init` does not write this workflow. Example: https://github.com/teambit/acme-modular-store/blob/main/.github/workflows/bit-adopt-pr.yml. Without it, a branch that has no lane stays out of the sync: use the Bit-first path.
 
 ```bash
-git switch -c add-gift-wrap                 # the branch name becomes the lane name; no "/"
+git switch -c add-gift-wrap                 # the lane gets the branch's name, so no "/"
 bit install                                  # once per clone
 # edit the components; .bitmap says where each one lives
 bit validate                                 # lint + types + tests; never use tsc directly
@@ -77,8 +77,8 @@ Headless or CI agents can call the Bit Cloud MCP with a bit.cloud token, without
 ### Read a sync PR
 
 - The PR body lists the mirrored components and the foreign ones (other scopes, "not mirrored").
-- The bot's **run summary** comment says what the last run did: `import-lane`, `export-branch`, `merge-diverged`, `noop (converged)`.
-- Runs: `gh run list --workflow bit-sync` and `gh run view <id> --log`.
+- The bot's **run summary** comment lists the components that the sync last snapped onto the lane from this branch, with the branch and lane heads. A run that exports nothing does not change it.
+- The run log says what each run did: `import-lane`, `export-branch`, `merge-diverged`, `adopt-branch`, `noop (converged)`. Runs: `gh run list --workflow bit-sync` and `gh run view <id> --log`.
 - `Lane sync: <scope>/<lane>` PRs are lanes. `Bit sync: update to latest main scope versions` (branch `bit-sync/main`) brings `{{branch}}` up to the scope. Merging that one releases nothing.
 
 ### Fix a halt (`bit-sync-conflict` label)
@@ -98,7 +98,7 @@ gh pr edit <pr> --remove-label bit-sync-conflict
 gh workflow run bit-sync -f lane=<host-scope>/<lane>
 ```
 
-The next run reports `merge-diverged` or `export-branch`, then `noop (converged)`. Never resolve by force-pushing over the bot's commits. Never delete the lane to "start fresh".
+The log of the next run shows `merge-diverged` or `export-branch`, then a later run shows `noop (converged)`. Never resolve by force-pushing over the bot's commits. Never delete the lane to "start fresh".
 
 ### Change several scopes at once (preview)
 

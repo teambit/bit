@@ -48,6 +48,14 @@ export function renderAgentsSection(values: AgentsSectionValues): string {
 }
 
 /**
+ * Does `line` open a Markdown block other than a paragraph: a heading, a rule, a fence, a comment, a
+ * table, a quote, or a bulleted or numbered list item?
+ */
+function startsBlock(line: string): boolean {
+  return /^\s*(#|---|```|~~~|<!--|\||>|[-*+](\s|$)|\d+[.)](\s|$))/.test(line);
+}
+
+/**
  * `existing` with `section` placed after its title and the paragraph under the title, and before
  * everything else. Front matter stays first. A file with no title gets the section at the top.
  */
@@ -63,9 +71,11 @@ export function insertAgentsSection(existing: string, section: string): string {
   if (next < lines.length && lines[next].startsWith('# ')) {
     next++;
     while (next < lines.length && !lines[next].trim()) next++;
-    // The paragraph under the title introduces the file; it stays with the title.
-    if (next < lines.length && !/^\s*(#|---|```|<!--|\||[-*>] )/.test(lines[next])) {
-      while (next < lines.length && lines[next].trim()) next++;
+    // The paragraph under the title introduces the file; it stays with the title. A list, a heading or
+    // another block is content: the section goes before it, so the rules come first.
+    if (next < lines.length && !startsBlock(lines[next])) {
+      next++;
+      while (next < lines.length && lines[next].trim() && !startsBlock(lines[next])) next++;
     }
     at = next;
   }
