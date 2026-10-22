@@ -29,6 +29,7 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
     syncRun,
     remoteBranchExists,
     remoteRefs,
+    runBit,
     branchTipSha,
     branchTipMessage,
     laneHeadTrailer,
@@ -278,6 +279,18 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
       expect(output).to.include(`${FEATURE} -> noop`);
       expect(output).to.not.include(`${LANE} ->`);
+    });
+
+    it('origin cannot be fetched (--branch): should halt the lane instead of failing the command', () => {
+      const originUrl = helper.command.runCmd('git remote get-url origin').trim();
+      helper.command.runCmd('git remote set-url origin /no-such-origin');
+      try {
+        const { output, exitCode } = runBit(`bit ci sync --branch ${LANE}`);
+        expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
+        expect(output).to.include(`HALTED ${LANE} ->`);
+      } finally {
+        helper.command.runCmd(`git remote set-url origin ${originUrl}`);
+      }
     });
 
     it('a same-named lane in THIS scope: should halt under --dry-run and for real, leaving the owner’s branch', () => {

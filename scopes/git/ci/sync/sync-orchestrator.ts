@@ -453,7 +453,8 @@ export class SyncOrchestrator {
    */
   private async branchLaneTarget(laneSync: LaneSyncExecutor, branch: string, laneName: string): Promise<LaneTarget> {
     const defaultScope = this.deps.workspace.defaultScope;
-    await laneSync.fetchOnce();
+    // a failed fetch must not throw here: syncLane fetches again and turns the failure into a halt
+    await laneSync.fetchOnce().catch(() => undefined);
     const pointer = await readBranchLanePointer(branch, defaultScope);
     const target = pointer ? parseLaneTarget(pointer, defaultScope) : undefined;
     return target?.name === laneName ? target : { hostScope: defaultScope, name: laneName };
