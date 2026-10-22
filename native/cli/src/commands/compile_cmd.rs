@@ -1,7 +1,9 @@
 //! Native `bit compile [component-names...]` (`scopes/compilation/compiler/compiler.cmd.ts`).
 
+mod runner;
 #[cfg(test)]
 mod tests;
+mod transpile;
 
 use super::{
     Command,
@@ -46,6 +48,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return workspace_command::execute_without_loader(&root, args, "compile", |_| {
             Ok(Report { data: "[]".into(), code: 0, details: None })
         });
+    }
+    if let Some(outcome) = runner::try_run(&root, args, &options)? {
+        return Ok(outcome);
     }
     Ok(Outcome::Declined("compile execution delegated".into()))
 }

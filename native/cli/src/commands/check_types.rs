@@ -1,5 +1,6 @@
 //! Native `bit check-types [component-pattern]` (`scopes/typescript/typescript/cmds/check-types.cmd.ts`).
 
+mod checker;
 #[cfg(test)]
 mod tests;
 
@@ -45,6 +46,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     if is_empty_workspace(&root).unwrap_or(false) {
         return emit_empty_check_types(&root, args, &options);
+    }
+    if let Some(outcome) = checker::try_run(&root, args, &options)? {
+        return Ok(outcome);
     }
     Ok(Outcome::Declined("check-types execution delegated".into()))
 }

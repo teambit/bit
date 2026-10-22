@@ -1,8 +1,14 @@
 //! Native `bit ci [verify|pr|merge|sync]` (`scopes/git/ci/ci.cmd.ts`).
 
+mod merge;
+mod pr;
 #[cfg(test)]
 mod tests;
 
+use self::{
+    merge::{MergeOptions, parse_merge, run_merge},
+    pr::{PrOptions, parse_pr, run_pr},
+};
 use super::{
     Command,
     workspace_command::{self, results::Report},
@@ -13,6 +19,7 @@ use std::{
     ffi::OsString,
     io::{self, Write},
     path::Path,
+    process::Command as ProcessCommand,
 };
 
 pub const COMMAND: Command = Command { name: "ci", aliases: &[], run };
@@ -36,8 +43,8 @@ pub(super) struct SyncOptions {
 pub(super) enum Subcommand {
     Bare,
     Verify,
-    Pr,
-    Merge { auto_merge_resolve: Option<String> },
+    Pr(PrOptions),
+    Merge(MergeOptions),
     Sync(SyncOptions),
 }
 
@@ -46,8 +53,8 @@ impl Subcommand {
         match self {
             Self::Bare => "ci",
             Self::Verify => "verify",
-            Self::Pr => "pr",
-            Self::Merge { .. } => "merge",
+            Self::Pr(_) => "pr",
+            Self::Merge(_) => "merge",
             Self::Sync(_) => "sync",
         }
     }
@@ -56,8 +63,8 @@ impl Subcommand {
         match self {
             Self::Bare => "",
             Self::Verify => "\n\n\u{1f680} Initializing Verify command\n",
-            Self::Pr => "\n\n\n\u{1f680} Initializing PR command\n",
-            Self::Merge { .. } => "\n\n\n\u{1f680} Initializing Merge command\n",
+            Self::Pr(_) => "\n\n\n\u{1f680} Initializing PR command\n",
+            Self::Merge(_) => "\n\n\n\u{1f680} Initializing Merge command\n",
             Self::Sync(_) => "\n\n\nInitializing sync command\n",
         }
     }
@@ -79,10 +86,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return emit_outside_workspace(&cwd, args, &subcommand);
     };
     match &subcommand {
-        Subcommand::Merge { auto_merge_resolve: Some(strategy) }
-            if !matches!(strategy.as_str(), "ours" | "theirs" | "manual") =>
-        {
-            emit_subcommand_error(&root, args, &subcommand, INVALID_MERGE_RESOLVE_ERR)
+        Subcommand::Pr(opts) => run_pr(&root, args, opts),
+        Subcommand::Merge(opts) => {
+            if let Some(strategy) = &opts.auto_merge_resolve
+                && !matches!(strategy.as_str(), "ours" | "theirs" | "manual")
+            {
+                return emit_subcommand_error(&root, args, &subcommand, INVALID_MERGE_RESOLVE_ERR);
+            }
+            run_merge(&root, args, opts)
         }
         Subcommand::Sync(opts) => match validate_sync_options(opts) {
             Err(err_msg) => emit_subcommand_error(&root, args, &subcommand, &err_msg),
@@ -146,33 +157,14 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         [] => Some(Subcommand::Bare),
         ["verify"] => Some(Subcommand::Verify),
         ["pr", rest @ ..] if !rest.contains(&"--help") && !rest.contains(&"-h") => {
-            Some(Subcommand::Pr)
+            parse_pr(rest).map(Subcommand::Pr)
         }
         ["merge", rest @ ..] if !rest.contains(&"--help") && !rest.contains(&"-h") => {
-            parse_merge(rest)
+            parse_merge(rest).map(Subcommand::Merge)
         }
         ["sync", rest @ ..] => parse_sync(rest).map(Subcommand::Sync),
         _ => None,
     }
-}
-
-fn parse_merge(rest: &[&str]) -> Option<Subcommand> {
-    let mut auto_merge_resolve = None;
-    let mut idx = 0;
-    while idx < rest.len() {
-        match rest[idx] {
-            "-r" | "--auto-merge-resolve" => {
-                idx += 1;
-                auto_merge_resolve = Some((*rest.get(idx)?).to_owned());
-            }
-            arg if arg.starts_with("--auto-merge-resolve=") => {
-                auto_merge_resolve = Some(arg["--auto-merge-resolve=".len()..].to_owned());
-            }
-            _ => {}
-        }
-        idx += 1;
-    }
-    Some(Subcommand::Merge { auto_merge_resolve })
 }
 
 fn parse_sync(rest: &[&str]) -> Option<SyncOptions> {
@@ -247,4 +239,47 @@ fn sync_winner_label(opts: &SyncOptions) -> String {
     } else {
         format!(r#"--branch ("{}")"#, opts.branch.as_deref().unwrap_or_default())
     }
+}
+
+pub(super) fn run_child_bit(root: &Path, bit_args: &[&str]) -> io::Result<String> {
+    let exe = env::current_exe()?;
+    let output = ProcessCommand::new(exe)
+        .current_dir(root)
+        .args(bit_args)
+        .env("BIT_DISABLE_SPINNER", "true")
+        .env("CI", "true")
+        .output()?;
+    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+    if output.status.success() {
+        Ok(stdout)
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        Err(io::Error::other(format!("{stdout}\n{stderr}")))
+    }
+}
+
+pub(super) fn run_git(root: &Path, git_args: &[&str]) -> io::Result<String> {
+    let exe = super::diff::git::executable(root).unwrap_or_else(|_| "git".into());
+    let output = ProcessCommand::new(exe)
+        .current_dir(root)
+        .args(git_args)
+        .output()?;
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).trim().to_owned())
+    } else {
+        Err(io::Error::other(String::from_utf8_lossy(&output.stderr).trim().to_owned()))
+    }
+}
+
+pub(super) fn git_current_branch(root: &Path) -> Option<String> {
+    run_git(root, &["symbolic-ref", "-q", "--short", "HEAD"])
+        .or_else(|_| run_git(root, &["rev-parse", "--abbrev-ref", "HEAD"]))
+        .ok()
+        .filter(|branch| !branch.is_empty())
+}
+
+pub(super) fn git_last_commit_message(root: &Path) -> Option<String> {
+    run_git(root, &["log", "-1", "--pretty=%B"])
+        .ok()
+        .filter(|msg| !msg.is_empty())
 }

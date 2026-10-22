@@ -1,4 +1,6 @@
-use super::{Subcommand, SyncOptions, parse_subcommand, validate_sync_options};
+use super::{
+    Subcommand, SyncOptions, merge::MergeOptions, parse_subcommand, validate_sync_options,
+};
 
 #[test]
 fn parses_ci_subcommands_and_validates_sync_flags() {
@@ -6,7 +8,10 @@ fn parses_ci_subcommands_and_validates_sync_flags() {
     assert_eq!(parse_subcommand(&["verify"]), Some(Subcommand::Verify));
     assert_eq!(
         parse_subcommand(&["merge", "-r", "invalid"]),
-        Some(Subcommand::Merge { auto_merge_resolve: Some("invalid".into()) }),
+        Some(Subcommand::Merge(MergeOptions {
+            auto_merge_resolve: Some("invalid".into()),
+            ..MergeOptions::default()
+        })),
     );
     assert_eq!(
         parse_subcommand(&["sync", "--init", "--main"]),

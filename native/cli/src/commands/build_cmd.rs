@@ -1,5 +1,6 @@
 //! Native `bit build [component-pattern]` (`scopes/pipelines/builder/build.cmd.ts`).
 
+mod runner;
 #[cfg(test)]
 mod tests;
 
@@ -11,7 +12,7 @@ use super::{
 };
 use crate::{native::Outcome, workspace};
 use bit_object_import::parse_jsonc;
-use std::{env, ffi::OsString, fs, io, path::Path};
+use std::{env, ffi::OsString, fs, io, iter::Peekable, path::Path};
 
 pub const COMMAND: Command = Command { name: "build", aliases: &[], run };
 
@@ -28,14 +29,24 @@ pub(super) struct CapsuleFlags {
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(super) struct PipelineFlags {
+    pub tasks: Option<String>,
+    pub skip_tasks: Option<String>,
+    pub fail_fast: bool,
+    pub loose: bool,
+    pub reset: bool,
+    pub skip_tests: bool,
+    pub include_snap: bool,
+    pub include_tag: bool,
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub pattern: Option<String>,
     pub unmodified: bool,
     pub dev: bool,
-    pub tasks: Option<String>,
     pub list_tasks: Option<String>,
-    pub skip_tasks: Option<String>,
-    pub fail_fast: bool,
+    pub pipeline: PipelineFlags,
     pub capsules: CapsuleFlags,
 }
 
@@ -65,11 +76,17 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Err(io::Error::other(OUTSIDE_WORKSPACE_ERR))
         });
     };
+    if let Some(target) = &options.list_tasks {
+        return runner::run_list_tasks(&root, args, target);
+    }
     if is_empty_build_workspace(&root, &options).unwrap_or(false) {
         let formatter = Formatter::new(Chalk::detect(args));
         return workspace_command::execute_without_loader(&root, args, "build", move |_| {
             Ok(Report { data: formatter.hint(EMPTY_BUILD_HINT), code: 0, details: None })
         });
+    }
+    if let Some(outcome) = runner::try_run(&cwd, &root, args, &options)? {
+        return Ok(outcome);
     }
     Ok(Outcome::Declined("build pipeline execution delegated".into()))
 }
@@ -98,35 +115,40 @@ pub(super) fn is_empty_build_workspace(root: &Path, options: &Options) -> io::Re
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
-    let mut iter = args.iter().copied();
+    let mut iter = args.iter().copied().peekable();
     while let Some(arg) = iter.next() {
         apply_token(arg, &mut iter, &mut options)?;
     }
     Some(options)
 }
 
-fn apply_token<'a>(
+fn apply_token<'a, Iter>(
     arg: &'a str,
-    iter: &mut impl Iterator<Item = &'a str>,
+    iter: &mut Peekable<Iter>,
     options: &mut Options,
-) -> Option<()> {
+) -> Option<()>
+where
+    Iter: Iterator<Item = &'a str>,
+{
     match arg {
-        "--no-color"
-        | "--install"
-        | "--cache-packages-on-capsule-root"
-        | "--skip-tests"
-        | "--loose"
-        | "--include-snap"
-        | "--include-tag" => {}
+        "--no-color" | "--install" | "--cache-packages-on-capsule-root" => {}
+        "--skip-tests" => options.pipeline.skip_tests = true,
+        "--loose" => options.pipeline.loose = true,
+        "--reset" => options.pipeline.reset = true,
+        "--include-snap" => options.pipeline.include_snap = true,
+        "--include-tag" => options.pipeline.include_tag = true,
         "-u" | "--unmodified" => options.unmodified = true,
         "-d" | "--dev" => options.dev = true,
         "--reuse-capsules" => options.capsules.reuse_capsules = true,
         "--rewrite" => options.capsules.rewrite = true,
         "--reinstall" => options.capsules.reinstall = true,
-        "--fail-fast" => options.fail_fast = true,
-        "--tasks" => options.tasks = Some(take_val(iter.next()?)?),
-        "--list-tasks" => options.list_tasks = Some(take_val(iter.next()?)?),
-        "--skip-tasks" => options.skip_tasks = Some(take_val(iter.next()?)?),
+        "--fail-fast" => options.pipeline.fail_fast = true,
+        "--tasks" => options.pipeline.tasks = Some(take_val(iter.next()?)?),
+        "--list-tasks" => {
+            let next = iter.next_if(|val| !val.is_empty() && !val.starts_with('-'));
+            options.list_tasks = Some(next.unwrap_or_default().to_owned());
+        }
+        "--skip-tasks" => options.pipeline.skip_tasks = Some(take_val(iter.next()?)?),
         "-i" | "--ignore-issues" => {
             take_val(iter.next()?)?;
         }
@@ -137,11 +159,11 @@ fn apply_token<'a>(
 
 fn apply_inline_or_positional(arg: &str, options: &mut Options) -> Option<()> {
     if let Some(val) = arg.strip_prefix("--tasks=") {
-        options.tasks = Some((!val.is_empty()).then(|| val.to_owned())?);
+        options.pipeline.tasks = Some((!val.is_empty()).then(|| val.to_owned())?);
     } else if let Some(val) = arg.strip_prefix("--list-tasks=") {
         options.list_tasks = Some((!val.is_empty()).then(|| val.to_owned())?);
     } else if let Some(val) = arg.strip_prefix("--skip-tasks=") {
-        options.skip_tasks = Some((!val.is_empty()).then(|| val.to_owned())?);
+        options.pipeline.skip_tasks = Some((!val.is_empty()).then(|| val.to_owned())?);
     } else if let Some(val) = arg.strip_prefix("--ignore-issues=") {
         (!val.is_empty()).then_some(())?;
     } else if !arg.starts_with('-') && !arg.is_empty() && options.pattern.is_none() {

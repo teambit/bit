@@ -83,20 +83,16 @@ fn out_of_sync_components_between_scope_and_consumer() {
     assert!(lane_curr.contains("dev"), "{lane_curr}");
 }
 
-mod known_failures {
-    use crate::{allow_known_failure, helper::Helper};
-
-    /// - `components that are not synced between the scope and the consumer › consumer with a tagged component and scope with no components › bit build › should build the component successfully`
-    #[test]
-    fn build_tagged_component_when_scope_has_no_components() {
-        let helper = Helper::new();
-        helper.re_init_workspace();
-        helper.create_component_bar_foo("");
-        helper.add_component_bar_foo();
-        helper.native("tag --skip-tests");
-        helper.delete_path(".bit");
-        helper.native("init");
-        let run = allow_known_failure!(helper.native_or_known("build"));
-        assert_eq!(run.status.code(), Some(0));
-    }
+/// - `components that are not synced between the scope and the consumer › consumer with a tagged component and scope with no components › bit build › should build the component successfully`
+#[test]
+fn build_tagged_component_when_scope_has_no_components() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.create_component_bar_foo("");
+    helper.add_component_bar_foo();
+    helper.native("tag --skip-tests");
+    helper.delete_path(".bit");
+    helper.native("init");
+    let run = helper.native_run("build");
+    assert_eq!(run.status.code(), Some(0));
 }

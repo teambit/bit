@@ -11,15 +11,25 @@ fn parses_build_options_and_validates_capsule_flags() {
         "compile",
         "--skip-tasks=test",
         "--fail-fast",
+        "--loose",
+        "--reset",
     ])
     .unwrap();
     assert_eq!(opts.pattern.as_deref(), Some("ui/*"));
     assert!(opts.unmodified);
     assert!(opts.dev);
-    assert_eq!(opts.tasks.as_deref(), Some("compile"));
-    assert_eq!(opts.skip_tasks.as_deref(), Some("test"));
-    assert!(opts.fail_fast);
+    assert_eq!(opts.pipeline.tasks.as_deref(), Some("compile"));
+    assert_eq!(opts.pipeline.skip_tasks.as_deref(), Some("test"));
+    assert!(opts.pipeline.fail_fast);
+    assert!(opts.pipeline.loose);
+    assert!(opts.pipeline.reset);
     assert_eq!(flag_error(&opts.capsules), None);
+
+    let list_bare = parse_options(&["--list-tasks"]).unwrap();
+    assert_eq!(list_bare.list_tasks.as_deref(), Some(""));
+
+    let list_comp = parse_options(&["--list-tasks", "comp1"]).unwrap();
+    assert_eq!(list_comp.list_tasks.as_deref(), Some("comp1"));
 
     let bad_rewrite = parse_options(&["--rewrite"]).unwrap();
     assert_eq!(
