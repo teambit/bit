@@ -47,6 +47,8 @@ export async function isModifiedWithoutLoading(
     const compDirAbs = path.join(consumer.getPath(), componentMap.getComponentDir());
     if (!(await fs.pathExists(compDirAbs))) return undefined;
     if (await fs.pathExists(path.join(compDirAbs, COMPONENT_CONFIG_FILE_NAME))) return undefined;
+    // a pending merge may carry merged config. same as above.
+    if (consumer.scope.objects.unmergedComponents.getEntry(id)) return undefined;
 
     const modelComponent = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
     if (!modelComponent || modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true) === VERSION_ZERO) {
@@ -60,6 +62,7 @@ export async function isModifiedWithoutLoading(
     await consumer.bitMap.trackDirectoryChanges(componentMap);
     // without the main file, the component is invalid. the full status knows to let it be removed.
     if (!componentMap.getAllFilesPaths().includes(componentMap.mainFile)) return undefined;
+    if (pathNormalizeToLinux(componentMap.mainFile) !== version.mainFile) return true;
     if (componentMap.files.length !== version.files.length) return true;
     const modelHashes = new Map(version.files.map((file) => [file.relativePath, file.file.toString()]));
     return componentMap.files.some((file) => {

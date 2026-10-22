@@ -1,11 +1,7 @@
 import { expect } from 'chai';
-import fs from 'fs-extra';
-import path from 'path';
 import type { Harmony } from '@teambit/harmony';
 import type { ComponentID } from '@teambit/component-id';
 import { loadManyAspects } from '@teambit/harmony.testing.load-aspect';
-import type { SnappingMain } from '@teambit/snapping';
-import { SnappingAspect } from '@teambit/snapping';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -27,14 +23,12 @@ describe('remove load-free checks', function () {
   let workspace: Workspace;
   let comp1: ComponentID;
   let comp2: ComponentID;
-  let comp1Dir: string;
   before(async () => {
     workspaceData = mockWorkspace();
     const { workspacePath } = workspaceData;
     const compsDirs = await mockComponents(workspacePath, { numOfComponents: 2 });
     [comp1, comp2] = compsDirs.map((c) => c.id);
-    comp1Dir = compsDirs[0].dir;
-    harmony = await loadManyAspects([SnappingAspect, WorkspaceAspect, DependencyResolverAspect], workspacePath);
+    harmony = await loadManyAspects([WorkspaceAspect, DependencyResolverAspect], workspacePath);
     workspace = harmony.get<Workspace>(WorkspaceAspect.id);
   });
   after(async () => {
@@ -58,15 +52,6 @@ describe('remove load-free checks', function () {
         workspace.bitMap.removeComponentConfig(comp1, aspectId, false);
       }
     });
-  });
-  describe('when the components are tagged', () => {
-    before(async () => {
-      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
-      await snapping.tag({ build: false, ignoreIssues: 'MissingManuallyConfiguredPackages' });
-    });
-    it('isModifiedWithoutLoading should return false when the files are unchanged', async () => {
-      expect(await isModifiedWithoutLoading(workspace, comp1)).to.be.false;
-    });
     it('getPackageNameDataWithoutLoading should calculate the same package name as the loaded component', async () => {
       const data = await getPackageNameDataWithoutLoading(workspace, comp1);
       expect(data).to.not.be.undefined;
@@ -74,24 +59,7 @@ describe('remove load-free checks', function () {
       const component = await workspace.get(comp1);
       expect(componentIdToPackageName(data!)).to.equal(depResolver.getPackageName(component));
     });
-    it('isModifiedWithoutLoading should return true when a file is changed', async () => {
-      const indexPath = path.join(comp1Dir, 'index.js');
-      const original = await fs.readFile(indexPath, 'utf8');
-      await fs.appendFile(indexPath, '\n// a change');
-      try {
-        expect(await isModifiedWithoutLoading(workspace, comp1)).to.be.true;
-      } finally {
-        await fs.writeFile(indexPath, original);
-      }
-    });
-    it('isModifiedWithoutLoading should return true when a file is added', async () => {
-      const newFile = path.join(comp1Dir, 'new-file.js');
-      await fs.writeFile(newFile, 'export const a = 1;');
-      try {
-        expect(await isModifiedWithoutLoading(workspace, comp1)).to.be.true;
-      } finally {
-        await fs.remove(newFile);
-      }
-    });
   });
+  // the checks of tagged components are covered by e2e/commands/remove.e2e.ts. tagging here requires the snapping
+  // aspect, which depends on remove, so it would add a circular dependency.
 });
