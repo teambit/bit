@@ -49,14 +49,15 @@ export async function getStatusWithoutLoading(
     // without the main file, the component is invalid. the full status knows to let it be removed.
     if (!componentMap.getAllFilesPaths().includes(componentMap.mainFile)) return undefined;
 
-    if (!componentMap.id.hasVersion()) return { newlyCreated: true, modified: false };
-    const versionStr = componentMap.id.version as string;
     const modelComponent = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
-    // versioned but missing from the scope - pending import, not new. let the full status handle it.
-    if (!modelComponent) return undefined;
-    if (modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true) === VERSION_ZERO) {
-      return { newlyCreated: true, modified: false };
-    }
+    const hasHistory = modelComponent && modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true) !== VERSION_ZERO;
+    const hasVersion = componentMap.id.hasVersion();
+    if (!hasVersion && !hasHistory) return { newlyCreated: true, modified: false };
+    // either versioned but missing from the scope (pending import), or the scope has a version the .bitmap doesn't
+    // (out of sync). the full status knows how to handle both.
+    if (!hasVersion || !modelComponent) return undefined;
+    if (!hasHistory) return { newlyCreated: true, modified: false };
+    const versionStr = componentMap.id.version as string;
     const version = await modelComponent.loadVersion(versionStr, consumer.scope.objects, false);
     if (!version) return undefined;
 
