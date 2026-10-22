@@ -899,6 +899,18 @@
         }
       }
     },
+    "components/legacy/e2e-helper": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            // the excluded-fixtures hold env templates that are copied into the e2e workspaces,
+            // where their imports are installed. react is no longer a core aspect resolving to a
+            // component here, so without this the import reads as a missing dependency of the helper.
+            "@teambit/react": "-"
+          }
+        }
+      }
+    },
     "scopes/harmony/node": {
       "teambit.component/issues": {
         "ignoreIssues": [
