@@ -61,6 +61,17 @@ pub(super) fn execute_workspace_graph(
     Ok(formatter.success_summary(&format!("image created at {}", svg_path.display())))
 }
 
+/// Build the same workspace ID graph used by `GraphBuilder.getGraphIds` for insights.
+pub(crate) fn insight_graph(root: &Path) -> Result<(CompGraph, Vec<String>), Failure> {
+    let (_, ws) =
+        resolve_workspace_components(root).map_err(|err| Failure::Declined(err.to_string()))?;
+    let seeders = ws
+        .active()
+        .map(|(entry, _)| selection::entry_full_id(entry))
+        .collect();
+    Ok((build_full_graph(&workspace::scope_path(root), &ws), seeders))
+}
+
 fn resolve_seeder_id(ws: &Workspace, raw_id: &str) -> Result<String, Failure> {
     let (bare, explicit_ver) = raw_id
         .rsplit_once('@')
@@ -83,7 +94,7 @@ fn resolve_seeder_id(ws: &Workspace, raw_id: &str) -> Result<String, Failure> {
     Ok(selection::entry_full_id(entry))
 }
 
-fn build_full_graph(scope_dir: &Path, ws: &Workspace) -> CompGraph {
+pub(super) fn build_full_graph(scope_dir: &Path, ws: &Workspace) -> CompGraph {
     let mut graph = CompGraph::default();
     for (entry, comp) in ws.active() {
         let node_id = selection::entry_full_id(entry);

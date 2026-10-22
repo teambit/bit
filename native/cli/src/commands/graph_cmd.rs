@@ -1,7 +1,7 @@
 //! Native `bit graph [id]` (`scopes/component/graph/graph-cmd.ts`).
 
-mod builder;
-mod model;
+pub(super) mod builder;
+pub(super) mod model;
 #[cfg(test)]
 mod tests;
 

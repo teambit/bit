@@ -11,20 +11,20 @@ use std::{
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub(super) struct GraphEdge {
+pub(crate) struct GraphEdge {
     pub id: String,
     #[serde(rename = "sourceId")]
-    pub source_id: String,
+    pub(crate) source_id: String,
     #[serde(rename = "targetId")]
-    pub target_id: String,
+    pub(crate) target_id: String,
     pub attr: String,
     pub bidirectional: bool,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub(super) struct CompGraph {
-    pub nodes: Vec<String>,
-    pub edges: Vec<GraphEdge>,
+pub(crate) struct CompGraph {
+    pub(crate) nodes: Vec<String>,
+    pub(crate) edges: Vec<GraphEdge>,
 }
 
 impl CompGraph {
@@ -34,7 +34,7 @@ impl CompGraph {
         }
     }
 
-    pub(super) fn add_edge(&mut self, source_id: String, target_id: String, attr: &str) {
+    pub(crate) fn add_edge(&mut self, source_id: String, target_id: String, attr: &str) {
         self.add_node(source_id.clone());
         self.add_node(target_id.clone());
         let edge_id = format!("{source_id} -> {target_id}");
