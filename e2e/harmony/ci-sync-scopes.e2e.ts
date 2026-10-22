@@ -215,6 +215,7 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
     const LANE = 'hosted-elsewhere';
     let hostScope: string;
     let defaultBranch: string;
+    let devPath: string;
 
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -229,7 +230,7 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
 
       // `--scope` puts the lane OBJECT on another scope; the components on it are still this
       // workspace's, so the lane's content is entirely this repository's business.
-      createLaneWithSnap(
+      devPath = createLaneWithSnap(
         LANE,
         { 'comp1/index.js': comp1Src('hosted-elsewhere-snap') },
         'snap on a foreign-hosted lane',
@@ -262,16 +263,21 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
       expect(branchTipSha(LANE)).to.equal(tip);
     });
 
-    // A branch name carries no scope, but its committed `.bitmap` pointer does: the run resolves the
-    // branch against the foreign host and reads the pair as converged — never as "lane gone".
-    it('the same branch reached by NAME: should resolve it through its .bitmap pointer, converged and untouched', () => {
-      const shaBefore = branchTipSha(LANE);
+    it('a dev commit pushed to the branch (--branch): should export it to the lane on the host scope', () => {
+      branchSideCommit(LANE, defaultBranch, 'comp2/index.js', comp2Src('pushed-to-branch'), 'feat: dev edits comp2');
       const { output, exitCode } = syncRun(`--branch ${LANE}`);
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
-      expect(output).to.include(`${LANE} -> noop (converged)`);
-      expect(output).to.not.include('close-pr');
-      expect(remoteBranchExists(LANE)).to.be.true;
-      expect(branchTipSha(LANE)).to.equal(shaBefore);
+      expect(output).to.include(`${LANE} -> export-branch`);
+      expect(laneTipFile(devPath, 'comp2/index.js')).to.include('pushed-to-branch');
+    });
+
+    it('a branch cut from the lane branch under another name (--branch): should not reconcile the lane', () => {
+      const FEATURE = 'cut-from-lane';
+      helper.command.runCmd(`git push origin origin/${LANE}:refs/heads/${FEATURE}`);
+      const { output, exitCode } = syncRun(`--branch ${FEATURE}`);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${FEATURE} -> noop`);
+      expect(output).to.not.include(`${LANE} ->`);
     });
 
     it('a same-named lane in THIS scope: should halt under --dry-run and for real, leaving the owner’s branch', () => {
@@ -300,59 +306,14 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
       // The rival lane's content never reached the branch.
       expect(fileOnBranch(LANE, 'comp2/index.js')).to.not.include('rival-lane-snap');
     });
-  });
 
-  // `--all` cannot see a lane another scope hosts unless `laneScopes` names that scope; once mirrored,
-  // the branch's `.bitmap` pointer is what lets a later `--all` find the lane again — including after
-  // the host archived it, with no `laneScopes` at all.
-  describe('--all discovers a lane hosted on another scope, and retires it once the host removes it', () => {
-    const LANE = 'discovered-elsewhere';
-    let hostScope: string;
-
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope('-lane-host');
-      hostScope = scopeName;
-      helper.scopeHelper.addRemoteScope(scopePath);
-      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
-      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
-      setupGitRemote();
-      setSyncConfig({ lanes: ['*'] });
-      setupComponentsAndInitialCommit();
-      createLaneWithSnap(
-        LANE,
-        { 'comp1/index.js': comp1Src('discovered-snap') },
-        'snap on a foreign-hosted lane',
-        `--scope ${hostScope}`
-      );
-    });
-
-    it('should list the host scope only when laneScopes names it, then mirror the lane from --all', () => {
-      const without = syncRun('--all');
-      expect(without.exitCode, `bit ci sync --all output:\n${without.output}`).to.equal(0);
-      expect(without.output).to.include('Reconciling 0 mapped lane(s)');
-      expect(remoteBranchExists(LANE)).to.be.false;
-
-      setSyncConfig({ lanes: ['*'], laneScopes: [hostScope] });
-      const { output, exitCode } = syncRun('--all');
-      expect(exitCode, `bit ci sync --all output:\n${output}`).to.equal(0);
-      expect(output).to.include(`Reconciling 1 mapped lane(s) of ${helper.scopes.remote}: ${hostScope}/${LANE}`);
-      expect(output).to.include(`${LANE} -> import-lane`);
-      expect(fileOnBranch(LANE, '.bitmap')).to.include(hostScope);
-      expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('discovered-snap');
-      expect(branchTipMessage(LANE)).to.include(`sync lane ${hostScope}/${LANE}`);
-    });
-
-    it('should close the PR and delete the branch once the host removes the lane, with no laneScopes', () => {
+    it('the host removes the lane: --all should close its PR, found through the branch alone', () => {
+      // the same-named lane of this scope, from the previous test, would halt the run
+      helper.command.runCmd(`bit lane remove ${helper.scopes.remote}/${LANE} --remote --force --silent`);
       helper.command.runCmd(`bit lane remove ${hostScope}/${LANE} --remote --force --silent`);
-      setSyncConfig({ lanes: ['*'] });
       const { output, exitCode } = syncRun('--all');
       expect(exitCode, `bit ci sync --all output:\n${output}`).to.equal(0);
-      // Found through the branch side alone, and resolved against the host its pointer names.
-      expect(output).to.include(`Reconciling 1 mapped lane(s) of ${helper.scopes.remote}: ${hostScope}/${LANE}`);
       expect(output).to.include(`${LANE} -> close-pr`);
-      expect(output).to.include(`branch ${LANE} deleted`);
-      expect(remoteBranchExists(LANE)).to.be.false;
     });
   });
 });

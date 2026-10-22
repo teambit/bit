@@ -222,11 +222,7 @@ export function parseDevCommitCount(raw: string): boolean {
   return Number.isNaN(count) ? true : count > 0;
 }
 
-/**
- * The scope-qualified lane id `origin/<branch>`'s committed `.bitmap` points at, or undefined (no
- * pointer, an unexported one, or an unreadable file). Assumes `git fetch origin` already ran. Fail-safe:
- * every failure answers undefined, which resolves the branch against `defaultScope` as before.
- */
+/** The lane id in `origin/<branch>`'s `.bitmap`, if it has an exported one. Assumes `git fetch origin` already ran. */
 export async function readBranchLanePointer(branch: string, defaultScope: string): Promise<string | undefined> {
   return parseBranchBitmap(await readFileAtRef(`origin/${branch}`, BIT_MAP), defaultScope)?.laneIdStr;
 }

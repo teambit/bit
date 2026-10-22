@@ -328,10 +328,10 @@ An `--all` run visits two sets of targets: the lanes that match the `lanes` patt
 branches on `origin`. The second set makes the cleanup possible. A lane that bit.cloud deleted is absent from
 the first set, so a run that reads lanes only would leave an orphan branch and an open pull request.
 
-The first set holds the lanes of `defaultScope`, plus the lanes of the scopes in `laneScopes` that carry at
-least one `defaultScope` component. The command resolves each branch of the second set against the lane that
-the committed `.bitmap` of the branch points at, when that pointer has the lane name of the branch. Other
-branches resolve against `defaultScope`. Read [Cross-scope lanes](#cross-scope-lanes).
+The command resolves each branch of the second set against the lane that the committed `.bitmap` of the branch
+points at, when that pointer has the lane name of the branch. Other branches resolve against `defaultScope`.
+So after another scope archives a lane that this repository mirrors, the next `--all` run closes its pull
+request.
 
 ### Halts and conflicts
 
@@ -409,36 +409,6 @@ bit ci sync other-org.other-scope/my-lane # hosted elsewhere
 
 The branch mapping always uses the lane **name**, so a lane that another scope hosts maps to the same branch
 as before. Every request to Bit uses the full `hostScope/name` id.
-
-#### Finding lanes that other scopes host
-
-bit.cloud fires the webhook of the hosting scope only, and bit.cloud has no query for "the lanes that carry
-components of scope X". By default, an `--all` run lists the lanes of `defaultScope` only. Set `laneScopes`
-to list the lanes of other scopes too:
-
-```json
-{
-  "teambit.git/ci": {
-    "sync": { "laneScopes": ["acme.*"] }
-  }
-}
-```
-
-An entry is a scope id (`acme.platform`) or a glob with a literal owner (`acme.*`, `acme.team-*`). The command
-expands a glob with the scope list of bit.cloud for that owner. The command always lists `defaultScope`. The
-command keeps a lane of another scope only when the lane carries at least one `defaultScope` component, so a
-run never visits a lane that has nothing to mirror here.
-
-Each scope costs one lane-list request per run. Each owner with a glob costs one more request. The command
-sends up to five requests at a time.
-
-A branch remembers its lane. The committed `.bitmap` of a mirror branch points at the lane id, with the
-hosting scope. An `--all` run and a `--branch` run read that pointer, so the run reconciles the branch
-against the right lane, also without `laneScopes`. After the hosting scope archives a lane, the next `--all`
-run closes the pull request of that lane.
-
-Two lanes with the same name map to one branch. The lane that holds the branch keeps it. The command halts
-the other lane with "two lanes, one branch" until a person renames one of the lanes.
 
 **The command mirrors a lane's `defaultScope` slice.** A lane may carry components from several scopes; this
 repository sources only one of them. The mirror materializes, fingerprints, snaps and exports the components
@@ -616,7 +586,6 @@ bit ci merge --build  # → automatically uses minor version bump
 | `branchPrefix`        | `""`              | The prefix for a lane-mapped branch. The value `"lane/"` maps lane `my-lane` to branch `lane/my-lane`.      |
 | `branches`            | `{}`              | Explicit overrides that map a lane name to a branch name. An override wins over `branchPrefix`.             |
 | `lanes`               | `["*"]`           | The glob patterns of the lane names to sync. The command supports the `*` wildcard only.                    |
-| `laneScopes`          | `[]`              | Other scopes whose lanes an `--all` run lists. Read [Cross-scope lanes](#cross-scope-lanes).                |
 | `mainSyncBranch`      | `"bit-sync/main"` | The branch that carries the main-scope drift. The command ignores the field with `mainSync: "direct-push"`. |
 | `mainSync`            | `"pr"`            | How main-scope drift reaches the default branch. Read the tables below.                                     |
 | `onConflict`          | `"halt"`          | What the command does with one contested line. Read the tables below.                                       |

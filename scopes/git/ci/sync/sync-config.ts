@@ -63,13 +63,6 @@ export interface CiSyncConfig {
   branches?: Record<string, string>;
   /** The glob patterns of the lane names to sync. An empty list stops lane mirroring. */
   lanes?: string[];
-  /**
-   * The scopes, besides `defaultScope`, whose lanes an `--all` run scans for this repository's slice.
-   * A foreign-hosted lane is kept only when it carries at least one `defaultScope` component. Entries
-   * are scope ids (`acme.platform`) or owner-qualified globs (`acme.*`), resolved through bit.cloud's
-   * scope listing for that owner. `defaultScope` is always scanned.
-   */
-  laneScopes?: string[];
   /** The branch that carries the main-scope drift. */
   mainSyncBranch?: string;
   /**
@@ -98,7 +91,6 @@ export function resolveSyncConfig(raw?: CiSyncConfig): Required<CiSyncConfig> {
     branchPrefix: raw?.branchPrefix ?? '',
     branches: raw?.branches ?? {},
     lanes: raw?.lanes ?? ['*'],
-    laneScopes: raw?.laneScopes ?? [],
     mainSyncBranch: raw?.mainSyncBranch ?? 'bit-sync/main',
     autoMergeMainSyncPr: raw?.autoMergeMainSyncPr ?? false,
     mainSync: raw?.mainSync ?? 'pr',
@@ -120,66 +112,12 @@ export function resolveSyncConfig(raw?: CiSyncConfig): Required<CiSyncConfig> {
         `the branch's version) or "lane-wins" (conflicting hunks take the lane's version)`
     );
   }
-  assertValidLaneScopes(resolved.laneScopes);
   assertValidBranchPrefix(resolved.branchPrefix, 'sync.branchPrefix');
   assertValidBranchName(resolved.mainSyncBranch, 'sync.mainSyncBranch');
   Object.entries(resolved.branches).forEach(([laneName, branch]) =>
     assertValidBranchName(branch, `sync.branches["${laneName}"]`)
   );
   return resolved;
-}
-
-/**
- * Why a `laneScopes` entry is unusable, or undefined when it is fine. A wildcard is only meaningful
- * within one owner — bit.cloud can list an owner's scopes, never "every scope" — so the owner part
- * (before the first `.`) must be literal: `acme.*` and `acme.team-*` are fine, `*` and `ac*.x` are not.
- */
-export function validateLaneScopePattern(pattern: unknown): string | undefined {
-  if (typeof pattern !== 'string' || !pattern.trim()) return 'it is not a non-empty string';
-  if (/\s/.test(pattern)) return 'it contains whitespace';
-  if (pattern.includes('/')) return 'it contains "/" — give a scope id ("acme.platform"), not a lane id';
-  if (!pattern.includes('*')) return undefined;
-  const owner = laneScopePatternOwner(pattern);
-  if (!owner) {
-    return (
-      'a wildcard needs a literal owner before the first "." ("acme.*"): bit.cloud lists scopes per owner, ' +
-      'so the owner cannot be a pattern'
-    );
-  }
-  return undefined;
-}
-
-/**
- * The owner whose scopes a wildcard `laneScopes` entry expands over, or undefined when the entry has no
- * usable literal owner. Only meaningful for an entry containing `*`.
- */
-export function laneScopePatternOwner(pattern: string): string | undefined {
-  const dot = pattern.indexOf('.');
-  if (dot <= 0) return undefined;
-  const owner = pattern.slice(0, dot);
-  return owner.includes('*') ? undefined : owner;
-}
-
-/** Does `scope` match a `laneScopes` entry (`*` wildcard only, like `lanes`)? */
-export function scopeMatchesPattern(scope: string, pattern: string): boolean {
-  return globToRegExp(pattern).test(scope);
-}
-
-function assertValidLaneScopes(laneScopes: unknown): void {
-  if (!Array.isArray(laneScopes)) {
-    throw new BitError(
-      `bit ci sync: sync.laneScopes must be a list of scope ids or owner-qualified globs ` +
-        `(e.g. ["acme.platform"] or ["acme.*"]). Fix it in the "teambit.git/ci" sync config in workspace.jsonc.`
-    );
-  }
-  laneScopes.forEach((pattern, index) => {
-    const problem = validateLaneScopePattern(pattern);
-    if (!problem) return;
-    throw new BitError(
-      `bit ci sync: sync.laneScopes[${index}] is ${JSON.stringify(pattern)}, which is not a usable scope pattern — ` +
-        `${problem}. Fix it in the "teambit.git/ci" sync config in workspace.jsonc.`
-    );
-  });
 }
 
 /**

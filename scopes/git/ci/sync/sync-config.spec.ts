@@ -8,9 +8,6 @@ import {
   validateBranchName,
   resolveSyncConfig,
   laneNameToBranch,
-  laneScopePatternOwner,
-  scopeMatchesPattern,
-  validateLaneScopePattern,
   branchToLaneName,
   isValidLaneName,
   parseLaneTarget,
@@ -159,7 +156,6 @@ describe('sync-config', () => {
       branchPrefix: '',
       branches: {},
       lanes: ['*'],
-      laneScopes: [],
       mainSyncBranch: 'bit-sync/main',
       autoMergeMainSyncPr: false,
       mainSync: 'pr',
@@ -283,48 +279,5 @@ describe('syncableLaneNameForBranch round-trips lane and branch validity', () =>
     const prefixed = cfg({ branchPrefix: 'bit-sync/' });
     expect(syncableLaneNameForBranch('bit-sync/my-lane', prefixed)).to.equal('my-lane');
     expect(syncableLaneNameForBranch('my-lane', prefixed)).to.equal(undefined);
-  });
-});
-
-describe('sync.laneScopes', () => {
-  it('accepts scope ids and owner-qualified wildcards', () => {
-    const laneScopes = ['acme.platform', 'acme.*', 'acme.team-*', 'self-hosted-scope'];
-    expect(resolveSyncConfig({ laneScopes }).laneScopes).to.deep.equal(laneScopes);
-  });
-
-  const invalid: Array<[unknown, string]> = [
-    ['*', 'literal owner'],
-    ['*.design', 'literal owner'],
-    ['ac*.design', 'literal owner'],
-    ['acme.platform/my-lane', 'not a lane id'],
-    ['acme. platform', 'whitespace'],
-    ['', 'non-empty string'],
-    [42, 'non-empty string'],
-  ];
-  invalid.forEach(([pattern, problem]) => {
-    it(`refuses ${JSON.stringify(pattern)} at startup, naming the key and the index`, () => {
-      expect(validateLaneScopePattern(pattern)).to.be.a('string');
-      expect(() => resolveSyncConfig({ laneScopes: ['acme.ok', pattern as string] })).to.throw(/sync\.laneScopes\[1\]/);
-      expect(validateLaneScopePattern(pattern)).to.include(problem);
-    });
-  });
-
-  it('refuses a non-list value', () => {
-    expect(() => resolveSyncConfig({ laneScopes: 'acme.*' as any })).to.throw(/sync\.laneScopes must be a list/);
-  });
-
-  it('extracts the owner a wildcard expands over', () => {
-    expect(laneScopePatternOwner('acme.*')).to.equal('acme');
-    expect(laneScopePatternOwner('acme.team-*')).to.equal('acme');
-    expect(laneScopePatternOwner('*.x')).to.equal(undefined);
-    expect(laneScopePatternOwner('nodot*')).to.equal(undefined);
-  });
-
-  it('matches scopes with the same "*"-only glob as lanes (dots are literal)', () => {
-    expect(scopeMatchesPattern('acme.platform', 'acme.*')).to.equal(true);
-    expect(scopeMatchesPattern('acmeXplatform', 'acme.*')).to.equal(false);
-    expect(scopeMatchesPattern('acme.team-a', 'acme.team-*')).to.equal(true);
-    expect(scopeMatchesPattern('acme.design', 'acme.team-*')).to.equal(false);
-    expect(scopeMatchesPattern('other.platform', 'acme.*')).to.equal(false);
   });
 });
