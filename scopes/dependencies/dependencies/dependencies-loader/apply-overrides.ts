@@ -1,4 +1,5 @@
 import path from 'path';
+import semver from 'semver';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import { cloneDeep, difference, forEach, isEmpty, pick, pickBy, uniq } from 'lodash';
@@ -14,6 +15,7 @@ import type { ResolvedPackageData } from '../resolve-pkg-data';
 import { resolvePackageData } from '../resolve-pkg-data';
 import type { Workspace } from '@teambit/workspace';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { isPlusVersion, resolvePlusVersion } from '@teambit/dependency-resolver';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import type { Logger } from '@teambit/logger';
@@ -245,7 +247,9 @@ export class ApplyOverrides {
   }
 
   private async loadAutoDetectOverrides() {
-    this.autoDetectOverrides = await this.workspace?.getAutoDetectOverrides(
+    // outside a workspace, they're calculated by the caller (if at all) and set before this runs
+    if (!this.workspace) return;
+    this.autoDetectOverrides = await this.workspace.getAutoDetectOverrides(
       this.component.extensions,
       this.component.id,
       this.component.files,
@@ -290,10 +294,28 @@ export class ApplyOverrides {
 
   private _getComponentIdToAdd(
     dependency: string,
-    versionRange: string
-  ): { componentId?: ComponentID; packageName?: string; versionRange: string } {
+    versionRange: string,
+    depField: string
+  ): { componentId?: ComponentID; packageName?: string; versionRange?: string } {
+    if (!this.consumer) {
+      // a scope has no node_modules to resolve the package from. if it's a component dependency, use it. otherwise, a
+      // forced component dependency (e.g. an env's own peer, which is a runtime dep of the env) is added as a package
+      // and then dropped in favor of the component dependency, which may be in a different field.
+      const compDep = this.findComponentDepByPackageName(dependency);
+      if (compDep) {
+        // same as the workspace (see updateDependenciesVersions), only a peer component dependency keeps its range
+        const range = depField === 'peerDependencies' ? versionRange : undefined;
+        return { componentId: compDep.id, packageName: dependency, versionRange: range };
+      }
+    }
     const packageData = this._resolvePackageData(dependency);
     return { componentId: packageData?.componentId, packageName: packageData?.name, versionRange };
+  }
+
+  private findComponentDepByPackageName(packageName: string): Dependency | undefined {
+    const { dependencies, devDependencies, peerDependencies } = this.allDependencies;
+    const isMatch = (dep: Dependency) => dep.packageName === packageName;
+    return dependencies.find(isMatch) || devDependencies.find(isMatch) || peerDependencies.find(isMatch);
   }
 
   getDependenciesToAddManually(
@@ -309,7 +331,7 @@ export class ApplyOverrides {
       if (!overrides[depField]) return;
       Object.keys(overrides[depField]).forEach((dependency) => {
         const dependencyValue = overrides[depField][dependency];
-        const componentData = this._getComponentIdToAdd(dependency, dependencyValue);
+        const componentData = this._getComponentIdToAdd(dependency, dependencyValue, depField);
         if (componentData?.componentId) {
           if (componentData.componentId.isEqualWithoutVersion(this.componentId)) {
             this.logger.warn(
@@ -589,10 +611,7 @@ export class ApplyOverrides {
 
   private isPackageAutoDetected(pkgName: string, originallyExists: string[], missingPackages: string[]): boolean {
     // Check component dependencies
-    const existsInAnyCompDeps =
-      this.allDependencies.dependencies.some((dep) => dep.packageName === pkgName) ||
-      this.allDependencies.devDependencies.some((dep) => dep.packageName === pkgName) ||
-      this.allDependencies.peerDependencies.some((dep) => dep.packageName === pkgName);
+    const existsInAnyCompDeps = Boolean(this.findComponentDepByPackageName(pkgName));
 
     // Check originAllPackagesDependencies instead of allPackagesDependencies
     // as it might be already removed at this point if it was set with "-" in runtime/dev
@@ -716,7 +735,11 @@ export class ApplyOverrides {
       comp.versionRange = pkgVal;
       this.allDependencies.peerDependencies.push(comp);
     } else {
-      this.allPackagesDependencies[key][pkgName] = pkgVal;
+      // a package has no separate version and range, so a "+" placeholder is resolved here.
+      // a component dep keeps it in the versionRange, and it's resolved when generating the package.json
+      this.allPackagesDependencies[key][pkgName] = isPlusVersion(pkgVal)
+        ? resolvePlusVersion(pkgVal, this.resolveEnvPeerDepVersion(pkgName, true))
+        : pkgVal;
     }
 
     if (existsInCompsPeerDeps) {
@@ -750,11 +773,11 @@ export class ApplyOverrides {
     });
     const resolvedEnvPolicyManifest = Object.keys(envPolicyManifest).reduce((acc, pkgName) => {
       const version = envPolicyManifest[pkgName];
-      if (version !== '+') {
+      if (!isPlusVersion(version)) {
         acc[pkgName] = version;
         return acc;
       }
-      acc[pkgName] = this.resolveEnvPeerDepVersion(pkgName);
+      acc[pkgName] = resolvePlusVersion(version, this.resolveEnvPeerDepVersion(pkgName));
       return acc;
     }, {});
     // TODO: handle component deps once we support peers between components
@@ -765,21 +788,34 @@ export class ApplyOverrides {
   }
 
   /**
-   * in the env.jsonc file, a policy-peer package can have `+` sign in the version. it means that it should be resolved
+   * in the env.jsonc file, a policy-peer package can have `+` sign (or `+^`/`+~`) in the version. it means that it should be resolved
    * from the workspace. whatever version is installed/imported in the workspace, it should be used here.
    * in some cases, the package is not installed in the workspace, for example, the env is now imported without the
    * dep. so the dep is not in the node_modules.
    * strategy should be: .bitmap, workspace.jsonc, then model.
    * it's not in .bitmap, otherwise, it was linked and `_resolvePackageData` would have found it.
    * so either, it's in the workspace.jsonc or in the model.
+   * @param preferWorkspacePolicy check the workspace.jsonc before what's installed. needed for a package that the
+   * component gets with a plus version. what's installed for the component was installed according to the version it
+   * had before, so it doesn't follow an upgrade in the workspace.jsonc (e.g. by "bit update").
    */
-  private resolveEnvPeerDepVersion(pkgName: string): string {
+  private resolveEnvPeerDepVersion(pkgName: string, preferWorkspacePolicy = false): string {
+    const wsPolicy = this.depsResolver.getWorkspacePolicyManifest();
+    const wsVersion = wsPolicy?.dependencies?.[pkgName] || wsPolicy?.peerDependencies?.[pkgName];
     const resolved = this._resolvePackageData(pkgName);
+    if (preferWorkspacePolicy && wsVersion) {
+      // the workspace.jsonc has usually a range. the plus version needs a concrete version to add its own prefix to
+      if (resolved?.concreteVersion && semver.satisfies(resolved.concreteVersion, wsVersion)) {
+        return resolved.concreteVersion;
+      }
+      const validRange = semver.validRange(wsVersion);
+      // an unconstrained range (e.g. "*") has no meaningful minimum, keep it as is
+      if (!validRange || validRange === '*') return wsVersion;
+      return semver.minVersion(wsVersion)?.version || wsVersion;
+    }
     if (resolved && resolved.concreteVersion) {
       return resolved.concreteVersion;
     }
-    const wsPolicy = this.depsResolver.getWorkspacePolicyManifest();
-    const wsVersion = wsPolicy?.dependencies?.[pkgName] || wsPolicy?.peerDependencies?.[pkgName];
     if (wsVersion) {
       return wsVersion;
     }

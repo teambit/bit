@@ -23,6 +23,8 @@ export default class SnappingHelper {
       updateDependents?: boolean;
       push?: boolean;
       message?: string;
+      tag?: boolean;
+      skipLoadingAspects?: boolean;
     } = {}
   ): Promise<void> {
     const runnerPath = path.resolve(__dirname, 'snap-from-scope-runner.js');

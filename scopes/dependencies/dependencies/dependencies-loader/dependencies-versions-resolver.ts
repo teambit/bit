@@ -8,6 +8,7 @@ import { isEmpty } from 'lodash';
 import type { Dependency, Dependencies, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import type { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { isPlusVersion } from '@teambit/dependency-resolver';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import type OverridesDependencies from './overrides-dependencies';
 import type { DebugComponentsDependency } from './auto-detect-deps';
@@ -126,7 +127,7 @@ export async function updateDependenciesVersions(
       ) {
         dependency.versionRange = `${componentRangePrefix}${resolvedVersion}`;
       }
-    } else if (dependency.versionRange && depType !== 'peerDependencies' && dependency.versionRange !== '+') {
+    } else if (dependency.versionRange && depType !== 'peerDependencies' && !isPlusVersion(dependency.versionRange)) {
       dependency.versionRange = undefined;
     }
   }
