@@ -7,24 +7,24 @@ fn bit_reset_removes_the_lane_history_entry_of_the_reset_snap() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
-    helper.create_lane("dev", "");
-    helper.snap_all_components_without_build(r#"-m "snap A""#);
-    helper.export("");
+    helper.native("lane create dev");
+    helper.native(r#"snap --skip-tests -m "snap A""#);
+    helper.native("export");
 
     helper.populate_components(2, true, "v2");
-    helper.snap_all_components_without_build(r#"-m "snap B""#);
+    helper.native(r#"snap --skip-tests -m "snap B""#);
 
-    helper.run_cmd("reset --silent");
+    helper.native("reset --silent");
 
     helper.populate_components(2, true, "v3");
-    helper.snap_all_components_without_build(r#"-m "snap C""#);
-    helper.export("");
+    helper.native(r#"snap --skip-tests -m "snap C""#);
+    helper.native("export");
 
     helper.re_init_workspace();
     helper.add_remote_scope();
-    helper.run_cmd(&format!("switch {}/dev --get-all", helper.scopes.remote));
+    helper.native(&format!("switch {}/dev --get-all", helper.scopes.remote));
 
-    let history_entries = parse(&helper.run_cmd("lane history --json"));
+    let history_entries = parse(&helper.native("lane history --json"));
     let entries = history_entries.as_array().unwrap();
 
     // 1. should not have a lane-history entry for the reset snap

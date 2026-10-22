@@ -28,9 +28,9 @@ fn importing_an_exported_lane_into_a_git_repo_when_no_git_branch_exists() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.create_lane("my-test-lane", "");
-    helper.snap_all_components_without_build("");
-    helper.export("");
+    helper.native("lane create my-test-lane");
+    helper.native("snap --skip-tests");
+    helper.native("export");
 
     helper.re_init_workspace();
     helper.add_remote_scope();
@@ -39,7 +39,7 @@ fn importing_an_exported_lane_into_a_git_repo_when_no_git_branch_exists() {
     helper.run_cmd(&format!("lane import {lane_id} --branch"));
 
     // 1. should import the lane successfully
-    let lanes = parse(&helper.run_cmd("lane list --json"));
+    let lanes = parse(&helper.native("lane list --json"));
     assert_eq!(lanes["currentLane"].as_str(), Some("my-test-lane"));
 
     // 2. should checkout to the branch with the same name as the lane id
@@ -52,9 +52,9 @@ fn importing_an_exported_lane_into_a_git_repo_when_git_branch_already_exists() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.create_lane("my-test-lane", "");
-    helper.snap_all_components_without_build("");
-    helper.export("");
+    helper.native("lane create my-test-lane");
+    helper.native("snap --skip-tests");
+    helper.native("export");
 
     helper.re_init_workspace();
     helper.add_remote_scope();
@@ -68,7 +68,7 @@ fn importing_an_exported_lane_into_a_git_repo_when_git_branch_already_exists() {
     assert!(import_output.contains(&format!("fatal: a branch named '{lane_id}' already exists")));
 
     // 4. should still import the lane successfully
-    let lanes = parse(&helper.run_cmd("lane list --json"));
+    let lanes = parse(&helper.native("lane list --json"));
     assert_eq!(lanes["currentLane"].as_str(), Some("my-test-lane"));
 }
 
@@ -77,8 +77,8 @@ fn import_lane_after_remote_lane_changes() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
-    helper.tag_all_without_build("");
-    helper.export("");
+    helper.native("tag --skip-tests");
+    helper.native("export");
 
     let bare_git_dir = helper.scopes.e2e_dir.join("bare-repo.git");
     git(&helper.scopes.e2e_dir, &["init", "--bare", bare_git_dir.to_str().unwrap()]);
@@ -89,15 +89,15 @@ fn import_lane_after_remote_lane_changes() {
     let workspace_backup = helper.clone_workspace();
 
     let lane_id = format!("{}/my-test-lane", helper.scopes.remote);
-    helper.create_lane("my-test-lane", "");
+    helper.native("lane create my-test-lane");
     let existing = helper.read_file("comp1/index.js");
     helper.write_file("comp1/index.js", &format!("{existing}\n console.log(1)"));
-    helper.snap_all_components_without_build("");
-    helper.export("");
+    helper.native("snap --skip-tests");
+    helper.native("export");
 
     helper.get_cloned_workspace(&workspace_backup);
     helper.run_cmd(&format!("lane import {lane_id} --branch"));
-    let lanes = parse(&helper.run_cmd("lane list --json"));
+    let lanes = parse(&helper.native("lane list --json"));
     assert_eq!(lanes["currentLane"].as_str(), Some("my-test-lane"));
 
     git(&helper.scopes.local_path, &["add", "."]);
@@ -106,7 +106,7 @@ fn import_lane_after_remote_lane_changes() {
 
     // 5. switching git back to main should switch the lane as well to main and keep status clean
     git(&helper.scopes.local_path, &["checkout", "main"]);
-    let lanes = parse(&helper.run_cmd("lane list --json"));
+    let lanes = parse(&helper.native("lane list --json"));
     assert_eq!(lanes["currentLane"].as_str(), Some("main"));
     helper.expect_status_to_be_clean();
 }

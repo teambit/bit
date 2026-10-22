@@ -19,11 +19,11 @@ fn diffing_the_current_lane_against_main() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
-    helper.snap_all_components_without_build("");
-    helper.export("");
-    helper.create_lane("dev", "");
+    helper.native("snap --skip-tests");
+    helper.native("export");
+    helper.native("lane create dev");
     helper.create_component_bar_foo(FOO_V2);
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
 
     // with no args
     let diff = helper.run_cmd("lane diff");
@@ -40,7 +40,7 @@ fn diffing_the_current_lane_against_main() {
     expect_main_to_dev_diff(&diff);
 
     // on the scope, after exporting the lane
-    helper.export("");
+    helper.native("export");
     let diff = Helper::cmd_in(&helper.scopes.remote_path, "lane diff dev");
     assert!(diff.status.success(), "{diff:?}");
     expect_main_to_dev_diff(&diff.stdout);
@@ -52,15 +52,15 @@ fn bit_lane_diff_to_lane_non_default_on_the_workspace() {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("");
     helper.add_component_bar_foo();
-    helper.snap_all_components_without_build("");
-    helper.export("");
-    helper.create_lane("dev", "");
+    helper.native("snap --skip-tests");
+    helper.native("export");
+    helper.native("lane create dev");
     helper.create_component_bar_foo(FOO_V2);
-    helper.snap_all_components_without_build("");
-    helper.switch_local_lane("main", "");
-    helper.create_lane("stage", "");
+    helper.native("snap --skip-tests");
+    helper.native("switch main");
+    helper.native("lane create stage");
     helper.create_component_bar_foo(FOO_V3);
-    helper.snap_all_components_without_build("");
+    helper.native("snap --skip-tests");
 
     let diff = strip_ansi(&helper.run_cmd("lane diff dev"));
     assert!(diff.contains("--- foo.js (dev)"), "{diff}");
