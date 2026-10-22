@@ -24,6 +24,7 @@ import { MainSyncExecutor } from './main-sync-executor';
 import { selectGitHostProvider } from './git-host-provider';
 import { gitRepoRoot, isNonContentPath, listRemoteBranches } from './git-ops';
 import { chooseInitDefaultBranch, deriveOwnerRepo, renderInitReport, scaffoldWorkflowFiles } from './init-scaffold';
+import { UNKNOWN_REPO, scaffoldAgentsMd } from './agents-md';
 
 /**
  * Refuse a `--dry-run` whose plan would be computed by force-checking-out branches over uncommitted
@@ -209,8 +210,9 @@ export class SyncOrchestrator {
 
   /**
    * `bit ci sync --init` — one-command onboarding: scaffolds the two workflow files, adds the sync
-   * config block to workspace.jsonc if missing, and returns the report of the steps left. Safe to
-   * re-run: existing files are skipped, an existing config block is left alone; it never reconciles.
+   * config block to workspace.jsonc if missing, puts the sync rules for coding agents into AGENTS.md,
+   * and returns the report of the steps left. Safe to re-run: existing files are skipped, an existing
+   * config block or AGENTS.md sync section is left alone; it never reconciles.
    */
   private async syncInit(): Promise<string> {
     const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
@@ -249,6 +251,15 @@ export class SyncOrchestrator {
       return fromCwd && !path.isAbsolute(fromCwd) ? fromCwd : abs;
     };
     const configAdded = await this.ensureSyncConfigBlock();
+    // AGENTS.md belongs to the workspace, where agents run bit commands.
+    const ownerRepo = deriveOwnerRepo(origin);
+    const agentsOutcome = scaffoldAgentsMd(this.deps.workspace.path, {
+      scope: this.deps.workspace.defaultScope ?? '<owner>.<scope>',
+      repo: ownerRepo
+        ? `${ownerRepo.host === 'github.com' ? '' : `${ownerRepo.host}/`}${ownerRepo.owner}/${ownerRepo.repo}`
+        : UNKNOWN_REPO,
+      defaultBranch,
+    });
     // No commit yet: the first commit must take the whole workspace, not only the files --init wrote.
     const repoHasCommits = await git
       .raw(['rev-parse', '--verify', '--quiet', 'HEAD'])
@@ -260,6 +271,7 @@ export class SyncOrchestrator {
     const handled = [
       ...fileOutcomes.map((outcome) => path.join(scaffoldRoot, outcome.relativePath)),
       path.join(this.deps.workspace.path, 'workspace.jsonc'),
+      path.join(this.deps.workspace.path, agentsOutcome.relativePath),
     ];
     const toStage: string[] = [];
     const ignored: string[] = [];
@@ -291,7 +303,7 @@ export class SyncOrchestrator {
     // Returned, not logged: the command prints what `report()` returns.
     return renderInitReport({
       scopeId: this.deps.workspace.defaultScope,
-      ownerRepo: deriveOwnerRepo(origin),
+      ownerRepo,
       originUrl: origin,
       defaultBranch,
       defaultBranchGuessed: !detectedBranch,
@@ -299,10 +311,13 @@ export class SyncOrchestrator {
       repoRootFromCwd: path.relative(process.cwd(), scaffoldRoot) || '.',
       repoHasCommits,
       inGitRepo: Boolean(repoRoot),
-      files: fileOutcomes.map((outcome) => ({
-        ...outcome,
-        displayPath: displayPath(path.join(scaffoldRoot, outcome.relativePath)),
-      })),
+      files: [
+        ...fileOutcomes.map((outcome) => ({
+          ...outcome,
+          displayPath: displayPath(path.join(scaffoldRoot, outcome.relativePath)),
+        })),
+        { ...agentsOutcome, displayPath: displayPath(path.join(this.deps.workspace.path, agentsOutcome.relativePath)) },
+      ],
       configDisplayPath: displayPath(path.join(this.deps.workspace.path, 'workspace.jsonc')),
       configAdded,
       ...(repoRoot ? { toStage, ignored } : {}),
