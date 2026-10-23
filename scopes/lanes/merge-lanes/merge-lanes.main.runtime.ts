@@ -238,7 +238,10 @@ export class MergeLanesMain {
     }
 
     const lastMerged = consumer ? new LastMerged(this.scope, consumer, this.logger) : undefined;
-    const snapshot = await lastMerged?.takeSnapshot(currentLane);
+    const snapshot = await lastMerged?.takeSnapshot(
+      currentLane,
+      succeededComponents.map((c) => c.id)
+    );
 
     const mergeResults = await this.merging.mergeSnaps({
       mergeStrategy,
