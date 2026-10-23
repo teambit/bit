@@ -248,8 +248,66 @@ fn deps_in_capsules_and_isolating_cyclic_dependencies() {
     let run = helper.native_run("capsule create --seeders-only comp1 -j");
     assert!(run.status.success(), "{}{}", run.stdout, run.stderr);
     let parsed = parse(&run.stdout);
-    let capsules = parsed["capsules"].as_array().unwrap();
+    let capsules = parsed.as_array().unwrap();
     assert_eq!(capsules.len(), 2, "{parsed}");
+}
+
+#[test]
+fn capsule_create_custom_base_dir_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    for flag in ["--base-dir", "-b"] {
+        let command = format!("capsule create comp1 {flag} custom-capsules -j");
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            &command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run(&command);
+        assert!(node.status.success(), "{node:?}");
+        assert!(native.status.success(), "{native:?}");
+        assert_eq!(parse(&native.stdout), parse(&node.stdout));
+        assert_eq!(native.stdout, node.stdout);
+        let capsule = &parse(&native.stdout)[0];
+        assert!(
+            capsule["path"]
+                .as_str()
+                .unwrap()
+                .contains("/custom-capsules/"),
+        );
+    }
+}
+
+#[test]
+fn capsule_create_always_new_uses_unique_node_style_paths() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let command = "capsule create comp1 --base-dir custom-capsules --always-new -j";
+    for native_mode in [false, true] {
+        let mut paths = Vec::new();
+        for _ in 0..2 {
+            let output = if native_mode {
+                helper.native_run(command)
+            } else {
+                Helper::cmd_in_with(
+                    &helper.scopes.local_path,
+                    command,
+                    &[("BIT_NATIVE", OsStr::new("off"))],
+                )
+            };
+            assert!(output.status.success(), "{output:?}");
+            let payload = parse(&output.stdout);
+            let path = payload[0]["path"].as_str().unwrap();
+            assert!(path.contains("/custom-capsules/"));
+            assert!(std::path::Path::new(path).is_dir());
+            let suffix = path.rsplit_once('_').unwrap().1;
+            assert_eq!(suffix.len(), 36);
+            paths.push(path.to_owned());
+        }
+        assert_ne!(paths[0], paths[1]);
+    }
 }
 
 /// Covers:
