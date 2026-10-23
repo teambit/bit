@@ -238,7 +238,7 @@ export class PackageJsonFile {
   /*
    * remove components from package.json dependencies
    */
-  async removeComponentsFromDependencies(components: Component[]) {
+  async removeComponentsFromDependencies(components: Array<Parameters<typeof componentIdToPackageName>[0]>) {
     if (!this.fileExist) return;
     const deps = this.packageJsonObject.dependencies;
     if (!deps) return;

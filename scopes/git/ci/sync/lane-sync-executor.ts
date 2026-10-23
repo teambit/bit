@@ -1545,7 +1545,7 @@ export class LaneSyncExecutor {
     return undefined;
   }
 
-  private async fetchOnce() {
+  async fetchOnce() {
     if (this.fetched) return;
     await fetchRemoteHeads();
     this.fetched = true;
@@ -1932,8 +1932,9 @@ export function haltCommentBody({
   const resolution =
     note ??
     `To resolve locally:
-  git fetch origin && git checkout ${shellQuote(branch)}
+  git fetch origin && git checkout ${shellQuote(branch)} && git merge --ff-only ${shellQuote(`origin/${branch}`)}
   bit lane import ${shellQuote(laneId)}
+  bit checkout head --manual --workspace-only   # merges the lane's head into the files; conflicts get conflict markers
   # resolve conflicts, commit the result, then:
   git push origin ${shellQuote(branch)}`;
   return `bit-git-sync could not reconcile this branch automatically: ${reason}

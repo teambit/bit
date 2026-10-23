@@ -444,16 +444,16 @@ describe('bit ci sync: main-scope reconciliation', function () {
       helper.command.runCmd('git add unrelated.txt', repoDir);
       const { output, exitCode } = runBit('bit ci sync --init', repoDir);
       expect(exitCode, output).to.equal(0);
-      const add = 'git add -- workspace.jsonc';
+      const add = 'git add -- workspace.jsonc AGENTS.md';
       const forceAdd = 'git add -f -- .github/workflows/bit-sync.yml .github/workflows/bit-release.yml';
       const commit =
-        "git commit -m 'Mirror my-scope' -- workspace.jsonc .github/workflows/bit-sync.yml .github/workflows/bit-release.yml";
+        "git commit -m 'Mirror my-scope' -- workspace.jsonc AGENTS.md .github/workflows/bit-sync.yml .github/workflows/bit-release.yml";
       expect(output).to.include(add);
       expect(output).to.include(forceAdd);
       expect(output).to.include('.gitignore matches these');
       // printed with the paths on a continuation line
       expect(output).to.match(
-        /git commit -m 'Mirror my-scope' -- \\\n\s+workspace\.jsonc \.github\/workflows\/bit-sync\.yml \.github\/workflows\/bit-release\.yml\n/
+        /git commit -m 'Mirror my-scope' -- \\\n\s+workspace\.jsonc AGENTS\.md \.github\/workflows\/bit-sync\.yml \.github\/workflows\/bit-release\.yml\n/
       );
       // the printed commands really work: both workflows are committed, the unrelated file stays staged
       helper.command.runCmd(
@@ -464,6 +464,7 @@ describe('bit ci sync: main-scope reconciliation', function () {
       expect(committed).to.include('.github/workflows/bit-sync.yml');
       expect(committed).to.include('.github/workflows/bit-release.yml');
       expect(committed).to.include('workspace.jsonc');
+      expect(committed).to.include('AGENTS.md');
       expect(committed).to.not.include('unrelated.txt');
       expect(helper.command.runCmd('git diff --cached --name-only', repoDir)).to.include('unrelated.txt');
     });
