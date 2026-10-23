@@ -150,19 +150,24 @@ describe('bit lane command', function () {
       expect(helper.command.statusJson().stagedComponents).to.have.lengthOf(0);
     });
   });
-  // staged snaps of main are moved to a new lane. tags, and snaps the workspace is not on, can't be moved.
-  describe('creating a lane from main when main has a local tag and a snap the workspace is not on', () => {
+  // staged snaps of main are moved to a new lane. tags, snaps the workspace is not on, and detached heads can't be moved.
+  describe('creating a lane from main when main has a local tag, a snap the workspace is not on and a detached head', () => {
     let error: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
+      helper.fixtures.createComponentIsType();
+      helper.fixtures.addComponentUtilsIsType();
       helper.command.tagAllWithoutBuild();
+      helper.command.tagWithoutBuild('utils/is-type', '--unmodified');
       helper.command.export();
       helper.command.tagWithoutBuild('comp1', '--unmodified');
       helper.command.snapComponentWithoutBuild('bar/foo', '--unmodified');
       helper.command.checkoutVersion('0.0.1', 'bar/foo', '-x');
+      helper.command.checkoutVersion('0.0.1', 'utils/is-type', '-x');
+      helper.command.snapComponentWithoutBuild('utils/is-type', '--unmodified --detach-head');
       try {
         helper.command.createLane('dev');
       } catch (err: any) {
@@ -174,6 +179,10 @@ describe('bit lane command', function () {
     });
     it('should throw for the snap the workspace is not on', () => {
       expect(error).to.have.string('bar/foo - the workspace is on 0.0.1, not on the main head');
+    });
+    it('should throw for the detached head', () => {
+      expect(error).to.have.string('utils/is-type - the workspace is on');
+      expect(error).to.have.string('a detached head that was not exported');
     });
     it('should not create the lane', () => {
       expect(helper.command.listLanes()).to.not.have.string('dev');

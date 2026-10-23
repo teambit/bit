@@ -106,7 +106,17 @@ async function moveStagedSnapsOfMainToLane(workspace: Workspace, lane: Lane): Pr
   await pMapSeries(modelComponents, async (modelComponent) => {
     const bitmapId = workspaceIds.searchWithoutVersion(modelComponent.toComponentId());
     const head = modelComponent.head;
-    if (!bitmapId || !head || modelComponent.remoteHead?.isEqual(head)) return;
+    if (!bitmapId || !head) return;
+    if (modelComponent.remoteHead?.isEqual(head)) {
+      // main has nothing to move. still, the workspace can be on a local version outside main history (a detached head)
+      await modelComponent.setDivergeData(repo, undefined, false, bitmapId);
+      if (modelComponent.getDivergeData().snapsOnSourceOnly.length) {
+        errors.push(
+          `${bitmapId.toStringWithoutVersion()} - the workspace is on ${bitmapId.version}, a detached head that was not exported`
+        );
+      }
+      return;
+    }
     // diverge from the main head, not from the .bitmap version, to find also local snaps the workspace is not on
     await modelComponent.setDivergeData(repo, undefined, false);
     const localRefs = await modelComponent.getLocalHashes(repo);
