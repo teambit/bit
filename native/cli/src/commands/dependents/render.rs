@@ -107,7 +107,7 @@ fn render_dependents_table(dependents: &[DependentInfo], target_id: &str, chalk:
     format!("\n{}\n{table_str}", chalk.bold("Dependents Details"))
 }
 
-fn render_honeywell_table(rows: &[Vec<String>]) -> String {
+pub(in crate::commands) fn render_honeywell_table(rows: &[Vec<String>]) -> String {
     let widths = column_widths(rows);
     let mut out = String::new();
     out.push_str(&honeywell_border(&widths, '╔', '═', '╤', '╗'));

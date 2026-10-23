@@ -38,9 +38,11 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
 fn parse_get(rest: &[&str]) -> Option<Subcommand> {
     let mut id = None;
     let mut tree = false;
+    let mut scope = false;
     for &arg in rest {
         match arg {
             "-t" | "--tree" => tree = true,
+            "--scope" => scope = true,
             value
                 if id.is_none()
                     && !value.starts_with('-')
@@ -52,7 +54,7 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
             _ => return None,
         }
     }
-    Some(Subcommand::Get { id: id?.to_owned(), tree })
+    Some(Subcommand::Get { id: id?.to_owned(), tree, scope })
 }
 
 fn parse_blame(rest: &[&str]) -> Option<Subcommand> {

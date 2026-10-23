@@ -84,6 +84,25 @@ fn bit_deps_get_tree_matches_node() -> KnownResult<()> {
     Ok(())
 }
 
+#[test]
+fn bit_deps_get_scope_matches_node() -> KnownResult<()> {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(3, true, "");
+    assert_get_tree_parity(&helper, "deps get comp1");
+    helper.native("tag --skip-tests");
+    assert_get_tree_parity(&helper, "deps get comp1");
+    for command in [
+        "deps get comp1 --scope",
+        "deps get --scope comp2",
+        "deps get comp1 --scope --tree",
+        "deps get comp3 --scope --tree",
+    ] {
+        assert_get_tree_parity(&helper, command);
+    }
+    Ok(())
+}
+
 fn assert_get_tree_parity(helper: &Helper, command: &str) {
     let node = Helper::cmd_in_with(
         &helper.scopes.local_path,

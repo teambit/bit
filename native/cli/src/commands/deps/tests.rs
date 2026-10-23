@@ -64,15 +64,19 @@ fn parses_deps_subcommands() {
     );
     assert_eq!(
         parse_subcommand(&["get", "comp1"]),
-        Some(Subcommand::Get { id: "comp1".into(), tree: false }),
+        Some(Subcommand::Get { id: "comp1".into(), tree: false, scope: false }),
     );
     assert_eq!(
         parse_subcommand(&["get", "comp1", "--tree"]),
-        Some(Subcommand::Get { id: "comp1".into(), tree: true }),
+        Some(Subcommand::Get { id: "comp1".into(), tree: true, scope: false }),
     );
     assert_eq!(
         parse_subcommand(&["get", "--tree", "comp1"]),
-        Some(Subcommand::Get { id: "comp1".into(), tree: true }),
+        Some(Subcommand::Get { id: "comp1".into(), tree: true, scope: false }),
+    );
+    assert_eq!(
+        parse_subcommand(&["get", "--scope", "comp1"]),
+        Some(Subcommand::Get { id: "comp1".into(), tree: false, scope: true }),
     );
     assert_eq!(
         parse_subcommand(&["usage", "is-number", "--depth=2"]),
@@ -209,7 +213,7 @@ fn sets_removes_gets_and_writes_dependencies() {
         json!({ "lodash": "3.3.1" }),
     );
 
-    let get_cmd = Subcommand::Get { id: "comp1".into(), tree: false };
+    let get_cmd = Subcommand::Get { id: "comp1".into(), tree: false, scope: false };
     let get_report = prepare(dir.path(), &get_cmd, Chalk::new(false))
         .expect("prepare get")
         .commit(Chalk::new(false))

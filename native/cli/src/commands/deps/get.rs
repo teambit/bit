@@ -8,8 +8,8 @@ use super::{
 use crate::commands::{
     color::Chalk,
     debug_cat::lookup::load_cat_component,
+    dependents::render_honeywell_table,
     lane::scope_root::ScopeRoot,
-    list::table,
     scope_set::{Failure, selection},
     set_peer::load_dep_resolver_config,
 };
@@ -33,6 +33,7 @@ pub(super) fn prepare_get(
     bitmap_val: &Value,
     id: &str,
     tree: bool,
+    scope: bool,
     chalk: Chalk,
 ) -> Result<String, Failure> {
     let matched = selection::resolve_pattern_entries(root, bitmap, id, chalk)?;
@@ -41,6 +42,9 @@ pub(super) fn prepare_get(
     };
     let id_with_ver = selection::entry_full_id(entry);
     let ctx = WorkspaceDepsContext::load(root)?;
+    if scope {
+        return prepare_scope_get(root, &ctx, entry, &id_with_ver, tree, chalk);
+    }
     let component = ctx
         .find_workspace_component(entry)
         .ok_or_else(|| Failure::Declined("missing workspace component".into()))?;
@@ -61,6 +65,51 @@ pub(super) fn prepare_get(
         if tree { 64 } else { 8 },
     );
     render_get_result(&id_with_ver, &entry.id.to_string_without_version(), rows, tree, chalk)
+}
+
+fn prepare_scope_get(
+    root: &Path,
+    ctx: &WorkspaceDepsContext,
+    entry: &bit_install::workspace::BitmapEntry,
+    id_with_ver: &str,
+    tree: bool,
+    chalk: Chalk,
+) -> Result<String, Failure> {
+    let Some(version) = entry.id.version.as_deref() else {
+        return Err(Failure::Declined("deps get --scope requires a stored version".into()));
+    };
+    if version.is_empty() || version == "latest" || version == "0.0.1-new" {
+        return Err(Failure::Declined("deps get --scope requires a stored version".into()));
+    }
+    let rows = collect_scope_rows(root, ctx, id_with_ver, if tree { 64 } else { 8 })?;
+    render_get_result(id_with_ver, &entry.id.to_string_without_version(), rows, tree, chalk)
+}
+
+fn collect_scope_rows(
+    root: &Path,
+    ctx: &WorkspaceDepsContext,
+    root_id: &str,
+    max_depth: usize,
+) -> Result<Vec<DepInfoRow>, Failure> {
+    let mut rows = Vec::new();
+    let mut visited = HashSet::from([root_id.to_owned()]);
+    let mut queue = VecDeque::from([(root_id.to_owned(), 0)]);
+    while let Some((curr_id, depth)) = queue.pop_front() {
+        if depth >= max_depth {
+            continue;
+        }
+        let children = scope_child_deps_checked(root, ctx, &curr_id)
+            .ok_or_else(|| Failure::Declined("scope dependency model unavailable".into()))?;
+        for (child_id, dep_type) in children {
+            push_dep_row(
+                &mut rows,
+                &mut visited,
+                &mut queue,
+                (&child_id, depth + 1, &curr_id, dep_type),
+            );
+        }
+    }
+    Ok(rows)
 }
 
 fn render_get_result(
@@ -88,7 +137,7 @@ fn render_get_result(
             "no dependencies found for {id_with_ver}.\ntry running \"bit cat-component {id_without_ver}\" to see whether the component/version exists locally",
         ));
     }
-    Ok(render_dep_info_table(rows, chalk))
+    Ok(render_dep_info_table(id_with_ver, rows, chalk))
 }
 
 fn render_dep_tree(root_id: &str, rows: &[DepInfoRow]) -> String {
@@ -111,17 +160,36 @@ fn assemble_dep_tree(id: &str, rows: &[DepInfoRow]) -> TreeNode {
     }
 }
 
-fn render_dep_info_table(rows: Vec<DepInfoRow>, chalk: Chalk) -> String {
-    let table_rows = rows
-        .into_iter()
-        .map(|row| vec![row.id, row.depth.to_string(), row.parent, row.dependency_type.to_owned()])
-        .collect::<Vec<_>>();
-    let rendered = table::render(
-        &["Dependency ID", "Depth", "Immediate Dependent", "Dependency type"],
-        &table_rows,
-        chalk.enabled(),
+fn render_dep_info_table(root_id: &str, rows: Vec<DepInfoRow>, chalk: Chalk) -> String {
+    let mut table_rows = vec![vec![
+        chalk.cyan("Dependency ID"),
+        chalk.cyan("Depth"),
+        chalk.cyan("Immediate Dependent"),
+        chalk.cyan("Dependency type"),
+    ]];
+    table_rows.extend(
+        rows.into_iter()
+            .map(|row| {
+                vec![
+                    display_id(&row.id),
+                    row.depth.to_string(),
+                    if row.parent == root_id {
+                        "<self>".to_owned()
+                    } else {
+                        display_id(&row.parent)
+                    },
+                    row.dependency_type.to_owned(),
+                ]
+            }),
     );
+    let rendered = render_honeywell_table(&table_rows);
     format!("\n{}\n{rendered}", chalk.bold("Dependencies Details"))
+}
+
+fn display_id(id: &str) -> String {
+    id.strip_suffix("@0.0.1-new")
+        .unwrap_or(id)
+        .to_owned()
 }
 
 fn collect_dep_info_rows(
@@ -224,10 +292,19 @@ fn scope_child_deps(
     ctx: &WorkspaceDepsContext,
     comp_id: &str,
 ) -> Vec<(String, &'static str)> {
+    scope_child_deps_checked(root, ctx, comp_id).unwrap_or_default()
+}
+
+fn scope_child_deps_checked(
+    root: &Path,
+    ctx: &WorkspaceDepsContext,
+    comp_id: &str,
+) -> Option<Vec<(String, &'static str)>> {
+    if !comp_id.contains('@') {
+        return None;
+    }
     let scope_root = ScopeRoot { path: root.to_path_buf(), bare: false };
-    let Some(ver_val) = load_cat_component(&scope_root, &ctx.ws.scope_path, comp_id) else {
-        return Vec::new();
-    };
+    let ver_val = load_cat_component(&scope_root, &ctx.ws.scope_path, comp_id)?;
     let mut children = Vec::new();
     for (field, kind) in [("dependencies", "prod"), ("devDependencies", "dev")] {
         let Some(arr) = ver_val[field].as_array() else { continue };
@@ -237,7 +314,7 @@ fn scope_child_deps(
             }
         }
     }
-    children
+    Some(children)
 }
 
 fn format_scope_dep_id(id_val: &Value) -> Option<String> {

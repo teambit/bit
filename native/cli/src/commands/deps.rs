@@ -55,7 +55,7 @@ pub(super) enum Subcommand {
     Unset { pattern: String, packages: Vec<String>, dev: bool, peer: bool },
     Reset { pattern: String },
     Eject { pattern: String },
-    Get { id: String, tree: bool },
+    Get { id: String, tree: bool, scope: bool },
     Usage { dep_name: String, depth: Option<usize> },
     Blame { component: String, dep: String },
     Diagnose { origins: bool },
@@ -229,8 +229,8 @@ fn prepare_non_mutating(
     chalk: Chalk,
 ) -> Result<Prepared, Failure> {
     match subcommand {
-        Subcommand::Get { id, tree } => {
-            Ok(Prepared::ReadOnly(prepare_get(root, bitmap, bitmap_val, id, *tree, chalk)?))
+        Subcommand::Get { id, tree, scope } => {
+            Ok(Prepared::ReadOnly(prepare_get(root, bitmap, bitmap_val, id, *tree, *scope, chalk)?))
         }
         Subcommand::Usage { dep_name, depth } => {
             Ok(Prepared::ReadOnly(prepare_usage(root, bitmap_val, dep_name, *depth, chalk)?))

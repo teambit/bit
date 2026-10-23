@@ -1,5 +1,7 @@
 //! Native `bit dependents <component-name>` (`scopes/dependencies/dependencies/dependents-cmd.ts`).
 
+pub(super) use render::render_honeywell_table;
+
 mod query;
 mod render;
 #[cfg(test)]
