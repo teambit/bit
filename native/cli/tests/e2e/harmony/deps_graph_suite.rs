@@ -279,6 +279,27 @@ fn capsule_create_custom_base_dir_matches_node() {
     }
 }
 
+#[cfg(unix)]
+#[test]
+fn capsule_create_absolute_base_dir_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let absolute_base = helper.scopes.local_path.join("absolute-capsules");
+    for hash_flag in ["", " --use-hash"] {
+        let command = format!("capsule create comp1 -b {}{hash_flag} -j", absolute_base.display());
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            &command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        assert!(node.status.success(), "{node:?}");
+        let native = helper.native_run(&command);
+        assert!(native.status.success() && native.native, "{native:?}");
+        assert_eq!(native.stdout, node.stdout);
+    }
+}
+
 #[test]
 fn capsule_create_always_new_uses_unique_node_style_paths() {
     let helper = Helper::new();

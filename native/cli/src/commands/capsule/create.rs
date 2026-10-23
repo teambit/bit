@@ -2,14 +2,14 @@
 
 mod files;
 mod metadata;
+mod root;
 
 use super::{
     super::{
         aspect::workspace_default_scope, dependents::find_existing_bitmap_entry,
         scope_set::selection,
     },
-    Chalk, Formatter, ScopeRoot, Subcommand, compute_capsules_root_dirs, emit_report,
-    object_hash_short, resolve_capsules_dir,
+    Chalk, Formatter, ScopeRoot, Subcommand, emit_report,
 };
 use crate::{commands::workspace_command::uuid_v4, history::History, native::Outcome};
 use bit_install::workspace::{Bitmap, BitmapEntry};
@@ -19,7 +19,7 @@ use std::{
     ffi::OsString,
     fs,
     io::{self, Write},
-    path::{Component, Path, PathBuf},
+    path::{Component, Path},
     process::ExitCode,
 };
 
@@ -29,6 +29,7 @@ use self::{
         write_default_package_json,
     },
     metadata::write_root_metadata,
+    root::resolve_create_root,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -179,61 +180,6 @@ fn build_capsules(
             )
         })
         .collect()
-}
-
-fn resolve_create_root(
-    cwd: &Path,
-    root: &ScopeRoot,
-    create_args: &CreateArgs,
-) -> io::Result<PathBuf> {
-    let default_root = PathBuf::from(resolve_capsules_dir(cwd)?);
-    let root_base = match &create_args.root_base_dir {
-        Some(value) => validate_root_base_dir(value)?,
-        None => default_root.clone(),
-    };
-    if let Some(base_dir) = &create_args.base_dir {
-        let path = Path::new(base_dir);
-        if path.as_os_str().is_empty()
-            || path
-                .components()
-                .any(|part| !matches!(part, Component::Normal(_)))
-        {
-            return Err(io::Error::other("unsupported capsule base dir"));
-        }
-        return Ok(root_base.join(if create_args.use_hash {
-            PathBuf::from(object_hash_short(base_dir))
-        } else {
-            path.to_path_buf()
-        }));
-    }
-    if create_args.use_hash {
-        return Err(io::Error::other("capsule use-hash requires an explicit base dir"));
-    }
-    let dirs = compute_capsules_root_dirs(cwd, root)?;
-    let ws_dir = PathBuf::from(dirs.workspace.ok_or_else(|| {
-        io::Error::other("missing workspace capsules root dir")
-    })?);
-    if create_args.root_base_dir.is_none() {
-        return Ok(ws_dir);
-    }
-    let sub = ws_dir
-        .strip_prefix(&default_root)
-        .map_err(|_| io::Error::other("custom capsule root cannot map workspace path"))?;
-    Ok(root_base.join(sub))
-}
-
-fn validate_root_base_dir(value: &str) -> io::Result<PathBuf> {
-    let path = Path::new(value);
-    if !path.is_absolute()
-        || path
-            .components()
-            .any(|part| {
-                !matches!(part, Component::Prefix(_) | Component::RootDir | Component::Normal(_))
-            })
-    {
-        return Err(io::Error::other("unsupported capsule root base dir"));
-    }
-    Ok(path.to_path_buf())
 }
 
 fn validate_custom_name(name: Option<&str>, selected_len: usize) -> io::Result<()> {
