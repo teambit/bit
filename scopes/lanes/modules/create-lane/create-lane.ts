@@ -68,10 +68,12 @@ export async function createLane(
     : Lane.create(laneName, scopeName, forkedFrom, bitCloudUser);
   const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
   newLane.setLaneComponents(dataToPopulate);
-  if (!remoteLane && workspace.isOnMain()) await moveStagedSnapsOfMainToLane(workspace, newLane);
+  const movedObjects = !remoteLane && workspace.isOnMain() ? await moveStagedSnapsOfMainToLane(workspace, newLane) : [];
 
   const laneHistoryMsg = remoteLane ? `fork lane "${remoteLane.name}"` : 'new lane';
   await consumer.scope.lanes.saveLane(newLane, { laneHistoryMsg });
+  // written only once the lane is saved. otherwise, a failure to save the lane leaves main without its staged snaps.
+  if (movedObjects.length) await consumer.scope.objects.writeObjectsToTheFS(movedObjects);
 
   return newLane;
 }
@@ -93,8 +95,9 @@ export async function createLaneInScope(laneName: string, scope: ScopeMain, scop
  * otherwise, the same snaps are staged on both main and the lane, and once switching to main, it's impossible to switch
  * back to the lane without exporting them to main directly.
  * the snaps that were made on main become snaps of the lane. it's safe to change them because they were never exported.
+ * the changes are done in memory. it returns the changed objects (main components and snaps) for the caller to write.
  */
-async function moveStagedSnapsOfMainToLane(workspace: Workspace, lane: Lane) {
+async function moveStagedSnapsOfMainToLane(workspace: Workspace, lane: Lane): Promise<BitObject[]> {
   const repo = workspace.consumer.scope.objects;
   const workspaceIds = workspace.consumer.bitMap.getAllBitIds();
   const modelComponents = await new ComponentsList(workspace).getModelComponents();
@@ -141,7 +144,7 @@ ${errors.join('\n')}`);
     objectsToWrite.push(modelComponent);
     lane.addComponent({ id: modelComponent.toComponentId(), head });
   });
-  await repo.writeObjectsToTheFS(objectsToWrite);
+  return objectsToWrite;
 }
 
 async function getLaneOrigin(consumer: Consumer): Promise<LaneId | undefined> {
