@@ -49,6 +49,8 @@ struct DependencyMetadata {
 pub(super) enum BuiltinEnv {
     Node,
     React,
+    Html,
+    ReactNative,
 }
 
 pub(super) fn supported_builtin_manifests(
@@ -73,21 +75,35 @@ pub(super) fn supported_builtin_manifests(
         let builtin = match env.as_deref() {
             None | Some("teambit.harmony/node") => BuiltinEnv::Node,
             Some("teambit.react/react") => BuiltinEnv::React,
+            Some("teambit.html/html") => BuiltinEnv::Html,
+            Some("teambit.react/react-native") => BuiltinEnv::ReactNative,
             _ => return Ok(None),
         };
         if config
             .and_then(|config| config.get("teambit.pkg/pkg"))
             .is_some_and(|pkg| pkg.get("packageJson").is_some())
-            || config
-                .and_then(|config| config.get("teambit.react/react"))
-                .and_then(Value::as_object)
-                .is_some_and(|react| !react.is_empty())
+            || has_custom_builtin_env_config(config)
         {
             return Ok(None);
         }
         envs.push(builtin);
     }
     Ok(Some(envs))
+}
+
+fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>) -> bool {
+    let Some(config) = config else { return false };
+    ["teambit.react/react", "teambit.html/html", "teambit.react/react-native"]
+        .iter()
+        .any(|key| {
+            config
+                .get(*key)
+                .is_some_and(|value| {
+                    value
+                        .as_object()
+                        .is_none_or(|env| !env.is_empty())
+                })
+        })
 }
 
 fn effective_env(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<String>> {
@@ -162,6 +178,15 @@ fn package_dependencies(
     } else {
         insert_dependency(&mut dev_dependencies, "@types/jest", "26.0.20");
         insert_dependency(&mut dev_dependencies, "@types/node", "22.10.5");
+        match env {
+            BuiltinEnv::Html => {
+                insert_dependency(&mut dev_dependencies, "@teambit/html", "latest");
+            }
+            BuiltinEnv::ReactNative => {
+                insert_dependency(&mut dev_dependencies, "@teambit/react-native", "latest");
+            }
+            BuiltinEnv::Node | BuiltinEnv::React => {}
+        }
     }
     for (name, version) in component_dependencies {
         insert_dependency(&mut dependencies, name, version);

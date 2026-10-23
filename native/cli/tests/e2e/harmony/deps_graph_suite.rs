@@ -48,6 +48,34 @@ fn deps_debug_unresolved_import_matches_node() {
     assert_eq!(native.stdout, output.stdout);
 }
 
+#[test]
+fn capsule_create_html_and_react_native_manifests_match_node() {
+    for env in ["teambit.html/html", "teambit.react/react-native"] {
+        let helper = Helper::new();
+        helper.set_workspace_with_remote_scope();
+        helper.populate_components(1, true, "");
+        helper.native(&format!("env set comp1 {env}"));
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            "capsule create comp1 -b builtin-manifest-parity -j",
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        assert!(node.status.success(), "{node:?}");
+        let capsule = parse(&node.stdout)[0]["path"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+        let capsule_path = std::path::Path::new(&capsule);
+        let root = capsule_path.parent().unwrap();
+        let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+        fs::remove_dir_all(root).unwrap();
+        let native = helper.native_run("capsule create comp1 -b builtin-manifest-parity -j");
+        assert!(native.status.success() && native.native, "{native:?}");
+        assert_eq!(native.stdout, node.stdout);
+        assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+    }
+}
+
 fn dep_resolver_data(helper: &Helper, id: &str) -> Value {
     let comp = helper.cat_component_parsed(&format!("{id}@latest"));
     comp["extensions"]
