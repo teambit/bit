@@ -534,6 +534,127 @@ fn capsule_create_new_component_manifest_matches_node() {
 }
 
 #[test]
+fn capsule_create_snapped_react_manifest_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("env set comp1 teambit.react/react");
+    helper.native("snap --unmodified");
+    let command = "capsule create comp1 -b snapped-react-manifest-capsules -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let root = capsule_path.parent().unwrap();
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    fs::remove_dir_all(root).unwrap();
+
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+}
+
+#[test]
+fn capsule_create_tagged_react_manifest_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("env set comp1 teambit.react/react");
+    helper.tag_without_build("", "");
+    let command = "capsule create comp1 -b tagged-react-manifest-capsules -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let root = capsule_path.parent().unwrap();
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    fs::remove_dir_all(root).unwrap();
+
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+}
+
+#[test]
+fn capsule_create_react_dependency_manifest_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    helper.native("env set comp1 teambit.react/react");
+    let command = "capsule create comp1 -b react-graph-manifest-capsules -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let rows = parse(&node.stdout);
+    let rows = rows.as_array().unwrap();
+    assert_eq!(rows.len(), 2);
+    let root = std::path::Path::new(rows[0]["path"].as_str().unwrap()).parent().unwrap();
+    let node_manifests = rows
+        .iter()
+        .map(|row| {
+            let path = std::path::Path::new(row["path"].as_str().unwrap());
+            fs::read(path.join("package.json")).unwrap()
+        })
+        .collect::<Vec<_>>();
+    fs::remove_dir_all(root).unwrap();
+
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    for (row, node_manifest) in rows.iter().zip(node_manifests) {
+        let path = std::path::Path::new(row["path"].as_str().unwrap());
+        assert_eq!(fs::read(path.join("package.json")).unwrap(), node_manifest);
+    }
+}
+
+#[test]
+fn capsule_create_react_component_manifest_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("env set comp1 teambit.react/react");
+    let command = "capsule create comp1 -b react-manifest-capsules -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let root = capsule_path.parent().unwrap();
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    fs::remove_dir_all(root).unwrap();
+
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+}
+
+#[test]
 fn capsule_create_source_package_manifest_matches_node() {
     let helper = Helper::new();
     helper.re_init_workspace();

@@ -25,7 +25,7 @@ use std::{
 
 use self::{
     files::{
-        component_dependency, copy_component_files, standard_node_manifests,
+        BuiltinEnv, component_dependency, copy_component_files, supported_builtin_manifests,
         write_default_package_json,
     },
     metadata::write_root_metadata,
@@ -160,13 +160,14 @@ fn build_capsules(
     let selected =
         select_isolated_indices(active.len(), &seeders, &edges, create_args.seeders_only);
     validate_custom_name(create_args.name.as_deref(), selected.len())?;
-    if !standard_node_manifests(&root.path, &active, &selected)? {
+    let Some(envs) = supported_builtin_manifests(&root.path, &active, &selected)? else {
         return Err(io::Error::other("capsule manifest requires Node environment"));
-    }
+    };
     write_root_metadata(&ws_capsules_dir, create_args.base_dir.as_deref().unwrap_or(""))?;
     selected
         .into_iter()
-        .map(|idx| {
+        .zip(envs)
+        .map(|(idx, env)| {
             let dependencies = edges[idx]
                 .iter()
                 .map(|&dep| component_dependency(active[dep]))
@@ -175,6 +176,7 @@ fn build_capsules(
                 &root.path,
                 &ws_capsules_dir,
                 active[idx],
+                env,
                 create_args,
                 &dependencies,
             )
@@ -335,6 +337,7 @@ fn materialize_capsule(
     ws_root: &Path,
     capsules_root: &Path,
     entry: &BitmapEntry,
+    env: BuiltinEnv,
     create_args: &CreateArgs,
     dependencies: &BTreeMap<String, String>,
 ) -> io::Result<CreatedCapsule> {
@@ -352,7 +355,7 @@ fn materialize_capsule(
     if src_dir.is_dir() && entry.root_dir != "." {
         copy_component_files(&src_dir, &capsule_dir)?;
     }
-    write_default_package_json(&capsule_dir, entry, dependencies)?;
+    write_default_package_json(&capsule_dir, entry, env, dependencies)?;
     fs::write(capsule_dir.join(".bit-capsule-ready"), "")?;
     Ok(CreatedCapsule { id: full_id, path: capsule_dir.to_string_lossy().into_owned() })
 }

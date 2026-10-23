@@ -1,8 +1,8 @@
 //! Source and package files for an isolated workspace component.
 
-use bit_install::workspace::BitmapEntry;
+use bit_install::workspace::{BitmapEntry, ScopeObjects};
 use serde::Serialize;
-use serde_json::Value;
+use serde_json::{Map, Value};
 use std::{collections::BTreeMap, fs, io, path::Path};
 
 #[derive(Serialize)]
@@ -33,9 +33,9 @@ struct ComponentPackage<'a> {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct PackageDependencies {
-    dependencies: BTreeMap<String, String>,
-    dev_dependencies: BTreeMap<String, String>,
-    peer_dependencies: BTreeMap<String, String>,
+    dependencies: Map<String, Value>,
+    dev_dependencies: Map<String, Value>,
+    peer_dependencies: Map<String, Value>,
 }
 
 #[derive(Serialize)]
@@ -45,11 +45,17 @@ struct DependencyMetadata {
     peer_dependencies_meta: BTreeMap<String, String>,
 }
 
-pub(super) fn standard_node_manifests(
+#[derive(Clone, Copy)]
+pub(super) enum BuiltinEnv {
+    Node,
+    React,
+}
+
+pub(super) fn supported_builtin_manifests(
     ws_root: &Path,
     active: &[&BitmapEntry],
     selected: &[usize],
-) -> io::Result<bool> {
+) -> io::Result<Option<Vec<BuiltinEnv>>> {
     let bytes = fs::read(ws_root.join("workspace.jsonc"))?;
     let config: Value = bit_object_import::parse_jsonc(&bytes).map_err(io::Error::other)?;
     if config
@@ -57,24 +63,56 @@ pub(super) fn standard_node_manifests(
         .and_then(Value::as_object)
         .is_some_and(|variants| !variants.is_empty())
     {
-        return Ok(false);
+        return Ok(None);
     }
+    let mut envs = Vec::with_capacity(selected.len());
     for &index in selected {
         let entry = active[index];
         let config = entry.config.as_ref();
+        let env = effective_env(ws_root, entry)?;
+        let builtin = match env.as_deref() {
+            None | Some("teambit.harmony/node") => BuiltinEnv::Node,
+            Some("teambit.react/react") => BuiltinEnv::React,
+            _ => return Ok(None),
+        };
         if config
-            .and_then(|config| config.get("teambit.envs/envs"))
-            .and_then(|env| env.get("env"))
-            .and_then(Value::as_str)
-            .is_some_and(|env| env != "teambit.harmony/node")
+            .and_then(|config| config.get("teambit.pkg/pkg"))
+            .is_some_and(|pkg| pkg.get("packageJson").is_some())
             || config
-                .and_then(|config| config.get("teambit.pkg/pkg"))
-                .is_some_and(|pkg| pkg.get("packageJson").is_some())
+                .and_then(|config| config.get("teambit.react/react"))
+                .and_then(Value::as_object)
+                .is_some_and(|react| !react.is_empty())
         {
-            return Ok(false);
+            return Ok(None);
         }
+        envs.push(builtin);
     }
-    Ok(true)
+    Ok(Some(envs))
+}
+
+fn effective_env(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<String>> {
+    let bitmap_env = entry.config
+        .as_ref()
+        .and_then(|config| config.get("teambit.envs/envs"))
+        .and_then(|env| env.get("env"))
+        .and_then(Value::as_str);
+    if entry.id.version.is_none() {
+        return Ok(bitmap_env.map(str::to_owned));
+    }
+    let mut id = entry.id.clone();
+    if id.scope.is_none() {
+        id.scope = id.effective_scope().map(str::to_owned);
+    }
+    let model = ScopeObjects::new(&ws_root.join(".bit"))
+        .component_or_head(&id)?
+        .ok_or_else(|| io::Error::other("versioned capsule component model is missing"))?;
+    let model_env = model.extensions
+        .iter()
+        .find(|ext| ext.get("name").and_then(Value::as_str) == Some("teambit.envs/envs"))
+        .and_then(|ext| ext.get("config"))
+        .and_then(|config| config.get("env"))
+        .and_then(Value::as_str);
+    Ok(model_env.or(bitmap_env).map(str::to_owned))
 }
 
 pub(super) fn component_dependency(entry: &BitmapEntry) -> (String, String) {
@@ -96,9 +134,45 @@ fn package_version(entry: &BitmapEntry) -> String {
     }
 }
 
+fn insert_dependency(map: &mut Map<String, Value>, name: &str, version: &str) {
+    map.insert(name.to_owned(), Value::String(version.to_owned()));
+}
+
+fn package_dependencies(
+    env: BuiltinEnv,
+    component_dependencies: &BTreeMap<String, String>,
+) -> PackageDependencies {
+    let mut dependencies = Map::new();
+    let mut dev_dependencies = Map::new();
+    let mut peer_dependencies = Map::new();
+    if matches!(env, BuiltinEnv::React) {
+        insert_dependency(&mut dependencies, "core-js", "^3.0.0");
+        for (name, version) in [
+            ("@types/node", "12.20.4"),
+            ("@types/react", "^19.0.0"),
+            ("@types/react-dom", "^19.0.0"),
+            ("@types/jest", "^26.0.0"),
+            ("@babel/runtime", "7.20.0"),
+            ("@types/testing-library__jest-dom", "5.9.5"),
+        ] {
+            insert_dependency(&mut dev_dependencies, name, version);
+        }
+        insert_dependency(&mut peer_dependencies, "react", "^17.0.0 || ^18.0.0 || ^19.0.0");
+        insert_dependency(&mut peer_dependencies, "react-dom", "^17.0.0 || ^18.0.0 || ^19.0.0");
+    } else {
+        insert_dependency(&mut dev_dependencies, "@types/jest", "26.0.20");
+        insert_dependency(&mut dev_dependencies, "@types/node", "22.10.5");
+    }
+    for (name, version) in component_dependencies {
+        insert_dependency(&mut dependencies, name, version);
+    }
+    PackageDependencies { dependencies, dev_dependencies, peer_dependencies }
+}
+
 pub(super) fn write_default_package_json(
     capsule_dir: &Path,
     entry: &BitmapEntry,
+    env: BuiltinEnv,
     dependencies: &BTreeMap<String, String>,
 ) -> io::Result<()> {
     let pkg_json_path = capsule_dir.join("package.json");
@@ -114,14 +188,7 @@ pub(super) fn write_default_package_json(
             scope: entry.id.effective_scope(),
             version: entry.id.version.as_deref(),
         },
-        dependencies: PackageDependencies {
-            dependencies: dependencies.clone(),
-            dev_dependencies: BTreeMap::from([
-                ("@types/jest".into(), "26.0.20".into()),
-                ("@types/node".into(), "22.10.5".into()),
-            ]),
-            peer_dependencies: BTreeMap::new(),
-        },
+        dependencies: package_dependencies(env, dependencies),
         license: "SEE LICENSE IN UNLICENSED",
         dependency_metadata: DependencyMetadata {
             optional_dependencies: BTreeMap::new(),
