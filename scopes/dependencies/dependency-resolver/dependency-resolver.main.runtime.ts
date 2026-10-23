@@ -1264,8 +1264,31 @@ export class DependencyResolverMain {
     if (fromFile) return fromFile;
     const env = await this.envs.calculateEnvFromExtensions(configuredExtensions);
     const isLoaded = ComponentID.fromString(env.id).isEqualWithoutVersion(ComponentID.fromString(envId));
-    if (!isLoaded && envPolicyIfNotLoaded) return envPolicyIfNotLoaded;
+    if (!isLoaded) {
+      if (envPolicyIfNotLoaded) return envPolicyIfNotLoaded;
+      // a legacy core env also defines its policy in code, and `env.env` here is the default env, whose policy is
+      // empty. snapping keeps the stored env policy in that case (it passes it as envPolicyIfNotLoaded), so without
+      // the embedded copy a workspace load would drop the very dependencies the snap kept and the component would
+      // read as config-modified. the pinned versions are immutable, so the embedded policy is that policy.
+      const legacyCoreEnvPolicy = this.getLegacyCoreEnvPolicy(envId.split('@')[0]);
+      if (legacyCoreEnvPolicy) return legacyCoreEnvPolicy;
+    }
     return this.getComponentEnvPolicyFromEnv(env.env, { envId });
+  }
+
+  /**
+   * the policy of an env that used to be a core aspect, from the embedded table. these envs cannot always be loaded -
+   * their package is not necessarily installed - and their pinned versions are immutable, so their policies are known.
+   */
+  private getLegacyCoreEnvPolicy(envIdWithoutVersion: string): EnvPolicy | undefined {
+    if (!this.envs.isLegacyCoreEnv(envIdWithoutVersion)) return undefined;
+    const legacyCoreEnvPolicy = this.envs.getLegacyCoreEnvPolicy(envIdWithoutVersion);
+    if (!legacyCoreEnvPolicy) return undefined;
+    return EnvPolicy.fromConfigObject(
+      legacyCoreEnvPolicy,
+      { includeLegacyPeersInSelfPolicy: true },
+      envIdWithoutVersion
+    );
   }
 
   /**
@@ -1323,14 +1346,8 @@ export class DependencyResolverMain {
     // pinned versions are immutable, so their policies are known - use the embedded policy
     // rather than the default-env fallback which has no policy at all.
     if (this.envs.isLegacyCoreEnv(envIdWithoutVersion) && !this.envs.isEnvRegistered(envId.toString())) {
-      const legacyCoreEnvPolicy = this.envs.getLegacyCoreEnvPolicy(envIdWithoutVersion);
-      if (legacyCoreEnvPolicy) {
-        return EnvPolicy.fromConfigObject(
-          legacyCoreEnvPolicy,
-          { includeLegacyPeersInSelfPolicy: true },
-          envIdWithoutVersion
-        );
-      }
+      const legacyCoreEnvPolicy = this.getLegacyCoreEnvPolicy(envIdWithoutVersion);
+      if (legacyCoreEnvPolicy) return legacyCoreEnvPolicy;
     }
     const env = this.envs.getEnv(component).env;
     return this.getComponentEnvPolicyFromEnv(env, { envId: envIdWithoutVersion });
