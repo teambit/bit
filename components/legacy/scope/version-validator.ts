@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 import { PackageJsonValidator as PJV } from '@teambit/pkg.package-json.validator';
-import { forEach, isEmpty } from 'lodash';
+import { countBy, forEach, isEmpty } from 'lodash';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
 import type { ComponentIdList } from '@teambit/component-id';
@@ -89,9 +89,7 @@ export function validateVersionInstance(version: Version): void {
     artifactsFiles.forEach((artifacts) => {
       artifacts.refs.map((artifact) => validateFile(artifact, 'artifact'));
       const filesPaths = artifacts.refs.map((artifact) => artifact.relativePath);
-      const duplicateArtifacts = filesPaths.filter(
-        (file) => filesPaths.filter((f) => file.toLowerCase() === f.toLowerCase()).length > 1
-      );
+      const duplicateArtifacts = findCaseInsensitiveDuplicates(filesPaths);
       if (duplicateArtifacts.length) {
         throw new VersionInvalid(
           `${message} the following artifact files are duplicated ${duplicateArtifacts.join(', ')}`
@@ -159,9 +157,7 @@ export function validateVersionInstance(version: Version): void {
       )}`
     );
   }
-  const duplicateFiles = filesPaths.filter(
-    (file) => filesPaths.filter((f) => file.toLowerCase() === f.toLowerCase()).length > 1
-  );
+  const duplicateFiles = findCaseInsensitiveDuplicates(filesPaths);
   if (duplicateFiles.length) {
     throw new VersionInvalid(`${message} the following files are duplicated ${duplicateFiles.join(', ')}`);
   }
@@ -178,7 +174,10 @@ export function validateVersionInstance(version: Version): void {
   });
   version.dependencies.validate(version.componentId);
   version.devDependencies.validate(version.componentId);
-  if (!version.dependencies.isEmpty() && !version.flattenedDependencies.length) {
+  // when the flattened dependencies are stored in a separate object that wasn't loaded, the validation has no access
+  // to them, so the list is not validated here.
+  const flattenedDependencies = version.getFlattenedDependenciesIfLoaded();
+  if (flattenedDependencies && !version.dependencies.isEmpty() && !flattenedDependencies.length) {
     throw new VersionInvalid(`${message}, it has dependencies but its flattenedDependencies is empty`);
   }
   const validateFlattenedDependencies = (dependencies: ComponentIdList) => {
@@ -206,7 +205,7 @@ export function validateVersionInstance(version: Version): void {
       });
     }
   };
-  validateFlattenedDependencies(version.flattenedDependencies);
+  if (flattenedDependencies) validateFlattenedDependencies(flattenedDependencies);
   // extensions can be duplicate with other dependencies type. e.g. "test" can have "compile" as a
   // dependency and extensionDependency. we can't remove it from extDep, otherwise, the ext won't
   // be running
@@ -339,4 +338,14 @@ ${duplicationStr}`);
       );
     }
   }
+}
+
+/**
+ * returns all paths that collide with another path when compared case-insensitively.
+ * linear on purpose: components with tens of thousands of files (e.g. bundled docs sites) made the
+ * previous nested-filter implementation take seconds on every Version serialization.
+ */
+function findCaseInsensitiveDuplicates(paths: string[]): string[] {
+  const counts = countBy(paths, (filePath) => filePath.toLowerCase());
+  return paths.filter((filePath) => counts[filePath.toLowerCase()] > 1);
 }

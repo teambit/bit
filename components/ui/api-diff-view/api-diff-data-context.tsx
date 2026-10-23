@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { gql } from '@apollo/client';
 import { useBulkPagedQuery } from '@teambit/ui-foundation.ui.hooks.use-bulk-paged-query';
 import type { APIDiffResult } from './api-diff-model';
+import { UNSUPPORTED_API_DIFF } from './api-diff-model';
 import { API_DIFF_RESULT_FIELDS } from './use-api-diff';
 
 /** number of component pairs requested per bulk api-diff page */
@@ -49,6 +50,11 @@ export type ApiDiffDataContextModel = {
   apiDiffFor: (compareId: string) => APIDiffResult | null | undefined;
   /** true while pages are still loading; settles to false once every page loads or paging stops early */
   loading: boolean;
+  /**
+   * the server has no API diff support (its GraphQL schema lacks the query or its fields). Every pair
+   * then reads as `UNSUPPORTED_API_DIFF`, and paging stops without retrying.
+   */
+  unsupported: boolean;
 };
 
 const ApiDiffDataContext = createContext<ApiDiffDataContextModel | undefined>(undefined);
@@ -80,7 +86,7 @@ export function ApiDiffDataProvider({
   host?: string;
   children: ReactNode;
 }) {
-  const { lookupByCompareId, loading } = useBulkPagedQuery<APIDiffResult>({
+  const { lookupByCompareId, loading, unsupported } = useBulkPagedQuery<APIDiffResult>({
     query: QUERY_API_DIFFS,
     resultField: 'apiDiffs',
     pairs,
@@ -93,8 +99,18 @@ export function ApiDiffDataProvider({
   });
 
   const value = useMemo<ApiDiffDataContextModel>(
-    () => ({ apiDiffFor: lookupByCompareId, loading }),
-    [lookupByCompareId, loading]
+    () => ({
+      // only a pair without data reads as unsupported; a result that loaded is always kept.
+      apiDiffFor: unsupported
+        ? (compareId: string) => {
+            const loaded = lookupByCompareId(compareId);
+            return loaded === null ? UNSUPPORTED_API_DIFF : loaded;
+          }
+        : lookupByCompareId,
+      loading,
+      unsupported,
+    }),
+    [lookupByCompareId, loading, unsupported]
   );
 
   return <ApiDiffDataContext.Provider value={value}>{children}</ApiDiffDataContext.Provider>;

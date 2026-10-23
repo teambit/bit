@@ -147,7 +147,7 @@ describe('bit reset command', function () {
       let untagOutput;
       before(() => {
         helper.scopeHelper.getClonedWorkspace(localScope);
-        helper.command.tagIncludeUnmodified('0.0.5');
+        helper.command.tagIncludeUnmodifiedWithoutBuild('0.0.5');
         untagOutput = helper.command.resetAll('--head');
       });
       it('should display a descriptive successful message', () => {
@@ -205,7 +205,7 @@ describe('bit reset command', function () {
           helper.scopeHelper.reInitRemoteScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.export();
-          helper.command.tagIncludeUnmodified('1.0.5');
+          helper.command.tagIncludeUnmodifiedWithoutBuild('1.0.5');
           try {
             output = helper.command.reset('utils/is-type');
           } catch (err: any) {

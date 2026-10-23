@@ -17,7 +17,7 @@ describe('bit cat command', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo("module.exports = function foo() { return 'v1'; };\n");
       helper.fixtures.addComponentBarFoo();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
     });
 
     it('should show all source files with headers', () => {
@@ -64,9 +64,9 @@ describe('bit cat command', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo("module.exports = function foo() { return 'v1'; };\n");
       helper.fixtures.addComponentBarFoo();
-      helper.command.tagAllComponents('', '0.0.1');
+      helper.command.tagAllWithoutBuild('--ver 0.0.1');
       helper.fixtures.createComponentBarFoo("module.exports = function foo() { return 'v2'; };\n");
-      helper.command.tagAllComponents('', '0.0.2');
+      helper.command.tagAllWithoutBuild('--ver 0.0.2');
     });
 
     it('should show files at a specific historical version', () => {

@@ -1,4 +1,4 @@
-export type { GeneratorMain, TemplateDescriptor } from './generator.main.runtime';
+export type { GeneratorMain, TemplateDescriptor, BitApi } from './generator.main.runtime';
 export type {
   ComponentContext,
   ComponentTemplate,
@@ -18,6 +18,7 @@ export type {
   ForkComponentInfo,
   ImportComponentInfo,
   CreateComponentInfo,
+  BaseWorkspaceOptions,
 } from './workspace-template';
 export type { GeneratorEnv } from './generator-env-type';
 export { GeneratorAspect } from './generator.aspect';

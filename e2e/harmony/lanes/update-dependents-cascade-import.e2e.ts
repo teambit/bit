@@ -58,72 +58,6 @@ describe('updateDependents cascade - import, fetch and promotion', function () {
     return { comp3HeadOnLaneInitial, comp2InUpdDepInitial };
   }
   // ---------------------------------------------------------------------------------------------
-  // Scenario 11: `bit import` on a hidden updateDependent (no edit, no snap) must leave the
-  // workspace consistent — bitmap presence, `bit status` not erroring, `bit list` reporting the
-  // comp, and a clean export round-trip leaving the remote lane unchanged.
-  // ---------------------------------------------------------------------------------------------
-  describe('scenario 11: bit import on a hidden updateDependent leaves the workspace consistent', () => {
-    let comp2InUpdDepInitial: string;
-    let comp3HeadOnLaneInitial: string;
-
-    before(async () => {
-      const base = await buildBaseRemoteState();
-      comp2InUpdDepInitial = base.comp2InUpdDepInitial;
-      comp3HeadOnLaneInitial = base.comp3HeadOnLaneInitial;
-
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
-      helper.command.importLane('dev', '-x');
-
-      helper.command.importComponent('comp2');
-    });
-
-    it('comp2 should land in the workspace bitmap', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap).to.have.property('comp2');
-    });
-
-    it('bit status runs cleanly (no thrown errors, no merge-pending)', () => {
-      const status = helper.command.statusJson();
-      expect(status).to.be.an('object');
-      expect(status.invalidComponents || []).to.have.lengthOf(0);
-    });
-
-    it('bit list reports comp2 with a resolvable version', () => {
-      const list = helper.command.listLocalScopeParsed();
-      const comp2 = list.find((c: Record<string, any>) => c.id.includes('/comp2'));
-      expect(comp2, 'comp2 should appear in `bit list`').to.exist;
-    });
-
-    it('comp2 stays in lane.updateDependents on the remote (import alone does not promote)', () => {
-      const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
-      expect(remoteLane.updateDependents).to.have.lengthOf(1);
-      expect(remoteLane.updateDependents[0].split('@')[1]).to.equal(comp2InUpdDepInitial);
-    });
-
-    it('the lane`s visible components list still has comp3 only (no leak from the import)', () => {
-      const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
-      expect(remoteLane.components).to.have.lengthOf(1);
-      const comp3OnLane = remoteLane.components.find((c) => c.id.name === 'comp3');
-      expect(comp3OnLane, 'comp3 must stay on lane.components').to.exist;
-      expect(comp3OnLane.head).to.equal(comp3HeadOnLaneInitial);
-    });
-
-    it('a no-op export after the import leaves the remote lane untouched', () => {
-      try {
-        helper.command.export();
-      } catch (err: any) {
-        if (!String(err?.message || err).match(/nothing to export/i)) throw err;
-      }
-      const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
-      expect(remoteLane.updateDependents).to.have.lengthOf(1);
-      expect(remoteLane.updateDependents[0].split('@')[1]).to.equal(comp2InUpdDepInitial);
-      expect(remoteLane.components).to.have.lengthOf(1);
-      const comp3OnLane = remoteLane.components.find((c) => c.id.name === 'comp3');
-      expect(comp3OnLane.head).to.equal(comp3HeadOnLaneInitial);
-    });
-  });
-  // ---------------------------------------------------------------------------------------------
   // Scenario 13: workspace `bit lane merge main` must refresh `lane.updateDependents` so hidden
   // entries stay in sync with main's advanced head.
   // ---------------------------------------------------------------------------------------------
@@ -313,19 +247,23 @@ describe('updateDependents cascade - import, fetch and promotion', function () {
 
   // ---------------------------------------------------------------------------------------------
   // Scenario 19: explicit `bit import <id>` of a hidden updateDependent must land main's tagged
-  // version in the workspace bitmap — not the lane's cascade snap. A subsequent snap then
-  // promotes the component cleanly into `lane.components` and clears the hidden entry, so it
-  // never lives in both buckets at once. Also locks down the snap's parent chain: it descends
-  // from main's head, not the cascade hash, so promote-on-import doesn't silently graft the
-  // cascade history into the lane component graph.
+  // version in the workspace bitmap — not the lane's cascade snap — and otherwise leave the
+  // workspace and the remote lane untouched (status/list work, nothing leaks into
+  // lane.components, a no-op export changes nothing). A subsequent snap then promotes the
+  // component cleanly into `lane.components` and clears the hidden entry, so it never lives in
+  // both buckets at once. Also locks down the snap's parent chain: it descends from main's head,
+  // not the cascade hash, so promote-on-import doesn't silently graft the cascade history into
+  // the lane component graph.
   // ---------------------------------------------------------------------------------------------
   describe('scenario 19: bit import of hidden updateDependent lands main version; snap promotes cleanly', () => {
     let comp2InUpdDepInitial: string;
+    let comp3HeadOnLaneInitial: string;
     let comp2HashOnMain: string;
 
     before(async () => {
       const base = await buildBaseRemoteState();
       comp2InUpdDepInitial = base.comp2InUpdDepInitial;
+      comp3HeadOnLaneInitial = base.comp3HeadOnLaneInitial;
 
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
@@ -348,6 +286,40 @@ describe('updateDependents cascade - import, fetch and promotion', function () {
       const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
       expect(remoteLane.updateDependents).to.have.lengthOf(1);
       expect(remoteLane.updateDependents[0].split('@')[1]).to.equal(comp2InUpdDepInitial);
+    });
+
+    it('bit status runs cleanly (no thrown errors, no invalid components)', () => {
+      const status = helper.command.statusJson();
+      expect(status).to.be.an('object');
+      expect(status.invalidComponents || []).to.have.lengthOf(0);
+    });
+
+    it('bit list reports comp2 with a resolvable version', () => {
+      const list = helper.command.listLocalScopeParsed();
+      const comp2 = list.find((c: Record<string, any>) => c.id.includes('/comp2'));
+      expect(comp2, 'comp2 should appear in `bit list`').to.exist;
+    });
+
+    it('the lane`s visible components list still has comp3 only (no leak from the import)', () => {
+      const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
+      expect(remoteLane.components).to.have.lengthOf(1);
+      const comp3OnLane = remoteLane.components.find((c) => c.id.name === 'comp3');
+      expect(comp3OnLane, 'comp3 must stay on lane.components').to.exist;
+      expect(comp3OnLane.head).to.equal(comp3HeadOnLaneInitial);
+    });
+
+    it('a no-op export after the import leaves the remote lane untouched', () => {
+      try {
+        helper.command.export();
+      } catch (err: any) {
+        if (!String(err?.message || err).match(/nothing to export/i)) throw err;
+      }
+      const remoteLane = helper.command.catLane('dev', helper.scopes.remotePath);
+      expect(remoteLane.updateDependents).to.have.lengthOf(1);
+      expect(remoteLane.updateDependents[0].split('@')[1]).to.equal(comp2InUpdDepInitial);
+      expect(remoteLane.components).to.have.lengthOf(1);
+      const comp3OnLane = remoteLane.components.find((c) => c.id.name === 'comp3');
+      expect(comp3OnLane.head).to.equal(comp3HeadOnLaneInitial);
     });
 
     describe('after editing and snapping the imported comp2', () => {

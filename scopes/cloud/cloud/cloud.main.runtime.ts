@@ -1,7 +1,8 @@
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime, globalFlags } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect, globalFlags } from '@teambit/cli';
 import { v4 } from 'uuid';
 import chalk from 'chalk';
 import os from 'os';

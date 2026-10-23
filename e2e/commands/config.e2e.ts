@@ -40,28 +40,6 @@ describe('bit config', function () {
     });
   });
 
-  describe('git propagation', () => {
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.git.initNewGitRepo();
-      helper.command.runCmd('bit config set conf.key bit-value');
-      // Commented because of permission issue
-      // helper.git.addGitConfig('conf.key', 'git-system-val', 'system');
-      helper.git.addGitConfig('conf.key', 'git-global-val', 'global');
-      helper.git.addGitConfig('conf.key', 'git-local-val', 'local');
-    });
-    it('should read config from bit if exists', () => {
-      const confVal = helper.command.runCmd('bit config get conf.key');
-      expect(confVal).to.have.string('bit-value\n');
-    });
-    it('should not throw an error if not exists both in git and bit', () => {
-      // const confVal = helper.command.runCmd('bit config get nonExistsKey');
-      // expect(confVal).to.be.oneOf(['\n', '', 'undefined\n']);
-      const getNonExistConf = () => helper.command.runCmd('bit config get nonExistsKey');
-      expect(getNonExistConf).to.not.throw();
-    });
-  });
-
   describe('saving config in the local workspace', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();

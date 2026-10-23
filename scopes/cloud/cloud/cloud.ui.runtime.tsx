@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import { flatten } from 'lodash';
 import { SubMenu } from '@teambit/design.controls.menu';
 import { useThemePicker, useThemeByName } from '@teambit/base-react.themes.theme-switcher';

@@ -121,14 +121,11 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
 
   toConfigArray(): ConfigOnlyEntry[] {
     const arr = this.map((entry) => {
-      // Remove extensions without config
-      const clonedEntry = entry.clone();
-      if (clonedEntry.rawConfig && !isEmpty(clonedEntry.rawConfig)) {
-        removeInternalConfigFieldsWithMutation(clonedEntry.rawConfig);
-        if (isEmpty(clonedEntry.rawConfig)) return undefined;
-        return { id: clonedEntry.stringId, config: clonedEntry.config };
-      }
-      return undefined;
+      if (entry.isRemoved) return { id: entry.stringId, config: {} };
+      // Remove extensions without config. only the config is cloned, the data can be big and is not needed here.
+      const config = removeInternalConfigFields(entry.rawConfig);
+      if (!config || isEmpty(config)) return undefined;
+      return { id: entry.stringId, config };
     });
     return compact(arr);
   }
@@ -234,8 +231,23 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     const env = conf[EnvsAspect.id]?.env;
     if (!env) return;
     const [id] = env.split('@');
-    conf[EnvsAspect.id] = { env: id };
-    conf[env] = {};
+    // keep the env set as specific to the component (e.g. by "bit env set"), so it keeps taking precedence over variants
+    const specificProp = conf[EnvsAspect.id].__specific ? { __specific: true } : {};
+    conf[EnvsAspect.id] = { env: id, ...specificProp };
+    conf[env] = { ...specificProp };
+  }
+
+  /**
+   * when the given config object (adjusted by adjustEnvsOnConfigObject) sets an env other than the env of this list,
+   * returns this list without the entry of its env. same as a workspace, which drops the env of a config with a lower
+   * precedence (see AspectsMerger.filterEnvsFromExtensionsIfNeeded).
+   */
+  withoutEnvReplacedBy(conf: Record<string, any>): ExtensionDataList {
+    const newEnv = conf[EnvsAspect.id]?.env;
+    const envsEntry = this.findCoreExtension(EnvsAspect.id);
+    const currentEnv = envsEntry?.config.env || envsEntry?.data.id;
+    if (!newEnv || !currentEnv || newEnv === currentEnv) return this;
+    return this.filter((entry) => entry.idWithoutVersion !== currentEnv);
   }
 }
 

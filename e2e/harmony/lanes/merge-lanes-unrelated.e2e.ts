@@ -1,8 +1,6 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import _ from 'lodash';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
 
 describe('merge lanes - unrelated components', function () {
   this.timeout(0);
@@ -56,13 +54,13 @@ describe('merge lanes - unrelated components', function () {
     });
     describe('bit lane merge without --resolve-unrelated flag', () => {
       it('should throw', () => {
-        expect(() => helper.command.mergeLane('main')).to.throw("don't have any snap in common");
+        expect(() => helper.command.mergeLaneWithoutBuild('main')).to.throw("don't have any snap in common");
       });
     });
     describe('bit lane merge with --resolve-unrelated', () => {
       let mergeOutput: string;
       before(() => {
-        mergeOutput = helper.command.mergeLane('main', '--resolve-unrelated');
+        mergeOutput = helper.command.mergeLaneWithoutBuild('main', '--resolve-unrelated');
       });
       it('should merge successfully', () => {
         expect(mergeOutput).to.have.string('successfully merged');
@@ -94,7 +92,7 @@ describe('merge lanes - unrelated components', function () {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
         helper.scopeHelper.getClonedWorkspace(afterLaneExport);
         helper.command.import();
-        helper.command.mergeLane('main', '--resolve-unrelated --no-auto-snap');
+        helper.command.mergeLaneWithoutBuild('main', '--resolve-unrelated --no-auto-snap');
       });
       it('bit status should show the component as during-merge and staged and not everywhere else', () => {
         helper.command.expectStatusToBeClean(['componentsDuringMergeState', 'stagedComponents']);
@@ -121,20 +119,16 @@ describe('merge lanes - unrelated components', function () {
         });
       });
     });
+    // only the file content is asserted here: the status and import behaviour is driven by
+    // --no-auto-snap, not by the strategy, and the describe above already covers it
     describe('bit lane merge with --resolve-unrelated and "theirs" merge-strategy', () => {
       before(() => {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeAfterExport);
         helper.scopeHelper.getClonedWorkspace(afterLaneExport);
         helper.command.import();
-        helper.command.mergeLane('main', '--resolve-unrelated theirs --no-auto-snap');
+        helper.command.mergeLaneWithoutBuild('main', '--resolve-unrelated theirs --no-auto-snap');
       });
-      it('bit status should show the component as during-merge and staged and not everywhere else', () => {
-        helper.command.expectStatusToBeClean(['componentsDuringMergeState', 'stagedComponents']);
-      });
-      it('bit import should not throw', () => {
-        expect(() => helper.command.import()).not.to.throw();
-      });
-      it('should not change the file content because the default merge-strategy is "ours"', () => {
+      it('should take the file content from the other side, as asked by the "theirs" strategy', () => {
         const file = helper.fs.readFile('comp1/index.js');
         expect(file).to.have.string('on-origin');
         expect(file).not.to.have.string('on-lane');
@@ -151,11 +145,11 @@ describe('merge lanes - unrelated components', function () {
         helper.command.export();
         helper.command.switchLocalLane('dev');
         helper.command.import();
-        helper.command.mergeLane('main', '--resolve-unrelated');
+        helper.command.mergeLaneWithoutBuild('main', '--resolve-unrelated');
         laneHeadAfterMerge = helper.command.getHeadOfLane('dev', 'comp1');
         helper.command.export();
         beforeMergingSecondLane = helper.scopeHelper.cloneWorkspace();
-        helper.command.mergeLane('dev2', '--resolve-unrelated');
+        helper.command.mergeLaneWithoutBuild('dev2', '--resolve-unrelated');
       });
       it('should keep the local history and not the dev2 history because the current history has been already resolved', () => {
         const log = helper.command.logParsed('comp1');
@@ -183,7 +177,7 @@ describe('merge lanes - unrelated components', function () {
           helper.command.import();
         });
         it('should be able to merge with no errors', () => {
-          expect(() => helper.command.mergeLane('dev2', '--resolve-unrelated')).to.not.throw();
+          expect(() => helper.command.mergeLaneWithoutBuild('dev2', '--resolve-unrelated')).to.not.throw();
         });
       });
     });
@@ -213,7 +207,7 @@ describe('merge lanes - unrelated components', function () {
         helper.command.export();
       });
       it('should not throw', () => {
-        expect(() => helper.command.mergeLane('main')).to.not.throw();
+        expect(() => helper.command.mergeLaneWithoutBuild('main')).to.not.throw();
       });
     });
     // dev: snapA -> export -> snapB -> snapC -> merge-snap.
@@ -225,7 +219,7 @@ describe('merge lanes - unrelated components', function () {
         helper.command.import();
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
-        helper.command.mergeLane('main', '--resolve-unrelated -x');
+        helper.command.mergeLaneWithoutBuild('main', '--resolve-unrelated -x');
       });
       // previously, this was throwing NoCommonSnap error, because getDivergeData was comparing the remote-lane-head
       // (snapA) with the current merge-snap. The current merge-snap has one parent - head of main. The remote-lane-head has
@@ -263,7 +257,7 @@ describe('merge lanes - unrelated components', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.command.mergeLane('lane-a', '-x');
+      helper.command.mergeLaneWithoutBuild('lane-a', '-x');
     });
     it('should not throw during bit-import because it tries to import comp1 from the original scope instead of the lane scope', () => {
       expect(() => helper.command.import()).to.not.throw();
@@ -275,7 +269,6 @@ describe('merge lanes - unrelated components', function () {
     let headOnLaneB: string;
     let beforeMerge: string;
     before(() => {
-      helper = new Helper();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.createLane('lane-a');
       helper.fixtures.populateComponents(1, false, 'lane-a');
@@ -294,7 +287,7 @@ describe('merge lanes - unrelated components', function () {
     });
     describe('without specifying strategy, which defaults to "ours"', () => {
       before(() => {
-        helper.command.mergeLane('lane-a', '--resolve-unrelated -x');
+        helper.command.mergeLaneWithoutBuild('lane-a', '--resolve-unrelated -x');
       });
       it('should resolve by default by ours', () => {
         const fileContent = helper.fs.readFile('comp1/index.js');
@@ -314,7 +307,7 @@ describe('merge lanes - unrelated components', function () {
     describe('with strategy theirs', () => {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(beforeMerge);
-        helper.command.mergeLane('lane-a', '--resolve-unrelated=theirs -x');
+        helper.command.mergeLaneWithoutBuild('lane-a', '--resolve-unrelated=theirs -x');
       });
       it('should get the file content according to their', () => {
         const fileContent = helper.fs.readFile('comp1/index.js');
@@ -348,7 +341,7 @@ describe('merge lanes - unrelated components', function () {
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.mergeLane('dev2');
+      helper.command.mergeLaneWithoutBuild('dev2');
     });
     it('should not bring the removed components', () => {
       const bitMap = helper.bitMap.read();
@@ -371,18 +364,11 @@ describe('merge lanes - unrelated components', function () {
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.mergeLane('dev2');
+      helper.command.mergeLaneWithoutBuild('dev2');
     });
-    // made a decision (according to Ran) to not merge the component in this case.
-    it.skip('should bring the removed component because it may have changed and these changes are needed for other components', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap).to.have.property('comp2');
-    });
-    it.skip('should show the removed components as remotelySoftRemoved because of the merge-config mechanism', () => {
-      const status = helper.command.statusJson();
-      expect(status.remotelySoftRemoved).to.have.lengthOf(1);
-      expect(status.remotelySoftRemoved[0]).to.include('comp2');
-    });
+    // by design, a component the local lane soft-removed is not brought back by the merge even when
+    // the other lane diverged - so there is deliberately no assertion here that comp2 returns or is
+    // reported as remotelySoftRemoved (two permanently-skipped tests claiming that were removed)
     it('bit log should not show duplications', () => {
       const log = helper.command.logParsed('comp2');
       const hashes = log.map((logEntry) => logEntry.hash);

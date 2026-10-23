@@ -42,6 +42,7 @@ export type WorkspaceExtensionProps = {
   defaultDirectory?: string;
   components?: ComponentScopeDirMap;
   ignoredFiles?: string[];
+  trackAllFiles?: boolean;
 };
 
 export type PackageManagerClients = 'npm' | 'yarn' | undefined;
@@ -404,6 +405,7 @@ export class WorkspaceConfig implements HostConfig {
       componentsDefaultDirectory,
       _manageWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.manageWorkspaces,
       ignoredFiles: this.extension('teambit.workspace/workspace', true)?.ignoredFiles,
+      trackAllFiles: this.extension('teambit.workspace/workspace', true)?.trackAllFiles,
       extensions: this.extensions.toConfigObject(),
       path: this.path,
       isLegacy: false,

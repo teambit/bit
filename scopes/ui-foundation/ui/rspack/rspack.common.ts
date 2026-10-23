@@ -1,5 +1,4 @@
 import type { RuleSetRule } from '@rspack/core';
-import { fallbacks } from '@teambit/webpack';
 import { excludeNodeModulesJs } from '@teambit/webpack.modules.exclude-node-modules-js';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 
@@ -57,9 +56,12 @@ export function resolveAlias(opts?: { profile?: boolean }): Record<string, strin
   };
 }
 
+const pathFallback = require.resolve('path-browserify');
+export const processFallback = require.resolve('process/browser');
+
 export const resolveFallback = {
   module: false,
-  path: fallbacks.path,
+  path: pathFallback,
   dgram: false,
   dns: false,
   fs: false,
@@ -68,14 +70,14 @@ export const resolveFallback = {
   net: false,
   tls: false,
   child_process: false,
-  process: fallbacks.process,
+  process: processFallback,
 } as const;
 
 export const resolveFallbackDev = {
   fs: false,
-  path: fallbacks.path,
+  path: pathFallback,
   stream: false,
-  process: fallbacks.process,
+  process: processFallback,
 } as const;
 
 // Keep CSS module imports webpack-compatible: `import styles from './x.module.scss'`.

@@ -1,7 +1,7 @@
 import { mergeSchemas } from '@graphql-tools/schema';
 import NoIntrospection from 'graphql-disable-introspection';
 import { GraphQLModule } from '@graphql-modules/core';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { Logger, LoggerMain } from '@teambit/logger';

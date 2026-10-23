@@ -42,6 +42,11 @@
           "description": "When true, every bit command auto-syncs the local .bitmap to the latest scope HEAD on the first run after `git pull` (sentinel-driven, paid at most once per pull). Pair with `bit ci merge --no-bitmap-commit` to support repos with branch protection that forbid CI commits on the default branch.",
           "type": "boolean",
           "default": false
+        },
+        "trackAllFiles": {
+          "description": "When true, bit tracks every file in a component directory that git would track, including the files it normally treats as bit-generated: package.json, a tsconfig.json and lint configs at the component root, and npm/yarn lockfiles. For workspaces adopted from an existing monorepo, where those files are the source of truth.",
+          "type": "boolean",
+          "default": false
         }
       },
       "required": [

@@ -44,6 +44,12 @@ export type ImportOptions = {
   mergeStrategy?: MergeStrategy;
   filterEnvs?: string[];
   writeToPath?: string;
+  /**
+   * a directory per component, keyed by the id without its version, for writing components that each
+   * go to its own place in one import rather than one import per directory (see the same prop on
+   * ManyComponentsWriterParams).
+   */
+  writeToPathPerId?: Record<string, string>;
   writeConfig?: boolean;
   override?: boolean;
   installNpmPackages: boolean; // default: true
@@ -387,6 +393,7 @@ export default class ImportComponents {
     return {
       components,
       writeToPath: this.options.writeToPath,
+      writeToPathPerId: this.options.writeToPathPerId,
       writeConfig: this.options.writeConfig,
       skipDependencyInstallation: !this.options.installNpmPackages,
       skipWriteConfigFiles: !this.options.writeConfigFiles,
@@ -578,7 +585,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
           throwForSeederNotFound: false,
           reason: this.options.fetchDeps
             ? 'for getting all dependencies'
-            : `for getting dependencies of components that don't have dependency-graph`,
+            : 'for getting missing versions and dependencies',
         });
 
     return results;
@@ -721,7 +728,9 @@ if you just want to get a quick look into this snap, create a new workspace and 
   private async getAllFlattenedDeps(bitIds: ComponentID[]): Promise<ComponentIdList> {
     const remoteComps = await this.scope.scopeImporter.getManyRemoteComponents(bitIds);
     const versions = remoteComps.getVersions();
-    return ComponentIdList.uniqFromArray(versions.flatMap((v) => [...v.flattenedDependencies]));
+    // the objects aren't written to the scope yet, so the flattened dependencies are loaded from the received objects.
+    const flattenedDeps = await Promise.all(versions.map((v) => v.loadFlattenedDependencies(remoteComps)));
+    return ComponentIdList.uniqFromArray(flattenedDeps.flatMap((deps) => [...deps]));
   }
 
   /**
@@ -740,7 +749,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
     const missingEdges: string[] = [];
     for (const { component, versionStr, version } of componentsAndVersions) {
       const edges = await version.getFlattenedEdges(this.scope.objects);
-      if (!edges.length && version.flattenedDependencies.length) {
+      if (!edges.length && (await version.loadFlattenedDependencies(this.scope.objects)).length) {
         missingEdges.push(`${component.toComponentId().toStringWithoutVersion()}@${versionStr}`);
         continue;
       }
@@ -1096,6 +1105,7 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
     const manyComponentsWriterOpts: ManyComponentsWriterParams = {
       components: componentsToWrite,
       writeToPath: this.options.writeToPath,
+      writeToPathPerId: this.options.writeToPathPerId,
       writeConfig: this.options.writeConfig,
       skipDependencyInstallation: !this.options.installNpmPackages,
       skipWriteConfigFiles: !this.options.writeConfigFiles,

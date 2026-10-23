@@ -35,9 +35,9 @@ export async function createLane(
   const getDataToPopulateLaneObjectIfNeeded = async (): Promise<LaneComponent[]> => {
     if (remoteLane) return remoteLane.components;
     // when branching from one lane to another, copy components from the origin lane
-    // when branching from main, no need to copy anything
+    // when branching from main, copy only the staged snaps (see getStagedSnapsOfMain)
     const currentLaneObject = await consumer.getCurrentLaneObject();
-    if (!currentLaneObject) return [];
+    if (!currentLaneObject) return consumer.bitMap.laneId ? [] : getStagedSnapsOfMain(workspace);
     const laneComponents = currentLaneObject.components;
     const workspaceIds = consumer.bitMap.getAllBitIds();
     const laneComponentWithBitmapHead = await Promise.all(
@@ -83,6 +83,23 @@ export async function createLaneInScope(laneName: string, scope: ScopeMain, scop
   const newLane = Lane.create(laneName, scopeName);
   await scope.legacyScope.lanes.saveLane(newLane, { laneHistoryMsg: 'new lane (created from scope)' });
   return newLane;
+}
+
+/**
+ * snaps that exist on main locally but were not exported, e.g. after merging another lane into main locally.
+ * the new lane must include them. otherwise, the new lane snaps are based on snaps that are not part of the lane
+ * history, and their dependencies can point to snaps of another lane.
+ */
+async function getStagedSnapsOfMain(workspace: Workspace): Promise<LaneComponent[]> {
+  const stagedIds = await new ComponentsList(workspace).listExportPendingComponentsIds();
+  const workspaceIds = workspace.consumer.bitMap.getAllBitIds();
+  return compact(
+    stagedIds.map((id) => {
+      const bitmapId = workspaceIds.searchWithoutVersion(id);
+      if (!bitmapId || !isSnap(bitmapId.version)) return null;
+      return { id: bitmapId.changeVersion(undefined), head: Ref.from(bitmapId.version as string) };
+    })
+  );
 }
 
 async function getLaneOrigin(consumer: Consumer): Promise<LaneId | undefined> {

@@ -26,8 +26,7 @@ import type { PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import type { UiMain, PreStartOpts } from '@teambit/ui';
 import { readRootComponentsDir } from '@teambit/workspace.root-components';
-import { compact, groupBy, uniq } from 'lodash';
-import type { MultiCompiler } from '@teambit/multi-compiler';
+import { compact, groupBy, uniq, uniqBy } from 'lodash';
 import type { CompIdGraph } from '@teambit/graph';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent } from './events';
@@ -54,6 +53,12 @@ export type CompileOptions = {
    * start` to avoid webpack "EINTR" error.
    */
   deleteDistDir?: boolean;
+  /**
+   * source files (absolute paths) that were removed from the component. once the new dists are written, their stale
+   * dists are deleted. (used by watch, which can't delete the entire dist dir, as other processes such as webpack
+   * may read it meanwhile)
+   */
+  removedFiles?: PathOsBasedAbsolute[];
   initiator: CompilationInitiator; // describes where the compilation is coming from
   // should we create links in node_modules for the compiled components (default = true)
   // this will link the source files, and create the package.json
@@ -99,9 +104,9 @@ export class ComponentCompiler {
       await Promise.all(absoluteDistDirs.map((distDir) => fs.remove(distDir)));
     }
 
-    const compilers: Compiler[] = (this.compilerInstance as MultiCompiler).compilers
-      ? (this.compilerInstance as MultiCompiler).compilers
-      : [this.compilerInstance];
+    // a multi-compiler exposes its inner compilers.
+    const innerCompilers: Compiler[] | undefined = (this.compilerInstance as { compilers?: Compiler[] }).compilers;
+    const compilers: Compiler[] = innerCompilers || [this.compilerInstance];
     const canTranspileFile = compilers.find((c) => c.transpileFile);
     const canTranspileComponent = compilers.find((c) => c.transpileComponent);
 
@@ -135,6 +140,7 @@ export class ComponentCompiler {
       await dataToPersist.persistAllToFS();
     }
     await Promise.all(absoluteDists.map((distFile) => distFile.write()));
+    if (options.removedFiles?.length) await this.removeDistsOfRemovedFiles(options.removedFiles, distDirs);
     const buildResults = this.dists.map((distFile) => distFile.path);
     if (this.component.state._consumer.compiler) this.logger.consoleSuccess();
 
@@ -167,6 +173,38 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
       this.logger.console(err.message);
     }
+  }
+
+  /**
+   * delete only the dists generated from the removed files, rather than the whole dist dir. this way, files that were
+   * never compiled (e.g. temp files of an atomic save) delete nothing, and the remaining dists are always available.
+   */
+  private async removeDistsOfRemovedFiles(removedFiles: PathOsBasedAbsolute[], distDirs: string[]) {
+    const distDirName = this.compilerInstance.getDistDir?.() || DEFAULT_DIST_DIRNAME;
+    // a file might have been re-created meanwhile (e.g. delete-then-recreate save), its dists are valid then.
+    const stillRemoved = compact(
+      await Promise.all(removedFiles.map(async (file) => ((await fs.pathExists(file)) ? null : file)))
+    );
+    const pathsInDistDir = stillRemoved.flatMap((removedFile) => {
+      const relativePath = path.relative(this.componentDir, removedFile);
+      if (!relativePath || relativePath.startsWith('..') || path.isAbsolute(relativePath)) return [];
+      const compiledPath = path.relative(distDirName, this.compilerInstance.getDistPathBySrcPath(relativePath));
+      const compiledPathNoExt = compiledPath.replace(/\.js$/, '');
+      return [
+        relativePath, // a non-supported file copied as is, or a removed directory
+        compiledPath,
+        `${compiledPath}.map`,
+        `${compiledPathNoExt}.d.ts`,
+        `${compiledPathNoExt}.d.ts.map`,
+      ];
+    });
+    const writtenDists = new Set(this.dists.map((distFile) => path.resolve(this.toAbsolutePath(distFile.path))));
+    const pathsToRemove = uniq(
+      distDirs.flatMap((distDir) =>
+        pathsInDistDir.map((pathInDistDir) => path.resolve(this.toAbsolutePath(distDir), pathInDistDir))
+      )
+    ).filter((pathToRemove) => !writtenDists.has(pathToRemove));
+    await Promise.all(pathsToRemove.map((pathToRemove) => fs.remove(pathToRemove)));
   }
 
   private async distDirs(): Promise<string[]> {
@@ -340,6 +378,7 @@ type TypeGeneratorParamsPerEnv = { envId: string; compParams: TypeGeneratorCompP
 
 export class WorkspaceCompiler {
   private componentsBeingProcessedInOnAspectLoadFail = new Set<string>();
+  private envsBeingRestored = new Set<string>();
 
   constructor(
     private workspace: Workspace,
@@ -423,6 +462,16 @@ export class WorkspaceCompiler {
           return false;
         }
 
+        // an install in another process may be replacing node_modules (likely why the aspect failed to load), and
+        // compiling would write into dirs the package manager is deleting. a later load of the aspect tries again.
+        const runningInstall = await this.watcher.ipcEvents.getInstallRunningElsewhere();
+        if (runningInstall) {
+          this.logger.debug(
+            `onAspectLoadFail: skipping compilation of ${idStr} - an install is running in process ${runningInstall.pid}`
+          );
+          return false;
+        }
+
         this.componentsBeingProcessedInOnAspectLoadFail.add(idStr);
         try {
           const { graph, successors } = await this.getEnvDepsGraph(id);
@@ -466,9 +515,10 @@ export class WorkspaceCompiler {
     watchOpts: WatchOptions
   ): Promise<SerializableResults | void> {
     if (!watchOpts.compile) return undefined;
-    // when files are removed, we need to remove the dist directories and the old symlinks, otherwise, it has
-    // symlinks to non-exist files and the dist has stale files
-    const deleteDistDir = Boolean(removedFiles?.length);
+    // when files are removed, we need to remove their dists and the old symlinks, otherwise, it has
+    // symlinks to non-exist files and the dist has stale files.
+    // don't delete the entire dist dir here. other processes (e.g. a webpack dev-server) may read it meanwhile and
+    // fail with ENOENT. also, "removed files" include temp files of atomic saves, which have no dists at all.
     if (removedFiles?.length) {
       await removeLinksFromNodeModules(component, this.workspace, removedFiles);
     }
@@ -476,7 +526,8 @@ export class WorkspaceCompiler {
       [component.id.toString()],
       {
         initiator: watchOpts.initiator || CompilationInitiator.ComponentChanged,
-        deleteDistDir,
+        deleteDistDir: false,
+        removedFiles,
         generateTypes: watchOpts.generateTypes,
       },
       true
@@ -572,6 +623,45 @@ export class WorkspaceCompiler {
     this.workspace.clearComponentsCache(idsToClearCache.map((id) => ComponentID.fromString(id)));
   }
 
+  /**
+   * an env instance keeps absolute paths into the package dir it was loaded from, such as its tsconfig in "dist".
+   * when the package manager re-creates that dir (sources only, no "dist"), a compiler created from that instance
+   * reads missing files, and get-tsconfig falls back to whatever tsconfig.json it finds up the tree. compiling the
+   * workspace env writes its "dist" back, so the paths are valid again. this runs on every compile, not only in
+   * install, because a long-lived process (e.g. "bit server") can hold such an instance after another process installs.
+   * when the package dir was moved instead of re-created, compiling can't help; install's reloadMovedEnvs reloads it.
+   */
+  private async restoreEnvsWithMissingFiles(components: Component[], options: CompileOptions) {
+    const envDefs = uniqBy(
+      components.map((component) => this.envs.getOrCalculateEnv(component)),
+      (envDef) => envDef.id
+    );
+    const envIds = envDefs
+      .filter((envDef) => {
+        const pluginPath = envDef.env?.__resolvedPath;
+        return (
+          pluginPath &&
+          !fs.existsSync(pluginPath) &&
+          !this.envsBeingRestored.has(envDef.id) &&
+          this.workspace.hasId(ComponentID.fromString(envDef.id), { ignoreVersion: true })
+        );
+      })
+      .map((envDef) => envDef.id);
+    if (!envIds.length) return;
+    this.logger.debug(`restoreEnvsWithMissingFiles: compiling ${envIds.join(', ')} before using them`);
+    envIds.forEach((envId) => this.envsBeingRestored.add(envId));
+    // without a version, so an env instance loaded from another version than the workspace's is still compiled
+    // (its package dir is the workspace component's).
+    const idsToCompile = envIds.map((envId) => ComponentID.fromString(envId).toStringWithoutVersion());
+    try {
+      await this.compileComponents(idsToCompile, { initiator: options.initiator }, true, {
+        loadSeedersAsAspects: false,
+      });
+    } finally {
+      envIds.forEach((envId) => this.envsBeingRestored.delete(envId));
+    }
+  }
+
   private async runCompileComponents(
     components: Component[],
     options: CompileOptions,
@@ -579,6 +669,8 @@ export class WorkspaceCompiler {
   ): Promise<BuildResult[]> {
     const componentsCompilers: ComponentCompiler[] = [];
     const skipped: BuildResult[] = [];
+
+    await this.restoreEnvsWithMissingFiles(components, options);
 
     components.forEach((c) => {
       const env = this.envs.getOrCalculateEnv(c);

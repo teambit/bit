@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { Environment, EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import { EmptyEnvAspect } from './empty-env.aspect';

@@ -1,4 +1,4 @@
-import type { Component, ComponentFactory, ComponentID, ComponentMain } from '@teambit/component';
+import type { Component, ComponentFactory, ComponentID, ComponentMain, GetGraphIdsOpts } from '@teambit/component';
 import type { Graph } from '@teambit/graph.cleargraph';
 import { Edge } from '@teambit/graph.cleargraph';
 import { ComponentGraph } from './component-graph';
@@ -7,7 +7,7 @@ import { Dependency } from './model/dependency';
 
 export type GetGraphOpts = {
   host?: ComponentFactory;
-};
+} & GetGraphIdsOpts;
 
 export class GraphBuilder {
   constructor(private componentAspect: ComponentMain) {}
@@ -27,7 +27,7 @@ export class GraphBuilder {
   async getGraphIds(ids?: ComponentID[], opts: GetGraphOpts = {}): Promise<ComponentIdGraph> {
     const componentHost = opts.host || this.componentAspect.getHost();
 
-    const graph = await componentHost.getGraphIds(ids, false);
+    const graph = await componentHost.getGraphIds(ids, false, opts);
     const componentIdGraph = new ComponentIdGraph(graph.nodes, graph.edges);
     componentIdGraph.seederIds = ids || (await componentHost.listIds());
     return componentIdGraph;

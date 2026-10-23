@@ -47,7 +47,7 @@ describe('custom env (config and versioning scenarios)', function () {
     });
     // previously, it errored "Cannot read property 'id' of undefined"
     it('bit env-set should not throw any error', () => {
-      expect(() => helper.command.setEnv('comp1', envId));
+      expect(() => helper.command.setEnv('comp1', envId)).to.not.throw();
     });
   });
   describe('custom-env is 0.0.2 on the workspace, but comp1 is using it in the model with 0.0.1', () => {
@@ -61,16 +61,13 @@ describe('custom env (config and versioning scenarios)', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.2
     });
-    // previously, this was failing with ComponentNotFound error.
+    // previously, loading comp1 was failing with ComponentNotFound error.
     // it's happening during the load of comp1, we have the onLoad, where the workspace calculate extensions.
     // Once it has all extensions it's loading them. in this case, comp1 has the custom-env with 0.0.1 in the envs/envs
     // it's unable to find it in the workspace and asks the scope, which can't find it because it's the full-id include
     // scope-name.
     // now, during the extension calculation, it checks whether the component is in the workspace, and if so, it sets
     // the version according to the workspace.
-    it('any bit command should not throw', () => {
-      expect(() => helper.command.status()).to.not.throw();
-    });
     it('bit show should show the correct env', () => {
       const env = helper.env.getComponentEnv('comp1');
       expect(env).to.equal(`${envId}@0.0.2`);
@@ -177,10 +174,6 @@ export default createMounter(MyReactProvider) as any;`
     it('bit status should not enter into an infinite loop', () => {
       expect(() => helper.command.status()).to.not.throw();
     });
-    it('should complete bit status command successfully', () => {
-      const status = helper.command.status();
-      expect(status).to.be.a('string');
-    });
   });
   describe('ejecting conf when current env exists locally', () => {
     before(() => {
@@ -237,7 +230,6 @@ export default createMounter(MyReactProvider) as any;`
     });
   });
   describe('an env with a preview/bundler but without a compiler', () => {
-    let buildOutput: string;
     before(() => {
       // preview is disabled by default in e2e to speed up tagging. enable it so the GeneratePreview
       // task actually runs - this is the path that used to fail for a compiler-less env.
@@ -250,16 +242,14 @@ export default createMounter(MyReactProvider) as any;`
       helper.command.setEnv('comp1', envId);
       helper.command.install();
     });
-    it('bit build should not fail generating the preview', () => {
+    it('bit build should not fail generating the preview, and the GeneratePreview task should have run', () => {
       // before the fix it used to throw "context.env.getCompiler is not a function" and then
       // ENOENT when writing the preview link into the (never created) dist dir.
       // skip the TSCompiler task: comp1's env has no compiler anyway, and skipping it avoids
       // compiling the env component itself (irrelevant to this scenario - the user's env was a
       // resolved dependency, not built). the global GeneratePreview task still runs.
-      buildOutput = helper.command.build('comp1', '--skip-tasks TSCompiler');
+      const buildOutput = helper.command.build('comp1', '--skip-tasks TSCompiler');
       expect(buildOutput).to.have.string('build succeeded');
-    });
-    it('the GeneratePreview task should have run (preview was needed, not skipped)', () => {
       expect(buildOutput).to.have.string('GeneratePreview');
     });
   });

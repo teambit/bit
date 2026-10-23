@@ -2,7 +2,8 @@
 /* eslint-disable import/no-unresolved */
 
 import type { CLIMain, Command } from '@teambit/cli';
-import { CLIAspect, getArgsData, getCommandName, getFlagsData, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect, getArgsData, getCommandName, getFlagsData } from '@teambit/cli';
 import childProcess from 'child_process';
 import stripAnsi from 'strip-ansi';
 import fs from 'fs-extra';

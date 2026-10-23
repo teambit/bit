@@ -20,7 +20,7 @@ export class ScopeComponentLoader {
     private scope: ScopeMain,
     private logger: Logger
   ) {
-    this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+    this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents(), weak: true });
     this.importedComponentsCache = createInMemoryCache({ maxAge: 1000 * 60 * 30 }); // 30 min
   }
 
@@ -90,7 +90,11 @@ export class ScopeComponentLoader {
       );
     }
     const snap = await this.getHeadSnap(modelComponent);
-    const state = await loadSpan('state-from-version', { id: idStr }, () => this.createStateFromVersion(id, version));
+    // newId, not id. without a version, id resolves to "latest" again, which may have moved (e.g. by the fetch of a
+    // missing Version above) and point at a version other than the loaded one, which may not exist locally.
+    const state = await loadSpan('state-from-version', { id: idStr }, () =>
+      this.createStateFromVersion(newId, version)
+    );
     const tagMap = this.getTagMap(modelComponent);
 
     const component = new Component(newId, snap, state, tagMap, this.scope);

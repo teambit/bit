@@ -146,10 +146,6 @@ describe('bit ci sync: branch ownership and first contact', function () {
   // Every input to the deletion decision is read from refs fetched once at the start of the run, so a
   // branch can advance before the delete lands. A `pre-push` hook is the only way to interleave a remote
   // update into the command's own push, i.e. to reach the window between the re-read and the delete.
-
-  // Every input to the deletion decision is read from refs fetched once at the start of the run, so a
-  // branch can advance before the delete lands. A `pre-push` hook is the only way to interleave a remote
-  // update into the command's own push, i.e. to reach the window between the re-read and the delete.
   describe('a branch that advances between the ownership read and the delete is kept, not deleted', () => {
     const LANE = 'race-lane';
     let defaultBranch: string;
@@ -189,9 +185,6 @@ describe('bit ci sync: branch ownership and first contact', function () {
       }
     });
   });
-
-  // The defect this closes: `bit ci pr --keep-lane` creates the lane but never commits the pointer to
-  // the branch's `.bitmap`, and the next `bit ci sync` used to halt on the pair.
 
   // The defect this closes: `bit ci pr --keep-lane` creates the lane but never commits the pointer to
   // the branch's `.bitmap`, and the next `bit ci sync` used to halt on the pair.
@@ -238,8 +231,6 @@ describe('bit ci sync: branch ownership and first contact', function () {
       expect(output).to.include(`${FEATURE_BRANCH} -> noop (converged)`);
     });
   });
-
-  // Adoption must never be a bare export: real divergence halts and the lane is left untouched.
 
   // Adoption must never be a bare export: real divergence halts and the lane is left untouched.
   describe('a branch whose content would change the lane at first contact halts instead of adopting', () => {
@@ -295,8 +286,6 @@ describe('bit ci sync: branch ownership and first contact', function () {
   });
 
   // Lane names chosen so the halting lane sorts first: any adoption residue would poison the lane after it.
-
-  // Lane names chosen so the halting lane sorts first: any adoption residue would poison the lane after it.
   describe('one lane halting during adoption does not affect a healthy lane in the same --all run', () => {
     const HALTING_LANE = 'adopt-conflict-blast';
     const HEALTHY_LANE = 'healthy-blast';
@@ -336,9 +325,4 @@ describe('bit ci sync: branch ownership and first contact', function () {
       expect(rerun.output).to.include(`${HEALTHY_LANE} -> noop (converged)`);
     });
   });
-
-  // `commitAllAndPush`'s own comment says a rejected push means "someone pushed concurrently; re-plan
-  // rather than clobber" — this proves the caller actually does that instead of halting and labeling
-  // the PR `bit-sync-conflict` over a race that isn't a real content conflict, AND that the pair is
-  // left in a state the very next run converges cleanly — the race leaves no unresolved trail.
 });

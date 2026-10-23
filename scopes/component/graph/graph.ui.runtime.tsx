@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { ComponentCompareUI } from '@teambit/component-compare';

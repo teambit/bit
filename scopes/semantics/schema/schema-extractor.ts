@@ -1,6 +1,5 @@
 import type { Component } from '@teambit/component';
 import type { APISchema } from '@teambit/semantics.entities.semantic-schema';
-import type { Formatter } from '@teambit/formatter';
 
 export interface SchemaExtractor {
   /**
@@ -16,8 +15,16 @@ export interface SchemaExtractor {
   dispose(): void;
 }
 
+/**
+ * the part of the formatter the extractor needs (formats code snippets, such as examples in jsdoc).
+ * the formatter aspect's `Formatter` satisfies it.
+ */
+export type SnippetFormatter = {
+  formatSnippet(snippet: string, filepath?: string): Promise<string>;
+};
+
 export type SchemaExtractorOptions = {
-  formatter?: Formatter;
+  formatter?: SnippetFormatter;
   tsserverPath?: string;
   contextPath?: string;
   skipInternals?: boolean;

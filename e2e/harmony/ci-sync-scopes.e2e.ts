@@ -29,6 +29,7 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
     syncRun,
     remoteBranchExists,
     remoteRefs,
+    runBit,
     branchTipSha,
     branchTipMessage,
     laneHeadTrailer,
@@ -215,6 +216,7 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
     const LANE = 'hosted-elsewhere';
     let hostScope: string;
     let defaultBranch: string;
+    let devPath: string;
 
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -229,7 +231,7 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
 
       // `--scope` puts the lane OBJECT on another scope; the components on it are still this
       // workspace's, so the lane's content is entirely this repository's business.
-      createLaneWithSnap(
+      devPath = createLaneWithSnap(
         LANE,
         { 'comp1/index.js': comp1Src('hosted-elsewhere-snap') },
         'snap on a foreign-hosted lane',
@@ -262,16 +264,33 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
       expect(branchTipSha(LANE)).to.equal(tip);
     });
 
-    // A branch name carries no scope, so this resolves against `defaultScope`, mismatches the pointer,
-    // and reads `inherited-or-none` — the safe direction of the Stage-0 trade.
-    it('the same branch reached by NAME: should leave it alone rather than retire it', () => {
-      const shaBefore = branchTipSha(LANE);
+    it('a dev commit pushed to the branch (--branch): should export it to the lane on the host scope', () => {
+      branchSideCommit(LANE, defaultBranch, 'comp2/index.js', comp2Src('pushed-to-branch'), 'feat: dev edits comp2');
       const { output, exitCode } = syncRun(`--branch ${LANE}`);
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
-      expect(output).to.include(`${LANE} -> noop`);
-      expect(output).to.not.include('close-pr');
-      expect(remoteBranchExists(LANE)).to.be.true;
-      expect(branchTipSha(LANE)).to.equal(shaBefore);
+      expect(output).to.include(`${LANE} -> export-branch`);
+      expect(laneTipFile(devPath, 'comp2/index.js')).to.include('pushed-to-branch');
+    });
+
+    it('a branch cut from the lane branch under another name (--branch): should not reconcile the lane', () => {
+      const FEATURE = 'cut-from-lane';
+      helper.command.runCmd(`git push origin origin/${LANE}:refs/heads/${FEATURE}`);
+      const { output, exitCode } = syncRun(`--branch ${FEATURE}`);
+      expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${FEATURE} -> noop`);
+      expect(output).to.not.include(`${LANE} ->`);
+    });
+
+    it('origin cannot be fetched (--branch): should halt the lane instead of failing the command', () => {
+      const originUrl = helper.command.runCmd('git remote get-url origin').trim();
+      helper.command.runCmd('git remote set-url origin /no-such-origin');
+      try {
+        const { output, exitCode } = runBit(`bit ci sync --branch ${LANE}`);
+        expect(exitCode, `bit ci sync output:\n${output}`).to.not.equal(0);
+        expect(output).to.include(`HALTED ${LANE} ->`);
+      } finally {
+        helper.command.runCmd(`git remote set-url origin ${originUrl}`);
+      }
     });
 
     it('a same-named lane in THIS scope: should halt under --dry-run and for real, leaving the owner’s branch', () => {
@@ -300,9 +319,14 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
       // The rival lane's content never reached the branch.
       expect(fileOnBranch(LANE, 'comp2/index.js')).to.not.include('rival-lane-snap');
     });
-  });
 
-  // D2 proves the default (halt); these two prove the automatic policies on the same shape. The
-  // load-bearing assertions are on file bytes — a policy that "succeeded" while dropping either half
-  // would pass any summary-line check.
+    it('the host removes the lane: --all should close its PR, found through the branch alone', () => {
+      // the same-named lane of this scope, from the previous test, would halt the run
+      helper.command.runCmd(`bit lane remove ${helper.scopes.remote}/${LANE} --remote --force --silent`);
+      helper.command.runCmd(`bit lane remove ${hostScope}/${LANE} --remote --force --silent`);
+      const { output, exitCode } = syncRun('--all');
+      expect(exitCode, `bit ci sync --all output:\n${output}`).to.equal(0);
+      expect(output).to.include(`${LANE} -> close-pr`);
+    });
+  });
 });

@@ -70,6 +70,7 @@ describe('update command', function () {
     });
     describe('select by patterns', function () {
       let configFile;
+      let workspaceConfigAfter: string;
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.addPolicyToDependencyResolver({
@@ -80,8 +81,19 @@ describe('update command', function () {
           },
         });
         helper.command.install();
+        // the comment is for the "preserve a comment" case, which used to be a describe of its own
+        // running this exact same install + `update --yes is-posit*` flow.
+        const workspaceJsonc = helper.fs.readFile('workspace.jsonc');
+        const workspaceJsoncWithComment = workspaceJsonc.replace(
+          /(\n(\s*))"is-odd":/,
+          '$1// this dependency must stay pinned\n$2"is-odd":'
+        );
+        // guard against a formatting change turning the replace into a no-op
+        expect(workspaceJsoncWithComment).to.not.equal(workspaceJsonc);
+        helper.fs.outputFile('workspace.jsonc', workspaceJsoncWithComment);
         helper.command.update('--yes is-posit*');
         configFile = helper.workspaceJsonc.read(helper.scopes.localPath);
+        workspaceConfigAfter = helper.fs.readFile('workspace.jsonc');
       });
       it('should update the version range of the selected package', function () {
         expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).not.to.equal(
@@ -94,6 +106,9 @@ describe('update command', function () {
         );
         expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal('1.0.0');
       });
+      it('should preserve a comment attached to a dependency inside the policy', function () {
+        expect(workspaceConfigAfter).to.include('// this dependency must stay pinned');
+      });
     });
     describe('policies added by deps set', function () {
       before(() => {
@@ -105,38 +120,6 @@ describe('update command', function () {
       it('should update the version range', function () {
         const showOutput = helper.command.showComponentParsed('comp1');
         expect(showOutput.packageDependencies['is-negative']).not.to.equal('1.0.0');
-      });
-    });
-    describe('comments attached to entries inside the policy', function () {
-      let workspaceConfigAfter: string;
-      before(() => {
-        helper.scopeHelper.reInitWorkspace();
-        helper.extensions.workspaceJsonc.addPolicyToDependencyResolver({
-          dependencies: {
-            'is-odd': '1.0.0',
-            'is-positive': '1.0.0',
-          },
-        });
-        helper.command.install();
-        const workspaceJsonc = helper.fs.readFile('workspace.jsonc');
-        const workspaceJsoncWithComment = workspaceJsonc.replace(
-          /(\n(\s*))"is-odd":/,
-          '$1// this dependency must stay pinned\n$2"is-odd":'
-        );
-        // guard against a formatting change turning the replace into a no-op
-        expect(workspaceJsoncWithComment).to.not.equal(workspaceJsonc);
-        helper.fs.outputFile('workspace.jsonc', workspaceJsoncWithComment);
-        helper.command.update('--yes is-posit*');
-        workspaceConfigAfter = helper.fs.readFile('workspace.jsonc');
-      });
-      it('should update the version range of the selected package', function () {
-        const configFile = helper.workspaceJsonc.read(helper.scopes.localPath);
-        expect(configFile['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).not.to.equal(
-          '1.0.0'
-        );
-      });
-      it('should preserve a comment attached to a dependency inside the policy', function () {
-        expect(workspaceConfigAfter).to.include('// this dependency must stay pinned');
       });
     });
   });

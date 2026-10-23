@@ -1,4 +1,4 @@
-import { forEach, isEmpty, pickBy, mapValues, isEqual, clone } from 'lodash';
+import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
@@ -12,8 +12,8 @@ import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '@teambit/legacy.constants';
-import type { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
-import { ConsumerComponent, SchemaName } from '@teambit/legacy.consumer-component';
+import type { Dependencies } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent, Dependency, SchemaName } from '@teambit/legacy.consumer-component';
 import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
 import { ComponentOverrides, getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 import { ValidationError } from '@teambit/legacy.cli.error';
@@ -145,6 +145,7 @@ export default class Component extends BitObject {
   detachedHeads: DetachedHeads;
   private divergeData?: SnapsDistance;
   private _populateVersionHistoryMutex?: Mutex;
+  private lastFoundTag?: string;
   constructor(props: ComponentProps) {
     super();
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
@@ -192,7 +193,7 @@ export default class Component extends BitObject {
 
   getRef(version: string): Ref | null {
     if (isTag(version)) {
-      return this.versionsIncludeOrphaned[version];
+      return this.orphanedVersions[version] || this.versions[version];
     }
     if (isHash(version)) {
       return new Ref(version);
@@ -266,9 +267,12 @@ export default class Component extends BitObject {
     return Boolean(this.versions[version]);
   }
 
+  /**
+   * a new object on every access, which is expensive for a component with many versions. to look up a single tag,
+   * use `getRef` / `getTagOfRefIfExists` instead.
+   */
   get versionsIncludeOrphaned(): Versions {
-    // for bit-bin with 266 components, it takes about 1,700ms. don't use lodash.merge, it's much faster
-    // but mutates `this.versions`.
+    // don't use lodash.merge, it's much faster but mutates `this.versions`.
     return { ...this.versions, ...this.orphanedVersions };
   }
 
@@ -649,8 +653,19 @@ export default class Component extends BitObject {
     );
   }
 
-  getTagOfRefIfExists(ref: Ref, allTags = this.versionsIncludeOrphaned): string | undefined {
-    return Object.keys(allTags).find((versionRef) => allTags[versionRef].isEqual(ref));
+  getTagOfRefIfExists(ref: Ref): string | undefined {
+    // the same ref (usually the head) is looked up many times per command, and each scan has to list all the tags.
+    // the last hit is re-checked against the current versions, so it can't go stale when versions change. only hits
+    // in `versions` are remembered, so they keep their precedence over orphaned versions.
+    if (this.lastFoundTag && this.versions[this.lastFoundTag]?.isEqual(ref)) return this.lastFoundTag;
+    // search from the newest tag. tags are kept in insertion order and the head is usually the latest one.
+    const findIn = (versions: Versions) => findLastKey(versions, (versionRef) => versionRef.isEqual(ref));
+    const tag = findIn(this.versions);
+    if (tag) {
+      this.lastFoundTag = tag;
+      return tag;
+    }
+    return findIn(this.orphanedVersions);
   }
 
   getTag(version: string): string | undefined {
@@ -660,10 +675,7 @@ export default class Component extends BitObject {
   }
 
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {
-    // cache the this.versionsIncludeOrphaned results into "allTags", looks strange but it improved
-    // the performance on bit-bin with 188 components during source.merge in 4 seconds.
-    const allTags = this.versionsIncludeOrphaned;
-    return refs.map((ref) => this.getTagOfRefIfExists(ref, allTags) || ref.toString());
+    return refs.map((ref) => this.getTagOfRefIfExists(ref) || ref.toString());
   }
 
   /**
@@ -930,9 +942,7 @@ Error from "semver": ${err.message}`);
     const artifactsRefs: Ref[] = [];
     const artifactsRefsFromExportedVersions: Ref[] = [];
     const locallyChangedVersions = await this.getLocalTagsOrHashes(repo, workspaceId);
-    const locallyChangedHashes = locallyChangedVersions.map((v) =>
-      isTag(v) ? this.versionsIncludeOrphaned[v].hash : v
-    );
+    const locallyChangedHashes = locallyChangedVersions.map((v) => (isTag(v) ? (this.getRef(v) as Ref).hash : v));
     const versionsRefs = versions.map((version) => this.getRef(version) as Ref);
     refsWithoutArtifacts.push(...versionsRefs);
 
@@ -1178,6 +1188,7 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     // ConsumerComponent instance is changed, the Version will be changed as well, and since
     // the Version instance is saved in the Repository._cache, the next time a Version instance
     // is retrieved, it'll be different than the first time.
+    let flattenedDependencies: ComponentIdList | undefined;
     const consumerComponent = new ConsumerComponent({
       name: this.name,
       version: componentVersion.version,
@@ -1186,9 +1197,12 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       lang: this.lang,
       bindingPrefix: this.bindingPrefix,
       mainFile: version.mainFile,
-      dependencies: this.addDepsInfoFromDepsResolver(version.dependencies, extensions),
-      devDependencies: this.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
-      flattenedDependencies: version.flattenedDependencies.clone(),
+      dependencies: Component.addDepsInfoFromDepsResolver(version.dependencies, extensions),
+      devDependencies: Component.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
+      peerDependencies: this.getPeerDepsFromDepsResolver(version, extensions),
+      // built on first read and shared with clones (which copy this loader). a failed load is not kept, so it throws again.
+      loadFlattenedDependencies: () =>
+        (flattenedDependencies ??= ComponentIdList.fromArray(version.loadFlattenedDependenciesSync(repository))),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
@@ -1211,9 +1225,13 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     return consumerComponent;
   }
 
-  private addDepsInfoFromDepsResolver(dependencies: Dependencies, extensions: ExtensionDataList): Dependency[] {
+  /**
+   * a Version has the package names of its component dependencies in the dependency-resolver data only. returns copies
+   * of the dependencies with their package names.
+   */
+  static addDepsInfoFromDepsResolver(dependencies: Dependencies, extensions: ExtensionDataList): Dependency[] {
     const cloned = dependencies.getClone();
-    const depsResolverData = extensions.find((ext) => ext.name === 'teambit.dependencies/dependency-resolver');
+    const depsResolverData = extensions.findCoreExtension(Extensions.dependencyResolver);
     if (!depsResolverData) return cloned;
     cloned.forEach((dependency) => {
       if (dependency.packageName) return;
@@ -1225,6 +1243,30 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       }
     });
     return cloned;
+  }
+
+  /**
+   * component peer-dependencies (e.g. a component set as a peer in env.jsonc) are not saved in the legacy fields of
+   * the Version object, only in the dependency-resolver data. restore them, otherwise, any flow that re-calculates the
+   * dependency-resolver data out of this ConsumerComponent, drops them. e.g. a snap/tag from a bare scope, which is
+   * what happens when a lane is merged and released on the remote.
+   */
+  private getPeerDepsFromDepsResolver(version: Version, extensions: ExtensionDataList): Dependency[] {
+    const entries: Array<Record<string, any>> =
+      extensions.findCoreExtension(Extensions.dependencyResolver)?.data?.dependencies || [];
+    const peerEntries = entries.filter(
+      (entry) => entry.__type === 'component' && entry.lifecycle === 'peer' && entry.componentId
+    );
+    if (!peerEntries.length) return [];
+    const runtimeAndDevDeps = [...version.dependencies.get(), ...version.devDependencies.get()];
+    const isRuntimeOrDevDep = (id: ComponentID) => runtimeAndDevDeps.some((dep) => dep.id.isEqualWithoutVersion(id));
+    return peerEntries
+      .map((entry) => {
+        const id =
+          entry.componentId instanceof ComponentID ? entry.componentId : ComponentID.fromObject(entry.componentId);
+        return new Dependency(id, [], entry.packageName, entry.versionRange);
+      })
+      .filter((dependency) => !isRuntimeOrDevDep(dependency.id));
   }
 
   // @todo: make sure it doesn't have the same ref twice, once as a version and once as a head

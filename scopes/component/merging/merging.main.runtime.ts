@@ -1,5 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -43,6 +44,7 @@ import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
 import type { DataMergeResult, MergeStatusProviderOptions } from './merge-status-provider';
 import { MergeStatusProvider } from './merge-status-provider';
+import type { DependenciesSnapshot } from './merge-dependencies';
 import type {
   MergeStrategy,
   MergeResultsThreeWay,
@@ -76,6 +78,7 @@ export type ComponentMergeStatus = ComponentStatusBase & {
   resolvedUnrelated?: ResolveUnrelatedData;
   configMergeResult?: ConfigMergeResult;
   dataMergeResult?: DataMergeResult;
+  dependenciesMergeResult?: DependenciesSnapshot; // populated on a bare scope only. see mergeDependencies()
 };
 
 export type ComponentMergeStatusBeforeMergeAttempt = ComponentStatusBase & {
@@ -421,7 +424,7 @@ export class MergingMain {
   ): Promise<ApplyVersionWithComps[]> {
     const componentsResults = await mapSeries(
       succeededComponents,
-      async ({ currentComponent, id, mergeResults, resolvedUnrelated, configMergeResult }) => {
+      async ({ currentComponent, id, mergeResults, resolvedUnrelated, configMergeResult, dependenciesMergeResult }) => {
         const modelComponent = await this.scope.legacyScope.getModelComponent(id);
         const updatedLaneId = otherLaneId.isDefault() ? LaneId.from(otherLaneId.name, id.scope as string) : otherLaneId;
         return this.applyVersion({
@@ -434,11 +437,19 @@ export class MergingMain {
           currentLane,
           resolvedUnrelated,
           configMergeResult,
+          dependenciesMergeResult,
           detachHead,
           shouldSquash,
         });
       }
     );
+    if (!this.workspace && currentLane) {
+      await Promise.all(
+        compact(succeededComponents.map((c) => c.dependenciesMergeResult)).map((dependenciesMergeResult) =>
+          this.setLaneVersionsOfDeps(dependenciesMergeResult, currentLane)
+        )
+      );
+    }
 
     if (this.workspace) {
       // Hidden lane updateDependents live only on the lane and in the scope. Writing them to
@@ -473,6 +484,7 @@ export class MergingMain {
     currentLane,
     resolvedUnrelated,
     configMergeResult,
+    dependenciesMergeResult,
     detachHead,
     shouldSquash,
   }: {
@@ -485,6 +497,7 @@ export class MergingMain {
     currentLane?: Lane;
     resolvedUnrelated?: ResolveUnrelatedData;
     configMergeResult?: ConfigMergeResult;
+    dependenciesMergeResult?: DependenciesSnapshot;
     detachHead?: boolean;
     shouldSquash?: boolean;
   }): Promise<ApplyVersionWithComps> {
@@ -563,6 +576,12 @@ export class MergingMain {
       // in this case, we don't want to update .bitmap with the version of the remote. we want to keep the same version
       legacyComponent.version = id.version;
     }
+    if (!this.workspace && mergeResults) {
+      await this.prepareScopeComponentForMergeSnap(legacyComponent, {
+        currentComponent: idToLoad === id ? currentComponent : undefined,
+        dependenciesMergeResult,
+      });
+    }
     const files = legacyComponent.files;
     updateFileStatus(files, filesStatus, currentComponent || undefined);
 
@@ -620,6 +639,50 @@ export class MergingMain {
       component: currentComponent || undefined,
       legacyCompToWrite: legacyComponent,
     };
+  }
+
+  /**
+   * a workspace makes the merge snap from the merged files it re-loads, which re-calculates the component.
+   * a bare scope makes it from the in-memory component, so bring it to the same state: the merged aspects-data and the
+   * merged dependencies. (the dependencies policy and overrides are re-calculated later, during the snap. see
+   * snapFromScope's "recalcDependencies").
+   */
+  private async prepareScopeComponentForMergeSnap(
+    legacyComponent: ConsumerComponent,
+    {
+      currentComponent,
+      dependenciesMergeResult,
+    }: {
+      currentComponent?: ConsumerComponent | null; // set when legacyComponent was loaded from the same version
+      dependenciesMergeResult?: DependenciesSnapshot;
+    }
+  ) {
+    if (currentComponent) {
+      // MergeStatusProvider.mergeExtensionsData() merged the aspects-data into currentComponent, which is a different
+      // instance than legacyComponent (each load from the scope clones the extensions). without this, data that changed
+      // on the other side only (e.g. a new test file in dev-files) is lost, and as it's not a conflict, it's not
+      // re-calculated either.
+      legacyComponent.extensions = currentComponent.extensions.clone();
+    }
+    if (dependenciesMergeResult) Object.assign(legacyComponent, dependenciesMergeResult);
+  }
+
+  /**
+   * a dependency on a component of the current lane gets the lane's version, same as a workspace gets it from .bitmap
+   * (or from the lane's hidden updateDependents, see updateDependenciesVersions).
+   * call it once all the components were applied, so the lane has the new heads of the ones the merge updated.
+   */
+  private async setLaneVersionsOfDeps(dependenciesMergeResult: DependenciesSnapshot, currentLane: Lane) {
+    const { dependencies, devDependencies, peerDependencies } = dependenciesMergeResult;
+    const compDeps = [...dependencies.get(), ...devDependencies.get(), ...peerDependencies.get()];
+    await Promise.all(
+      compDeps.map(async (dep) => {
+        const onLane = currentLane.getComponent(dep.id) || currentLane.getUpdateDependentAsLaneComponent(dep.id);
+        if (!onLane) return;
+        const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(dep.id.changeVersion(undefined));
+        dep.id = dep.id.changeVersion(modelComponent?.getTagOfRefIfExists(onLane.head) || onLane.head.toString());
+      })
+    );
   }
 
   private async abortMerge(pattern: string): Promise<ApplyVersionResults> {
@@ -714,6 +777,8 @@ export class MergingMain {
           lane: laneId?.toString(),
           updatedLegacyComponents: updatedComponents,
           loadAspectOnlyForIds: getLoadAspectOnlyForIds(),
+          // the config was merged, it may differ from the stored one (e.g. an env or a policy changed on the other side)
+          recalcDependencies: true,
           loose,
         }
       );

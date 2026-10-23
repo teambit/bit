@@ -7,7 +7,7 @@ import type {
   ArtifactDefinition,
 } from '@teambit/builder';
 import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import mapSeries from 'p-map-series';
 import type { Component } from '@teambit/component';
 import { ComponentMap } from '@teambit/component';
@@ -44,6 +44,7 @@ export const GENERATE_ENV_TEMPLATE_TASK_NAME = 'GenerateEnvTemplate';
 export class EnvPreviewTemplateTask implements BuildTask {
   aspectId = 'teambit.preview/preview';
   name = GENERATE_ENV_TEMPLATE_TASK_NAME;
+  readonly description = 'Generating the preview template of the env';
   location: TaskLocation = 'end';
   // readonly dependencies = [CompilerAspect.id];
 

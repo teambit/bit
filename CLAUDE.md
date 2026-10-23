@@ -6,6 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 For comprehensive Bit MCP workflow instructions and core principles, see: `.github/instructions/bit.instructions.md`
 
+## Public Repo Hygiene
+
+This repo is open source. Commits, branch names, PR titles/descriptions, and PR comments are public.
+
+- **No private data**: Never use real component-ids, package names, scope/org names, or people's names (these often come from the prompt or from a bug report) in commits, PRs, or PR comments — they may be private. Use made-up placeholders instead (e.g. `my-org.my-scope/button`).
+- **No private commands**: Some internal `bit` commands are defined outside this repo and must not be mentioned publicly. Before naming a `bit` command in a commit, branch, or PR, verify it's defined here (`grep -rn "name = '<command>" scopes components`). If it isn't, describe the behavior instead (e.g. "a lane merge from a bare scope", "snapping from a scope"). Internal API names that live in this repo (e.g. `snapFromScope`, `mergeSnaps`) are fine to mention.
+
 ## CLI Output Style Guide
 
 When modifying CLI command output, follow the style guide: `scopes/harmony/cli/cli-output-style-guide.md`
@@ -111,6 +118,8 @@ Each aspect follows a standard structure:
 - `.ui.runtime.ts` - UI runtime implementation (if applicable)
 - `.docs.mdx` - Documentation
 - `.composition.tsx` - Component compositions for testing
+
+**New aspects must use the core-aspect env** (`teambit.harmony/envs/core-aspect-env`), like every other aspect here. No variant sets it, so a new component otherwise falls back to `teambit.harmony/node`. Pass it when creating the aspect: `bit create bit-aspect <name> --scope <scope> --env teambit.harmony/envs/core-aspect-env`. If the component was added with `bit add` (which has no env flag), run `bit envs set <component-id> teambit.harmony/envs/core-aspect-env` right after. Verify with `bit envs get <component-id>`. The same fallback hits any new component: give a non-aspect component the env of its siblings (e.g. `teambit.node/envs/node-babel-mocha` for `scopes/*/modules/*`, `teambit.node/envs/node-typescript-mocha` for `scopes/toolbox/*`).
 
 ### Configuration
 

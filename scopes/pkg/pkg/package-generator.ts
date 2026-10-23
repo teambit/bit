@@ -1,6 +1,12 @@
 import type { EnvContext, EnvHandler } from '@teambit/envs';
 import type { Component } from '@teambit/component';
+import type { Capsule } from '@teambit/isolator';
 import type { PackageJsonProps } from './pkg.main.runtime';
+
+export type GetNpmIgnoreContext = {
+  capsule: Capsule;
+  component: Component;
+};
 
 export type ModifyPackageJsonFunc = (
   component: Component,

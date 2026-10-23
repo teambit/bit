@@ -5,9 +5,10 @@ import { readdirSync, existsSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { reportLoadFailure } from '@teambit/harmony.modules.load-trace';
 import { recordLoadedEsmFile } from './record-loaded-esm-file';
+import { replaceNeverLoadedAspects } from './replace-never-loaded-aspects';
 import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { ExtensionManifest, Harmony, SlotRegistry } from '@teambit/harmony';
 import { Aspect, Slot } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
@@ -227,8 +228,15 @@ export class AspectLoaderMain {
 
   isAspectLoaded(id: string) {
     if (this.failedAspects.includes(id)) return true;
+    return this.hasAspectInstance(id);
+  }
+
+  /**
+   * whether the aspect has an instance in harmony. unlike isAspectLoaded, an aspect that failed to load is not counted.
+   */
+  hasAspectInstance(id: string): boolean {
     try {
-      return this.harmony.get(id);
+      return Boolean(this.harmony.get(id));
     } catch {
       return false;
     }
@@ -756,6 +764,10 @@ export class AspectLoaderMain {
         return nodesUniq.map((n) => n.attr);
       };
       const relevantManifests = getOnlyDeclaredDependenciesManifests();
+      const replacedIds = replaceNeverLoadedAspects(this.harmony, relevantManifests);
+      if (replacedIds.length) {
+        this.logger.debug(`loadExtensionsByManifests, replaced never-loaded aspects: ${replacedIds.join(', ')}`);
+      }
       // @ts-ignore TODO: fix this
       await this.harmony.load(relevantManifests);
     } catch (e: any) {

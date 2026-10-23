@@ -2,6 +2,7 @@ import type { ComponentID } from '@teambit/component-id';
 import type { ApplyVersionResult, WorkspaceConfigUpdateResult, WorkspaceDepsUpdates } from './types';
 import chalk from 'chalk';
 import { compact } from 'lodash';
+import isBinaryPath from 'is-binary-path';
 import { errorSymbol, formatTitle, joinSections } from '@teambit/cli';
 import { FileStatus } from './merge-version';
 import { FILE_CHANGES_CHECKOUT_MSG } from '@teambit/legacy.constants';
@@ -64,10 +65,7 @@ export function applyVersionReport(components: ApplyVersionResult[], addName = t
       const files = compact(
         Object.keys(component.filesStatus).map((file) => {
           if (component.filesStatus[file] === FileStatus.unchanged) return null;
-          const note =
-            component.filesStatus[file] === FileStatus.manual
-              ? chalk.white('automatic merge failed. please fix conflicts manually and then run "bit install"')
-              : '';
+          const note = getFileStatusNote(file, component.filesStatus[file]);
           return `${tab}${String(component.filesStatus[file])} ${chalk.bold(file)} ${note}`;
         })
       ).join('\n');
@@ -79,6 +77,22 @@ export function applyVersionReport(components: ApplyVersionResult[], addName = t
     return '';
   }
   return `\n${formatTitle(FILE_CHANGES_CHECKOUT_MSG)}\n${fileChanges}`;
+}
+
+function getFileStatusNote(file: string, status: string): string {
+  if (status === FileStatus.manual) {
+    return chalk.white('automatic merge failed. please fix conflicts manually and then run "bit install"');
+  }
+  if (status === FileStatus.binaryConflict) {
+    // git refuses to merge a file when one of its versions has a NUL byte. for a text file, that's not a real binary.
+    if (isBinaryPath(file)) {
+      return chalk.white('binary files cannot be merged. please pick the version to keep manually');
+    }
+    return chalk.white(
+      'git treats it as binary because one of its versions contains NUL bytes. the file is probably corrupted or saved as UTF-16. please fix it and merge manually'
+    );
+  }
+  return '';
 }
 
 export function conflictSummaryReport(components: ApplyVersionResult[]): {

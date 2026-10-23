@@ -1,8 +1,5 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-
-chai.use(chaiFs);
 
 describe('surfacing swallowed load errors as component issues', function () {
   this.timeout(0);

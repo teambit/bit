@@ -27,7 +27,7 @@ describe('bit lane merge-abort command', function () {
       helper.command.export();
       helper.command.switchLocalLane('lane-a', '-x');
       bitMapBeforeMerge = helper.bitMap.read();
-      helper.command.mergeLane('lane-b', '-x');
+      helper.command.mergeLaneWithoutBuild('lane-b', '-x');
       bitMapAfterMerge = helper.bitMap.read();
       helper.command.mergeAbortLane('-x');
     });
@@ -62,7 +62,7 @@ describe('bit lane merge-abort command', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('lane-a', '-x');
-      helper.command.mergeLane(`${helper.scopes.remote}/lane-b`, '-x');
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/lane-b`, '-x');
       helper.fs.expectDirToExist(`${helper.scopes.remote}/comp2`);
       helper.command.mergeAbortLane('-x');
     });

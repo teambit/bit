@@ -20,12 +20,14 @@ import { PkgAspect, getPublishRegistry, shouldPublishToExternalRegistry } from '
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { isSnap as isSnapVersion } from '@teambit/component-version';
-import type { BuilderMain, OnTagOpts } from '@teambit/builder';
+import type { BuilderMain, OnTagOpts, UnbuiltBuilderData } from '@teambit/builder';
 import type { ModelComponent, Log, Lane } from '@teambit/objects';
 import { DependenciesGraph } from '@teambit/objects';
+import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { MessagePerComponent } from './message-per-component';
 import { MessagePerComponentFetcher } from './message-per-component';
 import { VersionFileParser } from './version-file-parser';
+import { throwForPlusRangeVersions } from './plus-range-versions';
 import type { VersionCandidate } from './published-versions';
 import { createIsVersionPublished, skipPublishedVersions } from './published-versions';
 import type { DependencyResolverMain, ComponentRangePrefix } from '@teambit/dependency-resolver';
@@ -33,6 +35,7 @@ import { DependencyResolverAspect, COMPONENT_DEP_TYPE } from '@teambit/dependenc
 import type { Registries } from '@teambit/pkg.entities.registry';
 import type { ScopeMain, StagedConfig } from '@teambit/scope';
 import type { Workspace, AutoTagResult } from '@teambit/workspace';
+import { findWorkspaceRootMap, writeWorkspaceRoot } from '@teambit/workspace-root';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import type { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 import type { LaneId } from '@teambit/lane-id';
@@ -67,6 +70,12 @@ export type BasicTagParams = BasicTagSnapParams & {
   skipPublishedVersions?: boolean;
 };
 
+/**
+ * a workspace component that depends on a tagged/snapped component, but its config sets the version of this
+ * dependency (e.g. "bit deps set"). it doesn't use the workspace version, so it's not auto-tagged.
+ */
+export type DependentWithPinnedDeps = { id: ComponentID; pinnedDependencies: string[] };
+
 export type VersionMakerParams = {
   tagDataPerComp?: TagDataPerComp[];
   populateArtifactsFrom?: ComponentID[];
@@ -81,6 +90,11 @@ export type VersionMakerParams = {
   exitOnFirstFailedTask?: boolean;
   updateDependentsOnLane?: boolean;
   setHeadAsParent?: boolean;
+  /**
+   * the workspace-root component that joined the batch on its own, being new or modified. see
+   * SnappingMain.getWorkspaceRootToTagAlong.
+   */
+  autoAddedWorkspaceRoot?: ComponentID;
 } & BasicTagParams;
 
 type ComputedVersion = { componentToTag: ConsumerComponent; version: string };
@@ -117,6 +131,7 @@ export class VersionMaker {
   async makeVersion(): Promise<{
     taggedComponents: ConsumerComponent[];
     autoTaggedResults: AutoTagResult[];
+    dependentsWithPinnedDeps: DependentWithPinnedDeps[];
     publishedPackages: string[];
     stagedConfig?: StagedConfig;
     removedComponents?: ComponentIdList;
@@ -127,10 +142,12 @@ export class VersionMaker {
     this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
     const componentsToTag = this.getUniqCompsToTag();
     const idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
-    const autoTagData = await this.getAutoTagData(idsToTag);
+    // a component that is tagged explicitly is not auto-tagged too (the scope flow may find it as both)
+    const autoTagData = (await this.getAutoTagData(idsToTag)).filter(
+      (autoTagItem) => !idsToTag.has(autoTagItem.component.id)
+    );
     const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
-    const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
-    const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
+    const autoTagIds = ComponentIdList.fromArray(autoTagComponents.map((autoTag) => autoTag.id));
 
     // Validate component issues for auto-tag components
     if (this.allWorkspaceComps && autoTagIds.length) {
@@ -139,7 +156,9 @@ export class VersionMaker {
     }
 
     await this.triggerOnPreSnap(autoTagIds);
-    this.allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
+    this.allComponentsToTag = [...componentsToTag, ...autoTagComponents];
+    // in a bare scope (e.g. bit.cloud), the components were already snapped in a workspace, so they passed this check
+    if (this.workspace) throwForPlusRangeVersions(this.allComponentsToTag);
     await this.parseVersionsFile(idsToTag, autoTagIds);
     const messagePerId = await this.getMessagePerId(idsToTag, autoTagIds);
     await this.checkForNewerVersions();
@@ -148,6 +167,8 @@ export class VersionMaker {
     this.params.isSnap ? this.setHashes() : await this.setFutureVersions(autoTagIds);
     // go through all dependencies and update their versions
     this.updateDependenciesVersions();
+    const dependentsWithPinnedDeps = this.getDependentsWithPinnedDeps();
+    this.recordWorkspaceRoot();
     await this.addLogToComponents(componentsToTag, autoTagComponents, messagePerId);
     // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
     // (it's being deleted in snapping.main.runtime - `_addCompToObjects` method)
@@ -160,6 +181,7 @@ export class VersionMaker {
       return {
         taggedComponents: componentsToTag,
         autoTaggedResults: autoTagData,
+        dependentsWithPinnedDeps,
         publishedPackages: [],
         stagedConfig,
         totalComponentsCount: this.allComponentsToTag.length,
@@ -174,7 +196,7 @@ export class VersionMaker {
       await this._addDependenciesGraphToComponents();
     }
     await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
-    if (!build) this.emptyBuilderData();
+    if (!build) this.setUnbuiltBuilderData();
     this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);
 
     const currentLane = this.consumer?.getCurrentLaneId();
@@ -263,6 +285,7 @@ export class VersionMaker {
     return {
       taggedComponents: componentsToTag,
       autoTaggedResults: autoTagData,
+      dependentsWithPinnedDeps,
       publishedPackages,
       stagedConfig,
       removedComponents,
@@ -418,7 +441,7 @@ export class VersionMaker {
     if (!versionsFile) return;
 
     const allComponentsToTag = ComponentIdList.fromArray([...idsToTag, ...autoTagIds]);
-    const versionFileParser = new VersionFileParser(allComponentsToTag);
+    const versionFileParser = new VersionFileParser(allComponentsToTag, this.params.autoAddedWorkspaceRoot);
     const tagDataFromFile = await versionFileParser.parseVersionsFile(versionsFile);
     this.params.tagDataPerComp = tagDataFromFile;
   }
@@ -497,7 +520,9 @@ export class VersionMaker {
     if (Object.keys(dependentsMap).length === 0) return [];
     const allDependentsIds = ComponentIdList.uniqFromArray(Object.values(dependentsMap).flat());
     const allDependents = await this.legacyScope.getManyConsumerComponents(allDependentsIds);
-    return allDependents.map((dependent) => {
+    // a component that was removed from the lane is not snapped again, same as in a workspace, where it's not loaded
+    const notRemovedDependents = allDependents.filter((dependent) => !dependent.isRemoved());
+    return notRemovedDependents.map((dependent) => {
       const triggeredByIds = Object.keys(dependentsMap).filter((id) => dependentsMap[id].has(dependent.id));
       const triggeredBy = ComponentIdList.fromStringArray(triggeredByIds);
       return { component: dependent, triggeredBy };
@@ -515,9 +540,18 @@ export class VersionMaker {
         const isAutoTag = autoTagIds.hasWithoutVersion(componentToTag.id);
         const modelComponent = await this.legacyScope.sources.findOrAddComponent(componentToTag);
         const nextVersion = componentToTag.componentMap?.nextVersion?.version;
+        const isAutoAddedRoot = Boolean(this.params.autoAddedWorkspaceRoot?.isEqualWithoutVersion(componentToTag.id));
+        // the root joined the batch on its own. a version given for the members - `--ver`, the id, or
+        // a versions-file DEFAULT - is not meant for it, so it is bumped the way an auto-tagged
+        // dependent is.
+        const bumpRootAsPatch = () =>
+          soft ? 'patch' : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
         const getNewVersion = (): string => {
           if (tagDataPerComp) {
             const tagData = tagDataPerComp.find((t) => t.componentId.isEqualWithoutVersion(componentToTag.id));
+            // a versions file names the components being tagged. it covers the root only when it names
+            // it, see VersionFileParser - otherwise the root is still bumped on its own.
+            if (!tagData && isAutoAddedRoot) return bumpRootAsPatch();
             if (!tagData) throw new Error(`tag-data is missing for ${componentToTag.id.toStringWithoutVersion()}`);
             if (!tagData.versionToTag)
               throw new Error(`tag-data.TagResults is missing for ${componentToTag.id.toStringWithoutVersion()}`);
@@ -553,6 +587,7 @@ export class VersionMaker {
             }
             return soft ? 'patch' : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
           }
+          if (isAutoAddedRoot) return bumpRootAsPatch();
           const versionByEnteredId = this.getVersionByEnteredId(this.ids, componentToTag, modelComponent);
           return soft
             ? versionByEnteredId || exactVersion || (releaseType as string)
@@ -672,15 +707,37 @@ export class VersionMaker {
   }
 
   /**
-   * otherwise, tagging without build will have the old build data of the previous snap/tag.
-   * in case we currently build, it's ok to leave the data as is, because it'll be overridden anyway.
+   * when not building, replace the builder data, otherwise, it has the old build data of the previous snap/tag.
+   * (when building, the build overrides it anyway).
+   * the new data has only the tasks that are going to run once the component is built (e.g. by the CI), so they can
+   * be shown before the build starts.
    */
-  private emptyBuilderData() {
+  private setUnbuiltBuilderData() {
+    const plannedTasksPerComp = this.builder.getPlannedTasks(
+      this.getHarmonyComps(this.allComponentsToTag.filter((c) => !c.isRemoved())),
+      this.params.isSnap ? 'snap' : 'tag'
+    );
     this.allComponentsToTag.forEach((component) => {
       component.extensions = component.extensions.clone();
+      const plannedTasks = plannedTasksPerComp.get(component.id.toStringWithoutVersion());
+      const data: Partial<UnbuiltBuilderData> = plannedTasks ? { plannedTasks } : {};
       const existingBuilder = component.extensions.findCoreExtension(Extensions.builder);
-      if (existingBuilder) existingBuilder.data = {};
+      if (existingBuilder) existingBuilder.data = data;
+      else if (plannedTasks)
+        component.extensions.push(new ExtensionDataEntry(undefined, undefined, Extensions.builder, {}, data));
     });
+  }
+
+  /**
+   * the harmony components that were already loaded. (the auto-tagged ones are available only in a workspace).
+   */
+  private getHarmonyComps(consumerComponents: ConsumerComponent[]): Component[] {
+    const loadedComps = [...this.components, ...(this.allWorkspaceComps || [])];
+    return compact(
+      consumerComponents.map((consumerComp) =>
+        loadedComps.find((comp) => comp.id.isEqualWithoutVersion(consumerComp.id))
+      )
+    );
   }
 
   private updateDependenciesVersions() {
@@ -689,9 +746,12 @@ export class VersionMaker {
     // from main. we want to keep it as the user requested. Otherwise, this changes the dependency version to the newly
     // snapped one unintentionally.
     const componentsToTag = this.allComponentsToTag.filter((c) => !c.isRemoved());
-    const getNewDependencyVersion = (id: ComponentID): ComponentID | null => {
+    const getNewDependencyVersion = (id: ComponentID, dependent?: ConsumerComponent): ComponentID | null => {
       const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
-      return foundDependency ? id.changeVersion(foundDependency.version) : null;
+      if (!foundDependency) return null;
+      // the dependent uses the version set in its config (e.g. "bit deps set"), not the workspace one. keep it.
+      if (dependent?.isDependencyVersionFromConfig(id)) return null;
+      return id.changeVersion(foundDependency.version);
     };
     const changeExtensionsVersion = (component: ConsumerComponent): void => {
       component.extensions.forEach((ext) => {
@@ -719,7 +779,7 @@ export class VersionMaker {
         // "ComponentID.fromObject expect to get an object, got an instance of ComponentID" (locally it didn't happen)
         const depId =
           dep.componentId instanceof ComponentID ? dep.componentId : ComponentID.fromObject(dep.componentId);
-        const newDepId = getNewDependencyVersion(depId);
+        const newDepId = getNewDependencyVersion(depId, component);
         dep.componentId = (newDepId || depId).serialize();
         dep.id = (newDepId || depId).toString();
         dep.version = (newDepId || depId).version;
@@ -737,7 +797,7 @@ export class VersionMaker {
       const componentRangePrefix =
         this.dependencyResolver.calcComponentRangePrefixByConsumerComponent(oneComponentToTag);
       oneComponentToTag.getAllDependencies().forEach((dependency) => {
-        const newDepId = getNewDependencyVersion(dependency.id);
+        const newDepId = getNewDependencyVersion(dependency.id, oneComponentToTag);
         if (!newDepId) return;
         dependency.id = newDepId;
         // if componentRangePrefix === '+', then, only it only saves packages in workspace.jsonc.
@@ -749,6 +809,56 @@ export class VersionMaker {
       });
       changeExtensionsVersion(oneComponentToTag);
       oneComponentToTag = updateDepsResolverData(oneComponentToTag);
+    });
+  }
+
+  private getDependentsWithPinnedDeps(): DependentWithPinnedDeps[] {
+    if (!this.allWorkspaceComps) return [];
+    const idsToTag = ComponentIdList.fromArray(this.allComponentsToTag.map((c) => c.id));
+    // like updateDependenciesVersions, a removed component doesn't count as a new version of a dependency
+    const idsWithNewVersion = ComponentIdList.fromArray(
+      this.allComponentsToTag.filter((c) => !c.isRemoved()).map((c) => c.id)
+    );
+    return compact(
+      this.allWorkspaceComps.map((component) => {
+        const consumerComponent: ConsumerComponent = component.state._consumer;
+        const pinnedDependencies = consumerComponent.getDependenciesWithVersionFromConfig((id) =>
+          idsWithNewVersion.hasWithoutVersion(id)
+        );
+        if (!pinnedDependencies.length || idsToTag.hasWithoutVersion(component.id)) return null;
+        return { id: component.id, pinnedDependencies };
+      })
+    );
+  }
+
+  /**
+   * every member of a workspace-root component records the root it is snapped in, at the version the
+   * root has after this batch: its new version when it is snapped along, otherwise the one in .bitmap.
+   * tag and snap bring a new or modified root into the batch (see SnappingMain.getWorkspaceRootToTagAlong),
+   * so the version is only missing on the paths that don't, such as a merge snap made while the root
+   * was never snapped. the root itself records nothing here, it carries the isRoot marker instead.
+   * see WorkspaceRootMain.
+   *
+   * a workspace with no root of its own writes nothing, and has nothing to undo either: aspect data is
+   * supplied fresh by the loader on every load rather than inherited from the version before it, so a
+   * component imported from a workspace that had a root arrives here without one. what does carry over
+   * is the extension's (empty) config, which is why the entry itself outlives the data it held.
+   */
+  private recordWorkspaceRoot() {
+    const consumer = this.consumer;
+    if (!consumer) return;
+    const rootMap = findWorkspaceRootMap(consumer.bitMap);
+    if (!rootMap) return;
+    const rootInBatch = this.allComponentsToTag.find((component) => component.id.isEqualWithoutVersion(rootMap.id));
+    const rootId = rootInBatch ? rootInBatch.id.changeVersion(rootInBatch.version) : rootMap.id;
+    this.allComponentsToTag.forEach((component) => {
+      // the root records no root of its own, it carries the isRoot marker the loader gives it
+      if (component.id.isEqualWithoutVersion(rootMap.id)) return;
+      // hidden lane entries (lane.updateDependents) cascade into the batch from the scope rather than
+      // from the workspace, so they were not snapped in this root. absence from .bitmap is how they
+      // are told apart elsewhere in this file as well
+      if (!consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true })) return;
+      writeWorkspaceRoot(component.extensions, rootId);
     });
   }
 

@@ -2,11 +2,8 @@ import { loadBit } from '@teambit/bit';
 import type { TsserverClient } from '@teambit/ts-server';
 import type { TypescriptMain } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
-import chai, { expect } from 'chai';
-import chaiFs from 'chai-fs';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(chaiFs);
 
 describe('TsServer component', function () {
   this.timeout(0);

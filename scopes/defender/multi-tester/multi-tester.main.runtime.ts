@@ -1,5 +1,5 @@
 import { getCloudDomain } from '@teambit/legacy.constants';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { Tester } from '@teambit/tester';
 import type { LoggerMain, Logger } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
