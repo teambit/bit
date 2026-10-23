@@ -448,6 +448,130 @@ fn capsule_create_root_metadata_and_ready_marker_match_node() {
     assert_eq!(fs::read(capsule_path.join(".bit-capsule-ready")).unwrap(), b"");
 }
 
+#[test]
+fn capsule_create_component_manifest_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    let command = "capsule create comp1 -b manifest-capsules -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsules = parse(&node.stdout);
+    let rows = capsules.as_array().unwrap();
+    assert_eq!(rows.len(), 2);
+    let root = std::path::Path::new(rows[0]["path"].as_str().unwrap()).parent().unwrap();
+    let node_manifests = rows
+        .iter()
+        .map(|row| {
+            let path = std::path::Path::new(row["path"].as_str().unwrap());
+            fs::read(path.join("package.json")).unwrap()
+        })
+        .collect::<Vec<_>>();
+    fs::remove_dir_all(root).unwrap();
+
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    for (row, node_manifest) in rows.iter().zip(node_manifests) {
+        let path = std::path::Path::new(row["path"].as_str().unwrap());
+        let native_manifest = fs::read(path.join("package.json")).unwrap();
+        assert_eq!(native_manifest, node_manifest);
+    }
+}
+
+#[test]
+fn capsule_create_new_component_manifest_matches_node() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.output_file("comp1/index.js", "module.exports = 1;\n");
+    helper.native("add comp1");
+    let command = "capsule create comp1 -b new-manifest-capsules -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let root = capsule_path.parent().unwrap();
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    fs::remove_dir_all(root).unwrap();
+
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    let native_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    assert_eq!(native_manifest, node_manifest);
+}
+
+#[test]
+fn capsule_create_tagged_component_manifest_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.output_file("comp1/index.js", "module.exports = 1;\n");
+    helper.native("add comp1");
+    helper.tag_without_build("", "");
+    let command = "capsule create comp1 -b tagged-manifest-capsules -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let root = capsule_path.parent().unwrap();
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    fs::remove_dir_all(root).unwrap();
+
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    let native_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    assert_eq!(native_manifest, node_manifest);
+}
+
+#[test]
+fn capsule_create_snapped_component_manifest_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.output_file("comp1/index.js", "module.exports = 1;\n");
+    helper.native("add comp1");
+    helper.native("snap --unmodified");
+    let command = "capsule create comp1 -b snapped-manifest-capsules -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let root = capsule_path.parent().unwrap();
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    fs::remove_dir_all(root).unwrap();
+
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    let native_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    assert_eq!(native_manifest, node_manifest);
+}
+
 /// Covers:
 /// - `e2e/harmony/global-virtual-store.e2e.ts:37`
 ///   installing with the global virtual store › a workspace with a component › should not create the dependency directories inside the workspace

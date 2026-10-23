@@ -15,7 +15,7 @@ use crate::{commands::workspace_command::uuid_v4, history::History, native::Outc
 use bit_install::workspace::{Bitmap, BitmapEntry};
 use serde_json::{Value, json};
 use std::{
-    collections::VecDeque,
+    collections::{BTreeMap, VecDeque},
     ffi::OsString,
     fs,
     io::{self, Write},
@@ -24,7 +24,10 @@ use std::{
 };
 
 use self::{
-    files::{copy_component_files, write_default_package_json},
+    files::{
+        component_dependency, copy_component_files, standard_node_manifests,
+        write_default_package_json,
+    },
     metadata::write_root_metadata,
 };
 
@@ -156,10 +159,25 @@ fn build_capsules(
     let selected =
         select_isolated_indices(active.len(), &seeders, &edges, create_args.seeders_only);
     validate_custom_name(create_args.name.as_deref(), selected.len())?;
+    if !standard_node_manifests(&root.path, &active, &selected)? {
+        return Err(io::Error::other("capsule manifest requires Node environment"));
+    }
     write_root_metadata(&ws_capsules_dir, create_args.base_dir.as_deref().unwrap_or(""))?;
     selected
         .into_iter()
-        .map(|idx| materialize_capsule(&root.path, &ws_capsules_dir, active[idx], create_args))
+        .map(|idx| {
+            let dependencies = edges[idx]
+                .iter()
+                .map(|&dep| component_dependency(active[dep]))
+                .collect::<BTreeMap<_, _>>();
+            materialize_capsule(
+                &root.path,
+                &ws_capsules_dir,
+                active[idx],
+                create_args,
+                &dependencies,
+            )
+        })
         .collect()
 }
 
@@ -372,6 +390,7 @@ fn materialize_capsule(
     capsules_root: &Path,
     entry: &BitmapEntry,
     create_args: &CreateArgs,
+    dependencies: &BTreeMap<String, String>,
 ) -> io::Result<CreatedCapsule> {
     let full_id = selection::entry_full_id(entry);
     let mut dir_name = create_args.name
@@ -387,7 +406,7 @@ fn materialize_capsule(
     if src_dir.is_dir() && entry.root_dir != "." {
         copy_component_files(&src_dir, &capsule_dir)?;
     }
-    write_default_package_json(&capsule_dir, entry)?;
+    write_default_package_json(&capsule_dir, entry, dependencies)?;
     fs::write(capsule_dir.join(".bit-capsule-ready"), "")?;
     Ok(CreatedCapsule { id: full_id, path: capsule_dir.to_string_lossy().into_owned() })
 }
