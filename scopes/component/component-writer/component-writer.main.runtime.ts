@@ -63,7 +63,11 @@ export type ComponentWriterResults = {
   workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult;
 };
 
+type WorkspaceRootDetector = (extensions: ExtensionDataList) => boolean;
+
 export class ComponentWriterMain {
+  private workspaceRootDetector?: WorkspaceRootDetector;
+
   constructor(
     private installer: InstallMain,
     private compiler: CompilerMain,
@@ -73,13 +77,11 @@ export class ComponentWriterMain {
     private configMerge: ConfigMergerMain
   ) {}
 
-  private workspaceRootDetector?: (extensions: ExtensionDataList) => boolean;
-
   /**
    * workspace-root tells which components are workspace roots. it registers the check rather than being
    * imported here, because it depends on component-writer (through the importer).
    */
-  registerWorkspaceRootDetector(detector: (extensions: ExtensionDataList) => boolean) {
+  registerWorkspaceRootDetector(detector: WorkspaceRootDetector) {
     this.workspaceRootDetector = detector;
   }
 

@@ -316,7 +316,7 @@ needed-for: ${neededFor || '<unknown>'}`);
                 outputText: file.contents.toString('utf8'),
                 outputPath: file.path,
               },
-            ] as TranspiledFile[];
+            ];
           }
           if (compiler.transpileFile) {
             return compiler.transpileFile(file.contents.toString('utf8'), {

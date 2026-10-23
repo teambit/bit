@@ -237,11 +237,7 @@ describe('the conflict check at the workspace root', () => {
 });
 
 describe('the guard on what may be written to the workspace root', () => {
-  /**
-   * it runs in the same branch as the symlink preflight, which an e2e case covers on the real
-   * "--path ." path - so what is left to check is the rule itself. workspace-root registers how a root
-   * is told (its own spec covers the marker), so a stub detector stands in for it here.
-   */
+  // workspace-root's own spec covers the marker; a stub detector stands in for it here
   const extensions = ExtensionDataList.fromArray([]);
   const component = { id: { toString: () => 'my-scope/comp1' }, extensions } as any;
   const writerWith = (detector?: (exts: ExtensionDataList) => boolean) => {

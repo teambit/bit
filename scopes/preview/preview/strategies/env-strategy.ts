@@ -9,7 +9,7 @@ import type { ArtifactDefinition, ComponentResult } from '@teambit/builder';
 import type { BundlerContext, BundlerHtmlConfig, BundlerResult } from '@teambit/bundler';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { PkgMain } from '@teambit/pkg';
-import type { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
+import type { BundlingStrategy, ComputeTargetsContext, OutputDirContext } from '../bundling-strategy';
 import type { PreviewDefinition } from '../preview-definition';
 import type { PreviewMain } from '../preview.main.runtime';
 import { html } from '../bundler/html-template';
@@ -86,7 +86,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     };
   }
 
-  private getArtifactDef(context: Pick<BundlerContext, 'id' | 'capsuleNetwork'>): ArtifactDefinition[] {
+  private getArtifactDef(context: OutputDirContext): ArtifactDefinition[] {
     // eslint-disable-next-line @typescript-eslint/prefer-as-const
     const env: 'env' = 'env';
     const rootDir = this.getDirName(context);
@@ -100,12 +100,12 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     ];
   }
 
-  getDirName(context: Pick<BundlerContext, 'id' | 'capsuleNetwork'>) {
+  getDirName(context: OutputDirContext) {
     const envName = context.id.replace('/', '__');
     return `${envName}-preview`;
   }
 
-  private getOutputPath(context: Pick<BundlerContext, 'id' | 'capsuleNetwork'>) {
+  private getOutputPath(context: OutputDirContext) {
     return resolve(`${context.capsuleNetwork.capsulesRootDir}/${this.getDirName(context)}`);
   }
 

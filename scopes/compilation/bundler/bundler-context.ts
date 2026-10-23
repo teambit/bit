@@ -203,7 +203,7 @@ export type MetaData = {
 export interface BundlerContext extends ExecutionContext {
   /**
    * the fields of the builder's BuildContext, restated rather than imported because the builder
-   * depends on the bundler. a BuildContext stays assignable to a bundler context.
+   * depends on the bundler (transitively). a BuildContext stays assignable to a bundler context.
    */
   components: Component[];
   capsuleNetwork: Network;
