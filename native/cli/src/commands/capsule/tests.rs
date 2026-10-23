@@ -27,7 +27,7 @@ fn parses_capsule_subcommands() {
         parse_subcommand(&["prune", "--dry-run", "--with-sizes", "--json"]),
         Some(Subcommand::Prune(_)),
     ));
-    assert_eq!(parse_subcommand(&["prune", "--json"]), None);
+    assert!(matches!(parse_subcommand(&["prune", "--json"]), Some(Subcommand::Prune(_))));
     assert_eq!(
         parse_subcommand(&["create", "--seeders-only", "comp1", "-j"]),
         Some(Subcommand::Create(CreateArgs {
@@ -62,7 +62,7 @@ fn parses_capsule_subcommands() {
         parse_subcommand(&["create", "comp1", "-a"]),
         Some(Subcommand::Create(CreateArgs { always_new: true, .. }))
     ));
-    assert_eq!(parse_subcommand(&["prune"]), None);
+    assert!(matches!(parse_subcommand(&["prune"]), Some(Subcommand::Prune(_))));
 }
 
 #[test]

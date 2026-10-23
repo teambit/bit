@@ -93,6 +93,67 @@ fn capsule_prune_empty_cache_matches_node() -> KnownResult<()> {
 }
 
 #[test]
+fn capsule_prune_removes_the_same_roots_as_node() -> KnownResult<()> {
+    use chrono::Datelike;
+
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    let root = helper.scopes.e2e_dir.join("prune-capsule-cache");
+    let globals = helper.own_global_config("capsules_root_base_dir", root.to_str().unwrap());
+    let node_env = [("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NATIVE", OsStr::new("off"))];
+    let native_env = [("BIT_GLOBALS_DIR", globals.as_os_str())];
+    let today = chrono::Local::now();
+    let today_path =
+        root.join(format!("dated-capsules/{}-{}-{}", today.year(), today.month(), today.day()));
+    let prepare = || {
+        fs::create_dir_all(root.join("workspace")).unwrap();
+        fs::create_dir_all(root.join("scope")).unwrap();
+        fs::create_dir_all(root.join("dated-capsules/2020-1-1")).unwrap();
+        fs::create_dir_all(&today_path).unwrap();
+        fs::write(root.join("workspace/payload"), "workspace").unwrap();
+        fs::write(root.join("scope/payload"), "scope").unwrap();
+        fs::write(root.join("dated-capsules/2020-1-1/payload"), "dated").unwrap();
+        fs::write(
+            root.join("workspace/.bit-capsule-origin.json"),
+            json!({"originPath": helper.scopes.local_path, "kind": "workspace"}).to_string(),
+        )
+        .unwrap();
+        fs::write(
+            root.join("scope/.bit-capsule-origin.json"),
+            json!({"originPath": root.join("gone"), "kind": "scope"}).to_string(),
+        )
+        .unwrap();
+    };
+    for command in
+        ["capsule prune --older-than=0 --json", "capsule prune --older-than=0 --with-sizes"]
+    {
+        prepare();
+        let node = Helper::cmd_in_with(&helper.scopes.local_path, command, &node_env);
+        assert!(node.status.success(), "{node:?}");
+        assert!(!root.join("workspace").exists());
+        assert!(!root.join("scope").exists());
+        assert!(!root.join("dated-capsules/2020-1-1").exists());
+        assert!(today_path.exists());
+
+        fs::remove_dir_all(&root).unwrap();
+        prepare();
+        let native = Helper::cmd_in_with(&helper.scopes.local_path, command, &native_env);
+        assert!(native.status.success() && native.native, "{native:?}");
+        if command.ends_with("--json") {
+            assert_eq!(parse(&native.stdout), parse(&node.stdout));
+        } else {
+            assert_eq!(native.stdout, node.stdout);
+        }
+        assert!(!root.join("workspace").exists());
+        assert!(!root.join("scope").exists());
+        assert!(!root.join("dated-capsules/2020-1-1").exists());
+        assert!(today_path.exists());
+        fs::remove_dir_all(&root).unwrap();
+    }
+    Ok(())
+}
+
+#[test]
 fn capsule_delete_all_outside_workspace_matches_node() -> KnownResult<()> {
     let helper = Helper::new();
     let root = helper.scopes.e2e_dir.join("delete-all-cache");

@@ -1,19 +1,24 @@
-//! Read-only `capsule prune --dry-run` planning. Real deletion stays delegated.
+//! Native `capsule prune` planning and removal.
 
-use super::{Chalk, History, Outcome, ScopeRoot, emit_report, list_stats, read_combined_config};
+use super::{
+    Chalk, History, Outcome, ScopeRoot, emit_report, list_stats, read_combined_config,
+    resolve_capsules_dir,
+};
 use bit_workspace_config::environment_value;
+use chrono::{Datelike, Local};
 use serde::Serialize;
 use serde_json::{Map, Value};
 use std::{
     ffi::OsString,
     fs,
     io::{self, Write},
-    path::Path,
+    path::{Path, PathBuf},
     process::ExitCode,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct PruneArgs {
+    dry_run: bool,
     older_than: Option<String>,
     keep_workspace_caps: bool,
     no_orphans: bool,
@@ -44,17 +49,17 @@ struct PruneReport {
 
 pub(super) fn parse_flags(rest: &[&str]) -> Option<PruneArgs> {
     let mut parsed = PruneArgs {
+        dry_run: false,
         older_than: None,
         keep_workspace_caps: false,
         no_orphans: false,
         with_sizes: false,
         json: false,
     };
-    let mut dry_run = false;
     let mut iter = rest.iter();
     while let Some(&arg) = iter.next() {
         match arg {
-            "--dry-run" => dry_run = true,
+            "--dry-run" => parsed.dry_run = true,
             "--keep-workspace-caps" => parsed.keep_workspace_caps = true,
             "--no-orphans" => parsed.no_orphans = true,
             "--with-sizes" => parsed.with_sizes = true,
@@ -66,7 +71,7 @@ pub(super) fn parse_flags(rest: &[&str]) -> Option<PruneArgs> {
             _ => return None,
         }
     }
-    dry_run.then_some(parsed)
+    Some(parsed)
 }
 
 pub(super) fn run(
@@ -76,11 +81,12 @@ pub(super) fn run(
     chalk: Chalk,
     opts: &PruneArgs,
 ) -> io::Result<Outcome> {
-    let report = match build(cwd, root, opts) {
-        Ok(Some(report)) => report,
-        Ok(None) => return Ok(Outcome::Declined("capsule prune dated cache delegated".into())),
-        Err(_) => return Ok(Outcome::Declined("capsule prune cache scan delegated".into())),
+    let Ok(report) = build(cwd, root, opts) else {
+        return Ok(Outcome::Declined("capsule prune cache scan delegated".into()));
     };
+    if !opts.dry_run {
+        remove_selected(cwd, &report)?;
+    }
     if opts.json {
         let history = (!root.bare).then(|| History::start(&root.path, args));
         let mut stdout = io::stdout().lock();
@@ -94,7 +100,7 @@ pub(super) fn run(
     emit_report(root, args, "prune", render(&report, opts.with_sizes, chalk))
 }
 
-fn build(cwd: &Path, root: &ScopeRoot, opts: &PruneArgs) -> io::Result<Option<PruneReport>> {
+fn build(cwd: &Path, root: &ScopeRoot, opts: &PruneArgs) -> io::Result<PruneReport> {
     let config = read_combined_config(root)?;
     let configured_dated = environment_value("capsules_scopes_aspects_dated_dir");
     let dated = configured_dated
@@ -103,34 +109,31 @@ fn build(cwd: &Path, root: &ScopeRoot, opts: &PruneArgs) -> io::Result<Option<Pr
         .filter(|value| !value.is_empty())
         .unwrap_or("dated-capsules");
     let roots = list_stats::collect(cwd, opts.with_sizes)?;
-    if roots
-        .iter()
-        .any(|entry| {
-            Path::new(&entry.path)
-                .file_name()
-                .is_some_and(|name| name == dated)
-        })
-    {
-        return Ok(None);
-    }
     let age_days = parse_age(opts, &config);
     let cutoff = age_days.mul_add(-86_400_000.0, list_stats::now_millis() as f64);
     let mut removed = Vec::new();
     for entry in &roots {
-        select_root(entry, opts, cutoff, age_days, &mut removed);
+        if Path::new(&entry.path)
+            .file_name()
+            .is_some_and(|name| name == dated)
+        {
+            select_dated_children(Path::new(&entry.path), opts.with_sizes, &mut removed);
+        } else {
+            select_root(entry, opts, cutoff, age_days, &mut removed);
+        }
     }
     let before = list_stats::total_size(&roots);
     let removed_bytes = removed
         .iter()
         .map(|entry: &Removed| entry.size_bytes)
         .sum();
-    Ok(Some(PruneReport {
+    Ok(PruneReport {
         removed,
         total_removed_bytes: removed_bytes,
         total_size_before_bytes: before,
         total_size_after_bytes: before.saturating_sub(removed_bytes),
-        dry_run: true,
-    }))
+        dry_run: opts.dry_run,
+    })
 }
 
 fn parse_age(opts: &PruneArgs, config: &Map<String, Value>) -> f64 {
@@ -222,6 +225,51 @@ fn select_aspect_children(path: &Path, with_sizes: bool, cutoff: f64, removed: &
     }
 }
 
+fn select_dated_children(path: &Path, with_sizes: bool, removed: &mut Vec<Removed>) {
+    let now = Local::now();
+    let today = format!("{}-{}-{}", now.year(), now.month(), now.day());
+    let Ok(entries) = fs::read_dir(path) else { return };
+    for entry in entries.filter_map(Result::ok) {
+        if !entry.file_type().is_ok_and(|kind| kind.is_dir())
+            || entry.file_name() == "node_modules"
+            || entry
+                .file_name()
+                .to_string_lossy()
+                .starts_with('.')
+            || entry.file_name() == today.as_str()
+        {
+            continue;
+        }
+        let child = entry.path();
+        removed.push(Removed {
+            path: child.to_string_lossy().into_owned(),
+            kind: "unmarked".into(),
+            reason: "dated-capsules-not-today".into(),
+            size_bytes: if with_sizes { list_stats::dir_size(&child) } else { 0 },
+            origin_path: None,
+        });
+    }
+}
+
+fn remove_selected(cwd: &Path, report: &PruneReport) -> io::Result<()> {
+    if report.removed.is_empty() {
+        return Ok(());
+    }
+    let cache = PathBuf::from(resolve_capsules_dir(cwd)?).canonicalize()?;
+    // Only remove planned directories inside the resolved cache. Re-check after planning
+    // so a replaced symlink cannot direct deletion outside the cache.
+    for entry in &report.removed {
+        let target = Path::new(&entry.path);
+        let parent = target.parent().ok_or_else(|| io::Error::other("invalid capsule path"))?;
+        let resolved_parent = parent.canonicalize()?;
+        if !resolved_parent.starts_with(&cache) || !fs::symlink_metadata(target)?.is_dir() {
+            return Err(io::Error::other("capsule path changed while pruning"));
+        }
+        fs::remove_dir_all(target)?;
+    }
+    Ok(())
+}
+
 fn record(entry: &list_stats::RootEntry, reason: &str, removed: &mut Vec<Removed>) {
     let kind = if reason == "aspect-older-than-cutoff" { "scope-aspect" } else { &entry.kind };
     removed.push(Removed {
@@ -235,10 +283,11 @@ fn record(entry: &list_stats::RootEntry, reason: &str, removed: &mut Vec<Removed
 
 fn render(report: &PruneReport, with_sizes: bool, chalk: Chalk) -> String {
     let formatter = super::Formatter::new(chalk);
-    let mut lines = vec![formatter.title(&format!(
-        "[dry-run] would remove {} capsule(s)",
-        report.removed.len(),
-    ))];
+    let mut lines = vec![if report.dry_run {
+        formatter.title(&format!("[dry-run] would remove {} capsule(s)", report.removed.len()))
+    } else {
+        formatter.success_summary(&format!("removed {} capsule(s)", report.removed.len()))
+    }];
     if with_sizes && report.total_size_before_bytes > 0 {
         lines.push(formatter.item(&format!(
             "cache: {} → {} (freed {})",
