@@ -3,8 +3,14 @@ use super::{Subcommand, create::CreateArgs, object_hash_short, parse_subcommand}
 #[test]
 fn parses_capsule_subcommands() {
     assert_eq!(parse_subcommand(&[]), Some(Subcommand::BareList));
-    assert_eq!(parse_subcommand(&["list"]), Some(Subcommand::List { json: false }));
-    assert_eq!(parse_subcommand(&["list", "--json"]), Some(Subcommand::List { json: true }));
+    assert_eq!(
+        parse_subcommand(&["list"]),
+        Some(Subcommand::List { json: false, with_stats: false }),
+    );
+    assert_eq!(
+        parse_subcommand(&["list", "--json"]),
+        Some(Subcommand::List { json: true, with_stats: false }),
+    );
     assert_eq!(
         parse_subcommand(&["delete", "--scope-aspects"]),
         Some(Subcommand::Delete { all: false, scope_aspects: true }),
@@ -13,7 +19,15 @@ fn parses_capsule_subcommands() {
         parse_subcommand(&["delete", "-a"]),
         Some(Subcommand::Delete { all: true, scope_aspects: false }),
     );
-    assert_eq!(parse_subcommand(&["list", "--with-stats"]), None);
+    assert_eq!(
+        parse_subcommand(&["list", "--with-stats"]),
+        Some(Subcommand::List { json: false, with_stats: true }),
+    );
+    assert!(matches!(
+        parse_subcommand(&["prune", "--dry-run", "--with-sizes", "--json"]),
+        Some(Subcommand::Prune(_)),
+    ));
+    assert_eq!(parse_subcommand(&["prune", "--json"]), None);
     assert_eq!(
         parse_subcommand(&["create", "--seeders-only", "comp1", "-j"]),
         Some(Subcommand::Create(CreateArgs {
