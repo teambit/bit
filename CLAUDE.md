@@ -12,6 +12,7 @@ This repo is open source. Commits, branch names, PR titles/descriptions, and PR 
 
 - **No private data**: Never use real component-ids, package names, scope/org names, or people's names (these often come from the prompt or from a bug report) in commits, PRs, or PR comments — they may be private. Use made-up placeholders instead (e.g. `my-org.my-scope/button`).
 - **No private commands**: Some internal `bit` commands are defined outside this repo and must not be mentioned publicly. Before naming a `bit` command in a commit, branch, or PR, verify it's defined here (`grep -rn "name = '<command>" scopes components`). If it isn't, describe the behavior instead (e.g. "a lane merge from a bare scope", "snapping from a scope"). Internal API names that live in this repo (e.g. `snapFromScope`, `mergeSnaps`) are fine to mention.
+- **No private commands in generated files either**: `bit cli generate` reports whatever the running binary loaded, so regenerating the CLI reference with a bit that also loads an aspect from another workspace writes that workspace's commands into `scopes/harmony/cli-reference/*` and `contrib/claude-skill-bit-cli/*`. `npm run generate-cli-reference-json` runs `scripts/check-cli-reference-groups.js`, which fails on any command whose group this repo doesn't declare — never commit a regenerated reference without that check passing, and run the whole chain (`generate-cli-reference`, `-json`, `-docs`, `generate-cli-skill`, `generate-core-aspects-ids`) so the files stay consistent.
 
 ## CLI Output Style Guide
 
