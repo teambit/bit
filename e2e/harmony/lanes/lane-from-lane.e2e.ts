@@ -141,6 +141,39 @@ describe('bit lane command', function () {
       expect(helper.command.getHeadOfLane('lane-b', 'comp1')).to.equal(comp1LaneASnap);
       expect(helper.command.getHeadOfLane('lane-b', 'comp2')).to.equal(comp2LaneASnap);
     });
+    it('main should have nothing staged, because the merged snaps were moved to the new lane', () => {
+      helper.command.switchLocalLane('main', '-x');
+      expect(helper.command.statusJson().stagedComponents).to.have.lengthOf(0);
+    });
+  });
+  // staged snaps of main are moved to a new lane. tags, and snaps the workspace is not on, can't be moved.
+  describe('creating a lane from main when main has a local tag and a snap the workspace is not on', () => {
+    let error: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.tagWithoutBuild('comp1', '--unmodified');
+      helper.command.snapComponentWithoutBuild('bar/foo', '--unmodified');
+      helper.command.checkoutVersion('0.0.1', 'bar/foo', '-x');
+      try {
+        helper.command.createLane('dev');
+      } catch (err: any) {
+        error = err.message;
+      }
+    });
+    it('should throw for the local tag', () => {
+      expect(error).to.have.string('comp1 - has tags that were not exported (0.0.2)');
+    });
+    it('should throw for the snap the workspace is not on', () => {
+      expect(error).to.have.string('bar/foo - the workspace is on 0.0.1, not on the main head');
+    });
+    it('should not create the lane', () => {
+      expect(helper.command.listLanes()).to.not.have.string('dev');
+    });
   });
   // the workspace is on lane-b (created from main), but the components are checked out to lane-a snaps.
   // the deps of comp1 are "inherited" from its lane-a parent, so they must be validated against lane-b.

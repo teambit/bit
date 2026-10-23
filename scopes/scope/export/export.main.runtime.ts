@@ -422,13 +422,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         // for components inherited unchanged from the original lane). Without this, those
         // components would be exported with zero refs and the new scope would reference an
         // unresolvable hash. The filter in `filterLeanLaneRefs` already keeps lane-head refs.
-        // Main snaps that were never exported are filtered out as main-origin too, but they're not on the
-        // component's home scope, so they must be pushed with the lane.
         const laneHead = laneObject.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
-        const refsToAdd = compact([laneHead, ...modelComponent.getUnexportedMainRefs()]);
-        refsToAdd.forEach((ref) => {
-          if (!localTagsOrHashes.find((r) => r.isEqual(ref))) localTagsOrHashes.push(ref);
-        });
+        if (laneHead && !localTagsOrHashes.find((r) => r.isEqual(laneHead))) {
+          localTagsOrHashes.push(laneHead);
+        }
       }
       if (!allVersions) {
         return localTagsOrHashes;

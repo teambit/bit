@@ -1,4 +1,4 @@
-import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey, compact } from 'lodash';
+import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
@@ -1385,15 +1385,6 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       { concurrency: concurrentComponentsLimit() }
     );
     return keptRefs.filter((ref): ref is Ref => ref !== null);
-  }
-
-  /**
-   * main snaps/tags that were never exported (e.g. snapped on main, then a lane was created and snapped on top).
-   * `getLocalHashes` with a lane drops them as main-origin, but unlike other main-origin refs, they're not on the
-   * component's home scope, so a lane export must push them.
-   */
-  getUnexportedMainRefs(): Ref[] {
-    return compact(this.getLocalVersions().map((version) => this.getRef(version)));
   }
 
   /**
