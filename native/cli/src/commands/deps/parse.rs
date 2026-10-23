@@ -37,6 +37,12 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
 }
 
 fn parse_diagnose(rest: &[&str]) -> Option<Subcommand> {
+    if rest.is_empty() {
+        return Some(Subcommand::Diagnose { origins: false });
+    }
+    if rest == ["--origins"] {
+        return Some(Subcommand::Diagnose { origins: true });
+    }
     let package = match rest {
         ["--package", package] => *package,
         [arg] if arg.starts_with("--package=") => arg.strip_prefix("--package=")?,

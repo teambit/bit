@@ -1,5 +1,7 @@
 //! Installed-package drill-down for `bit deps diagnose --package`.
 
+pub(super) mod report;
+
 use super::usage_render::compare_versions;
 use crate::{
     commands::{
@@ -56,7 +58,7 @@ fn inspect<'a>(root: &Path, package: &'a str) -> Result<PackageReport<'a>, Failu
     Ok(PackageReport { package_name: package, pnpm_dirs })
 }
 
-fn entries(virtual_store: &Path) -> Result<Vec<String>, Failure> {
+pub(super) fn entries(virtual_store: &Path) -> Result<Vec<String>, Failure> {
     let dirs = physical_entries(virtual_store)?;
     if !dirs.is_empty() {
         return Ok(dirs);
