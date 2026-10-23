@@ -10,6 +10,7 @@ export const ConsumerNotFound = cjsModule.ConsumerNotFound;
 export const NewerVersionFound = cjsModule.NewerVersionFound;
 export const ComponentOutOfSync = cjsModule.ComponentOutOfSync;
 export const ComponentsPendingImport = cjsModule.ComponentsPendingImport;
+export const ComponentLoader = cjsModule.ComponentLoader;
 export const ComponentsPendingMerge = cjsModule.ComponentsPendingMerge;
 export const UnexpectedPackageName = cjsModule.UnexpectedPackageName;
 

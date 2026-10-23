@@ -1,7 +1,7 @@
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
 
-export default class ComponentOutOfSync extends BitError {
+export class ComponentOutOfSync extends BitError {
   id: string;
   showDoctorMessage: boolean;
 

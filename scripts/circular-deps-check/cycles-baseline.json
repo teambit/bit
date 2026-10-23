@@ -1,16 +1,13 @@
 {
   "summary": {
     "groups": [
-      8
+      5
     ],
-    "components": 8,
-    "edges": 22
+    "components": 5,
+    "edges": 12
   },
   "groups": [
     [
-      "teambit.legacy/consumer",
-      "teambit.legacy/consumer-component",
-      "teambit.legacy/dependency-graph",
       "teambit.legacy/scope",
       "teambit.legacy/scope-api",
       "teambit.scope/network",
@@ -19,25 +16,15 @@
     ]
   ],
   "edges": [
-    "teambit.legacy/consumer -> teambit.legacy/consumer-component",
-    "teambit.legacy/consumer -> teambit.legacy/scope",
-    "teambit.legacy/consumer-component -> teambit.legacy/consumer",
-    "teambit.legacy/dependency-graph -> teambit.legacy/consumer-component",
-    "teambit.legacy/scope -> teambit.legacy/consumer-component",
-    "teambit.legacy/scope -> teambit.legacy/dependency-graph",
     "teambit.legacy/scope -> teambit.scope/network",
     "teambit.legacy/scope -> teambit.scope/remotes",
     "teambit.legacy/scope-api -> teambit.legacy/scope",
     "teambit.legacy/scope-api -> teambit.scope/network",
     "teambit.legacy/scope-api -> teambit.scope/remote-actions",
-    "teambit.scope/network -> teambit.legacy/consumer-component",
-    "teambit.scope/network -> teambit.legacy/dependency-graph",
     "teambit.scope/network -> teambit.legacy/scope",
     "teambit.scope/network -> teambit.legacy/scope-api",
     "teambit.scope/remote-actions -> teambit.legacy/scope",
     "teambit.scope/remote-actions -> teambit.scope/network",
-    "teambit.scope/remotes -> teambit.legacy/consumer-component",
-    "teambit.scope/remotes -> teambit.legacy/dependency-graph",
     "teambit.scope/remotes -> teambit.legacy/scope",
     "teambit.scope/remotes -> teambit.legacy/scope-api",
     "teambit.scope/remotes -> teambit.scope/network"
