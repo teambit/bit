@@ -67,6 +67,36 @@ fn bit_deps_diagnose_package_matches_node() -> KnownResult<()> {
 }
 
 #[test]
+fn bit_deps_get_tree_matches_node() -> KnownResult<()> {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(3, true, "");
+    for command in [
+        "deps get comp1 --tree",
+        "deps get comp2 -t",
+        "deps get comp3 --tree",
+        "deps get --tree comp1",
+    ] {
+        assert_get_tree_parity(&helper, command);
+    }
+    helper.native("tag --skip-tests");
+    assert_get_tree_parity(&helper, "deps get comp1 --tree");
+    Ok(())
+}
+
+fn assert_get_tree_parity(helper: &Helper, command: &str) {
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run(command);
+    assert!(node.status.success(), "{command}: {node:?}");
+    assert!(native.status.success(), "{command}: {native:?}");
+    assert_eq!(native.stdout, node.stdout, "{command}");
+}
+
+#[test]
 fn bit_deps_diagnose_report_matches_node() -> KnownResult<()> {
     let helper = Helper::new();
     helper.re_init_workspace();

@@ -1,6 +1,10 @@
 //! `bit deps get <component-name>` implementation (`dependencies-cmd.ts`).
 
-use super::resolve::{ResolvedDep, WorkspaceDepsContext};
+use super::{
+    resolve::{ResolvedDep, WorkspaceDepsContext},
+    usage::TreeNode,
+    usage_render::render_archy,
+};
 use crate::commands::{
     color::Chalk,
     debug_cat::lookup::load_cat_component,
@@ -28,6 +32,7 @@ pub(super) fn prepare_get(
     bitmap: &Bitmap,
     bitmap_val: &Value,
     id: &str,
+    tree: bool,
     chalk: Chalk,
 ) -> Result<String, Failure> {
     let matched = selection::resolve_pattern_entries(root, bitmap, id, chalk)?;
@@ -47,14 +52,63 @@ pub(super) fn prepare_get(
             .as_ref()
             .and_then(|cfg| cfg.get("policy")),
     );
-    let rows = collect_dep_info_rows(root, &ctx, bitmap_val, &id_with_ver, &deps);
+    let rows = collect_dep_info_rows(
+        root,
+        &ctx,
+        bitmap_val,
+        &id_with_ver,
+        &deps,
+        if tree { 64 } else { 8 },
+    );
+    render_get_result(&id_with_ver, &entry.id.to_string_without_version(), rows, tree, chalk)
+}
+
+fn render_get_result(
+    id_with_ver: &str,
+    id_without_ver: &str,
+    rows: Vec<DepInfoRow>,
+    tree: bool,
+    chalk: Chalk,
+) -> Result<String, Failure> {
+    if tree {
+        if rows.iter().any(|row| row.depth >= 64) {
+            return Err(Failure::Declined("deps get tree depth exceeds native bound".into()));
+        }
+        let mut seen = HashSet::from([id_with_ver.to_owned()]);
+        if rows
+            .iter()
+            .any(|row| !seen.insert(row.id.clone()))
+        {
+            return Err(Failure::Declined("deps get tree with shared or cyclic components".into()));
+        }
+        return Ok(render_dep_tree(id_with_ver, &rows));
+    }
     if rows.is_empty() {
-        let id_without_ver = entry.id.to_string_without_version();
         return Ok(format!(
             "no dependencies found for {id_with_ver}.\ntry running \"bit cat-component {id_without_ver}\" to see whether the component/version exists locally",
         ));
     }
     Ok(render_dep_info_table(rows, chalk))
+}
+
+fn render_dep_tree(root_id: &str, rows: &[DepInfoRow]) -> String {
+    let tree = assemble_dep_tree(root_id, rows);
+    render_archy(&tree)
+}
+
+fn assemble_dep_tree(id: &str, rows: &[DepInfoRow]) -> TreeNode {
+    let children = rows
+        .iter()
+        .filter(|row| row.parent == id)
+        .map(|row| assemble_dep_tree(&row.id, rows))
+        .collect();
+    TreeNode {
+        label: id
+            .strip_suffix("@0.0.1-new")
+            .unwrap_or(id)
+            .to_owned(),
+        children,
+    }
 }
 
 fn render_dep_info_table(rows: Vec<DepInfoRow>, chalk: Chalk) -> String {
@@ -76,6 +130,7 @@ fn collect_dep_info_rows(
     bitmap_val: &Value,
     root_id: &str,
     direct_deps: &[ResolvedDep],
+    max_depth: usize,
 ) -> Vec<DepInfoRow> {
     let mut rows = Vec::new();
     let mut visited = HashSet::from([root_id.to_owned()]);
@@ -87,7 +142,7 @@ fn collect_dep_info_rows(
         }
     }
     while let Some((curr_id, depth)) = queue.pop_front() {
-        if depth >= 8 {
+        if depth >= max_depth {
             continue;
         }
         for (child_id, dep_type) in child_component_deps(root, ctx, bitmap_val, &curr_id) {

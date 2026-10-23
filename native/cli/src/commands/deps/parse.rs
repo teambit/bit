@@ -22,9 +22,7 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
         ["eject", pattern] if is_supported_pattern(pattern) => {
             Some(Subcommand::Eject { pattern: (*pattern).to_owned() })
         }
-        ["get", id] if is_supported_pattern(id) && !id.contains(['*', ',', '!']) => {
-            Some(Subcommand::Get { id: (*id).to_owned() })
-        }
+        ["get", rest @ ..] => parse_get(rest),
         ["usage", rest @ ..] => parse_usage(rest),
         ["blame", rest @ ..] => parse_blame(rest),
         ["diagnose", rest @ ..] => parse_diagnose(rest),
@@ -35,6 +33,26 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
         }
         _ => None,
     }
+}
+
+fn parse_get(rest: &[&str]) -> Option<Subcommand> {
+    let mut id = None;
+    let mut tree = false;
+    for &arg in rest {
+        match arg {
+            "-t" | "--tree" => tree = true,
+            value
+                if id.is_none()
+                    && !value.starts_with('-')
+                    && is_supported_pattern(value)
+                    && !value.contains(['*', ',', '!']) =>
+            {
+                id = Some(value);
+            }
+            _ => return None,
+        }
+    }
+    Some(Subcommand::Get { id: id?.to_owned(), tree })
 }
 
 fn parse_blame(rest: &[&str]) -> Option<Subcommand> {
