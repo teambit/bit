@@ -1,5 +1,7 @@
 import type { Component } from '@teambit/component';
-import type { BuildContext } from '@teambit/builder';
+import type { ExecutionContext } from '@teambit/envs';
+import type { Network } from '@teambit/isolator';
+import type { LaneId } from '@teambit/lane-id';
 
 export type LibraryOptions = {
   /**
@@ -198,7 +200,18 @@ export type MetaData = {
    */
   isEnvTemplate?: boolean;
 };
-export interface BundlerContext extends BuildContext {
+export interface BundlerContext extends ExecutionContext {
+  /**
+   * the fields of the builder's BuildContext, restated rather than imported because the builder
+   * depends on the bundler. a BuildContext stays assignable to a bundler context.
+   */
+  components: Component[];
+  capsuleNetwork: Network;
+  previousTasksResults: unknown[];
+  dev?: boolean;
+  pipeName: 'build' | 'tag' | 'snap';
+  laneId?: LaneId;
+
   /**
    * targets for bundling.
    */

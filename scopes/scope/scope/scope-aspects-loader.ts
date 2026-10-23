@@ -9,7 +9,6 @@ import {
   CFG_USE_DATED_CAPSULES,
   CFG_CACHE_LOCK_ONLY_CAPSULES,
 } from '@teambit/legacy.constants';
-import type { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
 import type { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { compact, uniq, difference, groupBy, defaultsDeep } from 'lodash';
@@ -25,6 +24,22 @@ import type { ConfigStoreMain } from '@teambit/config-store';
 import { AspectVersionsPicker } from './aspect-versions-picker';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
+
+type TranspiledFile = { outputText: string; outputPath: string };
+
+/**
+ * the part of an env's compiler this loader uses. it is typed structurally rather than against the
+ * compiler aspect's Compiler, because the compiler depends on the scope.
+ */
+type DistCompiler = {
+  distDir: string;
+  isFileSupported(filePath: string): boolean;
+  transpileFile?: (
+    fileContent: string,
+    params: { filePath: string; componentDir: string }
+  ) => TranspiledFile[] | null | Promise<TranspiledFile[] | null>;
+  getDistPathBySrcPath(srcPath: string): string;
+};
 
 export type ScopeLoadAspectsOptions = LoadAspectsOptions & {
   useScopeAspectsCapsule?: boolean;
@@ -274,7 +289,7 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   private async compileIfNoDist(capsule: Capsule, component: Component) {
-    let compiler: Compiler | undefined;
+    let compiler: DistCompiler | undefined;
     try {
       const env = this.envs.getEnv(component);
       compiler = env.env.getCompiler();
@@ -301,7 +316,7 @@ needed-for: ${neededFor || '<unknown>'}`);
                 outputText: file.contents.toString('utf8'),
                 outputPath: file.path,
               },
-            ] as TranspileFileOutputOneFile[];
+            ] as TranspiledFile[];
           }
           if (compiler.transpileFile) {
             return compiler.transpileFile(file.contents.toString('utf8'), {

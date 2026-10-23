@@ -86,7 +86,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     };
   }
 
-  private getArtifactDef(context: ComputeTargetsContext): ArtifactDefinition[] {
+  private getArtifactDef(context: Pick<BundlerContext, 'id' | 'capsuleNetwork'>): ArtifactDefinition[] {
     // eslint-disable-next-line @typescript-eslint/prefer-as-const
     const env: 'env' = 'env';
     const rootDir = this.getDirName(context);
@@ -100,12 +100,12 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     ];
   }
 
-  getDirName(context: ComputeTargetsContext) {
+  getDirName(context: Pick<BundlerContext, 'id' | 'capsuleNetwork'>) {
     const envName = context.id.replace('/', '__');
     return `${envName}-preview`;
   }
 
-  private getOutputPath(context: ComputeTargetsContext) {
+  private getOutputPath(context: Pick<BundlerContext, 'id' | 'capsuleNetwork'>) {
     return resolve(`${context.capsuleNetwork.capsulesRootDir}/${this.getDirName(context)}`);
   }
 

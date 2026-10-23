@@ -364,12 +364,12 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     ];
   }
 
-  getDirName(context: ComputeTargetsContext) {
+  getDirName(context: Pick<BundlerContext, 'id' | 'capsuleNetwork'>) {
     const envName = context.id.replace('/', '__');
     return `${envName}-preview`;
   }
 
-  private getOutputPath(context: ComputeTargetsContext) {
+  private getOutputPath(context: Pick<BundlerContext, 'id' | 'capsuleNetwork'>) {
     return resolve(`${context.capsuleNetwork.capsulesRootDir}/${this.getDirName(context)}`);
   }
 
