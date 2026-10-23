@@ -11,7 +11,9 @@
  */
 
 import pMapSeries from 'p-map-series';
-import { HeadNotFound, ParentNotFound, VersionNotFound } from '@teambit/legacy.scope';
+import { HeadNotFound } from './head-not-found';
+import { ParentNotFound } from './parent-not-found';
+import { VersionNotFound } from './version-not-found';
 import type { VersionParents, ModelComponent, Version, Ref, Repository } from '@teambit/objects';
 
 export type VersionInfo = {

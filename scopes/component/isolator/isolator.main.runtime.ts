@@ -34,6 +34,7 @@ import { LoggerAspect } from '@teambit/logger';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import type { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
+import { importMultipleDistsArtifacts } from '@teambit/legacy.scope';
 import type { GlobalConfigMain } from '@teambit/global-config';
 import { GlobalConfigAspect } from '@teambit/global-config';
 import {
@@ -51,7 +52,6 @@ import {
   deserializeArtifactFiles,
   getArtifactFilesByExtension,
   getArtifactFilesExcludeExtension,
-  importMultipleDistsArtifacts,
   DataToPersist,
   RemovePath,
 } from '@teambit/component.sources';
