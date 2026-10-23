@@ -275,7 +275,7 @@ impl WorkspaceDepsContext {
     }
 }
 
-fn scanned_specifiers(comp_dir: &Path, rel_file: &str) -> Vec<String> {
+pub(super) fn scanned_specifiers(comp_dir: &Path, rel_file: &str) -> Vec<String> {
     let Ok(source) = fs::read_to_string(comp_dir.join(rel_file)) else {
         return Vec::new();
     };

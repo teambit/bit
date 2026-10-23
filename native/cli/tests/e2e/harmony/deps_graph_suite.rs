@@ -11,6 +11,42 @@ use serde_json::{Value, json};
 use std::{ffi::OsStr, fs};
 
 #[test]
+fn deps_debug_workspace_policy_without_imports_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    for env in ["teambit.harmony/node", "teambit.react/react"] {
+        if env != "teambit.harmony/node" {
+            helper.native(&format!("env set comp1 {env}"));
+        }
+        for policy in [
+            json!({
+                "dependencies": { "lodash": "4.17.21" },
+                "devDependencies": { "jest": "26.0.20" },
+                "peerDependencies": { "react": "^19.0.0" }
+            }),
+            json!({"devDependencies": {"@types/node": "99.0.0"}}),
+        ] {
+            let mut ws = helper.read_workspace_jsonc();
+            ws["teambit.dependencies/dependency-resolver"]["policy"] = policy;
+            helper.write_workspace_jsonc(&ws);
+            let node = Helper::cmd_in_with(
+                &helper.scopes.local_path,
+                "deps debug comp1",
+                &[("BIT_NATIVE", OsStr::new("off"))],
+            );
+            let native = helper.native_run("deps debug comp1");
+            assert!(node.status.success(), "{node:?}");
+            assert!(native.status.success() && native.native, "{native:?}");
+            assert_eq!(native.stdout, node.stdout);
+        }
+    }
+    helper.output_file("comp1/index.js", "module.exports = require('lodash');\n");
+    let unresolved = helper.cmd("deps debug comp1");
+    assert!(unresolved.status.success() && !unresolved.native, "{unresolved:?}");
+}
+
+#[test]
 fn deps_debug_builtin_env_without_imports_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

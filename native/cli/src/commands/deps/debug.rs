@@ -1,6 +1,9 @@
 //! Dependency debug output for fresh components using a built-in environment.
 
-use super::{mutation::format_json_indent_4, resolve::WorkspaceDepsContext};
+use super::{
+    mutation::format_json_indent_4,
+    resolve::{WorkspaceDepsContext, scanned_specifiers},
+};
 use crate::commands::{
     color::Chalk,
     scope_set::{Failure, selection},
@@ -53,7 +56,7 @@ fn validate_simple_component(
         return Err(Failure::Declined("versioned deps debug delegated".into()));
     }
     if !ctx.ws_config.variants.is_empty()
-        || !empty_policy(&ctx.ws_config.dependency_resolver.policy)
+        || !supported_policy(&ctx.ws_config.dependency_resolver.policy)
         || component.has_package_json
         || component.config
             .iter()
@@ -68,7 +71,12 @@ fn validate_simple_component(
         return Err(Failure::Declined("configured deps debug delegated".into()));
     }
     let (deps, _) = ctx.collect_component_deps(entry, component, None);
-    if !deps.is_empty() {
+    if !deps.is_empty()
+        || !empty_policy(&ctx.ws_config.dependency_resolver.policy)
+            && component.files
+                .iter()
+                .any(|rel_file| !scanned_specifiers(&component.dir, rel_file).is_empty())
+    {
         return Err(Failure::Declined("resolved deps debug delegated".into()));
     }
     if root
@@ -140,7 +148,7 @@ fn versions(deps: &[(&str, &str)]) -> Value {
     )
 }
 
-fn empty_policy(policy: &Value) -> bool {
+fn supported_policy(policy: &Value) -> bool {
     policy.is_null()
         || policy
             .as_object()
@@ -150,7 +158,20 @@ fn empty_policy(policy: &Value) -> bool {
                         matches!(
                             key.as_str(),
                             "dependencies" | "devDependencies" | "peerDependencies",
-                        ) && value.as_object().is_some_and(Map::is_empty)
+                        ) && value
+                            .as_object()
+                            .is_some_and(|entries| entries.values().all(Value::is_string))
                     })
+            })
+}
+
+fn empty_policy(policy: &Value) -> bool {
+    policy.is_null()
+        || policy
+            .as_object()
+            .is_some_and(|fields| {
+                fields
+                    .values()
+                    .all(|entries| entries.as_object().is_some_and(Map::is_empty))
             })
 }
