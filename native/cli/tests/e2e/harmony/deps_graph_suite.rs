@@ -406,6 +406,48 @@ fn capsule_create_package_manager_option_matches_node() {
     }
 }
 
+#[test]
+fn capsule_create_root_metadata_and_ready_marker_match_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let command = "capsule create comp1 -b metadata-capsules -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let root = capsule_path.parent().unwrap();
+    let node_package = fs::read(root.join("package.json")).unwrap();
+    let mut node_marker =
+        parse(&fs::read_to_string(root.join(".bit-capsule-origin.json")).unwrap());
+    assert_eq!(fs::read(capsule_path.join(".bit-capsule-ready")).unwrap(), b"");
+
+    fs::remove_dir_all(root).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(root.join("package.json")).unwrap(), node_package);
+    let mut native_marker =
+        parse(&fs::read_to_string(root.join(".bit-capsule-origin.json")).unwrap());
+    assert!(
+        native_marker["createdAt"]
+            .as_str()
+            .unwrap()
+            .ends_with('Z'),
+    );
+    node_marker["createdAt"] = Value::Null;
+    native_marker["createdAt"] = Value::Null;
+    assert_eq!(native_marker, node_marker);
+    assert_eq!(fs::read(capsule_path.join(".bit-capsule-ready")).unwrap(), b"");
+}
+
 /// Covers:
 /// - `e2e/harmony/global-virtual-store.e2e.ts:37`
 ///   installing with the global virtual store › a workspace with a component › should not create the dependency directories inside the workspace

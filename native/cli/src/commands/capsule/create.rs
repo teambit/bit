@@ -1,5 +1,8 @@
 //! Native `bit capsule create [component-ids...] [--seeders-only] [-j|--json]`.
 
+mod files;
+mod metadata;
+
 use super::{
     super::{
         aspect::workspace_default_scope, dependents::find_existing_bitmap_entry,
@@ -18,6 +21,11 @@ use std::{
     io::{self, Write},
     path::{Component, Path, PathBuf},
     process::ExitCode,
+};
+
+use self::{
+    files::{copy_component_files, write_default_package_json},
+    metadata::write_root_metadata,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -148,6 +156,7 @@ fn build_capsules(
     let selected =
         select_isolated_indices(active.len(), &seeders, &edges, create_args.seeders_only);
     validate_custom_name(create_args.name.as_deref(), selected.len())?;
+    write_root_metadata(&ws_capsules_dir, create_args.base_dir.as_deref().unwrap_or(""))?;
     selected
         .into_iter()
         .map(|idx| materialize_capsule(&root.path, &ws_capsules_dir, active[idx], create_args))
@@ -379,39 +388,6 @@ fn materialize_capsule(
         copy_component_files(&src_dir, &capsule_dir)?;
     }
     write_default_package_json(&capsule_dir, entry)?;
+    fs::write(capsule_dir.join(".bit-capsule-ready"), "")?;
     Ok(CreatedCapsule { id: full_id, path: capsule_dir.to_string_lossy().into_owned() })
-}
-
-fn write_default_package_json(capsule_dir: &Path, entry: &BitmapEntry) -> io::Result<()> {
-    let pkg_json_path = capsule_dir.join("package.json");
-    if pkg_json_path.exists() {
-        return Ok(());
-    }
-    let scope = entry.id.scope.as_deref().unwrap_or("my-scope");
-    let pkg_name = format!("@{scope}/{}", entry.id.name.replace('/', "."));
-    let ver = entry.id.version.as_deref().unwrap_or("0.0.1");
-    let pkg = json!({
-        "name": pkg_name,
-        "version": ver,
-        "main": entry.main_file,
-    });
-    fs::write(&pkg_json_path, serde_json::to_string_pretty(&pkg)?)
-}
-
-fn copy_component_files(src: &Path, dst: &Path) -> io::Result<()> {
-    fs::create_dir_all(dst)?;
-    for entry in fs::read_dir(src)?.filter_map(Result::ok) {
-        let name = entry.file_name();
-        if name == "node_modules" || name == ".git" {
-            continue;
-        }
-        let src_path = entry.path();
-        let dst_path = dst.join(&name);
-        if src_path.is_dir() {
-            copy_component_files(&src_path, &dst_path)?;
-        } else if src_path.is_file() {
-            fs::copy(&src_path, &dst_path)?;
-        }
-    }
-    Ok(())
 }
