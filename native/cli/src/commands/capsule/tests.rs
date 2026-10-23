@@ -36,6 +36,9 @@ fn parses_capsule_subcommands() {
             json: true,
             base_dir: None,
             always_new: false,
+            name: None,
+            root_base_dir: None,
+            use_hash: false,
         })),
     );
     assert_eq!(
@@ -46,8 +49,15 @@ fn parses_capsule_subcommands() {
             json: false,
             base_dir: Some("custom".into()),
             always_new: false,
+            name: None,
+            root_base_dir: None,
+            use_hash: false,
         })),
     );
+    assert!(matches!(
+        parse_subcommand(&["create", "comp1", "--id", "custom"]),
+        Some(Subcommand::Create(CreateArgs { name: Some(name), .. })) if name == "custom"
+    ));
     assert!(matches!(
         parse_subcommand(&["create", "comp1", "-a"]),
         Some(Subcommand::Create(CreateArgs { always_new: true, .. }))

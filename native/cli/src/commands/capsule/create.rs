@@ -6,7 +6,7 @@ use super::{
         scope_set::selection,
     },
     Chalk, Formatter, ScopeRoot, Subcommand, compute_capsules_root_dirs, emit_report,
-    resolve_capsules_dir,
+    object_hash_short, resolve_capsules_dir,
 };
 use crate::{commands::workspace_command::uuid_v4, history::History, native::Outcome};
 use bit_install::workspace::{Bitmap, BitmapEntry};
@@ -27,6 +27,9 @@ pub(in crate::commands) struct CreateArgs {
     pub json: bool,
     pub base_dir: Option<String>,
     pub always_new: bool,
+    pub name: Option<String>,
+    pub root_base_dir: Option<String>,
+    pub use_hash: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,24 +44,43 @@ pub(super) fn parse_create_flags(rest: &[&str]) -> Option<Subcommand> {
     let mut json = false;
     let mut base_dir = None;
     let mut always_new = false;
+    let mut name = None;
+    let mut root_base_dir = None;
+    let mut use_hash = false;
     let mut args = rest.iter().copied();
     while let Some(arg) = args.next() {
         match arg {
             "-j" | "--json" => json = true,
             "-s" | "--seeders-only" => seeders_only = true,
             "-a" | "--always-new" => always_new = true,
-            "-b" | "--base-dir" => {
-                let value = args.next()?;
-                if value.starts_with('-') {
-                    return None;
-                }
-                base_dir = Some(value.to_owned());
+            "--use-hash" => use_hash = true,
+            "-i" | "--id" => name = Some(next_option_value(&mut args)?.to_owned()),
+            "-b" | "--base-dir" => base_dir = Some(next_option_value(&mut args)?.to_owned()),
+            "-r" | "--root-base-dir" => {
+                root_base_dir = Some(next_option_value(&mut args)?.to_owned());
+            }
+            "-p" | "--package-manager" => {
+                let _ = next_option_value(&mut args)?;
             }
             val if !val.starts_with('-') => ids.push(val.to_owned()),
             _ => return None,
         }
     }
-    Some(Subcommand::Create(CreateArgs { ids, seeders_only, json, base_dir, always_new }))
+    Some(Subcommand::Create(CreateArgs {
+        ids,
+        seeders_only,
+        json,
+        base_dir,
+        always_new,
+        name,
+        root_base_dir,
+        use_hash,
+    }))
+}
+
+fn next_option_value<'a>(args: &mut impl Iterator<Item = &'a str>) -> Option<&'a str> {
+    let value = args.next()?;
+    (!value.starts_with('-')).then_some(value)
 }
 
 pub(super) fn run_create(
@@ -115,22 +137,7 @@ fn build_capsules(
     root: &ScopeRoot,
     create_args: &CreateArgs,
 ) -> io::Result<Vec<CreatedCapsule>> {
-    let dirs = compute_capsules_root_dirs(cwd, root)?;
-    let ws_capsules_dir = if let Some(base_dir) = &create_args.base_dir {
-        let path = Path::new(base_dir);
-        if path.as_os_str().is_empty()
-            || path
-                .components()
-                .any(|part| !matches!(part, Component::Normal(_)))
-        {
-            return Err(io::Error::other("unsupported capsule base dir"));
-        }
-        PathBuf::from(resolve_capsules_dir(cwd)?).join(path)
-    } else {
-        PathBuf::from(dirs.workspace.ok_or_else(|| {
-            io::Error::other("missing workspace capsules root dir")
-        })?)
-    };
+    let ws_capsules_dir = resolve_create_root(cwd, root, create_args)?;
     let bitmap = load_workspace_bitmap(&root.path)?;
     let active = bitmap.entries
         .iter()
@@ -140,12 +147,78 @@ fn build_capsules(
     let edges = build_dependency_edges(&root.path, &active);
     let selected =
         select_isolated_indices(active.len(), &seeders, &edges, create_args.seeders_only);
+    validate_custom_name(create_args.name.as_deref(), selected.len())?;
     selected
         .into_iter()
-        .map(|idx| {
-            materialize_capsule(&root.path, &ws_capsules_dir, active[idx], create_args.always_new)
-        })
+        .map(|idx| materialize_capsule(&root.path, &ws_capsules_dir, active[idx], create_args))
         .collect()
+}
+
+fn resolve_create_root(
+    cwd: &Path,
+    root: &ScopeRoot,
+    create_args: &CreateArgs,
+) -> io::Result<PathBuf> {
+    let default_root = PathBuf::from(resolve_capsules_dir(cwd)?);
+    let root_base = match &create_args.root_base_dir {
+        Some(value) => validate_root_base_dir(value)?,
+        None => default_root.clone(),
+    };
+    if let Some(base_dir) = &create_args.base_dir {
+        let path = Path::new(base_dir);
+        if path.as_os_str().is_empty()
+            || path
+                .components()
+                .any(|part| !matches!(part, Component::Normal(_)))
+        {
+            return Err(io::Error::other("unsupported capsule base dir"));
+        }
+        return Ok(root_base.join(if create_args.use_hash {
+            PathBuf::from(object_hash_short(base_dir))
+        } else {
+            path.to_path_buf()
+        }));
+    }
+    if create_args.use_hash {
+        return Err(io::Error::other("capsule use-hash requires an explicit base dir"));
+    }
+    let dirs = compute_capsules_root_dirs(cwd, root)?;
+    let ws_dir = PathBuf::from(dirs.workspace.ok_or_else(|| {
+        io::Error::other("missing workspace capsules root dir")
+    })?);
+    if create_args.root_base_dir.is_none() {
+        return Ok(ws_dir);
+    }
+    let sub = ws_dir
+        .strip_prefix(&default_root)
+        .map_err(|_| io::Error::other("custom capsule root cannot map workspace path"))?;
+    Ok(root_base.join(sub))
+}
+
+fn validate_root_base_dir(value: &str) -> io::Result<PathBuf> {
+    let path = Path::new(value);
+    if !path.is_absolute()
+        || path
+            .components()
+            .any(|part| {
+                !matches!(part, Component::Prefix(_) | Component::RootDir | Component::Normal(_))
+            })
+    {
+        return Err(io::Error::other("unsupported capsule root base dir"));
+    }
+    Ok(path.to_path_buf())
+}
+
+fn validate_custom_name(name: Option<&str>, selected_len: usize) -> io::Result<()> {
+    let Some(name) = name else { return Ok(()) };
+    if selected_len != 1 {
+        return Err(io::Error::other("capsule id requires one selected component"));
+    }
+    let mut components = Path::new(name).components();
+    if !matches!(components.next(), Some(Component::Normal(_))) || components.next().is_some() {
+        return Err(io::Error::other("unsupported capsule id"));
+    }
+    Ok(())
 }
 
 fn load_workspace_bitmap(ws_root: &Path) -> io::Result<Bitmap> {
@@ -289,11 +362,13 @@ fn materialize_capsule(
     ws_root: &Path,
     capsules_root: &Path,
     entry: &BitmapEntry,
-    always_new: bool,
+    create_args: &CreateArgs,
 ) -> io::Result<CreatedCapsule> {
     let full_id = selection::entry_full_id(entry);
-    let mut dir_name = full_id.replace('/', "_");
-    if always_new {
+    let mut dir_name = create_args.name
+        .clone()
+        .unwrap_or_else(|| full_id.replace('/', "_"));
+    if create_args.always_new {
         dir_name.push('_');
         dir_name.push_str(&uuid_v4()?);
     }

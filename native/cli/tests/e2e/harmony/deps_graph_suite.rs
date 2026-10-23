@@ -310,6 +310,102 @@ fn capsule_create_always_new_uses_unique_node_style_paths() {
     }
 }
 
+#[test]
+fn capsule_create_custom_id_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    for flag in ["-i", "--id"] {
+        let command = format!("capsule create comp1 {flag} custom-capsule -j");
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            &command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run(&command);
+        assert!(node.status.success(), "{node:?}");
+        assert!(native.status.success(), "{native:?}");
+        assert_eq!(native.stdout, node.stdout);
+        assert!(
+            parse(&native.stdout)[0]["path"]
+                .as_str()
+                .unwrap()
+                .ends_with("/custom-capsule"),
+        );
+    }
+}
+
+#[test]
+fn capsule_create_root_base_dir_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let custom_root = helper.scopes.local_path.join("capsule-root");
+    for flag in ["-r", "--root-base-dir"] {
+        let command = format!(
+            "capsule create comp1 --base-dir custom-capsules {flag} {} -j",
+            custom_root.display(),
+        );
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            &command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run(&command);
+        assert!(node.status.success(), "{node:?}");
+        assert!(native.status.success(), "{native:?}");
+        assert_eq!(native.stdout, node.stdout);
+        let path = parse(&native.stdout)[0]["path"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+        assert!(path.starts_with(custom_root.to_str().unwrap()));
+        assert!(std::path::Path::new(&path).is_dir());
+    }
+}
+
+#[test]
+fn capsule_create_hashed_base_dir_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let command = "capsule create comp1 -b custom-capsules --use-hash -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run(command);
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success(), "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    let path = parse(&native.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let hashed_root = std::path::Path::new(&path).parent().unwrap();
+    assert_eq!(hashed_root.file_name().unwrap().len(), 9);
+}
+
+#[test]
+fn capsule_create_package_manager_option_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    for flag in ["-p", "--package-manager"] {
+        let command = format!("capsule create comp1 -b custom-capsules {flag} pnpm -j");
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            &command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run(&command);
+        assert!(node.status.success(), "{node:?}");
+        assert!(native.status.success(), "{native:?}");
+        assert_eq!(native.stdout, node.stdout);
+    }
+}
+
 /// Covers:
 /// - `e2e/harmony/global-virtual-store.e2e.ts:37`
 ///   installing with the global virtual store › a workspace with a component › should not create the dependency directories inside the workspace
