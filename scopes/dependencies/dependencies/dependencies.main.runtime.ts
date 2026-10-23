@@ -2,7 +2,7 @@ import type { CLIMain } from '@teambit/cli';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
 import moment from 'moment';
-import type { ComponentID } from '@teambit/component-id';
+import type { ComponentID, ComponentIdList } from '@teambit/component-id';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE } from '@teambit/dependency-resolver';
 import type { Workspace } from '@teambit/workspace';
@@ -364,11 +364,13 @@ export class DependenciesMain {
    * the "auto-detect" are passed here as "dependenciesData". the "overrides", such as dependencies from the env,
    * are calculated here.
    * eventually all these dependencies are added to the ConsumerComponent object.
+   * see ApplyOverrides.workspaceComponentIds for "workspaceComponentIds".
    */
   async loadDependenciesFromScope(
     component: ConsumerComponent,
     dependenciesData: Partial<DependenciesData>,
-    autoDetectOverrides?: DependenciesOverridesData
+    autoDetectOverrides?: DependenciesOverridesData,
+    workspaceComponentIds?: ComponentIdList
   ) {
     const dependenciesLoader = new DependenciesLoader(
       component,
@@ -377,7 +379,7 @@ export class DependenciesMain {
       this.aspectLoader,
       this.logger
     );
-    return dependenciesLoader.loadFromScope(dependenciesData, autoDetectOverrides);
+    return dependenciesLoader.loadFromScope(dependenciesData, autoDetectOverrides, workspaceComponentIds);
   }
 
   async debugDependencies(id: string): Promise<DependenciesResultsDebug> {
