@@ -271,7 +271,7 @@ bit ci sync [lane] [--branch <branch>] [--all] [--main] [--dry-run] [--init]
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | _(no args)_ | The same as `--all`.                                                                                                                                                                                                                                                                                                                                                                   |
 | `[lane]`    | One lane. Give the lane name, which the command resolves against `defaultScope`, or a scope-qualified id such as `other-org.other-scope/my-lane`. The `lanes` patterns still filter the lane, and those patterns match the lane **name**.                                                                                                                                              |
-| `--branch`  | The command resolves the lane from a branch name through the mapping config. Use the flag for a push-triggered run. The flag carries a branch name only, so the command assumes `defaultScope`.                                                                                                                                                                                        |
+| `--branch`  | The command resolves the lane from a branch name through the mapping config. Use the flag for a push-triggered run. The flag carries a branch name only. The command reads the lane id from the committed `.bitmap` of the branch, and otherwise assumes `defaultScope`.                                                                                                               |
 | `--all`     | Every mapped lane, plus the main scope. The run includes a lane that exists only as a branch. The command therefore retires the branch and the pull request of a lane that bit.cloud deleted.                                                                                                                                                                                          |
 | `--main`    | Only the main scope, against the default branch.                                                                                                                                                                                                                                                                                                                                       |
 | `--dry-run` | The command reports the action for each target. The command pushes nothing, and the command creates, closes, labels and comments no pull request. The run is not read-only on disk: the command writes the working tree, `.bitmap` and the local scope, then restores them. The command therefore refuses a dirty working tree. The command exits non-zero if the plan needs a person. |
@@ -327,6 +327,11 @@ For each mapped lane, the command compares the remote head of the lane with the 
 An `--all` run visits two sets of targets: the lanes that match the `lanes` patterns, and the lane-mapped
 branches on `origin`. The second set makes the cleanup possible. A lane that bit.cloud deleted is absent from
 the first set, so a run that reads lanes only would leave an orphan branch and an open pull request.
+
+The command resolves each branch of the second set against the lane that the committed `.bitmap` of the branch
+points at, when that pointer has the lane name of the branch. Other branches resolve against `defaultScope`.
+So after another scope archives a lane that this repository mirrors, the next `--all` run closes its pull
+request.
 
 ### Halts and conflicts
 

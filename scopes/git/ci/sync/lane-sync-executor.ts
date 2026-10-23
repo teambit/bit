@@ -1545,7 +1545,7 @@ export class LaneSyncExecutor {
     return undefined;
   }
 
-  private async fetchOnce() {
+  async fetchOnce() {
     if (this.fetched) return;
     await fetchRemoteHeads();
     this.fetched = true;
