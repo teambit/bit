@@ -71,11 +71,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(subcommand) = parse_subcommand(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native capsule grammar".into()));
     };
-    let Ok(Some(root)) = scope_root::discover() else {
-        return Ok(Outcome::Declined("capsule requires a workspace or scope".into()));
-    };
     let cwd = env::current_dir()?;
     let chalk = Chalk::detect(args);
+    let root = match scope_root::discover() {
+        Ok(Some(root)) => root,
+        Ok(None) if matches!(subcommand, Subcommand::Delete { all: true, .. }) => {
+            return run_delete_all_outside_scope(&cwd, args, chalk);
+        }
+        _ => return Ok(Outcome::Declined("capsule requires a workspace or scope".into())),
+    };
     match &subcommand {
         Subcommand::Prune(prune_args) => prune::run(&cwd, &root, args, chalk, prune_args),
         Subcommand::List { json: true, with_stats } => {
@@ -95,6 +99,18 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             create::run_create(&cwd, &root, args, chalk, create_args)
         }
     }
+}
+
+fn run_delete_all_outside_scope(
+    cwd: &Path,
+    args: &[OsString],
+    chalk: Chalk,
+) -> io::Result<Outcome> {
+    let Ok(target_dir) = resolve_capsules_dir(cwd) else {
+        return Ok(Outcome::Declined("capsule delete --all cache root delegated".into()));
+    };
+    let report = delete_and_report(&target_dir, chalk)?;
+    workspace_command::execute_with_scope(cwd, args, "delete", &report)
 }
 
 fn run_list_json(

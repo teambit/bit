@@ -91,3 +91,56 @@ fn capsule_prune_empty_cache_matches_node() -> KnownResult<()> {
     }
     Ok(())
 }
+
+#[test]
+fn capsule_delete_all_outside_workspace_matches_node() -> KnownResult<()> {
+    let helper = Helper::new();
+    let root = helper.scopes.e2e_dir.join("delete-all-cache");
+    let globals = helper.own_global_config("capsules_root_base_dir", root.to_str().unwrap());
+    let payload = root.join("workspace-cap/file.txt");
+    fs::create_dir_all(payload.parent().unwrap()).unwrap();
+    fs::write(&payload, "cached").unwrap();
+    let command = "capsule delete --all";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.e2e_dir,
+        command,
+        &[("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    assert!(!root.exists());
+    fs::create_dir_all(payload.parent().unwrap()).unwrap();
+    fs::write(&payload, "cached").unwrap();
+    let native = Helper::cmd_in_with(
+        &helper.scopes.e2e_dir,
+        command,
+        &[("BIT_GLOBALS_DIR", globals.as_os_str())],
+    );
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert!(!root.exists());
+    assert_eq!(native.stdout, node.stdout);
+
+    fs::create_dir_all(payload.parent().unwrap()).unwrap();
+    fs::write(&payload, "cached").unwrap();
+    let node_colored = Helper::cmd_in_with(
+        &helper.scopes.e2e_dir,
+        command,
+        &[
+            ("BIT_GLOBALS_DIR", globals.as_os_str()),
+            ("BIT_NATIVE", OsStr::new("off")),
+            ("FORCE_COLOR", OsStr::new("1")),
+        ],
+    );
+    fs::create_dir_all(payload.parent().unwrap()).unwrap();
+    fs::write(&payload, "cached").unwrap();
+    let native_colored = Helper::cmd_in_with(
+        &helper.scopes.e2e_dir,
+        command,
+        &[("BIT_GLOBALS_DIR", globals.as_os_str()), ("FORCE_COLOR", OsStr::new("1"))],
+    );
+    assert!(
+        node_colored.status.success() && native_colored.status.success() && native_colored.native,
+    );
+    assert_eq!(native_colored.stdout, node_colored.stdout);
+    assert!(!root.exists());
+    Ok(())
+}
