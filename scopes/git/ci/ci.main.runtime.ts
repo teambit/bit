@@ -1848,16 +1848,17 @@ export class CiMain {
   }
 
   /**
-   * Compare lane Version extensions with main Version extensions for each component.
-   * Any config differences (e.g. env-set, deps-set) are saved to .bitmap so they survive
-   * the switch from lane to main and get included in the subsequent tag.
+   * Compare lane Version extensions with main Version extensions for each component this workspace tracks (a
+   * cross-scope lane also carries other scopes' components; their own workspaces release them). Config differences
+   * (e.g. env-set, deps-set) are saved to .bitmap so they survive the switch to main and get included in the tag.
    */
   private async restoreLaneConfigChanges(laneComponents: LaneComponent[]) {
     const scope = this.workspace.scope.legacyScope;
     const repo = scope.objects;
     let hasChanges = false;
 
-    const activeComponents = laneComponents.filter((c) => !c.isDeleted);
+    const isTracked = (c: LaneComponent) => this.workspace.bitMap.getBitmapEntryIfExist(c.id, { ignoreVersion: true });
+    const activeComponents = laneComponents.filter((c) => !c.isDeleted && isTracked(c));
     await Promise.all(
       activeComponents.map(async (laneComp) => {
         const laneVersion = (await repo.load(laneComp.head)) as Version;
