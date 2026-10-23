@@ -10,6 +10,44 @@ use crate::helper::{Helper, parse};
 use serde_json::{Value, json};
 use std::{ffi::OsStr, fs};
 
+#[test]
+fn deps_debug_builtin_env_without_imports_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    for env in ["teambit.harmony/node", "teambit.react/react"] {
+        if env != "teambit.harmony/node" {
+            helper.native(&format!("env set comp1 {env}"));
+        }
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            "deps debug comp1",
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run("deps debug comp1");
+        assert!(node.status.success(), "{node:?}");
+        assert!(native.status.success() && native.native, "{native:?}");
+        assert_eq!(native.stdout, node.stdout);
+    }
+}
+
+#[test]
+fn deps_debug_unresolved_import_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.output_file("comp1/index.js", "module.exports = require('is-positive');\n");
+    let output = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(output.status.success(), "{output:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, output.stdout);
+}
+
 fn dep_resolver_data(helper: &Helper, id: &str) -> Value {
     let comp = helper.cat_component_parsed(&format!("{id}@latest"));
     comp["extensions"]

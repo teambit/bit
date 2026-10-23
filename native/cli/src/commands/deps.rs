@@ -4,6 +4,7 @@
 pub(super) use self::parse::parse_subcommand;
 
 mod blame;
+mod debug;
 mod diagnose;
 mod get;
 mod mutation;
@@ -56,6 +57,7 @@ pub(super) enum Subcommand {
     Reset { pattern: String },
     Eject { pattern: String },
     Get { id: String, tree: bool, scope: bool },
+    Debug { id: String },
     Usage { dep_name: String, depth: Option<usize> },
     Blame { component: String, dep: String },
     Diagnose { origins: bool },
@@ -82,6 +84,7 @@ impl Subcommand {
             Self::Reset { .. } => "reset",
             Self::Eject { .. } => "eject",
             Self::Get { .. } => "get",
+            Self::Debug { .. } => "debug",
             Self::Usage { .. } => "usage",
             Self::Blame { .. } => "blame",
             Self::Diagnose { .. } => "diagnose",
@@ -231,6 +234,9 @@ fn prepare_non_mutating(
     match subcommand {
         Subcommand::Get { id, tree, scope } => {
             Ok(Prepared::ReadOnly(prepare_get(root, bitmap, bitmap_val, id, *tree, *scope, chalk)?))
+        }
+        Subcommand::Debug { id } => {
+            Ok(Prepared::ReadOnly(debug::prepare(root, bitmap, id, chalk)?))
         }
         Subcommand::Usage { dep_name, depth } => {
             Ok(Prepared::ReadOnly(prepare_usage(root, bitmap_val, dep_name, *depth, chalk)?))

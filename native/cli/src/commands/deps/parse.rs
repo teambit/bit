@@ -23,6 +23,13 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
             Some(Subcommand::Eject { pattern: (*pattern).to_owned() })
         }
         ["get", rest @ ..] => parse_get(rest),
+        ["debug", id]
+            if !id.starts_with('-')
+                && is_supported_pattern(id)
+                && !id.contains(['*', ',', '!']) =>
+        {
+            Some(Subcommand::Debug { id: (*id).to_owned() })
+        }
         ["usage", rest @ ..] => parse_usage(rest),
         ["blame", rest @ ..] => parse_blame(rest),
         ["diagnose", rest @ ..] => parse_diagnose(rest),
