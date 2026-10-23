@@ -141,6 +141,10 @@ describe('bit lane command', function () {
       expect(helper.command.getHeadOfLane('lane-b', 'comp1')).to.equal(comp1LaneASnap);
       expect(helper.command.getHeadOfLane('lane-b', 'comp2')).to.equal(comp2LaneASnap);
     });
+    it('the merged snaps should keep lane-a as their origin, because they were exported already', () => {
+      const version = helper.command.catObject(comp1LaneASnap, true);
+      expect(version.origin.lane.name).to.equal('lane-a');
+    });
     it('main should have nothing staged, because the merged snaps were moved to the new lane', () => {
       helper.command.switchLocalLane('main', '-x');
       expect(helper.command.statusJson().stagedComponents).to.have.lengthOf(0);

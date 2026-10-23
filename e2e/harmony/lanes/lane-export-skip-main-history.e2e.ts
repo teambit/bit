@@ -951,8 +951,9 @@ describe('lane export skips main history objects', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       expect(() => helper.command.export()).to.not.throw();
     });
-    it('the lane scope should contain the moved snap and have a closed VersionHistory', () => {
-      expect(() => helper.command.catObject(unexportedMainSnap, false, laneScopePath)).to.not.throw();
+    it('the lane scope should contain the moved snap, as a lane snap, and have a closed VersionHistory', () => {
+      const version = helper.command.catObject(unexportedMainSnap, true, laneScopePath);
+      expect(version.origin.lane.name).to.equal('dev');
       const vh = helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`, laneScopePath);
       const dangling = danglingParentsIn(vh);
       expect(dangling, `dangling parent refs in scope-L VH:\n${dangling.join('\n')}`).to.have.lengthOf(0);
