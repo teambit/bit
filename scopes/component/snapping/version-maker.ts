@@ -27,6 +27,7 @@ import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { MessagePerComponent } from './message-per-component';
 import { MessagePerComponentFetcher } from './message-per-component';
 import { VersionFileParser } from './version-file-parser';
+import { getLaneDependentsToAutoTag } from './lane-dependents-to-auto-tag';
 import { throwForPlusRangeVersions } from './plus-range-versions';
 import type { VersionCandidate } from './published-versions';
 import { createIsVersionPublished, skipPublishedVersions } from './published-versions';
@@ -496,37 +497,21 @@ export class VersionMaker {
     // for the workspace+lane path we only care about hidden entries — workspace autotag handles
     // visible ones. for the bare-scope path (no workspace), include all lane entries.
     const hiddenLaneIds = lane.updateDependents || [];
-    const candidateLaneIds = hiddenOnly ? hiddenLaneIds : [...lane.toComponentIds(), ...hiddenLaneIds];
-    if (!candidateLaneIds.length) return [];
-    const laneCompIds = ComponentIdList.fromArray(candidateLaneIds);
-    // include `idsToTag` in the graph too. For the bare-scope reverse cascade
-    // (`snapFromScope({ updateDependents: true })`), the targeted hidden entry is being NEWLY
-    // introduced to the lane and isn't in candidateLaneEntries yet — without seeding it into
-    // the graph, predecessors lookup wouldn't surface lane.components that depend on it, and
-    // the reverse cascade (re-snap visible dependents) wouldn't fire.
-    const graphSeedIds = ComponentIdList.uniqFromArray([...laneCompIds, ...idsToTag]);
-    const graphIds = await this.scope.getGraphIds(graphSeedIds);
-    const dependentsMap = idsToTag.reduce(
-      (acc, id) => {
-        const dependents = graphIds.predecessors(id.toString());
-        const dependentsCompIds = dependents.map((d) => d.attr);
-        const dependentsCompIdsFromTheLane = dependentsCompIds.filter((s) => laneCompIds.has(s));
-        if (!dependentsCompIdsFromTheLane.length) return acc;
-        acc[id.toString()] = ComponentIdList.fromArray(dependentsCompIdsFromTheLane);
-        return acc;
-      },
-      {} as Record<string, ComponentIdList>
+    const candidateLaneIds = (hiddenOnly ? hiddenLaneIds : [...lane.toComponentIds(), ...hiddenLaneIds]).filter(
+      (id) => !idsToTag.hasWithoutVersion(id)
     );
-    if (Object.keys(dependentsMap).length === 0) return [];
-    const allDependentsIds = ComponentIdList.uniqFromArray(Object.values(dependentsMap).flat());
-    const allDependents = await this.legacyScope.getManyConsumerComponents(allDependentsIds);
-    // a component that was removed from the lane is not snapped again, same as in a workspace, where it's not loaded
-    const notRemovedDependents = allDependents.filter((dependent) => !dependent.isRemoved());
-    return notRemovedDependents.map((dependent) => {
-      const triggeredByIds = Object.keys(dependentsMap).filter((id) => dependentsMap[id].has(dependent.id));
-      const triggeredBy = ComponentIdList.fromStringArray(triggeredByIds);
-      return { component: dependent, triggeredBy };
+    if (!candidateLaneIds.length) return [];
+    // a bare scope (e.g. a Ripple cascade) has only the components it snaps. fetch the lane entries that are missing.
+    await this.scope.import(candidateLaneIds, {
+      lane,
+      includeUpdateDependents: true,
+      reFetchUnBuiltVersion: false,
+      reason: 'to find the lane components to snap along',
     });
+    const candidates = await this.legacyScope.getManyConsumerComponents(ComponentIdList.fromArray(candidateLaneIds));
+    // a component that was removed from the lane is not snapped again, same as in a workspace, where it's not loaded
+    const notRemovedCandidates = candidates.filter((candidate) => !candidate.isRemoved());
+    return getLaneDependentsToAutoTag(notRemovedCandidates, idsToTag);
   }
 
   private async setFutureVersions(autoTagIds: ComponentIdList): Promise<void> {
