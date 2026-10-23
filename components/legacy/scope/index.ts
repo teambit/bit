@@ -33,8 +33,13 @@ export {
   UnknownObjectType,
   PersistFailed,
   VersionInvalid,
+  LaneNotFound,
+  UnexpectedPackageName,
 } from './exceptions';
-export { validateType } from './validate-type';
+export type { FETCH_TYPE, FETCH_OPTIONS } from './objects-fetcher/fetch-options';
+export { validateType } from '@teambit/legacy.cli.error';
+export { listLocalScope, ListScopeResult } from './list-local-scope';
+export { importMultipleDistsArtifacts, importAllArtifactsFromLane } from './component-ops/import-artifacts';
 export { RemovedObjects, RemovedObjectSerialized } from './removed-components';
 export { ComponentObjects } from './component-objects';
 export { LaneData, serializeLaneData } from './lanes/lanes';

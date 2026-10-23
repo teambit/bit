@@ -16,8 +16,7 @@ import type { PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolb
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
-import { fileContentsForVersioning } from '@teambit/legacy.bit-map';
-import { IgnoredDirectory } from './exceptions/ignored-directory';
+import { fileContentsForVersioning, IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.bit-map';
 import type { Dist, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
 import { License, SourceFile } from '@teambit/component.sources';
 import type { ComponentConfigLoadOptions } from '@teambit/legacy.consumer-config';
@@ -28,7 +27,6 @@ import { ComponentOutOfSync, ComponentsPendingImport } from '@teambit/legacy.con
 import type { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
-import { ComponentNotFoundInPath } from './exceptions/component-not-found-in-path';
 import MainFileRemoved from './exceptions/main-file-removed';
 import type { ComponentLoadOptions } from './component-loader';
 

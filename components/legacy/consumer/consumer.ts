@@ -16,7 +16,7 @@ import {
   LATEST,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
+import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound, UnexpectedPackageName } from '@teambit/legacy.scope';
 import type { Lane, ModelComponent } from '@teambit/objects';
 import { Version } from '@teambit/objects';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
@@ -41,7 +41,6 @@ import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
-import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
 import type { FsCache } from '@teambit/workspace.modules.fs-cache';
 
 type ConsumerProps = {

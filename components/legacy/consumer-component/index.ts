@@ -9,5 +9,5 @@ export { ImportSpecifier, Specifier, RelativePath } from './dependencies/depende
 export { DEPENDENCIES_TYPES_UI_MAP, DEPENDENCIES_TYPES } from './dependencies/dependencies';
 export { SchemaName, CURRENT_SCHEMA, isSchemaSupport, SchemaFeature } from './component-schema';
 export { ComponentLoadOptions, DependencyLoaderOpts, LoadManyResult, ComponentLoader } from './component-loader';
-export { ComponentNotFoundInPath } from './exceptions/component-not-found-in-path';
-export { IgnoredDirectory } from './exceptions/ignored-directory';
+// thrown by bit-map; re-exported here for existing importers
+export { ComponentNotFoundInPath, IgnoredDirectory } from '@teambit/legacy.bit-map';

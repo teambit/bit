@@ -6,4 +6,5 @@ export { ConsumerNotFound, NewerVersionFound, ComponentOutOfSync };
 
 export { ComponentsPendingImport } from './components-pending-import';
 export { ComponentsPendingMerge } from './components-pending-merge';
-export { UnexpectedPackageName } from './unexpected-package-name';
+// thrown by the scope as well; re-exported here for existing importers
+export { UnexpectedPackageName } from '@teambit/legacy.scope';
