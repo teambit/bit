@@ -513,6 +513,36 @@ fn capsule_create_new_component_manifest_matches_node() {
 }
 
 #[test]
+fn capsule_create_source_package_manifest_matches_node() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.output_file("comp1/index.js", "module.exports = 1;\n");
+    helper.output_file("comp1/package.json", "{\"name\":\"custom-package\",\"description\":\"example\",\"scripts\":{\"x\":\"echo x\"}}\n");
+    helper.native("add comp1");
+    let command = "capsule create comp1 -b source-manifest-capsules -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let root = capsule_path.parent().unwrap();
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    fs::remove_dir_all(root).unwrap();
+
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    let native_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    assert_eq!(native_manifest, node_manifest);
+}
+
+#[test]
 fn capsule_create_tagged_component_manifest_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

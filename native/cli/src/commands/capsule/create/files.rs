@@ -61,13 +61,6 @@ pub(super) fn standard_node_manifests(
     }
     for &index in selected {
         let entry = active[index];
-        if ws_root
-            .join(&entry.root_dir)
-            .join("package.json")
-            .exists()
-        {
-            return Ok(false);
-        }
         let config = entry.config.as_ref();
         if config
             .and_then(|config| config.get("teambit.envs/envs"))
@@ -109,9 +102,6 @@ pub(super) fn write_default_package_json(
     dependencies: &BTreeMap<String, String>,
 ) -> io::Result<()> {
     let pkg_json_path = capsule_dir.join("package.json");
-    if pkg_json_path.exists() {
-        return Ok(());
-    }
     let pkg_name = component_dependency(entry).0;
     let stem = Path::new(&entry.main_file).with_extension("");
     let stem = stem.to_string_lossy().replace('\\', "/");
