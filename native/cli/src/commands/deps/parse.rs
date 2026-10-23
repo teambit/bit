@@ -26,6 +26,7 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
             Some(Subcommand::Get { id: (*id).to_owned() })
         }
         ["usage", rest @ ..] => parse_usage(rest),
+        ["blame", rest @ ..] => parse_blame(rest),
         ["diagnose", rest @ ..] => parse_diagnose(rest),
         ["circular", rest @ ..] => parse_circular(rest),
         ["write", rest @ ..] => parse_write(rest),
@@ -34,6 +35,14 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
         }
         _ => None,
     }
+}
+
+fn parse_blame(rest: &[&str]) -> Option<Subcommand> {
+    let [component, dep] = rest else { return None };
+    if component.starts_with('-') || dep.starts_with('-') {
+        return None;
+    }
+    Some(Subcommand::Blame { component: (*component).to_owned(), dep: (*dep).to_owned() })
 }
 
 fn parse_diagnose(rest: &[&str]) -> Option<Subcommand> {

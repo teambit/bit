@@ -1,8 +1,9 @@
-//! Native `bit deps <set|remove|unset|reset|eject|get|usage|diagnose|write|circular>` (`bit dependencies`)
+//! Native `bit deps <set|remove|unset|reset|eject|get|usage|diagnose|blame|write|circular>` (`bit dependencies`)
 //! (`scopes/dependencies/dependencies/dependencies-cmd.ts`).
 
 pub(super) use self::parse::parse_subcommand;
 
+mod blame;
 mod diagnose;
 mod get;
 mod mutation;
@@ -56,6 +57,7 @@ pub(super) enum Subcommand {
     Eject { pattern: String },
     Get { id: String },
     Usage { dep_name: String, depth: Option<usize> },
+    Blame { component: String, dep: String },
     Diagnose { origins: bool },
     DiagnosePackage { package: String },
     Circular { json: bool, include_deps: bool },
@@ -81,6 +83,7 @@ impl Subcommand {
             Self::Eject { .. } => "eject",
             Self::Get { .. } => "get",
             Self::Usage { .. } => "usage",
+            Self::Blame { .. } => "blame",
             Self::Diagnose { .. } => "diagnose",
             Self::DiagnosePackage { .. } => "diagnose",
             Self::Circular { .. } => "circular",
@@ -109,6 +112,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
     if let Subcommand::DiagnosePackage { package } = &subcommand {
         return diagnose::run_package(&root, args, package, chalk);
+    }
+    if let Subcommand::Blame { component, dep } = &subcommand {
+        return blame::run(&root, args, component, dep, chalk);
     }
     if let Subcommand::Diagnose { origins } = &subcommand {
         return diagnose::report::run(&root, args, chalk, *origins);

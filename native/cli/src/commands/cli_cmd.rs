@@ -1,4 +1,4 @@
-//! Native `bit cli generate --docs` (`scopes/harmony/cli/cli.cmd.ts`).
+//! Native `bit cli generate --docs` with metadata and skill options (`cli.cmd.ts`).
 
 #[cfg(test)]
 mod tests;
@@ -41,12 +41,27 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 pub(super) fn is_generate_docs(args: &[&str]) -> bool {
-    let filtered = args
-        .iter()
-        .copied()
-        .filter(|arg| *arg != "--no-color")
-        .collect::<Vec<_>>();
-    matches!(filtered.as_slice(), ["generate", "--docs"])
+    let ["generate", rest @ ..] = args else { return false };
+    rest.contains(&"--docs") && valid_docs_options(rest)
+}
+
+fn valid_docs_options(rest: &[&str]) -> bool {
+    let mut index = 0;
+    while index < rest.len() {
+        let Some(consumed) = docs_option_len(&rest[index..]) else { return false };
+        index += consumed;
+    }
+    true
+}
+
+fn docs_option_len(rest: &[&str]) -> Option<usize> {
+    match rest {
+        ["--skill", value, ..] if !value.starts_with('-') => Some(2),
+        ["--docs" | "--metadata" | "--no-color", ..] => Some(1),
+        [arg, ..] if arg.starts_with("--metadata.") && arg.contains('=') => Some(1),
+        [arg, ..] if arg.starts_with("--skill=") && arg.len() > "--skill=".len() => Some(1),
+        _ => None,
+    }
 }
 
 pub(super) fn render_docs_frontmatter(version: &str) -> String {

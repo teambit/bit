@@ -11,6 +11,30 @@ use std::{ffi::OsStr, fs};
 const DEP_RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
 #[test]
+fn bit_deps_blame_matches_node() -> KnownResult<()> {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("deps set comp1 foo@1.0.0");
+    helper.native("tag --skip-tests");
+    helper.native("deps set comp1 foo@2.0.0");
+    helper.native("tag --skip-tests");
+    let scoped = format!("dependencies blame {}/comp1 foo", helper.scopes.remote);
+    for command in ["deps blame comp1 foo", "deps blame comp1 absent", &scoped] {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run(command);
+        assert!(node.status.success(), "{}", node.stderr);
+        assert!(native.status.success(), "{}", native.stderr);
+        assert_eq!(native.stdout, node.stdout, "{command}");
+    }
+    Ok(())
+}
+
+#[test]
 fn bit_deps_diagnose_package_matches_node() -> KnownResult<()> {
     let helper = Helper::new();
     helper.re_init_workspace();
