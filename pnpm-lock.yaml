@@ -13792,6 +13792,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
+      '@teambit/lane-id':
+        specifier: ~0.0.312
+        version: 0.0.312
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -14967,9 +14970,6 @@ importers:
       '@teambit/component-id':
         specifier: 1.2.5
         version: 1.2.5
-      '@teambit/component.ui.component-compare.models.component-compare-change-type':
-        specifier: ~0.0.7
-        version: 0.0.7(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.component-compare.status-resolver':
         specifier: ~0.0.12
         version: 0.0.12(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
@@ -55421,6 +55421,7 @@ snapshots:
       '@apollo/client': 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(subscriptions-transport-ws@0.9.19)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@teambit/lane-id': 0.0.312
       '@teambit/legacy.bit-map': file:components/legacy/bit-map(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
@@ -55445,6 +55446,7 @@ snapshots:
       '@apollo/client': 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(subscriptions-transport-ws@0.9.19)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@teambit/lane-id': 0.0.312
       '@teambit/legacy.bit-map': file:components/legacy/bit-map(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
@@ -68725,8 +68727,6 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component.modules.component-url': file:scopes/component/component-url(react@18.3.1)
       '@teambit/component.ui.component-compare.context': file:components/ui/component-compare/context(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react@18.3.1)
-      '@teambit/component.ui.component-compare.models.component-compare-change-type': 0.0.7(react-dom@19.2.7)(react@18.3.1)
-      '@teambit/component.ui.component-compare.models.component-compare-props': file:components/ui/component-compare/models/component-compare-props(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/component.ui.component-compare.status-resolver': 0.0.12(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/component.ui.deprecation-icon': 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@18.3.1)
       '@teambit/design.skeletons.base-skeleton': 0.0.2(react@18.3.1)
@@ -68773,8 +68773,6 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component.modules.component-url': file:scopes/component/component-url(react@19.2.7)
       '@teambit/component.ui.component-compare.context': file:components/ui/component-compare/context(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react@19.2.7)
-      '@teambit/component.ui.component-compare.models.component-compare-change-type': 0.0.7(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/component.ui.component-compare.models.component-compare-props': file:components/ui/component-compare/models/component-compare-props(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/component.ui.component-compare.status-resolver': 0.0.12(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.deprecation-icon': 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.skeletons.base-skeleton': 0.0.2(react@19.2.7)
@@ -68821,8 +68819,6 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component.modules.component-url': file:scopes/component/component-url(react@19.2.7)
       '@teambit/component.ui.component-compare.context': file:components/ui/component-compare/context(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react@19.2.7)
-      '@teambit/component.ui.component-compare.models.component-compare-change-type': 0.0.7(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/component.ui.component-compare.models.component-compare-props': file:components/ui/component-compare/models/component-compare-props(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/component.ui.component-compare.status-resolver': 0.0.12(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.deprecation-icon': 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.skeletons.base-skeleton': 0.0.2(react@19.2.7)
