@@ -16,11 +16,11 @@ import * as path from 'path';
 import type { MoverMain } from '@teambit/mover';
 import { MoverAspect } from '@teambit/mover';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { PathLinuxRelative } from '@teambit/legacy.utils';
 import { isDir, isDirEmptySync, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
-import { isWorkspaceRootComponent } from '@teambit/workspace-root';
 import { COMPONENT_CONFIG_FILE_NAME, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { DataToPersist } from '@teambit/component.sources';
 import type { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
@@ -72,6 +72,16 @@ export class ComponentWriterMain {
     private mover: MoverMain,
     private configMerge: ConfigMergerMain
   ) {}
+
+  private workspaceRootDetector?: (extensions: ExtensionDataList) => boolean;
+
+  /**
+   * workspace-root tells which components are workspace roots. it registers the check rather than being
+   * imported here, because it depends on component-writer (through the importer).
+   */
+  registerWorkspaceRootDetector(detector: (extensions: ExtensionDataList) => boolean) {
+    this.workspaceRootDetector = detector;
+  }
 
   get consumer(): Consumer {
     return this.workspace.consumer;
@@ -450,7 +460,7 @@ run "bit remove ${component.id.toStringWithoutVersion()}" first if the workspace
    * component scans may carry one.
    */
   private throwForNonWorkspaceRootComponent(component: ConsumerComponent) {
-    if (isWorkspaceRootComponent(component.extensions)) return;
+    if (this.workspaceRootDetector?.(component.extensions)) return;
     throw new BitError(
       `unable to import "${component.id.toString()}" to the workspace root, it is not a workspace-root component. use --path to write it to a directory`
     );

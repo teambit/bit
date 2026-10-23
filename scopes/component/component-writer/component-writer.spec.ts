@@ -4,8 +4,7 @@ import os from 'os';
 import path from 'path';
 import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { WORKSPACE_JSONC } from '@teambit/legacy.constants';
-import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
-import { WorkspaceRootAspect } from '@teambit/workspace-root';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import ComponentWriter, { isOwnedByNestedComponent } from './component-writer';
 import { ComponentWriterMain } from './component-writer.main.runtime';
 
@@ -240,36 +239,29 @@ describe('the conflict check at the workspace root', () => {
 describe('the guard on what may be written to the workspace root', () => {
   /**
    * it runs in the same branch as the symlink preflight, which an e2e case covers on the real
-   * "--path ." path - so what is left to check is the rule itself, on the marker a version carries.
+   * "--path ." path - so what is left to check is the rule itself. workspace-root registers how a root
+   * is told (its own spec covers the marker), so a stub detector stands in for it here.
    */
-  const componentWith = (extensions: ExtensionDataList) =>
-    ({ id: { toString: () => 'my-scope/comp1' }, extensions }) as any;
-
-  it('should refuse an ordinary component, only a workspace-root component may own "."', () => {
+  const extensions = ExtensionDataList.fromArray([]);
+  const component = { id: { toString: () => 'my-scope/comp1' }, extensions } as any;
+  const writerWith = (detector?: (exts: ExtensionDataList) => boolean) => {
     const main = Object.create(ComponentWriterMain.prototype);
-    expect(() => main.throwForNonWorkspaceRootComponent(componentWith(ExtensionDataList.fromArray([])))).to.throw(
+    if (detector) main.registerWorkspaceRootDetector(detector);
+    return main;
+  };
+
+  it('should refuse a component the detector does not take for a workspace root', () => {
+    expect(() => writerWith(() => false).throwForNonWorkspaceRootComponent(component)).to.throw(
       'not a workspace-root component'
     );
   });
 
-  it('should accept a component whose version carries the root marker', () => {
-    const extensions = ExtensionDataList.fromArray([
-      new ExtensionDataEntry(undefined, undefined, WorkspaceRootAspect.id, undefined, { isRoot: true }),
-    ]);
-    const main = Object.create(ComponentWriterMain.prototype);
-    expect(() => main.throwForNonWorkspaceRootComponent(componentWith(extensions))).to.not.throw();
+  it('should accept a component the detector takes for a workspace root', () => {
+    expect(() => writerWith((exts) => exts === extensions).throwForNonWorkspaceRootComponent(component)).to.not.throw();
   });
 
-  it('should refuse a member, which points at its root rather than being one', () => {
-    const extensions = ExtensionDataList.fromArray([
-      new ExtensionDataEntry(undefined, undefined, WorkspaceRootAspect.id, undefined, {
-        root: 'my-scope/ws-root@0.0.1',
-      }),
-    ]);
-    const main = Object.create(ComponentWriterMain.prototype);
-    expect(() => main.throwForNonWorkspaceRootComponent(componentWith(extensions))).to.throw(
-      'not a workspace-root component'
-    );
+  it('should refuse any component when no detector is registered', () => {
+    expect(() => writerWith().throwForNonWorkspaceRootComponent(component)).to.throw('not a workspace-root component');
   });
 });
 
