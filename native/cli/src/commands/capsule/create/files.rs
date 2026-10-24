@@ -43,6 +43,7 @@ struct ComponentPackage<'a> {
 
 pub(super) struct ManifestConfig {
     pub(super) env: BuiltinEnv,
+    pub(super) package_name: Option<String>,
     pub(super) metadata: Map<String, Value>,
 }
 
@@ -123,7 +124,7 @@ fn plan_manifest(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Manif
         Some("teambit.harmony/empty-env") => BuiltinEnv::Empty,
         _ => return Ok(None),
     };
-    let Some(metadata) = additional_package_metadata(config) else {
+    let Some((package_name, metadata)) = additional_package_metadata(config) else {
         return Ok(None);
     };
     if entry.id.version.is_some()
@@ -134,7 +135,7 @@ fn plan_manifest(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Manif
     if has_custom_builtin_env_config(config) {
         return Ok(None);
     }
-    Ok(Some(ManifestConfig { env: builtin, metadata }))
+    Ok(Some(ManifestConfig { env: builtin, package_name, metadata }))
 }
 
 fn model_has_package_metadata(ws_root: &Path, entry: &BitmapEntry) -> io::Result<bool> {
@@ -156,16 +157,22 @@ fn model_has_package_metadata(ws_root: &Path, entry: &BitmapEntry) -> io::Result
         }))
 }
 
-fn additional_package_metadata(config: Option<&Map<String, Value>>) -> Option<Map<String, Value>> {
+fn additional_package_metadata(
+    config: Option<&Map<String, Value>>,
+) -> Option<(Option<String>, Map<String, Value>)> {
     let Some(package_json) = config
         .and_then(|config| config.get("teambit.pkg/pkg"))
         .and_then(|pkg| pkg.get("packageJson"))
     else {
-        return Some(Map::new());
+        return Some((None, Map::new()));
     };
-    let metadata = package_json.as_object()?;
+    let mut metadata = package_json.as_object()?.clone();
+    let package_name = match metadata.remove("name") {
+        None => None,
+        Some(Value::String(name)) if !name.is_empty() => Some(name),
+        _ => return None,
+    };
     let generated = [
-        "name",
         "version",
         "main",
         "componentId",
@@ -184,7 +191,7 @@ fn additional_package_metadata(config: Option<&Map<String, Value>>) -> Option<Ma
     {
         return None;
     }
-    Some(metadata.clone())
+    Some((package_name, metadata))
 }
 
 fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>) -> bool {
@@ -263,7 +270,9 @@ pub(super) fn write_default_package_json(
     dependencies: &BTreeMap<String, String>,
 ) -> io::Result<()> {
     let pkg_json_path = capsule_dir.join("package.json");
-    let pkg_name = component_dependency(entry).0;
+    let pkg_name = manifest.package_name
+        .clone()
+        .unwrap_or_else(|| component_dependency(entry).0);
     let stem = Path::new(&entry.main_file).with_extension("");
     let stem = stem.to_string_lossy().replace('\\', "/");
     let generated = GeneratedPackage {
