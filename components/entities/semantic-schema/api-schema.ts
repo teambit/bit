@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
-import { ExportSchema, ModuleSchema } from './schemas';
+import { ExportSchema, ModuleSchema, TypeRefSchema } from './schemas';
 import type { SchemaLocation } from './schema-node';
 import { SchemaNode } from './schema-node';
 import { TagName } from './schemas/docs/tag';
@@ -132,6 +132,61 @@ export class APISchema extends SchemaNode {
     };
 
     return sectionNameMap[constructorName] || constructorName;
+  }
+
+  /**
+   * every declaration of the component: the index module's, then the internal modules'.
+   */
+  listDeclarations(): SchemaNode[] {
+    return [this.module, ...this.internals].flatMap((module) => module.listDeclarations());
+  }
+
+  /**
+   * the declarations the component exports, following an exported reference to the local declaration
+   * it points at — `export default Button` exports a reference to `Button`.
+   */
+  listExportedDeclarations(): SchemaNode[] {
+    return this.module.listExports().map((node) => {
+      return (TypeRefSchema.isTypeRefSchema(node) && this.resolveRef(node)) || node;
+    });
+  }
+
+  /**
+   * finds a declaration of this component by name. with `filePath`, only a declaration internal to that
+   * file matches. without it, the name may also be one the component exports the declaration under
+   * (`export { Props as ButtonProps }`).
+   */
+  findDeclaration(name: string, filePath?: string): SchemaNode | undefined {
+    const candidates = this.listDeclarations().filter((node) => node.name === name);
+    if (filePath) return candidates.find((node) => node.location.filePath === filePath);
+    return candidates[0] || this.findExportedAs(name);
+  }
+
+  /**
+   * resolves a type reference to the declaration it points at. references to other components or to
+   * packages resolve to nothing: their declarations are not part of this schema. a reference to a
+   * declaration internal to a file only resolves within that file, so same-named declarations in other
+   * files are never mistaken for it.
+   */
+  resolveRef(ref: TypeRefSchema): SchemaNode | undefined {
+    if (!ref.isFromThisComponent()) return undefined;
+    return this.findDeclaration(ref.name, ref.internalFilePath);
+  }
+
+  private findExportedAs(name: string): SchemaNode | undefined {
+    for (const module of [this.module, ...this.internals]) {
+      const found = module.findExport(name);
+      if (found) return found;
+    }
+    return undefined;
+  }
+
+  /**
+   * the members an object-like type contributes, resolving references within this component.
+   * see `SchemaNode.getMembers()`.
+   */
+  getMembersOf(node: SchemaNode): SchemaNode[] {
+    return node.getMembers({ resolveRef: (ref) => this.resolveRef(ref) });
   }
 
   listSignatures() {
