@@ -241,12 +241,41 @@ fn capsule_create_package_name_override_matches_node() {
 }
 
 #[test]
-fn capsule_create_package_main_override_delegates() {
+fn capsule_create_package_entry_fields_match_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    set_capsule_package_metadata(&helper, &json!({"main": "custom.js"}));
-    let run = helper.cmd("capsule create comp1 -b package-main-override -j");
+    set_capsule_package_metadata(
+        &helper,
+        &json!({"main": "custom.js", "version": "2.3.4", "license": "MIT"}),
+    );
+    let command = "capsule create comp1 -b package-main-override -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    fs::remove_dir_all(capsule_path.parent().unwrap()).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+}
+
+#[test]
+fn capsule_create_package_dependency_override_delegates() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    set_capsule_package_metadata(&helper, &json!({"dependencies": {"is-positive": "1.0.0"}}));
+    let run = helper.cmd("capsule create comp1 -b package-dependency-override -j");
     assert!(run.status.success() && !run.native, "{run:?}");
     assert!(run.trace.contains("capsule create delegated"), "{run:?}");
 }

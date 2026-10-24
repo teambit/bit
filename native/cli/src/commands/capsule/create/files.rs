@@ -26,7 +26,7 @@ struct GeneratedPackage<'a> {
     component_id: PackageComponentId<'a>,
     #[serde(flatten)]
     dependencies: PackageDependencies,
-    license: &'static str,
+    license: String,
     #[serde(flatten)]
     dependency_metadata: DependencyMetadata,
     #[serde(flatten)]
@@ -43,8 +43,16 @@ struct ComponentPackage<'a> {
 
 pub(super) struct ManifestConfig {
     pub(super) env: BuiltinEnv,
-    pub(super) package_name: Option<String>,
-    pub(super) metadata: Map<String, Value>,
+    overrides: PackageOverrides,
+}
+
+#[derive(Default)]
+struct PackageOverrides {
+    name: Option<String>,
+    main: Option<String>,
+    license: Option<String>,
+    metadata: Map<String, Value>,
+    configured: bool,
 }
 
 #[derive(Serialize)]
@@ -124,18 +132,18 @@ fn plan_manifest(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Manif
         Some("teambit.harmony/empty-env") => BuiltinEnv::Empty,
         _ => return Ok(None),
     };
-    let Some((package_name, metadata)) = additional_package_metadata(config) else {
+    let Some(overrides) = additional_package_metadata(config) else {
         return Ok(None);
     };
     if entry.id.version.is_some()
-        && (!metadata.is_empty() || model_has_package_metadata(ws_root, entry)?)
+        && (overrides.configured || model_has_package_metadata(ws_root, entry)?)
     {
         return Ok(None);
     }
     if has_custom_builtin_env_config(config) {
         return Ok(None);
     }
-    Ok(Some(ManifestConfig { env: builtin, package_name, metadata }))
+    Ok(Some(ManifestConfig { env: builtin, overrides }))
 }
 
 fn model_has_package_metadata(ws_root: &Path, entry: &BitmapEntry) -> io::Result<bool> {
@@ -157,29 +165,23 @@ fn model_has_package_metadata(ws_root: &Path, entry: &BitmapEntry) -> io::Result
         }))
 }
 
-fn additional_package_metadata(
-    config: Option<&Map<String, Value>>,
-) -> Option<(Option<String>, Map<String, Value>)> {
+fn additional_package_metadata(config: Option<&Map<String, Value>>) -> Option<PackageOverrides> {
     let Some(package_json) = config
         .and_then(|config| config.get("teambit.pkg/pkg"))
         .and_then(|pkg| pkg.get("packageJson"))
     else {
-        return Some((None, Map::new()));
+        return Some(PackageOverrides::default());
     };
     let mut metadata = package_json.as_object()?.clone();
-    let package_name = match metadata.remove("name") {
-        None => None,
-        Some(Value::String(name)) if !name.is_empty() => Some(name),
-        _ => return None,
-    };
+    let name = take_nonempty_string(&mut metadata, "name")?;
+    let main = take_nonempty_string(&mut metadata, "main")?;
+    let license = take_nonempty_string(&mut metadata, "license")?;
+    let _version = take_nonempty_string(&mut metadata, "version")?;
     let generated = [
-        "version",
-        "main",
         "componentId",
         "dependencies",
         "devDependencies",
         "peerDependencies",
-        "license",
         "optionalDependencies",
         "peerDependenciesMeta",
         "types",
@@ -191,7 +193,15 @@ fn additional_package_metadata(
     {
         return None;
     }
-    Some((package_name, metadata))
+    Some(PackageOverrides { name, main, license, metadata, configured: true })
+}
+
+fn take_nonempty_string(metadata: &mut Map<String, Value>, key: &str) -> Option<Option<String>> {
+    match metadata.remove(key) {
+        None => Some(None),
+        Some(Value::String(value)) if !value.is_empty() => Some(Some(value)),
+        _ => None,
+    }
 }
 
 fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>) -> bool {
@@ -270,7 +280,7 @@ pub(super) fn write_default_package_json(
     dependencies: &BTreeMap<String, String>,
 ) -> io::Result<()> {
     let pkg_json_path = capsule_dir.join("package.json");
-    let pkg_name = manifest.package_name
+    let pkg_name = manifest.overrides.name
         .clone()
         .unwrap_or_else(|| component_dependency(entry).0);
     let stem = Path::new(&entry.main_file).with_extension("");
@@ -278,25 +288,31 @@ pub(super) fn write_default_package_json(
     let generated = GeneratedPackage {
         name: pkg_name,
         version: package_version(entry),
-        main: if matches!(manifest.env, BuiltinEnv::Empty) {
-            entry.main_file.clone()
-        } else {
-            format!("dist/{stem}.js")
-        },
+        main: manifest.overrides.main
+            .clone()
+            .unwrap_or_else(|| {
+                if matches!(manifest.env, BuiltinEnv::Empty) {
+                    entry.main_file.clone()
+                } else {
+                    format!("dist/{stem}.js")
+                }
+            }),
         component_id: PackageComponentId {
             name: &entry.id.name,
             scope: entry.id.effective_scope(),
             version: entry.id.version.as_deref(),
         },
         dependencies: policy::package_dependencies(manifest.env, dependencies),
-        license: "SEE LICENSE IN UNLICENSED",
+        license: manifest.overrides.license
+            .clone()
+            .unwrap_or_else(|| "SEE LICENSE IN UNLICENSED".into()),
         dependency_metadata: DependencyMetadata {
             optional_dependencies: BTreeMap::new(),
             peer_dependencies_meta: BTreeMap::new(),
         },
         entry_points: entry_point_metadata(manifest.env, &stem),
     };
-    let pkg = ComponentPackage { generated, metadata: &manifest.metadata };
+    let pkg = ComponentPackage { generated, metadata: &manifest.overrides.metadata };
     fs::write(&pkg_json_path, serde_json::to_string_pretty(&pkg)?)
 }
 
