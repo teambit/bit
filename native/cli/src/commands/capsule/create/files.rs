@@ -1,5 +1,7 @@
 //! Source and package files for an isolated workspace component.
 
+mod policy;
+
 use bit_install::workspace::{BitmapEntry, ScopeObjects};
 use serde::Serialize;
 use serde_json::{Map, Value};
@@ -27,7 +29,16 @@ struct ComponentPackage<'a> {
     license: &'static str,
     #[serde(flatten)]
     dependency_metadata: DependencyMetadata,
-    types: String,
+    #[serde(flatten)]
+    entry_points: EntryPointMetadata,
+}
+
+#[derive(Serialize)]
+struct EntryPointMetadata {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    types: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    exports: Option<Value>,
 }
 
 #[derive(Serialize)]
@@ -51,6 +62,12 @@ pub(super) enum BuiltinEnv {
     React,
     Html,
     ReactNative,
+    Aspect,
+    Mdx,
+    Environment,
+    MdxReadme,
+    BitCustomAspect,
+    Empty,
 }
 
 pub(super) fn supported_builtin_manifests(
@@ -77,6 +94,12 @@ pub(super) fn supported_builtin_manifests(
             Some("teambit.react/react") => BuiltinEnv::React,
             Some("teambit.html/html") => BuiltinEnv::Html,
             Some("teambit.react/react-native") => BuiltinEnv::ReactNative,
+            Some("teambit.harmony/aspect") if entry.main_file == "index.js" => BuiltinEnv::Aspect,
+            Some("teambit.mdx/mdx") => BuiltinEnv::Mdx,
+            Some("teambit.envs/env") => BuiltinEnv::Environment,
+            Some("teambit.mdx/readme") => BuiltinEnv::MdxReadme,
+            Some("teambit.harmony/bit-custom-aspect") => BuiltinEnv::BitCustomAspect,
+            Some("teambit.harmony/empty-env") => BuiltinEnv::Empty,
             _ => return Ok(None),
         };
         if config
@@ -93,17 +116,27 @@ pub(super) fn supported_builtin_manifests(
 
 fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>) -> bool {
     let Some(config) = config else { return false };
-    ["teambit.react/react", "teambit.html/html", "teambit.react/react-native"]
-        .iter()
-        .any(|key| {
-            config
-                .get(*key)
-                .is_some_and(|value| {
-                    value
-                        .as_object()
-                        .is_none_or(|env| !env.is_empty())
-                })
-        })
+    [
+        "teambit.react/react",
+        "teambit.html/html",
+        "teambit.react/react-native",
+        "teambit.harmony/aspect",
+        "teambit.mdx/mdx",
+        "teambit.envs/env",
+        "teambit.mdx/readme",
+        "teambit.harmony/bit-custom-aspect",
+        "teambit.harmony/empty-env",
+    ]
+    .iter()
+    .any(|key| {
+        config
+            .get(*key)
+            .is_some_and(|value| {
+                value
+                    .as_object()
+                    .is_none_or(|env| !env.is_empty())
+            })
+    })
 }
 
 fn effective_env(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<String>> {
@@ -150,50 +183,6 @@ fn package_version(entry: &BitmapEntry) -> String {
     }
 }
 
-fn insert_dependency(map: &mut Map<String, Value>, name: &str, version: &str) {
-    map.insert(name.to_owned(), Value::String(version.to_owned()));
-}
-
-fn package_dependencies(
-    env: BuiltinEnv,
-    component_dependencies: &BTreeMap<String, String>,
-) -> PackageDependencies {
-    let mut dependencies = Map::new();
-    let mut dev_dependencies = Map::new();
-    let mut peer_dependencies = Map::new();
-    if matches!(env, BuiltinEnv::React) {
-        insert_dependency(&mut dependencies, "core-js", "^3.0.0");
-        for (name, version) in [
-            ("@types/node", "12.20.4"),
-            ("@types/react", "^19.0.0"),
-            ("@types/react-dom", "^19.0.0"),
-            ("@types/jest", "^26.0.0"),
-            ("@babel/runtime", "7.20.0"),
-            ("@types/testing-library__jest-dom", "5.9.5"),
-        ] {
-            insert_dependency(&mut dev_dependencies, name, version);
-        }
-        insert_dependency(&mut peer_dependencies, "react", "^17.0.0 || ^18.0.0 || ^19.0.0");
-        insert_dependency(&mut peer_dependencies, "react-dom", "^17.0.0 || ^18.0.0 || ^19.0.0");
-    } else {
-        insert_dependency(&mut dev_dependencies, "@types/jest", "26.0.20");
-        insert_dependency(&mut dev_dependencies, "@types/node", "22.10.5");
-        match env {
-            BuiltinEnv::Html => {
-                insert_dependency(&mut dev_dependencies, "@teambit/html", "latest");
-            }
-            BuiltinEnv::ReactNative => {
-                insert_dependency(&mut dev_dependencies, "@teambit/react-native", "latest");
-            }
-            BuiltinEnv::Node | BuiltinEnv::React => {}
-        }
-    }
-    for (name, version) in component_dependencies {
-        insert_dependency(&mut dependencies, name, version);
-    }
-    PackageDependencies { dependencies, dev_dependencies, peer_dependencies }
-}
-
 pub(super) fn write_default_package_json(
     capsule_dir: &Path,
     entry: &BitmapEntry,
@@ -207,21 +196,36 @@ pub(super) fn write_default_package_json(
     let pkg = ComponentPackage {
         name: pkg_name,
         version: package_version(entry),
-        main: format!("dist/{stem}.js"),
+        main: if matches!(env, BuiltinEnv::Empty) {
+            entry.main_file.clone()
+        } else {
+            format!("dist/{stem}.js")
+        },
         component_id: PackageComponentId {
             name: &entry.id.name,
             scope: entry.id.effective_scope(),
             version: entry.id.version.as_deref(),
         },
-        dependencies: package_dependencies(env, dependencies),
+        dependencies: policy::package_dependencies(env, dependencies),
         license: "SEE LICENSE IN UNLICENSED",
         dependency_metadata: DependencyMetadata {
             optional_dependencies: BTreeMap::new(),
             peer_dependencies_meta: BTreeMap::new(),
         },
-        types: format!("{stem}.ts"),
+        entry_points: entry_point_metadata(env, &stem),
     };
     fs::write(&pkg_json_path, serde_json::to_string_pretty(&pkg)?)
+}
+
+fn entry_point_metadata(env: BuiltinEnv, stem: &str) -> EntryPointMetadata {
+    let types = (!matches!(env, BuiltinEnv::Empty)).then(|| format!("{stem}.ts"));
+    let exports = matches!(env, BuiltinEnv::Aspect).then(|| {
+        serde_json::json!({
+            "node": { "require": "./dist/index.js", "import": "./dist/esm.mjs" },
+            "default": "./dist/index.js",
+        })
+    });
+    EntryPointMetadata { types, exports }
 }
 
 pub(super) fn copy_component_files(src: &Path, dst: &Path) -> io::Result<()> {
