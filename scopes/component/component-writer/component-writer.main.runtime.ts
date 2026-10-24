@@ -16,11 +16,11 @@ import * as path from 'path';
 import type { MoverMain } from '@teambit/mover';
 import { MoverAspect } from '@teambit/mover';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { PathLinuxRelative } from '@teambit/legacy.utils';
 import { isDir, isDirEmptySync, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
-import { isWorkspaceRootComponent } from '@teambit/workspace-root';
 import { COMPONENT_CONFIG_FILE_NAME, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { DataToPersist } from '@teambit/component.sources';
 import type { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
@@ -63,7 +63,11 @@ export type ComponentWriterResults = {
   workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult;
 };
 
+type WorkspaceRootDetector = (extensions: ExtensionDataList) => boolean;
+
 export class ComponentWriterMain {
+  private workspaceRootDetector?: WorkspaceRootDetector;
+
   constructor(
     private installer: InstallMain,
     private compiler: CompilerMain,
@@ -72,6 +76,14 @@ export class ComponentWriterMain {
     private mover: MoverMain,
     private configMerge: ConfigMergerMain
   ) {}
+
+  /**
+   * workspace-root tells which components are workspace roots. it registers the check rather than being
+   * imported here, because it depends on component-writer (through the importer).
+   */
+  registerWorkspaceRootDetector(detector: WorkspaceRootDetector) {
+    this.workspaceRootDetector = detector;
+  }
 
   get consumer(): Consumer {
     return this.workspace.consumer;
@@ -218,9 +230,7 @@ export class ComponentWriterMain {
     uniqDuplicates.forEach((compDir) => {
       const hasDuplication = componentWriterInstances.filter((compWriter) => compWriter.writeToPath === compDir);
       hasDuplication.forEach((compWriter) => {
-        const ownerName = compWriter.component.id.scope?.includes('.')
-          ? compWriter.component.id.scope.split('.')[0]
-          : undefined;
+        const ownerName = getOwnerName(compWriter.component);
         if (ownerName && !compDir.startsWith(ownerName) && !allDirs.includes(`${ownerName}/${compDir}`)) {
           compWriter.writeToPath = `${ownerName}/${compDir}`;
         } else {
@@ -229,6 +239,31 @@ export class ComponentWriterMain {
         allDirs.push(compWriter.writeToPath);
       });
     });
+  }
+
+  /**
+   * the dir from the "defaultDirectory" template. when `avoidOtherComponents` is set, it handles the same issue as
+   * fixDirsIfEqual, for a component that is already in the workspace rather than in this batch.
+   * e.g. org1.ui/button is in "ui/button" and org2.ui/button is imported now. it goes to "org2/ui/button", unless that
+   * dir is taken as well, in which case the default dir stays and the conflict check reports it.
+   */
+  private getDefaultDir(component: ConsumerComponent, avoidOtherComponents: boolean): PathLinuxRelative {
+    const defaultDir = this.consumer.composeRelativeComponentPath(component.id);
+    if (!avoidOtherComponents) return defaultDir;
+    const usedByComponent = this.consumer.bitMap.getComponentIdByRootPath(defaultDir);
+    if (!usedByComponent || usedByComponent.isEqualWithoutVersion(component.id)) return defaultDir;
+    const ownerName = getOwnerName(component);
+    if (!ownerName || defaultDir.startsWith(`${ownerName}/`)) return defaultDir;
+    const ownerDir = `${ownerName}/${defaultDir}`;
+    // a dir nested in a tracked rootDir (or containing one) would be moved later by fixDirsIfNested, past this check
+    const isNestedWithTrackedDir = Object.keys(this.consumer.bitMap.getAllTrackDirs()).some(
+      (rootDir) => rootDir.startsWith(`${ownerDir}/`) || ownerDir.startsWith(`${rootDir}/`)
+    );
+    if (isNestedWithTrackedDir || this.getDirUnavailableReason(ownerDir, undefined)) return defaultDir;
+    this.logger.consoleWarning(
+      `"${defaultDir}" is already used by ${usedByComponent.toString()}, importing ${component.id.toStringWithoutVersion()} into "${ownerDir}" instead`
+    );
+    return ownerDir;
   }
 
   /**
@@ -284,11 +319,12 @@ export class ComponentWriterMain {
     // "--path ." resolves to an empty relative path. normalize it to "." so it is a real rootDir
     // rather than a falsy one that later turns into an undefined path segment.
     const writeToPath = this.getWriteToPath(component, opts);
-    const componentRootDir: PathLinuxRelative = writeToPath
-      ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(writeToPath))) || WORKSPACE_ROOT_DIR
-      : this.consumer.composeRelativeComponentPath(component.id);
     // components can't be saved with multiple versions, so we can ignore the version to find the component in bit.map
     const existingComponentMap = this.consumer?.bitMap.getComponentIfExist(component.id, { ignoreVersion: true });
+    const componentRootDir: PathLinuxRelative = writeToPath
+      ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(writeToPath))) || WORKSPACE_ROOT_DIR
+      : // a component already in .bitmap keeps its dir, and nothing is written with skipWritingToFs
+        this.getDefaultDir(component, !existingComponentMap && !opts.skipWritingToFs);
     // a component already tracked at the root is written there whatever path was derived above, e.g. by
     // a checkout or a re-import, so the guards of the root run for it as well
     if (componentRootDir === WORKSPACE_ROOT_DIR || existingComponentMap?.rootDir === WORKSPACE_ROOT_DIR) {
@@ -426,7 +462,7 @@ run "bit remove ${component.id.toStringWithoutVersion()}" first if the workspace
    * component scans may carry one.
    */
   private throwForNonWorkspaceRootComponent(component: ConsumerComponent) {
-    if (isWorkspaceRootComponent(component.extensions)) return;
+    if (this.workspaceRootDetector?.(component.extensions)) return;
     throw new BitError(
       `unable to import "${component.id.toString()}" to the workspace root, it is not a workspace-root component. use --path to write it to a directory`
     );
@@ -490,7 +526,7 @@ use --override to overwrite them`
       if (compInTheSameDir) {
         throw new BitError(
           `unable to import to ${componentDir}, the directory is already used by ${compInTheSameDir.toString()}.
-either use --path to specify a different directory or modify "defaultDirectory" prop in the workspace.jsonc file to "{scopeId}/{name}"`
+either use --path to specify a different directory, --write-to-empty-dir to import into the next available directory, or modify "defaultDirectory" prop in the workspace.jsonc file to "{scopeId}/{name}"`
         );
       }
     }
@@ -503,7 +539,7 @@ either use --path to specify a different directory or modify "defaultDirectory" 
     }
     if (!isDirEmptySync(componentDir) && opts.throwForExistingDir) {
       throw new BitError(
-        `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`
+        `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import, or --write-to-empty-dir to import into the next available directory`
       );
     }
   }
@@ -598,4 +634,12 @@ function lstatIfExists(absolutePath: string): fs.Stats | undefined {
     if (err.code === 'ENOENT') return undefined;
     throw err;
   }
+}
+
+/**
+ * the owner part of the scope-id, e.g. "org1" of "org1.ui". undefined when the scope has no owner.
+ */
+function getOwnerName(component: ConsumerComponent): string | undefined {
+  const scope = component.id.scope;
+  return scope?.includes('.') ? scope.split('.')[0] : undefined;
 }
