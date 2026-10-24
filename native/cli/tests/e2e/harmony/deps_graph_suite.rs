@@ -501,6 +501,24 @@ fn capsule_create_custom_base_dir_matches_node() {
     }
 }
 
+#[test]
+fn capsule_create_write_failure_stays_native() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let root = helper.scopes.local_path.join("blocked-capsules");
+    let blocked = root
+        .join("blocked")
+        .join(format!("{}_comp1", helper.scopes.remote));
+    fs::create_dir_all(blocked.parent().unwrap()).unwrap();
+    fs::write(&blocked, "sentinel").unwrap();
+    let command = format!("capsule create comp1 -b blocked -r {} -j", root.display());
+    let run = helper.native_run(&command);
+    assert!(run.native, "{}", run.trace);
+    assert!(!run.status.success(), "{run:?}");
+    assert_eq!(fs::read_to_string(blocked).unwrap(), "sentinel");
+}
+
 #[cfg(unix)]
 #[test]
 fn capsule_create_absolute_base_dir_matches_node() {

@@ -50,6 +50,11 @@ struct CreatedCapsule {
     path: String,
 }
 
+enum BuildError {
+    BeforeWrite,
+    AfterWrite(io::Error),
+}
+
 pub(super) fn parse_create_flags(rest: &[&str]) -> Option<Subcommand> {
     let mut ids = Vec::new();
     let mut seeders_only = false;
@@ -105,8 +110,12 @@ pub(super) fn run_create(
     if root.bare {
         return Ok(Outcome::Declined("capsule create in bare scope delegated".into()));
     }
-    let Ok(capsules) = build_capsules(cwd, root, create_args) else {
-        return Ok(Outcome::Declined("capsule create delegated".into()));
+    let capsules = match build_capsules(cwd, root, create_args) {
+        Ok(capsules) => capsules,
+        Err(BuildError::BeforeWrite) => {
+            return Ok(Outcome::Declined("capsule create delegated".into()));
+        }
+        Err(BuildError::AfterWrite(err)) => return Err(err),
     };
     if create_args.json {
         emit_create_json(root, args, &capsules)
@@ -148,22 +157,28 @@ fn build_capsules(
     cwd: &Path,
     root: &ScopeRoot,
     create_args: &CreateArgs,
-) -> io::Result<Vec<CreatedCapsule>> {
-    let ws_capsules_dir = resolve_create_root(cwd, root, create_args)?;
-    let bitmap = load_workspace_bitmap(&root.path)?;
+) -> Result<Vec<CreatedCapsule>, BuildError> {
+    let ws_capsules_dir =
+        resolve_create_root(cwd, root, create_args).map_err(|_| BuildError::BeforeWrite)?;
+    let bitmap = load_workspace_bitmap(&root.path).map_err(|_| BuildError::BeforeWrite)?;
     let active = bitmap.entries
         .iter()
         .filter(|entry| entry.owns_its_dir())
         .collect::<Vec<_>>();
-    let seeders = resolve_seeder_indices(&bitmap, &active, &create_args.ids)?;
+    let seeders = resolve_seeder_indices(&bitmap, &active, &create_args.ids)
+        .map_err(|_| BuildError::BeforeWrite)?;
     let edges = build_dependency_edges(&root.path, &active);
     let selected =
         select_isolated_indices(active.len(), &seeders, &edges, create_args.seeders_only);
-    validate_custom_name(create_args.name.as_deref(), selected.len())?;
-    let Some(envs) = supported_builtin_manifests(&root.path, &active, &selected)? else {
-        return Err(io::Error::other("capsule manifest requires Node environment"));
+    validate_custom_name(create_args.name.as_deref(), selected.len())
+        .map_err(|_| BuildError::BeforeWrite)?;
+    let Some(envs) = supported_builtin_manifests(&root.path, &active, &selected)
+        .map_err(|_| BuildError::BeforeWrite)?
+    else {
+        return Err(BuildError::BeforeWrite);
     };
-    write_root_metadata(&ws_capsules_dir, create_args.base_dir.as_deref().unwrap_or(""))?;
+    write_root_metadata(&ws_capsules_dir, create_args.base_dir.as_deref().unwrap_or(""))
+        .map_err(BuildError::AfterWrite)?;
     selected
         .into_iter()
         .zip(envs)
@@ -181,7 +196,8 @@ fn build_capsules(
                 &dependencies,
             )
         })
-        .collect()
+        .collect::<io::Result<_>>()
+        .map_err(BuildError::AfterWrite)
 }
 
 fn validate_custom_name(name: Option<&str>, selected_len: usize) -> io::Result<()> {
