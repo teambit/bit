@@ -5,6 +5,7 @@ use super::{
     resolve::{WorkspaceDepsContext, scanned_specifiers},
 };
 mod policy;
+mod versioned;
 use crate::commands::{
     color::Chalk,
     scope_set::{Failure, selection},
@@ -13,7 +14,7 @@ use bit_install::{
     config::DEPENDENCY_RESOLVER_ASPECT,
     workspace::{Bitmap, BitmapEntry},
 };
-use policy::{apply_lifecycle_precedence, empty_policy, supported_policy, unresolved_plus};
+use policy::{empty_policy, parse_manual_fields, supported_policy};
 use serde_json::{Map, Value, json};
 use std::{collections::HashSet, path::Path};
 
@@ -38,7 +39,9 @@ struct ManualPolicy {
     runtime: Vec<(String, String)>,
     dev: Vec<(String, String)>,
     peer: Vec<(String, String)>,
-    unresolved_plus: Vec<String>,
+    unresolved_runtime_plus: Vec<String>,
+    unresolved_dev_plus: Vec<String>,
+    unresolved_peer_plus: Vec<String>,
     has_ignored_policy: bool,
     ignored_env_dependencies: Vec<String>,
 }
@@ -48,7 +51,9 @@ impl ManualPolicy {
         self.runtime.is_empty()
             && self.dev.is_empty()
             && self.peer.is_empty()
-            && self.unresolved_plus.is_empty()
+            && self.unresolved_runtime_plus.is_empty()
+            && self.unresolved_dev_plus.is_empty()
+            && self.unresolved_peer_plus.is_empty()
             && !self.has_ignored_policy
     }
 }
@@ -73,8 +78,12 @@ pub(super) fn prepare(
     let component = ctx
         .find_workspace_component(entry)
         .ok_or_else(|| Failure::Declined("missing workspace component".into()))?;
-    let manual = validate_simple_component(root, &ctx, entry, component)?;
-    let env_deps = builtin_env_deps(&component.env_id)?;
+    let (env_id, manual) = if entry.id.version.is_some() {
+        versioned::plan(root, &ctx, entry, component)?
+    } else {
+        (component.env_id.as_str(), validate_simple_component(root, &ctx, entry, component)?)
+    };
+    let env_deps = builtin_env_deps(env_id)?;
     if manual.is_empty() { render_debug(root, env_deps) } else { render_manual(root, &manual) }
 }
 
@@ -84,9 +93,6 @@ fn validate_simple_component(
     entry: &BitmapEntry,
     component: &bit_install::model::WorkspaceComponent,
 ) -> Result<ManualPolicy, Failure> {
-    if entry.id.version.is_some() {
-        return Err(Failure::Declined("versioned deps debug delegated".into()));
-    }
     let manual = manual_policy(entry)?;
     if !manual.is_empty() {
         validate_manual_component(root, ctx, entry, component)?;
@@ -147,63 +153,6 @@ fn parse_manual_config(config: &Value) -> Result<ManualPolicy, Failure> {
         return Err(Failure::Declined("unsupported component deps debug policy".into()));
     };
     parse_manual_fields(fields)
-}
-
-fn parse_manual_fields(fields: &Map<String, Value>) -> Result<ManualPolicy, Failure> {
-    let mut manual = ManualPolicy::default();
-    for (field, values) in fields {
-        let target = match field.as_str() {
-            "dependencies" => &mut manual.runtime,
-            "devDependencies" => &mut manual.dev,
-            "peerDependencies" => &mut manual.peer,
-            _ => return Err(Failure::Declined("unsupported component deps debug field".into())),
-        };
-        manual.has_ignored_policy |= values
-            .as_object()
-            .is_some_and(|entries| {
-                entries
-                    .values()
-                    .any(|value| value == "-")
-            });
-        manual.ignored_env_dependencies.extend(
-            NODE_DEV
-                .iter()
-                .filter(|(name, _)| {
-                    field == "devDependencies"
-                        && values.get(*name).and_then(Value::as_str) == Some("-")
-                })
-                .map(|(name, _)| (*name).to_owned()),
-        );
-        manual.unresolved_plus.extend(unresolved_plus(field, values)?);
-        target.extend(parse_manual_entries(values)?);
-    }
-    manual.unresolved_plus.sort();
-    apply_lifecycle_precedence(&mut manual);
-    Ok(manual)
-}
-
-fn parse_manual_entries(values: &Value) -> Result<Vec<(String, String)>, Failure> {
-    let Some(entries) = values.as_object() else {
-        return Err(Failure::Declined("unsupported component deps debug policy".into()));
-    };
-    let mut rows = entries
-        .iter()
-        .map(|(name, value)| {
-            let version = manual_version(value)
-                .ok_or_else(|| {
-                    Failure::Declined("unsupported component deps debug version".into())
-                })?;
-            if name.is_empty() || version.is_empty() {
-                return Err(Failure::Declined("unsupported component deps debug entry".into()));
-            }
-            Ok((version != "-" && version != "+").then(|| (name.clone(), version.to_owned())))
-        })
-        .collect::<Result<Vec<_>, _>>()?
-        .into_iter()
-        .flatten()
-        .collect::<Vec<_>>();
-    rows.sort_by(|left, right| left.0.cmp(&right.0));
-    Ok(rows)
 }
 
 fn manual_version(value: &Value) -> Option<&str> {
@@ -370,21 +319,7 @@ fn manual_value(
     if !groups.peer.is_empty() {
         added.insert("peerDependencies".into(), manual_versions(&groups.peer));
     }
-    let mut runtime_missing = manual.unresolved_plus
-        .iter()
-        .map(String::as_str)
-        .chain(groups.runtime.iter().map(|(name, _, _)| *name))
-        .collect::<Vec<_>>();
-    runtime_missing.sort_unstable();
-    let missing = runtime_missing
-        .into_iter()
-        .chain(
-            groups.dev
-                .iter()
-                .chain(&groups.peer)
-                .map(|(name, _, _)| *name),
-        )
-        .collect::<Vec<_>>();
+    let missing = missing_names(manual, groups);
     let sources = all
         .iter()
         .map(|(name, _, source)| json!({ "id": name, "source": source }))
@@ -397,6 +332,26 @@ fn manual_value(
         "coreAspects": [],
         "sources": sources,
     })
+}
+
+fn missing_names<'a>(manual: &'a ManualPolicy, groups: &'a ManualGroups<'_>) -> Vec<&'a str> {
+    let mut runtime_missing = manual.unresolved_runtime_plus
+        .iter()
+        .map(String::as_str)
+        .chain(groups.runtime.iter().map(|(name, _, _)| *name))
+        .collect::<Vec<_>>();
+    runtime_missing.sort_unstable();
+    let peer_missing = manual.unresolved_peer_plus
+        .iter()
+        .map(String::as_str)
+        .chain(groups.peer.iter().map(|(name, _, _)| *name))
+        .collect::<Vec<_>>();
+    runtime_missing
+        .into_iter()
+        .chain(manual.unresolved_dev_plus.iter().map(String::as_str))
+        .chain(groups.dev.iter().map(|(name, _, _)| *name))
+        .chain(peer_missing)
+        .collect()
 }
 
 fn manual_versions(deps: &[SourcedDep<'_>]) -> Value {

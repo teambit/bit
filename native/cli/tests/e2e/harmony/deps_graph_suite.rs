@@ -11,6 +11,419 @@ use serde_json::{Value, json};
 use std::{ffi::OsStr, fs};
 
 #[test]
+fn deps_debug_duplicate_runtime_dev_plus_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = r#""rootDir": "comp1", "config": {"teambit.dependencies/dependency-resolver": {"policy": {"dependencies": {"is-positive": "+"}, "devDependencies": {"is-positive": "+"}}}}"#;
+    fs::write(bitmap_path, bitmap.replace(marker, replacement)).unwrap();
+    compare_debug_with_node(&helper);
+}
+
+#[test]
+fn deps_debug_multiple_plus_with_peer_plus_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = r#""rootDir": "comp1", "config": {"teambit.dependencies/dependency-resolver": {"policy": {"dependencies": {"is-odd": "+"}, "devDependencies": {"is-even": "+"}, "peerDependencies": {"is-positive": "+"}}}}"#;
+    fs::write(bitmap_path, bitmap.replace(marker, replacement)).unwrap();
+    compare_debug_with_node(&helper);
+    helper.native("tag --skip-tests");
+    compare_debug_with_node(&helper);
+}
+
+#[test]
+fn deps_debug_runtime_plus_with_peer_plus_matches_node() {
+    compare_debug_plus_fields("dependencies");
+}
+
+#[test]
+fn deps_debug_dev_plus_with_peer_plus_matches_node() {
+    compare_debug_plus_fields("devDependencies");
+}
+
+fn compare_debug_plus_fields(field: &str) {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = format!(
+        r#""rootDir": "comp1", "config": {{"teambit.dependencies/dependency-resolver": {{"policy": {{"{field}": {{"is-odd": "+"}}, "peerDependencies": {{"is-positive": "+"}}}}}}}}"#,
+    );
+    fs::write(bitmap_path, bitmap.replace(marker, &replacement)).unwrap();
+    compare_debug_with_node(&helper);
+    helper.native("tag --skip-tests");
+    compare_debug_with_node(&helper);
+}
+
+#[test]
+fn deps_debug_peer_plus_with_runtime_and_dev_policy_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = r#""rootDir": "comp1", "config": {"teambit.dependencies/dependency-resolver": {"policy": {"dependencies": {"is-odd": "1.0.0"}, "devDependencies": {"is-even": "1.0.0"}, "peerDependencies": {"is-positive": "+"}}}}"#;
+    fs::write(bitmap_path, bitmap.replace(marker, replacement)).unwrap();
+    compare_debug_with_node(&helper);
+    helper.native("tag --skip-tests");
+    compare_debug_with_node(&helper);
+}
+
+#[test]
+fn deps_debug_peer_plus_with_peer_policy_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = r#""rootDir": "comp1", "config": {"teambit.dependencies/dependency-resolver": {"policy": {"peerDependencies": {"is-odd": "1.0.0", "is-positive": "+"}}}}"#;
+    fs::write(bitmap_path, bitmap.replace(marker, replacement)).unwrap();
+    compare_debug_with_node(&helper);
+    helper.native("tag --skip-tests");
+    compare_debug_with_node(&helper);
+}
+
+#[test]
+fn deps_debug_peer_plus_with_dev_policy_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = r#""rootDir": "comp1", "config": {"teambit.dependencies/dependency-resolver": {"policy": {"devDependencies": {"is-odd": "1.0.0"}, "peerDependencies": {"is-positive": "+"}}}}"#;
+    fs::write(bitmap_path, bitmap.replace(marker, replacement)).unwrap();
+    compare_debug_with_node(&helper);
+    helper.native("tag --skip-tests");
+    compare_debug_with_node(&helper);
+}
+
+#[test]
+fn deps_debug_peer_plus_with_runtime_policy_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = r#""rootDir": "comp1", "config": {"teambit.dependencies/dependency-resolver": {"policy": {"dependencies": {"is-odd": "1.0.0"}, "peerDependencies": {"is-positive": "+"}}}}"#;
+    fs::write(bitmap_path, bitmap.replace(marker, replacement)).unwrap();
+    compare_debug_with_node(&helper);
+    helper.native("tag --skip-tests");
+    compare_debug_with_node(&helper);
+}
+
+#[test]
+fn deps_debug_tagged_unresolved_dev_plus_matches_node() {
+    compare_debug_plus_policy("devDependencies");
+}
+
+#[test]
+fn deps_debug_tagged_unresolved_peer_plus_matches_node() {
+    compare_debug_plus_policy("peerDependencies");
+}
+
+fn compare_debug_plus_policy(field: &str) {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = format!(
+        r#""rootDir": "comp1", "config": {{"teambit.dependencies/dependency-resolver": {{"policy": {{"{field}": {{"is-positive": "+"}}}}}}}}"#,
+    );
+    fs::write(bitmap_path, bitmap.replace(marker, &replacement)).unwrap();
+    compare_debug_with_node(&helper);
+    helper.native("tag --skip-tests");
+    compare_debug_with_node(&helper);
+}
+
+fn compare_debug_with_node(helper: &Helper) {
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
+fn deps_debug_tagged_unresolved_plus_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = r#""rootDir": "comp1", "config": {"teambit.dependencies/dependency-resolver": {"policy": {"dependencies": {"is-positive": "+"}}}}"#;
+    fs::write(bitmap_path, bitmap.replace(marker, replacement)).unwrap();
+    helper.native("tag --skip-tests");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
+fn deps_debug_tagged_ignored_unresolved_name_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = r#""rootDir": "comp1", "config": {"teambit.dependencies/dependency-resolver": {"policy": {"dependencies": {"is-positive": "-"}}}}"#;
+    fs::write(bitmap_path, bitmap.replace(marker, replacement)).unwrap();
+    helper.native("tag --skip-tests");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+#[test]
+fn deps_debug_tagged_ignored_env_matches_node() {
+    for entries in [
+        r#""@types/jest": "-""#,
+        r#""@types/node": "-""#,
+        r#""@types/jest": "-", "@types/node": "-""#,
+    ] {
+        let helper = Helper::new();
+        helper.set_workspace_with_remote_scope();
+        helper.populate_components(1, true, "");
+        let bitmap_path = helper.scopes.local_path.join(".bitmap");
+        let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+        let marker = r#""rootDir": "comp1""#;
+        let replacement = format!(
+            r#""rootDir": "comp1", "config": {{"teambit.dependencies/dependency-resolver": {{"policy": {{"devDependencies": {{{entries}}}}}}}}}"#,
+        );
+        fs::write(bitmap_path, bitmap.replace(marker, &replacement)).unwrap();
+        helper.native("tag --skip-tests");
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            "deps debug comp1",
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run("deps debug comp1");
+        assert!(node.status.success(), "{node:?}");
+        assert!(native.status.success() && native.native, "{native:?}");
+        assert_eq!(native.stdout, node.stdout);
+    }
+}
+#[test]
+fn deps_debug_tagged_optional_runtime_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("deps set comp1 --optional is-positive@3.1.0");
+    helper.native("tag --skip-tests");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
+fn deps_debug_tagged_optional_dev_matches_node() {
+    compare_tagged_optional("--dev --optional is-odd@3.0.1");
+}
+
+#[test]
+fn deps_debug_tagged_optional_peer_matches_node() {
+    compare_tagged_optional("--peer --optional is-positive@3.1.0");
+}
+
+fn compare_tagged_optional(spec: &str) {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native(&format!("deps set comp1 {spec}"));
+    helper.native("tag --skip-tests");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+#[test]
+fn deps_debug_plain_tagged_react_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("env set comp1 teambit.react/react");
+    helper.tag_without_build("", "");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
+fn deps_debug_plain_snapped_react_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("env set comp1 teambit.react/react");
+    helper.native("snap --unmodified");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
+fn deps_debug_plain_tagged_node_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("tag --skip-tests");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
+fn deps_debug_tagged_dev_policy_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("deps set comp1 --dev yargs-parser@21.1.1");
+    helper.native("tag --skip-tests");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success());
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
+fn deps_debug_tagged_runtime_policy_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("deps set comp1 lodash@4.17.21");
+    helper.native("tag --skip-tests");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
+fn deps_debug_tagged_peer_policy_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("deps set comp1 --peer react@^19.0.0");
+    helper.native("tag --skip-tests");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
+fn deps_debug_tagged_mixed_policy_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("deps set comp1 lodash@4.17.21");
+    helper.native("deps set comp1 --dev yargs-parser@21.1.1");
+    helper.native("deps set comp1 --peer react@^19.0.0");
+    helper.native("tag --skip-tests");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
+fn deps_debug_policy_added_after_tag_delegates() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("tag --skip-tests");
+    helper.native("deps set comp1 --dev yargs-parser@21.1.1");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.cmd("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && !native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
 fn deps_debug_plus_duplicate_dev_policy_matches_node() {
     compare_plus_duplicate_policy("devDependencies");
 }
