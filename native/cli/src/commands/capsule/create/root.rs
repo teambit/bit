@@ -28,7 +28,7 @@ pub(super) fn resolve_create_root(
         }));
     }
     if create_args.use_hash {
-        return Err(io::Error::other("capsule use-hash requires an explicit base dir"));
+        return Ok(root_base.join(object_hash_short(&root.path.to_string_lossy())));
     }
     let dirs = compute_capsules_root_dirs(cwd, root)?;
     let ws_dir = PathBuf::from(dirs.workspace.ok_or_else(|| {

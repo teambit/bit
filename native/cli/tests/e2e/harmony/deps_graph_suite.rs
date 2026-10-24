@@ -799,6 +799,54 @@ fn capsule_create_hashed_base_dir_matches_node() {
 }
 
 #[test]
+fn capsule_create_use_hash_without_base_dir_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    for command in [
+        "capsule create comp1 --use-hash -j".to_owned(),
+        format!(
+            "capsule create comp1 --use-hash --root-base-dir {} -j",
+            helper.scopes.local_path.join("alternate-capsule-root").display(),
+        ),
+    ] {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            &command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run(&command);
+        assert!(node.status.success(), "{node:?}");
+        assert!(native.status.success(), "{native:?}");
+        assert_eq!(native.stdout, node.stdout);
+    }
+}
+
+#[test]
+fn capsule_create_use_hash_overrides_configured_base_dir_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let globals = helper.own_global_config("capsules_build_components_base_dir", "custom-base");
+    let command = "capsule create comp1 --use-hash -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off")), ("BIT_GLOBALS_DIR", globals.as_os_str())],
+    );
+    let native = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_GLOBALS_DIR", globals.as_os_str())],
+    );
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success(), "{native:?}");
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.stdout, node.stdout);
+    assert!(!native.stdout.contains("custom-base"));
+}
+
+#[test]
 fn capsule_create_package_manager_option_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
