@@ -154,6 +154,48 @@ fn capsule_prune_removes_the_same_roots_as_node() -> KnownResult<()> {
 }
 
 #[test]
+fn capsule_prune_outside_workspace_matches_node() -> KnownResult<()> {
+    let helper = Helper::new();
+    let outside = helper.scopes.e2e_dir.join("outside-prune");
+    let cache = helper.scopes.e2e_dir.join("outside-prune-cache");
+    fs::create_dir_all(&outside).unwrap();
+    let globals = helper.own_global_config("capsules_root_base_dir", cache.to_str().unwrap());
+    let node_env = [("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NATIVE", OsStr::new("off"))];
+    let native_env = [("BIT_GLOBALS_DIR", globals.as_os_str())];
+    for command in [
+        "capsule prune --dry-run",
+        "capsule prune --dry-run --json",
+        "capsule prune --json",
+        "capsule prune",
+    ] {
+        let prepare = || {
+            fs::create_dir_all(cache.join("workspace")).unwrap();
+            fs::write(cache.join("workspace/payload"), "capsule").unwrap();
+            fs::write(
+                cache.join("workspace/.bit-capsule-origin.json"),
+                json!({"originPath": outside, "kind": "workspace"}).to_string(),
+            )
+            .unwrap();
+        };
+        prepare();
+        let node = Helper::cmd_in_with(&outside, command, &node_env);
+        assert!(node.status.success(), "{command}: {node:?}");
+        fs::remove_dir_all(&cache).unwrap_or(());
+        prepare();
+        let native = Helper::cmd_in_with(&outside, command, &native_env);
+        assert!(native.status.success() && native.native, "{command}: {native:?}");
+        if command.ends_with("--json") {
+            assert_eq!(parse(&native.stdout), parse(&node.stdout), "{command}");
+        } else {
+            assert_eq!(native.stdout, node.stdout, "{command}");
+        }
+        assert_eq!(cache.join("workspace").exists(), command.contains("--dry-run"));
+        fs::remove_dir_all(&cache).unwrap_or(());
+    }
+    Ok(())
+}
+
+#[test]
 fn capsule_delete_all_outside_workspace_matches_node() -> KnownResult<()> {
     let helper = Helper::new();
     let root = helper.scopes.e2e_dir.join("delete-all-cache");

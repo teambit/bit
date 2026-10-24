@@ -1,8 +1,9 @@
 //! Native `capsule prune` planning and removal.
 
 use super::{
-    Chalk, History, Outcome, ScopeRoot, emit_report, list_stats, read_combined_config,
-    resolve_capsules_dir,
+    Chalk, History, Outcome, Report, ScopeRoot, emit_report, global_config_dir, list_stats,
+    merge_layers, read_combined_config, read_global_config, resolve_capsules_dir,
+    workspace_command,
 };
 use bit_workspace_config::environment_value;
 use chrono::{Datelike, Local};
@@ -81,7 +82,7 @@ pub(super) fn run(
     chalk: Chalk,
     opts: &PruneArgs,
 ) -> io::Result<Outcome> {
-    let Ok(report) = build(cwd, root, opts) else {
+    let Ok(report) = build(cwd, Some(root), opts) else {
         return Ok(Outcome::Declined("capsule prune cache scan delegated".into()));
     };
     if !opts.dry_run {
@@ -100,8 +101,31 @@ pub(super) fn run(
     emit_report(root, args, "prune", render(&report, opts.with_sizes, chalk))
 }
 
-fn build(cwd: &Path, root: &ScopeRoot, opts: &PruneArgs) -> io::Result<PruneReport> {
-    let config = read_combined_config(root)?;
+pub(super) fn run_outside(
+    cwd: &Path,
+    args: &[OsString],
+    chalk: Chalk,
+    opts: &PruneArgs,
+) -> io::Result<Outcome> {
+    let Ok(report) = build(cwd, None, opts) else {
+        return Ok(Outcome::Declined("capsule prune cache scan delegated".into()));
+    };
+    if !opts.dry_run {
+        remove_selected(cwd, &report)?;
+    }
+    if opts.json {
+        let mut stdout = io::stdout().lock();
+        stdout.write_all(serde_json::to_string_pretty(&report)?.as_bytes())?;
+        stdout.flush()?;
+        return Ok(Outcome::Exit(ExitCode::SUCCESS));
+    }
+    let data = render(&report, opts.with_sizes, chalk);
+    let report = Report { data, code: 0, details: None };
+    workspace_command::execute_with_scope(cwd, args, "prune", &report)
+}
+
+fn build(cwd: &Path, root: Option<&ScopeRoot>, opts: &PruneArgs) -> io::Result<PruneReport> {
+    let config = prune_config(root)?;
     let configured_dated = environment_value("capsules_scopes_aspects_dated_dir");
     let dated = configured_dated
         .as_deref()
@@ -134,6 +158,14 @@ fn build(cwd: &Path, root: &ScopeRoot, opts: &PruneArgs) -> io::Result<PruneRepo
         total_size_after_bytes: before.saturating_sub(removed_bytes),
         dry_run: opts.dry_run,
     })
+}
+
+fn prune_config(root: Option<&ScopeRoot>) -> io::Result<Map<String, Value>> {
+    if let Some(root) = root {
+        read_combined_config(root)
+    } else {
+        Ok(merge_layers(&read_global_config(&global_config_dir())?, &Value::Null, &Value::Null))
+    }
 }
 
 fn parse_age(opts: &PruneArgs, config: &Map<String, Value>) -> f64 {

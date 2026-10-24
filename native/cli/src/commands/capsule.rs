@@ -78,6 +78,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(None) if matches!(subcommand, Subcommand::Delete { all: true, .. }) => {
             return run_delete_all_outside_scope(&cwd, args, chalk);
         }
+        Ok(None) if let Subcommand::Prune(prune_args) = &subcommand => {
+            return prune::run_outside(&cwd, args, chalk, prune_args);
+        }
         _ => return Ok(Outcome::Declined("capsule requires a workspace or scope".into())),
     };
     match &subcommand {
