@@ -149,17 +149,14 @@ fn parse_manual_fields(fields: &Map<String, Value>) -> Result<ManualPolicy, Fail
             "peerDependencies" => &mut manual.peer,
             _ => return Err(Failure::Declined("unsupported component deps debug field".into())),
         };
-        if let Some(entry) = parse_single_manual_entry(values, field == "dependencies")? {
+        if let Some(entry) = parse_single_manual_entry(values)? {
             target.push(entry);
         }
     }
     Ok(manual)
 }
 
-fn parse_single_manual_entry(
-    values: &Value,
-    allow_optional: bool,
-) -> Result<Option<(String, String)>, Failure> {
+fn parse_single_manual_entry(values: &Value) -> Result<Option<(String, String)>, Failure> {
     let Some(entries) = values.as_object() else {
         return Err(Failure::Declined("unsupported component deps debug policy".into()));
     };
@@ -167,7 +164,7 @@ fn parse_single_manual_entry(
         return Err(Failure::Declined("multiple component debug policies delegated".into()));
     }
     let Some((name, version)) = entries.iter().next() else { return Ok(None) };
-    let Some(version) = manual_version(version, allow_optional) else {
+    let Some(version) = manual_version(version) else {
         return Err(Failure::Declined("unsupported component deps debug version".into()));
     };
     if name.is_empty() || version.is_empty() || version == "-" {
@@ -176,12 +173,9 @@ fn parse_single_manual_entry(
     Ok(Some((name.clone(), version.to_owned())))
 }
 
-fn manual_version(value: &Value, allow_optional: bool) -> Option<&str> {
+fn manual_version(value: &Value) -> Option<&str> {
     if let Some(version) = value.as_str() {
         return Some(version);
-    }
-    if !allow_optional {
-        return None;
     }
     let object = value.as_object()?;
     (object.len() == 2 && object["optional"] == true)
