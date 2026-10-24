@@ -585,6 +585,9 @@ async fn detection_is_cached_in_bit_format_unless_it_has_issues() {
     write(&broken.dir.join("index.ts"), "import 'nowhere';\n");
     let components = vec![button, broken];
     let options = DependencyOptions { use_cache: true, ..DependencyOptions::default() };
+    // Cache timestamps use whole milliseconds, while source mtimes retain fractions.
+    // Let the fixture files age past that boundary before writing the cache.
+    std::thread::sleep(std::time::Duration::from_millis(10));
     run_with(root, &components, &IndexMap::new(), &options, &TestHost::default()).await;
     let scope = Scope::find(root).expect("scope");
     let pool = rayon::ThreadPoolBuilder::new()
@@ -937,6 +940,8 @@ async fn a_cache_older_than_a_workspace_change_is_not_read() {
     let components = vec![button];
     let options = DependencyOptions { use_cache: true, ..DependencyOptions::default() };
     let host = TestHost::default();
+    // Keep the source mtime behind the cache's whole-millisecond timestamp.
+    std::thread::sleep(std::time::Duration::from_millis(10));
     run_with(root, &components, &IndexMap::new(), &options, &host).await;
     // An entry the detection would not produce: reading it shows in the result.
     let cache_dir = Scope::find(root).expect("scope").dependency_cache();
