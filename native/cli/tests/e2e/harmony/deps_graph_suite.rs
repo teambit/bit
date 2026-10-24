@@ -406,7 +406,7 @@ fn deps_debug_tagged_mixed_policy_matches_node() {
 }
 
 #[test]
-fn deps_debug_policy_added_after_tag_delegates() {
+fn deps_debug_policy_added_after_tag_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
@@ -417,9 +417,9 @@ fn deps_debug_policy_added_after_tag_delegates() {
         "deps debug comp1",
         &[("BIT_NATIVE", OsStr::new("off"))],
     );
-    let native = helper.cmd("deps debug comp1");
+    let native = helper.native_run("deps debug comp1");
     assert!(node.status.success(), "{node:?}");
-    assert!(native.status.success() && !native.native, "{native:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
     assert_eq!(native.stdout, node.stdout);
 }
 

@@ -20,6 +20,11 @@ pub(super) fn plan(
     let (env_id, model_manual) = validate(ctx, entry)?;
     let mut manual = super::validate_simple_component(root, ctx, entry, component)?;
     if let Some(saved) = model_manual {
+        if !manual.is_empty() {
+            return Err(Failure::Declined(
+                "combined versioned deps debug policies delegated".into(),
+            ));
+        }
         super::validate_manual_component(root, ctx, entry, component)?;
         manual = saved;
     }
@@ -31,12 +36,6 @@ fn validate(
     entry: &BitmapEntry,
 ) -> Result<(&'static str, Option<ManualPolicy>), Failure> {
     let decline = || Failure::Declined("configured versioned deps debug delegated".into());
-    if entry.config
-        .as_ref()
-        .is_some_and(|config| !config.is_empty())
-    {
-        return Err(decline());
-    }
     let mut id = entry.id.clone();
     if id.scope.is_none() {
         id.scope = id.effective_scope().map(str::to_owned);
