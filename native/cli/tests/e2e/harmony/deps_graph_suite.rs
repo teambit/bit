@@ -6,7 +6,7 @@
 //! - `e2e/harmony/global-virtual-store.e2e.ts`
 //! - `e2e/harmony/isolate-cyclic-deps.e2e.ts`
 
-use crate::helper::{Helper, parse};
+use crate::helper::{Helper, config, parse};
 use serde_json::{Value, json};
 use std::{ffi::OsStr, fs};
 
@@ -179,6 +179,57 @@ fn capsule_create_aspect_with_nonstandard_main_matches_node() {
     for main_file in ["main.js", "src/entry.js"] {
         compare_aspect_main_manifest(main_file);
     }
+}
+
+#[test]
+fn capsule_create_package_metadata_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    set_capsule_package_metadata(
+        &helper,
+        &json!({
+            "description": "capsule metadata parity",
+            "private": true,
+            "customProp": "probe"
+        }),
+    );
+    let command = "capsule create comp1 -b package-metadata-parity -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    fs::remove_dir_all(capsule_path.parent().unwrap()).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+}
+
+#[test]
+fn capsule_create_generated_package_field_override_delegates() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    set_capsule_package_metadata(&helper, &json!({"name": "custom-capsule-name"}));
+    let run = helper.cmd("capsule create comp1 -b generated-field-override -j");
+    assert!(run.status.success() && !run.native, "{run:?}");
+    assert!(run.trace.contains("capsule create delegated"), "{run:?}");
+}
+
+fn set_capsule_package_metadata(helper: &Helper, metadata: &Value) {
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let mut bitmap = helper.read_bit_map();
+    bitmap["comp1"]["config"]["teambit.pkg/pkg"] = json!({"packageJson":metadata});
+    config::write_json(&bitmap_path, &bitmap, b"    ");
 }
 
 fn compare_aspect_main_manifest(main_file: &str) {

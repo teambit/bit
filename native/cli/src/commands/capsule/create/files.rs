@@ -19,7 +19,7 @@ struct PackageComponentId<'a> {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct ComponentPackage<'a> {
+struct GeneratedPackage<'a> {
     name: String,
     version: String,
     main: String,
@@ -31,6 +31,19 @@ struct ComponentPackage<'a> {
     dependency_metadata: DependencyMetadata,
     #[serde(flatten)]
     entry_points: EntryPointMetadata,
+}
+
+#[derive(Serialize)]
+struct ComponentPackage<'a> {
+    #[serde(flatten)]
+    generated: GeneratedPackage<'a>,
+    #[serde(flatten)]
+    metadata: &'a Map<String, Value>,
+}
+
+pub(super) struct ManifestConfig {
+    pub(super) env: BuiltinEnv,
+    pub(super) metadata: Map<String, Value>,
 }
 
 #[derive(Serialize)]
@@ -74,7 +87,7 @@ pub(super) fn supported_builtin_manifests(
     ws_root: &Path,
     active: &[&BitmapEntry],
     selected: &[usize],
-) -> io::Result<Option<Vec<BuiltinEnv>>> {
+) -> io::Result<Option<Vec<ManifestConfig>>> {
     let bytes = fs::read(ws_root.join("workspace.jsonc"))?;
     let config: Value = bit_object_import::parse_jsonc(&bytes).map_err(io::Error::other)?;
     if config
@@ -86,32 +99,92 @@ pub(super) fn supported_builtin_manifests(
     }
     let mut envs = Vec::with_capacity(selected.len());
     for &index in selected {
-        let entry = active[index];
-        let config = entry.config.as_ref();
-        let env = effective_env(ws_root, entry)?;
-        let builtin = match env.as_deref() {
-            None | Some("teambit.harmony/node") => BuiltinEnv::Node,
-            Some("teambit.react/react") => BuiltinEnv::React,
-            Some("teambit.html/html") => BuiltinEnv::Html,
-            Some("teambit.react/react-native") => BuiltinEnv::ReactNative,
-            Some("teambit.harmony/aspect") => BuiltinEnv::Aspect,
-            Some("teambit.mdx/mdx") => BuiltinEnv::Mdx,
-            Some("teambit.envs/env") => BuiltinEnv::Environment,
-            Some("teambit.mdx/readme") => BuiltinEnv::MdxReadme,
-            Some("teambit.harmony/bit-custom-aspect") => BuiltinEnv::BitCustomAspect,
-            Some("teambit.harmony/empty-env") => BuiltinEnv::Empty,
-            _ => return Ok(None),
-        };
-        if config
-            .and_then(|config| config.get("teambit.pkg/pkg"))
-            .is_some_and(|pkg| pkg.get("packageJson").is_some())
-            || has_custom_builtin_env_config(config)
-        {
+        let Some(manifest) = plan_manifest(ws_root, active[index])? else {
             return Ok(None);
-        }
-        envs.push(builtin);
+        };
+        envs.push(manifest);
     }
     Ok(Some(envs))
+}
+
+fn plan_manifest(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<ManifestConfig>> {
+    let config = entry.config.as_ref();
+    let env = effective_env(ws_root, entry)?;
+    let builtin = match env.as_deref() {
+        None | Some("teambit.harmony/node") => BuiltinEnv::Node,
+        Some("teambit.react/react") => BuiltinEnv::React,
+        Some("teambit.html/html") => BuiltinEnv::Html,
+        Some("teambit.react/react-native") => BuiltinEnv::ReactNative,
+        Some("teambit.harmony/aspect") => BuiltinEnv::Aspect,
+        Some("teambit.mdx/mdx") => BuiltinEnv::Mdx,
+        Some("teambit.envs/env") => BuiltinEnv::Environment,
+        Some("teambit.mdx/readme") => BuiltinEnv::MdxReadme,
+        Some("teambit.harmony/bit-custom-aspect") => BuiltinEnv::BitCustomAspect,
+        Some("teambit.harmony/empty-env") => BuiltinEnv::Empty,
+        _ => return Ok(None),
+    };
+    let Some(metadata) = additional_package_metadata(config) else {
+        return Ok(None);
+    };
+    if entry.id.version.is_some()
+        && (!metadata.is_empty() || model_has_package_metadata(ws_root, entry)?)
+    {
+        return Ok(None);
+    }
+    if has_custom_builtin_env_config(config) {
+        return Ok(None);
+    }
+    Ok(Some(ManifestConfig { env: builtin, metadata }))
+}
+
+fn model_has_package_metadata(ws_root: &Path, entry: &BitmapEntry) -> io::Result<bool> {
+    let mut id = entry.id.clone();
+    if id.scope.is_none() {
+        id.scope = id.effective_scope().map(str::to_owned);
+    }
+    let model = ScopeObjects::new(&ws_root.join(".bit"))
+        .component_or_head(&id)?
+        .ok_or_else(|| io::Error::other("versioned capsule component model is missing"))?;
+    Ok(model.extensions
+        .iter()
+        .any(|extension| {
+            extension.get("name").and_then(Value::as_str) == Some("teambit.pkg/pkg")
+                && extension
+                    .get("config")
+                    .and_then(|config| config.get("packageJson"))
+                    .is_some()
+        }))
+}
+
+fn additional_package_metadata(config: Option<&Map<String, Value>>) -> Option<Map<String, Value>> {
+    let Some(package_json) = config
+        .and_then(|config| config.get("teambit.pkg/pkg"))
+        .and_then(|pkg| pkg.get("packageJson"))
+    else {
+        return Some(Map::new());
+    };
+    let metadata = package_json.as_object()?;
+    let generated = [
+        "name",
+        "version",
+        "main",
+        "componentId",
+        "dependencies",
+        "devDependencies",
+        "peerDependencies",
+        "license",
+        "optionalDependencies",
+        "peerDependenciesMeta",
+        "types",
+        "exports",
+    ];
+    if metadata
+        .keys()
+        .any(|key| generated.contains(&key.as_str()))
+    {
+        return None;
+    }
+    Some(metadata.clone())
 }
 
 fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>) -> bool {
@@ -186,17 +259,17 @@ fn package_version(entry: &BitmapEntry) -> String {
 pub(super) fn write_default_package_json(
     capsule_dir: &Path,
     entry: &BitmapEntry,
-    env: BuiltinEnv,
+    manifest: &ManifestConfig,
     dependencies: &BTreeMap<String, String>,
 ) -> io::Result<()> {
     let pkg_json_path = capsule_dir.join("package.json");
     let pkg_name = component_dependency(entry).0;
     let stem = Path::new(&entry.main_file).with_extension("");
     let stem = stem.to_string_lossy().replace('\\', "/");
-    let pkg = ComponentPackage {
+    let generated = GeneratedPackage {
         name: pkg_name,
         version: package_version(entry),
-        main: if matches!(env, BuiltinEnv::Empty) {
+        main: if matches!(manifest.env, BuiltinEnv::Empty) {
             entry.main_file.clone()
         } else {
             format!("dist/{stem}.js")
@@ -206,14 +279,15 @@ pub(super) fn write_default_package_json(
             scope: entry.id.effective_scope(),
             version: entry.id.version.as_deref(),
         },
-        dependencies: policy::package_dependencies(env, dependencies),
+        dependencies: policy::package_dependencies(manifest.env, dependencies),
         license: "SEE LICENSE IN UNLICENSED",
         dependency_metadata: DependencyMetadata {
             optional_dependencies: BTreeMap::new(),
             peer_dependencies_meta: BTreeMap::new(),
         },
-        entry_points: entry_point_metadata(env, &stem),
+        entry_points: entry_point_metadata(manifest.env, &stem),
     };
+    let pkg = ComponentPackage { generated, metadata: &manifest.metadata };
     fs::write(&pkg_json_path, serde_json::to_string_pretty(&pkg)?)
 }
 
