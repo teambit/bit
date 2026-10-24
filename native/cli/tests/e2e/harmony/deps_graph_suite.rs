@@ -485,6 +485,34 @@ fn capsule_create_ignores_configured_dependency_maps_like_node() {
 }
 
 #[test]
+fn capsule_create_component_id_override_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    set_capsule_package_metadata(&helper, &json!({"componentId": {"name": "other"}}));
+    let command = "capsule create comp1 -b component-id-override -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    let node_package: Value = serde_json::from_slice(&node_manifest).unwrap();
+    assert_eq!(node_package["componentId"]["name"], "other");
+    fs::remove_dir_all(capsule_path.parent().unwrap()).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+}
+
+#[test]
 fn capsule_create_versioned_package_metadata_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
@@ -1034,6 +1062,64 @@ fn capsule_create_custom_id_matches_node() {
 }
 
 #[test]
+fn capsule_create_multi_component_id_always_new_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    let command = "capsule create comp1 comp2 -i custom-capsule --always-new -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let node_rows = parse(&node.stdout);
+    let node_rows = node_rows.as_array().unwrap();
+    assert_eq!(node_rows.len(), 2);
+    let node_files = node_rows
+        .iter()
+        .map(|row| {
+            crate::commands::move_paths::support::tree(std::path::Path::new(
+                row["path"].as_str().unwrap(),
+            ))
+        })
+        .collect::<Vec<_>>();
+    let root = std::path::Path::new(node_rows[0]["path"].as_str().unwrap()).parent().unwrap();
+    fs::remove_dir_all(root).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    let native_rows = parse(&native.stdout);
+    let native_rows = native_rows.as_array().unwrap();
+    assert_eq!(native_rows.len(), 2);
+    for (index, row) in native_rows.iter().enumerate() {
+        assert_eq!(row["id"], node_rows[index]["id"]);
+        let path = std::path::Path::new(row["path"].as_str().unwrap());
+        let name = path
+            .file_name()
+            .unwrap()
+            .to_string_lossy();
+        assert_eq!(
+            name.strip_prefix("custom-capsule_")
+                .unwrap()
+                .len(),
+            36,
+        );
+        assert_eq!(crate::commands::move_paths::support::tree(path), node_files[index]);
+    }
+    assert_ne!(native_rows[0]["path"], native_rows[1]["path"]);
+}
+
+#[test]
+fn capsule_create_multi_component_shared_id_delegates() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    let run = helper.cmd("capsule create comp1 comp2 -i shared-capsule -j");
+    assert!(run.status.success() && !run.native, "{run:?}");
+    assert!(run.trace.contains("delegating:"), "{}", run.trace);
+}
+
+#[test]
 fn capsule_create_root_base_dir_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
@@ -1059,6 +1145,111 @@ fn capsule_create_root_base_dir_matches_node() {
             .to_owned();
         assert!(path.starts_with(custom_root.to_str().unwrap()));
         assert!(std::path::Path::new(&path).is_dir());
+    }
+}
+
+#[test]
+fn capsule_create_relative_root_base_dir_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    for command in [
+        "capsule create comp1 --root-base-dir relative-capsules -j",
+        "capsule create comp1 --root-base-dir relative-capsules -b custom-root -j",
+    ] {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        assert!(node.status.success(), "{node:?}");
+        let capsule = parse(&node.stdout)[0]["path"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+        fs::remove_dir_all(std::path::Path::new(&capsule).parent().unwrap()).unwrap();
+        let native = helper.native_run(command);
+        assert!(native.status.success() && native.native, "{native:?}");
+        assert_eq!(native.stdout, node.stdout);
+    }
+}
+
+#[test]
+fn capsule_create_dotted_root_base_dir_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    for command in [
+        "capsule create comp1 --root-base-dir ./dotted-capsules -j",
+        "capsule create comp1 --root-base-dir ../parent-capsules -b custom-root -j",
+    ] {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        assert!(node.status.success(), "{node:?}");
+        let capsule = parse(&node.stdout)[0]["path"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+        fs::remove_dir_all(std::path::Path::new(&capsule).parent().unwrap()).unwrap();
+        let native = helper.native_run(command);
+        assert!(native.status.success() && native.native, "{native:?}");
+        assert_eq!(native.stdout, node.stdout);
+    }
+}
+
+#[test]
+fn capsule_create_dotted_base_dir_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    for command in [
+        "capsule create comp1 --base-dir ./dotted-base -j",
+        "capsule create comp1 --base-dir ../parent-base -j",
+    ] {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        assert!(node.status.success(), "{node:?}");
+        let capsule = parse(&node.stdout)[0]["path"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+        fs::remove_dir_all(std::path::Path::new(&capsule).parent().unwrap()).unwrap();
+        let native = helper.native_run(command);
+        assert!(native.status.success() && native.native, "{native:?}");
+        assert_eq!(native.stdout, node.stdout);
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn capsule_create_base_dir_selects_root_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    for command in [
+        "capsule create comp1 --root-base-dir ./dot-root --base-dir . -j",
+        "capsule create comp1 --root-base-dir ./slash-root --base-dir / -j",
+    ] {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        assert!(node.status.success(), "{node:?}");
+        let capsule = parse(&node.stdout)[0]["path"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+        fs::remove_dir_all(std::path::Path::new(&capsule).parent().unwrap()).unwrap();
+        let native = helper.native_run(command);
+        assert!(native.status.success() && native.native, "{native:?}");
+        assert_eq!(native.stdout, node.stdout);
     }
 }
 

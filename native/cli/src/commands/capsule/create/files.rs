@@ -18,12 +18,19 @@ struct PackageComponentId<'a> {
 }
 
 #[derive(Serialize)]
+#[serde(untagged)]
+enum PackageComponentIdValue<'a> {
+    Generated(PackageComponentId<'a>),
+    Configured(Value),
+}
+
+#[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct GeneratedPackage<'a> {
     name: String,
     version: String,
     main: String,
-    component_id: PackageComponentId<'a>,
+    component_id: PackageComponentIdValue<'a>,
     #[serde(flatten)]
     dependencies: PackageDependencies,
     license: String,
@@ -51,11 +58,17 @@ struct PackageOverrides {
     name: Option<String>,
     main: Option<String>,
     license: Option<String>,
-    types: Option<String>,
-    exports: Option<Value>,
+    entry_points: EntryPointOverrides,
     optional_dependencies: Option<BTreeMap<String, String>>,
     peer_dependencies_meta: Option<Map<String, Value>>,
+    component_id: Option<Value>,
     metadata: Map<String, Value>,
+}
+
+#[derive(Default)]
+struct EntryPointOverrides {
+    types: Option<String>,
+    exports: Option<Value>,
 }
 
 #[derive(Serialize)]
@@ -175,31 +188,38 @@ fn additional_package_metadata(package_json: Option<&Value>) -> Option<PackageOv
     let name = take_nonempty_string(&mut metadata, "name")?;
     let main = take_nonempty_string(&mut metadata, "main")?;
     let license = take_nonempty_string(&mut metadata, "license")?;
-    let types = take_nonempty_string(&mut metadata, "types")?;
-    let exports = take_exports(&mut metadata)?;
+    let entry_points = take_entry_point_overrides(&mut metadata)?;
     let optional_dependencies = take_string_map(&mut metadata, "optionalDependencies")?;
     let peer_dependencies_meta = take_peer_meta(&mut metadata)?;
     let _runtime_dependencies = take_string_map(&mut metadata, "dependencies")?;
     let _dev_dependencies = take_string_map(&mut metadata, "devDependencies")?;
     let _peer_dependencies = take_string_map(&mut metadata, "peerDependencies")?;
+    let component_id = take_component_id(&mut metadata)?;
     let _version = take_nonempty_string(&mut metadata, "version")?;
-    let generated = ["componentId"];
-    if metadata
-        .keys()
-        .any(|key| generated.contains(&key.as_str()))
-    {
-        return None;
-    }
     Some(PackageOverrides {
         name,
         main,
         license,
-        types,
-        exports,
+        entry_points,
         optional_dependencies,
         peer_dependencies_meta,
+        component_id,
         metadata,
     })
+}
+
+fn take_entry_point_overrides(metadata: &mut Map<String, Value>) -> Option<EntryPointOverrides> {
+    let types = take_nonempty_string(metadata, "types")?;
+    let exports = take_exports(metadata)?;
+    Some(EntryPointOverrides { types, exports })
+}
+
+fn take_component_id(metadata: &mut Map<String, Value>) -> Option<Option<Value>> {
+    match metadata.remove("componentId") {
+        None => Some(None),
+        Some(value @ Value::Object(_)) => Some(Some(value)),
+        _ => None,
+    }
 }
 
 fn take_peer_meta(metadata: &mut Map<String, Value>) -> Option<Option<Map<String, Value>>> {
@@ -333,11 +353,7 @@ pub(super) fn write_default_package_json(
                     format!("dist/{stem}.js")
                 }
             }),
-        component_id: PackageComponentId {
-            name: &entry.id.name,
-            scope: entry.id.effective_scope(),
-            version: entry.id.version.as_deref(),
-        },
+        component_id: configured_component_id(manifest, entry),
         dependencies: policy::package_dependencies(manifest.env, dependencies),
         license: manifest.overrides.license
             .clone()
@@ -356,6 +372,20 @@ pub(super) fn write_default_package_json(
     fs::write(&pkg_json_path, serde_json::to_string_pretty(&pkg)?)
 }
 
+fn configured_component_id<'a>(
+    manifest: &ManifestConfig,
+    entry: &'a BitmapEntry,
+) -> PackageComponentIdValue<'a> {
+    match &manifest.overrides.component_id {
+        Some(value) => PackageComponentIdValue::Configured(value.clone()),
+        None => PackageComponentIdValue::Generated(PackageComponentId {
+            name: &entry.id.name,
+            scope: entry.id.effective_scope(),
+            version: entry.id.version.as_deref(),
+        }),
+    }
+}
+
 fn entry_point_metadata(env: BuiltinEnv, stem: &str) -> EntryPointMetadata {
     let types = (!matches!(env, BuiltinEnv::Empty)).then(|| format!("{stem}.ts"));
     let exports = matches!(env, BuiltinEnv::Aspect).then(|| {
@@ -370,10 +400,10 @@ fn entry_point_metadata(env: BuiltinEnv, stem: &str) -> EntryPointMetadata {
 
 fn configured_entry_points(manifest: &ManifestConfig, stem: &str) -> EntryPointMetadata {
     let mut entry_points = entry_point_metadata(manifest.env, stem);
-    if let Some(types) = &manifest.overrides.types {
+    if let Some(types) = &manifest.overrides.entry_points.types {
         entry_points.types = Some(types.clone());
     }
-    if let Some(exports) = &manifest.overrides.exports {
+    if let Some(exports) = &manifest.overrides.entry_points.exports {
         entry_points.exports = Some(exports.clone());
     }
     entry_points

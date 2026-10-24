@@ -170,7 +170,7 @@ fn build_capsules(
     let edges = build_dependency_edges(&root.path, &active);
     let selected =
         select_isolated_indices(active.len(), &seeders, &edges, create_args.seeders_only);
-    validate_custom_name(create_args.name.as_deref(), selected.len())
+    validate_custom_name(create_args.name.as_deref(), selected.len(), create_args.always_new)
         .map_err(|_| BuildError::BeforeWrite)?;
     let Some(envs) = supported_builtin_manifests(&root.path, &active, &selected)
         .map_err(|_| BuildError::BeforeWrite)?
@@ -200,9 +200,13 @@ fn build_capsules(
         .map_err(BuildError::AfterWrite)
 }
 
-fn validate_custom_name(name: Option<&str>, selected_len: usize) -> io::Result<()> {
+fn validate_custom_name(
+    name: Option<&str>,
+    selected_len: usize,
+    always_new: bool,
+) -> io::Result<()> {
     let Some(name) = name else { return Ok(()) };
-    if selected_len != 1 {
+    if selected_len != 1 && !always_new {
         return Err(io::Error::other("capsule id requires one selected component"));
     }
     let mut components = Path::new(name).components();
