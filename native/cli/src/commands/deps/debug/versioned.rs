@@ -1,0 +1,304 @@
+//! Plain built-in environment versions are rendered from verified model dependencies.
+
+use super::{
+    Deps, Failure, ManualPolicy, NODE_DEV, REACT_DEV, REACT_PEER, REACT_RUNTIME,
+    WorkspaceDepsContext,
+};
+use bit_install::{
+    model::WorkspaceComponent,
+    workspace::{BitmapEntry, ModelData},
+};
+use serde_json::{Value, json};
+use std::{
+    collections::{HashMap, HashSet},
+    path::Path,
+};
+
+pub(super) fn plan(
+    root: &Path,
+    ctx: &WorkspaceDepsContext,
+    entry: &BitmapEntry,
+    component: &WorkspaceComponent,
+) -> Result<(&'static str, ManualPolicy), Failure> {
+    let (env_id, model_manual) = validate(ctx, entry)?;
+    let mut manual = super::validate_simple_component(root, ctx, entry, component)?;
+    if let Some(saved) = model_manual {
+        super::validate_manual_component(root, ctx, entry, component)?;
+        if manual.is_empty() {
+            manual = saved;
+        } else {
+            manual = combine_versioned_policies(manual, saved)?;
+        }
+    }
+    Ok((env_id, manual))
+}
+
+fn combine_versioned_policies(
+    mut bitmap: ManualPolicy,
+    saved: ManualPolicy,
+) -> Result<ManualPolicy, Failure> {
+    if unsupported_combination(&bitmap) || unsupported_combination(&saved) {
+        return Err(Failure::Declined("combined versioned deps debug policies delegated".into()));
+    }
+    let mut names = HashMap::new();
+    for (lifecycle, rows) in
+        [("runtime", &bitmap.runtime), ("dev", &bitmap.dev), ("peer", &bitmap.peer)]
+    {
+        for (name, version) in rows {
+            names.insert(name.clone(), (lifecycle, version.clone()));
+        }
+    }
+    merge_rows(&mut names, "runtime", saved.runtime, &mut bitmap.runtime)?;
+    merge_rows(&mut names, "dev", saved.dev, &mut bitmap.dev)?;
+    merge_rows(&mut names, "peer", saved.peer, &mut bitmap.peer)?;
+    Ok(bitmap)
+}
+
+fn unsupported_combination(policy: &ManualPolicy) -> bool {
+    policy.has_ignored_policy
+        || [
+            &policy.unresolved_runtime_plus,
+            &policy.unresolved_dev_plus,
+            &policy.unresolved_peer_plus,
+        ]
+        .iter()
+        .any(|group| !group.is_empty())
+}
+
+fn merge_rows(
+    names: &mut HashMap<String, (&'static str, String)>,
+    lifecycle: &'static str,
+    rows: Vec<(String, String)>,
+    target: &mut Vec<(String, String)>,
+) -> Result<(), Failure> {
+    for (name, version) in rows {
+        match names.get(&name) {
+            Some((existing_lifecycle, existing_version))
+                if *existing_lifecycle == lifecycle && *existing_version == version => {}
+            Some(_) => {
+                return Err(Failure::Declined(
+                    "overlapping versioned deps debug policies delegated".into(),
+                ));
+            }
+            None => {
+                names.insert(name.clone(), (lifecycle, version.clone()));
+                target.push((name, version));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn validate(
+    ctx: &WorkspaceDepsContext,
+    entry: &BitmapEntry,
+) -> Result<(&'static str, Option<ManualPolicy>), Failure> {
+    let decline = || Failure::Declined("configured versioned deps debug delegated".into());
+    let mut id = entry.id.clone();
+    if id.scope.is_none() {
+        id.scope = id.effective_scope().map(str::to_owned);
+    }
+    let model = ctx.objects
+        .component(&id)
+        .map_err(|_| decline())?
+        .ok_or_else(decline)?;
+    let env_id = model_env(&model).ok_or_else(decline)?;
+    let manual = model_manual_policy(&model, env_id)?;
+    if !plain_model(&model, env_id, manual.as_ref()) {
+        return Err(decline());
+    }
+    Ok((env_id, manual))
+}
+
+fn model_manual_policy(model: &ModelData, env_id: &str) -> Result<Option<ManualPolicy>, Failure> {
+    let decline = || Failure::Declined("configured versioned deps debug delegated".into());
+    let resolver = model.extensions
+        .iter()
+        .find(|extension| extension["name"] == "teambit.dependencies/dependency-resolver")
+        .ok_or_else(decline)?;
+    let config = &resolver["config"];
+    if config.as_object().is_some_and(serde_json::Map::is_empty) {
+        return Ok(None);
+    }
+    if env_id != "teambit.harmony/node"
+        || config.as_object().map(serde_json::Map::len) != Some(2)
+        || config["__specific"] != true
+    {
+        return Err(decline());
+    }
+    let policy = config["policy"].as_object().ok_or_else(decline)?;
+    Ok(Some(manual_entries(policy)?))
+}
+
+fn manual_entries(policy: &serde_json::Map<String, Value>) -> Result<ManualPolicy, Failure> {
+    if policy.is_empty() || !supported_fields(policy) || !supported_entries(policy) {
+        return Err(Failure::Declined("configured versioned deps debug delegated".into()));
+    }
+    super::parse_manual_fields(policy)
+}
+
+fn supported_fields(policy: &serde_json::Map<String, Value>) -> bool {
+    policy
+        .keys()
+        .all(|field| {
+            matches!(field.as_str(), "dependencies" | "devDependencies" | "peerDependencies")
+        })
+}
+
+fn supported_entries(policy: &serde_json::Map<String, Value>) -> bool {
+    let mut seen = HashSet::new();
+    for (field, group) in policy {
+        let Some(entries) = group.as_object() else { return false };
+        if entries.is_empty() {
+            return false;
+        }
+        for (name, value) in entries {
+            if !valid_entry(field, name, value, &mut seen) {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+fn valid_entry<'a>(field: &str, name: &'a str, value: &Value, seen: &mut HashSet<&'a str>) -> bool {
+    let Some(version) = super::manual_version(value) else { return false };
+    if !seen.insert(name) || version.is_empty() {
+        return false;
+    }
+    if NODE_DEV
+        .iter()
+        .any(|(builtin, _)| name == *builtin)
+    {
+        return field == "devDependencies" && version == "-";
+    }
+    true
+}
+
+fn model_env(model: &ModelData) -> Option<&'static str> {
+    let mut envs = model.extensions
+        .iter()
+        .filter(|extension| extension["name"] == "teambit.envs/envs");
+    let id = envs
+        .next()?
+        .pointer("/data/id")?
+        .as_str()?;
+    if envs.next().is_some() {
+        return None;
+    }
+    match id {
+        "teambit.harmony/node" => Some("teambit.harmony/node"),
+        "teambit.react/react" => Some("teambit.react/react"),
+        _ => None,
+    }
+}
+
+fn plain_model(model: &ModelData, env_id: &str, manual: Option<&ManualPolicy>) -> bool {
+    if model.extensions
+        .iter()
+        .any(|extension| !allowed_config(extension, env_id, manual))
+    {
+        return false;
+    }
+    let mut resolver = model.extensions
+        .iter()
+        .filter(|extension| {
+            extension.get("name").and_then(Value::as_str)
+                == Some("teambit.dependencies/dependency-resolver")
+        });
+    let Some(deps) = resolver
+        .next()
+        .and_then(|extension| extension.pointer("/data/dependencies"))
+        .and_then(Value::as_array)
+    else {
+        return false;
+    };
+    resolver.next().is_none() && plain_dependencies(deps, env_id, manual)
+}
+
+fn allowed_config(extension: &Value, env_id: &str, manual: Option<&ManualPolicy>) -> bool {
+    let config = &extension["config"];
+    if extension["name"] == "teambit.dependencies/dependency-resolver" && manual.is_some() {
+        return true;
+    }
+    if env_id == "teambit.react/react" {
+        match extension["name"].as_str() {
+            Some("teambit.react/react") => return config == &json!({"__specific": true}),
+            Some("teambit.envs/envs") => {
+                return config == &json!({"env": env_id, "__specific": true});
+            }
+            _ => {}
+        }
+    }
+    config.as_object().is_some_and(serde_json::Map::is_empty)
+}
+
+fn plain_dependencies(deps: &[Value], env_id: &str, manual: Option<&ManualPolicy>) -> bool {
+    let expected = if env_id == "teambit.harmony/node" {
+        vec![("dev", NODE_DEV)]
+    } else {
+        vec![("runtime", REACT_RUNTIME), ("dev", REACT_DEV), ("peer", REACT_PEER)]
+    };
+    let ignored =
+        manual.map_or(&[][..], |manual| manual.ignored_env_dependencies.as_slice());
+    let expected_count: usize = expected
+        .iter()
+        .map(|(_, group)| group.len())
+        .sum::<usize>()
+        - ignored.len()
+        + manual.map_or(0, |manual| {
+            manual.runtime.len() + manual.dev.len() + manual.peer.len()
+        });
+    deps.len() == expected_count
+        && env_rows_match(deps, &expected, ignored)
+        && manual.is_none_or(|manual| manual_rows_match(deps, manual))
+}
+
+fn env_rows_match(deps: &[Value], expected: &[(&str, Deps)], ignored: &[String]) -> bool {
+    expected
+        .iter()
+        .all(|(lifecycle, group)| {
+            group
+                .iter()
+                .all(|(name, version)| {
+                    ignored
+                        .iter()
+                        .any(|ignored_name| ignored_name.as_str() == *name)
+                        || deps
+                            .iter()
+                            .any(|dep| {
+                                dep.get("id").and_then(Value::as_str) == Some(*name)
+                                    && dep.get("version").and_then(Value::as_str) == Some(*version)
+                                    && dep.get("__type").and_then(Value::as_str) == Some("package")
+                                    && dep.get("lifecycle").and_then(Value::as_str)
+                                        == Some(*lifecycle)
+                                    && dep.get("source").and_then(Value::as_str) == Some("env")
+                                    && dep.get("hidden").and_then(Value::as_bool) == Some(false)
+                            })
+                })
+        })
+}
+
+fn manual_rows_match(deps: &[Value], manual: &ManualPolicy) -> bool {
+    [("runtime", &manual.runtime), ("dev", &manual.dev), ("peer", &manual.peer)]
+        .iter()
+        .all(|(lifecycle, group)| {
+            group
+                .iter()
+                .all(|(name, version)| {
+                    deps.iter()
+                        .any(|dep| {
+                            dep.get("id").and_then(Value::as_str) == Some(name.as_str())
+                                && dep.get("version").and_then(Value::as_str)
+                                    == Some(version.as_str())
+                                && dep.get("__type").and_then(Value::as_str) == Some("package")
+                                && dep.get("lifecycle").and_then(Value::as_str) == Some(*lifecycle)
+                                && (dep.get("source").and_then(Value::as_str) == Some("auto")
+                                    || *lifecycle == "peer"
+                                        && dep.get("source").and_then(Value::as_str) == Some("env")
+                                        && dep.get("optional").and_then(Value::as_bool)
+                                            == Some(false))
+                        })
+                })
+        })
+}

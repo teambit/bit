@@ -1,0 +1,40 @@
+//! Restore removed components through one retained import and bitmap publication owner.
+mod execution;
+mod options;
+
+use super::{
+    add::ProjectedLinker,
+    color::Chalk,
+    workspace_command::{self, format::Formatter, results::Report},
+};
+use crate::{commands::Command, native::Outcome, workspace};
+use bit_object_import::component_recover::Batch;
+use std::{env, ffi::OsString, io};
+
+pub const COMMAND: Command = Command { name: "recover", aliases: &[], run };
+fn run(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("arguments are not UTF-8".into()));
+    };
+    let Some(options) = options::parse(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside the native recover grammar".into()));
+    };
+    let Some(root) = workspace::root(&env::current_dir()?) else {
+        return Ok(Outcome::Declined("not inside a workspace".into()));
+    };
+    let preview = match Batch::prepare(&root, options.pattern) {
+        Ok(plan) => plan,
+        Err(error) => return Ok(Outcome::Declined(format!("recover: {error}"))),
+    };
+    let installation = !options.skip_installation
+        && (!preview.import_ids().is_empty() || !preview.probe_ids().is_empty());
+    let mut linker = if installation {
+        ProjectedLinker::prepare_with_installation(&root, args)?
+    } else {
+        ProjectedLinker::prepare(&root)?
+    };
+    print!("{}", linker.take_stdout());
+    workspace_command::execute_then(&root, args, "recover", |output| {
+        execution::execute(&root, args, &options, &mut linker, output)
+    })
+}

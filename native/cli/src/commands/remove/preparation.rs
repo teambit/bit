@@ -1,0 +1,96 @@
+//! Native status classification and metadata receipts for `RemoveMain`.
+use super::options::Options;
+use bit_object_import::component_remove::{LocalBatch, select_ids};
+use serde_json::{Value, json};
+use std::{fs, io, path::Path};
+
+pub(in crate::commands) fn ids(root: &Path, pattern: &str) -> io::Result<Vec<String>> {
+    select_ids(root, pattern)
+        .map(|ids| {
+            ids.into_iter()
+                .map(|id| bare(&id).to_owned())
+                .collect()
+        })
+}
+pub(super) fn prepare(
+    root: &Path,
+    ids: &[String],
+    options: &Options<'_>,
+    rows: &[Value],
+) -> io::Result<LocalBatch> {
+    LocalBatch::prepare(root, ids, options.keep, options.track, &facts(rows))
+}
+pub(super) fn classify(selected: &[String], rows: &[Value]) -> (Vec<String>, Vec<String>) {
+    selected
+        .iter()
+        .cloned()
+        .partition(|id| {
+            !rows
+                .iter()
+                .any(|row| row["identity"] == *id && row["modified"] == true)
+        })
+}
+pub(in crate::commands) fn loadable(
+    root: &Path,
+    bitmap: &Value,
+    ids: &[String],
+) -> io::Result<Vec<String>> {
+    ids.iter()
+        .filter_map(|id| match row(bitmap, id) {
+            Ok(row) => main_exists(root, row).then(|| Ok(id.clone())),
+            Err(error) => Some(Err(error)),
+        })
+        .collect()
+}
+pub(in crate::commands) fn all(bitmap: &Value) -> Vec<String> {
+    bitmap
+        .as_object()
+        .into_iter()
+        .flat_map(|rows| rows.iter())
+        .filter_map(|(key, row)| {
+            let name = row["name"].as_str()?;
+            let scope = row["scope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+                .or_else(|| row["defaultScope"].as_str())?;
+            (!key.starts_with('$') && row["isAvailableOnCurrentLane"] != false).then(|| {
+                format!("{scope}/{name}")
+            })
+        })
+        .collect()
+}
+pub(in crate::commands) fn row<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a Value> {
+    bitmap
+        .as_object()
+        .and_then(|rows| {
+            rows.values()
+                .find(|row| {
+                    let scope = row["scope"]
+                        .as_str()
+                        .filter(|scope| !scope.is_empty())
+                        .or_else(|| row["defaultScope"].as_str())
+                        .unwrap_or_default();
+                    format!("{scope}/{}", row["name"].as_str().unwrap_or_default()) == id
+                })
+        })
+        .ok_or_else(|| io::Error::other("remove component selection changed"))
+}
+fn main_exists(root: &Path, row: &Value) -> bool {
+    row["rootDir"]
+        .as_str()
+        .zip(row["mainFile"].as_str())
+        .is_some_and(|(directory, main)| {
+            root.join(directory)
+                .join(main)
+                .is_file()
+        })
+}
+pub(in crate::commands) fn bitmap(root: &Path) -> io::Result<Value> {
+    bit_object_import::parse_jsonc(&fs::read(root.join(".bitmap"))?)
+}
+pub(in crate::commands) fn facts(rows: &[Value]) -> Vec<Value> {
+    rows.iter().map(|row| json!({"identity":row["identity"],"extensions":row["current"]["extensions"],"packageName":row["packageName"]})).collect()
+}
+fn bare(id: &str) -> &str {
+    id.split('@').next().unwrap_or(id)
+}

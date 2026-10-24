@@ -1,0 +1,124 @@
+//! Sufficient AST proof for the pinned React/JSDoc parser's empty result.
+#[cfg(test)]
+mod tests;
+
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{
+    Argument, AssignmentTarget, BindingPattern, CallExpression, Expression, SpreadElement,
+    Statement, VariableDeclarator,
+};
+use oxc_ast_visit::{Visit, walk};
+use oxc_parser::{ParseOptions, Parser};
+use oxc_span::SourceType;
+
+/// Prove that a bounded, valid JS/CJS data module has no React or `JSDoc` docs.
+///
+/// This is deliberately sufficient rather than exhaustive: only simple data,
+/// variable declarations, static property access/assignment and literal `require`
+/// calls qualify. Functions, classes, JSX, module declarations, other calls and
+/// unsupported constructs defer to the published parser. Raw `/**` is rejected
+/// even inside strings because the pinned `JSDoc` extractor scans source text.
+/// This says nothing about existing cached documentation, which must take
+/// precedence unchanged, or whether filesystem caching is enabled.
+#[must_use]
+pub fn proves_empty_docs(source: &[u8], relative_path: &str) -> bool {
+    if source.len() > crate::limits::SOURCE_BYTES {
+        return false;
+    }
+    let kind = relative_path
+        .rsplit('.')
+        .next()
+        .unwrap_or_default();
+    if !matches!(kind, "js" | "cjs") {
+        return false;
+    }
+    let Ok(source) = std::str::from_utf8(source) else { return false };
+    if source.contains("/**") {
+        return false;
+    }
+    let allocator = Allocator::default();
+    let options = ParseOptions { preserve_parens: false, ..ParseOptions::default() };
+    let parsed = Parser::new(&allocator, source, SourceType::cjs()).with_options(options).parse();
+    if parsed.fatal_error || !parsed.diagnostics.is_empty() {
+        return false;
+    }
+    let mut proof = Proof { accepted: true, depth: 0, expressions: 0 };
+    proof.visit_program(&parsed.program);
+    proof.accepted
+}
+
+struct Proof {
+    accepted: bool,
+    depth: usize,
+    expressions: usize,
+}
+impl<'a> Visit<'a> for Proof {
+    fn visit_statement(&mut self, statement: &Statement<'a>) {
+        if !matches!(
+            statement,
+            Statement::EmptyStatement(_)
+                | Statement::ExpressionStatement(_)
+                | Statement::VariableDeclaration(_),
+        ) {
+            self.accepted = false;
+            return;
+        }
+        walk::walk_statement(self, statement);
+    }
+    fn visit_expression(&mut self, expression: &Expression<'a>) {
+        self.expressions += 1;
+        if !self.accepted
+            || self.depth >= 128
+            || self.expressions > 16384
+            || !data_expression(expression)
+        {
+            self.accepted = false;
+            return;
+        }
+        self.depth += 1;
+        walk::walk_expression(self, expression);
+        self.depth -= 1;
+    }
+    fn visit_variable_declarator(&mut self, declaration: &VariableDeclarator<'a>) {
+        if !matches!(declaration.id, BindingPattern::BindingIdentifier(_)) {
+            self.accepted = false;
+            return;
+        }
+        walk::walk_variable_declarator(self, declaration);
+    }
+    fn visit_assignment_target(&mut self, target: &AssignmentTarget<'a>) {
+        if !matches!(
+            target,
+            AssignmentTarget::AssignmentTargetIdentifier(_)
+                | AssignmentTarget::StaticMemberExpression(_),
+        ) {
+            self.accepted = false;
+            return;
+        }
+        walk::walk_assignment_target(self, target);
+    }
+    fn visit_spread_element(&mut self, _: &SpreadElement<'a>) {
+        self.accepted = false;
+    }
+}
+fn data_expression(expression: &Expression<'_>) -> bool {
+    match expression {
+        Expression::BooleanLiteral(_)
+        | Expression::NullLiteral(_)
+        | Expression::NumericLiteral(_)
+        | Expression::StringLiteral(_)
+        | Expression::Identifier(_)
+        | Expression::ObjectExpression(_)
+        | Expression::ArrayExpression(_)
+        | Expression::BinaryExpression(_)
+        | Expression::AssignmentExpression(_) => true,
+        Expression::StaticMemberExpression(member) => !member.optional,
+        Expression::CallExpression(call) => literal_require(call),
+        _ => false,
+    }
+}
+fn literal_require(call: &CallExpression<'_>) -> bool {
+    !call.optional
+        && matches!(&call.callee, Expression::Identifier(id) if id.name == "require")
+        && matches!(call.arguments.as_slice(), [Argument::StringLiteral(_)])
+}

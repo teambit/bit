@@ -1,0 +1,152 @@
+//! Reconcile acknowledgements with component-level bitmap promotions.
+use super::{Prepared, invalid, prepare_staged_config_ids};
+use crate::store::Store;
+use rayon::prelude::*;
+use serde_json::Value;
+use std::{collections::HashSet, fs, io};
+
+impl Prepared {
+    pub(in super::super) fn resume_acknowledgement(
+        &mut self,
+        selected: &[(String, String, String)],
+        exported_ids: &[String],
+    ) -> io::Result<()> {
+        let selected_ids = selected
+            .iter()
+            .map(|(scope, name, version)| format!("{scope}/{name}@{version}"))
+            .collect::<HashSet<_>>();
+        if selected_ids != self.expected_ids {
+            return Err(invalid("outbound resume selection changed"));
+        }
+        let acknowledged = exported_ids
+            .iter()
+            .cloned()
+            .collect::<HashSet<_>>();
+        if acknowledged.len() != exported_ids.len() || !acknowledged.is_subset(&selected_ids) {
+            return Err(invalid("outbound resume acknowledgement"));
+        }
+        let mut promotions = selected
+            .iter()
+            .filter(|(scope, name, version)| {
+                acknowledged.contains(&format!("{scope}/{name}@{version}"))
+            })
+            .map(|(scope, name, _)| (scope.clone(), name.clone()))
+            .collect::<Vec<_>>();
+        let mut seen = HashSet::new();
+        promotions.retain(|identity| seen.insert(identity.clone()));
+        let bitmap = crate::recovery::jsonc::parse(&fs::read(self.root.join(".bitmap"))?)?;
+        let tracked = promotions
+            .iter()
+            .filter(|(scope, name)| present(&bitmap, scope, name))
+            .cloned()
+            .collect::<Vec<_>>();
+        self.bitmap.select_export_promotions(&tracked)?;
+        self.output.staged_config =
+            prepare_staged_config_ids(&self.preimage.staged_config, &promotions, true)?;
+        self.expected_ids.clone_from(&acknowledged);
+        self.known_ids = acknowledged;
+        Ok(())
+    }
+
+    pub(super) fn reconcile(&mut self, exported_ids: &[String]) -> io::Result<()> {
+        let mut promotions = exported_ids
+            .iter()
+            .map(|id| {
+                let identity = id.rsplit_once('@').map_or(id.as_str(), |(identity, _)| identity);
+                let (scope, name) = identity
+                    .split_once('/')
+                    .ok_or_else(|| invalid("outbound acknowledged identity"))?;
+                Ok((scope.to_owned(), name.to_owned()))
+            })
+            .collect::<io::Result<Vec<_>>>()?;
+        let mut seen = HashSet::new();
+        promotions.retain(|identity| seen.insert(identity.clone()));
+        let bitmap = crate::recovery::jsonc::parse(&fs::read(self.root.join(".bitmap"))?)?;
+        self.output.updated_ids = updates(&bitmap, &promotions);
+        sort_updates(&mut self.output.updated_ids, &promotions);
+        self.output.non_existing_ids = promotions
+            .iter()
+            .filter(|(scope, name)| {
+                !present(&bitmap, scope, name)
+                    && !self.output.removed_ids.contains(&format!("{scope}/{name}"))
+            })
+            .map(|(scope, name)| format!("{scope}/{name}"))
+            .collect();
+        let tracked = promotions
+            .iter()
+            .filter(|(scope, name)| present(&bitmap, scope, name))
+            .cloned()
+            .collect::<Vec<_>>();
+        self.bitmap.select_export_promotions(&tracked)?;
+        self.output.staged_config =
+            prepare_staged_config_ids(&self.preimage.staged_config, &promotions, false)?;
+        Ok(())
+    }
+}
+
+pub(in super::super) fn present(bitmap: &Value, scope: &str, name: &str) -> bool {
+    bitmap
+        .as_object()
+        .is_some_and(|rows| {
+            rows.values()
+                .any(|row| {
+                    row["name"] == name
+                        && (row["scope"] == scope
+                            || (row["scope"] == "" && row["defaultScope"] == scope))
+                })
+        })
+}
+
+fn updates(bitmap: &Value, promotions: &[(String, String)]) -> Vec<String> {
+    promotions
+        .iter()
+        .filter(|(scope, name)| {
+            bitmap
+                .as_object()
+                .is_some_and(|rows| {
+                    rows.values()
+                        .any(|row| {
+                            row["name"] == *name
+                                && row["scope"] == ""
+                                && row["defaultScope"] == *scope
+                        })
+                })
+        })
+        .map(|(scope, name)| format!("{scope}/{name}"))
+        .collect()
+}
+
+fn sort_updates(updates: &mut [String], promotions: &[(String, String)]) {
+    let mut scopes = Vec::new();
+    for (scope, _) in promotions {
+        if !scopes.contains(scope) {
+            scopes.push(scope.clone());
+        }
+    }
+    updates.sort_by(|left, right| {
+        let group = |id: &str| {
+            scopes
+                .iter()
+                .position(|scope| id.starts_with(&format!("{scope}/")))
+                .unwrap_or(usize::MAX)
+        };
+        group(left)
+            .cmp(&group(right))
+            .then_with(|| left.encode_utf16().cmp(right.encode_utf16()))
+    });
+}
+
+impl Prepared {
+    pub(super) fn write_objects(&self, store: &Store) -> io::Result<()> {
+        self.components
+            .par_iter()
+            .filter(|item| !item.unchanged)
+            .try_for_each(|item| {
+                let (model, history) = rayon::join(
+                    || store.write(&item.model_hash, &item.model_after),
+                    || store.write(&item.history_hash, &item.history),
+                );
+                model.and(history)
+            })
+    }
+}

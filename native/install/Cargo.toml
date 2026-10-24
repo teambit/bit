@@ -1,0 +1,63 @@
+[package]
+name = "bit-install"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+bit-workspace-config = { path = "../workspace-config" }
+bit-dependency-scanner = { path = "../dependency-scanner" }
+bit-client-transfer = { path = "../client-transfer" }
+bit-object-import = { path = "../object-import" }
+pnpm-config = { workspace = true }
+pnpm-default-reporter = { workspace = true }
+pnpm-deps-path = { workspace = true }
+pnpm-hooks = { workspace = true }
+pnpm-lockfile = { workspace = true }
+pnpm-modules-yaml = { workspace = true }
+pnpm-network = { workspace = true }
+pnpm-package-manager = { workspace = true }
+pnpm-package-manifest = { workspace = true }
+pnpm-reporter = { workspace = true }
+pnpm-resolving-default-resolver = { workspace = true }
+pnpm-resolving-deps-resolver = { workspace = true }
+pnpm-resolving-npm-resolver = { workspace = true }
+pnpm-resolving-parse-wanted-dependency = { workspace = true }
+pnpm-resolving-resolver-base = { workspace = true }
+pnpm-store-dir = { workspace = true }
+pnpm-tarball = { workspace = true }
+pnpm-workspace = { workspace = true }
+async-trait = "0.1"
+base64 = "0.22"
+flate2 = { version = "1.1", default-features = false, features = ["zlib-rs"] }
+futures-util = "0.3"
+getrandom = "0.3"
+indexmap = { version = "2", features = ["serde"] }
+miette = "7"
+node-semver = "2"
+rayon = "1.11"
+regress = "=0.12.0"
+reqwest = { version = "0.13", default-features = false, features = ["gzip", "json", "rustls", "stream"] }
+ryu-js = "=1.0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+sha1 = "0.10"
+sha2 = "0.10"
+tar = "0.4"
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "fs", "time"] }
+
+# Junctions for directories when Windows refuses a symlink, as Node's
+# `fs.symlinkSync(..., 'junction')`. Already in the graph through `pnpm-fs`.
+[target.'cfg(windows)'.dependencies]
+junction = "2.1"
+# File identity (volume serial and file index) for `isDestLinkedCorrectly`, as Node's
+# `stat` reports it. Already in the graph through `walkdir`.
+same-file = "1"
+
+[dev-dependencies]
+pretty_assertions = "1"
+tempfile = "3"
+tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread"] }
+
+[lints]
+workspace = true
