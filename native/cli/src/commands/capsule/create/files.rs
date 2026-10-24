@@ -52,7 +52,6 @@ struct PackageOverrides {
     main: Option<String>,
     license: Option<String>,
     metadata: Map<String, Value>,
-    configured: bool,
 }
 
 #[derive(Serialize)]
@@ -132,21 +131,23 @@ fn plan_manifest(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Manif
         Some("teambit.harmony/empty-env") => BuiltinEnv::Empty,
         _ => return Ok(None),
     };
-    let Some(overrides) = additional_package_metadata(config) else {
+    let model_package_json =
+        if entry.id.version.is_some() { model_package_json(ws_root, entry)? } else { None };
+    let bitmap_package_json = config
+        .and_then(|config| config.get("teambit.pkg/pkg"))
+        .and_then(|pkg| pkg.get("packageJson"));
+    let Some(overrides) =
+        additional_package_metadata(bitmap_package_json.or(model_package_json.as_ref()))
+    else {
         return Ok(None);
     };
-    if entry.id.version.is_some()
-        && (overrides.configured || model_has_package_metadata(ws_root, entry)?)
-    {
-        return Ok(None);
-    }
     if has_custom_builtin_env_config(config) {
         return Ok(None);
     }
     Ok(Some(ManifestConfig { env: builtin, overrides }))
 }
 
-fn model_has_package_metadata(ws_root: &Path, entry: &BitmapEntry) -> io::Result<bool> {
+fn model_package_json(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Value>> {
     let mut id = entry.id.clone();
     if id.scope.is_none() {
         id.scope = id.effective_scope().map(str::to_owned);
@@ -156,20 +157,14 @@ fn model_has_package_metadata(ws_root: &Path, entry: &BitmapEntry) -> io::Result
         .ok_or_else(|| io::Error::other("versioned capsule component model is missing"))?;
     Ok(model.extensions
         .iter()
-        .any(|extension| {
-            extension.get("name").and_then(Value::as_str) == Some("teambit.pkg/pkg")
-                && extension
-                    .get("config")
-                    .and_then(|config| config.get("packageJson"))
-                    .is_some()
-        }))
+        .find(|extension| extension.get("name").and_then(Value::as_str) == Some("teambit.pkg/pkg"))
+        .and_then(|extension| extension.get("config"))
+        .and_then(|config| config.get("packageJson"))
+        .cloned())
 }
 
-fn additional_package_metadata(config: Option<&Map<String, Value>>) -> Option<PackageOverrides> {
-    let Some(package_json) = config
-        .and_then(|config| config.get("teambit.pkg/pkg"))
-        .and_then(|pkg| pkg.get("packageJson"))
-    else {
+fn additional_package_metadata(package_json: Option<&Value>) -> Option<PackageOverrides> {
+    let Some(package_json) = package_json else {
         return Some(PackageOverrides::default());
     };
     let mut metadata = package_json.as_object()?.clone();
@@ -193,7 +188,7 @@ fn additional_package_metadata(config: Option<&Map<String, Value>>) -> Option<Pa
     {
         return None;
     }
-    Some(PackageOverrides { name, main, license, metadata, configured: true })
+    Some(PackageOverrides { name, main, license, metadata })
 }
 
 fn take_nonempty_string(metadata: &mut Map<String, Value>, key: &str) -> Option<Option<String>> {

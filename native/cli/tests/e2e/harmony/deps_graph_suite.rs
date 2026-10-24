@@ -280,6 +280,89 @@ fn capsule_create_package_dependency_override_delegates() {
     assert!(run.trace.contains("capsule create delegated"), "{run:?}");
 }
 
+#[test]
+fn capsule_create_versioned_package_metadata_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    set_capsule_package_metadata(
+        &helper,
+        &json!({"description": "tagged package metadata", "license": "MIT"}),
+    );
+    helper.native("tag --skip-tests");
+    let command = "capsule create comp1 -b versioned-package-metadata -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    let node_package: Value = serde_json::from_slice(&node_manifest).unwrap();
+    assert_eq!(node_package["license"], "MIT");
+    assert_eq!(node_package["description"], "tagged package metadata");
+    fs::remove_dir_all(capsule_path.parent().unwrap()).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+
+    set_capsule_package_metadata(&helper, &json!({"description": "workspace package metadata"}));
+    let command = "capsule create comp1 -b versioned-package-override -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let node_manifest = fs::read(std::path::Path::new(&capsule).join("package.json")).unwrap();
+    let node_package: Value = serde_json::from_slice(&node_manifest).unwrap();
+    assert_eq!(node_package["description"], "workspace package metadata");
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(
+        fs::read(std::path::Path::new(&capsule).join("package.json")).unwrap(),
+        node_manifest,
+    );
+
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let mut bitmap = helper.read_bit_map();
+    bitmap["comp1"]["config"]
+        .as_object_mut()
+        .unwrap()
+        .remove("teambit.pkg/pkg");
+    config::write_json(&bitmap_path, &bitmap, b"    ");
+    let command = "capsule create comp1 -b versioned-model-package -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let node_manifest = fs::read(std::path::Path::new(&capsule).join("package.json")).unwrap();
+    let node_package: Value = serde_json::from_slice(&node_manifest).unwrap();
+    assert_eq!(node_package["description"], "tagged package metadata");
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(
+        fs::read(std::path::Path::new(&capsule).join("package.json")).unwrap(),
+        node_manifest,
+    );
+}
+
 fn set_capsule_package_metadata(helper: &Helper, metadata: &Value) {
     let bitmap_path = helper.scopes.local_path.join(".bitmap");
     let mut bitmap = helper.read_bit_map();
