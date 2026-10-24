@@ -424,6 +424,25 @@ fn deps_debug_policy_added_after_tag_matches_node() {
 }
 
 #[test]
+fn deps_debug_saved_and_post_tag_policies_match_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("deps set comp1 --dev yargs-parser@21.1.1");
+    helper.native("tag --skip-tests");
+    helper.native("deps set comp1 lodash@4.17.21");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
 fn deps_debug_plus_duplicate_dev_policy_matches_node() {
     compare_plus_duplicate_policy("devDependencies");
 }

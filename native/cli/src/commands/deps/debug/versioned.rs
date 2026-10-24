@@ -9,7 +9,10 @@ use bit_install::{
     workspace::{BitmapEntry, ModelData},
 };
 use serde_json::{Value, json};
-use std::{collections::HashSet, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    path::Path,
+};
 
 pub(super) fn plan(
     root: &Path,
@@ -20,15 +23,70 @@ pub(super) fn plan(
     let (env_id, model_manual) = validate(ctx, entry)?;
     let mut manual = super::validate_simple_component(root, ctx, entry, component)?;
     if let Some(saved) = model_manual {
-        if !manual.is_empty() {
-            return Err(Failure::Declined(
-                "combined versioned deps debug policies delegated".into(),
-            ));
-        }
         super::validate_manual_component(root, ctx, entry, component)?;
-        manual = saved;
+        if manual.is_empty() {
+            manual = saved;
+        } else {
+            manual = combine_versioned_policies(manual, saved)?;
+        }
     }
     Ok((env_id, manual))
+}
+
+fn combine_versioned_policies(
+    mut bitmap: ManualPolicy,
+    saved: ManualPolicy,
+) -> Result<ManualPolicy, Failure> {
+    if unsupported_combination(&bitmap) || unsupported_combination(&saved) {
+        return Err(Failure::Declined("combined versioned deps debug policies delegated".into()));
+    }
+    let mut names = HashMap::new();
+    for (lifecycle, rows) in
+        [("runtime", &bitmap.runtime), ("dev", &bitmap.dev), ("peer", &bitmap.peer)]
+    {
+        for (name, version) in rows {
+            names.insert(name.clone(), (lifecycle, version.clone()));
+        }
+    }
+    merge_rows(&mut names, "runtime", saved.runtime, &mut bitmap.runtime)?;
+    merge_rows(&mut names, "dev", saved.dev, &mut bitmap.dev)?;
+    merge_rows(&mut names, "peer", saved.peer, &mut bitmap.peer)?;
+    Ok(bitmap)
+}
+
+fn unsupported_combination(policy: &ManualPolicy) -> bool {
+    policy.has_ignored_policy
+        || [
+            &policy.unresolved_runtime_plus,
+            &policy.unresolved_dev_plus,
+            &policy.unresolved_peer_plus,
+        ]
+        .iter()
+        .any(|group| !group.is_empty())
+}
+
+fn merge_rows(
+    names: &mut HashMap<String, (&'static str, String)>,
+    lifecycle: &'static str,
+    rows: Vec<(String, String)>,
+    target: &mut Vec<(String, String)>,
+) -> Result<(), Failure> {
+    for (name, version) in rows {
+        match names.get(&name) {
+            Some((existing_lifecycle, existing_version))
+                if *existing_lifecycle == lifecycle && *existing_version == version => {}
+            Some(_) => {
+                return Err(Failure::Declined(
+                    "overlapping versioned deps debug policies delegated".into(),
+                ));
+            }
+            None => {
+                names.insert(name.clone(), (lifecycle, version.clone()));
+                target.push((name, version));
+            }
+        }
+    }
+    Ok(())
 }
 
 fn validate(
