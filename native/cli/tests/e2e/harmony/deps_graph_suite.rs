@@ -174,6 +174,50 @@ fn capsule_create_remaining_core_manifests_match_node() {
     }
 }
 
+#[test]
+fn capsule_create_aspect_with_nonstandard_main_matches_node() {
+    for main_file in ["main.js", "src/entry.js"] {
+        compare_aspect_main_manifest(main_file);
+    }
+}
+
+fn compare_aspect_main_manifest(main_file: &str) {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.output_file(&format!("comp1/{main_file}"), "module.exports = 1;\n");
+    let main = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        &format!("add comp1 --main {main_file} --id comp1"),
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(main.status.success(), "{main:?}");
+    let assign = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "env set comp1 teambit.harmony/aspect",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(assign.status.success(), "{assign:?}");
+    let command = "capsule create comp1 -b aspect-main-parity -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    fs::remove_dir_all(capsule_path.parent().unwrap()).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+}
+
 fn compare_core_capsule_manifest(env: &str) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

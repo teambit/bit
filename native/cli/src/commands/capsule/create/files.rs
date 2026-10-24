@@ -94,7 +94,7 @@ pub(super) fn supported_builtin_manifests(
             Some("teambit.react/react") => BuiltinEnv::React,
             Some("teambit.html/html") => BuiltinEnv::Html,
             Some("teambit.react/react-native") => BuiltinEnv::ReactNative,
-            Some("teambit.harmony/aspect") if entry.main_file == "index.js" => BuiltinEnv::Aspect,
+            Some("teambit.harmony/aspect") => BuiltinEnv::Aspect,
             Some("teambit.mdx/mdx") => BuiltinEnv::Mdx,
             Some("teambit.envs/env") => BuiltinEnv::Environment,
             Some("teambit.mdx/readme") => BuiltinEnv::MdxReadme,
@@ -220,9 +220,10 @@ pub(super) fn write_default_package_json(
 fn entry_point_metadata(env: BuiltinEnv, stem: &str) -> EntryPointMetadata {
     let types = (!matches!(env, BuiltinEnv::Empty)).then(|| format!("{stem}.ts"));
     let exports = matches!(env, BuiltinEnv::Aspect).then(|| {
+        let main = format!("./dist/{stem}.js");
         serde_json::json!({
-            "node": { "require": "./dist/index.js", "import": "./dist/esm.mjs" },
-            "default": "./dist/index.js",
+            "node": { "require": main, "import": "./dist/esm.mjs" },
+            "default": main,
         })
     });
     EntryPointMetadata { types, exports }
