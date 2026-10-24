@@ -149,28 +149,30 @@ fn parse_manual_fields(fields: &Map<String, Value>) -> Result<ManualPolicy, Fail
             "peerDependencies" => &mut manual.peer,
             _ => return Err(Failure::Declined("unsupported component deps debug field".into())),
         };
-        if let Some(entry) = parse_single_manual_entry(values)? {
-            target.push(entry);
-        }
+        target.extend(parse_manual_entries(values)?);
     }
     Ok(manual)
 }
 
-fn parse_single_manual_entry(values: &Value) -> Result<Option<(String, String)>, Failure> {
+fn parse_manual_entries(values: &Value) -> Result<Vec<(String, String)>, Failure> {
     let Some(entries) = values.as_object() else {
         return Err(Failure::Declined("unsupported component deps debug policy".into()));
     };
-    if entries.len() > 1 {
-        return Err(Failure::Declined("multiple component debug policies delegated".into()));
-    }
-    let Some((name, version)) = entries.iter().next() else { return Ok(None) };
-    let Some(version) = manual_version(version) else {
-        return Err(Failure::Declined("unsupported component deps debug version".into()));
-    };
-    if name.is_empty() || version.is_empty() || version == "-" {
-        return Err(Failure::Declined("unsupported component deps debug entry".into()));
-    }
-    Ok(Some((name.clone(), version.to_owned())))
+    let mut rows = entries
+        .iter()
+        .map(|(name, value)| {
+            let version = manual_version(value)
+                .ok_or_else(|| {
+                    Failure::Declined("unsupported component deps debug version".into())
+                })?;
+            if name.is_empty() || version.is_empty() || version == "-" {
+                return Err(Failure::Declined("unsupported component deps debug entry".into()));
+            }
+            Ok((name.clone(), version.to_owned()))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    rows.sort_by(|left, right| left.0.cmp(&right.0));
+    Ok(rows)
 }
 
 fn manual_version(value: &Value) -> Option<&str> {

@@ -11,6 +11,28 @@ use serde_json::{Value, json};
 use std::{ffi::OsStr, fs};
 
 #[test]
+fn deps_debug_multiple_component_policy_entries_match_node_order() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("deps set comp1 zod@3.24.0");
+    helper.native("deps set comp1 ansi-regex@6.1.0");
+    helper.native("deps set comp1 --dev yargs-parser@21.1.1");
+    helper.native("deps set comp1 --dev acorn@8.11.3");
+    helper.native("deps set comp1 --peer xml2js@0.6.2");
+    helper.native("deps set comp1 --peer chalk@5.3.0");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
 fn deps_debug_optional_dev_and_peer_component_policy_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
