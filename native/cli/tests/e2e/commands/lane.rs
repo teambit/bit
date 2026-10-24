@@ -226,7 +226,8 @@ fn http_remote_lane_inspection_matches_node() {
         .spawn()
         .unwrap();
     let mut server = RemoteScopeServer(server);
-    let ready = (0..300).any(|_| {
+    // Node's scope server can take longer than 30 seconds on loaded Windows runners.
+    let ready = (0..900).any(|_| {
         if server.0.try_wait().unwrap().is_some() {
             return false;
         }
