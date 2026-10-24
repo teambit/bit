@@ -270,14 +270,218 @@ fn capsule_create_package_entry_fields_match_node() {
 }
 
 #[test]
-fn capsule_create_package_dependency_override_delegates() {
+fn capsule_create_package_types_override_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    set_capsule_package_metadata(&helper, &json!({"dependencies": {"is-positive": "1.0.0"}}));
-    let run = helper.cmd("capsule create comp1 -b package-dependency-override -j");
-    assert!(run.status.success() && !run.native, "{run:?}");
-    assert!(run.trace.contains("capsule create delegated"), "{run:?}");
+    set_capsule_package_metadata(&helper, &json!({"types": "custom.d.ts"}));
+    let command = "capsule create comp1 -b package-types-override -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    let node_package: Value = serde_json::from_slice(&node_manifest).unwrap();
+    assert_eq!(node_package["types"], "custom.d.ts");
+    fs::remove_dir_all(capsule_path.parent().unwrap()).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+}
+
+#[test]
+fn capsule_create_package_exports_override_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    set_capsule_package_metadata(
+        &helper,
+        &json!({"exports": {".": "./custom.js", "./feature": "./feature.js"}}),
+    );
+    let command = "capsule create comp1 -b package-exports-override -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    let node_package: Value = serde_json::from_slice(&node_manifest).unwrap();
+    assert_eq!(node_package["exports"]["."], "./custom.js");
+    fs::remove_dir_all(capsule_path.parent().unwrap()).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+}
+
+#[test]
+fn capsule_create_aspect_exports_override_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("env set comp1 teambit.harmony/aspect");
+    set_capsule_package_metadata(&helper, &json!({"exports": {".": "./custom-aspect.js"}}));
+    let command = "capsule create comp1 -b aspect-exports-override -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    let node_package: Value = serde_json::from_slice(&node_manifest).unwrap();
+    assert_eq!(node_package["exports"]["."], "./custom-aspect.js");
+    fs::remove_dir_all(capsule_path.parent().unwrap()).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+}
+
+#[test]
+fn capsule_create_package_exports_string_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    set_capsule_package_metadata(&helper, &json!({"exports": "./custom.js"}));
+    let command = "capsule create comp1 -b package-exports-string -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    let node_package: Value = serde_json::from_slice(&node_manifest).unwrap();
+    assert_eq!(node_package["exports"], "./custom.js");
+    fs::remove_dir_all(capsule_path.parent().unwrap()).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+}
+
+#[test]
+fn capsule_create_optional_dependencies_override_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    set_capsule_package_metadata(
+        &helper,
+        &json!({"optionalDependencies": {"is-positive": "^3.1.0"}}),
+    );
+    let command = "capsule create comp1 -b optional-deps-override -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    let node_package: Value = serde_json::from_slice(&node_manifest).unwrap();
+    assert_eq!(node_package["optionalDependencies"]["is-positive"], "^3.1.0");
+    fs::remove_dir_all(capsule_path.parent().unwrap()).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+}
+
+#[test]
+fn capsule_create_peer_dependency_metadata_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    set_capsule_package_metadata(
+        &helper,
+        &json!({"peerDependenciesMeta": {"react": {"optional": true}}}),
+    );
+    let command = "capsule create comp1 -b peer-dependency-metadata -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    let node_package: Value = serde_json::from_slice(&node_manifest).unwrap();
+    assert_eq!(node_package["peerDependenciesMeta"]["react"]["optional"], true);
+    fs::remove_dir_all(capsule_path.parent().unwrap()).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
+}
+
+#[test]
+fn capsule_create_ignores_configured_dependency_maps_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    set_capsule_package_metadata(
+        &helper,
+        &json!({
+            "dependencies": {"is-positive": "1.0.0"},
+            "devDependencies": {"left-pad": "1.3.0"},
+            "peerDependencies": {"react": "18.0.0"}
+        }),
+    );
+    let command = "capsule create comp1 -b package-dependency-override -j";
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let capsule = parse(&node.stdout)[0]["path"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let capsule_path = std::path::Path::new(&capsule);
+    let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
+    let node_package: Value = serde_json::from_slice(&node_manifest).unwrap();
+    assert!(node_package["dependencies"]["is-positive"].is_null());
+    assert!(node_package["devDependencies"]["left-pad"].is_null());
+    assert!(node_package["peerDependencies"]["react"].is_null());
+    fs::remove_dir_all(capsule_path.parent().unwrap()).unwrap();
+    let native = helper.native_run(command);
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest);
 }
 
 #[test]

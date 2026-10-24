@@ -51,6 +51,10 @@ struct PackageOverrides {
     name: Option<String>,
     main: Option<String>,
     license: Option<String>,
+    types: Option<String>,
+    exports: Option<Value>,
+    optional_dependencies: Option<BTreeMap<String, String>>,
+    peer_dependencies_meta: Option<Map<String, Value>>,
     metadata: Map<String, Value>,
 }
 
@@ -74,7 +78,7 @@ struct PackageDependencies {
 #[serde(rename_all = "camelCase")]
 struct DependencyMetadata {
     optional_dependencies: BTreeMap<String, String>,
-    peer_dependencies_meta: BTreeMap<String, String>,
+    peer_dependencies_meta: Map<String, Value>,
 }
 
 #[derive(Clone, Copy)]
@@ -171,24 +175,61 @@ fn additional_package_metadata(package_json: Option<&Value>) -> Option<PackageOv
     let name = take_nonempty_string(&mut metadata, "name")?;
     let main = take_nonempty_string(&mut metadata, "main")?;
     let license = take_nonempty_string(&mut metadata, "license")?;
+    let types = take_nonempty_string(&mut metadata, "types")?;
+    let exports = take_exports(&mut metadata)?;
+    let optional_dependencies = take_string_map(&mut metadata, "optionalDependencies")?;
+    let peer_dependencies_meta = take_peer_meta(&mut metadata)?;
+    let _runtime_dependencies = take_string_map(&mut metadata, "dependencies")?;
+    let _dev_dependencies = take_string_map(&mut metadata, "devDependencies")?;
+    let _peer_dependencies = take_string_map(&mut metadata, "peerDependencies")?;
     let _version = take_nonempty_string(&mut metadata, "version")?;
-    let generated = [
-        "componentId",
-        "dependencies",
-        "devDependencies",
-        "peerDependencies",
-        "optionalDependencies",
-        "peerDependenciesMeta",
-        "types",
-        "exports",
-    ];
+    let generated = ["componentId"];
     if metadata
         .keys()
         .any(|key| generated.contains(&key.as_str()))
     {
         return None;
     }
-    Some(PackageOverrides { name, main, license, metadata })
+    Some(PackageOverrides {
+        name,
+        main,
+        license,
+        types,
+        exports,
+        optional_dependencies,
+        peer_dependencies_meta,
+        metadata,
+    })
+}
+
+fn take_peer_meta(metadata: &mut Map<String, Value>) -> Option<Option<Map<String, Value>>> {
+    match metadata.remove("peerDependenciesMeta") {
+        None => Some(None),
+        Some(Value::Object(meta)) if meta.values().all(Value::is_object) => Some(Some(meta)),
+        _ => None,
+    }
+}
+
+fn take_string_map(
+    metadata: &mut Map<String, Value>,
+    key: &str,
+) -> Option<Option<BTreeMap<String, String>>> {
+    let Some(value) = metadata.remove(key) else { return Some(None) };
+    let entries = value.as_object()?;
+    entries
+        .iter()
+        .map(|(name, version)| Some((name.clone(), version.as_str()?.to_owned())))
+        .collect::<Option<BTreeMap<_, _>>>()
+        .map(Some)
+}
+
+fn take_exports(metadata: &mut Map<String, Value>) -> Option<Option<Value>> {
+    match metadata.remove("exports") {
+        None => Some(None),
+        Some(value @ Value::Object(_)) => Some(Some(value)),
+        Some(Value::String(value)) if !value.is_empty() => Some(Some(Value::String(value))),
+        _ => None,
+    }
 }
 
 fn take_nonempty_string(metadata: &mut Map<String, Value>, key: &str) -> Option<Option<String>> {
@@ -302,10 +343,14 @@ pub(super) fn write_default_package_json(
             .clone()
             .unwrap_or_else(|| "SEE LICENSE IN UNLICENSED".into()),
         dependency_metadata: DependencyMetadata {
-            optional_dependencies: BTreeMap::new(),
-            peer_dependencies_meta: BTreeMap::new(),
+            optional_dependencies: manifest.overrides.optional_dependencies
+                .clone()
+                .unwrap_or_default(),
+            peer_dependencies_meta: manifest.overrides.peer_dependencies_meta
+                .clone()
+                .unwrap_or_default(),
         },
-        entry_points: entry_point_metadata(manifest.env, &stem),
+        entry_points: configured_entry_points(manifest, &stem),
     };
     let pkg = ComponentPackage { generated, metadata: &manifest.overrides.metadata };
     fs::write(&pkg_json_path, serde_json::to_string_pretty(&pkg)?)
@@ -321,6 +366,17 @@ fn entry_point_metadata(env: BuiltinEnv, stem: &str) -> EntryPointMetadata {
         })
     });
     EntryPointMetadata { types, exports }
+}
+
+fn configured_entry_points(manifest: &ManifestConfig, stem: &str) -> EntryPointMetadata {
+    let mut entry_points = entry_point_metadata(manifest.env, stem);
+    if let Some(types) = &manifest.overrides.types {
+        entry_points.types = Some(types.clone());
+    }
+    if let Some(exports) = &manifest.overrides.exports {
+        entry_points.exports = Some(exports.clone());
+    }
+    entry_points
 }
 
 pub(super) fn copy_component_files(src: &Path, dst: &Path) -> io::Result<()> {
