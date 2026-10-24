@@ -11,6 +11,23 @@ use serde_json::{Value, json};
 use std::{ffi::OsStr, fs};
 
 #[test]
+fn deps_debug_optional_component_policy_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("deps set comp1 --optional is-positive@3.1.0");
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "deps debug comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native = helper.native_run("deps debug comp1");
+    assert!(node.status.success(), "{node:?}");
+    assert!(native.status.success() && native.native, "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+}
+
+#[test]
 fn deps_debug_component_policy_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
