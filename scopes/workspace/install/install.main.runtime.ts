@@ -58,6 +58,8 @@ import {
   DependencyResolverAspect,
   ComponentDependency,
   ensureHoistedDependencyResolution,
+  isPlusVersion,
+  resolvePlusVersion,
 } from '@teambit/dependency-resolver';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
@@ -145,6 +147,11 @@ export class InstallMain {
   private visitedAspects: Set<string> = new Set();
 
   private oldNonLoadedEnvs: string[] = [];
+
+  /** nesting depth of _installModules, so the install marker is written once and removed by the outermost call */
+  private runningInstalls = 0;
+
+  private installMarkerUpdate = Promise.resolve();
 
   constructor(
     private dependencyResolver: DependencyResolverMain,
@@ -383,13 +390,27 @@ export class InstallMain {
     this.workspace.inInstallContext = true;
     this.workspace.inInstallAfterPmContext = false;
     this.logger.profile('install.total');
+    // let other bit processes of this workspace know not to write into node_modules meanwhile (nested installs share
+    // one marker). see IpcEventsMain.markInstallStarted()
+    if (this.runningInstalls++ === 0) await this.updateInstallMarker(() => this.ipcEvents.markInstallStarted());
     try {
       return await this._installModulesProfiled(options);
     } finally {
+      if (--this.runningInstalls === 0) await this.updateInstallMarker(() => this.ipcEvents.markInstallEnded());
       this.logger.profile('install.total');
       this.workspace.inInstallContext = prevInInstallContext;
       this.workspace.inInstallAfterPmContext = prevInInstallAfterPmContext;
     }
+  }
+
+  /**
+   * serialized, so the removal by an ending install can't land after the write of an install that started meanwhile
+   */
+  private updateInstallMarker(update: () => Promise<void>): Promise<void> {
+    this.installMarkerUpdate = this.installMarkerUpdate.then(update).catch((err) => {
+      this.logger.debug(`failed to update the install marker: ${err.message}`);
+    });
+    return this.installMarkerUpdate;
   }
 
   private async _installModulesProfiled(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
@@ -816,12 +837,19 @@ export class InstallMain {
         })
       )
     );
-    await Promise.all(
-      loadedPlugins.map((plugin) => {
-        const runtime = plugin.getRuntime(MainRuntime);
-        return runtime?.provider(undefined, undefined, undefined, this.harmony);
-      })
-    );
+    // the provider registers the plugin, so run them one by one. a plugin that fails to load gets its component
+    // (and deps) compiled and is then re-loaded. in parallel, these compilations write the same files (e.g. of a
+    // shared env) while another plugin imports them. a failing plugin doesn't stop the others from registering.
+    let firstError: Error | undefined;
+    await pMapSeries(loadedPlugins, async (plugin) => {
+      const runtime = plugin.getRuntime(MainRuntime);
+      try {
+        await runtime?.provider(undefined, undefined, undefined, this.harmony);
+      } catch (err: any) {
+        firstError ??= err;
+      }
+    });
+    if (firstError) throw firstError;
   }
 
   /**
@@ -1141,7 +1169,7 @@ export class InstallMain {
 
   /**
    * Get the env's own peer dependencies from its policy (env.jsonc).
-   * Resolves "+" version placeholders using workspaceDeps.
+   * Resolves "+" (and "+^"/"+~") version placeholders using workspaceDeps.
    */
   private async _getEnvDependencies(
     envId: ComponentID,
@@ -1154,13 +1182,8 @@ export class InstallMain {
       policy.selfPolicy.entries
         .filter(({ force, value }) => force && value.version !== '-')
         .map(({ dependencyId, value }) => {
-          let version = value.version;
           // Resolve "+" version placeholders using workspace dependencies
-          // Similar to WorkspaceManifest._resolvePlusVersions
-          if (version === '+') {
-            version = workspaceDeps[dependencyId] || '*';
-          }
-          return [dependencyId, version];
+          return [dependencyId, resolvePlusVersion(value.version, workspaceDeps[dependencyId])];
         })
     );
   }
@@ -1292,7 +1315,8 @@ export class InstallMain {
             const depEntry = deps.find(({ name }) => name === pkg.name);
             if (depEntry) {
               depEntry.version = pkg.latestRange;
-              if (field === 'peers' && depEntry.supportedRange) {
+              // a plus supportedRange follows the version, so it doesn't need to be widened.
+              if (field === 'peers' && depEntry.supportedRange && !isPlusVersion(depEntry.supportedRange)) {
                 if (!semver.intersects(pkg.latestRange, depEntry.supportedRange)) {
                   depEntry.supportedRange = `${depEntry.supportedRange} || ${pkg.latestRange}`;
                 }

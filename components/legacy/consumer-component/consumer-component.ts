@@ -12,25 +12,36 @@ import type { Doclet } from '@teambit/semantics.doc-parser';
 import { parser as docsParser } from '@teambit/semantics.doc-parser';
 import { logger } from '@teambit/legacy.logger';
 import type { Version, DepEdge, Log, ScopeListItem, DependenciesGraph, ModelComponent } from '@teambit/objects';
-import type { PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import type { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
-import { fileContentsForVersioning } from '@teambit/legacy.bit-map';
-import { IgnoredDirectory } from './exceptions/ignored-directory';
+import { fileContentsForVersioning, IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.bit-map';
 import type { Dist, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
 import { License, SourceFile } from '@teambit/component.sources';
 import type { ComponentConfigLoadOptions } from '@teambit/legacy.consumer-config';
 import { ComponentConfig, ComponentOverrides, getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
-import type { Consumer } from '@teambit/legacy.consumer';
-import { ComponentOutOfSync, ComponentsPendingImport } from '@teambit/legacy.consumer';
 import type { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
-import { ComponentNotFoundInPath } from './exceptions/component-not-found-in-path';
 import MainFileRemoved from './exceptions/main-file-removed';
-import type { ComponentLoadOptions } from './component-loader';
+import { ComponentOutOfSync } from './exceptions/component-out-of-sync';
+import { ComponentsPendingImport } from './exceptions/components-pending-import';
+import type { ComponentLoadOptions } from './component-load-options';
+
+/**
+ * the parts of the legacy Consumer a component is loaded from the filesystem with.
+ * restated rather than imported because the consumer depends on this component.
+ */
+export type LoadingWorkspace = {
+  scope: { getModelComponentIfExist(id: ComponentID): Promise<ModelComponent | undefined> };
+  bitMap: { trackDirectoryChanges(componentMap: ComponentMap): Promise<void> };
+  componentFsCache: FsCache;
+  isLegacy: boolean;
+  getPath(): PathOsBasedAbsolute;
+  loadComponentFromModelIfExist(id: ComponentID): Promise<Component | undefined>;
+};
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -558,7 +569,7 @@ export class Component {
   }: {
     componentMap: ComponentMap;
     id: ComponentID;
-    consumer: Consumer;
+    consumer: LoadingWorkspace;
     loadOpts?: ComponentLoadOptions;
   }): Promise<Component> {
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
@@ -595,9 +606,7 @@ export class Component {
     const files = await getLoadedFiles(consumer, componentMap, id, compDirAbs);
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
-    const docsP = _getDocsForFiles(files, consumer.componentFsCache);
-    const docs = await Promise.all(docsP);
-    const flattenedDocs = docs ? flatten(docs) : [];
+    const flattenedDocs = await getDocsFromFiles(files, consumer.componentFsCache);
     // probably componentConfig.defaultScope is not needed. try to remove it.
     // once we changed BitId to ComponentId, the defaultScope is always part of the id.
     const defaultScope = id.hasScope() ? componentConfig.defaultScope : id.scope;
@@ -633,7 +642,7 @@ export class Component {
 }
 
 async function getLoadedFiles(
-  consumer: Consumer,
+  consumer: LoadingWorkspace,
   componentMap: ComponentMap,
   id: ComponentID,
   bitDir: string
@@ -656,6 +665,13 @@ async function getLoadedFiles(
   return sourceFiles;
 }
 
-function _getDocsForFiles(files: SourceFile[], componentFsCache: FsCache): Array<Promise<Doclet[]>> {
-  return files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file, componentFsCache)));
+/**
+ * parse the docs (JSDoc) of the component files, except test files.
+ * `componentFsCache` is relevant for files on the filesystem (a workspace), see the doc-parser.
+ */
+export async function getDocsFromFiles(files: SourceFile[], componentFsCache?: FsCache): Promise<Doclet[]> {
+  const docs = await Promise.all(
+    files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file, componentFsCache)))
+  );
+  return flatten(docs);
 }

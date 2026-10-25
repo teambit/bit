@@ -3,6 +3,8 @@ import { type ProjectManifest } from '@pnpm/types';
 import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import type * as Dp from '@pnpm/deps.path';
 import { pick, partition } from 'lodash';
+import type * as ParseOverridesModule from '@pnpm/config.parse-overrides';
+import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
 import {
@@ -35,6 +37,7 @@ type ResolveFunction = (
 // import. Call `init()` once before invoking the public converters; helpers
 // reach for this module-level slot synchronously.
 let dp!: typeof Dp;
+let parseOverrides!: typeof ParseOverridesModule.parseOverrides;
 let loading: Promise<void> | undefined;
 
 function ensureInitialized(): void {
@@ -46,10 +49,11 @@ function ensureInitialized(): void {
 export function init(): Promise<void> {
   loading ??= (async () => {
     const { loadEsm } = require('./load-pnpm-esm.cjs') as {
-      loadEsm: () => Promise<{ dp: typeof Dp }>;
+      loadEsm: () => Promise<{ dp: typeof Dp; parseOverrides: typeof ParseOverridesModule.parseOverrides }>;
     };
     const m = await loadEsm();
     dp = m.dp;
+    parseOverrides = m.parseOverrides;
   })();
   return loading;
 }
@@ -412,6 +416,8 @@ export async function convertGraphToLockfile(
       }
     }
   }
+  dedupeSnapshotDepsToRootManifest(lockfile, manifests[rootDir]);
+  dropUnreachableLockfileEntries(lockfile);
   const pkgsToResolve = getPkgsToResolve(lockfile, manifests);
   const failedWorkspaceComponentPkgs = new Set<string>();
   await Promise.all(
@@ -586,6 +592,50 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
       reachablePackages.has(dp.removeSuffix(depPath))
     );
   }
+}
+
+function dedupeSnapshotDepsToRootManifest(lockfile: BitLockfileFile, rootManifest: ProjectManifest | undefined): void {
+  const overridden = new Set(overriddenPackageNames(lockfile.overrides));
+  const rootDeps = new Map(
+    Object.entries(nonOptionalDependencies(rootManifest)).filter(([name]) => !overridden.has(name))
+  );
+  if (rootDeps.size === 0) return;
+  for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
+    const peers = new Set(Object.keys(lockfile.packages?.[dp.removeSuffix(depPath)]?.peerDependencies ?? {}));
+    dropSnapshotDeps(
+      snapshot,
+      (name, ref) => rootDeps.has(name) && rootVersionWins(name, ref, rootDeps.get(name)!, peers.has(name))
+    );
+  }
+}
+
+function nonOptionalDependencies(manifest: ProjectManifest | undefined): Record<string, string> {
+  return { ...manifest?.devDependencies, ...manifest?.dependencies };
+}
+
+function overriddenPackageNames(overrides: Record<string, string> | undefined): string[] {
+  return parseOverrides(overrides ?? {}).map((override) => override.targetPkg.name);
+}
+
+function dropSnapshotDeps(
+  snapshot: NonNullable<BitLockfileFile['snapshots']>[string],
+  shouldDrop: (name: string, ref: string) => boolean
+): void {
+  for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+    const deps = snapshot[depType];
+    if (!deps) continue;
+    for (const [name, ref] of Object.entries(deps)) {
+      if (shouldDrop(name, ref)) delete deps[name];
+    }
+  }
+}
+
+function rootVersionWins(name: string, ref: string, rootSpecifier: string, isPeer: boolean): boolean {
+  const lockedVersion = dp.parse(`${name}@${ref}`).version;
+  if (lockedVersion == null) return false;
+  const rootVersion = semver.valid(rootSpecifier);
+  if (rootVersion != null) return lockedVersion !== rootVersion;
+  return isPeer;
 }
 
 function depPathToRef(depPath: Dp.DependencyPath): string {

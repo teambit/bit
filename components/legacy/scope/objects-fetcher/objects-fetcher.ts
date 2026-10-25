@@ -4,7 +4,7 @@ import { omit, uniq } from 'lodash';
 // @ts-ignore
 import { pipeline } from 'stream/promises';
 import type { Scope } from '..';
-import type { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import type { FETCH_OPTIONS } from './fetch-options';
 import { loader } from '@teambit/legacy.loader';
 import { logger } from '@teambit/legacy.logger';
 import { ScopeNotFound } from '../exceptions';

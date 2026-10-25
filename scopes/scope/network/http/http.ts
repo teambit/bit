@@ -14,11 +14,10 @@ import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/ha
 import { LaneId } from '@teambit/lane-id';
 import type { AgentOptions } from '@teambit/toolbox.network.agent';
 import { getAgent } from '@teambit/toolbox.network.agent';
-import type { ListScopeResult } from '@teambit/legacy.component-list';
 import type { Network } from '../network';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import type { LaneData, ScopeDescriptor } from '@teambit/legacy.scope';
+import type { LaneData, ScopeDescriptor, ListScopeResult } from '@teambit/legacy.scope';
 import { RemovedObjects } from '@teambit/legacy.scope';
 import type { DoctorResponse } from '@teambit/doctor';
 import { globalFlags } from '@teambit/cli';

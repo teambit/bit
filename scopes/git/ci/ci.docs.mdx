@@ -243,16 +243,22 @@ bit ci sync --init
 ```
 
 `--init` writes `.github/workflows/bit-sync.yml` and `bit-release.yml`, with the real default branch of this
-repository in both files. `--init` adds `"teambit.git/ci": { "sync": {} }` to `workspace.jsonc` if the key is
+repository in both files. When the workspace is below the repository root, `--init` writes the files at the
+root and sets `ws-dir` to the workspace directory in both. `--init` adds `"teambit.git/ci": { "sync": {} }` to `workspace.jsonc` if the key is
 absent. The edit keeps the comments in the file, and it changes no existing `sync` setting. `--init` then
-prints the steps that need a person:
+prints one short report: the files it changed, and three steps that need a person, as commands to paste:
 
-- the `BIT_CONFIG_ACCESS_TOKEN` secret
-- the optional `BIT_SYNC_GH_TOKEN` token
-- the bit.cloud webhook recipe
-- a `fetch-depth: 0` reminder
+1. Commit the files `--init` changed, and push. With no `origin`, create the repository with `gh repo create`.
+2. Set the `BIT_CONFIG_ACCESS_TOKEN` secret, allow GitHub Actions to open pull requests, and optionally set
+   the `BIT_SYNC_GH_TOKEN` secret.
+3. Optional: make Bit -> Git instant. On github.com, install the `bit-git-sync` GitHub App and add its
+   webhook URL to the scope. On GitHub Enterprise Server, add a webhook that calls the repository
+   `dispatches` API.
 
-`--init` reports an existing file as skipped, and overwrites no file, so a second run is safe. `--init`
+The commands name the repository of `origin`. When `origin` is not a GitHub remote yet, `--init` prints
+only the push step, then tells you to run `--init` again after you push.
+
+`--init` reports an existing file as unchanged, and overwrites no file, so a second run is safe. `--init`
 writes the files, then exits. Do not combine `--init` with a lane argument or with another flag.
 
 ### Usage
@@ -265,7 +271,7 @@ bit ci sync [lane] [--branch <branch>] [--all] [--main] [--dry-run] [--init]
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | _(no args)_ | The same as `--all`.                                                                                                                                                                                                                                                                                                                                                                   |
 | `[lane]`    | One lane. Give the lane name, which the command resolves against `defaultScope`, or a scope-qualified id such as `other-org.other-scope/my-lane`. The `lanes` patterns still filter the lane, and those patterns match the lane **name**.                                                                                                                                              |
-| `--branch`  | The command resolves the lane from a branch name through the mapping config. Use the flag for a push-triggered run. The flag carries a branch name only, so the command assumes `defaultScope`.                                                                                                                                                                                        |
+| `--branch`  | The command resolves the lane from a branch name through the mapping config. Use the flag for a push-triggered run. The flag carries a branch name only. The command reads the lane id from the committed `.bitmap` of the branch, and otherwise assumes `defaultScope`.                                                                                                               |
 | `--all`     | Every mapped lane, plus the main scope. The run includes a lane that exists only as a branch. The command therefore retires the branch and the pull request of a lane that bit.cloud deleted.                                                                                                                                                                                          |
 | `--main`    | Only the main scope, against the default branch.                                                                                                                                                                                                                                                                                                                                       |
 | `--dry-run` | The command reports the action for each target. The command pushes nothing, and the command creates, closes, labels and comments no pull request. The run is not read-only on disk: the command writes the working tree, `.bitmap` and the local scope, then restores them. The command therefore refuses a dirty working tree. The command exits non-zero if the plan needs a person. |
@@ -321,6 +327,11 @@ For each mapped lane, the command compares the remote head of the lane with the 
 An `--all` run visits two sets of targets: the lanes that match the `lanes` patterns, and the lane-mapped
 branches on `origin`. The second set makes the cleanup possible. A lane that bit.cloud deleted is absent from
 the first set, so a run that reads lanes only would leave an orphan branch and an open pull request.
+
+The command resolves each branch of the second set against the lane that the committed `.bitmap` of the branch
+points at, when that pointer has the lane name of the branch. Other branches resolve against `defaultScope`.
+So after another scope archives a lane that this repository mirrors, the next `--all` run closes its pull
+request.
 
 ### Halts and conflicts
 
@@ -466,6 +477,14 @@ operation and every Bit operation, and skips only the pull-request operations.
 For GitHub, the command reads **`BIT_GITHUB_TOKEN` before `GITHUB_TOKEN`**. GitHub Actions sets
 `GITHUB_TOKEN` on every job, so an override needs the higher priority. The command reads the repository from
 `GITHUB_REPOSITORY`. If that variable is absent, the command reads the `origin` remote.
+
+On GitHub Enterprise Server, the command also claims an `origin` remote on the host that `GITHUB_SERVER_URL`
+names, and sends the API requests for that host to `GITHUB_API_URL`. GitHub Actions sets both variables on
+every job. Outside Actions, set `GITHUB_SERVER_URL` (for example `https://ghe.example.com`); without
+`GITHUB_API_URL` the API defaults to `https://ghe.example.com/api/v3`. A `GITHUB_API_URL` must be on the server
+host or on `api.<server host>` (GHE.com data residency), and must be `https` when the server is; any other
+value is refused with a warning and the GitHub provider stays unconfigured, so the enterprise token is never
+sent elsewhere. A github.com remote on such a runner still uses `https://api.github.com`.
 
 ---
 

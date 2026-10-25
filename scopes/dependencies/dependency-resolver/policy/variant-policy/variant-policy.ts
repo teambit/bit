@@ -2,47 +2,26 @@ import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { compact, sortBy, uniqWith } from 'lodash';
 import { snapToSemver } from '@teambit/component-package-version';
 import type { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
-import type { Policy, PolicyConfigKeys, PolicyConfigKeysNames, PolicyEntry, SemverVersion } from '../policy';
+import type {
+  VariantPolicyConfigObject,
+  VariantPolicyConfigEntryValue,
+  VariantPolicyEntryVersion,
+  VariantPolicyEntryValue,
+  VariantPolicyLifecycleConfigEntryObject,
+} from '@teambit/envs';
+import type { Policy, PolicyConfigKeysNames, PolicyEntry } from '../policy';
 import type { DependencyLifecycleType } from '../../dependencies';
 import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME } from '../../dependencies';
 
-export type VariantPolicyConfigObject = Partial<Record<keyof PolicyConfigKeys, VariantPolicyLifecycleConfigObject>>;
-
-type VariantPolicyLifecycleConfigObject = {
-  [dependencyId: string]: VariantPolicyConfigEntryValue;
-};
-
-type VariantPolicyLifecycleConfigEntryObject = {
-  name: string;
-  version: string;
-  /**
-   * hide the dependency from the component's package.json / dependencies list
-   */
-  hidden?: boolean;
-  /**
-   * force add to component dependencies even if it's not used by the component.
-   */
-  force?: boolean;
-  optional?: boolean;
-};
+export type {
+  VariantPolicyConfigObject,
+  VariantPolicyConfigEntryValue,
+  VariantPolicyEntryVersion,
+  VariantPolicyEntryValue,
+} from '@teambit/envs';
 
 export type VariantPolicyConfigArr = Partial<Record<PolicyConfigKeysNames, VariantPolicyLifecycleConfigEntryObject[]>>;
 type VariantPolicyConfigObj = Partial<Record<PolicyConfigKeysNames, Record<string, VariantPolicyConfigEntryValue>>>;
-
-export type VariantPolicyConfigEntryValue = VariantPolicyEntryValue | VariantPolicyEntryVersion;
-
-/**
- * Allowed values are valid semver values, git urls, fs path.
- */
-export type VariantPolicyEntryVersion = SemverVersion;
-
-export type VariantPolicyEntryValue = {
-  version: VariantPolicyEntryVersion;
-  resolveFromEnv?: boolean;
-  optional?: boolean;
-  workspaceSingleton?: boolean;
-  override?: boolean;
-};
 
 export type DependencySource = 'auto' | 'env' | 'env-own' | 'slots' | 'config';
 

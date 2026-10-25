@@ -1,10 +1,9 @@
 import type { ComponentID } from '@teambit/component-id';
 import type { PushOptions, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import { CURRENT_FETCH_SCHEMA } from '@teambit/legacy.scope-api';
-import type { ListScopeResult } from '@teambit/legacy.component-list';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
-import type { Scope, RemovedObjects, LaneData, ComponentObjects } from '@teambit/legacy.scope';
+import type { Scope, RemovedObjects, LaneData, ComponentObjects, ListScopeResult } from '@teambit/legacy.scope';
 import type { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import type { Network } from '@teambit/scope.network';
 import { connect } from '@teambit/scope.network';

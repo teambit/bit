@@ -7,7 +7,7 @@ version: 2.1
 # Base configurations
 default_image: &default_image
   docker:
-    - image: cimg/node:22.22.0
+    - image: cimg/node:22.23.4
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -129,7 +129,10 @@ commands:
           name: install bit bundle for <<parameters.os>> <<parameters.cpu>>
           command: |
             cd <<parameters.directory>>
-            pnpm init
+            # pnpm init pins the latest pnpm in package.json by default, and the install then
+            # records that pin in an env document at the top of pnpm-lock.yaml. bvm installs
+            # Bit from the published lockfile, which has to hold only Bit's dependencies.
+            pnpm init --no-init-package-manager
             pnpm config set --location=project registry https://node-registry.bit.cloud
             pnpm config set --location=project nodeLinker hoisted
             pnpm config set --location=project packageImportMethod copy
@@ -278,7 +281,7 @@ commands:
           name: Install pnpm
           command: |
             export PNPM_HOME="$HOME/.local/share/pnpm"
-            SHELL=/bin/bash npx --yes get-pnpm@0.0.3 12.0.0-rc.7
+            SHELL=/bin/bash npx --yes get-pnpm@0.0.5 12.15.0
             "$PNPM_HOME/bin/pnpm" --version
             echo "export PNPM_HOME=\"$PNPM_HOME\"" >> $BASH_ENV
             echo 'export PATH="$PNPM_HOME/bin:$PATH"' >> $BASH_ENV
@@ -339,13 +342,13 @@ commands:
   windows_set_node_version:
     parameters:
       version:
-        default: 22.22.0
+        default: 22.23.4
         type: string
     steps:
       - run: choco upgrade nvm -y
       - run: nvm -v
-      - run: nvm install 22.22.0
-      - run: nvm use 22.22.0
+      - run: nvm install 22.23.4
+      - run: nvm use 22.23.4
       - run: node -v
 
   windows_add_bvm_to_path:
@@ -386,7 +389,7 @@ commands:
         default: 'BASE_IMAGE'
         type: string
       docker_build_base_image_arg_value:
-        default: 'node:22.22.0'
+        default: 'node:22.23.4'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -419,7 +422,7 @@ commands:
         default: 'BASE_IMAGE'
         type: string
       docker_build_base_image_arg_value:
-        default: 'node:22.22.0'
+        default: 'node:22.23.4'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -552,8 +555,9 @@ commands:
         type: string
         default: "e2e/commands,e2e/doctor,e2e/flows"
       # when true, the job halts (successfully) if the PR diff contains only doc files
-      # (*.md / *.mdx). enabled only for the per-PR e2e_test job — the nightly/bbit/bundle
-      # jobs always run the full suite (on master the check is a no-op anyway).
+      # (*.md / *.mdx) and files of the Rust CLI (native/, scripts/rust/ and its workflows,
+      # which the e2e suite never runs). enabled only for the per-PR e2e_test job — the
+      # nightly/bbit/bundle jobs always run the full suite (on master the check is a no-op anyway).
       skip_when_doc_only:
         type: boolean
         default: false
@@ -564,7 +568,7 @@ commands:
           condition: << parameters.skip_when_doc_only >>
           steps:
             - run:
-                name: 'halt when the diff is docs-only (*.md / *.mdx)'
+                name: 'halt when the diff is docs-only (*.md / *.mdx) or Rust CLI only'
                 # any uncertainty (master branch, missing merge-base, unreadable or empty diff)
                 # falls back to running the full suite. doc files under e2e/ are treated as test
                 # changes, not docs, so they never trigger a skip.
@@ -596,14 +600,17 @@ commands:
                   if [ -z "$CHANGED_FILES" ]; then
                     echo "empty diff against merge-base - running the full suite"; exit 0
                   fi
-                  NON_DOC_FILES=$(echo "$CHANGED_FILES" | grep -vE '\.(md|mdx)$' || true)
+                  # the Rust CLI (native/) has its own workflow (.github/workflows/rust.yml) and
+                  # never runs in the e2e suite
+                  RUST_CLI_FILES='^(native/|scripts/rust/|\.github/workflows/rust(-scope)?\.yml$)'
+                  NON_DOC_FILES=$(echo "$CHANGED_FILES" | grep -vE '\.(md|mdx)$' | grep -vE "$RUST_CLI_FILES" || true)
                   E2E_DOC_FILES=$(echo "$CHANGED_FILES" | grep -E '^e2e/' | grep -E '\.(md|mdx)$' || true)
                   if [ -z "$NON_DOC_FILES" ] && [ -z "$E2E_DOC_FILES" ]; then
-                    echo "diff against merge-base $BASE contains only doc files - skipping e2e:"
+                    echo "diff against merge-base $BASE contains only doc and Rust CLI files - skipping e2e:"
                     echo "$CHANGED_FILES"
                     circleci-agent step halt
                   else
-                    echo "non-doc changes present - running the full suite"
+                    echo "changes outside docs and the Rust CLI - running the full suite"
                   fi
       # - run:
       #     # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
@@ -1361,8 +1368,8 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "node:22.22.0"
-          docker_tag_suffix: "-node-22.22.0"
+          docker_build_base_image_arg_value: "node:22.23.4"
+          docker_tag_suffix: "-node-22.23.4"
 
   docker_non_root_build_node_22:
     machine:
@@ -1371,10 +1378,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "node:22.22.0"
+          docker_build_base_image_arg_value: "node:22.23.4"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-22.22.0"
+          docker_tag_suffix: "-node-22.23.4"
 
   docker_build_alpine:
     machine:
@@ -1383,10 +1390,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "node:22.22.0-alpine"
+          docker_build_base_image_arg_value: "node:22.23.4-alpine"
           # image_name: "bitcli/bit-alpine"
           docker_file_name: "Dockerfile-bit-alpine"
-          docker_tag_suffix: "-alpine-node-22.22.0"
+          docker_tag_suffix: "-alpine-node-22.23.4"
 
   server_docker_build_node_22:
     machine:
@@ -1395,10 +1402,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "`npm show @teambit/bit version`-node-22.22.0"
+          docker_build_base_image_arg_value: "`npm show @teambit/bit version`-node-22.23.4"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-22.22.0"
+          docker_tag_suffix: "-node-22.23.4"
 
   # ========== Windows Jobs ==========
   windows_checkout_code:
@@ -1545,9 +1552,9 @@ jobs:
       # - run: node -v
       # - run: npm -v
       # - run: yarn -v
-      # # - run: choco install nodejs --version 22.22.0
+      # # - run: choco install nodejs --version 22.23.4
       # # - run: node -v
-      # - run: cinst nodejs --version 22.22.0
+      # - run: cinst nodejs --version 22.23.4
       # - run: node -v
 
 # ========================================

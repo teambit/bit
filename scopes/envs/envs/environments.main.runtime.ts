@@ -5,9 +5,9 @@ import type { SourceFile } from '@teambit/component.sources';
 import type { CLIMain } from '@teambit/cli';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
-import type { Component, ComponentMain, RegularCompDescriptor } from '@teambit/component';
+import type { AspectDefinition, Component, ComponentMain, RegularCompDescriptor } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { EnvPolicyConfigObject } from './env-policy-config';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { IssuesMain } from '@teambit/issues';
@@ -18,7 +18,6 @@ import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
-import type { AspectDefinition } from '@teambit/aspect-loader';
 import type { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
@@ -26,6 +25,7 @@ import { head, uniq } from 'lodash';
 import type { WorkerMain } from '@teambit/worker';
 import { WorkerAspect } from '@teambit/worker';
 import { ComponentID } from '@teambit/component-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { AsyncLocalStorage } from 'async_hooks';
 import type { EnvService } from './services';
 import type { Environment } from './environment';
@@ -416,7 +416,10 @@ export class EnvsMain {
   async recursivelyMergeWithParentManifest(object: EnvJsonc, envExtendsDeps?: LegacyDependency[]): Promise<EnvJsonc> {
     if (!object.extends) return object;
     const parentEnvId = object.extends;
-    const resolver = this.getAllRegisteredEnvJsoncResolvers()[0];
+    // a workspace registers a resolver that loads the parent env from the workspace. outside a workspace (e.g. a bare
+    // scope), there is none, so load it from the component host.
+    const resolver =
+      this.getAllRegisteredEnvJsoncResolvers()[0] || ((envId, deps) => this.resolveEnvManifestFromHost(envId, deps));
 
     const parentObject: EnvJsonc = await resolver(parentEnvId, envExtendsDeps);
     const mergedObject = this.mergeEnvManifests(parentObject, object);
@@ -424,6 +427,36 @@ export class EnvsMain {
       return this.recursivelyMergeWithParentManifest(mergedObject);
     }
     return mergedObject;
+  }
+
+  /**
+   * the id (with the version, when known) to load the parent env by, for an env.jsonc that "extends" `envId`.
+   * the version is taken from the dependencies of the extending env, as `envId` normally has no version.
+   */
+  getParentEnvIdToLoad(envId: string, envExtendsDeps: LegacyDependency[] = []): string {
+    const envIdWithoutVersion = BitId.getStringWithoutVersion(envId);
+    const foundEnv = envExtendsDeps.find(
+      (dep) => dep.id.toStringWithoutVersion() === envIdWithoutVersion || dep.packageName === envIdWithoutVersion
+    );
+    if (!foundEnv?.id) return envId;
+    // a new component (not snapped yet) has no version to load
+    return foundEnv.id.version.includes('-new') ? foundEnv.id.toStringWithoutVersion() : foundEnv.id.toString();
+  }
+
+  private async resolveEnvManifestFromHost(envId: string, envExtendsDeps?: LegacyDependency[]): Promise<EnvJsonc> {
+    if (this.isCoreEnv(envId)) return {};
+    const envComponent = await this.getEnvComponentByEnvId(this.getParentEnvIdToLoad(envId, envExtendsDeps));
+    // the parent's own dependencies determine the version of its parent, if it "extends" another env too. unlike
+    // getOrCalculateEnvManifest, don't retry without them on failure, which would load another version of that env.
+    const envManifest =
+      this.getEnvManifest(envComponent) ||
+      (await this.calculateEnvManifest(
+        envComponent,
+        undefined,
+        envComponent.state._consumer.dependencies.dependencies
+      ));
+    if (!envManifest) throw new BitError(`unable to find env.jsonc file in ${envId}`);
+    return envManifest;
   }
 
   mergeEnvManifests(parent: EnvJsonc, child: EnvJsonc): EnvJsonc {

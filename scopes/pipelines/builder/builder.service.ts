@@ -218,14 +218,27 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
     return 'run `bit build --list-tasks <component-id>` to see the tasks list for the pipelines: build, tag and snap';
   }
 
-  private getTasksNamesByPipeFunc(env: EnvDefinition, pipeFuncName: PipeFunctionNames): string[] {
-    const tasksQueue = calculatePipelineOrder(this.taskSlot, [env], pipeFuncName).map(({ task }) =>
-      BuildTaskHelper.serializeId(task)
-    );
-    return tasksQueue;
+  /**
+   * the envs are calculated together, as in the actual run, so a task may depend on a task of another env.
+   */
+  getCurrentPipeline(envs: EnvDefinition[]): BuildTask[] {
+    return calculatePipelineOrder(this.taskSlot, envs, this.pipeNameOnEnv).map(({ task }) => task);
   }
 
-  getCurrentPipeTasks(env: EnvDefinition) {
-    return this.getTasksNamesByPipeFunc(env, this.pipeNameOnEnv);
+  /**
+   * the tasks of each env (by env id), calculated for all the envs together as in getCurrentPipeline().
+   */
+  getCurrentPipelinePerEnv(envs: EnvDefinition[]): Map<string, BuildTask[]> {
+    const tasksPerEnv = new Map<string, BuildTask[]>();
+    calculatePipelineOrder(this.taskSlot, envs, this.pipeNameOnEnv).forEach(({ env, task }) => {
+      const tasks = tasksPerEnv.get(env.id) || [];
+      tasks.push(task);
+      tasksPerEnv.set(env.id, tasks);
+    });
+    return tasksPerEnv;
+  }
+
+  getCurrentPipeTasks(env: EnvDefinition): string[] {
+    return this.getCurrentPipeline([env]).map((task) => BuildTaskHelper.serializeId(task));
   }
 }

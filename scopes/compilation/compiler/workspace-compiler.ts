@@ -26,7 +26,7 @@ import type { PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import type { UiMain, PreStartOpts } from '@teambit/ui';
 import { readRootComponentsDir } from '@teambit/workspace.root-components';
-import { compact, groupBy, uniq } from 'lodash';
+import { compact, groupBy, uniq, uniqBy } from 'lodash';
 import type { CompIdGraph } from '@teambit/graph';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent } from './events';
@@ -378,6 +378,7 @@ type TypeGeneratorParamsPerEnv = { envId: string; compParams: TypeGeneratorCompP
 
 export class WorkspaceCompiler {
   private componentsBeingProcessedInOnAspectLoadFail = new Set<string>();
+  private envsBeingRestored = new Set<string>();
 
   constructor(
     private workspace: Workspace,
@@ -457,6 +458,16 @@ export class WorkspaceCompiler {
         if (this.componentsBeingProcessedInOnAspectLoadFail.has(idStr)) {
           this.logger.debug(
             `onAspectLoadFail: skipping ${idStr} as it's already being processed (preventing infinite loop)`
+          );
+          return false;
+        }
+
+        // an install in another process may be replacing node_modules (likely why the aspect failed to load), and
+        // compiling would write into dirs the package manager is deleting. a later load of the aspect tries again.
+        const runningInstall = await this.watcher.ipcEvents.getInstallRunningElsewhere();
+        if (runningInstall) {
+          this.logger.debug(
+            `onAspectLoadFail: skipping compilation of ${idStr} - an install is running in process ${runningInstall.pid}`
           );
           return false;
         }
@@ -612,6 +623,45 @@ export class WorkspaceCompiler {
     this.workspace.clearComponentsCache(idsToClearCache.map((id) => ComponentID.fromString(id)));
   }
 
+  /**
+   * an env instance keeps absolute paths into the package dir it was loaded from, such as its tsconfig in "dist".
+   * when the package manager re-creates that dir (sources only, no "dist"), a compiler created from that instance
+   * reads missing files, and get-tsconfig falls back to whatever tsconfig.json it finds up the tree. compiling the
+   * workspace env writes its "dist" back, so the paths are valid again. this runs on every compile, not only in
+   * install, because a long-lived process (e.g. "bit server") can hold such an instance after another process installs.
+   * when the package dir was moved instead of re-created, compiling can't help; install's reloadMovedEnvs reloads it.
+   */
+  private async restoreEnvsWithMissingFiles(components: Component[], options: CompileOptions) {
+    const envDefs = uniqBy(
+      components.map((component) => this.envs.getOrCalculateEnv(component)),
+      (envDef) => envDef.id
+    );
+    const envIds = envDefs
+      .filter((envDef) => {
+        const pluginPath = envDef.env?.__resolvedPath;
+        return (
+          pluginPath &&
+          !fs.existsSync(pluginPath) &&
+          !this.envsBeingRestored.has(envDef.id) &&
+          this.workspace.hasId(ComponentID.fromString(envDef.id), { ignoreVersion: true })
+        );
+      })
+      .map((envDef) => envDef.id);
+    if (!envIds.length) return;
+    this.logger.debug(`restoreEnvsWithMissingFiles: compiling ${envIds.join(', ')} before using them`);
+    envIds.forEach((envId) => this.envsBeingRestored.add(envId));
+    // without a version, so an env instance loaded from another version than the workspace's is still compiled
+    // (its package dir is the workspace component's).
+    const idsToCompile = envIds.map((envId) => ComponentID.fromString(envId).toStringWithoutVersion());
+    try {
+      await this.compileComponents(idsToCompile, { initiator: options.initiator }, true, {
+        loadSeedersAsAspects: false,
+      });
+    } finally {
+      envIds.forEach((envId) => this.envsBeingRestored.delete(envId));
+    }
+  }
+
   private async runCompileComponents(
     components: Component[],
     options: CompileOptions,
@@ -619,6 +669,8 @@ export class WorkspaceCompiler {
   ): Promise<BuildResult[]> {
     const componentsCompilers: ComponentCompiler[] = [];
     const skipped: BuildResult[] = [];
+
+    await this.restoreEnvsWithMissingFiles(components, options);
 
     components.forEach((c) => {
       const env = this.envs.getOrCalculateEnv(c);

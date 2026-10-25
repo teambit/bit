@@ -700,34 +700,37 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       );
     };
     process.on('SIGINT', warnCancelExport);
-    let centralHubResults;
     try {
-      if (resumeExportId) {
-        const remotes = manyObjectsPerRemote.map((o) => o.remote);
-        await validateRemotes(remotes, resumeExportId);
-        await persistRemotes(manyObjectsPerRemote, resumeExportId);
-      } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
-        centralHubResults = await pushAllToCentralHub();
-      } else {
-        // await pushToRemotes();
-        await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
+      let centralHubResults;
+      try {
+        if (resumeExportId) {
+          const remotes = manyObjectsPerRemote.map((o) => o.remote);
+          await validateRemotes(remotes, resumeExportId);
+          await persistRemotes(manyObjectsPerRemote, resumeExportId);
+        } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
+          centralHubResults = await pushAllToCentralHub();
+        } else {
+          // await pushToRemotes();
+          await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
+        }
+      } catch (err: any) {
+        throw addScopesInvolvedToError(
+          err,
+          manyObjectsPerRemote.map((o) => o.remote.name)
+        );
       }
-    } catch (err: any) {
-      throw addScopesInvolvedToError(
-        err,
-        manyObjectsPerRemote.map((o) => o.remote.name)
-      );
-    }
 
-    this.logger.setStatusLine('updating data locally...');
-    const results = await updateLocalObjects(laneObject);
-    process.removeListener('SIGINT', warnCancelExport);
-    return {
-      newIdsOnRemote: results.map((r) => r.newIdsOnRemote).flat(),
-      exported: ComponentIdList.uniqFromArray(results.map((r) => r.exported).flat()),
-      updatedLocally: ComponentIdList.uniqFromArray(results.map((r) => r.updatedLocally).flat()),
-      rippleJobs: centralHubResults?.rippleJobs || [],
-    };
+      this.logger.setStatusLine('updating data locally...');
+      const results = await updateLocalObjects(laneObject);
+      return {
+        newIdsOnRemote: results.map((r) => r.newIdsOnRemote).flat(),
+        exported: ComponentIdList.uniqFromArray(results.map((r) => r.exported).flat()),
+        updatedLocally: ComponentIdList.uniqFromArray(results.map((r) => r.updatedLocally).flat()),
+        rippleJobs: centralHubResults?.rippleJobs || [],
+      };
+    } finally {
+      process.removeListener('SIGINT', warnCancelExport);
+    }
   }
 
   private transformToOneObjectListWithScopeData(objectsPerRemote: ObjectsPerRemote[]): ObjectList {

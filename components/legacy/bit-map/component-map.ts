@@ -28,7 +28,7 @@ import type { PathLinux, PathLinuxRelative, PathOsBasedRelative } from '@teambit
 import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/toolbox.path.path';
 import { removeInternalConfigFields } from '@teambit/legacy.extension-data';
 import OutsideRootDir from './exceptions/outside-root-dir';
-import { IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
+import { IgnoredDirectory, ComponentNotFoundInPath } from './exceptions';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
