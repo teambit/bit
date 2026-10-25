@@ -59,3 +59,36 @@ fn app_run_outside_workspace_and_in_bare_scope_matches_node() -> KnownResult<()>
     }
     Ok(())
 }
+
+#[test]
+fn app_run_in_empty_workspace_matches_node() -> KnownResult<()> {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    let workspace = &helper.scopes.local_path;
+    for command in ["app run", "apps run", "app run foo", "apps run foo"] {
+        let node = Helper::cmd_in_with(workspace, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        let native = Helper::cmd_in(workspace, command);
+        assert_eq!(node.status.code(), Some(1), "{command}: {node:?}");
+        assert!(native.native, "{command}: {native:?}");
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+    let command = "app run --json";
+    let node = Helper::cmd_in_with(workspace, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native = Helper::cmd_in(workspace, command);
+    assert!(!native.native, "{native:?}");
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    helper.populate_components(1, true, "");
+    for command in ["app run", "app run foo"] {
+        let node = Helper::cmd_in_with(workspace, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        let native = Helper::cmd_in(workspace, command);
+        assert_eq!(node.status.code(), Some(1), "{command}: {node:?}");
+        assert!(!native.native, "{command}: {native:?}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+    Ok(())
+}
