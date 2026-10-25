@@ -2,6 +2,7 @@
 
 mod create;
 mod list_stats;
+mod outside;
 mod prune;
 #[cfg(test)]
 mod tests;
@@ -75,15 +76,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let chalk = Chalk::detect(args);
     let root = match scope_root::discover() {
         Ok(Some(root)) => root,
-        Ok(None) if matches!(subcommand, Subcommand::Delete { all: true, .. }) => {
-            return run_delete_all_outside_scope(&cwd, args, chalk);
-        }
-        Ok(None) if let Subcommand::Prune(prune_args) = &subcommand => {
-            return prune::run_outside(&cwd, args, chalk, prune_args);
-        }
-        Ok(None) if matches!(subcommand, Subcommand::BareList | Subcommand::List { .. }) => {
-            return run_list_outside_scope(chalk, &subcommand);
-        }
+        Ok(None) => return outside::run_outside_scope(&cwd, args, &argv, chalk, &subcommand),
         _ => return Ok(Outcome::Declined("capsule requires a workspace or scope".into())),
     };
     match &subcommand {
@@ -105,33 +98,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             create::run_create(&cwd, &root, args, chalk, create_args)
         }
     }
-}
-
-fn run_list_outside_scope(chalk: Chalk, subcommand: &Subcommand) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
-        return Ok(Outcome::Declined("capsule list CI error stack delegated".into()));
-    }
-    let json = matches!(subcommand, Subcommand::List { json: true, .. });
-    let output = workspace_command::loader_output(chalk, json);
-    output.restart(&format!(r#"running command "{}"..."#, subcommand.loader_label()));
-    output.stop();
-    writeln!(
-        io::stderr(),
-        "This command requires a Bit workspace or scope.\nTo initialize a workspace: bit init",
-    )?;
-    Ok(Outcome::Exit(ExitCode::FAILURE))
-}
-
-fn run_delete_all_outside_scope(
-    cwd: &Path,
-    args: &[OsString],
-    chalk: Chalk,
-) -> io::Result<Outcome> {
-    let Ok(target_dir) = resolve_capsules_dir(cwd) else {
-        return Ok(Outcome::Declined("capsule delete --all cache root delegated".into()));
-    };
-    let report = delete_and_report(&target_dir, chalk)?;
-    workspace_command::execute_with_scope(cwd, args, "delete", &report)
 }
 
 fn run_list_json(
