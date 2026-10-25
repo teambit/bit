@@ -185,6 +185,51 @@ fn app_run_outside_workspace_and_in_bare_scope_matches_node() -> KnownResult<()>
 }
 
 #[test]
+fn app_run_missing_app_with_flags_matches_node() -> KnownResult<()> {
+    let helper = Helper::new();
+    let outside = helper.scopes.e2e_dir.join("outside-app-run-flags");
+    fs::create_dir_all(&outside).unwrap();
+    let (_, bare_scope) = helper.new_bare_scope();
+    helper.re_init_workspace();
+    let ci_env = [("CI", OsStr::new("1"))];
+    for directory in [&outside, &bare_scope, &helper.scopes.local_path] {
+        for command in [
+            "app run -d",
+            "apps run foo --dev",
+            "app run foo -p 4000",
+            "apps run foo --no-browser",
+            "app run --watch",
+            "app run foo --args=--x=1",
+            "app run foo --port bad",
+        ] {
+            for native_env in [&[][..], &ci_env[..]] {
+                let mut node_env = vec![("BIT_NATIVE", OsStr::new("off"))];
+                node_env.extend_from_slice(native_env);
+                let node = Helper::cmd_in_with(directory, command, &node_env);
+                let native = Helper::cmd_in_with(directory, command, native_env);
+                assert!(native.native, "{command}: node={node:?}; native={native:?}");
+                assert_eq!(native.status.code(), node.status.code(), "{command}");
+                assert_eq!(native.stdout, node.stdout, "{command}");
+                assert_eq!(native.stderr, node.stderr, "{command}");
+            }
+        }
+    }
+    helper.populate_components(1, true, "");
+    for native_env in [&[][..], &ci_env[..]] {
+        let mut node_env = vec![("BIT_NATIVE", OsStr::new("off"))];
+        node_env.extend_from_slice(native_env);
+        let command = "app run foo --dev";
+        let node = Helper::cmd_in_with(&helper.scopes.local_path, command, &node_env);
+        let native = Helper::cmd_in_with(&helper.scopes.local_path, command, native_env);
+        assert!(native.native, "{command}: node={node:?}; native={native:?}");
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+    Ok(())
+}
+
+#[test]
 fn app_run_in_empty_workspace_matches_node() -> KnownResult<()> {
     let helper = Helper::new();
     helper.re_init_workspace();

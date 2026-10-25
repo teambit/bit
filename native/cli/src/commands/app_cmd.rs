@@ -7,6 +7,7 @@ use super::{
     Command,
     color::Chalk,
     list::table,
+    run_cmd,
     scope_set::selection,
     script::active_component_count,
     workspace_command::{self, results::Report},
@@ -108,19 +109,20 @@ pub(super) fn standard_nonapp_component_count(root: &Path) -> Option<usize> {
 }
 
 fn is_supported_run(args: &[&str]) -> bool {
-    match args {
-        ["run"] => true,
-        ["run", name] => {
-            !name.is_empty()
-                && !name.starts_with('-')
-                && name
-                    .bytes()
-                    .all(|byte| {
-                        byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'/' | b'.')
-                    })
-        }
-        _ => false,
-    }
+    let ["run", rest @ ..] = args else {
+        return false;
+    };
+    let Some(options) = run_cmd::parse_options(rest) else {
+        return false;
+    };
+    options.app_name
+        .as_deref()
+        .is_none_or(|name| {
+            name.bytes()
+                .all(|byte| {
+                    byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'/' | b'.')
+                })
+        })
 }
 
 pub(super) fn run_missing_app(args: &[OsString], component_count: usize) -> io::Result<Outcome> {
