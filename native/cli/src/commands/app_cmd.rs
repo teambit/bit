@@ -42,6 +42,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("app arguments are not UTF-8".into()));
     };
+    if is_supported_run(&argv[1..]) {
+        return run_supported_run(args);
+    }
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native app grammar".into()));
     };
@@ -56,6 +59,41 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return emit_apps_outcome(&root, args, &options, &apps);
     }
     Ok(Outcome::Declined("app list delegated".into()))
+}
+
+fn run_supported_run(args: &[OsString]) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI app run delegated".into()));
+    }
+    let cwd = env::current_dir()?;
+    if workspace::root(&cwd).is_some() {
+        return Ok(Outcome::Declined("app run inside workspace delegated".into()));
+    }
+    run_empty_app_outside(args)
+}
+
+fn is_supported_run(args: &[&str]) -> bool {
+    match args {
+        ["run"] => true,
+        ["run", name] => {
+            !name.is_empty()
+                && !name.starts_with('-')
+                && name
+                    .bytes()
+                    .all(|byte| {
+                        byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'/' | b'.')
+                    })
+        }
+        _ => false,
+    }
+}
+
+fn run_empty_app_outside(args: &[OsString]) -> io::Result<Outcome> {
+    let output = workspace_command::loader_output(Chalk::detect(args), false);
+    output.restart(r#"running command "run"..."#);
+    output.stop();
+    io::stdout().lock().write_all(b"  no apps found\n")?;
+    Ok(Outcome::Exit(ExitCode::FAILURE))
 }
 
 fn run_outside_workspace(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
