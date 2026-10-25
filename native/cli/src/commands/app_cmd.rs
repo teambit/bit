@@ -62,9 +62,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn run_supported_run(args: &[OsString]) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-        return Ok(Outcome::Declined("CI app run delegated".into()));
-    }
     let cwd = env::current_dir()?;
     let count = if let Some(root) = workspace::root(&cwd) {
         let Some(count) = standard_nonapp_component_count(&root) else {
