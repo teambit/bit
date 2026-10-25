@@ -45,7 +45,12 @@ fn unsupported_peer_plus_mix(manual: &ManualPolicy) -> bool {
         .any(|name| !seen.insert(name));
     let has_runtime_or_dev_plus = !manual.unresolved_runtime_plus.is_empty()
         || !manual.unresolved_dev_plus.is_empty();
-    let unsupported_plus_mix = has_runtime_or_dev_plus && populated > 0;
+    let supported_runtime_mix = !manual.runtime.is_empty()
+        && manual.dev.is_empty()
+        && manual.peer.is_empty()
+        && !manual.unresolved_runtime_plus.is_empty()
+        && manual.unresolved_dev_plus.is_empty();
+    let unsupported_plus_mix = has_runtime_or_dev_plus && populated > 0 && !supported_runtime_mix;
     populated > 1 && !manual.peer.is_empty() || unsupported_plus_mix || duplicate || duplicate_plus
 }
 

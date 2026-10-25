@@ -340,7 +340,9 @@ fn missing_names<'a>(manual: &'a ManualPolicy, groups: &'a ManualGroups<'_>) -> 
         .map(String::as_str)
         .chain(groups.runtime.iter().map(|(name, _, _)| *name))
         .collect::<Vec<_>>();
-    runtime_missing.sort_unstable();
+    if manual.unresolved_peer_plus.is_empty() {
+        runtime_missing.sort_unstable();
+    }
     let peer_missing = manual.unresolved_peer_plus
         .iter()
         .map(String::as_str)
