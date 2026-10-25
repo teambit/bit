@@ -129,6 +129,36 @@ fn deps_debug_dev_plus_runtime_dev_peer_policy_and_peer_plus_matches_node() {
 }
 
 #[test]
+fn deps_debug_runtime_and_dev_plus_with_plain_policies_and_peer_plus_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = r#""rootDir": "comp1", "config": {"teambit.dependencies/dependency-resolver": {"policy": {"dependencies": {"is-odd": "1.0.0", "is-positive": "+"}, "devDependencies": {"is-number": "1.0.0", "is-negative": "+"}, "peerDependencies": {"is-even": "+"}}}}"#;
+    fs::write(bitmap_path, bitmap.replace(marker, replacement)).unwrap();
+    compare_debug_with_node(&helper);
+    helper.native("tag --skip-tests");
+    compare_debug_with_node(&helper);
+}
+
+#[test]
+fn deps_debug_runtime_and_dev_plus_with_all_plain_policies_and_peer_plus_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = r#""rootDir": "comp1", "config": {"teambit.dependencies/dependency-resolver": {"policy": {"dependencies": {"is-odd": "1.0.0", "is-positive": "+"}, "devDependencies": {"is-number": "1.0.0", "is-negative": "+"}, "peerDependencies": {"is-npm": "1.0.0", "is-even": "+"}}}}"#;
+    fs::write(bitmap_path, bitmap.replace(marker, replacement)).unwrap();
+    compare_debug_with_node(&helper);
+    helper.native("tag --skip-tests");
+    compare_debug_with_node(&helper);
+}
+
+#[test]
 fn deps_debug_multiple_plus_with_peer_plus_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

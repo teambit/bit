@@ -43,20 +43,28 @@ fn unsupported_peer_plus_mix(manual: &ManualPolicy) -> bool {
         .chain(&manual.unresolved_dev_plus)
         .chain(&manual.unresolved_peer_plus)
         .any(|name| !seen.insert(name));
-    let has_runtime_or_dev_plus = !manual.unresolved_runtime_plus.is_empty()
-        || !manual.unresolved_dev_plus.is_empty();
+    let supported_mix = supported_plus_mix(manual);
+    (populated > 1 && !manual.peer.is_empty() && !supported_mix)
+        || (populated > 0
+            && (!manual.unresolved_runtime_plus.is_empty()
+                || !manual.unresolved_dev_plus.is_empty())
+            && !supported_mix)
+        || duplicate
+        || duplicate_plus
+}
+
+fn supported_plus_mix(manual: &ManualPolicy) -> bool {
     let supported_runtime_mix = !manual.runtime.is_empty()
         && !manual.unresolved_runtime_plus.is_empty()
         && manual.unresolved_dev_plus.is_empty();
     let supported_dev_mix = !manual.dev.is_empty()
         && manual.unresolved_runtime_plus.is_empty()
         && !manual.unresolved_dev_plus.is_empty();
-    let unsupported_plus_mix =
-        has_runtime_or_dev_plus && populated > 0 && !supported_runtime_mix && !supported_dev_mix;
-    (populated > 1 && !manual.peer.is_empty() && !supported_runtime_mix && !supported_dev_mix)
-        || unsupported_plus_mix
-        || duplicate
-        || duplicate_plus
+    let supported_both_mix = !manual.runtime.is_empty()
+        && !manual.dev.is_empty()
+        && !manual.unresolved_runtime_plus.is_empty()
+        && !manual.unresolved_dev_plus.is_empty();
+    supported_runtime_mix || supported_dev_mix || supported_both_mix
 }
 
 fn append_manual_field(
