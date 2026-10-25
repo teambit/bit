@@ -10,8 +10,14 @@ fn app_rejected_flags_help_matches_node() -> KnownResult<()> {
     helper.re_init_workspace();
     let ci_env = [("CI", OsStr::new("1"))];
     for directory in [&outside, &bare_scope, &helper.scopes.local_path] {
-        for command in ["app --json", "apps --json", "app list --no-color", "apps list --no-color"]
-        {
+        for command in [
+            "app --json",
+            "apps --json",
+            "app --no-color",
+            "apps --no-color",
+            "app list --no-color",
+            "apps list --no-color",
+        ] {
             for native_env in [&[][..], &ci_env[..]] {
                 let mut node_env = vec![("BIT_NATIVE", OsStr::new("off"))];
                 node_env.extend_from_slice(native_env);

@@ -68,9 +68,16 @@ fn unsupported_flag_help(argv: &[&str]) -> Option<String> {
     let name = *argv.first()?;
     let global = GLOBAL_HELP;
     match &argv[1..] {
-        ["--json"] => Some(format!(
-            "bit {name} [sub-command]\n\nmanage application components\napplications are components that create deployable, runnable applications like React apps or Node.js servers.\nlist available apps in the workspace and inspect their configurations.\nuse \"bit run\" to start an application locally.\nfor more info, visit: https://bit.dev/docs/getting-started/composing/create-apps\n\nCommands:\n  bit {name} list            list all registered apps\n  bit {name} run [app-name]  start an application component locally  [aliases: c]\n\n{global}\n\nUnknown argument: json\n",
-        )),
+        [flag @ ("--json" | "--no-color")] => {
+            let unknown = if *flag == "--json" {
+                "Unknown argument: json"
+            } else {
+                "Unknown arguments: no-color, noColor"
+            };
+            Some(format!(
+                "bit {name} [sub-command]\n\nmanage application components\napplications are components that create deployable, runnable applications like React apps or Node.js servers.\nlist available apps in the workspace and inspect their configurations.\nuse \"bit run\" to start an application locally.\nfor more info, visit: https://bit.dev/docs/getting-started/composing/create-apps\n\nCommands:\n  bit {name} list            list all registered apps\n  bit {name} run [app-name]  start an application component locally  [aliases: c]\n\n{global}\n\n{unknown}\n",
+            ))
+        }
         ["list", "--no-color"] => Some(format!(
             "bit {name} list\n\nlist all registered apps\nfor more info, visit: https://bit.dev/reference/reference/cli-reference\n\nOptions\n  -j, --json  return the component data in json format  [boolean]\n\n{global}\n\nUnknown arguments: no-color, noColor\n",
         )),
