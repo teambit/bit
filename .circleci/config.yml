@@ -129,7 +129,10 @@ commands:
           name: install bit bundle for <<parameters.os>> <<parameters.cpu>>
           command: |
             cd <<parameters.directory>>
-            pnpm init
+            # pnpm init pins the latest pnpm in package.json by default, and the install then
+            # records that pin in an env document at the top of pnpm-lock.yaml. bvm installs
+            # Bit from the published lockfile, which has to hold only Bit's dependencies.
+            pnpm init --no-init-package-manager
             pnpm config set --location=project registry https://node-registry.bit.cloud
             pnpm config set --location=project nodeLinker hoisted
             pnpm config set --location=project packageImportMethod copy
