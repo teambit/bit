@@ -5,11 +5,18 @@ mod tests;
 
 use super::{
     Command,
-    app_cmd::{is_empty_app_workspace, run_missing_app, standard_nonapp_component_count},
+    app_cmd::{
+        GLOBAL_HELP, is_empty_app_workspace, run_missing_app, standard_nonapp_component_count,
+    },
     workspace_command,
 };
 use crate::{native::Outcome, workspace};
-use std::{env, ffi::OsString, io};
+use std::{
+    env,
+    ffi::OsString,
+    io::{self, Write},
+    process::ExitCode,
+};
 
 pub const COMMAND: Command = Command { name: "run", aliases: &[], run };
 
@@ -28,6 +35,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("run arguments are not UTF-8".into()));
     };
+    if run_no_color_help(&argv[1..]) {
+        return print_no_color_help();
+    }
     if parse_options(&argv[1..]).is_none() {
         return Ok(Outcome::Declined("outside native run grammar".into()));
     }
@@ -41,6 +51,45 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return run_missing_app(args, count);
     }
     Ok(Outcome::Declined("run execution delegated".into()))
+}
+
+fn print_no_color_help() -> io::Result<Outcome> {
+    let global = GLOBAL_HELP;
+    let help = format!(
+        r#"bit run [app-name]
+
+start an application component locally
+runs application components in their own development server, separate from the "bit start" UI.
+apps are components that create deployable applications (React apps, Node.js servers, etc.).
+when no app name is specified, automatically detects and runs the app if only one exists in the workspace.
+for more info, visit: https://bit.dev/reference/apps/apps-overview/
+
+Arguments:
+  app-name  the app's name is registered by the app (run 'bit app list' to list the names of the available apps)
+
+Options
+  -d, --dev         start the application in dev mode.  [boolean]
+  -p, --port        port to run the app on  [string]
+  -v, --verbose     show verbose output for inspection and print stack trace  [boolean]
+  -w, --watch       watch and compile your components upon changes  [boolean]
+  -n, --no-browser  do not automatically open browser when ready  [boolean]
+  -a, --args        the arguments passing to the app. for example, --args="--a=1 --b". don't forget to use quotes to wrap the value to escape special characters.  [string]
+
+{global}
+
+Unknown arguments: no-color, noColor
+"#,
+    );
+    io::stdout().lock().write_all(help.as_bytes())?;
+    Ok(Outcome::Exit(ExitCode::FAILURE))
+}
+
+fn run_no_color_help(args: &[&str]) -> bool {
+    match args {
+        ["--no-color"] => true,
+        [name, "--no-color"] => !name.is_empty() && !name.starts_with('-'),
+        _ => false,
+    }
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {

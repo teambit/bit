@@ -30,6 +30,8 @@ use std::{
 
 pub const COMMAND: Command = Command { name: "app", aliases: &["apps"], run };
 
+pub(super) const GLOBAL_HELP: &str = "Global\n  -h, --help       show help\n      --log        print log messages to the screen, options are: [trace, debug, info, warn, error, fatal], the default is info\n      --safe-mode  useful when it fails to load normally. it skips loading aspects from workspace.jsonc, and for legacy-commands it initializes only the CLI aspect";
+
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 
@@ -64,7 +66,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 
 fn unsupported_flag_help(argv: &[&str]) -> Option<String> {
     let name = *argv.first()?;
-    let global = "Global\n  -h, --help       show help\n      --log        print log messages to the screen, options are: [trace, debug, info, warn, error, fatal], the default is info\n      --safe-mode  useful when it fails to load normally. it skips loading aspects from workspace.jsonc, and for legacy-commands it initializes only the CLI aspect";
+    let global = GLOBAL_HELP;
     match &argv[1..] {
         ["--json"] => Some(format!(
             "bit {name} [sub-command]\n\nmanage application components\napplications are components that create deployable, runnable applications like React apps or Node.js servers.\nlist available apps in the workspace and inspect their configurations.\nuse \"bit run\" to start an application locally.\nfor more info, visit: https://bit.dev/docs/getting-started/composing/create-apps\n\nCommands:\n  bit {name} list            list all registered apps\n  bit {name} run [app-name]  start an application component locally  [aliases: c]\n\n{global}\n\nUnknown argument: json\n",
