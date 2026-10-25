@@ -356,6 +356,20 @@ fn capsule_create_outside_workspace_flags_match_node() -> KnownResult<()> {
         "capsule create comp1 -i foo",
         "capsule create comp1 --package-manager pnpm",
         "capsule create comp1 -p pnpm",
+        "capsule create --id foo",
+        "capsule create -i foo",
+        "capsule create --package-manager pnpm",
+        "capsule create -p pnpm",
+        "capsule create --id foo --json",
+        "capsule create --package-manager pnpm --json",
+        "capsule create --id foo comp1",
+        "capsule create -i foo comp1",
+        "capsule create --package-manager pnpm comp1",
+        "capsule create -p pnpm comp1",
+        "capsule create --id foo comp1 --json",
+        "capsule create --package-manager pnpm comp1 --json",
+        "capsule create comp1 --id foo --json",
+        "capsule create comp1 --package-manager pnpm --json",
     ] {
         let node = Helper::cmd_in_with(&outside, command, &node_env);
         let native = Helper::cmd_in_with(&outside, command, &native_env);

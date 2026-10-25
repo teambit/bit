@@ -57,6 +57,9 @@ fn run_create_outside_scope(chalk: Chalk, argv: &[&str], args: &CreateArgs) -> i
 }
 
 fn supports_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
+    if supports_named_create_outside(argv, args) {
+        return true;
+    }
     match argv {
         ["capsule", "create"] => true,
         ["capsule", "create", "--json" | "-j" | "--seeders-only" | "-s" | "--use-hash"] => true,
@@ -74,11 +77,36 @@ fn supports_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
         ["capsule", "create", _, "--base-dir" | "-b" | "--root-base-dir" | "-r", _] => {
             args.ids.len() == 1
         }
-        ["capsule", "create", _, "--id" | "-i" | "--package-manager" | "-p", _] => {
-            args.ids.len() == 1
-        }
         ["capsule", "create", _, _] => args.ids.len() == 2,
         ["capsule", "create", _, _, "--json" | "-j"] => args.ids.len() == 2,
+        _ => false,
+    }
+}
+
+fn supports_named_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
+    match argv {
+        ["capsule", "create", "--id" | "-i" | "--package-manager" | "-p", _]
+        | ["capsule", "create", "--id" | "-i" | "--package-manager" | "-p", _, "--json" | "-j"] => {
+            args.ids.is_empty()
+        }
+        ["capsule", "create", _, "--id" | "-i" | "--package-manager" | "-p", _]
+        | ["capsule", "create", "--id" | "-i" | "--package-manager" | "-p", _, _]
+        | [
+            "capsule",
+            "create",
+            _,
+            "--id" | "-i" | "--package-manager" | "-p",
+            _,
+            "--json" | "-j",
+        ]
+        | [
+            "capsule",
+            "create",
+            "--id" | "-i" | "--package-manager" | "-p",
+            _,
+            _,
+            "--json" | "-j",
+        ] => args.ids.len() == 1,
         _ => false,
     }
 }
