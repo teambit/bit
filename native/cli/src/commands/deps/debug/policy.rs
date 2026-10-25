@@ -60,13 +60,14 @@ fn append_manual_field(
         "peerDependencies" => &mut manual.peer,
         _ => return Err(Failure::Declined("unsupported component deps debug field".into())),
     };
-    manual.has_ignored_policy |= values
+    let ignored = values
         .as_object()
-        .is_some_and(|entries| {
-            entries
-                .values()
-                .any(|value| value == "-")
-        });
+        .into_iter()
+        .flat_map(|entries| entries.iter())
+        .filter(|(_, value)| value.as_str() == Some("-"))
+        .map(|(name, _)| name.clone())
+        .collect::<Vec<_>>();
+    manual.ignored_names.extend(ignored);
     manual.ignored_env_dependencies.extend(
         NODE_DEV
             .iter()

@@ -42,7 +42,7 @@ struct ManualPolicy {
     unresolved_runtime_plus: Vec<String>,
     unresolved_dev_plus: Vec<String>,
     unresolved_peer_plus: Vec<String>,
-    has_ignored_policy: bool,
+    ignored_names: Vec<String>,
     ignored_env_dependencies: Vec<String>,
 }
 
@@ -54,7 +54,7 @@ impl ManualPolicy {
             && self.unresolved_runtime_plus.is_empty()
             && self.unresolved_dev_plus.is_empty()
             && self.unresolved_peer_plus.is_empty()
-            && !self.has_ignored_policy
+            && self.ignored_names.is_empty()
     }
 }
 

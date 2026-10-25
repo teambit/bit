@@ -443,6 +443,36 @@ fn deps_debug_saved_and_post_tag_policies_match_node() {
 }
 
 #[test]
+fn deps_debug_saved_plus_and_post_tag_policy_match_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = r#""rootDir": "comp1", "config": {"teambit.dependencies/dependency-resolver": {"policy": {"devDependencies": {"is-positive": "+"}}}}"#;
+    fs::write(bitmap_path, bitmap.replace(marker, replacement)).unwrap();
+    helper.native("tag --skip-tests");
+    helper.native("deps set comp1 lodash@4.17.21");
+    compare_debug_with_node(&helper);
+}
+
+#[test]
+fn deps_debug_saved_ignored_and_post_tag_policy_match_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let bitmap = fs::read_to_string(&bitmap_path).unwrap();
+    let marker = r#""rootDir": "comp1""#;
+    let replacement = r#""rootDir": "comp1", "config": {"teambit.dependencies/dependency-resolver": {"policy": {"devDependencies": {"@types/jest": "-"}}}}"#;
+    fs::write(bitmap_path, bitmap.replace(marker, replacement)).unwrap();
+    helper.native("tag --skip-tests");
+    helper.native("deps set comp1 lodash@4.17.21");
+    compare_debug_with_node(&helper);
+}
+
+#[test]
 fn deps_debug_plus_duplicate_dev_policy_matches_node() {
     compare_plus_duplicate_policy("devDependencies");
 }

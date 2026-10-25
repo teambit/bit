@@ -35,11 +35,8 @@ pub(super) fn plan(
 
 fn combine_versioned_policies(
     mut bitmap: ManualPolicy,
-    saved: ManualPolicy,
+    mut saved: ManualPolicy,
 ) -> Result<ManualPolicy, Failure> {
-    if unsupported_combination(&bitmap) || unsupported_combination(&saved) {
-        return Err(Failure::Declined("combined versioned deps debug policies delegated".into()));
-    }
     let mut names = HashMap::new();
     for (lifecycle, rows) in
         [("runtime", &bitmap.runtime), ("dev", &bitmap.dev), ("peer", &bitmap.peer)]
@@ -48,21 +45,113 @@ fn combine_versioned_policies(
             names.insert(name.clone(), (lifecycle, version.clone()));
         }
     }
-    merge_rows(&mut names, "runtime", saved.runtime, &mut bitmap.runtime)?;
-    merge_rows(&mut names, "dev", saved.dev, &mut bitmap.dev)?;
-    merge_rows(&mut names, "peer", saved.peer, &mut bitmap.peer)?;
+    merge_rows(&mut names, "runtime", std::mem::take(&mut saved.runtime), &mut bitmap.runtime)?;
+    merge_rows(&mut names, "dev", std::mem::take(&mut saved.dev), &mut bitmap.dev)?;
+    merge_rows(&mut names, "peer", std::mem::take(&mut saved.peer), &mut bitmap.peer)?;
+    merge_special(&mut bitmap, saved, &names)?;
     Ok(bitmap)
 }
 
-fn unsupported_combination(policy: &ManualPolicy) -> bool {
-    policy.has_ignored_policy
-        || [
-            &policy.unresolved_runtime_plus,
-            &policy.unresolved_dev_plus,
-            &policy.unresolved_peer_plus,
-        ]
+fn merge_special(
+    bitmap: &mut ManualPolicy,
+    saved: ManualPolicy,
+    regular: &HashMap<String, (&'static str, String)>,
+) -> Result<(), Failure> {
+    let mut plus = HashMap::new();
+    for (lifecycle, rows) in [
+        ("runtime", &bitmap.unresolved_runtime_plus),
+        ("dev", &bitmap.unresolved_dev_plus),
+        ("peer", &bitmap.unresolved_peer_plus),
+    ] {
+        for name in rows {
+            plus.insert(name.clone(), lifecycle);
+        }
+    }
+    if plus
+        .keys()
+        .any(|name| regular.contains_key(name))
+    {
+        return Err(overlapping_policy());
+    }
+    merge_plus(
+        regular,
+        &mut plus,
+        "runtime",
+        saved.unresolved_runtime_plus,
+        &mut bitmap.unresolved_runtime_plus,
+    )?;
+    merge_plus(
+        regular,
+        &mut plus,
+        "dev",
+        saved.unresolved_dev_plus,
+        &mut bitmap.unresolved_dev_plus,
+    )?;
+    merge_plus(
+        regular,
+        &mut plus,
+        "peer",
+        saved.unresolved_peer_plus,
+        &mut bitmap.unresolved_peer_plus,
+    )?;
+    merge_ignored(bitmap, saved.ignored_names, saved.ignored_env_dependencies, regular, &plus)?;
+    Ok(())
+}
+
+fn merge_plus(
+    regular: &HashMap<String, (&'static str, String)>,
+    plus: &mut HashMap<String, &'static str>,
+    lifecycle: &'static str,
+    rows: Vec<String>,
+    target: &mut Vec<String>,
+) -> Result<(), Failure> {
+    for name in rows {
+        if regular.contains_key(&name) {
+            return Err(overlapping_policy());
+        }
+        match plus.get(&name) {
+            Some(existing) if *existing == lifecycle => {}
+            Some(_) => return Err(overlapping_policy()),
+            None => {
+                plus.insert(name.clone(), lifecycle);
+                target.push(name);
+            }
+        }
+    }
+    Ok(())
+}
+
+fn merge_ignored(
+    bitmap: &mut ManualPolicy,
+    saved_names: Vec<String>,
+    saved_env: Vec<String>,
+    regular: &HashMap<String, (&'static str, String)>,
+    plus: &HashMap<String, &'static str>,
+) -> Result<(), Failure> {
+    let mut seen = bitmap.ignored_names
         .iter()
-        .any(|group| !group.is_empty())
+        .cloned()
+        .collect::<HashSet<_>>();
+    for name in bitmap.ignored_names.iter().chain(&saved_names) {
+        if regular.contains_key(name) || plus.contains_key(name) {
+            return Err(overlapping_policy());
+        }
+    }
+    for name in saved_names {
+        if seen.insert(name.clone()) {
+            bitmap.ignored_names.push(name);
+        }
+    }
+    for name in saved_env {
+        if !bitmap.ignored_env_dependencies.contains(&name) {
+            bitmap.ignored_env_dependencies.push(name);
+        }
+    }
+    Ok(())
+}
+
+fn overlapping_policy() -> Failure {
+    Failure::Declined("overlapping versioned deps debug policies delegated".into())
 }
 
 fn merge_rows(
@@ -75,11 +164,7 @@ fn merge_rows(
         match names.get(&name) {
             Some((existing_lifecycle, existing_version))
                 if *existing_lifecycle == lifecycle && *existing_version == version => {}
-            Some(_) => {
-                return Err(Failure::Declined(
-                    "overlapping versioned deps debug policies delegated".into(),
-                ));
-            }
+            Some(_) => return Err(overlapping_policy()),
             None => {
                 names.insert(name.clone(), (lifecycle, version.clone()));
                 target.push((name, version));

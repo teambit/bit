@@ -255,13 +255,19 @@ fn visit(root: &Path, directory: &Path, output: &mut BTreeMap<String, Vec<u8>>) 
                 .replace(root.to_str().unwrap(), "<workspace>");
             output.insert(relative, format!("symlink:{link}").into_bytes());
         } else if metadata.is_dir() {
-            output.insert(format!("{relative}/"), mode(&metadata));
+            output.insert(format!("{relative}/"), directory_mode(&relative, &metadata));
             visit(root, &path, output);
         } else {
             output.insert(format!("{relative}:mode"), mode(&metadata));
             output.insert(relative, fs::read(path).unwrap());
         }
     }
+}
+
+fn directory_mode(relative: &str, metadata: &fs::Metadata) -> Vec<u8> {
+    // pnpm package directory modes vary between identical released Node installs.
+    // Keep their paths and contents in the comparison; check modes elsewhere.
+    if relative.starts_with("node_modules/.pnpm/") { Vec::new() } else { mode(metadata) }
 }
 
 #[derive(PartialEq, Eq)]
