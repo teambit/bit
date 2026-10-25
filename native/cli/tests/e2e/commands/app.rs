@@ -2,6 +2,44 @@ use crate::{helper::Helper, known_failure::KnownResult};
 use std::{ffi::OsStr, fs};
 
 #[test]
+fn app_list_without_apps_in_ci_matches_node() -> KnownResult<()> {
+    let helper = Helper::new();
+    let outside = helper.scopes.e2e_dir.join("outside-app-list-ci");
+    fs::create_dir_all(&outside).unwrap();
+    let (_, bare_scope) = helper.new_bare_scope();
+    helper.re_init_workspace();
+    let workspace = &helper.scopes.local_path;
+    for directory in [&outside, &bare_scope, workspace] {
+        for command in ["app", "apps list", "app list --json", "apps list -j"] {
+            let node = Helper::cmd_in_with(
+                directory,
+                command,
+                &[("BIT_NATIVE", OsStr::new("off")), ("CI", OsStr::new("1"))],
+            );
+            let native = Helper::cmd_in_with(directory, command, &[("CI", OsStr::new("1"))]);
+            assert!(native.native, "{command}: node={node:?}; native={native:?}");
+            assert_eq!(native.status.code(), node.status.code(), "{command}");
+            assert_eq!(native.stdout, node.stdout, "{command}: node={node:?}; native={native:?}");
+            assert_eq!(native.stderr, node.stderr, "{command}");
+        }
+    }
+    helper.populate_components(1, true, "");
+    for command in ["app list", "apps list --json"] {
+        let node = Helper::cmd_in_with(
+            workspace,
+            command,
+            &[("BIT_NATIVE", OsStr::new("off")), ("CI", OsStr::new("1"))],
+        );
+        let native = Helper::cmd_in_with(workspace, command, &[("CI", OsStr::new("1"))]);
+        assert!(native.native, "{command}: node={node:?}; native={native:?}");
+        assert_eq!(native.status.code(), node.status.code());
+        assert_eq!(native.stdout, node.stdout);
+        assert_eq!(native.stderr, node.stderr);
+    }
+    Ok(())
+}
+
+#[test]
 fn app_run_without_apps_in_ci_matches_node() -> KnownResult<()> {
     let helper = Helper::new();
     let outside = helper.scopes.e2e_dir.join("outside-app-run-ci");
