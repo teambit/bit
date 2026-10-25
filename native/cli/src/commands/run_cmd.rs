@@ -35,8 +35,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("run arguments are not UTF-8".into()));
     };
-    if run_no_color_help(&argv[1..]) {
-        return print_no_color_help();
+    if let Some(unknown) = run_unsupported_help(&argv[1..]) {
+        return print_unsupported_help(unknown);
     }
     if parse_options(&argv[1..]).is_none() {
         return Ok(Outcome::Declined("outside native run grammar".into()));
@@ -53,7 +53,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("run execution delegated".into()))
 }
 
-fn print_no_color_help() -> io::Result<Outcome> {
+fn print_unsupported_help(unknown: &str) -> io::Result<Outcome> {
     let global = GLOBAL_HELP;
     let help = format!(
         r#"bit run [app-name]
@@ -77,18 +77,24 @@ Options
 
 {global}
 
-Unknown arguments: no-color, noColor
+{unknown}
 "#,
     );
     io::stdout().lock().write_all(help.as_bytes())?;
     Ok(Outcome::Exit(ExitCode::FAILURE))
 }
 
-fn run_no_color_help(args: &[&str]) -> bool {
+fn run_unsupported_help(args: &[&str]) -> Option<&'static str> {
     match args {
-        ["--no-color"] => true,
-        [name, "--no-color"] => !name.is_empty() && !name.starts_with('-'),
-        _ => false,
+        ["--no-color"] => Some("Unknown arguments: no-color, noColor"),
+        [name, "--no-color"] if !name.is_empty() && !name.starts_with('-') => {
+            Some("Unknown arguments: no-color, noColor")
+        }
+        ["--json"] => Some("Unknown argument: json"),
+        [name, "--json"] if !name.is_empty() && !name.starts_with('-') => {
+            Some("Unknown argument: json")
+        }
+        _ => None,
     }
 }
 

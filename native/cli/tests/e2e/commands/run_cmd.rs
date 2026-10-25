@@ -2,7 +2,7 @@ use crate::{helper::Helper, known_failure::KnownResult};
 use std::{ffi::OsStr, fs};
 
 #[test]
-fn run_no_color_help_matches_node() -> KnownResult<()> {
+fn run_unsupported_help_matches_node() -> KnownResult<()> {
     let helper = Helper::new();
     let outside = helper.scopes.e2e_dir.join("outside-run-help");
     fs::create_dir_all(&outside).unwrap();
@@ -10,7 +10,9 @@ fn run_no_color_help_matches_node() -> KnownResult<()> {
     helper.re_init_workspace();
     let ci_env = [("CI", OsStr::new("1"))];
     for directory in [&outside, &bare_scope, &helper.scopes.local_path] {
-        for command in ["run --no-color", "run missing-app --no-color"] {
+        for command in
+            ["run --no-color", "run missing-app --no-color", "run --json", "run missing-app --json"]
+        {
             for native_env in [&[][..], &ci_env[..]] {
                 let mut node_env = vec![("BIT_NATIVE", OsStr::new("off"))];
                 node_env.extend_from_slice(native_env);
