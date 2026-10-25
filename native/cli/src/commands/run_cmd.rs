@@ -36,7 +36,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        return Ok(Outcome::Declined("run outside workspace delegated".into()));
+        return run_missing_app(args, 0);
     };
     if is_empty_app_workspace(&root).unwrap_or(false)
         && let Some(count) = standard_nonapp_component_count(&root)
@@ -52,7 +52,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     while idx < args.len() {
         let arg = args[idx];
         match arg {
-            "--no-color" => {}
+            "--no-color" => return None,
             "-d" | "--dev" => options.dev = true,
             "-v" | "--verbose" => options.verbose = true,
             "-w" | "--watch" => options.watch = true,
