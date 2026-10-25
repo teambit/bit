@@ -60,7 +60,10 @@ fn supports_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
     match argv {
         ["capsule", "create"] => true,
         ["capsule", "create", "--json" | "-j" | "--seeders-only" | "-s" | "--use-hash"] => true,
-        ["capsule", "create", "--base-dir" | "-b", _] => args.ids.is_empty(),
+        ["capsule", "create", "--base-dir" | "-b" | "--root-base-dir" | "-r", _] => {
+            args.ids.is_empty()
+        }
+        ["capsule", "create", "--always-new" | "-a"] => args.ids.is_empty(),
         ["capsule", "create", _] => args.ids.len() == 1,
         [
             "capsule",
@@ -69,6 +72,9 @@ fn supports_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
             "--json" | "-j" | "--seeders-only" | "-s" | "--always-new" | "-a" | "--use-hash",
         ] => args.ids.len() == 1,
         ["capsule", "create", _, "--base-dir" | "-b" | "--root-base-dir" | "-r", _] => {
+            args.ids.len() == 1
+        }
+        ["capsule", "create", _, "--id" | "-i" | "--package-manager" | "-p", _] => {
             args.ids.len() == 1
         }
         ["capsule", "create", _, _] => args.ids.len() == 2,

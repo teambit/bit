@@ -348,6 +348,14 @@ fn capsule_create_outside_workspace_flags_match_node() -> KnownResult<()> {
         "capsule create comp1 --use-hash",
         "capsule create comp1 --root-base-dir foo",
         "capsule create comp1 -r foo",
+        "capsule create --root-base-dir foo",
+        "capsule create -r foo",
+        "capsule create --always-new",
+        "capsule create -a",
+        "capsule create comp1 --id foo",
+        "capsule create comp1 -i foo",
+        "capsule create comp1 --package-manager pnpm",
+        "capsule create comp1 -p pnpm",
     ] {
         let node = Helper::cmd_in_with(&outside, command, &node_env);
         let native = Helper::cmd_in_with(&outside, command, &native_env);
