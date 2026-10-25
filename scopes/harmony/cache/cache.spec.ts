@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { rmdirSync } from 'fs';
+import { rmSync } from 'fs';
 import { expect } from 'chai';
 import { Logger } from '@teambit/logger';
 import { CacheMain } from './cache.main.runtime';
@@ -27,6 +27,6 @@ describe('Cache Aspect', () => {
   });
 
   after(() => {
-    rmdirSync(cacheDirectory, { recursive: true });
+    rmSync(cacheDirectory, { recursive: true, force: true });
   });
 });
