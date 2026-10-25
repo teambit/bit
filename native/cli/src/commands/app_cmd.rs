@@ -42,6 +42,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("app arguments are not UTF-8".into()));
     };
+    if let Some(help) = unsupported_flag_help(&argv) {
+        io::stdout().lock().write_all(help.as_bytes())?;
+        return Ok(Outcome::Exit(ExitCode::FAILURE));
+    }
     if is_supported_run(&argv[1..]) {
         return run_supported_run(args);
     }
@@ -56,6 +60,20 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return emit_apps_outcome(&root, args, &options, &apps);
     }
     Ok(Outcome::Declined("app list delegated".into()))
+}
+
+fn unsupported_flag_help(argv: &[&str]) -> Option<String> {
+    let name = *argv.first()?;
+    let global = "Global\n  -h, --help       show help\n      --log        print log messages to the screen, options are: [trace, debug, info, warn, error, fatal], the default is info\n      --safe-mode  useful when it fails to load normally. it skips loading aspects from workspace.jsonc, and for legacy-commands it initializes only the CLI aspect";
+    match &argv[1..] {
+        ["--json"] => Some(format!(
+            "bit {name} [sub-command]\n\nmanage application components\napplications are components that create deployable, runnable applications like React apps or Node.js servers.\nlist available apps in the workspace and inspect their configurations.\nuse \"bit run\" to start an application locally.\nfor more info, visit: https://bit.dev/docs/getting-started/composing/create-apps\n\nCommands:\n  bit {name} list            list all registered apps\n  bit {name} run [app-name]  start an application component locally  [aliases: c]\n\n{global}\n\nUnknown argument: json\n",
+        )),
+        ["list", "--no-color"] => Some(format!(
+            "bit {name} list\n\nlist all registered apps\nfor more info, visit: https://bit.dev/reference/reference/cli-reference\n\nOptions\n  -j, --json  return the component data in json format  [boolean]\n\n{global}\n\nUnknown arguments: no-color, noColor\n",
+        )),
+        _ => None,
+    }
 }
 
 fn run_supported_run(args: &[OsString]) -> io::Result<Outcome> {
