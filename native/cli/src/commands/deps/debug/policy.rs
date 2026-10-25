@@ -46,7 +46,6 @@ fn unsupported_peer_plus_mix(manual: &ManualPolicy) -> bool {
     let has_runtime_or_dev_plus = !manual.unresolved_runtime_plus.is_empty()
         || !manual.unresolved_dev_plus.is_empty();
     let supported_runtime_mix = !manual.runtime.is_empty()
-        && manual.dev.is_empty()
         && manual.peer.is_empty()
         && !manual.unresolved_runtime_plus.is_empty()
         && manual.unresolved_dev_plus.is_empty();
