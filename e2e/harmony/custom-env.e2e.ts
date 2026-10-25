@@ -43,7 +43,7 @@ describe('custom env', function () {
       helper.fixtures.populateComponents(1, undefined, undefined, false);
       helper.extensions.addExtensionToVariant('*', envId);
       // Clean the node_modules as we want to run tests when node_modules is empty
-      fs.rmdirSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
+      fs.rmSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true, force: true });
     });
     it('should show the correct env in bit show (with no loaded indication)', () => {
       const componentShowParsed = helper.command.showComponentParsedHarmonyByTitle('comp1', 'env');
@@ -187,7 +187,7 @@ describe('custom env', function () {
       // Clean the capsule dir to make sure it's empty before we continue
       const scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
       if (fs.pathExistsSync(scopeAspectsCapsulesRootDir)) {
-        fs.rmdirSync(scopeAspectsCapsulesRootDir, { recursive: true });
+        fs.rmSync(scopeAspectsCapsulesRootDir, { recursive: true, force: true });
       }
 
       helper.scopeHelper.addRemoteScope();
