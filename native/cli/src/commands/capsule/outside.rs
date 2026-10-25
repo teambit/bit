@@ -1,6 +1,6 @@
 //! Capsule command behavior outside a workspace or scope.
 
-use super::{Subcommand, delete_and_report, prune};
+use super::{Subcommand, create::CreateArgs, delete_and_report, prune};
 use crate::{
     commands::{color::Chalk, globals::resolve_capsules_dir, workspace_command},
     native::Outcome,
@@ -19,27 +19,16 @@ pub(super) fn run_outside_scope(
     chalk: Chalk,
     subcommand: &Subcommand,
 ) -> io::Result<Outcome> {
+    if let Subcommand::Create(create_args) = subcommand {
+        return run_create_outside_scope(chalk, argv, create_args);
+    }
     match argv {
-        ["capsule", "create"] => {
-            return run_outside_failure(
-                chalk,
-                "create",
-                "undefined is not iterable (cannot read property Symbol(Symbol.iterator))",
-            );
-        }
-        ["capsule", "create", _] if matches!(subcommand, Subcommand::Create(create_args) if create_args.ids.len() == 1) =>
-        {
-            return run_outside_failure(
-                chalk,
-                "create",
-                "Cannot read properties of undefined (reading 'shouldUseHashForCapsules')",
-            );
-        }
         ["capsule", "delete"] => return run_delete_all_outside_scope(cwd, args, chalk),
         ["capsule", "delete", "--scope-aspects"] => {
             return run_outside_failure(
                 chalk,
                 "delete",
+                false,
                 "Cannot read properties of undefined (reading 'getAspectCapsulePath')",
             );
         }
@@ -53,11 +42,46 @@ pub(super) fn run_outside_scope(
     }
 }
 
-fn run_outside_failure(chalk: Chalk, label: &str, error: &str) -> io::Result<Outcome> {
+fn run_create_outside_scope(chalk: Chalk, argv: &[&str], args: &CreateArgs) -> io::Result<Outcome> {
+    if !supports_create_outside(argv, args) {
+        return Ok(Outcome::Declined("capsule create outside scope delegated".into()));
+    }
+    let error = if args.ids.is_empty() {
+        "undefined is not iterable (cannot read property Symbol(Symbol.iterator))"
+    } else if args.base_dir.is_some() || args.use_hash {
+        "Cannot read properties of undefined (reading 'resolveMultipleComponentIds')"
+    } else {
+        "Cannot read properties of undefined (reading 'shouldUseHashForCapsules')"
+    };
+    run_outside_failure(chalk, "create", args.json, error)
+}
+
+fn supports_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
+    match argv {
+        ["capsule", "create"] => true,
+        ["capsule", "create", "--json" | "-j" | "--seeders-only" | "-s" | "--use-hash"] => true,
+        ["capsule", "create", "--base-dir" | "-b", _] => args.ids.is_empty(),
+        ["capsule", "create", _] => args.ids.len() == 1,
+        [
+            "capsule",
+            "create",
+            _,
+            "--json" | "-j" | "--seeders-only" | "-s" | "--always-new" | "-a" | "--use-hash",
+        ] => args.ids.len() == 1,
+        ["capsule", "create", _, "--base-dir" | "-b" | "--root-base-dir" | "-r", _] => {
+            args.ids.len() == 1
+        }
+        ["capsule", "create", _, _] => args.ids.len() == 2,
+        ["capsule", "create", _, _, "--json" | "-j"] => args.ids.len() == 2,
+        _ => false,
+    }
+}
+
+fn run_outside_failure(chalk: Chalk, label: &str, json: bool, error: &str) -> io::Result<Outcome> {
     if std::env::var_os("CI").is_some_and(|value| !value.is_empty()) {
         return Ok(Outcome::Declined("capsule CI error stack delegated".into()));
     }
-    let output = workspace_command::loader_output(chalk, false);
+    let output = workspace_command::loader_output(chalk, json);
     output.restart(&format!(r#"running command "{label}"..."#));
     output.stop();
     writeln!(io::stderr(), "{error}")?;
