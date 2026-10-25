@@ -66,25 +66,24 @@ fn run_supported_run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("CI app run delegated".into()));
     }
     let cwd = env::current_dir()?;
-    if let Some(root) = workspace::root(&cwd)
-        && !is_standard_empty_workspace(&root)
-    {
-        return Ok(Outcome::Declined("app run in nonempty workspace delegated".into()));
-    }
-    run_empty_app_outside(args)
+    let count = if let Some(root) = workspace::root(&cwd) {
+        let Some(count) = standard_nonapp_component_count(&root) else {
+            return Ok(Outcome::Declined("app run with discoverable apps delegated".into()));
+        };
+        count
+    } else {
+        0
+    };
+    run_missing_app(args, count)
 }
 
-fn is_standard_empty_workspace(root: &Path) -> bool {
+fn standard_nonapp_component_count(root: &Path) -> Option<usize> {
     if !discover_workspace_apps(root).is_some_and(|apps| apps.is_empty()) {
-        return false;
+        return None;
     }
-    let Ok(raw) = fs::read(root.join(".bitmap")) else {
-        return false;
-    };
-    let Ok(bitmap) = parse_jsonc(&raw) else {
-        return false;
-    };
-    active_component_count(&bitmap) == 0
+    let raw = fs::read(root.join(".bitmap")).ok()?;
+    let bitmap = parse_jsonc(&raw).ok()?;
+    Some(active_component_count(&bitmap))
 }
 
 fn is_supported_run(args: &[&str]) -> bool {
@@ -103,9 +102,12 @@ fn is_supported_run(args: &[&str]) -> bool {
     }
 }
 
-fn run_empty_app_outside(args: &[OsString]) -> io::Result<Outcome> {
+fn run_missing_app(args: &[OsString], component_count: usize) -> io::Result<Outcome> {
     let output = workspace_command::loader_output(Chalk::detect(args), false);
     output.restart(r#"running command "run"..."#);
+    if component_count > 0 {
+        output.status(&format!("loading {component_count} component(s)"));
+    }
     output.stop();
     io::stdout().lock().write_all(b"  no apps found\n")?;
     Ok(Outcome::Exit(ExitCode::FAILURE))

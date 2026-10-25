@@ -86,9 +86,19 @@ fn app_run_in_empty_workspace_matches_node() -> KnownResult<()> {
         let node = Helper::cmd_in_with(workspace, command, &[("BIT_NATIVE", OsStr::new("off"))]);
         let native = Helper::cmd_in(workspace, command);
         assert_eq!(node.status.code(), Some(1), "{command}: {node:?}");
-        assert!(!native.native, "{command}: {native:?}");
+        assert!(native.native, "{command}: {native:?}");
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
         assert_eq!(native.stdout, node.stdout, "{command}");
         assert_eq!(native.stderr, node.stderr, "{command}");
     }
+    helper.populate_components(2, true, "");
+    let command = "apps run foo";
+    let node = Helper::cmd_in_with(workspace, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native = Helper::cmd_in(workspace, command);
+    assert_eq!(node.status.code(), Some(1), "{command}: {node:?}");
+    assert!(native.native, "{command}: {native:?}");
+    assert_eq!(native.status.code(), node.status.code(), "{command}");
+    assert_eq!(native.stdout, node.stdout, "{command}");
+    assert_eq!(native.stderr, node.stderr, "{command}");
     Ok(())
 }
