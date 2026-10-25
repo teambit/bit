@@ -53,9 +53,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return run_outside_workspace(args, &argv);
     };
     if let Some(apps) = discover_workspace_apps(&root) {
-        if env::var_os("CI").is_some_and(|val| !val.is_empty()) && !apps.is_empty() {
-            return Ok(Outcome::Declined("CI app list with apps delegated".into()));
-        }
         return emit_apps_outcome(&root, args, &options, &apps);
     }
     Ok(Outcome::Declined("app list delegated".into()))
@@ -154,7 +151,7 @@ fn emit_apps_outcome(
             .collect();
         table::render(&["id", "name"], &rows, table::colors(args))
     };
-    if apps.is_empty() && env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+    if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
         let label = if args.len() == 1 { "app" } else { "list" };
         writeln!(io::stdout().lock(), r#"- running command "{label}"..."#)?;
     }

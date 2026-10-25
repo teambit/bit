@@ -2,6 +2,32 @@ use crate::{helper::Helper, known_failure::KnownResult};
 use std::{ffi::OsStr, fs};
 
 #[test]
+fn app_list_with_apps_in_ci_matches_node() -> KnownResult<()> {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.populate_components(1, true, "");
+    helper.output_file(
+        "comp1/comp1.node-app.js",
+        "module.exports.default = { name: 'sample-app', entry: require.resolve('./index.js') };\n",
+    );
+    helper.run("add comp1");
+    for command in ["app", "app list", "apps list --json", "app list -j"] {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            command,
+            &[("BIT_NATIVE", OsStr::new("off")), ("CI", OsStr::new("1"))],
+        );
+        let native =
+            Helper::cmd_in_with(&helper.scopes.local_path, command, &[("CI", OsStr::new("1"))]);
+        assert!(native.native, "{command}: node={node:?}; native={native:?}");
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+    Ok(())
+}
+
+#[test]
 fn app_list_without_apps_in_ci_matches_node() -> KnownResult<()> {
     let helper = Helper::new();
     let outside = helper.scopes.e2e_dir.join("outside-app-list-ci");
