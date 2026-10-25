@@ -81,6 +81,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(None) if let Subcommand::Prune(prune_args) = &subcommand => {
             return prune::run_outside(&cwd, args, chalk, prune_args);
         }
+        Ok(None) if matches!(subcommand, Subcommand::BareList | Subcommand::List { .. }) => {
+            return run_list_outside_scope(chalk, &subcommand);
+        }
         _ => return Ok(Outcome::Declined("capsule requires a workspace or scope".into())),
     };
     match &subcommand {
@@ -102,6 +105,21 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             create::run_create(&cwd, &root, args, chalk, create_args)
         }
     }
+}
+
+fn run_list_outside_scope(chalk: Chalk, subcommand: &Subcommand) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+        return Ok(Outcome::Declined("capsule list CI error stack delegated".into()));
+    }
+    let json = matches!(subcommand, Subcommand::List { json: true, .. });
+    let output = workspace_command::loader_output(chalk, json);
+    output.restart(&format!(r#"running command "{}"..."#, subcommand.loader_label()));
+    output.stop();
+    writeln!(
+        io::stderr(),
+        "This command requires a Bit workspace or scope.\nTo initialize a workspace: bit init",
+    )?;
+    Ok(Outcome::Exit(ExitCode::FAILURE))
 }
 
 fn run_delete_all_outside_scope(
@@ -172,12 +190,7 @@ fn emit_report(
 }
 
 pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
-    let filtered = args
-        .iter()
-        .copied()
-        .filter(|arg| *arg != "--no-color")
-        .collect::<Vec<_>>();
-    match filtered.as_slice() {
+    match args {
         [] => Some(Subcommand::BareList),
         ["list", rest @ ..] => parse_list_flags(rest),
         ["delete", rest @ ..] => parse_delete_flags(rest),

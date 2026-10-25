@@ -1,9 +1,9 @@
 //! Released fork contracts: strict command bytes and complete same-path state.
+pub(super) mod installation;
 pub(super) use support::{assert_origins, delay_copies, exported, ids, remote_workspace};
 mod callbacks;
 mod corruption;
 mod http;
-mod installation;
 mod options;
 mod patterns;
 mod remote;

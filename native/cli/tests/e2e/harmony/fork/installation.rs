@@ -1,5 +1,8 @@
 //! Real installation; validated durations and one proven redundant clock redraw vary.
 mod startup_frame;
+pub(in crate::harmony) fn project_startup_frame(text: &str) -> String {
+    startup_frame::project(text)
+}
 use super::support;
 use crate::{
     commands::{
@@ -26,7 +29,7 @@ fn remote_single_fork_runs_real_installation_after_native_materialization() {
     support::assert_origins(&helper, &["comp1"]);
 }
 fn durations(text: &str) -> String {
-    startup_frame::project(text)
+    project_startup_frame(text)
         .split_inclusive('\n')
         .map(completion)
         .collect()

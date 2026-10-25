@@ -90,7 +90,8 @@ fn phases(helper: &Helper) -> Vec<String> {
 }
 
 fn install_output(text: &str) -> String {
-    let timed = super::lane_adoption::output::durations(text);
+    let projected = super::fork::installation::project_startup_frame(text);
+    let timed = super::lane_adoption::output::durations(&projected);
     let mut output = String::new();
     for line in timed.split_inclusive('\n') {
         let body = line.trim_end_matches(['\r', '\n']);
