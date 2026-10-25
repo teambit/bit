@@ -19,7 +19,14 @@ use bit_install::{
 };
 use bit_object_import::parse_jsonc;
 use serde_json::json;
-use std::{env, ffi::OsString, fs, io, path::Path};
+use std::{
+    env,
+    ffi::OsString,
+    fs,
+    io::{self, Write},
+    path::Path,
+    process::ExitCode,
+};
 
 pub const COMMAND: Command = Command { name: "app", aliases: &["apps"], run };
 
@@ -43,12 +50,30 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        return Ok(Outcome::Declined("app outside workspace delegated".into()));
+        return run_outside_workspace(args, &argv);
     };
     if let Some(apps) = discover_workspace_apps(&root) {
         return emit_apps_outcome(&root, args, &options, &apps);
     }
     Ok(Outcome::Declined("app list delegated".into()))
+}
+
+fn run_outside_workspace(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
+    match &argv[1..] {
+        ["list", "-j" | "--json"] => {
+            io::stdout().lock().write_all(b"[]")?;
+        }
+        [] | ["list"] => {
+            let chalk = Chalk::detect(args);
+            let label = if argv.len() == 1 { "app" } else { "list" };
+            let output = workspace_command::loader_output(chalk, false);
+            output.restart(&format!(r#"running command "{label}"..."#));
+            output.stop();
+            writeln!(io::stdout().lock(), "{}", chalk.yellow("no apps found"))?;
+        }
+        _ => return Ok(Outcome::Declined("app outside workspace grammar delegated".into())),
+    }
+    Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
 fn emit_apps_outcome(

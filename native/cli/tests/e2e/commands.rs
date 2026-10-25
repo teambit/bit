@@ -4,6 +4,7 @@ pub(crate) mod add;
 pub(crate) mod diff_completion;
 pub(crate) mod move_paths;
 
+mod app;
 mod capsule;
 mod cat;
 mod cli_generate;
