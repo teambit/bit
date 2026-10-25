@@ -31,9 +31,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if parse_options(&argv[1..]).is_none() {
         return Ok(Outcome::Declined("outside native run grammar".into()));
     }
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-        return Ok(Outcome::Declined("CI run delegated".into()));
-    }
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
         return run_missing_app(args, 0);
