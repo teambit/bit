@@ -22,6 +22,7 @@ mod recover;
 mod remote;
 mod remove;
 mod reset;
+mod run_cmd;
 mod search;
 mod snap;
 mod system_git_scope;

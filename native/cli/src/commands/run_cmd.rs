@@ -5,8 +5,8 @@ mod tests;
 
 use super::{
     Command,
-    app_cmd::is_empty_app_workspace,
-    workspace_command::{self, results::Report},
+    app_cmd::{is_empty_app_workspace, run_missing_app, standard_nonapp_component_count},
+    workspace_command,
 };
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io};
@@ -38,11 +38,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&cwd) else {
         return Ok(Outcome::Declined("run outside workspace delegated".into()));
     };
-    if is_empty_app_workspace(&root).unwrap_or(false) {
-        return workspace_command::execute_without_loader(&root, args, "run", |output| {
-            output.console("no apps found");
-            Ok(Report { data: String::new(), code: 1, details: None })
-        });
+    if is_empty_app_workspace(&root).unwrap_or(false)
+        && let Some(count) = standard_nonapp_component_count(&root)
+    {
+        return run_missing_app(args, count);
     }
     Ok(Outcome::Declined("run execution delegated".into()))
 }

@@ -77,7 +77,7 @@ fn run_supported_run(args: &[OsString]) -> io::Result<Outcome> {
     run_missing_app(args, count)
 }
 
-fn standard_nonapp_component_count(root: &Path) -> Option<usize> {
+pub(super) fn standard_nonapp_component_count(root: &Path) -> Option<usize> {
     if !discover_workspace_apps(root).is_some_and(|apps| apps.is_empty()) {
         return None;
     }
@@ -102,7 +102,7 @@ fn is_supported_run(args: &[&str]) -> bool {
     }
 }
 
-fn run_missing_app(args: &[OsString], component_count: usize) -> io::Result<Outcome> {
+pub(super) fn run_missing_app(args: &[OsString], component_count: usize) -> io::Result<Outcome> {
     let output = workspace_command::loader_output(Chalk::detect(args), false);
     output.restart(r#"running command "run"..."#);
     if component_count > 0 {
