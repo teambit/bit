@@ -9,7 +9,7 @@ use super::{
         aspect::workspace_default_scope, dependents::find_existing_bitmap_entry,
         scope_set::selection,
     },
-    Chalk, Formatter, ScopeRoot, Subcommand, emit_report,
+    Chalk, Formatter, ScopeRoot, Subcommand, emit_report, outside,
 };
 use crate::{commands::workspace_command::uuid_v4, history::History, native::Outcome};
 use bit_install::workspace::{Bitmap, BitmapEntry};
@@ -108,7 +108,7 @@ pub(super) fn run_create(
     create_args: &CreateArgs,
 ) -> io::Result<Outcome> {
     if root.bare {
-        return Ok(Outcome::Declined("capsule create in bare scope delegated".into()));
+        return outside::run_create_in_bare_scope(chalk, args, create_args);
     }
     let capsules = match build_capsules(cwd, root, create_args) {
         Ok(capsules) => capsules,

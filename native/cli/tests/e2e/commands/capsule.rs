@@ -398,6 +398,62 @@ fn capsule_create_outside_workspace_flags_match_node() -> KnownResult<()> {
 }
 
 #[test]
+fn capsule_create_bare_scope_errors_match_node() -> KnownResult<()> {
+    let helper = Helper::new();
+    let (_, bare_scope) = helper.new_bare_scope();
+    let cache = helper.scopes.e2e_dir.join("bare-create-cache");
+    fs::create_dir_all(&cache).unwrap();
+    fs::write(cache.join("payload"), "capsule").unwrap();
+    let globals = helper.own_global_config("capsules_root_base_dir", cache.to_str().unwrap());
+    let node_env = [("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NATIVE", OsStr::new("off"))];
+    let native_env = [("BIT_GLOBALS_DIR", globals.as_os_str())];
+    for command in [
+        "capsule create",
+        "capsule create --json",
+        "capsule create --seeders-only",
+        "capsule create --id foo",
+        "capsule create comp1",
+        "capsule create comp1 comp2",
+        "capsule create comp1 --json",
+        "capsule create comp1 --base-dir foo",
+        "capsule create comp1 --id foo",
+        "capsule create --id foo comp1",
+        "capsule create comp1 --id foo --json",
+    ] {
+        let node = Helper::cmd_in_with(&bare_scope, command, &node_env);
+        let native = Helper::cmd_in_with(&bare_scope, command, &native_env);
+        assert_eq!(node.status.code(), Some(1), "{command}: {node:?}");
+        assert!(native.native, "{command}: {native:?}");
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+        assert_eq!(fs::read_to_string(cache.join("payload")).unwrap(), "capsule", "{command}");
+    }
+    for command in ["capsule create", "capsule create comp1"] {
+        let node_env = [
+            ("BIT_GLOBALS_DIR", globals.as_os_str()),
+            ("BIT_NATIVE", OsStr::new("off")),
+            ("CI", OsStr::new("1")),
+        ];
+        let native_env = [("BIT_GLOBALS_DIR", globals.as_os_str()), ("CI", OsStr::new("1"))];
+        let node = Helper::cmd_in_with(&bare_scope, command, &node_env);
+        let native = Helper::cmd_in_with(&bare_scope, command, &native_env);
+        assert!(!native.native, "{command}: {native:?}");
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+    let command = "capsule create foo.bar";
+    let node = Helper::cmd_in_with(&bare_scope, command, &node_env);
+    let native = Helper::cmd_in_with(&bare_scope, command, &native_env);
+    assert!(!native.native, "{native:?}");
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    Ok(())
+}
+
+#[test]
 fn capsule_delete_all_outside_workspace_matches_node() -> KnownResult<()> {
     let helper = Helper::new();
     let root = helper.scopes.e2e_dir.join("delete-all-cache");

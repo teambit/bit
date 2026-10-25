@@ -56,6 +56,34 @@ fn run_create_outside_scope(chalk: Chalk, argv: &[&str], args: &CreateArgs) -> i
     run_outside_failure(chalk, "create", args.json, error)
 }
 
+pub(super) fn run_create_in_bare_scope(
+    chalk: Chalk,
+    command_args: &[OsString],
+    args: &CreateArgs,
+) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(command_args) else {
+        return Ok(Outcome::Declined("capsule create non-UTF-8 arguments".into()));
+    };
+    if !supports_create_outside(&argv, args) {
+        return Ok(Outcome::Declined("capsule create bare scope delegated".into()));
+    }
+    let error = match args.ids.first() {
+        None => "undefined is not iterable (cannot read property Symbol(Symbol.iterator))".into(),
+        Some(id) if safe_unscoped_id(id) => {
+            format!("scope.getParsedId, the component {id} must include a scope-name")
+        }
+        _ => return Ok(Outcome::Declined("capsule create scoped ID delegated".into())),
+    };
+    run_outside_failure(chalk, "create", args.json, &error)
+}
+
+fn safe_unscoped_id(id: &str) -> bool {
+    !id.is_empty()
+        && id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_'))
+}
+
 fn supports_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
     if supports_named_create_outside(argv, args) {
         return true;
