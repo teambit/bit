@@ -1,7 +1,8 @@
 # Upstream sync: 2026-10-26
 
 Previous shared ancestor: `8acc4d603abbb644efd60de978c1202983d75bc9`.
-Upstream target: `833c8928132c61c72d73aa7bee054a05d8dcc56c`.
+Initial upstream target: `833c8928132c61c72d73aa7bee054a05d8dcc56c`.
+Publication follow-up target: `99e0f30dbcda684161b81ef6578ff61713358d73`.
 Integration starting point: `beb177e26186a1dc9f837c76e3dac305365cd5e3`.
 
 The interval contains 57 commits, including 26 release-version bumps. The merge applies cleanly. It must retain upstream ancestry: squashing the upstream merge would make upstream TypeScript changes appear to be Rust-owned changes to the scope guard.
@@ -45,3 +46,13 @@ Additional qualification covers all 15 released relative-file extensions and dir
 The workspace suite covers 1,798 passing tests and one existing skip. Formatting, Clippy, Dylint, rustdoc, the generated index, packaging tests and scope checks pass. Separate released-oracle checks pass all 14 snapshot-environment cases on 2.2.147, the reachable graph comparisons, twelve restored-root graph conversions on 2.2.146, and 144 historical context combinations.
 
 Native distribution builds five bvm archives plus a musl binary. Bvm 3.1.7 selects the native entry; an isolated installation with that released package successfully ran the native command and its Node fallback. Distribution remains opt-in and does not change bvm’s default release index.
+
+## Publication follow-up
+
+Five further upstream commits landed during qualification, including release versions 2.2.148 and 2.2.149. They are merged with ancestry preserved. #10856 injects the existing remote resolver into the legacy scope provider and re-exports the relocated errors; the native inventory host still calls the published resolver directly, and hosted scope operations load Harmony before invoking the importer. No native protocol or fetch semantics change. #10857 removes obsolete TypeScript suppression comments. #10858 replaces dependency-tree configuration with an equivalent class and makes type declarations explicit; defaults, cloning and resolution behavior remain unchanged.
+
+The suppression-comment removal shifted E2E source locations and made the generated porting index stale in GitHub’s upstream merge checkout. Regenerating the index against this merged tree updates the locations without changing case coverage or marking additional cases complete.
+
+A repeated full-suite run exposed test interference: the root-clone fixture changed the shared global remote registry while parallel snapshot and checkout commands were validating it. Diagnostic paths identified `global-remotes.json`; the fixture now uses its own global configuration for remote registration and every clone invocation. Native input validation is unchanged.
+
+Follow-up qualification: formatting, workspace/E2E Clippy, Dylint, rustdoc, the 1,798 workspace tests and the generated porting index pass. All 37 focused root-clone, bitmap and CI-sync cases pass together. The final full E2E run at 16 threads records 1,632 passes, four failures and two existing skips. Two failures are published environment fetches; two registry-update cases leave their old versions unchanged. All four complete cases pass on focused reruns. No retry or weakened assertion was added. The published native implementation at `df2ce7438` also passes all platform, E2E-shard and Windows workspace jobs in [run 40373417279](https://github.com/zkochan/bit/actions/runs/40373417279).

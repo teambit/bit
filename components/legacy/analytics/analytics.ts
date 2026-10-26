@@ -51,7 +51,6 @@ class Analytics {
   static nodeVersion: string;
   static os: string;
   static extra: Record<string, any> | null | undefined = {};
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static level: keyof typeof LEVEL;
   static error: Error | string | Record<string, any>;
   static breadcrumbs: Array<Breadcrumb> = [];
@@ -161,7 +160,6 @@ Would you like to help Bit with anonymous usage analytics? [yes(y)/no(n)]`,
     return new Promise((resolve, reject) => {
       if (this.analytics_usage || (this.error_usage && !this.success)) {
         const file = path.join(__dirname, 'analytics-sender.js');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const forked = fork(file, { silent: true }); // switch to `false` to debug the child
         // console.log('sending', this.toObject()); // un-comment to see the data sent to Analytics
         forked.send(this.toObject());

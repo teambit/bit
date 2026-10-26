@@ -1,32 +1,9 @@
 {
   "summary": {
-    "groups": [
-      5
-    ],
-    "components": 5,
-    "edges": 12
+    "groups": [],
+    "components": 0,
+    "edges": 0
   },
-  "groups": [
-    [
-      "teambit.legacy/scope",
-      "teambit.legacy/scope-api",
-      "teambit.scope/network",
-      "teambit.scope/remote-actions",
-      "teambit.scope/remotes"
-    ]
-  ],
-  "edges": [
-    "teambit.legacy/scope -> teambit.scope/network",
-    "teambit.legacy/scope -> teambit.scope/remotes",
-    "teambit.legacy/scope-api -> teambit.legacy/scope",
-    "teambit.legacy/scope-api -> teambit.scope/network",
-    "teambit.legacy/scope-api -> teambit.scope/remote-actions",
-    "teambit.scope/network -> teambit.legacy/scope",
-    "teambit.scope/network -> teambit.legacy/scope-api",
-    "teambit.scope/remote-actions -> teambit.legacy/scope",
-    "teambit.scope/remote-actions -> teambit.scope/network",
-    "teambit.scope/remotes -> teambit.legacy/scope",
-    "teambit.scope/remotes -> teambit.legacy/scope-api",
-    "teambit.scope/remotes -> teambit.scope/network"
-  ]
+  "groups": [],
+  "edges": []
 }

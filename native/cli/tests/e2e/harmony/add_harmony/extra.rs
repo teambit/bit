@@ -1,9 +1,11 @@
 use crate::helper::{Helper, config};
 use serde_json::Value;
+use std::path::Path;
 
 #[test]
 fn root_snap_no_deps_and_cloning_workspace_from_root_and_lane() {
     let helper = Helper::new();
+    let globals = helper.own_global_config("analytics_reporting", "false");
 
     // when a root file has a relative import into a component and requires a missing package -> should snap with no dependencies
     helper.re_init_workspace();
@@ -37,8 +39,18 @@ fn root_snap_no_deps_and_cloning_workspace_from_root_and_lane() {
     helper.snap_all_components_without_build(r#"--ignore-issues "*""#);
     helper.export("");
     helper.clean_workspace();
-    helper.run_cmd(&format!("bit remote add file://{} --global", helper.remote_path().display()));
-    let output = helper.run_cmd(&format!("bit clone {}/ws-root . -x", helper.remote_scope()));
+    run_isolated(
+        helper.local_path(),
+        &globals,
+        &format!("remote add file://{} --global", helper.remote_path().display()),
+        true,
+    );
+    let output = run_isolated(
+        helper.local_path(),
+        &globals,
+        &format!("clone {}/ws-root . -x", helper.remote_scope()),
+        true,
+    );
 
     assert!(output.contains(&format!("cloned {}/ws-root@", helper.remote_scope())));
     assert!(output.contains("with 1 component"));
@@ -68,28 +80,37 @@ fn root_snap_no_deps_and_cloning_workspace_from_root_and_lane() {
     assert_eq!(status["newComponents"].as_array().map(Vec::len), Some(0));
 
     let not_a_root_path = helper.e2e_dir().join("not-a-root");
-    let err = helper.run_with_try_catch_in(
-        &format!("bit clone {}/comp1 {} -x", helper.remote_scope(), not_a_root_path.display()),
+    let err = run_isolated(
         helper.e2e_dir(),
+        &globals,
+        &format!("clone {}/comp1 {} -x", helper.remote_scope(), not_a_root_path.display()),
+        false,
     );
     assert!(err.contains("not a workspace-root component"));
     assert!(!not_a_root_path.exists());
 
     let never_exported_path = helper.e2e_dir().join("never-exported");
-    let err = helper.run_with_try_catch_in(
+    let err = run_isolated(
+        helper.e2e_dir(),
+        &globals,
         &format!(
-            "bit clone {}/never-exported {} -x",
+            "clone {}/never-exported {} -x",
             helper.remote_scope(),
             never_exported_path.display(),
         ),
-        helper.e2e_dir(),
+        false,
     );
     assert!(err.contains(&format!(
         r#"the remote scope "{}" does not have"#,
         helper.remote_scope()
     )));
     assert!(!never_exported_path.exists());
-    let _ = helper.run_cmd(&format!("bit remote del {} --global", helper.remote_scope()));
+    let _ = run_isolated(
+        helper.local_path(),
+        &globals,
+        &format!("remote del {} --global", helper.remote_scope()),
+        true,
+    );
 
     // cloning a workspace as it is on a lane
     helper.set_workspace_with_remote_scope();
@@ -116,12 +137,22 @@ fn root_snap_no_deps_and_cloning_workspace_from_root_and_lane() {
     helper.export("");
     let root_main_head = helper.get_head("ws-root");
     helper.clean_workspace();
-    helper.run_cmd(&format!("bit remote add file://{} --global", helper.remote_path().display()));
-    helper.run_cmd(&format!(
-        "bit clone {}/ws-root . --lane {}/dev -x",
-        helper.remote_scope(),
-        helper.remote_scope(),
-    ));
+    run_isolated(
+        helper.local_path(),
+        &globals,
+        &format!("remote add file://{} --global", helper.remote_path().display()),
+        true,
+    );
+    run_isolated(
+        helper.local_path(),
+        &globals,
+        &format!(
+            "clone {}/ws-root . --lane {}/dev -x",
+            helper.remote_scope(),
+            helper.remote_scope(),
+        ),
+        true,
+    );
 
     let bitmap = helper.read_bit_map();
     assert_eq!(bitmap["_bit_lane"]["id"]["name"].as_str(), Some("dev"));
@@ -135,14 +166,16 @@ fn root_snap_no_deps_and_cloning_workspace_from_root_and_lane() {
     // with a version on the root id, which pins the root files only
     let clone_path = helper.e2e_dir().join("pinned-root-clone");
     std::fs::create_dir_all(&clone_path).expect("create clone_path");
-    helper.run_cmd_in(
+    run_isolated(
+        helper.e2e_dir(),
+        &globals,
         &format!(
-            "bit clone {}/ws-root@{root_main_head} {} --lane {}/dev -x",
+            "clone {}/ws-root@{root_main_head} {} --lane {}/dev -x",
             helper.remote_scope(),
             clone_path.display(),
             helper.remote_scope(),
         ),
-        helper.e2e_dir(),
+        true,
     );
     assert_ne!(root_main_head, root_lane_head);
     let clone_bitmap: Value = config::read_jsonc(&clone_path.join(".bitmap"));
@@ -156,5 +189,16 @@ fn root_snap_no_deps_and_cloning_workspace_from_root_and_lane() {
     assert_eq!(clone_bitmap["_bit_lane"]["id"]["name"].as_str(), Some("dev"));
     assert_eq!(clone_bitmap["_bit_lane"]["id"]["scope"].as_str(), Some(helper.remote_scope()));
 
-    let _ = helper.run_cmd(&format!("bit remote del {} --global", helper.remote_scope()));
+    let _ = run_isolated(
+        helper.local_path(),
+        &globals,
+        &format!("remote del {} --global", helper.remote_scope()),
+        true,
+    );
+}
+
+fn run_isolated(cwd: &Path, globals: &Path, command: &str, success: bool) -> String {
+    let run = Helper::cmd_in_with(cwd, command, &[("BIT_GLOBALS_DIR", globals.as_os_str())]);
+    assert_eq!(run.status.success(), success, "{command}: {run:?}");
+    format!("{}\n{}", run.stdout, run.stderr)
 }
