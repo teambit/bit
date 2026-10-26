@@ -31,8 +31,7 @@ import Ref from './ref';
 import { LiveObjects } from './live-objects';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getCacheOptionsForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import type { Source } from '../models';
-import { ScopeMeta, Lane, ModelComponent } from '../models';
+import { ScopeMeta, Lane, ModelComponent, type Source } from '../models';
 
 type ContentTransformer = (content: Buffer) => Buffer;
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;

@@ -37,12 +37,17 @@ const flattenedIdsCache = new Map<string, Map<string, Map<string, ComponentID>>>
 const flattenedIdStrsCache = new Map<string, ComponentID>();
 const MAX_CACHED_FLATTENED_IDS = 100_000;
 let cachedFlattenedIds = 0;
+let flattenedEdgesCache = new WeakMap<ComponentID, Map<ComponentID, Map<DepEdgeType, DepEdge>>>();
+const MAX_CACHED_FLATTENED_EDGES = 100_000;
+let cachedFlattenedEdges = 0;
 
 function countCachedFlattenedId() {
   if (cachedFlattenedIds >= MAX_CACHED_FLATTENED_IDS) {
     flattenedIdsCache.clear();
     flattenedIdStrsCache.clear();
     cachedFlattenedIds = 0;
+    flattenedEdgesCache = new WeakMap();
+    cachedFlattenedEdges = 0;
   }
   cachedFlattenedIds += 1;
 }
@@ -77,9 +82,11 @@ function getFlattenedId(dep: string | Record<string, any>): ComponentID {
   return id;
 }
 
-const flattenedEdgesCache = new WeakMap<ComponentID, Map<ComponentID, Map<DepEdgeType, DepEdge>>>();
-
 function getFlattenedEdge(source: ComponentID, target: ComponentID, type: DepEdgeType): DepEdge {
+  if (cachedFlattenedEdges >= MAX_CACHED_FLATTENED_EDGES) {
+    flattenedEdgesCache = new WeakMap();
+    cachedFlattenedEdges = 0;
+  }
   let byTarget = flattenedEdgesCache.get(source);
   if (!byTarget) {
     byTarget = new Map();
@@ -92,6 +99,7 @@ function getFlattenedEdge(source: ComponentID, target: ComponentID, type: DepEdg
   }
   let edge = byType.get(type);
   if (!edge) {
+    cachedFlattenedEdges += 1;
     edge = { source, target, type };
     byType.set(type, edge);
   }
