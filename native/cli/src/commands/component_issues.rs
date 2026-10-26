@@ -166,6 +166,12 @@ const ISSUES: &[IssueDefinition] = &[
         solution: r#"see the error details below, often resolved by running "bit install" or "bit compile""#,
         is_tag_blocker: false,
     },
+    IssueDefinition {
+        name: "PinnedDependencies",
+        description: r#"dependencies on workspace components with a version set by config ("bit deps set", variants or env), not the workspace version"#,
+        solution: r#"to use the workspace version, remove the version from the config, e.g. "bit deps unset <component> <package>""#,
+        is_tag_blocker: false,
+    },
 ];
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

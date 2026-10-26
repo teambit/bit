@@ -1,6 +1,7 @@
 //! Create a local lane and publish its object, history and workspace metadata.
 
 mod origin;
+mod staged;
 
 use self::origin::{Origin, read_merge_move_backup};
 use crate::{inspection, recovery, store::Store, workspace::engine::command::outbound};
@@ -18,6 +19,7 @@ pub struct Plan {
     objects: Objects,
     documents: Documents,
     restored_parent: Option<(String, Vec<u8>)>,
+    moved: staged::Moved,
 }
 
 struct Objects {
@@ -52,7 +54,13 @@ impl Plan {
     ) -> io::Result<Self> {
         validate(name, scope, options, lane_hash, history_key)?;
         let mut documents = Documents::read(root)?;
-        let origin = Origin::read(root, &documents, scope, options.fork_lane_new_scope)?;
+        let mut origin = Origin::read(root, &documents, scope, options.fork_lane_new_scope)?;
+        let moved = if origin.parent_name.is_none() {
+            staged::prepare(root, &documents, name, scope, lane_hash)?
+        } else {
+            staged::Moved::default()
+        };
+        origin.components.extend(moved.components.clone());
         let objects = Objects::new(name, scope, log, lane_hash, history_key, &origin)?;
         documents.add(name, scope, options.alias, lane_hash)?;
         Ok(Self {
@@ -62,6 +70,7 @@ impl Plan {
             objects,
             documents,
             restored_parent: None,
+            moved,
         })
     }
 
@@ -89,22 +98,40 @@ impl Plan {
             objects,
             documents,
             restored_parent: Some((parent_hash, backup_bytes)),
+            moved: staged::Moved::default(),
         })
     }
 
     /// Publish the validated `Lane` and `LaneHistory` before their metadata references.
     pub fn commit(&self) -> io::Result<()> {
+        self.moved.validate()?;
         let store = Store::new(bit_workspace_config::scope_path(&self.root).join("objects"), None)?;
         if let Some((parent_hash, backup_bytes)) = &self.restored_parent {
             store.write(parent_hash, backup_bytes)?;
         }
         self.objects.persist(&store)?;
+        self.moved.persist(&store)?;
         self.documents.publish(&self.root, &store)
     }
 
     #[must_use]
     pub fn scope(&self) -> &str {
         &self.scope
+    }
+
+    /// Component identities whose unexported main snaps move into this lane.
+    #[must_use]
+    pub fn moved_from_main(&self) -> Vec<String> {
+        self.moved.components
+            .iter()
+            .map(|row| {
+                format!(
+                    "{}/{}",
+                    row["id"]["scope"].as_str().unwrap_or_default(),
+                    row["id"]["name"].as_str().unwrap_or_default(),
+                )
+            })
+            .collect()
     }
 
     #[must_use]

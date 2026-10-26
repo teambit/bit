@@ -8,6 +8,7 @@ fn merge_a_diverged_lane_into_main_with_tag() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, false, "");
     helper.tag_all_without_build("");
+    helper.export("");
     helper.create_lane("dev", "");
     helper.snap_all_components_without_build("--unmodified");
     helper.switch_local_lane("main", "-x");

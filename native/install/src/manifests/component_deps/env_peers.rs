@@ -44,12 +44,9 @@ pub(super) fn legacy_env_peers(
         {
             continue;
         }
-        let version = if entry.version == "+" {
-            found_version(deps, &entry.name)
-                .map_or_else(|| "*".to_string(), |version| snap_to_semver(&version))
-        } else {
-            entry.version.clone()
-        };
+        let resolved = found_version(deps, &entry.name).map(|version| snap_to_semver(&version));
+        let version =
+            bit_object_import::plus_version::resolve(&entry.version, resolved.as_deref(), "*");
         peers.insert(entry.name.clone(), version);
     }
     peers

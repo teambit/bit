@@ -175,9 +175,10 @@ fn tracked_reinitialization_and_reset_variants_match_node() {
 #[test]
 fn lane_reset_to_new_matches_node() {
     let helper = Helper::new();
-    helper.re_init_workspace();
+    helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
     helper.tag_without_build("", "--message fixture");
+    helper.run("export");
     helper.run("lane create fixture");
     helper.append_file("comp1/index.js", "\n// lane");
     helper.run("snap --message lane");
@@ -208,9 +209,10 @@ fn cloud_mcp_primitive_and_array_configuration_matches_node() {
 #[test]
 fn multiple_component_and_lane_index_repair_matches_node() {
     let helper = Helper::new();
-    helper.re_init_workspace();
+    helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
     helper.tag_without_build("", "--message fixture");
+    helper.run("export");
     helper.run("lane create fixture");
     helper.append_file("comp1/index.js", "\n// lane");
     helper.run("snap --message lane");

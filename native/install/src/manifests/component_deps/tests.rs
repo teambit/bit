@@ -55,7 +55,7 @@ fn dep(version: &str, lifecycle: Lifecycle) -> Dep<'static> {
 
 #[test]
 fn special_component_policy_versions_are_ignored() {
-    for special in ["-", "+", "*", ""] {
+    for special in ["-", "+", "+^", "+~", "*", ""] {
         let mut dependency = dep("1.0.0", Lifecycle::Runtime);
         update_version(&mut dependency, &[entry("pkg", special, Lifecycle::Runtime)], &[]);
         assert_eq!(dependency.version, "1.0.0", "component policy {special:?}");

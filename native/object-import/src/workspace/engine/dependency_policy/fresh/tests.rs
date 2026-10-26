@@ -68,6 +68,48 @@ fn detects_packages_types_and_original_file_lifecycles() {
     assert!(proof::verify(&read_set).is_err());
 }
 #[test]
+fn type_packages_follow_workspace_merge_and_model_precedence() {
+    let fixture = Fixture::new();
+    fixture.write("comp/index.ts", "import 'pkg';");
+    fixture.write("comp/index.js", "require('pkg');");
+    fixture.write(
+        "node_modules/pkg/package.json",
+        r#"{"name":"pkg","version":"1.0.0","main":"index.js"}"#,
+    );
+    fixture.write("node_modules/pkg/index.js", "module.exports = 1;");
+    for (workspace, merge, expected) in [
+        (None, None, Some("1.0.0")),
+        (None, Some("2.0.0"), Some("2.0.0")),
+        (Some("3.0.0"), Some("2.0.0"), Some("3.0.0")),
+        (Some("-"), Some("2.0.0"), None),
+        (None, Some("-"), None),
+        (Some("3.0.0"), Some("-"), Some("3.0.0")),
+    ] {
+        for field in 0..3 {
+            let mut input = fixture.request(&["index.ts"]);
+            input["detection"]["modelPackages"][1] = json!({"@types/pkg":"1.0.0"});
+            input["detection"]["mergePolicy"] = json!([{}, {}, {}]);
+            if let Some(value) = workspace {
+                input["detection"]["workspacePolicy"][field] = json!({"@types/pkg":value});
+            }
+            if let Some(value) = merge {
+                input["detection"]["mergePolicy"][field] = json!({"@types/pkg":value});
+            }
+            let output = Fixture::run(input).unwrap();
+            assert_eq!(output["detected"]["allPackagesDependencies"]["devPackageDependencies"]["@types/pkg"].as_str(), expected);
+        }
+    }
+    let mut javascript = fixture.request(&["index.js"]);
+    javascript["detection"]["mergePolicy"] = json!([{}, {"@types/pkg":"2.0.0"}, {}]);
+    let output = Fixture::run(javascript).unwrap();
+    assert!(
+        output["detected"]["allPackagesDependencies"]["devPackageDependencies"]
+            .get("@types/pkg")
+            .is_none(),
+    );
+}
+
+#[test]
 fn linked_component_versions_are_returned_for_semver_receipts() {
     let fixture = Fixture::new();
     fixture.write("comp/index.js", "require('other');");

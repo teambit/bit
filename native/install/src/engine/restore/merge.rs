@@ -164,11 +164,7 @@ pub(super) fn merge_into_existing(
             merged.insert(key.to_string(), entries);
         }
     }
-    // The merge mixes resolutions from both sides, so it can only claim the
-    // checksum both were resolved with.
-    if existing.get("pnpmfileChecksum") != graph.get("pnpmfileChecksum") {
-        merged.remove("pnpmfileChecksum");
-    }
+    super::context::merge(existing, graph, &mut merged);
     if let Some(bit) = merge_bit(existing.get("bit"), graph.get("bit")) {
         merged.insert("bit".to_string(), bit);
     }

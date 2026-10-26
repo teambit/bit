@@ -1,6 +1,7 @@
 //! `RemoveMain`'s local batch removal with retained provider startup and native scope publication.
 pub(super) mod preparation;
 
+mod load_free;
 mod options;
 mod report;
 use super::{
@@ -41,14 +42,19 @@ fn work(
     let bitmap = preparation::bitmap(root)?;
     let selected = linker.select_workspace(root, &bitmap, options.pattern, output)?;
     output.status("removing components");
-    let consumers = status_consumers(root, &bitmap, &selected, options.force, linker)?;
+    let mut reader = load_free::Reader::new(root).ok();
+    let consumers =
+        status_consumers(root, &bitmap, &selected, options.force, linker, reader.as_mut())?;
     let (removed, modified) = preparation::classify(&selected, &consumers);
-    let rows = load(root, &bitmap, &removed, options, linker, output)?;
+    let rows = load(root, &bitmap, &removed, options, linker, output, reader.as_ref())?;
     let plan = preparation::prepare(root, &removed, options, &rows)?;
     if !options.force {
         plan.check_aspect_usage(&preparation::facts(&rows))?;
     }
     linker.validate_captures()?;
+    if let Some(reader) = &mut reader {
+        reader.validate()?;
+    }
     plan.commit(&workspace_command::file_id())?;
     let formatter = Formatter::new(Chalk::detect(args));
     Ok(Report {
@@ -64,6 +70,7 @@ fn load(
     options: &options::Options<'_>,
     linker: &mut add::ProjectedLinker,
     output: &bit_install::output::Output,
+    reader: Option<&load_free::Reader>,
 ) -> io::Result<Vec<serde_json::Value>> {
     if removed.is_empty() {
         return Ok(Vec::new());
@@ -73,18 +80,32 @@ fn load(
             .iter()
             .any(|id| preparation::row(bitmap, id).is_ok_and(|row| row["version"] == ""));
     let ids = if has_new { preparation::all(bitmap) } else { removed.to_vec() };
-    output.status(&format!("loading {} component(s)", ids.len()));
-    let loadable = preparation::loadable(root, bitmap, &ids)?;
-    let rows = if loadable.is_empty() {
-        Vec::new()
-    } else {
-        linker.capture_cached(root, bitmap, &loadable)?
-    };
-    print!("{}", linker.take_stdout());
-    if has_new && !preparation::loadable(root, bitmap, removed)?.is_empty() {
-        output.status(&format!("loading {} component(s)", removed.len()));
+    let (mut rows, pending) = metadata(ids, reader);
+    if !pending.is_empty() {
+        output.status(&format!("loading {} component(s)", pending.len()));
+        let loadable = preparation::loadable(root, bitmap, &pending)?;
+        if !loadable.is_empty() {
+            rows.extend(linker.capture_cached(root, bitmap, &loadable)?);
+        }
+        print!("{}", linker.take_stdout());
     }
     Ok(rows)
+}
+
+fn metadata(
+    ids: Vec<String>,
+    reader: Option<&load_free::Reader>,
+) -> (Vec<serde_json::Value>, Vec<String>) {
+    let mut rows = Vec::new();
+    let mut pending = Vec::new();
+    for id in ids {
+        if let Some(row) = reader.and_then(|reader| reader.metadata(&id)) {
+            rows.push(row);
+        } else {
+            pending.push(id);
+        }
+    }
+    (rows, pending)
 }
 
 fn preflight(root: &Path, options: &options::Options<'_>) -> io::Result<()> {
@@ -101,17 +122,32 @@ fn status_consumers(
     selected: &[String],
     force: bool,
     linker: &mut add::ProjectedLinker,
+    mut reader: Option<&mut load_free::Reader>,
 ) -> io::Result<Vec<serde_json::Value>> {
     if force {
         return Ok(Vec::new());
     }
-    let loadable = preparation::loadable(root, bitmap, selected)?;
+    let mut rows = Vec::new();
+    let mut pending = Vec::new();
+    for id in selected {
+        if let Some(modified) = reader
+            .as_deref_mut()
+            .and_then(|reader| reader.status(root, bitmap, id))
+        {
+            rows.push(serde_json::json!({"identity":id,"modified":modified}));
+        } else {
+            pending.push(id.clone());
+        }
+    }
+    let loadable = preparation::loadable(root, bitmap, &pending)?;
+    if loadable.len() != pending.len() {
+        use bit_install::dependencies::cache::invalidation::{deps_dir, invalidate};
+        invalidate(root, &deps_dir(root))?;
+    }
     linker.call(root, "identityConsumerMode", &serde_json::json!({"enabled":true}))?;
-    let rows = if loadable.is_empty() {
-        Vec::new()
-    } else {
-        linker.capture_consumers(root, bitmap, &loadable)?
-    };
+    if !loadable.is_empty() {
+        rows.extend(linker.capture_consumers(root, bitmap, &loadable)?);
+    }
     print!("{}", linker.take_stdout());
     linker.call(root, "identityConsumerMode", &serde_json::json!({"enabled":false}))?;
     Ok(rows)

@@ -3494,7 +3494,7 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 [[package]]
 name = "pnpm-catalogs-config"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -3505,7 +3505,7 @@ dependencies = [
 [[package]]
 name = "pnpm-catalogs-protocol-parser"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "pnpm-catalogs-types",
 ]
@@ -3513,7 +3513,7 @@ dependencies = [
 [[package]]
 name = "pnpm-catalogs-resolver"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -3525,12 +3525,12 @@ dependencies = [
 [[package]]
 name = "pnpm-catalogs-types"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 
 [[package]]
 name = "pnpm-cmd-shim"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "dunce",
@@ -3550,7 +3550,7 @@ dependencies = [
 [[package]]
 name = "pnpm-config"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "base64 0.23.1",
  "derive_more",
@@ -3589,12 +3589,12 @@ dependencies = [
 [[package]]
 name = "pnpm-config-dir"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 
 [[package]]
 name = "pnpm-config-parse-overrides"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -3607,7 +3607,7 @@ dependencies = [
 [[package]]
 name = "pnpm-crypto-hash"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "base64 0.23.1",
  "sha2",
@@ -3617,13 +3617,14 @@ dependencies = [
 [[package]]
 name = "pnpm-crypto-shasums-file"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "base64 0.23.1",
  "derive_more",
  "libc",
  "miette 7.6.0",
  "pgp",
+ "pnpm-fs",
  "pnpm-http",
  "pnpm-network",
  "pnpm-wasm-host",
@@ -3633,7 +3634,7 @@ dependencies = [
 [[package]]
 name = "pnpm-default-reporter"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "chrono",
  "console",
@@ -3649,7 +3650,7 @@ dependencies = [
 [[package]]
 name = "pnpm-deps-inspection-peers"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "dunce",
  "node-semver",
@@ -3671,17 +3672,18 @@ dependencies = [
 [[package]]
 name = "pnpm-deps-path"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "node-semver",
  "pnpm-crypto-hash",
+ "pnpm-tool-protocol",
 ]
 
 [[package]]
 name = "pnpm-deps-restorer"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "base64 0.23.1",
  "derive_more",
@@ -3720,6 +3722,7 @@ dependencies = [
  "pnpm-shared-artifact-protocol",
  "pnpm-store-dir",
  "pnpm-tarball",
+ "pnpm-text-sanitize",
  "pnpm-workspace",
  "pnpm-workspace-task-scheduler",
  "rayon",
@@ -3741,7 +3744,7 @@ dependencies = [
 [[package]]
 name = "pnpm-detect-libc"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "pnpm-process",
 ]
@@ -3749,7 +3752,7 @@ dependencies = [
 [[package]]
 name = "pnpm-diagnostics"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "miette 7.6.0",
  "tracing",
@@ -3759,7 +3762,7 @@ dependencies = [
 [[package]]
 name = "pnpm-directory-fetcher"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -3774,7 +3777,7 @@ dependencies = [
 [[package]]
 name = "pnpm-engine-pm-yarn-resolver"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -3784,6 +3787,7 @@ dependencies = [
  "pnpm-lockfile",
  "pnpm-network",
  "pnpm-resolving-resolver-base",
+ "pnpm-tool-protocol",
  "reqwest",
  "serde",
  "serde_json",
@@ -3794,7 +3798,7 @@ dependencies = [
 [[package]]
 name = "pnpm-engine-runtime-bun-resolver"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -3805,6 +3809,7 @@ dependencies = [
  "pnpm-network",
  "pnpm-resolving-npm-resolver",
  "pnpm-resolving-resolver-base",
+ "pnpm-tool-protocol",
  "reqwest",
  "serde",
  "serde_json",
@@ -3815,7 +3820,7 @@ dependencies = [
 [[package]]
 name = "pnpm-engine-runtime-deno-resolver"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "base64 0.23.1",
  "derive_more",
@@ -3826,6 +3831,7 @@ dependencies = [
  "pnpm-network",
  "pnpm-resolving-npm-resolver",
  "pnpm-resolving-resolver-base",
+ "pnpm-tool-protocol",
  "reqwest",
  "serde",
  "serde_json",
@@ -3836,7 +3842,7 @@ dependencies = [
 [[package]]
 name = "pnpm-engine-runtime-node-resolver"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -3847,6 +3853,7 @@ dependencies = [
  "pnpm-lockfile",
  "pnpm-network",
  "pnpm-resolving-resolver-base",
+ "pnpm-tool-protocol",
  "reqwest",
  "serde",
  "serde_json",
@@ -3857,12 +3864,12 @@ dependencies = [
 [[package]]
 name = "pnpm-env-replace"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 
 [[package]]
 name = "pnpm-executor"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "deno_task_shell",
  "derive_more",
@@ -3884,7 +3891,7 @@ dependencies = [
 [[package]]
 name = "pnpm-fs"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "dunce",
@@ -3905,7 +3912,7 @@ dependencies = [
 [[package]]
 name = "pnpm-fs-packlist"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "ignore",
@@ -3919,7 +3926,7 @@ dependencies = [
 [[package]]
 name = "pnpm-git-fetcher"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -3947,7 +3954,7 @@ dependencies = [
 [[package]]
 name = "pnpm-git-utils"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "libc",
  "pnpm-process",
@@ -3956,7 +3963,7 @@ dependencies = [
 [[package]]
 name = "pnpm-graph-hasher"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "base64 0.23.1",
  "indexmap",
@@ -3970,10 +3977,11 @@ dependencies = [
 [[package]]
 name = "pnpm-hooks"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "async-trait",
  "derive_more",
+ "libc",
  "pnpm-crypto-hash",
  "pnpm-lockfile",
  "pnpm-process",
@@ -3986,7 +3994,7 @@ dependencies = [
 [[package]]
 name = "pnpm-http"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "base64 0.23.1",
  "bytes",
@@ -4004,7 +4012,7 @@ dependencies = [
 [[package]]
 name = "pnpm-injected-deps-syncer"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -4022,7 +4030,7 @@ dependencies = [
 [[package]]
 name = "pnpm-local-spec"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "pnpm-fs",
 ]
@@ -4030,7 +4038,7 @@ dependencies = [
 [[package]]
 name = "pnpm-lockfile"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "indexmap",
@@ -4045,6 +4053,7 @@ dependencies = [
  "pnpm-package-manifest",
  "pnpm-patching",
  "pnpm-resolving-parse-wanted-dependency",
+ "pnpm-tool-protocol",
  "rayon",
  "serde",
  "serde-saphyr",
@@ -4057,7 +4066,7 @@ dependencies = [
 [[package]]
 name = "pnpm-lockfile-preferred-versions"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "node-semver",
  "pnpm-catalogs-protocol-parser",
@@ -4072,7 +4081,7 @@ dependencies = [
 [[package]]
 name = "pnpm-lockfile-verification"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "chrono",
  "derive_more",
@@ -4093,7 +4102,7 @@ dependencies = [
 [[package]]
 name = "pnpm-matcher"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "regex",
 ]
@@ -4101,7 +4110,7 @@ dependencies = [
 [[package]]
 name = "pnpm-modules-yaml"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "httpdate",
@@ -4118,7 +4127,7 @@ dependencies = [
 [[package]]
 name = "pnpm-network"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "bytes",
  "core-foundation",
@@ -4140,7 +4149,7 @@ dependencies = [
 [[package]]
 name = "pnpm-package-is-installable"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -4153,7 +4162,7 @@ dependencies = [
 [[package]]
 name = "pnpm-package-manager"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "async-recursion",
  "chrono",
@@ -4218,6 +4227,7 @@ dependencies = [
  "pnpm-store-dir",
  "pnpm-tarball",
  "pnpm-text-sanitize",
+ "pnpm-tool-protocol",
  "pnpm-wasm-host",
  "pnpm-workspace",
  "pnpm-workspace-manifest-writer",
@@ -4240,13 +4250,14 @@ dependencies = [
 [[package]]
 name = "pnpm-package-manifest"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "json5",
  "miette 7.6.0",
  "node-semver",
  "pnpm-fs",
+ "pnpm-tool-protocol",
  "pnpm-yaml-document-sync",
  "serde",
  "serde_json",
@@ -4257,12 +4268,12 @@ dependencies = [
 [[package]]
 name = "pnpm-package-name"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 
 [[package]]
 name = "pnpm-patching"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "diffy",
@@ -4281,14 +4292,16 @@ dependencies = [
 [[package]]
 name = "pnpm-pnpr-client"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
+ "base64 0.23.1",
  "derive_more",
  "futures-util",
  "indexmap",
  "miette 7.6.0",
  "pnpm-catalogs-types",
  "pnpm-config",
+ "pnpm-crypto-hash",
  "pnpm-graph-hasher",
  "pnpm-http",
  "pnpm-lockfile",
@@ -4299,14 +4312,16 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "sha2",
  "tokio",
  "tracing",
+ "url",
 ]
 
 [[package]]
 name = "pnpm-process"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "pnpm-wasm-host",
  "serde",
@@ -4317,12 +4332,13 @@ dependencies = [
 [[package]]
 name = "pnpm-python-resolver"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "miette 7.6.0",
  "pep440_rs",
  "pep508_rs",
  "percent-encoding",
+ "pnpm-crypto-hash",
  "pubgrub",
  "serde",
  "serde_json",
@@ -4334,7 +4350,7 @@ dependencies = [
 [[package]]
 name = "pnpm-real-hoist"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "indexmap",
@@ -4345,7 +4361,7 @@ dependencies = [
 [[package]]
 name = "pnpm-registry"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -4366,7 +4382,7 @@ dependencies = [
 [[package]]
 name = "pnpm-reporter"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "gethostname",
  "pnpm-wasm-host",
@@ -4377,7 +4393,7 @@ dependencies = [
 [[package]]
 name = "pnpm-resolving-default-resolver"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -4397,7 +4413,7 @@ dependencies = [
 [[package]]
 name = "pnpm-resolving-deps-resolver"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "async-recursion",
  "chrono",
@@ -4423,6 +4439,7 @@ dependencies = [
  "pnpm-resolving-parse-wanted-dependency",
  "pnpm-resolving-resolver-base",
  "pnpm-semver-include-prerelease",
+ "pnpm-tool-protocol",
  "rustc-hash",
  "serde_json",
  "smart-default",
@@ -4433,7 +4450,7 @@ dependencies = [
 [[package]]
 name = "pnpm-resolving-git-resolver"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -4457,7 +4474,7 @@ dependencies = [
 [[package]]
 name = "pnpm-resolving-jsr-specifier-parser"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "miette 7.6.0",
@@ -4467,7 +4484,7 @@ dependencies = [
 [[package]]
 name = "pnpm-resolving-local-resolver"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "home",
@@ -4486,7 +4503,7 @@ dependencies = [
 [[package]]
 name = "pnpm-resolving-npm-resolver"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "chrono",
  "dashmap",
@@ -4523,7 +4540,7 @@ dependencies = [
 [[package]]
 name = "pnpm-resolving-parse-wanted-dependency"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "pnpm-package-name",
 ]
@@ -4531,7 +4548,7 @@ dependencies = [
 [[package]]
 name = "pnpm-resolving-resolver-base"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "chrono",
  "derive_more",
@@ -4549,7 +4566,7 @@ dependencies = [
 [[package]]
 name = "pnpm-resolving-tarball-resolver"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "httpdate",
  "pnpm-crypto-hash",
@@ -4569,7 +4586,7 @@ dependencies = [
 [[package]]
 name = "pnpm-semver-include-prerelease"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "node-semver",
 ]
@@ -4577,7 +4594,7 @@ dependencies = [
 [[package]]
 name = "pnpm-shared-artifact-protocol"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "base64 0.23.1",
  "derive_more",
@@ -4590,7 +4607,7 @@ dependencies = [
 [[package]]
 name = "pnpm-store-dir"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "dashmap",
  "derive_more",
@@ -4603,6 +4620,7 @@ dependencies = [
  "pnpm-package-manifest",
  "pnpm-package-name",
  "pnpm-shared-artifact-protocol",
+ "rayon",
  "rmp-serde",
  "rusqlite",
  "serde",
@@ -4619,7 +4637,7 @@ dependencies = [
 [[package]]
 name = "pnpm-tarball"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "bytes",
  "dashmap",
@@ -4654,12 +4672,17 @@ dependencies = [
 [[package]]
 name = "pnpm-text-sanitize"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
+
+[[package]]
+name = "pnpm-tool-protocol"
+version = "0.0.1"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 
 [[package]]
 name = "pnpm-versioning"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "getrandom 0.4.3",
@@ -4677,7 +4700,7 @@ dependencies = [
 [[package]]
 name = "pnpm-wasm-host"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "futures-util",
  "serde",
@@ -4687,7 +4710,7 @@ dependencies = [
 [[package]]
 name = "pnpm-which"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "pnpm-fs",
  "which",
@@ -4696,7 +4719,7 @@ dependencies = [
 [[package]]
 name = "pnpm-workspace"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "cap-primitives",
  "derive_more",
@@ -4719,7 +4742,7 @@ dependencies = [
 [[package]]
 name = "pnpm-workspace-manifest-writer"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "indexmap",
@@ -4742,7 +4765,7 @@ dependencies = [
 [[package]]
 name = "pnpm-workspace-projects-graph"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "indexmap",
  "node-semver",
@@ -4758,7 +4781,7 @@ dependencies = [
 [[package]]
 name = "pnpm-workspace-range-resolver"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "node-semver",
 ]
@@ -4766,12 +4789,12 @@ dependencies = [
 [[package]]
 name = "pnpm-workspace-spec"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 
 [[package]]
 name = "pnpm-workspace-state"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "indexmap",
@@ -4785,7 +4808,7 @@ dependencies = [
 [[package]]
 name = "pnpm-workspace-task-scheduler"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "futures-util",
@@ -4801,7 +4824,7 @@ dependencies = [
 [[package]]
 name = "pnpm-yaml-document-sync"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "serde-saphyr",
  "serde_json",
@@ -4813,7 +4836,7 @@ dependencies = [
 [[package]]
 name = "pnpr-error"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "axum",
  "bcrypt",
@@ -4830,7 +4853,7 @@ dependencies = [
 [[package]]
 name = "pnpr-package-name"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "pep508_rs",
@@ -4842,7 +4865,7 @@ dependencies = [
 [[package]]
 name = "pnpr-registry"
 version = "0.0.1"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "derive_more",
  "indexmap",
@@ -6076,7 +6099,7 @@ checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 [[package]]
 name = "tar"
 version = "0.4.46"
-source = "git+https://github.com/pnpm/pnpm?rev=343f3c4198b43dce5e58bc7de9927cb96aed59fc#343f3c4198b43dce5e58bc7de9927cb96aed59fc"
+source = "git+https://github.com/pnpm/pnpm?rev=063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e#063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e"
 dependencies = [
  "filetime",
  "libc",

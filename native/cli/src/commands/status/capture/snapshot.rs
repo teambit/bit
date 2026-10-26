@@ -2,6 +2,37 @@
 
 use super::{super::js::text, Capture, Engine, Value, array, decline, io, json};
 
+/// Prepare default-environment task discovery after native snapshot preflight succeeds.
+pub fn snapshot_host(
+    capture: &Capture,
+    root: &std::path::Path,
+    params: &Value,
+) -> io::Result<Option<crate::host::Host>> {
+    if capture.cache.callbacks.host.is_some()
+        || params["soft"] == true
+        || capture.captured.is_empty()
+    {
+        return Ok(None);
+    }
+    let crate::discovery::Target::Entry(cli) = crate::discovery::find()? else {
+        return Err(decline("snapshot task discovery needs installed Harmony"));
+    };
+    Ok(Some(crate::host::Host::new(cli, root.to_owned(), false)))
+}
+
+/// Retain hosted default component metadata before planned tasks are requested.
+pub fn snapshot_hydrate(
+    capture: &mut Capture,
+    context: &Value,
+    host: crate::host::Host,
+) -> io::Result<()> {
+    let result =
+        super::super::environments::callbacks::load(&host, context, capture, false, true, false);
+    capture.cache.retain_callback_stdout(&host.take_stdout());
+    capture.cache.retain_callback_host(Some(host));
+    result.map(|_| ())
+}
+
 /// Per-component aspect data returned by hydrated snapshot callbacks.
 pub fn snapshot_data<'a>(capture: &'a Capture, identity: &str) -> Option<&'a Value> {
     capture.cache.callbacks.snapshot_data.get(identity)

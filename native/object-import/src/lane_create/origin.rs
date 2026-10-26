@@ -33,7 +33,6 @@ impl Origin {
                 new_scope,
             );
         }
-        check_main_staged(root, &documents.index)?;
         Ok(Self { parent_name: None, components: Vec::new(), forked_from: None })
     }
 
@@ -182,25 +181,4 @@ fn bitmap_snap_head<'a>(bitmap: &'a Value, id: &Value) -> Option<&'a str> {
         return None;
     }
     row["version"].as_str().filter(|ver| valid_hash(ver))
-}
-
-fn check_main_staged(root: &Path, index: &Value) -> io::Result<()> {
-    for row in index["components"].as_array().ok_or_else(invalid)? {
-        let hash = row["hash"].as_str().ok_or_else(invalid)?;
-        let model = outbound::read_object(
-            &bit_workspace_config::scope_path(root).join("objects"),
-            hash,
-            "Component",
-        )?;
-        if model["state"]["versions"]
-            .as_object()
-            .is_some_and(|rows| {
-                rows.values()
-                    .any(|row| row["local"] == true)
-            })
-        {
-            return Err(invalid());
-        }
-    }
-    Ok(())
 }

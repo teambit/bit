@@ -1,4 +1,4 @@
-use super::artifacts;
+use super::{artifacts, metadata};
 use crate::workspace::engine::{command::scratch::Directory, dependency_graph::proof};
 use serde_json::{Value, json};
 use std::{fs, path::Path};
@@ -74,4 +74,35 @@ fn symlink_artifacts_and_symlink_parents_are_rejected() {
     std::os::unix::fs::symlink(&outside.0, &parent).unwrap();
     let mut value = receipt(&directory.0, &parent.join("artifact"));
     assert!(artifacts(&mut value, &mut Vec::new(), &mut Vec::new()).is_err());
+}
+
+#[test]
+fn unbuilt_tasks_replace_old_builder_data_and_create_missing_builder_entry() {
+    let tasks = json!([{"taskId": "sample.build/task", "taskName": "Compile", "taskDescription": "Compile sources"}]);
+    for extensions in [
+        json!([]),
+        json!([{"name": "teambit.pipelines/builder", "config": {"custom": true}, "data": {"pipeline": ["stale"], "artifacts": ["stale"]}}]),
+    ] {
+        let mut version = json!({"buildStatus": "pending", "extensions": extensions});
+        metadata(&mut version, &json!({"plannedTasks": tasks})).unwrap();
+        assert_eq!(
+            version["extensions"]
+                .as_array()
+                .unwrap()
+                .len(),
+            1,
+        );
+        assert_eq!(version["extensions"][0]["data"], json!({"plannedTasks": tasks}));
+        assert_eq!(version["buildStatus"], "pending");
+    }
+}
+#[test]
+fn completed_build_replaces_planned_tasks() {
+    let mut version = json!({"buildStatus": "pending", "extensions": []});
+    let data = json!({"pipeline": [{"taskId": "sample.build/task", "taskName": "Compile"}]});
+    metadata(&mut version, &json!({"plannedTasks": [], "buildData": {
+        "buildStatus": "succeed", "extensions": [{"name": "teambit.pipelines/builder", "config": {}, "data": data}]
+    }})).unwrap();
+    assert_eq!(version["buildStatus"], "succeed");
+    assert_eq!(version["extensions"][0]["data"], data);
 }

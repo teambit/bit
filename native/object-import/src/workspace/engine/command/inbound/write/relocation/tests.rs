@@ -1,6 +1,73 @@
-use super::prepare;
-use serde_json::Map;
-use std::fs;
+use serde_json::{Map, Value};
+use std::{fs, io, path::Path};
+
+fn prepare(
+    root: &Path,
+    directories: &mut [String],
+    rows: &Map<String, Value>,
+) -> io::Result<super::Retained> {
+    let mut retained = super::Retained::default();
+    super::prepare_into(root, directories, rows, &mut retained)?;
+    Ok(retained)
+}
+
+#[test]
+fn owner_destination_is_retained_and_rejects_a_later_filesystem_change() {
+    let root = tempfile::tempdir().unwrap();
+    let target = crate::command_import::Target {
+        scope: Some("second.shared".into()),
+        name: "alpha".into(),
+        version: "1.0.0".into(),
+    };
+    let rows = serde_json::json!({"alpha":{"name":"alpha","scope":"first.shared","version":"1.0.0","rootDir":"shared/alpha"}});
+    let mut retained = super::Retained::default();
+    assert_eq!(
+        retained
+            .avoid_tracked(root.path(), "shared/alpha".into(), &target, rows.as_object().unwrap())
+            .unwrap(),
+        "second/shared/alpha",
+    );
+    assert_eq!(
+        retained.warnings,
+        [
+            r#""shared/alpha" is already used by first.shared/alpha@1.0.0, importing second.shared/alpha into "second/shared/alpha" instead"#
+        ],
+    );
+    retained.validate().unwrap();
+    fs::create_dir_all(root.path().join("second/shared/alpha")).unwrap();
+    assert!(retained.validate().is_err());
+}
+
+#[test]
+fn occupied_or_nested_owner_destinations_preserve_the_original_conflict() {
+    let target = crate::command_import::Target {
+        scope: Some("second.shared".into()),
+        name: "alpha".into(),
+        version: "1.0.0".into(),
+    };
+    for tracked in ["second", "second/shared/alpha", "second/shared/alpha/nested", "unrelated"] {
+        let root = tempfile::tempdir().unwrap();
+        let rows = serde_json::json!({"alpha":{"name":"alpha","scope":"first.shared","rootDir":"shared/alpha"},"other":{"name":"other","scope":"other.scope","rootDir":tracked}});
+        if tracked == "unrelated" {
+            fs::create_dir_all(root.path().join("second/shared/alpha")).unwrap();
+            fs::write(root.path().join("second/shared/alpha/keep"), b"preserve").unwrap();
+        }
+        let mut retained = super::Retained::default();
+        assert_eq!(
+            retained
+                .avoid_tracked(
+                    root.path(),
+                    "shared/alpha".into(),
+                    &target,
+                    rows.as_object().unwrap()
+                )
+                .unwrap(),
+            "shared/alpha",
+        );
+        assert!(retained.warnings.is_empty());
+        retained.validate().unwrap();
+    }
+}
 
 #[test]
 fn occupied_candidates_are_preserved_and_the_empty_target_is_retained() {

@@ -1,4 +1,4 @@
-//! `getManyComponentsStatuses` primes the current lane's dependency cache before import.
+//! Retain pre-import documentation on main and dependency status caches on lanes.
 use super::options::Options;
 use crate::commands::{
     engine::Engine,
@@ -11,7 +11,8 @@ use std::{collections::HashSet, io, path::Path};
 pub(super) struct Prepared {
     engine: Engine,
     context: Value,
-    capture: Capture,
+    capture: Option<Capture>,
+    docs: Vec<crate::commands::add::docs::CatDocs>,
 }
 
 /// Stage the published pre-import status load without filesystem publication.
@@ -29,11 +30,18 @@ pub(super) fn prepare(
     let mut context: Value = engine.request(
         &json!({"kind":"trackingContext","root":root,"home":home,"bitmap":bitmap(root)?}),
     )?;
-    if context["currentLaneId"].is_null() {
-        return Ok(None);
-    }
     let targets = selected_targets(&context, ids)?;
     if targets.is_empty() {
+        return Ok(None);
+    }
+    if context["currentLaneId"]
+        .as_str()
+        .is_none_or(|lane| lane.ends_with("/main"))
+    {
+        let docs = documentation(root, &targets)?;
+        return Ok(Some(Prepared { engine, context, capture: None, docs }));
+    }
+    if !options.write.dependencies.fetch_deps {
         return Ok(None);
     }
     context["pendingHistory"] = json!([]);
@@ -45,17 +53,16 @@ pub(super) fn prepare(
         &targets,
         CaptureOptions::default(),
     )?;
-    Ok(Some(Prepared { engine, context, capture }))
+    Ok(Some(Prepared { engine, context, capture: Some(capture), docs: Vec::new() }))
 }
 
 fn eligible(options: &Options, retained: bool) -> bool {
     let writing = options.operation == "import" && !options.objects_only;
-    let fetch_deps =
-        options.write.skip_dependency_installation && options.write.dependencies.fetch_deps;
+    let without_install = options.write.skip_dependency_installation;
     let ordinary = !options.write.override_existing
         && options.write.merge_strategy.is_none()
         && !options.write.adoption.track_only;
-    !retained && writing && fetch_deps && ordinary
+    !retained && writing && without_install && ordinary
 }
 
 fn selected_targets(context: &Value, ids: &[String]) -> io::Result<Vec<Value>> {
@@ -82,10 +89,53 @@ fn selected_targets(context: &Value, ids: &[String]) -> io::Result<Vec<Value>> {
 impl Prepared {
     /// Once publication starts, caller retains ownership even if a write fails.
     pub(super) fn commit(mut self, root: &Path) -> io::Result<()> {
-        capture::commit(&mut self.engine, root, &self.context, &self.capture)
+        for mut docs in self.docs {
+            if !docs.misses().is_empty() {
+                let crate::discovery::Target::Entry(cli) = crate::discovery::find()? else {
+                    return Err(io::Error::other("import documentation parser unavailable"));
+                };
+                let host = crate::host::Host::new(cli, root.to_owned(), false);
+                let receipt = host.call("catSemanticDocs", &json!({"components":docs.components(),"scopePath":bit_object_import::scope_path(root)}))?;
+                print!("{}", host.take_stdout());
+                if let Some(error) = docs.absorb(&receipt)? {
+                    return Err(io::Error::other(error));
+                }
+            }
+            docs.publish()?;
+        }
+        if let Some(capture) = &self.capture {
+            capture::commit(&mut self.engine, root, &self.context, capture)?;
+        }
+        Ok(())
     }
 }
 
 fn bitmap(root: &Path) -> io::Result<Value> {
     bit_object_import::parse_jsonc(&std::fs::read(root.join(".bitmap"))?)
+}
+
+fn documentation(
+    root: &Path,
+    targets: &[Value],
+) -> io::Result<Vec<crate::commands::add::docs::CatDocs>> {
+    let identities = targets
+        .iter()
+        .map(|target| {
+            target["identity"]
+                .as_str()
+                .map(str::to_owned)
+                .ok_or_else(|| io::Error::other("import documentation identity"))
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    let components =
+        crate::commands::add::ProjectedLinker::import_documentation_components(root, &identities)?;
+    components
+        .into_iter()
+        .map(|component| {
+            crate::commands::add::docs::cat_prepare(root, component)
+                .ok_or_else(|| {
+                    io::Error::other("import current documentation requires canonical cache")
+                })
+        })
+        .collect()
 }

@@ -1,6 +1,4 @@
-use super::{
-    History, Prepared, Replacement, Target, WorkspaceFiles, safe_destination, unique_name,
-};
+use super::{History, Prepared, Replacement, Target, WorkspaceFiles, bitmap_key, safe_destination};
 use serde_json::json;
 use std::{
     fs,
@@ -31,9 +29,14 @@ fn history(root: &Path) -> History {
     }
 }
 #[test]
-fn same_name_from_different_scope_declines_before_bitmap_overwrite() {
-    let rows = json!({"alpha":{"name":"alpha","scope":"first.scope"}});
-    assert!(unique_name(rows.as_object().unwrap(), "alpha").is_err());
+fn same_name_from_different_scope_preserves_both_bitmap_identities() {
+    let mut rows = json!({"alpha":{"name":"alpha","scope":"first.scope"}})
+        .as_object()
+        .unwrap()
+        .clone();
+    assert_eq!(bitmap_key(&mut rows, "alpha", "second.scope").unwrap(), "second.scope/alpha");
+    assert_eq!(rows["first.scope/alpha"]["scope"], "first.scope");
+    assert!(!rows.contains_key("alpha"));
 }
 #[test]
 fn writer_rolls_back_partial_files_when_later_destination_conflicts() {

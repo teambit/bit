@@ -2,6 +2,7 @@
 //! dependency graphs before installing (`dependenciesGraphToLockfile` in
 //! `pnpm.package-manager.ts` and `convertGraphToLockfile`).
 
+mod context;
 mod convert;
 mod dep_path;
 mod merge;

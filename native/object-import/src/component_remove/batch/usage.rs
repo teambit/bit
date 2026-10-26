@@ -19,13 +19,17 @@ pub(in crate::component_remove) fn validate(
         let Some(extensions) = component["extensions"].as_array() else {
             return Err(invalid("stash removal component aspects"));
         };
-        if extensions
+        if let Some(used) = identities
             .iter()
-            .filter_map(extension_id)
-            .any(|id| identities.contains(&id))
+            .find(|removed| {
+                extensions
+                    .iter()
+                    .filter_map(extension_id)
+                    .any(|id| *removed == &id)
+            })
         {
             return Err(io::Error::other(format!(
-                "Unable to remove {identity}.\nThis component is 1) an aspect 2) is used by other components, such as \"{identity}\" 3) it's a new component so it can't be installed as a package.\nRemoving this component from the workspace will disrupt the functionality of other components that depend on it, and resolving these issues may not be straightforward.\nIf you understand the risks and wish to proceed with the removal, please use the --force flag.\n",
+                "Unable to remove {used}.\nThis component is 1) an aspect 2) is used by other components, such as \"{identity}\" 3) it's a new component so it can't be installed as a package.\nRemoving this component from the workspace will disrupt the functionality of other components that depend on it, and resolving these issues may not be straightforward.\nIf you understand the risks and wish to proceed with the removal, please use the --force flag.\n",
             )));
         }
     }

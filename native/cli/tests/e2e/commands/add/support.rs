@@ -473,7 +473,7 @@ fn describe(bytes: Option<&Vec<u8>>, path: &str) -> String {
         }
         Some(bytes)
             if bytes.len() <= diagnostic_limit(path)
-                && (bytes.first() == Some(&b'{')
+                && (matches!(bytes.first(), Some(b'{' | b'['))
                     || bytes.starts_with(b"//")
                     || bytes.starts_with(b"/*")
                     || path == "node_modules/.modules.yaml"

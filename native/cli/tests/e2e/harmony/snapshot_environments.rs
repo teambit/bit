@@ -1,5 +1,6 @@
 //! Snapshot extension hooks retain data and source transformations without Node VCS writes.
 mod build;
+mod plus_ranges;
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use serde_json::{Value, json};
 use std::ffi::OsStr;

@@ -1,0 +1,224 @@
+//! Move unexported main snaps into a newly created lane before publishing workspace references.
+use super::{Documents, invalid, outbound};
+mod history;
+use crate::store::Store;
+use serde_json::{Value, json};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
+
+#[derive(Default)]
+pub(super) struct Moved {
+    pub components: Vec<Value>,
+    objects: Vec<(String, &'static str, Value)>,
+    reads: Vec<(PathBuf, Option<Vec<u8>>)>,
+}
+
+impl Moved {
+    fn read(&mut self, path: &Path) -> io::Result<Option<Vec<u8>>> {
+        let bytes = match fs::read(path) {
+            Ok(bytes) => Some(bytes),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => None,
+            Err(error) => return Err(error),
+        };
+        let total = self.reads
+            .iter()
+            .filter_map(|(_, bytes)| bytes.as_ref())
+            .map(Vec::len)
+            .sum::<usize>();
+        if total + bytes.as_ref().map_or(0, Vec::len) > 32 * 1024 * 1024 {
+            return Err(invalid());
+        }
+        self.reads.push((path.to_owned(), bytes.clone()));
+        Ok(bytes)
+    }
+
+    fn object(&mut self, directory: &Path, hash: &str, kind: &str) -> io::Result<Value> {
+        crate::merge_history::hash(hash)?;
+        self.read(
+            &directory
+                .join(&hash[..2])
+                .join(&hash[2..]),
+        )?
+        .ok_or_else(invalid)?;
+        outbound::read_object(directory, hash, kind)
+    }
+
+    pub(super) fn validate(&self) -> io::Result<()> {
+        for (path, before) in &self.reads {
+            let after = match fs::read(path) {
+                Ok(bytes) => Some(bytes),
+                Err(error) if error.kind() == io::ErrorKind::NotFound => None,
+                Err(error) => return Err(error),
+            };
+            if &after != before {
+                return Err(invalid());
+            }
+        }
+        Ok(())
+    }
+
+    pub(super) fn persist(&self, store: &Store) -> io::Result<()> {
+        for (hash, kind, object) in &self.objects {
+            store.write(hash, &outbound::encode_object(hash, kind, object)?)?;
+        }
+        store.finish_batch()
+    }
+}
+
+pub(super) fn prepare(
+    root: &Path,
+    documents: &Documents,
+    name: &str,
+    scope: &str,
+    lane_hash: &str,
+) -> io::Result<Moved> {
+    let mut moved = Moved::default();
+    let scope_path = crate::scope_path(root);
+    let directory = scope_path.join("objects");
+    for path in [root.join(".bitmap"), scope_path.join("index.json"), scope_path.join("scope.json")]
+    {
+        moved.read(&path)?;
+    }
+    let lane = json!({"scope":scope,"name":name,"hash":lane_hash});
+    for row in documents.index["components"].as_array().ok_or_else(invalid)? {
+        let hash = row["hash"].as_str().ok_or_else(invalid)?;
+        let model = moved.object(&directory, hash, "Component")?;
+        if let Some(version) = workspace_version(&documents.bitmap, &model) {
+            component(&mut moved, &scope_path, hash, &model, &version, &lane)?;
+        }
+    }
+    moved.validate()?;
+    Ok(moved)
+}
+
+fn workspace_version(bitmap: &Value, model: &Value) -> Option<String> {
+    let name = model["name"].as_str()?;
+    let scope = model["scope"].as_str()?;
+    let row = bitmap
+        .get(name)
+        .or_else(|| bitmap.get(format!("{scope}/{name}")))?;
+    let tracked_scope = row["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())
+        .or_else(|| row["defaultScope"].as_str())?;
+    (tracked_scope == scope).then(|| {
+        row["version"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned()
+    })
+}
+
+fn remote(moved: &mut Moved, scope_path: &Path, model: &Value) -> io::Result<Option<String>> {
+    let scope = model["scope"].as_str().ok_or_else(invalid)?;
+    if !super::valid_scope(scope) {
+        return Err(invalid());
+    }
+    let Some(bytes) = moved.read(
+        &scope_path
+            .join("refs/remotes")
+            .join(scope)
+            .join("main"),
+    )?
+    else {
+        return Ok(None);
+    };
+    let rows: Vec<Value> = serde_json::from_slice(&bytes)?;
+    rows.iter()
+        .find(|row| row["id"]["scope"] == model["scope"] && row["id"]["name"] == model["name"])
+        .map(|row| {
+            row["head"]
+                .as_str()
+                .map(str::to_owned)
+                .ok_or_else(invalid)
+        })
+        .transpose()
+}
+
+fn component(
+    moved: &mut Moved,
+    scope_path: &Path,
+    hash: &str,
+    model: &Value,
+    workspace: &str,
+    lane: &Value,
+) -> io::Result<()> {
+    let Some(head) = model["head"].as_str() else { return Ok(()) };
+    let remote = remote(moved, scope_path, model)?;
+    let workspace_hash = model["versions"][workspace].as_str().unwrap_or(workspace);
+    let source = if remote.as_deref() == Some(head) { workspace_hash } else { head };
+    let directory = scope_path.join("objects");
+    let heads = [Some(source), remote.as_deref()]
+        .into_iter()
+        .flatten()
+        .map(str::to_owned)
+        .collect::<Vec<_>>();
+    let graph = crate::merge_history::read_graph(&directory, &heads)?;
+    let distance = crate::merge_history::status::distance(&graph, Some(source), remote.as_deref())?;
+    let refs = distance["sourceOnly"].as_array().ok_or_else(invalid)?;
+    if refs.is_empty() {
+        return Ok(());
+    }
+    if source != head || workspace != head || has_tags(model, refs) {
+        return Err(invalid());
+    }
+    for row in graph.as_array().ok_or_else(invalid)? {
+        moved.object(&directory, row["hash"].as_str().ok_or_else(invalid)?, "Version")?;
+    }
+    if crate::merge_history::read_graph(&directory, &heads)? != graph {
+        return Err(invalid());
+    }
+    history::prepare(moved, &directory, model, &heads)?;
+    move_objects(moved, &directory, hash, model.clone(), refs, remote.as_deref(), lane)?;
+    moved.components.push(json!({"id":{"scope":model["scope"],"name":model["name"]},"head":head}));
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests;
+
+fn has_tags(model: &Value, refs: &[Value]) -> bool {
+    model["versions"]
+        .as_object()
+        .is_some_and(|versions| {
+            versions
+                .values()
+                .any(|hash| refs.contains(hash))
+        })
+}
+
+fn move_objects(
+    moved: &mut Moved,
+    directory: &Path,
+    hash: &str,
+    mut model: Value,
+    refs: &[Value],
+    remote: Option<&str>,
+    lane: &Value,
+) -> io::Result<()> {
+    for reference in refs.iter().rev() {
+        let reference = reference.as_str().ok_or_else(invalid)?;
+        let mut version = moved.object(directory, reference, "Version")?;
+        if version["origin"]["lane"].is_null() {
+            let id = version["origin"]
+                .get("id")
+                .cloned()
+                .unwrap_or_else(|| json!({"scope":model["scope"],"name":model["name"]}));
+            version["origin"] = json!({"id":id,"lane":lane});
+            moved.objects.push((reference.to_owned(), "Version", version));
+        }
+        if let Some(versions) = model["state"]["versions"].as_object_mut() {
+            versions.shift_remove(reference);
+        }
+    }
+    let fields = model.as_object_mut().ok_or_else(invalid)?;
+    if let Some(remote) = remote {
+        fields.insert("head".into(), json!(remote));
+    } else {
+        fields.shift_remove("head");
+    }
+    moved.objects.push((hash.to_owned(), "Component", model));
+    Ok(())
+}

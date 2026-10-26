@@ -37,14 +37,11 @@ fn env_dependencies(
         .iter()
         .filter(|entry| entry.force && entry.version != "-")
         .map(|entry| {
-            let version = if entry.version == "+" {
-                workspace_deps
-                    .get(&entry.name)
-                    .cloned()
-                    .unwrap_or_else(|| "*".to_string())
-            } else {
-                entry.version.clone()
-            };
+            let version = bit_object_import::plus_version::resolve(
+                &entry.version,
+                workspace_deps.get(&entry.name).map(String::as_str),
+                "*",
+            );
             (entry.name.clone(), version)
         })
         .collect()

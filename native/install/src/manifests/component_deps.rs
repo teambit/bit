@@ -135,7 +135,11 @@ fn update_version(
     root_policy: &[PolicyEntry],
 ) {
     let from_component = policy_version(component_policy, dep.package_name, dep.lifecycle)
-        .filter(|version| !version.is_empty() && !["-", "+", "*"].contains(version));
+        .filter(|version| {
+            !version.is_empty()
+                && !["-", "*"].contains(version)
+                && !bit_object_import::plus_version::is_plus(version)
+        });
     let root_lifecycle =
         if dep.lifecycle == Lifecycle::Peer { Lifecycle::Peer } else { Lifecycle::Runtime };
     let from_root = policy_version(root_policy, dep.package_name, root_lifecycle)

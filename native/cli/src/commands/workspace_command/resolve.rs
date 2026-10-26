@@ -365,6 +365,7 @@ impl<'r> Session<'r> {
             resolved.receipt(self.kind, needs_snap, plan, options)?
         };
         lifecycle::messages(&mut receipt, messages)?;
+        lifecycle::planned_tasks(&mut receipt, &self.capture)?;
         let allocated_versions = (self.kind == Kind::Resolve).then(|| receipt["versions"].clone());
         let auto_snapped =
             if self.kind == Kind::Resolve { Some(auto_snap_report(plan, &receipt)?) } else { None };

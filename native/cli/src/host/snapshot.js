@@ -17,11 +17,16 @@ async function snapshotPreSnap({ selected, automatic, params, directory }) {
     const after = physicalProof(filename);
     if (after.hash !== proof.hash) changes.push({before:proof,after});
   }
+  const builder = loaded.get('teambit.pipelines/builder');
+  const plannedComponents = statusComponents.filter(component =>
+    [...selected, ...automatic].some(id => id.split('@')[0] === component.id.toStringWithoutVersion()) && !component.state._consumer.isRemoved());
+  const plannedTasks = !params.build && !params.soft && typeof builder.getPlannedTasks === 'function'
+    ? builder.getPlannedTasks(plannedComponents, params.isSnap ? 'snap' : 'tag') : new Map();
   const rows = statusComponents.map((component) => {
     const consumer = component.state._consumer;
     component.__nativeSourceProofs = component.__nativeSourceProofs.map((proof) => physicalProof(proof.path));
     const sources = statusSourceOverlays(component, directory, 'presnap');
-    return {identity:component.id.toStringWithoutVersion(),snapshotData:snapshotData(consumer),current:statusMetadata(component.__nativeCurrent,consumer),files:consumer.files.map(statusRelative),sourceOverlays:sources.overlays,sourceOverlayRoot:directory,readSet:sources.proofs,issues:statusIssues(consumer.issues),originalDependencyIdentities:component.__nativeOriginalDependencyIds,dependencyIdentities:[...consumer.dependencies.get(),...consumer.devDependencies.get(),...consumer.peerDependencies.get()].map((dependency)=>dependency.id.toString())};
+    return {identity:component.id.toStringWithoutVersion(),snapshotData:{...snapshotData(consumer),plannedTasks:plannedTasks.get(component.id.toStringWithoutVersion())},current:statusMetadata(component.__nativeCurrent,consumer),files:consumer.files.map(statusRelative),sourceOverlays:sources.overlays,sourceOverlayRoot:directory,readSet:sources.proofs,issues:statusIssues(consumer.issues),originalDependencyIdentities:component.__nativeOriginalDependencyIds,dependencyIdentities:[...consumer.dependencies.get(),...consumer.devDependencies.get(),...consumer.peerDependencies.get()].map((dependency)=>dependency.id.toString())};
   });
   return {components:rows,changedWorkspaceSources:changes};
 }

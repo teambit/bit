@@ -82,6 +82,7 @@ pub(super) fn configured(tagged: bool) -> Helper {
 #[test]
 fn removing_a_main_component_on_a_lane_preserves_unrelated_lane_records() {
     let helper = support::workspace(1, true);
+    setup(&helper, "export");
     setup(&helper, "lane create dev");
     successful(&helper, "remove comp1 --silent --force --keep-files");
     assert!(bitmap(&helper).get("comp1").is_none());

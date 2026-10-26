@@ -62,7 +62,8 @@ fn converts_a_graph_into_a_lockfile() {
     let graph = Graph::parse(&graph()).expect("graph");
     assert!(!graph.packages.contains_key("orphan@file:comps/x"));
     let lockfile = to_lockfile(&graph, &[root_project()], Path::new("/ws"));
-    assert_eq!(lockfile["pnpmfileChecksum"], json!("bit-1"));
+    assert!(lockfile.get("pnpmfileChecksum").is_none());
+    assert_eq!(lockfile["overrides"], json!({"@teambit/legacy@*":"-","@teambit/harmony@*":"-"}));
     assert_eq!(
         lockfile["snapshots"]["a@1.0.0(b@2.0.0)"],
         json!({

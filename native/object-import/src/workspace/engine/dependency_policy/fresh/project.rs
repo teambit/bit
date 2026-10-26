@@ -294,9 +294,11 @@ impl Projection<'_> {
         let typed = format!("@types/{escaped}");
         let version = self.request.detection.workspace_policy
             .iter()
-            .find_map(|field| field.get(&typed))
-            .or_else(|| self.request.detection.model_packages[1].get(&typed));
-        if let Some(version) = version {
+            .chain(&self.request.detection.merge_policy)
+            .filter_map(|field| field.get(&typed))
+            .chain(self.request.detection.model_packages[1].get(&typed))
+            .find(|value| **value != "" && !value.is_null());
+        if let Some(version) = version.filter(|value| **value != "-") {
             if !version.is_string() {
                 return Err(invalid("fresh type package version"));
             }

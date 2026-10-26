@@ -34,7 +34,7 @@ const PACKAGE_FIELDS: [&str; 12] = [
 pub(super) struct Graph {
     pub packages: Map<String, Value>,
     pub edges: Vec<Value>,
-    pub pnpmfile_checksum: Option<String>,
+    pub resolution_context: Map<String, Value>,
 }
 
 impl Graph {
@@ -53,10 +53,7 @@ impl Graph {
                 .and_then(Value::as_array)
                 .cloned()
                 .unwrap_or_default(),
-            pnpmfile_checksum: serialized
-                .get("pnpmfileChecksum")
-                .and_then(Value::as_str)
-                .map(str::to_string),
+            resolution_context: super::context::graph(serialized),
         };
         graph.drop_orphan_file_packages();
         graph.drop_orphan_neighbours();
@@ -160,9 +157,7 @@ pub(super) fn to_lockfile(graph: &Graph, projects: &[Project], root: &Path) -> M
     entries.add_remaining_packages();
     let mut lockfile = Map::new();
     lockfile.insert("lockfileVersion".to_string(), json!("9.0"));
-    if let Some(checksum) = &graph.pnpmfile_checksum {
-        lockfile.insert("pnpmfileChecksum".to_string(), json!(checksum));
-    }
+    lockfile.extend(graph.resolution_context.clone());
     lockfile.insert("importers".to_string(), Value::Object(importers(graph, projects, root)));
     lockfile.insert("packages".to_string(), Value::Object(entries.packages));
     lockfile.insert("snapshots".to_string(), Value::Object(entries.snapshots));

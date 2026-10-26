@@ -3,8 +3,16 @@ use crate::helper::{Helper, config};
 use std::ffi::OsStr;
 
 fn workspace() -> Helper {
+    workspace_in_scope(false)
+}
+
+fn workspace_in_scope(with_remote: bool) -> Helper {
     let helper = Helper::new();
-    helper.re_init_workspace_with(false);
+    if with_remote {
+        helper.set_workspace_with_remote_scope();
+    } else {
+        helper.re_init_workspace_with(false);
+    }
     helper.populate_components(3, true, "");
     for index in 1..=3 {
         helper.output_file(
@@ -81,7 +89,8 @@ fn reset_modified_state_and_soft_tagged_predicates_match_node() {
 
 #[test]
 fn selected_lane_snap_heads_reset_as_one_batch() {
-    let helper = workspace();
+    let helper = workspace_in_scope(true);
+    helper.run("export");
     helper.run("lane create selected-reset");
     for index in 1..=3 {
         helper.append_file(&format!("comp{index}/index.js"), "\n// lane edit");

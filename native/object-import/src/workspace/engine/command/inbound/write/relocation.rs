@@ -12,14 +12,58 @@ impl Retained {
     pub(super) fn validate(&self) -> io::Result<()> {
         self.observed.validate()
     }
+
+    pub(super) fn avoid_tracked(
+        &mut self,
+        root: &Path,
+        directory: String,
+        target: &super::Target,
+        rows: &Map<String, Value>,
+    ) -> io::Result<String> {
+        let Some(row) = rows
+            .values()
+            .find(|row| row["rootDir"] == directory)
+        else {
+            return Ok(directory);
+        };
+        let scope = target.scope.as_deref().ok_or_else(|| super::invalid("inbound scope"))?;
+        let Some((owner, _)) = scope.split_once('.') else { return Ok(directory) };
+        if directory.starts_with(&format!("{owner}/")) {
+            return Ok(directory);
+        }
+        let candidate = format!("{owner}/{directory}");
+        let nested = rows
+            .values()
+            .filter_map(|row| row["rootDir"].as_str())
+            .any(|tracked| {
+                tracked.starts_with(&format!("{candidate}/"))
+                    || candidate.starts_with(&format!("{tracked}/"))
+            });
+        if nested || unavailable(root, &candidate, rows, &mut self.observed)?.is_some() {
+            return Ok(directory);
+        }
+        let used_scope = row["scope"]
+            .as_str()
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| super::invalid("inbound owner collision with unscoped component"))?;
+        let version = row["version"]
+            .as_str()
+            .filter(|version| !version.is_empty())
+            .map_or(String::new(), |version| format!("@{version}"));
+        self.warnings.push(format!(
+            r#""{directory}" is already used by {}/{}{version}, importing {scope}/{} into "{candidate}" instead"#,
+            used_scope, row["name"].as_str().unwrap_or_default(), target.name,
+        ));
+        Ok(candidate)
+    }
 }
 
-pub(super) fn prepare(
+pub(super) fn prepare_into(
     root: &Path,
     directories: &mut [String],
     rows: &Map<String, Value>,
-) -> io::Result<Retained> {
-    let mut retained = Retained::default();
+    retained: &mut Retained,
+) -> io::Result<()> {
     let mut taken: HashSet<String> = rows
         .values()
         .filter_map(|row| row["rootDir"].as_str().map(str::to_owned))
@@ -49,7 +93,7 @@ pub(super) fn prepare(
         directory.clone_from(&candidate);
         taken.insert(candidate);
     }
-    Ok(retained)
+    Ok(())
 }
 
 fn unavailable(

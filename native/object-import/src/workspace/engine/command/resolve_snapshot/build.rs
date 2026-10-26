@@ -15,6 +15,7 @@ use std::{
 const BUILDER: &str = "teambit.pipelines/builder";
 
 pub(super) fn metadata(version: &mut Value, allocation: &Value) -> io::Result<()> {
+    planned_tasks(version, allocation)?;
     let Some(data) = allocation.get("buildData") else { return Ok(()) };
     let status = data["buildStatus"].as_str().ok_or_else(|| invalid("snapshot build status"))?;
     if !matches!(status, "succeed" | "failed" | "pending" | "skipped") {
@@ -149,6 +150,37 @@ fn extension(entries: &mut Vec<Value>, update: &Value) -> io::Result<()> {
             entry["config"] = json!({});
         }
         entries.push(entry);
+    }
+    Ok(())
+}
+
+fn planned_tasks(version: &mut Value, allocation: &Value) -> io::Result<()> {
+    let Some(tasks) = allocation
+        .get("plannedTasks")
+        .filter(|tasks| !tasks.is_null())
+    else {
+        return Ok(());
+    };
+    let rows = tasks.as_array().ok_or_else(|| invalid("snapshot planned task list"))?;
+    for task in rows {
+        if !task["taskId"].is_string()
+            || !task["taskName"].is_string()
+            || task
+                .get("taskDescription")
+                .is_some_and(|description| !description.is_string())
+        {
+            return Err(invalid("snapshot planned task descriptor"));
+        }
+    }
+    let extensions =
+        version["extensions"].as_array_mut().ok_or_else(|| invalid("snapshot extensions"))?;
+    if let Some(builder) = extensions
+        .iter_mut()
+        .find(|extension| extension["name"] == BUILDER)
+    {
+        builder["data"] = json!({"plannedTasks": tasks});
+    } else {
+        extensions.push(json!({"name": BUILDER, "config": {}, "data": {"plannedTasks": tasks}}));
     }
     Ok(())
 }

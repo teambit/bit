@@ -10,7 +10,6 @@ use super::super::{
     session::{Session, engine_project},
 };
 use crate::model::{InstallPlan, Project};
-use pnpm_hooks::PnpmfileHooks;
 use pnpm_package_manager::{
     DepsRequiringBuildSink, Install, InstallExecution, InstallInvocation, InstallLockfilePolicy,
     InstallProjects, ManifestFreshness, ProjectMutation, ResolutionInputs, UpdateSeedPolicy,
@@ -76,7 +75,7 @@ impl EngineCall {
         let reporter = ReporterGuard::install(self.renderer());
         let sink = DepsRequiringBuildSink::default();
         let session = Session::new(config, &self.settings.root, &projects)?;
-        session.runtime.block_on(self.run_install(&session, projects, hooks, Arc::clone(&sink)))?;
+        session.runtime.block_on(self.run_install(&session, projects, Arc::clone(&sink)))?;
         let stats = ReporterGuard::take_stats();
         drop(reporter);
         Ok(Outcome {
@@ -138,7 +137,6 @@ impl EngineCall {
         &self,
         session: &Session,
         projects: Vec<Project>,
-        hooks: BitHooks,
         sink: DepsRequiringBuildSink,
     ) -> io::Result<()> {
         // A lone project takes the plain install path; several are handed to
@@ -150,7 +148,7 @@ impl EngineCall {
                 .collect()
         });
         let install = session.install(self.dependency_groups());
-        let install = self.configure(install, Arc::new(hooks), workspace_projects, sink, session);
+        let install = self.configure(install, workspace_projects, sink, session);
         install.run::<BitReporter>().await.map_err(|error| diagnostic(&error))
     }
 
@@ -167,7 +165,6 @@ impl EngineCall {
     fn configure<'a>(
         &self,
         install: Install<'a, Vec<DependencyGroup>>,
-        hooks: Arc<dyn PnpmfileHooks>,
         workspace_projects: Option<Vec<pnpm_workspace::Project>>,
         sink: DepsRequiringBuildSink,
         session: &'a Session,
@@ -204,7 +201,7 @@ impl EngineCall {
             },
             projects: InstallProjects {
                 supported_architectures: None,
-                pnpmfile_hook_override: Some(hooks),
+                pnpmfile_hook_override: None,
                 workspace_projects_override: workspace_projects,
                 ..install.projects
             },

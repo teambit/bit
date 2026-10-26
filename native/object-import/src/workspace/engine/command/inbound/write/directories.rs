@@ -7,9 +7,12 @@ use std::{io, path::Path};
 /// Each target's directory: the template, then `fixDirsIfEqual` and
 /// `fixDirsIfNested` against the bitmap's existing `rootDir`s.
 pub(super) fn assign(
+    root: &Path,
     template: &str,
     targets: &[Target],
     rows: &Map<String, Value>,
+    avoid: bool,
+    retained: &mut super::relocation::Retained,
 ) -> io::Result<Vec<String>> {
     let existing: Vec<String> = rows
         .values()
@@ -20,7 +23,12 @@ pub(super) fn assign(
         .map(|target| {
             let scope =
                 target.scope.as_deref().ok_or_else(|| invalid("inbound workspace scope"))?;
-            directory(template, scope, &target.name)
+            let directory = directory(template, scope, &target.name)?;
+            if avoid {
+                retained.avoid_tracked(root, directory, target, rows)
+            } else {
+                Ok(directory)
+            }
         })
         .collect::<io::Result<Vec<_>>>()?;
     fix_dirs_if_equal(targets, &mut directories);

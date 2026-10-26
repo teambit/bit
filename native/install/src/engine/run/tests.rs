@@ -61,7 +61,7 @@ fn plan(root: &Path) -> InstallPlan {
 }
 
 #[tokio::test]
-async fn installs_local_projects_and_records_bits_checksum() {
+async fn installs_local_projects_with_core_removal_overrides() {
     let dir = tempfile::tempdir().expect("temp dir");
     let root = dir
         .path()
@@ -75,8 +75,9 @@ async fn installs_local_projects_and_records_bits_checksum() {
     let lockfile =
         Lockfile::load_from_path(&root.join("pnpm-lock.yaml")).expect("load").expect("lockfile");
     let lockfile = serde_json::to_value(lockfile).expect("json");
-    assert_eq!(lockfile["pnpmfileChecksum"], json!("bit-1"));
-    // The hooks removed `@teambit/legacy` from the component.
+    assert!(lockfile.get("pnpmfileChecksum").is_none());
+    assert_eq!(lockfile["overrides"], json!({"@teambit/legacy@*":"-","@teambit/harmony@*":"-"}));
+    // Workspace manifest preprocessing removes core registry dependencies.
     assert_eq!(lockfile["importers"]["comps/a"], json!({}));
     assert!(root.join("node_modules").is_dir());
     let repeat = install(&plan, &settings, &options).await.expect("repeat install");

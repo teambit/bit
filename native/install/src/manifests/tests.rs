@@ -769,3 +769,40 @@ fn a_root_of_an_env_resolved_to_the_default_env_has_no_env_dependencies() {
         json!({ "@org-ui/lib": "workspace:*", "@org-envs/env": "1.0.0" }),
     );
 }
+
+#[test]
+fn legacy_env_plus_ranges_resolve_releases_snaps_and_missing_packages() {
+    let mut fixture = Fixture::new(vec![component(
+        "sample.ui",
+        "widget",
+        Some("1.0.0"),
+        "sample.envs/env@1.0.0",
+    )]);
+    fixture.options.resolve_env_peers_from_root = false;
+    fixture.options.dedupe = false;
+    fixture.envs.insert(
+        "sample.envs/env@1.0.0".into(),
+        env_policy(vec![
+            env_peer("sample-release", "+^"),
+            env_peer("sample-snap", "+~"),
+            env_peer("sample-missing", "+^"),
+        ]),
+    );
+    fixture.deps(
+        0,
+        ComponentDependencies {
+            packages: vec![
+                package("sample-release", "2.3.4", Lifecycle::Peer),
+                package("sample-snap", "abcdef1", Lifecycle::Peer),
+            ],
+            ..Default::default()
+        },
+    );
+    let outcome = fixture.run();
+    assert_eq!(
+        field(manifest(&outcome, "/ws/widget"), "dependencies"),
+        json!({
+            "sample-release": "^2.3.4", "sample-snap": "0.0.0-abcdef1", "sample-missing": "*"
+        }),
+    );
+}

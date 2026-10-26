@@ -237,10 +237,12 @@ fn id_is_modified(
 
 fn bitmap_component_id(rows: &serde_json::Map<String, Value>, id: &str) -> Option<String> {
     let without_ver = id.rsplit_once('@').map_or(id, |(base, _)| base);
-    let (_, name) = without_ver.split_once('/')?;
+    let (requested_scope, name) = without_ver.split_once('/')?;
     let row = rows
         .iter()
-        .find(|(key, row)| row["name"].as_str().unwrap_or(key) == name)?
+        .find(|(key, row)| {
+            row["name"].as_str().unwrap_or(key) == name && row["scope"] == requested_scope
+        })?
         .1;
     let scope = row["scope"]
         .as_str()
@@ -283,12 +285,20 @@ fn new_target_directory(
     let (scope, name) = without_ver.split_once('/')?;
     if rows
         .iter()
-        .any(|(key, row)| row["name"].as_str().unwrap_or(key) == name)
+        .any(|(key, row)| row["name"].as_str().unwrap_or(key) == name && row["scope"] == scope)
     {
         return None;
     }
     let rel_dir =
         options.write.path.clone().unwrap_or_else(|| expand_directory(template, scope, name));
+    // The retained writer chooses and validates owner-prefixed destinations.
+    if options.write.path.is_none()
+        && rows
+            .values()
+            .any(|row| row["rootDir"] == rel_dir)
+    {
+        return None;
+    }
     Some(root.join(rel_dir))
 }
 

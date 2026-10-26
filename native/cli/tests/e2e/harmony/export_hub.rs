@@ -85,6 +85,7 @@ fn pending(lane: bool, mode: &str) -> Helper {
     helper.run("tag bar/foo --message hub");
     second_component(&helper, mode);
     if lane {
+        helper.run("export");
         helper.run("lane create dev");
         helper.run("snap --unmodified --message lane");
     }

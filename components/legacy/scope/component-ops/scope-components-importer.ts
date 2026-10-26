@@ -37,7 +37,7 @@ import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import type { HashesPerRemotes } from '../exceptions/missing-objects';
 import { MissingObjects } from '../exceptions/missing-objects';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
-import type { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import type { FETCH_OPTIONS } from '../objects-fetcher/fetch-options';
 
 type HashesPerRemote = { [remoteName: string]: string[] };
 

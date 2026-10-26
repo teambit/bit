@@ -224,6 +224,7 @@ impl Detection<'_> {
             "devFiles": files.iter().filter(|file| dev_files::is_dev_file(file)).collect::<Vec<_>>(),
             "modelPackages": policy.model_packages,
             "workspacePolicy": [field("dependencies"), field("devDependencies"), field("peerDependencies")],
+            "mergePolicy": policy.input["resolution"]["merge"],
             "corePackages": self.facts.core_packages,
             "coreAspectIds": self.facts.core_aspect_ids,
             "workspaceComponents": components,

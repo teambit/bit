@@ -13,6 +13,15 @@ use std::{
 const MAX_INPUT: usize = 4 * 1024 * 1024;
 const MAX_RAW: usize = 32 * 1024 * 1024;
 const MAX_FILES: usize = 4096;
+
+/// Read a bounded Version ancestry graph for native repository planning.
+pub(crate) fn read_graph(objects: &Path, heads: &[String]) -> io::Result<Value> {
+    let request = serde_json::from_value(serde_json::json!({
+        "objectsDirectory":objects,"heads":heads,"cached":[],"overlay":[],
+    }))
+    .map_err(io::Error::other)?;
+    graph::load(&request).map(|value| value["versions"].clone())
+}
 #[derive(Deserialize)]
 #[serde(
     tag = "kind",

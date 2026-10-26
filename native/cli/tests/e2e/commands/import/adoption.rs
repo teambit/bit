@@ -73,6 +73,59 @@ fn adoption_flags_without_ids_preserve_the_released_validation_errors() {
 fn compare(helper: &Helper, command: &str) -> Run {
     support::compare_with_stdout(helper, command, output::durations)
 }
+
+#[test]
+fn sequential_imports_of_equal_names_use_the_incoming_owner_directory() {
+    use crate::commands::move_paths::support::setup as canonical;
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    let mut remotes = Vec::new();
+    for owner in ["first-owner", "second-owner"] {
+        helper.re_init_workspace();
+        let (_, path) = helper.new_bare_scope();
+        let scope = format!("{owner}.shared");
+        crate::helper::config::update_scope_json(&path.join("scope.json"), |value| {
+            value.insert("name".into(), serde_json::json!(scope));
+        });
+        helper.add_remote(&path);
+        crate::helper::config::set_workspace_key(
+            &helper.scopes.local_path,
+            "teambit.workspace/workspace",
+            serde_json::json!({"defaultScope":scope,"defaultDirectory":"{scope}/{name}"}),
+        );
+        helper.output_file("alpha/index.js", &format!("module.exports = '{owner}';\n"));
+        canonical(&helper, "add alpha -i alpha");
+        canonical(&helper, "tag --message initial");
+        canonical(&helper, "export");
+        remotes.push(path);
+    }
+    helper.re_init_workspace();
+    for path in &remotes {
+        helper.add_remote(path);
+    }
+    crate::helper::config::set_workspace_key(
+        &helper.scopes.local_path,
+        "teambit.workspace/workspace",
+        serde_json::json!({"defaultScope":"first-owner.shared","defaultDirectory":"{scope}/{name}"}),
+    );
+    canonical(&helper, "import first-owner.shared/alpha -x");
+    let remote_state = remotes
+        .iter()
+        .map(|path| support::tree(path))
+        .collect::<Vec<_>>();
+    successful(&helper, "import second-owner.shared/alpha -x");
+    let bitmap = helper.read_bit_map();
+    assert_eq!(bitmap["first-owner.shared/alpha"]["rootDir"], "shared/alpha");
+    assert_eq!(bitmap["second-owner.shared/alpha"]["rootDir"], "second-owner/shared/alpha");
+    successful(&helper, "import second-owner.shared/alpha -x");
+    assert_eq!(
+        remotes
+            .iter()
+            .map(|path| support::tree(path))
+            .collect::<Vec<_>>(),
+        remote_state,
+    );
+}
 fn successful(helper: &Helper, command: &str) -> Run {
     let result = compare(helper, command);
     assert!(result.status.success(), "{command}: {} {}", result.stdout, result.stderr);

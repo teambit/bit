@@ -124,6 +124,18 @@ impl ProjectedLinker {
         super::super::docs::load(root, environment, &projection.loading_components())
     }
 
+    pub(in crate::commands) fn import_documentation_components(
+        root: &Path,
+        identities: &[String],
+    ) -> io::Result<Vec<Value>> {
+        let (_, projection) = super::load::projected(
+            root,
+            &bit_object_import::parse_jsonc(&std::fs::read(root.join(".bitmap"))?)?,
+            identities,
+        )?;
+        Ok(projection.loading_components())
+    }
+
     pub(in crate::commands) fn import_acknowledge(&mut self, writes: &[Value]) -> io::Result<()> {
         self.retained.acknowledge_import(writes)?;
         self.retained.validate()

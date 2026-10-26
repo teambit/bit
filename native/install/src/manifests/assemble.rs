@@ -61,14 +61,14 @@ fn resolve_plus(peers: &DependencyMap, root: &DepsObject) -> DependencyMap {
     peers
         .iter()
         .map(|(name, version)| {
-            if version != "+" {
+            if !bit_object_import::plus_version::is_plus(version) {
                 return (name.clone(), version.clone());
             }
             let found = lookup
                 .iter()
                 .find(|field| truthy(root.get(**field), name))
                 .map(|field| root.get(*field)[name].clone());
-            (name.clone(), found.unwrap_or_else(|| "*".to_string()))
+            (name.clone(), bit_object_import::plus_version::resolve(version, found.as_deref(), "*"))
         })
         .collect()
 }

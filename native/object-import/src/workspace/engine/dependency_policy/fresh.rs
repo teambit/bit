@@ -149,8 +149,10 @@ fn controls(request: &Detect) -> io::Result<Vec<proof::Proof>> {
 }
 
 fn validate_packages(request: &Detect) -> io::Result<()> {
-    for packages in
-        request.detection.model_packages.iter().chain(&request.detection.workspace_policy)
+    for packages in request.detection.model_packages
+        .iter()
+        .chain(&request.detection.workspace_policy)
+        .chain(&request.detection.merge_policy)
     {
         if packages
             .values()

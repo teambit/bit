@@ -1,14 +1,22 @@
 import { pickBy, keys, isEmpty, cloneDeep, get, merge } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
 import {
-  MANUALLY_ADD_DEPENDENCY,
+  PLUS_VERSIONS,
   MANUALLY_REMOVE_DEPENDENCY,
   OVERRIDE_COMPONENT_PREFIX,
   DEPENDENCIES_FIELDS,
 } from '@teambit/legacy.constants';
 import type { SourceFile } from '@teambit/component.sources';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import type { ConsumerComponent, Dependency } from '@teambit/legacy.consumer-component';
+import type { ComponentConfig } from './component-config';
+
+/**
+ * the shapes below are legacy consumer-component's ConsumerComponent and Dependency, restated rather than imported
+ * because consumer-component depends on this component.
+ */
+type OverridesComponent = { id: ComponentID; files: SourceFile[]; bitJson?: ComponentConfig };
+/** passed through untouched to the registered overrides loaders */
+type Dependency = { id: ComponentID };
 
 export type ConsumerOverridesOfComponent = ComponentOverridesData & {
   extensions?: Record<string, any>;
@@ -69,7 +77,7 @@ export class ComponentOverrides {
    * use the component-config.
    */
   static async loadFromConsumer(
-    component: ConsumerComponent,
+    component: OverridesComponent,
     envExtendsDeps?: Dependency[]
   ): Promise<ComponentOverrides> {
     const extensionsAddedOverrides = await runOnLoadOverridesEvent(
@@ -143,7 +151,7 @@ export class ComponentOverrides {
     }, {});
   }
   _isValidVersion(ver: string) {
-    return ver !== MANUALLY_ADD_DEPENDENCY && ver !== MANUALLY_REMOVE_DEPENDENCY;
+    return !PLUS_VERSIONS.includes(ver) && ver !== MANUALLY_REMOVE_DEPENDENCY;
   }
   getIgnored(field: string): string[] {
     const filtered = pickBy(this.overrides[field] || {}, (dep) => {

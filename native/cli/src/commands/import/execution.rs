@@ -102,7 +102,10 @@ fn complete(
     let advanced = options.selection.dependents.active()
         || options.write.adoption.track_only
         || options.write.adoption.write_to_empty_dir
-        || options.write.adoption.write_deps.is_some();
+        || options.write.adoption.write_deps.is_some()
+        || planned.prepared["directoryWarnings"]
+            .as_array()
+            .is_some_and(|warnings| !warnings.is_empty());
     if advanced {
         super::render_progress(planned, options, output);
     }

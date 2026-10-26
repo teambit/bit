@@ -1,4 +1,5 @@
 //! Client-side lane creation from a clean main workspace.
+mod staged;
 use crate::helper::{Helper, config, parse, remote, setup};
 use flate2::read::ZlibDecoder;
 use sha1::{Digest, Sha1};

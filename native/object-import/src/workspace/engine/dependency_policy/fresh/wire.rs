@@ -20,6 +20,8 @@ pub(super) struct Detection {
     pub(super) dev_files: Vec<String>,
     pub(super) model_packages: Packages,
     pub(super) workspace_policy: Packages,
+    #[serde(default)]
+    pub(super) merge_policy: Packages,
     pub(super) core_packages: Vec<String>,
     #[serde(default)]
     pub(super) core_aspect_ids: Vec<String>,

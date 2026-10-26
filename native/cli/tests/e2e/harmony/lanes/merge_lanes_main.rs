@@ -3,6 +3,66 @@
 use crate::helper::{Helper, parse};
 
 #[test]
+fn merging_main_retains_the_types_package_added_by_the_incoming_side() {
+    use crate::{commands::move_paths::support::setup, helper::config};
+    use serde_json::json;
+    use std::ffi::OsStr;
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.npm_add_fake_package("sample-package", "1.0.0", false);
+    helper.output_file(
+        "comp1/index.ts",
+        "import sample from 'sample-package';\nexport default sample;\n",
+    );
+    setup(&helper, "add comp1");
+    setup(&helper, "tag --message base");
+    setup(&helper, "export");
+    setup(&helper, "lane create dev");
+    setup(&helper, "snap --unmodified --message lane");
+    let lane = helper.clone_workspace();
+    setup(&helper, "switch main -x");
+    config::set_workspace_key(
+        &helper.scopes.local_path,
+        "teambit.dependencies/dependency-resolver",
+        json!({"policy":{"dependencies":{"@types/sample-package":"1.0.0"}}}),
+    );
+    setup(&helper, "tag --unmodified --message types");
+    setup(&helper, "export");
+    helper.get_cloned_workspace(&lane);
+    let oracle = helper.clone_workspace();
+    let command = "lane merge main -x";
+    let expected = Helper::cmd_in_with(&oracle, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let actual = helper.native_run(command);
+    assert!(expected.status.success(), "{} {}", expected.stdout, expected.stderr);
+    assert_eq!(actual.status.code(), expected.status.code(), "{} {}", actual.stdout, actual.stderr);
+    assert_eq!(actual.stderr, expected.stderr);
+    let native_head = helper.get_head_from_lane("dev", "comp1");
+    let lane = parse(
+        &Helper::cmd_in_with(&oracle, "cat-lane dev", &[("BIT_NATIVE", OsStr::new("off"))]).stdout,
+    );
+    let oracle_head = lane["components"][0]["head"].as_str().unwrap();
+    // Each CLI allocates its own merge snap; all other report bytes must match.
+    assert_eq!(
+        actual.stdout.replace(&native_head, "SNAP_HASH"),
+        expected.stdout.replace(oracle_head, "SNAP_HASH"),
+    );
+    let native_version = helper.cat_component_parsed(&format!("comp1@{native_head}"));
+    let oracle_version = helper.cat_component_in_parsed(&format!("comp1@{oracle_head}"), &oracle);
+    assert_eq!(native_version["devPackageDependencies"]["@types/sample-package"], "1.0.0");
+    for field in [
+        "packageDependencies",
+        "devPackageDependencies",
+        "peerPackageDependencies",
+        "overrides",
+        "extensions",
+        "files",
+        "parents",
+    ] {
+        assert_eq!(native_version[field], oracle_version[field], "{field}");
+    }
+}
+
+#[test]
 fn merging_main_into_local_lane_and_when_deleted_or_tagged() {
     // 1. merging main into local lane: should not throw an error that main lane doesn't exist
     let helper = Helper::new();

@@ -13,6 +13,11 @@ pub(super) fn normalize(root: &Path, version: &mut Value) {
     else {
         return;
     };
+    if builder["data"].get("pipeline").is_none() {
+        assert!(builder["data"]["plannedTasks"].is_array());
+        assert!(builder["data"].get("artifacts").is_none());
+        return;
+    }
     for task in builder["data"]["pipeline"].as_array_mut().unwrap() {
         task.as_object_mut()
             .unwrap()

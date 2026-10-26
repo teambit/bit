@@ -29,7 +29,7 @@ Everything else is Rust:
 - dependency detection (except custom detectors) and policies
 - manifest generation
 - registry and network configuration
-- the engine call and its `readPackage` hooks
+- the engine call, workspace manifest transforms and core-removal overrides
 - the lockfile `bit:` block
 - linking and pruning
 - comment-preserving edits to `workspace.jsonc`
@@ -170,7 +170,7 @@ version bump needs one full install, or removing the stamp.
 
 ## Engine pin
 
-`native/Cargo.toml` pins pnpm at the commit that released `@pnpm/napi` 12.10.1,
+`native/Cargo.toml` pins pnpm at the commit that released `@pnpm/napi` 12.13.0,
 the engine version Bit ships (`workspace.jsonc`). It also repeats pnpm's
 `[patch.crates-io]` entries.
 
@@ -184,9 +184,7 @@ cache.
 
 ## Lockfile compatibility
 
-The engine's `readPackage` hooks are implemented natively and report the
-`pnpmfileChecksum` that Bit's TypeScript integration intended (`bit-1`).
-Lockfiles therefore stay compatible between both implementations.
+Workspace manifests are transformed before the engine call. Registry core dependencies are removed through pnpm overrides, and the active install passes no read-package hook or `pnpmfileChecksum`, matching the released integration. Historical graph restoration migrates `bit-1` checksums to those overrides when the graph has no explicit overrides. Merging restored lockfiles preserves compatible checksum, settings and override fields; an empty or link-only side does not invalidate the other side’s resolution context. A released-helper oracle covers 144 combinations of these fields and resolution inventories.
 
 ## Envs before the package manager
 

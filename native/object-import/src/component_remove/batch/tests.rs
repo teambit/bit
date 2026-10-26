@@ -56,7 +56,7 @@ fn used_new_aspect_is_rejected_before_any_removal() {
     ];
     let error =
         NewBatch::prepare_with_components(&root, &["scope/alpha".into()], &facts).err().unwrap();
-    assert!(error.to_string().starts_with("Unable to remove scope/beta."));
+    assert!(error.to_string().starts_with("Unable to remove scope/alpha."));
     assert!(root.join("alpha/index.js").exists());
     assert!(root.join("beta/index.js").exists());
     fs::remove_dir_all(root).unwrap();

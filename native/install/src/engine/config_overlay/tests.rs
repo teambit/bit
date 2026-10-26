@@ -51,6 +51,8 @@ fn applies_bits_fixed_install_options() {
     let overrides = config.overrides.as_ref().expect("overrides");
     assert_eq!(overrides["a"], "1");
     assert_eq!(overrides["@teambit/harmony"], "0.4.7");
+    assert_eq!(overrides["@teambit/legacy@*"], "-");
+    assert!(!overrides.contains_key("@teambit/harmony@*"));
     assert_eq!(config.peer_dependency_rules.allow_any, Some(vec!["*".to_string()]));
 }
 

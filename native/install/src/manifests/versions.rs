@@ -30,7 +30,7 @@ pub(super) fn is_range(version: &str, origin: &str) -> io::Result<bool> {
         let allowed = is_hash(version)
             || version.starts_with("workspace:")
             || version.starts_with("npm:")
-            || version == "+";
+            || bit_object_import::plus_version::is_plus(version);
         if allowed {
             return Ok(false);
         }

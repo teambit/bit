@@ -85,7 +85,7 @@ fn component(
     true
 }
 fn package_version(request: &Request, name: &str, value: &Value) -> Option<String> {
-    if value != "+" {
+    if !value.as_str().is_some_and(crate::plus_version::is_plus) {
         return value
             .as_str()
             .filter(|value| !value.is_empty())
@@ -94,7 +94,13 @@ fn package_version(request: &Request, name: &str, value: &Value) -> Option<Strin
     request.package_json
         .iter()
         .find(|map| map.contains_key(name))
-        .and_then(|map| version(map, name))
+        .map(|map| {
+            crate::plus_version::resolve(
+                value.as_str().unwrap_or(""),
+                version(map, name).as_deref(),
+                "*",
+            )
+        })
 }
 fn promote(output: &mut Output, components: &[Vec<usize>; 3], packages: &[Map<String, Value>; 3]) {
     for field in 0..3 {

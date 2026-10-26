@@ -13,7 +13,14 @@ pub(super) fn apply(request: &Request, output: &mut Output) -> io::Result<()> {
         }
     }
     for (name, value) in &request.environment.policy {
-        let value = if value == "+" { resolve(request, name)? } else { value.clone() };
+        let value = if let Some(placeholder) =
+            value.as_str().filter(|value| crate::plus_version::is_plus(value))
+        {
+            let resolved = resolve(request, name)?;
+            Value::String(crate::plus_version::resolve(placeholder, resolved.as_str(), "*"))
+        } else {
+            value.clone()
+        };
         output.state.packages[0].insert(name.clone(), value);
     }
     Ok(())
@@ -43,4 +50,44 @@ fn resolve(request: &Request, name: &str) -> io::Result<Value> {
     Ok(Value::String(
         version(&request.environment.model_packages, name).unwrap_or_else(|| "*".to_owned()),
     ))
+}
+
+/// Resolve automatic package placeholders before the environment's own policy replaces them.
+pub(super) fn automatic(request: &Request, output: &mut Output) -> io::Result<()> {
+    for packages in &mut output.state.packages {
+        for (name, value) in packages {
+            let Some(placeholder) =
+                value.as_str().filter(|value| crate::plus_version::is_plus(value))
+            else {
+                continue;
+            };
+            let resolved = preferred(request, name)?;
+            *value = Value::String(crate::plus_version::resolve(placeholder, Some(&resolved), "*"));
+        }
+    }
+    Ok(())
+}
+fn preferred(request: &Request, name: &str) -> io::Result<String> {
+    let workspace = version(&request.environment.workspace.dependencies, name)
+        .or_else(|| version(&request.environment.workspace.peer_dependencies, name));
+    let Some(workspace) = workspace.filter(|version| !version.is_empty()) else {
+        return Ok(resolve(request, name)?
+            .as_str()
+            .unwrap_or("*")
+            .to_owned());
+    };
+    let Ok(range) = node_semver::Range::parse(&workspace) else { return Ok(workspace) };
+    if let Some(installed) =
+        request.resolved.get(name).and_then(|package| package.concrete_version.as_ref())
+        && node_semver::Version::parse(installed).is_ok_and(|version| range.satisfies(&version))
+    {
+        return Ok(installed.clone());
+    }
+    if node_semver::npm::valid_range(&workspace).as_deref() == Some("*") {
+        return Ok(workspace);
+    }
+    Ok(node_semver::npm::min_version(&workspace)
+        .ok()
+        .flatten()
+        .map_or(workspace, |version| version.version))
 }

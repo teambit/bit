@@ -175,15 +175,22 @@ fn report(plan: &Plan, options: &Options<'_>, chalk: Chalk) -> Report {
     let parent_note = plan
         .parent_name()
         .map_or(String::new(), |parent| {
-            format!("\nnote - your new lane will be based on lane {}\n", chalk.bold(parent))
+            formatter.hint(&format!("note - your new lane will be based on lane {parent}"))
         });
+    let moved = plan
+        .moved_from_main()
+        .iter()
+        .map(|id| formatter.item(id))
+        .collect::<Vec<_>>();
     Report {
-        data: format!(
-            "{}\n{parent_note}\n{note}",
+        data: crate::commands::workspace_command::format::Formatter::join(&[
             formatter.success_summary(&format!(
-                "successfully created and checked out to lane {display}"
+                "successfully created and checked out to lane {display}",
             )),
-        ),
+            parent_note,
+            formatter.section("moved from main", "these components had snaps on main that were not exported. the snaps were moved to the new lane", &moved),
+            formatter.hint(&note),
+        ]),
         code: 0,
         details: None,
     }

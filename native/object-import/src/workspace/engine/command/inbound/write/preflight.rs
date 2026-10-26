@@ -19,12 +19,17 @@ pub(in super::super) fn check(
         return Err(invalid("inbound unsupported workspace directory template"));
     }
     crate::checkout::plan::relative_path(&shape)?;
-    let directories = target_directories(&template, targets, rows, options.path)?;
+    let directories = target_directories(
+        root,
+        &template,
+        targets,
+        rows,
+        options,
+        &mut super::relocation::Retained::default(),
+    )?;
     let mut directories = directories.iter();
     for target in targets {
-        let row = rows
-            .values()
-            .find(|row| row["name"] == target.name);
+        let row = rows.values().find(|row| super::matches_target(row, target));
         if let Some(row) = row {
             existing_target(root, target, row, options)?;
         } else if !options.track_only && !options.write_to_empty_dir {

@@ -9,9 +9,9 @@ pub use callbacks::{
 pub(in crate::commands) use callbacks::{restore_callback_host, take_callback_environment};
 pub use commit::{commit, commit_checkout_dependencies};
 pub use snapshot::{
-    snapshot_build, snapshot_control_reads, snapshot_data, snapshot_editor,
-    snapshot_package_manifests, snapshot_pre_snap, snapshot_registry, snapshot_required,
-    snapshot_workspace_issues,
+    snapshot_build, snapshot_control_reads, snapshot_data, snapshot_editor, snapshot_host,
+    snapshot_hydrate, snapshot_package_manifests, snapshot_pre_snap, snapshot_registry,
+    snapshot_required, snapshot_workspace_issues,
 };
 
 mod bitmap;

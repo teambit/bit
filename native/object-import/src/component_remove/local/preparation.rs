@@ -49,7 +49,13 @@ fn packages(
 ) -> io::Result<()> {
     batch::custom_packages(root, selected, components)?;
     for row in &mut *selected {
-        if !row.main_exists {
+        if !row.main_exists
+            && !components
+                .iter()
+                .any(|component| {
+                    component["identity"] == row.identity && component["packageName"].is_string()
+                })
+        {
             row.package.clear();
         }
     }

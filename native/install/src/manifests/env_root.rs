@@ -65,7 +65,7 @@ fn satisfied_envs(
         .iter()
         .filter(|(version, _)| {
             *version == candidate
-                || *version == "+"
+                || bit_object_import::plus_version::is_plus(version)
                 || (valid_range(version).is_some() && satisfies(coerced, version))
         })
         .map(|(_, envs)| envs.len())
@@ -86,7 +86,7 @@ fn conflict_warning(
                 .is_some_and(|coerced| {
                     valid_range(version).is_some() && satisfies(coerced, version)
                 });
-            *version != best && *version != "+" && !satisfied
+            *version != best && !bit_object_import::plus_version::is_plus(version) && !satisfied
         })
         .map(|(version, envs)| {
             format!(
@@ -114,7 +114,9 @@ fn resolve_conflict(
 ) -> String {
     let candidates: Vec<&String> = versions
         .keys()
-        .filter(|version| *version != "+" && coerce(version).is_some())
+        .filter(|version| {
+            !bit_object_import::plus_version::is_plus(version) && coerce(version).is_some()
+        })
         .collect();
     let Some(first) = candidates.first() else {
         return versions
@@ -145,7 +147,7 @@ fn hint(package: &str) -> String {
 impl EnvRoot {
     fn add_root(&mut self, name: &str, version: &str, overrides: bool) {
         self.peers.insert(name.to_string(), version.to_string());
-        if overrides && version != "+" {
+        if overrides && !bit_object_import::plus_version::is_plus(version) {
             self.overrides.insert(name.to_string(), version.to_string());
         }
     }
@@ -153,7 +155,7 @@ impl EnvRoot {
     fn per_component(&mut self, name: &str, versions: &IndexMap<String, IndexSet<String>>) {
         for (version, envs) in versions
             .iter()
-            .filter(|(version, _)| *version != "+")
+            .filter(|(version, _)| !bit_object_import::plus_version::is_plus(version))
         {
             for env in envs {
                 self.component_peers

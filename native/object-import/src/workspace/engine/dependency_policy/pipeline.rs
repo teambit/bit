@@ -98,9 +98,12 @@ fn package_names(finish: &Value) -> io::Result<Vec<String>> {
         }
     };
     for (name, version) in environment {
-        if version == "+" {
+        if version.as_str().is_some_and(crate::plus_version::is_plus) {
             add(name);
         }
+    }
+    for name in automatic_placeholder_names(finish)? {
+        add(&name);
     }
     for field in
         finish["manual"].as_array().ok_or_else(|| invalid("dependency pipeline manual policy"))?
@@ -126,4 +129,20 @@ fn version_request(request: &Request, output: &Value) -> io::Result<versions::Re
             "workspace":policy.workspace_policy.dependencies,"automatic":policy.automatic,
             "merge":resolution.merge,"prefix":resolution.prefix}}))
     .map_err(io::Error::other)
+}
+
+fn automatic_placeholder_names(finish: &Value) -> io::Result<Vec<String>> {
+    let fields = finish["state"]["packages"]
+        .as_array()
+        .ok_or_else(|| invalid("dependency pipeline packages"))?;
+    let mut names = Vec::new();
+    for field in fields {
+        let map = field.as_object().ok_or_else(|| invalid("dependency pipeline package field"))?;
+        names.extend(
+            map.iter()
+                .filter(|(_, value)| value.as_str().is_some_and(crate::plus_version::is_plus))
+                .map(|(name, _)| name.clone()),
+        );
+    }
+    Ok(names)
 }

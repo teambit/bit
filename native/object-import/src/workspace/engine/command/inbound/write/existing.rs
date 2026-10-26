@@ -58,8 +58,7 @@ pub(super) fn prepare(
     if !input.resolution.track_only {
         plan_files(input, &old, new, &name, changes)?;
     }
-    let bitmap =
-        rows.get_mut(&input.target.name).ok_or_else(|| invalid("inbound existing bitmap"))?;
+    let bitmap = super::identity::existing_mut(rows, input.target)?;
     bitmap["version"] = Value::String(name);
     bitmap["mainFile"] = Value::String(main.to_owned());
     reorder_bitmap(bitmap)?;
@@ -102,7 +101,11 @@ fn imported_model<'a>(
     rows: &Map<String, Value>,
 ) -> io::Result<Cow<'a, Value>> {
     let scope = input.target.scope.as_deref().ok_or_else(|| invalid("inbound existing scope"))?;
-    if input.row["scope"] != scope || rows.get(&input.target.name) != Some(input.row) {
+    if input.row["scope"] != scope
+        || !rows
+            .values()
+            .any(|row| row == input.row)
+    {
         return Err(invalid("inbound existing workspace identity"));
     }
     details::model(input.root, input.imported, scope, &input.target.name)

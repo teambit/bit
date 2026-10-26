@@ -2,6 +2,8 @@ pub(in crate::workspace::engine) use wire::Request;
 
 mod environment;
 mod manual;
+#[cfg(test)]
+mod tests;
 mod wire;
 
 use super::{invalid, io};
@@ -11,6 +13,7 @@ use wire::Output;
 pub(in crate::workspace::engine) fn apply(request: &Request) -> io::Result<(usize, Value)> {
     validate(request)?;
     let mut output = Output::new(request);
+    environment::automatic(request, &mut output)?;
     environment::apply(request, &mut output)?;
     manual::apply(request, &mut output);
     Ok((1, json!(output)))

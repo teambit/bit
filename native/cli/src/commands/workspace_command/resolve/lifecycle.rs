@@ -1,5 +1,7 @@
 //! Run published extension hooks between native selection and version allocation.
 
+mod plus_ranges;
+
 use super::{Session, check_token, component_receipts, workflow::Workflow};
 use crate::commands::status::{
     autosync::Startup,
@@ -175,7 +177,9 @@ pub(super) fn pre_snap(
     startup: &mut Startup,
     params: &Value,
 ) -> io::Result<Value> {
+    hydrate_default(session, startup, params, plan)?;
     if !capture::snapshot_required(&session.capture, &session.context, params) {
+        plus_ranges::validate(session, plan)?;
         return Ok(json!([]));
     }
     let selected = strings(&plan["selectedIds"])?;
@@ -200,6 +204,7 @@ pub(super) fn pre_snap(
     callback_output(startup, &capture::callback_load_stdout(&session.capture)[before..]);
     let result = result?;
     refresh_sources(session, &result)?;
+    plus_ranges::validate(session, plan)?;
     if let Some(editor) = &workflow.editor {
         startup.committed = true;
         capture::snapshot_editor(
@@ -212,6 +217,46 @@ pub(super) fn pre_snap(
     } else {
         Ok(json!([]))
     }
+}
+
+fn hydrate_default(
+    session: &mut Session<'_>,
+    startup: &mut Startup,
+    params: &Value,
+    plan: &Value,
+) -> io::Result<()> {
+    let Some(host) = capture::snapshot_host(&session.capture, session.root, params)? else {
+        return Ok(());
+    };
+    validate_graph_targets(&session.context, plan, params)?;
+    let validated: Value = session.engine.request(&json!({
+        "kind":"commandSnapshotValidate", "token":session.token,
+        "dependencyReadSet":session.capture.dependency_read_set(),
+    }))?;
+    check_token(&validated, &session.token)?;
+    startup.committed = true;
+    let before = capture::callback_load_stdout(&session.capture).len();
+    let result = capture::snapshot_hydrate(&mut session.capture, &session.context, host);
+    callback_output(startup, &capture::callback_load_stdout(&session.capture)[before..]);
+    result?;
+    refresh_sources(session, &json!({}))
+}
+
+fn validate_graph_targets(context: &Value, plan: &Value, params: &Value) -> io::Result<()> {
+    if params["noLockDeps"] == true {
+        return Ok(());
+    }
+    let targets = array(context.get("targets"), "snapshot graph targets")?;
+    for identity in array(plan.get("needsSnap"), "snapshot graph selection")? {
+        let identity = text(Some(identity))?;
+        if !targets
+            .iter()
+            .any(|target| target["identity"].as_str() == Some(identity))
+        {
+            return Err(crate::commands::status::js::decline("command snapshot target"));
+        }
+    }
+    Ok(())
 }
 
 fn strings(value: &Value) -> io::Result<Vec<String>> {
@@ -313,4 +358,25 @@ fn refresh_sources(session: &mut Session<'_>, result: &Value) -> io::Result<()> 
         "sourceChanges":result.get("changedWorkspaceSources").cloned().unwrap_or_else(||json!([])),
     }))?;
     check_token(&refreshed, &session.token)
+}
+
+/// Carry environment-provided task descriptions into the native Version allocation.
+pub(super) fn planned_tasks(receipt: &mut Value, capture: &capture::Capture) -> io::Result<()> {
+    let Some(versions) = receipt
+        .get_mut("versions")
+        .filter(|value| !value.is_null())
+    else {
+        return Ok(());
+    };
+    for version in
+        versions.as_array_mut().ok_or_else(|| io::Error::other("snapshot allocation versions"))?
+    {
+        let identity = text(version.get("identity"))?;
+        if let Some(tasks) =
+            capture::snapshot_data(capture, identity).and_then(|data| data.get("plannedTasks"))
+        {
+            version["plannedTasks"] = tasks.clone();
+        }
+    }
+    Ok(())
 }

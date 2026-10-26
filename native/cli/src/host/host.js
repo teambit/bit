@@ -1100,6 +1100,9 @@ async function hydrateStatusComponent(row, sourceConsumer) {
     for (const field of ['log', 'docs', 'buildStatus', 'packageJsonChangedProps']) {
       if (Object.hasOwn(row.scope.currentVersion, field)) consumer[field] = row.scope.currentVersion[field];
     }
+    const storedBuilder = row.scope.currentVersion.extensions?.find(extension => extension.name === 'teambit.pipelines/builder');
+    const builder = consumer.extensions.findCoreExtension('teambit.pipelines/builder');
+    if (storedBuilder && builder) builder.data = structuredClone(storedBuilder.data);
   }
   if ((identityMutationCommand || checkoutCommand || ['add','a'].includes(cliArguments[0])) && trackingDocumentation.size) {
     consumer.docs = row.files.flatMap((file) => trackingDocumentation.get(path.join(directory, file)) ?? []);
@@ -1208,7 +1211,7 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout, 
 }
 
 function snapshotData(consumer) {
-  return { consumerMetadata: {
+  return { rangeDependencies: consumer.getAllDependencies().map(dependency => dependency.serialize()), consumerMetadata: {
     log: consumer.log, docs: consumer.docs, buildStatus: consumer.buildStatus,
     packageJsonChangedProps: consumer.packageJsonChangedProps,
     ...(consumer.dependenciesGraph ? {dependenciesGraph: consumer.dependenciesGraph.serialize()} : {}),
@@ -1251,7 +1254,10 @@ function statusMetadata(current, consumer) {
 async function statusApplyLoadCallbacks(component, { workspace, envs, resolver }) {
     const policy = await resolver.mergeVariantPolicies(component.config.extensions, component.id, component.state._consumer.files);
     const dependencies = await resolver.extractDepsFromLegacy(component, policy);
-    await statusUpsert(component, 'teambit.envs/envs', await envs.calcDescriptor(component, { skipWarnings: false }));
+    const envData = await envs.calcDescriptor(component, { skipWarnings: false });
+    const resolvedEnvJsonc = await envs.calculateEnvManifest(component, component.state._consumer.files, component.state._consumer.dependencies.get());
+    if (resolvedEnvJsonc) envData.resolvedEnvJsonc = resolvedEnvJsonc;
+    await statusUpsert(component, 'teambit.envs/envs', envData);
     await statusUpsert(component, 'teambit.dependencies/dependency-resolver', {
       packageName: resolver.calcPackageName(component), dependencies: dependencies.serialize(), policy: policy.serialize(),
       componentRangePrefix: resolver.calcComponentRangePrefixByConsumerComponent(component.state._consumer),

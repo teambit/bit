@@ -4,6 +4,8 @@
 pub(super) use preflight::check as preflight;
 
 use super::{Target, invalid};
+use identity::{bitmap_key, matches_target};
+mod identity;
 use crate::command_import::PreparedImport;
 use serde_json::{Map, Value, json};
 use std::{
@@ -118,10 +120,11 @@ fn prepare_targets(
         track_only: options.track_only,
         lane,
     };
-    let mut directories = target_directories(template, targets, rows, options.path)?;
     let mut changes = WorkspaceFiles::default();
+    let mut directories =
+        target_directories(root, template, targets, rows, options, &mut changes.relocation)?;
     if options.write_to_empty_dir && !options.track_only {
-        changes.relocation = relocation::prepare(root, &mut directories, rows)?;
+        relocation::prepare_into(root, &mut directories, rows, &mut changes.relocation)?;
     }
     let mut directories = directories.into_iter();
     let mut written = HashSet::new();
@@ -144,28 +147,26 @@ fn prepare_targets(
 }
 
 fn target_directories(
+    root: &Path,
     template: &str,
     targets: &[Target],
     rows: &Map<String, Value>,
-    path: Option<&str>,
+    options: Options<'_>,
+    retained: &mut relocation::Retained,
 ) -> io::Result<Vec<String>> {
     let new = targets
         .iter()
-        .filter(|target| {
-            !rows
-                .values()
-                .any(|row| row["name"] == target.name)
-        })
+        .filter(|target| !rows.values().any(|row| matches_target(row, target)))
         .cloned()
         .collect::<Vec<_>>();
-    if let Some(path) = path {
+    if let Some(path) = options.path {
         if targets.len() != 1 || new.len() != 1 {
             return Err(invalid("inbound path requires a new component"));
         }
         crate::checkout::plan::relative_path(path)?;
         Ok(vec![path.to_owned()])
     } else {
-        directories::assign(template, &new, rows)
+        directories::assign(root, template, &new, rows, !options.track_only, retained)
     }
 }
 
@@ -188,7 +189,7 @@ fn plan_target(
 ) -> io::Result<()> {
     let existing = rows
         .values()
-        .find(|row| row["name"] == target.name)
+        .find(|row| matches_target(row, target))
         .cloned();
     let directory = if let Some(row) = &existing {
         row["rootDir"]
@@ -253,7 +254,12 @@ fn prepare_target(
     lane: Option<&Value>,
 ) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
     let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound workspace scope"))?;
-    unique_name(rows, &target.name)?;
+    if rows
+        .values()
+        .any(|row| row["name"] == target.name && row["scope"].as_str().is_none_or(str::is_empty))
+    {
+        return Err(invalid("inbound unscoped workspace identity"));
+    }
     let model = super::details::model(root, import, scope, &target.name)?;
     let (version_name, hash) = version(&model, &target.version)?;
     let version = import.overlay
@@ -266,8 +272,9 @@ fn prepare_target(
     let main = version["mainFile"].as_str().ok_or_else(|| invalid("inbound main file"))?;
     crate::checkout::plan::relative_path(main)?;
     let files = target_files(root, directory, version, main, import)?;
+    let key = bitmap_key(rows, &target.name, scope)?;
     rows.insert(
-        target.name.clone(),
+        key,
         json!({"name":target.name,"scope":scope,
         "version":version_name,"mainFile":main,"rootDir":directory}),
     );
@@ -358,17 +365,6 @@ fn safe_destination(root: &Path, path: &Path) -> io::Result<()> {
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
             Err(error) => return Err(error),
         }
-    }
-    Ok(())
-}
-
-fn unique_name(rows: &Map<String, Value>, name: &str) -> io::Result<()> {
-    if rows.contains_key(name)
-        || rows
-            .values()
-            .any(|row| row["name"] == name)
-    {
-        return Err(invalid("inbound existing workspace component requires canonical writer"));
     }
     Ok(())
 }

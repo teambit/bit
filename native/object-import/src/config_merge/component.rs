@@ -4,6 +4,7 @@ mod data;
 mod deps;
 mod engine;
 mod env;
+mod specific;
 
 #[cfg(test)]
 mod tests;
@@ -19,6 +20,7 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
     current(&mut engine)?;
     other(&mut engine)?;
     env::merge(&mut engine)?;
+    specific::retain(&mut engine)?;
     engine.log(
         "debug",
         format!(

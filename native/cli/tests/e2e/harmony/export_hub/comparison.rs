@@ -27,7 +27,7 @@ pub(in crate::harmony) fn requests(rows: &[Value], retry: bool) {
     for row in &uploads {
         assert_eq!(row["headers"]["authorization"], "Bearer fixture-token");
         assert_eq!(row["headers"]["x-custom-origin"], "fixture-hub");
-        assert_eq!(row["headers"]["x-client-version"], "2.2.94");
+        assert_eq!(row["headers"]["x-client-version"], include_str!("../../bit-version").trim());
         assert!(row["headers"].get("x-request-scope").is_none());
         assert_eq!(row["headers"]["x-objects-hash"], row["hash"]);
         let id = row["headers"]["x-request-id"].as_str().unwrap();
@@ -219,7 +219,7 @@ pub(in crate::harmony) fn direct_requests(rows: &[Value], scope: &str) {
     for upload in &uploads {
         assert_eq!(upload["push"], scope);
         assert_eq!(upload["headers"]["authorization"], "Bearer fixture-token");
-        assert_eq!(upload["headers"]["x-client-version"], "2.2.94");
+        assert_eq!(upload["headers"]["x-client-version"], include_str!("../../bit-version").trim());
     }
     assert_eq!(uploads[0]["order"], uploads[1]["order"]);
     let routes: Vec<_> = rows

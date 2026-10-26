@@ -3,9 +3,8 @@
 //! Ports `lynx.ts`, `pnpm.package-manager.ts`, `pnpm-prune-modules.ts` and
 //! the registry, proxy and network resolution of the `dependency-resolver`
 //! aspect. The install itself mirrors how `@pnpm/napi` drives
-//! `pnpm_package_manager::Install` (`napi/src/install.rs`), with Bit's
-//! `readPackage` hooks implemented natively instead of through a JavaScript
-//! callback.
+//! `pnpm_package_manager::Install` (`napi/src/install.rs`), with native workspace
+//! manifest preprocessing and pnpm overrides for removed core dependencies.
 
 pub use canonical::CanonicalInstall;
 pub use cloud_user::{

@@ -25,6 +25,7 @@ fn entry(value: &Value) -> io::Result<Value> {
         return Err(invalid("scope aspect config"));
     }
     let mut result = json!({"stringId":id,"idWithoutVersion":base,"config":config,
+        "isSpecific":value["config"]["__specific"] == true,
         "configJson":serde_json::to_string(&config).map_err(io::Error::other)?,
         "configPretty":serde_json::to_string_pretty(&config).map_err(io::Error::other)?,
         "data":value.get("data").cloned().unwrap_or_else(|| json!({})),"dataUndefinedKeys":[]});

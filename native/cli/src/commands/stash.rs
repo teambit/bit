@@ -214,9 +214,7 @@ fn apply_save(
     save.persist(root)?;
     reset(root, &mut save)?;
     if !save.new.is_empty() {
-        output.status(&format!("loading {} component(s)", save.loaded));
         let batch = NewBatch::prepare_with_components(root, &save.new, &save.removal_components())?;
-        output.status(&format!("loading {} component(s)", save.new.len()));
         batch.commit(&workspace_command::file_id())?;
     }
     super::status::cleanup_temporary(root)?;

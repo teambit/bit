@@ -10,7 +10,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::io;
 
-pub(super) fn load(
+pub(in crate::commands::status) fn load(
     host: &Host,
     context: &Value,
     capture: &mut Capture,

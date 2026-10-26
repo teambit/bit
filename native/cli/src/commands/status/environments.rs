@@ -404,7 +404,8 @@ fn root_aspects(context: &Value, core: &[String]) -> Vec<String> {
 }
 
 fn needs_facts(component: &WorkspaceComponent, core: &[String], aspects: &[String]) -> bool {
-    component.env_id != "teambit.harmony/node"
+    component.is_env
+        || component.env_id != "teambit.harmony/node"
         || !aspects.is_empty()
         || component.config
             .keys()
