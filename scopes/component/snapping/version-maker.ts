@@ -230,6 +230,15 @@ export class VersionMaker {
         },
         batchId: this.batchId,
       });
+      if (!build) {
+        component.dependenciesGraph = undefined;
+        component.flattenedEdges = [];
+        const workspaceComp = this._findWorkspaceCompByConsumerComp(component);
+        if (workspaceComp?.state._consumer) {
+          workspaceComp.state._consumer.dependenciesGraph = undefined;
+          workspaceComp.state._consumer.flattenedEdges = [];
+        }
+      }
       if (this.workspace && !isHiddenLaneEntry) {
         const modelComponent = component.modelComponent || (await this.legacyScope.getModelComponent(component.id));
         await updateVersions(
@@ -977,11 +986,12 @@ function addIntegritiesToDependenciesGraph(
     const index = selector.indexOf('@', 1);
     const name = selector.substring(0, index);
     const version = selector.substring(index + 1);
-    const pendingPkg =
-      dependenciesGraph.packages.get(`${name}@${previouslyUsedVersion}`) ??
-      dependenciesGraph.packages.get(`${name}@${version}`);
+    const pendingKey = dependenciesGraph.packages.has(`${name}@${previouslyUsedVersion}`)
+      ? `${name}@${previouslyUsedVersion}`
+      : `${name}@${version}`;
+    const pendingPkg = dependenciesGraph.packages.get(pendingKey);
     if (pendingPkg) {
-      pendingPkg.resolution = { integrity };
+      dependenciesGraph.packages.set(pendingKey, { ...pendingPkg, resolution: { integrity } });
       resolvedVersions.push({ name, version, previouslyUsedVersion });
     }
   }
