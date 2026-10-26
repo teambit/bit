@@ -144,7 +144,9 @@ export class VersionMaker {
     const componentsToTag = this.getUniqCompsToTag();
     const idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
     // a component that is tagged explicitly is not auto-tagged too (the scope flow may find it as both)
-    const autoTagData = (await this.getAutoTagData(idsToTag)).filter(
+    // like updateDependenciesVersions, a removed component is not a new version of its dependents' dependency
+    const removedIds = ComponentIdList.fromArray(componentsToTag.filter((c) => c.isRemoved()).map((c) => c.id));
+    const autoTagData = (await this.getAutoTagData(idsToTag, removedIds)).filter(
       (autoTagItem) => !idsToTag.has(autoTagItem.component.id)
     );
     const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
@@ -459,13 +461,17 @@ export class VersionMaker {
     return Object.values(consumerComponentsIdsMap); // consumerComponents unique
   }
 
-  private async getAutoTagData(idsToTag: ComponentIdList): Promise<AutoTagResult[]> {
+  private async getAutoTagData(idsToTag: ComponentIdList, removedIds: ComponentIdList): Promise<AutoTagResult[]> {
     if (this.params.skipAutoTag) return [];
     // hidden lane.updateDependents are scope-only — they're not in the workspace
     // bitmap, so the workspace autotag candidate pool can't see them. Always run the scope-side
     // autotag pass alongside the workspace one when on a lane, so cascading a hidden updateDependent
     // off a workspace snap (scenario 1) works.
-    const fromScope = await this.getLaneAutoTagIdsFromScope(idsToTag, /* hiddenOnly */ Boolean(this.workspace));
+    const fromScope = await this.getLaneAutoTagIdsFromScope(
+      idsToTag,
+      removedIds,
+      /* hiddenOnly */ Boolean(this.workspace)
+    );
     if (!this.workspace) return fromScope;
     // ids without versions are new. it's impossible that tagged (and not-modified) components has
     // them as dependencies. Also filter out hidden lane entries — getAutoTagInfo loads
@@ -491,7 +497,13 @@ export class VersionMaker {
     return [...fromWorkspace, ...fromScopeFiltered];
   }
 
-  private async getLaneAutoTagIdsFromScope(idsToTag: ComponentIdList, hiddenOnly = false): Promise<AutoTagResult[]> {
+  private async getLaneAutoTagIdsFromScope(
+    idsToTag: ComponentIdList,
+    removedIds: ComponentIdList,
+    hiddenOnly = false
+  ): Promise<AutoTagResult[]> {
+    const triggerIds = ComponentIdList.fromArray(idsToTag.filter((id) => !removedIds.has(id)));
+    if (!triggerIds.length) return [];
     const lane = await this.legacyScope.getCurrentLaneObject();
     if (!lane) return [];
     // for the workspace+lane path we only care about hidden entries — workspace autotag handles
@@ -509,7 +521,7 @@ export class VersionMaker {
     const candidates = await this.legacyScope.getManyConsumerComponents(ComponentIdList.fromArray(candidateLaneIds));
     // a component that was removed from the lane is not snapped again, same as in a workspace, where it's not loaded
     const notRemovedCandidates = candidates.filter((candidate) => !candidate.isRemoved());
-    return getAutoTagInfoFromComponents(notRemovedCandidates, idsToTag);
+    return getAutoTagInfoFromComponents(notRemovedCandidates, triggerIds);
   }
 
   private async setFutureVersions(autoTagIds: ComponentIdList): Promise<void> {
