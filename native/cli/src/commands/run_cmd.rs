@@ -35,6 +35,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("run arguments are not UTF-8".into()));
     };
+    if is_help_form(&argv[1..]) {
+        io::stdout()
+            .lock()
+            .write_all(command_help("run").as_bytes())?;
+        return Ok(Outcome::Exit(ExitCode::SUCCESS));
+    }
     if let Some(unknown) = run_unsupported_help(&argv[1..]) {
         return print_unsupported_help(unknown);
     }
@@ -61,6 +67,10 @@ fn print_unsupported_help(unknown: &str) -> io::Result<Outcome> {
 }
 
 pub(super) fn unsupported_help(command: &str, unknown: &str) -> String {
+    format!("{}\n{unknown}\n", command_help(command))
+}
+
+pub(super) fn command_help(command: &str) -> String {
     let global = GLOBAL_HELP;
     format!(
         r#"bit {command} [app-name]
@@ -83,10 +93,16 @@ Options
   -a, --args        the arguments passing to the app. for example, --args="--a=1 --b". don't forget to use quotes to wrap the value to escape special characters.  [string]
 
 {global}
-
-{unknown}
 "#,
     )
+}
+
+pub(super) fn is_help_form(args: &[&str]) -> bool {
+    match args {
+        ["--help" | "-h"] => true,
+        [name, "--help" | "-h"] if !name.is_empty() && !name.starts_with('-') => true,
+        _ => false,
+    }
 }
 
 fn run_unsupported_help(args: &[&str]) -> Option<&'static str> {

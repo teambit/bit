@@ -1,8 +1,10 @@
 //! Native `bit app [subcommand]` (`scopes/harmony/application/app.cmd.ts`, alias `apps`).
 
+mod help;
 #[cfg(test)]
 mod tests;
 
+use self::help::{app_help_output, app_run_help_name, unsupported_flag_help};
 use super::{
     Command,
     color::Chalk,
@@ -45,6 +47,16 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("app arguments are not UTF-8".into()));
     };
+    if let Some(name) = app_run_help_name(&argv) {
+        io::stdout()
+            .lock()
+            .write_all(run_cmd::command_help(&format!("{name} run")).as_bytes())?;
+        return Ok(Outcome::Exit(ExitCode::SUCCESS));
+    }
+    if let Some(help) = app_help_output(&argv) {
+        io::stdout().lock().write_all(help.as_bytes())?;
+        return Ok(Outcome::Exit(ExitCode::SUCCESS));
+    }
     if let Some(help) = unsupported_flag_help(&argv) {
         io::stdout().lock().write_all(help.as_bytes())?;
         return Ok(Outcome::Exit(ExitCode::FAILURE));
@@ -63,33 +75,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return emit_apps_outcome(&root, args, &options, &apps);
     }
     Ok(Outcome::Declined("app list delegated".into()))
-}
-
-fn unsupported_flag_help(argv: &[&str]) -> Option<String> {
-    let name = *argv.first()?;
-    let global = GLOBAL_HELP;
-    match &argv[1..] {
-        ["run" | "c", "--ssr"] => {
-            Some(run_cmd::unsupported_help(&format!("{name} run"), "Unknown argument: ssr"))
-        }
-        ["run" | "c", app_name, "--ssr"] if !app_name.is_empty() && !app_name.starts_with('-') => {
-            Some(run_cmd::unsupported_help(&format!("{name} run"), "Unknown argument: ssr"))
-        }
-        [flag @ ("--json" | "--no-color")] => {
-            let unknown = if *flag == "--json" {
-                "Unknown argument: json"
-            } else {
-                "Unknown arguments: no-color, noColor"
-            };
-            Some(format!(
-                "bit {name} [sub-command]\n\nmanage application components\napplications are components that create deployable, runnable applications like React apps or Node.js servers.\nlist available apps in the workspace and inspect their configurations.\nuse \"bit run\" to start an application locally.\nfor more info, visit: https://bit.dev/docs/getting-started/composing/create-apps\n\nCommands:\n  bit {name} list            list all registered apps\n  bit {name} run [app-name]  start an application component locally  [aliases: c]\n\n{global}\n\n{unknown}\n",
-            ))
-        }
-        ["list", "--no-color"] => Some(format!(
-            "bit {name} list\n\nlist all registered apps\nfor more info, visit: https://bit.dev/reference/reference/cli-reference\n\nOptions\n  -j, --json  return the component data in json format  [boolean]\n\n{global}\n\nUnknown arguments: no-color, noColor\n",
-        )),
-        _ => None,
-    }
 }
 
 fn run_supported_run(args: &[OsString]) -> io::Result<Outcome> {
@@ -115,7 +100,7 @@ pub(super) fn standard_nonapp_component_count(root: &Path) -> Option<usize> {
 }
 
 fn is_supported_run(args: &[&str]) -> bool {
-    let ["run", rest @ ..] = args else {
+    let ["run" | "c", rest @ ..] = args else {
         return false;
     };
     let Some(options) = run_cmd::parse_options(rest) else {
@@ -146,6 +131,23 @@ fn run_outside_workspace(args: &[OsString], argv: &[&str]) -> io::Result<Outcome
     match &argv[1..] {
         ["list", "-j" | "--json"] => {
             io::stdout().lock().write_all(b"[]")?;
+        }
+        ["list", "-j" | "--json", "true"] => {
+            io::stdout().lock().write_all(b"[]")?;
+        }
+        ["list", "-j" | "--json", "false"] => {
+            let chalk = Chalk::detect(args);
+            writeln!(io::stdout().lock(), r#"- running command "list"..."#)?;
+            writeln!(io::stdout().lock(), "{}", chalk.yellow("no apps found"))?;
+        }
+        ["list", flag] if inline_json_value(flag).is_some() => {
+            if inline_json_value(flag) == Some("true") {
+                io::stdout().lock().write_all(b"[]")?;
+            } else {
+                let chalk = Chalk::detect(args);
+                writeln!(io::stdout().lock(), r#"- running command "list"..."#)?;
+                writeln!(io::stdout().lock(), "{}", chalk.yellow("no apps found"))?;
+            }
         }
         [] | ["list"] => {
             let chalk = Chalk::detect(args);
@@ -186,7 +188,18 @@ fn emit_apps_outcome(
             .collect();
         table::render(&["id", "name"], &rows, table::colors(args))
     };
-    if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+    if env::var_os("CI").is_some_and(|value| !value.is_empty())
+        || args
+            .windows(2)
+            .any(|pair| matches!(pair[0].to_str(), Some("-j" | "--json")) && pair[1] == "false")
+        || args
+            .iter()
+            .any(|arg| {
+                arg.to_str()
+                    .and_then(inline_json_value)
+                    .is_some_and(|value| value != "true")
+            })
+    {
         let label = if args.len() == 1 { "app" } else { "list" };
         writeln!(io::stdout().lock(), r#"- running command "{label}"..."#)?;
     }
@@ -312,13 +325,33 @@ fn parse_quoted_literal(input: &str) -> Option<String> {
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut json = false;
     let mut saw_list = false;
-    for &arg in args {
+    let mut args = args.iter().copied().peekable();
+    while let Some(arg) = args.next() {
         match arg {
             "--no-color" => {}
+            "-j" | "--json"
+                if saw_list
+                    && args
+                        .peek()
+                        .is_some_and(|next| matches!(*next, "true" | "false")) =>
+            {
+                json = args.next() == Some("true");
+            }
             "-j" | "--json" => json = true,
+            arg if saw_list && inline_json_value(arg).is_some() => {
+                json = inline_json_value(arg) == Some("true");
+            }
             "list" if !saw_list => saw_list = true,
             _ => return None,
         }
     }
     Some(Options { json })
+}
+
+fn inline_json_value(flag: &str) -> Option<&str> {
+    flag.strip_prefix("--json=")
+        .or_else(|| {
+            flag.strip_prefix("-j=")
+                .filter(|value| !value.is_empty())
+        })
 }
