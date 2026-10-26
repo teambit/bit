@@ -1,5 +1,4 @@
 import fs from 'fs-extra';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import pathlib from 'path';
 import { BitError } from '@teambit/bit-error';
 import { DEFAULT_LANE } from '@teambit/lane-id';
@@ -33,7 +32,6 @@ export type ScopeJsonProps = {
 export type TrackLane = { localLane: string; remoteLane: string; remoteScope: string };
 
 export class ScopeJson {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _name: string;
   version: string | null | undefined;
   resolverPath: string | null | undefined;
@@ -60,12 +58,10 @@ export class ScopeJson {
     this.config = config;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set name(suggestedName: string) {
     this._name = BitId.getValidScopeName(suggestedName);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get name(): string {
     return this._name;
   }

@@ -110,9 +110,7 @@ export class Component {
   bindingPrefix: string;
   mainFile: PathOsBased;
   bitJson: ComponentConfig | undefined;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dependencies: Dependencies;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
   peerDependencies: Dependencies;
   dependenciesGraph?: DependenciesGraph;
@@ -144,12 +142,10 @@ export class Component {
   deprecated: boolean;
   protected removed?: boolean; // was it soft-removed. to get this data please use isRemoved() method.
   defaultScope: string | null;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _isModified: boolean;
   packageJsonFile: PackageJsonFile | undefined; // populated when loadedFromFileSystem or when writing the components. for author it never exists
   packageJsonChangedProps: Record<string, any> | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | undefined;
   /**
