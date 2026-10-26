@@ -813,6 +813,35 @@ describe('filterLockfileByImporters', () => {
     delete filtered.snapshots!['foo@1.0.0(bar@1.0.0)'].dependencies!.bar;
     expect(lockfile.snapshots!['foo@1.0.0(bar@1.0.0)'].dependencies!.bar).to.equal('1.0.0');
   });
+
+  it('should retain package metadata for a reached dependency even when its snapshot is absent', () => {
+    const lockfile: BitLockfileFile = {
+      lockfileVersion: '9.0',
+      importers: {
+        'comps/comp1': {
+          dependencies: {
+            foo: { version: '1.0.0', specifier: '^1.0.0' },
+          },
+        },
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-foo' } },
+      },
+      snapshots: {},
+    };
+    const filtered = filterLockfileByImporters(lockfile, ['comps/comp1']);
+    expect(filtered.packages).to.eql({
+      'foo@1.0.0': { resolution: { integrity: 'sha512-foo' } },
+    });
+    const graph = convertLockfileToGraph(filtered, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentIdByPkgName: new Map([['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')]]),
+    });
+    expect(graph.packages.get('foo@1.0.0')).to.eql({
+      resolution: { integrity: 'sha512-foo' },
+    });
+  });
 });
 
 describe('convertLockfileToGraph benchmark', () => {

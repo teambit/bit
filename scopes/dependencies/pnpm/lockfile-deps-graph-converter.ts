@@ -386,13 +386,13 @@ export function filterLockfileByImporters(
     while (stack.length > 0) {
       const current = stack.pop()!;
       if (reachableSnapshots.has(current)) continue;
-      const snapshot = lockfile.snapshots?.[current];
-      if (!snapshot) continue;
-      reachableSnapshots.add(current);
       const pkgId = dp.removeSuffix(current);
       if (lockfile.packages?.[pkgId] != null) {
         reachablePackages.add(pkgId);
       }
+      const snapshot = lockfile.snapshots?.[current];
+      if (!snapshot) continue;
+      reachableSnapshots.add(current);
       for (const depType of ['dependencies', 'optionalDependencies'] as const) {
         for (const [name, ref] of Object.entries(snapshot[depType] ?? {}) as Array<[string, string]>) {
           const subDepPath = dp.refToRelative(ref, name);
