@@ -9,6 +9,8 @@ export {
   ClientIdInUse,
   ComponentNeedsUpdate,
   ScopeNotFound,
+  ScopeNotFoundOrDenied,
+  UnexpectedNetworkError,
   ScopeJsonNotFound,
   ComponentNotFound,
   DependenciesNotFound,

@@ -5,7 +5,7 @@ import { BitError } from '@teambit/bit-error';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { SCOPE_JSON, SCOPE_JSONC } from '@teambit/legacy.constants';
-import type { Remote } from '@teambit/scope.remotes';
+import type { Remote } from './scope-remotes';
 import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { cleanObject, writeFile } from '@teambit/legacy.utils';
 import { ScopeJsonNotFound } from './exceptions';
@@ -107,7 +107,7 @@ export class ScopeJson {
     return this[key];
   }
 
-  addRemote(remote: Remote) {
+  addRemote(remote: Pick<Remote, 'name' | 'host'>) {
     this.remotes[remote.name] = remote.host;
     return this;
   }
