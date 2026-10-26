@@ -15,7 +15,7 @@ import { WriteObjectsQueue } from './write-objects-queue';
 import { groupByScopeName } from '../component-ops/scope-components-importer';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
-import type { ScopeRemotes as Remotes, ScopeRemote as Remote } from '../scope-remotes';
+import type { Remotes, Remote } from '../scope-remotes';
 import type { ComponentsPerRemote } from '../component-ops/multiple-component-merger';
 import { MultipleComponentMerger } from '../component-ops/multiple-component-merger';
 

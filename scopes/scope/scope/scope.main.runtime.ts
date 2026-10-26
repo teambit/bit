@@ -35,7 +35,7 @@ import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import type { DependenciesGraph, DepEdge, ModelComponent, Lane, Version } from '@teambit/objects';
 import { Ref, Repository, ObjectList } from '@teambit/objects';
 import type { Scope as LegacyScope, Types } from '@teambit/legacy.scope';
-import { Scope, loadScopeIfExist, setScopeRemotesGetter } from '@teambit/legacy.scope';
+import { Scope, loadScopeIfExist, ScopeComponentsImporter } from '@teambit/legacy.scope';
 import type { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { ExportPersist, PostSign } from '@teambit/scope.remote-actions';
 import type { DependencyResolverMain, NodeLinker, VariantPolicy } from '@teambit/dependency-resolver';
@@ -1426,7 +1426,7 @@ export class ScopeMain implements ComponentFactory {
     const debugCommands = [new CatScopeCmd(), new CatComponentCmd(), new CatObjectCmd(), new CatLaneCmd()];
     const allCommands = [new ScopeCmd(), ...debugCommands, new RunActionCmd()];
     // registered before the scope is loaded: commands may create or load a scope later (e.g. clone)
-    setScopeRemotesGetter(getScopeRemotes);
+    ScopeComponentsImporter.getRemotes = getScopeRemotes;
     const legacyScope = await loadScopeIfExist(bitConfig?.cwd);
     if (!legacyScope) {
       cli.register(...allCommands);

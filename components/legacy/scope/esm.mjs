@@ -62,7 +62,6 @@ export const GarbageCollectorOpts = cjsModule.GarbageCollectorOpts;
 export const ScopeDescriptor = cjsModule.ScopeDescriptor;
 export const loadScopeIfExist = cjsModule.loadScopeIfExist;
 export const ScopeComponentsImporter = cjsModule.ScopeComponentsImporter;
-export const setScopeRemotesGetter = cjsModule.setScopeRemotesGetter;
 export const errorIsTypeOfMissingObject = cjsModule.errorIsTypeOfMissingObject;
 export const multipleVersionDependenciesToConsumer = cjsModule.multipleVersionDependenciesToConsumer;
 export const VersionDependencies = cjsModule.VersionDependencies;

@@ -57,7 +57,6 @@ export { GarbageCollectorOpts, ScopeDescriptor } from './scope';
 export { DELETED_OBJECTS_DIR } from './garbage-collector';
 export { loadScopeIfExist } from './scope-loader';
 export { ScopeComponentsImporter, errorIsTypeOfMissingObject } from './component-ops/scope-components-importer';
-export { setScopeRemotesGetter, ScopeRemote, ScopeRemotes, ScopeRemotesGetter } from './scope-remotes';
 export { multipleVersionDependenciesToConsumer, VersionDependencies } from './version-dependencies';
 export { MergeResult } from './repositories/sources';
 export { RemoteLanes } from './lanes/remote-lanes';

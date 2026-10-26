@@ -52,6 +52,7 @@ import { logger } from '@teambit/legacy.logger';
 import type { ObjectItemsStream, ComponentLog } from '@teambit/objects';
 import { ObjectList } from '@teambit/objects';
 import type { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
+import type { AuthData } from '@teambit/scope.remote-actions';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
@@ -116,7 +117,6 @@ type Agent = HttpsProxyAgent | HttpAgent | HttpAgent.HttpsAgent | HttpProxyAgent
  * fetched from HTTP Authorization header.
  * (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization)
  */
-export type AuthData = { type: string; credentials: string };
 export const DEFAULT_AUTH_TYPE = 'Bearer';
 
 export class Http implements Network {
