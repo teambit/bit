@@ -4,7 +4,8 @@ import { uniqBy } from 'lodash';
 import { LATEST } from '@teambit/legacy.constants';
 import type { Lane } from '@teambit/objects';
 import { ModelComponent } from '@teambit/objects';
-import type { Scope } from '@teambit/legacy.scope';
+import type { Scope, ListScopeResult } from '@teambit/legacy.scope';
+import { listLocalScope } from '@teambit/legacy.scope';
 import { fetchRemoteVersions } from '@teambit/scope.remotes';
 import { isBitIdMatchByWildcards } from '@teambit/legacy.utils';
 import type { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
@@ -12,15 +13,6 @@ import type { InvalidComponent, ComponentLoadOptions } from '@teambit/legacy.con
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { Workspace } from '@teambit/workspace';
-
-export type ListScopeResult = {
-  id: ComponentID;
-  currentlyUsedVersion?: string | null | undefined;
-  remoteVersion?: string;
-  deprecated?: boolean;
-  removed?: boolean;
-  laneReadmeOf?: string[];
-};
 
 export type OutdatedComponent = { id: ComponentID; headVersion: string; latestVersion?: string };
 
@@ -143,7 +135,6 @@ export class ComponentsList {
         newComponents.push(id);
       }
     });
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const newComponentsIds = new ComponentIdList(...newComponents);
     if (!load || !newComponents.length) return newComponentsIds;
 
@@ -329,7 +320,6 @@ export class ComponentsList {
         const listResult = listAllResults.find((c) => c.id.isEqualWithoutVersion(componentId));
         if (!listResult) throw new Error(`failed finding ${componentId.toString()} in componentsIds`);
         // $FlowFixMe version must be set as it came from a remote
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         listResult.remoteVersion = componentId.version;
       });
     }
@@ -363,30 +353,7 @@ export class ComponentsList {
     namespacesUsingWildcards?: string,
     includeRemoved = false
   ): Promise<ListScopeResult[]> {
-    const components = await scope.listLocal();
-    const componentsOnMain = components.filter((comp) => comp.head);
-    const getNameSpaceIncludeScopeNameIfNeeded = () => {
-      if (!namespacesUsingWildcards) return undefined;
-      if (namespacesUsingWildcards.startsWith(`${scope.name}/`)) return namespacesUsingWildcards;
-      return `${scope.name}/${namespacesUsingWildcards}`;
-    };
-    const nameSpaceIncludeScopeName = getNameSpaceIncludeScopeNameIfNeeded();
-    const componentsFilteredByWildcards = nameSpaceIncludeScopeName
-      ? ComponentsList.filterComponentsByWildcard(componentsOnMain, nameSpaceIncludeScopeName)
-      : componentsOnMain;
-    const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
-    const results = await Promise.all(
-      componentsSorted.map(async (component: ModelComponent) => {
-        return {
-          id: component.toComponentIdWithLatestVersion(),
-          deprecated: Boolean(await component.isDeprecated(scope.objects)),
-          removed: Boolean(await component.isRemoved(scope.objects)),
-          laneReadmeOf: await component.isLaneReadmeOf(scope.objects),
-        };
-      })
-    );
-    if (includeRemoved) return results;
-    return results.filter((result) => !result.removed);
+    return listLocalScope(scope, namespacesUsingWildcards, includeRemoved);
   }
 
   // components can be one of the following: Component[] | ModelComponent[] | string[] | ComponentID[]

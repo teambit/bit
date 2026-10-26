@@ -3,15 +3,32 @@ import path from 'path';
 import type { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { logger } from '@teambit/legacy.logger';
-import type { Scope } from '@teambit/legacy.scope';
-import { MissingObjects } from '@teambit/legacy.scope';
-import type { Lane, Source } from '@teambit/objects';
+import type { Lane, Repository, Source } from '@teambit/objects';
 import { Ref } from '@teambit/objects';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import type { ExtensionDataList } from '@teambit/legacy.extension-data';
-import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ArtifactVinyl } from './artifact';
 import { compact } from 'lodash';
+
+/**
+ * the part of legacy-scope's Scope used to import missing artifacts.
+ * restated rather than imported because legacy-scope depends on this component.
+ */
+export type ArtifactsScope = {
+  objects: Repository;
+  scopeImporter: {
+    importManyObjects(groupedHashes: { [scopeName: string]: string[] }, reason?: string): Promise<void>;
+  };
+  getCurrentLaneObject(): Promise<Lane | undefined>;
+  isIdOnLane(id: ComponentID, lane?: Lane | null): Promise<boolean | null>;
+};
+
+/**
+ * the extensions lookup used to find build artifacts, from legacy extension-data's ExtensionDataList.
+ * restated rather than imported because extension-data depends on this component.
+ */
+export type ArtifactsExtensions = {
+  findExtension(extensionId: string): { data: { [key: string]: any } } | undefined;
+};
 
 export type ArtifactRef = { relativePath: string; ref: Ref; url?: string };
 export type ArtifactModel = { relativePath: string; file: string; url?: string };
@@ -121,7 +138,7 @@ export class ArtifactFiles {
     });
   }
 
-  async getVinylsAndImportIfMissing(id: ComponentID, scope: Scope): Promise<ArtifactVinyl[]> {
+  async getVinylsAndImportIfMissing(id: ComponentID, scope: ArtifactsScope): Promise<ArtifactVinyl[]> {
     if (this.isEmpty()) return [];
     if (this.vinyls.length) return this.vinyls;
     const allHashes = this.refs.map((artifact) => artifact.ref);
@@ -147,7 +164,7 @@ export class ArtifactFiles {
     return this.vinyls;
   }
 
-  private async importMissing(id: ComponentID, scope: Scope, missingRefs: Ref[]) {
+  private async importMissing(id: ComponentID, scope: ArtifactsScope, missingRefs: Ref[]) {
     const allHashes = missingRefs.map((ref) => ref.hash);
     const scopeComponentsImporter = scope.scopeImporter;
     const lane = await scope.getCurrentLaneObject();
@@ -186,124 +203,6 @@ export class ArtifactFiles {
   }
 }
 
-export async function importMultipleDistsArtifacts(scope: Scope, components: Component[]) {
-  logger.debug(
-    `importMultipleDistsArtifacts: ${components.length} components: ${components
-      .map((c) => c.id.toString())
-      .join(', ')}`
-  );
-  const extensionsNamesForDistArtifacts = 'teambit.compilation/compiler';
-  const lane = await scope.getCurrentLaneObject();
-  const scopeComponentsImporter = scope.scopeImporter;
-  const groupedHashes: { [scopeName: string]: string[] } = {};
-  const debugHashesOrigin = {};
-  await Promise.all(
-    components.map(async (component) => {
-      const artifactsFiles = getArtifactFilesByExtension(component.extensions, extensionsNamesForDistArtifacts);
-      const isIdOnLane = await scope.isIdOnLane(component.id, lane, false);
-      const getScopes = () => {
-        if (isIdOnLane === null) {
-          // we're not sure wether it's on the lane or not. try to fetch from both.
-          return [lane?.scope as string, component.scope as string];
-        }
-        return isIdOnLane ? [lane?.scope as string] : [component.scope as string];
-      };
-      const scopes = getScopes();
-      artifactsFiles.forEach((artifactFiles) => {
-        if (!artifactFiles) return;
-        if (!(artifactFiles instanceof ArtifactFiles)) {
-          artifactFiles = deserializeArtifactFiles(artifactFiles);
-        }
-        if (artifactFiles.isEmpty()) return;
-        if (artifactFiles.vinyls.length) return;
-        const allHashes = artifactFiles.refs.map((artifact) => artifact.ref.hash);
-        scopes.forEach((scopeName) => (groupedHashes[scopeName] ||= []).push(...allHashes));
-        allHashes.forEach(
-          (hash) => (debugHashesOrigin[hash] = `id: ${component.id.toString()}. isIdOnLane: ${isIdOnLane}`)
-        );
-      });
-    })
-  );
-  try {
-    await scopeComponentsImporter.importManyObjects(
-      groupedHashes,
-      `to get dists artifacts for ${components.length} components`
-    );
-  } catch (err) {
-    logger.error('failed fetching the following hashes', { groupedHashes, debugHashesOrigin });
-    throw err;
-  }
-  logger.debug(`importMultipleDistsArtifacts: ${components.length} components. completed successfully`);
-}
-
-export async function importAllArtifactsFromLane(scope: Scope, components: Component[], lane: Lane) {
-  logger.debug(
-    `importAllArtifactsFromLane: ${components.length} components: ${components.map((c) => c.id.toString()).join(', ')}`
-  );
-  const scopeComponentsImporter = scope.scopeImporter;
-  const groupedHashesOnLane: { [scopeName: string]: string[] } = {};
-  const groupedHashesFromMain: { [scopeName: string]: string[] } = {};
-  const debugHashesOrigin = {};
-  groupedHashesOnLane[lane.scope] = [];
-  components.forEach((component) => {
-    const artifactsRefs = getRefsFromExtensions(component.extensions);
-    const artifactsRefsStr = artifactsRefs.map((ref) => ref.hash);
-    groupedHashesOnLane[lane.scope].push(...artifactsRefsStr);
-    if (lane.scope !== component.scope) {
-      (groupedHashesFromMain[component.scope as string] ||= []).push(...artifactsRefsStr);
-    }
-    artifactsRefsStr.forEach(
-      (hash) => (debugHashesOrigin[hash] = `id: ${component.id.toString()}. will try both lane and main`)
-    );
-  });
-  let errorFromLane: MissingObjects | undefined;
-  try {
-    await scopeComponentsImporter.importManyObjects(
-      groupedHashesOnLane,
-      `to get all artifacts for ${components.length} components from lane ${lane.id()}`
-    );
-  } catch (err: any) {
-    logger.error('failed fetching the following hashes from the lane', {
-      groupedHashes: groupedHashesOnLane,
-      debugHashesOrigin,
-    });
-    if (err instanceof MissingObjects) {
-      errorFromLane = err;
-    } else throw err;
-  }
-
-  if (errorFromLane) {
-    if (!Object.keys(groupedHashesFromMain).length) throw errorFromLane;
-    const groupHashesFallBack: { [scopeName: string]: string[] } = {};
-    const missing = errorFromLane.hashesPerRemotes;
-    Object.keys(groupedHashesFromMain).forEach((scopeName) => {
-      groupHashesFallBack[scopeName] = groupedHashesFromMain[scopeName].filter((hash) => missing[hash]);
-    });
-    try {
-      await scopeComponentsImporter.importManyObjects(
-        groupHashesFallBack,
-        `to get all artifacts for ${components.length} components from main`
-      );
-    } catch (err: any) {
-      logger.error('failed fetching the following hashes from both lane and main', {
-        groupedHashes: groupedHashesOnLane,
-        debugHashesOrigin,
-      });
-      if (err instanceof MissingObjects) {
-        const currentMissing = err.hashesPerRemotes;
-        const hashesPerRemotes = Object.keys(currentMissing).reduce((acc, curr) => {
-          acc[curr] = [...missing[curr], ...currentMissing[curr]];
-          return acc;
-        }, {});
-        throw new MissingObjects(hashesPerRemotes);
-      }
-      throw err;
-    }
-  }
-
-  logger.debug(`importAllArtifactsFromLane: ${components.length} components. completed successfully`);
-}
-
 export function refsToModelObjects(refs: ArtifactRef[]): ArtifactModel[] {
   return refs.map((artifact) => {
     return {
@@ -314,19 +213,19 @@ export function refsToModelObjects(refs: ArtifactRef[]): ArtifactModel[] {
   });
 }
 
-export function getRefsFromExtensions(extensions: ExtensionDataList): Ref[] {
+export function getRefsFromExtensions(extensions: ArtifactsExtensions): Ref[] {
   const artifactsFiles = getArtifactsFiles(extensions);
   const refs = artifactsFiles.map((artifactFiles) => artifactFiles.refs.map((r) => r.ref));
   return refs.flat().filter((ref) => ref);
 }
 
-export function getArtifactFilesByExtension(extensions: ExtensionDataList, extensionName: string): ArtifactFiles[] {
+export function getArtifactFilesByExtension(extensions: ArtifactsExtensions, extensionName: string): ArtifactFiles[] {
   const buildArtifacts = getBuildArtifacts(extensions);
   return buildArtifacts.filter((artifact) => artifact.task.id === extensionName).map((artifact) => artifact.files);
 }
 
 export function getArtifactFilesExcludeExtension(
-  extensions: ExtensionDataList,
+  extensions: ArtifactsExtensions,
   extensionNameToExclude: string
 ): ArtifactFiles[] {
   const buildArtifacts = getBuildArtifacts(extensions);
@@ -335,7 +234,7 @@ export function getArtifactFilesExcludeExtension(
     .map((artifact) => artifact.files);
 }
 
-export function convertBuildArtifactsToModelObject(extensions: ExtensionDataList) {
+export function convertBuildArtifactsToModelObject(extensions: ArtifactsExtensions) {
   const buildArtifacts = getBuildArtifacts(extensions);
   buildArtifacts.forEach((artifact) => {
     // @ts-ignore
@@ -343,7 +242,7 @@ export function convertBuildArtifactsToModelObject(extensions: ExtensionDataList
   });
 }
 
-export function convertBuildArtifactsFromModelObject(extensions: ExtensionDataList) {
+export function convertBuildArtifactsFromModelObject(extensions: ArtifactsExtensions) {
   const artifactObjects = getBuildArtifacts(extensions);
   artifactObjects.forEach((artifactObject) => {
     // @ts-ignore
@@ -351,12 +250,12 @@ export function convertBuildArtifactsFromModelObject(extensions: ExtensionDataLi
   });
 }
 
-export function getArtifactsFiles(extensions: ExtensionDataList): ArtifactFiles[] {
+export function getArtifactsFiles(extensions: ArtifactsExtensions): ArtifactFiles[] {
   const buildArtifacts = getBuildArtifacts(extensions);
   return buildArtifacts.map((artifacts) => artifacts.files);
 }
 
-export function reStructureBuildArtifacts(extensions: ExtensionDataList) {
+export function reStructureBuildArtifacts(extensions: ArtifactsExtensions) {
   const buildArtifacts = getBuildArtifacts(extensions);
   buildArtifacts.forEach((artifacts) => {
     artifacts.files = deserializeArtifactFiles(artifacts.files);
@@ -372,6 +271,6 @@ export function deserializeArtifactFiles(obj: { paths: string[]; vinyls: Artifac
   return new ArtifactFiles(obj.paths, obj.vinyls, refs);
 }
 
-function getBuildArtifacts(extensions: ExtensionDataList): ArtifactObject[] {
+function getBuildArtifacts(extensions: ArtifactsExtensions): ArtifactObject[] {
   return extensions.findExtension('teambit.pipelines/builder')?.data?.artifacts || [];
 }

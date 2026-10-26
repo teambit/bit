@@ -1,5 +1,5 @@
 import { BitError } from '@teambit/bit-error';
-import { ValidationError } from '@teambit/legacy.cli.error';
+import { ValidationError } from './validation-error';
 
 type Value = 'string' | 'number' | 'array' | 'object' | 'boolean' | 'undefined';
 

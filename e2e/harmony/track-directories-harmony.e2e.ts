@@ -95,9 +95,7 @@ describe('track directories functionality', function () {
       });
       it('should save the files with relativePaths relative to the rootDir', () => {
         const output = helper.command.catComponent('utils/bar@latest');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(output.files[0].relativePath).to.equal('foo.js');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(output.mainFile).to.equal('foo.js');
       });
       describe('then adding a new file to the directory', () => {
