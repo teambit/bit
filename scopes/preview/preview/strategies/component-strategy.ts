@@ -12,7 +12,7 @@ import { BitError } from '@teambit/bit-error';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { Logger } from '@teambit/logger';
 import type { BundlerResult, BundlerContext, Asset, BundlerEntryMap, EntriesAssetsMap, Target } from '@teambit/bundler';
-import type { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
+import type { BundlingStrategy, ComputeTargetsContext, OutputDirContext } from '../bundling-strategy';
 import type { PreviewDefinition } from '../preview-definition';
 import type { ComponentPreviewMetaData, PreviewMain } from '../preview.main.runtime';
 import { generateComponentLink } from './generate-component-link';
@@ -364,12 +364,12 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     ];
   }
 
-  getDirName(context: ComputeTargetsContext) {
+  getDirName(context: OutputDirContext) {
     const envName = context.id.replace('/', '__');
     return `${envName}-preview`;
   }
 
-  private getOutputPath(context: ComputeTargetsContext) {
+  private getOutputPath(context: OutputDirContext) {
     return resolve(`${context.capsuleNetwork.capsulesRootDir}/${this.getDirName(context)}`);
   }
 

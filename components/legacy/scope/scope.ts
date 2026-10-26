@@ -24,14 +24,13 @@ import {
   PENDING_OBJECTS_DIR,
 } from '@teambit/legacy.constants';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import type { Consumer } from '@teambit/legacy.consumer';
-import { UnexpectedPackageName } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
 import { isValidPath, type PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import RemoveModelComponents from './component-ops/remove-model-components';
+import type { RemovalWorkspace } from './component-ops/remove-model-components';
 import { ScopeComponentsImporter } from './component-ops/scope-components-importer';
 import type { ComponentVersion } from './component-version';
-import { ComponentNotFound, ScopeNotFound } from './exceptions';
+import { ComponentNotFound, ScopeNotFound, UnexpectedPackageName } from './exceptions';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import Lanes from './lanes/lanes';
 import type {
@@ -431,7 +430,7 @@ once done, to continue working, please run "bit cc"`
    * Remove components from scope
    * @force Boolean - remove component from scope even if other components use it
    */
-  async removeMany(bitIds: ComponentIdList, force: boolean, consumer?: Consumer): Promise<RemovedObjects> {
+  async removeMany(bitIds: ComponentIdList, force: boolean, consumer?: RemovalWorkspace): Promise<RemovedObjects> {
     logger.debug(`scope.removeMany ${bitIds.toString()} with force flag: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'removeMany',

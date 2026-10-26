@@ -15,7 +15,7 @@ import semver from 'semver';
 import { cloneDeep, compact, set, uniq } from 'lodash';
 import pMapSeries from 'p-map-series';
 import type { ConsumerComponent, DependencyLoaderOpts } from '@teambit/legacy.consumer-component';
-import { ComponentLoader } from '@teambit/legacy.consumer-component';
+import { ComponentLoader } from '@teambit/legacy.consumer';
 import type { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
 import type { DevFilesMain } from '@teambit/dev-files';
 import { DevFilesAspect } from '@teambit/dev-files';

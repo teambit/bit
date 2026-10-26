@@ -62,7 +62,7 @@ describe('custom env (registry)', function () {
       // Clean the capsule dir to make sure it's empty before we continue
       const scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
       if (fs.pathExistsSync(scopeAspectsCapsulesRootDir)) {
-        fs.rmdirSync(scopeAspectsCapsulesRootDir, { recursive: true });
+        fs.rmSync(scopeAspectsCapsulesRootDir, { recursive: true, force: true });
       }
 
       helper.scopeHelper.addRemoteScope();
