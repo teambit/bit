@@ -25,7 +25,19 @@ export async function getAutoTagInfo(
   const idsToLoad = new ComponentIdList(...potentialComponents, ...changedComponents);
   const workspaceComponents = await workspace.getMany(idsToLoad, undefined, false);
   const components = workspaceComponents.map((workspaceComponent) => workspaceComponent.state._consumer);
-  const graph = buildGraph(components);
+  return getAutoTagInfoFromComponents(components, changedComponents);
+}
+
+/**
+ * returns the components that depend on the `changedComponents`, directly or through other `components`.
+ * the dependencies are matched by component-id, not by version. the `changedComponents` don't have to be part of
+ * `components` (e.g. when snapping from a scope, the candidates are the lane components).
+ */
+export function getAutoTagInfoFromComponents(
+  components: Component[],
+  changedComponents: ComponentIdList
+): AutoTagResult[] {
+  const graph = buildGraph(components, changedComponents);
 
   const autoTagResults: AutoTagResult[] = [];
   components.forEach((component) => {
@@ -71,9 +83,9 @@ export async function getAutoTagInfo(
   return autoTagResults;
 }
 
-function buildGraph(components: Component[]): Graph {
+function buildGraph(components: Component[], changedComponents: ComponentIdList): Graph {
   const graph = new Graph();
-  const componentsIds = ComponentIdList.fromArray(components.map((c) => c.id));
+  const componentsIds = ComponentIdList.fromArray([...components.map((c) => c.id), ...changedComponents]);
 
   components.forEach((component) => {
     const idStr = component.id.toStringWithoutVersion();
