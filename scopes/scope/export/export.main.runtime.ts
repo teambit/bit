@@ -40,7 +40,7 @@ import { writeLastExport } from './last-export';
 import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Version } from '@teambit/objects';
 import { ObjectList, Ref } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
-import { getAllVersionHashes } from '@teambit/component.snap-distance';
+import { getAllVersionHashes, hasVersionByRef } from '@teambit/component.snap-distance';
 import { ExportAspect } from './export.aspect';
 import { ExportCmd } from './export-cmd';
 import { ResumeExportCmd } from './resume-export-cmd';
@@ -82,6 +82,7 @@ type ObjectsPerRemoteExtended = ObjectsPerRemote & {
   objectListPerName: ObjectListPerName;
   idsToChangeLocally: ComponentIdList;
   modelComponents: ModelComponent[];
+  updateDependentsChanged?: boolean;
 };
 
 type ExportParams = {
@@ -508,13 +509,14 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       .join(', ');
     this.logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
 
-    let updateDependentsChangedLocally = false;
     const getUpdatedObjectsToExport = async (
       remoteNameStr: string,
       bitIds: ComponentIdList,
       lane?: Lane
     ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
+      // fetched in parallel to the calculation of the versions to export, which doesn't depend on it
+      const remoteLanePromise = lane ? this.fetchRemoteLaneToCompareUpdateDependents(scope, lane) : undefined;
       const remote: Remote = await resolveRemote(remoteNameStr);
       const idsToChangeLocally = ComponentIdList.fromArray(bitIds.filter((id) => !scope.isExported(id)));
       const exportedModelComponents: ModelComponent[] = [];
@@ -607,17 +609,27 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
       await mapSeries(refsToExportPerComponent, processModelComponent);
       objectList.addIfNotExist(allObjectItems);
+      let updateDependentsChanged = false;
       if (lane) {
         // after the versions to export were calculated, as it may change the heads of the hidden entries.
-        updateDependentsChangedLocally = await this.setUpdateDependentsFromRemote(scope, lane);
+        updateDependentsChanged = await this.setUpdateDependentsFromRemote(scope, lane, await remoteLanePromise);
         const laneHistory = await scope.lanes.getOrCreateLaneHistory(lane);
         const laneHistoryData = await bitObjectToObjectItem(laneHistory);
         objectList.addIfNotExist([laneHistoryData]);
         const laneData = await bitObjectToObjectItem(lane);
         objectList.addIfNotExist([laneData]);
+        // needed for this export only. kept locally, the next export might resurrect removed entries.
+        lane.setOverrideUpdateDependents(false);
       }
 
-      return { remote, objectList, objectListPerName, idsToChangeLocally, modelComponents: exportedModelComponents };
+      return {
+        remote,
+        objectList,
+        objectListPerName,
+        idsToChangeLocally,
+        modelComponents: exportedModelComponents,
+        updateDependentsChanged,
+      };
     };
 
     const manyObjectsPerRemote = laneObject
@@ -655,7 +667,7 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       Array<{ exported: ComponentIdList; updatedLocally: ComponentIdList; newIdsOnRemote: ComponentID[] }>
     > => {
       return mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemoteExtended) => {
-        const { remote, idsToChangeLocally, modelComponents, exportedIds } = objectsPerRemote;
+        const { remote, idsToChangeLocally, modelComponents, exportedIds, updateDependentsChanged } = objectsPerRemote;
         const remoteNameStr = remote.name;
 
         // only the model-components were changed (scope-list, scope-name). the versions and their files already exist
@@ -664,9 +676,7 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
 
         // update lanes
         if (lane) {
-          // the flag is needed for this export only. kept locally, the next export might resurrect removed entries.
-          lane.setOverrideUpdateDependents(false);
-          if (idsToChangeLocally.length || updateDependentsChangedLocally) {
+          if (idsToChangeLocally.length || updateDependentsChanged) {
             // otherwise, we don't want to update scope-name of components in the lane object
             scope.objects.add(lane);
           }
@@ -739,33 +749,32 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
     }
   }
 
-  /**
-   * sets the hidden lane entries (`lane.updateDependents`) to export according to the remote lane, and raises
-   * `overrideUpdateDependents` when they differ from the remote. see `getUpdateDependentsToExport` for the rules.
-   * an older remote ignores the hidden entries of an export without this flag. as a result, a cascade snap of an
-   * existing entry got lost.
-   * returns true when the local entries were changed (e.g. an entry that was removed on the remote).
-   */
-  private async setUpdateDependentsFromRemote(scope: Scope, lane: Lane): Promise<boolean> {
-    const localUpdateDependents = lane.updateDependents || [];
-    if (lane.isNew || !localUpdateDependents.length) return false;
-    let remoteLane: Lane | undefined;
+  private async fetchRemoteLaneToCompareUpdateDependents(scope: Scope, lane: Lane): Promise<Lane | undefined> {
+    if (lane.isNew || !lane.updateDependents?.length) return undefined;
     try {
-      [remoteLane] = await scope.scopeImporter.importLanes([lane.toLaneId()]);
+      const [remoteLane] = await scope.scopeImporter.importLanes([lane.toLaneId()]);
+      return remoteLane;
     } catch (err: any) {
       this.logger.warn(`unable to fetch the lane ${lane.id()} to compare its updateDependents with the remote`, err);
+      return undefined;
     }
+  }
+
+  /**
+   * sets the hidden lane entries (`lane.updateDependents`) to export according to the remote lane (see
+   * `getUpdateDependentsToExport`), and raises `overrideUpdateDependents` when they differ from the remote.
+   * returns true when the local entries were changed (e.g. an entry that was removed on the remote).
+   */
+  private async setUpdateDependentsFromRemote(scope: Scope, lane: Lane, remoteLane?: Lane): Promise<boolean> {
     if (!remoteLane) return false;
+    const localUpdateDependents = lane.updateDependents || [];
     const remoteUpdateDependents = remoteLane.updateDependents || [];
     const isLocalAhead = async (localId: ComponentID, remoteId: ComponentID): Promise<boolean> => {
       try {
         const modelComponent = await scope.getModelComponentIfExist(localId.changeVersion(undefined));
         if (!modelComponent) return false;
         const localHead = Ref.from(localId.version as string);
-        const versionHistory = await modelComponent.getAndPopulateVersionHistory(scope.objects, localHead);
-        // "missing" are parents without a VersionHistory item. they're still ancestors of the local head.
-        const { found = [], missing = [] } = versionHistory.getAllHashesFrom(localHead);
-        return [...found, ...missing].includes(remoteId.version as string);
+        return await hasVersionByRef(modelComponent, Ref.from(remoteId.version as string), scope.objects, localHead);
       } catch (err: any) {
         this.logger.warn(`unable to check whether ${localId.toString()} is ahead of ${remoteId.toString()}`, err);
         return false;
@@ -783,9 +792,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         .map((id) => id.toString())
         .sort()
         .join();
-    lane.setOverrideUpdateDependents(toSortedStr(updateDependents) !== toSortedStr(remoteUpdateDependents));
-    if (toSortedStr(updateDependents) === toSortedStr(localUpdateDependents)) return false;
-    lane.updateDependents = updateDependents.length ? updateDependents : undefined;
+    const exportedStr = toSortedStr(updateDependents);
+    lane.setOverrideUpdateDependents(exportedStr !== toSortedStr(remoteUpdateDependents));
+    if (exportedStr === toSortedStr(localUpdateDependents)) return false;
+    lane.setUpdateDependents(updateDependents);
     return true;
   }
 

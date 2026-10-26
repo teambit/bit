@@ -1,5 +1,6 @@
 import { compact } from 'lodash';
-import type { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 
 export type UpdateDependentsToExportParams = {
   localUpdateDependents: ComponentID[];
@@ -34,18 +35,16 @@ export async function getUpdateDependentsToExport({
   includeNewEntries,
   isLocalAhead,
 }: UpdateDependentsToExportParams): Promise<ComponentID[]> {
+  const localIds = ComponentIdList.fromArray(localUpdateDependents);
+  const remoteIds = ComponentIdList.fromArray(remoteUpdateDependents);
   const fromRemote = await Promise.all(
     remoteUpdateDependents.map(async (remoteId) => {
       if (localComponents.hasWithoutVersion(remoteId)) return undefined;
-      const localId = localUpdateDependents.find((id) => id.isEqualWithoutVersion(remoteId));
+      const localId = localIds.searchWithoutVersion(remoteId);
       if (!localId || localId.version === remoteId.version) return remoteId;
       return (await isLocalAhead(localId, remoteId)) ? localId : remoteId;
     })
   );
-  const newEntries = includeNewEntries
-    ? localUpdateDependents.filter(
-        (localId) => !remoteUpdateDependents.some((remoteId) => remoteId.isEqualWithoutVersion(localId))
-      )
-    : [];
+  const newEntries = includeNewEntries ? localIds.filter((localId) => !remoteIds.hasWithoutVersion(localId)) : [];
   return [...compact(fromRemote), ...newEntries];
 }
