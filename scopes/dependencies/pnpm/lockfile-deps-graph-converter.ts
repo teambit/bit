@@ -97,14 +97,18 @@ function convertLockfileToGraphFromCapsule(
     componentRelativeDir,
     componentIdByPkgName,
     replaceFileVersion,
+    narrowToComponentImporter = false,
   }: Pick<
     CalcDepsGraphOptions & CalcDepsGraphForComponentOptions,
     'pkgName' | 'componentRelativeDir' | 'componentIdByPkgName'
   > & {
     replaceFileVersion?: (s: string) => string;
+    narrowToComponentImporter?: boolean;
   }
 ): DependenciesGraph {
-  const narrowedLockfile = filterLockfileByImporters(lockfile, [componentRelativeDir]);
+  const narrowedLockfile = narrowToComponentImporter
+    ? filterLockfileByImporters(lockfile, [componentRelativeDir])
+    : lockfile;
   scrubOwnComponentFromLockfile(narrowedLockfile, pkgName);
   const componentImporter = narrowedLockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
@@ -162,6 +166,7 @@ export function convertLockfileToGraph(
       componentRelativeDir,
       componentIdByPkgName,
       replaceFileVersion,
+      narrowToComponentImporter: lockfile.importers?.[componentRootDir] != null,
     });
   }
   const lockedFileVersion = rootImporterDeps.version;
@@ -173,6 +178,7 @@ export function convertLockfileToGraph(
       componentRelativeDir,
       componentIdByPkgName,
       replaceFileVersion,
+      narrowToComponentImporter: lockfile.importers?.[componentRootDir] != null,
     });
   }
   const componentDevImporter = lockfile.importers![componentRelativeDir];
