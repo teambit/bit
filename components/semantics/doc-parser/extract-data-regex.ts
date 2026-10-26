@@ -6,25 +6,19 @@ import exampleTagParser from './example-tag-parser';
 import type { Doclet } from './types';
 
 function formatTag(tag: Record<string, any>): Record<string, any> {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   delete tag.title;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (!tag.type) return tag;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   let formattedType = doctrine.type.stringify(tag.type);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (tag.type.type === doctrine.type.Syntax.TypeApplication) {
     // Doctrine adds a dot after the generic type for historical reasons.
     // see here for more info: https://github.com/eslint/doctrine/issues/185
     formattedType = formattedType.replace('.<', '<');
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (tag.type.type === doctrine.type.Syntax.OptionalType) {
     // Doctrine shows an optional type with a suffix `=` (e.g. `string=`), we prefer the more
     // common syntax `?` (e.g. `string?`)
     formattedType = formattedType.replace('=', '?');
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tag.type = formattedType;
 
   return tag;

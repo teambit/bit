@@ -11,7 +11,6 @@ describe('ConsumerComponent', function () {
       name: 'is-string',
       defaultScope: 'my-scope',
       mainFile: 'is-string.js',
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       files: [new SourceFile({ base: '.', path: 'is-string.js', contents: Buffer.from(''), test: false })],
     };
     it('should return an empty array when there is no docs', () => {

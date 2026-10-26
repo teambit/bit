@@ -21,7 +21,6 @@ export type DependenciesInfo = {
 
 export class DependencyGraph {
   graph: Graph;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   scopeName: string;
 
   constructor(graph: Graph) {
@@ -61,7 +60,6 @@ export class DependencyGraph {
   /**
    * @todo: refactor this to work with the newer method `buildGraphFromScope`.
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphWithAllVersions(scope: ScopeObjects): Promise<Graph> {
     const graph = new Graph({ compound: true });
     const depObj: { [id: string]: Version } = {};
@@ -116,7 +114,6 @@ export class DependencyGraph {
     return graph;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromScope(scope: ScopeObjects): Promise<Graph> {
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await scope.list();
@@ -190,7 +187,6 @@ export class DependencyGraph {
    * returns a new Graph that has only nodes that are related to the given id.
    * (meaning, they're either dependents or dependencies)
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   getSubGraphOfConnectedComponents(id: ComponentID): Graph {
     const connectedGraphs = GraphLib.alg.components(this.graph);
     const idWithVersion = this._getIdWithLatestVersion(id);

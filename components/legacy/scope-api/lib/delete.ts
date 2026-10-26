@@ -20,7 +20,6 @@ export default async function remove({
     return removedObjects.serialize();
   }
   const bitIds = ComponentIdList.fromStringArray(ids);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const res = await scope.removeMany(bitIds, force);
   return res.serialize();
 }
