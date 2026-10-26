@@ -469,6 +469,7 @@ describe('updateDependents cascade - import, fetch and promotion', function () {
     // cascade snap from the lane's scope and snap on top of it.
     describe('re-running the cascade from a fresh bare scope', () => {
       let comp2AfterRerun: string;
+      let comp2HashAfterRerun: string;
       before(async () => {
         const bareSnap = helper.scopeHelper.getNewBareScope('-bare-rerun-updep');
         helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareSnap.scopePath);
@@ -479,7 +480,8 @@ describe('updateDependents cascade - import, fetch and promotion', function () {
           { lane: `${helper.scopes.remote}/dev`, updateDependents: true, push: true }
         );
         const lane = helper.command.catLane('dev', helper.scopes.remotePath);
-        comp2AfterRerun = lane.updateDependents[0] || '';
+        comp2AfterRerun = lane.updateDependents[0];
+        comp2HashAfterRerun = comp2AfterRerun.split('@')[1];
       });
       it('should replace the cascade snap with a new one', () => {
         expect(comp2AfterRerun).to.include(`${anotherRemote}/comp2`);
@@ -497,8 +499,7 @@ describe('updateDependents cascade - import, fetch and promotion', function () {
           helper.command.import();
         });
         it('should fetch the new cascade snap into the local scope', () => {
-          const hash = comp2AfterRerun.split('@')[1];
-          expect(() => helper.command.catObject(hash)).to.not.throw();
+          expect(() => helper.command.catObject(comp2HashAfterRerun)).to.not.throw();
         });
       });
       // the lane's scope has the cascade snap of comp2 but not its main head (a cascade is pushed with its head
@@ -511,7 +512,7 @@ describe('updateDependents cascade - import, fetch and promotion', function () {
           helper.command.mergeLane(`${helper.scopes.remote}/dev`, '-x');
         });
         it('should merge the hidden updateDependent into main', () => {
-          expect(helper.command.getHead(`${anotherRemote}/comp2`)).to.equal(comp2AfterRerun.split('@')[1]);
+          expect(helper.command.getHead(`${anotherRemote}/comp2`)).to.equal(comp2HashAfterRerun);
         });
       });
     });
