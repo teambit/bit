@@ -94,6 +94,10 @@ fn run_unsupported_help(args: &[&str]) -> Option<&'static str> {
         [name, "--json"] if !name.is_empty() && !name.starts_with('-') => {
             Some("Unknown argument: json")
         }
+        ["--ssr"] => Some("Unknown argument: ssr"),
+        [name, "--ssr"] if !name.is_empty() && !name.starts_with('-') => {
+            Some("Unknown argument: ssr")
+        }
         _ => None,
     }
 }
