@@ -44,8 +44,8 @@ export default class Dependencies {
   }
 
   getClone(): Dependency[] {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.dependencies.map((dependency) => Dependency.getClone(dependency));
+    // Dependency.getClone() returns a plain object with the serializable props of the dependency
+    return this.dependencies.map((dependency) => Dependency.getClone(dependency)) as Dependency[];
   }
 
   add(dependency: Dependency) {
