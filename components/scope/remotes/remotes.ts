@@ -25,8 +25,7 @@ export class Remotes extends Map<string, Remote> {
   }
 
   validate() {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const primary = this.values.filter((remote) => remote.primary);
+    const primary = Array.from(this.values()).filter((remote) => remote.primary);
     if (primary.length > 1) throw new PrimaryOverloaded();
     return this.forEach((remote) => remote.validate());
   }
@@ -175,13 +174,12 @@ ${failedScopesErr.join('\n')}`);
   }
 
   static load(remotes: { [key: string]: string }, thisScope?: LegacyScope): Remotes {
-    const models = [];
+    const models: [string, Remote][] = [];
 
     if (!remotes) return new Remotes(undefined, thisScope);
 
     forEach(remotes, (name, host) => {
       const remote = Remote.load(name, host, thisScope);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       models.push([remote.name, remote]);
     });
 
