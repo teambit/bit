@@ -24,6 +24,7 @@ mod remove;
 mod reset;
 mod run_cmd;
 mod search;
+mod show;
 mod snap;
 mod system_git_scope;
 mod tag;

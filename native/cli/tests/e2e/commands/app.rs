@@ -9,6 +9,7 @@ fn app_and_list_help_match_node() -> KnownResult<()> {
     let (_, bare_scope) = helper.new_bare_scope();
     helper.re_init_workspace();
     let ci_env = [("CI", OsStr::new("1"))];
+    let color_env = [("FORCE_COLOR", OsStr::new("1"))];
     for directory in [&outside, &bare_scope, &helper.scopes.local_path] {
         for command in [
             "app --help",
@@ -18,7 +19,7 @@ fn app_and_list_help_match_node() -> KnownResult<()> {
             "apps list --help",
             "apps list -h",
         ] {
-            for native_env in [&[][..], &ci_env[..]] {
+            for native_env in [&[][..], &ci_env[..], &color_env[..]] {
                 let mut node_env = vec![("BIT_NATIVE", OsStr::new("off"))];
                 node_env.extend_from_slice(native_env);
                 let node = Helper::cmd_in_with(directory, command, &node_env);
@@ -41,6 +42,7 @@ fn app_run_help_matches_node() -> KnownResult<()> {
     let (_, bare_scope) = helper.new_bare_scope();
     helper.re_init_workspace();
     let ci_env = [("CI", OsStr::new("1"))];
+    let color_env = [("FORCE_COLOR", OsStr::new("1"))];
     for directory in [&outside, &bare_scope, &helper.scopes.local_path] {
         for command in [
             "app run --help",
@@ -50,7 +52,7 @@ fn app_run_help_matches_node() -> KnownResult<()> {
             "app run missing-app --help",
             "apps c missing-app -h",
         ] {
-            for native_env in [&[][..], &ci_env[..]] {
+            for native_env in [&[][..], &ci_env[..], &color_env[..]] {
                 let mut node_env = vec![("BIT_NATIVE", OsStr::new("off"))];
                 node_env.extend_from_slice(native_env);
                 let node = Helper::cmd_in_with(directory, command, &node_env);
@@ -110,10 +112,25 @@ fn app_rejected_flags_help_matches_node() -> KnownResult<()> {
     let (_, bare_scope) = helper.new_bare_scope();
     helper.re_init_workspace();
     let ci_env = [("CI", OsStr::new("1"))];
+    let color_env = [("FORCE_COLOR", OsStr::new("1"))];
     for directory in [&outside, &bare_scope, &helper.scopes.local_path] {
         for command in [
             "app --json",
             "apps --json",
+            "app -j",
+            "apps --json --json",
+            "app --json -j",
+            "apps -j --json",
+            "app -j -j",
+            "apps --json --no-color",
+            "app -j --no-color",
+            "apps --no-color --json",
+            "app --no-color -j",
+            "apps --no-color --no-color",
+            "app --json --no-color -j --json",
+            "apps list --no-color --no-color",
+            "app list --json --no-color -j --no-color",
+            "apps list --json=false --no-color --json=true",
             "app --no-color",
             "apps --no-color",
             "app list --no-color",
@@ -124,6 +141,18 @@ fn app_rejected_flags_help_matches_node() -> KnownResult<()> {
             "apps list --no-color -j",
             "app list --json=true --no-color",
             "apps list --json=false --no-color",
+            "app list --json true --no-color",
+            "apps list --no-color --json false",
+            "app list -j false --no-color",
+            "apps list --no-color -j true",
+            "app list --json --no-color true",
+            "apps list -j --no-color false",
+            "app list --no-color true --json",
+            "apps list --no-color false -j",
+            "app list true --json --no-color",
+            "apps list false -j --no-color",
+            "app list true --no-color -j",
+            "apps list false --no-color --json",
             "app run --ssr",
             "apps run --ssr",
             "app c --ssr",
@@ -139,7 +168,7 @@ fn app_rejected_flags_help_matches_node() -> KnownResult<()> {
             "app run missing-app --no-color",
             "apps run missing-app --no-color",
         ] {
-            for native_env in [&[][..], &ci_env[..]] {
+            for native_env in [&[][..], &ci_env[..], &color_env[..]] {
                 let mut node_env = vec![("BIT_NATIVE", OsStr::new("off"))];
                 node_env.extend_from_slice(native_env);
                 let node = Helper::cmd_in_with(directory, command, &node_env);

@@ -9,6 +9,7 @@ use std::{fs, path::Path};
 #[test]
 fn parses_show_options_and_detects_missing_host_errors() {
     assert_eq!(parse_options(&[]), None);
+    assert_eq!(parse_options(&["sample", "--json", "--no-color"]), None);
     let opts = parse_options(&["comp1", "-j", "-r", "-c"]).unwrap();
     assert_eq!(
         opts,

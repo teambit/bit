@@ -8,6 +8,7 @@ use super::{
     app_cmd::{
         GLOBAL_HELP, is_empty_app_workspace, run_missing_app, standard_nonapp_component_count,
     },
+    color::Chalk,
     workspace_command,
 };
 use crate::{native::Outcome, workspace};
@@ -35,14 +36,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("run arguments are not UTF-8".into()));
     };
+    let chalk = Chalk::detect(args);
     if is_help_form(&argv[1..]) {
         io::stdout()
             .lock()
-            .write_all(command_help("run").as_bytes())?;
+            .write_all(command_help("run", chalk).as_bytes())?;
         return Ok(Outcome::Exit(ExitCode::SUCCESS));
     }
     if let Some(unknown) = run_unsupported_help(&argv[1..]) {
-        return print_unsupported_help(unknown);
+        return print_unsupported_help(unknown, chalk);
     }
     if parse_options(&argv[1..]).is_none() {
         return Ok(Outcome::Declined("outside native run grammar".into()));
@@ -59,42 +61,56 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("run execution delegated".into()))
 }
 
-fn print_unsupported_help(unknown: &str) -> io::Result<Outcome> {
+fn print_unsupported_help(unknown: &str, chalk: Chalk) -> io::Result<Outcome> {
     io::stdout()
         .lock()
-        .write_all(unsupported_help("run", unknown).as_bytes())?;
+        .write_all(unsupported_help("run", unknown, chalk).as_bytes())?;
     Ok(Outcome::Exit(ExitCode::FAILURE))
 }
 
-pub(super) fn unsupported_help(command: &str, unknown: &str) -> String {
-    format!("{}\n{unknown}\n", command_help(command))
+pub(super) fn unsupported_help(command: &str, unknown: &str, chalk: Chalk) -> String {
+    let unknown = chalk.yellow(unknown);
+    format!("{}\n{unknown}\n", command_help(command, chalk))
 }
 
-pub(super) fn command_help(command: &str) -> String {
+pub(super) fn command_help(command: &str, chalk: Chalk) -> String {
     let global = GLOBAL_HELP;
+    let description = chalk.bold("start an application component locally");
+    let app_name = chalk.green("  app-name");
+    let dev = help_option(chalk, "-d", "--dev");
+    let port = help_option(chalk, "-p", "--port");
+    let verbose = help_option(chalk, "-v", "--verbose");
+    let watch = help_option(chalk, "-w", "--watch");
+    let no_browser = help_option(chalk, "-n", "--no-browser");
+    let args = help_option(chalk, "-a", "--args");
+    let link = chalk.underline("https://bit.dev/reference/apps/apps-overview/");
     format!(
         r#"bit {command} [app-name]
 
-start an application component locally
+{description}
 runs application components in their own development server, separate from the "bit start" UI.
 apps are components that create deployable applications (React apps, Node.js servers, etc.).
 when no app name is specified, automatically detects and runs the app if only one exists in the workspace.
-for more info, visit: https://bit.dev/reference/apps/apps-overview/
+for more info, visit: {link}
 
 Arguments:
-  app-name  the app's name is registered by the app (run 'bit app list' to list the names of the available apps)
+{app_name}  the app's name is registered by the app (run 'bit app list' to list the names of the available apps)
 
 Options
-  -d, --dev         start the application in dev mode.  [boolean]
-  -p, --port        port to run the app on  [string]
-  -v, --verbose     show verbose output for inspection and print stack trace  [boolean]
-  -w, --watch       watch and compile your components upon changes  [boolean]
-  -n, --no-browser  do not automatically open browser when ready  [boolean]
-  -a, --args        the arguments passing to the app. for example, --args="--a=1 --b". don't forget to use quotes to wrap the value to escape special characters.  [string]
+  {dev}         start the application in dev mode.  [boolean]
+  {port}        port to run the app on  [string]
+  {verbose}     show verbose output for inspection and print stack trace  [boolean]
+  {watch}       watch and compile your components upon changes  [boolean]
+  {no_browser}  do not automatically open browser when ready  [boolean]
+  {args}        the arguments passing to the app. for example, --args="--a=1 --b". don't forget to use quotes to wrap the value to escape special characters.  [string]
 
 {global}
 "#,
     )
+}
+
+pub(super) fn help_option(chalk: Chalk, short: &str, long: &str) -> String {
+    format!("{}, {}", chalk.green(short), chalk.green(long))
 }
 
 pub(super) fn is_help_form(args: &[&str]) -> bool {

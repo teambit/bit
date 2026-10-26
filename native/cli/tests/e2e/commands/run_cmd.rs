@@ -9,9 +9,10 @@ fn run_help_matches_node() -> KnownResult<()> {
     let (_, bare_scope) = helper.new_bare_scope();
     helper.re_init_workspace();
     let ci_env = [("CI", OsStr::new("1"))];
+    let color_env = [("FORCE_COLOR", OsStr::new("1"))];
     for directory in [&outside, &bare_scope, &helper.scopes.local_path] {
         for command in ["run --help", "run -h", "run missing-app --help", "run missing-app -h"] {
-            for native_env in [&[][..], &ci_env[..]] {
+            for native_env in [&[][..], &ci_env[..], &color_env[..]] {
                 let mut node_env = vec![("BIT_NATIVE", OsStr::new("off"))];
                 node_env.extend_from_slice(native_env);
                 let node = Helper::cmd_in_with(directory, command, &node_env);
@@ -34,6 +35,7 @@ fn run_unsupported_help_matches_node() -> KnownResult<()> {
     let (_, bare_scope) = helper.new_bare_scope();
     helper.re_init_workspace();
     let ci_env = [("CI", OsStr::new("1"))];
+    let color_env = [("FORCE_COLOR", OsStr::new("1"))];
     for directory in [&outside, &bare_scope, &helper.scopes.local_path] {
         for command in [
             "run --no-color",
@@ -43,7 +45,7 @@ fn run_unsupported_help_matches_node() -> KnownResult<()> {
             "run --ssr",
             "run missing-app --ssr",
         ] {
-            for native_env in [&[][..], &ci_env[..]] {
+            for native_env in [&[][..], &ci_env[..], &color_env[..]] {
                 let mut node_env = vec![("BIT_NATIVE", OsStr::new("off"))];
                 node_env.extend_from_slice(native_env);
                 let node = Helper::cmd_in_with(directory, command, &node_env);

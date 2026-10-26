@@ -11,6 +11,7 @@ ceiling: native-only cases for edge cases the e2e suite does not cover are welco
 
 | Additional released-CLI oracle | Native test |
 | --- | --- |
+| Published ShowCmd help, missing arguments and no-color rejection, including colored and CI output inside/outside workspaces and in bare scopes. | `commands::show::show_help_and_argument_errors_match_released_node` |
 | `ConsumerComponent.getLoadedFiles` checks the main file after loading every source and before starting any documentation parser; a missing later main file must leave earlier rich-source docs uncached. | `commands::cat::released_loader_rejects_missing_main_before_any_documentation_cache_write` |
 
 ## Closeout supplemental VCS parity fixtures

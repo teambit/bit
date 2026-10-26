@@ -8,6 +8,7 @@ fn parses_app_options_and_detects_empty_workspace() {
     assert_eq!(parse_options(&[]), Some(Options { json: false }));
     assert_eq!(parse_options(&["list", "-j"]), Some(Options { json: true }));
     assert_eq!(parse_options(&["unknown"]), None);
+    assert_eq!(parse_options(&["list", "--json", "true", "--no-color", "--json", "false"]), None);
 
     let temp = tempfile::tempdir().unwrap();
     fs::write(

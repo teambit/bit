@@ -2,6 +2,7 @@
 
 mod deps;
 mod deps_policy;
+mod help;
 mod remote_show;
 mod render;
 #[cfg(test)]
@@ -31,6 +32,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("show arguments are not UTF-8".into()));
     };
+    if let Some(outcome) = help::try_run(args, &argv[1..])? {
+        return Ok(outcome);
+    }
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native show grammar".into()));
     };
@@ -74,7 +78,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut compare = false;
     for &arg in args {
         match arg {
-            "--no-color" => {}
+            "--no-color" => return None,
             "-j" | "--json" => json = true,
             "-l" | "--legacy" => legacy = true,
             "-r" | "--remote" => remote = true,

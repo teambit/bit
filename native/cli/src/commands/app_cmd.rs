@@ -47,17 +47,18 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("app arguments are not UTF-8".into()));
     };
+    let chalk = Chalk::detect(args);
     if let Some(name) = app_run_help_name(&argv) {
         io::stdout()
             .lock()
-            .write_all(run_cmd::command_help(&format!("{name} run")).as_bytes())?;
+            .write_all(run_cmd::command_help(&format!("{name} run"), chalk).as_bytes())?;
         return Ok(Outcome::Exit(ExitCode::SUCCESS));
     }
-    if let Some(help) = app_help_output(&argv) {
+    if let Some(help) = app_help_output(&argv, chalk) {
         io::stdout().lock().write_all(help.as_bytes())?;
         return Ok(Outcome::Exit(ExitCode::SUCCESS));
     }
-    if let Some(help) = unsupported_flag_help(&argv) {
+    if let Some(help) = unsupported_flag_help(&argv, chalk) {
         io::stdout().lock().write_all(help.as_bytes())?;
         return Ok(Outcome::Exit(ExitCode::FAILURE));
     }
@@ -328,7 +329,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut args = args.iter().copied().peekable();
     while let Some(arg) = args.next() {
         match arg {
-            "--no-color" => {}
+            "--no-color" => return None,
             "-j" | "--json"
                 if saw_list
                     && args
