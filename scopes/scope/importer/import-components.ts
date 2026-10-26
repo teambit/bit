@@ -168,6 +168,9 @@ export default class ImportComponents {
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     const versionDependenciesArr = await this._importComponentsObjects(bitIds, {
       lane,
+      // getBitIdsForLanes() includes the hidden lane.updateDependents. route them to the lane's scope, where
+      // their cascade snaps live. their origin scope has main only.
+      includeUpdateDependents: true,
     });
 
     if (lane) {
@@ -550,10 +553,12 @@ if you just want to get a quick look into this snap, create a new workspace and 
       fromOriginalScope = false,
       lane,
       ignoreMissingHead = false,
+      includeUpdateDependents = false,
     }: {
       fromOriginalScope?: boolean;
       lane?: Lane;
       ignoreMissingHead?: boolean;
+      includeUpdateDependents?: boolean;
     }
   ): Promise<VersionDependencies[]> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
@@ -567,6 +572,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
       // empty, until it's exported. going to the remote and asking this component will throw an error if ignoreMissingHead is false
       ignoreMissingHead: true,
       includeUnexported: this.options.isLaneFromRemote,
+      includeUpdateDependents,
       reason: `of their latest on ${lane ? `lane ${lane.id()}` : 'main'}`,
     });
 
@@ -577,6 +583,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
           ids,
           ignoreMissingHead,
           lane,
+          includeUpdateDependents,
           preferDependencyGraph: !this.options.fetchDeps,
           // when user is running "bit import", we want to re-fetch if it wasn't built. todo: check if this can be disabled when not needed
           reFetchUnBuiltVersion: true,

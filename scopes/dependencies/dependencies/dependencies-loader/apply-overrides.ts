@@ -44,7 +44,7 @@ const DepsKeysToAllPackagesDepsKeys = {
 
 export class ApplyOverrides {
   componentId: ComponentID;
-  componentFromModel: Component;
+  componentFromModel: Component | undefined;
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
   /**
@@ -69,7 +69,6 @@ export class ApplyOverrides {
     private workspace?: Workspace
   ) {
     this.componentId = component.componentId;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
     this.allDependencies = {
       dependencies: [],
