@@ -561,6 +561,11 @@ export class SnappingMain {
     const components = [...existingComponents, ...newComponents];
 
     const autoDepsPerComp = new Map<Component, VariantPolicyConfigArr | undefined>();
+    // the components that a workspace of the lane has in its .bitmap, see ApplyOverrides.workspaceComponentIds.
+    // (not the update-dependents of the lane, which a workspace doesn't have)
+    const workspaceComponentIds = params.recalcDependencies
+      ? lane?.toComponentIds() || ComponentIdList.fromArray(allCompIds)
+      : undefined;
     const addDepsToComp = (component: Component, autoDetectOverrides?: DependenciesOverridesData) =>
       addDeps(
         component,
@@ -570,7 +575,8 @@ export class SnappingMain {
         this.dependencyResolver,
         this,
         autoDepsPerComp.get(component),
-        autoDetectOverrides
+        autoDetectOverrides,
+        workspaceComponentIds
       );
     // this must be done before we load component aspects later on, because this updated deps may update aspects.
     await pMapSeries(components, async (component) => {
