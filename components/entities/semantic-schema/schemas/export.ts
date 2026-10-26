@@ -1,4 +1,4 @@
-import type { SchemaLocation } from '../schema-node';
+import type { GetMembersContext, SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
 import { DocSchema } from './docs';
 import { SchemaRegistry } from '../schema-registry';
@@ -21,6 +21,10 @@ export class ExportSchema extends SchemaNode {
     this.alias = alias;
     this.doc = doc;
     this.signature = exportNode.signature || this.toFullSignature();
+  }
+
+  getMembers(context: GetMembersContext = {}) {
+    return SchemaNode.membersOf(this.exportNode, context);
   }
 
   toString(options?: { color?: boolean }): string {

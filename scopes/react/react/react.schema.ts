@@ -97,6 +97,10 @@ export class ReactSchema extends SchemaNode {
     };
   }
 
+  static isReactSchema(node: SchemaNode): node is ReactSchema {
+    return node.__schema === ReactSchema.name;
+  }
+
   static fromObject(obj: Record<string, any>): ReactSchema {
     const location = obj.location;
     const name = obj.name;

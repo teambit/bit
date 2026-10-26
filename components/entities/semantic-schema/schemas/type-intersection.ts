@@ -1,4 +1,4 @@
-import type { SchemaLocation } from '../schema-node';
+import type { GetMembersContext, SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
@@ -15,6 +15,10 @@ export class TypeIntersectionSchema extends SchemaNode {
 
   getNodes() {
     return this.types;
+  }
+
+  getMembers(context: GetMembersContext = {}) {
+    return this.types.flatMap((type) => SchemaNode.membersOf(type, context));
   }
 
   toString(options?: { color?: boolean }) {
