@@ -66,28 +66,62 @@ function getLockfileImporterId(lockfileDir: string, projectDir: string): string 
   return normalizePath(path.relative(lockfileDir, projectDir)) || '.';
 }
 
-function scrubOwnComponentFromLockfile(lockfile: BitLockfileFile, pkgName?: string): void {
-  if (!pkgName) return;
+function scrubOwnComponentFromLockfile(lockfile: BitLockfileFile, pkgName?: string): BitLockfileFile {
+  if (!pkgName) return lockfile;
   const prefix = `${pkgName}@`;
-  for (const depPath of Object.keys(lockfile.snapshots ?? {})) {
+  let snapshots: BitLockfileFile['snapshots'] = lockfile.snapshots;
+  let snapshotsCopied = false;
+  const ensureSnapshotsCopy = () => {
+    if (!snapshotsCopied && snapshots) {
+      snapshots = { ...snapshots };
+      snapshotsCopied = true;
+    }
+  };
+  for (const depPath of Object.keys(snapshots ?? {})) {
     if (depPath.startsWith(prefix) && depPath.slice(prefix.length).startsWith('file:')) {
-      delete lockfile.snapshots![depPath];
+      ensureSnapshotsCopy();
+      delete snapshots![depPath];
     }
   }
-  for (const pkgId of Object.keys(lockfile.packages ?? {})) {
+  let packages: BitLockfileFile['packages'] = lockfile.packages;
+  let packagesCopied = false;
+  for (const pkgId of Object.keys(packages ?? {})) {
     if (pkgId.startsWith(prefix) && pkgId.slice(prefix.length).startsWith('file:')) {
-      delete lockfile.packages![pkgId];
+      if (!packagesCopied && packages) {
+        packages = { ...packages };
+        packagesCopied = true;
+      }
+      delete packages![pkgId];
     }
   }
-  for (const snapshot of Object.values(lockfile.snapshots ?? {})) {
+  for (const [depPath, snapshot] of Object.entries(snapshots ?? {})) {
+    let snapshotCopied = false;
+    let currentSnapshot = snapshot;
     for (const depType of ['dependencies', 'optionalDependencies'] as const) {
-      const deps = snapshot[depType];
+      const deps = currentSnapshot[depType];
       if (deps && deps[pkgName]?.startsWith('file:')) {
-        delete deps[pkgName];
-        if (Object.keys(deps).length === 0) delete snapshot[depType];
+        ensureSnapshotsCopy();
+        if (!snapshotCopied) {
+          currentSnapshot = { ...currentSnapshot };
+          snapshots![depPath] = currentSnapshot;
+          snapshotCopied = true;
+        }
+        const nextDeps = { ...deps };
+        delete nextDeps[pkgName];
+        if (Object.keys(nextDeps).length === 0) {
+          delete currentSnapshot[depType];
+        } else {
+          currentSnapshot[depType] = nextDeps;
+        }
       }
     }
   }
+  if (!snapshotsCopied && !packagesCopied) return lockfile;
+  return {
+    ...lockfile,
+    snapshots,
+    packages,
+  };
 }
 
 function convertLockfileToGraphFromCapsule(
@@ -106,10 +140,10 @@ function convertLockfileToGraphFromCapsule(
     narrowToComponentImporter?: boolean;
   }
 ): DependenciesGraph {
-  const narrowedLockfile = narrowToComponentImporter
-    ? filterLockfileByImporters(lockfile, [componentRelativeDir])
-    : lockfile;
-  scrubOwnComponentFromLockfile(narrowedLockfile, pkgName);
+  const narrowedLockfile = scrubOwnComponentFromLockfile(
+    narrowToComponentImporter ? filterLockfileByImporters(lockfile, [componentRelativeDir]) : lockfile,
+    pkgName
+  );
   const componentImporter = narrowedLockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
   for (const depType of ['dependencies' as const, 'optionalDependencies' as const, 'devDependencies' as const]) {

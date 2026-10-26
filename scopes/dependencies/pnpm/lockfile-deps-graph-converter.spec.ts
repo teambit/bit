@@ -766,6 +766,60 @@ describe('convertLockfileToGraph when the root importer or snapshot lacks the co
     });
     expect(Array.from(graph.packages.keys())).to.eql(['foo@1.0.0']);
   });
+
+  it('should not mutate the caller lockfile when converting without a root importer', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        'comps/comp1': {
+          dependencies: {
+            comp2: { version: 'file:comps/comp2', specifier: '*' },
+          },
+        },
+        'comps/comp2': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'comp1@file:comps/comp1': {
+          dependencies: {
+            comp2: 'file:comps/comp2',
+          },
+        },
+        'comp2@file:comps/comp2': {
+          dependencies: {
+            comp1: 'file:comps/comp1',
+          },
+        },
+      },
+      packages: {
+        'comp1@file:comps/comp1': {
+          resolution: { directory: 'comps/comp1', type: 'directory' },
+        },
+        'comp2@file:comps/comp2': {
+          resolution: { directory: 'comps/comp2', type: 'directory' },
+        },
+      },
+    };
+    const componentIdByPkgName = new Map([
+      ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+      ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+    ]);
+    convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentIdByPkgName,
+    });
+    const graph2 = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp2',
+      componentRelativeDir: 'comps/comp2',
+      componentIdByPkgName,
+    });
+    expect(Array.from(graph2.packages.keys())).to.eql(['comp1@1.0.0']);
+  });
 });
 
 describe('filterLockfileByImporters', () => {
