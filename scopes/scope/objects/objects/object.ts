@@ -46,7 +46,7 @@ export default class BitObject {
   }
 
   async collectRefs(repo: Repository): Promise<Ref[]> {
-    const refsCollection = [];
+    const refsCollection: Ref[] = [];
     const objectType = this.getType();
     const objectId = objectType === 'Component' ? `Component ${this.id()}` : objectType;
 
@@ -63,7 +63,6 @@ path: ${err.path}`);
         throw err;
       }
 
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       refsCollection.push(...refs);
       await Promise.all(objs.map((obj) => addRefs(obj)));
     }
