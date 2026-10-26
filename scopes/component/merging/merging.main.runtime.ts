@@ -696,12 +696,11 @@ export class MergingMain {
 
   private async resolveMerge(pattern: string, snapMessage: string, build: boolean): Promise<ApplyVersionResults> {
     const ids = await this.getIdsForUnmerged(pattern);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const { snappedComponents } = await this.snapping.snap({
+    const { snappedComponents } = (await this.snapping.snap({
       legacyBitIds: ComponentIdList.fromArray(ids.map((id) => id)),
       build,
       message: snapMessage,
-    });
+    }))!;
     return { resolvedComponents: snappedComponents };
   }
 

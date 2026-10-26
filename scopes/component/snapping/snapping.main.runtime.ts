@@ -138,7 +138,7 @@ export type TagResults = BasicTagResults & {
 };
 
 export type BasicTagResults = {
-  warnings: string[];
+  warnings?: string[]; // not set by snap
   newComponents: ComponentIdList;
   removedComponents?: ComponentIdList;
   dependentsWithPinnedDeps?: DependentWithPinnedDeps[];
@@ -261,7 +261,7 @@ export class SnappingMain {
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(this.workspace);
     this.logger.setStatusLine('determine components to tag...');
-    const newComponents = await componentsList.listNewComponents();
+    const newComponents = (await componentsList.listNewComponents()) as ComponentIdList;
     const { bitIds, warnings } = await this.getComponentsToTag(
       unmodified,
       exactVersion,
@@ -335,7 +335,6 @@ export class SnappingMain {
 
     await consumer.onDestroy(`tag (message: ${message || 'N/A'})`);
     await stagedConfig?.write();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return tagResults;
   }
 
@@ -780,7 +779,8 @@ export class SnappingMain {
       totalComponentsCount,
     } = await this.makeVersion(idsToSnap, components, makeVersionParams);
 
-    const snapResults: Partial<SnapResults> = {
+    const currentLane = consumer.getCurrentLaneId();
+    const snapResults: SnapResults = {
       snappedComponents: taggedComponents,
       autoSnappedResults: autoTaggedResults,
       dependentsWithPinnedDeps,
@@ -788,13 +788,10 @@ export class SnappingMain {
       removedComponents,
       totalComponentsCount,
       autoAddedWorkspaceRoot: findVersioned(taggedComponents, autoAddedWorkspaceRoot),
+      laneName: currentLane.isDefault() ? null : currentLane.toString(),
     };
-
-    const currentLane = consumer.getCurrentLaneId();
-    snapResults.laneName = currentLane.isDefault() ? null : currentLane.toString();
     await consumer.onDestroy(`snap (message: ${message || 'N/A'})`);
     await stagedConfig?.write();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return snapResults;
 
     async function getIdsToSnap(): Promise<ComponentIdList | null> {

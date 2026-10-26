@@ -3,7 +3,10 @@ import doctrine from 'doctrine';
 import type { PathOsBased } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import exampleTagParser from './example-tag-parser';
-import type { Doclet } from './types';
+import type { Doclet, DocProp } from './types';
+import type { Example } from './example-tag-parser';
+
+type DocletWithRender = Doclet & { render: string };
 
 function formatTag(tag: Record<string, any>): Record<string, any> {
   delete tag.title;
@@ -28,13 +31,13 @@ export default function extractDataRegex(doc: string, doclets: Array<Doclet>, fi
   const commentsAst = doctrine.parse(doc.trim(), { unwrap, recoverable: true, sloppy: true });
   if (!commentsAst) return;
 
-  const args = [];
+  const args: Record<string, any>[] = [];
   let description = commentsAst.description;
   let returns = {};
   let isStatic = false;
   let access = 'public';
-  const examples = [];
-  const properties = [];
+  const examples: Example[] = [];
+  const properties: DocProp[] = [];
   let name = '';
   let render = '';
 
@@ -50,7 +53,6 @@ export default function extractDataRegex(doc: string, doclets: Array<Doclet>, fi
       case 'param':
       case 'arg':
       case 'argument':
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         args.push(formatTag(tag));
         break;
       case 'returns':
@@ -68,12 +70,10 @@ export default function extractDataRegex(doc: string, doclets: Array<Doclet>, fi
         access = tag.access;
         break;
       case 'example':
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         examples.push(exampleTagParser(tag.description));
         break;
       case 'property':
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        properties.push(formatTag(tag));
+        properties.push(formatTag(tag) as DocProp);
         break;
       case 'render':
         render = tag.description;
@@ -83,14 +83,13 @@ export default function extractDataRegex(doc: string, doclets: Array<Doclet>, fi
     }
   });
 
-  const doclet: Doclet = {
+  const doclet: DocletWithRender = {
     name, // todo: find the function/method name by regex
     description,
     args,
     returns,
     access,
     examples,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     render,
     properties,
     static: isStatic,
