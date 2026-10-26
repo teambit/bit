@@ -10,7 +10,6 @@ describe('Consumer', function () {
   this.timeout(0);
   let sandbox;
   const getConsumerInstance = () => {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const consumer = new Consumer({
       projectPath: '',
       // @ts-ignore

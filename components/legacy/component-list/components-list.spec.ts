@@ -6,7 +6,6 @@ import { ComponentsList } from './components-list';
 describe('ComponentList', function () {
   // @ts-ignore
   this.timeout(0);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const getModelComponent = () => ModelComponent.fromBitId(ComponentID.fromObject({ name: 'myName', scope: 'scope' }));
   const getScope = (modelComponent) => ({
     listLocal: () => {
