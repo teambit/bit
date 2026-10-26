@@ -127,6 +127,8 @@ function scrubOwnComponentFromLockfile(lockfile: BitLockfileFile, pkgName?: stri
 export interface LockfileToGraphCache {
   edges: WeakMap<object, { depPath: string; edge: DependencyEdge | null }>;
   packages: WeakMap<object, { pkgId: string; replacedPkgId: string; graphPkg: PackageAttributes }>;
+  contextKey?: string;
+  replaceFileVersion?: (s: string) => string;
 }
 
 export function createLockfileToGraphCache(): LockfileToGraphCache {
@@ -134,6 +136,17 @@ export function createLockfileToGraphCache(): LockfileToGraphCache {
     edges: new WeakMap(),
     packages: new WeakMap(),
   };
+}
+
+function getCacheContextKey(componentIdByPkgName: ComponentIdByPkgName, depsRequiringBuild?: string[]): string {
+  let key = '';
+  for (const [pkgName, compId] of componentIdByPkgName.entries()) {
+    key += `${pkgName}:${compId.scope}/${compId.fullName}@${compId.version};`;
+  }
+  if (depsRequiringBuild?.length) {
+    key += `|build:${depsRequiringBuild.join(',')}`;
+  }
+  return key;
 }
 
 function convertLockfileToGraphFromCapsule(
@@ -301,7 +314,7 @@ function _convertLockfileToGraph(
   {
     componentIdByPkgName,
     directDependencies,
-    replaceFileVersion = createFileVersionReplacer(componentIdByPkgName),
+    replaceFileVersion,
     cache,
   }: {
     componentIdByPkgName: ComponentIdByPkgName;
@@ -310,9 +323,36 @@ function _convertLockfileToGraph(
     cache?: LockfileToGraphCache;
   }
 ): DependenciesGraph {
+  let resolvedReplacer = replaceFileVersion;
+  if (cache) {
+    const contextKey = getCacheContextKey(componentIdByPkgName, lockfile.bit?.depsRequiringBuild);
+    const isContextChanged =
+      cache.contextKey !== contextKey ||
+      (replaceFileVersion != null &&
+        cache.replaceFileVersion != null &&
+        cache.replaceFileVersion !== replaceFileVersion);
+    if (isContextChanged) {
+      cache.edges = new WeakMap();
+      cache.packages = new WeakMap();
+      cache.contextKey = contextKey;
+      cache.replaceFileVersion = undefined;
+    }
+    resolvedReplacer ??= cache.replaceFileVersion ?? createFileVersionReplacer(componentIdByPkgName);
+    cache.replaceFileVersion = resolvedReplacer;
+  } else {
+    resolvedReplacer ??= createFileVersionReplacer(componentIdByPkgName);
+  }
   const graph = new DependenciesGraph({
-    edges: buildEdges(lockfile, { directDependencies, replaceFileVersion, edgesCache: cache?.edges }),
-    packages: buildPackages(lockfile, { componentIdByPkgName, replaceFileVersion, packagesCache: cache?.packages }),
+    edges: buildEdges(lockfile, {
+      directDependencies,
+      replaceFileVersion: resolvedReplacer,
+      edgesCache: cache?.edges,
+    }),
+    packages: buildPackages(lockfile, {
+      componentIdByPkgName,
+      replaceFileVersion: resolvedReplacer,
+      packagesCache: cache?.packages,
+    }),
     pnpmfileChecksum: lockfile.pnpmfileChecksum,
     lockfileSettings: lockfile.settings,
     overrides: lockfile.overrides,

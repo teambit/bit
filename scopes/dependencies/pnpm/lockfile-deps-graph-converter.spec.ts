@@ -1855,62 +1855,49 @@ describe('lockfile settings', () => {
 });
 
 describe('createLockfileToGraphCache', () => {
+  const lockfile: BitLockfileFile = {
+    bit: { depsRequiringBuild: [] },
+    lockfileVersion: '9.0',
+    importers: {
+      '.': {},
+      'node_modules/.bit_roots/env': {
+        dependencies: {
+          comp1: { version: 'file:comps/comp1(foo@1.0.0)', specifier: '*' },
+          comp2: { version: 'file:comps/comp2(foo@1.0.0)', specifier: '*' },
+        },
+      },
+      'comps/comp1': {
+        dependencies: {
+          comp2: { version: 'file:comps/comp2(foo@1.0.0)', specifier: '*' },
+          foo: { version: '1.0.0', specifier: '^1.0.0' },
+        },
+      },
+      'comps/comp2': {
+        dependencies: {
+          comp1: { version: 'file:comps/comp1(foo@1.0.0)', specifier: '*' },
+          foo: { version: '1.0.0', specifier: '^1.0.0' },
+        },
+      },
+    },
+    snapshots: {
+      'comp1@file:comps/comp1(foo@1.0.0)': {
+        dependencies: { comp2: 'file:comps/comp2(foo@1.0.0)', foo: '1.0.0' },
+      },
+      'comp2@file:comps/comp2(foo@1.0.0)': {
+        dependencies: { comp1: 'file:comps/comp1(foo@1.0.0)', foo: '1.0.0' },
+      },
+      'foo@1.0.0': { dependencies: { bar: '2.0.0' } },
+      'bar@2.0.0': {},
+    },
+    packages: {
+      'comp1@file:comps/comp1': { resolution: { directory: 'comps/comp1', type: 'directory' } },
+      'comp2@file:comps/comp2': { resolution: { directory: 'comps/comp2', type: 'directory' } },
+      'foo@1.0.0': { resolution: { integrity: 'sha512-foo' } },
+      'bar@2.0.0': { resolution: { integrity: 'sha512-bar' } },
+    },
+  };
+
   it('should reuse unmodified package and edge entries across components while isolating circular back-edge scrubbing', () => {
-    const lockfile: BitLockfileFile = {
-      bit: { depsRequiringBuild: [] },
-      lockfileVersion: '9.0',
-      importers: {
-        '.': {},
-        'node_modules/.bit_roots/env': {
-          dependencies: {
-            comp1: { version: 'file:comps/comp1(foo@1.0.0)', specifier: '*' },
-            comp2: { version: 'file:comps/comp2(foo@1.0.0)', specifier: '*' },
-          },
-        },
-        'comps/comp1': {
-          dependencies: {
-            comp2: { version: 'file:comps/comp2(foo@1.0.0)', specifier: '*' },
-            foo: { version: '1.0.0', specifier: '^1.0.0' },
-          },
-        },
-        'comps/comp2': {
-          dependencies: {
-            comp1: { version: 'file:comps/comp1(foo@1.0.0)', specifier: '*' },
-            foo: { version: '1.0.0', specifier: '^1.0.0' },
-          },
-        },
-      },
-      snapshots: {
-        'comp1@file:comps/comp1(foo@1.0.0)': {
-          dependencies: {
-            comp2: 'file:comps/comp2(foo@1.0.0)',
-            foo: '1.0.0',
-          },
-        },
-        'comp2@file:comps/comp2(foo@1.0.0)': {
-          dependencies: {
-            comp1: 'file:comps/comp1(foo@1.0.0)',
-            foo: '1.0.0',
-          },
-        },
-        'foo@1.0.0': {
-          dependencies: {
-            bar: '2.0.0',
-          },
-        },
-        'bar@2.0.0': {},
-      },
-      packages: {
-        'comp1@file:comps/comp1': {
-          resolution: { directory: 'comps/comp1', type: 'directory' },
-        },
-        'comp2@file:comps/comp2': {
-          resolution: { directory: 'comps/comp2', type: 'directory' },
-        },
-        'foo@1.0.0': { resolution: { integrity: 'sha512-foo' } },
-        'bar@2.0.0': { resolution: { integrity: 'sha512-bar' } },
-      },
-    };
     const componentIdByPkgName = new Map([
       ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
       ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
@@ -1950,5 +1937,39 @@ describe('createLockfileToGraphCache', () => {
     expect(graph2.packages.has('comp2@1.0.0')).to.equal(false);
     expect(graph2.packages.has('comp1@1.0.0')).to.equal(true);
     expect(graph2.edges.some((e) => e.neighbours.some((n) => n.id.startsWith('comp2@')))).to.equal(false);
+  });
+
+  it('should invalidate cached entries when reused with a different componentIdByPkgName mapping', () => {
+    const cache = createLockfileToGraphCache();
+    const filtered1 = filterLockfileByImporters(lockfile, ['comps/comp1', 'node_modules/.bit_roots/env']);
+    const graph1 = convertLockfileToGraph(filtered1, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+        ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+      ]),
+      cache,
+    });
+    expect(graph1.packages.has('comp2@1.0.0')).to.equal(true);
+    expect(graph1.edges.some((e) => e.id === 'comp2@1.0.0(foo@1.0.0)')).to.equal(true);
+
+    // Reuse the same cache and lockfile objects with an updated version mapping for comp2
+    const filtered2 = filterLockfileByImporters(lockfile, ['comps/comp1', 'node_modules/.bit_roots/env']);
+    const graph2 = convertLockfileToGraph(filtered2, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('my-scope/comp1@2.0.0')],
+        ['comp2', ComponentID.fromString('my-scope/comp2@2.0.0')],
+      ]),
+      cache,
+    });
+    expect(graph2.packages.has('comp2@2.0.0')).to.equal(true);
+    expect(graph2.packages.has('comp2@1.0.0')).to.equal(false);
+    expect(graph2.edges.some((e) => e.id === 'comp2@2.0.0(foo@1.0.0)')).to.equal(true);
+    expect(graph2.edges.some((e) => e.id === 'comp2@1.0.0(foo@1.0.0)')).to.equal(false);
   });
 });
