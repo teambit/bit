@@ -69,7 +69,10 @@ export class MergeStatusProvider {
     bitIds: ComponentID[] // the id.version is the version we want to merge to the current component
   ): Promise<ComponentMergeStatus[]> {
     if (!this.currentLane && this.otherLane) {
-      await this.importer.importObjectsFromMainIfExist(this.otherLane.toBitIds().toVersionLatest());
+      // all the merged ids, not only the visible lane components. the hidden lane.updateDependents are merged too
+      // (when included), and their cascade snaps are fetched from the lane's scope, which usually doesn't have their
+      // main head (a cascade is pushed with its head only). without it, the merge can't find the current version.
+      await this.importer.importObjectsFromMainIfExist(ComponentIdList.fromArray(bitIds).toVersionLatest());
     }
     const componentStatusBeforeMergeAttempt = await mapSeries(bitIds, (id) =>
       this.getComponentStatusBeforeMergeAttempt(id)

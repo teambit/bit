@@ -21,7 +21,6 @@ export default async function parse(data: string, filePath: PathOsBased): Promis
     const docs = data.match(jsdocRegex);
     // populate doclets array
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     docs.forEach((doc) => extractDataRegex(doc, doclets, filePath));
   } catch (e: any) {
     // never mind, ignore the doc of this source

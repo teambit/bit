@@ -119,6 +119,27 @@ describe('Version', () => {
       expect(first.getLoadedFlattenedDependencies()).to.not.equal(second.getLoadedFlattenedDependencies());
       expect(first.getLoadedFlattenedDependencies()[0]).to.equal(second.getLoadedFlattenedDependencies()[0]);
     });
+    it('should share the same id and edge instances for flattenedEdges', () => {
+      const edgeFromObj1 = Version.depEdgeFromObject({
+        source: { scope: 'my-scope', name: 'comp-a', version: '0.0.1' },
+        target: { scope: 'my-scope', name: 'is-type', version: '0.0.1' },
+        type: 'prod',
+      });
+      const edgeFromObj2 = Version.depEdgeFromObject({
+        source: { scope: 'my-scope', name: 'comp-a', version: '0.0.1' },
+        target: { scope: 'my-scope', name: 'is-type', version: '0.0.1' },
+        type: 'prod',
+      });
+      expect(edgeFromObj1).to.equal(edgeFromObj2);
+      expect(edgeFromObj1.source).to.equal(edgeFromObj2.source);
+      expect(edgeFromObj1.target).to.equal(edgeFromObj2.target);
+
+      const edgeFromArr1 = Version.depEdgeFromArray(['my-scope/comp-a@0.0.1', 'my-scope/is-type@0.0.1', 'prod']);
+      const edgeFromArr2 = Version.depEdgeFromArray(['my-scope/comp-a@0.0.1', 'my-scope/is-type@0.0.1', 'prod']);
+      expect(edgeFromArr1).to.equal(edgeFromArr2);
+      expect(edgeFromArr1.source).to.equal(edgeFromArr2.source);
+      expect(edgeFromArr1.target).to.equal(edgeFromArr2.target);
+    });
     it('should keep a list that was set, and serialize it', () => {
       const version = getVersionWithDepsFixture();
       version.flattenedDependencies = new ComponentIdList(ComponentID.fromString('my-scope/is-type@0.0.3'));

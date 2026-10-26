@@ -1,7 +1,7 @@
 import * as path from 'path';
 import type { ComponentID } from '@teambit/component-id';
-import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import type { ComponentExtensions } from './component-id-to-package-name';
 import { componentIdToPackageName } from './component-id-to-package-name';
 
 export function getNodeModulesPathOfComponent({
@@ -14,7 +14,7 @@ export function getNodeModulesPathOfComponent({
   bindingPrefix?: string;
   id: ComponentID;
   defaultScope?: string | null;
-  extensions: ExtensionDataList;
+  extensions: ComponentExtensions;
   isDependency?: boolean;
 }): PathOsBasedRelative {
   const packageName = componentIdToPackageName({

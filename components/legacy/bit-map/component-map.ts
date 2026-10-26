@@ -28,7 +28,7 @@ import type { PathLinux, PathLinuxRelative, PathOsBasedRelative } from '@teambit
 import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/toolbox.path.path';
 import { removeInternalConfigFields } from '@teambit/legacy.extension-data';
 import OutsideRootDir from './exceptions/outside-root-dir';
-import { IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
+import { IgnoredDirectory, ComponentNotFoundInPath } from './exceptions';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
@@ -268,7 +268,6 @@ export class ComponentMap {
   rootDir: PathLinux;
   wrapDir: PathLinux | undefined; // a wrapper directory needed when a user adds a package.json file to the component root so then it won't collide with Bit generated one
   // wether the compiler / tester are detached from the workspace global configuration
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   markBitMapChangedCb: Function;
   exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
   isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
@@ -364,7 +363,6 @@ export class ComponentMap {
     files.forEach((file) => {
       const newPath = this.getPathWithoutRootDir(existingRootDir, file.relativePath);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       changes.push({ from: file.relativePath, to: newPath });
       file.relativePath = newPath;
     });
@@ -404,7 +402,6 @@ export class ComponentMap {
       const newRootDir = rootDir.replace(dirFrom, dirTo);
       const newRootDirNormalized = pathNormalizeToLinux(newRootDir);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       changes.push({ from: rootDir, to: newRootDirNormalized });
       logger.debug(`updating rootDir location from ${rootDir} to ${newRootDirNormalized}`);
       this.rootDir = newRootDirNormalized;
@@ -417,7 +414,6 @@ export class ComponentMap {
         const newLocation = this.rootDir ? ComponentMap.getPathWithoutRootDir(this.rootDir, fileTo) : fileTo;
         logger.debug(`updating file location from ${file.relativePath} to ${newLocation}`);
         if (this.mainFile === file.relativePath) this.mainFile = newLocation;
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         changes.push({ from: file.relativePath, to: newLocation });
         file.relativePath = newLocation;
