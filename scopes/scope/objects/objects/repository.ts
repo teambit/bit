@@ -180,8 +180,7 @@ export default class Repository {
     return path.join(this.scopePath, TRASH_DIR);
   }
 
-  getLicense(): Promise<string> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  getLicense(): Promise<string | null | undefined> {
     return this.scopeJson.getPopulatedLicense();
   }
 
@@ -564,7 +563,7 @@ export default class Repository {
       if (throws) {
         throw new HashNotFound(ref.toString());
       }
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error @todo: it should return BitObject | null (same as `load()`)
       return null;
     }
   }

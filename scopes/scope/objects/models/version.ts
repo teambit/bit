@@ -4,7 +4,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import { v4 } from 'uuid';
 import type { BuildStatus } from '@teambit/legacy.constants';
-import { DEFAULT_BUNDLE_FILENAME, Extensions } from '@teambit/legacy.constants';
+import { Extensions } from '@teambit/legacy.constants';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   isSchemaSupport,
@@ -880,16 +880,6 @@ export default class Version extends BitObject {
     return this.origin?.id
       ? ComponentID.fromObject({ scope: this.origin.id.scope, name: this.origin.id.name })
       : undefined;
-  }
-
-  setDist(dist: Source | undefined) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.dist = dist
-      ? {
-          file: dist.hash(),
-          name: DEFAULT_BUNDLE_FILENAME,
-        }
-      : null;
   }
 
   hasParent(ref: Ref) {

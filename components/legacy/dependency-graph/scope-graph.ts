@@ -76,7 +76,7 @@ export class DependencyGraph {
             const idWithVersion = `${component.id()}${VERSION_DELIMITER}${version}`;
             graph.setNode(idWithVersion, componentVersion);
             graph.setParent(idWithVersion, component.id());
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-expect-error Version.id is a method, but it is overridden here with a ComponentID (existing behavior)
             componentVersion.id = component.toComponentId();
             depObj[idWithVersion] = componentVersion;
           })
