@@ -127,6 +127,8 @@ function scrubOwnComponentFromLockfile(lockfile: BitLockfileFile, pkgName?: stri
 export interface LockfileToGraphCache {
   edges: WeakMap<object, { depPath: string; edge: DependencyEdge | null }>;
   packages: WeakMap<object, { pkgId: string; replacedPkgId: string; graphPkg: PackageAttributes }>;
+  componentIdByPkgName?: ComponentIdByPkgName;
+  depsRequiringBuild?: string[];
   contextKey?: string;
   replaceFileVersion?: (s: string) => string;
 }
@@ -325,16 +327,21 @@ function _convertLockfileToGraph(
 ): DependenciesGraph {
   let resolvedReplacer = replaceFileVersion;
   if (cache) {
-    const contextKey = getCacheContextKey(componentIdByPkgName, lockfile.bit?.depsRequiringBuild);
-    const isContextChanged =
-      cache.contextKey !== contextKey ||
-      (replaceFileVersion != null &&
-        cache.replaceFileVersion != null &&
-        cache.replaceFileVersion !== replaceFileVersion);
+    const depsRequiringBuild = lockfile.bit?.depsRequiringBuild;
+    let isContextChanged =
+      replaceFileVersion != null && cache.replaceFileVersion != null && cache.replaceFileVersion !== replaceFileVersion;
+    if (cache.componentIdByPkgName !== componentIdByPkgName || cache.depsRequiringBuild !== depsRequiringBuild) {
+      const contextKey = getCacheContextKey(componentIdByPkgName, depsRequiringBuild);
+      if (cache.contextKey !== contextKey) {
+        isContextChanged = true;
+        cache.contextKey = contextKey;
+      }
+      cache.componentIdByPkgName = componentIdByPkgName;
+      cache.depsRequiringBuild = depsRequiringBuild;
+    }
     if (isContextChanged) {
       cache.edges = new WeakMap();
       cache.packages = new WeakMap();
-      cache.contextKey = contextKey;
       cache.replaceFileVersion = undefined;
     }
     resolvedReplacer ??= cache.replaceFileVersion ?? createFileVersionReplacer(componentIdByPkgName);
