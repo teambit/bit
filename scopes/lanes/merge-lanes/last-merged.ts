@@ -87,14 +87,7 @@ export class LastMerged {
   }
 
   async persistSnapshot(snapshot: Snapshot) {
-    const {
-      copyOfCurrentLane,
-      copyOfBitmap,
-      copyOfWorkspaceJsonc,
-      copyOfStagedSnaps,
-      copyOfStagedConfig,
-      copyOfMainComponents,
-    } = snapshot;
+    const { copyOfCurrentLane, copyOfBitmap, copyOfWorkspaceJsonc, copyOfStagedSnaps, copyOfStagedConfig } = snapshot;
     await fs.remove(this.path);
     await fs.ensureDir(this.path);
     await fs.copyFile(copyOfBitmap, this.getLastMergedBitmapPath());
@@ -110,7 +103,7 @@ export class LastMerged {
       await fs.copyFile(copyOfStagedConfig, this.getLastMergedStagedConfigPath());
     }
     await Promise.all(
-      (copyOfMainComponents || []).map((compressed, index) =>
+      (snapshot.copyOfMainComponents || []).map((compressed, index) =>
         fs.outputFile(path.join(this.getLastMergedMainComponentsPath(), String(index)), compressed)
       )
     );
@@ -208,8 +201,7 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
    */
   private async restoreMainComponents() {
     const dir = this.getLastMergedMainComponentsPath();
-    if (!fs.pathExistsSync(dir)) return;
-    const filenames = await fs.readdir(dir);
+    const filenames: string[] = await fs.readdir(dir).catch(() => []);
     const modelComponents = await Promise.all(
       filenames.map(async (filename) => BitObject.parseObject(await fs.readFile(path.join(dir, filename)), filename))
     );
