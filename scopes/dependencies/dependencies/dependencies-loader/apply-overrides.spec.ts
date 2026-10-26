@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Dependency } from '@teambit/legacy.consumer-component';
 import { ComponentOverrides } from '@teambit/legacy.consumer-config';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -39,6 +39,63 @@ describe('ApplyOverrides', () => {
     it('should not set a version range on a runtime component dependency', () => {
       expect(result?.components.dependencies[0].versionRange).to.be.undefined;
     });
+  });
+});
+
+describe('ApplyOverrides outside a workspace, when the dependencies are calculated from a new policy', () => {
+  // e.g. a lane merge from a bare scope. a workspace takes these versions from the policy, .bitmap and node_modules.
+  const buttonId = ComponentID.fromString('my-scope/ui/button@1.0.0');
+  const buttonPkg = '@my-scope/ui.button';
+  function loadForcedDep({ inWorkspace = false, envOwn = false, newPolicy = true } = {}) {
+    const applyOverrides = createApplyOverrides({ dependencies: { [buttonPkg]: '2.0.0' } });
+    const dep = new Dependency(buttonId, [], buttonPkg);
+    applyOverrides.allDependencies = { dependencies: [dep], devDependencies: [], peerDependencies: [] };
+    if (newPolicy) applyOverrides.workspaceComponentIds = ComponentIdList.fromArray(inWorkspace ? [buttonId] : []);
+    if (envOwn) applyOverrides.overridesDependencies.envOwnPkgNames = new Set([buttonPkg]);
+    applyOverrides.getDependenciesToAddManually(undefined, applyOverrides.allDependencies);
+    return { dep, component: (applyOverrides as any).component };
+  }
+  function applyPeerRange(range: string, { inWorkspace = false, version = '1.0.0' } = {}) {
+    const applyOverrides = createApplyOverrides({});
+    const peer = new Dependency(buttonId.changeVersion(version), [], buttonPkg, '1.0.0');
+    applyOverrides.allDependencies = { dependencies: [], devDependencies: [], peerDependencies: [peer] };
+    applyOverrides.workspaceComponentIds = ComponentIdList.fromArray(inWorkspace ? [buttonId] : []);
+    (applyOverrides as any).applyPackageVersion('peerDependencies', buttonPkg, range, undefined, undefined, peer);
+    return peer;
+  }
+  it('should set the version of a forced component dependency and keep it when a new version is snapped along', () => {
+    const { dep, component } = loadForcedDep();
+    expect(dep.id.version).to.equal('2.0.0');
+    expect(component.dependenciesWithVersionFromConfig).to.deep.equal(['my-scope/ui/button']);
+  });
+  it('should set the version of a forced dependency on a workspace component', () => {
+    expect(loadForcedDep({ inWorkspace: true }).dep.id.version).to.equal('2.0.0');
+  });
+  it('should keep the version of an env own dependency on a workspace component, which follows the workspace', () => {
+    const { dep, component } = loadForcedDep({ inWorkspace: true, envOwn: true });
+    expect(dep.id.version).to.equal('1.0.0');
+    expect(component.dependenciesWithVersionFromConfig).to.be.undefined;
+  });
+  it('should keep the version when the policy is not new (e.g. a tag from a scope)', () => {
+    expect(loadForcedDep({ newPolicy: false }).dep.id.version).to.equal('1.0.0');
+  });
+  it('should set the version of a component peer that is out of the range of the policy', () => {
+    const peer = applyPeerRange('2.0.0');
+    expect(peer.id.version).to.equal('2.0.0');
+    expect(peer.versionRange).to.equal('2.0.0');
+  });
+  it('should keep the version of a component peer that is in the range of the policy', () => {
+    expect(applyPeerRange('^1.0.0').id.version).to.equal('1.0.0');
+  });
+  it('should keep the version of a component peer when the range has no minimum version (e.g. an upper bound)', () => {
+    expect(applyPeerRange('<1.0.0').id.version).to.equal('1.0.0');
+  });
+  it('should set the version of a component peer that is a snap, which is out of any semver range', () => {
+    const snap = 'a'.repeat(40);
+    expect(applyPeerRange('^2.0.0', { version: snap }).id.version).to.equal('2.0.0');
+  });
+  it('should keep the version of a component peer that is a workspace component', () => {
+    expect(applyPeerRange('2.0.0', { inWorkspace: true }).id.version).to.equal('1.0.0');
   });
 });
 
