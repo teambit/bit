@@ -243,6 +243,11 @@ describe('updateDependents cascade - import, fetch and promotion', function () {
       const comp3OnRemote = remoteLane.components.find((c) => c.id.name === 'comp3');
       expect(comp3OnRemote.head).to.equal(comp3HeadAfterSnap);
     });
+
+    it('the stale entry should be removed from the local lane as well', () => {
+      const localLane = helper.command.catLane('dev');
+      expect(localLane.updateDependents || []).to.have.lengthOf(0);
+    });
   });
 
   // ---------------------------------------------------------------------------------------------
