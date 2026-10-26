@@ -27,7 +27,6 @@ import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { MessagePerComponent } from './message-per-component';
 import { MessagePerComponentFetcher } from './message-per-component';
 import { VersionFileParser } from './version-file-parser';
-import { getLaneDependentsToAutoTag } from './lane-dependents-to-auto-tag';
 import { throwForPlusRangeVersions } from './plus-range-versions';
 import type { VersionCandidate } from './published-versions';
 import { createIsVersionPublished, skipPublishedVersions } from './published-versions';
@@ -36,6 +35,7 @@ import { DependencyResolverAspect, COMPONENT_DEP_TYPE } from '@teambit/dependenc
 import type { Registries } from '@teambit/pkg.entities.registry';
 import type { ScopeMain, StagedConfig } from '@teambit/scope';
 import type { Workspace, AutoTagResult } from '@teambit/workspace';
+import { getAutoTagInfoFromComponents } from '@teambit/workspace';
 import { findWorkspaceRootMap, writeWorkspaceRoot } from '@teambit/workspace-root';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import type { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
@@ -496,10 +496,8 @@ export class VersionMaker {
     if (!lane) return [];
     // for the workspace+lane path we only care about hidden entries — workspace autotag handles
     // visible ones. for the bare-scope path (no workspace), include all lane entries.
-    const hiddenLaneIds = lane.updateDependents || [];
-    const candidateLaneIds = (hiddenOnly ? hiddenLaneIds : [...lane.toComponentIds(), ...hiddenLaneIds]).filter(
-      (id) => !idsToTag.hasWithoutVersion(id)
-    );
+    const laneIds = hiddenOnly ? lane.updateDependents || [] : lane.toComponentIdsIncludeUpdateDependents();
+    const candidateLaneIds = laneIds.filter((id) => !idsToTag.hasWithoutVersion(id));
     if (!candidateLaneIds.length) return [];
     // a bare scope (e.g. a Ripple cascade) has only the components it snaps. fetch the lane entries that are missing.
     await this.scope.import(candidateLaneIds, {
@@ -511,7 +509,7 @@ export class VersionMaker {
     const candidates = await this.legacyScope.getManyConsumerComponents(ComponentIdList.fromArray(candidateLaneIds));
     // a component that was removed from the lane is not snapped again, same as in a workspace, where it's not loaded
     const notRemovedCandidates = candidates.filter((candidate) => !candidate.isRemoved());
-    return getLaneDependentsToAutoTag(notRemovedCandidates, idsToTag);
+    return getAutoTagInfoFromComponents(notRemovedCandidates, idsToTag);
   }
 
   private async setFutureVersions(autoTagIds: ComponentIdList): Promise<void> {
