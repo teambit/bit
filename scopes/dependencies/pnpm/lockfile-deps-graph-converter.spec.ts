@@ -5,6 +5,7 @@ import { type ProjectManifest } from '@pnpm/types';
 import {
   convertLockfileToGraph,
   convertGraphToLockfile,
+  filterLockfileByImporters,
   init as initLockfileDepsGraphConverter,
 } from './lockfile-deps-graph-converter';
 import { type BitLockfileFile } from './lynx';
@@ -549,6 +550,137 @@ describe('convertLockfileToGraph with directory packages missing from componentI
     const rootEdge = graph.findRootEdge();
     expect(rootEdge?.neighbours.map((n) => n.id)).to.eql(['foo@1.0.0']);
     expect(graph.edges.find(({ id }) => id.includes('@file:'))).to.equal(undefined);
+  });
+});
+
+describe('convertLockfileToGraph when the root importer or snapshot lacks the component', () => {
+  it('should fall back to the component importer when the root importer is missing the component entry', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {
+          // dependencies is undefined (or missing comp1)
+        },
+        'comps/comp1': {
+          dependencies: {
+            foo: { version: '1.0.0', specifier: '^1.0.0' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'foo@1.0.0': {},
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-aaa' } },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')]]),
+    });
+    const rootEdge = graph.findRootEdge();
+    expect(rootEdge?.neighbours).to.eql([
+      {
+        name: 'foo',
+        specifier: '^1.0.0',
+        id: 'foo@1.0.0',
+        lifecycle: 'runtime',
+        optional: false,
+      },
+    ]);
+  });
+
+  it('should fall back to the component importer when the locked snapshot is missing from snapshots', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+        'comps/comp1': {
+          dependencies: {
+            foo: { version: '1.0.0', specifier: '^1.0.0' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'foo@1.0.0': {},
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-aaa' } },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')]]),
+    });
+    const rootEdge = graph.findRootEdge();
+    expect(rootEdge?.neighbours).to.eql([
+      {
+        name: 'foo',
+        specifier: '^1.0.0',
+        id: 'foo@1.0.0',
+        lifecycle: 'runtime',
+        optional: false,
+      },
+    ]);
+  });
+});
+
+describe('filterLockfileByImporters', () => {
+  it('should narrow packages and snapshots to the transitive closure of the requested importers without mutating the source lockfile', () => {
+    const lockfile: BitLockfileFile = {
+      lockfileVersion: '9.0',
+      importers: {
+        'comps/comp1': {
+          dependencies: {
+            foo: { version: '1.0.0(bar@1.0.0)', specifier: '^1.0.0' },
+          },
+        },
+        'comps/comp2': {
+          dependencies: {
+            unreached: { version: '1.0.0', specifier: '^1.0.0' },
+          },
+        },
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-foo' } },
+        'bar@1.0.0': { resolution: { integrity: 'sha512-bar' } },
+        'baz@1.0.0': { resolution: { integrity: 'sha512-baz' } },
+        'unreached@1.0.0': { resolution: { integrity: 'sha512-unreached' } },
+      },
+      snapshots: {
+        'foo@1.0.0(bar@1.0.0)': {
+          dependencies: {
+            bar: '1.0.0',
+          },
+          optionalDependencies: {
+            baz: '1.0.0',
+          },
+        },
+        'bar@1.0.0': {},
+        'baz@1.0.0': {},
+        'unreached@1.0.0': {},
+      },
+    };
+    const filtered = filterLockfileByImporters(lockfile, ['comps/comp1']);
+    expect(Object.keys(filtered.packages!).sort()).to.eql(['bar@1.0.0', 'baz@1.0.0', 'foo@1.0.0']);
+    expect(Object.keys(filtered.snapshots!).sort()).to.eql(['bar@1.0.0', 'baz@1.0.0', 'foo@1.0.0(bar@1.0.0)']);
+    expect(Object.keys(filtered.importers!)).to.eql(['comps/comp1']);
+
+    // Mutating filtered snapshots/packages must not mutate the original lockfile
+    delete filtered.snapshots!['foo@1.0.0(bar@1.0.0)'].dependencies!.bar;
+    expect(lockfile.snapshots!['foo@1.0.0(bar@1.0.0)'].dependencies!.bar).to.equal('1.0.0');
   });
 });
 

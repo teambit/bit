@@ -1,6 +1,6 @@
 import path from 'path';
 import { type ProjectManifest } from '@pnpm/types';
-import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
+import { type LockfileFileProjectResolvedDependencies, type LockfileFileProjectSnapshot } from '@pnpm/lockfile.types';
 import type * as Dp from '@pnpm/deps.path';
 import { pick, partition } from 'lodash';
 import type * as ParseOverridesModule from '@pnpm/config.parse-overrides';
@@ -71,7 +71,10 @@ function convertLockfileToGraphFromCapsule(
   {
     componentRelativeDir,
     componentIdByPkgName,
-  }: Pick<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'componentRelativeDir' | 'componentIdByPkgName'>
+    replaceFileVersion,
+  }: Pick<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'componentRelativeDir' | 'componentIdByPkgName'> & {
+    replaceFileVersion?: (s: string) => string;
+  }
 ): DependenciesGraph {
   const componentImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
@@ -82,7 +85,7 @@ function convertLockfileToGraphFromCapsule(
       directDependencies.push(...importerDepsToNeighbours(componentImporter[depType]!, lifecycle, optional));
     }
   }
-  return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
+  return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies, replaceFileVersion });
 }
 
 function importerDepsToNeighbours(
@@ -108,19 +111,42 @@ export function convertLockfileToGraph(
     componentRootDir,
     componentRelativeDir,
     componentIdByPkgName,
-  }: Omit<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'rootDir' | 'components' | 'component'>
+    replaceFileVersion,
+  }: Omit<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'rootDir' | 'components' | 'component'> & {
+    replaceFileVersion?: (s: string) => string;
+  }
 ): DependenciesGraph {
   ensureInitialized();
   if (componentRootDir == null || pkgName == null) {
-    return convertLockfileToGraphFromCapsule(lockfile, { componentRelativeDir, componentIdByPkgName });
+    return convertLockfileToGraphFromCapsule(lockfile, {
+      componentRelativeDir,
+      componentIdByPkgName,
+      replaceFileVersion,
+    });
+  }
+  const rootImporterDeps = lockfile.importers![componentRootDir]?.dependencies?.[pkgName];
+  if (rootImporterDeps == null) {
+    return convertLockfileToGraphFromCapsule(lockfile, {
+      componentRelativeDir,
+      componentIdByPkgName,
+      replaceFileVersion,
+    });
+  }
+  const lockedFileVersion = rootImporterDeps.version;
+  const lockedPkgDepPath = `${pkgName}@${lockedFileVersion}`;
+  const lockedPkg = lockfile.snapshots?.[lockedPkgDepPath];
+  if (lockedPkg == null) {
+    return convertLockfileToGraphFromCapsule(lockfile, {
+      componentRelativeDir,
+      componentIdByPkgName,
+      replaceFileVersion,
+    });
   }
   const componentDevImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
   if (componentDevImporter.devDependencies != null) {
     directDependencies.push(...importerDepsToNeighbours(componentDevImporter.devDependencies, 'dev', false));
   }
-  const lockedPkgDepPath = `${pkgName}@${lockfile.importers![componentRootDir].dependencies![pkgName].version}`;
-  const lockedPkg = lockfile.snapshots![lockedPkgDepPath];
   for (const depType of ['dependencies' as const, 'optionalDependencies' as const]) {
     const optional = depType === 'optionalDependencies';
     for (const [name, version] of Object.entries(lockedPkg[depType] ?? {})) {
@@ -144,7 +170,6 @@ export function convertLockfileToGraph(
   // convertGraphToLockfile would later materialise that neighbour as an
   // empty packages entry and ask the registry for the workspace
   // snap-version, which may never have been published.
-  const lockedFileVersion = lockfile.importers![componentRootDir].dependencies![pkgName].version;
   for (const snapshot of Object.values(lockfile.snapshots ?? {})) {
     for (const depType of ['dependencies', 'optionalDependencies'] as const) {
       const deps = snapshot[depType];
@@ -154,7 +179,7 @@ export function convertLockfileToGraph(
       }
     }
   }
-  return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
+  return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies, replaceFileVersion });
 }
 
 function _convertLockfileToGraph(
@@ -162,14 +187,16 @@ function _convertLockfileToGraph(
   {
     componentIdByPkgName,
     directDependencies,
+    replaceFileVersion = createFileVersionReplacer(componentIdByPkgName),
   }: {
     componentIdByPkgName: ComponentIdByPkgName;
     directDependencies: DependencyNeighbour[];
+    replaceFileVersion?: (s: string) => string;
   }
 ): DependenciesGraph {
   const graph = new DependenciesGraph({
-    edges: buildEdges(lockfile, { directDependencies, componentIdByPkgName }),
-    packages: buildPackages(lockfile, { componentIdByPkgName }),
+    edges: buildEdges(lockfile, { directDependencies, replaceFileVersion }),
+    packages: buildPackages(lockfile, { componentIdByPkgName, replaceFileVersion }),
     pnpmfileChecksum: lockfile.pnpmfileChecksum,
     lockfileSettings: lockfile.settings,
     overrides: lockfile.overrides,
@@ -182,13 +209,12 @@ function buildEdges(
   lockfile: BitLockfileFile,
   {
     directDependencies,
-    componentIdByPkgName,
+    replaceFileVersion,
   }: {
     directDependencies: DependencyNeighbour[];
-    componentIdByPkgName: ComponentIdByPkgName;
+    replaceFileVersion: (s: string) => string;
   }
 ): DependencyEdge[] {
-  const replaceFileVersion = createFileVersionReplacer(componentIdByPkgName);
   const edges: DependencyEdge[] = [];
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
     const neighbours = extractDependenciesFromSnapshot(snapshot, replaceFileVersion);
@@ -244,9 +270,14 @@ function extractDependenciesFromSnapshot(
 
 function buildPackages(
   lockfile: BitLockfileFile,
-  { componentIdByPkgName }: { componentIdByPkgName: ComponentIdByPkgName }
+  {
+    componentIdByPkgName,
+    replaceFileVersion,
+  }: {
+    componentIdByPkgName: ComponentIdByPkgName;
+    replaceFileVersion: (s: string) => string;
+  }
 ): PackagesMap {
-  const replaceFileVersion = createFileVersionReplacer(componentIdByPkgName);
   const depsRequiringBuild = lockfile.bit?.depsRequiringBuild;
   const depsRequiringBuildSet = depsRequiringBuild ? new Set(depsRequiringBuild) : undefined;
   const packages: PackagesMap = new Map();
@@ -285,7 +316,7 @@ function buildPackages(
   return packages;
 }
 
-function createFileVersionReplacer(componentIdByPkgName: ComponentIdByPkgName): (s: string) => string {
+export function createFileVersionReplacer(componentIdByPkgName: ComponentIdByPkgName): (s: string) => string {
   if (componentIdByPkgName.size === 0) return (s) => s;
 
   const replacements = new Map<string, string>();
@@ -299,6 +330,88 @@ function createFileVersionReplacer(componentIdByPkgName: ComponentIdByPkgName): 
   return (s: string) => {
     if (!s.includes('@file:')) return s;
     return s.replace(pattern, (_, name) => replacements.get(name)!);
+  };
+}
+
+/**
+ * Narrow a lockfile in-memory to the transitive closure of what `importerIds`
+ * reaches, without crossing the N-API boundary or cloning the full lockfile.
+ */
+export function filterLockfileByImporters(
+  lockfile: BitLockfileFile,
+  importerIds: string[],
+  importersOverride?: Record<string, LockfileFileProjectSnapshot>
+): BitLockfileFile {
+  ensureInitialized();
+  const importers = { ...lockfile.importers, ...importersOverride };
+  const reachablePackages = new Set<string>();
+  const reachableSnapshots = new Set<string>();
+  const stack: string[] = [];
+
+  const visit = (depPath: string) => {
+    stack.push(depPath);
+    while (stack.length > 0) {
+      const current = stack.pop()!;
+      if (reachableSnapshots.has(current)) continue;
+      const snapshot = lockfile.snapshots?.[current];
+      if (!snapshot) continue;
+      reachableSnapshots.add(current);
+      const pkgId = dp.removeSuffix(current);
+      if (lockfile.packages?.[pkgId] != null) {
+        reachablePackages.add(pkgId);
+      }
+      for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+        for (const [name, ref] of Object.entries(snapshot[depType] ?? {}) as Array<[string, string]>) {
+          const subDepPath = dp.refToRelative(ref, name);
+          if (subDepPath != null) {
+            stack.push(subDepPath);
+          }
+        }
+      }
+    }
+  };
+
+  for (const importerId of importerIds) {
+    const importer = importers[importerId];
+    if (!importer) continue;
+    for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
+      for (const [name, dep] of Object.entries(importer[depType] ?? {}) as Array<[string, { version?: string }]>) {
+        if (!dep?.version) continue;
+        const depPath = dp.refToRelative(dep.version, name);
+        if (depPath != null) {
+          visit(depPath);
+        }
+      }
+    }
+  }
+
+  const filteredPackages: NonNullable<BitLockfileFile['packages']> = {};
+  for (const pkgId of reachablePackages) {
+    filteredPackages[pkgId] = { ...lockfile.packages![pkgId] };
+  }
+
+  const filteredSnapshots: NonNullable<BitLockfileFile['snapshots']> = {};
+  for (const depPath of reachableSnapshots) {
+    const snapshot = lockfile.snapshots![depPath];
+    filteredSnapshots[depPath] = {
+      ...snapshot,
+      ...(snapshot.dependencies ? { dependencies: { ...snapshot.dependencies } } : {}),
+      ...(snapshot.optionalDependencies ? { optionalDependencies: { ...snapshot.optionalDependencies } } : {}),
+    };
+  }
+
+  const filteredImporters: NonNullable<BitLockfileFile['importers']> = {};
+  for (const importerId of importerIds) {
+    if (importers[importerId] != null) {
+      filteredImporters[importerId] = importers[importerId];
+    }
+  }
+
+  return {
+    ...lockfile,
+    importers: filteredImporters,
+    packages: filteredPackages,
+    snapshots: filteredSnapshots,
   };
 }
 
