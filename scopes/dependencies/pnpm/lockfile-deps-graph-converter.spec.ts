@@ -5,6 +5,7 @@ import { type ProjectManifest } from '@pnpm/types';
 import {
   convertLockfileToGraph,
   convertGraphToLockfile,
+  createLockfileToGraphCache,
   filterLockfileByImporters,
   init as initLockfileDepsGraphConverter,
 } from './lockfile-deps-graph-converter';
@@ -863,9 +864,11 @@ describe('filterLockfileByImporters', () => {
     expect(Object.keys(filtered.snapshots!).sort()).to.eql(['bar@1.0.0', 'baz@1.0.0', 'foo@1.0.0(bar@1.0.0)']);
     expect(Object.keys(filtered.importers!)).to.eql(['comps/comp1']);
 
-    // Mutating filtered snapshots/packages must not mutate the original lockfile
-    delete filtered.snapshots!['foo@1.0.0(bar@1.0.0)'].dependencies!.bar;
+    // Mutating the top-level filtered snapshots/packages map must not mutate the original lockfile
+    delete filtered.snapshots!['foo@1.0.0(bar@1.0.0)'];
+    delete filtered.packages!['foo@1.0.0'];
     expect(lockfile.snapshots!['foo@1.0.0(bar@1.0.0)'].dependencies!.bar).to.equal('1.0.0');
+    expect(lockfile.packages!['foo@1.0.0']).to.not.equal(undefined);
   });
 
   it('should retain package metadata for a reached dependency even when its snapshot is absent', () => {
@@ -1848,5 +1851,104 @@ describe('lockfile settings', () => {
 
     const lockfile = await graphToLockfile(graph);
     expect(lockfile).not.to.have.property('settings');
+  });
+});
+
+describe('createLockfileToGraphCache', () => {
+  it('should reuse unmodified package and edge entries across components while isolating circular back-edge scrubbing', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      lockfileVersion: '9.0',
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1(foo@1.0.0)', specifier: '*' },
+            comp2: { version: 'file:comps/comp2(foo@1.0.0)', specifier: '*' },
+          },
+        },
+        'comps/comp1': {
+          dependencies: {
+            comp2: { version: 'file:comps/comp2(foo@1.0.0)', specifier: '*' },
+            foo: { version: '1.0.0', specifier: '^1.0.0' },
+          },
+        },
+        'comps/comp2': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1(foo@1.0.0)', specifier: '*' },
+            foo: { version: '1.0.0', specifier: '^1.0.0' },
+          },
+        },
+      },
+      snapshots: {
+        'comp1@file:comps/comp1(foo@1.0.0)': {
+          dependencies: {
+            comp2: 'file:comps/comp2(foo@1.0.0)',
+            foo: '1.0.0',
+          },
+        },
+        'comp2@file:comps/comp2(foo@1.0.0)': {
+          dependencies: {
+            comp1: 'file:comps/comp1(foo@1.0.0)',
+            foo: '1.0.0',
+          },
+        },
+        'foo@1.0.0': {
+          dependencies: {
+            bar: '2.0.0',
+          },
+        },
+        'bar@2.0.0': {},
+      },
+      packages: {
+        'comp1@file:comps/comp1': {
+          resolution: { directory: 'comps/comp1', type: 'directory' },
+        },
+        'comp2@file:comps/comp2': {
+          resolution: { directory: 'comps/comp2', type: 'directory' },
+        },
+        'foo@1.0.0': { resolution: { integrity: 'sha512-foo' } },
+        'bar@2.0.0': { resolution: { integrity: 'sha512-bar' } },
+      },
+    };
+    const componentIdByPkgName = new Map([
+      ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+      ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+    ]);
+    const cache = createLockfileToGraphCache();
+
+    const filtered1 = filterLockfileByImporters(lockfile, ['comps/comp1', 'node_modules/.bit_roots/env']);
+    const graph1 = convertLockfileToGraph(filtered1, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName,
+      cache,
+    });
+
+    const filtered2 = filterLockfileByImporters(lockfile, ['comps/comp2', 'node_modules/.bit_roots/env']);
+    const graph2 = convertLockfileToGraph(filtered2, {
+      pkgName: 'comp2',
+      componentRelativeDir: 'comps/comp2',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName,
+      cache,
+    });
+
+    // Shared non-mutated package and edge objects are reused by reference
+    expect(graph1.packages.get('foo@1.0.0')).to.equal(graph2.packages.get('foo@1.0.0'));
+    const fooEdge1 = graph1.edges.find((e) => e.id === 'foo@1.0.0');
+    const fooEdge2 = graph2.edges.find((e) => e.id === 'foo@1.0.0');
+    expect(fooEdge1).to.not.equal(undefined);
+    expect(fooEdge1).to.equal(fooEdge2);
+
+    // Circular back-edges are scrubbed per component without mutating the original lockfile
+    expect(graph1.packages.has('comp1@1.0.0')).to.equal(false);
+    expect(graph1.packages.has('comp2@1.0.0')).to.equal(true);
+    expect(graph1.edges.some((e) => e.neighbours.some((n) => n.id.startsWith('comp1@')))).to.equal(false);
+
+    expect(graph2.packages.has('comp2@1.0.0')).to.equal(false);
+    expect(graph2.packages.has('comp1@1.0.0')).to.equal(true);
+    expect(graph2.edges.some((e) => e.neighbours.some((n) => n.id.startsWith('comp2@')))).to.equal(false);
   });
 });
