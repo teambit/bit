@@ -1,7 +1,7 @@
 //! Relative cross-component and nested untracked dependency detection parity.
 
 use crate::helper::Helper;
-use std::ffi::OsStr;
+use std::{ffi::OsStr, fmt::Write as _};
 
 fn parity(helper: &Helper) {
     let root = helper.clone_workspace();
@@ -125,4 +125,38 @@ fn external_component_without_package_version_matches_node() {
         .to_string(),
     );
     parity(&helper);
+}
+
+#[test]
+fn every_released_extension_and_directory_index_reports_untracked_relative_files() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    let extensions = [
+        "js", "json", "cjs", "mjs", "jsx", "ts", "tsx", "cts", "mts", "d.ts", "css", "scss",
+        "sass", "styl", "less",
+    ];
+    let mut imports = String::new();
+    let mut expected = Vec::new();
+    for extension in extensions {
+        let name = extension.replace('.', "-");
+        for (specifier, file) in [
+            (format!("direct-{name}"), format!("direct-{name}.{extension}")),
+            (format!("directory-{name}"), format!("directory-{name}/index.{extension}")),
+        ] {
+            writeln!(imports, "require('../shared/{specifier}');").unwrap();
+            let file = format!("shared/{file}");
+            helper.output_file(&file, if extension == "json" { "{}\n" } else { "\n" });
+            expected.push(file);
+        }
+    }
+    helper.output_file("consumer/index.js", &imports);
+    helper.native("add consumer -i consumer");
+    parity(&helper);
+    let actual = helper.native_run("status --json");
+    assert!(actual.native, "{}", actual.trace);
+    assert!(actual.stdout.contains("UntrackedDependencies"), "{}", actual.stdout);
+    assert!(!actual.stdout.contains("MissingDependenciesOnFs"), "{}", actual.stdout);
+    for file in expected {
+        assert!(actual.stdout.contains(&file), "missing {file}: {}", actual.stdout);
+    }
 }

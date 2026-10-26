@@ -72,6 +72,9 @@ fn create_lane_from_main_after_local_merge_and_block_snap_on_foreign_lane_deps()
     helper.run("lane create lane-b");
     assert_eq!(helper.head_of_lane("lane-b", "comp1"), comp1_lane_a);
     assert_eq!(helper.head_of_lane("lane-b", "comp2"), comp2_lane_a);
+    assert_eq!(parse(&helper.cat_object(&comp1_lane_a, true))["origin"]["lane"]["name"], "lane-a");
+    helper.native("switch main -x");
+    assert_eq!(len(&parse(&helper.native("status --json"))["stagedComponents"]), 0);
 
     helper.get_cloned_workspace(&main_before_merge);
     helper.native("lane create lane-b");
@@ -151,4 +154,31 @@ fn create_lane_when_current_lane_diverged_from_remote() {
     assert_eq!(len(&parse(&helper.run("status --json"))["stagedComponents"]), 1);
     helper.run("import -x");
     assert_eq!(len(&parse(&helper.run("status --json"))["stagedComponents"]), 1);
+}
+
+#[test]
+fn creating_a_lane_rejects_local_tags_outdated_snaps_and_detached_heads() {
+    use crate::commands::move_paths::support;
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    for name in ["comp1", "bar/foo", "utils/is-type"] {
+        helper.output_file(&format!("{name}/index.js"), "module.exports = 1;\n");
+        support::setup(&helper, &format!("add {name} -i {name}"));
+    }
+    support::setup(&helper, "tag --message initial");
+    support::setup(&helper, "tag utils/is-type --unmodified --message second");
+    crate::helper::remote::publish(&helper);
+    support::setup(&helper, "tag comp1 --unmodified --message local");
+    support::setup(&helper, "snap bar/foo --unmodified --message local");
+    support::setup(&helper, "checkout 0.0.1 bar/foo -x");
+    support::setup(&helper, "checkout 0.0.1 utils/is-type -x");
+    support::setup(&helper, "snap utils/is-type --unmodified --detach-head --message detached");
+    let result = support::compare_declined(&helper, "lane create dev", str::to_owned);
+    assert!(!result.status.success());
+    let error = format!("{}{}", result.stdout, result.stderr);
+    assert!(error.contains("comp1 - has tags that were not exported (0.0.2)"), "{error}");
+    assert!(error.contains("bar/foo - the workspace is on 0.0.1, not on the main head"), "{error}");
+    assert!(error.contains("utils/is-type - the workspace is on"), "{error}");
+    assert!(error.contains("a detached head that was not exported"), "{error}");
+    assert!(!helper.native("lane list").contains("dev"));
 }

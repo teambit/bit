@@ -70,7 +70,9 @@ Parity is checked against a released Node.js CLI, not against this repository's 
 - Mask what legitimately differs (new hashes, dates, timings) and say so; Node's order of some
   changed-component lists is not deterministic.
 - Oracle tests that run the Node.js CLI's own functions are opt-in:
-  `BIT_TEST_SNAPSHOT_CLI=<@teambit/bit installation> cargo test`.
+  `BIT_TEST_SNAPSHOT_CLI=<@teambit/bit installation> cargo test`. The released graph
+  filter comparison uses `BIT_TEST_GRAPH_CLI=<Bit 2.2.147 package.json>` with
+  `cargo test -p bit-cli --bin bit reachable`.
 - The e2e suite's cases are ported to `cli/tests/e2e/` following
   [plans/TEST_PORTING.md](plans/TEST_PORTING.md): read it before porting a case or changing a
   native command an e2e case covers, and tick its boxes as cases land. `pnpm run test:e2e`
@@ -116,9 +118,7 @@ cargo test --locked -p bit-cli --features e2e --test e2e   # the ported e2e case
 node ../scripts/rust/e2e-port-plan.mjs --check             # the plan lists every e2e case
 ```
 
-`node ../scripts/rust/prepare-pnpm-engine.mjs` prepares pnpm's engine sources once (CI runs it
-before building). A test failure that also fails on the base branch is reported as such, never
-hidden.
+A test failure that also fails on the base branch is reported as such, never hidden.
 
 When a command's native coverage changes, update its row in the native commands table of
 `docs/rust-cli.md`.

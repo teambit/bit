@@ -378,11 +378,12 @@ fn manual_rows_match(deps: &[Value], manual: &ManualPolicy) -> bool {
                                     == Some(version.as_str())
                                 && dep.get("__type").and_then(Value::as_str) == Some("package")
                                 && dep.get("lifecycle").and_then(Value::as_str) == Some(*lifecycle)
-                                && (dep.get("source").and_then(Value::as_str) == Some("auto")
-                                    || *lifecycle == "peer"
-                                        && dep.get("source").and_then(Value::as_str) == Some("env")
-                                        && dep.get("optional").and_then(Value::as_bool)
-                                            == Some(false))
+                                && (matches!(
+                                    dep.get("source").and_then(Value::as_str),
+                                    Some("auto" | "config"),
+                                ) || *lifecycle == "peer"
+                                    && dep.get("source").and_then(Value::as_str) == Some("env")
+                                    && dep.get("optional").and_then(Value::as_bool) == Some(false))
                         })
                 })
         })

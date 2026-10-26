@@ -45,7 +45,9 @@ impl Session<'_> {
     /// bitmap component, the workspace-root component included.
     pub fn loading(&self, loaded: &Loaded) {
         let count = loaded.workspace.active().count();
-        self.output.status(&format!("loading {count} component(s)"));
+        if count != 0 {
+            self.output.status(&format!("loading {count} component(s)"));
+        }
     }
 
     /// Bit's core aspect ids, `teambit.harmony/bit` included.

@@ -170,17 +170,16 @@ version bump needs one full install, or removing the stamp.
 
 ## Engine pin
 
-`native/Cargo.toml` pins pnpm at the commit that released `@pnpm/napi` 12.13.0,
-the engine version Bit ships (`workspace.jsonc`). It also repeats pnpm's
-`[patch.crates-io]` entries.
+`native/Cargo.toml` pins all pnpm crates and its `tar` patch to
+`0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53`, a backport on top of the
+`@pnpm/napi` 12.13.0 release that Bit ships (`workspace.jsonc`). The only change
+from that release is the generated `deps-restorer` CAS loader. Cargo can build
+this Git dependency directly without modifying its checkout or writing a stub.
 
-pnpm's `deps-restorer` embeds `cas-loader.mjs.inc`, a bundle that pnpm builds
-and does not commit. It is only used by pnpm's experimental CAS store loader,
-which Bit never enables. Before a build, `node scripts/rust/prepare-pnpm-engine.mjs`
-writes a stub that fails loudly into the pinned checkout. The script is
-idempotent; every CI job runs it after fetching and before compiling, including
-the Alpine release container. It must also run after a restored `~/.cargo/git`
-cache.
+The mainline fix is [pnpm/pnpm#17388](https://github.com/pnpm/pnpm/pull/17388).
+It commits the real loader and checks that regeneration matches, including a
+regression test that rejects stale content without rewriting it. Bit still does
+not enable pnpm's experimental CAS store loader.
 
 ## Lockfile compatibility
 
@@ -283,12 +282,18 @@ integration that loaded it into the Node.js CLI:
 - `dependencies/allow-scripts`
 - `root-components`
 
+Untracked relative dependencies are checked against the released CLI for direct files
+and directory indexes across all 15 released extensions, including TypeScript and
+stylesheets. The native engine also recognizes empty stylesheet dependency leaves.
+
 ## Known differences
 
 - Workspaces configured with the yarn package manager decline to the Node.js CLI, because yarn is a JavaScript package manager.
-- Against a released Node.js CLI (bit 2.2.94), the installed files are identical, but some progress lines differ: the pre-install import prints one more line (`import 0 components with their dependencies (if missing)`) and can count its imported objects differently, and pnpm's throttled progress lines vary. These are tracked with the other install gaps in #123.
+- Released Bit 2.2.146 comparisons cover empty-workspace and missing-object import progress, output, and full local/remote state. Empty imports do not announce zero components, and imported-object counts describe received objects, including already-present objects, as Node does. pnpm's throttled download progress still varies with scheduling.
 
 ## CI
 
 The `Rust` workflow (`.github/workflows/rust.yml`) runs the crate's unit tests with
-the rest of the native workspace. The e2e suites run the Node.js CLI.
+the rest of the native workspace on Linux, macOS and Windows. The ported E2E suites run the Rust CLI against a pinned released Node CLI; strict differential fixtures replay both implementations on the same workspace. Windows link tests execute in the Windows Rust job. `native/plans/TEST_PORTING.md` records coverage, explicit delegation and upstream exceptions.
+
+Restored graphs deduplicate snapshot dependencies against the root manifest before resolving missing package metadata. Exact root versions and root-provided peers take precedence; optional-only providers and explicit overrides retain their original resolution. Unreachable entries are removed before contacting the registry. A released Bit 2.2.146 converter comparison covers twelve root-provider cases.

@@ -4,6 +4,7 @@
 
 mod context;
 mod convert;
+mod dedupe;
 mod dep_path;
 mod merge;
 
@@ -72,6 +73,14 @@ async fn restore(
 ) -> io::Result<()> {
     let graph = Graph::parse(serialized)?;
     let mut lockfile = convert::to_lockfile(&graph, projects, &settings.root);
+    dedupe::dedupe(
+        &mut lockfile,
+        projects
+            .iter()
+            .find(|project| project.dir == settings.root)
+            .map(|project| &project.manifest),
+    )?;
+    merge::drop_unreachable(&mut lockfile, dep_path::remove_suffix);
     let mut failed = resolve_packages(&mut lockfile, &graph, projects, settings).await?;
     // A component snap still without a resolution was never published: pnpm
     // re-resolves the dependency from the manifest instead.

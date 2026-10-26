@@ -42,7 +42,17 @@ pub(crate) fn publish_at(helper: &Helper, workspace: &Path) {
 pub(crate) fn seed_after_export_at(helper: &Helper, workspace: &Path) {
     seed_selected_at(helper, workspace, &[]);
 }
+/// Publish fixture objects to an explicitly selected remote scope.
+pub(crate) fn publish_to(helper: &Helper, remote: &Path) {
+    node_export(helper);
+    if cfg!(windows) {
+        seed_selected_to(helper, &helper.scopes.local_path, remote, &[]);
+    }
+}
 fn seed_selected_at(helper: &Helper, workspace: &Path, identities: &[String]) {
+    seed_selected_to(helper, workspace, &helper.scopes.remote_path, identities);
+}
+fn seed_selected_to(helper: &Helper, workspace: &Path, remote: &Path, identities: &[String]) {
     let scope = bit_object_import::scope_path(workspace);
     promote_workspace(helper, &scope, workspace, identities);
     let shared = setup::shared();
@@ -50,7 +60,7 @@ fn seed_selected_at(helper: &Helper, workspace: &Path, identities: &[String]) {
         .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/e2e/helper/publish_objects.js"))
         .arg(&shared.node_cli)
         .arg(&scope)
-        .arg(&helper.scopes.remote_path)
+        .arg(remote)
         .arg(config::read_jsonc(&workspace.join(".bitmap"))["_bit_lane"]["id"].to_string())
         .arg(serde_json::to_string(identities).unwrap())
         .env("HOME", shared.root.join("home"))

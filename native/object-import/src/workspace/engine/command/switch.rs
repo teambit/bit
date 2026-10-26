@@ -59,19 +59,27 @@ pub(super) fn context(
 }
 
 impl LaneSelection {
-    fn remove_without_main_head(&self, context: &mut Value) -> io::Result<()> {
+    fn remove_without_main_head(&mut self, context: &mut Value) -> io::Result<()> {
         if !self.destination.is_main() {
             return Ok(());
         }
         let targets = context["targets"].as_array().ok_or_else(|| invalid("switch targets"))?;
+        let current = entries(self.current_lane.as_ref())?;
         let keep = targets
             .iter()
             .map(|target| {
                 let identity =
                     target["identity"].as_str().ok_or_else(|| invalid("switch identity"))?;
-                Ok(!self.lane_only.contains(identity)
-                    || repository::model(context, identity)?
-                        .is_some_and(|model| model["head"].as_str().is_some()))
+                let has_main = repository::model(context, identity)?
+                    .is_some_and(|model| model["head"].as_str().is_some());
+                if !has_main
+                    && current
+                        .iter()
+                        .any(|entry| entry.identity == identity)
+                {
+                    self.lane_only.insert(identity.to_owned());
+                }
+                Ok(!self.lane_only.contains(identity) || has_main)
             })
             .collect::<io::Result<Vec<_>>>()?;
         let retained: Vec<Value> = targets
@@ -81,6 +89,7 @@ impl LaneSelection {
             .map(|(target, _)| target.clone())
             .collect();
         context["targets"] = json!(retained);
+        context["lane"]["switchLaneOnly"] = json!(self.lane_only);
         Ok(())
     }
 

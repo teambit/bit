@@ -10,6 +10,7 @@ mod branch_ownership;
 mod convergence;
 mod lane_cycle;
 mod main_scope;
+mod onboarding;
 mod scopes;
 mod state;
 mod support;

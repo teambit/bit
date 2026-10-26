@@ -48,7 +48,7 @@ fn update_main_on_a_lane_preserves_other_configuration_and_sources_policy() {
 #[test]
 fn update_main_range_keeps_lane_sources_and_marks_only_the_selected_range() {
     let helper = support::workspace(1, true);
-    setup(&helper, "export");
+    crate::helper::remote::publish(&helper);
     setup(&helper, "lane create dev");
     successful(&helper, "delete comp1 --silent --update-main --range <1.0.0");
     assert!(helper.scopes.local_path.join("comp1/index.js").is_file());

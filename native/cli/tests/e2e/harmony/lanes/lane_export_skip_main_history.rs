@@ -538,3 +538,30 @@ fn cross_scope_chained_lane_forks_and_deleted_upstream_degradation() {
     assert!(helper.try_cmd(merge_cmd).status.success());
     check_deleted_upstream_degradation();
 }
+
+#[test]
+fn unexported_main_snaps_move_to_a_cross_scope_lane_and_export_closed_history() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    let (lane_scope, lane_path) = helper.new_bare_scope();
+    helper.add_remote_scope_with(&lane_path);
+    wire_scopes(&[&helper.scopes.remote_path, &lane_path]);
+    helper.populate_components(1, true, "");
+    helper.native("tag --message initial");
+    crate::helper::remote::publish(&helper);
+    helper.create_component_bar_foo("module.exports = 'new';\n");
+    helper.add_component_bar_foo();
+    helper.native("snap --unmodified --message staged");
+    let staged = helper.get_head("comp1");
+    helper.native(&format!("lane create dev --scope {lane_scope}"));
+    helper.native("switch main -x");
+    assert_eq!(crate::helper::len(&parse(&helper.native("status --json"))["stagedComponents"]), 0);
+    helper.native("switch dev -x");
+    helper.native("snap --unmodified --message lane");
+    helper.native("export");
+    let version = Helper::cmd_in(&lane_path, &format!("cat-object {staged}"));
+    assert!(version.status.success(), "{} {}", version.stdout, version.stderr);
+    assert_eq!(parse(&version.stdout)["origin"]["lane"]["name"], "dev");
+    let identity = format!("{}/comp1", helper.scopes.remote);
+    assert!(dangling_parents_in(&lane_path, &identity).is_empty());
+}

@@ -348,26 +348,58 @@ fn ci_sync_init_onboarding_scaffolding() {
     assert!(sync_yml.contains("main-sync-branch: bit-sync/main"));
     assert!(release_yml.contains("github.event.pull_request.head.ref != 'bit-sync/main'"));
 
-    assert!(output.contains("wrote .github/workflows/bit-sync.yml"));
-    assert!(output.contains("wrote .github/workflows/bit-release.yml"));
-    assert!(output.contains(r#"added "teambit.git/ci": { "sync": {} } to workspace.jsonc"#));
+    assert!(
+        output
+            .lines()
+            .any(|line| line.contains(".github/workflows/bit-sync.yml")
+                && line.contains("syncs lanes and branches")),
+    );
+    assert!(
+        output
+            .lines()
+            .any(|line| line.contains(".github/workflows/bit-release.yml")
+                && line.contains("releases the scope")),
+    );
+    assert!(
+        output
+            .lines()
+            .any(|line| line.contains("workspace.jsonc")
+                && line.contains(r#"added "teambit.git/ci": { "sync": {} }"#)),
+    );
     let ws_jsonc = helper.read_workspace_jsonc();
     assert_eq!(ws_jsonc["teambit.git/ci"]["sync"], json!({}));
 
-    assert!(output.contains("BIT_CONFIG_ACCESS_TOKEN"));
-    assert!(output.contains("BIT_SYNC_GH_TOKEN"));
-    assert!(output.contains("Components > Export"));
-    assert!(output.contains("drops its custom headers"));
-    assert!(output.contains("fetch-depth: 0"));
+    assert_eq!(output.matches("Scaffolded bit ci sync").count(), 1);
+    assert_eq!(output.matches("steps to go live").count(), 1);
+    assert!(!output.contains("Initializing sync command"));
+    assert!(output.contains(&format!("(default branch: {default_branch})")));
+    assert!(!output.contains("GITHUB_SERVER_URL"));
+    assert!(output.contains("git push -u origin HEAD"));
+    assert!(output.contains("Run bit ci sync --init again"));
 
     // 2. is idempotent: a second run skips both files and the config block, and still exits 0
     let sync_yml_before = fs::read_to_string(workflow_path(&helper, "bit-sync.yml")).unwrap();
     let release_yml_before = fs::read_to_string(workflow_path(&helper, "bit-release.yml")).unwrap();
     let (output, exit_code) = run_bit(&helper, "bit ci sync --init");
     assert_eq!(exit_code, 0, "bit ci sync --init output:\n{output}");
-    assert!(output.contains("skipped .github/workflows/bit-sync.yml"));
-    assert!(output.contains("skipped .github/workflows/bit-release.yml"));
-    assert!(output.contains(r#"workspace.jsonc already configures "teambit.git/ci".sync"#));
+    assert!(
+        output
+            .lines()
+            .any(|line| line.contains(".github/workflows/bit-sync.yml")
+                && line.contains("already exists, left unchanged")),
+    );
+    assert!(
+        output
+            .lines()
+            .any(|line| line.contains(".github/workflows/bit-release.yml")
+                && line.contains("already exists, left unchanged")),
+    );
+    assert!(
+        output
+            .lines()
+            .any(|line| line.contains("workspace.jsonc")
+                && line.contains("already configures sync, left unchanged")),
+    );
     assert_eq!(
         fs::read_to_string(workflow_path(&helper, "bit-sync.yml")).unwrap(),
         sync_yml_before,
@@ -387,7 +419,12 @@ fn ci_sync_init_onboarding_scaffolding() {
 
     assert_eq!(exit_code, 0, "bit ci sync --init output:\n{output}");
     assert!(ws_dir.join("workspace.jsonc").exists());
-    assert!(output.contains(r#"added "teambit.git/ci": { "sync": {} } to workspace.jsonc"#));
+    assert!(
+        output
+            .lines()
+            .any(|line| line.contains("workspace.jsonc")
+                && line.contains(r#"added "teambit.git/ci": { "sync": {} }"#)),
+    );
     assert!(fs::read_to_string(ws_dir.join("workspace.jsonc")).unwrap().contains("teambit.git/ci"));
     assert!(!repo_root.join("workspace.jsonc").exists());
 

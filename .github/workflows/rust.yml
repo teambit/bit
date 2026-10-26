@@ -17,6 +17,11 @@ on:
       - 'scopes/harmony/testing/load-aspect/core-aspects-ids.json'
       - '.github/workflows/rust.yml'
   workflow_dispatch:
+    inputs:
+      build-distribution:
+        description: Build native binaries and bvm archives
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -66,8 +71,6 @@ jobs:
           rustup component add clippy
       - name: Check pnpm's pinned formatter
         run: node ../scripts/rust/rustfmt.mjs --all -- --check
-      - name: Prepare pinned pnpm engine sources
-        run: node ../scripts/rust/prepare-pnpm-engine.mjs
       - name: Check Clippy
         run: cargo clippy --locked --workspace --all-targets --features bit-cli/e2e -- -D warnings
       - name: Install pnpm's Dylint version
@@ -90,6 +93,7 @@ jobs:
           python3 ../scripts/rust/lane-restoration-benchmark-tests.py
           python3 ../scripts/rust/lane-graph-reset-benchmark-tests.py
           python3 ../scripts/rust/bitmap-history-oracle-tests.py
+          python3 ../scripts/rust/package-bvm-tests.py
 
   test:
     name: Rust tests (${{ matrix.os }})
@@ -120,8 +124,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.22.0
-      - name: Prepare pinned pnpm engine sources
-        run: node ../scripts/rust/prepare-pnpm-engine.mjs
       - name: Test the workspace
         run: cargo test --locked --workspace
 
@@ -175,8 +177,6 @@ jobs:
         run: |
           npx -y @teambit/bvm@3.1.4 config set RELEASE_TYPE nightly
           npx -y @teambit/bvm@3.1.4 install "$BIT_VERSION" --skip-update-path
-      - name: Prepare pinned pnpm engine sources
-        run: node ../scripts/rust/prepare-pnpm-engine.mjs
       - name: Run the ported e2e cases
         env:
           SHARD: ${{ matrix.shard }}
@@ -266,8 +266,6 @@ jobs:
         run: |
           npx -y @teambit/bvm@3.1.4 config set RELEASE_TYPE nightly
           npx -y @teambit/bvm@3.1.4 install "$BIT_VERSION" --skip-update-path
-      - name: Prepare pinned pnpm engine sources
-        run: node ../scripts/rust/prepare-pnpm-engine.mjs
       - name: Compare native workspace VCS with the pinned Node.js CLI
         env:
           PARITY_FILTERS: ${{ matrix.filters }}
@@ -279,3 +277,103 @@ jobs:
             fi
           done
           exit "$parity_failed"
+
+  distribution:
+    name: Native distribution (${{ matrix.target }})
+    if: github.event_name == 'workflow_dispatch' && inputs.build-distribution
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            platform: linux
+            arch: x64
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            platform: linux
+            arch: arm64
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+            platform: darwin
+            arch: x64
+          - os: macos-15
+            target: aarch64-apple-darwin
+            platform: darwin
+            arch: arm64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            platform: win
+            arch: x64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            platform: linux
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: bash
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target
+          key: rust-dist-${{ matrix.target }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+      - name: Install pinned Rust target
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          rustup show
+          rustup target add "$TARGET"
+      - name: Install musl toolchain
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          echo "CMAKE_TOOLCHAIN_FILE=$PWD/cmake/linux-musl.cmake" >> "$GITHUB_ENV"
+          echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=musl-gcc" >> "$GITHUB_ENV"
+      - name: Build distribution binary
+        env:
+          TARGET: ${{ matrix.target }}
+        run: cargo build --locked --profile dist --target "$TARGET" -p bit-cli
+      - name: Package native executable
+        env:
+          TARGET: ${{ matrix.target }}
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          mkdir -p distribution
+          executable=bit
+          if [ "$PLATFORM" = win ]; then executable=bit.exe; fi
+          cp "target/$TARGET/dist/$executable" "distribution/$executable"
+      - name: Package bvm archive with released Node fallback
+        if: matrix.target != 'x86_64-unknown-linux-musl'
+        env:
+          TARGET: ${{ matrix.target }}
+          PLATFORM: ${{ matrix.platform }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          base=$(tr -d '\r\n' < cli/tests/e2e/bit-version)
+          version="$base-native.$GITHUB_RUN_NUMBER"
+          executable=bit
+          if [ "$PLATFORM" = win ]; then executable=bit.exe; fi
+          curl --fail --location --retry 3 "https://bvm.bit.dev/bit/versions/$base/bit-$base-$PLATFORM-$ARCH.tar.gz" -o base.tar.gz
+          python3 ../scripts/rust/package-bvm.py --base base.tar.gz --binary "distribution/$executable" --version "$version" --platform "$PLATFORM" --output "distribution/bit-$version-$PLATFORM-$ARCH.tar.gz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bit-native-${{ matrix.target }}-${{ github.sha }}
+          path: native/distribution/
+          if-no-files-found: error
+          retention-days: 30

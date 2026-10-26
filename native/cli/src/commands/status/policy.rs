@@ -2,7 +2,7 @@
 //! with the environment and component `VariantPolicy` precedence used by
 //! the dependency resolver. Pending-configuration projections decline.
 
-pub use metadata::current_metadata;
+pub use metadata::{current_metadata, peer_metadata};
 pub(super) use pending::context as pending_context;
 
 mod component;

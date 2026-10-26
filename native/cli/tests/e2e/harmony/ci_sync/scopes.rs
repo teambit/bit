@@ -214,7 +214,7 @@ fn ci_sync_lane_hosted_on_another_scope() {
     set_sync_config(&helper, json!({ "lanes": ["*"] }));
     let default_branch = setup_components_and_initial_commit(&helper);
 
-    create_lane_with_snap(
+    let dev_path = create_lane_with_snap(
         &helper,
         lane,
         &[("comp1/index.js", &comp1_src("hosted-elsewhere-snap"))],
@@ -253,6 +253,33 @@ fn ci_sync_lane_hosted_on_another_scope() {
     assert!(remote_branch_exists(&helper, lane));
     assert_eq!(branch_tip_sha(&helper, lane), sha_before);
 
+    branch_side_commit(
+        &helper,
+        lane,
+        &default_branch,
+        "comp2/index.js",
+        &comp2_src("pushed-to-branch"),
+        "branch edit",
+    );
+    let (output, code) = sync_run(&helper, &format!("--branch {lane}"));
+    assert_eq!(code, 0, "{output}");
+    assert!(output.contains(&format!("{lane} -> export-branch")));
+    assert!(lane_tip_file(&dev_path, "comp2/index.js").contains("pushed-to-branch"));
+    helper.git(&format!("push origin origin/{lane}:refs/heads/cut-from-lane"));
+    let (output, code) = sync_run(&helper, "--branch cut-from-lane");
+    assert_eq!(code, 0, "{output}");
+    assert!(output.contains("cut-from-lane -> noop"));
+    assert!(!output.contains(&format!("{lane} ->")));
+    let origin = helper
+        .git("remote get-url origin")
+        .trim()
+        .to_owned();
+    helper.git("remote set-url origin /no-such-origin");
+    let (output, code) = super::support::run_bit(&helper, &format!("bit ci sync --branch {lane}"));
+    helper.git(&format!("remote set-url origin {origin}"));
+    assert_ne!(code, 0, "{output}");
+    assert!(output.contains(&format!("HALTED {lane} ->")));
+
     // 3. a same-named lane in THIS scope: should halt under --dry-run and for real, leaving the owner's branch
     let sha_before = branch_tip_sha(&helper, lane);
     create_lane_with_snap(
@@ -281,4 +308,12 @@ fn ci_sync_lane_hosted_on_another_scope() {
     assert_eq!(branch_tip_sha(&helper, lane), sha_before);
     assert!(file_on_branch(&helper, lane, "comp1/index.js").contains("hosted-elsewhere-snap"));
     assert!(!file_on_branch(&helper, lane, "comp2/index.js").contains("rival-lane-snap"));
+    helper.native(&format!(
+        "lane remove {}/{lane} --remote --force --silent",
+        helper.scopes.remote,
+    ));
+    helper.native(&format!("lane remove {host_scope}/{lane} --remote --force --silent"));
+    let (output, code) = sync_run(&helper, "--all");
+    assert_eq!(code, 0, "{output}");
+    assert!(output.contains(&format!("{lane} -> close-pr")));
 }

@@ -5,33 +5,33 @@ resolver = "3"
 # pnpm's engine (pacquet) at the commit that released `@pnpm/napi` 12.13.0, the
 # engine version `workspace.jsonc` ships. Bump together with that version.
 [workspace.dependencies]
-pnpm-config = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-default-reporter = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-diagnostics = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-deps-path = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-fs = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-hooks = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-lockfile = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-modules-yaml = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-network = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-package-manager = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-package-manifest = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-reporter = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-resolving-default-resolver = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-resolving-deps-resolver = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-resolving-npm-resolver = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-resolving-parse-wanted-dependency = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-resolving-resolver-base = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-store-dir = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-tarball = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
-pnpm-workspace = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
+pnpm-config = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-default-reporter = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-diagnostics = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-deps-path = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-fs = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-hooks = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-lockfile = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-modules-yaml = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-network = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-package-manager = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-package-manifest = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-reporter = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-resolving-default-resolver = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-resolving-deps-resolver = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-resolving-npm-resolver = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-resolving-parse-wanted-dependency = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-resolving-resolver-base = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-store-dir = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-tarball = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
+pnpm-workspace = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
 
 # Repeats pnpm's own `[patch.crates-io]` at the same commit: a git dependency
 # does not inherit its workspace's patches. `node-semver` is one commit ahead
 # of pnpm's pin: it adds the `npm` module (npm semver's strict functions,
 # pnpm/node-semver-rs#2) and leaves the rest of the crate unchanged.
 [patch.crates-io]
-tar = { git = "https://github.com/pnpm/pnpm", rev = "063bd8d216b1e610e6ae4dcc3eff3bc2786e9c4e" }
+tar = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
 node-semver = { git = "https://github.com/pnpm/node-semver-rs", rev = "aa94acb21a1cd4321fd789ff14598dd410cde2d9" }
 
 [workspace.lints.rust]

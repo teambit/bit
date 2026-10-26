@@ -75,7 +75,7 @@ impl EngineCall {
         let reporter = ReporterGuard::install(self.renderer());
         let sink = DepsRequiringBuildSink::default();
         let session = Session::new(config, &self.settings.root, &projects)?;
-        session.runtime.block_on(self.run_install(&session, projects, Arc::clone(&sink)))?;
+        session.runtime.block_on(self.run_install(&session, projects, &hooks, Arc::clone(&sink)))?;
         let stats = ReporterGuard::take_stats();
         drop(reporter);
         Ok(Outcome {
@@ -137,6 +137,7 @@ impl EngineCall {
         &self,
         session: &Session,
         projects: Vec<Project>,
+        hooks: &BitHooks,
         sink: DepsRequiringBuildSink,
     ) -> io::Result<()> {
         // A lone project takes the plain install path; several are handed to
@@ -144,7 +145,7 @@ impl EngineCall {
         let workspace_projects = (projects.len() > 1).then(|| {
             projects
                 .into_iter()
-                .map(|project| engine_project(&project.dir, project.manifest))
+                .map(|project| dependency_project(project, hooks))
                 .collect()
         });
         let install = session.install(self.dependency_groups());
@@ -208,6 +209,22 @@ impl EngineCall {
             ..install
         }
     }
+}
+
+fn dependency_project(project: Project, hooks: &BitHooks) -> pnpm_workspace::Project {
+    let dependency_manifest = hooks.raw_manifests
+        .get(&normalize(&project.dir))
+        .map(|raw| hooks.apply(raw.clone(), None))
+        .filter(|raw| raw.as_object() != Some(&project.manifest))
+        .map(|raw| {
+            pnpm_package_manifest::PackageManifest::from_value(
+                project.dir.join("package.json"),
+                raw,
+            )
+        });
+    let mut result = engine_project(&project.dir, project.manifest);
+    result.dependency_manifest = dependency_manifest;
+    result
 }
 
 /// The project's manifest after Bit's hooks, with the project as `workspaceDir`.

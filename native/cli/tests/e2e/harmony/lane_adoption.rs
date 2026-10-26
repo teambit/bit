@@ -93,7 +93,7 @@ fn remote_pattern_performs_real_default_installation() {
     assert!(bitmap.get("comp2").is_none());
     assert!(helper.scopes.local_path.join("pnpm-lock.yaml").is_file());
     assert!(helper.scopes.local_path.join("node_modules/.modules.yaml").is_file());
-    reporter::assert_receipt(&helper);
+    reporter::assert_not_invoked(&helper);
 }
 
 #[test]

@@ -8,7 +8,7 @@ use super::{
     Chalk, Formatter, Options, Report,
 };
 use crate::native::Outcome;
-use bit_install::workspace::{Bitmap, BitmapEntry};
+use bit_install::workspace::{Bitmap, BitmapEntry, ScopeObjects};
 use bit_object_import::parse_jsonc;
 use serde_json::{Value, json};
 use std::{ffi::OsString, fs, io, path::Path};
@@ -80,7 +80,7 @@ pub(super) fn try_run(
         .iter()
         .filter(|entry| entry.owns_its_dir())
         .collect::<Vec<_>>();
-    if active.is_empty() {
+    if active.is_empty() || has_component_peers(root, &active)? {
         return Ok(None);
     }
     if !options.pipeline.skip_tests
@@ -96,6 +96,28 @@ pub(super) fn try_run(
         Ok(Report { data, code: 0, details: None })
     })?;
     Ok(Some(outcome))
+}
+
+fn has_component_peers(root: &Path, entries: &[&BitmapEntry]) -> io::Result<bool> {
+    let objects = ScopeObjects::new(&root.join(".bit"));
+    for entry in entries {
+        let mut id = entry.id.clone();
+        if id.scope.is_none() {
+            id.scope = id.effective_scope().map(str::to_owned);
+        }
+        let Some(model) = objects.component_or_head(&id)? else { continue };
+        let has_peers = model.extensions
+            .iter()
+            .filter_map(|extension| extension["data"]["dependencies"].as_array())
+            .flatten()
+            .any(|dependency| {
+                dependency["__type"] == "component" && dependency["lifecycle"] == "peer"
+            });
+        if has_peers {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
 fn is_delegated_pipeline(pipeline: &super::PipelineFlags) -> bool {

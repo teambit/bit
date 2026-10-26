@@ -1092,6 +1092,7 @@ async function hydrateStatusComponent(row, sourceConsumer) {
     ...row.current, name: id.fullName, scope: row.scoped === false ? undefined : id.scope, version: Object.hasOwn(row,'trackingVersion') ? row.trackingVersion??undefined : row.version || undefined, schema: '2.0.0',
     dependencies: (row.current.dependencies ?? []).map((dependency) => Dependency.deserialize(dependency)),
     devDependencies: (row.current.devDependencies ?? []).map((dependency) => Dependency.deserialize(dependency)),
+    peerDependencies: (row.peerDependencies ?? []).map((dependency) => Dependency.deserialize(dependency)),
     extensions: row.current.extensions.map(convert),
     files: row.files.map((file) => SourceFile.load(path.join(directory, file), directory, root)),
   });

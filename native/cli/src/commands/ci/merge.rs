@@ -131,7 +131,7 @@ fn execute_merge(root: &Path, opts: &MergeOptions) -> io::Result<Report> {
         .clone()
         .or_else(|| git_current_branch(root))
         .unwrap_or_else(|| "main".into());
-    ensure_on_main_lane(root);
+    let switched = ensure_on_main_lane(root)?;
     let _ = super::super::status::autosync::run_if_enabled(root);
     let bitmap_before = fs::read(root.join(".bitmap")).ok();
     let tag_args = build_tag_args(root, opts);
@@ -139,13 +139,16 @@ fn execute_merge(root: &Path, opts: &MergeOptions) -> io::Result<Report> {
         .iter()
         .map(String::as_str)
         .collect::<Vec<_>>();
-    let tag_out = run_child_bit(root, &tag_refs).unwrap_or_default();
+    let tag_out = run_child_bit(root, &tag_refs)?;
     let bitmap_after = fs::read(root.join(".bitmap")).ok();
     let tagged = bitmap_before != bitmap_after
         || (!tag_out.is_empty() && !tag_out.to_lowercase().contains("nothing to tag"));
     let mut notes = vec!["\n\n\u{1f680} Initializing Merge command".to_owned()];
     if tagged {
-        let _ = run_child_bit(root, &["export"]);
+        run_child_bit(root, &["export"])?;
+        finalize_git_after_tag(root, opts, &target_branch, &mut notes);
+    } else if switched && !opts.no_bitmap_commit {
+        notes.push("No components were tagged; committing main's .bitmap".into());
         finalize_git_after_tag(root, opts, &target_branch, &mut notes);
     } else {
         notes.push("No components were tagged, skipping export and git operations".into());
@@ -154,22 +157,24 @@ fn execute_merge(root: &Path, opts: &MergeOptions) -> io::Result<Report> {
     Ok(Report { data: notes.join("\n"), code: 0, details: None })
 }
 
-fn ensure_on_main_lane(root: &Path) {
-    let Ok(bytes) = fs::read(root.join(".bitmap")) else {
-        return;
-    };
-    let Ok(bitmap) = parse_jsonc(&bytes) else {
-        return;
-    };
-    if bitmap["_bit_lane"]["id"]["name"]
+fn ensure_on_main_lane(root: &Path) -> io::Result<bool> {
+    let bitmap = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
+    let on_lane = bitmap["_bit_lane"]["id"]["name"]
         .as_str()
-        .is_some_and(|name| !name.is_empty() && name != "main")
-    {
-        let _ = run_child_bit(
+        .is_some_and(|name| !name.is_empty() && name != "main");
+    if on_lane {
+        run_child_bit(
             root,
-            &["switch", "main", "--workspace-only", "--skip-dependency-installation"],
-        );
+            &[
+                "switch",
+                "main",
+                "--force-ours",
+                "--workspace-only",
+                "--skip-dependency-installation",
+            ],
+        )?;
     }
+    Ok(on_lane)
 }
 
 fn build_tag_args(root: &Path, opts: &MergeOptions) -> Vec<String> {

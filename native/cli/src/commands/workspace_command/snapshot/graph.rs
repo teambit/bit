@@ -9,6 +9,7 @@
 pub use replacer::WorkspaceComponent;
 
 mod convert;
+mod reachable;
 mod replacer;
 
 use replacer::Replacer;
@@ -48,11 +49,18 @@ pub fn graphs(
         return Ok(vec![None; snapped.len()]);
     }
     let workspace = Replacer::new(components)?;
+    let version = super::receipt::NodeCli::find()?.version;
+    let modern = node_semver::Version::parse(version).map_err(io::Error::other)?
+        >= node_semver::Version::parse("2.2.147").unwrap();
     snapped
         .iter()
         .map(|component| {
             let environment = environment_importer(root, &roots, component.env_id)?;
-            graph(&lockfile, component, &workspace, &environment)
+            if modern {
+                reachable::graph(&lockfile, component, &workspace, &environment)
+            } else {
+                graph(&lockfile, component, &workspace, &environment)
+            }
         })
         .collect()
 }

@@ -364,7 +364,7 @@ fn import_with_local_env_in_component_json_and_flattened_deps_in_separate_object
     // should import the object with the flattened dependencies
     let local_ver = parse(&helper.cat_component(&format!("{}/comp1@0.0.1", helper.scopes.remote)));
     if let Some(ref_hash) = local_ver["flattenedDependenciesRef"].as_str() {
-        let flattened = parse(&helper.native(&format!("cat-object {ref_hash} --json")));
+        let flattened = parse(&helper.native(&format!("cat-object {ref_hash}")));
         let members: Vec<&str> = flattened
             .as_array()
             .unwrap()

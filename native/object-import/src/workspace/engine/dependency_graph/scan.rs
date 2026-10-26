@@ -99,6 +99,14 @@ fn read(file: &Path, budget: &AtomicUsize, resolver: &Budget) -> io::Result<Vec<
 }
 
 fn extract(filename: &str, source: String, output_bytes: &AtomicUsize) -> io::Result<Vec<String>> {
+    if source.trim().is_empty()
+        && matches!(
+            Path::new(filename).extension().and_then(|ext| ext.to_str()),
+            Some("css" | "scss" | "sass" | "styl" | "less"),
+        )
+    {
+        return Ok(Vec::new());
+    }
     let outcome =
         bit_dependency_scanner::scan_source(filename.to_owned(), source).map_err(io::Error::other)?;
     if outcome["status"] != "ok" {

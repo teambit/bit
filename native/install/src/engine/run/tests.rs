@@ -85,6 +85,88 @@ async fn installs_local_projects_with_core_removal_overrides() {
 }
 
 #[tokio::test]
+async fn injected_components_retain_sibling_dependencies_removed_from_importers() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let root = dir
+        .path()
+        .canonicalize()
+        .expect("canonical");
+    let mut settings = workspace_settings(&root);
+    settings.layout.root_components = true;
+    let plan = injected_plan(&root);
+    let options =
+        EngineInstallOptions { include_optional_deps: true, ..EngineInstallOptions::default() };
+    install(&plan, &settings, &options).await.expect("install injected chain");
+    let lockfile = Lockfile::load_from_path(&root.join("pnpm-lock.yaml"))
+        .expect("read lockfile")
+        .expect("lockfile");
+    let lockfile = serde_json::to_value(lockfile).expect("serialize lockfile");
+    assert!(lockfile["importers"]["components/alpha"].get("dependencies").is_none());
+    let (_, alpha) = lockfile["snapshots"]
+        .as_object()
+        .expect("snapshots")
+        .iter()
+        .find(|(key, _)| key.starts_with("alpha@file:"))
+        .expect("injected alpha");
+    assert!(
+        alpha["dependencies"]["beta"]
+            .as_str()
+            .expect("sibling reference")
+            .starts_with("file:"),
+    );
+    let alpha = root
+        .join("node_modules/.bit_roots/env/node_modules/alpha")
+        .canonicalize()
+        .expect("injected component");
+    assert!(
+        alpha
+            .parent()
+            .expect("node_modules")
+            .join("beta/index.js")
+            .is_file(),
+    );
+    install(&plan, &settings, &options).await.expect("repeat install");
+    assert!(
+        alpha
+            .parent()
+            .expect("node_modules")
+            .join("beta/index.js")
+            .is_file(),
+    );
+}
+
+fn injected_plan(root: &Path) -> InstallPlan {
+    let manifests = [
+        ("", json!({"name":"workspace","version":"1.0.0"})),
+        (
+            "components/alpha",
+            json!({"name":"alpha","version":"1.0.0",
+            "dependencies":{"beta":"workspace:*"},"dependenciesMeta":{"beta":{"injected":true}}}),
+        ),
+        ("components/beta", json!({"name":"beta","version":"1.0.0"})),
+        (
+            "node_modules/.bit_roots/env",
+            json!({"name":"environment","version":"1.0.0",
+            "dependencies":{"alpha":"workspace:*"},"dependenciesMeta":{"alpha":{"injected":true}}}),
+        ),
+    ];
+    let projects = manifests
+        .into_iter()
+        .map(|(directory, manifest)| {
+            let dir = root.join(directory);
+            fs::create_dir_all(&dir).expect("project directory");
+            fs::write(dir.join("index.js"), "module.exports = 1;").expect("source");
+            Project { dir, manifest: object(manifest) }
+        })
+        .collect();
+    InstallPlan {
+        projects,
+        external_dependencies: vec!["alpha".into(), "beta".into()],
+        ..InstallPlan::default()
+    }
+}
+
+#[tokio::test]
 async fn a_failed_update_restores_the_lockfile() {
     let dir = tempfile::tempdir().expect("temp dir");
     let root = dir

@@ -389,3 +389,61 @@ fn ci_merge_multi_env_circular_dependencies() {
     assert_eq!(remote_comp_version(&helper, "comp2").as_deref(), Some("0.0.2"));
     assert_eq!(remote_comp_version(&helper, "comp3").as_deref(), Some("0.0.2"));
 }
+
+#[test]
+fn ci_merge_without_content_changes_commits_main_bitmap_and_leaves_clean_state() {
+    let helper = Helper::new();
+    let branch = setup_ci_workspace(&helper, 2);
+    helper.native("lane create no-change-lane");
+    helper.native("snap --unmodified --message unchanged");
+    helper.native("export");
+    simulate_merged_pr(&helper, &branch, "no-change-lane", || {});
+    assert!(helper.git("show HEAD:.bitmap").contains(r#""_bit_lane""#));
+    let output = run_ci_merge(&helper, "");
+    assert!(output.contains("No components were tagged"), "{output}");
+    assert_eq!(helper.read_bit_map()["comp1"]["version"], "0.0.1");
+    helper.git("fetch origin");
+    let pushed = helper.git(&format!("show origin/{branch}:.bitmap"));
+    assert!(!pushed.contains(r#""_bit_lane""#));
+    assert!(pushed.contains(r#""version": "0.0.1""#));
+    assert_eq!(helper.git("status --porcelain").trim(), "");
+    helper.expect_status_to_be_clean();
+}
+
+#[test]
+fn ci_merge_cross_scope_lane_tags_only_workspace_tracked_components() {
+    use crate::commands::move_paths::support::setup;
+    let helper = Helper::new();
+    let branch = setup_ci_workspace(&helper, 1);
+    let (other_scope, _) = helper.new_bare_scope_connected();
+    helper.native("lane create cross-scope-lane");
+    helper.output_file("comp1/index.js", "module.exports = () => 'on the lane';\n");
+    helper.native("snap --message changed");
+    helper.native("export");
+    helper.git("checkout -b feature/cross-scope");
+    helper.git("add .");
+    helper.git("commit -m lane");
+    let developer = helper.clone_workspace();
+    std::fs::create_dir_all(developer.join("comp2")).unwrap();
+    std::fs::write(developer.join("comp2/index.js"), "module.exports = 2;\n").unwrap();
+    for command in [
+        "add comp2".to_owned(),
+        format!("scope set {other_scope} comp2"),
+        "env set comp2 teambit.harmony/node".to_owned(),
+        "snap --message foreign".to_owned(),
+        "export".to_owned(),
+    ] {
+        let result = Helper::cmd_in(&developer, &command);
+        assert!(result.status.success(), "{command}: {} {}", result.stdout, result.stderr);
+    }
+    setup(&helper, "import");
+    helper.git(&format!("checkout {branch}"));
+    helper.git("merge feature/cross-scope");
+    run_ci_merge(&helper, "--message merged");
+    assert_eq!(remote_comp_version(&helper, "comp1").as_deref(), Some("0.0.2"));
+    assert!(
+        !std::fs::read_to_string(helper.scopes.local_path.join(".bitmap"))
+            .unwrap()
+            .contains(&other_scope),
+    );
+}

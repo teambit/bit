@@ -105,9 +105,8 @@ shipped (bvm packages, release assets) must come from `build:dist`, which
 writes `target/dist/bit` with fat LTO and one codegen unit: about 20% smaller
 and a few percent faster, but a rebuild takes minutes and over 4 GB of memory.
 
-Each Cargo script first runs `prepare-engine`, which writes a file that pnpm's
-pinned engine crates expect but do not commit, into a local copy of that crate,
-never into pnpm's store. Two checks still need rustup: `fmt` and `fmt:check`
+The pinned pnpm engine includes its generated CAS loader, so Cargo builds need no
+source preparation. Two checks still need rustup: `fmt` and `fmt:check`
 build pnpm's pinned rustfmt fork with a dated nightly, and the perfectionist
 lints (`cargo dylint`) use the nightly toolchain `cargo-dylint` installs.
 
@@ -202,6 +201,7 @@ Each host method is removed once its behavior is ported to Rust.
 | `git set-merge-driver` with optional `--global` / `-g`; `git merge-bitmaps <base> <current> <other>` | `bit-cli`, `bit-workspace-config`: configures the Git `.bitmap` merge driver in local `.git` or global Git config and merges `.bitmap` JSONC files across base/current/other revisions | none | unsupported flags or arguments decline before effects |
 | `whoami` with optional `--token <token>` | `bit-cli`, `bit-install`: inspects global config `user.token` and queries Bit Cloud Symphony GraphQL endpoint for authenticated username, or immediately reports unauthenticated status | none | unknown flags or arguments decline before effects |
 | `logout` | `bit-cli`, `bit-workspace-config`: deletes stored `user.token` and `user.name` credentials from global configuration | none | unknown flags or arguments decline before effects |
+| `build [pattern]` | native task listing and eligible capsule materialization | unsupported pipelines run through the released CLI | component peer dependencies delegate before capsule writes so released env policy and peer ranges are retained |
 | `npmrc [sub-command]` | `bit-cli`: routes unrecognized npmrc subcommands with descriptive guidance, delegating interactive/registry `generate` | none | `npmrc generate` or unknown flags decline to canonical CLI |
 | `use <aspect-id>`; `unuse <aspect-id>` | `bit-cli`, `bit-install`, `bit-workspace-config`: adds or removes aspect configuration entries in `workspace.jsonc` root preserving comments and formatting; `unuse` cleans generator environments | none | non-workspace aspect requiring remote import on `use`, non-workspace execution, or unsupported flags decline before effects |
 | `search <query...>` with `--local-only` / `-l` and optional `--json` / `-j` | `bit-cli`, `bit-install`: searches workspace components by case-insensitive substring match, deduplicates results across queries, and renders formatted text or JSON | none | remote search without `--local-only`, unsupported flags, or outside a workspace decline before effects |
@@ -670,7 +670,7 @@ When a merge, `bit snap` or `bit tag` writes versions, the CLI supplies what the
 - **Snapshot identity.** New snap hashes (`newSnapHash`: the SHA-1 of a random UUID v4) and a batch id.
 - **Log.** Identity is cached for the process as published `getIdentity()` does; every log gets a fresh date. The username comes from Bit Cloud's `/user` endpoint when a `user.token` is configured, else from `user.name`. The email comes from `user.email`. Both follow `getConfig`: environment, workspace, scope and global config, then `git config --list`.
 - **Bit version.** The version of the `@teambit/bit` package the Node.js CLI runs from.
-- **Dependency graph.** Each snapped component's `DependenciesGraph` (`calcDependenciesGraph`), cut from `pnpm-lock.yaml`. The lockfile is read and filtered by pnpm's `pnpm-lockfile` crate, the code `@pnpm/napi` runs for the Node.js CLI. The filtered package and snapshot order follows pnpm's importer-root, depth-first walker; object hashes depend on this order. Workspace components are named by their versions (`createFileVersionReplacer`): the snapped ones by their new hashes as `0.0.0-<hash>`, the others by their workspace versions. The engine stores the graph as a Source and sets `dependenciesGraphRef`.
+- **Dependency graph.** Each snapped component's `DependenciesGraph` (`calcDependenciesGraph`), cut from `pnpm-lock.yaml`. The lockfile is read once. For Bit 2.2.147 and newer, Rust copies only reachable packages and snapshots, and falls back to the component importer when the environment root or its component snapshot is absent. Older releases retain pnpm’s importer-root, depth-first filtering order; object hashes depend on this order. Workspace components are named by their versions (`createFileVersionReplacer`): the snapped ones by their new hashes as `0.0.0-<hash>`, the others by their workspace versions. The engine stores the graph as a Source and sets `dependenciesGraphRef`.
 
 A merge uses one authoritative capture and native merge plan. It materializes files
 and policy changes, runs installation unless `-x` was requested, and then resolves
@@ -690,6 +690,27 @@ When an engine request fails, the engine now returns the reason, and `BIT_NATIVE
 ### Component patterns
 
 `snap` and `tag` match component id patterns as `matchComponentPatterns` does, with `multimatch` 5 over `minimatch` 3.1.5: comma-separated patterns, `*`, `?`, `**`, and `!` negation (a list of negations starts from `**`). An id is kept when the last pattern that matches it is not negated, and ids keep the workspace order. A test checks the port against results `multimatch` produced.
+
+## Native release archives
+
+The Rust workflow's manual `build-distribution` input builds fat-LTO binaries for
+Linux x64/ARM64, macOS Intel/ARM64, Windows x64, and Linux x64 musl. The five bvm
+platforms also produce archives combining the native entry with the released
+Node CLI pinned in `native/cli/tests/e2e/bit-version`. Artifact names include the
+source commit. The musl artifact contains only the executable; it requires a
+separately installed Node CLI and a Node runtime compatible with its host.
+
+`python3 scripts/rust/package-bvm.py --help` describes local archive assembly.
+The packager preserves the Node package, writes the native entry with executable
+permissions, and records both input hashes in `native-release.json`. Use a
+distinct prerelease version so installation cannot replace a stable release.
+
+Native entry selection ships in [bvm 3.1.7](https://github.com/teambit/bvm/releases/tag/v3.1.7).
+With bvm 3.1.7 or newer, install an artifact using
+`bvm install --method tar --file /path/to/bit-<version>-<platform>-<arch>.tar.gz` and select it
+with `bvm use <version>`. `BIT_NATIVE=off` retains the packaged Node fallback.
+The workflow uploads artifacts; it does not change bvm's release index or the
+default version installed by users.
 
 ## Versions
 

@@ -42,6 +42,9 @@ pub struct Importer<'a> {
 impl Importer<'_> {
     /// Import `ids` and return what was written.
     pub async fn import(&self, ids: &[Id]) -> io::Result<Written> {
+        if ids.is_empty() {
+            return Ok(Written::default());
+        }
         let externals: Vec<Id> = ids
             .iter()
             .filter(|id| id.scope != self.local_scope)
@@ -248,7 +251,13 @@ impl Importer<'_> {
         let fetched = self.fetcher.fetch(&grouped, options).await?;
         let written = persist(self.repo, &fetched, progress.as_ref())?;
         let imported = match written.components.len() {
-            0 => format!("{} objects", written.objects),
+            0 => format!(
+                "{} objects",
+                fetched
+                    .values()
+                    .map(Vec::len)
+                    .sum::<usize>(),
+            ),
             components => format!("{components} components"),
         };
         self.status(&format!("successfully imported {imported} {reason}"));

@@ -1,9 +1,9 @@
-//! Real package-manager subscriber suppresses pnpm's platform-dependent progress frames.
+//! A workspace-only subscriber stays unloaded during released empty-workspace adoption.
 use crate::{
     commands::move_paths::support,
     helper::{Helper, config},
 };
-use serde_json::{Value, json};
+use serde_json::json;
 
 pub(super) fn configure(helper: &Helper) {
     let source = include_str!("reporter.cjs");
@@ -34,6 +34,10 @@ pub(super) fn configure(helper: &Helper) {
         .remove("env/quiet-reporter")
         .unwrap();
     let version = reporter["version"].as_str().unwrap();
+    helper.output_file(
+        "quiet-reporter/package.json",
+        &json!({"name":format!("@{}/env.quiet-reporter", helper.scopes.remote), "version":version, "main":"dist/index.js"}).to_string(),
+    );
     config::write_json(&path, &bitmap, b"    ");
     config::set_workspace_key(
         &helper.scopes.local_path,
@@ -61,18 +65,8 @@ fn link_reporter_policy(helper: &Helper) {
     );
 }
 
-pub(super) fn assert_receipt(helper: &Helper) {
-    let path = helper.scopes.local_path.join("quiet-reporter-receipt.jsonl");
-    let lines = std::fs::read_to_string(&path).unwrap();
-    let actual = lines
-        .lines()
-        .map(|line| serde_json::from_str::<Value>(line).unwrap())
-        .collect::<Vec<_>>();
-    assert_eq!(
-        actual,
-        vec![
-            json!({"phase":"pre","hidden":true}),
-            json!({"phase":"post","sameInstaller":true,"sameArgs":true,"samePackageOptions":true,"hidden":true}),
-        ],
-    );
+pub(super) fn assert_not_invoked(helper: &Helper) {
+    assert!(helper.scopes.local_path.join("quiet-reporter-active").is_file());
+    assert!(helper.scopes.local_path.join("quiet-reporter/package.json").is_file());
+    assert!(!helper.scopes.local_path.join("quiet-reporter-receipt.jsonl").exists());
 }

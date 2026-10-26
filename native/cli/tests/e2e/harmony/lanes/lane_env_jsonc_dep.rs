@@ -94,3 +94,114 @@ fn env_with_workspace_component_as_peer_dep_in_env_jsonc_on_lane() {
     let diff_output = helper.diff(env_name);
     assert!(!diff_output.contains("0.0.1"), "{diff_output}");
 }
+
+#[test]
+fn lane_peer_plus_range_survives_a_bare_scope_release_and_capsule_build() {
+    use crate::helper::{config, parse, setup};
+    use serde_json::json;
+    use std::{ffi::OsStr, process::Command};
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    helper.set_empty_env();
+    helper.run("env set comp1 empty-env");
+    let run = |command: &str| {
+        let result = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            command,
+            &[("BIT_FEATURES", OsStr::new("plus-range-versions"))],
+        );
+        assert!(result.status.success(), "{command}: {} {}", result.stdout, result.stderr);
+        result.stdout
+    };
+    run("tag --message initial");
+    let package = format!("@{}/comp2", helper.scopes.remote);
+    helper.output_file(
+        "empty-env/env.jsonc",
+        &json!({"policy":{"peers":[{"name":package,"version":"+","supportedRange":"+^"}]}})
+            .to_string(),
+    );
+    run("tag --message policy");
+    run("export");
+    run("lane create dev");
+    helper.append_file("comp2/index.js", "\n// second version\n");
+    run("snap --message lane");
+    run("export");
+    let lane_snap = helper.head_of_lane("dev", "comp2");
+    let configuration =
+        helper.show_aspect_config("comp1", "teambit.dependencies/dependency-resolver");
+    let dependencies = &configuration["data"]["dependencies"];
+    let peer = dependencies
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| row["packageName"] == package)
+        .unwrap();
+    assert_eq!(peer["lifecycle"], "peer");
+    assert_eq!(peer["version"], lane_snap);
+    assert_eq!(peer["versionRange"], "+^");
+    run("switch main -x");
+    run("lane merge dev -x");
+    run("export");
+    let (_, bare) = helper.new_bare_scope();
+    Helper::add_remote_to(&bare, &helper.scopes.remote_path);
+    let shared = setup::shared();
+    let released = Command::new("node")
+        .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/e2e/helper/release_from_scope.js"))
+        .arg(&shared.node_cli)
+        .arg(&bare)
+        .arg(&helper.scopes.remote_path)
+        .arg(&helper.scopes.remote)
+        .args(["comp1", "comp2", "empty-env"])
+        .env("HOME", shared.root.join("home"))
+        .env("USERPROFILE", shared.root.join("home"))
+        .env("BIT_GLOBALS_DIR", shared.root.join("globals"))
+        .env("BIT_FEATURES", "plus-range-versions")
+        .output()
+        .unwrap();
+    assert!(
+        released.status.success(),
+        "{} {}",
+        String::from_utf8_lossy(&released.stdout),
+        String::from_utf8_lossy(&released.stderr),
+    );
+    let model = Helper::cmd_in(
+        &helper.scopes.remote_path,
+        &format!("cat-component {}/comp1@latest", helper.scopes.remote),
+    );
+    assert!(model.status.success(), "{} {}", model.stdout, model.stderr);
+    let model = parse(&model.stdout[model.stdout.find('{').expect("component JSON")..]);
+    let resolver = model["extensions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| {
+            row["extensionId"]["name"] == "dependencies/dependency-resolver"
+                || row["name"] == "teambit.dependencies/dependency-resolver"
+        })
+        .unwrap();
+    let peer = resolver["data"]["dependencies"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| row["packageName"] == package)
+        .unwrap();
+    assert_eq!(peer["__type"], "component");
+    assert_eq!(peer["lifecycle"], "peer");
+    assert_eq!(peer["version"], "0.0.2");
+    assert_eq!(peer["versionRange"], "+^");
+    run("import");
+    run("checkout head --all -x");
+    helper.expect_status_to_be_clean();
+    run("build comp1");
+    let capsules = helper.capsule_list_parsed();
+    let capsule = capsules["capsules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(serde_json::Value::as_str)
+        .find(|path| path.contains("comp1"))
+        .unwrap();
+    let manifest = config::read_jsonc(&std::path::Path::new(capsule).join("package.json"));
+    assert_eq!(manifest["peerDependencies"][&package], "^0.0.2");
+}

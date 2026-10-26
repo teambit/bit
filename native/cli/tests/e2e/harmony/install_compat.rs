@@ -89,7 +89,7 @@ fn phases(helper: &Helper) -> Vec<String> {
         .collect()
 }
 
-fn install_output(text: &str) -> String {
+pub(super) fn install_output(text: &str) -> String {
     let projected = super::fork::installation::project_startup_frame(text);
     let timed = super::lane_adoption::output::durations(&projected);
     let mut output = String::new();

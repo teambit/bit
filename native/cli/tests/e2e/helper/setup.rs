@@ -151,6 +151,9 @@ pub fn bit_command(shared: &Shared, cwd: &Path) -> Command {
         .env_remove("BIT_GITHUB_TOKEN")
         .env_remove("GITHUB_REPOSITORY")
         .env_remove("GITHUB_HEAD_REF");
+    if super::on_node() {
+        command.env("BIT_NATIVE", "off");
+    }
     command
 }
 

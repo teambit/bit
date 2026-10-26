@@ -10,6 +10,7 @@ bit-dependency-scanner = { path = "../dependency-scanner" }
 bit-client-transfer = { path = "../client-transfer" }
 bit-object-import = { path = "../object-import" }
 pnpm-config = { workspace = true }
+pnpm-config-parse-overrides = { git = "https://github.com/pnpm/pnpm", rev = "0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53" }
 pnpm-default-reporter = { workspace = true }
 pnpm-deps-path = { workspace = true }
 pnpm-hooks = { workspace = true }

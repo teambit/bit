@@ -58,6 +58,12 @@ fn projected_extensions(policy: &Policy, output: &Value) -> io::Result<Value> {
     Ok(json!(extensions))
 }
 
+/// Peer component metadata for the published `ConsumerComponent` adapter.
+pub fn peer_metadata(state: &Value) -> io::Result<Value> {
+    let entries = array(state.get("entries"), "peer dependency entries")?;
+    metadata_dependencies(&state["components"][2], entries)
+}
+
 fn metadata_dependencies(indices: &Value, entries: &[Value]) -> io::Result<Value> {
     let indices = array(Some(indices), "dependency indices")?;
     let rows = indices

@@ -222,3 +222,30 @@ fn install_and_compile_custom_envs_skip_compile_and_missing_node_modules() {
     assert!(full.status.success(), "{}{}", full.stdout, full.stderr);
     assert!(comp_nm.join("dist").exists());
 }
+
+#[test]
+fn empty_install_import_progress_and_workspace_state_match_the_released_cli() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    let result = crate::commands::move_paths::support::compare_install(
+        &helper,
+        "install --skip-compile",
+        super::install_compat::install_output,
+    );
+    assert!(result.status.success(), "{} {}", result.stdout, result.stderr);
+}
+
+#[test]
+fn install_missing_objects_progress_and_workspace_state_match_the_released_cli() {
+    let helper = crate::commands::move_paths::support::workspace(1, true);
+    crate::helper::remote::publish(&helper);
+    crate::commands::move_paths::support::setup(&helper, "install");
+    helper.delete_path(".bit/objects");
+    std::fs::create_dir_all(helper.scopes.local_path.join(".bit/objects")).unwrap();
+    let result = crate::commands::move_paths::support::compare_with_stdout(
+        &helper,
+        "install --skip-compile",
+        super::install_compat::install_output,
+    );
+    assert!(result.status.success(), "{} {}", result.stdout, result.stderr);
+}

@@ -96,7 +96,7 @@ fn sequential_imports_of_equal_names_use_the_incoming_owner_directory() {
         helper.output_file("alpha/index.js", &format!("module.exports = '{owner}';\n"));
         canonical(&helper, "add alpha -i alpha");
         canonical(&helper, "tag --message initial");
-        canonical(&helper, "export");
+        remote::publish_to(&helper, &path);
         remotes.push(path);
     }
     helper.re_init_workspace();
