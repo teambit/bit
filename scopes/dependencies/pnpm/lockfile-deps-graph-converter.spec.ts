@@ -635,6 +635,59 @@ describe('convertLockfileToGraph when the root importer or snapshot lacks the co
       },
     ]);
   });
+
+  it('should scrub the component itself and circular back-edges when falling back to the component importer', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {},
+        'comps/comp1': {
+          dependencies: {
+            comp2: { version: 'file:comps/comp2', specifier: '*' },
+          },
+        },
+        'comps/comp2': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'comp1@file:comps/comp1': {
+          dependencies: {
+            comp2: 'file:comps/comp2',
+          },
+        },
+        'comp2@file:comps/comp2': {
+          dependencies: {
+            comp1: 'file:comps/comp1',
+          },
+        },
+      },
+      packages: {
+        'comp1@file:comps/comp1': {
+          resolution: { directory: 'comps/comp1', type: 'directory' },
+        },
+        'comp2@file:comps/comp2': {
+          resolution: { directory: 'comps/comp2', type: 'directory' },
+        },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+        ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+      ]),
+    });
+    const referencingComp1 = graph.edges.filter((edge) => edge.neighbours.some((n) => n.id === 'comp1@1.0.0'));
+    expect(referencingComp1).to.eql([]);
+    expect(Array.from(graph.packages.keys())).to.not.include('comp1@1.0.0');
+  });
 });
 
 describe('filterLockfileByImporters', () => {

@@ -543,7 +543,12 @@ export class PnpmPackageManager implements PackageManager {
               importer.optionalDependencies?.[workspacePkgName];
             if (ref?.version?.startsWith('file:')) continue;
           }
-          for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies', 'dependenciesMeta']) {
+          for (const depType of [
+            'dependencies',
+            'devDependencies',
+            'optionalDependencies',
+            'dependenciesMeta',
+          ] as const) {
             delete importer[depType]?.[workspacePkgName];
           }
         }

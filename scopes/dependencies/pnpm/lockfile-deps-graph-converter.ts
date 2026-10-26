@@ -66,16 +66,49 @@ function getLockfileImporterId(lockfileDir: string, projectDir: string): string 
   return normalizePath(path.relative(lockfileDir, projectDir)) || '.';
 }
 
+function scrubOwnComponentFromLockfile(lockfile: BitLockfileFile, pkgName?: string): void {
+  if (!pkgName) return;
+  const prefix = `${pkgName}@`;
+  const removedSuffixes = new Set<string>();
+  for (const depPath of Object.keys(lockfile.snapshots ?? {})) {
+    if (depPath.startsWith(prefix) && depPath.slice(prefix.length).startsWith('file:')) {
+      removedSuffixes.add(depPath.slice(prefix.length));
+      delete lockfile.snapshots![depPath];
+    }
+  }
+  for (const pkgId of Object.keys(lockfile.packages ?? {})) {
+    if (pkgId.startsWith(prefix) && pkgId.slice(prefix.length).startsWith('file:')) {
+      delete lockfile.packages![pkgId];
+    }
+  }
+  if (removedSuffixes.size === 0) return;
+  for (const snapshot of Object.values(lockfile.snapshots ?? {})) {
+    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+      const deps = snapshot[depType];
+      const depVersion = deps?.[pkgName];
+      if (depVersion && removedSuffixes.has(depVersion)) {
+        delete deps[pkgName];
+        if (Object.keys(deps).length === 0) delete snapshot[depType];
+      }
+    }
+  }
+}
+
 function convertLockfileToGraphFromCapsule(
   lockfile: BitLockfileFile,
   {
+    pkgName,
     componentRelativeDir,
     componentIdByPkgName,
     replaceFileVersion,
-  }: Pick<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'componentRelativeDir' | 'componentIdByPkgName'> & {
+  }: Pick<
+    CalcDepsGraphOptions & CalcDepsGraphForComponentOptions,
+    'pkgName' | 'componentRelativeDir' | 'componentIdByPkgName'
+  > & {
     replaceFileVersion?: (s: string) => string;
   }
 ): DependenciesGraph {
+  scrubOwnComponentFromLockfile(lockfile, pkgName);
   const componentImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
   for (const depType of ['dependencies' as const, 'optionalDependencies' as const, 'devDependencies' as const]) {
@@ -119,6 +152,7 @@ export function convertLockfileToGraph(
   ensureInitialized();
   if (componentRootDir == null || pkgName == null) {
     return convertLockfileToGraphFromCapsule(lockfile, {
+      pkgName,
       componentRelativeDir,
       componentIdByPkgName,
       replaceFileVersion,
@@ -127,6 +161,7 @@ export function convertLockfileToGraph(
   const rootImporterDeps = lockfile.importers![componentRootDir]?.dependencies?.[pkgName];
   if (rootImporterDeps == null) {
     return convertLockfileToGraphFromCapsule(lockfile, {
+      pkgName,
       componentRelativeDir,
       componentIdByPkgName,
       replaceFileVersion,
@@ -137,6 +172,7 @@ export function convertLockfileToGraph(
   const lockedPkg = lockfile.snapshots?.[lockedPkgDepPath];
   if (lockedPkg == null) {
     return convertLockfileToGraphFromCapsule(lockfile, {
+      pkgName,
       componentRelativeDir,
       componentIdByPkgName,
       replaceFileVersion,
