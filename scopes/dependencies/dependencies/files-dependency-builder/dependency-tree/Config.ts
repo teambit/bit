@@ -2,65 +2,64 @@
  * this file had been forked from https://github.com/dependents/node-dependency-tree
  */
 
-const path = require('path');
-const debug = require('debug')('tree');
+import path from 'path';
+import debugFactory from 'debug';
+import type { DependencyDetector } from '@teambit/dependency-resolver';
 
-export default function Config(options) {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.filename = options.filename;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.directory = options.directory || options.root;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.visited = options.visited || {};
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.errors = options.errors || {};
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.nonExistent = options.nonExistent || [];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.isListForm = options.isListForm;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.requireConfig = options.config || options.requireConfig;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.webpackConfig = options.webpackConfig;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.detectiveConfig = options.detective || options.detectiveConfig || {};
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.pathMap = options.pathMap || [];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.resolveConfig = options.resolveConfig;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.cacheProjectAst = options.cacheProjectAst;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.envDetectors = options.envDetectors;
+const debug = debugFactory('tree');
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.filter = options.filter;
+export default class Config {
+  filename: string;
+  directory: string;
+  visited: Record<string, any>;
+  errors: Record<string, any>;
+  nonExistent: Record<string, string[]>;
+  isListForm?: boolean;
+  requireConfig?: Record<string, any>;
+  webpackConfig?: Record<string, any>;
+  detectiveConfig: Record<string, any>;
+  pathMap: Array<Record<string, any>>;
+  resolveConfig?: Record<string, any>;
+  cacheProjectAst?: boolean;
+  envDetectors?: DependencyDetector[];
+  filter?: (filePath: string, filename: string) => boolean;
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  if (!this.filename) {
-    throw new Error('filename not given');
+  constructor(options) {
+    this.filename = options.filename;
+    this.directory = options.directory || options.root;
+    this.visited = options.visited || {};
+    this.errors = options.errors || {};
+    this.nonExistent = options.nonExistent || [];
+    this.isListForm = options.isListForm;
+    this.requireConfig = options.config || options.requireConfig;
+    this.webpackConfig = options.webpackConfig;
+    this.detectiveConfig = options.detective || options.detectiveConfig || {};
+    this.pathMap = options.pathMap || [];
+    this.resolveConfig = options.resolveConfig;
+    this.cacheProjectAst = options.cacheProjectAst;
+    this.envDetectors = options.envDetectors;
+
+    this.filter = options.filter;
+
+    if (!this.filename) {
+      throw new Error('filename not given');
+    }
+    if (!this.directory) {
+      throw new Error('directory not given');
+    }
+    if (this.filter && typeof this.filter !== 'function') {
+      throw new Error('filter must be a function');
+    }
+
+    debug(`given filename: ${this.filename}`);
+
+    this.filename = path.resolve(process.cwd(), this.filename);
+
+    debug(`resolved filename: ${this.filename}`);
+    debug('visited: ', this.visited);
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  if (!this.directory) {
-    throw new Error('directory not given');
+
+  clone() {
+    return new Config(this);
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  if (this.filter && typeof this.filter !== 'function') {
-    throw new Error('filter must be a function');
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  debug(`given filename: ${this.filename}`);
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  this.filename = path.resolve(process.cwd(), this.filename);
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  debug(`resolved filename: ${this.filename}`);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  debug('visited: ', this.visited);
 }
-
-Config.prototype.clone = function () {
-  return new Config(this);
-};
