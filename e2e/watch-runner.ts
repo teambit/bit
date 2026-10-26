@@ -1,6 +1,5 @@
 /* eslint no-console: 0 */
 import chalk from 'chalk';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import type { ChildProcess } from 'child_process';
 import childProcess from 'child_process';
 import rightpad from 'pad-right';

@@ -135,7 +135,6 @@ export class ComponentsList {
         newComponents.push(id);
       }
     });
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const newComponentsIds = new ComponentIdList(...newComponents);
     if (!load || !newComponents.length) return newComponentsIds;
 
@@ -321,7 +320,6 @@ export class ComponentsList {
         const listResult = listAllResults.find((c) => c.id.isEqualWithoutVersion(componentId));
         if (!listResult) throw new Error(`failed finding ${componentId.toString()} in componentsIds`);
         // $FlowFixMe version must be set as it came from a remote
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         listResult.remoteVersion = componentId.version;
       });
     }

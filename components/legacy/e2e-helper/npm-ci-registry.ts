@@ -34,7 +34,6 @@ export const supportNpmCiRegistryTesting = !skipRegistryTests;
  * (or just use `this.unpublishComponent()` method)
  */
 export class NpmCiRegistry {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   registryServer: ChildProcess;
   helper: Helper;
   ciRegistry = `http://localhost:${REGISTRY_MOCK_PORT}`;
