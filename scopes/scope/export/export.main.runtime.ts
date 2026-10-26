@@ -28,6 +28,7 @@ import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import type { Remotes, Remote } from '@teambit/scope.remotes';
 import { getScopeRemotes, ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
+import { LaneNotFound } from '@teambit/legacy.scope-api';
 import type { EjectMain, EjectResults } from '@teambit/eject';
 import { EjectAspect } from '@teambit/eject';
 import type { ExportOrigin } from '@teambit/scope.network';
@@ -517,6 +518,7 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       bitIds.throwForDuplicationIgnoreVersion();
       // fetched in parallel to the calculation of the versions to export, which doesn't depend on it
       const remoteLanePromise = lane ? this.fetchRemoteLaneToCompareUpdateDependents(scope, lane) : undefined;
+      remoteLanePromise?.catch(() => {}); // it's awaited (and throws) later. avoid an unhandled rejection meanwhile.
       const remote: Remote = await resolveRemote(remoteNameStr);
       const idsToChangeLocally = ComponentIdList.fromArray(bitIds.filter((id) => !scope.isExported(id)));
       const exportedModelComponents: ModelComponent[] = [];
@@ -618,8 +620,6 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         objectList.addIfNotExist([laneHistoryData]);
         const laneData = await bitObjectToObjectItem(lane);
         objectList.addIfNotExist([laneData]);
-        // needed for this export only. kept locally, the next export might resurrect removed entries.
-        lane.setOverrideUpdateDependents(false);
       }
 
       return {
@@ -676,7 +676,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
 
         // update lanes
         if (lane) {
-          if (idsToChangeLocally.length || updateDependentsChanged) {
+          // the flag is needed for this export only. kept locally, the next export might resurrect removed entries.
+          const hadOverrideFlag = lane.shouldOverrideUpdateDependents();
+          lane.setOverrideUpdateDependents(false);
+          if (idsToChangeLocally.length || updateDependentsChanged || hadOverrideFlag) {
             // otherwise, we don't want to update scope-name of components in the lane object
             scope.objects.add(lane);
           }
@@ -755,8 +758,9 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       const [remoteLane] = await scope.scopeImporter.importLanes([lane.toLaneId()]);
       return remoteLane;
     } catch (err: any) {
-      this.logger.warn(`unable to fetch the lane ${lane.id()} to compare its updateDependents with the remote`, err);
-      return undefined;
+      // e.g. the lane was deleted on the remote. the export creates it again.
+      if (err instanceof LaneNotFound) return undefined;
+      throw err;
     }
   }
 
