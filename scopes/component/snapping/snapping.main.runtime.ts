@@ -506,6 +506,9 @@ export class SnappingMain {
     await this.scope.import(componentIdsLatest, {
       preferDependencyGraph: false,
       lane,
+      // a seeder can be a hidden lane.updateDependents entry (e.g. re-running "snap updates"). its head is a
+      // cascade snap that lives only in the lane's scope, so it must be fetched from there and not from main.
+      includeUpdateDependents: true,
       reason: `seeders to snap`,
     });
     const getSnapData = (id: ComponentID): SnapDataParsed => {
