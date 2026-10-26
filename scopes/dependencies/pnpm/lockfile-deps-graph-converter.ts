@@ -69,10 +69,8 @@ function getLockfileImporterId(lockfileDir: string, projectDir: string): string 
 function scrubOwnComponentFromLockfile(lockfile: BitLockfileFile, pkgName?: string): void {
   if (!pkgName) return;
   const prefix = `${pkgName}@`;
-  const removedSuffixes = new Set<string>();
   for (const depPath of Object.keys(lockfile.snapshots ?? {})) {
     if (depPath.startsWith(prefix) && depPath.slice(prefix.length).startsWith('file:')) {
-      removedSuffixes.add(depPath.slice(prefix.length));
       delete lockfile.snapshots![depPath];
     }
   }
@@ -81,12 +79,10 @@ function scrubOwnComponentFromLockfile(lockfile: BitLockfileFile, pkgName?: stri
       delete lockfile.packages![pkgId];
     }
   }
-  if (removedSuffixes.size === 0) return;
   for (const snapshot of Object.values(lockfile.snapshots ?? {})) {
     for (const depType of ['dependencies', 'optionalDependencies'] as const) {
       const deps = snapshot[depType];
-      const depVersion = deps?.[pkgName];
-      if (depVersion && removedSuffixes.has(depVersion)) {
+      if (deps && deps[pkgName]?.startsWith('file:')) {
         delete deps[pkgName];
         if (Object.keys(deps).length === 0) delete snapshot[depType];
       }
@@ -108,8 +104,9 @@ function convertLockfileToGraphFromCapsule(
     replaceFileVersion?: (s: string) => string;
   }
 ): DependenciesGraph {
-  scrubOwnComponentFromLockfile(lockfile, pkgName);
-  const componentImporter = lockfile.importers![componentRelativeDir];
+  const narrowedLockfile = filterLockfileByImporters(lockfile, [componentRelativeDir]);
+  scrubOwnComponentFromLockfile(narrowedLockfile, pkgName);
+  const componentImporter = narrowedLockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
   for (const depType of ['dependencies' as const, 'optionalDependencies' as const, 'devDependencies' as const]) {
     if (componentImporter[depType] != null) {
@@ -118,7 +115,7 @@ function convertLockfileToGraphFromCapsule(
       directDependencies.push(...importerDepsToNeighbours(componentImporter[depType]!, lifecycle, optional));
     }
   }
-  return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies, replaceFileVersion });
+  return _convertLockfileToGraph(narrowedLockfile, { componentIdByPkgName, directDependencies, replaceFileVersion });
 }
 
 function importerDepsToNeighbours(
@@ -379,7 +376,7 @@ export function filterLockfileByImporters(
   importersOverride?: Record<string, LockfileFileProjectSnapshot>
 ): BitLockfileFile {
   ensureInitialized();
-  const importers = { ...lockfile.importers, ...importersOverride };
+  const getImporter = (id: string) => importersOverride?.[id] ?? lockfile.importers?.[id];
   const reachablePackages = new Set<string>();
   const reachableSnapshots = new Set<string>();
   const stack: string[] = [];
@@ -408,7 +405,7 @@ export function filterLockfileByImporters(
   };
 
   for (const importerId of importerIds) {
-    const importer = importers[importerId];
+    const importer = getImporter(importerId);
     if (!importer) continue;
     for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
       for (const [name, dep] of Object.entries(importer[depType] ?? {}) as Array<[string, { version?: string }]>) {
@@ -438,8 +435,9 @@ export function filterLockfileByImporters(
 
   const filteredImporters: NonNullable<BitLockfileFile['importers']> = {};
   for (const importerId of importerIds) {
-    if (importers[importerId] != null) {
-      filteredImporters[importerId] = importers[importerId];
+    const importer = getImporter(importerId);
+    if (importer != null) {
+      filteredImporters[importerId] = importer;
     }
   }
 

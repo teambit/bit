@@ -688,6 +688,84 @@ describe('convertLockfileToGraph when the root importer or snapshot lacks the co
     expect(referencingComp1).to.eql([]);
     expect(Array.from(graph.packages.keys())).to.not.include('comp1@1.0.0');
   });
+
+  it('should scrub circular back-edges even when the component snapshot itself is missing', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+        'comps/comp1': {
+          dependencies: {
+            comp2: { version: 'file:comps/comp2', specifier: '*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'comp2@file:comps/comp2': {
+          dependencies: {
+            comp1: 'file:comps/comp1',
+          },
+        },
+      },
+      packages: {
+        'comp2@file:comps/comp2': {
+          resolution: { directory: 'comps/comp2', type: 'directory' },
+        },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+        ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+      ]),
+    });
+    const referencingComp1 = graph.edges.filter((edge) => edge.neighbours.some((n) => n.id === 'comp1@1.0.0'));
+    expect(referencingComp1).to.eql([]);
+    expect(Array.from(graph.packages.keys())).to.not.include('comp1@1.0.0');
+  });
+
+  it('should not include packages reachable only from the root importer when falling back to the component importer', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        'node_modules/.bit_roots/env': {
+          dependencies: {
+            'root-only-pkg': { version: '2.0.0', specifier: '^2.0.0' },
+          },
+        },
+        'comps/comp1': {
+          dependencies: {
+            foo: { version: '1.0.0', specifier: '^1.0.0' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'foo@1.0.0': {},
+        'root-only-pkg@2.0.0': {},
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-aaa' } },
+        'root-only-pkg@2.0.0': { resolution: { integrity: 'sha512-bbb' } },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')]]),
+    });
+    expect(Array.from(graph.packages.keys())).to.eql(['foo@1.0.0']);
+  });
 });
 
 describe('filterLockfileByImporters', () => {

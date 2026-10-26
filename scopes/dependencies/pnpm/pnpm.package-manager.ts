@@ -513,7 +513,12 @@ export class PnpmPackageManager implements PackageManager {
       if (!originalImporters[componentImporterId]) {
         continue;
       }
-      const hasComponentRootImporter = compRootDir != null && Boolean(originalImporters[compRootDir]);
+      const rootImporterVersion =
+        compRootDir != null && pkgName != null
+          ? originalImporters[compRootDir]?.dependencies?.[pkgName]?.version
+          : undefined;
+      const hasComponentRootImporter =
+        rootImporterVersion != null && Boolean(originalLockfile.snapshots?.[`${pkgName}@${rootImporterVersion}`]);
       const filterByImporterIds = [componentImporterId];
       if (hasComponentRootImporter && compRootDir !== componentImporterId) {
         filterByImporterIds.push(compRootDir as ProjectId);
