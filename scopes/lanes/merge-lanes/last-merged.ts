@@ -139,16 +139,10 @@ export class LastMerged {
         `unable to abort the last lane-merge because the workspace.jsonc is missing from ${this.path}`
       );
     }
-    if (currentLane) {
-      if (!lastLane) {
-        throw new BitError(
-          `unable to abort the last lane-merge because the ${LAST_MERGED_LANE_FILENAME} is missing from ${this.path}`
-        );
-      }
-      const laneFromBackup = await BitObject.parseObject(lastLane, LAST_MERGED_LANE_FILENAME);
-      await this.scope.legacyScope.objects.writeObjectsToTheFS([laneFromBackup]);
-    } else {
-      await this.restoreMainComponents();
+    if (currentLane && !lastLane) {
+      throw new BitError(
+        `unable to abort the last lane-merge because the ${LAST_MERGED_LANE_FILENAME} is missing from ${this.path}`
+      );
     }
     const previousBitmapBuffer = await fs.readFile(this.getLastMergedBitmapPath());
     const previousBitmap = BitMap.loadFromContentWithoutLoadingFiles(previousBitmapBuffer, '', '', '');
@@ -158,6 +152,12 @@ export class LastMerged {
 
     if (!mergeAbortOpts.silent) {
       await this.mergeAbortPrompt(compDirsToRemove);
+    }
+    if (currentLane) {
+      const laneFromBackup = await BitObject.parseObject(lastLane as Buffer, LAST_MERGED_LANE_FILENAME);
+      await this.scope.legacyScope.objects.writeObjectsToTheFS([laneFromBackup]);
+    } else {
+      await this.restoreMainComponents();
     }
     await Promise.all(compDirsToRemove.map((dir) => fs.remove(dir))); // it doesn't throw if not-exist, so we're good here.
     await fs.copyFile(this.getLastMergedBitmapPath(), this.consumer.bitMap.mapPath);
@@ -201,7 +201,11 @@ ${chalk.bold('Do you want to continue? [yes(y)/no(n)]')}`,
    */
   private async restoreMainComponents() {
     const dir = this.getLastMergedMainComponentsPath();
-    const filenames: string[] = await fs.readdir(dir).catch(() => []);
+    // a snapshot of an older bit, or of a merge with no components, has no such dir
+    const filenames: string[] = await fs.readdir(dir).catch((err) => {
+      if (err.code === 'ENOENT') return [];
+      throw err;
+    });
     const modelComponents = await Promise.all(
       filenames.map(async (filename) => BitObject.parseObject(await fs.readFile(path.join(dir, filename)), filename))
     );
