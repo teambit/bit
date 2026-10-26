@@ -87,11 +87,21 @@ export class GraphFromFsBuilder {
     return this.graph;
   }
 
+  /**
+   * the ids passed by the caller are the core aspects, which are versionless - they're provided by the running bit,
+   * not installed. a dependency on one of them does carry a version (e.g. an installed env whose closure pins the
+   * core aspects it was published against), so comparing the full id lets it through the filter and the core aspect
+   * is then resolved as if it were installed. ids added while building (below) are version-specific on purpose.
+   */
+  private shouldIgnore(depId: ComponentID): boolean {
+    return this.ignoreIds.has(depId.toString()) || this.ignoreIds.has(depId.toStringWithoutVersion());
+  }
+
   private async getAllDepsUnfiltered(component: Component): Promise<ComponentID[]> {
     const deps = await this.dependencyResolver.getComponentDependencies(component);
     const depsIds = deps.map((dep) => dep.componentId);
 
-    return depsIds.filter((depId) => !this.ignoreIds.has(depId.toString()));
+    return depsIds.filter((depId) => !this.shouldIgnore(depId));
   }
 
   private async getAllDepsFiltered(component: Component): Promise<ComponentID[]> {
@@ -188,7 +198,7 @@ export class GraphFromFsBuilder {
     const deps = await this.dependencyResolver.getComponentDependencies(component);
     deps.forEach((dep) => {
       const depId = dep.componentId;
-      if (this.ignoreIds.has(depId.toString())) return;
+      if (this.shouldIgnore(depId)) return;
       if (!this.graph.hasNode(depId.toString())) {
         if (this.shouldThrowOnMissingDep) {
           throw new Error(`buildOneComponent: missing node of ${depId.toString()}`);

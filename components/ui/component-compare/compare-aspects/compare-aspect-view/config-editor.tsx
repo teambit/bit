@@ -31,9 +31,18 @@ export function ConfigDiffEditor({ original = '', modified = '', name = 'aspect 
         showHeader={false}
         collapsible={false}
         maxHeight={420}
+        contextLines={unchangedContext(original, modified)}
       />
     </div>
   );
+}
+
+/**
+ * Unlimited context when both sides are the same: an unchanged config has no change to collapse
+ * toward, so the default context would hide all of it behind a single "Expand N unchanged lines".
+ */
+export function unchangedContext(original: string, modified: string): number | undefined {
+  return original === modified ? Number.MAX_SAFE_INTEGER : undefined;
 }
 
 function CopyButton({ text, label }: { text: string; label: string }) {

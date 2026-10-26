@@ -8,7 +8,7 @@ import { APIRefSection } from '@teambit/api-reference.sections.api-reference-sec
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import { defaultNodeRenderers } from '@teambit/api-reference.renderers.default-node-renderers';
+import { defaultNodeRenderers } from './default-node-renderers';
 import { APIRefRenderersProvider } from '@teambit/api-reference.hooks.use-api-renderers';
 import type { SchemaNodeConstructor } from '@teambit/semantics.entities.semantic-schema';
 import { SchemaRegistry, Schemas } from '@teambit/semantics.entities.semantic-schema';

@@ -40,6 +40,7 @@ export type Options = {
 };
 export class AppsBuildTask implements BuildTask {
   name = BUILD_TASK;
+  readonly description = 'Building the application';
   aspectId = ApplicationAspect.id;
   readonly location = 'end';
   constructor(

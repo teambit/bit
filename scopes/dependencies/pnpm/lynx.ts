@@ -189,7 +189,7 @@ export async function getPeerDependencyIssues(
   }
 }
 
-export type RebuildFn = (opts: { pending?: boolean; skipIfHasSideEffectsCache?: boolean }) => Promise<void>;
+export type RebuildFn = (opts?: { pending?: boolean; skipIfHasSideEffectsCache?: boolean }) => Promise<void>;
 
 /**
  * A stream the engine's rendered output can be written to. `columns` is
@@ -207,6 +207,48 @@ export interface ReportOptions {
   peerDependencyRules?: PeerDependencyRules;
   /** Defaults to `process.stdout`. */
   outputStream?: OutputStream;
+}
+
+/**
+ * `@teambit/legacy` and `@teambit/harmony` are never installed: the running bit
+ * installation provides them, and Bit links them itself. Harmony is kept when
+ * the workspace forces its version, which the caller then sets as a regular
+ * override.
+ */
+function removedCoreDependencies(forcedHarmonyVersion?: string): string[] {
+  return forcedHarmonyVersion ? ['@teambit/legacy'] : ['@teambit/legacy', '@teambit/harmony'];
+}
+
+/**
+ * The overrides remove the core dependencies from every manifest the engine
+ * resolves, peer dependencies included. The `@*` selector matches only semver
+ * ranges, so the `link:` dependencies Bit's linker adds stay. A registry
+ * package declares nothing else, while a workspace project may also use
+ * `workspace:`, `file:` or `npm:` specs: `removeCoreDependencies` removes those
+ * from the workspace manifests before the install.
+ */
+export function removedCoreDependencyOverrides(forcedHarmonyVersion?: string): Record<string, string> {
+  return Object.fromEntries(removedCoreDependencies(forcedHarmonyVersion).map((name) => [`${name}@*`, '-']));
+}
+
+/**
+ * Removes the core dependencies from a workspace project's manifest, whatever
+ * their spec, except the `link:` dependencies Bit's linker adds.
+ */
+export function removeCoreDependencies<T extends PackageManifest>(manifest: T, forcedHarmonyVersion?: string): T {
+  let result = manifest;
+  for (const name of removedCoreDependencies(forcedHarmonyVersion)) {
+    const dependency = result.dependencies?.[name];
+    if (dependency != null && !dependency.startsWith('link:')) {
+      const { [name]: _removed, ...dependencies } = result.dependencies!;
+      result = { ...result, dependencies };
+    }
+    if (result.peerDependencies?.[name] != null) {
+      const { [name]: _removed, ...peerDependencies } = result.peerDependencies;
+      result = { ...result, peerDependencies };
+    }
+  }
+  return result;
 }
 
 export async function install(
@@ -273,6 +315,7 @@ export async function install(
   const overrides = {
     ...options.overrides,
   };
+  Object.assign(overrides, removedCoreDependencyOverrides(options.forcedHarmonyVersion));
   if (options.forcedHarmonyVersion) {
     // Harmony needs to be a singleton, so if a specific version was requested for the workspace,
     // we force that version accross the whole dependency graph.
@@ -299,34 +342,27 @@ export async function install(
     neverBuiltDependencies: options.neverBuiltDependencies,
   });
 
-  // The in-memory importer manifests are transformed up front (with each
-  // importer's own directory as workspaceDir). The dependency manifests are
-  // transformed lazily by the engine through the readPackageHook (which has no
-  // workspaceDir).
-  const projects: nodeApi.NodeApiProject[] = Object.entries(manifestsByPaths).map(([dir, manifest]) => ({
-    rootDir: dir,
-    manifest: applyReadPackageHooks(
-      hooks,
-      manifest as unknown as PackageManifest,
-      dir
-    ) as unknown as nodeApi.PackageManifest,
-  }));
-  // When the engine resolves a workspace project as a dependency (an injected
-  // "file:" instance), it hands the hook that project's importer manifest —
-  // which the up-front transform above already stripped of workspace-sibling
-  // deps. The instance must keep those deps (they become the component's graph
-  // edges), so substitute the project's raw manifest, identified by the
-  // lockfile-root-relative directory the engine passes for directory
-  // resolutions. pnpm's TS engine reaches the same split by keeping raw
-  // project manifests and applying the hook chain contextually.
-  const readPackageHookForDeps = (manifest: nodeApi.PackageManifest, resolvedDir?: string): nodeApi.PackageManifest => {
-    const rawManifest = resolvedDir ? manifestsByPaths[join(rootDir, resolvedDir)] : undefined;
-    const resolvedManifest = applyReadPackageHooks(
-      hooks,
-      (rawManifest ?? manifest) as unknown as PackageManifest
-    ) as unknown as nodeApi.PackageManifest;
-    return removeScriptsFromNeverBuiltPackages(resolvedManifest, scriptPolicies.neverBuildPackageNames);
-  };
+  // The importer manifests are transformed here, with each importer's own
+  // directory as workspaceDir. The engine needs no readPackage hook for the
+  // dependency manifests: the core dependencies are removed by the overrides
+  // above (and from the workspace manifests here), and a workspace project resolved as a dependency (an injected
+  // "file:" instance) gets its raw manifest through `dependencyManifest`. The
+  // instance must keep the workspace-sibling deps the importer transform
+  // strips, because they become the component's graph edges.
+  const projects: nodeApi.NodeApiProject[] = Object.entries(manifestsByPaths).map(([dir, projectManifest]) => {
+    const rawManifest = removeCoreDependencies(
+      projectManifest as unknown as PackageManifest,
+      options.forcedHarmonyVersion
+    );
+    const manifest = applyReadPackageHooks(hooks, rawManifest, dir);
+    return {
+      rootDir: dir,
+      manifest: manifest as unknown as nodeApi.PackageManifest,
+      dependencyManifest: isEqual(manifest, rawManifest)
+        ? undefined
+        : (rawManifest as unknown as nodeApi.PackageManifest),
+    };
+  });
 
   const installOptions: nodeApi.InstallOptions = {
     dir: rootDir,
@@ -431,7 +467,7 @@ export async function install(
       // install alongside `depsRequiringBuild`.
       const preInstallBitAttrs = await readBitLockfileAttrs(rootDir);
       restoreWantedLockfile = await removeWantedLockfileForUpdate(rootDir, options.updateAll);
-      installPromise = nodeApi.install(installOptions, undefined, readPackageHookForDeps, onOutput);
+      installPromise = nodeApi.install(installOptions, undefined, undefined, onOutput);
       installsRunning[rootDir] = installPromise;
       const installResult: nodeApi.InstallResult = await installPromise;
       resolvedStoreDir = installResult.storeDir;
@@ -457,9 +493,11 @@ export async function install(
   }
   return {
     dependenciesChanged,
-    // The Rust engine's rebuild rebuilds every build-needing package and does not
-    // support the pending / skipIfHasSideEffectsCache selectors of the old engine.
-    rebuild: async () => {
+    // A pending rebuild is expressed as a selection of the packages the
+    // lockfile records as needing a build.
+    rebuild: async ({ pending, skipIfHasSideEffectsCache } = {}) => {
+      const selectedNames = pending ? await pendingBuildNames(rootDir, depsRequiringBuild) : undefined;
+      if (selectedNames?.length === 0) return;
       // Reached without an install of its own after a dry run.
       prepareBuildScriptsPath(logger);
       // Same output routing as the install: the CLI server's stream has to
@@ -474,9 +512,12 @@ export async function install(
           ...installOptions,
           storeDir: resolvedStoreDir,
           reporter: options.hidePackageManagerOutput ? undefined : toReporterOptions(rebuildReportOptions),
+          // A selected package the side-effects cache already holds a build
+          // of is restored from it instead of running its scripts again.
+          skipIfHasSideEffectsCache,
         },
         undefined,
-        undefined,
+        selectedNames,
         options.hidePackageManagerOutput ? undefined : reporterOutput(rebuildReportOptions)
       );
     },
@@ -517,17 +558,14 @@ export function resolveScriptPolicies({
 }: ScriptPolicyConfig): {
   allowBuilds: Record<string, boolean | string>;
   dangerouslyAllowAllBuilds?: boolean;
-  neverBuildPackageNames?: string[];
 } {
   const allowBuilds: Record<string, boolean | string> = {};
   if (dangerouslyAllowAllScripts) {
-    if (!neverBuiltDependencies?.length) {
-      return { allowBuilds, dangerouslyAllowAllBuilds: true };
-    }
-    for (const pkg of neverBuiltDependencies) {
+    // The engine checks `allowBuilds` denials before the allow-all flag.
+    for (const pkg of neverBuiltDependencies ?? []) {
       allowBuilds[pkg] = false;
     }
-    return { allowBuilds, neverBuildPackageNames: neverBuiltDependencies };
+    return { allowBuilds, dangerouslyAllowAllBuilds: true };
   }
   for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts ?? {})) {
     if (allowedScript === true || allowedScript === false) {
@@ -549,17 +587,6 @@ export function resolveScriptPolicies({
     allowBuilds[pkg] = false;
   }
   return { allowBuilds };
-}
-
-function removeScriptsFromNeverBuiltPackages(
-  manifest: nodeApi.PackageManifest,
-  neverBuildPackageNames?: string[]
-): nodeApi.PackageManifest {
-  if (!manifest.name || !manifest.scripts || !neverBuildPackageNames?.includes(manifest.name)) return manifest;
-  return {
-    ...manifest,
-    scripts: undefined,
-  };
 }
 
 const APPROVE_BUILDS_INSTRUCTION_TEXT =
@@ -611,22 +638,16 @@ function reporterOutputStream(opts?: ReportOptions): OutputStream {
 }
 
 /**
- * This function returns the list of hooks that are passed to pnpm
- * for transforming the manifests of dependencies during installation.
+ * The transforms Bit applies to the importer manifests (the workspace projects)
+ * before passing them to pnpm. Dependency manifests are not transformed.
  */
 export function createReadPackageHooks(options: {
   rootComponents?: boolean;
   rootComponentsForCapsules?: boolean;
-  forcedHarmonyVersion?: string;
 }): ReadPackageHook[] {
   const readPackage: ReadPackageHook[] = [];
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
     readPackage.push(readPackageHook as ReadPackageHook);
-  }
-  if (!options.forcedHarmonyVersion) {
-    // If the workspace did not specify a harmony version in a root policy,
-    // then we remove harmony from any dependencies, so that the one linked from bvm is used.
-    readPackage.push(removeHarmonyFromDeps as ReadPackageHook);
   }
   if (options?.rootComponentsForCapsules) {
     readPackage.push(readPackageHookForCapsules as ReadPackageHook);
@@ -649,20 +670,6 @@ function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string)
         ...pkg.dependencies,
       },
     };
-  }
-  return pkg;
-}
-
-function removeHarmonyFromDeps(pkg: PackageManifest): PackageManifest {
-  if (pkg.dependencies != null) {
-    if (pkg.dependencies['@teambit/harmony'] && !pkg.dependencies['@teambit/harmony'].startsWith('link:')) {
-      delete pkg.dependencies['@teambit/harmony'];
-    }
-  }
-  if (pkg.peerDependencies != null) {
-    if (pkg.peerDependencies['@teambit/harmony']) {
-      delete pkg.peerDependencies['@teambit/harmony'];
-    }
   }
   return pkg;
 }
@@ -808,6 +815,38 @@ export function mergeBitLockfileAttrs(
 ): Partial<BitLockfileAttributes> | undefined {
   if (sortedDepsRequiringBuild == null) return preInstallAttrs;
   return { ...preInstallAttrs, depsRequiringBuild: sortedDepsRequiringBuild };
+}
+
+/**
+ * The packages a pending rebuild selects: the ones the install reported as
+ * needing a build, or the ones the lockfile's `bit:` block records when the
+ * install was served from the lockfile. Undefined when neither has a list,
+ * which leaves the selection to the engine.
+ *
+ * An empty recorded list is not trusted: a lockfile restored from a
+ * dependency graph that was built without build information records an
+ * empty list too, so only the install's own answer can prove there is
+ * nothing to build.
+ */
+async function pendingBuildNames(
+  rootDir: string,
+  depsRequiringBuild: string[] | undefined
+): Promise<string[] | undefined> {
+  if (depsRequiringBuild) return depsRequiringBuild.map(packageNameOfDepPath);
+  const recorded = (await readBitLockfileAttrs(rootDir))?.depsRequiringBuild;
+  return recorded?.length ? recorded.map(packageNameOfDepPath) : undefined;
+}
+
+/**
+ * `@scope/name@1.0.0(peer@2.0.0)` -> `@scope/name`. The engine matches a
+ * rebuild selection by package name. A package name carries no `@` past its
+ * scope prefix, while a version may (a git or tarball resolution such as
+ * `git+ssh://git@github.com/...`), so the name ends at the first `@` after
+ * the start.
+ */
+export function packageNameOfDepPath(depPath: string): string {
+  const versionAt = depPath.indexOf('@', 1);
+  return versionAt > 0 ? depPath.slice(0, versionAt) : depPath.replace(/\(.*$/, '');
 }
 
 /**

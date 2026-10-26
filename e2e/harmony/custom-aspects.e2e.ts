@@ -1,4 +1,7 @@
 import chai, { expect } from 'chai';
+import { execSync } from 'child_process';
+import { createRequire } from 'module';
+import path from 'path';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 
@@ -168,6 +171,71 @@ describe('custom aspects', function () {
       });
     });
   });
+  // slot-owner has a slot, registrar registers into it and app-aspect depends on both. app-aspect and slot-owner got a
+  // new version, while registrar is still pinned to slot-owner@0.0.1. loading app-aspect from the scope must create
+  // one instance of slot-owner, otherwise, registrar registers into a slot that app-aspect never reads.
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'loading an aspect from the scope when its dependencies pin different versions of the same aspect',
+    () => {
+      let npmCiRegistry: NpmCiRegistry;
+      let output: string;
+      before(async () => {
+        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        npmCiRegistry = new NpmCiRegistry(helper);
+        await npmCiRegistry.init();
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        const scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
+        helper.fixtures.createAspect('slot-owner');
+        helper.fixtures.createAspect('registrar');
+        helper.fixtures.createAspect('app-aspect');
+        helper.fs.outputFile(`${scopeWithoutOwner}/slot-owner/slot-owner.main.runtime.ts`, getSlotOwnerAspect());
+        helper.fs.outputFile(
+          `${scopeWithoutOwner}/registrar/registrar.main.runtime.ts`,
+          getRegistrarAspect(scopeWithoutOwner)
+        );
+        helper.fs.outputFile(
+          `${scopeWithoutOwner}/app-aspect/app-aspect.main.runtime.ts`,
+          getAppAspect(scopeWithoutOwner)
+        );
+        helper.extensions.addExtensionToVariant('*', 'teambit.harmony/aspect');
+        helper.command.compile();
+        helper.command.install();
+        helper.command.tagAllComponents('--skip-tasks ExtractSchema');
+        helper.command.export();
+        // tag a new version of slot-owner and app-aspect. registrar is not in this workspace, so it stays on 0.0.1
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+        helper.command.importComponent('slot-owner');
+        helper.command.importComponent('app-aspect');
+        helper.command.tagAllComponents('--unmodified --skip-tasks ExtractSchema');
+        helper.command.export();
+
+        // load the aspect from the bare remote scope, the same way a scope-side build does
+        helper.fs.outputFile('load-aspect.js', getLoadAspectScript());
+        const scriptPath = path.join(helper.scopes.localPath, 'load-aspect.js');
+        try {
+          output = execSync(`node ${scriptPath} ${helper.scopes.remotePath} ${helper.scopes.remote}/app-aspect@0.0.2`, {
+            encoding: 'utf8',
+            stdio: 'pipe',
+          });
+        } catch (err: any) {
+          output = `${err.stdout}\n${err.stderr}`;
+        }
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      it('should load slot-owner once, in the version app-aspect depends on', () => {
+        const providerRuns = output.split('\n').filter((line) => line.startsWith('slot-owner provider'));
+        expect(providerRuns, output).to.deep.equal([`slot-owner provider ${helper.scopes.remote}/slot-owner@0.0.2`]);
+      });
+      it('should let app-aspect read what registrar registered', () => {
+        expect(output).to.have.string('app-aspect sees: ["registrar"]');
+      });
+    }
+  );
 });
 
 function getEnvRuntimeMain(remoteScope: string) {
@@ -255,4 +323,88 @@ function getMainAspectWithRegularDep(remoteScope: string) {
 
   MainAspectAspect.addRuntime(MainAspectMain);
   `;
+}
+
+function getSlotOwnerAspect() {
+  return `import { MainRuntime } from '@teambit/cli';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+import { SlotOwnerAspect } from './slot-owner.aspect';
+
+export class SlotOwnerMain {
+  constructor(private slot: SlotRegistry<string>) {}
+  register(name: string) {
+    this.slot.register(name);
+  }
+  list() {
+    return this.slot.values();
+  }
+  static slots = [Slot.withType<string>()];
+  static dependencies = [];
+  static runtime = MainRuntime;
+  static async provider(_deps: [], _config: any, [slot]: [SlotRegistry<string>]) {
+    console.log('slot-owner provider ' + SlotOwnerAspect.id);
+    return new SlotOwnerMain(slot);
+  }
+}
+
+SlotOwnerAspect.addRuntime(SlotOwnerMain);
+`;
+}
+
+function getRegistrarAspect(remoteScope: string) {
+  return `import { MainRuntime } from '@teambit/cli';
+import { SlotOwnerAspect, SlotOwnerMain } from '@ci/${remoteScope}.slot-owner';
+import { RegistrarAspect } from './registrar.aspect';
+
+export class RegistrarMain {
+  static slots = [];
+  static dependencies = [SlotOwnerAspect];
+  static runtime = MainRuntime;
+  static async provider([slotOwner]: [SlotOwnerMain]) {
+    slotOwner.register('registrar');
+    return new RegistrarMain();
+  }
+}
+
+RegistrarAspect.addRuntime(RegistrarMain);
+`;
+}
+
+function getAppAspect(remoteScope: string) {
+  return `import { MainRuntime } from '@teambit/cli';
+import { SlotOwnerAspect, SlotOwnerMain } from '@ci/${remoteScope}.slot-owner';
+import { RegistrarAspect } from '@ci/${remoteScope}.registrar';
+import { AppAspectAspect } from './app-aspect.aspect';
+
+export class AppAspectMain {
+  static slots = [];
+  static dependencies = [SlotOwnerAspect, RegistrarAspect];
+  static runtime = MainRuntime;
+  static async provider([slotOwner]: [SlotOwnerMain]) {
+    console.log('app-aspect sees: ' + JSON.stringify(slotOwner.list()));
+    return new AppAspectMain();
+  }
+}
+
+AppAspectAspect.addRuntime(AppAspectMain);
+`;
+}
+
+/**
+ * a script that loads an aspect in a bare scope. it runs outside of this repo, so it requires bit by an absolute path.
+ */
+function getLoadAspectScript() {
+  // @ts-ignore
+  const bitPath = createRequire(import.meta.url).resolve('@teambit/bit');
+  return `const { loadBit } = require('${bitPath}');
+const [, , scopePath, aspectId] = process.argv;
+(async () => {
+  const harmony = await loadBit(scopePath);
+  await harmony.get('teambit.scope/scope').loadAspects([aspectId], true);
+  process.exit(0);
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+`;
 }

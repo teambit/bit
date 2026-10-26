@@ -5,7 +5,7 @@ import { H4 } from '@teambit/documenter.ui.heading';
 import { BlockSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { DiffViewer } from '@teambit/code.ui.diff-viewer';
 import type { ComponentAspectData } from '@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model';
-import { ConfigDiffEditor } from './config-editor';
+import { ConfigDiffEditor, unchangedContext } from './config-editor';
 import styles from './compare-aspect-view.module.scss';
 
 export type CompareAspectViewProps = {
@@ -70,6 +70,7 @@ export function CompareAspectView({
               showHeader={false}
               collapsible={false}
               maxHeight={420}
+              contextLines={unchangedContext(originalData, modifiedData)}
             />
           )}
         </div>

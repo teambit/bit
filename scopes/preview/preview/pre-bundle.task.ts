@@ -15,6 +15,7 @@ export const BUNDLE_DIR = 'ui-bundle';
 export class PreBundlePreviewTask implements BuildTask {
   aspectId = PreviewAspect.id;
   name = BUNDLE_TASK_NAME;
+  readonly description = 'Pre-bundling the preview of the UI runtime';
   location: TaskLocation = 'end';
 
   constructor(

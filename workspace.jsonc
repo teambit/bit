@@ -28,11 +28,6 @@
         "@teambit/env": "1.0.1107",
         "@teambit/mdx": "1.0.1108",
         "@teambit/readme": "1.0.1108",
-        // react-env reads "@teambit/react/typescript/tsconfig.json" when it builds its compiler, and
-        // react is no longer a workspace component here, so the package has to come from the
-        // registry like the former core envs above. It used to arrive as a transitive dependency of
-        // another env's root component, which made the omission invisible.
-        "@teambit/react": "1.0.1201",
         "@babel/core": "7.28.3",
         "@babel/plugin-proposal-decorators": "7.28.0",
         "@babel/plugin-transform-class-properties": "7.27.1",
@@ -67,7 +62,7 @@
         "@pnpm/deps.path": "1100.1.0",
         "@pnpm/error": "1100.1.1",
         "@pnpm/lockfile.types": "1100.0.19",
-        "@pnpm/napi": "12.9.0",
+        "@pnpm/napi": "12.13.0",
         "@pnpm/network.ca-file": "3.0.3",
         "@pnpm/network.fetch": "1100.1.11",
         "@pnpm/node-fetch": "^1.0.0",
@@ -79,8 +74,8 @@
         "@rspack/core": "^1.7.7",
         "@rspack/dev-server": "1.2.1",
         "@rspack/plugin-react-refresh": "1.6.0",
-        "@shikijs/engine-javascript": "^3.0.0",
-        "@shikijs/langs": "^3.0.0",
+        "@shikijs/engine-javascript": "^4.5.0",
+        "@shikijs/langs": "^4.5.0",
         "@svgr/webpack": "8.1.0",
         "@teambit/any-fs": "0.0.5",
         "@teambit/api-reference.explorer.api-reference-explorer": "~0.0.41",
@@ -94,7 +89,6 @@
         "@teambit/api-reference.renderers.api-node-details": "~0.0.89",
         "@teambit/api-reference.renderers.class": "~0.0.92",
         "@teambit/api-reference.renderers.decorator": "~0.0.46",
-        "@teambit/api-reference.renderers.default-node-renderers": "~0.0.39",
         "@teambit/api-reference.renderers.enum": "~0.0.90",
         "@teambit/api-reference.renderers.function": "~0.0.93",
         "@teambit/api-reference.renderers.grouped-schema-nodes-summary": "~0.0.88",
@@ -164,7 +158,7 @@
         "@teambit/community.starters.hello-world": "^0.1.2",
         "@teambit/compilation.babel-compiler": "^1.1.18",
         "@teambit/compilation.content.compiler-overview": "1.96.22",
-        "@teambit/component-id": "^1.2.4",
+        "@teambit/component-id": "^1.2.5",
         "@teambit/component-version": "^1.0.4",
         "@teambit/component.content.component-overview": "^1.96.10",
         "@teambit/component.content.dev-files": "1.96.6",
@@ -282,7 +276,7 @@
         "@teambit/gitconfig": "2.0.10",
         "@teambit/graph.cleargraph": "0.0.11",
         "@teambit/harmony": "0.4.12",
-        "@teambit/harmony.envs.core-aspect-env": "2.1.1",
+        "@teambit/harmony.envs.core-aspect-env": "2.1.2",
         "@teambit/html.modules.inject-html-element": "0.0.6",
         "@teambit/lane-id": "~0.0.312",
         "@teambit/lanes.ui.icons.lane-icon": "~0.0.9",
@@ -290,7 +284,7 @@
         "@teambit/lanes.ui.menus.lanes-overview-menu": "~0.0.11",
         "@teambit/lanes.ui.menus.use-lanes-menu": "~0.0.299",
         "@teambit/lanes.ui.navigation.lane-switcher": "~0.0.239",
-        "@teambit/legacy-bit-id": "^1.1.3",
+        "@teambit/legacy-bit-id": "^1.1.4",
         "@teambit/mdx.compilers.mdx-multi-compiler": "^2.0.46",
         "@teambit/mdx.generator.mdx-templates": "^1.0.14",
         "@teambit/mdx.modules.mdx-pre-loader": "~0.0.1",
@@ -311,7 +305,7 @@
         "@teambit/react.instructions.react.adding-tests": "0.0.7",
         "@teambit/react.jest.react-jest": "^1.0.38",
         "@teambit/react.rendering.ssr": "^1.0.5",
-        "@teambit/react.ui.component-highlighter": "0.2.8",
+        "@teambit/react.ui.component-highlighter": "0.2.10",
         "@teambit/react.ui.highlighter.component-metadata.bit-component-meta": "0.0.45",
         "@teambit/react.webpack.react-webpack": "^1.0.56",
         "@teambit/scope.content.scope-overview": "1.96.8",
@@ -549,7 +543,7 @@
         "junit-report-builder": "3.0.1",
         "less": "^4.1.1",
         "lint-staged": "^12.5.0",
-        "lodash": "4.17.21",
+        "lodash": "4.18.1",
         "lodash.compact": "3.0.1",
         "lodash.head": "4.0.1",
         "lodash.partition": "4.6.0",
@@ -629,7 +623,7 @@
         "semver-intersect": "1.4.0",
         "semver-range-intersect": "0.3.1",
         "serialize-error": "5.0.0",
-        "shiki": "^3.0.0",
+        "shiki": "^4.5.0",
         "simple-git": "^3.28.0",
         "sinon": "17.0.1",
         "socks-proxy-agent": "5.0.0",
@@ -702,7 +696,10 @@
       "react-router-dom@6": "^6.30.1",
       "subscriptions-transport-ws@0.9": "^0.9.19",
       "@teambit/base-react.navigation.link@2": "2.0.33",
-      "lodash@4": "4.17.21",
+      "lodash@4": "4.18.1",
+      // collapse all 1.x copies to the versions without lodash, avoiding duplicate ComponentID classes at runtime.
+      "@teambit/component-id@1": "1.2.5",
+      "@teambit/legacy-bit-id@1": "1.1.4",
       "trim@0": "0.0.3",
       "@teambit/harmony": "0.4.12",
       "@types/fs-capacitor": "2.0.0",
@@ -899,6 +896,18 @@
             // Not imported: the aspect only puts its bin on PATH for the build
             // scripts of installed dependencies, so it has to be declared here.
             "node-gyp": "11.5.0"
+          }
+        }
+      }
+    },
+    "components/legacy/e2e-helper": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            // the excluded-fixtures hold env templates that are copied into the e2e workspaces,
+            // where their imports are installed. react is no longer a core aspect resolving to a
+            // component here, so without this the import reads as a missing dependency of the helper.
+            "@teambit/react": "-"
           }
         }
       }

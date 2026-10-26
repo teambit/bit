@@ -19,8 +19,8 @@ import type { LoggerMain, Logger } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { DiffOptions, DiffResults, FieldsDiff, FileDiff } from '@teambit/legacy.component-diff';
 import { getFilesDiff, diffBetweenComponentsObjects } from '@teambit/legacy.component-diff';
-import type { TesterMain } from '@teambit/tester';
-import { TesterAspect } from '@teambit/tester';
+import type { DevFilesMain } from '@teambit/dev-files';
+import { DevFilesAspect } from '@teambit/dev-files';
 import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import type { SchemaMain } from '@teambit/schema';
@@ -65,12 +65,18 @@ type ConfigDiff = {
  */
 const PERSISTENT_CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 
+/**
+ * the tester registers the test files in dev-files under its aspect id. it's used as a string, because the tester
+ * aspect is higher than this aspect (its UI registers into component-compare).
+ */
+const TESTER_ASPECT_ID = 'teambit.defender/tester';
+
 export class ComponentCompareMain {
   constructor(
     private componentAspect: ComponentMain,
     private scope: ScopeMain,
     private logger: Logger,
-    private tester: TesterMain,
+    private devFiles: DevFilesMain,
     private depResolver: DependencyResolverMain,
     private importer: ImporterMain,
     private schema: SchemaMain,
@@ -83,6 +89,11 @@ export class ComponentCompareMain {
   // on a cold load). Persisted results survive restarts via the global `@teambit/cache` aspect.
   private compareInflight = new Map<string, Promise<ComponentCompareResult>>();
   private apiDiffInflight = new Map<string, Promise<Record<string, any> | null>>();
+
+  private getTestFiles(component: Component): string[] {
+    const testFiles = this.devFiles.getDevFiles(component).get(TESTER_ASPECT_ID);
+    return component.state.filesystem.files.map((file) => file.relative).filter((file) => testFiles.includes(file));
+  }
 
   /**
    * Read-through cache with single-flight dedupe: serve a persisted result, else share an in-flight
@@ -214,10 +225,8 @@ export class ComponentCompareMain {
           fieldsDiff: [],
         };
 
-    const baseTestFiles =
-      (baseComponent && (await this.tester.getTestFiles(baseComponent).map((file) => file.relative))) || [];
-    const compareTestFiles =
-      (compareComponent && (await this.tester.getTestFiles(compareComponent).map((file) => file.relative))) || [];
+    const baseTestFiles = (baseComponent && this.getTestFiles(baseComponent)) || [];
+    const compareTestFiles = (compareComponent && this.getTestFiles(compareComponent)) || [];
 
     const allTestFiles = [...baseTestFiles, ...compareTestFiles];
 
@@ -592,7 +601,7 @@ export class ComponentCompareMain {
     LoggerAspect,
     CLIAspect,
     WorkspaceAspect,
-    TesterAspect,
+    DevFilesAspect,
     DependencyResolverAspect,
     ImporterAspect,
     SchemaAspect,
@@ -606,7 +615,7 @@ export class ComponentCompareMain {
     loggerMain,
     cli,
     workspace,
-    tester,
+    devFiles,
     depResolver,
     importer,
     schema,
@@ -618,7 +627,7 @@ export class ComponentCompareMain {
     LoggerMain,
     CLIMain,
     Workspace,
-    TesterMain,
+    DevFilesMain,
     DependencyResolverMain,
     ImporterMain,
     SchemaMain,
@@ -629,7 +638,7 @@ export class ComponentCompareMain {
       component,
       scope,
       logger,
-      tester,
+      devFiles,
       depResolver,
       importer,
       schema,

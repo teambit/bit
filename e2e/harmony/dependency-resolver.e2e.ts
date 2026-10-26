@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
+import yaml from 'js-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import rimraf from 'rimraf';
 import { Extensions } from '@teambit/legacy.constants';
@@ -266,6 +267,30 @@ describe('dependency-resolver extension', function () {
       it('should run pnpm with the specified hoist pattern', () => {
         expect(modulesState?.hoistPattern).to.deep.eq(['hoist-pattern']);
       });
+    });
+  });
+  describe('install without readPackage hooks', function () {
+    let lockfile: any;
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.reInitWorkspace();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/pnpm');
+      helper.command.install('is-positive@1.0.0');
+      lockfile = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')) as any;
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    // Bit passes no readPackage hooks, so there is no checksum to record. A hook pnpm cannot
+    // fingerprint would make it resolve every dependency again on each install.
+    it('should record no pnpmfileChecksum', () => {
+      expect(lockfile).to.not.have.property('pnpmfileChecksum');
+    });
+    it('should record the override that removes @teambit/legacy from the dependencies', () => {
+      expect(lockfile.overrides).to.have.property('@teambit/legacy@*', '-');
+    });
+    it('should not mark a readPackage hook as untracked', () => {
+      expect(lockfile).to.not.have.property('untrackedPnpmfileReadPackageHook');
     });
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('env.jsonc with policy.peer version="+"', () => {

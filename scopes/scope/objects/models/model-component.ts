@@ -12,8 +12,8 @@ import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '@teambit/legacy.constants';
-import type { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
-import { ConsumerComponent, SchemaName } from '@teambit/legacy.consumer-component';
+import type { Dependencies } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent, Dependency, SchemaName } from '@teambit/legacy.consumer-component';
 import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
 import { ComponentOverrides, getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 import { ValidationError } from '@teambit/legacy.cli.error';
@@ -1188,6 +1188,7 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     // ConsumerComponent instance is changed, the Version will be changed as well, and since
     // the Version instance is saved in the Repository._cache, the next time a Version instance
     // is retrieved, it'll be different than the first time.
+    let flattenedDependencies: ComponentIdList | undefined;
     const consumerComponent = new ConsumerComponent({
       name: this.name,
       version: componentVersion.version,
@@ -1196,10 +1197,12 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       lang: this.lang,
       bindingPrefix: this.bindingPrefix,
       mainFile: version.mainFile,
-      dependencies: this.addDepsInfoFromDepsResolver(version.dependencies, extensions),
-      devDependencies: this.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
-      // a new list, but the ids themselves are immutable, no need to clone them
-      flattenedDependencies: ComponentIdList.fromArray(version.flattenedDependencies),
+      dependencies: Component.addDepsInfoFromDepsResolver(version.dependencies, extensions),
+      devDependencies: Component.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
+      peerDependencies: this.getPeerDepsFromDepsResolver(version, extensions),
+      // built on first read and shared with clones (which copy this loader). a failed load is not kept, so it throws again.
+      loadFlattenedDependencies: () =>
+        (flattenedDependencies ??= ComponentIdList.fromArray(version.loadFlattenedDependenciesSync(repository))),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
@@ -1222,9 +1225,13 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     return consumerComponent;
   }
 
-  private addDepsInfoFromDepsResolver(dependencies: Dependencies, extensions: ExtensionDataList): Dependency[] {
+  /**
+   * a Version has the package names of its component dependencies in the dependency-resolver data only. returns copies
+   * of the dependencies with their package names.
+   */
+  static addDepsInfoFromDepsResolver(dependencies: Dependencies, extensions: ExtensionDataList): Dependency[] {
     const cloned = dependencies.getClone();
-    const depsResolverData = extensions.find((ext) => ext.name === 'teambit.dependencies/dependency-resolver');
+    const depsResolverData = extensions.findCoreExtension(Extensions.dependencyResolver);
     if (!depsResolverData) return cloned;
     cloned.forEach((dependency) => {
       if (dependency.packageName) return;
@@ -1236,6 +1243,30 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       }
     });
     return cloned;
+  }
+
+  /**
+   * component peer-dependencies (e.g. a component set as a peer in env.jsonc) are not saved in the legacy fields of
+   * the Version object, only in the dependency-resolver data. restore them, otherwise, any flow that re-calculates the
+   * dependency-resolver data out of this ConsumerComponent, drops them. e.g. a snap/tag from a bare scope, which is
+   * what happens when a lane is merged and released on the remote.
+   */
+  private getPeerDepsFromDepsResolver(version: Version, extensions: ExtensionDataList): Dependency[] {
+    const entries: Array<Record<string, any>> =
+      extensions.findCoreExtension(Extensions.dependencyResolver)?.data?.dependencies || [];
+    const peerEntries = entries.filter(
+      (entry) => entry.__type === 'component' && entry.lifecycle === 'peer' && entry.componentId
+    );
+    if (!peerEntries.length) return [];
+    const runtimeAndDevDeps = [...version.dependencies.get(), ...version.devDependencies.get()];
+    const isRuntimeOrDevDep = (id: ComponentID) => runtimeAndDevDeps.some((dep) => dep.id.isEqualWithoutVersion(id));
+    return peerEntries
+      .map((entry) => {
+        const id =
+          entry.componentId instanceof ComponentID ? entry.componentId : ComponentID.fromObject(entry.componentId);
+        return new Dependency(id, [], entry.packageName, entry.versionRange);
+      })
+      .filter((dependency) => !isRuntimeOrDevDep(dependency.id));
   }
 
   // @todo: make sure it doesn't have the same ref twice, once as a version and once as a head

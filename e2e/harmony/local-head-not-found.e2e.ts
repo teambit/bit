@@ -50,17 +50,21 @@ describe('local head Version object is missing from scope', function () {
   describe('the head Version object is missing locally while the remote has it', () => {
     // the state a fetch leaves behind when it completes while the remote is mid-export
     let head: string;
+    let authorWorkspace: string;
+    let consumerWorkspace: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
+      authorWorkspace = helper.scopeHelper.cloneWorkspace();
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       // objects only: the component is loaded from the scope, the way an env or an aspect is
       helper.command.importComponent('comp1', '--objects');
       head = helper.command.getHead(`${helper.scopes.remote}/comp1`);
       helper.fs.deleteObject(helper.general.getHashPathOfObject(head));
+      consumerWorkspace = helper.scopeHelper.cloneWorkspace();
     });
     it('should fetch the missing Version object rather than fail', () => {
       const output = helper.command.showComponent(`${helper.scopes.remote}/comp1`);
@@ -69,6 +73,21 @@ describe('local head Version object is missing from scope', function () {
     it('should write the fetched Version object to the local scope', () => {
       const objectPath = path.join(helper.scopes.localPath, '.bit/objects', helper.general.getHashPathOfObject(head));
       expect(objectPath).to.be.a.file();
+    });
+    describe('and the remote head has moved on since', () => {
+      // fetching the missing Version updates the local component object to the newer remote head, which is not fetched.
+      // the component must be loaded in the version it was resolved to, not in the newer head.
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(authorWorkspace);
+        helper.fixtures.populateComponents(1, false, 'v2');
+        helper.command.tagAllWithoutBuild();
+        helper.command.export();
+        helper.scopeHelper.getClonedWorkspace(consumerWorkspace);
+      });
+      it('should load the version it fetched rather than fail on the newer head', () => {
+        const output = helper.command.showComponent(`${helper.scopes.remote}/comp1`);
+        expect(output).to.have.string('comp1@0.0.1');
+      });
     });
   });
   describe('bit envs with a component on a core env', () => {

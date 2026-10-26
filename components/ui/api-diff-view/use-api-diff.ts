@@ -1,6 +1,9 @@
-import { gql } from '@apollo/client';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
+import { useContext, useEffect } from 'react';
+import { gql, useQuery } from '@apollo/client';
+import { NotificationContext } from '@teambit/ui-foundation.ui.notifications.notification-context';
+import { isUnsupportedQueryError } from '@teambit/ui-foundation.ui.hooks.use-bulk-paged-query';
 import type { APIDiffResult } from './api-diff-model';
+import { UNSUPPORTED_API_DIFF } from './api-diff-model';
 
 const API_DIFF_CHANGE_FIELDS = `
   status
@@ -70,18 +73,34 @@ export type UseApiDiffOptions = {
 };
 
 export type UseApiDiffResult = {
-  /** undefined while loading, null when the server could not compute the diff at all */
+  /**
+   * undefined while loading, null when the server could not compute the diff at all, and
+   * `UNSUPPORTED_API_DIFF` when the server has no API diff support (see `unsupported`).
+   */
   result: APIDiffResult | null | undefined;
   loading?: boolean;
   error?: string;
+  /** the server's GraphQL schema has no API diff support, e.g. an older backend. */
+  unsupported?: boolean;
 };
 
 export function useApiDiff(baseId?: string, compareId?: string, options?: UseApiDiffOptions): UseApiDiffResult {
   const skip = options?.skip || !baseId || !compareId || baseId === compareId;
-  const { data, loading, error } = useDataQuery<{ getHost: { apiDiff: APIDiffResult | null } }>(API_DIFF_QUERY, {
+  // raw `useQuery` rather than `useDataQuery`: that wrapper toasts every error, and a backend without API
+  // diff support is an expected state shown inline, not an error to pop up. Other errors still toast.
+  const { data, loading, error } = useQuery<{ getHost: { apiDiff: APIDiffResult | null } }>(API_DIFF_QUERY, {
     variables: { baseId: baseId || '', compareId: compareId || '', host: options?.host },
     skip,
   });
+  const unsupported = !skip && isUnsupportedQueryError(error);
+
+  const notifications = useContext(NotificationContext);
+  useEffect(() => {
+    if (error && !unsupported) notifications?.error(error.message);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error, unsupported]);
+
+  if (unsupported) return { result: UNSUPPORTED_API_DIFF, loading: false, unsupported: true };
 
   return {
     result: data ? (data.getHost?.apiDiff ?? null) : undefined,

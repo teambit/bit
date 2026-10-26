@@ -1,4 +1,4 @@
-import { join } from 'path';
+import path, { join } from 'path';
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR, DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
@@ -14,6 +14,8 @@ import type { LoadSpan } from '@teambit/harmony.modules.load-trace';
 import { startOrJoinLoadTrace, reportLoadFailure } from '@teambit/harmony.modules.load-trace';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { ComponentID } from '@teambit/component-id';
+import { snapToSemver } from '@teambit/component-package-version';
+import { getRootComponentDir } from '@teambit/workspace.root-components';
 import { ComponentNotFound } from '@teambit/legacy.scope';
 import pMapSeries from 'p-map-series';
 import { difference, compact, groupBy, partition, uniq } from 'lodash';
@@ -826,6 +828,33 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   }
 
   /**
+   * the dir to load the aspect from. for an aspect that is not in the workspace and whose version has no root dir
+   * (e.g. it was imported with --skip-dependency-installation), getComponentPackagePath falls back to the root
+   * node_modules, which may have another version of the same package. loading it runs that version's code as the
+   * requested one, e.g. a component configured with env@2 is snapped with the package.json props of env@1.
+   * in this case, return the root dir of the requested version. it doesn't exist, so the aspect fails to load like
+   * any aspect that is not installed (blocking the tag of components using it as an env) and "bit install" fixes it.
+   */
+  private async getAspectPackagePath(component: Component): Promise<string> {
+    const packagePath = await this.workspace.getComponentPackagePath(component);
+    const version = component.id.version;
+    if (
+      !version ||
+      !this.dependencyResolver.hasRootComponents() ||
+      this.workspace.hasId(component.id, { ignoreVersion: true })
+    ) {
+      return packagePath;
+    }
+    const installedVersion = (await fs.readJson(path.join(packagePath, 'package.json')).catch(() => undefined))
+      ?.version;
+    if (!installedVersion || installedVersion === snapToSemver(version)) return packagePath;
+    const idStr = component.id.toString();
+    this.logger.warn(`not loading ${idStr} from ${packagePath}, which has version ${installedVersion} of the package`);
+    const packageName = this.dependencyResolver.getPackageName(component);
+    return path.join(getRootComponentDir(this.workspace.rootComponentsPath, idStr), 'node_modules', packageName);
+  }
+
+  /**
    * This will return a resolver that knows to resolve aspects which are part of the workspace.
    * means aspects exist in the bitmap file
    * @param stringIds
@@ -836,7 +865,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     const workspaceAspectResolver = async (component: Component): Promise<ResolvedAspect> => {
       const compStringId = component.id.toString();
       stringIds.push(compStringId);
-      const localPath = await this.workspace.getComponentPackagePath(component);
+      const localPath = await this.getAspectPackagePath(component);
 
       const runtimePath = runtimeName
         ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName)
@@ -964,7 +993,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       // path (the package dir in the workspace node_modules) is version-agnostic anyway.
       const aspectIdWithoutVersion = aspectComponent.id.toStringWithoutVersion();
       if (rootIds.some((rootId) => rootId === aspectStringId || rootId.split('@')[0] === aspectIdWithoutVersion)) {
-        const localPath = await this.workspace.getComponentPackagePath(aspectComponent);
+        const localPath = await this.getAspectPackagePath(aspectComponent);
         this.resolvedInstalledAspects.set(aspectStringId, localPath);
         return localPath;
       }
@@ -975,7 +1004,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       // while the bitmap stores it versionless (or at another version), and the workspace has a
       // single instance of the component either way.
       if (this.workspace.hasId(aspectComponent.id, { ignoreVersion: true })) {
-        const localPath = await this.workspace.getComponentPackagePath(aspectComponent);
+        const localPath = await this.getAspectPackagePath(aspectComponent);
         this.resolvedInstalledAspects.set(aspectStringId, localPath);
         return localPath;
       }
@@ -1222,7 +1251,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   }
 
   private async shouldLoadFromRootComps(component: Component): Promise<boolean> {
-    const rootDir = await this.workspace.getComponentPackagePath(component);
+    const rootDir = await this.getAspectPackagePath(component);
     const rootDirExist = await fs.pathExists(rootDir);
     const aspectFilePath = await this.aspectLoader.getAspectFilePath(component, rootDir);
     const aspectFilePathExist = aspectFilePath ? await fs.pathExists(aspectFilePath) : false;

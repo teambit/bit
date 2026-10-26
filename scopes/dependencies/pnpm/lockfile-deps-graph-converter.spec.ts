@@ -1,6 +1,7 @@
 import path from 'path';
 import { ComponentID } from '@teambit/component';
 import { DependenciesGraph, type PackagesMap, type DependencyEdge } from '@teambit/objects';
+import { type ProjectManifest } from '@pnpm/types';
 import {
   convertLockfileToGraph,
   convertGraphToLockfile,
@@ -220,8 +221,15 @@ describe('convertLockfileToGraph simple case', () => {
     },
   };
   it('should convert the lockfile object to the graph object', () => {
+    // The lockfile records no pnpmfileChecksum. Whether the graph then has the
+    // property set to undefined or not at all depends on how the class is
+    // compiled, so it is checked on its own.
+    const { pnpmfileChecksum, lockfileSettings, overrides, ...graphFields } = graph;
+    expect(pnpmfileChecksum).to.equal(undefined);
+    expect(lockfileSettings).to.equal(undefined);
+    expect(overrides).to.equal(undefined);
     expect({
-      ...graph,
+      ...graphFields,
       packages: Object.fromEntries(graph.packages.entries()),
     }).to.eql(expected);
   });
@@ -1188,5 +1196,311 @@ describe('convertGraphToLockfile on invalid graph', () => {
     expect(error?.message).eq(
       `Failed to generate a valid lockfile. The "packages['foo@1.0.0']" entry doesn't have a "resolution" field.`
     );
+  });
+});
+
+// A graph is stored by a workspace whose root may provide a different version of a package than
+// the root of the install restoring it (the capsules root pins the env's peers). pnpm resolves
+// peers from the root and dedupes satisfiable ranges to it, so the restored lockfile must not keep
+// the workspace's other version next to the root's one.
+describe('convertGraphToLockfile with a root manifest that provides a package the graph resolved to another version', () => {
+  const rootDir = process.cwd();
+  const compDir = path.resolve('comps/comp1');
+  const helmetSnapshot = '@types/react-helmet@6.1.6';
+  const peerSnapshot = 'react-types-peer@1.0.0(@types/react@18.2.23)';
+  const resolve = (async () => ({ resolution: { integrity: '0000' } })) as any;
+  function createGraph(
+    opts: { peerKeyed?: boolean; overrides?: Record<string, string>; typesReactUnresolved?: boolean } = {}
+  ) {
+    const typesReactDep = opts.peerKeyed ? peerSnapshot : '@types/react@18.2.23';
+    const packages: PackagesMap = new Map([
+      [helmetSnapshot, { resolution: { integrity: 'sha512-helmet' } } as any],
+      [
+        '@types/react@18.2.23',
+        (opts.typesReactUnresolved ? {} : { resolution: { integrity: 'sha512-react18' } }) as any,
+      ],
+      [
+        'react-types-peer@1.0.0',
+        { resolution: { integrity: 'sha512-peer' }, peerDependencies: { '@types/react': '*' } } as any,
+      ],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [{ id: helmetSnapshot, name: '@types/react-helmet', specifier: '6.1.6', lifecycle: 'dev' }],
+      },
+      { id: helmetSnapshot, neighbours: [{ id: typesReactDep }] },
+      { id: peerSnapshot, attr: { pkgId: 'react-types-peer@1.0.0' }, neighbours: [{ id: '@types/react@18.2.23' }] },
+    ];
+    return new DependenciesGraph({ packages, edges, overrides: opts.overrides });
+  }
+  function convert(rootManifest: ProjectManifest, graph = createGraph()) {
+    return convertGraphToLockfile(graph, {
+      manifests: { [rootDir]: rootManifest, [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } } },
+      rootDir,
+      resolve,
+    });
+  }
+
+  it('should drop a reference to another version of a package the root pins, so the install resolves it to the root version', async () => {
+    const lockfile = await convert({ dependencies: { '@types/react': '17.0.87' } });
+    expect(lockfile.snapshots![helmetSnapshot]).to.eql({ dependencies: {} });
+    expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
+    expect(lockfile.snapshots!['@types/react@18.2.23']).to.equal(undefined);
+  });
+
+  it('should drop a peer resolution of the other version', async () => {
+    const lockfile = await convert({ dependencies: { '@types/react': '17.0.87' } }, createGraph({ peerKeyed: true }));
+    expect(lockfile.snapshots![peerSnapshot]).to.eql({ dependencies: {} });
+    expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
+  });
+
+  it('should keep a regular dependency when the root specifier is a range, a tag or a link', async () => {
+    for (const specifier of ['^17.0.0', 'latest', 'link:../types-react']) {
+      const lockfile = await convert({ dependencies: { '@types/react': specifier } });
+      expect(lockfile.snapshots![helmetSnapshot], specifier).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+    }
+  });
+
+  it('should drop a peer resolution whatever the root specifier is, since pnpm resolves peers from the root', async () => {
+    for (const specifier of ['^17.0.0', 'latest', 'link:../types-react', 'npm:@types/react@17.0.87']) {
+      const lockfile = await convert({ dependencies: { '@types/react': specifier } }, createGraph({ peerKeyed: true }));
+      expect(lockfile.snapshots![peerSnapshot], specifier).to.eql({ dependencies: {} });
+      expect(lockfile.packages!['@types/react@18.2.23'], specifier).to.equal(undefined);
+    }
+  });
+
+  it('should keep the reference when it is already the root version, however the root spells it', async () => {
+    for (const specifier of ['18.2.23', 'v18.2.23']) {
+      const lockfile = await convert({ dependencies: { '@types/react': specifier } });
+      expect(lockfile.snapshots![helmetSnapshot], specifier).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+      const peerLockfile = await convert(
+        { dependencies: { '@types/react': specifier } },
+        createGraph({ peerKeyed: true })
+      );
+      expect(peerLockfile.snapshots![peerSnapshot], specifier).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+    }
+  });
+
+  it('should keep the reference when the root provides the package only as an optional dependency', async () => {
+    const lockfile = await convert({ optionalDependencies: { '@types/react': '17.0.87' } });
+    expect(lockfile.snapshots![helmetSnapshot]).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+  });
+
+  it('should keep the reference when an override targets the package', async () => {
+    for (const overrides of [
+      { '@types/react-helmet>@types/react': '^18.0.0' },
+      { '@types/react@*': '18.2.23' },
+    ] as Record<string, string>[]) {
+      const lockfile = await convert({ dependencies: { '@types/react': '17.0.87' } }, createGraph({ overrides }));
+      expect(lockfile.snapshots![helmetSnapshot]).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+    }
+  });
+
+  it('should not send a package the dedupe orphaned to the resolver', async () => {
+    const lockfile = await convertGraphToLockfile(createGraph({ typesReactUnresolved: true }), {
+      manifests: {
+        [rootDir]: { dependencies: { '@types/react': '17.0.87' } },
+        [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+      },
+      rootDir,
+      resolve: async (wantedDep: { alias?: string }) => {
+        if (wantedDep.alias === '@types/react') throw new Error('ENOTFOUND');
+        return { resolution: { integrity: '0000' } };
+      },
+    });
+    expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
+  });
+
+  it('should not take an inherited object property name, e.g. "constructor", for a package the root provides', async () => {
+    const packages: PackagesMap = new Map([
+      ['dependent@1.0.0', { resolution: { integrity: 'sha512-dependent' }, peerDependencies: { react: '*' } } as any],
+      ['constructor@1.0.0', { resolution: { integrity: 'sha512-constructor' } } as any],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [{ id: 'dependent@1.0.0', name: 'dependent', specifier: '1.0.0', lifecycle: 'runtime' }],
+      },
+      { id: 'dependent@1.0.0', neighbours: [{ id: 'constructor@1.0.0' }] },
+    ];
+    const lockfile = await convertGraphToLockfile(new DependenciesGraph({ packages, edges }), {
+      manifests: {
+        [rootDir]: { dependencies: { '@types/react': '17.0.87' } },
+        [compDir]: { dependencies: { dependent: '1.0.0' } },
+      },
+      rootDir,
+      resolve,
+    });
+    expect(lockfile.snapshots!['dependent@1.0.0']).to.eql({ dependencies: { constructor: '1.0.0' } });
+  });
+
+  it('should leave the graph alone when the root has no such dependency', async () => {
+    const lockfile = await convert({ dependencies: { react: '18.3.1' } });
+    expect(lockfile.snapshots![helmetSnapshot]).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+  });
+});
+
+describe('pnpmfileChecksum', () => {
+  const componentDir = 'comps/comp1';
+
+  function createLockfile(pnpmfileChecksum?: string): BitLockfileFile {
+    return {
+      lockfileVersion: '9.0',
+      pnpmfileChecksum,
+      importers: {
+        [componentDir]: {
+          dependencies: { foo: { version: '1.0.0', specifier: '1.0.0' } },
+        },
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-aaa' } },
+      },
+      snapshots: {
+        'foo@1.0.0': {},
+      },
+    } as BitLockfileFile;
+  }
+
+  function graphToLockfile(graph: DependenciesGraph) {
+    return convertGraphToLockfile(graph, {
+      manifests: {
+        [path.resolve(componentDir)]: { dependencies: { foo: '1.0.0' } },
+      },
+      rootDir: process.cwd(),
+      resolve: () => ({ resolution: { integrity: '0000' } }) as any,
+    });
+  }
+
+  it('should be kept from the lockfile to the graph and back', async () => {
+    const graph = convertLockfileToGraph(createLockfile('hooks-1'), {
+      componentRelativeDir: componentDir,
+      componentIdByPkgName: new Map(),
+    });
+    expect(graph.pnpmfileChecksum).to.equal('hooks-1');
+
+    const lockfile = await graphToLockfile(DependenciesGraph.deserialize(graph.serialize())!);
+    expect(lockfile.pnpmfileChecksum).to.equal('hooks-1');
+  });
+
+  it('should stay unset for a graph saved without one', async () => {
+    const graph = convertLockfileToGraph(createLockfile(), {
+      componentRelativeDir: componentDir,
+      componentIdByPkgName: new Map(),
+    });
+    expect(graph.pnpmfileChecksum).to.equal(undefined);
+
+    const lockfile = await graphToLockfile(graph);
+    expect(lockfile).not.to.have.property('pnpmfileChecksum');
+  });
+
+  it("should restore the checksum of Bit's readPackage hooks as the overrides that replaced them", async () => {
+    const graph = convertLockfileToGraph(createLockfile('bit-1'), {
+      componentRelativeDir: componentDir,
+      componentIdByPkgName: new Map(),
+    });
+
+    const lockfile = await graphToLockfile(DependenciesGraph.deserialize(graph.serialize())!);
+    expect(lockfile).not.to.have.property('pnpmfileChecksum');
+    expect(lockfile.overrides).to.eql({ '@teambit/legacy@*': '-', '@teambit/harmony@*': '-' });
+  });
+});
+
+describe('lockfile overrides', () => {
+  const componentDir = 'comps/comp1';
+  const overrides = { '@teambit/legacy@*': '-', react: '19.1.0' };
+
+  function createLockfile(lockfileOverrides?: Record<string, string>): BitLockfileFile {
+    return {
+      lockfileVersion: '9.0',
+      overrides: lockfileOverrides,
+      importers: {
+        [componentDir]: {
+          dependencies: { foo: { version: '1.0.0', specifier: '1.0.0' } },
+        },
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-aaa' } },
+      },
+      snapshots: {
+        'foo@1.0.0': {},
+      },
+    } as BitLockfileFile;
+  }
+
+  async function roundTrip(lockfile: BitLockfileFile) {
+    const graph = convertLockfileToGraph(lockfile, {
+      componentRelativeDir: componentDir,
+      componentIdByPkgName: new Map(),
+    });
+    return convertGraphToLockfile(DependenciesGraph.deserialize(graph.serialize())!, {
+      manifests: {
+        [path.resolve(componentDir)]: { dependencies: { foo: '1.0.0' } },
+      },
+      rootDir: process.cwd(),
+      resolve: () => ({ resolution: { integrity: '0000' } }) as any,
+    });
+  }
+
+  it('should be kept from the lockfile to the graph and back', async () => {
+    expect((await roundTrip(createLockfile(overrides))).overrides).to.eql(overrides);
+  });
+
+  it('should stay unset for a lockfile without overrides', async () => {
+    expect(await roundTrip(createLockfile())).not.to.have.property('overrides');
+  });
+});
+
+describe('lockfile settings', () => {
+  const componentDir = 'comps/comp1';
+  const settings = { autoInstallPeers: true, dedupePeers: true, injectWorkspacePackages: true };
+
+  function createLockfile(lockfileSettings?: BitLockfileFile['settings']): BitLockfileFile {
+    return {
+      lockfileVersion: '9.0',
+      ...(lockfileSettings ? { settings: lockfileSettings } : {}),
+      importers: {
+        [componentDir]: {
+          dependencies: { foo: { version: '1.0.0', specifier: '1.0.0' } },
+        },
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-aaa' } },
+      },
+      snapshots: {
+        'foo@1.0.0': {},
+      },
+    } as BitLockfileFile;
+  }
+
+  function graphToLockfile(graph: DependenciesGraph) {
+    return convertGraphToLockfile(graph, {
+      manifests: {
+        [path.resolve(componentDir)]: { dependencies: { foo: '1.0.0' } },
+      },
+      rootDir: process.cwd(),
+      resolve: () => ({ resolution: { integrity: '0000' } }) as any,
+    });
+  }
+
+  it('should be kept from the lockfile to the graph and back', async () => {
+    const graph = convertLockfileToGraph(createLockfile(settings), {
+      componentRelativeDir: componentDir,
+      componentIdByPkgName: new Map(),
+    });
+    expect(graph.lockfileSettings).to.eql(settings);
+
+    const lockfile = await graphToLockfile(DependenciesGraph.deserialize(graph.serialize())!);
+    expect(lockfile.settings).to.eql(settings);
+  });
+
+  it('should stay unset for a graph saved without them', async () => {
+    const graph = convertLockfileToGraph(createLockfile(), {
+      componentRelativeDir: componentDir,
+      componentIdByPkgName: new Map(),
+    });
+
+    const lockfile = await graphToLockfile(graph);
+    expect(lockfile).not.to.have.property('settings');
   });
 });

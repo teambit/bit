@@ -1573,7 +1573,7 @@
           ],
           [
             "",
-            "log",
+            "full-log",
             "show full build log for failed containers (not just the error summary)"
           ],
           [
@@ -2154,7 +2154,7 @@
       [
         "",
         "tasks <string>",
-        "build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.\nspecify the task-name (e.g. \"TypescriptCompiler\") or the task-aspect-id (e.g. teambit.compilation/compiler)"
+        "build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.\nspecify the task-name (e.g. \"TypescriptCompiler\"), the task-aspect-id (e.g. teambit.compilation/compiler)\nor the full task-id as shown by --list-tasks (e.g. teambit.compilation/compiler:TypescriptCompiler)"
       ],
       [
         "",
@@ -2179,7 +2179,7 @@
       [
         "",
         "skip-tasks <string>",
-        "skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes.\n  specify the task-name (e.g. \"TypescriptCompiler\") or the task-aspect-id (e.g. teambit.compilation/compiler)"
+        "skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes.\n  specify the task-name (e.g. \"TypescriptCompiler\"), the task-aspect-id (e.g. teambit.compilation/compiler)\n  or the full task-id as shown by --list-tasks (e.g. teambit.compilation/compiler:TypescriptCompiler)"
       ],
       [
         "",
@@ -2199,7 +2199,7 @@
       [
         "i",
         "ignore-issues <issues>",
-        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
+        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures, PinnedDependencies]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
       ]
     ],
     "description": "run build pipeline tasks in isolated environments",
@@ -3076,7 +3076,7 @@
       ]
     ],
     "description": "remove component from workspace and install it as npm package",
-    "extendedDescription": "converts workspace components to external npm packages by removing them from .bitmap and installing via package manager.\nby default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency.\nuseful for components that no longer need active development in current workspace.",
+    "extendedDescription": "converts workspace components to external npm packages by removing them from .bitmap and installing via package manager.\nthe packages are added to the workspace dependencies in workspace.jsonc. to untrack components without that, use \"bit remove\".\nby default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency.\nuseful for components that no longer need active development in current workspace.",
     "group": "dependencies",
     "private": false,
     "arguments": [
@@ -3656,7 +3656,7 @@
       [
         "i",
         "ignore-issues <issues>",
-        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
+        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures, PinnedDependencies]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
       ],
       [
         "I",
@@ -3774,7 +3774,7 @@
       [
         "i",
         "ignore-issues <issues>",
-        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
+        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures, PinnedDependencies]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
       ],
       [
         "",
@@ -3887,82 +3887,6 @@
         "extendedDescription": "compares the public API schema between two versions of a component.\nshows added, removed, and modified exports with semantic impact analysis.\n\nexamples:\n  bit schema diff my-component 0.0.1 0.0.2",
         "group": "info-analysis",
         "private": false
-      }
-    ]
-  },
-  {
-    "name": "test [pattern-or-test-file...]",
-    "alias": "at",
-    "options": [
-      [
-        "w",
-        "watch",
-        "start the tester in watch mode."
-      ],
-      [
-        "d",
-        "debug",
-        "start the tester in debug mode."
-      ],
-      [
-        "a",
-        "all",
-        "DEPRECATED. (use --unmodified)"
-      ],
-      [
-        "u",
-        "unmodified",
-        "test all components, not only new and modified"
-      ],
-      [
-        "",
-        "junit <filepath>",
-        "write tests results as JUnit XML format into the specified file path"
-      ],
-      [
-        "",
-        "coverage",
-        "show code coverage data"
-      ],
-      [
-        "e",
-        "env <id>",
-        "test only components assigned the given env"
-      ],
-      [
-        "",
-        "update-snapshot",
-        "if supported by the tester, re-record every snapshot that fails during the test run"
-      ],
-      [
-        "s",
-        "scope <scope-name>",
-        "DEPRECATED. (use the pattern instead, e.g. \"scopeName/**\"). name of the scope to test"
-      ],
-      [
-        "j",
-        "json",
-        "return the results in json format"
-      ],
-      [
-        "",
-        "verbose",
-        "list the component ids that have no tests (default collapses them into a count)"
-      ],
-      [
-        "",
-        "summary",
-        "suppress tester output, print only the final pass/fail headline (or summary object with --json)"
-      ]
-    ],
-    "description": "run component tests",
-    "extendedDescription": "executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.).\nby default only runs tests for new and modified components. use --unmodified to test all components.\nto run specific test files only, pass their paths instead of a component pattern, e.g. \"bit test path/to/comp/my-comp.spec.ts\".\nsupports watch mode, coverage reporting, and debug mode for development workflows.",
-    "group": "testing",
-    "private": false,
-    "arguments": [
-      {
-        "name": "pattern-or-test-file...",
-        "description": "one of two modes (multiple values are supported, separated by spaces):\n1) component pattern: component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n2) test-file path: a path to a test file, to run only this file, e.g. \"bit test path/to/comp/my-comp.spec.ts\".\nnote that a directory path selects the component in that directory and runs all its tests, while a test-file path runs only that file"
       }
     ]
   },
@@ -6275,6 +6199,82 @@
       {
         "name": "component-pattern",
         "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "test [pattern-or-test-file...]",
+    "alias": "at",
+    "options": [
+      [
+        "w",
+        "watch",
+        "start the tester in watch mode."
+      ],
+      [
+        "d",
+        "debug",
+        "start the tester in debug mode."
+      ],
+      [
+        "a",
+        "all",
+        "DEPRECATED. (use --unmodified)"
+      ],
+      [
+        "u",
+        "unmodified",
+        "test all components, not only new and modified"
+      ],
+      [
+        "",
+        "junit <filepath>",
+        "write tests results as JUnit XML format into the specified file path"
+      ],
+      [
+        "",
+        "coverage",
+        "show code coverage data"
+      ],
+      [
+        "e",
+        "env <id>",
+        "test only components assigned the given env"
+      ],
+      [
+        "",
+        "update-snapshot",
+        "if supported by the tester, re-record every snapshot that fails during the test run"
+      ],
+      [
+        "s",
+        "scope <scope-name>",
+        "DEPRECATED. (use the pattern instead, e.g. \"scopeName/**\"). name of the scope to test"
+      ],
+      [
+        "j",
+        "json",
+        "return the results in json format"
+      ],
+      [
+        "",
+        "verbose",
+        "list the component ids that have no tests (default collapses them into a count)"
+      ],
+      [
+        "",
+        "summary",
+        "suppress tester output, print only the final pass/fail headline (or summary object with --json)"
+      ]
+    ],
+    "description": "run component tests",
+    "extendedDescription": "executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.).\nby default only runs tests for new and modified components. use --unmodified to test all components.\nto run specific test files only, pass their paths instead of a component pattern, e.g. \"bit test path/to/comp/my-comp.spec.ts\".\nsupports watch mode, coverage reporting, and debug mode for development workflows.",
+    "group": "testing",
+    "private": false,
+    "arguments": [
+      {
+        "name": "pattern-or-test-file...",
+        "description": "one of two modes (multiple values are supported, separated by spaces):\n1) component pattern: component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n2) test-file path: a path to a test file, to run only this file, e.g. \"bit test path/to/comp/my-comp.spec.ts\".\nnote that a directory path selects the component in that directory and runs all its tests, while a test-file path runs only that file"
       }
     ]
   },
