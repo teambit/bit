@@ -351,7 +351,9 @@ export class ApplyOverrides {
   private setComponentPeerVersionInRange(dependency: Dependency, range: string) {
     if (!this.workspaceComponentIds || this.workspaceComponentIds.hasWithoutVersion(dependency.id)) return;
     const version = dependency.id.version;
-    if (!version || !semver.valid(version) || !semver.validRange(range) || semver.satisfies(version, range)) return;
+    if (!version || !semver.validRange(range)) return;
+    // a snap is not in any semver range, a workspace would install a version of the range instead
+    if (semver.valid(version) && semver.satisfies(version, range)) return;
     const { version: versionInRange } = getValidComponentVersion(range);
     // e.g. "<2.0.0" is coerced to "2.0.0", which is out of the range. there's no version to take for such a range.
     if (versionInRange && semver.satisfies(versionInRange, range)) {

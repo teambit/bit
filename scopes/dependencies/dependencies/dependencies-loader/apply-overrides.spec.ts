@@ -55,9 +55,9 @@ describe('ApplyOverrides outside a workspace, when the dependencies are calculat
     applyOverrides.getDependenciesToAddManually(undefined, applyOverrides.allDependencies);
     return { dep, component: (applyOverrides as any).component };
   }
-  function applyPeerRange(range: string, { inWorkspace = false } = {}) {
+  function applyPeerRange(range: string, { inWorkspace = false, version = '1.0.0' } = {}) {
     const applyOverrides = createApplyOverrides({});
-    const peer = new Dependency(buttonId, [], buttonPkg, '1.0.0');
+    const peer = new Dependency(buttonId.changeVersion(version), [], buttonPkg, '1.0.0');
     applyOverrides.allDependencies = { dependencies: [], devDependencies: [], peerDependencies: [peer] };
     applyOverrides.workspaceComponentIds = ComponentIdList.fromArray(inWorkspace ? [buttonId] : []);
     (applyOverrides as any).applyPackageVersion('peerDependencies', buttonPkg, range, undefined, undefined, peer);
@@ -89,6 +89,10 @@ describe('ApplyOverrides outside a workspace, when the dependencies are calculat
   });
   it('should keep the version of a component peer when the range has no minimum version (e.g. an upper bound)', () => {
     expect(applyPeerRange('<1.0.0').id.version).to.equal('1.0.0');
+  });
+  it('should set the version of a component peer that is a snap, which is out of any semver range', () => {
+    const snap = 'a'.repeat(40);
+    expect(applyPeerRange('^2.0.0', { version: snap }).id.version).to.equal('2.0.0');
   });
   it('should keep the version of a component peer that is a workspace component', () => {
     expect(applyPeerRange('2.0.0', { inWorkspace: true }).id.version).to.equal('1.0.0');
