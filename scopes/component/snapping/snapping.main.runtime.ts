@@ -558,9 +558,10 @@ export class SnappingMain {
     const components = [...existingComponents, ...newComponents];
 
     const autoDepsPerComp = new Map<Component, VariantPolicyConfigArr | undefined>();
-    // the components that a workspace of the lane has in its .bitmap, see ApplyOverrides.workspaceComponentIds
+    // the components that a workspace of the lane has in its .bitmap, see ApplyOverrides.workspaceComponentIds.
+    // (not the update-dependents of the lane, which a workspace doesn't have)
     const workspaceComponentIds = params.recalcDependencies
-      ? ComponentIdList.uniqFromArray([...(lane?.toComponentIds() || []), ...allCompIds])
+      ? lane?.toComponentIds() || ComponentIdList.fromArray(allCompIds)
       : undefined;
     const addDepsToComp = (component: Component, autoDetectOverrides?: DependenciesOverridesData) =>
       addDeps(

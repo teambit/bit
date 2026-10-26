@@ -353,7 +353,10 @@ export class ApplyOverrides {
     const version = dependency.id.version;
     if (!version || !semver.valid(version) || !semver.validRange(range) || semver.satisfies(version, range)) return;
     const { version: versionInRange } = getValidComponentVersion(range);
-    if (versionInRange) dependency.id = dependency.id.changeVersion(versionInRange);
+    // e.g. "<2.0.0" is coerced to "2.0.0", which is out of the range. there's no version to take for such a range.
+    if (versionInRange && semver.satisfies(versionInRange, range)) {
+      dependency.id = dependency.id.changeVersion(versionInRange);
+    }
   }
 
   private setVersionFromConfig(id: ComponentID) {

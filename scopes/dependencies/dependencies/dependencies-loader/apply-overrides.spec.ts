@@ -87,6 +87,9 @@ describe('ApplyOverrides outside a workspace, when the dependencies are calculat
   it('should keep the version of a component peer that is in the range of the policy', () => {
     expect(applyPeerRange('^1.0.0').id.version).to.equal('1.0.0');
   });
+  it('should keep the version of a component peer when the range has no minimum version (e.g. an upper bound)', () => {
+    expect(applyPeerRange('<1.0.0').id.version).to.equal('1.0.0');
+  });
   it('should keep the version of a component peer that is a workspace component', () => {
     expect(applyPeerRange('2.0.0', { inWorkspace: true }).id.version).to.equal('1.0.0');
   });
