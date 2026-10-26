@@ -69,6 +69,12 @@ fn unsupported_flag_help(argv: &[&str]) -> Option<String> {
     let name = *argv.first()?;
     let global = GLOBAL_HELP;
     match &argv[1..] {
+        ["run" | "c", "--ssr"] => {
+            Some(run_cmd::unsupported_help(&format!("{name} run"), "Unknown argument: ssr"))
+        }
+        ["run" | "c", app_name, "--ssr"] if !app_name.is_empty() && !app_name.starts_with('-') => {
+            Some(run_cmd::unsupported_help(&format!("{name} run"), "Unknown argument: ssr"))
+        }
         [flag @ ("--json" | "--no-color")] => {
             let unknown = if *flag == "--json" {
                 "Unknown argument: json"

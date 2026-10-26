@@ -54,9 +54,16 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn print_unsupported_help(unknown: &str) -> io::Result<Outcome> {
+    io::stdout()
+        .lock()
+        .write_all(unsupported_help("run", unknown).as_bytes())?;
+    Ok(Outcome::Exit(ExitCode::FAILURE))
+}
+
+pub(super) fn unsupported_help(command: &str, unknown: &str) -> String {
     let global = GLOBAL_HELP;
-    let help = format!(
-        r#"bit run [app-name]
+    format!(
+        r#"bit {command} [app-name]
 
 start an application component locally
 runs application components in their own development server, separate from the "bit start" UI.
@@ -79,9 +86,7 @@ Options
 
 {unknown}
 "#,
-    );
-    io::stdout().lock().write_all(help.as_bytes())?;
-    Ok(Outcome::Exit(ExitCode::FAILURE))
+    )
 }
 
 fn run_unsupported_help(args: &[&str]) -> Option<&'static str> {

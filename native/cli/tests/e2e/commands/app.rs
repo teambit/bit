@@ -17,6 +17,12 @@ fn app_rejected_flags_help_matches_node() -> KnownResult<()> {
             "apps --no-color",
             "app list --no-color",
             "apps list --no-color",
+            "app run --ssr",
+            "apps run --ssr",
+            "app c --ssr",
+            "apps c --ssr",
+            "app run missing-app --ssr",
+            "apps c missing-app --ssr",
         ] {
             for native_env in [&[][..], &ci_env[..]] {
                 let mut node_env = vec![("BIT_NATIVE", OsStr::new("off"))];
