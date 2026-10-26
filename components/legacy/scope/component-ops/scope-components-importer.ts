@@ -26,8 +26,7 @@ import type {
 import { ObjectList, Ref } from '@teambit/objects';
 import type { ComponentDef } from '../repositories/sources';
 import type SourcesRepository from '../repositories/sources';
-import type { Remotes } from '@teambit/scope.remotes';
-import { getScopeRemotes } from '@teambit/scope.remotes';
+import { getScopeRemotes, type ScopeRemotes as Remotes } from '../scope-remotes';
 import { VersionDependencies } from '../version-dependencies';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';

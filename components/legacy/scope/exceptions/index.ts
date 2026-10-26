@@ -17,6 +17,8 @@ import { NoHeadNoVersion } from './no-head-no-version';
 import OutdatedIndexJson from './outdated-index-json';
 import ScopeJsonNotFound from './scope-json-not-found';
 import ScopeNotFound from './scope-not-found';
+import { ScopeNotFoundOrDenied } from './scope-not-found-or-denied';
+import UnexpectedNetworkError from './unexpected-network-error';
 import VersionAlreadyExists from './version-already-exists';
 import ServerIsBusy from './server-is-busy';
 import { UnknownObjectType } from './unknown-object-type';
@@ -39,6 +41,8 @@ export {
   ClientIdInUse,
   ComponentNeedsUpdate,
   ScopeNotFound,
+  ScopeNotFoundOrDenied,
+  UnexpectedNetworkError,
   ScopeJsonNotFound,
   ComponentNotFound,
   DependenciesNotFound,
