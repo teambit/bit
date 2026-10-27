@@ -207,7 +207,8 @@ export class ScopeComponentsImporter {
     });
 
     if (lane && importedComps.length < uniqExternals.length) {
-      const missing = uniqExternals.filter((id) => !importedComps.find((i) => i.component.id.isEqual(id)));
+      const importedIds = new Set(importedComps.map((i) => i.component.id.toString()));
+      const missing = uniqExternals.filter((id) => !importedIds.has(id.toString()));
       logger.debug(
         `importMany, ${missing.length} components are missing from the lane, going to fetch them from the main`
       );
@@ -621,8 +622,8 @@ export class ScopeComponentsImporter {
 
   private throwForMissingObjects(groupedHashes: HashesPerRemote, receivedObjects: string[]) {
     const allRequestedHashes = uniq(Object.values(groupedHashes).flat());
-    const allReceivedHashes = uniq(receivedObjects);
-    const missingHashes = allRequestedHashes.filter((hash) => !allReceivedHashes.includes(hash));
+    const allReceivedHashes = new Set(receivedObjects);
+    const missingHashes = allRequestedHashes.filter((hash) => !allReceivedHashes.has(hash));
     if (!missingHashes.length) {
       return; // all good, nothing is missing
     }
@@ -870,12 +871,11 @@ export class ScopeComponentsImporter {
     await this.importWithoutDeps(flattenedDepsToFetch, { lane, reason: reasonForImport });
     const compDefsOfDeps = await this.sources.getMany(flattenedDepsToFetch);
     const compVersionsOfDeps = this.componentsDefToComponentsVersion(compDefsOfDeps, false, true);
+    const compVersionsOfDepsById = indexComponentVersionsById(compVersionsOfDeps);
 
     const versionDeps = componentsWithVersion.map(({ componentVersion, versionObj }) => {
-      const dependencies = versionObj
-        .getLoadedFlattenedDependencies()
-        .map((dep) => compVersionsOfDeps.find((c) => c.toComponentId().isEqual(dep)));
-      return new VersionDependencies(componentVersion, compact(dependencies), versionObj);
+      const dependencies = lookupVersionDeps(compVersionsOfDepsById, versionObj);
+      return new VersionDependencies(componentVersion, dependencies, versionObj);
     });
     return versionDeps;
   }
@@ -1194,11 +1194,9 @@ export class ScopeComponentsImporter {
         return component.toComponentVersion(id.version);
       })
     );
+    const flattenedComponentVersionsById = indexComponentVersionsById(flattenedComponentVersions);
     versionDeps.forEach((versionDep) => {
-      const deps = versionDep.version
-        .getLoadedFlattenedDependencies()
-        .map((dep) => flattenedComponentVersions.find((c) => c.toComponentId().isEqual(dep)));
-      versionDep.dependencies = compact(deps);
+      versionDep.dependencies = lookupVersionDeps(flattenedComponentVersionsById, versionDep.version);
     });
 
     return versionDeps;
@@ -1226,4 +1224,27 @@ export function groupByScopeName(ids: Array<ComponentID | LaneId>): { [scopeName
 
 export function errorIsTypeOfMissingObject(err: Error) {
   return err instanceof ParentNotFound || err instanceof VersionNotFound || err instanceof HeadNotFound;
+}
+
+/**
+ * by the id with version (`ComponentID.toString()`), for resolving the flattened dependencies of many versions: a linear
+ * search per dependency, which creates a ComponentID per comparison, is quadratic in the number of dependencies.
+ * the first entry wins, as with a search.
+ */
+function indexComponentVersionsById(componentVersions: ComponentVersion[]): Map<string, ComponentVersion> {
+  const byId = new Map<string, ComponentVersion>();
+  componentVersions.forEach((componentVersion) => {
+    const key = componentVersion.toComponentId().toString();
+    if (!byId.has(key)) byId.set(key, componentVersion);
+  });
+  return byId;
+}
+
+/**
+ * the flattened dependencies of the version that are in the index. when nothing was fetched (for example, the
+ * dependency graph of the version is used instead), the index is empty and no key is built.
+ */
+function lookupVersionDeps(byId: Map<string, ComponentVersion>, version: Version): ComponentVersion[] {
+  if (!byId.size) return [];
+  return compact(version.getLoadedFlattenedDependencies().map((dep) => byId.get(dep.toString())));
 }
