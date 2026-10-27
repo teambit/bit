@@ -6,6 +6,8 @@
 //! - `e2e/harmony/global-virtual-store.e2e.ts`
 //! - `e2e/harmony/isolate-cyclic-deps.e2e.ts`
 
+mod core_manifest_setup;
+
 use crate::helper::{Helper, config, parse};
 use serde_json::{Value, json};
 use std::{ffi::OsStr, fs};
@@ -1642,18 +1644,13 @@ fn compare_core_capsule_manifest(env: &str) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    let assign = Helper::cmd_in_with(
-        &helper.scopes.local_path,
-        &format!("env set comp1 {env}"),
-        &[("BIT_NATIVE", OsStr::new("off"))],
-    );
-    assert!(assign.status.success(), "{assign:?}");
+    let guard = core_manifest_setup::prepare(&helper, env);
+    let mut variables = vec![("BIT_NATIVE", OsStr::new("off"))];
+    if let Some(guard) = &guard {
+        variables.push(("NODE_OPTIONS", OsStr::new(guard)));
+    }
     let command = "capsule create comp1 -b more-core-parity -j";
-    let node = Helper::cmd_in_with(
-        &helper.scopes.local_path,
-        command,
-        &[("BIT_NATIVE", OsStr::new("off"))],
-    );
+    let node = Helper::cmd_in_with(&helper.scopes.local_path, command, &variables);
     assert!(node.status.success(), "{node:?}");
     let capsule = parse(&node.stdout)[0]["path"]
         .as_str()
@@ -1662,7 +1659,8 @@ fn compare_core_capsule_manifest(env: &str) {
     let capsule_path = std::path::Path::new(&capsule);
     let node_manifest = fs::read(capsule_path.join("package.json")).unwrap();
     fs::remove_dir_all(capsule_path.parent().unwrap()).unwrap();
-    let native = helper.native_run(command);
+    variables[0].1 = OsStr::new("on");
+    let native = Helper::cmd_in_with(&helper.scopes.local_path, command, &variables);
     assert!(native.status.success() && native.native, "{env}: {native:?}");
     assert_eq!(native.stdout, node.stdout, "{env}");
     assert_eq!(fs::read(capsule_path.join("package.json")).unwrap(), node_manifest, "{env}");

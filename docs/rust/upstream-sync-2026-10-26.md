@@ -320,3 +320,26 @@ negative control fails as intended. Yarn implementation remains excluded.
 Windows provisioning passed on the preceding lint/formatter revision, confirming
 its platform fixes; CI for this React batch is pending. Local Node lint still
 requires the unavailable `tsc`.
+
+## Capsule fixture network verification
+
+The remaining-core-environment capsule comparison now configures five built-in
+environments directly in its fixture. Independent released-CLI replay confirmed
+that these are the exact component config entries written by environment
+assignment and that all five resulting capsule manifests are identical. The
+comparison still runs the actual released capsule command, requires native
+ownership and compares complete manifest bytes and command output. A preload
+rejects JavaScript HTTP/HTTPS/fetch requests during these five comparisons.
+
+The versioned custom-aspect environment retains released assignment and metadata
+import: replacing it with an unversioned entry changes a manifest dependency,
+and the correctly versioned entry needs imported objects. It therefore remains
+a network-dependent fixture. No retry, timeout or assertion was weakened; this
+removes only unrelated remote verification from the five built-in setups.
+
+Validation: formatting, Clippy, Dylint, rustdoc, all 1,814 workspace tests and
+generated plan/census/asset/scope checks pass. Full E2E: 1,733 passed, two existing
+skips and one Bit Cloud request failure in the unchanged React Native capsule
+comparison. That case passed unchanged on a serial rerun. The revised remaining
+core-environment comparison passed both focused and full runs. Platform CI is
+pending; local Node lint remains unavailable because `tsc` is missing.
