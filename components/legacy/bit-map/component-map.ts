@@ -359,10 +359,9 @@ export class ComponentMap {
   }
 
   static changeFilesPathAccordingToItsRootDir(existingRootDir: PathLinux, files: ComponentMapFile[]): PathChange[] {
-    const changes = [];
+    const changes: PathChange[] = [];
     files.forEach((file) => {
       const newPath = this.getPathWithoutRootDir(existingRootDir, file.relativePath);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       changes.push({ from: file.relativePath, to: newPath });
       file.relativePath = newPath;
     });
@@ -396,12 +395,11 @@ export class ComponentMap {
   updateDirLocation(dirFrom: PathOsBasedRelative, dirTo: PathOsBasedRelative): PathChange[] {
     dirFrom = pathNormalizeToLinux(dirFrom);
     dirTo = pathNormalizeToLinux(dirTo);
-    const changes = [];
+    const changes: PathChange[] = [];
     if (this.rootDir && this.rootDir.startsWith(dirFrom)) {
       const rootDir = this.rootDir;
       const newRootDir = rootDir.replace(dirFrom, dirTo);
       const newRootDirNormalized = pathNormalizeToLinux(newRootDir);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       changes.push({ from: rootDir, to: newRootDirNormalized });
       logger.debug(`updating rootDir location from ${rootDir} to ${newRootDirNormalized}`);
       this.rootDir = newRootDirNormalized;
@@ -414,7 +412,6 @@ export class ComponentMap {
         const newLocation = this.rootDir ? ComponentMap.getPathWithoutRootDir(this.rootDir, fileTo) : fileTo;
         logger.debug(`updating file location from ${file.relativePath} to ${newLocation}`);
         if (this.mainFile === file.relativePath) this.mainFile = newLocation;
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         changes.push({ from: file.relativePath, to: newLocation });
         file.relativePath = newLocation;
       }
@@ -465,9 +462,8 @@ export class ComponentMap {
   removeFiles(files: ComponentMapFile[]): void {
     const relativePaths = files.map((file) => file.relativePath);
     this.files = this.files.reduce((accumulator, file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return relativePaths.includes(file.relativePath) ? accumulator : accumulator.concat(file);
-    }, []);
+    }, [] as ComponentMapFile[]);
     this.validate();
   }
 

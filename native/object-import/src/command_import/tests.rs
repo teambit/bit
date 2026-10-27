@@ -1,5 +1,6 @@
 mod canonical_model;
 mod graph;
+mod recovery_objects;
 use super::{
     Object, Overlay, PreparedImport, Target, VirtualRemote, history, object_hash, prepare,
     prepare::prepare_with_virtual, prepare_cached, publish,

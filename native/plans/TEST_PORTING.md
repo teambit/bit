@@ -2347,6 +2347,8 @@ row's fields, object path, header, logical identity, and remote index stay exact
 - [x] `e2e/harmony/lanes/abort-merge-lane.e2e.ts:39` bit lane merge-abort command › when the lane was merged successfully without conflicts or diverged › should revert the lane object to the state before the merge — `harmony::lanes::abort_merge_lane::when_the_lane_was_merged_successfully_without_conflicts_or_diverged`
 - [x] `e2e/harmony/lanes/abort-merge-lane.e2e.ts:45` bit lane merge-abort command › when the lane was merged successfully without conflicts or diverged › should reset the source code to pre-merge — `harmony::lanes::abort_merge_lane::when_the_lane_was_merged_successfully_without_conflicts_or_diverged`
 - [x] `e2e/harmony/lanes/abort-merge-lane.e2e.ts:69` bit lane merge-abort command › when the merged lane introduced new components › should delete the newly introduced component root-dirs — `harmony::lanes::abort_merge_lane::when_the_merged_lane_introduced_new_components_should_delete_the_newly_introduced_component_root_dirs`
+- [x] `e2e/harmony/lanes/abort-merge-lane.e2e.ts:91` bit lane merge-abort command › when a lane was merged into main › should revert the head of main to the state before the merge — `harmony::lanes::abort_merge_lane::aborting_a_lane_merge_into_main_restores_the_model_head_and_export_boundary`
+- [x] `e2e/harmony/lanes/abort-merge-lane.e2e.ts:94` bit lane merge-abort command › when a lane was merged into main › should not leave the merged snaps staged for export — `harmony::lanes::abort_merge_lane::aborting_a_lane_merge_into_main_restores_the_model_head_and_export_boundary`
 
 ### `e2e/harmony/lanes/bit-checkout-on-lanes.e2e.ts`
 

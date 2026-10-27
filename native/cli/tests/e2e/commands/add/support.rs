@@ -42,7 +42,7 @@ pub(crate) fn compare_with_error_variants(
     stdout: fn(&str) -> String,
     variants: &[String; 2],
 ) -> Run {
-    let output = Comparison { stdout, errors: Some(variants) };
+    let output = Comparison { errors: Some(variants), ..Comparison::exact(stdout) };
     compare_mode(helper, command, false, true, output, false, None)
 }
 
@@ -63,6 +63,17 @@ pub(crate) fn compare_install_declined(
 /// Installation clocks are qualified against the baseline or actual command window.
 pub(crate) fn compare_install(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
     compare_mode(helper, command, false, true, Comparison::exact(stdout), true, None)
+}
+
+/// Explicit upstream additions remain byte-for-byte assertions while the release is unavailable.
+pub(crate) fn compare_install_with_scope_additions(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    additions: &BTreeMap<String, Vec<u8>>,
+) -> Run {
+    let output = Comparison { scope_additions: Some(additions), ..Comparison::exact(stdout) };
+    compare_mode(helper, command, false, true, output, true, None)
 }
 
 pub(crate) type HistoryProjection<'a> = dyn Fn(&Path, i64, i64) -> BTreeMap<String, Vec<u8>> + 'a;
@@ -168,7 +179,15 @@ fn compare_mode(
         );
         install_clocks::project(&mut expected_files, modules.as_deref(), started, ended);
     }
-    let expected_scope = scope_tree(root, &config_history);
+    let mut expected_scope = scope_tree(root, &config_history);
+    if let Some(additions) = output.scope_additions {
+        for (path, bytes) in additions {
+            assert!(
+                expected_scope.insert(path.clone(), bytes.clone()).is_none(),
+                "upstream addition replaces an existing reference entry: {path}",
+            );
+        }
+    }
     let expected_history = oracle.map_or_else(
         || history(root, &baseline_history),
         |observe| observe(root, started, ended),

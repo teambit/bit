@@ -215,7 +215,7 @@ jobs:
           - group: transfer
             filters: commands::import commands::export commands::resume_export restoring_a_directory_link export_completion export_hub export_callbacks
           - group: merge-history
-            filters: merge_history merge_lifecycle merge_callbacks merge_policy merge_recovery
+            filters: merge_history merge_lifecycle merge_callbacks merge_policy merge_recovery harmony::lanes::abort_merge_lane
           - group: provisioning
             filters: commands::init commands::lane harmony::config harmony::doctor harmony::install_compat harmony::lane_import_callbacks harmony::ci_sync::onboarding::native
           - group: stash

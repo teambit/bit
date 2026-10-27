@@ -77,6 +77,19 @@ pub(crate) fn compare_install(helper: &Helper, command: &str, stdout: fn(&str) -
     assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
     actual
 }
+/// Keep the full remote invariant for explicitly asserted newer-upstream scope additions.
+pub(crate) fn compare_install_with_scope_additions(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    additions: &BTreeMap<String, Vec<u8>>,
+) -> Run {
+    let remote = tree(&helper.scopes.remote_path);
+    let actual = support::compare_install_with_scope_additions(helper, command, stdout, additions);
+    assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
+    actual
+}
+
 /// Recovery's independent write oracle retains the same immutable real remote contract.
 pub(crate) fn compare_with_history(
     helper: &Helper,

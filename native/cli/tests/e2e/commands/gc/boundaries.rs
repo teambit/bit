@@ -62,3 +62,31 @@ fn early_move_error(directory: bool) {
     assert_eq!(tree(scope), before);
     assert!(objects::path(scope, "objects", &movable).is_file());
 }
+
+#[test]
+fn missing_legacy_alias_target_delegates_the_error_before_deleting_objects() {
+    let helper = fixture();
+    let scope = &helper.scopes.remote_path;
+    objects::alias_graph(&helper, false);
+    fs::remove_file(objects::path(
+        scope,
+        "objects",
+        &objects::digest("fixture.foreign/dependency"),
+    ))
+    .unwrap();
+    let before = tree(&scope.join("objects"));
+    let baseline = helper.clone_remote_scope();
+    let node = Helper::cmd_in_with(scope, "gc", &[("BIT_NATIVE", OsStr::new("off"))]);
+    let expected = tree(scope);
+    helper.restore_remote_scope(&baseline);
+    let actual = Helper::cmd_in(scope, "gc");
+    assert!(!actual.native && !actual.status.success(), "{actual:?}");
+    assert!(actual.trace.contains("legacy alias target model is missing"), "{actual:?}");
+    assert_eq!(
+        (actual.stdout, actual.stderr, actual.status.code()),
+        (node.stdout, node.stderr, node.status.code()),
+    );
+    assert_eq!(tree(scope), expected);
+    assert_eq!(tree(&scope.join("objects")), before);
+    assert!(!scope.join("deleted-objects").exists());
+}

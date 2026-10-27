@@ -102,3 +102,27 @@ fn when_the_merged_lane_introduced_new_components() {
             .exists(),
     );
 }
+
+/// bit lane merge-abort command › when a lane was merged into main › should revert the head of main to the state before the merge
+/// bit lane merge-abort command › when a lane was merged into main › should not leave the merged snaps staged for export
+#[test]
+fn aborting_a_lane_merge_into_main_restores_the_model_head_and_export_boundary() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    populate(&helper, 1, false, "");
+    helper.run("tag --skip-tests");
+    remote::publish(&helper);
+    let original = helper.head("comp1");
+    helper.native("lane create lane-a");
+    helper.run("snap --unmodified --skip-tests");
+    remote::publish(&helper);
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.native(&format!("import {}/comp1 -x", helper.scopes.remote));
+    helper.native(&format!("lane merge {}/lane-a -x", helper.scopes.remote));
+    assert_ne!(helper.head("comp1"), original);
+    helper.native("lane merge-abort --silent -x");
+    assert_eq!(helper.head("comp1"), original);
+    let status = parse(&helper.native("status --json"));
+    assert_eq!(status["stagedComponents"], serde_json::json!([]));
+}

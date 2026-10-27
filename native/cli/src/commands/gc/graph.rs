@@ -1,5 +1,7 @@
 //! Version reachability graph and dependency expansion for `bit gc`.
 
+pub(super) mod models;
+
 use super::inventory::ScopeInventory;
 use serde_json::Value;
 use std::{
@@ -16,7 +18,7 @@ pub(super) struct CompIdSpec {
 
 pub(super) struct GcGraph {
     pub version_map: HashMap<String, Value>,
-    pub comp_map: HashMap<String, Value>,
+    pub models: models::Models,
     pub remote_refs_per_comp: HashMap<String, Vec<String>>,
     pub remote_refs: HashSet<String>,
     pub root_versions: HashSet<String>,
@@ -25,17 +27,14 @@ pub(super) struct GcGraph {
 impl GcGraph {
     pub fn new(inv: &ScopeInventory) -> Self {
         let mut version_map = HashMap::new();
-        let mut comp_map = HashMap::new();
         for obj in &inv.objects {
             if obj.kind == "Version" {
                 version_map.insert(obj.hash.clone(), obj.value.clone());
-            } else if obj.kind == "Component" {
-                insert_comp_entry(&mut comp_map, &obj.value);
             }
         }
         Self {
             version_map,
-            comp_map,
+            models: models::Models::new(inv),
             remote_refs_per_comp: inv.roots.remote_refs_per_comp.clone(),
             remote_refs: inv.roots.remote_refs.clone(),
             root_versions: HashSet::new(),
@@ -224,13 +223,7 @@ impl GcGraph {
     }
 
     pub fn find_comp(&self, scope: Option<&str>, name: &str) -> Option<&Value> {
-        if let Some(scope_str) = scope.filter(|val| !val.is_empty()) {
-            let full = format!("{scope_str}/{name}");
-            if let Some(comp) = self.comp_map.get(&full) {
-                return Some(comp);
-            }
-        }
-        self.comp_map.get(name)
+        self.models.get(scope, name)
     }
 }
 
@@ -281,18 +274,6 @@ pub(super) fn parse_dep_value(val: &Value) -> Option<CompIdSpec> {
         .filter(|ver| !ver.is_empty())
         .map(str::to_owned);
     Some(CompIdSpec { scope, name, version })
-}
-
-fn insert_comp_entry(comp_map: &mut HashMap<String, Value>, val: &Value) {
-    let key = comp_value_key(val);
-    if !key.is_empty() {
-        comp_map.insert(key, val.clone());
-    }
-    if let Some(name) = val["name"].as_str()
-        && !comp_map.contains_key(name)
-    {
-        comp_map.insert(name.to_owned(), val.clone());
-    }
 }
 
 fn version_parents(ver_val: &Value) -> Vec<String> {

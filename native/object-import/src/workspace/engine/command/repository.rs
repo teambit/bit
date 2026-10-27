@@ -1,3 +1,4 @@
+mod recovery;
 mod short_refs;
 
 use super::super::dependency_graph::proof;

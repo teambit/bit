@@ -49,17 +49,8 @@ pub(super) fn prepare_with_workspace_ids(
         .and_then(parse_keep_versions)
         .unwrap_or(0);
     let keep_limit = usize::try_from(keep_versions).unwrap_or(usize::MAX);
-    let inv = load_scope_inventory(scope_dir)?;
-    if inv.objects
-        .iter()
-        .any(|object| {
-            object.kind == "Symlink"
-                || (object.kind == "Component"
-                    && crate::commands::status::js::truthy(object.value.get("box")))
-        })
-    {
-        return Err("legacy workspace component resolution requires the published runtime".into());
-    }
+    let mut inv = load_scope_inventory(scope_dir)?;
+    super::graph::models::normalize(&mut inv)?;
     let settled_before = inv.started_at_ms.saturating_sub(RECENT_WRITE_MARGIN_MS);
     let mut graph = GcGraph::new(&inv);
     populate_roots(&mut graph, &inv, workspace_ids, settled_before, keep_limit);
@@ -216,7 +207,7 @@ fn seed_lane_roots(graph: &mut GcGraph, inv: &ScopeInventory) -> (CompHeadList, 
     for lane_val in live_lanes.chain(inv.trashed_lanes.iter()) {
         for (comp_key, ver_hash) in lane_component_refs(lane_val) {
             graph.add_root(&ver_hash);
-            if graph.comp_map.contains_key(&comp_key) {
+            if graph.models.contains_key(&comp_key) {
                 lane_heads.push((comp_key, ver_hash));
             } else {
                 unattached.push(ver_hash);

@@ -5,6 +5,7 @@ mod cross_device;
 mod graph;
 mod index;
 mod repository;
+mod verbose;
 
 use super::{Options, io_error};
 use crate::{
@@ -32,12 +33,7 @@ pub(super) fn run(scope: &Path, args: &[OsString], options: &Options) -> io::Res
             "bare collection Windows repository enumeration requires the published runtime".into(),
         ));
     }
-    if options.verbose {
-        return Ok(Outcome::Declined(
-            "verbose bare collection requires the published collector".into(),
-        ));
-    }
-    let plan = match prepare(scope) {
+    let plan = match prepare(scope, options) {
         Ok(plan) => plan,
         Err(error) => return Ok(Outcome::Declined(error.to_string())),
     };
@@ -51,7 +47,7 @@ pub(super) fn run(scope: &Path, args: &[OsString], options: &Options) -> io::Res
         workspace_command::execute_then_scope(scope, args, "gc", work)
     }
 }
-fn prepare(scope: &Path) -> io::Result<Plan> {
+fn prepare(scope: &Path, options: &Options) -> io::Result<Plan> {
     if !startup::supported(None, scope, &Value::Null, false)? {
         return Err(unsupported("configured startup callbacks"));
     }
@@ -60,12 +56,19 @@ fn prepare(scope: &Path) -> io::Result<Plan> {
     let objects = repository::read(&scope.join("objects"))?;
     let trash = repository::read(&scope.join("trash"))?;
     let mut collector = graph::Collector::new(scope, name, &objects, &trash);
+    collector.verbose = options.verbose;
     let deleted = collector.plan()?;
+    if options.verbose {
+        verbose::preflight(&objects, &deleted)?;
+    }
     files::validate_batch(&config, deleted.len())?;
     files::preflight_moves(scope, &deleted)?;
     let mut logs = inventory_report(name, &objects, &trash);
     logs.extend(collector.logs);
     logs.push(format!("[*] total {} refs to delete", deleted.len()));
+    if options.verbose {
+        logs.extend(verbose::deleted(&objects, &deleted)?);
+    }
     let components = deleted
         .iter()
         .filter_map(|hash| {

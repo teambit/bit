@@ -1,3 +1,4 @@
+pub(super) use recovery::encode_model;
 mod objects;
 mod recovery;
 mod squash;
@@ -16,7 +17,7 @@ pub(super) struct Prepared {
     squashes: Vec<squash::Prepared>,
 }
 impl Prepared {
-    pub(super) fn prepare(record: &mut Record) -> io::Result<Option<Self>> {
+    pub(super) fn prepare(record: &mut Record, models: &[Value]) -> io::Result<Option<Self>> {
         if record.request.options.lane.is_none() {
             return Ok(None);
         }
@@ -34,7 +35,10 @@ impl Prepared {
         }
         let current = context["current"]["value"].clone();
         let history = load_history(&context, &mut record.repository)?;
-        let recovery = recovery::Recovery::prepare(&record.request.root, &context)?;
+        let mut recovery = recovery::Recovery::prepare(&record.request.root, &context)?;
+        if current.is_null() {
+            recovery.main_components(models)?;
+        }
         Ok(Some(Self {
             context,
             current,

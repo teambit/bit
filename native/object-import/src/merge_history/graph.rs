@@ -46,16 +46,6 @@ pub(super) fn validate(versions: &[Version]) -> io::Result<()> {
     }
     Ok(())
 }
-fn put(versions: &mut Vec<Version>, version: Version) {
-    if let Some(found) = versions
-        .iter_mut()
-        .find(|item| item.hash == version.hash)
-    {
-        *found = version;
-    } else {
-        versions.push(version);
-    }
-}
 struct Reader<'a> {
     repository: crate::read_version::Reader<'a>,
 }
@@ -85,20 +75,16 @@ impl Reader<'_> {
     fn traverse(
         &mut self,
         head: &str,
-        cached: &[Version],
+        known: &mut HashSet<String>,
         added: &mut Vec<Version>,
     ) -> io::Result<()> {
         hash(head)?;
         let mut stack = vec![head.to_string()];
         while let Some(current) = stack.pop() {
-            if cached
-                .iter()
-                .chain(added.iter())
-                .any(|item| item.hash == current)
-            {
+            if !known.insert(current.clone()) {
                 continue;
             }
-            count(cached.len() + added.len() + 1)?;
+            count(known.len())?;
             let version = self.version(&current)?;
             for parent in version.parents.iter().rev() {
                 stack.push(parent.clone());
@@ -111,13 +97,14 @@ impl Reader<'_> {
 fn heads(request: &Load) -> io::Result<Vec<String>> {
     count(request.heads.len())?;
     let mut heads = request.heads.clone();
+    let known: HashSet<_> = request.overlay
+        .iter()
+        .chain(&request.cached)
+        .map(|version| version.hash.as_str())
+        .collect();
     for version in &request.overlay {
         for parent in &version.parents {
-            if !request.overlay
-                .iter()
-                .chain(request.cached.iter())
-                .any(|item| item.hash == *parent)
-            {
+            if !known.contains(parent.as_str()) {
                 heads.push(parent.clone());
             }
         }
@@ -133,7 +120,11 @@ pub(super) fn load(request: &Load) -> io::Result<Value> {
     for item in &request.stop_at {
         hash(item)?;
     }
-    let mut versions = request.cached.clone();
+    let mut versions: indexmap::IndexMap<_, _> = request.cached
+        .iter()
+        .map(|version| (version.hash.clone(), version.clone()))
+        .collect();
+    let mut known = versions.keys().cloned().collect();
     let mut added = Vec::new();
     let mut reader = Reader {
         repository: crate::read_version::Reader::history_with_artifacts(
@@ -141,14 +132,12 @@ pub(super) fn load(request: &Load) -> io::Result<Value> {
         )?,
     };
     for head in heads(request)? {
-        reader.traverse(&head, &versions, &mut added)?;
+        reader.traverse(&head, &mut known, &mut added)?;
     }
-    for version in &added {
-        put(&mut versions, version.clone());
+    for version in added.iter().chain(&request.overlay) {
+        versions.insert(version.hash.clone(), version.clone());
     }
-    for version in &request.overlay {
-        put(&mut versions, version.clone());
-    }
+    let versions = versions.into_values().collect::<Vec<_>>();
     validate(&versions)?;
     let mut data = json!({"versions":versions,"added":added,"missing":[]});
     if let Some(from) = &request.from {
@@ -158,23 +147,27 @@ pub(super) fn load(request: &Load) -> io::Result<Value> {
     Ok(data)
 }
 pub(super) fn subset(versions: &[Version], from: &str, stop: &[String]) -> Vec<String> {
-    let index: HashMap<_, _> = versions
+    let mut index = HashMap::new();
+    for version in versions {
+        index.entry(version.hash.as_str()).or_insert(version);
+    }
+    let stop: HashSet<_> = stop
         .iter()
-        .map(|version| (version.hash.as_str(), version))
+        .map(String::as_str)
         .collect();
+    if stop.contains(from) {
+        return Vec::new();
+    }
     let mut stack = vec![from.to_string()];
     let mut seen = HashSet::from([from.to_string()]);
     let mut result = Vec::new();
     while let Some(current) = stack.pop() {
-        if stop.contains(&current) {
-            continue;
-        }
         let Some(version) = index.get(current.as_str()) else {
             continue;
         };
         result.push(current);
         for parent in version.parents.iter().rev() {
-            if !stop.contains(parent)
+            if !stop.contains(parent.as_str())
                 && index.contains_key(parent.as_str())
                 && seen.insert(parent.clone())
             {

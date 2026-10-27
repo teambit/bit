@@ -16,6 +16,7 @@ pub(super) struct Collector<'a> {
     retained: HashSet<String>,
     dependencies: IndexSet<String>,
     pub logs: Vec<String>,
+    pub verbose: bool,
 }
 impl<'a> Collector<'a> {
     pub(super) fn new(
@@ -38,6 +39,7 @@ impl<'a> Collector<'a> {
             retained: HashSet::new(),
             dependencies: IndexSet::new(),
             logs: Vec::new(),
+            verbose: false,
         }
     }
     pub(super) fn plan(&mut self) -> io::Result<Vec<String>> {
@@ -91,13 +93,24 @@ impl<'a> Collector<'a> {
         let id = identity(component)?;
         self.retained.insert(digest(&id));
         self.retained.insert(digest(&format!("{id}:VersionHistory")));
-        if let Some(head) = head {
-            self.history(head, !local)?;
+        if self.verbose {
+            self.logs.push(format!("** processing {id} **"));
         }
-        if local {
-            for head in self.local_lane_heads(&id)? {
-                self.history(&head, true)?;
-            }
+        let main = match head {
+            Some(head) => self.history(head, !local, &HashSet::new())?,
+            None => HashSet::new(),
+        };
+        let heads = if local { self.local_lane_heads(&id)? } else { Vec::new() };
+        let mut count = main.len();
+        for head in &heads {
+            count += self.history(head, true, &main)?.len();
+        }
+        if self.verbose {
+            self.logs.push(if local {
+                format!("total {count} versions, total lanes with this component {}", heads.len())
+            } else {
+                format!("total {count} versions")
+            });
         }
         Ok(())
     }
@@ -116,11 +129,17 @@ impl<'a> Collector<'a> {
         }
         Ok(heads)
     }
-    fn history(&mut self, head: &str, tolerate_missing: bool) -> io::Result<()> {
+    fn history(
+        &mut self,
+        head: &str,
+        tolerate_missing: bool,
+        stop: &HashSet<String>,
+    ) -> io::Result<HashSet<String>> {
         let mut queue = VecDeque::from([head.to_owned()]);
         let mut seen = HashSet::new();
+        let mut loaded = HashSet::new();
         while let Some(hash) = queue.pop_front() {
-            if !seen.insert(hash.clone()) {
+            if stop.contains(&hash) || !seen.insert(hash.clone()) {
                 continue;
             }
             let Some(object) = self.objects.get(&hash) else {
@@ -132,17 +151,31 @@ impl<'a> Collector<'a> {
             if object.kind != "Version" {
                 return Err(unsupported("non-version ancestry object"));
             }
+            loaded.insert(hash.clone());
             self.version(&hash, &object.value);
             queue.extend(strings(&object.value["parents"])?);
             self.dependencies.extend(flattened(self.scope, &object.value)?);
         }
-        Ok(())
+        Ok(loaded)
     }
     fn version(&mut self, hash: &str, version: &Value) {
         self.retained.insert(hash.to_owned());
         self.retained.extend(super::super::graph::version_refs_without_parents(version));
     }
     fn foreign_lanes(&mut self) -> io::Result<()> {
+        let foreign = self.retain_lanes()?;
+        if self.verbose && foreign.len() > 1 {
+            return Err(unsupported("verbose foreign lane report ordering"));
+        }
+        self.logs.push(format!("[*] total {} components inside lanes", foreign.len()));
+        for (id, head) in foreign {
+            if let Some(object) = repository::model(self.objects, &id)? {
+                self.component(&object.value, Some(&head), false)?;
+            }
+        }
+        Ok(())
+    }
+    fn retain_lanes(&mut self) -> io::Result<IndexSet<(String, String)>> {
         let mut foreign = IndexSet::new();
         for (hash, lane) in &self.lanes {
             self.retained.insert(hash.clone());
@@ -153,13 +186,7 @@ impl<'a> Collector<'a> {
                 }
             }
         }
-        self.logs.push(format!("[*] total {} components inside lanes", foreign.len()));
-        for (id, head) in foreign {
-            if let Some(object) = repository::model(self.objects, &id)? {
-                self.component(&object.value, Some(&head), false)?;
-            }
-        }
-        Ok(())
+        Ok(foreign)
     }
     fn dependency(&mut self, id: &str) -> io::Result<()> {
         let (id, version) =

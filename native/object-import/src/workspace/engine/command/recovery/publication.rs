@@ -26,10 +26,7 @@ pub(super) fn restore(input: &Restore, state: &mut State) -> io::Result<(usize, 
     controls.validate(&input.dependency_read_set)?;
     controls.validate(&retained.record.proofs)?;
     retained.restore.publish()?;
-    retained.record.repository.accept_recovery_staged(
-        &retained.record.request.root,
-        retained.restore.staged_snaps.as_deref(),
-    )?;
+    accept_restored_objects(&mut retained)?;
     write_pending(&retained.record.request.root, &json!([]))?;
     crate::workspace::actions::remove(&retained.record.request.root.join("merge-conflict"))?;
     let projected = controls.project(&input.dependency_read_set, false)?;
@@ -43,6 +40,43 @@ pub(super) fn restore(input: &Restore, state: &mut State) -> io::Result<(usize, 
     let count = retained.record.targets.len();
     state.recovery = Some(retained);
     Ok((count, output))
+}
+
+fn accept_restored_objects(retained: &mut super::Retained) -> io::Result<()> {
+    retained.record.repository.accept_recovery_objects(
+        &retained.record.request.root,
+        retained.restore.main_objects(),
+    )?;
+    restore_models(&mut retained.record, retained.restore.main_objects())?;
+    retained.record.repository.accept_recovery_staged(
+        &retained.record.request.root,
+        retained.restore.staged_snaps.as_deref(),
+    )?;
+    Ok(())
+}
+
+fn restore_models(
+    record: &mut super::super::Record,
+    objects: &[(String, Vec<u8>)],
+) -> io::Result<()> {
+    let models = record.context["models"]
+        .as_array_mut()
+        .ok_or_else(|| invalid("recovery context models"))?;
+    for model in models {
+        let name = model["name"].as_str().ok_or_else(|| invalid("recovery model name"))?;
+        let identity = model["scope"]
+            .as_str()
+            .filter(|scope| !scope.is_empty())
+            .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
+        let hash = super::super::super::hash(identity.as_bytes());
+        if objects
+            .iter()
+            .any(|(restored, _)| *restored == hash)
+        {
+            *model = record.repository.read(&hash, "Component")?;
+        }
+    }
+    Ok(())
 }
 
 pub(super) fn validate_apply(

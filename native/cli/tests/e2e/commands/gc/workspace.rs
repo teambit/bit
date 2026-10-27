@@ -46,6 +46,10 @@ fn workspace_backup_failure_after_stray_cleanup_is_owned_in_json_and_ci() {
         ("gc --backup --json", false),
         ("gc --backup", true),
         ("gc --backup --json", true),
+        ("gc --backup --verbose", false),
+        ("gc --backup --verbose --json", false),
+        ("gc --backup --verbose", true),
+        ("gc --backup --verbose --json", true),
     ] {
         let helper = support::workspace(1, true);
         let scope = bit_object_import::scope_path(&helper.scopes.local_path);
@@ -119,7 +123,7 @@ fn workspace_recovery_declines_missing_ci_backup_before_mutation() {
 }
 
 #[test]
-fn workspace_collection_declines_legacy_component_aliases_before_cleanup() {
+fn workspace_collection_declines_missing_legacy_alias_targets_before_cleanup() {
     let helper = support::workspace(1, true);
     let scope = bit_object_import::scope_path(&helper.scopes.local_path);
     let hash = orphan(&scope);
@@ -129,6 +133,38 @@ fn workspace_collection_declines_legacy_component_aliases_before_cleanup() {
     objects::write(&scope, "Symlink", &alias, &serde_json::to_vec(&value).unwrap());
     let result = support::compare_declined(&helper, "gc --backup", str::to_owned);
     assert!(result.status.success(), "{result:?}");
-    assert!(result.trace.contains("legacy workspace component resolution"), "{result:?}");
+    assert!(result.trace.contains("legacy workspace alias target"), "{result:?}");
     assert!(objects::path(&scope, "deleted-objects", &hash).is_file());
+}
+
+#[test]
+fn workspace_verbose_collection_preserves_text_logs_and_json_suppression() {
+    for ci in [false, true] {
+        for command in [
+            "gc --verbose --dry-run",
+            "gc --verbose --dry-run --json",
+            "gc --verbose --backup",
+            "gc --verbose --json",
+        ] {
+            let helper = support::workspace(1, true);
+            let scope = bit_object_import::scope_path(&helper.scopes.local_path);
+            let hash = orphan(&scope);
+            old(&objects::path(&scope, "objects", &hash));
+            let result = if ci {
+                support::compare_ci(&helper, command, true)
+            } else {
+                support::compare(&helper, command)
+            };
+            assert!(result.status.success(), "{result:?}");
+            assert!(!result.trace.contains("starting the JavaScript host"), "{result:?}");
+            assert_eq!(
+                result.stdout.contains(&format!("gc, deleting Source {hash}")),
+                !command.contains("--json"),
+            );
+            assert_eq!(
+                objects::path(&scope, "objects", &hash).exists(),
+                command.contains("--dry-run"),
+            );
+        }
+    }
 }

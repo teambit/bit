@@ -91,7 +91,10 @@ pub(super) fn model<'objects>(
     let Some(object) = objects.get(&digest(id)) else { return Ok(None) };
     if object.kind == "Symlink" {
         let id = format!("{}/{}", text(&object.value["realScope"])?, text(&object.value["name"])?);
-        return component(objects.get(&digest(&id)));
+        let target = objects
+            .get(&digest(&id))
+            .ok_or_else(|| unsupported("legacy alias target model is missing"))?;
+        return component(Some(target));
     }
     component(Some(object))
 }

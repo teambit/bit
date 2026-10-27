@@ -9,6 +9,11 @@ use std::{fs, io, path::Path};
 
 impl Plan {
     pub(in crate::commands::gc) fn validate(&self, scope: &Path) -> io::Result<()> {
+        if self.result.deleted.by_type.len() > 1 {
+            return Err(io::Error::other(
+                "mixed object-type collection report ordering requires the published runtime",
+            ));
+        }
         let config = serde_json::from_slice(&fs::read(scope.join("scope.json"))?)?;
         files::validate_batch(&config, self.versions.len().max(self.sources.len()))?;
         if self.result.flags.backup {
@@ -19,6 +24,13 @@ impl Plan {
             return Err(io::Error::other("stray-file concurrency limit"));
         }
         Ok(())
+    }
+    pub(in crate::commands::gc) fn log(&self, output: &bit_install::output::Output) {
+        for (kind, hashes) in [("Version", &self.versions), ("Source", &self.sources)] {
+            for hash in hashes {
+                output.console(&format!("gc, deleting {kind} {hash}"));
+            }
+        }
     }
     pub(in crate::commands::gc) fn execute(&self, scope: &Path) -> io::Result<()> {
         if self.result.flags.dry_run {

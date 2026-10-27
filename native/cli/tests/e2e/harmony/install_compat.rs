@@ -1,5 +1,7 @@
 //! Actual published `InstallMain` slots and mutable dependency-installer subscribers.
 
+mod main_snapshot;
+
 use crate::{
     commands::move_paths::support,
     helper::{Helper, config},
@@ -236,10 +238,12 @@ fn configured_checkout_keeps_provider_memory_through_install() {
 #[test]
 fn configured_lane_merge_leaves_unloaded_provider_out_of_install() {
     let helper = merge_ready_minimal();
-    let result = support::compare_install(
+    let additions = main_snapshot::expected(&helper);
+    let result = support::compare_install_with_scope_additions(
         &helper,
         "lane merge install-dev --auto-merge-resolve theirs --no-snap",
         install_output,
+        &additions,
     );
     assert!(result.status.success(), "{} {}", result.stdout, result.stderr);
     assert!(!helper.scopes.local_path.join("install-compat-planning.json").exists());
@@ -250,10 +254,12 @@ fn configured_lane_merge_leaves_unloaded_provider_out_of_install() {
 fn configured_lane_merge_does_not_invoke_unloaded_provider_failure() {
     let helper = merge_ready_minimal();
     helper.output_file("install-compat-fail-pre", "active");
-    let result = support::compare_install(
+    let additions = main_snapshot::expected(&helper);
+    let result = support::compare_install_with_scope_additions(
         &helper,
         "lane merge install-dev --auto-merge-resolve theirs --no-snap",
         install_output,
+        &additions,
     );
     assert!(result.status.success(), "{} {}", result.stdout, result.stderr);
     assert!(!helper.scopes.local_path.join("install-compat-planning.json").exists());

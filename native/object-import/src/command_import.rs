@@ -19,6 +19,7 @@ mod history;
 mod merge;
 mod prepare;
 mod publish;
+mod recovery_objects;
 mod remote_error;
 mod retained;
 

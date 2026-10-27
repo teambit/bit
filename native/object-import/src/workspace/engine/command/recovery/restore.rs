@@ -15,7 +15,12 @@ pub(super) struct Prepared {
     root: PathBuf,
     mutations: Mutations,
     lane: bool,
-    object: Option<super::lane::Lane>,
+    objects: Objects,
+}
+#[derive(Default)]
+struct Objects {
+    lane: Option<super::lane::Lane>,
+    main: Option<main::Main>,
 }
 #[derive(Default)]
 struct Mutations {
@@ -25,6 +30,7 @@ struct Mutations {
     permissions: Vec<(PathBuf, std::fs::Permissions)>,
     staged_bytes: Vec<Option<Vec<u8>>>,
 }
+mod main;
 mod paths;
 mod projection;
 pub(super) fn prepare(
@@ -49,12 +55,12 @@ pub(super) fn prepare(
         root: root.into(),
         mutations: Mutations::default(),
         lane,
-        object: None,
+        objects: Objects::default(),
     };
     if lane {
         prepare_lane(&mut prepared, &bitmap_path, &workspace_path, proofs)?;
     }
-    if let Some(object) = &prepared.object {
+    if let Some(object) = &prepared.objects.lane {
         prepared.items.push(format!("{} lane object", object.id));
     }
     prepared.capture_permissions()?;
@@ -72,7 +78,10 @@ fn prepare_lane(
         &proof::read(&root.join(".bitmap"), proofs)?
             .ok_or_else(|| invalid("recovery live bitmap"))?,
     )?;
-    prepared.object = super::lane::prepare(root, &current, proofs)?;
+    prepared.objects.lane = super::lane::prepare(root, &current, proofs)?;
+    if prepared.objects.lane.is_none() {
+        prepared.objects.main = main::Main::prepare(root, proofs)?;
+    }
     prepared.mutations.removals =
         paths::removals(root, &current, bitmap_path, &prepared.bitmap, proofs)?;
     prepared.mutations.copies.extend([
@@ -105,7 +114,7 @@ fn staged_controls(prepared: &mut Prepared, proofs: &mut Vec<proof::Proof>) -> i
     let backup = crate::scope_path(root).join("last-merged");
     let staged_config = format!(
         "staged-config/{}.json",
-        prepared.object.as_ref().map_or("main", |lane| lane.id.as_str()),
+        prepared.objects.lane.as_ref().map_or("main", |lane| lane.id.as_str()),
     );
     for (source, destination) in
         [("staged-snaps", "staged-snaps"), ("staged-config.json", staged_config.as_str())]
@@ -150,8 +159,11 @@ impl Prepared {
     pub(super) fn validate(&self) -> io::Result<()> {
         self.validate_permissions()?;
 
-        if let Some(object) = &self.object {
+        if let Some(object) = &self.objects.lane {
             object.validate()?;
+        }
+        if let Some(main) = &self.objects.main {
+            main.validate()?;
         }
         for (source, destination) in &self.mutations.copies {
             crate::recovery::validate_copy(source, destination)?;
@@ -171,8 +183,16 @@ impl Prepared {
         }
         Ok(())
     }
+    pub(in super::super) fn main_objects(&self) -> &[(String, Vec<u8>)] {
+        self.objects.main
+            .as_ref()
+            .map_or(&[], |main| main.objects.as_slice())
+    }
     pub(super) fn publish(&mut self) -> io::Result<()> {
-        if let Some(object) = &mut self.object {
+        if let Some(main) = &self.objects.main {
+            main.publish(&self.root)?;
+        }
+        if let Some(object) = &mut self.objects.lane {
             object.publish(&self.root)?;
         }
         for path in &self.mutations.removals {

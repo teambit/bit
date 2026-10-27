@@ -100,3 +100,51 @@ snapshots: the tested operation is native cross-scope fetching, including exact
 output, model, version and ref comparisons. The prior Windows failure was a setup
 snapshot declining because its environment package was absent, before that fetch
 comparison ran. No native fetch assertion was removed.
+
+
+## Follow-up through Bit 2.2.160
+
+This sync advances from `f74f23c8ef59e90206b35e84ceb06bd524686391` to
+`e564f07658bdcc541d4ff4c66ec6c4751ef21d04`, preserving all six upstream commits.
+The generated test inventory includes the two new main recovery assertions;
+the stale inventory caused the formatting job to fail on GitHub's synthetic
+merge of the previous Rust head with this newer master.
+
+| Upstream change | Native disposition |
+| --- | --- |
+| #10865: indexed version-parent traversal | Cached and newly loaded history use indexed membership and replacement while preserving insertion and preorder traversal order. Subset traversal uses first-entry lookup and indexed stop boundaries. A deep-history regression covers overlay replacement and stop order. |
+| #10860: TypeScript migration cleanup | Type annotations, explicit identity-string keys and removed unused constructor arguments do not change native wire formats or behavior. The existing status error-field behavior is preserved. |
+| #10846: aborting a lane merge into main restores component models | Native merge snapshots all selected main models before publication. Abort restores their canonical objects, updates retained import proofs and removes pending model overlays so later import publication cannot replay the merged heads. Missing legacy backups remain compatible; malformed snapshots and restoration requiring index repair decline before effects. |
+
+The two new upstream recovery assertions run natively: abort restores the original
+main head and leaves no merged snaps staged for export. Disabling the new snapshot
+makes the head assertion fail. Serialization uses the existing released-qualified
+component projection. Bit 2.2.160 is not yet downloadable from the release service,
+so these new upstream semantics are covered by explicit regression assertions;
+a differential run against that release remains pending its availability. The
+full-suite released reference stays at Bit 2.2.146.
+
+Collection qualification also adds bare verbose counts and object identities,
+workspace verbose text/JSON suppression, legacy aliases and boxed names, and scoped lookup without a name-only
+fallback. Missing alias targets delegate before deletion. Mixed Version/Source
+workspace reports remain delegated because their property and text order depends
+on the released glob traversal. Runtime callbacks and the other documented
+collection boundaries remain open.
+
+The installer compatibility comparisons retain exact scope state and add only the
+three expected entries for the new main-model backup (directory, object bytes,
+and file mode). The expected object is the pre-merge model written by the released
+Node fixture, not a native-generated expected value. The older reference still
+supplies every other output, file, remote and callback assertion. The first full
+run had 1,702 passes, these two expected upstream-delta failures, one Bit Cloud
+setup failure and two existing skips. Both installer cases pass with the explicit
+backup assertion, alongside all 36 focused collection/recovery cases. Disabling
+workspace verbose logging makes its exact stdout comparison fail.
+
+Final qualification: formatting, Clippy, Dylint, rustdoc and all 1,809 workspace
+tests pass. Full E2E records 1,704 passes, two Bit Cloud failures during released
+fixture setup and two existing skips; both failed cases pass unchanged in a serial
+rerun. Generated inventory/census/asset and scope checks pass. Windows CI now
+explicitly includes the lane-abort regressions. Repository Node lint remains
+unavailable because `tsc` is not installed. A newer upstream history-membership
+optimization landed during validation and is the next sync audit.

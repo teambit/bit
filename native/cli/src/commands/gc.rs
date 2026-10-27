@@ -94,9 +94,6 @@ fn run_workspace_gc(root: &ScopeRoot, args: &[OsString], options: &Options) -> i
             "Windows collection repository enumeration requires the published runtime".into(),
         ));
     }
-    if options.verbose {
-        return Ok(Outcome::Declined("verbose gc with objects delegated".into()));
-    }
     let plan = match prepare_workspace_garbage(&root.path, &scope_dir, options) {
         Ok(Some(plan)) => plan,
         Ok(None) => return Ok(Outcome::Declined("gc workspace config delegated".into())),
@@ -104,6 +101,9 @@ fn run_workspace_gc(root: &ScopeRoot, args: &[OsString], options: &Options) -> i
             return Ok(Outcome::Declined(format!("workspace collection preflight: {error}")));
         }
     };
+    if options.verbose && !options.json && plan.result.deleted.objects > 1 {
+        return Ok(Outcome::Declined("workspace verbose deletion ordering".into()));
+    }
     if let Err(error) = plan.validate(&scope_dir) {
         return Ok(Outcome::Declined(error.to_string()));
     }
@@ -124,13 +124,16 @@ fn execute_workspace_gc(
     } else {
         format_gc_report(&plan.result, chalk)
     };
-    let work = |_: &bit_install::output::Output| {
+    let work = |output: &bit_install::output::Output| {
         if let Some(bytes) = index {
             let path = scope_dir.join("index.json");
             fs::write(&path, bytes)
                 .map_err(|error| {
                     io_error::report(&io_error::failure(error, "open", &path), chalk)
                 })?;
+        }
+        if options.verbose {
+            plan.log(output);
         }
         plan.execute(&scope_dir).map_err(|error| io_error::report(&error, chalk))?;
         Ok(Report { data, code: 0, details: None })

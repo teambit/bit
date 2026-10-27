@@ -227,7 +227,7 @@ fn prepare_materials(
         })
         .collect::<io::Result<Vec<_>>>()?;
     let plans = state.prepare_bodies(requests, snapshots, record.repository.overlay())?;
-    let mut prepared = empty_plan(record, state)?;
+    let mut prepared = empty_plan(record, state, selected)?;
     for ((index, selected), plan) in selected
         .iter()
         .enumerate()
@@ -257,10 +257,20 @@ fn prepare_materials(
     planned.merge = Some(prepared);
     Ok(())
 }
-fn empty_plan(record: &mut Record, state: merge::State) -> io::Result<Prepared> {
+fn empty_plan(
+    record: &mut Record,
+    state: merge::State,
+    selected: &[Selected],
+) -> io::Result<Prepared> {
     Ok(Prepared {
         publication: Publication {
-            lane: super::lane_publication::Prepared::prepare(record)?,
+            lane: super::lane_publication::Prepared::prepare(
+                record,
+                &selected
+                    .iter()
+                    .map(|row| row.model.clone())
+                    .collect::<Vec<_>>(),
+            )?,
             fast_forward: None,
             removed: Vec::new(),
         },

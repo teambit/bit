@@ -41,6 +41,13 @@ impl Recovery {
         output.validate()?;
         Ok(output)
     }
+    pub(super) fn main_components(&mut self, models: &[Value]) -> io::Result<()> {
+        for (index, model) in models.iter().enumerate() {
+            let (_, bytes) = encode_model(model)?;
+            self.files.push((format!("main-components/{index}"), bytes));
+        }
+        Ok(())
+    }
     fn staged_config(&mut self, root: &Path, lane: &Value) -> io::Result<()> {
         let current = &lane["current"];
         let config = if current.is_null() {
@@ -104,7 +111,9 @@ impl Recovery {
         }
         fs::create_dir_all(&self.directory)?;
         for (name, bytes) in &self.files {
-            fs::write(self.directory.join(name), bytes)?;
+            let path = self.directory.join(name);
+            fs::create_dir_all(path.parent().unwrap())?;
+            fs::write(path, bytes)?;
         }
         for (_, name, permissions) in &self.permissions {
             fs::set_permissions(self.directory.join(name), permissions.clone())?;
@@ -127,4 +136,18 @@ fn encode_lane(hash: &str, value: &Value) -> io::Result<Vec<u8>> {
     encoder.write_all(format!("Lane {hash} {length}\0").as_bytes())?;
     encoder.write_all(&body)?;
     encoder.finish()
+}
+
+pub(in crate::workspace::engine::command) fn encode_model(
+    value: &Value,
+) -> io::Result<(String, Vec<u8>)> {
+    let object = snapshot::object("Component", None, value.clone())?;
+    let fields = serde_json::from_value(object["fields"].clone()).map_err(io::Error::other)?;
+    let hash = crate::snapshot_projection::identity("Component", &fields, None)?;
+    let body = crate::snapshot_projection::serialize("Component", &fields, false)?;
+    let length = String::from_utf8_lossy(&body).encode_utf16().count();
+    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+    encoder.write_all(format!("Component {hash} {length}\0").as_bytes())?;
+    encoder.write_all(&body)?;
+    Ok((hash, encoder.finish()?))
 }

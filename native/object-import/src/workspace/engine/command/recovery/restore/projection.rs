@@ -32,6 +32,15 @@ impl Prepared {
         {
             expected.insert(destination.clone(), bytes.clone());
         }
+        for (hash, bytes) in self.main_objects() {
+            expected.insert(
+                crate::scope_path(&self.root)
+                    .join("objects")
+                    .join(&hash[..2])
+                    .join(&hash[2..]),
+                Some(bytes.clone()),
+            );
+        }
         Controls {
             expected,
             backup: crate::scope_path(&self.root).join("last-merged"),

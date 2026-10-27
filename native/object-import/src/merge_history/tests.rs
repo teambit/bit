@@ -389,3 +389,35 @@ if(files.refs[0].ref.toString()!==hash||files.refs[0].relativePath!=='dist/index
         .unwrap();
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
 }
+
+#[test]
+fn indexed_history_preserves_deep_order_and_overlay_stop_boundaries() {
+    let directory = Directory::new();
+    let hashes: Vec<_> = (0..2048)
+        .map(|index| format!("{index:040x}"))
+        .collect();
+    let cached: Vec<_> = hashes
+        .iter()
+        .enumerate()
+        .map(|(index, hash)| {
+            let parents: Vec<_> = hashes
+                .get(index + 1)
+                .map(String::as_str)
+                .into_iter()
+                .collect();
+            record(hash, &parents)
+        })
+        .collect();
+    let mut request = graph(&directory, &hashes[0]);
+    request["cached"] = json!(cached);
+    request["overlay"] = json!([record(&hashes[1024], &[&hashes[2047]])]);
+    request["stopAt"] = json!([hashes[2047]]);
+    let result = response(&request);
+    assert_eq!(result["failed"], false);
+    assert_eq!(result["data"]["added"], json!([]));
+    assert_eq!(result["data"]["hashes"], json!(hashes[..1025]));
+    let versions = result["data"]["versions"].as_array().unwrap();
+    assert_eq!(versions.len(), hashes.len());
+    assert_eq!(versions[1024], record(&hashes[1024], &[&hashes[2047]]));
+    assert_eq!(versions[2047]["hash"], hashes[2047]);
+}

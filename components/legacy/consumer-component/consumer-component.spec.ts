@@ -14,12 +14,10 @@ describe('ConsumerComponent', function () {
       files: [new SourceFile({ base: '.', path: 'is-string.js', contents: Buffer.from(''), test: false })],
     };
     it('should return an empty array when there is no docs', () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const component = new Component(componentProps);
       expect(component.docs).to.deep.equal([]);
     });
     it('should generate bindingPrefix based on the defaultScope if not specified', () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const component = new Component(componentProps);
       expect(component.bindingPrefix).to.equal('@my-scope');
     });
@@ -37,7 +35,6 @@ describe('ConsumerComponent', function () {
         loaded += 1;
         return new ComponentIdList(ComponentID.fromString('my-scope/is-type@0.0.1'));
       };
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const component = new Component({ ...componentProps, loadFlattenedDependencies: load });
       expect(loaded).to.equal(0);
       expect(component.flattenedDependencies.toString()).to.equal('my-scope/is-type@0.0.1');
@@ -48,13 +45,11 @@ describe('ConsumerComponent', function () {
       const load = () => {
         throw new Error('unable to find the object');
       };
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const component = new Component({ ...componentProps, loadFlattenedDependencies: load });
       expect(() => component.flattenedDependencies).to.throw('unable to find the object');
       expect(() => component.flattenedDependencies).to.throw('unable to find the object');
     });
     it('should default to an empty list and keep a list that was set', () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const component = new Component(componentProps);
       expect(component.flattenedDependencies).to.have.lengthOf(0);
       const ids = new ComponentIdList(ComponentID.fromString('my-scope/is-type@0.0.2'));

@@ -22,3 +22,26 @@ fn an_object_removed_after_planning_does_not_remove_its_empty_bucket() {
             .is_none(),
     );
 }
+
+#[test]
+fn mixed_type_reports_decline_before_stray_cleanup_or_collection() {
+    let scope = tempfile::tempdir().unwrap();
+    let stray = scope.path().join("interrupted-write");
+    fs::write(&stray, b"keep until planning succeeds").unwrap();
+    let mut result = GcResult::default();
+    for kind in ["Version", "Source"] {
+        result.deleted.by_type.insert(
+            kind.into(),
+            super::super::super::format::DeletedTypeStats { count: 1, size: 1 },
+        );
+    }
+    let plan =
+        Plan { result, versions: Vec::new(), sources: Vec::new(), stray: vec![stray.clone()] };
+    assert!(
+        plan.validate(scope.path())
+            .unwrap_err()
+            .to_string()
+            .contains("mixed object-type"),
+    );
+    assert_eq!(fs::read(stray).unwrap(), b"keep until planning succeeds");
+}

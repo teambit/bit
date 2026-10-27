@@ -4,7 +4,9 @@ mod boundaries;
 mod cross_device;
 mod objects;
 mod restore;
+mod verbose;
 mod workspace;
+mod workspace_aliases;
 use crate::{
     commands::move_paths::support::{self, tree},
     helper::{Helper, Run},
