@@ -1127,7 +1127,9 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
       fs.outputFileSync(path.join(devPath, 'comp2', 'index.js'), 'module.exports = () => "comp2";');
       helper.command.runCmd('bit add comp2', devPath);
       helper.command.runCmd(`bit scope set ${otherScope} comp2`, devPath);
-      helper.command.runCmd('bit env set comp2 teambit.harmony/node', devPath);
+      // any env gives the foreign component its own config. it must be one that loads without an
+      // install, so the core empty-env rather than teambit.harmony/node, which is no longer a core aspect.
+      helper.command.runCmd('bit env set comp2 teambit.harmony/empty-env', devPath);
       helper.command.runCmd('bit snap --message "comp2 on the lane"', devPath);
       helper.command.runCmd('bit export', devPath);
 
