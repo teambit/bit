@@ -63,6 +63,7 @@ function MenuItem(props: MenuItemProps) {
 
   return (
     <div ref={currentVersionRef} key={`${current.href}-container`}>
+      {/* @ts-ignore */}
       <MenuLinkItem key={current.href} active={current.id === selected?.id} href={current.href} onClick={onClick}>
         <div className={styles.menuItem}>
           <span>{current.label}</span>

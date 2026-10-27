@@ -7,6 +7,7 @@ import { Html } from '@teambit/ui-foundation.ui.rendering.html';
 export function fullPageToStaticString(content: ReactNode, assets?: Assets) {
   const html = (
     <Html assets={assets} fullHeight>
+      {/* @ts-ignore */}
       {content}
     </Html>
   );

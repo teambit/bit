@@ -17,6 +17,7 @@ describe('Time Ago Component', () => {
   it('should render - years ago', () => {
     const { getByText } = render(<YearsAgoWithTimestamp />);
     const text = getByText(/years ago/);
+    // @ts-ignore
     expect(text).toBeInTheDocument();
   });
   it('renders correctly - month ago', () => {
@@ -25,6 +26,7 @@ describe('Time Ago Component', () => {
   it('should render - month ago', () => {
     const { getByText } = render(<MonthTimeAgo />);
     const text = getByText(/month ago/);
+    // @ts-ignore
     expect(text).toBeInTheDocument();
   });
   it('renders correctly - months ago', () => {
@@ -33,6 +35,7 @@ describe('Time Ago Component', () => {
   it('should render - months ago', () => {
     const { getByText } = render(<MonthsTimeAgo />);
     const text = getByText(/months ago/);
+    // @ts-ignore
     expect(text).toBeInTheDocument();
   });
   it('renders correctly - hour ago', () => {
@@ -41,6 +44,7 @@ describe('Time Ago Component', () => {
   it('should render - hour ago', () => {
     const { getByText } = render(<HourTimeAgo />);
     const text = getByText(/hour ago/);
+    // @ts-ignore
     expect(text).toBeInTheDocument();
   });
   it('renders correctly - hours ago', () => {
@@ -49,6 +53,7 @@ describe('Time Ago Component', () => {
   it('should render - hours ago', () => {
     const { getByText } = render(<HoursTimeAgo />);
     const text = getByText(/hours ago/);
+    // @ts-ignore
     expect(text).toBeInTheDocument();
   });
   it('renders correctly - just now', () => {
@@ -57,6 +62,7 @@ describe('Time Ago Component', () => {
   it('should render - just now', () => {
     const { getByText } = render(<CurrentTime />);
     const text = getByText(/just now/);
+    // @ts-ignore
     expect(text).toBeInTheDocument();
   });
   it('renders correctly - just now with ISO date', () => {
@@ -65,6 +71,7 @@ describe('Time Ago Component', () => {
   it('should render - just now', () => {
     const { getByText } = render(<CurrentTimeWithIsoDate />);
     const text = getByText(/just now/);
+    // @ts-ignore
     expect(text).toBeInTheDocument();
   });
 });
