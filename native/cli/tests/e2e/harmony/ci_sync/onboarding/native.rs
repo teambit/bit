@@ -91,11 +91,7 @@ fn nested_workspace_writes_workflows_at_the_repository_root_without_node() {
     let baseline = helper.clone_workspace();
     let parent = helper.scopes.e2e_dir.join(".github");
     assert!(!parent.exists());
-    let expected = Helper::cmd_in_with(
-        &helper.scopes.local_path,
-        "ci sync --init",
-        &[("BIT_NATIVE", std::ffi::OsStr::new("off"))],
-    );
+    let expected = nested_reference(&helper);
     assert!(expected.status.success(), "{expected:?}");
     let expected_files = nested_files(&helper);
     helper.get_cloned_workspace(&baseline);
@@ -109,8 +105,35 @@ fn nested_workspace_writes_workflows_at_the_repository_root_without_node() {
     assert!(actual.native && actual.status.success(), "{actual:?}");
     assert_eq!(actual.stdout, expected.stdout);
     assert_eq!(actual.stderr, expected.stderr);
-    assert_eq!(nested_files(&helper), expected_files);
+    assert_eq!(
+        nested_files(&helper),
+        expected_files,
+        "reference path trace: {}",
+        fs::read_to_string(helper.scopes.e2e_dir.join("onboarding-paths.jsonl")).unwrap(),
+    );
     assert!(!helper.scopes.local_path.join(".github").exists());
+}
+
+fn nested_reference(helper: &Helper) -> crate::helper::Run {
+    let scripts = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let engine = scripts.join("../../scripts/rust/pnpm-oracle/preload.cjs");
+    let trace = scripts.join("tests/e2e/harmony/ci_sync/onboarding/paths.cjs");
+    let options = format!(
+        r#"{} --require="{}" --require="{}""#,
+        std::env::var("NODE_OPTIONS").unwrap_or_default(),
+        engine.to_string_lossy().replace('\\', "/"),
+        trace.to_string_lossy().replace('\\', "/"),
+    );
+    let log = helper.scopes.e2e_dir.join("onboarding-paths.jsonl");
+    Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "ci sync --init",
+        &[
+            ("BIT_NATIVE", std::ffi::OsStr::new("off")),
+            ("NODE_OPTIONS", std::ffi::OsStr::new(&options)),
+            ("BIT_TEST_ONBOARDING_PATHS", log.as_os_str()),
+        ],
+    )
 }
 
 fn nested_files(helper: &Helper) -> BTreeMap<&'static str, Vec<u8>> {

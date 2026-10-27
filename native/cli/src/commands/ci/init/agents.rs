@@ -5,12 +5,12 @@ const END: &str = "<!-- bit-ci-sync:end -->";
 pub(super) const UNKNOWN: &str = "<org>/<this-repo>";
 
 pub(super) fn render(scope: &str, repo: &str, branch: &str) -> String {
-    let raw = include_str!("agents-section.md");
+    let raw = include_str!("agents-section.md").replace("\r\n", "\n");
     let quoted = super::shell_word(branch);
     let values =
         [("scope", scope), ("repo", repo), ("branch", branch), ("branch-sh", quoted.as_str())];
     let mut out = String::new();
-    let mut rest = raw;
+    let mut rest = raw.as_str();
     while let Some(start) = rest.find("{{") {
         out.push_str(&rest[..start]);
         let token = &rest[start..];

@@ -20,7 +20,10 @@ pub(super) fn workflows(
         ),
         (".github/workflows/bit-release.yml", include_str!("bit-release.yml"), "branches: [main]"),
     ] {
-        let path = root.join(relative);
+        let path = root
+            .join(relative)
+            .components()
+            .collect::<std::path::PathBuf>();
         let status = if path.exists() {
             "skipped"
         } else {
@@ -37,7 +40,8 @@ pub(super) fn workflows(
 fn render(raw: &str, marker: &str, branch: &str, workspace_dir: &str) -> String {
     let quoted = |value: &str| format!("'{}'", value.replace('\'', "''"));
     let replacement = marker.replacen("main", &quoted(branch), 1);
-    let rendered = raw.replacen(marker, &replacement, 1);
+    // JavaScript template literals normalize source CRLF, including Windows checkouts.
+    let rendered = raw.replace("\r\n", "\n").replacen(marker, &replacement, 1);
     if workspace_dir.is_empty() || workspace_dir == "." {
         return rendered;
     }
@@ -80,6 +84,18 @@ pub(super) fn config(root: &Path) -> io::Result<bool> {
     Ok(true)
 }
 fn failure(error: io::Error, operation: &str, path: &Path) -> io::Error {
+    let error = if cfg!(windows)
+        && operation == "mkdir"
+        && error.kind() == io::ErrorKind::AlreadyExists
+        && path
+            .ancestors()
+            .skip(1)
+            .any(Path::is_file)
+    {
+        io::Error::from(io::ErrorKind::NotADirectory)
+    } else {
+        error
+    };
     if cfg!(unix) && error.kind() == io::ErrorKind::PermissionDenied {
         return io::Error::new(
             error.kind(),

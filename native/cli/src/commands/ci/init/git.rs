@@ -15,7 +15,7 @@ pub(super) fn origin(root: &Path) -> Option<String> {
 pub(super) fn repository_root(root: &Path) -> Option<PathBuf> {
     run(root, &["rev-parse", "--show-toplevel"])
         .filter(|value| !value.is_empty())
-        .map(PathBuf::from)
+        .map(|value| Path::new(&value).components().collect())
 }
 pub(super) fn commits(root: &Path) -> bool {
     run(root, &["rev-parse", "--verify", "--quiet", "HEAD"]).is_some_and(|value| !value.is_empty())
