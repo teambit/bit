@@ -12,6 +12,7 @@ mod config;
 mod delete;
 mod diff;
 mod export;
+mod format;
 #[cfg(unix)]
 mod gc;
 mod import;

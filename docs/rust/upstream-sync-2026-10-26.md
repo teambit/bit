@@ -176,3 +176,42 @@ All three pass unchanged in a serial rerun. The intermittent freshness failure
 remains under investigation; no proof validation was weakened. Node lint cannot
 start locally because `tsc` is unavailable. Windows merge-history CI on the
 preceding head passed, including the new lane-abort assertions.
+
+## Default-environment formatter orchestration
+
+Rust now selects components, loads their sources, prepares native dependency,
+history and documentation caches, invokes external Prettier and renders formatter
+reports. The external tool adapter requires only Prettier and Node built-ins;
+this is not a Rust reimplementation of Prettier or a Node-free distribution.
+An execution fixture rejects Bit module loads and still runs the native command.
+
+Coverage includes literal/glob selection, changed-only selection, ordinary and
+CI JSON, text, empty workspaces, configured names, new/tagged identities, nested
+source checks, single-file writes and repeated clean checks. Read-only source
+writes retain the released successful exit with an EACCES entry in the JSON
+errors array. Documentation-cache preparation retains existing cache values;
+its AST proof additionally covers zero-argument arrows returning literal strings,
+numbers or booleans, while null-returning/parameterized/async arrows and other
+semantic parser inputs still delegate when their documentation is not cached.
+
+The released loader returns cached components in completion order. A strict
+Node-to-Node replay of one unchanged two-component fixture produced both full
+result permutations. Only this two-row JSON order is normalized in the test;
+identities, cardinality, fields, file order, formatting bytes, command formatting,
+exit status, caches, workspace state and the real remote remain compared. The
+initial quiet probes copied timestamps incorrectly and invalidated the cache;
+they were replaced with same-path replay preserving the complete freshness state.
+Larger cached batches, cached text reports and concurrent writes remain guarded.
+Custom environments/providers and semantic documentation parsing are still open.
+Windows provisioning CI includes these formatter cases.
+
+Negative controls verify that disabling native dispatch fails the ownership
+assertion and disabling documentation-cache publication fails the complete scope
+comparison. Nested source order follows the released breadth-first loader.
+
+Validation: formatting, Clippy, Dylint, rustdoc and all 1,811 workspace tests pass.
+The final full E2E run passes all 1,715 active cases, with two existing skips.
+An earlier run had one Bit Cloud request failure during capsule fixture setup;
+that case passed unchanged before the final full run. Generated inventory/census,
+asset and scope checks pass. The preceding PR head has no failing CI checks.
+Repository Node lint remains unavailable because `tsc` is not installed.

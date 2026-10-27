@@ -4,8 +4,8 @@ mod tests;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Argument, AssignmentTarget, BindingPattern, CallExpression, Expression, SpreadElement,
-    Statement, VariableDeclarator,
+    Argument, ArrowFunctionBody, ArrowFunctionExpression, AssignmentTarget, BindingPattern,
+    CallExpression, Expression, SpreadElement, Statement, VariableDeclarator,
 };
 use oxc_ast_visit::{Visit, walk};
 use oxc_parser::{ParseOptions, Parser};
@@ -15,7 +15,8 @@ use oxc_span::SourceType;
 ///
 /// This is deliberately sufficient rather than exhaustive: only simple data,
 /// variable declarations, static property access/assignment and literal `require`
-/// calls qualify. Functions, classes, JSX, module declarations, other calls and
+/// calls and zero-argument arrows returning a string, number or boolean qualify.
+/// Other functions, classes, JSX, module declarations, other calls and
 /// unsupported constructs defer to the published parser. Raw `/**` is rejected
 /// even inside strings because the pinned `JSDoc` extractor scans source text.
 /// This says nothing about existing cached documentation, which must take
@@ -97,6 +98,9 @@ impl<'a> Visit<'a> for Proof {
         }
         walk::walk_assignment_target(self, target);
     }
+    fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
+        self.accepted &= literal_arrow(arrow);
+    }
     fn visit_spread_element(&mut self, _: &SpreadElement<'a>) {
         self.accepted = false;
     }
@@ -114,6 +118,7 @@ fn data_expression(expression: &Expression<'_>) -> bool {
         | Expression::AssignmentExpression(_) => true,
         Expression::StaticMemberExpression(member) => !member.optional,
         Expression::CallExpression(call) => literal_require(call),
+        Expression::ArrowFunctionExpression(arrow) => literal_arrow(arrow),
         _ => false,
     }
 }
@@ -121,4 +126,19 @@ fn literal_require(call: &CallExpression<'_>) -> bool {
     !call.optional
         && matches!(&call.callee, Expression::Identifier(id) if id.name == "require")
         && matches!(call.arguments.as_slice(), [Argument::StringLiteral(_)])
+}
+
+fn literal_arrow(arrow: &ArrowFunctionExpression<'_>) -> bool {
+    if arrow.r#async || !arrow.params.items.is_empty() || arrow.params.rest.is_some() {
+        return false;
+    }
+    match &arrow.body {
+        ArrowFunctionBody::StringLiteral(_)
+        | ArrowFunctionBody::NumericLiteral(_)
+        | ArrowFunctionBody::BooleanLiteral(_) => true,
+        ArrowFunctionBody::FunctionBody(body) => {
+            matches!(body.statements.as_slice(), [Statement::ReturnStatement(statement)] if statement.argument.as_ref().is_some_and(|value| matches!(value, Expression::StringLiteral(_) | Expression::NumericLiteral(_) | Expression::BooleanLiteral(_))))
+        }
+        _ => false,
+    }
 }

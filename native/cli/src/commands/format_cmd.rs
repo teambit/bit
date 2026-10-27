@@ -1,5 +1,6 @@
 //! Native `bit format [component-pattern]` (`scopes/defender/formatter/format.cmd.ts`).
 
+mod runner;
 #[cfg(test)]
 mod tests;
 
@@ -26,6 +27,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native format grammar".into()));
     };
+    if let Some(root) = workspace::root(&env::current_dir()?) {
+        return runner::run(&root, args, &options);
+    }
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("CI format delegated".into()));
     }

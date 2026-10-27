@@ -1,0 +1,86 @@
+use super::{Value, invalid};
+use crate::commands::{color::Chalk, workspace_command::format::Formatter};
+use std::io;
+fn render(
+    value: &Value,
+    chalk: Chalk,
+    seconds: f64,
+    progress: &super::progress::Progress,
+    check: bool,
+) -> io::Result<String> {
+    let formatter = Formatter::new(chalk);
+    let name = &progress.name;
+    let rows = value["results"].as_array().ok_or_else(|| invalid("formatter result rows"))?;
+    let mut sections = vec![formatter.title(&format!(
+        "formatting total of {} component(s) in workspace '{name}'",
+        progress.identities.len(),
+    ))];
+    for row in rows {
+        sections.push(component(row, &formatter, check)?);
+    }
+    sections.push(formatter.hint(&format!(
+        "formatted {} components in {}s.",
+        progress.identities.len(),
+        (seconds * 1000.0).round() / 1000.0,
+    )));
+    Ok(Formatter::join(&sections))
+}
+fn component(row: &Value, formatter: &Formatter, check: bool) -> io::Result<String> {
+    let id = &row["componentId"];
+    let scope = id["_legacy"]["scope"]
+        .as_str()
+        .or_else(|| id["_scope"].as_str())
+        .ok_or_else(|| invalid("formatter scope"))?;
+    let name = id["_legacy"]["name"].as_str().ok_or_else(|| invalid("formatter name"))?;
+    let mut lines = vec![formatter.title(&format!("{scope}/{name}"))];
+    let files = row["results"].as_array().ok_or_else(|| invalid("formatter file results"))?;
+    let issues: Vec<_> = files
+        .iter()
+        .filter(|file| file["hasIssues"] == true)
+        .collect();
+    if issues.is_empty() {
+        lines.push(formatter.success_summary("no issues found"));
+    } else {
+        lines.push(if check {
+            format!("{} issues found in the following files:", formatter.error_symbol())
+        } else {
+            formatter.success_summary("the following files have been re-formatted:")
+        });
+        for file in issues {
+            lines.push(formatter.item(
+                file["filePath"].as_str().ok_or_else(|| invalid("formatter report filename"))?,
+            ));
+        }
+    }
+    Ok(lines.join("\n"))
+}
+
+pub(super) fn create(
+    value: &Value,
+    progress: &super::progress::Progress,
+    args: &[std::ffi::OsString],
+    options: &super::Options,
+    seconds: f64,
+) -> io::Result<crate::commands::workspace_command::results::Report> {
+    let rows = value["results"].as_array().ok_or_else(|| invalid("formatter status rows"))?;
+    let code = i32::from(
+        options.check
+            && rows
+                .iter()
+                .any(|row| {
+                    row["results"]
+                        .as_array()
+                        .is_some_and(|files| {
+                            files
+                                .iter()
+                                .any(|file| file["hasIssues"] == true)
+                        })
+                }),
+    );
+    let data = if options.json {
+        serde_json::to_string_pretty(value)?
+    } else {
+        render(value, Chalk::detect(args), seconds, progress, options.check)?
+    };
+    Ok(crate::commands::workspace_command::results::Report { data, code, details: None })
+}

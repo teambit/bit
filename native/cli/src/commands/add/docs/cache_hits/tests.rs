@@ -76,7 +76,7 @@ fn proven_empty_miss_produces_metadata_and_a_new_cache_write() {
 fn no_cache_uncertain_source_still_uses_the_published_parser() {
     let directory = tempfile::tempdir().unwrap();
     let root = directory.path();
-    fs::write(root.join("file.js"), "module.exports=()=>42;\n").unwrap();
+    fs::write(root.join("file.js"), "module.exports=()=>null;\n").unwrap();
     let components = vec![json!({"directory":".","files":[{"relativePath":"file.js"}]})];
     let observed = observe(root, &components).unwrap();
     let plan = prepare(root, &root.join("docs"), &components, &observed, false);
