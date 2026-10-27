@@ -81,7 +81,7 @@ fn bfs_global_lane_marker_and_head_stop_keep_tag_cache_order() {
     assert_eq!(result["lastFoundTag"], "1.0.0");
 }
 #[test]
-fn populate_full_traversal_preserves_duplicate_diamond_paths() {
+fn populate_full_traversal_deduplicates_diamond_in_first_visit_order() {
     let head = "a".repeat(40);
     let main = "b".repeat(40);
     let other = "c".repeat(40);
@@ -97,7 +97,7 @@ fn populate_full_traversal_preserves_duplicate_diamond_paths() {
             .iter()
             .map(|row| row["hash"].as_str().unwrap())
             .collect::<Vec<_>>(),
-        vec![head.as_str(), main.as_str(), base.as_str(), other.as_str(), base.as_str()],
+        vec![head.as_str(), main.as_str(), base.as_str(), other.as_str()],
     );
 }
 
@@ -320,4 +320,46 @@ fn diff_reuses_token_source_snapshot_after_repository_deletion() {
     super::apply("historyQueryFinish", json!({"token":owner["token"]}), &mut state).unwrap();
     assert!(super::apply("historyQueryDiff", request, &mut state).is_err());
     std::fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn indexed_version_walk_keeps_first_duplicate_and_stop_boundary() {
+    let head = "a".repeat(40);
+    let parent = "b".repeat(40);
+    let row = |hash: &str, parents: Vec<&str>| json!({"hash":hash,"parents":parents,"log":{}});
+    let mut state = super::State::default();
+    let input = json!({"objectsDirectory":std::env::temp_dir(),"start":head,"mainHead":head,"throws":true,"overlays":[row(&head,vec![&parent]),row(&head,vec![]),row(&parent,vec![])]});
+    let result = super::apply("historyQueryBegin", input.clone(), &mut state).unwrap();
+    assert_eq!(result["rows"][0]["overlayIndex"], 0);
+    assert_eq!(result["rows"][1]["overlayIndex"], 2);
+    assert_eq!(result["rows"].as_array().unwrap().len(), 2);
+    let mut stopped = input;
+    stopped["stopAt"] = json!([parent]);
+    let result = super::apply("historyQueryBegin", stopped, &mut state).unwrap();
+    assert_eq!(result["rows"].as_array().unwrap().len(), 1);
+    assert_eq!(result["rows"][0]["hash"], head);
+}
+
+#[test]
+fn indexed_population_keeps_first_overlay_and_reports_missing_parent() {
+    let directory = tempfile::tempdir().unwrap();
+    let head = "a".repeat(40);
+    let parent = "b".repeat(40);
+    let missing = "c".repeat(40);
+    let row = |hash: &str, parents: Vec<&str>| json!({"hash":hash,"parents":parents});
+    let input = json!({"objectsDirectory":directory.path(),"head":head,"headExists":false,"exitWhenFind":true,"existing":[],"headData":row(&head,vec![&parent]),"overlays":[row(&parent,vec![&missing]),row(&parent,vec![])]});
+    let mut state = super::State::default();
+    let result = super::apply("historyQueryPopulateBegin", input, &mut state).unwrap();
+    assert_eq!(result["complete"], false);
+    assert_eq!(
+        result["added"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2,
+    );
+    assert_eq!(result["added"][0]["hash"], head);
+    assert_eq!(result["added"][1]["hash"], parent);
+    assert_eq!(result["added"][1]["overlayIndex"], 0);
+    assert_eq!(result["missing"], json!([{"hash":missing,"parentOf":parent,"kind":"parent"}]));
 }

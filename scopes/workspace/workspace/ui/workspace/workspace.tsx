@@ -136,7 +136,6 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
                   {isMinimal && <WorkspaceBreadcrumb />}
                 </div>
               )}
-              // @ts-ignore - getting an error of "Types have separate declarations of a private property 'registerFn'." for some reason after upgrading teambit.harmony/harmony from 0.4.6 to 0.4.7
               menu={menuSlot}
             />
           )}

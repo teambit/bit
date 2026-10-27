@@ -2155,7 +2155,7 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/graph-harmony.e2e.ts`
 
-- [x] `e2e/harmony/graph-harmony.e2e.ts:38` graph aspect › tag a few components › ask the graph aspect for the graph ids › should include the dependencies correctly — `harmony::workspace_misc::graph_aspect_and_workspace_aspect_and_import_resolves_missing_deps`
+- [x] `e2e/harmony/graph-harmony.e2e.ts:37` graph aspect › tag a few components › ask the graph aspect for the graph ids › should include the dependencies correctly — `harmony::workspace_misc::graph_aspect_and_workspace_aspect_and_import_resolves_missing_deps`
 
 ### `e2e/harmony/harmony-workspace.e2e.ts`
 

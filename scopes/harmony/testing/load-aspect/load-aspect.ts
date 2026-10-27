@@ -157,6 +157,5 @@ function clearGlobalsIfNeeded() {
   // @ts-ignore
   ComponentLoader.loadDeps = undefined;
   ExtensionDataList.coreExtensionsNames = new Map();
-  // @ts-ignore
   LegacyWorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
 }

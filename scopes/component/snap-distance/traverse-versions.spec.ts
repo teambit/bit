@@ -1,7 +1,13 @@
 import { expect } from 'chai';
 import { Ref } from '@teambit/objects';
 import type { VersionParents } from '@teambit/objects';
-import { getAllVersionHashes, getAllVersionParents, getSubsetOfVersionParents } from './traverse-versions';
+import {
+  getAllVersionHashes,
+  getAllVersionParents,
+  getAllVersionsInfo,
+  getSubsetOfVersionParents,
+  indexVersionObjects,
+} from './traverse-versions';
 
 /** a 40-char hash from a number. */
 const hash = (i: number) => i.toString(16).padStart(40, '0');
@@ -30,6 +36,8 @@ function fakeModelComponent(
   return {
     id: () => 'acme.ui/button',
     getHeadRegardlessOfLane: () => head,
+    getHead: () => head,
+    getTagOfRefIfExists: () => undefined,
     getVersionHistory: async () => versionHistory,
     populateVersionHistoryIfMissingGracefully: async (_repo: any, vh: VersionHistoryLike, current: Ref) =>
       populate(current, vh),
@@ -404,5 +412,77 @@ describe('getAllVersionHashes', () => {
       startFrom: ref(2),
     });
     expect(result.map(String)).to.deep.equal([hash(2), hash(1), hash(0)]);
+  });
+});
+
+describe('getAllVersionsInfo with version objects', () => {
+  /** a version object of the given number, as the walk reads it. */
+  const versionObject = (i: number, parents?: number[]): any => {
+    const versionParents = item(i, parents);
+    return { ...versionParents, _hash: hash(i), hash: () => versionParents.hash };
+  };
+  const fakeComponentWithHead = (head: number) => fakeModelComponent([], undefined, ref(head));
+  const refs = (list: Array<{ ref: Ref }>) => list.map((v) => v.ref.toString());
+
+  it('walks from the head through the parents, using the version objects', async () => {
+    const versionObjects = [0, 1, 2, 3].map((i) => versionObject(i));
+    const result = await getAllVersionsInfo({ modelComponent: fakeComponentWithHead(3), versionObjects });
+    expect(refs(result)).to.deep.equal([hash(3), hash(2), hash(1), hash(0)]);
+    expect(result.map((v) => v.version)).to.deep.equal([3, 2, 1, 0].map((i) => versionObjects[i]));
+  });
+
+  it('uses the first version object of a hash when it was sent twice', async () => {
+    const first = versionObject(1, [0]);
+    const second = versionObject(1, []);
+    const versionObjects = [versionObject(0), first, second, versionObject(2)];
+    const result = await getAllVersionsInfo({ modelComponent: fakeComponentWithHead(2), versionObjects });
+    expect(result[1].version).to.equal(first);
+    expect(refs(result)).to.deep.equal([hash(2), hash(1), hash(0)]);
+  });
+
+  it('takes the version objects already indexed', async () => {
+    const versionObjects = [0, 1, 2].map((i) => versionObject(i));
+    const result = await getAllVersionsInfo({
+      modelComponent: fakeComponentWithHead(2),
+      versionObjects: indexVersionObjects(versionObjects),
+    });
+    expect(refs(result)).to.deep.equal([hash(2), hash(1), hash(0)]);
+    expect(result[0].version).to.equal(versionObjects[2]);
+  });
+
+  it('stops at the stopAt snaps', async () => {
+    const versionObjects = [0, 1, 2, 3].map((i) => versionObject(i));
+    const result = await getAllVersionsInfo({
+      modelComponent: fakeComponentWithHead(3),
+      versionObjects,
+      stopAt: [ref(1)],
+    });
+    expect(refs(result)).to.deep.equal([hash(3), hash(2)]);
+  });
+
+  it('reports a missing parent without throwing when asked to', async () => {
+    const versionObjects = [versionObject(2), versionObject(3)];
+    const result = await getAllVersionsInfo({
+      modelComponent: fakeComponentWithHead(3),
+      versionObjects,
+      throws: false,
+    });
+    expect(refs(result)).to.deep.equal([hash(3), hash(2), hash(1)]);
+    expect(result[2].error).to.be.instanceOf(Error);
+  });
+
+  it('stays fast for a long history mixed with the versions of other components', async () => {
+    const size = 20000;
+    // the remote merge on export passes the versions of all exported components
+    const otherComponentVersions = Array.from({ length: size }, (_, i) => versionObject(size + i, []));
+    const versionObjects = [...otherComponentVersions, ...Array.from({ length: size }, (_, i) => versionObject(i))];
+    const start = Date.now();
+    const result = await getAllVersionsInfo({
+      modelComponent: fakeComponentWithHead(size - 1),
+      versionObjects,
+      stopAt: [ref(size + 1)],
+    });
+    expect(result).to.have.length(size);
+    expect(Date.now() - start).to.be.lessThan(2000);
   });
 });

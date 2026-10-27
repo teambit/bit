@@ -343,3 +343,34 @@ skips and one Bit Cloud request failure in the unchanged React Native capsule
 comparison. That case passed unchanged on a serial rerun. The revised remaining
 core-environment comparison passed both focused and full runs. Platform CI is
 pending; local Node lint remains unavailable because `tsc` is missing.
+
+## Upstream history indexing sync
+
+Merged upstream through `7c0228a4f` (Bit 2.2.163), following `c15f6da17`.
+The delta contains history/export lookup indexing, the version bump and stale
+TypeScript suppression removal. Rust history queries now index supplied versions
+once per walk, preserve the first object for duplicate hashes and use indexed
+stop boundaries. History population indexes existing hashes and accumulated
+versions, preserving insertion order while replacing duplicate accumulated rows.
+
+The upstream population change has one observable delta: full traversal of a
+merge diamond now returns each shared ancestor once. Running the actual method
+extracted from both upstream revisions confirmed this difference and unchanged
+default traversal. The Rust regression failed on the previous implementation
+and passes after the port. Additional regressions preserve first-object lookup,
+stop boundaries and missing-parent results. These are explicit upstream-delta
+checks; the released CLI remains the oracle for unchanged behavior.
+
+Existing native export/history collection already uses indexed visited sets.
+The upstream export filtering/index reuse and removed suppressions introduce no
+additional command contract. Existing native bounds and pre-effect guards remain;
+this sync does not claim arbitrary provider or compiler support. The generated
+E2E plan follows the upstream source-line change.
+
+Validation: all 1,816 workspace tests, formatting, Clippy, Dylint, rustdoc and
+generated plan/census/asset/scope checks pass. Full E2E: 1,733 passed, two existing
+skips and one Bit Cloud fetch failure during released-CLI setup for the existing
+nonstandard-main capsule case. That case passed unchanged on a serial rerun.
+The regenerated plan also fixes the prior PR lint job's stale graph-test line
+reference when GitHub combines the branch with the updated upstream master.
+Platform CI for this sync is pending; local Node lint still lacks `tsc`.

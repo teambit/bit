@@ -9,7 +9,6 @@ describe('replacePlaceHolderForPackageValue', () => {
     expect(result).to.equal('dist/index.js');
   });
   it('should be able to replace the component name', () => {
-    // @ts-ignore
     const result = replacePlaceHolderForPackageValue({ name: 'foo' }, 'bar/baz/{name}');
     expect(result).to.equal('bar/baz/foo');
   });

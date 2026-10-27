@@ -42,3 +42,13 @@ pub(crate) fn validate_version(value: &Value) -> io::Result<()> {
     artifacts::validate(value)?;
     crate::transfer::collection::shape::query(value)
 }
+
+fn overlay_indices(overlays: &[Value]) -> std::collections::HashMap<String, usize> {
+    let mut indices = std::collections::HashMap::new();
+    for (index, value) in overlays.iter().enumerate() {
+        if let Some(hash) = value.get("hash").and_then(Value::as_str) {
+            indices.entry(hash.to_owned()).or_insert(index);
+        }
+    }
+    indices
+}

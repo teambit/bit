@@ -2,7 +2,7 @@ use super::invalid;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{
-    collections::{HashSet, VecDeque},
+    collections::{HashMap, HashSet, VecDeque},
     io,
     path::PathBuf,
 };
@@ -38,6 +38,8 @@ struct Tag {
 struct Request {
     fields: Fields,
     labels: Labels,
+    overlays: HashMap<String, usize>,
+    stops: HashSet<String>,
 }
 struct Walk {
     rows: Vec<Value>,
@@ -92,7 +94,7 @@ fn drain(
         if walk.checkpoint.is_some() {
             break;
         }
-        if request.fields.stop_at.contains(&parent) || !walk.seen.insert(parent.clone()) {
+        if request.stops.contains(&parent) || !walk.seen.insert(parent.clone()) {
             continue;
         }
         if walk.seen.len() > 4096 {
@@ -162,16 +164,9 @@ fn load(
     from: Option<&str>,
 ) -> io::Result<()> {
     let tag = tag(request, &mut walk.cached_tag, hash);
-    let overlay = request.fields.overlays
-        .iter()
-        .position(|value| value.get("hash").and_then(Value::as_str) == Some(hash));
+    let overlay = request.overlays.get(hash).copied();
     let object = read(request, reader, hash, overlay)?;
-    if from.is_none()
-        && object.is_some()
-        && request.fields.stop_at
-            .iter()
-            .any(|stop| stop == hash)
-    {
+    if from.is_none() && object.is_some() && request.stops.contains(hash) {
         stop(walk, hash, overlay, reader);
         return Ok(());
     }
@@ -312,8 +307,10 @@ fn parse(mut input: Value) -> io::Result<Request> {
         }
     }
     let labels = serde_json::from_value(Value::Object(labels)).map_err(io::Error::other)?;
-    let fields = serde_json::from_value(input).map_err(io::Error::other)?;
-    Ok(Request { fields, labels })
+    let fields: Fields = serde_json::from_value(input).map_err(io::Error::other)?;
+    let overlays = super::overlay_indices(&fields.overlays);
+    let stops = fields.stop_at.iter().cloned().collect();
+    Ok(Request { fields, labels, overlays, stops })
 }
 
 fn metadata(row: &mut Value, reader: &crate::read_version::Reader<'_>) {

@@ -1,7 +1,12 @@
-use super::invalid;
+use super::{invalid, overlay_indices};
+use indexmap::IndexMap;
 use serde::Deserialize;
 use serde_json::{Value, json};
-use std::{collections::HashSet, io, path::PathBuf};
+use std::{
+    collections::{HashMap, HashSet},
+    io,
+    path::PathBuf,
+};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -13,12 +18,10 @@ struct Request {
 fn read(
     reader: &mut crate::read_version::Reader<'_>,
     overlays: &[Value],
+    indices: &HashMap<String, usize>,
     hash: &str,
 ) -> io::Result<Option<Value>> {
-    if let Some(index) = overlays
-        .iter()
-        .position(|value| value.get("hash").and_then(Value::as_str) == Some(hash))
-    {
+    if let Some(&index) = indices.get(hash) {
         let mut value = overlays[index].clone();
         value["overlayIndex"] = json!(index);
         return Ok(Some(value));
@@ -134,16 +137,17 @@ fn populate(request: &Request, plan: &Value) -> io::Result<Value> {
         .and_then(Value::as_str)
         .ok_or_else(|| invalid("history population head ref"))?;
     let head = record(hash, head)?;
-    let mut added = Vec::new();
+    let mut added = IndexMap::new();
     if plan.get("headExists") != Some(&Value::Bool(true)) {
-        added.push(head.clone());
+        added.insert(hash.to_owned(), head.clone());
     }
     let mut missing = Vec::new();
     traverse(request, plan, &head, &mut reader, &mut added, &mut missing)?;
     let overlays = 1 + added
-        .iter()
+        .values()
         .filter(|row| row.get("overlayIndex").is_some())
         .count();
+    let added = added.into_values().collect::<Vec<_>>();
     let mut output = json!({"added":added,"missing":missing,"complete":missing.is_empty(),"reads":super::reads(reader.stats(),(0,0),overlays)});
     if !missing.is_empty() {
         output["lastErrorIndex"] = json!(missing.len() - 1);
@@ -154,7 +158,9 @@ struct Trace<'a> {
     active: HashSet<String>,
     stack: Vec<(String, Value, bool)>,
     count: usize,
-    added: &'a mut Vec<Value>,
+    added: &'a mut IndexMap<String, Value>,
+    existing: HashSet<String>,
+    overlays: HashMap<String, usize>,
     missing: &'a mut Vec<Value>,
 }
 fn traverse(
@@ -162,7 +168,7 @@ fn traverse(
     plan: &Value,
     head: &Value,
     reader: &mut crate::read_version::Reader<'_>,
-    added: &mut Vec<Value>,
+    added: &mut IndexMap<String, Value>,
     missing: &mut Vec<Value>,
 ) -> io::Result<()> {
     let hash = head["hash"]
@@ -175,6 +181,11 @@ fn traverse(
         count: 0,
         added,
         missing,
+        existing: request.existing
+            .iter()
+            .cloned()
+            .collect(),
+        overlays: overlay_indices(&request.overlays),
     };
     let exit_when_find = plan.get("exitWhenFind") == Some(&Value::Bool(true));
     while let Some((hash, row, exit)) = trace.stack.pop() {
@@ -202,26 +213,19 @@ impl Trace<'_> {
         reader: &mut crate::read_version::Reader<'_>,
     ) -> io::Result<Option<Value>> {
         let Some(parent) = row.get("parentOf") else { return Ok(Some(row.clone())) };
-        if exit
-            && (request.existing
-                .iter()
-                .any(|ref_| ref_ == hash)
-                || self.added
-                    .iter()
-                    .any(|row| row["hash"].as_str() == Some(hash)))
-        {
+        if exit && (self.existing.contains(hash) || self.added.contains_key(hash)) {
             return Ok(None);
         }
         self.count += 1;
         if self.count > 4096 {
             return Err(invalid("history population traversal limit"));
         }
-        let Some(value) = read(reader, &request.overlays, hash)? else {
+        let Some(value) = read(reader, &request.overlays, &self.overlays, hash)? else {
             self.missing.push(json!({"hash":hash,"parentOf":parent,"kind":"parent"}));
             return Ok(None);
         };
         let row = record(hash, &value)?;
-        self.added.push(row.clone());
+        self.added.insert(hash.to_owned(), row.clone());
         Ok(Some(row))
     }
     fn push(&mut self, hash: &str, row: &Value) -> io::Result<()> {
