@@ -6,10 +6,11 @@ import { BuildStatus } from '@teambit/legacy.constants';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
 import type { ComponentObjects } from '../component-objects';
-import type { SnapsDistance, VersionInfo } from '@teambit/component.snap-distance';
+import type { SnapsDistance, VersionInfo, VersionObjectsByHash } from '@teambit/component.snap-distance';
 import {
   getAllVersionHashes,
   getAllVersionsInfo,
+  indexVersionObjects,
   getSubsetOfVersionParents,
   getVersionParentsFromVersion,
   getDivergeData,
@@ -489,7 +490,7 @@ please either remove the component (bit remove) or remove the lane.`);
    * changes where done on a lane, this function will not do anything because modelComponent
    * hasn't changed.
    */
-  async merge(incomingComp: ModelComponent, versionObjects: Version[]): Promise<MergeResult> {
+  async merge(incomingComp: ModelComponent, versionObjects: Version[] | VersionObjectsByHash): Promise<MergeResult> {
     const existingComp = await this._findComponent(incomingComp);
     if (existingComp && incomingComp.isEqual(existingComp)) {
       return { mergedComponent: incomingComp, mergedVersions: [] };
@@ -533,7 +534,7 @@ please either remove the component (bit remove) or remove the lane.`);
   private async getMergedSnaps(
     existingHead: Ref | undefined,
     incomingComp: ModelComponent,
-    versionObjects: Version[]
+    versionObjects: Version[] | VersionObjectsByHash
   ): Promise<string[]> {
     const allIncomingVersionsInfoUntilExistingHead = await getAllVersionsInfo({
       modelComponent: incomingComp,
@@ -560,10 +561,12 @@ please either remove the component (bit remove) or remove the lane.`);
   ): Promise<{ mergeResults: MergeResult[]; errors: Error[] }> {
     const mergeResults: MergeResult[] = [];
     const errors: Array<MergeConflict | ComponentNeedsUpdate> = [];
+    // each component is merged with the versions of all components. index them once rather than per component.
+    const versionObjectsByHash = indexVersionObjects(versions);
     await Promise.all(
       components.map(async (component) => {
         try {
-          const result = await this.merge(component, versions);
+          const result = await this.merge(component, versionObjectsByHash);
           mergeResults.push(result);
         } catch (err: any) {
           if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {
