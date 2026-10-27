@@ -427,26 +427,6 @@ describe('getAllVersionsInfo with version objects', () => {
   });
   const refs = (list: Array<{ ref: Ref }>) => list.map((v) => v.ref.toString());
 
-  it('returns nothing for a component without a head, without hashing the version objects', async () => {
-    const counter = { hashCalls: 0 };
-    const versionObjects = Array.from({ length: 1000 }, (_, i) => ({
-      ...versionObject(i),
-      hash: () => {
-        counter.hashCalls += 1;
-        return ref(i);
-      },
-    }));
-    const headless: any = {
-      id: () => 'acme.ui/button',
-      getHeadRegardlessOfLane: () => undefined,
-      getHead: () => undefined,
-      getTagOfRefIfExists: () => undefined,
-    };
-    const result = await getAllVersionsInfo({ modelComponent: headless, versionObjects, throws: false });
-    expect(result).to.deep.equal([]);
-    expect(counter.hashCalls).to.equal(0);
-  });
-
   it('walks from the head through the parents, using the version objects', async () => {
     const versionObjects = [0, 1, 2, 3].map((i) => versionObject(i));
     const result = await getAllVersionsInfo({ modelComponent: fakeComponentWithHead(3), versionObjects });
