@@ -100,7 +100,7 @@ pub(super) fn relative(from: &Path, to: &Path) -> PathBuf {
     let shared = from
         .iter()
         .zip(&target)
-        .take_while(|(a, b)| a == b)
+        .take_while(|(a, b)| same_component(**a, **b))
         .count();
     if shared == 0 {
         return to.to_path_buf();
@@ -120,5 +120,17 @@ pub(super) fn display(cwd: &Path, path: &Path) -> String {
         path.to_string_lossy().into_owned()
     } else {
         result.to_string_lossy().into_owned()
+    }
+}
+
+#[cfg(not(windows))]
+fn same_component(first: std::path::Component<'_>, second: std::path::Component<'_>) -> bool {
+    first == second
+}
+#[cfg(windows)]
+fn same_component(first: std::path::Component<'_>, second: std::path::Component<'_>) -> bool {
+    match (first.as_os_str().to_str(), second.as_os_str().to_str()) {
+        (Some(first), Some(second)) => first.to_lowercase() == second.to_lowercase(),
+        _ => first == second,
     }
 }

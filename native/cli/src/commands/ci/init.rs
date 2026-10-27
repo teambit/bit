@@ -2,6 +2,7 @@
 mod agents;
 mod files;
 mod git;
+mod paths;
 mod remote;
 mod report;
 mod report_github;
@@ -110,7 +111,7 @@ impl Plan {
         if self.repository_root.is_none() {
             output.warning(&format!(r#"could not resolve the git repository root ("git rev-parse --show-toplevel" failed — is this a git repository?). Writing the workflow files under the workspace instead: {}. If that is not the repository root, GitHub will not discover them — move .github/workflows there by hand."#, scaffold.display()));
         }
-        let workspace_dir = git::relative(&real(scaffold)?, &real(&self.root)?)
+        let workspace_dir = git::relative(&paths::real(scaffold)?, &paths::real(&self.root)?)
             .to_string_lossy()
             .replace('\\', "/");
         let workspace_dir = if workspace_dir.starts_with("..") { "" } else { &workspace_dir };
@@ -158,9 +159,6 @@ impl Plan {
     }
 }
 
-fn real(path: &Path) -> io::Result<PathBuf> {
-    if path.exists() { fs::canonicalize(path) } else { Ok(path.to_owned()) }
-}
 fn shell_word(value: &str) -> String {
     if !value.is_empty()
         && value
