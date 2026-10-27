@@ -30,7 +30,7 @@ export function hashErrorIfNeeded(error: Error) {
   return clonedError;
 }
 
-function hashValue(value: any): string {
+function hashValue(value: any): string | string[] {
   if (!value) return value;
   const type = typeof value;
   switch (type) {
@@ -39,7 +39,6 @@ function hashValue(value: any): string {
     case 'boolean':
       return value;
     case 'object':
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (Array.isArray(value)) return value.map((v) => hash(v));
       // ignoreUnknown helps to not throw error for some errors with custom props.
       return hash(value, { ignoreUnknown: true });
