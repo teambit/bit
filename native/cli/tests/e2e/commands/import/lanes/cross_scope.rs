@@ -25,12 +25,18 @@ fn fixture(advanced: bool) -> (Helper, String, PathBuf, String) {
     helper.native("tag --skip-tests");
     crate::helper::remote::publish_to(&helper, &origin_path);
     helper.native("lane create dev");
-    helper.native("snap comp1 --skip-auto-snap --unmodified --skip-tests");
+    crate::commands::move_paths::support::setup(
+        &helper,
+        "snap comp1 --skip-auto-snap --unmodified --skip-tests",
+    );
     crate::helper::remote::publish(&helper);
     let head = helper.get_head_from_lane("dev", "comp1");
     if advanced {
         helper.native("switch main --skip-fetch -x");
-        helper.native("snap comp1 --skip-auto-snap --unmodified --skip-tests");
+        crate::commands::move_paths::support::setup(
+            &helper,
+            "snap comp1 --skip-auto-snap --unmodified --skip-tests",
+        );
         crate::helper::remote::publish_to(&helper, &origin_path);
     }
     helper.re_init_workspace();

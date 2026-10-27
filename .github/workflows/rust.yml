@@ -179,6 +179,8 @@ jobs:
         run: |
           npx -y @teambit/bvm@3.1.4 config set RELEASE_TYPE nightly
           npx -y @teambit/bvm@3.1.4 install "$BIT_VERSION" --skip-update-path
+      - name: Install the released upstream pnpm reference engine
+        run: npm ci --prefix ../scripts/rust/pnpm-oracle --@pnpm:registry=https://registry.npmjs.org --ignore-scripts --no-audit --no-fund
       - name: Run the ported e2e cases
         env:
           SHARD: ${{ matrix.shard }}
@@ -268,6 +270,8 @@ jobs:
         run: |
           npx -y @teambit/bvm@3.1.4 config set RELEASE_TYPE nightly
           npx -y @teambit/bvm@3.1.4 install "$BIT_VERSION" --skip-update-path
+      - name: Install the released upstream pnpm reference engine
+        run: npm ci --prefix ../scripts/rust/pnpm-oracle --@pnpm:registry=https://registry.npmjs.org --ignore-scripts --no-audit --no-fund
       - name: Compare native workspace VCS with the pinned Node.js CLI
         env:
           PARITY_FILTERS: ${{ matrix.filters }}

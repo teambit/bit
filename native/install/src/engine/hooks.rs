@@ -169,9 +169,10 @@ impl PnpmfileHooks for BitHooks {
 
     async fn pre_resolution(
         &self,
-        _ctx: PreResolutionHookContext,
+        ctx: PreResolutionHookContext,
         _logger: PreResolutionHookLogger,
-    ) {
+    ) -> Result<PreResolutionHookContext, HookError> {
+        Ok(ctx)
     }
 
     async fn filter_log(&self, _log: Value, _ctx: HookContext) -> bool {

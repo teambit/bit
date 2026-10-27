@@ -170,16 +170,19 @@ version bump needs one full install, or removing the stamp.
 
 ## Engine pin
 
-`native/Cargo.toml` pins all pnpm crates and its `tar` patch to
-`0745ab835ad21f0f0284b1858fdbb3ea8d6b7b53`, a backport on top of the
-`@pnpm/napi` 12.13.0 release that Bit ships (`workspace.jsonc`). The only change
-from that release is the generated `deps-restorer` CAS loader. Cargo can build
-this Git dependency directly without modifying its checkout or writing a stub.
+`native/Cargo.toml` and `native/install/Cargo.toml` pin all pnpm crates and
+its `tar` patch to `6b5b8ac53a6120a644c3693ecac8aaed8af88174`, the
+`@pnpm/napi` 12.16.0 release shipped by Bit (`workspace.jsonc`). The root
+workspace also repeats pnpm's `dashmap` patch because Cargo does not inherit
+patches from Git dependencies. The existing npm-compatible `node-semver`
+extension remains pinned separately.
 
-The mainline fix is [pnpm/pnpm#17388](https://github.com/pnpm/pnpm/pull/17388).
-It commits the real loader and checks that regeneration matches, including a
-regression test that rejects stale content without rewriting it. Bit still does
-not enable pnpm's experimental CAS store loader.
+This release includes the real generated CAS loader and the bounded stale-link
+retry from [pnpm/pnpm#17403](https://github.com/pnpm/pnpm/pull/17403). A filesystem
+that keeps returning a removed stale link now produces a diagnostic instead of
+unbounded recursion. Bit still does not enable the experimental CAS store loader.
+The native adapters return unchanged pre-resolution context and use the released
+lockfile writer's refusal of writes through symlinked lockfiles.
 
 ## Lockfile compatibility
 

@@ -5,6 +5,8 @@ import { BitError } from '@teambit/bit-error';
 import { Analytics, LEVEL } from '@teambit/legacy.analytics';
 import { hashErrorIfNeeded } from '@teambit/legacy.cli.error';
 
+type ErrorWithExtraProps = NodeJS.ErrnoException & { isUserError?: boolean };
+
 /**
  * if err.userError is set, it inherits from AbstractError, which are user errors not Bit errors
  * and should not be reported to Sentry.
@@ -13,19 +15,18 @@ import { hashErrorIfNeeded } from '@teambit/legacy.cli.error';
  */
 export function sendToAnalyticsAndSentry(err: Error) {
   const possiblyHashedError = hashErrorIfNeeded(err);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const shouldNotReportToSentry = Boolean(err.isUserError || err.code === 'EACCES');
+  const errWithProps: ErrorWithExtraProps = err;
+  const shouldNotReportToSentry = Boolean(errWithProps.isUserError || errWithProps.code === 'EACCES');
   // only level FATAL are reported to Sentry.
   const level = shouldNotReportToSentry ? LEVEL.INFO : LEVEL.FATAL;
   Analytics.setError(level, possiblyHashedError);
 }
 
-function handleNonBitCustomErrors(err: Error): string {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+function handleNonBitCustomErrors(error: Error): string {
+  const err: ErrorWithExtraProps = error;
   if (err.code === 'EACCES' && err.path) {
     // see #1774
     return chalk.red(
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       `error: you do not have permissions to access '${err.path}', were you running bit, npm or git as root?`
     );
   }

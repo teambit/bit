@@ -143,6 +143,7 @@ pub fn bit_command(shared: &Shared, cwd: &Path) -> Command {
         .env("USERPROFILE", &home)
         .env("BIT_GLOBALS_DIR", shared.root.join("globals"))
         .env("BIT_NATIVE_TRACE", "1")
+        .env("NODE_OPTIONS", pnpm_oracle_options())
         .env_remove("BIT_NATIVE")
         .env_remove("BIT_NATIVE_QUIET")
         .env_remove("BIT_FEATURES")
@@ -155,6 +156,14 @@ pub fn bit_command(shared: &Shared, cwd: &Path) -> Command {
         command.env("BIT_NATIVE", "off");
     }
     command
+}
+
+/// Use the released engine version now required by upstream, without editing Bit's install.
+fn pnpm_oracle_options() -> String {
+    let preload =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../scripts/rust/pnpm-oracle/preload.cjs");
+    let preload = preload.to_string_lossy().replace('\\', "/");
+    format!(r#"{} --require="{preload}""#, env::var("NODE_OPTIONS").unwrap_or_default())
 }
 
 /// `copySync`.

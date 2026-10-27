@@ -82,7 +82,6 @@ fn refresh_current_main(lanes: &mut Lanes) -> io::Result<()> {
     {
         let identities = command_import::lane::entries(&other.value)?
             .into_iter()
-            .filter(|entry| !entry.hidden)
             .map(|entry| entry.identity)
             .collect::<Vec<_>>();
         lanes.imported.refresh_lane_main(&identities)?;

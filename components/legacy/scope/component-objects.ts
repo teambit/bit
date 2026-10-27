@@ -49,8 +49,7 @@ export class ComponentObjects {
    */
   toObjects(): { component: ModelComponent; objects: BitObject[] } {
     return {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      component: BitObject.parseSync(this.component),
+      component: BitObject.parseSync(this.component) as ModelComponent,
       objects: this.objects.map((obj) => BitObject.parseSync(obj)),
     };
   }
@@ -59,8 +58,7 @@ export class ComponentObjects {
    */
   async toObjectsAsync(): Promise<{ component: ModelComponent; objects: BitObject[] }> {
     return {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      component: await BitObject.parseObject(this.component),
+      component: (await BitObject.parseObject(this.component)) as ModelComponent,
       objects: await Promise.all(this.objects.map((obj) => BitObject.parseObject(obj))),
     };
   }

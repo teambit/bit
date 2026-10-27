@@ -15,7 +15,7 @@ use super::{
 };
 use crate::model::{InstallPlan, Project};
 use convert::Graph;
-use pnpm_lockfile::Lockfile;
+use pnpm_lockfile::{Lockfile, SymlinkedLockfile};
 use pnpm_resolving_default_resolver::{
     DefaultResolver,
     standalone::{StandaloneChainOptions, build_standalone_chain},
@@ -271,7 +271,7 @@ fn save(settings: &EngineSettings, mut lockfile: Map<String, Value>) -> io::Resu
             io::Error::other(format!("the restored lockfile is not a valid lockfile: {error}"))
         })?;
     lockfile
-        .save_to_path(&settings.root.join(Lockfile::FILE_NAME))
+        .save_to_path(&settings.root.join(Lockfile::FILE_NAME), SymlinkedLockfile::Refuse)
         .map_err(|error| diagnostic(&error))
 }
 

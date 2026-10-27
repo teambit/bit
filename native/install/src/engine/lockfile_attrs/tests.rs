@@ -90,3 +90,19 @@ fn update_removes_and_failure_restores_the_lockfile() {
     restore_after_failure(dir.path(), saved).expect("restore");
     assert_eq!(fs::read_to_string(&path).expect("read"), LOCKFILE);
 }
+
+#[cfg(unix)]
+#[test]
+fn changed_attributes_refuse_a_symlinked_lockfile_without_writing_its_target() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let target = dir.path().join("stored-lock.yaml");
+    let link = dir.path().join("pnpm-lock.yaml");
+    fs::write(&target, LOCKFILE).expect("write target");
+    std::os::unix::fs::symlink(&target, &link).expect("link lockfile");
+    write(dir.path(), object(json!({ "restoredFromModel": true }))).expect("unchanged");
+    let error = write(dir.path(), object(json!({ "restoredFromModel": false })))
+        .expect_err("changed symlinked lockfile must be refused");
+    assert!(error.to_string().contains("symlink"), "{error}");
+    assert_eq!(fs::read_link(&link).expect("read link"), target);
+    assert_eq!(fs::read_to_string(&target).expect("read target"), LOCKFILE);
+}

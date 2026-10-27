@@ -51,7 +51,7 @@ pub(crate) fn compare_declined(helper: &Helper, command: &str, stdout: fn(&str) 
     compare_mode(helper, command, false, false, Comparison::exact(stdout), false, None)
 }
 
-/// A delegated `install` still needs the two independently qualified pnpm clock projections.
+/// A delegated `install` still needs the independently qualified pnpm clock projections.
 pub(crate) fn compare_install_declined(
     helper: &Helper,
     command: &str,
@@ -60,7 +60,7 @@ pub(crate) fn compare_install_declined(
     compare_mode(helper, command, false, false, Comparison::exact(stdout), true, None)
 }
 
-/// Installation changes only these two qualified pnpm wall-clock fields independently.
+/// Installation clocks are qualified against the baseline or actual command window.
 pub(crate) fn compare_install(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
     compare_mode(helper, command, false, true, Comparison::exact(stdout), true, None)
 }
@@ -146,6 +146,7 @@ fn compare_mode(
     let root = &helper.scopes.local_path;
     let baseline_history = History::read(root);
     let config_history = config_history::Snapshot::read(root);
+    let modules = fs::read(root.join("node_modules/.modules.yaml")).ok();
     let environment = command_environment(ci, false);
     clock_phase::align(command);
     let started = chrono::Utc::now().timestamp_millis();
@@ -165,7 +166,7 @@ fn compare_mode(
             expected.stdout,
             expected.stderr,
         );
-        install_clocks::project(&mut expected_files, started, ended);
+        install_clocks::project(&mut expected_files, modules.as_deref(), started, ended);
     }
     let expected_scope = scope_tree(root, &config_history);
     let expected_history = oracle.map_or_else(
@@ -200,7 +201,7 @@ fn compare_mode(
     }
     let mut actual_files = tree(root);
     if install_clocks {
-        install_clocks::project(&mut actual_files, started, ended);
+        install_clocks::project(&mut actual_files, modules.as_deref(), started, ended);
     }
     compare_paths(&actual_files, &expected_files, command);
     compare_paths(&scope_tree(root, &config_history), &expected_scope, "scope objects/controls");

@@ -71,8 +71,7 @@ export class NpmCiRegistry {
       });
       this.registryServer = startRegistryMock({ detached: true });
       let resolved = false;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.registryServer.stdout.on('data', async (data): void => {
+      this.registryServer.stdout!.on('data', async (data) => {
         if (!resolved && data.includes(REGISTRY_MOCK_PORT)) {
           resolved = true;
           let fetchResults;
@@ -97,8 +96,7 @@ export class NpmCiRegistry {
           }
         }
       });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.registryServer.stderr.on('data', (data) => {
+      this.registryServer.stderr!.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
       });
       this.registryServer.on('error', (err) => {

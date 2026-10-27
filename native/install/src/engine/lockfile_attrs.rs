@@ -6,7 +6,7 @@
 //! before the install and re-asserted after it.
 
 use super::error::diagnostic;
-use pnpm_lockfile::Lockfile;
+use pnpm_lockfile::{Lockfile, SymlinkedLockfile};
 use serde_json::{Map, Value};
 use std::{fs, io, path::Path};
 
@@ -53,7 +53,7 @@ pub(super) fn write(root: &Path, attrs: Map<String, Value>) -> io::Result<()> {
         return Ok(());
     }
     lockfile.extra.insert(BIT_KEY.to_string(), Value::Object(merged));
-    lockfile.save_to_path(&path).map_err(|error| diagnostic(&error))
+    lockfile.save_to_path(&path, SymlinkedLockfile::Refuse).map_err(|error| diagnostic(&error))
 }
 
 /// `--update` resolves everything again, so the wanted lockfile is removed

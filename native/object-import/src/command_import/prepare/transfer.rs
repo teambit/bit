@@ -134,7 +134,11 @@ fn receive_history(
         .unwrap()
         .objects
         .insert(hash.clone());
-    let old = plan.capture.object(&local, &hash, "VersionHistory")?;
+    let old = if let Some(retained) = plan.overlay.objects.get(&hash) {
+        Some(retained.clone())
+    } else {
+        plan.capture.object(&local, &hash, "VersionHistory")?
+    };
     let merged = history::merge(old.as_ref(), &incoming_history)?;
     let object = if !changed && merged == incoming_history {
         plan.capture

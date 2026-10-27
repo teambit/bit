@@ -56,3 +56,47 @@ The suppression-comment removal shifted E2E source locations and made the genera
 A repeated full-suite run exposed test interference: the root-clone fixture changed the shared global remote registry while parallel snapshot and checkout commands were validating it. Diagnostic paths identified `global-remotes.json`; the fixture now uses its own global configuration for remote registration and every clone invocation. Native input validation is unchanged.
 
 Follow-up qualification: formatting, workspace/E2E Clippy, Dylint, rustdoc, the 1,798 workspace tests and the generated porting index pass. All 37 focused root-clone, bitmap and CI-sync cases pass together. The final full E2E run at 16 threads records 1,632 passes, four failures and two existing skips. Two failures are published environment fetches; two registry-update cases leave their old versions unchanged. All four complete cases pass on focused reruns. No retry or weakened assertion was added. The published native implementation at `df2ce7438` also passes all platform, E2E-shard and Windows workspace jobs in [run 40373417279](https://github.com/zkochan/bit/actions/runs/40373417279).
+
+
+## Follow-up sync on 2026-10-27
+
+The next sync advances from `3ab125f2df4329b256a4fda904478cb02375b756` to
+`f74f23c8ef59e90206b35e84ceb06bd524686391` (Bit 2.2.157), seven commits.
+
+| Upstream change | Native disposition |
+| --- | --- |
+| #10859: scope/object TypeScript migration cleanup | Type assertions and optional fields preserve runtime object formats. Buffer-to-string parsing preserves existing JSON coercion. Removed unused legacy helpers have no native callers. Remote latest-version requests already serialize ID arrays directly; the repaired remote-map validation has no production call sites in the synced tree. |
+| #10861: CLI and parser TypeScript migration cleanup | Error rendering, doctor flags, documentation parsing, component diff, removal, fetch reporting and snapshot result fields retain their observable behavior. Empty package arrays still disappear after filtering; snapshot lane-name insertion order is unchanged. No Rust behavior change is needed for these valid inputs. |
+| #10864: installer engine 12.16.0 | All pnpm Git dependencies advance together to the release commit, including the direct override-parser dependency and tar patch. The upstream dashmap patch is retained for Cargo resolution. Native adapters follow the new hook-result, install-policy and symlinked-lockfile APIs. The upstream stale-link retry regression is run from the exact pinned engine source. |
+| Four version bumps and regenerated metadata | Merged without editing the Node implementation. |
+
+The cross-scope hidden-update merge regression also completes the outstanding
+workspace merge assertion from the previous sync. Main-history prefetch includes
+hidden lane identities, and multiple histories received in one operation merge
+against retained history rather than discarding the earlier lane history. The
+fixture still uses the released scope-side producer; those two producer assertions
+remain open. Removing either native history fix makes the workspace merge fail.
+
+Bit 2.2.157 is not yet downloadable, and released 2.2.156 still bundles pnpm
+12.13.0. The E2E reference therefore keeps released Bit 2.2.146 and resolves its
+pnpm dependency to the published 12.16.0 addon through an isolated test preload.
+The addon and platform binaries are integrity-pinned in the test reference lockfile;
+CI installs them without package scripts. No Bit implementation is replaced.
+Comparisons retain new validation digests, manifest fingerprints, file sizes and
+settings. Only validation recording and file-stat timestamps are projected after
+checking their types and time bounds. The original version mismatch is not masked.
+
+Qualification: formatting, Clippy, Dylint and rustdoc passed; all 1,800 workspace
+tests passed, with one existing ignored test. The final full E2E run recorded
+1,658 passes, two Bit Cloud request failures during released-CLI fixture setup
+and two existing skips. Both failed cases passed unchanged on a serial rerun.
+The new cross-scope merge regression fails independently when either history fix
+is removed. The pinned pnpm stale-symlink regression and the new symlinked-lockfile
+preservation test pass. Generated porting and runtime-boundary checks pass.
+Repository Node lint remains unavailable because `tsc` is not installed.
+
+The Windows transfer fixture now uses the released CLI explicitly for its setup
+snapshots: the tested operation is native cross-scope fetching, including exact
+output, model, version and ref comparisons. The prior Windows failure was a setup
+snapshot declining because its environment package was absent, before that fetch
+comparison ran. No native fetch assertion was removed.

@@ -14,8 +14,8 @@ use super::{
 };
 use crate::model::{DependencyMap, Project};
 use pnpm_package_manager::{
-    Install, InstallExecution, InstallLockfilePolicy, InstallProjects, ManifestFreshness,
-    PeerIssuesSink, ResolutionInputs,
+    Install, InstallExecution, InstallLockfilePolicy, InstallProjects, PeerIssuesSink,
+    ResolutionInputs,
 };
 use pnpm_package_manifest::DependencyGroup;
 use pnpm_resolving_deps_resolver::PeerDependencyIssues;
@@ -86,7 +86,6 @@ fn configure<'a>(
             frozen: false,
             prefer_frozen: Some(false),
             disable_optimistic_repeat: true,
-            manifest_freshness: ManifestFreshness::Content,
             ..install.lockfile_policy
         },
         execution: InstallExecution {

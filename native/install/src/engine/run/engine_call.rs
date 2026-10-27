@@ -12,7 +12,7 @@ use super::super::{
 use crate::model::{InstallPlan, Project};
 use pnpm_package_manager::{
     DepsRequiringBuildSink, Install, InstallExecution, InstallInvocation, InstallLockfilePolicy,
-    InstallProjects, ManifestFreshness, ProjectMutation, ResolutionInputs, UpdateSeedPolicy,
+    InstallProjects, ProjectMutation, ResolutionInputs, UpdateSeedPolicy,
 };
 use pnpm_package_manifest::DependencyGroup;
 use serde_json::{Map, Value};
@@ -177,7 +177,6 @@ impl EngineCall {
                 prefer_frozen: Some(!update),
                 ignore_manifest_check: false,
                 disable_optimistic_repeat: false,
-                manifest_freshness: ManifestFreshness::Content,
                 ..install.lockfile_policy
             },
             execution: InstallExecution {

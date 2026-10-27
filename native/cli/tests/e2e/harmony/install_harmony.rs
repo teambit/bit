@@ -242,7 +242,7 @@ fn install_missing_objects_progress_and_workspace_state_match_the_released_cli()
     crate::commands::move_paths::support::setup(&helper, "install");
     helper.delete_path(".bit/objects");
     std::fs::create_dir_all(helper.scopes.local_path.join(".bit/objects")).unwrap();
-    let result = crate::commands::move_paths::support::compare_with_stdout(
+    let result = crate::commands::move_paths::support::compare_install(
         &helper,
         "install --skip-compile",
         super::install_compat::install_output,
