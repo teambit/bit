@@ -52,6 +52,10 @@ export async function getAllVersionsInfo({
 }): Promise<VersionInfo[]> {
   const results: VersionInfo[] = [];
   const processedHashes = new Set<string>();
+  const laneHead = getRefToStartFrom(modelComponent, startFrom);
+  if (!laneHead) {
+    return results;
+  }
   // index once. callers (e.g. the remote merge on export) may pass the versions of all exported components, and a
   // linear search per visited version made the walk quadratic. the first object of a hash wins, as with `find`.
   const versionObjectsByHash = new Map<string, Version>();
@@ -68,10 +72,6 @@ export async function getAllVersionsInfo({
     if (repo) return (await ref.load(repo)) as Version;
     return undefined;
   };
-  const laneHead = getRefToStartFrom(modelComponent, startFrom);
-  if (!laneHead) {
-    return results;
-  }
   const headOnMain = modelComponent.getHead()?.toString();
   let foundOnMain = laneHead.toString() === headOnMain;
 
