@@ -244,3 +244,51 @@ Full E2E: 1,714 passed, one Bit Cloud request failed during released-CLI MDX
 environment setup, and two existing cases were skipped. The failed fixture passes
 unchanged on a serial rerun. Generated inventory/census/assets and scope checks
 pass. Repository Node lint still cannot start because `tsc` is not installed.
+
+## Built-in lint orchestration and formatter platform fixes
+
+Linting now shares the Rust component loader with formatting. Rust owns default
+Node-environment selection, dependency/history/documentation cache publication,
+generated TypeScript configuration, diagnostic totals, reports and single-file
+fixes. ESLint remains an external Node tool. Built-in configuration data is
+embedded from public `@teambit/react.eslint-config-bit-react` 2.0.27 (Apache-2.0);
+other versions decline before effects. Tool preparation resolves metadata and
+third-party dependencies but imports neither Bit runtime nor Bit configuration
+modules. A preload fixture rejects all Bit module imports during native linting.
+
+The generated config's name reproduces `object-hash` for its fixed plain-object
+schema, including prototype references and UTF-16 string lengths. Independent
+library probes match 101 configurations with Unicode paths. Regression tests
+also assert known library hashes and the actual released generated filename.
+The command preserves existing canonical configs; noncanonical configs delegate.
+An external-tool process is prepared before cache publication and retained until
+linting completes, with cleanup on early exits. After publication, config/source
+write failures are owned service errors and never replayed through fallback.
+
+Released-CLI comparisons retain complete workspace/cache/remote state and raw
+ESLint diagnostics, including generated config paths, bytes and permissions.
+Only the validated duration changes. Cases cover clean/cached runs, warnings,
+errors, autofixes, changed/new selection, empty/configured workspaces, nested
+files, CI/colors, read-only sources and read-only config directories. The latter
+exposed directory modes lost while copying comparison fixtures; the helper now
+restores those modes along with timestamps, with a separate regression.
+Multiple components, concurrent fixes, custom services and semantic documentation
+cache misses remain guarded. Fixing rich source can invalidate its documentation
+cache; subsequent cache misses retain that explicit boundary.
+
+Windows provisioning CI exposed two formatter defects. The released formatter
+package uses `fs-extra.outputFile` directly, preserving Prettier's LF bytes; it
+does not use the legacy vinyl writer's platform EOL conversion. Native formatting
+now preserves those bytes on Windows too. Preload fixtures use quoted forward-slash
+paths because Node's options parser consumes backslashes. The same fixes apply
+to lint preload tests. Formatter checks also guard ignored extensions and now
+retain new components whose status-context version is the empty string when
+selecting changed components. Windows provisioning CI includes both services.
+
+Validation: formatting, Clippy, Dylint, rustdoc, generated plan/census/asset and
+scope checks pass; all 1,814 workspace tests pass. Full E2E: 1,725 passed, two
+existing skips and one Bit Cloud request failure during released-CLI fixture
+setup. That case passed unchanged on a serial rerun. All 20 focused service and
+fixture-permission cases pass. Negative controls catch disabled native dispatch
+and incorrect generated config filenames. Windows CI for this batch is pending.
+Repository Node lint remains unavailable because `tsc` is missing.

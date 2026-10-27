@@ -7,18 +7,46 @@ use crate::commands::{
 use bit_install::{config::WorkspaceConfig, workspace::Workspace};
 use std::{env, fs, io, path::Path};
 
-pub(super) struct Loaded {
+pub(in crate::commands) struct Loaded {
     engine: Engine,
     context: Value,
     capture: capture::Capture,
     ids: Vec<Value>,
-    pub(super) progress: super::progress::Progress,
-    pub(super) files: Vec<Value>,
+    pub(in crate::commands) progress: super::Progress,
+    pub(in crate::commands) files: Vec<Value>,
     counts: Vec<usize>,
     docs: Vec<crate::commands::add::docs::CatDocs>,
 }
 impl Loaded {
-    pub(super) fn prepare(root: &Path, options: &super::Options) -> io::Result<Self> {
+    pub(in crate::commands) fn components(&self) -> io::Result<Vec<super::Component>> {
+        let mut offset = 0;
+        self.ids
+            .iter()
+            .zip(&self.counts)
+            .zip(&self.progress.identities)
+            .map(|((id, count), identity)| {
+                let identity = identity
+                    .split('@')
+                    .next()
+                    .unwrap_or(identity);
+                let captured = self.capture.captured
+                    .iter()
+                    .find(|row| row["identity"] == identity)
+                    .ok_or_else(|| invalid("component service identity"))?;
+                let directory = captured["directory"]
+                    .as_str()
+                    .ok_or_else(|| invalid("component service directory"))?
+                    .to_owned();
+                let files = self.files[offset..offset + count].to_vec();
+                offset += count;
+                Ok(super::Component { id: id.clone(), directory, files })
+            })
+            .collect()
+    }
+    pub(in crate::commands) fn prepare(
+        root: &Path,
+        options: &super::Selection,
+    ) -> io::Result<Self> {
         let (workspace, name) = workspace(root)?;
         let home =
             env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
@@ -44,7 +72,7 @@ impl Loaded {
             context,
             capture,
             ids: Vec::new(),
-            progress: super::progress::Progress {
+            progress: super::Progress {
                 name,
                 identities: Vec::new(),
                 loads: if options.changed && options.pattern.is_none() {
@@ -65,7 +93,7 @@ impl Loaded {
         root: &Path,
         workspace: &Workspace,
         targets: &[Value],
-        options: &super::Options,
+        options: &super::Selection,
     ) -> io::Result<()> {
         for (entry, _) in workspace.active() {
             if targets
@@ -75,13 +103,13 @@ impl Loaded {
                 self.add(root, entry)?;
             }
         }
-        if !options.check
+        if options.single_file_write
             && (self.counts.len() > 1
                 || self.counts
                     .iter()
                     .any(|count| *count > 1))
         {
-            return Err(invalid("formatter concurrent source writes"));
+            return Err(invalid("component service concurrent source writes"));
         }
         Ok(())
     }
@@ -90,11 +118,11 @@ impl Loaded {
         let row = self.capture.captured
             .iter()
             .find(|row| row["identity"] == identity)
-            .ok_or_else(|| invalid("formatter capture"))?;
-        let files = row["files"].as_array().ok_or_else(|| invalid("formatter files"))?;
+            .ok_or_else(|| invalid("component service capture"))?;
+        let files = row["files"].as_array().ok_or_else(|| invalid("component service files"))?;
         self.counts.push(files.len());
         for file in files {
-            let relative = file.as_str().ok_or_else(|| invalid("formatter filename"))?;
+            let relative = file.as_str().ok_or_else(|| invalid("component service filename"))?;
             let path = root.join(&entry.root_dir).join(relative);
             let source = fs::read_to_string(&path)?;
             self.files.push(json!({"filePath":relative,"absolutePath":path,"source":source}));
@@ -106,7 +134,7 @@ impl Loaded {
             entry.id.scope
                 .as_ref()
                 .or(entry.id.default_scope.as_ref())
-                .ok_or_else(|| invalid("formatter component scope"))?
+                .ok_or_else(|| invalid("component service component scope"))?
         );
         self.ids.push(id);
         self.progress.identities.push(
@@ -116,9 +144,9 @@ impl Loaded {
         );
         Ok(())
     }
-    pub(super) fn result(&self, files: &[Value]) -> io::Result<Value> {
+    pub(in crate::commands) fn result(&self, files: &[Value]) -> io::Result<Value> {
         if files.len() != self.files.len() {
-            return Err(invalid("formatter file count"));
+            return Err(invalid("component service file count"));
         }
         let mut offset = 0;
         let results: Vec<_> = self.ids
@@ -132,7 +160,7 @@ impl Loaded {
             .collect();
         Ok(json!({"results":results,"errors":[]}))
     }
-    pub(super) fn commit(&mut self, root: &Path) -> io::Result<()> {
+    pub(in crate::commands) fn commit(&mut self, root: &Path) -> io::Result<()> {
         for plan in self.docs.drain(..) {
             plan.publish()?;
         }
@@ -143,7 +171,7 @@ impl Loaded {
 fn workspace(root: &Path) -> io::Result<(Workspace, String)> {
     let raw: Value = bit_object_import::parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
     if !startup::supported(Some(root), &crate::workspace::scope_path(root), &raw, true)? {
-        return Err(invalid("formatter startup callbacks"));
+        return Err(invalid("component service startup callbacks"));
     }
     let config = WorkspaceConfig::load(root).map_err(io::Error::other)?;
     let core: Vec<String> = serde_json::from_str(include_str!(
@@ -154,7 +182,7 @@ fn workspace(root: &Path) -> io::Result<(Workspace, String)> {
         if !matches!(component.env_id.as_str(), "teambit.harmony/node" | "teambit.react/react")
             || component.is_env
         {
-            return Err(invalid("formatter environment service"));
+            return Err(invalid("component service environment service"));
         }
     }
     let name = config.workspace.name
@@ -172,18 +200,20 @@ fn changed(
     root: &Path,
     capture: &capture::Capture,
     targets: Vec<Value>,
-    options: &super::Options,
+    options: &super::Selection,
 ) -> io::Result<Vec<Value>> {
     if !options.changed || options.pattern.is_some() {
         return Ok(targets);
     }
     let compared: Value =
         engine.request(&json!({"kind":"statusCompare","root":root,"targets":capture.comparisons}))?;
-    let rows = compared["comparisons"].as_array().ok_or_else(|| invalid("formatter comparison"))?;
+    let rows = compared["comparisons"]
+        .as_array()
+        .ok_or_else(|| invalid("component service comparison"))?;
     Ok(targets
         .into_iter()
         .filter(|target| {
-            target["version"].as_str().is_none()
+            target["version"].as_str().is_none_or(str::is_empty)
                 || rows
                     .iter()
                     .any(|row| row["identity"] == target["identity"] && row["modified"] == true)
@@ -191,23 +221,24 @@ fn changed(
         .collect())
 }
 
-fn serial_loading(root: &Path, targets: &[Value], options: &super::Options) -> io::Result<()> {
+fn serial_loading(root: &Path, targets: &[Value], options: &super::Selection) -> io::Result<()> {
     use bit_install::dependencies::cache::invalidation::{deps_dir, needs_invalidation};
-    if options.check && options.json && targets.len() == 2 {
+    if options.allow_cached_pair && targets.len() == 2 {
         return Ok(());
     }
     let cache = deps_dir(root);
     if targets.len() > 1 && cache.join("index-v5").exists() && !needs_invalidation(root, &cache)? {
-        return Err(invalid("formatter parallel cached component order"));
+        return Err(invalid("component service parallel cached component order"));
     }
     Ok(())
 }
 
-fn selected(root: &Path, context: &Value, options: &super::Options) -> io::Result<Vec<Value>> {
-    let targets = context["targets"].as_array().ok_or_else(|| invalid("formatter targets"))?;
+fn selected(root: &Path, context: &Value, options: &super::Selection) -> io::Result<Vec<Value>> {
+    let targets =
+        context["targets"].as_array().ok_or_else(|| invalid("component service targets"))?;
     Environments::require_native_write_for(root, context, targets)?;
     if options.pattern.as_deref().is_some_and(crate::commands::diff::selection::stateful) {
-        return Err(invalid("formatter stateful selection"));
+        return Err(invalid("component service stateful selection"));
     }
     let targets = crate::commands::diff::selection::select(targets, options.pattern.as_deref())?;
     serial_loading(root, &targets, options)?;
@@ -217,8 +248,9 @@ fn selected(root: &Path, context: &Value, options: &super::Options) -> io::Resul
 fn order_sources(root: &Path, capture: &mut capture::Capture) -> io::Result<()> {
     for component in &mut capture.captured {
         let files: Vec<String> = serde_json::from_value(component["files"].clone())?;
-        let directory =
-            component["directory"].as_str().ok_or_else(|| invalid("formatter source directory"))?;
+        let directory = component["directory"]
+            .as_str()
+            .ok_or_else(|| invalid("component service source directory"))?;
         component["files"] = json!(crate::commands::diff::order::captured(
             &root.join(directory),
             &files,

@@ -1,6 +1,4 @@
 //! Rust owns built-in formatting selection and reports; Prettier is an external tool.
-mod docs;
-mod load;
 mod progress;
 mod report;
 mod tool;
@@ -9,10 +7,17 @@ use super::Options;
 use crate::{commands::workspace_command, native::Outcome};
 use serde_json::{Value, json};
 use std::{ffi::OsString, io, path::Path, time::Instant};
+use workspace_command::component_service::{Loaded, Selection};
 
 pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let started = Instant::now();
-    let mut loaded = match load::Loaded::prepare(root, options) {
+    let selection = Selection {
+        pattern: options.pattern.clone(),
+        changed: options.changed,
+        allow_cached_pair: options.check && options.json,
+        single_file_write: !options.check,
+    };
+    let mut loaded = match Loaded::prepare(root, &selection) {
         Ok(loaded) => loaded,
         Err(error) => return Ok(Outcome::Declined(format!("formatter load: {error}"))),
     };

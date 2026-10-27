@@ -1,5 +1,6 @@
 //! Native `bit lint [component-pattern]` (`scopes/defender/linter/lint.cmd.ts`).
 
+mod runner;
 #[cfg(test)]
 mod tests;
 
@@ -27,10 +28,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native lint grammar".into()));
     };
+    let cwd = env::current_dir()?;
+    if let Some(root) = workspace::root(&cwd) {
+        return runner::run(&root, args, &options);
+    }
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("CI lint delegated".into()));
     }
-    let cwd = env::current_dir()?;
     if is_missing_host(&cwd, &options) {
         return workspace_command::execute_without_loader_scope(&cwd, args, "lint", |_| {
             Err(io::Error::other(HOST_NOT_FOUND_ERR))

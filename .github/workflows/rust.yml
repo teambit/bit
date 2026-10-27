@@ -217,7 +217,7 @@ jobs:
           - group: merge-history
             filters: merge_history merge_lifecycle merge_callbacks merge_policy merge_recovery harmony::lanes::abort_merge_lane
           - group: provisioning
-            filters: commands::init commands::lane commands::format harmony::config harmony::doctor harmony::install_compat harmony::lane_import_callbacks harmony::ci_sync::onboarding::native
+            filters: commands::init commands::lane commands::format commands::lint harmony::config harmony::doctor harmony::install_compat harmony::lane_import_callbacks harmony::ci_sync::onboarding::native
           - group: stash
             filters: harmony::stash
           - group: tracking

@@ -21,6 +21,7 @@ fn standard_format_checks_clean_and_new_components_and_selection_match_node() {
     assert!(!all.trace.contains("starting the JavaScript host"));
     let clean = support::compare(&helper, "format comp1 --check --json");
     assert!(clean.status.success());
+    support::compare_with_stdout(&helper, "format --changed --check --json", two_component_order);
     support::compare_with_stdout(&helper, "format '**/comp*' --check --json", two_component_order);
 }
 
@@ -89,7 +90,7 @@ Module._load = function (name, ...args) {
   if (name.includes('@teambit/') || name.includes('@teambit\\')) throw new Error('Bit module load forbidden');
   return load.call(this, name, ...args);
 };").unwrap();
-    let options = format!(r#"--require "{}""#, guard.display());
+    let options = format!(r#"--require "{}""#, guard.to_string_lossy().replace('\\', "/"));
     let actual = crate::helper::Helper::cmd_in_with(
         &helper.scopes.local_path,
         "format --check --json",
@@ -115,6 +116,13 @@ fn standard_format_nested_source_checks_preserve_file_order_and_guard_concurrent
     helper.output_file("comp1/z.js", "module.exports=()=>true;\n");
     support::compare(&helper, "format --check --json");
     support::compare_declined(&helper, "format --json", str::to_owned);
+}
+
+#[test]
+fn standard_format_ignored_extensions_delegate_before_cache_or_source_writes() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/schema.graphql", "type Example { field: String }\n");
+    support::compare_declined(&helper, "format --check --json", str::to_owned);
 }
 
 // Released Node-to-Node replay produces both complete permutations on the same cached fixture.

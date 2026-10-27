@@ -1,11 +1,6 @@
 //! Formatter component-loading and per-component progress in released order.
+pub(super) use crate::commands::workspace_command::component_service::Progress;
 use bit_install::output::Output;
-
-pub(super) struct Progress {
-    pub name: String,
-    pub identities: Vec<String>,
-    pub loads: Vec<usize>,
-}
 impl Progress {
     pub fn print(&self, output: &Output) {
         for count in &self.loads {

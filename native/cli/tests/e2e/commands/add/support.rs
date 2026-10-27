@@ -27,6 +27,17 @@ pub(crate) fn compare_ci(helper: &Helper, command: &str, native: bool) -> Run {
     compare_mode(helper, command, true, native, Comparison::exact(str::to_owned), false, None)
 }
 
+pub(crate) fn compare_service_output(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    ci: bool,
+    colors: bool,
+) -> Run {
+    let output = Comparison { colors, ..Comparison::exact(stdout) };
+    compare_mode(helper, command, ci, true, output, false, None)
+}
+
 pub(crate) fn compare_with_stdout(
     helper: &Helper,
     command: &str,
@@ -158,10 +169,11 @@ fn compare_mode(
     let baseline_history = History::read(root);
     let config_history = config_history::Snapshot::read(root);
     let modules = fs::read(root.join("node_modules/.modules.yaml")).ok();
-    let environment = command_environment(ci, false);
+    let environment = command_environment(ci, false, output.colors);
     clock_phase::align(command);
     let started = chrono::Utc::now().timestamp_millis();
-    let expected = Helper::cmd_in_with(root, command, &command_environment(ci, true));
+    let expected =
+        Helper::cmd_in_with(root, command, &command_environment(ci, true, output.colors));
     let ended = chrono::Utc::now().timestamp_millis();
     let mut expected_files = tree(root);
     if install_clocks {
@@ -235,13 +247,20 @@ fn compare_mode(
     actual
 }
 
-fn command_environment(ci: bool, oracle: bool) -> Vec<(&'static str, &'static OsStr)> {
+fn command_environment(
+    ci: bool,
+    oracle: bool,
+    colors: bool,
+) -> Vec<(&'static str, &'static OsStr)> {
     let mut environment = vec![("BIT_NATIVE_QUIET", OsStr::new("1"))];
     if ci {
         environment.push(("CI", OsStr::new("1")));
     }
     if oracle {
         environment.push(("BIT_NATIVE", OsStr::new("off")));
+    }
+    if colors {
+        environment.push(("FORCE_COLOR", OsStr::new("1")));
     }
     environment
 }

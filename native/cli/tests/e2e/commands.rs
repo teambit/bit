@@ -19,6 +19,7 @@ mod import;
 mod import_all;
 mod init;
 mod lane;
+mod lint;
 mod list;
 mod pattern;
 mod recover;
