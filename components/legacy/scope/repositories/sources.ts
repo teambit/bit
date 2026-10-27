@@ -664,7 +664,7 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
       const modelComponent = await getModelComponent(component.id);
       const existingComponent = isHidden
         ? existingLane?.getUpdateDependentAsLaneComponent(component.id)
-        : existingLane?.components.find((c) => c.id.isEqual(component.id));
+        : existingLane?.getComponentExact(component.id);
       if (!existingComponent) {
         if (isExport) {
           if (isHidden && !lane.shouldOverrideUpdateDependents()) {

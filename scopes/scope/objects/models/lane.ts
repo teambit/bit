@@ -58,6 +58,13 @@ export default class Lane extends BitObject {
    */
   updateDependents?: ComponentID[];
   private overrideUpdateDependents?: boolean;
+  /**
+   * `components` indexed by the id without version, for the lookups below. a linear search with `ComponentID.isEqual`
+   * per lookup makes any loop over the lane components (e.g. the lane merge on export) quadratic in the lane size.
+   * the index is bound to the array it was built from, so it's rebuilt once `components` is replaced or its length
+   * changes (e.g. a push). in-memory only.
+   */
+  private componentsIndex?: { components: LaneComponent[]; length: number; byIdStr: Map<string, LaneComponent> };
   constructor(props: LaneProps) {
     super();
     if (!props.name) throw new TypeError('Lane constructor expects to get a name parameter');
@@ -192,6 +199,7 @@ export default class Lane extends BitObject {
     } else {
       logger.debug(`Lane.addComponent, adding component ${component.id.toString()} to lane ${this.id()}`);
       this.components.push(component);
+      this.indexAddedComponent(component);
       this.hasChanged = true;
     }
   }
@@ -259,12 +267,49 @@ export default class Lane extends BitObject {
     return true;
   }
   getComponent(id: ComponentID): LaneComponent | undefined {
-    return this.components.find((c) => c.id.isEqualWithoutVersion(id));
+    const found = this.getComponentsByIdStr().get(id.toStringWithoutVersion());
+    // the entry's id can be replaced in place (see addComponent), so the hit is re-checked.
+    if (found && found.id.isEqualWithoutVersion(id)) return found;
+    if (found) {
+      this.componentsIndex = undefined;
+      return this.components.find((c) => c.id.isEqualWithoutVersion(id));
+    }
+    return undefined;
+  }
+  /**
+   * same as getComponent, but the version of the given id must match as well (lane components normally have no version).
+   */
+  getComponentExact(id: ComponentID): LaneComponent | undefined {
+    const found = this.getComponent(id);
+    return found && found.id.isEqual(id) ? found : undefined;
   }
   getComponentHead(bitId: ComponentID): Ref | null {
-    const found = this.components.find((c) => c.id.isEqual(bitId));
-    if (found) return found.head;
-    return null;
+    return this.getComponentExact(bitId)?.head || null;
+  }
+  /**
+   * keeps the index current after a push, so adding many components (e.g. a lane merged into a scope that doesn't
+   * have it yet) doesn't rebuild it per component.
+   */
+  private indexAddedComponent(component: LaneComponent) {
+    const index = this.componentsIndex;
+    if (!index || index.components !== this.components || index.length !== this.components.length - 1) return;
+    const key = component.id.toStringWithoutVersion();
+    if (!index.byIdStr.has(key)) index.byIdStr.set(key, component);
+    index.length = this.components.length;
+  }
+  private getComponentsByIdStr(): Map<string, LaneComponent> {
+    const index = this.componentsIndex;
+    if (index && index.components === this.components && index.length === this.components.length) {
+      return index.byIdStr;
+    }
+    const byIdStr = new Map<string, LaneComponent>();
+    this.components.forEach((c) => {
+      const key = c.id.toStringWithoutVersion();
+      // the first entry of an id wins, as with a search.
+      if (!byIdStr.has(key)) byIdStr.set(key, c);
+    });
+    this.componentsIndex = { components: this.components, length: this.components.length, byIdStr };
+    return byIdStr;
   }
   setLaneComponents(laneComponents: LaneComponent[]) {
     // this gets called when adding lane-components from other lanes/remotes, so it's better to
