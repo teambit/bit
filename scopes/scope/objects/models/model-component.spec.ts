@@ -90,5 +90,37 @@ describe('ModelComponent', () => {
       component.setVersion('0.0.8', ref);
       expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.8');
     });
+    it('should find a tag added after a lookup, and not one deleted directly from the versions', () => {
+      const component = getModelComponent(getModelComponentFixture());
+      const ref = Ref.from('d'.repeat(40));
+      expect(component.getTagOfRefIfExists(ref)).to.be.undefined;
+      component.setVersion('0.0.9', ref);
+      expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.9');
+      delete component.versions['0.0.9'];
+      component.setOrphanedVersion('0.0.9', ref);
+      expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.9');
+      delete component.orphanedVersions['0.0.9'];
+      expect(component.getTagOfRefIfExists(ref)).to.be.undefined;
+    });
+    it('should not find an orphaned tag after the orphaned versions were replaced', () => {
+      const component = getModelComponent(getModelComponentFixture());
+      const ref = Ref.from('e'.repeat(40));
+      component.setOrphanedVersion('0.0.4', ref);
+      expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.4');
+      component.orphanedVersions = {};
+      expect(component.getTagOfRefIfExists(ref)).to.be.undefined;
+    });
+    it('should stay fast looking up every version of a component with many tags, and snaps that are not tags', () => {
+      const size = 20000;
+      const hash = (i: number) => i.toString(16).padStart(40, '0');
+      const component = getModelComponent(getModelComponentFixture());
+      for (let i = 0; i < size; i += 1) component.setVersion(`1.0.${i}`, Ref.from(hash(i)));
+      const refs = Array.from({ length: size * 2 }, (_, i) => Ref.from(hash(i)));
+      const start = Date.now();
+      const tags = component.switchHashesWithTagsIfExist(refs);
+      expect(tags[size - 1]).to.equal(`1.0.${size - 1}`);
+      expect(tags[size]).to.equal(hash(size));
+      expect(Date.now() - start).to.be.lessThan(2000);
+    });
   });
 });

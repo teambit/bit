@@ -1,4 +1,4 @@
-import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
+import { forEach, isEmpty, pickBy, mapValues, isEqual, clone } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
@@ -95,6 +95,15 @@ export type ComponentProps = {
   detachedHeads?: DetachedHeads;
 };
 
+/** the tag of each hash. a later tag of the same hash wins, as it's the newest (tags keep insertion order). */
+function indexTagsByHash(versions: Versions): Map<string, string> {
+  const tagsByHash = new Map<string, string>();
+  for (const [tag, ref] of Object.entries(versions)) {
+    if (ref) tagsByHash.set(ref.toString(), tag);
+  }
+  return tagsByHash;
+}
+
 export const VERSION_ZERO = '0.0.0';
 
 /**
@@ -105,8 +114,15 @@ export const VERSION_ZERO = '0.0.0';
 export default class Component extends BitObject {
   scope: string;
   name: string;
-  versions: Versions;
-  orphanedVersions: Versions;
+  private _versions!: Versions;
+  private _orphanedVersions!: Versions;
+  /**
+   * indexes of `getTagOfRefIfExists`, built on demand. writes to the versions go through `setVersion`,
+   * `setOrphanedVersion` or the setters below, which drop them. a tag deleted directly from the
+   * versions (as the merger does) is caught by checking the hit against the current versions.
+   */
+  private tagsByHash?: Map<string, string>;
+  private orphanedTagsByHash?: Map<string, string>;
   lang: string;
   /**
    * @deprecated moved to the Version object inside teambit/deprecation aspect
@@ -145,7 +161,6 @@ export default class Component extends BitObject {
   detachedHeads: DetachedHeads;
   private divergeData?: SnapsDistance;
   private _populateVersionHistoryMutex?: Mutex;
-  private lastFoundTag?: string;
   constructor(props: ComponentProps) {
     super();
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
@@ -173,6 +188,24 @@ export default class Component extends BitObject {
     return this._populateVersionHistoryMutex;
   }
 
+  get versions(): Versions {
+    return this._versions;
+  }
+
+  set versions(versions: Versions) {
+    this._versions = versions;
+    this.tagsByHash = undefined;
+  }
+
+  get orphanedVersions(): Versions {
+    return this._orphanedVersions;
+  }
+
+  set orphanedVersions(versions: Versions) {
+    this._orphanedVersions = versions;
+    this.orphanedTagsByHash = undefined;
+  }
+
   get versionArray(): Ref[] {
     return Object.values(this.versions);
   }
@@ -180,6 +213,8 @@ export default class Component extends BitObject {
   setVersion(tag: string, ref: Ref) {
     this.versions[tag] = ref;
     delete this.orphanedVersions[tag]; // just in case it's there.
+    this.tagsByHash = undefined;
+    this.orphanedTagsByHash = undefined;
   }
 
   setOrphanedVersion(tag: string, ref: Ref) {
@@ -189,6 +224,7 @@ export default class Component extends BitObject {
       );
     }
     this.orphanedVersions[tag] = ref;
+    this.orphanedTagsByHash = undefined;
   }
 
   getRef(version: string): Ref | null {
@@ -652,18 +688,19 @@ export default class Component extends BitObject {
   }
 
   getTagOfRefIfExists(ref: Ref): string | undefined {
-    // the same ref (usually the head) is looked up many times per command, and each scan has to list all the tags.
-    // the last hit is re-checked against the current versions, so it can't go stale when versions change. only hits
-    // in `versions` are remembered, so they keep their precedence over orphaned versions.
-    if (this.lastFoundTag && this.versions[this.lastFoundTag]?.isEqual(ref)) return this.lastFoundTag;
-    // search from the newest tag. tags are kept in insertion order and the head is usually the latest one.
-    const findIn = (versions: Versions) => findLastKey(versions, (versionRef) => versionRef.isEqual(ref));
-    const tag = findIn(this.versions);
-    if (tag) {
-      this.lastFoundTag = tag;
-      return tag;
+    // called for every version of a history walk, so it's a lookup in an index rather than a scan of all the tags.
+    // a tag in `versions` takes precedence over an orphaned one.
+    const hash = ref.toString();
+    this.tagsByHash ||= indexTagsByHash(this.versions);
+    this.orphanedTagsByHash ||= indexTagsByHash(this.orphanedVersions);
+    const tag = this.tagsByHash.get(hash) || this.orphanedTagsByHash.get(hash);
+    if (tag && (this.versions[tag] || this.orphanedVersions[tag])?.toString() !== hash) {
+      // the tag was deleted directly from the versions. rebuild the indexes and look again.
+      this.tagsByHash = undefined;
+      this.orphanedTagsByHash = undefined;
+      return this.getTagOfRefIfExists(ref);
     }
-    return findIn(this.orphanedVersions);
+    return tag;
   }
 
   getTag(version: string): string | undefined {
