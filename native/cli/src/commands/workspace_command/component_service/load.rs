@@ -18,6 +18,14 @@ pub(in crate::commands) struct Loaded {
     docs: Vec<crate::commands::add::docs::CatDocs>,
 }
 impl Loaded {
+    pub(in crate::commands) fn dependency_state(&self, identity: &str) -> Option<&Value> {
+        self.capture.dependency_states.get(identity)
+    }
+
+    pub(in crate::commands) fn captured(&self) -> &[Value] {
+        &self.capture.captured
+    }
+
     pub(in crate::commands) fn components(&self) -> io::Result<Vec<super::Component>> {
         let mut offset = 0;
         self.ids
@@ -62,7 +70,11 @@ impl Loaded {
             &context,
             &targets,
             capture::CaptureOptions {
-                environments: Some(Environments::for_builtin_services()),
+                environments: Some(if options.compiler {
+                    Environments::for_compiler_services()
+                } else {
+                    Environments::for_builtin_services()
+                }),
                 ..Default::default()
             },
         )?;
@@ -224,7 +236,7 @@ fn changed(
 
 fn serial_loading(root: &Path, targets: &[Value], options: &super::Selection) -> io::Result<()> {
     use bit_install::dependencies::cache::invalidation::{deps_dir, needs_invalidation};
-    if options.allow_cached_pair && targets.len() == 2 {
+    if options.allow_cached_many || (options.allow_cached_pair && targets.len() == 2) {
         return Ok(());
     }
     let cache = deps_dir(root);
@@ -241,7 +253,10 @@ fn selected(root: &Path, context: &Value, options: &super::Selection) -> io::Res
     if options.pattern.as_deref().is_some_and(crate::commands::diff::selection::stateful) {
         return Err(invalid("component service stateful selection"));
     }
-    let targets = crate::commands::diff::selection::select(targets, options.pattern.as_deref())?;
+    let targets = match &options.exact {
+        Some(selectors) => super::selection::exact(targets, selectors)?,
+        None => crate::commands::diff::selection::select(targets, options.pattern.as_deref())?,
+    };
     serial_loading(root, &targets, options)?;
     Ok(targets)
 }

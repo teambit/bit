@@ -40,7 +40,7 @@ pub(in crate::commands) struct Environments {
     snapshot_loads: Vec<Value>,
     checkout: bool,
     import: Option<bool>,
-    builtin_services: bool,
+    builtin_services: builtin::Services,
 }
 impl Environments {
     pub(super) fn new() -> Self {
@@ -52,7 +52,7 @@ impl Environments {
             snapshot_loads: Vec::new(),
             checkout: false,
             import: None,
-            builtin_services: false,
+            builtin_services: builtin::Services::Disabled,
         }
     }
 
@@ -64,7 +64,9 @@ impl Environments {
         core: &[String],
         aspects: &[String],
     ) -> io::Result<Value> {
-        if self.builtin_services && builtin::supported(component, core, aspects) {
+        if self.builtin_services != builtin::Services::Disabled
+            && builtin::supported(component, core, aspects)
+        {
             return Ok(builtin::facts(component, self.issue_facts));
         }
         let needs_issues = self.issue_facts;

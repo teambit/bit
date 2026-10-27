@@ -3,7 +3,10 @@ use bit_install::model::WorkspaceComponent;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
-pub(super) fn overlay(components: &mut [WorkspaceComponent], captured: &[Value]) -> io::Result<()> {
+pub(in crate::commands) fn overlay(
+    components: &mut [WorkspaceComponent],
+    captured: &[Value],
+) -> io::Result<()> {
     for component in components {
         let Some(row) = captured
             .iter()

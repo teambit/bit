@@ -10,7 +10,10 @@ impl Environments {
         files: &[String],
         custom: &Value,
     ) -> io::Result<Value> {
-        if self.builtin_services {
+        if self.builtin_services == super::builtin::Services::Compiler {
+            return crate::commands::compile_cmd::syntax::parse(root, target, files, custom);
+        }
+        if self.builtin_services != super::builtin::Services::Disabled {
             return Err(decline("component service dependency parser"));
         }
         let directory = root.join(text(target.get("directory"))?);
@@ -35,7 +38,9 @@ impl Environments {
         let env = context["environmentFacts"][identity]["envId"]
             .as_str()
             .unwrap_or("teambit.harmony/node");
-        if self.builtin_services && env == "teambit.react/react" {
+        if self.builtin_services != super::builtin::Services::Disabled
+            && env == "teambit.react/react"
+        {
             return Ok(Value::Null);
         }
         if (env == "teambit.harmony/node" && context["environmentFacts"][identity].is_null())

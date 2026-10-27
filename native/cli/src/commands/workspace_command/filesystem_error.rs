@@ -41,7 +41,7 @@ impl fmt::Display for Failure {
 }
 impl std::error::Error for Failure {}
 
-pub(super) fn report(error: &io::Error, chalk: Chalk) -> io::Error {
+pub(in crate::commands) fn report(error: &io::Error, chalk: Chalk) -> io::Error {
     let details = error
         .get_ref()
         .and_then(|error| error.downcast_ref::<Failure>())
@@ -55,7 +55,7 @@ pub(super) fn report(error: &io::Error, chalk: Chalk) -> io::Error {
     }
 }
 
-pub(super) fn paired_failure(
+pub(in crate::commands) fn paired_failure(
     error: io::Error,
     operation: &str,
     source: &Path,
@@ -64,7 +64,7 @@ pub(super) fn paired_failure(
     make(error, operation, source, Some(target))
 }
 
-pub(super) fn failure(error: io::Error, operation: &str, path: &Path) -> io::Error {
+pub(in crate::commands) fn failure(error: io::Error, operation: &str, path: &Path) -> io::Error {
     make(error, operation, path, None)
 }
 fn make(error: io::Error, operation: &str, path: &Path, destination: Option<&Path>) -> io::Error {

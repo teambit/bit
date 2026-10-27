@@ -3,7 +3,9 @@ use bit_install::model::{ComponentDependencies, Lifecycle, PackageDependency};
 use serde_json::Value;
 use std::io;
 
-pub(super) fn packages(captured: &[Value]) -> io::Result<Vec<(String, ComponentDependencies)>> {
+pub(in crate::commands) fn packages(
+    captured: &[Value],
+) -> io::Result<Vec<(String, ComponentDependencies)>> {
     captured
         .iter()
         .map(component_packages)

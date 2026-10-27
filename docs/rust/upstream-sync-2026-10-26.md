@@ -374,3 +374,58 @@ nonstandard-main capsule case. That case passed unchanged on a serial rerun.
 The regenerated plan also fixes the prior PR lint job's stale graph-test line
 reference when GitHub combines the branch with the updated upstream master.
 Platform CI for this sync is pending; local Node lint still lacks `tsc`.
+
+## Built-in compiler orchestration and byte parity
+
+Replaced the handwritten transpiler and placeholder source maps with external
+TypeScript transpilation under Rust-owned component loading, selection, scheduling,
+dist persistence, package linking and reports. Qualified built-in Node and React
+commands no longer load the published Bit runtime. Rust retains documentation and
+dependency-cache effects, repeated and changed selection, duplicate-selector load
+counts, stale dist files unless deletion is requested, copied-file ordering,
+platform text line endings, injected packages and root-component copies. Generated
+manifests retain optional package, peer and component dependency metadata.
+
+TypeScript diagnostics preserve text/JSON differences, including JSON's released
+zero exit code for compilation diagnostics. A narrow external TypeScript ESTree
+parser supplies malformed-source diagnostics to the native dependency loader;
+source hashes, graph resolution and cache ownership remain native. The external
+tools resolve through installed distribution metadata. A preload rejects Bit
+module imports for valid compilation and syntax-error handling. This is not a
+standalone compiler distribution or an arbitrary environment implementation.
+
+Filesystem failures use the shared released error formatter, including CI details
+and colors. Independent released-command replay established the tested first-open
+failure's partial-write state: a pending sibling output is truncated, not completed.
+Rust opens each configured I/O batch before writing it, retaining that state on
+failure and respecting configured single-file batches. The regression compares
+complete output bytes, caches, manifests and the unchanged remote; it does not
+mask failed-write contents. Other concurrent-failure interleavings are not claimed
+as qualified by this fixture.
+
+Fourteen differential cases cover emitted code/maps, repeated commands, new/changed
+selection, diagnostics, assets, optional metadata, copies, CI/colors and owned write
+failures. Negative controls detect both the previous missing loading messages and
+corrupted source-map bytes. A cold-cache regression after dependency rewiring
+now proves that bounded data-only `console.log` calls have no documentation;
+released-parser replay confirms the empty result. Disabling that proof fails
+the new native-execution assertion. Two obsolete unit assertions for the old transpiler
+and incorrect empty JSON success were removed; the released no-selector JSON
+failure remains explicitly delegated. Windows provisioning includes the new suite.
+Custom providers/environments, mixed groups, type generation, rich documentation
+cache misses, unsupported dependency syntax, binary sources, colliding outputs
+and ordered multi-component reports remain pre-effect guards.
+
+Validation: formatting, Clippy, Dylint, rustdoc and all 1,814 workspace tests pass.
+All 17 focused compiler/regression/capsule cases pass. The final full E2E run
+reports 1,746 passes, two Bit Cloud failures in released environment assignment
+and two existing skips; both failed cases pass unchanged on a serial rerun.
+An earlier full run exposed the cold documentation-cache regression now covered
+by the new comparison and negative control. Generated inventory/census, asset,
+scope and public-data checks pass. Local Node lint still requires the unavailable
+tsc. Platform CI for this compiler change is pending.
+
+The preceding head's E2E shard 3 failed on an extra timed pnpm progress frame.
+Independent released-command replays reproduce that frame under slower scheduling;
+a narrowly bounded comparison fix is prepared separately. The remaining runtime,
+compiler, tester, build and service milestones remain open.

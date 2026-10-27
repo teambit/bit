@@ -5,7 +5,7 @@ mod collector;
 mod format;
 mod graph;
 mod inventory;
-mod io_error;
+use crate::commands::workspace_command::filesystem_error as io_error;
 mod restore;
 #[cfg(test)]
 mod tests;

@@ -139,7 +139,7 @@ impl Environments {
             .iter()
             .any(|component| {
                 needs_facts(component, core, aspects)
-                    && !(self.builtin_services
+                    && !(self.builtin_services != super::builtin::Services::Disabled
                         && super::builtin::supported(component, core, aspects))
             })
         {

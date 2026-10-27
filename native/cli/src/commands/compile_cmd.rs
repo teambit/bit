@@ -1,18 +1,14 @@
 //! Native `bit compile [component-names...]` (`scopes/compilation/compiler/compiler.cmd.ts`).
 
+pub(in crate::commands) mod syntax;
+
 mod runner;
 #[cfg(test)]
 mod tests;
-mod transpile;
 
-use super::{
-    Command,
-    script::active_component_count,
-    workspace_command::{self, results::Report},
-};
+use super::{Command, workspace_command};
 use crate::{native::Outcome, workspace};
-use bit_object_import::parse_jsonc;
-use std::{env, ffi::OsString, fs, io, path::Path};
+use std::{env, ffi::OsString, io};
 
 pub const COMMAND: Command = Command { name: "compile", aliases: &[], run };
 
@@ -35,33 +31,20 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native compile grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-        return Ok(Outcome::Declined("CI compile delegated".into()));
-    }
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
+        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            return Ok(Outcome::Declined("CI compile delegated".into()));
+        }
+
         return workspace_command::execute_without_loader_scope(&cwd, args, "compile", |_| {
             Err(io::Error::other(OUTSIDE_WORKSPACE_ERR))
         });
     };
-    if options.json && options.components.is_empty() && is_empty_workspace(&root).unwrap_or(false) {
-        return workspace_command::execute_without_loader(&root, args, "compile", |_| {
-            Ok(Report { data: "[]".into(), code: 0, details: None })
-        });
-    }
     if let Some(outcome) = runner::try_run(&root, args, &options)? {
         return Ok(outcome);
     }
     Ok(Outcome::Declined("compile execution delegated".into()))
-}
-
-pub(super) fn is_empty_workspace(root: &Path) -> io::Result<bool> {
-    let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    if ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
-        return Ok(false);
-    }
-    let bitmap = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
-    Ok(active_component_count(&bitmap) == 0)
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {

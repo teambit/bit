@@ -9,6 +9,7 @@
 pub(super) mod checkout_lifecycle;
 pub(crate) mod checkout_policy;
 pub(in crate::commands) mod component_service;
+pub(in crate::commands) mod filesystem_error;
 pub mod format;
 pub mod progress;
 pub mod resolve;

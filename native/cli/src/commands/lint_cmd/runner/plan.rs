@@ -19,6 +19,7 @@ impl Plan {
             changed: options.changed,
             allow_cached_pair: false,
             single_file_write: options.fix,
+            ..Selection::default()
         };
         let loaded = Loaded::prepare(root, &selection)?;
         let components = loaded.components()?;

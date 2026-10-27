@@ -1,7 +1,9 @@
 //! `NodeModuleLinker.link()`: workspace components as packages in `node_modules`.
 
+pub use copies::component_package_copies;
 pub use prepared::{link_prepared_component, prepared_package_manifest};
 
+mod copies;
 mod prepared;
 mod tracking;
 mod write;

@@ -15,7 +15,8 @@ use oxc_span::SourceType;
 ///
 /// This is deliberately sufficient rather than exhaustive: only simple data,
 /// variable declarations, static property access/assignment and literal `require`
-/// calls and zero-argument arrows returning a string, number or boolean qualify.
+/// calls, `console.log` calls with data arguments and zero-argument arrows
+/// returning a string, number or boolean qualify.
 /// Other functions, classes, JSX, module declarations, other calls and
 /// unsupported constructs defer to the published parser. Raw `/**` is rejected
 /// even inside strings because the pinned `JSDoc` extractor scans source text.
@@ -117,7 +118,7 @@ fn data_expression(expression: &Expression<'_>) -> bool {
         | Expression::BinaryExpression(_)
         | Expression::AssignmentExpression(_) => true,
         Expression::StaticMemberExpression(member) => !member.optional,
-        Expression::CallExpression(call) => literal_require(call),
+        Expression::CallExpression(call) => literal_require(call) || console_log(call),
         Expression::ArrowFunctionExpression(arrow) => literal_arrow(arrow),
         _ => false,
     }
@@ -126,6 +127,13 @@ fn literal_require(call: &CallExpression<'_>) -> bool {
     !call.optional
         && matches!(&call.callee, Expression::Identifier(id) if id.name == "require")
         && matches!(call.arguments.as_slice(), [Argument::StringLiteral(_)])
+}
+
+fn console_log(call: &CallExpression<'_>) -> bool {
+    !call.optional
+        && matches!(&call.callee, Expression::StaticMemberExpression(member)
+            if !member.optional && member.property.name == "log"
+                && matches!(&member.object, Expression::Identifier(id) if id.name == "console"))
 }
 
 fn literal_arrow(arrow: &ArrowFunctionExpression<'_>) -> bool {

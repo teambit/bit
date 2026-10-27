@@ -5,6 +5,13 @@ use super::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum Services {
+    Disabled,
+    Tools,
+    Compiler,
+}
+
 pub(super) fn supported(
     component: &WorkspaceComponent,
     core: &[String],
@@ -48,7 +55,11 @@ pub(super) fn facts(component: &WorkspaceComponent, issues: bool) -> Value {
 
 impl Environments {
     pub(in crate::commands) fn for_builtin_services() -> Self {
-        Self { builtin_services: true, ..Self::new() }
+        Self { builtin_services: Services::Tools, ..Self::new() }
+    }
+
+    pub(in crate::commands) fn for_compiler_services() -> Self {
+        Self { builtin_services: Services::Compiler, ..Self::new() }
     }
 
     pub(in crate::commands) fn require_service(
@@ -74,10 +85,10 @@ impl Environments {
         root: &Path,
         context: &Value,
     ) -> io::Result<()> {
-        if self.builtin_services {
-            Self::require_service(root, context, array(context.get("targets"), "service targets")?)
-        } else {
+        if self.builtin_services == Services::Disabled {
             Self::require_native_write(root, context)
+        } else {
+            Self::require_service(root, context, array(context.get("targets"), "service targets")?)
         }
     }
 }

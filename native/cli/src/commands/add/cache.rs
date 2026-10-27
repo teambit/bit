@@ -64,7 +64,10 @@ fn serialized(path: &Path) -> Option<String> {
     bit_object_import::stringify_json(&value, false).ok()
 }
 
-pub(super) fn invalidate(root: &Path, components: &[WorkspaceComponent]) -> io::Result<()> {
+pub(in crate::commands) fn invalidate(
+    root: &Path,
+    components: &[WorkspaceComponent],
+) -> io::Result<()> {
     let cache = bit_object_import::scope_path(root).join("cache/components/deps");
     for component in components
         .iter()

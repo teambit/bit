@@ -8,6 +8,7 @@ mod app;
 mod capsule;
 mod cat;
 mod cli_generate;
+mod compile;
 mod config;
 mod delete;
 mod diff;

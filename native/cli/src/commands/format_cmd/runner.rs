@@ -16,6 +16,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         changed: options.changed,
         allow_cached_pair: options.check && options.json,
         single_file_write: !options.check,
+        ..Selection::default()
     };
     let mut loaded = match Loaded::prepare(root, &selection) {
         Ok(loaded) => loaded,

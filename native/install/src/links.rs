@@ -9,8 +9,8 @@
 //! workspace authoring the core aspects needs.
 
 pub use components::{
-    ComponentLinkOptions, ComponentLinks, FileLink, LinkResult, link_components,
-    link_prepared_component, link_tracking_components, prepared_package_manifest,
+    ComponentLinkOptions, ComponentLinks, FileLink, LinkResult, component_package_copies,
+    link_components, link_prepared_component, link_tracking_components, prepared_package_manifest,
 };
 pub use env_links::{EnvLinks, resolved_from_env_links};
 pub use root::{

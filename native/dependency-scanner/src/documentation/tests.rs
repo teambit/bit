@@ -4,6 +4,10 @@ use super::proves_empty_docs;
 fn ordinary_commonjs_data_and_literal_dependency_modules_are_empty() {
     for source in [
         "module.exports = 42;",
+        "console.log('v1');",
+        "const value = require('example-package'); console.log(value);",
+        "console.log({value:42}, [1,true]);",
+        "module.exports = console.log('value');",
         "module.exports = () => 42;",
         "module.exports = () => { return 'text'; };",
         "module.exports = () => false;",
@@ -52,6 +56,11 @@ fn invalid_unsupported_and_nonliteral_modules_defer() {
         "module.exports = ;",
         "function incomplete(",
         "module.exports = require(name);",
+        "console.log(() => null);",
+        "console.log(function Component() { return null; });",
+        "console.log(...values);",
+        "console['log']('value');",
+        "console.log?.('value');",
         "module.exports = require.resolve('package');",
         "module.exports = {...other};",
         "import value from 'package'; export default value;",

@@ -3,14 +3,19 @@ pub(in crate::commands) mod filesystem;
 pub(in crate::commands) use load::Loaded;
 mod docs;
 mod load;
+mod selection;
 use serde_json::{Value, json};
 use std::io;
 
+#[derive(Default)]
 pub(in crate::commands) struct Selection {
     pub pattern: Option<String>,
     pub changed: bool,
     pub allow_cached_pair: bool,
     pub single_file_write: bool,
+    pub exact: Option<Vec<String>>,
+    pub allow_cached_many: bool,
+    pub compiler: bool,
 }
 
 pub(in crate::commands) struct Progress {
