@@ -110,8 +110,7 @@ export class ComponentOverrides {
   }
 
   static loadFromScope(overridesFromModel: ComponentOverridesData | null | undefined = {}) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new ComponentOverrides(cloneDeep(overridesFromModel), {});
+    return new ComponentOverrides(cloneDeep(overridesFromModel));
   }
 
   get componentOverridesData() {

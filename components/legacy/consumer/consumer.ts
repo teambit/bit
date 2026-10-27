@@ -531,8 +531,7 @@ export default class Consumer {
     const config = await LegacyWorkspaceConfig.loadIfExist(consumerInfo.path, scope.path);
     const consumer = new Consumer({
       projectPath: consumerInfo.path,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      config,
+      config: config!, // the existence of the workspace config was verified above (hasWorkspaceConfig)
       scope,
     });
     await consumer.setBitMap();

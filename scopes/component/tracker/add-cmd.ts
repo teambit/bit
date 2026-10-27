@@ -9,9 +9,9 @@ import type { AddActionResults, Warnings } from './add-components';
 import type { TrackerMain } from './tracker.main.runtime';
 
 type AddFlags = {
-  id: string | null | undefined;
+  id?: string;
   main: string | null | undefined;
-  namespace: string | null | undefined;
+  namespace?: string;
   scope?: string;
   env?: string;
   override: boolean;
@@ -103,10 +103,8 @@ export class AddCmd implements Command {
     const normalizedPaths: PathOsBased[] = paths.map((p) => pathNormalizeToLinux(path.normalize(p)));
     const { addedComponents, warnings }: AddActionResults = await this.tracker.addForCLI({
       componentPaths: normalizedPaths,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       id,
       main: main ? pathNormalizeToLinux(path.normalize(main)) : undefined,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       namespace,
       defaultScope: scope,
       override,
