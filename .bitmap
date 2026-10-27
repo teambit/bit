@@ -215,7 +215,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "2.2.159",
+        "version": "2.2.160",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -495,7 +495,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.1368",
+        "version": "2.0.1369",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
@@ -964,7 +964,7 @@
     "merge-lanes": {
         "name": "merge-lanes",
         "scope": "teambit.lanes",
-        "version": "1.0.1284",
+        "version": "1.0.1285",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/merge-lanes"
     },
