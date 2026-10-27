@@ -130,22 +130,21 @@ export function getDivergeDataBetweenTwoSnaps(
 
   const targetSet = new Set(targetArr);
   let commonSnaps = sourceArr.filter((snap) => targetSet.has(snap));
+  let commonSnapsSet = new Set(commonSnaps);
 
   if (!commonSnaps.length) {
     sourceSubgraph = graph.successorsSubgraph(localHead.toString());
     targetSubgraph = graph.successorsSubgraph(targetHead.toString());
     const sourceFullArr = sourceSubgraph.nodes.map((n) => n.id);
-    const targetFullArr = targetSubgraph.nodes.map((n) => n.id);
-    const targetFullSet = new Set(targetFullArr);
+    const targetFullSet = new Set(targetSubgraph.nodes.map((n) => n.id));
     commonSnaps = sourceFullArr.filter((snap) => targetFullSet.has(snap));
+    commonSnapsSet = new Set(commonSnaps);
     if (commonSnaps.length) {
       // these commonSnaps are not from "parents", they're either squashed or unrelated. remove them from the arrays.
-      const commonSet = new Set(commonSnaps);
-      sourceArr = sourceArr.filter((snap) => !commonSet.has(snap));
-      targetArr = targetArr.filter((snap) => !commonSet.has(snap));
+      sourceArr = sourceArr.filter((snap) => !commonSnapsSet.has(snap));
+      targetArr = targetArr.filter((snap) => !commonSnapsSet.has(snap));
     }
   }
-  const commonSnapsSet = new Set(commonSnaps);
 
   const getClosestCommonSnap = (): string | undefined => {
     if (!commonSnaps.length) return undefined;

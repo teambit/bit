@@ -6,6 +6,7 @@ import {
   getAllVersionParents,
   getAllVersionsInfo,
   getSubsetOfVersionParents,
+  indexVersionObjects,
 } from './traverse-versions';
 
 /** a 40-char hash from a number. */
@@ -35,6 +36,8 @@ function fakeModelComponent(
   return {
     id: () => 'acme.ui/button',
     getHeadRegardlessOfLane: () => head,
+    getHead: () => head,
+    getTagOfRefIfExists: () => undefined,
     getVersionHistory: async () => versionHistory,
     populateVersionHistoryIfMissingGracefully: async (_repo: any, vh: VersionHistoryLike, current: Ref) =>
       populate(current, vh),
@@ -414,17 +417,11 @@ describe('getAllVersionHashes', () => {
 
 describe('getAllVersionsInfo with version objects', () => {
   /** a version object of the given number, as the walk reads it. */
-  const versionObject = (i: number, parents: number[] = i > 0 ? [i - 1] : []): any => ({
-    _hash: hash(i),
-    hash: () => ref(i),
-    parents: parents.map(ref),
-  });
-  const fakeComponentWithHead = (head: number): any => ({
-    id: () => 'acme.ui/button',
-    getHeadRegardlessOfLane: () => ref(head),
-    getHead: () => ref(head),
-    getTagOfRefIfExists: () => undefined,
-  });
+  const versionObject = (i: number, parents?: number[]): any => {
+    const versionParents = item(i, parents);
+    return { ...versionParents, _hash: hash(i), hash: () => versionParents.hash };
+  };
+  const fakeComponentWithHead = (head: number) => fakeModelComponent([], undefined, ref(head));
   const refs = (list: Array<{ ref: Ref }>) => list.map((v) => v.ref.toString());
 
   it('walks from the head through the parents, using the version objects', async () => {
@@ -441,6 +438,16 @@ describe('getAllVersionsInfo with version objects', () => {
     const result = await getAllVersionsInfo({ modelComponent: fakeComponentWithHead(2), versionObjects });
     expect(result[1].version).to.equal(first);
     expect(refs(result)).to.deep.equal([hash(2), hash(1), hash(0)]);
+  });
+
+  it('takes the version objects already indexed', async () => {
+    const versionObjects = [0, 1, 2].map((i) => versionObject(i));
+    const result = await getAllVersionsInfo({
+      modelComponent: fakeComponentWithHead(2),
+      versionObjects: indexVersionObjects(versionObjects),
+    });
+    expect(refs(result)).to.deep.equal([hash(2), hash(1), hash(0)]);
+    expect(result[0].version).to.equal(versionObjects[2]);
   });
 
   it('stops at the stopAt snaps', async () => {

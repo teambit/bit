@@ -1464,17 +1464,12 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     const headExists = versionHistory.hasHash(head);
     if (exitWhenFind && headExists) return {};
     const getVersionObj = async (ref: Ref) => (await ref.load(repo)) as Version | undefined;
-    const versionsToAdd: Version[] = [];
-    // to check whether a version was already added without searching the array, which is quadratic on long histories
-    const hashesToAdd = new Set<string>();
-    const addVersion = (version: Version) => {
-      versionsToAdd.push(version);
-      hashesToAdd.add(version.hash().toString());
-    };
+    const versionsToAdd = new Map<string, Version>(); // by hash
+    const addVersion = (version: Version) => versionsToAdd.set(version.hash().toString(), version);
     let err: Error | undefined;
     const addParentsRecursively = async (version: Version) => {
       await pMapSeries(version.parents, async (parent) => {
-        const foundParent = versionHistory.hasHash(parent) || hashesToAdd.has(parent.toString());
+        const foundParent = versionHistory.hasHash(parent) || versionsToAdd.has(parent.toString());
         if (exitWhenFind && foundParent) {
           return;
         }
@@ -1497,13 +1492,13 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     return this.populateVersionHistoryMutex.runExclusive(async () => {
       if (!headExists) addVersion(headVer);
       await addParentsRecursively(headVer);
-      const added = versionsToAdd.map((v) => getVersionParentsFromVersion(v));
+      const added = [...versionsToAdd.values()].map((v) => getVersionParentsFromVersion(v));
       if (err) {
         return { err, added };
       }
-      versionHistory.addFromVersionsObjects(versionsToAdd);
+      versionHistory.addFromVersionsObjects([...versionsToAdd.values()]);
       logger.debug(
-        `populateVersionHistoryIfMissingGracefully, updating ${this.id()} with ${versionsToAdd.length} versions`
+        `populateVersionHistoryIfMissingGracefully, updating ${this.id()} with ${versionsToAdd.size} versions`
       );
       await repo.writeObjectsToTheFS([versionHistory]);
       return { added };

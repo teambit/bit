@@ -31,6 +31,21 @@ export type VersionInfo = {
   onLane: boolean;
 };
 
+export type VersionObjectsByHash = Map<string, Version>;
+
+/**
+ * index version objects by hash, the first object of a hash wins. a caller walking many components over the same
+ * version objects (e.g. the remote merge of an export) should index them once and pass the index.
+ */
+export function indexVersionObjects(versionObjects: Version[]): VersionObjectsByHash {
+  const versionObjectsByHash: VersionObjectsByHash = new Map();
+  versionObjects.forEach((v) => {
+    const hashStr = v.hash().toString();
+    if (!versionObjectsByHash.has(hashStr)) versionObjectsByHash.set(hashStr, v);
+  });
+  return versionObjectsByHash;
+}
+
 /**
  * by default it starts the traverse from the head or lane-head, unless "startFrom" is passed.
  * if versionObjects passed, use it instead of loading from the repo.
@@ -46,19 +61,14 @@ export async function getAllVersionsInfo({
   modelComponent: ModelComponent;
   repo?: Repository;
   throws?: boolean; // in case objects are missing
-  versionObjects?: Version[];
+  versionObjects?: Version[] | VersionObjectsByHash;
   startFrom?: Ref | null; // by default, start from the head
   stopAt?: Ref[] | null; // by default, stop when the parents is empty
 }): Promise<VersionInfo[]> {
   const results: VersionInfo[] = [];
   const processedHashes = new Set<string>();
-  // index once. callers (e.g. the remote merge on export) may pass the versions of all exported components, and a
-  // linear search per visited version made the walk quadratic. the first object of a hash wins, as with `find`.
-  const versionObjectsByHash = new Map<string, Version>();
-  versionObjects?.forEach((v) => {
-    const hashStr = v.hash().toString();
-    if (!versionObjectsByHash.has(hashStr)) versionObjectsByHash.set(hashStr, v);
-  });
+  const versionObjectsByHash =
+    versionObjects instanceof Map ? versionObjects : indexVersionObjects(versionObjects || []);
   const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
     if (!versionObjects && !repo) {
       throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
