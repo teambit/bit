@@ -1,7 +1,12 @@
 import { expect } from 'chai';
 import { Ref } from '@teambit/objects';
 import type { VersionParents } from '@teambit/objects';
-import { getAllVersionHashes, getAllVersionParents, getSubsetOfVersionParents } from './traverse-versions';
+import {
+  getAllVersionHashes,
+  getAllVersionParents,
+  getAllVersionsInfo,
+  getSubsetOfVersionParents,
+} from './traverse-versions';
 
 /** a 40-char hash from a number. */
 const hash = (i: number) => i.toString(16).padStart(40, '0');
@@ -398,5 +403,74 @@ describe('getAllVersionHashes', () => {
       startFrom: ref(2),
     });
     expect(result.map(String)).to.deep.equal([hash(2), hash(1), hash(0)]);
+  });
+});
+
+describe('getAllVersionsInfo', () => {
+  const counter = { hashCalls: 0 };
+  const version = (i: number, parents: number[] = i > 0 ? [i - 1] : []): any => ({
+    _hash: hash(i),
+    parents: parents.map(ref),
+    hash: () => {
+      counter.hashCalls += 1;
+      return ref(i);
+    },
+  });
+  const modelComponent = (head?: number): any => ({
+    id: () => 'acme.ui/button',
+    getHead: () => (head === undefined ? undefined : ref(head)),
+    getHeadRegardlessOfLane: () => (head === undefined ? undefined : ref(head)),
+    getTagOfRefIfExists: () => undefined,
+  });
+  const refs = (infos: Array<{ ref: Ref }>) => infos.map((info) => info.ref.toString());
+
+  beforeEach(() => {
+    counter.hashCalls = 0;
+  });
+
+  it('returns nothing for a component without a head, without hashing the supplied versions', async () => {
+    const versionObjects = Array.from({ length: 1000 }, (_, i) => version(i));
+    const result = await getAllVersionsInfo({ modelComponent: modelComponent(), versionObjects, throws: false });
+    expect(result).to.deep.equal([]);
+    expect(counter.hashCalls).to.equal(0);
+  });
+
+  it('walks from the head through the parents found in the supplied versions', async () => {
+    const result = await getAllVersionsInfo({
+      modelComponent: modelComponent(3),
+      versionObjects: [version(0), version(1), version(2), version(3)],
+    });
+    expect(refs(result)).to.deep.equal([hash(3), hash(2), hash(1), hash(0)]);
+  });
+
+  it('uses the first supplied version of a hash listed twice', async () => {
+    const first = version(1, [0]);
+    const second = version(1, []);
+    const result = await getAllVersionsInfo({
+      modelComponent: modelComponent(2),
+      versionObjects: [version(0), first, second, version(2)],
+    });
+    expect(result[1].version).to.equal(first);
+    expect(refs(result)).to.deep.equal([hash(2), hash(1), hash(0)]);
+  });
+
+  it('reports a parent missing from the supplied versions when not throwing', async () => {
+    const result = await getAllVersionsInfo({
+      modelComponent: modelComponent(2),
+      versionObjects: [version(2)],
+      throws: false,
+    });
+    expect(refs(result)).to.deep.equal([hash(2), hash(1)]);
+    expect(result[1].error).to.exist;
+  });
+
+  it('hashes each supplied version once, and stays fast for many versions', async () => {
+    const size = 20000;
+    const versionObjects = Array.from({ length: size }, (_, i) => version(i));
+    const start = Date.now();
+    const result = await getAllVersionsInfo({ modelComponent: modelComponent(size - 1), versionObjects });
+    expect(result).to.have.length(size);
+    expect(counter.hashCalls).to.be.at.most(size + 1);
+    expect(Date.now() - start).to.be.lessThan(2000);
   });
 });

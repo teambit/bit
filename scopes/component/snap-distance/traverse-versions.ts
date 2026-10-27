@@ -52,11 +52,23 @@ export async function getAllVersionsInfo({
 }): Promise<VersionInfo[]> {
   const results: VersionInfo[] = [];
   const processedHashes = new Set<string>();
+  const versionObjectsIndex: { byHash?: Map<string, Version> } = {};
+  const getVersionObjectsByHash = () => {
+    if (!versionObjectsIndex.byHash) {
+      const byHash = new Map<string, Version>();
+      (versionObjects || []).forEach((v) => {
+        const key = v.hash().toString();
+        if (!byHash.has(key)) byHash.set(key, v);
+      });
+      versionObjectsIndex.byHash = byHash;
+    }
+    return versionObjectsIndex.byHash;
+  };
   const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
     if (!versionObjects && !repo) {
       throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
     }
-    const foundInVersionObjects = versionObjects?.find((v) => v.hash().isEqual(ref));
+    const foundInVersionObjects = versionObjects ? getVersionObjectsByHash().get(ref.toString()) : undefined;
     if (foundInVersionObjects) return foundInVersionObjects;
     if (repo) return (await ref.load(repo)) as Version;
     return undefined;
