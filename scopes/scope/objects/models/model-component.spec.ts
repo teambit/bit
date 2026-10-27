@@ -77,7 +77,7 @@ describe('ModelComponent', () => {
       const ref = Ref.from(tagHash);
       component.setVersion('0.0.2', Ref.from('b'.repeat(40)));
       expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.1');
-      delete component.versions['0.0.1'];
+      component.removeVersion('0.0.1');
       expect(component.getTagOfRefIfExists(ref)).to.be.undefined;
       component.setVersion('0.0.5', ref);
       expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.5');
@@ -90,17 +90,16 @@ describe('ModelComponent', () => {
       component.setVersion('0.0.8', ref);
       expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.8');
     });
-    it('should find a tag added after a lookup, and not one deleted directly from the versions', () => {
+    it('should find a tag added after a lookup, also after it was moved to the orphaned versions', () => {
       const component = getModelComponent(getModelComponentFixture());
       const ref = Ref.from('d'.repeat(40));
       expect(component.getTagOfRefIfExists(ref)).to.be.undefined;
       component.setVersion('0.0.9', ref);
       expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.9');
-      delete component.versions['0.0.9'];
-      component.setOrphanedVersion('0.0.9', ref);
+      component.moveVersionToOrphaned('0.0.9');
+      expect(component.versions['0.0.9']).to.be.undefined;
+      expect(component.orphanedVersions['0.0.9']?.toString()).to.equal(ref.toString());
       expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.9');
-      delete component.orphanedVersions['0.0.9'];
-      expect(component.getTagOfRefIfExists(ref)).to.be.undefined;
     });
     it('should not find an orphaned tag after the orphaned versions were replaced', () => {
       const component = getModelComponent(getModelComponentFixture());

@@ -95,11 +95,14 @@ export type ComponentProps = {
   detachedHeads?: DetachedHeads;
 };
 
-/** the tag of each hash. a later tag of the same hash wins, as it's the newest (tags keep insertion order). */
-function indexTagsByHash(versions: Versions): Map<string, string> {
+/**
+ * the tag of each hash. a later tag of the same hash overrides an earlier one, so pass the maps by ascending
+ * precedence. within a map the newest tag wins, as tags keep insertion order.
+ */
+function indexTagsByHash(...versionsMaps: Readonly<Versions>[]): Map<string, string> {
   const tagsByHash = new Map<string, string>();
-  for (const [tag, ref] of Object.entries(versions)) {
-    if (ref) tagsByHash.set(ref.toString(), tag);
+  for (const versions of versionsMaps) {
+    for (const tag in versions) tagsByHash.set(versions[tag].toString(), tag);
   }
   return tagsByHash;
 }
@@ -117,12 +120,10 @@ export default class Component extends BitObject {
   private _versions!: Versions;
   private _orphanedVersions!: Versions;
   /**
-   * indexes of `getTagOfRefIfExists`, built on demand. writes to the versions go through `setVersion`,
-   * `setOrphanedVersion` or the setters below, which drop them. a tag deleted directly from the
-   * versions (as the merger does) is caught by checking the hit against the current versions.
+   * the index of `getTagOfRefIfExists`, built on demand. the versions are read-only from outside, so every write goes
+   * through a method or a setter of this class, which drops it.
    */
   private tagsByHash?: Map<string, string>;
-  private orphanedTagsByHash?: Map<string, string>;
   lang: string;
   /**
    * @deprecated moved to the Version object inside teambit/deprecation aspect
@@ -188,7 +189,7 @@ export default class Component extends BitObject {
     return this._populateVersionHistoryMutex;
   }
 
-  get versions(): Versions {
+  get versions(): Readonly<Versions> {
     return this._versions;
   }
 
@@ -197,13 +198,13 @@ export default class Component extends BitObject {
     this.tagsByHash = undefined;
   }
 
-  get orphanedVersions(): Versions {
+  get orphanedVersions(): Readonly<Versions> {
     return this._orphanedVersions;
   }
 
   set orphanedVersions(versions: Versions) {
     this._orphanedVersions = versions;
-    this.orphanedTagsByHash = undefined;
+    this.tagsByHash = undefined;
   }
 
   get versionArray(): Ref[] {
@@ -211,10 +212,9 @@ export default class Component extends BitObject {
   }
 
   setVersion(tag: string, ref: Ref) {
-    this.versions[tag] = ref;
-    delete this.orphanedVersions[tag]; // just in case it's there.
+    this._versions[tag] = ref;
+    delete this._orphanedVersions[tag]; // just in case it's there.
     this.tagsByHash = undefined;
-    this.orphanedTagsByHash = undefined;
   }
 
   setOrphanedVersion(tag: string, ref: Ref) {
@@ -223,8 +223,15 @@ export default class Component extends BitObject {
         `unable to save orphanedVersion "${tag}" for "${this.id()}" because this tag is already part of the versions prop`
       );
     }
-    this.orphanedVersions[tag] = ref;
-    this.orphanedTagsByHash = undefined;
+    this._orphanedVersions[tag] = ref;
+    this.tagsByHash = undefined;
+  }
+
+  moveVersionToOrphaned(tag: string) {
+    const ref = this._versions[tag];
+    if (!ref) throw new Error(`moveVersionToOrphaned failed finding version ${tag} of ${this.id()}`);
+    delete this._versions[tag];
+    this.setOrphanedVersion(tag, ref);
   }
 
   getRef(version: string): Ref | null {
@@ -690,17 +697,8 @@ export default class Component extends BitObject {
   getTagOfRefIfExists(ref: Ref): string | undefined {
     // called for every version of a history walk, so it's a lookup in an index rather than a scan of all the tags.
     // a tag in `versions` takes precedence over an orphaned one.
-    const hash = ref.toString();
-    this.tagsByHash ||= indexTagsByHash(this.versions);
-    this.orphanedTagsByHash ||= indexTagsByHash(this.orphanedVersions);
-    const tag = this.tagsByHash.get(hash) || this.orphanedTagsByHash.get(hash);
-    if (tag && (this.versions[tag] || this.orphanedVersions[tag])?.toString() !== hash) {
-      // the tag was deleted directly from the versions. rebuild the indexes and look again.
-      this.tagsByHash = undefined;
-      this.orphanedTagsByHash = undefined;
-      return this.getTagOfRefIfExists(ref);
-    }
-    return tag;
+    this.tagsByHash ||= indexTagsByHash(this.orphanedVersions, this.versions);
+    return this.tagsByHash.get(ref.toString());
   }
 
   getTag(version: string): string | undefined {
@@ -1056,7 +1054,8 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   removeVersion(version: string): Ref {
     const objectRef = this.getRef(version);
     if (!objectRef) throw new Error(`removeVersion failed finding version ${version}`);
-    delete this.versions[version];
+    delete this._versions[version];
+    this.tagsByHash = undefined;
     if (this.state.versions && this.state.versions[version]) delete this.state.versions[version];
     return objectRef;
   }

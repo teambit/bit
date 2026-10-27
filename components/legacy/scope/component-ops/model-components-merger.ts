@@ -122,9 +122,7 @@ export class ModelComponentMerger {
         this.isIncomingFromOrigin &&
         !this.existingComponent.hasLocalTag(existingVersion)
       ) {
-        const ref = this.existingComponent.versions[existingVersion];
-        delete this.existingComponent.versions[existingVersion];
-        this.existingComponent.setOrphanedVersion(existingVersion, ref);
+        this.existingComponent.moveVersionToOrphaned(existingVersion);
       }
     });
   }
