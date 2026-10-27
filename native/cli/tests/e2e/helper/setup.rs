@@ -183,11 +183,40 @@ fn copy_link(from: &Path, to: &Path) {
 
 #[cfg(windows)]
 fn copy_link(from: &Path, to: &Path) {
+    use std::os::windows::fs::FileTypeExt;
     let target = fs::read_link(from).unwrap();
-    let absolute = from.parent().unwrap().join(&target);
-    if absolute.is_dir() {
+    if fs::symlink_metadata(from)
+        .unwrap()
+        .file_type()
+        .is_symlink_dir()
+    {
         std::os::windows::fs::symlink_dir(target, to).unwrap();
     } else {
         std::os::windows::fs::symlink_file(target, to).unwrap();
     }
+}
+
+#[cfg(windows)]
+#[test]
+fn restoring_a_directory_link_preserves_its_kind_before_its_target_exists() {
+    use std::os::windows::fs::{FileTypeExt, symlink_dir};
+    let directory = tempfile::tempdir().unwrap();
+    let source = directory.path().join("source");
+    let restored = directory.path().join("restored");
+    fs::create_dir(&source).unwrap();
+    let target = directory.path().join("not-yet-restored");
+    symlink_dir(&target, source.join("link")).unwrap();
+    copy_dir(&source, &restored);
+    assert!(
+        fs::symlink_metadata(restored.join("link"))
+            .unwrap()
+            .file_type()
+            .is_symlink_dir(),
+    );
+    assert_eq!(
+        fs::read_link(restored.join("link")).unwrap(),
+        fs::read_link(source.join("link")).unwrap(),
+    );
+    fs::create_dir(&target).unwrap();
+    assert!(restored.join("link").is_dir());
 }

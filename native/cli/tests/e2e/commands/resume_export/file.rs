@@ -1,4 +1,5 @@
 //! File pending-object recovery against restored scopes and the released CLI.
+mod order;
 use crate::helper::{Helper, Run};
 use std::{
     collections::BTreeMap,
@@ -236,7 +237,12 @@ fn compare_with_runtime(
     let actual = tree(remote);
     cleanup(remote);
     assert_owned(&native);
-    assert_eq!(native.stdout, node.stdout, "{native:?}\n{node:?}");
+    let mixed_scope = metadata.then_some(helper.scopes.remote.as_str());
+    assert_eq!(
+        order::normalize(&native.stdout, mixed_scope),
+        order::normalize(&node.stdout, mixed_scope),
+        "{native:?}\n{node:?}",
+    );
     assert_eq!(native.stderr, node.stderr, "{native:?}\n{node:?}");
     assert_eq!(native.status.code(), node.status.code(), "{native:?}\n{node:?}");
     assert_eq!(actual, expected);

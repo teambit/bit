@@ -209,7 +209,7 @@ jobs:
           - group: checkout
             filters: checkout_platform checkout_local checkout_callbacks checkout_policy checkout_selection reset_selection harmony::untag harmony::revert harmony::lane_adoption harmony::lane_restoration harmony::lane_graph_reset
           - group: transfer
-            filters: commands::import commands::export commands::resume_export export_completion export_hub export_callbacks
+            filters: commands::import commands::export commands::resume_export restoring_a_directory_link export_completion export_hub export_callbacks
           - group: merge-history
             filters: merge_history merge_lifecycle merge_callbacks merge_policy merge_recovery
           - group: provisioning
