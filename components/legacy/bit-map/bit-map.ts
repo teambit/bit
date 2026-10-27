@@ -67,6 +67,7 @@ export class BitMap {
   markAsChangedBinded: Function;
   _cacheIdsAll: ComponentIdList | undefined;
   private _cacheIdsByName?: { allIds: ComponentIdList; byName: Map<string, ComponentIdList> };
+  private _cacheIdsLaneByIdStr?: { ids: ComponentIdList; byIdStr: Map<string, ComponentID> };
   _cacheIdsLane: ComponentIdList | undefined;
   _cacheIdsLaneIncludeRemoved: ComponentIdList | undefined;
   _cacheIdsAllStr: { [idStr: string]: ComponentID } | undefined;
@@ -542,6 +543,25 @@ export class BitMap {
       Object.freeze(this._cacheIdsLane);
     }
     return this._cacheIdsLane;
+  }
+
+  /**
+   * the id available on the current lane with the same scope and name as the given id, regardless of the version.
+   * this runs per component in many flows (status, export, import), and a scan of all the ids with `ComponentID.isEqual`
+   * per call is quadratic in the size of the workspace. indexed by the ids list, so it follows the cache of that list.
+   */
+  getIdAvailableOnLaneIfExist(componentId: ComponentID): ComponentID | undefined {
+    const ids = this.getAllIdsAvailableOnLane();
+    if (this._cacheIdsLaneByIdStr?.ids !== ids) {
+      const byIdStr = new Map<string, ComponentID>();
+      ids.forEach((id) => {
+        const key = id.toStringWithoutVersion();
+        // the first id wins, as with a search
+        if (!byIdStr.has(key)) byIdStr.set(key, id);
+      });
+      this._cacheIdsLaneByIdStr = { ids, byIdStr };
+    }
+    return this._cacheIdsLaneByIdStr.byIdStr.get(componentId.toStringWithoutVersion());
   }
 
   getAllIdsAvailableOnLaneIncludeRemoved(): ComponentIdList {

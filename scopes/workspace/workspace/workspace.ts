@@ -1258,7 +1258,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   getIdIfExist(componentId: ComponentID): ComponentID | undefined {
-    return this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId));
+    return this.consumer.bitMap.getIdAvailableOnLaneIfExist(componentId);
   }
 
   mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: BitmapMergeOptions = {}): string {

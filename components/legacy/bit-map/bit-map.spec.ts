@@ -568,3 +568,31 @@ ${JSON.stringify(
     });
   });
 });
+
+describe('BitMap.getIdAvailableOnLaneIfExist', () => {
+  const idOf = (name: string, version?: string) => ComponentID.fromObject({ name, version }, 'my-scope');
+  let bitMap: BitMap;
+  beforeEach(async () => {
+    bitMap = await getBitmapInstance();
+    bitMap.addComponent({ ...addComponentParamsFixture, componentId: idOf('is-string', '0.0.1') });
+  });
+  it('should find the id by scope and name, regardless of the version of the given id', () => {
+    const found = bitMap.getIdAvailableOnLaneIfExist(idOf('is-string', '0.0.9'));
+    expect(found?.toStringWithoutVersion()).to.equal('my-scope/is-string');
+    expect(found?.version).to.equal('0.0.1');
+  });
+  it('should return undefined for an id that is not in the .bitmap', () => {
+    expect(bitMap.getIdAvailableOnLaneIfExist(idOf('is-number'))).to.be.undefined;
+  });
+  it('should find a component added after a lookup', () => {
+    expect(bitMap.getIdAvailableOnLaneIfExist(idOf('is-number'))).to.be.undefined;
+    bitMap.addComponent({ ...addComponentParamsFixture, componentId: idOf('is-number', '0.0.2') });
+    expect(bitMap.getIdAvailableOnLaneIfExist(idOf('is-number'))?.version).to.equal('0.0.2');
+  });
+  it('should not find a component that is not available on the current lane', () => {
+    expect(bitMap.getIdAvailableOnLaneIfExist(idOf('is-string'))).to.not.be.undefined;
+    bitMap.components[0].isAvailableOnCurrentLane = false;
+    bitMap._invalidateCache();
+    expect(bitMap.getIdAvailableOnLaneIfExist(idOf('is-string'))).to.be.undefined;
+  });
+});
