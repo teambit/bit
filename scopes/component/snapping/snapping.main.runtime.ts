@@ -1168,7 +1168,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     });
     const allFlattened = components.map((comp) => comp.flattenedDependencies);
     const allFlattenedUniq = ComponentIdList.uniqFromArray(allFlattened.flat());
-    const allFlattenedWithoutCurrent = allFlattenedUniq.filter((id) => !components.find((c) => c.id.isEqual(id)));
+    const currentIds = new Set(components.map((c) => c.id.toString()));
+    const allFlattenedWithoutCurrent = allFlattenedUniq.filter((id) => !currentIds.has(id.toString()));
     const componentsAndVersions = await this.scope.legacyScope.getComponentsAndVersions(
       ComponentIdList.fromArray(allFlattenedWithoutCurrent)
     );

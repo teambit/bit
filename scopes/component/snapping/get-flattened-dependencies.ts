@@ -13,7 +13,11 @@ import { compact, tail, uniq } from 'lodash';
 export class FlattenedDependenciesGetter {
   private dependenciesGraph: GraphLib;
   private versionDependencies: VersionDependencies[];
+  private versionDependenciesById: Map<string, VersionDependencies>;
   private cache: { [idStr: string]: ComponentIdList } = {};
+  // the ids (with version) of the components to tag. a linear search per dependency with `ComponentID.isEqual`, which
+  // builds strings, is quadratic in the size of the workspace.
+  private componentIds: Set<string>;
   constructor(
     private scope: Scope,
     private components: Component[],
@@ -37,6 +41,7 @@ export class FlattenedDependenciesGetter {
    */
   async populateFlattenedDependencies() {
     logger.debug(`populateFlattenedDependencies starts with ${this.components.length} components`);
+    this.componentIds = new Set(this.components.map((c) => c.id.toString()));
     this.dependenciesGraph = buildComponentsGraphCombined(this.components);
     // console.log("this.dependenciesGraph", this.dependenciesGraph.toString())
     await this.importExternalDependenciesInBulk();
@@ -52,7 +57,7 @@ export class FlattenedDependenciesGetter {
     const idsStr: string[] = compact(uniq(allDependencies.flat()));
     const bitIds = idsStr
       .map((idStr) => this.dependenciesGraph.node(idStr))
-      .filter((bitId) => !this.components.find((c) => c.id.isEqual(bitId)));
+      .filter((bitId) => !this.componentIds.has(bitId.toString()));
     const scopeComponentsImporter = this.scope.scopeImporter;
     this.versionDependencies = await scopeComponentsImporter.importMany({
       ids: ComponentIdList.fromArray(bitIds),
@@ -61,6 +66,12 @@ export class FlattenedDependenciesGetter {
       throwForDependencyNotFound: true,
       lane: this.lane,
       reason: 'for fetching all dependencies',
+    });
+    this.versionDependenciesById = new Map();
+    this.versionDependencies.forEach((versionDeps) => {
+      const key = versionDeps.component.toComponentId().toString();
+      // the first entry wins, as with a search
+      if (!this.versionDependenciesById.has(key)) this.versionDependenciesById.set(key, versionDeps);
     });
   }
 
@@ -85,12 +96,12 @@ export class FlattenedDependenciesGetter {
 
   private async getFlattenedFromVersion(id: ComponentID, dependentId: ComponentID): Promise<ComponentIdList> {
     if (!this.cache[id.toString()]) {
-      const versionDeps = this.versionDependencies.find(({ component }) => component.toComponentId().isEqual(id));
+      const versionDeps = this.versionDependenciesById.get(id.toString());
       if (versionDeps) {
         const dependencies = await versionDeps.component.flattenedDependencies(this.scope.objects);
         this.cache[id.toString()] = dependencies;
       } else {
-        const existing = this.components.find((c) => c.id.isEqual(id));
+        const existing = this.componentIds.has(id.toString());
         if (existing) {
           this.cache[id.toString()] = new ComponentIdList();
         } else {
