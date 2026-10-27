@@ -215,3 +215,32 @@ An earlier run had one Bit Cloud request failure during capsule fixture setup;
 that case passed unchanged before the final full run. Generated inventory/census,
 asset and scope checks pass. The preceding PR head has no failing CI checks.
 Repository Node lint remains unavailable because `tsc` is not installed.
+
+## Pending-import status partition
+
+Merged upstream through `c15f6da17` (Bit 2.2.162). Since the preceding sync at
+`3754c4f5754aa82394141a3f807f3403c26a30e2`, the only behavioral change is
+`3b52056c6e17d1c0b5a8947a229fda5b62b76072`: pending-import components no longer
+appear a second time as invalid components. Version/bitmap metadata and the
+status component's test-dependency lockfile changes are inherited unchanged.
+
+The native status engine now partitions pending-import and other invalid
+components in input order. The mixed-error regression retains ordinary invalid
+errors and verifies that invalid entries do not enter modification or auto-tag
+results. Restoring the old duplicate classification makes the regression fail.
+
+Released Bit 2.2.146 still produces the duplicate classification; the 2.2.162
+release artifact was unavailable during qualification. The existing real-workspace
+regression therefore asserts the exact released duplicate row before applying
+only the explicit upstream removal to its expected JSON. All other fields,
+exit status and stderr remain compared. The text regression asserts the entire
+old invalid section before replacing it with the existing clean summary that
+upstream now renders when no other sections exist; the import warning and
+loading prefix are preserved. This is an explicit upstream delta, not a claim
+that the released oracle already contains the fix.
+
+Validation: formatting, Clippy, Dylint, rustdoc and all 1,812 workspace tests pass.
+Full E2E: 1,714 passed, one Bit Cloud request failed during released-CLI MDX
+environment setup, and two existing cases were skipped. The failed fixture passes
+unchanged on a serial rerun. Generated inventory/census/assets and scope checks
+pass. Repository Node lint still cannot start because `tsc` is not installed.

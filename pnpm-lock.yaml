@@ -7498,7 +7498,7 @@ importers:
         version: file:scopes/component/stash(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/status':
         specifier: workspace:*
-        version: file:scopes/component/status(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/status(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/tagged-exports':
         specifier: workspace:*
         version: file:components/tagged-exports(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -8575,7 +8575,7 @@ importers:
         version: file:scopes/component/stash(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/status':
         specifier: workspace:*
-        version: file:scopes/component/status(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/status(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/tagged-exports':
         specifier: workspace:*
         version: file:components/tagged-exports(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -9640,7 +9640,7 @@ importers:
         version: file:scopes/component/stash(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/status':
         specifier: workspace:*
-        version: file:scopes/component/status(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/status(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/tagged-exports':
         specifier: workspace:*
         version: file:components/tagged-exports(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@18.3.1)
@@ -10705,7 +10705,7 @@ importers:
         version: file:scopes/component/stash(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/status':
         specifier: workspace:*
-        version: file:scopes/component/status(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/status(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/tagged-exports':
         specifier: workspace:*
         version: file:components/tagged-exports(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -11752,7 +11752,7 @@ importers:
         version: file:scopes/component/stash(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/status':
         specifier: workspace:*
-        version: file:scopes/component/status(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/status(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/tagged-exports':
         specifier: workspace:*
         version: file:components/tagged-exports(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -12799,7 +12799,7 @@ importers:
         version: file:scopes/component/stash(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/status':
         specifier: workspace:*
-        version: file:scopes/component/status(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/component/status(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/tagged-exports':
         specifier: workspace:*
         version: file:components/tagged-exports(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -16039,6 +16039,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       chalk:
         specifier: 4.1.2
         version: 4.1.2
@@ -33922,6 +33925,8 @@ packages:
 
   '@teambit/status@file:scopes/component/status':
     resolution: {directory: scopes/component/status, type: directory}
+    peerDependencies:
+      chai: 5.2.1
 
   '@teambit/styling.deps-detectors.detective-css-and-preprocessors@0.0.9':
     resolution: {integrity: sha512-eMK7rsZm+gQtZBr/gEG5ScdeMNuxefcM03IsJCwlTzYG6bGYKQvKZKg52odNeTCffEof13nSqCY1s/SJwdliWw==}
@@ -81309,7 +81314,7 @@ snapshots:
       - graphql
       - supports-color
 
-  '@teambit/status@file:scopes/component/status(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)':
+  '@teambit/status@file:scopes/component/status(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)':
     dependencies:
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
@@ -81326,6 +81331,36 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
+      chalk: 4.1.2
+      lodash: 4.18.1
+      p-map-series: 2.1.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    transitivePeerDependencies:
+      - domexception
+      - graphql
+      - supports-color
+
+  '@teambit/status@file:scopes/component/status(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)':
+    dependencies:
+      '@teambit/component-id': 1.2.5
+      '@teambit/component-issues': file:components/component-issues
+      '@teambit/component-version': 1.0.4
+      '@teambit/component.snap-distance': file:scopes/component/snap-distance
+      '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@teambit/lane-id': 0.0.312
+      '@teambit/legacy.component-list': file:components/legacy/component-list(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy.constants': file:components/legacy/constants
+      '@teambit/legacy.consumer': file:components/legacy/consumer(supports-color@9.4.0)
+      '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(supports-color@9.4.0)
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 5.2.1
       chalk: 4.1.2
       lodash: 4.18.1
       p-map-series: 2.1.0

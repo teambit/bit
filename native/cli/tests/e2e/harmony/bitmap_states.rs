@@ -3,6 +3,8 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;
 
+mod pending_import;
+
 fn parity(helper: &Helper) -> serde_json::Value {
     let copy = helper.clone_workspace();
     let native = helper.native_run("status --json");
@@ -112,10 +114,7 @@ fn a_scoped_component_without_local_objects_is_pending_import() {
     entry["version"] = serde_json::json!("0.0.1");
     config::write_json(&bitmap_path, &bitmap, b"    ");
 
-    let status = parity(&helper);
-    assert_eq!(status["importPendingComponents"], serde_json::json!(["my-scope/bar/foo"]));
-    assert_eq!(status["invalidComponents"][0]["error"]["name"], "ComponentsPendingImport");
-    text_parity(&helper);
+    pending_import::verify(&helper);
 }
 
 #[test]

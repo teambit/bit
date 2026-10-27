@@ -65,8 +65,9 @@ fn current(output: &mut Value, target: &Target) {
     if let Some(error) = &target.invalid {
         if error["name"] == "ComponentsPendingImport" {
             push(output, "importPendingComponents", json!(target.identity));
+        } else {
+            push(output, "invalidComponents", json!({"id":target.identity,"error":error}));
         }
-        push(output, "invalidComponents", json!({"id":target.identity,"error":error}));
         return;
     }
     if target.version.is_empty() {
