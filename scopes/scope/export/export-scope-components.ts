@@ -288,17 +288,33 @@ async function throwForMissingLocalDependencies(
   const compsWithHeads = lanes.length
     ? lanes.map((lane) => lane.toBitIds()).flat()
     : components.map((c) => c.toComponentIdWithHead());
+  // indexed: the searches below run for every flattened dependency of every exported head, so a linear search makes
+  // this step quadratic in the size of the export. the first entry wins, as with a search.
+  const compWithHeadByVersion = new Map<string, ComponentID>();
+  compsWithHeads.forEach((id) => {
+    if (id.version && !compWithHeadByVersion.has(id.version)) compWithHeadByVersion.set(id.version, id);
+  });
+  const componentByIdStr = new Map<string, ModelComponent>();
+  components.forEach((c) => {
+    const key = c.toComponentId().toStringWithoutVersion();
+    if (!componentByIdStr.has(key)) componentByIdStr.set(key, c);
+  });
+  const versionByHash = new Map<string, Version>();
+  versions.forEach((v) => {
+    const key = v.hash().toString();
+    if (!versionByHash.has(key)) versionByHash.set(key, v);
+  });
 
   await Promise.all(
     versions.map(async (version) => {
-      const originComp = compsWithHeads.find((id) => version.hash().toString() === id.version);
+      const originComp = compWithHeadByVersion.get(version.hash().toString());
       if (!originComp) {
         // coz if an older version has a missing dep, then, it's fine. (it can easily happen when exporting lane, which
         // all old versions are exported)
         return;
       }
       const getOriginCompWithVer = () => {
-        const compObj = components.find((c) => c.toComponentId().isEqualWithoutVersion(originComp));
+        const compObj = componentByIdStr.get(originComp.toStringWithoutVersion());
         if (!compObj) return originComp;
         const tag = compObj.getTagOfRefIfExists(Ref.from(originComp.version as string));
         if (tag) return originComp.changeVersion(tag);
@@ -309,8 +325,7 @@ async function throwForMissingLocalDependencies(
         depsIds.map(async (depId) => {
           if (depId.scope !== scope.name) return;
           const existingModelComponent =
-            (await scope.getModelComponentIfExist(depId)) ||
-            components.find((c) => c.toComponentId().isEqualWithoutVersion(depId));
+            (await scope.getModelComponentIfExist(depId)) || componentByIdStr.get(depId.toStringWithoutVersion());
           if (!existingModelComponent) {
             scope.objects.clearObjectsFromCache(); // just in case this error is caught. we don't want to persist anything by mistake.
             throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());
@@ -320,7 +335,7 @@ async function throwForMissingLocalDependencies(
           const objectExist =
             scope.objects.getCache(versionRef) ||
             (await scope.objects.has(versionRef)) ||
-            versions.find((v) => v.hash().isEqual(versionRef));
+            versionByHash.get(versionRef.toString());
           if (!objectExist) {
             scope.objects.clearObjectsFromCache(); // just in case this error is caught. we don't want to persist anything by mistake.
             throw new ComponentNotFound(depId.toString(), getOriginCompWithVer().toString());
