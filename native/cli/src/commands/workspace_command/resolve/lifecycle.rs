@@ -252,6 +252,7 @@ fn validate_graph_targets(context: &Value, plan: &Value, params: &Value) -> io::
         if !targets
             .iter()
             .any(|target| target["identity"].as_str() == Some(identity))
+            && !super::super::snapshot::hidden_target(context, identity)
         {
             return Err(crate::commands::status::js::decline("command snapshot target"));
         }

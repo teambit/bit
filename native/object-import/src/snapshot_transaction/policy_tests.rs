@@ -62,7 +62,7 @@ const id=(name,version)=>ComponentID.fromObject({scope:'qualification.scope',nam
  for(let index=0;index<count;index++){
   const own=id('component'+index,versions[next()%versions.length]);
   const dependencies=Array.from({length:next()%count},()=>({id:id('component'+next()%count,versions[next()%versions.length])}));
-  components.push({id:own,componentId:own,getAllDependencies:()=>dependencies,dependencies});
+  components.push({id:own,componentId:own,getAllDependencies:()=>dependencies,isDependencyVersionFromConfig:()=>false,dependencies});
   locators.set(own,{kind:'component',component:index});dependencies.forEach((dep,i)=>locators.set(dep.id,{kind:'dependency',component:index,index:i}));
  }
  const changed=ComponentIdList.fromArray(Array.from({length:1+next()%count},()=>id('component'+next()%count,versions[next()%versions.length])));

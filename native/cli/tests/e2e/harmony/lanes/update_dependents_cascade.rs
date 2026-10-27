@@ -1,5 +1,7 @@
 //! `e2e/harmony/lanes/update-dependents-cascade.e2e.ts`.
 
+mod older;
+
 use crate::helper::{Helper, parse};
 
 /// - `local snap cascades updateDependents on the lane › comp2 (B) enters lane.updateDependents`

@@ -1,4 +1,5 @@
-//! A hidden scope fast-forward is independent of visible snapshot finalization.
+//! Upstream hidden cascades also follow visible merge snapshots.
+mod cascade;
 use crate::helper::{Helper, config, parse};
 use std::{ffi::OsStr, fs, path::Path};
 
@@ -57,7 +58,7 @@ fn hidden_head(helper: &Helper) -> String {
 }
 
 #[test]
-fn hidden_fast_forward_and_visible_merge_share_the_retained_snapshot_owner() {
+fn hidden_fast_forward_cascades_when_the_visible_merge_changes_its_older_dependency() {
     let helper = workspace();
     let oracle = helper.clone_workspace();
     let command = format!(
@@ -76,6 +77,7 @@ fn hidden_fast_forward_and_visible_merge_share_the_retained_snapshot_owner() {
         super::stable(&node.stdout.replace(&expected, "NEW_SNAP")),
     );
     compare(&helper, &oracle, &actual, &expected);
+    cascade::compare(&helper, &oracle, &actual);
     compare_lane(&helper, &oracle, &actual, &expected);
 }
 
@@ -93,15 +95,13 @@ fn compare(helper: &Helper, oracle: &Path, actual: &str, expected: &str) {
             .replace(actual, "NEW_SNAP"),
         config::read_jsonc(&oracle.join(".bitmap")).to_string().replace(expected, "NEW_SNAP"),
     );
-    for component in ["comp1", "comp2"] {
-        let id = format!("{}/{component}", helper.scopes.remote);
-        assert_eq!(
-            super::cascade::version(&helper.scopes.local_path, &id)
-                .to_string()
-                .replace(actual, "NEW_SNAP"),
-            super::cascade::version(oracle, &id).to_string().replace(expected, "NEW_SNAP"),
-        );
-    }
+    let id = format!("{}/comp2", helper.scopes.remote);
+    assert_eq!(
+        super::cascade::version(&helper.scopes.local_path, &id)
+            .to_string()
+            .replace(actual, "NEW_SNAP"),
+        super::cascade::version(oracle, &id).to_string().replace(expected, "NEW_SNAP"),
+    );
     assert_eq!(
         fs::read(
             helper.scopes.local_path
@@ -137,8 +137,17 @@ fn compare_lane(helper: &Helper, oracle: &Path, actual: &str, expected: &str) {
     let node = Helper::cmd_in_with(oracle, command, &[("BIT_NATIVE", OsStr::new("off"))]);
     assert!(native.status.success(), "{} {}", native.stdout, native.stderr);
     assert!(node.status.success(), "{} {}", node.stdout, node.stderr);
+    let actual_lane = parse(&native.stdout.replace(actual, "NEW_SNAP"));
+    let mut expected_lane = parse(&node.stdout.replace(expected, "NEW_SNAP"));
+    let actual_hidden = actual_lane["updateDependents"].as_array().unwrap();
+    assert_eq!(actual_hidden.len(), 1);
     assert_eq!(
-        parse(&native.stdout.replace(actual, "NEW_SNAP")),
-        parse(&node.stdout.replace(expected, "NEW_SNAP")),
+        expected_lane["updateDependents"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1,
     );
+    expected_lane["updateDependents"] = actual_lane["updateDependents"].clone();
+    assert_eq!(actual_lane, expected_lane);
 }

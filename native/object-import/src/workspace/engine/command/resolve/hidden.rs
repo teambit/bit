@@ -3,28 +3,54 @@ use super::{
         capture, invalid, repository,
         resolve_snapshot::{Material, Participation, VersionState},
     },
-    Retained, selection,
+    Plan, Retained, cascade, selection,
 };
 use crate::workspace::{engine::status_models::harmony, snapshots};
-use serde_json::Value;
+use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+/// `getLaneAutoTagIdsFromScope`: direct consumer dependencies use workspace cascade rules.
 pub(super) fn append(
     retained: &mut Retained,
     materials: &mut Vec<Material>,
     snapshots: &mut snapshots::State,
-) -> io::Result<()> {
-    let Some(lane) = retained.record.context["lane"]["current"].as_object() else { return Ok(()) };
+    input: &Plan,
+) -> io::Result<Vec<Value>> {
+    let Some(lane) = retained.record.context["lane"]["current"].as_object() else {
+        return Ok(Vec::new());
+    };
     let entries = crate::command_import::lane::entries(&lane["value"])?;
     let selected = materials
         .iter()
-        .filter(|row| row.participation.selected)
-        .map(|row| (row.identity.clone(), row.version_state.current_head.clone()))
+        .filter(|row| {
+            row.participation.selected && !super::super::resolve_snapshot::is_removed(&row.version)
+        })
+        .map(|row| row.identity.clone())
         .collect::<Vec<_>>();
-    let visible: HashSet<_> = materials
+    if selected.is_empty() {
+        return Ok(Vec::new());
+    }
+    let visible = materials
         .iter()
         .map(|row| row.identity.clone())
-        .collect();
+        .collect::<HashSet<_>>();
+    let candidates = candidates(retained, entries, &visible)?;
+    let reports = reports(&candidates, &input.current, &selected, &input.semver)?;
+    for report in &reports {
+        let (entry, version) = candidates
+            .iter()
+            .find(|(entry, _)| report["id"] == entry.identity)
+            .ok_or_else(|| invalid("hidden cascade candidate"))?;
+        materials.push(material(retained, entry, version, snapshots)?);
+    }
+    Ok(reports)
+}
+
+fn candidates(
+    retained: &mut Retained,
+    entries: Vec<crate::command_import::lane::Entry>,
+    visible: &HashSet<String>,
+) -> io::Result<Vec<(crate::command_import::lane::Entry, Value)>> {
     let mut candidates = Vec::new();
     for entry in entries
         .into_iter()
@@ -32,42 +58,33 @@ pub(super) fn append(
     {
         let version = retained.record.repository.read(&entry.head, "Version")?;
         let mut version = harmony::project(&version)?;
+        if super::super::resolve_snapshot::is_removed(&version) {
+            continue;
+        }
         enrich_packages(&mut version)?;
-        saved::validate(&entry, &version, &mut retained.record.repository)?;
         candidates.push((entry, version));
     }
-    // GraphIds.predecessors is keyed by exact version, unlike workspace autotag.
-    // Its union preserves selected seed order then lane graph insertion order.
-    let mut chosen = HashSet::new();
-    for (identity, head) in selected {
-        for (entry, version) in &candidates {
-            if !depends_on(version, &identity, &head) || !chosen.insert(entry.identity.clone()) {
-                continue;
-            }
-            materials.push(material(retained, entry, version, snapshots)?);
-        }
-    }
-    Ok(())
+    Ok(candidates)
 }
 
-pub(super) fn depends_on(version: &Value, identity: &str, head: &str) -> bool {
-    let matches = |id: &Value| {
-        selection::identity(id).ok().as_deref() == Some(identity) && id["version"] == head
-    };
-    ["dependencies", "devDependencies"]
-        .iter()
-        .any(|field| {
-            version[*field]
-                .as_array()
-                .into_iter()
-                .flatten()
-                .any(|dep| matches(&dep["id"]))
-        })
-        || version["extensions"]
-            .as_array()
-            .into_iter()
-            .flatten()
-            .any(|extension| matches(&extension["extensionId"]))
+fn reports(
+    candidates: &[(crate::command_import::lane::Entry, Value)],
+    current: &[Value],
+    selected: &[String],
+    semver: &Value,
+) -> io::Result<Vec<Value>> {
+    let mut rows = candidates.iter().map(|(entry, version)| {
+        json!({"identity":entry.identity,"version":entry.head,"current":version})
+    }).collect::<Vec<_>>();
+    for identity in selected {
+        let row = current
+            .iter()
+            .find(|row| row["identity"] == *identity)
+            .ok_or_else(|| invalid("hidden cascade trigger"))?;
+        // Changed IDs are graph nodes, but their own dependencies are not scope candidates.
+        rows.push(json!({"identity":identity,"version":row["version"],"current":{}}));
+    }
+    cascade::reports(&rows, &[], selected, semver)
 }
 
 fn material(
@@ -151,5 +168,3 @@ fn enrich_package(dependency: &mut Value, entries: &[Value]) -> io::Result<()> {
 
 #[cfg(test)]
 mod tests;
-
-mod saved;

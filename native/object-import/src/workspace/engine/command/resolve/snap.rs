@@ -159,33 +159,6 @@ pub(super) fn report(
     )
 }
 
-pub(super) fn hidden_reports(
-    materials: &[super::super::resolve_snapshot::Material],
-) -> io::Result<Vec<Value>> {
-    materials
-        .iter()
-        .filter(|material| material.hidden && !material.participation.selected)
-        .map(|material| {
-            let triggered: Vec<_> = materials
-                .iter()
-                .filter(|seed| {
-                    seed.participation.selected
-                        && super::hidden::depends_on(
-                            &material.version,
-                            &seed.identity,
-                            &seed.version_state.current_head,
-                        )
-                })
-                .map(|seed| format!("{}@{}", seed.identity, seed.version_state.current_head))
-                .collect();
-            if triggered.is_empty() {
-                return Err(invalid("snap hidden trigger absent"));
-            }
-            Ok(serde_json::json!({"id":material.identity,"triggeredBy":triggered}))
-        })
-        .collect()
-}
-
 pub(super) fn prepare_graph_imports(
     retained: &mut Retained,
     materials: &[super::super::resolve_snapshot::Material],

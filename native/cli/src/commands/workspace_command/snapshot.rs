@@ -6,17 +6,20 @@
 
 pub(super) mod receipt;
 
+pub(super) use lockfile::{graphs, hidden_target};
+
 mod graph;
 mod issues;
+mod lockfile;
 
 use super::{Request, Steps, defaults::app_file};
 use crate::commands::status::{
     capture::{self, Capture, CaptureOptions},
     fresh::Pending,
-    js::{array, decline, text, truthy, without_version},
+    js::{array, decline, text, truthy},
 };
 use serde_json::{Value, json};
-use std::{collections::HashMap, io, path::Path};
+use std::{collections::HashMap, io};
 
 impl Steps<'_> {
     /// The plan's snapshot step: a new capture, and unless the engine
@@ -158,83 +161,6 @@ impl Steps<'_> {
         }
         Ok(capture)
     }
-}
-
-/// The dependency graph of each component the snap writes.
-pub(super) fn graphs(
-    root: &Path,
-    context: &Value,
-    needs_snap: &[String],
-    hashes: &[String],
-    capture: &Capture,
-) -> io::Result<Vec<Option<String>>> {
-    let targets = array(context.get("targets"), "targets")?;
-    let snapped = needs_snap
-        .iter()
-        .map(|identity| {
-            let target = targets
-                .iter()
-                .find(|target| target.get("identity").and_then(Value::as_str) == Some(identity))
-                .ok_or_else(|| decline("command snapshot target"))?;
-            let directory = text(target.get("directory"))?;
-            Ok(graph::Snapped {
-                directory,
-                package_name: package_name(capture, identity)?,
-                env_id: capture.environment_facts[identity]["envId"]
-                    .as_str()
-                    .or_else(|| context["environmentFacts"][identity]["envId"].as_str())
-                    .unwrap_or("teambit.harmony/node"),
-            })
-        })
-        .collect::<io::Result<Vec<_>>>()?;
-    let components = workspace_components(targets, needs_snap, hashes, capture)?;
-    graph::graphs(root, &snapped, &components)
-}
-
-/// `componentIdByPkgName`: the snapped components under their new hashes,
-/// then the others under their workspace versions.
-fn workspace_components<'c>(
-    targets: &'c [Value],
-    needs_snap: &'c [String],
-    hashes: &'c [String],
-    capture: &'c Capture,
-) -> io::Result<Vec<graph::WorkspaceComponent<'c>>> {
-    let mut components = needs_snap
-        .iter()
-        .zip(hashes)
-        .map(|(identity, hash)| {
-            let package_name = package_name(capture, identity)?;
-            Ok(graph::WorkspaceComponent { package_name, identity, version: Some(hash) })
-        })
-        .collect::<io::Result<Vec<_>>>()?;
-    for target in targets {
-        let identity = text(target.get("identity"))?;
-        if needs_snap
-            .iter()
-            .any(|snapped| snapped == identity)
-        {
-            continue;
-        }
-        let version = target
-            .get("version")
-            .and_then(Value::as_str)
-            .filter(|version| !version.is_empty());
-        components.push(graph::WorkspaceComponent {
-            package_name: package_name(capture, identity)?,
-            identity,
-            version,
-        });
-    }
-    Ok(components)
-}
-
-/// The package name of a captured component.
-fn package_name<'c>(capture: &'c Capture, identity: &str) -> io::Result<&'c str> {
-    capture.components
-        .iter()
-        .find(|component| without_version(&component.identity) == identity)
-        .map(|component| component.package_name.as_str())
-        .ok_or_else(|| decline("command snapshot component"))
 }
 
 /// A lane merge whose snaps are all hidden lane components, absent from

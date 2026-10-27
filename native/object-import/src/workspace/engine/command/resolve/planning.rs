@@ -144,10 +144,10 @@ fn materials(
         })
         .collect::<io::Result<Vec<_>>>()?;
     if !retained.snap.as_ref().is_some_and(|options| options.skip_auto_snap) {
-        super::hidden::append(retained, &mut materials, snapshots)?;
-    }
-    if retained.snap.is_some() {
-        automatic.extend(super::snap::hidden_reports(&materials)?);
+        let hidden = super::hidden::append(retained, &mut materials, snapshots, input)?;
+        if retained.snap.is_some() {
+            automatic.extend(hidden);
+        }
     }
     Ok((materials, automatic, !seeds.is_empty()))
 }
