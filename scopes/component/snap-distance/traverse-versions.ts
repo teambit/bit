@@ -218,10 +218,16 @@ export async function getAllVersionParents({
 }): Promise<VersionParents[]> {
   const versionHistory = await modelComponent.getVersionHistory(repo);
   const versionParents: VersionParents[] = [];
+  // indexed by hash: a linear search per item makes this quadratic in the size of the history, which is slow for
+  // components with thousands of versions. `versionParents` keeps the order.
+  const byHash = new Map<string, VersionParents>();
   const push = (versionParentsItem: VersionParents) => {
-    const existing = versionParents.find((v) => v.hash.isEqual(versionParentsItem.hash));
-    if (!existing) versionParents.push(versionParentsItem);
-    else {
+    const key = versionParentsItem.hash.toString();
+    const existing = byHash.get(key);
+    if (!existing) {
+      versionParents.push(versionParentsItem);
+      byHash.set(key, versionParentsItem);
+    } else {
       // override it
       Object.keys(existing).forEach((field) => (existing[field] = versionParentsItem[field]));
     }
@@ -244,7 +250,7 @@ export async function getAllVersionParents({
   if (versionParentsFromObjects) {
     versionParentsFromObjects.forEach((versionParentItem) => push(versionParentItem));
     const allParentsFromObj = versionParentsFromObjects.map((v) => v.parents).flat();
-    const missingParents = allParentsFromObj.filter((parent) => !versionParents.some((v) => v.hash.isEqual(parent)));
+    const missingParents = allParentsFromObj.filter((parent) => !byHash.has(parent.toString()));
     if (missingParents.length) {
       if (missingRefsFromVersionHistory) {
         // stops the recursion
@@ -277,8 +283,16 @@ export function getSubsetOfVersionParents(
 ): VersionParents[] {
   const results: VersionParents[] = [];
   const processedHashes = new Set<string>();
-  const shouldStop = (ref: Ref): boolean => Boolean(stopAt?.find((r) => r.isEqual(ref)));
-  const getVersionParent = (ref: Ref) => versionParents.find((v) => v.hash.isEqual(ref));
+  // indexed by hash: a linear search per parent makes the walk quadratic in the size of the history.
+  // the first entry of a hash wins, as with a search.
+  const byHash = new Map<string, VersionParents>();
+  versionParents.forEach((v) => {
+    const key = v.hash.toString();
+    if (!byHash.has(key)) byHash.set(key, v);
+  });
+  const stopHashes = new Set((stopAt || []).map((r) => r.toString()));
+  const shouldStop = (ref: Ref): boolean => stopHashes.has(ref.toString());
+  const getVersionParent = (ref: Ref) => byHash.get(ref.toString());
 
   const head = getVersionParent(from);
   if (!head || shouldStop(head.hash)) return [];
