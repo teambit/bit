@@ -7,9 +7,22 @@ import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import type { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { JsonVinyl } from './json-vinyl';
 import { cloneDeep, isEmpty } from 'lodash';
+
+/**
+ * the fields of a legacy ConsumerComponent a package.json is created from.
+ * restated rather than imported because consumer-component depends on this component.
+ */
+export type PackageJsonComponent = Parameters<typeof componentIdToPackageName>[0] & {
+  version?: string;
+  mainFile: PathOsBased;
+  packageDependencies?: Record<string, string>;
+  devPackageDependencies?: Record<string, string>;
+  peerPackageDependencies?: Record<string, string>;
+  license?: unknown;
+  _getHomepage(): string | undefined;
+};
 
 /**
  * when a package.json file is loaded, we save the indentation and the type of newline it uses, so
@@ -136,7 +149,7 @@ export class PackageJsonFile {
 
   static createFromComponent(
     componentDir: PathRelative,
-    component: Component,
+    component: PackageJsonComponent,
     addExportProperty = false
   ): PackageJsonFile {
     const filePath = composePath(componentDir);

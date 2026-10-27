@@ -31,7 +31,7 @@ import Ref from './ref';
 import { LiveObjects } from './live-objects';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getCacheOptionsForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { ScopeMeta, Lane, ModelComponent } from '../models';
+import { ScopeMeta, Lane, ModelComponent, type Source } from '../models';
 
 type ContentTransformer = (content: Buffer) => Buffer;
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
@@ -180,8 +180,7 @@ export default class Repository {
     return path.join(this.scopePath, TRASH_DIR);
   }
 
-  getLicense(): Promise<string> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  getLicense(): Promise<string | null | undefined> {
     return this.scopeJson.getPopulatedLicense();
   }
 
@@ -564,7 +563,7 @@ export default class Repository {
       if (throws) {
         throw new HashNotFound(ref.toString());
       }
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error @todo: it should return BitObject | null (same as `load()`)
       return null;
     }
   }
@@ -629,7 +628,8 @@ export default class Repository {
     // leave the following commented log message, it is very useful for debugging but too verbose when not needed.
     // logger.debug(`repository: adding object ${object.hash().toString()} which consist of the following id: ${object.id()}`);
     this.objects[object.hash().toString()] = object;
-    this.setCache(object);
+    const size = (object as Source).contents?.byteLength;
+    this.setCache(object, size);
     return this;
   }
 
@@ -845,13 +845,12 @@ export default class Repository {
     await this.writeObjectFile(objectPath, transformedContent, options);
     // once written, the object is the up-to-date one. this also replaces the size-estimate of objects that
     // were cached by `add()`.
-    if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object, inflatedSize);
-    this.liveObjects.set(
-      hash.toString(),
-      object,
-      inflatedSize,
-      transformedContent.byteLength < MAX_COMPRESSED_SIZE_TO_CACHE
-    );
+    const cacheable = transformedContent.byteLength < MAX_COMPRESSED_SIZE_TO_CACHE;
+    if (this.cache.has(hash.toString())) {
+      if (cacheable) this.cache.set(hash.toString(), object, inflatedSize);
+      else this.cache.delete(hash.toString());
+    }
+    this.liveObjects.set(hash.toString(), object, inflatedSize, cacheable);
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, pendingDir: PathOsBasedAbsolute) {

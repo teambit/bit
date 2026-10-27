@@ -1,8 +1,17 @@
 import { getConsumerComponent } from './get-consumer-component';
 import { getScopeComponent } from './get-scope-component';
 import { loader } from '@teambit/legacy.loader';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { DependenciesInfo } from '@teambit/legacy.dependency-graph';
 
 const BEFORE_SHOW_REMOTE = 'showing a component...';
+
+type ShowComponentResult = {
+  component: ConsumerComponent | ConsumerComponent[];
+  componentModel?: ConsumerComponent;
+  dependentsInfo?: DependenciesInfo[];
+  dependenciesInfo?: DependenciesInfo[];
+};
 
 export async function show({
   id,
@@ -11,11 +20,10 @@ export async function show({
   compare,
 }: {
   id: string;
-  json: boolean;
+  json?: boolean;
   remote: boolean;
   compare: boolean;
 }) {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return getComponent().then(({ component, componentModel, dependentsInfo, dependenciesInfo }) => ({
     component,
     componentModel,
@@ -24,7 +32,7 @@ export async function show({
     json,
   }));
 
-  function getComponent() {
+  function getComponent(): Promise<ShowComponentResult> {
     const params = {
       id,
     };

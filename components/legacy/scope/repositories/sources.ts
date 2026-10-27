@@ -214,8 +214,7 @@ export default class SourceRepository {
         // eslint-disable-next-line @typescript-eslint/return-await
         return this._findComponentBySymlink(foundComponent);
       }
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (foundComponent) return foundComponent;
+      if (foundComponent) return foundComponent as ModelComponent;
     } catch (err: any) {
       logger.error(`findComponent got an error ${err}`);
     }
@@ -234,8 +233,7 @@ if you have the steps to reproduce the issue, please open a Github issue with th
 to quickly fix the issue, please delete the object at "${this.objects().objectPath(symlink.hash())}"`
       );
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return foundComponent;
+    return foundComponent as ModelComponent;
   }
 
   getObjects(id: ComponentID): Promise<ComponentObjects> {

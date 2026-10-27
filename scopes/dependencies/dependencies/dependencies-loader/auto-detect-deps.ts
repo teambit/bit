@@ -57,7 +57,7 @@ type PushToDepsArrayOpts = {
 export class AutoDetectDeps {
   componentId: ComponentID;
   componentMap: ComponentMap;
-  componentFromModel: Component;
+  componentFromModel: Component | undefined;
   consumerPath: PathOsBased;
   tree: DependenciesTree;
   allDependencies: AllDependencies;
@@ -77,7 +77,6 @@ export class AutoDetectDeps {
     this.componentId = component.componentId;
     // the consumerComponent is coming from the workspace, so it must have the componentMap prop
     this.componentMap = this.component.componentMap as ComponentMap;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
     this.consumerPath = this.consumer.getPath();
     this.allDependencies = {

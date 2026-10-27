@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
-import type { Consumer } from '@teambit/legacy.consumer';
+import type Consumer from './consumer';
 import { ComponentLoader } from './component-loader';
 
 describe('ComponentLoader', function () {

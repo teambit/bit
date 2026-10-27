@@ -1,7 +1,7 @@
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
 
-export default class ParentNotFound extends BitError {
+export class ParentNotFound extends BitError {
   constructor(
     private id: string,
     private versionHash: string,

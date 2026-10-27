@@ -783,24 +783,21 @@ describe('dependencyTree', function () {
       const barFile = path.normalize(`${directory}/bar.js`);
       const bazFile = path.normalize(`${directory}/baz.js`);
       const nonExistent = {};
-      const config = {
+      const config: { directory: string; nonExistent: Record<string, string[]>; visited: object; filename?: string } = {
         directory,
         nonExistent,
         visited: {},
       };
 
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config.filename = fooFile;
       await dependencyTree(config);
       expect(nonExistent[fooFile]).to.deep.equal(['non-exist-foo-pkg']);
 
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config.filename = barFile;
       await dependencyTree(config);
       expect(nonExistent[fooFile]).to.deep.equal(['non-exist-foo-pkg']);
       expect(nonExistent[barFile]).to.deep.equal(['non-exist-bar-pkg']);
 
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config.filename = bazFile;
       await dependencyTree(config);
       expect(nonExistent[fooFile]).to.deep.equal(['non-exist-foo-pkg']);
@@ -821,15 +818,13 @@ describe('dependencyTree', function () {
       const directory = path.normalize(`${UNIT_TEST_DIR}/baz`);
       const baseFile = path.normalize(`${directory}/base.scss`);
       const indexFile = path.normalize(`${directory}/index.jsx`);
-      const config = {
+      const config: { directory: string; filename?: string } = {
         directory,
       };
 
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config.filename = baseFile;
       await dependencyTree(config);
 
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config.filename = indexFile;
       const dependencies = await dependencyTree(config);
       expect(dependencies).to.be.ok;

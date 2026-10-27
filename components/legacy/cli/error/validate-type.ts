@@ -1,5 +1,5 @@
 import { BitError } from '@teambit/bit-error';
-import { ValidationError } from '@teambit/legacy.cli.error';
+import { ValidationError } from './validation-error';
 
 type Value = 'string' | 'number' | 'array' | 'object' | 'boolean' | 'undefined';
 
@@ -12,8 +12,7 @@ export function validateUserInputType(message: string, value: any, fieldName: st
 }
 
 function validate(message: string, value: any, fieldName: string, expectedType: Value, isUserInput: boolean) {
-  let type = typeof value;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  let type: string = typeof value;
   if ((expectedType === 'array' || expectedType === 'object') && Array.isArray(value)) type = 'array';
   if (type !== expectedType) {
     const errorMessage = `${message}, expected ${fieldName} to be ${expectedType}, got ${type}`;
