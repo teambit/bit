@@ -103,8 +103,20 @@ fn standard_lint_nested_sources_and_concurrent_fix_guard_match_node() {
 
 #[test]
 fn standard_lint_uses_external_eslint_without_bit_module_imports() {
+    assert_no_bit_modules(false);
+}
+
+#[test]
+fn builtin_react_lint_uses_external_eslint_without_bit_module_imports() {
+    assert_no_bit_modules(true);
+}
+
+fn assert_no_bit_modules(react: bool) {
     use std::{ffi::OsStr, fs};
     let helper = support::workspace(1, true);
+    if react {
+        support::setup(&helper, "env set comp1 teambit.react/react");
+    }
     let guard = helper.scopes.e2e_dir.join("reject-bit-modules.cjs");
     fs::write(&guard, r"const Module = require('node:module');
 const load = Module._load;
@@ -153,4 +165,77 @@ fn standard_lint_noncanonical_config_cache_declines_without_rewriting_it() {
     fs::write(&config, "{\"compilerOptions\":{}}\n").unwrap();
     support::compare_declined(&helper, "lint --json", duration);
     assert_eq!(fs::read_to_string(config).unwrap(), "{\"compilerOptions\":{}}\n");
+}
+
+#[test]
+fn builtin_react_lint_matches_released_loading_and_cached_state_without_host() {
+    let helper = support::workspace(1, true);
+    support::setup(&helper, "env set comp1 teambit.react/react");
+    helper.output_file("comp1/index.js", "module.exports=()=>42;\n");
+    for command in ["lint --json", "lint --changed --json", "lint comp1 --json"] {
+        let result = support::compare_with_stdout(&helper, command, duration);
+        assert!(result.status.success());
+        assert!(!result.trace.contains("starting the JavaScript host"));
+    }
+    support::compare_with_stdout(&helper, "lint", text_duration);
+}
+
+#[test]
+fn builtin_react_lint_dependency_policy_diagnostics_and_fixes_match_node() {
+    let helper = support::workspace(1, true);
+    support::setup(&helper, "env set comp1 teambit.react/react");
+    helper.output_file(
+        "node_modules/react/package.json",
+        r#"{"name":"react","version":"19.0.0","main":"index.js"}"#,
+    );
+    helper.output_file("node_modules/react/index.js", "module.exports={};\n");
+    for (source, command) in [
+        ("const React=require('react'); module.exports=()=>React;\n", "lint --json"),
+        ("module.exports=()=>missing;\n", "lint --json"),
+        ("module.exports=()=>Boolean(!!true);\n", "lint --fix --json"),
+    ] {
+        helper.output_file("comp1/index.js", source);
+        support::setup(&helper, "show comp1");
+        let result = support::compare_with_stdout(&helper, command, duration);
+        assert!(!result.trace.contains("starting the JavaScript host"));
+    }
+    support::setup(&helper, "show comp1");
+    super::add::support::compare_service_output(&helper, "lint", text_duration, false, true);
+    super::add::support::compare_service_output(&helper, "lint --json", duration, true, false);
+}
+
+#[cfg(unix)]
+#[test]
+fn builtin_react_lint_write_failure_reports_its_environment_without_replay() {
+    use std::{fs, os::unix::fs::PermissionsExt};
+    let helper = support::workspace(1, true);
+    support::setup(&helper, "env set comp1 teambit.react/react");
+    helper.output_file("comp1/index.js", "module.exports=()=>Boolean(!!true);\n");
+    support::setup(&helper, "show comp1");
+    fs::set_permissions(
+        helper.scopes.local_path.join("comp1/index.js"),
+        fs::Permissions::from_mode(0o444),
+    )
+    .unwrap();
+    support::compare_with_stdout(&helper, "lint --fix --json", duration);
+    support::compare_with_stdout(&helper, "lint --fix", text_duration);
+}
+
+#[test]
+fn builtin_react_lint_changed_selection_preserves_tagged_peer_policy() {
+    let helper = support::workspace(1, false);
+    support::setup(&helper, "env set comp1 teambit.react/react");
+    helper.output_file(
+        "node_modules/react/package.json",
+        r#"{"name":"react","version":"19.0.0","main":"index.js"}"#,
+    );
+    helper.output_file("node_modules/react/index.js", "module.exports={};\n");
+    helper.output_file(
+        "comp1/index.js",
+        "const React=require('react'); module.exports=()=>React;\n",
+    );
+    support::tag(&helper);
+    let result = support::compare_with_stdout(&helper, "lint --changed --json", duration);
+    let value: serde_json::Value = serde_json::from_str(&result.stdout).unwrap();
+    assert_eq!(value["componentsIdsToLint"], serde_json::json!([]));
 }

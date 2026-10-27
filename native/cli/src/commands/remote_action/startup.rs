@@ -11,7 +11,20 @@ pub(in crate::commands) fn supported(
     load_workspace: bool,
 ) -> io::Result<bool> {
     let Some(root) = workspace else { return scope_supported(scope) };
-    if Installer::needs_canonical(root) {
+    supported_workspace(root, config, load_workspace, Installer::needs_canonical(root))
+}
+
+pub(in crate::commands) fn service_supported(root: &Path, config: &Value) -> io::Result<bool> {
+    supported_workspace(root, config, true, Installer::needs_service_callbacks(root))
+}
+
+fn supported_workspace(
+    root: &Path,
+    config: &Value,
+    load_workspace: bool,
+    callbacks: bool,
+) -> io::Result<bool> {
+    if callbacks {
         return Ok(false);
     }
     if !load_workspace {

@@ -69,7 +69,7 @@ impl Plan {
             .ok_or_else(|| invalid("linter config"))?
             .publish()?
         {
-            return failure(error, output);
+            return failure(error, &self.loaded.progress.environment, output);
         }
         output.status(&format!(
             "linting components (1/1) component: {}, # of files: {}",
@@ -82,13 +82,14 @@ impl Plan {
             .run()?;
         if let Some(error) = tool.get("error") {
             output.failure(&format!(
-                r#"service "linter" of env "teambit.harmony/node" has failed. error: {}"#,
+                r#"service "linter" of env "{}" has failed. error: {}"#,
+                self.loaded.progress.environment,
                 tool["message"].as_str().unwrap_or_default(),
             ));
             return Ok(results::aggregate(Vec::new(), vec![error.clone()]));
         }
         if fix && let Some(error) = write(&tool)? {
-            return failure(error, output);
+            return failure(error, &self.loaded.progress.environment, output);
         }
         Ok(results::aggregate(vec![results::component(&component.id, &tool)?], Vec::new()))
     }
@@ -138,7 +139,11 @@ fn write(tool: &Value) -> io::Result<Option<Value>> {
     Ok(None)
 }
 
-fn failure(error: Value, output: &bit_install::output::Output) -> io::Result<Value> {
-    output.failure(&filesystem::message("linter", &error)?);
+fn failure(
+    error: Value,
+    environment: &str,
+    output: &bit_install::output::Output,
+) -> io::Result<Value> {
+    output.failure(&filesystem::message("linter", environment, &error)?);
     Ok(results::aggregate(Vec::new(), vec![error]))
 }

@@ -33,7 +33,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         if !options.check
             && let Some(error) = write::publish(&loaded.files, &files)?
         {
-            output.failure(&write::message(&error)?);
+            output.failure(&write::message(&loaded.progress.environment, &error)?);
             result = json!({"results":[],"errors":[error]});
         }
         report::create(&result, &loaded.progress, args, options, started.elapsed().as_secs_f64())

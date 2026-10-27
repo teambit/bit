@@ -135,7 +135,14 @@ impl Environments {
         core: &[String],
         aspects: &[String],
     ) -> io::Result<()> {
-        if !components.iter().any(|component| needs_facts(component, core, aspects)) {
+        if !components
+            .iter()
+            .any(|component| {
+                needs_facts(component, core, aspects)
+                    && !(self.builtin_services
+                        && super::builtin::supported(component, core, aspects))
+            })
+        {
             return Ok(());
         }
         let mut ids = aspects

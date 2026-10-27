@@ -35,6 +35,6 @@ fn path(input: &Value) -> io::Result<&Path> {
         .ok_or_else(|| invalid("formatter source path"))
 }
 
-pub(super) fn message(error: &Value) -> io::Result<String> {
-    filesystem::message("formatter", error)
+pub(super) fn message(environment: &str, error: &Value) -> io::Result<String> {
+    filesystem::message("formatter", environment, error)
 }

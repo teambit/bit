@@ -19,7 +19,11 @@ pub(in crate::commands) fn error(
     Ok(json!({"errno":errno,"code":code,"syscall":syscall,"path":path}))
 }
 
-pub(in crate::commands) fn message(service: &str, error: &Value) -> io::Result<String> {
+pub(in crate::commands) fn message(
+    service: &str,
+    environment: &str,
+    error: &Value,
+) -> io::Result<String> {
     let code = error["code"].as_str().ok_or_else(|| invalid("service error code"))?;
     let description = match code {
         "EACCES" => "permission denied",
@@ -32,6 +36,6 @@ pub(in crate::commands) fn message(service: &str, error: &Value) -> io::Result<S
     let path = error["path"].as_str().ok_or_else(|| invalid("service error path"))?;
     let syscall = error["syscall"].as_str().ok_or_else(|| invalid("service error syscall"))?;
     Ok(format!(
-        r#"service "{service}" of env "teambit.harmony/node" has failed. error: {code}: {description}, {syscall} '{path}'"#,
+        r#"service "{service}" of env "{environment}" has failed. error: {code}: {description}, {syscall} '{path}'"#,
     ))
 }

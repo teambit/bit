@@ -14,6 +14,7 @@ pub(in crate::commands) struct Selection {
 }
 
 pub(in crate::commands) struct Progress {
+    pub environment: String,
     pub name: String,
     pub identities: Vec<String>,
     pub loads: Vec<usize>,
@@ -27,4 +28,19 @@ pub(in crate::commands) struct Component {
 
 fn invalid(message: &str) -> io::Error {
     io::Error::other(message)
+}
+
+impl Progress {
+    fn new(name: String, environment: String, counts: [usize; 2], options: &Selection) -> Self {
+        Self {
+            name,
+            environment,
+            identities: Vec::new(),
+            loads: if options.changed && options.pattern.is_none() {
+                counts.to_vec()
+            } else {
+                vec![counts[1]]
+            },
+        }
+    }
 }

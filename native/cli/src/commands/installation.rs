@@ -105,7 +105,11 @@ impl Installer {
     /// A configured user class may register mutable `InstallMain` or package-manager callbacks.
     /// Keep those workspaces on the released installation class before native install effects.
     pub(in crate::commands) fn needs_canonical(root: &Path) -> bool {
-        canonical_workspace(root).unwrap_or(true)
+        canonical_workspace(root, false).unwrap_or(true)
+    }
+
+    pub(in crate::commands) fn needs_service_callbacks(root: &Path) -> bool {
+        canonical_workspace(root, true).unwrap_or(true)
     }
 
     /// Keep the already loaded providers and process facts of a parent operation.
@@ -367,7 +371,7 @@ impl Installer {
     }
 }
 
-fn canonical_workspace(root: &Path) -> io::Result<bool> {
+fn canonical_workspace(root: &Path, react_service: bool) -> io::Result<bool> {
     let config = WorkspaceConfig::load(root)?;
     let core: Vec<String> = serde_json::from_str(include_str!(
         "../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
@@ -402,7 +406,8 @@ fn canonical_workspace(root: &Path) -> io::Result<bool> {
     Ok(workspace.components
         .iter()
         .any(|component| {
-            component.env_id != "teambit.harmony/node"
+            (component.env_id != "teambit.harmony/node"
+                && !(react_service && component.env_id == "teambit.react/react"))
                 || component.config.keys().any(|id| custom(id))
         }))
 }

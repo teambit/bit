@@ -292,3 +292,31 @@ setup. That case passed unchanged on a serial rerun. All 20 focused service and
 fixture-permission cases pass. Negative controls catch disabled native dispatch
 and incorrect generated config filenames. Windows CI for this batch is pending.
 Repository Node lint remains unavailable because `tsc` is missing.
+
+## Built-in React component services
+
+Formatting and linting can now load qualified built-in React components without
+the published Bit runtime host. Rust supplies the released React dependency
+policy, development-file patterns and compiler facts, retaining native cache,
+selection and report ownership. A dedicated component-service mode preserves
+the existing lifecycle requirements of other operations. Startup still rejects
+custom workspace/scope/global providers, configured requires, lane hydration
+and bitmap auto-sync. Mixed environment groups remain guarded before effects.
+Unsupported dependency syntax also declines before starting a Bit parser host.
+
+Differential fixtures exercise React formatting and linting on repeated caches,
+changed selection, real dependency metadata, diagnostics, fixes, CI/colors and
+read-only write failures. Errors identify the selected environment. An external
+ESLint preload rejects all Bit module imports. External ESLint/Prettier and their
+installed distribution metadata remain requirements; this is not a standalone
+runtime or arbitrary JavaScript environment implementation.
+
+Validation: all 1,814 workspace tests and formatting, Clippy, Dylint, rustdoc,
+generated plan/census/asset and scope checks pass. Full E2E: 1,729 passed, two
+existing skips and five external request failures (two Bit Cloud fixture setup
+requests and three registry timeouts in existing Yarn cases). All five passed
+unchanged in a serial rerun. All eight new React comparisons pass; the peer-policy
+negative control fails as intended. Yarn implementation remains excluded.
+Windows provisioning passed on the preceding lint/formatter revision, confirming
+its platform fixes; CI for this React batch is pending. Local Node lint still
+requires the unavailable `tsc`.

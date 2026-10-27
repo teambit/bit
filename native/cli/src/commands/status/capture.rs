@@ -265,7 +265,7 @@ fn validate_write(
         && !options.missing_status_invalid
         && !options.allow_special_states
     {
-        Environments::require_native_write(root, context)?;
+        environments.require_write(root, context)?;
     }
     Ok(())
 }

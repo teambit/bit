@@ -47,7 +47,7 @@ impl Loaded {
         root: &Path,
         options: &super::Selection,
     ) -> io::Result<Self> {
-        let (workspace, name) = workspace(root)?;
+        let (workspace, name, environment) = workspace(root)?;
         let home =
             env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
         let mut engine = Engine::new()?;
@@ -61,7 +61,10 @@ impl Loaded {
             Path::new(&home),
             &context,
             &targets,
-            capture::CaptureOptions::default(),
+            capture::CaptureOptions {
+                environments: Some(Environments::for_builtin_services()),
+                ..Default::default()
+            },
         )?;
         order_sources(root, &mut capture)?;
         let load_count = targets.len();
@@ -72,15 +75,7 @@ impl Loaded {
             context,
             capture,
             ids: Vec::new(),
-            progress: super::Progress {
-                name,
-                identities: Vec::new(),
-                loads: if options.changed && options.pattern.is_none() {
-                    vec![load_count, targets.len()]
-                } else {
-                    vec![targets.len()]
-                },
-            },
+            progress: super::Progress::new(name, environment, [load_count, targets.len()], options),
             files: Vec::new(),
             counts: Vec::new(),
             docs,
@@ -168,9 +163,9 @@ impl Loaded {
     }
 }
 
-fn workspace(root: &Path) -> io::Result<(Workspace, String)> {
+fn workspace(root: &Path) -> io::Result<(Workspace, String, String)> {
     let raw: Value = bit_object_import::parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    if !startup::supported(Some(root), &crate::workspace::scope_path(root), &raw, true)? {
+    if !startup::service_supported(root, &raw)? {
         return Err(invalid("component service startup callbacks"));
     }
     let config = WorkspaceConfig::load(root).map_err(io::Error::other)?;
@@ -178,9 +173,15 @@ fn workspace(root: &Path) -> io::Result<(Workspace, String)> {
         "../../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
     ))?;
     let workspace = Workspace::load(root, &config, &core).map_err(io::Error::other)?;
+    let environment = workspace
+        .active()
+        .next()
+        .map_or("teambit.harmony/node", |(_, component)| component.env_id.as_str())
+        .to_owned();
     for (_, component) in workspace.active() {
         if !matches!(component.env_id.as_str(), "teambit.harmony/node" | "teambit.react/react")
             || component.is_env
+            || component.env_id != environment
         {
             return Err(invalid("component service environment service"));
         }
@@ -193,7 +194,7 @@ fn workspace(root: &Path) -> io::Result<(Workspace, String)> {
                 .to_string_lossy()
                 .into_owned()
         });
-    Ok((workspace, name))
+    Ok((workspace, name, environment))
 }
 fn changed(
     engine: &mut Engine,
@@ -236,7 +237,7 @@ fn serial_loading(root: &Path, targets: &[Value], options: &super::Selection) ->
 fn selected(root: &Path, context: &Value, options: &super::Selection) -> io::Result<Vec<Value>> {
     let targets =
         context["targets"].as_array().ok_or_else(|| invalid("component service targets"))?;
-    Environments::require_native_write_for(root, context, targets)?;
+    Environments::require_service(root, context, targets)?;
     if options.pattern.as_deref().is_some_and(crate::commands::diff::selection::stateful) {
         return Err(invalid("component service stateful selection"));
     }

@@ -141,3 +141,37 @@ fn two_component_order(output: &str) -> String {
     assert_eq!(rows[1]["componentId"]["_legacy"]["name"], "comp2");
     serde_json::to_string_pretty(&value).unwrap()
 }
+
+#[test]
+fn builtin_react_format_matches_released_loading_and_cached_state_without_host() {
+    let helper = support::workspace(1, true);
+    support::setup(&helper, "env set comp1 teambit.react/react");
+    helper.output_file("comp1/index.js", "module.exports=()=>42;\n");
+    for command in ["format --check --json", "format --json", "format --check --json"] {
+        let result = support::compare(&helper, command);
+        assert!(!result.trace.contains("starting the JavaScript host"));
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn builtin_react_format_write_failure_reports_its_environment_without_replay() {
+    use std::{fs, os::unix::fs::PermissionsExt};
+    let helper = support::workspace(1, true);
+    support::setup(&helper, "env set comp1 teambit.react/react");
+    helper.output_file("comp1/index.js", "module.exports=()=>42;\n");
+    fs::set_permissions(
+        helper.scopes.local_path.join("comp1/index.js"),
+        fs::Permissions::from_mode(0o444),
+    )
+    .unwrap();
+    support::compare(&helper, "format --json");
+    support::compare_with_stdout(&helper, "format", duration);
+}
+
+#[test]
+fn builtin_react_format_keeps_mixed_environment_groups_on_released_runner() {
+    let helper = support::workspace(2, true);
+    support::setup(&helper, "env set comp1 teambit.react/react");
+    support::compare_declined(&helper, "format --check --json", str::to_owned);
+}
