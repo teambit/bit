@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{
     capture::{Capture, Object},
     invalid,

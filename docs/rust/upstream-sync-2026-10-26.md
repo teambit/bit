@@ -148,3 +148,31 @@ rerun. Generated inventory/census/asset and scope checks pass. Windows CI now
 explicitly includes the lane-abort regressions. Repository Node lint remains
 unavailable because `tsc` is not installed. A newer upstream history-membership
 optimization landed during validation and is the next sync audit.
+
+## Indexed history-merge follow-up
+
+Upstream `3754c4f5754aa82394141a3f807f3403c26a30e2` replaces linear membership
+checks in `VersionHistory.merge` with a set. Native `operation::history` already
+uses sets for both incoming and stored membership, and `command_import::history`
+keeps incoming rows first before appending existing-only rows. No algorithm
+replacement is needed. Added regression coverage verifies 40,000-row histories,
+incoming override data and ordering, both empty-side cases, and preservation of
+existing graph metadata. The upstream performance test's wall-clock threshold
+is not copied into the native correctness test.
+
+The preceding Linux CI run exposed a host-transport test fixture race. Repeated
+local runs with the hidden call error included reproduce `ETXTBSY` when executing
+the fake Node program just written by the test. The fixture now uses an immutable,
+checked-in shell executable and writes only per-session response data. Script
+lifetime, exact script contents, callback errors and cleanup assertions are
+unchanged. The original fails on iteration 34 at 64 test threads; the fix passes
+all 60 complete CLI unit-suite stress runs at the same concurrency.
+
+Validation: formatting, Clippy, Dylint, rustdoc, generated checks and all 1,811
+workspace tests pass. Full E2E: 1,703 passed, three failed and two existing skips.
+Two failures were Bit Cloud requests during fixture setup; the third was a
+dependency-capture freshness failure in the environment-policy tagging case.
+All three pass unchanged in a serial rerun. The intermittent freshness failure
+remains under investigation; no proof validation was weakened. Node lint cannot
+start locally because `tsc` is unavailable. Windows merge-history CI on the
+preceding head passed, including the new lane-abort assertions.

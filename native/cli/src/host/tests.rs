@@ -2,15 +2,15 @@
 use super::{Host, SCRIPT};
 use crate::discovery::{NodeCli, Source};
 use serde_json::json;
-use std::{fs, os::unix::fs::PermissionsExt, path::PathBuf};
+use std::{fs, path::PathBuf};
 
 #[test]
 fn private_host_script_is_retained_until_the_session_ends_including_callback_failures() {
     for response in [r#"{"id":1,"result":true}"#, r#"{"id":1,"error":"callback rejected"}"#] {
         let directory = tempfile::tempdir().unwrap();
-        let executable = directory.path().join("fake-node");
-        fs::write(&executable, format!("#!/bin/sh\n[ -s \"$1\" ] || exit 2\nprintf '%s\\n' \"$1\" > \"$4/host-path\"\nIFS= read -r request\nprintf '%s\\n' '{response}'\nIFS= read -r end\n")).unwrap();
-        fs::set_permissions(&executable, fs::Permissions::from_mode(0o700)).unwrap();
+        let executable =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/host/tests/transport.sh");
+        fs::write(directory.path().join("response"), format!("{response}\n")).unwrap();
         let host = Host::new(
             NodeCli {
                 entry: directory.path().join("entry"),
@@ -23,8 +23,13 @@ fn private_host_script_is_retained_until_the_session_ends_including_callback_fai
             false,
         );
         let result = host.call("fixture", &json!({}));
-        let script =
-            PathBuf::from(fs::read_to_string(directory.path().join("host-path")).unwrap().trim());
+        let script = PathBuf::from(
+            fs::read_to_string(directory.path().join("host-path"))
+                .unwrap_or_else(|error| {
+                    panic!("host path receipt missing: {error}; call returned {result:?}")
+                })
+                .trim(),
+        );
         assert_eq!(script.extension().unwrap(), "cjs");
         if response.contains("error") {
             assert_eq!(result.unwrap_err().to_string(), "callback rejected");
