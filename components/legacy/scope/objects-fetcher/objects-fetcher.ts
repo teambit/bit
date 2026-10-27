@@ -1,6 +1,7 @@
 import type { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { omit, uniq } from 'lodash';
+// @ts-ignore
 import { pipeline } from 'stream/promises';
 import type { Scope } from '..';
 import type { FETCH_OPTIONS } from './fetch-options';
