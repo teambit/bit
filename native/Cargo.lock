@@ -340,6 +340,7 @@ dependencies = [
  "diff",
  "flate2",
  "getrandom 0.3.4",
+ "indexmap",
  "libc",
  "node-semver",
  "pnpm-deps-path",

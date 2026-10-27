@@ -22,6 +22,7 @@ mod recover;
 mod remote;
 mod remove;
 mod reset;
+mod resume_export;
 mod run_cmd;
 mod search;
 mod show;

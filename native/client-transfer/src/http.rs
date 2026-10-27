@@ -5,7 +5,11 @@
 pub use hub::HubReply;
 pub use inventory::old_server_fallback;
 
+pub use action_errors::{action_conflict, is_action_not_found};
+
+mod action_errors;
 mod configuration;
+use action_errors::throw_for_action_status;
 mod delete;
 mod doctor;
 mod hub;
@@ -307,28 +311,6 @@ impl Network {
             }
         }
     }
-}
-
-/// `Http.action` surfaces the server message to the command handler. In
-/// particular `UnexpectedNetworkError.message` is the raw server message,
-/// even though its inherited constructor formats a longer description.
-async fn throw_for_action_status(response: Response) -> io::Result<Response> {
-    if response.status().is_success() {
-        return Ok(response);
-    }
-    let url = response.url().to_string();
-    let parsed: Value = response.json().await.unwrap_or(Value::Null);
-    let error = if parsed["error"]["code"].is_null() { &parsed } else { &parsed["error"] };
-    let message = error["message"]
-        .as_str()
-        .or_else(|| parsed["message"].as_str())
-        .unwrap_or("unknown error")
-        .to_owned();
-    let code = error["code"].as_u64();
-    Err(match code {
-        Some(127..=130) => remote_error(code, error, &url, message),
-        _ => io::Error::other(message),
-    })
 }
 
 /// `throwForNonOkStatus` with `remoteErrorHandler`'s messages.

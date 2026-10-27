@@ -88,6 +88,8 @@ jobs:
         run: cargo doc --locked --workspace --no-deps
       - name: Check that the e2e porting plan lists every e2e case
         run: node ../scripts/rust/e2e-port-plan.mjs --check
+      - name: Check the native runtime boundary census
+        run: node ../scripts/rust/native-boundaries.mjs --check
       - name: Check benchmark JSON and bitmap history validators
         run: |
           python3 ../scripts/rust/lane-restoration-benchmark-tests.py
@@ -207,7 +209,7 @@ jobs:
           - group: checkout
             filters: checkout_platform checkout_local checkout_callbacks checkout_policy checkout_selection reset_selection harmony::untag harmony::revert harmony::lane_adoption harmony::lane_restoration harmony::lane_graph_reset
           - group: transfer
-            filters: commands::import commands::export export_completion export_hub export_callbacks
+            filters: commands::import commands::export commands::resume_export export_completion export_hub export_callbacks
           - group: merge-history
             filters: merge_history merge_lifecycle merge_callbacks merge_policy merge_recovery
           - group: provisioning

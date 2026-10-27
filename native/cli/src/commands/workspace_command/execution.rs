@@ -40,6 +40,16 @@ pub fn execute_with_scope(
     })
 }
 
+/// Run command-owned scope work after starting its loader, without workspace history.
+pub fn execute_then_scope(
+    scope: &Path,
+    args: &[OsString],
+    command: &str,
+    work: impl FnOnce(&Output) -> io::Result<Report>,
+) -> io::Result<Outcome> {
+    execute_mode_at(scope, args, command, false, true, work)
+}
+
 /// An owned lane callback error uses the bare scope's loader without workspace history.
 pub fn execute_failure_scope(
     scope: &Path,
@@ -182,7 +192,7 @@ pub(in crate::commands) fn loader_output(chalk: Chalk, quiet: bool) -> Output {
     let ci = env::var_os("CI").is_some_and(|ci| !ci.is_empty());
     Output::new(chalk.enabled(), interactive, !disabled && !quiet, sink)
         .with_ci(ci)
-        .with_console(!quiet)
+        .with_console(!quiet && !disabled)
 }
 
 /// `runReportHandler`: the report and a newline; details are kept for `bit details`.

@@ -5,8 +5,15 @@ that process. Every other command runs the Node.js Bit CLI with the same
 arguments, terminal, environment and exit code. The Node.js CLI does not know
 this binary exists, so nothing outside `native/` has to change for it to work.
 
-The plan and milestones are tracked in
-[zkochan/bit#125](https://github.com/zkochan/bit/issues/125).
+The remaining implementation is tracked in
+[zkochan/bit#395](https://github.com/zkochan/bit/issues/395), following the earlier
+[#125](https://github.com/zkochan/bit/issues/125) milestones. Yarn support is excluded.
+
+This is still a hybrid CLI. A native dispatch can call the published Bit JavaScript
+host; a passing test or a command registration alone does not prove Rust ownership.
+The generated [runtime boundary census](rust/native-boundaries.md) locates source
+sites to audit alongside the command coverage table. Run
+`node scripts/rust/native-boundaries.mjs --check` to verify that census is current.
 
 ## Dispatch
 
@@ -256,7 +263,7 @@ Each host method is removed once its behavior is ported to Rust.
 | `publish <component-id>` with `-d` / `--dry-run`, `-j` / `--json`, `--allow-staged` | `bit-cli`, `bit-install`, `bit-object-import`: validates workspace presence, verifies local component existence, enforces non-staged version tags unless `--allow-staged`, checks `teambit.pkg/pkg` `publishConfig`/`packageJson.private` configuration, and renders `--allow-staged --dry-run` output (text or `--json`) | none | non-dry-run registry publishing or complex custom pkg aspect setups decline to the canonical pkg aspect |
 | `pack <component-id> [scope-path]` with `-d` / `--out-dir <dir>`, `-o` / `--override`, `-k` / `--keep`, `-p` / `--prefix`, `-j` / `--json` | `bit-cli`, `bit-install`, `bit-object-import`: resolves workspace or bare-scope components, packages `package/package.json` and component files into a `.tgz` tarball with SHA-1 checksum, enforces `--override` on existing tarballs, and renders text or `--json` output | none | missing component IDs or unknown flags decline to the canonical pkg aspect |
 | `update [package-patterns...]` / `up` with `-y` / `--yes`, `--patch`, `--minor`, `--major`, `--semver` | `bit-cli`, `bit-install`, `bit-workspace-config`: collects dependency policies from `workspace.jsonc`, root `package.json`, `variants`, `.bitmap`, and `component.json`, queries the configured npm registry for matching latest/semver/patch/minor/major versions with `-y` / `--yes`, updates dependency policies in place preserving comments, and runs native `bit install` | none | interactive `update` without `-y` / `--yes` or unknown flags decline before effects |
-| `resume-export <export-id> <remotes...>` | `bit-cli`, `bit-workspace-config`: validates workspace presence and required `<export-id>` and `<remotes...>` positional arguments before delegating pending export resumption | none | pending remote export resumption inside a workspace declines to the canonical exporter aspect |
+| `resume-export <export-id> <remotes...>` | Rust validates configured HTTP(S) remotes, persists sequentially with bounded retries, and owns `--delete` probing, confirmation, deletion, partial failures, and race reports in workspaces and bare scopes | Published package version metadata only; no JavaScript host or Node execution | File/custom-resolved remotes, configured startup callbacks, lane startup, and bitmap auto-sync decline before requests |
 | `run-action <action-name> <remote>` with `--payload <json>` | `bit-cli`, `bit-workspace-config`: validates workspace or bare-scope presence, required `<action-name>` and `<remote>` arguments, and `--payload` JSON syntax before delegating remote action dispatch | none | remote scope action execution declines to the canonical scope aspect |
 | `completion` | `bit-cli`: outputs the standard yargs bash/zsh tab-completion script (`###-begin-bit-completions-###` ... `###-end-bit-completions-###`) based on `$SHELL` / `$ZSH_NAME` | none | unknown flags decline before effects |
 | `server` with `-p` / `--port <port>`, `-u` / `--ui` | `bit-cli`, `bit-workspace-config`: validates workspace or bare-scope presence and `--port` numeric range before delegating GraphQL/HTTP server startup | none | active GraphQL/HTTP server sessions decline to the canonical express/graphql aspect |

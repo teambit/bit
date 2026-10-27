@@ -1,5 +1,8 @@
 //! Native `bit resume-export <export-id> <remotes...>` (`scopes/scope/export/resume-export.cmd.ts`).
 
+mod deletion;
+mod deletion_report;
+mod execute;
 #[cfg(test)]
 mod tests;
 
@@ -21,10 +24,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("resume-export arguments are not UTF-8".into()));
     };
-    if parse_options(&argv[1..]).is_none() {
+    let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native resume-export grammar".into()));
-    }
-    Ok(Outcome::Declined("resume-export execution delegated".into()))
+    };
+    execute::run(args, &options)
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
@@ -34,9 +37,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut force = false;
     for &arg in args {
         match arg {
-            "--no-color" => {}
-            "-d" | "--delete" => delete = true,
-            "-f" | "--force" => force = true,
+            "--delete" => delete = true,
+            "--force" => force = true,
             val if !val.starts_with('-') && !val.is_empty() => {
                 if export_id.is_none() {
                     export_id = Some(val.to_owned());

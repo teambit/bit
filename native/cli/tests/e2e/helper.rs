@@ -2,6 +2,7 @@
 //! directory holding the local workspace and the remote scopes, and runs `bit` from
 //! `native/` with the Node.js CLI behind it.
 
+pub(crate) mod action_server;
 pub(crate) mod config;
 pub(crate) mod remote;
 pub(crate) mod setup;

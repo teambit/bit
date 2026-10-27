@@ -19,6 +19,7 @@ path = "tests/e2e/main.rs"
 required-features = ["e2e"]
 
 [dependencies]
+indexmap = "2"
 bit-client-transfer = { path = "../client-transfer" }
 bit-dependency-scanner = { path = "../dependency-scanner" }
 bit-ignore = { path = "../ignore" }

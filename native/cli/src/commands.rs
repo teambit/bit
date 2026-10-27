@@ -73,6 +73,7 @@ mod recover;
 mod recovery;
 mod refactor;
 mod remote;
+mod remote_action;
 mod remote_resolution;
 mod remove;
 mod rename;
