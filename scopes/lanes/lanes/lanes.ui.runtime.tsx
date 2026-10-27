@@ -318,7 +318,6 @@ export class LanesUI {
       <LaneSwitcher
         groupByScope={this.lanesHost === 'workspace'}
         mainIcon={this.lanesHost === 'scope' ? mainIcon : undefined}
-        // @ts-ignore @todo - fix this
         useLanes={useLanes}
       />
     );

@@ -16,7 +16,6 @@ export function DocsContent({ docs = defaultDocs, ...rest }: DocsContentProps) {
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
 
   return (
-    // @ts-ignore - todo need to figure out what the issue is here
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       {Content.isMDXComponent ? (
         <MDXLayout {...rest}>

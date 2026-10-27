@@ -151,7 +151,6 @@ export default class SourceRepository {
     const isSnap = isHash(bitId.version);
     const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId._legacy.getVersion().versionNum}`;
     if (isSnap) {
-      // @ts-ignore
       const snap = await this.objects().load(new Ref(bitId.version));
       if (!snap) {
         logger.trace(`sources.get, ${msg} object was not found on the filesystem`);
@@ -159,7 +158,6 @@ export default class SourceRepository {
       }
       return returnComponent(snap as Version);
     }
-    // @ts-ignore
     if (!component.hasTagIncludeOrphaned(bitId.version)) {
       logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
       return undefined;

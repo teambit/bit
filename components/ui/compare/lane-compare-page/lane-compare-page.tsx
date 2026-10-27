@@ -25,7 +25,6 @@ export type LaneComparePageProps = {
 export function LaneComparePage({
   getLaneCompare,
   groupByScope = false,
-  // @ts-ignore TODO fix with luv.
   useLanes = defaultUseLanes,
   searchLanes,
   ...rest
@@ -99,7 +98,6 @@ export function LaneComparePage({
           </div>
           <div className={styles.baseSelectorContainer}>
             <LaneSelector
-              // @ts-ignore
               searchLanes={searchLanes}
               selectedLaneId={base.id}
               className={styles.baseSelector}

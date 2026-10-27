@@ -12,7 +12,6 @@ const GET_CORE_ASPECTS = gql`
 `;
 
 export function useCoreAspects(): CoreAspectIdByPackageName {
-  // @ts-ignore - remove once graphql versions are aligned (see #8753)
   const { data } = useDataQuery(GET_CORE_ASPECTS);
   return data?.coreAspects;
 }

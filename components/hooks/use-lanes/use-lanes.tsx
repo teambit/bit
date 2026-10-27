@@ -172,7 +172,6 @@ type UseRootLanes = (
 const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => {
   const { ids, offset, limit, sort } = options;
 
-  // @ts-ignore - remove once graphql versions are aligned (see #8753)
   const { data, fetchMore, loading } = useDataQuery<LanesQuery>(GET_LANES, {
     variables: {
       laneIds: ids,
@@ -261,7 +260,6 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => 
 };
 
 export const useSearchLanes: SearchLanes = (search, skip) => {
-  // @ts-ignore - remove once graphql versions are aligned (see #8753)
   const { data: searchData, loading: loadingSearch } = useDataQuery<LanesQuery>(GET_LANES, {
     variables: {
       search,

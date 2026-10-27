@@ -158,7 +158,6 @@ export class DependencyGraph {
     const idStr = id.toString();
     // save the full ComponentID of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
-    // @ts-ignore
     Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]: [string, ComponentIdList]) => {
       depIds.forEach((dependencyId) => {
         const depIdStr = dependencyId.toString();
