@@ -370,7 +370,6 @@ to move all component files to a different directory, run bit remove and then bi
         const relativeWrittenPath = component.writtenPath;
         // @ts-ignore relativeWrittenPath is set at this point
         const absoluteWrittenPath = this.consumer.toAbsolutePath(relativeWrittenPath);
-        // @ts-ignore this.writeToPath is set at this point
         const absoluteWriteToPath = path.resolve(writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
         if (relativeWrittenPath && absoluteWrittenPath !== absoluteWriteToPath) {
           // a component tracked at the workspace root is the workspace. moving it schedules the removal

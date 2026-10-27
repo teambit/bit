@@ -375,7 +375,6 @@ it was probably created on another lane and if so, consider removing this compon
       const remoteComponent: ModelComponent | null | undefined = await this._getRemoteComponent(currentId);
       // @todo-lanes: make it work with lanes. It needs to go through the objects one by one and check
       // whether one of the hashes exist.
-      // @ts-ignore version is set here
       if (remoteComponent && remoteComponent.hasTag(currentId.version)) {
         throw new ComponentsPendingImport([currentId.toString()]);
       }
