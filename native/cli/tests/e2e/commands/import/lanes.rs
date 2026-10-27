@@ -1,4 +1,5 @@
 //! Main and implicit lane fetches preserve fetch ordering and lane-first result ordering.
+mod cross_scope;
 use crate::helper::{Helper, config::read_jsonc};
 use std::{ffi::OsStr, fs};
 

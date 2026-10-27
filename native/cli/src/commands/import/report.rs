@@ -48,13 +48,17 @@ pub fn validate(value: &Value) -> io::Result<Receipt> {
         return Err(decline("native inbound receipt"));
     }
     let multi_lane = value["laneFetch"] == true && value["laneGroups"].is_array();
-    let (ids, imported) = imported_ids(rows, multi_lane)?;
+    let repeated_versions =
+        multi_lane || value["laneObjectImport"] == true && value["currentLane"].is_string();
+    let (ids, imported) = imported_ids(rows, repeated_versions)?;
     let mut seen = HashSet::new();
     let details = details
         .iter()
         .map(|row| {
             let detail = details_row(row)?;
-            if !imported.contains(&detail.id) || (!seen.insert(detail.id.clone()) && !multi_lane) {
+            if !imported.contains(&detail.id)
+                || (!seen.insert(detail.id.clone()) && !repeated_versions)
+            {
                 return Err(decline("native inbound details"));
             }
             Ok(detail)
@@ -173,7 +177,7 @@ impl Receipt {
         }
         let format = Formatter::new(chalk);
         let (items, up_to_date) = self.import_items(&format)?;
-        let prefix = match self.ids.len() {
+        let prefix = match unique_components(&self.ids) {
             1 => "successfully imported one component".to_string(),
             count => format!("successfully imported {count} components"),
         };
@@ -368,3 +372,10 @@ fn fetch_item(chalk: Chalk, id: &Id, details: &Details) -> String {
 
 #[cfg(test)]
 mod report_tests;
+
+fn unique_components(ids: &[String]) -> usize {
+    ids.iter()
+        .map(|id| id.rsplit_once('@').map_or(id.as_str(), |(identity, _)| identity))
+        .collect::<HashSet<_>>()
+        .len()
+}

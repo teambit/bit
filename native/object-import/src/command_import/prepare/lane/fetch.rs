@@ -81,9 +81,9 @@ impl PreparedImport {
             let target =
                 Target { scope: Some(scope.into()), name: name.into(), version: entry.head };
             if prefer_graph {
-                receive_prefer_graph(self, &directory, &target, &mut visited)?;
+                receive_prefer_graph(self, &directory, &id.scope, &target, &mut visited)?;
             } else {
-                receive_closure(self, &directory, &target, &mut visited)?;
+                receive_closure(self, &directory, &id.scope, &target, &mut visited)?;
             }
         }
         Ok(Record { hash, value, is_new: false })

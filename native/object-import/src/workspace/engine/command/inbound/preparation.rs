@@ -141,6 +141,9 @@ fn complete_receipt(
     }
     if let Some(lane) = remote::active_lane(&input.root)? {
         receipt["currentLane"] = json!(format!("{}/{}", lane.scope, lane.name));
+        if input.operation == "import" && input.ids.is_empty() && input.options.objects_only {
+            receipt["laneObjectImport"] = json!(true);
+        }
     }
     Ok(())
 }

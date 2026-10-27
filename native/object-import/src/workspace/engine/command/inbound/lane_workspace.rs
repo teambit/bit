@@ -3,13 +3,17 @@ use super::{Prepare, Target, config, identity, invalid, lanes, remote};
 use crate::command_import::{self, PreparedImport, Progress, VirtualRemote, lane};
 use std::{collections::HashMap, io};
 
+mod objects;
+
 pub(super) fn prepare(
     input: &Prepare,
     roots: &[Target],
     id: &lane::Id,
 ) -> io::Result<(Vec<Target>, PreparedImport)> {
-    if input.options.objects_only
-        || input.options.dependencies.import_dependencies
+    if input.options.objects_only {
+        return objects::prepare(input, roots, id);
+    }
+    if input.options.dependencies.import_dependencies
         || input.options.dependencies.import_head_dependencies
     {
         return Err(invalid("inbound lane workspace import mode"));

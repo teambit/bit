@@ -44,6 +44,9 @@ pub(super) fn prepare_into_with(
 }
 
 pub(super) fn local_preflight(root: &Path, options: &Options) -> io::Result<Preflight> {
+    if options.output.json && options.ids.is_empty() {
+        return Err(io::Error::other("released no-ID JSON import argument failure"));
+    }
     if options.validation_error().is_some() {
         return Ok(Preflight::Ready);
     }

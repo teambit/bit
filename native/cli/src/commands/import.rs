@@ -152,7 +152,7 @@ fn render_progress(planned: &Planned, options: &options::Options, output: &Outpu
             progress.render_inbound(
                 output,
                 options.operation == "fetch",
-                !options.ids.is_empty(),
+                !options.ids.is_empty() || planned.prepared["laneObjectImport"] == true,
                 options.write.dependencies.depth.is_some()
                     && (options.write.dependencies.import_head_dependencies
                         || options.ids

@@ -116,6 +116,7 @@ impl PreparedImport {
 fn receive_prefer_graph(
     plan: &mut PreparedImport,
     directory: &Path,
+    source: &str,
     target: &Target,
     visited: &mut HashSet<String>,
 ) -> io::Result<()> {
@@ -123,7 +124,7 @@ fn receive_prefer_graph(
     if !visited.insert(key.clone()) {
         return Ok(());
     }
-    let hash = receive_counted(plan, directory, target, key)?;
+    let hash = receive_counted(plan, directory, source, target, key)?;
     let version =
         super::read_version(plan, &hash)?.ok_or_else(|| invalid("lane fetched Version absent"))?;
     if super::dependencies::has_edges(plan, &version)? {
@@ -136,6 +137,7 @@ fn receive_prefer_graph(
         receive_closure(
             plan,
             directory,
+            source,
             &super::dependencies::dependency_target(dependency)?,
             visited,
         )?;
@@ -146,6 +148,7 @@ fn receive_prefer_graph(
 pub(super) fn receive_closure(
     plan: &mut PreparedImport,
     directory: &Path,
+    source: &str,
     target: &Target,
     visited: &mut HashSet<String>,
 ) -> io::Result<()> {
@@ -157,7 +160,7 @@ pub(super) fn receive_closure(
     if visited.len() > 4096 {
         return Err(invalid("lane import closure budget"));
     }
-    let hash = receive_counted(plan, directory, target, key)?;
+    let hash = receive_counted(plan, directory, source, target, key)?;
     let version =
         super::read_version(plan, &hash)?.ok_or_else(|| invalid("lane fetched Version absent"))?;
     for dependency in version["flattenedDependencies"]
@@ -166,7 +169,7 @@ pub(super) fn receive_closure(
     {
         let target = super::dependencies::dependency_target(dependency)?;
         if !local_version(plan, &target)? {
-            receive_closure(plan, directory, &target, visited)?;
+            receive_closure(plan, directory, source, &target, visited)?;
         }
     }
     Ok(())
@@ -179,6 +182,7 @@ pub(super) fn receive_closure(
 fn receive_counted(
     plan: &mut PreparedImport,
     directory: &Path,
+    source: &str,
     target: &Target,
     key: String,
 ) -> io::Result<String> {
@@ -197,7 +201,7 @@ fn receive_counted(
     if present {
         plan.cache.unbuilt.insert(key);
     }
-    receive(plan, directory, target, &incoming, &hash, true)?;
+    super::transfer::receive_lane(plan, directory, source, target, &incoming, &hash)?;
     if present {
         let row = plan.progress.last_mut().unwrap();
         (row.components, row.objects) = counted;

@@ -59,10 +59,10 @@ fn fixture(transitive: bool) -> Helper {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");
     helper.native("tag --skip-tests");
-    helper.native("export");
+    crate::helper::remote::publish(&helper);
     helper.native("lane create dev");
     helper.native("snap comp3 --skip-auto-snap --unmodified --skip-tests");
-    helper.native("export");
+    crate::helper::remote::publish(&helper);
     let remote = &helper.scopes.remote;
     helper.seed_hidden_update_dependent(&format!("{remote}/comp2"), &format!("{remote}/dev"));
     if transitive {

@@ -1,4 +1,5 @@
 //! `e2e/harmony/lanes/update-dependents-cascade-import.e2e.ts`.
+mod objects;
 
 use crate::helper::{Helper, parse};
 

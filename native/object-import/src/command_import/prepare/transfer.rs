@@ -15,6 +15,26 @@ pub(super) fn receive(
     receive_from(plan, directory, target, incoming, hash, include_history, true)
 }
 
+/// Lane transfers retain history but only their origin scope can refresh the main head.
+pub(super) fn receive_lane(
+    plan: &mut PreparedImport,
+    directory: &Path,
+    source: &str,
+    target: &Target,
+    incoming: &Value,
+    hash: &str,
+) -> io::Result<()> {
+    receive_from(
+        plan,
+        directory,
+        target,
+        incoming,
+        hash,
+        true,
+        target.scope.as_deref() == Some(source),
+    )
+}
+
 /// `receive` of a model that arrived from `directory` as a cached dependency
 /// of a component of another scope (`mergeOne` with `isIncomingFromOrigin`
 /// false): no remote head is recorded for it.

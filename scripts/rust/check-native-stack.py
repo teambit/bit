@@ -10,7 +10,7 @@ TESTS = [
     'commands::export::hidden_lane_update_dependent_exports_like_node',
     'commands::import::adoption::dependents::silent_dependents_imports_all_paths_to_the_workspace_without_unrelated_branches',
     'harmony::merge_policy::hidden_lane_merge_preserves_scope_configuration_without_workspace_files',
-    'harmony::merge_policy::hidden_pending::hidden_fast_forward_and_visible_merge_share_the_retained_snapshot_owner',
+    'harmony::merge_policy::hidden_pending::hidden_fast_forward_cascades_when_the_visible_merge_changes_its_older_dependency',
 ]
 
 

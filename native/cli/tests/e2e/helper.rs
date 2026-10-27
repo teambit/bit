@@ -63,23 +63,9 @@ impl Helper {
         let shared = setup::shared();
         let seed = self.scopes.e2e_dir.join(format!("{}-seed", random_str()));
         setup::copy_dir(&shared.bare_scope_template, &seed);
-        config::update_scope_json(&seed.join("scope.json"), |scope| {
-            scope.insert(
-                "name".into(),
-                json!(
-                    seed.file_name()
-                        .unwrap()
-                        .to_string_lossy()
-                ),
-            );
-            let mut remotes = serde_json::Map::new();
-            remotes.insert(
-                self.scopes.remote.clone(),
-                json!(format!("file://{}", self.scopes.remote_path.display())),
-            );
-            scope.insert("remotes".into(), Value::Object(remotes));
-        });
-        let _ = Self::cmd_in(&seed, &format!("fetch {lane_id} --lanes"));
+        self.configure_scope_seed(&seed);
+        let fetched = Self::cmd_in(&seed, &format!("fetch {lane_id} --lanes"));
+        assert!(fetched.status.success(), "{fetched:?}");
         let output = Command::new("node")
             .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/e2e/helper/snap_from_scope.js"))
             .arg(&shared.node_cli)
@@ -92,6 +78,30 @@ impl Helper {
             .output()
             .unwrap();
         assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+    }
+
+    fn configure_scope_seed(&self, seed: &Path) {
+        config::update_scope_json(&seed.join("scope.json"), |scope| {
+            scope.insert(
+                "name".into(),
+                json!(
+                    seed.file_name()
+                        .unwrap()
+                        .to_string_lossy()
+                ),
+            );
+            let workspace =
+                bit_object_import::scope_path(&self.scopes.local_path).join("scope.json");
+            let mut remotes = config::read_jsonc(&workspace)["remotes"]
+                .as_object()
+                .cloned()
+                .unwrap_or_default();
+            remotes.insert(
+                self.scopes.remote.clone(),
+                json!(format!("file://{}", self.scopes.remote_path.display())),
+            );
+            scope.insert("remotes".into(), Value::Object(remotes));
+        });
     }
 
     pub fn new() -> Self {

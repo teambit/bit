@@ -117,28 +117,50 @@ fn load(
     Ok((model, version))
 }
 fn fetch(plan: &mut PreparedImport, target: &Target, remotes: &Value) -> io::Result<String> {
-    let directory = remote(
-        plan,
-        remotes,
-        target.scope.as_deref().ok_or_else(|| invalid("import dependency scope"))?,
-    )?;
+    let source = plan.cache.lane_sources
+        .get(&identity(target)?)
+        .cloned()
+        .or_else(|| target.scope.clone())
+        .ok_or_else(|| invalid("import dependency scope"))?;
+    let directory = remote(plan, remotes, &source)?;
     let row = plan.progress.last_mut().ok_or_else(|| invalid("import progress phase"))?;
     row.ids.push(format!("{}@{}", identity(target)?, target.version));
-    row.objects.insert(object_hash(target.scope.as_deref().unwrap_or_default()));
+    row.objects.insert(object_hash(&source));
     let incoming = read_model(plan, &directory, target)?
         .ok_or_else(|| invalid("import missing remote model"))?;
     let hash = version_ref(&incoming, &target.version)?;
-    let remote_version = plan.capture
-        .object(&directory, &hash, "Version")?
-        .and_then(|record| record.value)
-        .ok_or_else(|| invalid("import remote dependency Version absent"))?;
-    if !plan.cache.only_if_built
-        || matches!(remote_version["buildStatus"].as_str(), Some("succeed" | "skipped"))
-    {
-        receive(plan, &directory, target, &incoming, &hash, false)?;
-    }
+    receive_fetched(plan, &directory, &source, target, &incoming, &hash)?;
     Ok(hash)
 }
+
+fn receive_fetched(
+    plan: &mut PreparedImport,
+    directory: &std::path::Path,
+    source: &str,
+    target: &Target,
+    incoming: &Value,
+    hash: &str,
+) -> io::Result<()> {
+    let version = plan.capture.object(directory, hash, "Version")?.and_then(|record| record.value);
+    let Some(version) = version else {
+        // A lane server may omit a tracked version absent from its cache that the client already has.
+        if plan.cache.only_if_built && read_version(plan, hash)?.is_some() {
+            return Ok(());
+        }
+        return Err(invalid("import remote dependency Version absent"));
+    };
+    if plan.cache.only_if_built
+        && !matches!(version["buildStatus"].as_str(), Some("succeed" | "skipped"))
+    {
+        return Ok(());
+    }
+    if target.scope.as_deref() == Some(source) {
+        receive(plan, directory, target, incoming, hash, false)
+    } else {
+        receive_dependency(plan, directory, target, incoming, hash)
+    }
+}
+
 pub(super) fn has_edges(plan: &mut PreparedImport, version: &Value) -> io::Result<bool> {
     // Canonical preferDependencyGraph stops dependency expansion at nonempty edges.
     if version["flattenedEdges"]

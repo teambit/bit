@@ -29,7 +29,7 @@ impl PreparedImport {
         });
         let mut visited = HashSet::new();
         for target in &remote_targets {
-            super::lane::receive_closure(self, &directory, target, &mut visited)?;
+            super::lane::receive_closure(self, &directory, &id.scope, target, &mut visited)?;
         }
         self.checkout_off_lane(&targets, &remote_targets, &remotes)?;
         super::prepare_dependencies(self, root, &targets.iter().collect::<Vec<_>>(), &remotes)?;
@@ -44,9 +44,13 @@ impl PreparedImport {
         hash: Option<&str>,
         bitmap: &[Target],
         all_history: bool,
+        fetch_dependencies: bool,
     ) -> io::Result<Vec<Target>> {
         let record = self.fetch_lane_contents_at_hash(id, hash)?;
         let remote_targets = lane_targets(&record.value)?;
+        for target in &remote_targets {
+            self.cache.lane_sources.insert(super::identity(target)?, id.scope.clone());
+        }
         let targets = seeds(&remote_targets, bitmap);
         let remotes = self.environment.remotes.clone();
         self.checkout_off_lane(&targets, &remote_targets, &remotes)?;
@@ -64,7 +68,11 @@ impl PreparedImport {
         if all_history {
             self.collect_lane_history(id, &remote_targets)?;
         }
-        super::prepare_dependencies(self, root, &targets.iter().collect::<Vec<_>>(), &remotes)?;
+        if fetch_dependencies {
+            self.prepare_lane_dependencies(root, &targets)?;
+        } else {
+            super::prepare_dependencies(self, root, &targets.iter().collect::<Vec<_>>(), &remotes)?;
+        }
         self.progress.last_mut().unwrap().requested = Some(targets.len());
         self.validate()?;
         Ok(targets)

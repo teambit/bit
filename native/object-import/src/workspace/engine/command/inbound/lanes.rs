@@ -159,6 +159,7 @@ fn receive_lanes(
                 hash.as_deref(),
                 &super::bitmap_targets(&input.root)?,
                 input.options.all_history,
+                false,
             )?
         } else {
             let targets =
