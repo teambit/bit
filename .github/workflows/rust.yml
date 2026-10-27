@@ -90,6 +90,8 @@ jobs:
         run: node ../scripts/rust/e2e-port-plan.mjs --check
       - name: Check the native runtime boundary census
         run: node ../scripts/rust/native-boundaries.mjs --check
+      - name: Check upstream onboarding assets
+        run: node ../scripts/rust/check-ci-scaffold.mjs
       - name: Check benchmark JSON and bitmap history validators
         run: |
           python3 ../scripts/rust/lane-restoration-benchmark-tests.py
@@ -215,7 +217,7 @@ jobs:
           - group: merge-history
             filters: merge_history merge_lifecycle merge_callbacks merge_policy merge_recovery
           - group: provisioning
-            filters: commands::init commands::lane harmony::config harmony::doctor harmony::install_compat harmony::lane_import_callbacks
+            filters: commands::init commands::lane harmony::config harmony::doctor harmony::install_compat harmony::lane_import_callbacks harmony::ci_sync::onboarding::native
           - group: stash
             filters: harmony::stash
           - group: tracking

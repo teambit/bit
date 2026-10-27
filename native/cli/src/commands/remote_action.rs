@@ -1,7 +1,8 @@
 //! Configured HTTP actions and native file pending-directory plans; preparation performs no remote requests.
+pub(super) mod startup;
+
 mod errors;
 mod file;
-mod startup;
 
 use super::workspace_command::{self, NodeCli, results::Report};
 use crate::{native::Outcome, workspace};

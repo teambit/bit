@@ -1,5 +1,6 @@
 //! Native `bit ci [verify|pr|merge|sync]` (`scopes/git/ci/ci.cmd.ts`).
 
+mod init;
 mod merge;
 mod pr;
 #[cfg(test)]
@@ -95,11 +96,18 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             }
             run_merge(&root, args, opts)
         }
-        Subcommand::Sync(opts) => match validate_sync_options(opts) {
-            Err(err_msg) => emit_subcommand_error(&root, args, &subcommand, &err_msg),
-            Ok(()) => Ok(Outcome::Declined("ci sync execution delegated".into())),
-        },
+        Subcommand::Sync(opts) => run_sync(&root, args, opts),
         _ => Ok(Outcome::Declined("ci subcommand execution delegated".into())),
+    }
+}
+
+fn run_sync(root: &Path, args: &[OsString], options: &SyncOptions) -> io::Result<Outcome> {
+    match validate_sync_options(options) {
+        Err(message) => {
+            emit_subcommand_error(root, args, &Subcommand::Sync(options.clone()), &message)
+        }
+        Ok(()) if options.init => init::run(root, args),
+        Ok(()) => Ok(Outcome::Declined("ci sync execution delegated".into())),
     }
 }
 

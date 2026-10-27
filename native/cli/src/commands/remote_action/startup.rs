@@ -4,7 +4,7 @@ use bit_workspace_config::parse_jsonc;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
-pub(super) fn supported(
+pub(in crate::commands) fn supported(
     workspace: Option<&Path>,
     scope: &Path,
     config: &Value,
