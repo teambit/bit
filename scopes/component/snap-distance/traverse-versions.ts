@@ -31,6 +31,21 @@ export type VersionInfo = {
   onLane: boolean;
 };
 
+export type VersionObjectsByHash = Map<string, Version>;
+
+/**
+ * index version objects by hash, the first object of a hash wins. a caller walking many components over the same
+ * version objects (e.g. the remote merge of an export) should index them once and pass the index.
+ */
+export function indexVersionObjects(versionObjects: Version[]): VersionObjectsByHash {
+  const versionObjectsByHash: VersionObjectsByHash = new Map();
+  versionObjects.forEach((v) => {
+    const hashStr = v.hash().toString();
+    if (!versionObjectsByHash.has(hashStr)) versionObjectsByHash.set(hashStr, v);
+  });
+  return versionObjectsByHash;
+}
+
 /**
  * by default it starts the traverse from the head or lane-head, unless "startFrom" is passed.
  * if versionObjects passed, use it instead of loading from the repo.
@@ -46,17 +61,19 @@ export async function getAllVersionsInfo({
   modelComponent: ModelComponent;
   repo?: Repository;
   throws?: boolean; // in case objects are missing
-  versionObjects?: Version[];
+  versionObjects?: Version[] | VersionObjectsByHash;
   startFrom?: Ref | null; // by default, start from the head
   stopAt?: Ref[] | null; // by default, stop when the parents is empty
 }): Promise<VersionInfo[]> {
   const results: VersionInfo[] = [];
   const processedHashes = new Set<string>();
+  const versionObjectsByHash =
+    versionObjects instanceof Map ? versionObjects : indexVersionObjects(versionObjects || []);
   const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
     if (!versionObjects && !repo) {
       throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
     }
-    const foundInVersionObjects = versionObjects?.find((v) => v.hash().isEqual(ref));
+    const foundInVersionObjects = versionObjectsByHash.get(ref.toString());
     if (foundInVersionObjects) return foundInVersionObjects;
     if (repo) return (await ref.load(repo)) as Version;
     return undefined;
@@ -74,7 +91,8 @@ export async function getAllVersionsInfo({
     parents: [],
     onLane: !foundOnMain,
   };
-  const shouldStop = (ref: Ref): boolean => Boolean(stopAt?.find((r) => r.isEqual(ref)));
+  const stopHashes = new Set((stopAt || []).map((r) => r.toString()));
+  const shouldStop = (ref: Ref): boolean => stopHashes.has(ref.toString());
   const head = await getVersionObj(laneHead);
   if (head) {
     if (shouldStop(head.hash())) {

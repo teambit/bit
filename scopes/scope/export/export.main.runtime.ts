@@ -539,12 +539,14 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
           .map((r) => r.refs)
           .flat()
           .map((ref) => ref.toString());
-        const existingOnRemote = await scope.scopeImporter.checkWhatHashesExistOnRemote(remoteNameStr, allHashesAsStr);
+        const existingOnRemote = new Set(
+          await scope.scopeImporter.checkWhatHashesExistOnRemote(remoteNameStr, allHashesAsStr)
+        );
         // for lanes, some snaps might be already on the remote, and the reason they're staged is due to a previous merge.
         const refsToExportPerComponent = refsToPotentialExportPerComponent.map(({ modelComponent, refs }) => {
           const filteredOutRefs: string[] = [];
           const refsToExport = refs.filter((ref) => {
-            const existing = existingOnRemote.includes(ref.toString());
+            const existing = existingOnRemote.has(ref.toString());
             if (existing) filteredOutRefs.push(ref.toString());
             return !existing;
           });
