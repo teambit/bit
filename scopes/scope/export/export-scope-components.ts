@@ -171,8 +171,9 @@ async function _updateVersionHistoryForVersionsWithOrigin(
       logger.error(`updateVersionHistoryIfNeeded, unable to find component for version ${version.hash().toString()}`);
       return;
     }
-    const versions = componentVersionMap.get(component) || [];
-    componentVersionMap.set(component, [...versions, version]);
+    const versions = componentVersionMap.get(component);
+    if (versions) versions.push(version);
+    else componentVersionMap.set(component, [version]);
   });
 
   const versionsHistory = await pMapPool(

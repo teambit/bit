@@ -52,11 +52,18 @@ export async function getAllVersionsInfo({
 }): Promise<VersionInfo[]> {
   const results: VersionInfo[] = [];
   const processedHashes = new Set<string>();
+  // index once. callers (e.g. the remote merge on export) may pass the versions of all exported components, and a
+  // linear search per visited version made the walk quadratic. the first object of a hash wins, as with `find`.
+  const versionObjectsByHash = new Map<string, Version>();
+  versionObjects?.forEach((v) => {
+    const hashStr = v.hash().toString();
+    if (!versionObjectsByHash.has(hashStr)) versionObjectsByHash.set(hashStr, v);
+  });
   const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
     if (!versionObjects && !repo) {
       throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
     }
-    const foundInVersionObjects = versionObjects?.find((v) => v.hash().isEqual(ref));
+    const foundInVersionObjects = versionObjectsByHash.get(ref.toString());
     if (foundInVersionObjects) return foundInVersionObjects;
     if (repo) return (await ref.load(repo)) as Version;
     return undefined;
@@ -74,7 +81,8 @@ export async function getAllVersionsInfo({
     parents: [],
     onLane: !foundOnMain,
   };
-  const shouldStop = (ref: Ref): boolean => Boolean(stopAt?.find((r) => r.isEqual(ref)));
+  const stopHashes = new Set((stopAt || []).map((r) => r.toString()));
+  const shouldStop = (ref: Ref): boolean => stopHashes.has(ref.toString());
   const head = await getVersionObj(laneHead);
   if (head) {
     if (shouldStop(head.hash())) {
