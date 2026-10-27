@@ -22,7 +22,7 @@ export type ComponentWithCollectOptions = {
 
 export class ObjectsReadableGenerator {
   public readable: Readable;
-  private pushed: string[] = [];
+  private pushed = new Set<string>();
   constructor(
     private repo: Repository,
     private callbackOnceDone: Function
@@ -65,13 +65,13 @@ export class ObjectsReadableGenerator {
   }
 
   private closeReadableSuccessfully() {
-    logger.debug(`ObjectsReadableGenerator, pushed ${this.pushed.length} objects`);
+    logger.debug(`ObjectsReadableGenerator, pushed ${this.pushed.size} objects`);
     this.callbackOnceDone();
     this.readable.push(null);
   }
 
   private closeReadableFailure(err: Error) {
-    logger.debug(`ObjectsReadableGenerator, pushed ${this.pushed.length} objects`);
+    logger.debug(`ObjectsReadableGenerator, pushed ${this.pushed.size} objects`);
     logger.error(`ObjectsReadableGenerator, got an error`, err);
     this.callbackOnceDone(err);
     this.readable.destroy(err);
@@ -103,12 +103,12 @@ export class ObjectsReadableGenerator {
 
   private push(obj: ObjectItem) {
     const hashStr = obj.ref.toString();
-    if (this.pushed.includes(hashStr)) {
+    if (this.pushed.has(hashStr)) {
       return;
     }
     logger.trace('ObjectsReadableGenerator.push', hashStr);
     this.readable.push(obj);
-    this.pushed.push(hashStr);
+    this.pushed.add(hashStr);
   }
   private pushManyObjects(objects: ObjectItem[]) {
     objects.map((obj) => this.push(obj));
@@ -124,12 +124,12 @@ export class ObjectsReadableGenerator {
     }
     const collectVersionObjects = async (ver: Version): Promise<ObjectItem[]> => {
       const versionRefs = ver.refsWithOptions(false, collectArtifacts);
-      const missingVersionRefs = versionRefs.filter((ref) => !this.pushed.includes(ref.toString()));
+      const missingVersionRefs = versionRefs.filter((ref) => !this.pushed.has(ref.toString()));
       const versionObjects = await ver.collectManyObjects(this.repo, missingVersionRefs);
       const versionData = { ref: ver.hash(), buffer: await ver.asRaw(this.repo), type: ver.getType() };
       return [...versionObjects, versionData];
     };
-    if (!this.pushed.includes(component.hash().toString())) {
+    if (!this.pushed.has(component.hash().toString())) {
       const componentData = {
         ref: component.hash(),
         buffer: await component.asRaw(this.repo),
