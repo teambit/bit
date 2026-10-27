@@ -1,4 +1,6 @@
 //! Export recovery protocol, failures and reports against the released CLI.
+mod file;
+
 use crate::helper::{
     Helper,
     action_server::{Request, Server},

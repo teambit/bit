@@ -22,7 +22,7 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
             continue;
         }
         names.push(name.clone());
-        match remote_action::prepare(&cwd, name, true) {
+        match remote_action::prepare(&cwd, name, true, options.delete) {
             Ok(Some(plan)) => plans.push(Arc::new(plan)),
             Ok(None) => {
                 return Ok(Outcome::Declined(
