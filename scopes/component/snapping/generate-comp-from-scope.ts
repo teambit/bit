@@ -1,3 +1,4 @@
+import type { ComponentIdList } from '@teambit/component-id';
 import { ComponentID } from '@teambit/component-id';
 import { Dependency, ConsumerComponent, CURRENT_SCHEMA } from '@teambit/legacy.consumer-component';
 import { SourceFile } from '@teambit/component.sources';
@@ -111,7 +112,8 @@ export async function addDeps(
   depsResolver: DependencyResolverMain,
   snapping: SnappingMain,
   autoDetect?: VariantPolicyConfigArr,
-  autoDetectOverrides?: DependenciesOverridesData
+  autoDetectOverrides?: DependenciesOverridesData,
+  workspaceComponentIds?: ComponentIdList
 ) {
   const newDeps = snapData.newDependencies || [];
   const updateDeps = snapData.dependencies || [];
@@ -186,7 +188,7 @@ export async function addDeps(
 
   // add the dependencies to the legacy ConsumerComponent object
   // it takes care of both: given dependencies (from the cli) and the overrides, which are coming from the env.
-  await deps.loadDependenciesFromScope(consumerComponent, dependenciesData, autoDetectOverrides);
+  await deps.loadDependenciesFromScope(consumerComponent, dependenciesData, autoDetectOverrides, workspaceComponentIds);
 
   await snapping.UpdateDepsAspectsSaveIntoDepsResolver(component, updateDeps);
 }

@@ -138,7 +138,7 @@ export type TagResults = BasicTagResults & {
 };
 
 export type BasicTagResults = {
-  warnings: string[];
+  warnings?: string[]; // not set by snap
   newComponents: ComponentIdList;
   removedComponents?: ComponentIdList;
   dependentsWithPinnedDeps?: DependentWithPinnedDeps[];
@@ -261,7 +261,7 @@ export class SnappingMain {
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(this.workspace);
     this.logger.setStatusLine('determine components to tag...');
-    const newComponents = await componentsList.listNewComponents();
+    const newComponents = (await componentsList.listNewComponents()) as ComponentIdList;
     const { bitIds, warnings } = await this.getComponentsToTag(
       unmodified,
       exactVersion,
@@ -335,7 +335,6 @@ export class SnappingMain {
 
     await consumer.onDestroy(`tag (message: ${message || 'N/A'})`);
     await stagedConfig?.write();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return tagResults;
   }
 
@@ -506,6 +505,9 @@ export class SnappingMain {
     await this.scope.import(componentIdsLatest, {
       preferDependencyGraph: false,
       lane,
+      // a seeder can be a hidden lane.updateDependents entry (e.g. re-running "snap updates"). its head is a
+      // cascade snap that lives only in the lane's scope, so it must be fetched from there and not from main.
+      includeUpdateDependents: true,
       reason: `seeders to snap`,
     });
     const getSnapData = (id: ComponentID): SnapDataParsed => {
@@ -558,6 +560,11 @@ export class SnappingMain {
     const components = [...existingComponents, ...newComponents];
 
     const autoDepsPerComp = new Map<Component, VariantPolicyConfigArr | undefined>();
+    // the components that a workspace of the lane has in its .bitmap, see ApplyOverrides.workspaceComponentIds.
+    // (not the update-dependents of the lane, which a workspace doesn't have)
+    const workspaceComponentIds = params.recalcDependencies
+      ? lane?.toComponentIds() || ComponentIdList.fromArray(allCompIds)
+      : undefined;
     const addDepsToComp = (component: Component, autoDetectOverrides?: DependenciesOverridesData) =>
       addDeps(
         component,
@@ -567,7 +574,8 @@ export class SnappingMain {
         this.dependencyResolver,
         this,
         autoDepsPerComp.get(component),
-        autoDetectOverrides
+        autoDetectOverrides,
+        workspaceComponentIds
       );
     // this must be done before we load component aspects later on, because this updated deps may update aspects.
     await pMapSeries(components, async (component) => {
@@ -780,7 +788,8 @@ export class SnappingMain {
       totalComponentsCount,
     } = await this.makeVersion(idsToSnap, components, makeVersionParams);
 
-    const snapResults: Partial<SnapResults> = {
+    const currentLane = consumer.getCurrentLaneId();
+    const snapResults: SnapResults = {
       snappedComponents: taggedComponents,
       autoSnappedResults: autoTaggedResults,
       dependentsWithPinnedDeps,
@@ -788,13 +797,10 @@ export class SnappingMain {
       removedComponents,
       totalComponentsCount,
       autoAddedWorkspaceRoot: findVersioned(taggedComponents, autoAddedWorkspaceRoot),
+      laneName: currentLane.isDefault() ? null : currentLane.toString(),
     };
-
-    const currentLane = consumer.getCurrentLaneId();
-    snapResults.laneName = currentLane.isDefault() ? null : currentLane.toString();
     await consumer.onDestroy(`snap (message: ${message || 'N/A'})`);
     await stagedConfig?.write();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return snapResults;
 
     async function getIdsToSnap(): Promise<ComponentIdList | null> {

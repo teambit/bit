@@ -186,8 +186,7 @@ edit the file to fix the error, or delete it and run "bit init" to recreate it`)
   }
 
   getPopulatedLicense(): Promise<string | null | undefined> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (!this.get('license') || !fs.existsSync(this.get('license'))) return Promise.resolve();
+    if (!this.get('license') || !fs.existsSync(this.get('license'))) return Promise.resolve(undefined);
     return fs.readFile(this.get('license')).then((license) => license.toString());
   }
 }

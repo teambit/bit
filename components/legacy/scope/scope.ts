@@ -593,8 +593,7 @@ once done, to continue working, please run "bit cc"`
     // Remove the version before hashing since hashing with the version number will result a wrong hash
     const idWithoutVersion = ComponentID.getStringWithoutVersion(id);
     const ref = Ref.from(BitObject.makeHash(idWithoutVersion));
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.objects.load(ref);
+    return this.objects.load(ref) as Promise<ModelComponent | Symlink>;
   }
 
   async getParsedId(id: BitIdStr): Promise<ComponentID> {
