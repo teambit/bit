@@ -1,32 +1,34 @@
 //! Native `bit gc` (`scopes/workspace/clear-cache/gc-cmd.ts`).
 
+mod bare;
 mod collector;
 mod format;
 mod graph;
 mod inventory;
+mod io_error;
+mod restore;
 #[cfg(test)]
 mod tests;
 
 use self::{
-    collector::collect_workspace_garbage,
+    collector::prepare_workspace_garbage,
     format::{GcResult, GcRunFlags, format_gc_report},
 };
 use super::{
     Command,
     color::Chalk,
     lane::scope_root::{self, ScopeRoot},
-    workspace_command::{self, format::Formatter, results::Report},
+    workspace_command::{self, results::Report},
 };
 use crate::{history::History, native::Outcome, workspace};
-use serde_json::{Value, json};
+use serde_json::Value;
 use std::{
     env,
     ffi::OsString,
     fs,
     io::{self, Write},
     path::Path,
-    process::{self, ExitCode},
-    time::{SystemTime, UNIX_EPOCH},
+    process::ExitCode,
 };
 
 pub const COMMAND: Command = Command { name: "gc", aliases: &[], run };
@@ -54,7 +56,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside native gc grammar".into()));
     };
     let cwd = env::current_dir()?;
-    let root_opt = scope_root::discover().ok().flatten();
+    let root_opt = match scope_root::discover() {
+        Ok(root) => root,
+        Err(error) => return Ok(Outcome::Declined(format!("gc scope preflight: {error}"))),
+    };
     if options.restore || options.restore_overwrite {
         return run_restore(&cwd, root_opt.as_ref(), args, &options);
     }
@@ -68,35 +73,72 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return emit_error(&cwd, None, args, options.json, NO_SCOPE_ERR);
     };
     if !root.bare {
-        return run_workspace_gc(&cwd, &root, args, &options);
+        return run_workspace_gc(&root, args, &options);
     }
-    Ok(Outcome::Declined("bare scope gc delegated".into()))
+    bare::run(&root.path, args, &options)
 }
 
-fn run_workspace_gc(
-    cwd: &Path,
-    root: &ScopeRoot,
-    args: &[OsString],
-    options: &Options,
-) -> io::Result<Outcome> {
+fn run_workspace_gc(root: &ScopeRoot, args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let scope_dir = workspace::scope_path(&root.path);
+    let index = match restore::workspace_index(&root.path, &scope_dir) {
+        Ok(index) => index,
+        Err(error) => {
+            return Ok(Outcome::Declined(format!("collection startup preflight: {error}")));
+        }
+    };
     if is_workspace_scope_empty(&scope_dir) {
         return run_empty_workspace_gc(root, args, options);
+    }
+    if cfg!(windows) {
+        return Ok(Outcome::Declined(
+            "Windows collection repository enumeration requires the published runtime".into(),
+        ));
     }
     if options.verbose {
         return Ok(Outcome::Declined("verbose gc with objects delegated".into()));
     }
-    match collect_workspace_garbage(&root.path, &scope_dir, options) {
-        Ok(Some(result)) if options.json => {
-            let payload = serde_json::to_value(&result).map_err(io::Error::other)?;
-            emit_json(root, args, &payload)
+    let plan = match prepare_workspace_garbage(&root.path, &scope_dir, options) {
+        Ok(Some(plan)) => plan,
+        Ok(None) => return Ok(Outcome::Declined("gc workspace config delegated".into())),
+        Err(error) => {
+            return Ok(Outcome::Declined(format!("workspace collection preflight: {error}")));
         }
-        Ok(Some(result)) => {
-            let chalk = Chalk::detect(args);
-            emit_report(root, args, format_gc_report(&result, chalk))
+    };
+    if let Err(error) = plan.validate(&scope_dir) {
+        return Ok(Outcome::Declined(error.to_string()));
+    }
+    execute_workspace_gc(root, args, options, &plan, index)
+}
+
+fn execute_workspace_gc(
+    root: &ScopeRoot,
+    args: &[OsString],
+    options: &Options,
+    plan: &collector::Plan,
+    index: Option<Vec<u8>>,
+) -> io::Result<Outcome> {
+    let scope_dir = workspace::scope_path(&root.path);
+    let chalk = Chalk::detect(args);
+    let data = if options.json {
+        serde_json::to_string_pretty(&plan.result)?
+    } else {
+        format_gc_report(&plan.result, chalk)
+    };
+    let work = |_: &bit_install::output::Output| {
+        if let Some(bytes) = index {
+            let path = scope_dir.join("index.json");
+            fs::write(&path, bytes)
+                .map_err(|error| {
+                    io_error::report(&io_error::failure(error, "open", &path), chalk)
+                })?;
         }
-        Ok(None) => Ok(Outcome::Declined("gc workspace config delegated".into())),
-        Err(msg) => emit_error(cwd, Some(root), args, options.json, &msg),
+        plan.execute(&scope_dir).map_err(|error| io_error::report(&error, chalk))?;
+        Ok(Report { data, code: 0, details: None })
+    };
+    if options.json {
+        workspace_command::execute_json(&root.path, args, "gc", work)
+    } else {
+        workspace_command::execute_then(&root.path, args, "gc", work)
     }
 }
 
@@ -146,81 +188,10 @@ fn run_restore(
     let Some(root) = root_opt else {
         return emit_error(cwd, None, args, options.json, NO_SCOPE_ERR);
     };
-    let scope_dir = if root.bare { root.path.clone() } else { workspace::scope_path(&root.path) };
-    match restore_deleted_objects(&scope_dir, options.restore_overwrite) {
-        Ok(()) if options.json => emit_json(root, args, &json!({ "restored": true })),
-        Ok(()) => {
-            let chalk = Chalk::detect(args);
-            let data = Formatter::new(chalk)
-                .success_summary("restored the objects from the backup directory");
-            emit_report(root, args, data)
-        }
-        Err(msg) => emit_error(cwd, Some(root), args, options.json, &msg),
+    if root.bare {
+        return bare::restore(&root.path, args, options);
     }
-}
-
-pub(super) fn restore_deleted_objects(scope_dir: &Path, overwrite: bool) -> Result<(), String> {
-    let deleted_dir = scope_dir.join("deleted-objects");
-    let mut candidates = find_restoring_leftovers(scope_dir);
-    candidates.push("deleted-objects".into());
-    let mut staged = Vec::new();
-    let now_ms = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis();
-    let pid = process::id();
-    for dir in candidates {
-        let claimed = format!("deleted-objects.restoring-{now_ms}-{pid}-{}", staged.len());
-        if fs::rename(scope_dir.join(&dir), scope_dir.join(&claimed)).is_ok() {
-            staged.push(claimed);
-        }
-    }
-    if staged.is_empty() {
-        return Err(format!(
-            "there is nothing to restore, \"{}\" doesn't exist.\nit is only created by a garbage collection that ran with --backup",
-            deleted_dir.display(),
-        ));
-    }
-    let objects_dir = scope_dir.join("objects");
-    for staging in staged {
-        let src = scope_dir.join(&staging);
-        if let Err(err) = copy_dir_recursive(&src, &objects_dir, overwrite) {
-            if !deleted_dir.exists() {
-                let _ = fs::rename(&src, &deleted_dir);
-            }
-            return Err(err.to_string());
-        }
-        let _ = fs::remove_dir_all(&src);
-    }
-    Ok(())
-}
-
-fn find_restoring_leftovers(scope_dir: &Path) -> Vec<String> {
-    let Ok(entries) = fs::read_dir(scope_dir) else {
-        return Vec::new();
-    };
-    let mut names = entries
-        .filter_map(Result::ok)
-        .filter_map(|entry| entry.file_name().into_string().ok())
-        .filter(|name| name.starts_with("deleted-objects.restoring-"))
-        .collect::<Vec<_>>();
-    names.sort();
-    names
-}
-
-fn copy_dir_recursive(src: &Path, dst: &Path, overwrite: bool) -> io::Result<()> {
-    fs::create_dir_all(dst)?;
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let src_path = entry.path();
-        let dst_path = dst.join(entry.file_name());
-        if src_path.is_dir() {
-            copy_dir_recursive(&src_path, &dst_path, overwrite)?;
-        } else if overwrite || !dst_path.exists() {
-            fs::copy(&src_path, &dst_path)?;
-        }
-    }
-    Ok(())
+    restore::workspace(&root.path, args, options)
 }
 
 fn is_workspace_scope_empty(scope_dir: &Path) -> bool {

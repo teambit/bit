@@ -7,8 +7,17 @@ use std::{io, path::Path};
 /// malformed headers, compressed data and over-budget objects are errors. Source
 /// bodies are never projected into the diagnostic JSON metadata.
 pub fn read_scope_object(scope: &Path, identity: &str) -> io::Result<Option<(String, Value)>> {
+    read_object_directory(&scope.join("objects"), identity)
+}
+
+/// Decode metadata from a repository object directory, including its trash or pending directory.
+/// Missing objects return `None`; the normal repository size and header checks still apply.
+pub fn read_object_directory(
+    directory: &Path,
+    identity: &str,
+) -> io::Result<Option<(String, Value)>> {
     let hash = merge_history::hash(identity)?;
-    let raw = match repository::read(&scope.join("objects"), hash, 32 * 1024 * 1024, &mut 0) {
+    let raw = match repository::read(directory, hash, 32 * 1024 * 1024, &mut 0) {
         Ok(raw) => raw,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error),

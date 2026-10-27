@@ -1,4 +1,6 @@
 //! Command-owned publication, report output, and history after preflight.
+pub use error::with_error_details;
+mod error;
 use super::{Report, cache};
 use crate::{commands::color::Chalk, history::History, native::Outcome};
 use bit_install::output::Output;
@@ -85,6 +87,16 @@ pub fn execute_json(
     execute_mode(root, args, command, true, false, work)
 }
 
+/// A bare-scope JSON handler owns its effects without writing workspace command history.
+pub fn execute_json_scope(
+    scope: &Path,
+    args: &[OsString],
+    command: &str,
+    work: impl FnOnce(&Output) -> io::Result<Report>,
+) -> io::Result<Outcome> {
+    execute_mode_at(scope, args, command, true, false, work)
+}
+
 /// A text command whose registry has no loader; callback console output remains visible.
 pub fn execute_without_loader(
     root: &Path,
@@ -152,7 +164,7 @@ fn execute_mode_impl(
             if let Some(history) = &history {
                 history.end(false);
             }
-            eprintln!("{}", chalk.red(&error.to_string()));
+            self::error::print(&error, chalk);
             return Ok(Outcome::Exit(ExitCode::FAILURE));
         }
     };

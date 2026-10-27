@@ -1,10 +1,10 @@
 use super::{
     Options,
-    collector::collect_with_workspace_ids,
-    format::{format_bytes, format_gc_report},
+    collector::prepare_with_workspace_ids,
+    format::{GcResult, format_bytes, format_gc_report},
     format_empty_gc_report,
     graph::CompIdSpec,
-    parse_keep_versions, parse_options, restore_deleted_objects,
+    parse_keep_versions, parse_options, restore,
 };
 use crate::commands::color::Chalk;
 use flate2::{Compression, write::ZlibEncoder};
@@ -177,4 +177,21 @@ fn collects_unreachable_versions_and_sources() {
     assert!(backup_res.flags.backup_dir.is_some());
     let report = format_gc_report(&backup_res, Chalk::new(false));
     assert!(report.contains("moved 2 objects"));
+}
+
+fn collect_with_workspace_ids(
+    scope: &Path,
+    ids: &[CompIdSpec],
+    options: &Options,
+) -> Result<GcResult, String> {
+    let plan = prepare_with_workspace_ids(scope, ids, options)?;
+    plan.execute(scope).map_err(|error| error.to_string())?;
+    Ok(plan.result)
+}
+fn restore_deleted_objects(scope: &Path, overwrite: bool) -> Result<(), String> {
+    restore::run(scope, overwrite)
+        .map_err(|error| match error {
+            restore::Error::Missing(message) => message,
+            restore::Error::Filesystem(error) => error.to_string(),
+        })
 }

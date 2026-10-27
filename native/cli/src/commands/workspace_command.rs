@@ -18,8 +18,9 @@ pub mod versions;
 
 pub(in crate::commands) use execution::loader_output;
 pub use execution::{
-    execute_failure_scope, execute_json, execute_then, execute_then_scope, execute_with,
-    execute_with_scope, execute_without_loader, execute_without_loader_scope,
+    execute_failure_scope, execute_json, execute_json_scope, execute_then, execute_then_scope,
+    execute_with, execute_with_scope, execute_without_loader, execute_without_loader_scope,
+    with_error_details,
 };
 pub use snapshot::receipt::NodeCli;
 pub(crate) use snapshot::receipt::{User, uuid_v4};

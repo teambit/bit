@@ -12,6 +12,8 @@ mod config;
 mod delete;
 mod diff;
 mod export;
+#[cfg(unix)]
+mod gc;
 mod import;
 mod import_all;
 mod init;

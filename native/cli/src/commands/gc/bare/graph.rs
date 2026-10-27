@@ -1,0 +1,227 @@
+//! `collectGarbage`: retain full local/lane history and only the requested flattened dependency versions.
+use super::repository::{self, Object, digest, identity, strings, text, unsupported};
+use indexmap::IndexSet;
+use serde_json::Value;
+use std::{
+    collections::{BTreeMap, HashSet, VecDeque},
+    io,
+    path::Path,
+};
+
+pub(super) struct Collector<'a> {
+    scope: &'a Path,
+    name: &'a str,
+    objects: &'a BTreeMap<String, Object>,
+    lanes: Vec<(String, &'a Value)>,
+    retained: HashSet<String>,
+    dependencies: IndexSet<String>,
+    pub logs: Vec<String>,
+}
+impl<'a> Collector<'a> {
+    pub(super) fn new(
+        scope: &'a Path,
+        name: &'a str,
+        objects: &'a BTreeMap<String, Object>,
+        trash: &'a BTreeMap<String, Object>,
+    ) -> Self {
+        let lanes = objects
+            .iter()
+            .chain(trash)
+            .filter(|(_, object)| object.kind == "Lane")
+            .map(|(hash, object)| (hash.clone(), &object.value))
+            .collect();
+        Self {
+            scope,
+            name,
+            objects,
+            lanes,
+            retained: HashSet::new(),
+            dependencies: IndexSet::new(),
+            logs: Vec::new(),
+        }
+    }
+    pub(super) fn plan(&mut self) -> io::Result<Vec<String>> {
+        self.local_components()?;
+        self.logs.push(format!(
+            "[*] completed processing local components. total {} refs in the white list",
+            self.retained.len(),
+        ));
+        self.foreign_lanes()?;
+        self.logs.push(format!(
+            "[*] completed processing lanes. total {} refs in the white list",
+            self.retained.len(),
+        ));
+        self.logs.push(format!(
+            "[*] start processing {} flattened dependencies",
+            self.dependencies.len(),
+        ));
+        for dependency in self.dependencies.clone() {
+            self.dependency(&dependency)?;
+        }
+        self.logs.push(format!(
+            "[*] completed processing {} flattened dependencies. total {} refs in the white list",
+            self.dependencies.len(),
+            self.retained.len(),
+        ));
+        Ok(self.objects
+            .keys()
+            .filter(|hash| !self.retained.contains(*hash))
+            .cloned()
+            .collect())
+    }
+    fn local_components(&mut self) -> io::Result<()> {
+        for object in self.objects.values() {
+            match object.kind.as_str() {
+                "ScopeMeta" => {
+                    self.retained.insert(digest(text(&object.value["name"])?));
+                }
+                "Component" if object.value["scope"] == self.name => {
+                    let component = &object.value;
+                    self.component(component, component["head"].as_str(), true)?;
+                    for head in strings(&component["detachedHeads"]["heads"])? {
+                        self.component(component, Some(&head), true)?;
+                    }
+                }
+                _ => {}
+            }
+        }
+        Ok(())
+    }
+    fn component(&mut self, component: &Value, head: Option<&str>, local: bool) -> io::Result<()> {
+        let id = identity(component)?;
+        self.retained.insert(digest(&id));
+        self.retained.insert(digest(&format!("{id}:VersionHistory")));
+        if let Some(head) = head {
+            self.history(head, !local)?;
+        }
+        if local {
+            for head in self.local_lane_heads(&id)? {
+                self.history(&head, true)?;
+            }
+        }
+        Ok(())
+    }
+    fn local_lane_heads(&self, id: &str) -> io::Result<Vec<String>> {
+        let mut heads = Vec::new();
+        for (hash, lane) in &self.lanes {
+            if !self.objects.contains_key(hash) {
+                continue;
+            }
+            heads.extend(
+                lane_entries(lane)?
+                    .into_iter()
+                    .find(|(key, _)| key == id)
+                    .map(|(_, head)| head),
+            );
+        }
+        Ok(heads)
+    }
+    fn history(&mut self, head: &str, tolerate_missing: bool) -> io::Result<()> {
+        let mut queue = VecDeque::from([head.to_owned()]);
+        let mut seen = HashSet::new();
+        while let Some(hash) = queue.pop_front() {
+            if !seen.insert(hash.clone()) {
+                continue;
+            }
+            let Some(object) = self.objects.get(&hash) else {
+                if tolerate_missing {
+                    continue;
+                }
+                return Err(unsupported("incomplete version ancestry"));
+            };
+            if object.kind != "Version" {
+                return Err(unsupported("non-version ancestry object"));
+            }
+            self.version(&hash, &object.value);
+            queue.extend(strings(&object.value["parents"])?);
+            self.dependencies.extend(flattened(self.scope, &object.value)?);
+        }
+        Ok(())
+    }
+    fn version(&mut self, hash: &str, version: &Value) {
+        self.retained.insert(hash.to_owned());
+        self.retained.extend(super::super::graph::version_refs_without_parents(version));
+    }
+    fn foreign_lanes(&mut self) -> io::Result<()> {
+        let mut foreign = IndexSet::new();
+        for (hash, lane) in &self.lanes {
+            self.retained.insert(hash.clone());
+            self.retained.insert(digest(&format!("{hash}:LaneHistory")));
+            for (id, head) in lane_entries(lane)? {
+                if !id.starts_with(&format!("{}/", self.name)) {
+                    foreign.insert((id, head));
+                }
+            }
+        }
+        self.logs.push(format!("[*] total {} components inside lanes", foreign.len()));
+        for (id, head) in foreign {
+            if let Some(object) = repository::model(self.objects, &id)? {
+                self.component(&object.value, Some(&head), false)?;
+            }
+        }
+        Ok(())
+    }
+    fn dependency(&mut self, id: &str) -> io::Result<()> {
+        let (id, version) =
+            id.rsplit_once('@').ok_or_else(|| unsupported("unversioned flattened dependency"))?;
+        let Some(model) = repository::model(self.objects, id)? else {
+            return Ok(());
+        };
+        self.retained.insert(digest(&identity(&model.value)?));
+        let target = if repository::hash(version) {
+            Some(version)
+        } else {
+            model.value["versions"][version]
+                .as_str()
+                .or_else(|| model.value["orphanedVersions"][version].as_str())
+        };
+        if let Some(target) = target
+            && let Some(object) = self.objects.get(target)
+        {
+            if object.kind != "Version" {
+                return Err(unsupported("dependency version reference has a non-version object"));
+            }
+            self.version(target, &object.value);
+        }
+        Ok(())
+    }
+}
+fn lane_entries(lane: &Value) -> io::Result<Vec<(String, String)>> {
+    let mut result = Vec::new();
+    for component in
+        lane["components"].as_array().ok_or_else(|| unsupported("lane component list"))?
+    {
+        result.push((identity(&component["id"])?, text(&component["head"])?.to_owned()));
+    }
+    for id in strings(&lane["updateDependents"])? {
+        let (id, head) = id.rsplit_once('@').ok_or_else(|| unsupported("hidden lane identity"))?;
+        result.push((id.to_owned(), head.to_owned()));
+    }
+    Ok(result)
+}
+fn flattened(scope: &Path, version: &Value) -> io::Result<Vec<String>> {
+    if let Some(hash) = version["flattenedDependenciesRef"].as_str() {
+        let (_, bytes) = bit_object_import::read_raw_scope_object(scope, hash)?
+            .ok_or_else(|| unsupported("flattened dependency object missing"))?;
+        return flattened_values(&serde_json::from_slice::<Value>(&bytes)?);
+    }
+    let mut result = flattened_values(&version["flattenedDependencies"])?;
+    result.extend(flattened_values(&version["flattenedDevDependencies"])?);
+    Ok(result)
+}
+fn flattened_values(value: &Value) -> io::Result<Vec<String>> {
+    if value.is_null() {
+        return Ok(Vec::new());
+    }
+    value
+        .as_array()
+        .ok_or_else(|| unsupported("flattened dependency array"))?
+        .iter()
+        .map(|value| {
+            if let Some(value) = value.as_str() {
+                return Ok(value.to_owned());
+            }
+            Ok(format!("{}@{}", identity(value)?, text(&value["version"])?))
+        })
+        .collect()
+}

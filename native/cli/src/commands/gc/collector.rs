@@ -1,4 +1,5 @@
-//! Garbage collection root seeding and sweep for `bit gc`.
+//! Garbage collection root seeding and a write-free plan for `bit gc`.
+mod publication;
 
 use super::{
     Options,
@@ -13,40 +14,57 @@ use serde_json::Value;
 use std::{
     collections::{BTreeMap, HashSet},
     fs,
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 const RECENT_WRITE_MARGIN_MS: u64 = 5 * 60 * 1000;
 
 type CompHeadList = Vec<(String, String)>;
 
-pub(super) fn collect_workspace_garbage(
+pub(super) struct Plan {
+    pub result: GcResult,
+    versions: Vec<String>,
+    sources: Vec<String>,
+    stray: Vec<PathBuf>,
+}
+
+pub(super) fn prepare_workspace_garbage(
     root: &Path,
     scope_dir: &Path,
     options: &Options,
-) -> Result<Option<GcResult>, String> {
+) -> Result<Option<Plan>, String> {
     let Some(workspace_ids) = load_workspace_ids(root) else {
         return Ok(None);
     };
-    collect_with_workspace_ids(scope_dir, &workspace_ids, options).map(Some)
+    prepare_with_workspace_ids(scope_dir, &workspace_ids, options).map(Some)
 }
 
-pub(super) fn collect_with_workspace_ids(
+pub(super) fn prepare_with_workspace_ids(
     scope_dir: &Path,
     workspace_ids: &[CompIdSpec],
     options: &Options,
-) -> Result<GcResult, String> {
+) -> Result<Plan, String> {
     let keep_versions = options.keep_versions
         .as_deref()
         .and_then(parse_keep_versions)
         .unwrap_or(0);
     let keep_limit = usize::try_from(keep_versions).unwrap_or(usize::MAX);
     let inv = load_scope_inventory(scope_dir)?;
+    if inv.objects
+        .iter()
+        .any(|object| {
+            object.kind == "Symlink"
+                || (object.kind == "Component"
+                    && crate::commands::status::js::truthy(object.value.get("box")))
+        })
+    {
+        return Err("legacy workspace component resolution requires the published runtime".into());
+    }
     let settled_before = inv.started_at_ms.saturating_sub(RECENT_WRITE_MARGIN_MS);
     let mut graph = GcGraph::new(&inv);
     populate_roots(&mut graph, &inv, workspace_ids, settled_before, keep_limit);
     let kept = graph.expand_referenced(scope_dir);
-    sweep_and_build_result(scope_dir, &inv, &graph, &kept, (options, settled_before))
+    Ok(plan_result(scope_dir, &inv, &graph, &kept, (options, settled_before)))
 }
 
 fn load_workspace_ids(root: &Path) -> Option<Vec<CompIdSpec>> {
@@ -234,25 +252,16 @@ fn seed_history_entry(graph: &mut GcGraph, entry: &Value) {
     }
 }
 
-fn sweep_and_build_result(
+fn plan_result(
     scope_dir: &Path,
     inv: &ScopeInventory,
     graph: &GcGraph,
     kept: &HashSet<String>,
     ctx: (&Options, u64),
-) -> Result<GcResult, String> {
+) -> Plan {
     let (options, settled_before) = ctx;
     let (ver_to_delete, src_to_delete, deleted) =
         collect_deletable_objects(&inv.objects, kept, settled_before);
-    if !options.dry_run {
-        for stray_path in &inv.stray_files.paths {
-            let _ = fs::remove_file(stray_path);
-        }
-        if deleted.objects > 0 {
-            apply_object_deletion(scope_dir, &ver_to_delete, options.backup)?;
-            apply_object_deletion(scope_dir, &src_to_delete, options.backup)?;
-        }
-    }
     let backup_dir = (options.backup && !options.dry_run && deleted.objects > 0).then(|| {
         scope_dir
             .join("deleted-objects")
@@ -263,7 +272,7 @@ fn sweep_and_build_result(
         .iter()
         .map(|obj| obj.size)
         .sum();
-    Ok(GcResult {
+    let result = GcResult {
         flags: GcRunFlags { dry_run: options.dry_run, backup: options.backup, backup_dir },
         total_objects: inv.objects.len(),
         total_size: total_objects_size
@@ -278,7 +287,13 @@ fn sweep_and_build_result(
             backup_dir_size: inv.backup_dir_size,
             retained_dirs_size: inv.retained_dirs_size,
         },
-    })
+    };
+    Plan {
+        result,
+        versions: ver_to_delete,
+        sources: src_to_delete,
+        stray: inv.stray_files.paths.clone(),
+    }
 }
 
 fn collect_deletable_objects(
@@ -313,24 +328,6 @@ fn collect_deletable_objects(
         src_to_delete,
         GcDeletionStats { objects: deleted_objects, size: deleted_size, by_type: deleted_by_type },
     )
-}
-
-fn apply_object_deletion(scope_dir: &Path, hashes: &[String], backup: bool) -> Result<(), String> {
-    let objects_dir = scope_dir.join("objects");
-    let backup_dir = scope_dir.join("deleted-objects");
-    for hash in hashes {
-        let src = objects_dir
-            .join(&hash[..2])
-            .join(&hash[2..]);
-        if backup {
-            let dst_bucket = backup_dir.join(&hash[..2]);
-            fs::create_dir_all(&dst_bucket).map_err(|err| err.to_string())?;
-            fs::rename(&src, dst_bucket.join(&hash[2..])).map_err(|err| err.to_string())?;
-        } else {
-            let _ = fs::remove_file(&src);
-        }
-    }
-    Ok(())
 }
 
 fn lane_component_refs(lane_val: &Value) -> CompHeadList {

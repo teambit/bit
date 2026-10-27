@@ -8,9 +8,9 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase")]
 pub(super) struct GcRunFlags {
     pub dry_run: bool,
-    pub backup: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub backup_dir: Option<String>,
+    pub backup: bool,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]

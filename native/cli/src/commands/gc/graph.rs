@@ -307,7 +307,7 @@ fn version_parents(ver_val: &Value) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn version_refs_without_parents(ver_val: &Value) -> Vec<String> {
+pub(super) fn version_refs_without_parents(ver_val: &Value) -> Vec<String> {
     let mut refs = Vec::new();
     collect_file_refs(&ver_val["files"], &mut refs);
     if let Some(exts) = ver_val["extensions"].as_array() {
