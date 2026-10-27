@@ -27,8 +27,7 @@ describe('Consumer', function () {
     let consumer;
     before(() => {
       sandbox = sinon.createSandbox();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      consumer = getConsumerInstance(sandbox);
+      consumer = getConsumerInstance();
     });
     after(() => {
       sandbox.restore();

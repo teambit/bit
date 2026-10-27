@@ -135,7 +135,7 @@ export class StatusMain {
     const importPendingComponents = allInvalidComponents
       .filter((c) => c.err instanceof ComponentsPendingImport)
       .map((i) => i.id);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error `error` does not exist on the type (the property is `err`), so this filter currently keeps everything. fixing it would change the status output.
     const invalidComponents = allInvalidComponents.filter((c) => !(c.error instanceof ComponentsPendingImport));
     const divergeInvalid = await this.divergeDataErrorsToInvalidComp(allComps);
     invalidComponents.push(...divergeInvalid);

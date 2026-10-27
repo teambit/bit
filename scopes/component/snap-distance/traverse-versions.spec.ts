@@ -93,7 +93,10 @@ describe('getAllVersionParents', () => {
       heads: [ref(1)],
       throws: true,
     });
-    const error = await promise.then(() => undefined, (err: Error) => err);
+    const error = await promise.then(
+      () => undefined,
+      (err: Error) => err
+    );
     expect(error?.message).to.equal('missing version');
   });
 
@@ -118,7 +121,10 @@ describe('getAllVersionParents', () => {
       heads: [ref(2)],
       versionParentsFromObjects: [item(10, [9])],
     });
-    const error = await promise.then(() => undefined, (err: Error) => err);
+    const error = await promise.then(
+      () => undefined,
+      (err: Error) => err
+    );
     expect(error?.message).to.include('unable to get the full history of "acme.ui/button"');
     expect(error?.message).to.include(`missing snaps: ${hash(9)}`);
     // the first run with the head, the retry with the head and the missing parent

@@ -262,8 +262,7 @@ export class PackageJsonFile {
   }
 
   clone(): PackageJsonFile {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const clone = new PackageJsonFile(this);
+    const clone = new PackageJsonFile(this as ConstructorParameters<typeof PackageJsonFile>[0]);
     clone.packageJsonObject = cloneDeep(this.packageJsonObject);
     return clone;
   }
