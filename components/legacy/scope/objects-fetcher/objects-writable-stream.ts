@@ -1,7 +1,7 @@
 import { Writable } from 'stream';
 import { logger } from '@teambit/legacy.logger';
-import type { ObjectItem, Repository } from '@teambit/objects';
-import { BitObject, Lane, LaneHistory, ModelComponent, Version, VersionHistory } from '@teambit/objects';
+import type { ObjectItem, Repository, RawObjectsMap } from '@teambit/objects';
+import { BitObject, Lane, LaneHistory, ModelComponent, Source, Version, VersionHistory } from '@teambit/objects';
 import type { WriteObjectsQueue } from './write-objects-queue';
 import type { ComponentsPerRemote } from '../component-ops/multiple-component-merger';
 
@@ -62,7 +62,7 @@ export class ObjectsWritable extends Writable {
   }
 
   private async writeObjectToFs(obj: ObjectItem) {
-    const bitObject = await BitObject.parseObject(obj.buffer);
+    const { object: bitObject, inflatedSize } = await BitObject.parseObjectWithSize(obj.buffer);
     if (bitObject instanceof Lane) {
       throw new Error('ObjectsWritable does not support lanes');
     }
@@ -81,12 +81,21 @@ export class ObjectsWritable extends Writable {
       // simple enough and can't interrupt others
       await this.objectsQueue.addImmutableObject(obj.ref.toString(), () => this.mergeVersionObject(bitObject));
     } else {
-      await this.objectsQueue.addImmutableObject(obj.ref.toString(), () => this.writeImmutableObject(bitObject));
+      await this.objectsQueue.addImmutableObject(obj.ref.toString(), () =>
+        this.writeImmutableObject(bitObject, obj, inflatedSize)
+      );
     }
   }
 
-  private async writeImmutableObject(bitObject: BitObject) {
-    await this.repo.writeObjectsToTheFS([bitObject]);
+  private async writeImmutableObject(bitObject: BitObject, obj: ObjectItem, inflatedSize: number) {
+    // a Source (file, artifact) is immutable and its hash is the sha1 of its content. when the received buffer matches
+    // the ref, it is written as is, without the re-serialization and re-compression (as the export does, see
+    // ObjectList.toBitObjectsWithRawSources).
+    const rawObjects: RawObjectsMap | undefined =
+      bitObject instanceof Source && bitObject.hash().isEqual(obj.ref)
+        ? new Map([[bitObject, { buffer: obj.buffer, inflatedSize, ref: obj.ref }]])
+        : undefined;
+    await this.repo.writeObjectsToTheFS([bitObject], rawObjects);
   }
 
   private addComponentToComponentsPerRemote(component: ModelComponent) {
