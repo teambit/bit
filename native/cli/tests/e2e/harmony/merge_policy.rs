@@ -204,10 +204,7 @@ fn package(helper: &Helper, version: &str) {
         "teambit.dependencies/dependency-resolver",
         serde_json::json!({"policy":{"dependencies":{"lodash.get":version}}}),
     );
-    helper.output_file(
-        "node_modules/lodash.get/package.json",
-        &serde_json::json!({"name":"lodash.get","version":version,"main":"index.js"}).to_string(),
-    );
+    helper.npm_add_fake_package("lodash.get", version, false);
     helper.output_file("node_modules/lodash.get/index.js", "module.exports = () => 1;\n");
 }
 

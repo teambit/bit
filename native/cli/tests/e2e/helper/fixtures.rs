@@ -541,6 +541,9 @@ impl Helper {
     }
 
     pub fn npm_add_fake_package(&self, name: &str, version: &str, is_comp: bool) {
+        // Installed packages may be symlinks or contain pnpm store hardlinks. Remove the
+        // workspace entry before writing fixture files so the shared store stays intact.
+        super::restore::remove(&self.scopes.local_path.join("node_modules").join(name));
         let mut obj = json!({
             "name": name,
             "version": version,

@@ -28,10 +28,7 @@ fn source() -> (Helper, PathBuf) {
         "teambit.dependencies/dependency-resolver",
         json!({"policy":{"dependencies":{"lodash.get":"^4.4.2"}}}),
     );
-    helper.output_file(
-        "node_modules/lodash.get/package.json",
-        &json!({"name":"lodash.get","version":"4.4.2","main":"index.js"}).to_string(),
-    );
+    helper.npm_add_fake_package("lodash.get", "4.4.2", false);
     helper.output_file("node_modules/lodash.get/index.js", "module.exports = () => 1;\n");
     node(&helper, "tag --ignore-issues * --message second");
     crate::helper::remote::publish(&helper);

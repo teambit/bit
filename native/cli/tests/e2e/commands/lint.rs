@@ -364,10 +364,7 @@ fn builtin_react_lint_matches_released_loading_and_cached_state_without_host() {
 fn builtin_react_lint_dependency_policy_diagnostics_and_fixes_match_node() {
     let helper = support::workspace(1, true);
     support::setup(&helper, "env set comp1 teambit.react/react");
-    helper.output_file(
-        "node_modules/react/package.json",
-        r#"{"name":"react","version":"19.0.0","main":"index.js"}"#,
-    );
+    helper.npm_add_fake_package("react", "19.0.0", false);
     helper.output_file("node_modules/react/index.js", "module.exports={};\n");
     for (source, command) in [
         ("const React=require('react'); module.exports=()=>React;\n", "lint --json"),
@@ -405,10 +402,7 @@ fn builtin_react_lint_write_failure_reports_its_environment_without_replay() {
 fn builtin_react_lint_changed_selection_preserves_tagged_peer_policy() {
     let helper = support::workspace(1, false);
     support::setup(&helper, "env set comp1 teambit.react/react");
-    helper.output_file(
-        "node_modules/react/package.json",
-        r#"{"name":"react","version":"19.0.0","main":"index.js"}"#,
-    );
+    helper.npm_add_fake_package("react", "19.0.0", false);
     helper.output_file("node_modules/react/index.js", "module.exports={};\n");
     helper.output_file(
         "comp1/index.js",
