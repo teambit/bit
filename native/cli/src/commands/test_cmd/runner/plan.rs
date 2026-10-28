@@ -47,10 +47,7 @@ impl Plan {
         };
         let streamed = !options.json && !settings.summary && request.is_some();
         if streamed
-            && (components.len() != 1
-                || settings.files.len() != 1
-                || io::stdout().is_terminal()
-                || io::stderr().is_terminal())
+            && (components.len() != 1 || io::stdout().is_terminal() || io::stderr().is_terminal())
         {
             return Err(invalid("tester text reporting"));
         }

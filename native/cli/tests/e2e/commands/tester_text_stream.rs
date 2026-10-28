@@ -78,3 +78,47 @@ fn text_single_test_with_verbose() {
     );
     assert!(result.status.success());
 }
+
+#[test]
+fn text_selected_component_streams_jest_report() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "it('first',()=>expect(2+2).toBe(4));\n");
+    let result = support::compare_with_streams(&helper, "test comp1", without_duration, jest_times);
+    assert!(result.status.success());
+}
+
+#[test]
+fn text_selected_component_runs_multiple_discovered_files() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "it('first',()=>expect(2+2).toBe(4));\n");
+    helper.output_file("comp1/other.spec.js", "it('second',()=>expect(3+3).toBe(6));\n");
+    let result =
+        support::compare_with_streams(&helper, "test comp1", without_duration, multiple_jest_times);
+    assert!(result.status.success());
+}
+
+#[test]
+fn text_selected_component_runs_multiple_explicit_files() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "it('first',()=>expect(2+2).toBe(4));\n");
+    helper.output_file("comp1/other.spec.js", "it('second',()=>expect(3+3).toBe(6));\n");
+    let result = support::compare_with_streams(
+        &helper,
+        "test comp1/index.spec.js comp1/other.spec.js",
+        without_duration,
+        multiple_jest_times,
+    );
+    assert!(result.status.success());
+}
+fn multiple_jest_times(output: &str) -> String {
+    let time =
+        regex::Regex::new(r"(?m)^Time:        ([0-9]+(?:\.[0-9]+)?) s(?:, estimated ([0-9]+) s)?$")
+            .unwrap();
+    assert_eq!(time.find_iter(output).count(), 1, "Jest timing: {output:?}");
+    let output = time.replace(output, "Time:        <duration> s");
+    let (reports, rest) = output.split_once("\n\n").unwrap();
+    let mut lines = reports.lines().collect::<Vec<_>>();
+    lines.sort_unstable();
+    assert_eq!(lines, ["PASS comp1/index.spec.js", "PASS comp1/other.spec.js"]);
+    format!("{}\n\n{rest}", lines.join("\n"))
+}

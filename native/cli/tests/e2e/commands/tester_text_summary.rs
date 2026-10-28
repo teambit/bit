@@ -219,10 +219,10 @@ fn text_without_summary_and_no_changed_components_matches_node() {
 }
 
 #[test]
-fn text_without_summary_and_selected_component_still_declines() {
+fn text_without_summary_and_selected_component_preserves_exit() {
     let helper = support::workspace(1, true);
     helper.output_file("comp1/index.spec.js", "process.exit(7);\n");
-    let result = support::compare_declined(&helper, "test comp1", str::to_owned);
+    let result = support::compare(&helper, "test comp1");
     assert_eq!(result.status.code(), Some(7));
 }
 
