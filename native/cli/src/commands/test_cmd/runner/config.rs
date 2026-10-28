@@ -13,6 +13,16 @@ pub(super) fn request(
     environment: &str,
     settings: &Settings,
 ) -> io::Result<Option<Value>> {
+    let (request, has_tests) = request_with_empty(root, selected, environment, settings)?;
+    Ok(has_tests.then_some(request))
+}
+
+pub(super) fn request_with_empty(
+    root: &Path,
+    selected: &Component,
+    environment: &str,
+    settings: &Settings,
+) -> io::Result<(Value, bool)> {
     let patterns = patterns(root, selected)?;
     let tests = files::tests(selected, &patterns.tests)?;
     if settings.files
@@ -21,9 +31,7 @@ pub(super) fn request(
     {
         return Err(invalid("tester requested file recognition"));
     }
-    if tests.is_empty() {
-        return Ok(None);
-    }
+    let has_tests = !tests.is_empty();
     let mut config: Value = serde_json::from_str(include_str!("config.json"))?;
     config["rootDir"] = json!(root);
     config["roots"] = json!([root]);
@@ -47,7 +55,7 @@ pub(super) fn request(
         config["setupFiles"] = json!(["$polyfill"]);
     }
     let options = tool_options(&mut config, patterns.dev_files, settings);
-    Ok(Some(json!({"root":root,"config":config,"options":options})))
+    Ok((json!({"root":root,"config":config,"options":options}), has_tests))
 }
 fn tool_options(config: &mut Value, dev_files: Vec<String>, settings: &Settings) -> Value {
     let mut options = json!({});

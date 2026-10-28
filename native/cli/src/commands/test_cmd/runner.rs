@@ -4,6 +4,7 @@ mod config;
 mod coverage;
 mod files;
 mod junit;
+mod multi;
 mod paths;
 mod plan;
 mod report;

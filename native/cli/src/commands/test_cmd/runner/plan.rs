@@ -1,5 +1,5 @@
 use super::{
-    Execution, Options, config, coverage::Coverage, invalid, json, junit, report,
+    Execution, Options, config, coverage::Coverage, invalid, json, junit, multi, report,
     settings::Settings, summary, tool::Session,
 };
 use crate::commands::{
@@ -26,16 +26,22 @@ impl Plan {
         {
             return Err(invalid("tester environment selection"));
         }
-        if components.len() > 1 {
+        if components.len() > 1
+            && (!settings.summary || settings.junit.is_some() || !settings.files.is_empty())
+        {
             return Err(invalid("tester multiple component services"));
         }
-        let request = components
-            .first()
-            .map(|component| {
-                config::request(root, component, &loaded.progress.environment, &settings)
-            })
-            .transpose()?
-            .flatten();
+        let request = if components.len() > 1 {
+            multi::request(root, &components, &loaded.progress.environment, &settings)?
+        } else {
+            components
+                .first()
+                .map(|component| {
+                    config::request(root, component, &loaded.progress.environment, &settings)
+                })
+                .transpose()?
+                .flatten()
+        };
         let tool = request
             .as_ref()
             .map(|request| Session::prepare(request, Chalk::detect(args).enabled(), args))
@@ -66,14 +72,35 @@ impl Plan {
             coverage.collect(root, &mut result);
         }
         let terminated = result.get("terminated").is_some();
-        let mut report = report::report(&result, identity)?;
+        let report = self.format_report(root, &result, identity, terminated)?;
+        Ok(Execution { report, terminated })
+    }
+    fn format_report(
+        &self,
+        root: &Path,
+        result: &serde_json::Value,
+        identity: &str,
+        terminated: bool,
+    ) -> io::Result<Report> {
+        let components = self.loaded.components()?;
+        let mut report = if components.len() > 1 {
+            multi::report_summary(
+                root,
+                result,
+                &components,
+                &self.loaded.progress.identities,
+                &self.loaded.progress.environment,
+            )?
+        } else {
+            report::report(result, identity)?
+        };
         if !terminated
             && self.settings.environment.is_none()
             && let Some(path) = &self.settings.junit
         {
-            junit::write(path, &report.data, &result)?;
+            junit::write(path, &report.data, result)?;
         }
-        if self.settings.summary && !terminated {
+        if self.settings.summary && !terminated && components.len() == 1 {
             report.data = summary::render(
                 &report.data,
                 identity,
@@ -81,7 +108,7 @@ impl Plan {
                 result["errorMessage"].as_str(),
             )?;
         }
-        Ok(Execution { report, terminated })
+        Ok(report)
     }
 }
 fn validate_sources(files: &[serde_json::Value]) -> io::Result<()> {

@@ -600,3 +600,46 @@ generated checks and 1,817 workspace tests passed. The final full E2E run had
 1,785 passes, two existing skips and three Bit Cloud request failures during
 fixture setup; all three cases passed unchanged on serial rerun. The preceding
 JUnit head's platform checks were still running at this checkpoint.
+
+## Multi-component tester summary
+
+Same-environment built-in JSON summaries can run one Jest invocation for
+multiple components. Rust combines test patterns, groups results by qualified
+component roots, aggregates counters and preserves environment errors. Coverage
+is collected by Jest and the existing native path consumes and removes its
+artifact. Components without tracked tests still contribute their patterns and
+development-file exclusions when another component has tests: the released
+runner can execute matching untracked test files from those components.
+
+The path declines before effects for overlapping or symlinked component trees,
+component roots containing glob metacharacters, negated or unconfined patterns,
+explicit files from multiple components, JUnit output, detailed JSON and mixed or
+custom environments. Warm parallel loader cases retain the existing cache-order
+guard. A runtime import guard proves the qualified path does not load Bit's
+JavaScript modules; Jest and Babel remain external tools resolved through the
+installed distribution.
+
+Differential tests cover passing and failing tests, components with and without
+tests, coverage, environment cleanup errors, matching untracked files, and the
+pre-effect guards. Side-effect assertions verify tests run once. The test
+normalizer only reorders the known two fixture components in summary arrays;
+eight same-path released runs independently produced both orders for tested,
+untested and environment-error arrays, with every other field unchanged. A
+negative control that dropped patterns for the untracked component failed the
+strict complete-summary comparison.
+
+Jest's default scheduling can place multiple test files in workers or run them
+in-band according to its cache. Eight repeated released runs of a two-file
+fixture that sets `process.exitCode` produced both exit codes 0 and 7; the
+complete summaries otherwise matched after the same independently qualified
+component-order projection. The adapter retains Jest's default scheduling and
+uses its existing separate native cache identities. The deterministic regression
+uses one file, verifies exit code 7 and compares command history exactly.
+
+Validation: 11 focused multi-component cases and 45 tester comparisons passed,
+as did formatting, Clippy, Dylint, rustdoc, generated checks and 1,817 workspace
+tests. The full E2E run had 1,797 passes, two existing skips and two Bit Cloud
+fixture setup failures; both failed cases passed unchanged on serial rerun.
+The separately committed Dylint bootstrap repair passed a clean driver build and
+lint run against the current Clippy repository, plus local tests for both branch
+layouts. Its GitHub CI job was still running at this checkpoint.
