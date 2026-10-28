@@ -156,6 +156,33 @@ fn builtin_compile_two_components_one_syntax_error_text() {
 }
 
 #[test]
+fn builtin_compile_two_cold_components_with_syntax_errors_json() {
+    let helper = support::workspace(0, false);
+    helper.output_file("comp1/index.ts", "export const first = ;\n");
+    helper.output_file("comp2/index.ts", "export const second = ;\n");
+    support::setup(&helper, "add comp1 -i comp1");
+    support::setup(&helper, "add comp2 -i comp2");
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let result = support::compare(&helper, "compile comp2 comp1 --json");
+    assert!(result.status.success());
+    let rows: serde_json::Value = serde_json::from_str(&result.stdout).unwrap();
+    assert!(
+        rows.as_array()
+            .unwrap()
+            .iter()
+            .all(|row| !row["errors"]
+                .as_array()
+                .unwrap()
+                .is_empty()),
+    );
+}
+
+#[test]
 fn builtin_compile_rewired_sources_with_cold_documentation_cache_match_node() {
     let helper = support::workspace(2, true);
     helper.output_file(

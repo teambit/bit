@@ -28,7 +28,7 @@ impl Plan {
         }
         let compiled =
             emission::prepare(root, &components, &loaded.progress.identities, &directories)?;
-        validate_order(&compiled)?;
+        validate_order(&compiled, options.json)?;
         limits::outputs(&compiled)?;
         write::validate_sources(&loaded.files)?;
         Ok(Self { loaded, batch_size, links, directories, compiled })
@@ -66,12 +66,12 @@ impl Plan {
         self.links.publish(root)
     }
 }
-fn validate_order(compiled: &[Compiled]) -> io::Result<()> {
+fn validate_order(compiled: &[Compiled], json: bool) -> io::Result<()> {
     let errors = compiled
         .iter()
         .filter(|row| !row.errors.is_empty())
         .count();
-    if errors > 1 || (errors > 0 && compiled.len() > 2) {
+    if (errors > 1 && !json) || (errors > 0 && compiled.len() > 2) {
         return Err(io::Error::other("compiler diagnostic component order"));
     }
     Ok(())
