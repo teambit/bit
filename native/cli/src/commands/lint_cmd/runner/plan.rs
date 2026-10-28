@@ -22,7 +22,7 @@ impl Plan {
         };
         let loaded = Loaded::prepare(root, &selection)?;
         let components = loaded.components()?;
-        if components.len() > 2
+        if components.len() > 8
             || (options.fix
                 && components
                     .iter()
