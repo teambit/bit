@@ -9,7 +9,12 @@ use crate::commands::{
         results::Report,
     },
 };
-use std::{ffi::OsString, fs, io, path::Path};
+use std::{
+    ffi::OsString,
+    fs,
+    io::{self, IsTerminal},
+    path::Path,
+};
 
 pub(super) struct Plan {
     loaded: Loaded,
@@ -40,22 +45,21 @@ impl Plan {
                 .transpose()?
                 .flatten()
         };
-        if !options.json && !settings.summary && request.is_some() {
+        let streamed = !options.json && !settings.summary && request.is_some();
+        if streamed
+            && (components.len() != 1
+                || settings.files.len() != 1
+                || io::stdout().is_terminal()
+                || io::stderr().is_terminal())
+        {
             return Err(invalid("tester text reporting"));
         }
         let tool = request
             .as_ref()
-            .map(|request| Session::prepare(request, Chalk::detect(args).enabled(), args))
+            .map(|request| Session::prepare(request, Chalk::detect(args).enabled(), args, streamed))
             .transpose()?;
         validate_sources(&loaded.files)?;
-        let coverage = if tool.is_some() {
-            components
-                .iter()
-                .map(|component| Coverage::prepare(root, &component.directory))
-                .collect::<io::Result<Vec<_>>>()?
-        } else {
-            Vec::new()
-        };
+        let coverage = prepare_coverage(root, &components, tool.is_some())?;
         Ok(Self { loaded, tool, coverage, settings })
     }
     pub(super) fn run(
@@ -80,6 +84,12 @@ impl Plan {
                 self.loaded.progress.identities.len(),
                 chalk.cyan(&self.loaded.progress.name),
             ));
+            if self.tool.is_some() {
+                output.console(&format!(
+                    "testing 1 components with environment {}\n",
+                    chalk.cyan(&self.loaded.progress.environment),
+                ));
+            }
         }
         let mut result = self.tool
             .as_mut()
@@ -167,4 +177,19 @@ fn validate_sources(files: &[serde_json::Value]) -> io::Result<()> {
         }
     }
     Ok(())
+}
+
+fn prepare_coverage(
+    root: &Path,
+    components: &[Component],
+    enabled: bool,
+) -> io::Result<Vec<Coverage>> {
+    if enabled {
+        components
+            .iter()
+            .map(|component| Coverage::prepare(root, &component.directory))
+            .collect()
+    } else {
+        Ok(Vec::new())
+    }
 }

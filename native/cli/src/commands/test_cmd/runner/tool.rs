@@ -8,9 +8,40 @@ use std::{
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
 
-const LIMIT: u64 = 16 * 1024 * 1024;
+mod stream;
 
 pub(super) struct Session {
+    inner: Inner,
+}
+enum Inner {
+    Quiet(Quiet),
+    Stream(stream::Stream),
+}
+impl Session {
+    pub(super) fn prepare(
+        request: &Value,
+        colors: bool,
+        args: &[OsString],
+        streamed: bool,
+    ) -> io::Result<Self> {
+        let inner = if streamed {
+            Inner::Stream(stream::Stream::prepare(request, colors, args)?)
+        } else {
+            Inner::Quiet(Quiet::prepare(request, colors, args)?)
+        };
+        Ok(Self { inner })
+    }
+    pub(super) fn run(&mut self) -> io::Result<Value> {
+        match &mut self.inner {
+            Inner::Quiet(session) => session.run(),
+            Inner::Stream(session) => session.run(),
+        }
+    }
+}
+
+const LIMIT: u64 = 16 * 1024 * 1024;
+
+struct Quiet {
     child: Child,
     input: Option<ChildStdin>,
     output: BufReader<ChildStdout>,
@@ -18,7 +49,7 @@ pub(super) struct Session {
     assets: Assets,
 }
 
-impl Session {
+impl Quiet {
     pub(super) fn prepare(request: &Value, colors: bool, args: &[OsString]) -> io::Result<Self> {
         let mut session = Self::spawn(colors, args)?;
         let mut request = request.clone();
@@ -101,7 +132,7 @@ impl Session {
     }
 }
 
-impl Drop for Session {
+impl Drop for Quiet {
     fn drop(&mut self) {
         let _ = self.child.kill();
         let _ = self.child.wait();

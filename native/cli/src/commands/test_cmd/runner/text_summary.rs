@@ -138,6 +138,50 @@ pub(super) fn format_report(
     {
         return summary;
     }
+    let mut sections = Vec::new();
+    result_sections(value, chalk, &mut sections);
+    no_tests_section(
+        value,
+        chalk,
+        flags
+            .iter()
+            .any(|arg| *arg == "--verbose"),
+        &mut sections,
+    );
+    sections.push(summary);
+    format!("\n{}", sections.join("\n\n"))
+}
+fn result_sections(value: &Value, chalk: Chalk, sections: &mut Vec<String>) {
+    let tested = value["componentsWithTests"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
+    if !tested.is_empty() {
+        let lines = tested
+            .iter()
+            .map(|row| component_line(row, chalk))
+            .collect::<Vec<_>>()
+            .join("\n");
+        sections.push(format!("{}\n{lines}", chalk.bold_white("test results")));
+    }
+    let errors = value["envErrors"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
+    if !errors.is_empty() {
+        let symbol = chalk.red("✖");
+        let mut section = format!("{symbol} {}", chalk.bold_white("tester errors"));
+        for error in errors {
+            write!(
+                section,
+                "\n   {symbol} {}: {}",
+                error["envId"].as_str().unwrap_or("unknown env"),
+                error["message"].as_str().unwrap_or("undefined"),
+            )
+            .unwrap();
+        }
+        sections.push(section);
+    }
+}
+fn no_tests_section(value: &Value, chalk: Chalk, verbose: bool, sections: &mut Vec<String>) {
     let ids = value["componentsWithoutTests"]
         .as_array()
         .map_or(&[][..], Vec::as_slice);
@@ -146,21 +190,40 @@ pub(super) fn format_report(
         .filter_map(Value::as_str)
         .collect::<Vec<_>>();
     names.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
-    let verbose = flags
-        .iter()
-        .any(|arg| *arg == "--verbose");
     let hint = if verbose {
         format!("{} components have no tests", names.len())
     } else {
         format!("{} components have no tests (run with --verbose to list)", names.len())
     };
-    let mut section = chalk.dim(&hint);
-    if verbose {
-        for name in names {
-            write!(section, "\n   {} {name}", chalk.dim("›")).unwrap();
+    if !names.is_empty() {
+        let mut section = chalk.dim(&hint);
+        if verbose {
+            for name in names {
+                write!(section, "\n   {} {name}", chalk.dim("›")).unwrap();
+            }
         }
+        sections.push(section);
     }
-    format!("\n{section}\n\n{summary}")
+}
+fn component_line(row: &Value, chalk: Chalk) -> String {
+    let failed = row["failed"].as_u64().unwrap_or(0);
+    let passed = row["passed"].as_u64().unwrap_or(0);
+    let pending = row["pending"].as_u64().unwrap_or(0);
+    let parts = [(failed, "failed"), (passed, "passed"), (pending, "pending")]
+        .into_iter()
+        .filter(|(count, _)| *count > 0)
+        .map(|(count, label)| format!("{count} {label}"))
+        .collect::<Vec<_>>();
+    let stats =
+        if parts.is_empty() { "no test counts reported".to_owned() } else { parts.join(", ") };
+    let text = format!("{} — {stats}", row["id"].as_str().unwrap_or_default());
+    if failed > 0 {
+        format!("   {} {text}", chalk.red("✖"))
+    } else if row["hasError"] == true {
+        format!("   {} {text} (tester reported errors)", chalk.yellow("⚠"))
+    } else {
+        format!("   {} {text}", chalk.green(if cfg!(windows) { "✓" } else { "✔" }))
+    }
 }
 fn format_summary(value: &Value, code: i32, elapsed_ms: u128, chalk: Chalk) -> String {
     let (message, warning, hint) = Summary(value).headline(code);

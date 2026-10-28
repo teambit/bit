@@ -46,6 +46,16 @@ pub(crate) fn compare_with_stdout(
     compare_mode(helper, command, false, true, Comparison::exact(stdout), false, None)
 }
 
+pub(crate) fn compare_with_streams(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    stderr: fn(&str) -> String,
+) -> Run {
+    let output = Comparison { stderr: Some(stderr), ..Comparison::exact(stdout) };
+    compare_mode(helper, command, false, true, output, false, None)
+}
+
 pub(crate) type ArtifactProjection<'a> =
     dyn Fn(&mut BTreeMap<String, Vec<u8>>, &Run, i64, i64) + 'a;
 
@@ -240,11 +250,15 @@ fn compare_mode(
         actual.trace,
     );
     assert_eq!((output.stdout)(&actual.stdout), (output.stdout)(&expected.stdout), "{command}");
-    match output.errors {
-        Some(variants) => output::assert_errors(&actual.stderr, &expected.stderr, variants),
-        None => {
+    match (output.errors, output.stderr) {
+        (Some(variants), None) => output::assert_errors(&actual.stderr, &expected.stderr, variants),
+        (None, Some(project)) => {
+            assert_eq!(project(&actual.stderr), project(&expected.stderr), "{command}");
+        }
+        (None, None) => {
             assert_eq!(atomic_error(&actual.stderr), atomic_error(&expected.stderr), "{command}");
         }
+        (Some(_), Some(_)) => panic!("incompatible error projections"),
     }
     let mut actual_files = tree(root);
     if install_clocks {

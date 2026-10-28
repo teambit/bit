@@ -50,6 +50,17 @@ pub(crate) fn compare_with_stdout(
     assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
     actual
 }
+pub(crate) fn compare_with_streams(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    stderr: fn(&str) -> String,
+) -> Run {
+    let remote = tree(&helper.scopes.remote_path);
+    let actual = support::compare_with_streams(helper, command, stdout, stderr);
+    assert_eq!(tree(&helper.scopes.remote_path), remote);
+    actual
+}
 /// An exact independently qualified error set retains every filesystem comparison.
 pub(crate) fn compare_with_error_variants(
     helper: &Helper,

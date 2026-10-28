@@ -8,7 +8,11 @@ const defender = createRequire(installation.resolve('@teambit/defender.jest-test
 const react = createRequire(installation.resolve('@teambit/react.jest.react-jest'));
 const jest = installation('@jest/core');
 const { formatResultsErrors } = installation('jest-message-util');
-const emit = process.stdout.write.bind(process.stdout);
+const control = process.env.BIT_NATIVE_TESTER_CONTROL;
+delete process.env.BIT_NATIVE_TESTER_CONTROL;
+const socket = control ? require('node:net').connect(Number(control.split(':')[0]), '127.0.0.1') : null;
+if (socket) socket.write(JSON.stringify({token:control.split(':')[1]}) + '\n');
+const emit = socket ? socket.write.bind(socket) : process.stdout.write.bind(process.stdout);
 const lines = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });
 let request;
 let config;
@@ -46,9 +50,11 @@ lines.on('line', async line => {
   if (JSON.parse(line) !== true) throw new Error('test tool execution signal');
   lines.close();
   const silent = (...args) => { const callback = args.find(value => typeof value === 'function'); if (callback) callback(); return true; };
-  for (const method of ['log', 'warn', 'error', 'info', 'debug']) console[method] = () => {};
-  process.stdout.write = silent;
-  process.stderr.write = silent;
+  if (!request.streamed) {
+    for (const method of ['log', 'warn', 'error', 'info', 'debug']) console[method] = () => {};
+    process.stdout.write = silent;
+    process.stderr.write = silent;
+  }
   try {
     const result = await jest.runCLI(argv, [request.root]);
     for (const file of result.results.testResults) {
@@ -60,7 +66,9 @@ lines.on('line', async line => {
       }
     }
     emit(JSON.stringify({ results: result.results, exitCode: process.exitCode }) + '\n');
+    if (socket) socket.end();
   } catch (error) {
     emit(JSON.stringify({ error, errorMessage: error?.message, exitCode: process.exitCode }) + '\n');
+    if (socket) socket.end();
   }
 });

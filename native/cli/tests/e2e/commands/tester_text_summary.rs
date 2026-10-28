@@ -1,7 +1,7 @@
 //! Text summary behavior against the released tester.
 use super::move_paths::support;
 
-fn without_duration(output: &str) -> String {
+pub(super) fn without_duration(output: &str) -> String {
     let (prefix, tail) = output.rsplit_once("Finished. (").expect("finished timing");
     let (duration, suffix) = tail.split_once("s)").expect("seconds suffix");
     assert!(duration.parse::<f64>().is_ok(), "invalid timing: {duration}");
