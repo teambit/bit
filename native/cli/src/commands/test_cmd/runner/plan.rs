@@ -100,6 +100,7 @@ impl Plan {
         } else if !self.coverage.is_empty() {
             Coverage::collect_many(&self.coverage, root, &mut result);
         }
+        self.report_service_error(output, text, &result);
         let terminated = result.get("terminated").is_some();
         let report = self.format_report(root, &result, identity, terminated, text)?;
         Ok(Execution { report, terminated, empty: false })
@@ -111,6 +112,20 @@ impl Plan {
                     output.status(&format!("loading {count} component(s)"));
                 }
             }
+        }
+    }
+    fn report_service_error(
+        &self,
+        output: &bit_install::output::Output,
+        text: bool,
+        result: &serde_json::Value,
+    ) {
+        if text && !self.settings.summary && result.get("error").is_some() {
+            output.failure(&format!(
+                r#"service "tester" of env "{}" has failed. error: {}"#,
+                self.loaded.progress.environment,
+                result["errorMessage"].as_str().unwrap_or("undefined"),
+            ));
         }
     }
     fn format_report(

@@ -206,6 +206,36 @@ fn text_stream_junit_failure_does_not_repeat_test() {
     assert_eq!(result.status.code(), Some(1));
     assert_eq!(std::fs::read_to_string(helper.scopes.local_path.join("test-effect")).unwrap(), "x");
 }
+
+#[cfg(unix)]
+#[test]
+fn text_stream_reports_coverage_cleanup_error_without_replay() {
+    use std::os::unix::fs::PermissionsExt;
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "const fs=require('fs');it('first',()=>{fs.appendFileSync('test-effect','x');expect(2+2).toBe(4);});\n");
+    helper.output_file("coverage/coverage-summary.json", "{}");
+    let directory = helper.scopes.local_path.join("coverage");
+    std::fs::set_permissions(&directory, std::fs::Permissions::from_mode(0o555)).unwrap();
+    let result = support::compare_with_streams(&helper, "test comp1", without_duration, jest_times);
+    std::fs::set_permissions(&directory, std::fs::Permissions::from_mode(0o755)).unwrap();
+    assert_eq!(result.status.code(), Some(1));
+    assert_eq!(std::fs::read_to_string(helper.scopes.local_path.join("test-effect")).unwrap(), "x");
+}
+
+#[cfg(unix)]
+#[test]
+fn text_summary_reports_coverage_cleanup_error_without_replay() {
+    use std::os::unix::fs::PermissionsExt;
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "const fs=require('fs');it('first',()=>{fs.appendFileSync('test-effect','x');expect(2+2).toBe(4);});\n");
+    helper.output_file("coverage/coverage-summary.json", "{}");
+    let directory = helper.scopes.local_path.join("coverage");
+    std::fs::set_permissions(&directory, std::fs::Permissions::from_mode(0o555)).unwrap();
+    let result = support::compare_with_stdout(&helper, "test comp1 --summary", without_duration);
+    std::fs::set_permissions(&directory, std::fs::Permissions::from_mode(0o755)).unwrap();
+    assert_eq!(result.status.code(), Some(1));
+    assert_eq!(std::fs::read_to_string(helper.scopes.local_path.join("test-effect")).unwrap(), "x");
+}
 fn multi_component_times(output: &str) -> String {
     let time =
         regex::Regex::new(r"(?m)^Time:        ([0-9]+(?:\.[0-9]+)?) s(?:, estimated ([0-9]+) s)?$")
