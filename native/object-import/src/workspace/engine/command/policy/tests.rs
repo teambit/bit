@@ -60,6 +60,16 @@ fn merged_scope_config_finds_versioned_aspect_by_unversioned_identity() {
 }
 
 #[test]
+fn scope_configuration_merge_preserves_stored_docs_data() {
+    let current =
+        json!([{"name":"teambit.docs/docs","config":{},"data":{"doc":{"description":"stored"}}}]);
+    let versions = [json!({"extensions":[]}), json!({"extensions":[]}), json!({"extensions":[]})];
+    let selected =
+        super::scope::apply(&current, &json!({"teambit.docs/docs":{}}), &versions).unwrap();
+    assert_eq!(selected[0]["data"]["doc"]["description"], "stored");
+}
+
+#[test]
 fn workspace_aspect_identity_keeps_version_for_added_other_lane_config() {
     let workspace = workspace_id(&json!({"identity":"scope/env/install-compat",
         "version":"0.0.1"}))

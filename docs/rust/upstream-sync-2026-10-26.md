@@ -869,3 +869,11 @@ unchanged on rerun. The preceding Windows provisioning check passed.
 The subsequent upstream sync to `f367980931c33240f17c1f259c7d1d000d6b7f89` updates release and CLI reference metadata; it does not add a Rust behavior gap.
 
 Upstream `e831b73da` adds release notes only; no Rust behavior change is required.
+
+Upstream `3bd72fe67` changes scope-side documentation recalculation: a failed
+reader for an existing docs file leaves the stored doc intact, while a component
+without a docs file clears it. The native scope configuration merge already
+preserves stored documentation data, now covered by a regression test. Full
+scope-side aspect recalculation and the reader/no-file distinction are still a
+porting gap; scope-side snapshot paths needing those callbacks remain delegated.
+The following `06ab7f06c` commit updates release metadata.
