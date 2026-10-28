@@ -102,12 +102,16 @@ impl Loaded {
         targets: &[Value],
         options: &super::Selection,
     ) -> io::Result<()> {
-        for (entry, _) in workspace.active() {
-            if targets
-                .iter()
-                .any(|target| target["identity"] == entry.id.to_string_without_version())
-            {
-                self.add(root, entry)?;
+        if options.explicit_file_order {
+            self.add_in_target_order(root, workspace, targets)?;
+        } else {
+            for (entry, _) in workspace.active() {
+                if targets
+                    .iter()
+                    .any(|target| target["identity"] == entry.id.to_string_without_version())
+                {
+                    self.add(root, entry)?;
+                }
             }
         }
         if options.single_file_write
@@ -117,6 +121,24 @@ impl Loaded {
                     .any(|count| *count > 1))
         {
             return Err(invalid("component service concurrent source writes"));
+        }
+        Ok(())
+    }
+    fn add_in_target_order(
+        &mut self,
+        root: &Path,
+        workspace: &Workspace,
+        targets: &[Value],
+    ) -> io::Result<()> {
+        for target in targets {
+            let identity = target["identity"]
+                .as_str()
+                .ok_or_else(|| invalid("component service selection identity"))?;
+            let (entry, _) = workspace
+                .active()
+                .find(|(entry, _)| entry.id.to_string_without_version() == identity)
+                .ok_or_else(|| invalid("component service selection entry"))?;
+            self.add(root, entry)?;
         }
         Ok(())
     }

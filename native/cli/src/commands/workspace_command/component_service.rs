@@ -16,6 +16,7 @@ pub(in crate::commands) struct Selection {
     pub exact: Option<Vec<String>>,
     pub allow_cached_many: bool,
     pub compiler: bool,
+    pub explicit_file_order: bool,
 }
 
 pub(in crate::commands) struct Progress {

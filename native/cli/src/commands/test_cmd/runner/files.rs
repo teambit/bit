@@ -8,7 +8,7 @@ use std::{
 };
 
 pub(super) struct Selected {
-    pub identity: String,
+    pub identities: Vec<String>,
     pub paths: Vec<PathBuf>,
 }
 
@@ -32,13 +32,14 @@ pub(super) fn select(root: &Path, values: &[String]) -> io::Result<Option<Select
         .map(|value| paths::normalized(&cwd.join(value)))
         .collect();
     let bitmap = Bitmap::load(root, None)?;
-    let identity = owner(root, &bitmap, &paths[0])?;
-    for path in &paths[1..] {
-        if owner(root, &bitmap, path)? != identity {
-            return Err(invalid("tester multiple component file selection"));
+    let mut identities = Vec::new();
+    for path in &paths {
+        let identity = owner(root, &bitmap, path)?;
+        if !identities.contains(&identity) {
+            identities.push(identity);
         }
     }
-    Ok(Some(Selected { identity, paths }))
+    Ok(Some(Selected { identities, paths }))
 }
 fn owner(root: &Path, bitmap: &Bitmap, path: &Path) -> io::Result<String> {
     let mut owners = bitmap.entries

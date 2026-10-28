@@ -694,3 +694,25 @@ Validation: 62 focused tester cases, formatting, Clippy, Dylint, rustdoc,
 generated checks and 1,817 workspace tests passed. The full E2E run had 1,814
 passes, two existing skips and one Bit Cloud setup failure; the case passed
 unchanged on rerun. Platform CI for this checkpoint is pending.
+
+## Explicit test files across components
+
+Same-environment built-in JSON testing now accepts explicit test files from
+multiple components. Rust validates each file against its owning component,
+selects only the requested tests, and preserves the first-seen component order
+in reports and JUnit suites. Duplicate paths are executed once. Existing
+unsupported ownership, loader, environment and path cases still decline before
+execution.
+
+Seven differential cases cover relative and absolute paths, duplicate inputs,
+summary and coverage, JUnit, reversed input order, and an unrecognized file.
+The fixtures assert selected and excluded test effects as well as output and
+workspace state. Eight released runs in each input order confirmed the exact
+component and JUnit suite order. Removing target-order loading makes the
+reversed-order comparison fail; the previous implementation declined the
+multi-component selection.
+
+Validation: 69 focused tester cases, 14 compiler cases, formatting, Clippy,
+Dylint, rustdoc, generated checks and all workspace tests passed. The full E2E
+run had 1,821 passes, two existing skips and one Bit Cloud request failure in
+released-CLI custom-aspect fixture setup; that case passed unchanged on rerun.

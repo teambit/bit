@@ -13,6 +13,15 @@ fn compare(helper: &Helper, command: &str, summary: bool) -> Run {
     assert_eq!(remote, move_paths::support::tree(&helper.scopes.remote_path));
     result
 }
+pub(super) fn compare_file_order(helper: &Helper, command: &str, summary: bool) -> Run {
+    let remote = move_paths::support::tree(&helper.scopes.remote_path);
+    let normalize: fn(&str) -> String =
+        if summary { str::to_owned } else { super::tester::timings };
+    let result = support::compare_with_artifacts(helper, command, normalize, &project_file_order);
+    assert_eq!(remote, move_paths::support::tree(&helper.scopes.remote_path));
+    result
+}
+
 fn detail_error_order(output: &str) -> String {
     let mut data: Value = serde_json::from_str(&detail_order(output)).unwrap();
     let errors = data[0]["data"]["errors"].as_array().unwrap();
@@ -42,6 +51,18 @@ fn compare_error(helper: &Helper, command: &str) -> Run {
 }
 
 fn project(files: &mut BTreeMap<String, Vec<u8>>, run: &Run, started: i64, ended: i64) {
+    project_with_order(files, run, started, ended, true);
+}
+fn project_file_order(files: &mut BTreeMap<String, Vec<u8>>, run: &Run, started: i64, ended: i64) {
+    project_with_order(files, run, started, ended, false);
+}
+fn project_with_order(
+    files: &mut BTreeMap<String, Vec<u8>>,
+    run: &Run,
+    started: i64,
+    ended: i64,
+    reorder: bool,
+) {
     let Some(bytes) = files.get_mut("reports/test.xml") else {
         return;
     };
@@ -62,7 +83,7 @@ fn project(files: &mut BTreeMap<String, Vec<u8>>, run: &Run, started: i64, ended
         assert!(duration > 0.0 && duration * 1000.0 <= (ended - started + 1) as f64);
     }
     let text = durations.replace_all(&text, r#" time="duration""#).into_owned();
-    *bytes = suite_order(&text).into_bytes();
+    *bytes = if reorder { suite_order(&text) } else { text }.into_bytes();
 }
 fn suite_order(text: &str) -> String {
     let suites = regex::Regex::new(r"(?s)  <testsuite .*?\n  </testsuite>\n").unwrap();

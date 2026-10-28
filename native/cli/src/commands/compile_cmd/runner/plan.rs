@@ -18,6 +18,7 @@ impl Plan {
         let selection = Selection {
             pattern: None,
             compiler: true,
+            explicit_file_order: false,
             changed: options.changed && options.components.is_empty(),
             allow_cached_pair: false,
             allow_cached_many: !options.json && !options.verbose,

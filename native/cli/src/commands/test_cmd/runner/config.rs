@@ -25,13 +25,20 @@ pub(super) fn request_with_empty(
 ) -> io::Result<(Value, bool)> {
     let patterns = patterns(root, selected)?;
     let tests = files::tests(selected, &patterns.tests)?;
-    if settings.files
+    let directory = super::paths::normalized(&root.join(&selected.directory));
+    let requested: Vec<_> = settings.files
+        .iter()
+        .filter(|file| file.starts_with(&directory))
+        .cloned()
+        .collect();
+    if requested
         .iter()
         .any(|file| !tests.contains(file))
     {
         return Err(invalid("tester requested file recognition"));
     }
-    let has_tests = !tests.is_empty();
+    let has_tests =
+        if settings.files.is_empty() { !tests.is_empty() } else { !requested.is_empty() };
     let mut config: Value = serde_json::from_str(include_str!("config.json"))?;
     config["rootDir"] = json!(root);
     config["roots"] = json!([root]);
@@ -46,7 +53,7 @@ pub(super) fn request_with_empty(
         json!(
             tests
                 .iter()
-                .filter(|file| settings.files.contains(file))
+                .filter(|file| requested.contains(file))
                 .collect::<Vec<_>>()
         )
     };

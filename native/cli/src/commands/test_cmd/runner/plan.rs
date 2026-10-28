@@ -29,9 +29,6 @@ impl Plan {
         {
             return Err(invalid("tester environment selection"));
         }
-        if components.len() > 1 && !settings.files.is_empty() {
-            return Err(invalid("tester multiple component services"));
-        }
         let request = if components.len() > 1 {
             multi::request(root, &components, &loaded.progress.environment, &settings)?
         } else {

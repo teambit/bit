@@ -39,7 +39,11 @@ impl Settings {
         };
         settings.apply(args)?;
         if let Some(selected) = selected {
-            settings.selection.pattern = Some(selected.identity);
+            settings.selection.pattern = Some(selected.identities.join(", "));
+            if selected.identities.len() > 1 {
+                settings.selection.exact = Some(selected.identities);
+                settings.selection.explicit_file_order = true;
+            }
             settings.files = selected.paths;
         }
         Ok(settings)
