@@ -17762,6 +17762,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
@@ -32076,6 +32079,7 @@ packages:
   '@teambit/docs@file:scopes/docs/docs':
     resolution: {directory: scopes/docs/docs, type: directory}
     peerDependencies:
+      chai: 5.2.1
       react: 19.2.7
       react-dom: 19.2.7
 
@@ -65766,6 +65770,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.18.1
@@ -65775,7 +65780,6 @@ snapshots:
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/dom'
-      - chai
       - graphql
       - supports-color
 
@@ -65799,6 +65803,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.18.1
@@ -65808,7 +65813,6 @@ snapshots:
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/dom'
-      - chai
       - graphql
       - supports-color
 
@@ -65832,6 +65836,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 5.2.1
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.18.1
@@ -65841,7 +65846,6 @@ snapshots:
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/dom'
-      - chai
       - graphql
       - supports-color
 
