@@ -22,13 +22,13 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         Err(error) => return Ok(Outcome::Declined(format!("formatter load: {error}"))),
     };
     let components = loaded.components()?;
-    if !supported_writes(options.check, &components) {
-        return Ok(Outcome::Declined("formatter concurrent source writes".to_owned()));
-    }
     let files = match tool::format(&loaded.files) {
         Ok(files) => files,
         Err(error) => return Ok(Outcome::Declined(format!("formatter tool: {error}"))),
     };
+    if !supported_writes(options.check, &components, &files) {
+        return Ok(Outcome::Declined("formatter concurrent source writes".to_owned()));
+    }
     let mut result = loaded.result(&files)?;
     write::validate(&loaded.files)?;
     let work = |output: &bit_install::output::Output| {
@@ -49,10 +49,33 @@ fn invalid(message: &str) -> io::Error {
 fn supported_writes(
     check: bool,
     components: &[workspace_command::component_service::Component],
+    files: &[Value],
 ) -> bool {
-    check
-        || (components.len() <= 2
-            && components
-                .iter()
-                .all(|component| component.files.len() <= 1))
+    if check {
+        return true;
+    }
+    if components.len() > 2 {
+        return false;
+    }
+    let mut offset = 0;
+    for component in components {
+        let end = offset + component.files.len();
+        let Some(rows) = files.get(offset..end) else {
+            return false;
+        };
+        if rows
+            .iter()
+            .filter(|row| {
+                row["newContent"]
+                    .as_str()
+                    .is_some_and(|content| !content.is_empty())
+            })
+            .count()
+            > 1
+        {
+            return false;
+        }
+        offset = end;
+    }
+    offset == files.len()
 }

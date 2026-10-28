@@ -208,6 +208,40 @@ fn standard_format_nested_source_checks_preserve_file_order_and_guard_concurrent
 }
 
 #[test]
+fn standard_format_multiple_sources_writes_only_the_changed_file() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.js", "module.exports=()=>42;\n");
+    helper.output_file("comp1/extra.js", "module.exports = () => 43;\n");
+    support::setup(&helper, "show comp1");
+    let result = support::compare(&helper, "format --json");
+    assert!(result.status.success());
+    assert_eq!(
+        std::fs::read_to_string(helper.scopes.local_path.join("comp1/index.js")).unwrap(),
+        "module.exports = () => 42;\n",
+    );
+    assert_eq!(
+        std::fs::read_to_string(helper.scopes.local_path.join("comp1/extra.js")).unwrap(),
+        "module.exports = () => 43;\n",
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn standard_format_multiple_sources_reports_the_only_write_failure() {
+    use std::os::unix::fs::PermissionsExt;
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.js", "module.exports=()=>42;\n");
+    helper.output_file("comp1/extra.js", "module.exports = () => 43;\n");
+    support::setup(&helper, "show comp1");
+    let changed = helper.scopes.local_path.join("comp1/index.js");
+    std::fs::set_permissions(&changed, std::fs::Permissions::from_mode(0o444)).unwrap();
+    let result = support::compare_with_stdout(&helper, "format", duration);
+    std::fs::set_permissions(&changed, std::fs::Permissions::from_mode(0o644)).unwrap();
+    assert!(result.status.success());
+    assert_eq!(std::fs::read_to_string(&changed).unwrap(), "module.exports=()=>42;\n");
+}
+
+#[test]
 fn standard_format_ignored_extensions_delegate_before_cache_or_source_writes() {
     let helper = support::workspace(1, true);
     helper.output_file("comp1/schema.graphql", "type Example { field: String }\n");
