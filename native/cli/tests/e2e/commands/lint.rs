@@ -29,6 +29,48 @@ fn standard_lint_clean_results_and_config_cache_match_without_bit_runtime() {
 }
 
 #[test]
+fn standard_lint_multiple_components_share_config_and_preserve_reports() {
+    let helper = support::workspace(2, false);
+    helper.output_file("comp1/index.js", "module.exports=()=>42;\n");
+    helper.output_file("comp2/index.js", "module.exports=()=>missing;\n");
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let result = support::compare_with_stdout(&helper, "lint --json", duration);
+    assert_eq!(result.status.code(), Some(1));
+}
+
+#[test]
+fn standard_lint_multiple_new_typescript_components() {
+    let helper = support::workspace(2, false);
+    helper.output_file("comp1/index.ts", "export const value: number = 42;\n");
+    helper.output_file("comp2/index.ts", "export const value: number = 7;\n");
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    support::compare_with_stdout(&helper, "lint --json", duration);
+}
+
+#[test]
+fn standard_lint_multiple_components_cold_text() {
+    let helper = support::workspace(2, false);
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let result = support::compare_with_stdout(&helper, "lint", text_duration);
+    assert!(result.status.success());
+}
+
+#[test]
 fn standard_lint_warning_error_and_fix_preserve_released_diagnostics_and_sources() {
     let helper = support::workspace(1, true);
     for (source, command, code) in [

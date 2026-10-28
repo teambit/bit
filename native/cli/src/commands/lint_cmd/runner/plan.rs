@@ -9,7 +9,7 @@ pub(super) struct Plan {
     pub loaded: Loaded,
     components: Vec<Component>,
     config: Option<Config>,
-    tool: Option<Session>,
+    tools: Vec<Session>,
 }
 
 impl Plan {
@@ -23,30 +23,26 @@ impl Plan {
         };
         let loaded = Loaded::prepare(root, &selection)?;
         let components = loaded.components()?;
-        if components.len() > 1 {
-            return Err(invalid("linter multiple component services"));
+        if components.len() > 2 || (components.len() > 1 && options.fix) {
+            return Err(invalid("linter multiple component fixes"));
         }
-        let config = components
-            .first()
-            .map(|component| Config::prepare(root, &component.directory))
-            .transpose()?;
-        let tool = components
-            .first()
-            .zip(config.as_ref())
-            .map(|(component, config)| {
-                Session::prepare(
+        let directories = components
+            .iter()
+            .map(|component| component.directory.as_str())
+            .collect::<Vec<_>>();
+        let config =
+            if directories.is_empty() { None } else { Some(Config::prepare(root, &directories)?) };
+        let mut tools = Vec::new();
+        if let Some(config) = &config {
+            for component in &components {
+                tools.push(Session::prepare(
                     &request(component, config, options)?,
                     Chalk::detect(args).enabled(),
-                )
-            })
-            .transpose()?;
-        for file in &loaded.files {
-            let path = file["absolutePath"].as_str().ok_or_else(|| invalid("linter file path"))?;
-            if fs::read_to_string(path)? != file["source"].as_str().unwrap_or_default() {
-                return Err(invalid("linter source changed"));
+                )?);
             }
         }
-        Ok(Self { loaded, components, config, tool })
+        validate_sources(&loaded.files)?;
+        Ok(Self { loaded, components, config, tools })
     }
 
     pub(super) fn run(
@@ -61,10 +57,11 @@ impl Plan {
                 output.status(&format!("loading {count} component(s)"));
             }
         }
-        let Some(component) = self.components.first() else {
+        if self.components.is_empty() {
             return Ok(results::aggregate(Vec::new(), Vec::new()));
-        };
-        output.status("linting components (total: 1)");
+        }
+        let total = self.components.len();
+        output.status(&format!("linting components (total: {total})"));
         if let Some(error) = self.config
             .as_ref()
             .ok_or_else(|| invalid("linter config"))?
@@ -72,27 +69,41 @@ impl Plan {
         {
             return failure(error, &self.loaded.progress.environment, output);
         }
-        output.status(&format!(
-            "linting components (1/1) component: {}, # of files: {}",
-            self.loaded.progress.identities[0],
-            component.files.len(),
-        ));
-        let tool = self.tool
-            .as_mut()
-            .ok_or_else(|| invalid("linter tool"))?
-            .run()?;
-        if let Some(error) = tool.get("error") {
-            output.failure(&format!(
-                r#"service "linter" of env "{}" has failed. error: {}"#,
-                self.loaded.progress.environment,
-                tool["message"].as_str().unwrap_or_default(),
+        self.lint_components(output, fix)
+    }
+    fn lint_components(
+        &mut self,
+        output: &bit_install::output::Output,
+        fix: bool,
+    ) -> io::Result<Value> {
+        let total = self.components.len();
+        let mut rows = Vec::new();
+        for (index, (component, tool)) in self.components
+            .iter()
+            .zip(&mut self.tools)
+            .enumerate()
+        {
+            output.status(&format!(
+                "linting components ({}/{total}) component: {}, # of files: {}",
+                index + 1,
+                self.loaded.progress.identities[index],
+                component.files.len(),
             ));
-            return Ok(results::aggregate(Vec::new(), vec![error.clone()]));
+            let result = tool.run()?;
+            if let Some(error) = result.get("error") {
+                output.failure(&format!(
+                    r#"service "linter" of env "{}" has failed. error: {}"#,
+                    self.loaded.progress.environment,
+                    result["message"].as_str().unwrap_or_default(),
+                ));
+                return Ok(results::aggregate(Vec::new(), vec![error.clone()]));
+            }
+            if fix && let Some(error) = write(&result)? {
+                return failure(error, &self.loaded.progress.environment, output);
+            }
+            rows.push(results::component(&component.id, &result)?);
         }
-        if fix && let Some(error) = write(&tool)? {
-            return failure(error, &self.loaded.progress.environment, output);
-        }
-        Ok(results::aggregate(vec![results::component(&component.id, &tool)?], Vec::new()))
+        Ok(results::aggregate(rows, Vec::new()))
     }
 }
 
@@ -147,4 +158,14 @@ fn failure(
 ) -> io::Result<Value> {
     output.failure(&filesystem::message("linter", environment, &error)?);
     Ok(results::aggregate(Vec::new(), vec![error]))
+}
+
+fn validate_sources(files: &[Value]) -> io::Result<()> {
+    for file in files {
+        let path = file["absolutePath"].as_str().ok_or_else(|| invalid("linter file path"))?;
+        if fs::read_to_string(path)? != file["source"].as_str().unwrap_or_default() {
+            return Err(invalid("linter source changed"));
+        }
+    }
+    Ok(())
 }

@@ -4,7 +4,7 @@ use serde_json::json;
 #[test]
 fn generated_configuration_name_matches_released_object_hash() {
     let root = tempfile::tempdir().unwrap();
-    let config = Config::prepare(root.path(), "sample").unwrap();
+    let config = Config::prepare(root.path(), &["sample"]).unwrap();
     assert_eq!(
         config.path.file_name().unwrap(),
         "bit.tsconfig.eslint.26e769456ec718fdfcaa0c55b0ce1f76a888ce82.json",

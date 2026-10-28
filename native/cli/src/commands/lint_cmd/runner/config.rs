@@ -17,7 +17,7 @@ pub(super) struct Config {
 }
 
 impl Config {
-    pub(super) fn prepare(root: &Path, directory: &str) -> io::Result<Self> {
+    pub(super) fn prepare(root: &Path, directories: &[&str]) -> io::Result<Self> {
         let mut config: Value = serde_json::from_str(include_str!(
             "../../../../../../scopes/react/react/typescript/tsconfig.json"
         ))?;
@@ -25,10 +25,15 @@ impl Config {
             config["exclude"].as_array_mut().ok_or_else(|| invalid("linter excludes"))?;
         excludes.push(json!("./dist"));
         for key in ["include", "exclude"] {
-            for pattern in config[key].as_array_mut().ok_or_else(|| invalid("linter patterns"))? {
+            let patterns = config[key].as_array().ok_or_else(|| invalid("linter patterns"))?;
+            let mut expanded = Vec::new();
+            for pattern in patterns {
                 let value = pattern.as_str().ok_or_else(|| invalid("linter pattern"))?;
-                *pattern = json!(format!("../../{directory}/{value}"));
+                for directory in directories {
+                    expanded.push(json!(format!("../../{directory}/{value}")));
+                }
             }
+            config[key] = json!(expanded);
         }
         let name = format!("bit.tsconfig.eslint.{}.json", hash::hash(&config)?);
         let path = root.join("node_modules/.cache").join(name);
