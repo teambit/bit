@@ -52,6 +52,7 @@ lines.on('line', async line => {
   try {
     const result = await jest.runCLI(argv, [request.root]);
     for (const file of result.results.testResults) {
+      file.executionErrorMessage = file.testExecError?.message;
       for (const test of file.testResults) {
         test.formattedError = formatResultsErrors([test], config, { noStackTrace: true }) || undefined;
       }

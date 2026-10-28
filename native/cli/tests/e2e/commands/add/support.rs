@@ -46,6 +46,19 @@ pub(crate) fn compare_with_stdout(
     compare_mode(helper, command, false, true, Comparison::exact(stdout), false, None)
 }
 
+pub(crate) type ArtifactProjection<'a> =
+    dyn Fn(&mut BTreeMap<String, Vec<u8>>, &Run, i64, i64) + 'a;
+
+pub(crate) fn compare_with_artifacts(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    artifacts: &ArtifactProjection<'_>,
+) -> Run {
+    let output = Comparison { artifacts: Some(artifacts), ..Comparison::exact(stdout) };
+    compare_mode(helper, command, false, true, output, false, None)
+}
+
 /// Only a caller with independently qualified complete Node errors may use variants.
 pub(crate) fn compare_with_error_variants(
     helper: &Helper,
@@ -191,6 +204,9 @@ fn compare_mode(
         );
         install_clocks::project(&mut expected_files, modules.as_deref(), started, ended);
     }
+    if let Some(project) = output.artifacts {
+        project(&mut expected_files, &expected, started, ended);
+    }
     let mut expected_scope = scope_tree(root, &config_history);
     if let Some(additions) = output.scope_additions {
         for (path, bytes) in additions {
@@ -233,6 +249,9 @@ fn compare_mode(
     let mut actual_files = tree(root);
     if install_clocks {
         install_clocks::project(&mut actual_files, modules.as_deref(), started, ended);
+    }
+    if let Some(project) = output.artifacts {
+        project(&mut actual_files, &actual, started, ended);
     }
     compare_paths(&actual_files, &expected_files, command);
     compare_paths(&scope_tree(root, &config_history), &expected_scope, "scope objects/controls");

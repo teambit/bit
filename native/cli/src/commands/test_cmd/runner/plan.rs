@@ -1,6 +1,6 @@
 use super::{
-    Execution, Options, config, coverage::Coverage, invalid, json, report, settings::Settings,
-    summary, tool::Session,
+    Execution, Options, config, coverage::Coverage, invalid, json, junit, report,
+    settings::Settings, summary, tool::Session,
 };
 use crate::commands::{
     color::Chalk,
@@ -60,6 +60,9 @@ impl Plan {
         }
         let terminated = result.get("terminated").is_some();
         let mut report = report::report(&result, identity)?;
+        if !terminated && let Some(path) = &self.settings.junit {
+            junit::write(path, &report.data, &result)?;
+        }
         if self.settings.summary && !terminated {
             report.data = summary::render(
                 &report.data,

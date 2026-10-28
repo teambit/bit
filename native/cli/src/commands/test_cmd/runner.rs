@@ -3,6 +3,7 @@ mod assets;
 mod config;
 mod coverage;
 mod files;
+mod junit;
 mod paths;
 mod plan;
 mod report;

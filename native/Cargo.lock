@@ -292,6 +292,7 @@ dependencies = [
  "pnpm-diagnostics",
  "pnpm-fs",
  "pnpm-lockfile",
+ "regex",
  "regress",
  "reqwest",
  "serde",

@@ -13,6 +13,7 @@ pub(super) struct Settings {
     pub coverage: bool,
     pub update_snapshot: bool,
     pub files: Vec<PathBuf>,
+    pub junit: Option<PathBuf>,
 }
 impl Settings {
     pub(super) fn parse(root: &Path, args: &[OsString], options: &Options) -> io::Result<Self> {
@@ -32,6 +33,7 @@ impl Settings {
             coverage: false,
             update_snapshot: false,
             files: Vec::new(),
+            junit: None,
         };
         settings.apply(args)?;
         if let Some(selected) = selected {
@@ -41,7 +43,8 @@ impl Settings {
         Ok(settings)
     }
     fn apply(&mut self, args: &[OsString]) -> io::Result<()> {
-        for argument in args.iter().skip(1) {
+        let mut arguments = args.iter().skip(1);
+        while let Some(argument) = arguments.next() {
             match argument.to_str().ok_or_else(|| invalid("tester argument"))? {
                 "--" => break,
                 "--json" | "-j" | "--verbose" => {}
@@ -49,6 +52,14 @@ impl Settings {
                 "--summary" => self.summary = true,
                 "--coverage" => self.coverage = true,
                 "--update-snapshot" => self.update_snapshot = true,
+                "--junit" => {
+                    self.junit = Some(PathBuf::from(
+                        arguments.next().ok_or_else(|| invalid("tester junit path"))?,
+                    ));
+                }
+                value if value.starts_with("--junit=") => {
+                    self.junit = Some(PathBuf::from(&value[8..]));
+                }
                 value if value.starts_with('-') => return Err(invalid("tester runtime option")),
                 _ => {}
             }

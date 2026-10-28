@@ -556,3 +556,29 @@ targets. Windows transfer CI includes the restoration tests. The tester adapter
 also resolves its exposed CLI entry path as Node does, preserving exact
 `process.argv` bytes when the configured installation path mixes separators.
 Existing strict process-artifact comparisons caught that mismatch on Windows.
+
+## Tester JUnit output
+
+Single-component built-in JSON testing now creates JUnit XML after executing
+tests, including nested output directories, failure and suite-error messages,
+skipped tests, test durations, timestamp, XML escaping and empty reports. The
+Jest adapter supplies the original execution error message separately because
+JavaScript Error messages are not normally enumerable. Direct test-process exit
+does not create a report; filesystem failures remain owned after test effects.
+
+Differential cases compare complete XML apart from validated command timestamps
+and nonzero durations (the fixture runs long enough to avoid zero-duration
+attribute ambiguity), plus stdout, exit status, workspace and scope state. They
+cover passing and failing assertions, suite errors, pending and todo tests, empty
+reports, nonzero process exit and an output path that is a directory. The last
+cases assert the test's side effect occurs once. A negative control that
+suppressed report writing failed the full filesystem comparison. The standalone renderer also
+matched captured released reports for Unicode, control characters and ANSI
+sequences. Multi-component, custom tester and text paths remain outside this
+bounded implementation.
+
+Validation for this checkpoint: formatting, Clippy, Dylint, rustdoc, generated
+checks and 1,817 workspace tests passed. Four focused JUnit differential cases
+passed. The final full E2E run reported 1,784 passes, two existing skips and two Bit
+Cloud request failures during released capsule fixtures; both passed unchanged
+on rerun. Platform CI for this checkpoint remains pending.

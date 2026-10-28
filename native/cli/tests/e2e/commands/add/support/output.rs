@@ -8,11 +8,12 @@ pub(super) struct Comparison<'a> {
     pub errors: Option<&'a [String; 2]>,
     pub scope_additions: Option<&'a std::collections::BTreeMap<String, Vec<u8>>>,
     pub colors: bool,
+    pub artifacts: Option<&'a super::ArtifactProjection<'a>>,
 }
 
 impl Comparison<'_> {
     pub fn exact(stdout: fn(&str) -> String) -> Self {
-        Self { stdout, errors: None, scope_additions: None, colors: false }
+        Self { stdout, errors: None, scope_additions: None, colors: false, artifacts: None }
     }
 }
 
