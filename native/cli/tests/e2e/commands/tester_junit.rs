@@ -9,7 +9,7 @@ fn compare(helper: &Helper, command: &str) -> Run {
     assert_eq!(remote, move_paths::support::tree(&helper.scopes.remote_path));
     result
 }
-fn project(files: &mut BTreeMap<String, Vec<u8>>, run: &Run, started: i64, ended: i64) {
+pub(super) fn project(files: &mut BTreeMap<String, Vec<u8>>, run: &Run, started: i64, ended: i64) {
     let Some(bytes) = files.get_mut("reports/test.xml") else {
         return;
     };

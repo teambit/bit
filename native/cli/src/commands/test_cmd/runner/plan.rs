@@ -22,6 +22,9 @@ impl Plan {
         let settings = Settings::parse(root, args, options)?;
         let loaded = Loaded::prepare(root, &settings.selection)?;
         let components = loaded.components()?;
+        if !options.json && components.is_empty() {
+            return Err(invalid("empty tester text selection"));
+        }
         if !components.is_empty()
             && settings.environment
                 .as_ref()
@@ -55,8 +58,20 @@ impl Plan {
         };
         Ok(Self { loaded, tool, coverage, settings })
     }
-    pub(super) fn run(&mut self, root: &Path) -> io::Result<Execution> {
+    pub(super) fn run(
+        &mut self,
+        root: &Path,
+        output: &bit_install::output::Output,
+        text: bool,
+    ) -> io::Result<Execution> {
         self.loaded.commit(root)?;
+        if text && self.settings.files.is_empty() {
+            for count in &self.loaded.progress.loads {
+                if *count > 0 {
+                    output.status(&format!("loading {count} component(s)"));
+                }
+            }
+        }
         let Some(identity) = self.loaded.progress.identities.first() else {
             return Ok(Execution {
                 report: Report { data: "[]".to_owned(), code: 0, details: None },

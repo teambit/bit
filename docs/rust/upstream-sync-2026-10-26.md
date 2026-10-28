@@ -716,3 +716,26 @@ Validation: 69 focused tester cases, 14 compiler cases, formatting, Clippy,
 Dylint, rustdoc, generated checks and all workspace tests passed. The full E2E
 run had 1,821 passes, two existing skips and one Bit Cloud request failure in
 released-CLI custom-aspect fixture setup; that case passed unchanged on rerun.
+
+## Tester text summaries
+
+Built-in same-environment testing now owns the text `--summary` path as well
+as JSON. Rust renders the released pass, failure, tester-error, no-test and
+nonzero-exit headlines from the existing aggregate, with color and measured
+duration. It preserves cold loader progress, explicit-file selection, report
+writes and direct process termination. Regular text reporting, deprecated text
+selection flags and the existing unsupported loader and environment cases still
+decline before effects.
+
+Eight differential cases cover passing, pending, failing and missing tests,
+suite errors, explicit files, CI colors, JUnit and coverage, nonzero and direct
+exit, and once-only effects. A preload rejects Bit runtime imports for a text
+summary. The before-change controls confirm these cases previously delegated;
+comparisons retain output, exit codes and workspace effects while validating and
+normalizing only elapsed durations and JUnit timestamps/durations.
+
+Validation: eight focused text-summary cases and 75 focused tester cases passed,
+as did formatting, Clippy, Dylint, rustdoc, workspace tests and generated/scope
+checks. The full E2E run had 1,827 passes, two existing skips and three Bit
+Cloud request failures in existing fixture setup. All three passed unchanged
+on serial rerun.

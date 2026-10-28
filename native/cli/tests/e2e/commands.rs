@@ -42,3 +42,4 @@ mod tester_multi;
 mod tester_multi_detail;
 mod tester_multi_files;
 mod tester_multi_junit;
+mod tester_text_summary;

@@ -18,7 +18,14 @@ pub(super) struct Settings {
 }
 impl Settings {
     pub(super) fn parse(root: &Path, args: &[OsString], options: &Options) -> io::Result<Self> {
-        if !options.json {
+        if !options.json
+            && (!args
+                .iter()
+                .take_while(|arg| *arg != "--")
+                .any(|arg| arg == "--summary")
+                || options.all
+                || options.scope.is_some())
+        {
             return Err(invalid("tester text reporting"));
         }
         let selected = files::select(root, &options.user_pattern)?;

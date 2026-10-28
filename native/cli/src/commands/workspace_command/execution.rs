@@ -214,7 +214,7 @@ fn print(report: &Report, command: &str, newline: bool) -> io::Result<()> {
     }
     let mut stdout = io::stdout().lock();
     stdout.write_all(report.data.as_bytes())?;
-    if newline {
+    if newline && !(command == "test" && report.data.is_empty()) {
         stdout.write_all(b"\n")?;
     }
     stdout.flush()
