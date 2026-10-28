@@ -181,6 +181,13 @@ const DEFAULT_VENDOR_DIR = 'vendor';
 /**
  * API of the Bit Workspace
  */
+export type SavedGraphEdge = { source: string; target: string; type: DepEdgeType };
+export type SavedGraphLazy = {
+  nodeIds: Set<string>;
+  idByStr: Map<string, ComponentID>;
+  loadEdges: () => Promise<SavedGraphEdge[]>;
+};
+
 export class Workspace implements ComponentFactory {
   private warnedAboutMisconfiguredEnvs: string[] = []; // cache env-ids that have been errored about not having "env" type
   priority = true;
@@ -677,19 +684,42 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
-   * the ids of the nodes of the saved graph of the component (the component itself and its flattened dependencies),
-   * or null when the component has no saved graph. unlike `getSavedGraphOfComponentIfExist`, the edges are not
-   * loaded and parsed: the graph builder of the workspace asks this first and asks for the graph only when it needs
-   * the edges.
+   * the saved graph of the component (its flattened edges) without building a `Graph` for it: the ids of its nodes
+   * (the component itself and its flattened dependencies) and a function that loads the edges on demand. null when
+   * the component has no saved graph. the graph builder of the workspace uses the node ids to tell which
+   * dependencies the saved graph covers, and loads the edges only when it needs them.
    */
-  async getSavedGraphNodeIdsOfComponentIfExist(component: Component): Promise<Set<string> | null> {
+  async getSavedGraphLazyOfComponentIfExist(component: Component): Promise<SavedGraphLazy | null> {
     if (!component.id.hasVersion()) return null;
     const versionObj = await this.scope.getBitObjectVersionById(component.id);
     if (!versionObj) return null;
     const objects = this.scope.legacyScope.objects;
     if (!(await versionObj.hasFlattenedEdges(objects))) return null;
     const flattenedDependencies = await versionObj.loadFlattenedDependencies(objects);
-    return new Set([component.id.toString(), ...flattenedDependencies.map((id) => id.toString())]);
+    const idByStr = new Map<string, ComponentID>([[component.id.toString(), component.id]]);
+    flattenedDependencies.forEach((id) => idByStr.set(id.toString(), id));
+    const loadEdges = async (): Promise<SavedGraphEdge[]> => {
+      const flattenedEdges = await versionObj.getFlattenedEdges(objects);
+      const toNodeId = (id: ComponentID): string => {
+        const idStr = id.toString();
+        if (!idByStr.has(idStr)) {
+          const suggestWrongSnap = isHash(component.id.version)
+            ? `\nplease check that .bitmap has the correct versions of ${component.id.toStringWithoutVersion()}.
+it's possible that the version ${component.id.version} belong to ${idStr.split('@')[0]}`
+            : '';
+          throw new Error(
+            `id ${idStr} exists in flattenedEdges but not in flattened of ${component.id.toString()}.${suggestWrongSnap}`
+          );
+        }
+        return idStr;
+      };
+      return flattenedEdges.map((edge) => ({
+        source: toNodeId(edge.source),
+        target: toNodeId(edge.target),
+        type: edge.type,
+      }));
+    };
+    return { nodeIds: new Set(idByStr.keys()), idByStr, loadEdges };
   }
 
   async getSavedGraphOfComponentIfExist(component: Component) {

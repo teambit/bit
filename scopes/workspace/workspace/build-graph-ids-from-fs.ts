@@ -14,7 +14,7 @@ import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { ComponentIssue } from '@teambit/component-issues';
-import type { Workspace } from './workspace';
+import type { SavedGraphEdge, SavedGraphLazy, Workspace } from './workspace';
 
 const DEPS_NOT_RESOLVED_ISSUES: Array<new () => ComponentIssue> = [
   IssuesClasses.MissingPackagesDependenciesOnFs,
@@ -116,9 +116,9 @@ export class GraphIdsFromFsBuilder {
     if (isOnWorkspace) {
       // the node ids are enough to tell which dependencies the saved graph covers. the edges, which are costly to
       // load for every component, are asked for only when a covered dependency is not in the graph yet.
-      const savedGraphNodeIds = await this.workspace.getSavedGraphNodeIdsOfComponentIfExist(component);
-      if (savedGraphNodeIds) {
-        const allDependenciesComps = await this.processCompFromWorkspaceWithGraph(savedGraphNodeIds, component);
+      const savedGraph = await this.workspace.getSavedGraphLazyOfComponentIfExist(component);
+      if (savedGraph) {
+        const allDependenciesComps = await this.processCompFromWorkspaceWithGraph(savedGraph, component);
         this.completed.add(idStr);
         return allDependenciesComps;
       }
@@ -153,30 +153,20 @@ export class GraphIdsFromFsBuilder {
    * and get its dependencies.
    */
   private async processCompFromWorkspaceWithGraph(
-    savedGraphNodeIds: Set<string>,
+    savedGraph: SavedGraphLazy,
     component: Component
   ): Promise<Component[]> {
     const deps = this.dependencyResolver.getComponentDependencies(component);
     const workspaceIdsStr = new Set(this.workspace.listIds().map((id) => id.toString()));
     const [depsInScopeGraph, depsNotInScopeGraph] = partition(
       deps,
-      (dep) => savedGraphNodeIds.has(dep.componentId.toString()) && !workspaceIdsStr.has(dep.componentId.toString())
+      (dep) => savedGraph.nodeIds.has(dep.componentId.toString()) && !workspaceIdsStr.has(dep.componentId.toString())
     );
 
     const depsInScopeGraphIds = depsInScopeGraph.map((dep) => dep.componentId.toString());
     const depsInScopeGraphIdsNotCompleted = depsInScopeGraphIds.filter((id) => !this.completed.has(id));
     if (depsInScopeGraphIdsNotCompleted.length) {
-      const graphFromScope = await this.workspace.getSavedGraphOfComponentIfExist(component);
-      if (!graphFromScope) {
-        throw new Error(`the saved graph of ${component.id.toString()} has nodes but could not be loaded`);
-      }
-      const subGraphs = graphFromScope.successorsSubgraph(depsInScopeGraphIdsNotCompleted);
-      // delete any edge that its source is from the workspace. if this component is modified, this edge could be
-      // incorrect. we don't need these edges anyway because we add them directly.
-      subGraphs.edges.forEach((edge) => {
-        if (workspaceIdsStr.has(edge.sourceId)) subGraphs.deleteEdge(edge.sourceId, edge.targetId);
-      });
-      this.graph.merge([subGraphs]);
+      await this.addSuccessorsOfSavedGraph(savedGraph, depsInScopeGraphIdsNotCompleted, workspaceIdsStr);
       depsInScopeGraphIdsNotCompleted.forEach((id) => this.completed.add(id));
     }
 
@@ -197,6 +187,54 @@ export class GraphIdsFromFsBuilder {
    * for these components, keep only the incoming edges from components processed from the workspace (their edges are
    * the current ones) and only the outgoing edges that are current deps.
    */
+  /**
+   * adds to the graph the nodes reachable from the given roots in the saved graph of a component, and the edges
+   * between them, in the order a depth-first walk meets them (the order `successorsSubgraph` + `merge` gave).
+   * edges whose source is in the workspace are not added: if that component is modified, the saved edge could be
+   * incorrect, and the edges of the workspace components are added directly from their current dependencies.
+   */
+  private async addSuccessorsOfSavedGraph(savedGraph: SavedGraphLazy, rootIds: string[], workspaceIdsStr: Set<string>) {
+    const edges = await savedGraph.loadEdges();
+    const outEdges = new Map<string, SavedGraphEdge[]>();
+    edges.forEach((edge) => {
+      const list = outEdges.get(edge.source);
+      if (list) list.push(edge);
+      else outEdges.set(edge.source, [edge]);
+    });
+    const nodeIds: string[] = [];
+    const reached: SavedGraphEdge[] = [];
+    const seen = new Set<string>(); // in nodeIds
+    const expanded = new Set<string>(); // its out-edges were pushed
+    const stack: SavedGraphEdge[] = [];
+    const expand = (nodeId: string) => {
+      expanded.add(nodeId);
+      const list = outEdges.get(nodeId) || [];
+      for (let i = list.length - 1; i >= 0; i -= 1) stack.push(list[i]);
+    };
+    rootIds.forEach((rootId) => {
+      if (!seen.has(rootId)) {
+        seen.add(rootId);
+        nodeIds.push(rootId);
+      }
+      // a root is expanded on its turn even when an earlier walk reached it, as successorsSubgraph does.
+      expand(rootId);
+      while (stack.length) {
+        const edge = stack.pop() as SavedGraphEdge;
+        if (!seen.has(edge.target)) {
+          seen.add(edge.target);
+          nodeIds.push(edge.target);
+        }
+        reached.push(edge);
+        if (!expanded.has(edge.target)) expand(edge.target);
+      }
+    });
+    nodeIds.forEach((nodeId) => this.graph.setNode(new Node(nodeId, savedGraph.idByStr.get(nodeId) as ComponentID)));
+    reached.forEach((edge) => {
+      if (workspaceIdsStr.has(edge.source)) return;
+      this.graph.setEdge(new Edge(edge.source, edge.target, edge.type));
+    });
+  }
+
   private async removeOutdatedEdgesOfModified() {
     // components processed from the workspace. the edges of other nodes came from saved graphs, so they are the
     // published ones, even when the id is in the workspace.
