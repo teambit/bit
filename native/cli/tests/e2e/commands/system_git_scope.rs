@@ -5,6 +5,46 @@ use serde_json::json;
 use std::fs;
 
 #[test]
+fn version_history_linear_text_matches_node() {
+    let helper = super::move_paths::support::workspace(1, false);
+    super::move_paths::support::tag(&helper);
+    helper.output_file("comp1/index.js", "module.exports = () => 'second';\n");
+    super::move_paths::support::tag(&helper);
+    super::move_paths::support::setup(&helper, "version-history build comp1");
+    let history = super::move_paths::support::json(&helper, "version-history show comp1 --json");
+    assert_eq!(
+        history["versions"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2,
+    );
+    let result = super::move_paths::support::compare(&helper, "version-history show comp1");
+    assert!(!result.trace.contains("starting the JavaScript host"));
+    super::move_paths::support::compare(&helper, "vh show comp1 --short-hash");
+    super::move_paths::support::compare_ci(&helper, "version-history show comp1", true);
+}
+
+#[test]
+fn version_history_text_empty_and_remote_refs_match_node() {
+    let helper = super::move_paths::support::workspace(1, true);
+    let history = super::move_paths::support::json(&helper, "version-history show comp1 --json");
+    let hash = history["hash"].as_str().unwrap();
+    let path = helper.scopes.local_path
+        .join(".bit/objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    super::move_paths::support::compare(&helper, "version-history show comp1");
+    helper.output_file(".bit/refs/remotes/example/main", "[]");
+    super::add::support::compare_declined(&helper, "version-history show comp1", |text| {
+        text.to_owned()
+    });
+}
+
+#[test]
 fn version_and_globals_and_system_log_run_natively() {
     let helper = Helper::new();
     helper.re_init_workspace();

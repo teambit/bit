@@ -2,6 +2,7 @@
 
 #[cfg(test)]
 mod tests;
+mod text;
 
 use super::{
     Command,
@@ -19,6 +20,7 @@ pub const COMMAND: Command = Command { name: "version-history", aliases: &["vh"]
 #[derive(Debug, PartialEq, Eq)]
 enum Subcommand {
     ShowJson(String),
+    ShowText(String, bool),
     Unrecognized(String),
 }
 
@@ -29,25 +31,28 @@ fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         .filter(|arg| *arg != "--no-color")
         .collect::<Vec<_>>();
     match filtered.as_slice() {
-        ["show", rest @ ..] => {
-            let mut id = None;
-            let mut json = false;
-            for &arg in rest {
-                match arg {
-                    "-j" | "--json" => json = true,
-                    "-s" | "--short-hash" => {}
-                    val if !val.starts_with('-') && id.is_none() => id = Some(val.to_owned()),
-                    _ => return None,
-                }
-            }
-            let id = id.filter(|text| !text.is_empty())?;
-            json.then_some(Subcommand::ShowJson(id))
-        }
+        ["show", rest @ ..] => parse_show(rest),
         [sub] if !sub.starts_with('-') && !matches!(*sub, "show" | "build" | "graph") => {
             Some(Subcommand::Unrecognized((*sub).to_owned()))
         }
         _ => None,
     }
+}
+
+fn parse_show(rest: &[&str]) -> Option<Subcommand> {
+    let mut id = None;
+    let mut json = false;
+    let mut short = false;
+    for &arg in rest {
+        match arg {
+            "-j" | "--json" => json = true,
+            "-s" | "--short-hash" => short = true,
+            val if !val.starts_with('-') && id.is_none() => id = Some(val.to_owned()),
+            _ => return None,
+        }
+    }
+    let id = id.filter(|text| !text.is_empty())?;
+    Some(if json { Subcommand::ShowJson(id) } else { Subcommand::ShowText(id, short) })
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -69,6 +74,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             emit_text(&root, args, "version-history", true, msg)
         }
         Subcommand::ShowJson(id) => run_show_json(&root, args, &id),
+        Subcommand::ShowText(id, short) => text::run(&root, args, &id, short),
     }
 }
 
