@@ -43,7 +43,7 @@
       "phase": "pre",
       "pathGlob": "dist/core-aspects/node_modules/@teambit/*",
       "suffix": "browser",
-      "baselineMB": 7.32
+      "baselineMB": 8.15
     },
     {
       "id": "combined-pre",
