@@ -26,6 +26,8 @@ const ASSETS: Array<{ pkg: string; from: string; to: string; flatten?: boolean }
   { pkg: '@teambit/config', from: 'dist/workspace-template.jsonc', to: '.', flatten: true },
   // `HostInitializerMain.loadAgentsTemplate`
   { pkg: '@teambit/host-initializer', from: 'dist/agents-template*.md', to: '.', flatten: true },
+  // `renderAgentsSection` - the AGENTS.md section `bit ci sync --init` writes
+  { pkg: '@teambit/ci', from: 'dist/sync/agents-sync-section.md', to: '.', flatten: true },
   // McpConfigWriter's rules templates are no longer copied - `getDefaultRulesContent` inlines them
   // via esbuild's `.md` text loader instead (see `run-esbuild.ts`, gated on `BIT_IS_BUNDLE`).
   // the preview aspect's `generateLink` writes webpack entries that import
