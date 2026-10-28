@@ -9,28 +9,41 @@ use std::{
 const METRICS: [&str; 4] = ["lines", "functions", "statements", "branches"];
 
 fn read(root: &Path, directory: &str, main: &str) -> io::Result<Value> {
+    let component = Coverage { directory: directory.to_owned(), main: main.to_owned() };
+    Ok(read_many(root, &[component])?.remove(0))
+}
+fn read_many(root: &Path, components: &[Coverage]) -> io::Result<Vec<Value>> {
     let path = root.join("coverage/coverage-summary.json");
     if !path.exists() {
-        return Ok(empty());
+        return Ok(components
+            .iter()
+            .map(|_| empty())
+            .collect());
     }
-    let report = fs::read(&path)
+    let raw = fs::read(&path)
         .ok()
-        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
-        .and_then(|raw| {
-            project(
-                &raw,
-                &root
-                    .join(directory)
-                    .components()
-                    .collect::<PathBuf>(),
-                main,
-            )
+        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok());
+    let reports = components
+        .iter()
+        .map(|component| {
+            raw.as_ref()
+                .and_then(|raw| {
+                    project(
+                        raw,
+                        &root
+                            .join(&component.directory)
+                            .components()
+                            .collect::<PathBuf>(),
+                        &component.main,
+                    )
+                })
+                .unwrap_or_else(empty)
         })
-        .unwrap_or_else(empty);
+        .collect();
     if path.exists() {
         remove::directory(&root.join("coverage"))?;
     }
-    Ok(report)
+    Ok(reports)
 }
 
 fn project(raw: &Value, directory: &Path, main: &str) -> Option<Value> {
@@ -114,6 +127,25 @@ impl Coverage {
         }
         match read(root, &self.directory, &self.main) {
             Ok(coverage) => result["coverage"] = coverage,
+            Err(error) => {
+                result["errorMessage"] = json!(
+                    crate::commands::workspace_command::filesystem_error::description(&error)
+                );
+                result["error"] =
+                    crate::commands::workspace_command::filesystem_error::json(&error);
+                result
+                    .as_object_mut()
+                    .expect("tester result")
+                    .remove("results");
+            }
+        }
+    }
+    pub(super) fn collect_many(components: &[Self], root: &Path, result: &mut Value) {
+        if result.get("results").is_none() {
+            return;
+        }
+        match read_many(root, components) {
+            Ok(coverage) => result["componentCoverage"] = json!(coverage),
             Err(error) => {
                 result["errorMessage"] = json!(
                     crate::commands::workspace_command::filesystem_error::description(&error)

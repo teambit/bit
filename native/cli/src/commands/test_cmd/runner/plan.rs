@@ -11,7 +11,7 @@ use std::{ffi::OsString, fs, io, path::Path};
 pub(super) struct Plan {
     loaded: Loaded,
     tool: Option<Session>,
-    coverage: Option<Coverage>,
+    coverage: Vec<Coverage>,
     settings: Settings,
 }
 impl Plan {
@@ -26,9 +26,7 @@ impl Plan {
         {
             return Err(invalid("tester environment selection"));
         }
-        if components.len() > 1
-            && (!settings.summary || settings.junit.is_some() || !settings.files.is_empty())
-        {
+        if components.len() > 1 && (settings.junit.is_some() || !settings.files.is_empty()) {
             return Err(invalid("tester multiple component services"));
         }
         let request = if components.len() > 1 {
@@ -49,11 +47,11 @@ impl Plan {
         validate_sources(&loaded.files)?;
         let coverage = if tool.is_some() {
             components
-                .first()
+                .iter()
                 .map(|component| Coverage::prepare(root, &component.directory))
-                .transpose()?
+                .collect::<io::Result<Vec<_>>>()?
         } else {
-            None
+            Vec::new()
         };
         Ok(Self { loaded, tool, coverage, settings })
     }
@@ -68,8 +66,10 @@ impl Plan {
         let mut result = self.tool
             .as_mut()
             .map_or_else(|| Ok(json!({"results":{"testResults":[]}})), Session::run)?;
-        if let Some(coverage) = &self.coverage {
-            coverage.collect(root, &mut result);
+        if self.coverage.len() == 1 {
+            self.coverage[0].collect(root, &mut result);
+        } else if !self.coverage.is_empty() {
+            Coverage::collect_many(&self.coverage, root, &mut result);
         }
         let terminated = result.get("terminated").is_some();
         let report = self.format_report(root, &result, identity, terminated)?;
@@ -83,7 +83,7 @@ impl Plan {
         terminated: bool,
     ) -> io::Result<Report> {
         let components = self.loaded.components()?;
-        let mut report = if components.len() > 1 {
+        let mut report = if components.len() > 1 && self.settings.summary {
             multi::report_summary(
                 root,
                 result,
@@ -91,6 +91,8 @@ impl Plan {
                 &self.loaded.progress.identities,
                 &self.loaded.progress.environment,
             )?
+        } else if components.len() > 1 {
+            multi::report_detail(root, result, &components, &self.loaded.progress.identities)?
         } else {
             report::report(result, identity)?
         };

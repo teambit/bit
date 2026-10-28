@@ -78,6 +78,69 @@ fn merge(target: &mut Value, source: &Value) -> io::Result<()> {
     Ok(())
 }
 
+pub(super) fn report_detail(
+    root: &Path,
+    raw: &Value,
+    components: &[Component],
+    identities: &[String],
+) -> io::Result<Report> {
+    let mut output = report::report(raw, &identities[0])?;
+    if raw.get("terminated").is_some() || raw.get("error").is_some() {
+        return Ok(output);
+    }
+    let rows =
+        raw["results"]["testResults"].as_array().ok_or_else(|| invalid("tester result files"))?;
+    validate_rows(root, components, rows)?;
+    let mut reports = Vec::new();
+    let mut errors = Vec::new();
+    for (index, (component, identity)) in components
+        .iter()
+        .zip(identities)
+        .enumerate()
+    {
+        let mut result = raw.clone();
+        result["results"]["testResults"] = Value::Array(
+            rows.iter()
+                .filter(|row| belongs(root, component, row))
+                .cloned()
+                .collect(),
+        );
+        if let Some(coverage) = raw["componentCoverage"].get(index) {
+            result["coverage"] = coverage.clone();
+        }
+        let report = report::report(&result, identity)?;
+        let data: Value = serde_json::from_str(&report.data)?;
+        if let Some(component) = data[0]["data"]["components"].get(0) {
+            errors.extend(
+                component["errors"]
+                    .as_array()
+                    .ok_or_else(|| invalid("tester component errors"))?
+                    .iter()
+                    .cloned(),
+            );
+            reports.push(component.clone());
+        }
+    }
+    output.data =
+        serde_json::to_string_pretty(&json!([{"data":{"components":reports,"errors":errors}}]))?;
+    Ok(output)
+}
+fn validate_rows(root: &Path, components: &[Component], rows: &[Value]) -> io::Result<()> {
+    if rows
+        .iter()
+        .any(|row| {
+            components
+                .iter()
+                .filter(|component| belongs(root, component, row))
+                .count()
+                != 1
+        })
+    {
+        return Err(invalid("tester result ownership"));
+    }
+    Ok(())
+}
+
 pub(super) fn report_summary(
     root: &Path,
     raw: &Value,
@@ -92,18 +155,7 @@ pub(super) fn report_summary(
     let rows = raw["results"]["testResults"]
         .as_array()
         .map_or(&[][..], Vec::as_slice);
-    if rows
-        .iter()
-        .any(|row| {
-            components
-                .iter()
-                .filter(|component| belongs(root, component, row))
-                .count()
-                != 1
-        })
-    {
-        return Err(invalid("tester result ownership"));
-    }
+    validate_rows(root, components, rows)?;
     let mut aggregate = json!({"totals":{"totalComponents":0,"tested":0,"withoutTests":0,
         "affectedByEnvError":0,"testsPassed":0,"testsFailed":0,"testsPending":0},
         "componentsWithTests":[],"componentsWithoutTests":[],"componentsAffectedByEnvError":[],"envErrors":[]});

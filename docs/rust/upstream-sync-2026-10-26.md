@@ -643,3 +643,28 @@ fixture setup failures; both failed cases passed unchanged on serial rerun.
 The separately committed Dylint bootstrap repair passed a clean driver build and
 lint run against the current Clippy repository, plus local tests for both branch
 layouts. Its GitHub CI job was still running at this checkpoint.
+
+## Multi-component detailed tester results
+
+Same-environment built-in multi-component testing now also returns detailed JSON
+reports. Rust groups Jest files and errors by component, preserves the shared
+Jest success and start values, projects coverage separately for each component,
+and consumes the coverage artifact once. This includes coverage created during
+the run, stale and malformed reports, and the released string-prefix path
+matching behavior. JUnit for multiple components and the earlier path, pattern,
+loader and environment guards still decline before effects.
+
+Differential cases cover mixed pass/fail results, components without tests,
+per-component coverage, stale and malformed coverage, cleanup errors with
+once-only test effects, and an in-band nonzero process exit. Eight same-path
+released detailed reports produced both observed component orders; after
+projecting that known pair and the existing timing fields, all remaining report
+fields matched. A pre-change strict native test confirmed detailed multi-component
+JSON previously delegated.
+
+Validation: seven focused detailed-report cases, formatting, Clippy, Dylint,
+rustdoc, generated checks and 1,817 workspace tests passed. The full E2E run
+had 1,805 passes, two existing skips and one Bit Cloud setup failure; the failed
+case passed unchanged on rerun. The Dylint bootstrap repair subsequently passed
+its GitHub Actions lint job. Other platform jobs for the prior head were pending
+at this checkpoint.
