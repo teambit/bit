@@ -582,3 +582,21 @@ checks and 1,817 workspace tests passed. Four focused JUnit differential cases
 passed. The final full E2E run reported 1,784 passes, two existing skips and two Bit
 Cloud request failures during released capsule fixtures; both passed unchanged
 on rerun. Platform CI for this checkpoint remains pending.
+
+## Tester selection flags
+
+For the qualified single-component JSON tester, explicit selection of the
+configured built-in environment now runs natively. A different environment
+continues to decline before loader effects. As in the released CLI, specifying
+an environment suppresses JUnit file generation. The deprecated all and scope
+flags are accepted in JSON mode and do not change component selection, matching
+the released JSON handler. Differential cases cover long, short and inline flag
+forms, summary output, JUnit interaction and an invalid environment. The new
+strict native assertion failed on the prior implementation, which delegated the
+first deprecated-flag case.
+
+Validation: 35 focused tester cases, formatting, Clippy, Dylint, rustdoc,
+generated checks and 1,817 workspace tests passed. The final full E2E run had
+1,785 passes, two existing skips and three Bit Cloud request failures during
+fixture setup; all three cases passed unchanged on serial rerun. The preceding
+JUnit head's platform checks were still running at this checkpoint.

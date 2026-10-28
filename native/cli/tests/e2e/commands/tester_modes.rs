@@ -132,3 +132,40 @@ fn builtin_test_react_coverage_failure_owns_effects_once() {
     );
     assert!(!helper.scopes.local_path.join("coverage").exists());
 }
+#[test]
+fn builtin_test_deprecated_json_flags_keep_the_released_selection() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "it('works',()=>expect(2+2).toBe(4));\n");
+    for command in [
+        "test comp1 --json --all",
+        "test comp1 --json -a",
+        "test comp1 --json --scope unknown",
+        "test comp1 --json -s unknown --all",
+        "test comp1 --json --scope=unknown --summary",
+    ] {
+        if command.contains("--summary") {
+            support::compare(&helper, command);
+        } else {
+            support::compare_with_stdout(&helper, command, timings);
+        }
+    }
+}
+
+#[test]
+fn builtin_test_explicit_environment_and_junit_follow_released_selection() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "it('works',()=>expect(2+2).toBe(4));\n");
+    for command in [
+        "test comp1 --json --env teambit.harmony/node",
+        "test comp1 --json -e teambit.harmony/node --summary",
+        "test comp1 --json --env=teambit.harmony/node --junit report.xml",
+    ] {
+        if command.contains("--summary") {
+            support::compare(&helper, command);
+        } else {
+            support::compare_with_stdout(&helper, command, timings);
+        }
+        assert!(!helper.scopes.local_path.join("report.xml").exists());
+    }
+    support::compare_declined(&helper, "test comp1 --json --env unknown", str::to_owned);
+}

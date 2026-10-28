@@ -19,6 +19,13 @@ impl Plan {
         let settings = Settings::parse(root, args, options)?;
         let loaded = Loaded::prepare(root, &settings.selection)?;
         let components = loaded.components()?;
+        if !components.is_empty()
+            && settings.environment
+                .as_ref()
+                .is_some_and(|env| env != &loaded.progress.environment)
+        {
+            return Err(invalid("tester environment selection"));
+        }
         if components.len() > 1 {
             return Err(invalid("tester multiple component services"));
         }
@@ -60,7 +67,10 @@ impl Plan {
         }
         let terminated = result.get("terminated").is_some();
         let mut report = report::report(&result, identity)?;
-        if !terminated && let Some(path) = &self.settings.junit {
+        if !terminated
+            && self.settings.environment.is_none()
+            && let Some(path) = &self.settings.junit
+        {
             junit::write(path, &report.data, &result)?;
         }
         if self.settings.summary && !terminated {

@@ -14,6 +14,7 @@ pub(super) struct Settings {
     pub update_snapshot: bool,
     pub files: Vec<PathBuf>,
     pub junit: Option<PathBuf>,
+    pub environment: Option<String>,
 }
 impl Settings {
     pub(super) fn parse(root: &Path, args: &[OsString], options: &Options) -> io::Result<Self> {
@@ -34,6 +35,7 @@ impl Settings {
             update_snapshot: false,
             files: Vec::new(),
             junit: None,
+            environment: None,
         };
         settings.apply(args)?;
         if let Some(selected) = selected {
@@ -47,7 +49,23 @@ impl Settings {
         while let Some(argument) = arguments.next() {
             match argument.to_str().ok_or_else(|| invalid("tester argument"))? {
                 "--" => break,
-                "--json" | "-j" | "--verbose" => {}
+                "--json" | "-j" | "--verbose" | "--all" | "-a" => {}
+                "--scope" | "-s" => {
+                    arguments.next().ok_or_else(|| invalid("tester scope"))?;
+                }
+                value if value.starts_with("--scope=") => {}
+                "--env" | "-e" => {
+                    self.environment = Some(
+                        arguments
+                            .next()
+                            .and_then(|value| value.to_str())
+                            .ok_or_else(|| invalid("tester environment"))?
+                            .to_owned(),
+                    );
+                }
+                value if value.starts_with("--env=") => {
+                    self.environment = Some(value[6..].to_owned());
+                }
                 "--unmodified" | "-u" => self.selection.changed = false,
                 "--summary" => self.summary = true,
                 "--coverage" => self.coverage = true,

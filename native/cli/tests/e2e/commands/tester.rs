@@ -167,11 +167,13 @@ fn builtin_test_failure_owns_test_side_effects_without_replay() {
 fn builtin_test_unsupported_environment_selector_declines_before_running_tests() {
     let helper = support::workspace(1, true);
     helper.output_file("comp1/index.spec.js","const fs=require('fs'); it('works',()=>{const path='test-side-effect';const value=fs.existsSync(path)?Number(fs.readFileSync(path,'utf8')):0;fs.writeFileSync(path,String(value+1));expect(value).toBe(0);});\n");
-    support::compare_declined(&helper, "test comp1 --env teambit.harmony/node --json", timings);
-    assert_eq!(
-        std::fs::read_to_string(helper.scopes.local_path.join("test-side-effect")).unwrap(),
-        "1",
+    let result = support::compare_declined(
+        &helper,
+        "test comp1 --env teambit.react/react --json",
+        str::to_owned,
     );
+    assert_eq!(result.status.code(), Some(1));
+    assert!(!helper.scopes.local_path.join("test-side-effect").exists());
 }
 
 #[test]
