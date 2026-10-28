@@ -28,6 +28,7 @@ import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import type { Remotes, Remote } from '@teambit/scope.remotes';
 import { getScopeRemotes, ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
+import { LaneNotFound } from '@teambit/legacy.scope-api';
 import type { EjectMain, EjectResults } from '@teambit/eject';
 import { EjectAspect } from '@teambit/eject';
 import type { ExportOrigin } from '@teambit/scope.network';
@@ -37,13 +38,14 @@ import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
 import { writeLastExport } from './last-export';
-import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref, Version } from '@teambit/objects';
-import { ObjectList } from '@teambit/objects';
+import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Version } from '@teambit/objects';
+import { ObjectList, Ref } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
-import { getAllVersionHashes } from '@teambit/component.snap-distance';
+import { getAllVersionHashes, hasVersionByRef } from '@teambit/component.snap-distance';
 import { ExportAspect } from './export.aspect';
 import { ExportCmd } from './export-cmd';
 import { ResumeExportCmd } from './resume-export-cmd';
+import { getUpdateDependentsToExport } from './update-dependents-to-export';
 
 export type OnExportIdTransformer = (id: ComponentID) => ComponentID;
 
@@ -81,6 +83,7 @@ type ObjectsPerRemoteExtended = ObjectsPerRemote & {
   objectListPerName: ObjectListPerName;
   idsToChangeLocally: ComponentIdList;
   modelComponents: ModelComponent[];
+  updateDependentsChanged?: boolean;
 };
 
 type ExportParams = {
@@ -513,6 +516,9 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       lane?: Lane
     ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
+      // fetched in parallel to the calculation of the versions to export, which doesn't depend on it
+      const remoteLanePromise = lane ? this.fetchRemoteLaneToCompareUpdateDependents(scope, lane) : undefined;
+      remoteLanePromise?.catch(() => {}); // it's awaited (and throws) later. avoid an unhandled rejection meanwhile.
       const remote: Remote = await resolveRemote(remoteNameStr);
       const idsToChangeLocally = ComponentIdList.fromArray(bitIds.filter((id) => !scope.isExported(id)));
       const exportedModelComponents: ModelComponent[] = [];
@@ -607,7 +613,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
       await mapSeries(refsToExportPerComponent, processModelComponent);
       objectList.addIfNotExist(allObjectItems);
+      let updateDependentsChanged = false;
       if (lane) {
+        // after the versions to export were calculated, as it may change the heads of the hidden entries.
+        updateDependentsChanged = await this.setUpdateDependentsFromRemote(scope, lane, await remoteLanePromise);
         const laneHistory = await scope.lanes.getOrCreateLaneHistory(lane);
         const laneHistoryData = await bitObjectToObjectItem(laneHistory);
         objectList.addIfNotExist([laneHistoryData]);
@@ -615,7 +624,14 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         objectList.addIfNotExist([laneData]);
       }
 
-      return { remote, objectList, objectListPerName, idsToChangeLocally, modelComponents: exportedModelComponents };
+      return {
+        remote,
+        objectList,
+        objectListPerName,
+        idsToChangeLocally,
+        modelComponents: exportedModelComponents,
+        updateDependentsChanged,
+      };
     };
 
     const manyObjectsPerRemote = laneObject
@@ -653,7 +669,7 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       Array<{ exported: ComponentIdList; updatedLocally: ComponentIdList; newIdsOnRemote: ComponentID[] }>
     > => {
       return mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemoteExtended) => {
-        const { remote, idsToChangeLocally, modelComponents, exportedIds } = objectsPerRemote;
+        const { remote, idsToChangeLocally, modelComponents, exportedIds, updateDependentsChanged } = objectsPerRemote;
         const remoteNameStr = remote.name;
 
         // only the model-components were changed (scope-list, scope-name). the versions and their files already exist
@@ -662,7 +678,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
 
         // update lanes
         if (lane) {
-          if (idsToChangeLocally.length) {
+          // the flag is needed for this export only. kept locally, the next export might resurrect removed entries.
+          const hadOverrideFlag = lane.shouldOverrideUpdateDependents();
+          lane.setOverrideUpdateDependents(false);
+          if (idsToChangeLocally.length || updateDependentsChanged || hadOverrideFlag) {
             // otherwise, we don't want to update scope-name of components in the lane object
             scope.objects.add(lane);
           }
@@ -733,6 +752,57 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
     } finally {
       process.removeListener('SIGINT', warnCancelExport);
     }
+  }
+
+  private async fetchRemoteLaneToCompareUpdateDependents(scope: Scope, lane: Lane): Promise<Lane | undefined> {
+    if (lane.isNew || !lane.updateDependents?.length) return undefined;
+    try {
+      const [remoteLane] = await scope.scopeImporter.importLanes([lane.toLaneId()]);
+      return remoteLane;
+    } catch (err: any) {
+      // e.g. the lane was deleted on the remote. the export creates it again.
+      if (err instanceof LaneNotFound) return undefined;
+      throw err;
+    }
+  }
+
+  /**
+   * sets the hidden lane entries (`lane.updateDependents`) to export according to the remote lane (see
+   * `getUpdateDependentsToExport`), and raises `overrideUpdateDependents` when they differ from the remote.
+   * returns true when the local entries were changed (e.g. an entry that was removed on the remote).
+   */
+  private async setUpdateDependentsFromRemote(scope: Scope, lane: Lane, remoteLane?: Lane): Promise<boolean> {
+    if (!remoteLane) return false;
+    const localUpdateDependents = lane.updateDependents || [];
+    const remoteUpdateDependents = remoteLane.updateDependents || [];
+    const isLocalAhead = async (localId: ComponentID, remoteId: ComponentID): Promise<boolean> => {
+      try {
+        const modelComponent = await scope.getModelComponentIfExist(localId.changeVersion(undefined));
+        if (!modelComponent) return false;
+        const localHead = Ref.from(localId.version as string);
+        return await hasVersionByRef(modelComponent, Ref.from(remoteId.version as string), scope.objects, localHead);
+      } catch (err: any) {
+        this.logger.warn(`unable to check whether ${localId.toString()} is ahead of ${remoteId.toString()}`, err);
+        return false;
+      }
+    };
+    const updateDependents = await getUpdateDependentsToExport({
+      localUpdateDependents,
+      remoteUpdateDependents,
+      localComponents: lane.toComponentIds(),
+      includeNewEntries: lane.shouldOverrideUpdateDependents(),
+      isLocalAhead,
+    });
+    const toSortedStr = (ids: ComponentID[]) =>
+      ids
+        .map((id) => id.toString())
+        .sort()
+        .join();
+    const exportedStr = toSortedStr(updateDependents);
+    lane.setOverrideUpdateDependents(exportedStr !== toSortedStr(remoteUpdateDependents));
+    if (exportedStr === toSortedStr(localUpdateDependents)) return false;
+    lane.setUpdateDependents(updateDependents);
+    return true;
   }
 
   private transformToOneObjectListWithScopeData(objectsPerRemote: ObjectsPerRemote[]): ObjectList {

@@ -230,6 +230,10 @@ export default class Lane extends BitObject {
     (this.updateDependents ||= []).push(componentId);
     this.hasChanged = true;
   }
+  setUpdateDependents(componentIds: ComponentID[]) {
+    this.updateDependents = componentIds.length ? componentIds : undefined;
+    this.hasChanged = true;
+  }
   removeAllUpdateDependents() {
     if (!this.updateDependents?.length) return;
     this.updateDependents = undefined;
