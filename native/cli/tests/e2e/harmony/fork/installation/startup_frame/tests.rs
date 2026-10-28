@@ -23,11 +23,6 @@ fn changed_counts_control_bytes_stage_or_intervening_lines_are_never_removed() {
         repeated.replacen("running package installation", "running other installation", 1),
         format!("embedded {repeated}"),
         repeated.replacen(BANNER, &format!("unexpected message\n{BANNER}"), 1),
-        repeated.replacen(
-            &format!("{COUNTERS}\u{1b}[0K"),
-            "Progress: resolved 2, reused 0, downloaded 0, added 0\u{1b}[0K",
-            1,
-        ),
     ] {
         assert_eq!(project(&altered), altered);
     }
@@ -60,7 +55,6 @@ fn observed_two_package_redraw_preserves_the_banner_and_final_package_counts() {
 fn two_package_projection_rejects_counter_mismatches_and_unqualified_redraws() {
     let repeated = format!("{START}{}{REDRAW}{}", super::TWO_COUNTERS, two_package_banner());
     for altered in [
-        repeated.replacen("resolved 2", "resolved 1", 1),
         repeated.replacen("reused 0", "reused 1", 1),
         repeated.replacen("downloaded 0", "downloaded 1", 1),
         repeated.replacen("added 0", "added 1", 1),
@@ -75,4 +69,36 @@ fn two_package_projection_rejects_counter_mismatches_and_unqualified_redraws() {
     ] {
         assert_eq!(project(&altered), altered);
     }
+}
+
+#[test]
+fn observed_one_to_two_resolution_frame_preserves_complete_banner_and_completion() {
+    let expected = format!("unchanged prefix\n{START}{}", two_package_banner());
+    let slow = format!("unchanged prefix\n{START}{COUNTERS}{REDRAW}{}", two_package_banner());
+    assert_eq!(project(&slow), expected);
+    assert_eq!(project(&expected), expected);
+    for altered in [
+        slow.replacen("resolved 2", "resolved 3", 1),
+        slow.replacen("reused 0", "reused 1", 1),
+        slow.replacen("downloaded 0", "downloaded 1", 1),
+        slow.replacen("added 0", "added 1", 1),
+    ] {
+        assert_eq!(project(&altered), altered);
+    }
+    let changed_final = slow.replace("added 2", "added 3");
+    assert_ne!(project(&changed_final), expected);
+    assert!(project(&changed_final).ends_with("added 3\n"));
+}
+
+#[test]
+fn released_unpadded_banner_preserves_paths_and_later_terminal_controls() {
+    let padded = two_package_banner();
+    let (banner, later) = padded.split_once("Packages: +2").unwrap();
+    let plain = banner.replace("\u{1b}[0K", "");
+    let expected = format!("{START}{plain}Packages: +2{later}");
+    let slow = format!("{START}{COUNTERS}{REDRAW}{plain}Packages: +2{later}");
+    assert_eq!(project(&slow), expected);
+    assert_eq!(project(&expected), expected);
+    let malformed = slow.replacen("node_modules/.pnpm", "node_modules/\u{1b}[1A.pnpm", 1);
+    assert_eq!(project(&malformed), malformed);
 }

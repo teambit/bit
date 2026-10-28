@@ -429,3 +429,30 @@ The preceding head's E2E shard 3 failed on an extra timed pnpm progress frame.
 Independent released-command replays reproduce that frame under slower scheduling;
 a narrowly bounded comparison fix is prepared separately. The remaining runtime,
 compiler, tester, build and service milestones remain open.
+
+## Installer progress scheduling qualification
+
+The preceding head's E2E shard 3 failed because its installer comparison retained
+an optional initial progress frame with one resolved package before the two-package
+store banner. Independent replays of the same restored fixture through the released
+Node command reproduce both forms: ordinary scheduling coalesces the first frame,
+while CPU contention on one core exposes it. Full outputs match after accounting
+only for elapsed times and that initial frame. No reporter setting or clock hook
+was changed for the replay.
+
+The comparison now accepts that specific zero-added one-to-two resolution advance,
+as well as the already qualified identical-counter redraws. It preserves store
+paths, the complete banner, later transitions, final counters, errors, reports,
+provider assertions and filesystem comparisons. Released padded and unpadded banner
+lines are recognized without changing their bytes. Other counter advances, reversed
+counters, changed transfer/addition counts and malformed control sequences remain
+unrecognized. Negative controls using both complete Node replays and the captured
+CI failure fail with the old comparison and pass with the new one.
+
+Validation: formatting, Clippy, Dylint, rustdoc and all 1,814 workspace tests pass.
+All 17 focused progress/provider cases pass. Full E2E: 1,749 passed, one Bit Cloud
+failure while creating a React fixture and two existing skips. The failed case
+passes unchanged on a serial rerun. Generated inventory/census, asset, scope and
+public-data checks pass. Local Node lint still lacks tsc. CI for the preceding
+compiler head has no reported failures at publication time, with jobs still
+running; the new head requires its own platform checks.

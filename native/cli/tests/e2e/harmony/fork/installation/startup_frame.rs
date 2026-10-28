@@ -1,6 +1,6 @@
 //! A coalescible progress event may redraw before the non-coalescible store banner.
-//! Remove only that clock-controlled redundant zero-add redraw when the next
-//! banner frame repeats identical counters; retain every other byte and transition.
+//! Remove only a qualified clock-controlled zero-add redraw: the banner either
+//! repeats its counters or advances resolution from one to two. Keep all other bytes.
 mod tests;
 const START: &str = "- running package installation using pnpm\n\r\n\u{1b}[K\u{1b}[0J\r\u{1b}[1A";
 const COUNTERS: &str = "Progress: resolved 1, reused 0, downloaded 0, added 0";
@@ -21,7 +21,9 @@ pub(super) fn project(text: &str) -> String {
     else {
         return text.into();
     };
-    if !repeats_counters(banner, counters) {
+    if !(repeats_counters(banner, counters)
+        || counters == COUNTERS && repeats_counters(banner, TWO_COUNTERS))
+    {
         return text.into();
     }
     format!("{prefix}{START}{banner}")
@@ -34,10 +36,10 @@ fn repeats_counters(frame: &str, counters: &str) -> bool {
         && valid_path(virtual_store, "  Virtual store is at:             ")
         && progress
             .strip_prefix(counters)
-            .is_some_and(|rest| rest.starts_with("\u{1b}[0K\n"))
+            .is_some_and(|rest| rest.starts_with("\u{1b}[0K\n") || rest.starts_with('\n'))
 }
 fn valid_path(line: &str, label: &str) -> bool {
     line.strip_prefix(label)
-        .and_then(|path| path.strip_suffix("\u{1b}[0K"))
+        .map(|path| path.strip_suffix("\u{1b}[0K").unwrap_or(path))
         .is_some_and(|path| !path.is_empty() && !path.contains(['\r', '\n', '\u{1b}']))
 }
