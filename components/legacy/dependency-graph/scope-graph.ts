@@ -21,7 +21,6 @@ export type DependenciesInfo = {
 
 export class DependencyGraph {
   graph: Graph;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   scopeName: string;
 
   constructor(graph: Graph) {
@@ -61,7 +60,6 @@ export class DependencyGraph {
   /**
    * @todo: refactor this to work with the newer method `buildGraphFromScope`.
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphWithAllVersions(scope: ScopeObjects): Promise<Graph> {
     const graph = new Graph({ compound: true });
     const depObj: { [id: string]: Version } = {};
@@ -78,7 +76,7 @@ export class DependencyGraph {
             const idWithVersion = `${component.id()}${VERSION_DELIMITER}${version}`;
             graph.setNode(idWithVersion, componentVersion);
             graph.setParent(idWithVersion, component.id());
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-expect-error Version.id is a method, but it is overridden here with a ComponentID (existing behavior)
             componentVersion.id = component.toComponentId();
             depObj[idWithVersion] = componentVersion;
           })
@@ -116,7 +114,6 @@ export class DependencyGraph {
     return graph;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromScope(scope: ScopeObjects): Promise<Graph> {
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await scope.list();
@@ -161,7 +158,6 @@ export class DependencyGraph {
     const idStr = id.toString();
     // save the full ComponentID of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
-    // @ts-ignore
     Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]: [string, ComponentIdList]) => {
       depIds.forEach((dependencyId) => {
         const depIdStr = dependencyId.toString();
@@ -190,7 +186,6 @@ export class DependencyGraph {
    * returns a new Graph that has only nodes that are related to the given id.
    * (meaning, they're either dependents or dependencies)
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   getSubGraphOfConnectedComponents(id: ComponentID): Graph {
     const connectedGraphs = GraphLib.alg.components(this.graph);
     const idWithVersion = this._getIdWithLatestVersion(id);

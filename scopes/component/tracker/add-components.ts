@@ -55,8 +55,7 @@ export type Warnings = {
 };
 export type AddActionResults = { addedComponents: AddResult[]; warnings: Warnings };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-type PathsStats = { [PathOsBased]: { isDir: boolean } };
+type PathsStats = Record<PathOsBased, { isDir: boolean }>;
 export type AddedComponent = {
   componentId: ComponentID;
   files: ComponentMapFile[];
@@ -325,13 +324,11 @@ run "bit add . --root" from the workspace root, or drop the flag to track the gi
       );
       if (idOfFileIsDifferent && !ownedByWorkspaceRoot) {
         // not imported component file but exists in bitmap
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        if (this.warnings.alreadyUsed[existingIdOfFile]) {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          this.warnings.alreadyUsed[existingIdOfFile].push(file.relativePath);
+        const existingIdOfFileStr = existingIdOfFile.toString();
+        if (this.warnings.alreadyUsed[existingIdOfFileStr]) {
+          this.warnings.alreadyUsed[existingIdOfFileStr].push(file.relativePath);
         } else {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          this.warnings.alreadyUsed[existingIdOfFile] = [file.relativePath];
+          this.warnings.alreadyUsed[existingIdOfFileStr] = [file.relativePath];
         }
         return null;
       }
@@ -354,8 +351,7 @@ run "bit add . --root" from the workspace root, or drop the flag to track the gi
       this._updateFilesAccordingToExistingRootDir(foundComponentFromBitMap, componentFiles, component);
     }
     if (this.trackDirFeature) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (this.bitMap._areFilesArraysEqual(foundComponentFromBitMap.files, componentFiles)) {
+      if (this.bitMap._areFilesArraysEqual(foundComponentFromBitMap!.files, componentFiles)) {
         return foundComponentFromBitMap;
       }
     }
@@ -407,8 +403,6 @@ run "bit add . --root" from the workspace root, or drop the flag to track the gi
             ? configForWorkspaceRoot(foundComponentFromBitMap?.config, this.config)
             : this.config,
         mainFile,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        override: this.override,
       });
       componentMap.changeRootDirAndUpdateFilesAccordingly(rootDir);
       return componentMap;
@@ -757,7 +751,7 @@ you can add the directory these files are located at and it'll change the root d
   }
 
   async _addMultipleToBitMap(added: AddedComponent[]): Promise<void> {
-    const missingMainFiles = [];
+    const missingMainFiles: MissingMainFile[] = [];
     await Promise.all(
       added.map(async (component) => {
         if (component.files.length) {
@@ -766,14 +760,12 @@ you can add the directory these files are located at and it'll change the root d
             if (addedComponent && addedComponent.files.length) this.addedComponents.push(addedComponent);
           } catch (err: any) {
             if (!(err instanceof MissingMainFile)) throw err;
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             missingMainFiles.push(err);
           }
         }
       })
     );
     if (missingMainFiles.length) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       throw new MissingMainFileMultipleComponents(missingMainFiles.map((err) => err.componentId).sort());
     }
   }

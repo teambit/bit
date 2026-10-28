@@ -25,6 +25,7 @@ import {
   convertLockfileToGraph,
   convertGraphToLockfile,
   createFileVersionReplacer,
+  createLockfileToGraphCache,
   filterLockfileByImporters,
   init as initLockfileDepsGraphConverter,
 } from './lockfile-deps-graph-converter';
@@ -528,6 +529,7 @@ export class PnpmPackageManager implements PackageManager {
     }
     const originalImporters = originalLockfile.importers as Record<string, LockfileFileImporter>;
     const replaceFileVersion = createFileVersionReplacer(opts.componentIdByPkgName);
+    const cache = createLockfileToGraphCache();
     for (const { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
       const componentImporterId = (componentRelativeDir || '.') as ProjectId;
       let compRootDir: string | undefined;
@@ -592,6 +594,7 @@ export class PnpmPackageManager implements PackageManager {
         componentRelativeDir: componentImporterId,
         pkgName,
         replaceFileVersion,
+        cache,
       });
       component.state._consumer.dependenciesGraph = graph;
     }

@@ -1,5 +1,5 @@
 import type { NodeFS } from '@teambit/any-fs';
-import type { Exec } from '@teambit/capsule';
+import type { Exec, ExecOptions } from '@teambit/capsule';
 import { Capsule as CapsuleTemplate, Console, State } from '@teambit/capsule';
 import type { Component } from '@teambit/component';
 import filenamify from 'filenamify';
@@ -80,8 +80,7 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
 
   // TODO: refactor this crap and simplify capsule API
   async execute(cmd: string, options?: Record<string, any> | null | undefined) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const execResults = await this.exec({ command: cmd.split(' '), options });
+    const execResults = await this.exec({ command: cmd.split(' '), options } as ExecOptions);
     let stdout = '';
     let stderr = '';
     return new Promise((resolve, reject) => {

@@ -73,8 +73,8 @@ export type ComponentProps = {
   packageDependencies?: Record<string, string>;
   devPackageDependencies?: Record<string, string>;
   peerPackageDependencies?: Record<string, string>;
-  overrides: ComponentOverrides;
-  defaultScope: string | null;
+  overrides?: ComponentOverrides; // not available when loading from the filesystem, it is set later by the dependencies loader
+  defaultScope?: string | null;
   packageJsonFile?: PackageJsonFile;
   packageJsonChangedProps?: { [key: string]: any };
   files: SourceFile[];
@@ -87,7 +87,7 @@ export type ComponentProps = {
   log?: Log;
   schema?: string;
   scopesList?: ScopeListItem[];
-  extensions: ExtensionDataList;
+  extensions?: ExtensionDataList;
   componentFromModel?: Component;
   modelComponent?: ModelComponent;
   buildStatus?: BuildStatus;
@@ -110,9 +110,7 @@ export class Component {
   bindingPrefix: string;
   mainFile: PathOsBased;
   bitJson: ComponentConfig | undefined;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dependencies: Dependencies;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
   peerDependencies: Dependencies;
   dependenciesGraph?: DependenciesGraph;
@@ -143,13 +141,11 @@ export class Component {
   dependenciesWithVersionFromConfig?: string[];
   deprecated: boolean;
   protected removed?: boolean; // was it soft-removed. to get this data please use isRemoved() method.
-  defaultScope: string | null;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  defaultScope: string | null | undefined;
   _isModified: boolean;
   packageJsonFile: PackageJsonFile | undefined; // populated when loadedFromFileSystem or when writing the components. for author it never exists
   packageJsonChangedProps: Record<string, any> | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | undefined;
   /**
@@ -230,7 +226,7 @@ export class Component {
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
-    this.overrides = overrides;
+    this.overrides = overrides!;
     this.defaultScope = defaultScope;
     this.packageJsonFile = packageJsonFile;
     this.packageJsonChangedProps = packageJsonChangedProps;
@@ -517,7 +513,6 @@ export class Component {
       schema,
       extensions,
     } = object;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Component({
       name: box ? `${box}/${name}` : name,
       version,
@@ -624,11 +619,8 @@ export class Component {
       bitJson: componentConfig,
       mainFile: componentMap.mainFile,
       files,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      loadedFromFileSystem: true,
       componentFromModel,
       modelComponent,
-      componentMap,
       docs: flattenedDocs,
       deprecated,
       schema: getSchema(),
