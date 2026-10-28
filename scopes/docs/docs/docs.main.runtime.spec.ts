@@ -8,8 +8,7 @@ function createDocsMain(docFiles: string[], docReader: DocReader) {
   const devFiles: any = { getDevFiles: () => ({ get: () => docFiles }) };
   const logger: any = { debug: () => {} };
   const docReaderSlot: any = { values: () => [docReader] };
-  const args: any[] = [[], undefined, undefined, undefined, undefined, logger, devFiles, undefined, undefined];
-  return new (DocsMain as any)(...args, docReaderSlot) as DocsMain;
+  return Object.assign(Object.create(DocsMain.prototype), { logger, devFiles, docReaderSlot }) as DocsMain;
 }
 
 function createComponent(filePaths: string[]): Component {
