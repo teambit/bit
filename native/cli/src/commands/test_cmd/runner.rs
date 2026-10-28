@@ -21,6 +21,7 @@ use std::{ffi::OsString, io, path::Path, time::Instant};
 struct Execution {
     report: workspace_command::results::Report,
     terminated: bool,
+    empty: bool,
 }
 
 pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
@@ -69,7 +70,11 @@ fn format_execution(
     started: Instant,
 ) -> io::Result<workspace_command::results::Report> {
     let mut report = execution.report;
-    if !options.json && !execution.terminated {
+    if !options.json && execution.empty {
+        report.data = crate::commands::color::Chalk::detect(args).dim(
+            "no components found to test.\nuse \"--unmodified\" flag to test all components or specify the ids to test.\notherwise, only new and modified components will be tested",
+        );
+    } else if !options.json && !execution.terminated {
         let value = serde_json::from_str(&report.data)?;
         report.data = text_summary::format_summary(
             &value,

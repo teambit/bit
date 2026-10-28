@@ -757,3 +757,20 @@ Validation: all focused text-summary cases passed, along with formatting,
 Clippy, Dylint, rustdoc, workspace tests and generated/scope checks. The full
 E2E run had 1,835 passes, two existing skips and two Bit Cloud request failures
 in existing fixtures; both passed unchanged on serial rerun.
+
+## Empty changed test selections
+
+When the workspace has components but none are changed, Rust now publishes the
+released loader progress and no-components hint in both text summary and
+ordinary text modes. This path does not start Jest. Ordinary text with selected
+components still declines before test execution.
+
+Differential cases cover a tagged unchanged component, the summary and regular
+text forms, colored CI output and the selected-component delegation boundary.
+The summary case failed the native-ownership assertion before this change.
+
+Validation: focused text comparisons, formatting, Clippy, Dylint, rustdoc,
+workspace tests and generated/scope checks passed. The full E2E run had 1,840
+passes, two existing skips and one Bit Cloud fixture setup failure; that case
+passed unchanged on rerun. Upstream advanced after this validation and is synced
+in the following checkpoint.

@@ -198,3 +198,44 @@ fn text_summary_unknown_scope_declines_before_test_effects() {
     assert_eq!(result.status.code(), Some(1));
     assert!(!helper.scopes.local_path.join("effect").exists());
 }
+#[test]
+fn text_summary_no_changed_components_preserves_loading_and_hint() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "it('pass',()=>expect(2).toBe(2));\n");
+    support::tag(&helper);
+    let result = support::compare(&helper, "test --summary");
+    assert!(result.status.success());
+    assert!(result.stdout.contains("no components found to test."));
+}
+
+#[test]
+fn text_without_summary_and_no_changed_components_matches_node() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "it('pass',()=>expect(2).toBe(2));\n");
+    support::tag(&helper);
+    let result = support::compare(&helper, "test");
+    assert!(result.status.success());
+    assert!(result.stdout.contains("no components found to test."));
+}
+
+#[test]
+fn text_without_summary_and_selected_component_still_declines() {
+    let helper = support::workspace(1, true);
+    let result = support::compare_declined(&helper, "test comp1", without_duration);
+    assert!(result.status.success());
+}
+
+#[test]
+fn text_summary_empty_selection_preserves_colored_ci_hint() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "it('pass',()=>expect(2).toBe(2));\n");
+    support::tag(&helper);
+    let result = super::add::support::compare_service_output(
+        &helper,
+        "test --summary",
+        str::to_owned,
+        true,
+        true,
+    );
+    assert!(result.status.success());
+}

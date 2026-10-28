@@ -22,8 +22,8 @@ impl Plan {
         let settings = Settings::parse(root, args, options)?;
         let loaded = Loaded::prepare(root, &settings.selection)?;
         let components = loaded.components()?;
-        if !options.json && components.is_empty() {
-            return Err(invalid("empty tester text selection"));
+        if !options.json && !settings.summary && !components.is_empty() {
+            return Err(invalid("tester text reporting"));
         }
         if !components.is_empty()
             && settings.environment
@@ -76,6 +76,7 @@ impl Plan {
             return Ok(Execution {
                 report: Report { data: "[]".to_owned(), code: 0, details: None },
                 terminated: false,
+                empty: true,
             });
         };
         let mut result = self.tool
@@ -88,7 +89,7 @@ impl Plan {
         }
         let terminated = result.get("terminated").is_some();
         let report = self.format_report(root, &result, identity, terminated)?;
-        Ok(Execution { report, terminated })
+        Ok(Execution { report, terminated, empty: false })
     }
     fn format_report(
         &self,
