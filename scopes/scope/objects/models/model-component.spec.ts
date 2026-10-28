@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import ModelComponent from './model-component';
 import { cloneDeep } from 'lodash';
 import { Ref } from '../objects';
+import VersionHistory from './version-history';
 
 const modelComponentFixture = {
   name: 'bar/foo',
@@ -119,6 +120,74 @@ describe('ModelComponent', () => {
       const tags = component.switchHashesWithTagsIfExist(refs);
       expect(tags[size - 1]).to.equal(`1.0.${size - 1}`);
       expect(tags[size]).to.equal(hash(size));
+      expect(Date.now() - start).to.be.lessThan(2000);
+    });
+  });
+
+  describe('populateVersionHistoryIfMissingGracefully', () => {
+    const hash = (i: number) => i.toString(16).padStart(40, '0');
+    const ref = (i: number) => new Ref(hash(i));
+    /** a version object of the given number, as the history population reads it. */
+    const versionObject = (i: number, parents: number[] = i > 0 ? [i - 1] : []): any => ({
+      hash: () => ref(i),
+      parents: parents.map(ref),
+    });
+    /** a repo holding these version objects, which records what it loads. */
+    const fakeRepo = (versions: any[]) => {
+      const byHash = new Map(versions.map((v) => [v.hash().toString(), v]));
+      const loaded: string[] = [];
+      return {
+        loaded,
+        load: async (r: Ref) => {
+          loaded.push(r.toString());
+          return byHash.get(r.toString());
+        },
+        writeObjectsToTheFS: async () => {},
+      } as any;
+    };
+    const component = () => getModelComponent(getModelComponentFixture());
+    const historyHashes = (versionHistory: VersionHistory) => versionHistory.getAllHashesAsString().sort();
+
+    it('adds the head and all its ancestors to an empty history', async () => {
+      const versionHistory = VersionHistory.create('bar/foo', 'remote-scope', []);
+      const repo = fakeRepo([0, 1, 2, 3].map((i) => versionObject(i)));
+      const { err } = await component().populateVersionHistoryIfMissingGracefully(repo, versionHistory, ref(3));
+      expect(err).to.be.undefined;
+      expect(historyHashes(versionHistory)).to.deep.equal([0, 1, 2, 3].map(hash).sort());
+    });
+
+    it('loads a shared ancestor of a merge snap only once', async () => {
+      // 0 <- 1 <- 3, 0 <- 2 <- 3
+      const versionHistory = VersionHistory.create('bar/foo', 'remote-scope', []);
+      const repo = fakeRepo([versionObject(0), versionObject(1, [0]), versionObject(2, [0]), versionObject(3, [1, 2])]);
+      await component().populateVersionHistoryIfMissingGracefully(repo, versionHistory, ref(3));
+      expect(repo.loaded.filter((h: string) => h === hash(0))).to.have.length(1);
+      expect(historyHashes(versionHistory)).to.deep.equal([0, 1, 2, 3].map(hash).sort());
+    });
+
+    it('stops at versions the history already has', async () => {
+      const versionHistory = VersionHistory.create('bar/foo', 'remote-scope', []);
+      versionHistory.addFromVersionsObjects([versionObject(0), versionObject(1)]);
+      const repo = fakeRepo([0, 1, 2, 3].map((i) => versionObject(i)));
+      await component().populateVersionHistoryIfMissingGracefully(repo, versionHistory, ref(3));
+      expect(repo.loaded).to.deep.equal([hash(3), hash(2)]);
+    });
+
+    it('returns the added versions and an error when a parent is missing', async () => {
+      const versionHistory = VersionHistory.create('bar/foo', 'remote-scope', []);
+      const repo = fakeRepo([versionObject(2), versionObject(3)]);
+      const { err, added } = await component().populateVersionHistoryIfMissingGracefully(repo, versionHistory, ref(3));
+      expect(err).to.be.instanceOf(Error);
+      expect(added?.map((v) => v.hash.toString())).to.deep.equal([hash(3), hash(2)]);
+    });
+
+    it('stays fast when the whole of a long history is missing', async () => {
+      const size = 10000;
+      const versionHistory = VersionHistory.create('bar/foo', 'remote-scope', []);
+      const repo = fakeRepo(Array.from({ length: size }, (_, i) => versionObject(i)));
+      const start = Date.now();
+      await component().populateVersionHistoryIfMissingGracefully(repo, versionHistory, ref(size - 1));
+      expect(versionHistory.versions).to.have.length(size);
       expect(Date.now() - start).to.be.lessThan(2000);
     });
   });

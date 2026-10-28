@@ -6,7 +6,6 @@ import Consumer from './consumer';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 
 describe('Consumer', function () {
-  // @ts-ignore
   this.timeout(0);
   let sandbox;
   const getConsumerInstance = () => {
