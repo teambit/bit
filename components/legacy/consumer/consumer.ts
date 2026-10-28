@@ -16,7 +16,7 @@ import {
   LATEST,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
+import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound, UnexpectedPackageName } from '@teambit/legacy.scope';
 import type { Lane, ModelComponent } from '@teambit/objects';
 import { Version } from '@teambit/objects';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
@@ -34,14 +34,14 @@ import { parseScope } from '@teambit/legacy.utils';
 import type { NextVersion } from '@teambit/legacy.bit-map';
 import { BitMap, isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { Dependencies, ComponentLoadOptions, LoadManyResult } from '@teambit/legacy.consumer-component';
-import { ConsumerComponent as Component, ComponentLoader } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import { ComponentLoader } from './component-loader';
 import { PackageJsonFile } from '@teambit/component.sources';
 import type { ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
-import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
 import type { FsCache } from '@teambit/workspace.modules.fs-cache';
 
 type ConsumerProps = {
@@ -70,7 +70,6 @@ export default class Consumer {
   scope: Scope;
   bitMap: BitMap;
   isolated = false; // Mark that the consumer instance is of isolated env and not real
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dirStructure: DirStructure;
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
@@ -99,7 +98,6 @@ export default class Consumer {
     this.packageJson = packageJson;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
       this._dirStructure = new DirStructure(this.config.componentsDefaultDirectory);
@@ -533,8 +531,7 @@ export default class Consumer {
     const config = await LegacyWorkspaceConfig.loadIfExist(consumerInfo.path, scope.path);
     const consumer = new Consumer({
       projectPath: consumerInfo.path,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      config,
+      config: config!, // the existence of the workspace config was verified above (hasWorkspaceConfig)
       scope,
     });
     await consumer.setBitMap();

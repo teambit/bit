@@ -5,7 +5,7 @@ import chalk from 'chalk';
  * this is when a version is not found in the ModelComponent versions prop.
  * @see VersionNotFoundOnFS for cases when the Version object is missing from the filesystem.
  */
-export default class VersionNotFound extends BitError {
+export class VersionNotFound extends BitError {
   constructor(
     readonly version: string,
     componentId: string
