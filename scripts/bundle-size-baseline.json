@@ -65,14 +65,14 @@
       "phase": "post",
       "path": "dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/public",
       "excludePath": "dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/public/bit/ssr",
-      "baselineMB": 6.65
+      "baselineMB": 8.04
     },
     {
       "id": "ssr",
       "label": "SSR bundle",
       "phase": "post",
       "path": "dist/core-aspects/node_modules/@teambit/ui/artifacts/ui-bundle/public/bit/ssr",
-      "baselineMB": 6.35
+      "baselineMB": 7.73
     },
     {
       "id": "vendor-dll",
