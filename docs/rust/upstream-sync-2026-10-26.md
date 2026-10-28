@@ -884,3 +884,8 @@ newest normal tag before orphaned tags, and no longer let an earlier cached tag
 change the answer. Component log projection also selects the newest orphaned tag.
 The index is transient and is never serialized into a component model. A 20,000-tag
 regression checks tagged and untagged lookups; existing history-query bounds remain.
+
+The same indexed lookup is used when reporting staged history and building a
+scope's reverse dependency graph, avoiding a tag scan for every traversed snap.
+Rebuilding the index after a model change observes removals and orphaned tags;
+constructing it leaves the serialized model unchanged.

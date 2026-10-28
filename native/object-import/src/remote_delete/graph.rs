@@ -52,6 +52,7 @@ fn add_component(
     };
     let mut queue = VecDeque::from([head.to_owned()]);
     let mut seen = IndexSet::new();
+    let tags = crate::tag_index::TagIndex::model(model);
     while let Some(version_hash) = queue.pop_front() {
         if !seen.insert(version_hash.clone()) {
             continue;
@@ -61,7 +62,7 @@ fn add_component(
             Err(error) if error.kind() == io::ErrorKind::NotFound => continue,
             Err(error) => return Err(error),
         };
-        let label = tag(model, &version_hash).unwrap_or(&version_hash);
+        let label = tags.get(&version_hash).map_or(version_hash.as_str(), |(label, _)| label);
         let node = format!("{identity}@{label}");
         record_dependencies(reverse, &node, &version);
         enqueue_parents(&mut queue, &version)?;
@@ -88,20 +89,6 @@ fn enqueue_parents(queue: &mut VecDeque<String>, version: &Value) -> io::Result<
         queue.push_back(hash(parent)?.to_owned());
     }
     Ok(())
-}
-
-fn tag<'a>(model: &'a Value, version_hash: &str) -> Option<&'a str> {
-    ["versions", "orphanedVersions"]
-        .iter()
-        .find_map(|name| {
-            model[*name]
-                .as_object()?
-                .iter()
-                .rev()
-                .find_map(|(label, value)| {
-                    (value.as_str() == Some(version_hash)).then_some(label.as_str())
-                })
-        })
 }
 
 fn collect(reverse: &Reverse, identity: &str) -> Vec<String> {

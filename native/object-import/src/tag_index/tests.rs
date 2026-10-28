@@ -25,3 +25,24 @@ fn indexes_many_tagged_and_untagged_hashes() {
         }
     }
 }
+
+#[test]
+fn rebuilding_after_model_changes_keeps_serialized_model_unchanged() {
+    let mut model =
+        serde_json::json!({"versions":{"old":"a","new":"a"},"orphanedVersions":{"orphan":"a"}});
+    let before = model.clone();
+    assert_eq!(TagIndex::model(&model).get("a"), Some(("new", true)));
+    assert_eq!(model, before);
+    model["versions"]
+        .as_object_mut()
+        .unwrap()
+        .shift_remove("new");
+    assert_eq!(TagIndex::model(&model).get("a"), Some(("old", true)));
+    model["versions"]
+        .as_object_mut()
+        .unwrap()
+        .shift_remove("old");
+    assert_eq!(TagIndex::model(&model).get("a"), Some(("orphan", false)));
+    model["orphanedVersions"] = serde_json::json!({});
+    assert_eq!(TagIndex::model(&model).get("a"), None);
+}

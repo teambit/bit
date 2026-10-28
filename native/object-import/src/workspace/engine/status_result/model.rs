@@ -109,6 +109,7 @@ fn local(model: &Value) -> bool {
 }
 fn local_labels(model: &Value, history: &Value) -> io::Result<Vec<String>> {
     let mut refs = refs(&history["status"], "sourceOnly")?.to_vec();
+    let tags = crate::tag_index::TagIndex::model(model);
     let heads = match model["detachedHeads"].get("heads") {
         None => &[][..],
         Some(value) => value
@@ -126,7 +127,7 @@ fn local_labels(model: &Value, history: &Value) -> io::Result<Vec<String>> {
     refs.drain(..)
         .map(|value| {
             let hash = value.as_str().ok_or_else(|| invalid("status local ref"))?;
-            label(model, hash)
+            Ok(tags.get(hash).map_or_else(|| hash.to_owned(), |(label, _)| label.to_owned()))
         })
         .collect()
 }
