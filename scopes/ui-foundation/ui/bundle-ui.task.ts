@@ -1,8 +1,7 @@
 import { join } from 'path';
 import pMapSeries from 'p-map-series';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import type { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
-import type { Capsule } from '@teambit/isolator';
+import type { Capsule, Network } from '@teambit/isolator';
 import type { Logger } from '@teambit/logger';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { UIAspect } from './ui.aspect';
@@ -38,11 +37,15 @@ export function getUiRootHtmlFilename(uiRootAspectId: string): string {
   return `${getUiRootEntryName(uiRootAspectId)}.html`;
 }
 
-export class BundleUiTask implements BuildTask {
+/**
+ * a build task for the builder, which registers it. it is typed structurally rather than against the
+ * builder's BuildTask, because the builder depends on the ui.
+ */
+export class BundleUiTask {
   aspectId = 'teambit.ui-foundation/ui';
   name = BUNDLE_UI_TASK_NAME;
   readonly description = 'Pre-bundling the Bit UI';
-  location: TaskLocation = 'end';
+  location = 'end' as const;
 
   constructor(
     private ui: UiMain,
@@ -50,7 +53,7 @@ export class BundleUiTask implements BuildTask {
     private aspectLoader: AspectLoaderMain
   ) {}
 
-  async execute(context: BuildContext): Promise<BuiltTaskResult> {
+  async execute(context: { capsuleNetwork: Pick<Network, 'seedersCapsules'> }) {
     const capsule: Capsule | undefined = context.capsuleNetwork.seedersCapsules.find(
       (c) => c.component.id.toStringWithoutVersion() === UIAspect.id
     );

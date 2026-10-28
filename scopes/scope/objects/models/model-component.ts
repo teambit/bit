@@ -85,9 +85,9 @@ export type ComponentProps = {
   name: string;
   versions?: Versions;
   orphanedVersions?: Versions;
-  lang: string;
-  deprecated: boolean;
-  bindingPrefix: string;
+  lang?: string;
+  deprecated?: boolean;
+  bindingPrefix?: string;
   state?: State; // get deleted after export
   scopesList?: ScopeListItem[];
   head?: Ref;
@@ -546,13 +546,11 @@ export default class Component extends BitObject {
   latestExisting(repository: Repository): string {
     if (isEmpty(this.versions)) return VERSION_ZERO;
     const versions = this.listVersions('ASC');
-    let version = null;
-    let versionStr = null;
+    let version: Version | undefined;
+    let versionStr: string | undefined;
     while (!version && versions && versions.length) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       versionStr = versions.pop();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      version = this.loadVersionSync(versionStr, repository, false);
+      version = this.loadVersionSync(versionStr!, repository, false);
     }
     return versionStr || VERSION_ZERO;
   }
@@ -893,7 +891,19 @@ Error from "semver": ${err.message}`);
       return obj;
     }
 
-    const componentObject = {
+    const componentObject: {
+      name: string;
+      scope: string;
+      versions: Record<string, string>;
+      lang: string;
+      deprecated: boolean;
+      bindingPrefix: string;
+      remotes: ScopeListItem[];
+      schema: string | undefined;
+      detachedHeads: ReturnType<DetachedHeads['toObject']>;
+      local?: boolean;
+      state?: State;
+    } = {
       name: this.name,
       scope: this.scope,
       versions: versions(this.versions),
@@ -904,9 +914,7 @@ Error from "semver": ${err.message}`);
       schema: this.schema,
       detachedHeads: this.detachedHeads.toObject(),
     };
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.local) componentObject.local = this.local;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!isEmpty(this.state)) componentObject.state = this.state;
     // @ts-ignore
     if (!isEmpty(this.orphanedVersions)) componentObject.orphanedVersions = versions(this.orphanedVersions);
@@ -928,8 +936,7 @@ Error from "semver": ${err.message}`);
   loadVersionSync(version: string, repository: Repository, throws = true): Version {
     const versionRef = this.getRef(version);
     if (!versionRef) throw new VersionNotFound(version, this.id());
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return versionRef.loadSync(repository, throws);
+    return versionRef.loadSync(repository, throws) as Version;
   }
 
   async collectVersionsObjects(
@@ -1300,10 +1307,8 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
 
   markVersionAsLocal(version: string) {
     if (!this.state.versions) this.state = { versions: {} };
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (!this.state.versions[version]) this.state.versions[version] = {};
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.state.versions[version].local = true;
+    if (!this.state.versions![version]) this.state.versions![version] = {};
+    this.state.versions![version].local = true;
   }
 
   /**
@@ -1312,8 +1317,7 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
    */
   getLocalVersions(): string[] {
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return [];
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return Object.keys(this.state.versions).filter((version) => this.state.versions[version].local);
+    return Object.keys(this.state.versions!).filter((version) => this.state.versions![version].local);
   }
 
   hasLocalTag(tag: string): boolean {
@@ -1460,11 +1464,12 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     const headExists = versionHistory.hasHash(head);
     if (exitWhenFind && headExists) return {};
     const getVersionObj = async (ref: Ref) => (await ref.load(repo)) as Version | undefined;
-    const versionsToAdd: Version[] = [];
+    const versionsToAdd = new Map<string, Version>(); // by hash
+    const addVersion = (version: Version) => versionsToAdd.set(version.hash().toString(), version);
     let err: Error | undefined;
     const addParentsRecursively = async (version: Version) => {
       await pMapSeries(version.parents, async (parent) => {
-        const foundParent = versionHistory.hasHash(parent) || versionsToAdd.find((v) => v.hash().isEqual(parent));
+        const foundParent = versionHistory.hasHash(parent) || versionsToAdd.has(parent.toString());
         if (exitWhenFind && foundParent) {
           return;
         }
@@ -1476,7 +1481,7 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
             : new ParentNotFound(this.id(), version.hash().toString(), parent.toString());
           return;
         }
-        versionsToAdd.push(parentVersion);
+        addVersion(parentVersion);
         await addParentsRecursively(parentVersion);
       });
     };
@@ -1485,15 +1490,15 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       return { err: new HeadNotFound(this.id(), head.toString()) };
     }
     return this.populateVersionHistoryMutex.runExclusive(async () => {
-      if (!headExists) versionsToAdd.push(headVer);
+      if (!headExists) addVersion(headVer);
       await addParentsRecursively(headVer);
-      const added = versionsToAdd.map((v) => getVersionParentsFromVersion(v));
+      const added = [...versionsToAdd.values()].map((v) => getVersionParentsFromVersion(v));
       if (err) {
         return { err, added };
       }
-      versionHistory.addFromVersionsObjects(versionsToAdd);
+      versionHistory.addFromVersionsObjects([...versionsToAdd.values()]);
       logger.debug(
-        `populateVersionHistoryIfMissingGracefully, updating ${this.id()} with ${versionsToAdd.length} versions`
+        `populateVersionHistoryIfMissingGracefully, updating ${this.id()} with ${versionsToAdd.size} versions`
       );
       await repo.writeObjectsToTheFS([versionHistory]);
       return { added };
@@ -1523,7 +1528,6 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
   }
 
   static fromBitId(bitId: ComponentID): Component {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Component({
       name: bitId.fullName,
       scope: bitId.scope,

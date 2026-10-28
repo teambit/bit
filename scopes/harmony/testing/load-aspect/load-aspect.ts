@@ -1,5 +1,5 @@
 import { resolve, join } from 'path';
-import { loadConsumer } from '@teambit/legacy.consumer';
+import { loadConsumer, ComponentLoader } from '@teambit/legacy.consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { readdirSync, readFileSync } from 'fs';
@@ -10,7 +10,6 @@ import { Config } from '@teambit/harmony/harmony-config';
 import { ComponentID } from '@teambit/component';
 import { CLIAspect } from '@teambit/cli';
 import { EmptyEnvAspect } from '@teambit/empty-env';
-import { ComponentLoader } from '@teambit/legacy.consumer-component';
 import { LegacyWorkspaceConfig, ComponentOverrides, ComponentConfig } from '@teambit/legacy.consumer-config';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { DependenciesAspect } from '@teambit/dependencies';
@@ -165,6 +164,5 @@ function clearGlobalsIfNeeded() {
   // @ts-ignore
   ComponentLoader.loadDeps = undefined;
   ExtensionDataList.coreExtensionsNames = new Map();
-  // @ts-ignore
   LegacyWorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
 }

@@ -13,7 +13,7 @@ import type {
 } from '@teambit/dependency-resolver';
 import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import type { Logger } from '@teambit/logger';
-import { type LockfileFile } from '@pnpm/lockfile.types';
+import { type LockfileFile, type LockfileFileProjectSnapshot } from '@pnpm/lockfile.types';
 import { memoize, omit } from 'lodash';
 import type * as NodeApi from '@pnpm/napi';
 import type { DependentNode, DependentsTree, PeerDependencyIssuesByProjects, ResolvedConfig } from '@pnpm/napi';
@@ -24,6 +24,9 @@ import { join } from 'path';
 import {
   convertLockfileToGraph,
   convertGraphToLockfile,
+  createFileVersionReplacer,
+  createLockfileToGraphCache,
+  filterLockfileByImporters,
   init as initLockfileDepsGraphConverter,
 } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
@@ -58,7 +61,7 @@ interface ModulesManifest {
 }
 
 /** One importer entry of a lockfile, in the file's own shape. */
-type LockfileFileImporter = Record<string, Record<string, { specifier?: string; version?: string }> | undefined>;
+type LockfileFileImporter = LockfileFileProjectSnapshot;
 
 /**
  * Required lazily so the native engine binary is not mapped into every
@@ -525,6 +528,8 @@ export class PnpmPackageManager implements PackageManager {
       return;
     }
     const originalImporters = originalLockfile.importers as Record<string, LockfileFileImporter>;
+    const replaceFileVersion = createFileVersionReplacer(opts.componentIdByPkgName);
+    const cache = createLockfileToGraphCache();
     for (const { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
       const componentImporterId = (componentRelativeDir || '.') as ProjectId;
       let compRootDir: string | undefined;
@@ -536,7 +541,12 @@ export class PnpmPackageManager implements PackageManager {
       if (!originalImporters[componentImporterId]) {
         continue;
       }
-      const hasComponentRootImporter = compRootDir != null && Boolean(originalImporters[compRootDir]);
+      const rootImporterVersion =
+        compRootDir != null && pkgName != null
+          ? originalImporters[compRootDir]?.dependencies?.[pkgName]?.version
+          : undefined;
+      const hasComponentRootImporter =
+        rootImporterVersion != null && Boolean(originalLockfile.snapshots?.[`${pkgName}@${rootImporterVersion}`]);
       const filterByImporterIds = [componentImporterId];
       if (hasComponentRootImporter && compRootDir !== componentImporterId) {
         filterByImporterIds.push(compRootDir as ProjectId);
@@ -548,12 +558,8 @@ export class PnpmPackageManager implements PackageManager {
           clonedImporters[importerId] = structuredClone(originalImporters[importerId]);
         }
       }
-      const lockfile = {
-        ...originalLockfile,
-        importers: { ...originalImporters, ...clonedImporters },
-      };
       for (const importerId of filterByImporterIds) {
-        const importer = lockfile.importers[importerId];
+        const importer = clonedImporters[importerId];
         if (importer == null) continue;
         for (const workspacePkgName of opts.componentIdByPkgName.keys()) {
           if (workspacePkgName === pkgName) continue;
@@ -570,18 +576,25 @@ export class PnpmPackageManager implements PackageManager {
               importer.optionalDependencies?.[workspacePkgName];
             if (ref?.version?.startsWith('file:')) continue;
           }
-          for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies', 'dependenciesMeta']) {
+          for (const depType of [
+            'dependencies',
+            'devDependencies',
+            'optionalDependencies',
+            'dependenciesMeta',
+          ] as const) {
             delete importer[depType]?.[workspacePkgName];
           }
         }
       }
       // Filters the lockfile so that it only includes packages related to the given component.
-      const partialLockfile = nodeApi.filterLockfileByImporters<LockfileFile>(lockfile, filterByImporterIds);
+      const partialLockfile = filterLockfileByImporters(originalLockfile, filterByImporterIds, clonedImporters);
       const graph = convertLockfileToGraph(partialLockfile, {
         ...opts,
         componentRootDir: hasComponentRootImporter ? compRootDir : undefined,
         componentRelativeDir: componentImporterId,
         pkgName,
+        replaceFileVersion,
+        cache,
       });
       component.state._consumer.dependenciesGraph = graph;
     }

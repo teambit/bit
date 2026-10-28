@@ -2,8 +2,8 @@ import { readdirSync, existsSync, readFileSync, writeFileSync, mkdirSync, mkdtem
 import { join, relative, resolve, dirname, sep } from 'path';
 import { rspack } from '@rspack/core';
 import { getCoreAspectPackageName } from '@teambit/aspect-loader';
-import { fallbacksProvidePluginConfig } from '@teambit/webpack';
 import {
+  processFallback,
   moduleFileExtensions,
   shouldUseSourceMap,
   imageInlineSizeLimit,
@@ -606,7 +606,7 @@ async function runUiVendorDllCompiler(entryFile: string, dllOutputDir: string, s
       ],
     },
     plugins: [
-      new rspack.ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
+      new rspack.ProvidePlugin({ process: processFallback }),
       new rspack.IgnorePlugin({ resourceRegExp: /^\.\/locale$/, contextRegExp: /moment$/ }),
       new rspack.DllPlugin({
         path: join(dllOutputDir, UI_VENDOR_DLL_MANIFEST_FILENAME),

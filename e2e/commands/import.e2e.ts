@@ -338,17 +338,13 @@ describe('bit import', function () {
       });
       it('should not remove the local version', () => {
         const catComponent = helper.command.catComponent(`${helper.scopes.remote}/bar/foo`);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.1');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.2');
       });
       it('should not override the local component', () => {
         const catComponent = helper.command.catComponent(`${helper.scopes.remote}/bar/foo`);
         expect(catComponent).to.have.property('state');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.state).to.have.property('versions');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.state.versions).to.have.property('0.0.2');
       });
       describe('importing a specific version', () => {

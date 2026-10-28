@@ -62,7 +62,7 @@
         "@pnpm/deps.path": "1100.1.0",
         "@pnpm/error": "1100.1.1",
         "@pnpm/lockfile.types": "1100.0.19",
-        "@pnpm/napi": "12.13.0",
+        "@pnpm/napi": "12.16.0",
         "@pnpm/network.ca-file": "3.0.3",
         "@pnpm/network.fetch": "1100.1.11",
         "@pnpm/node-fetch": "^1.0.0",
@@ -739,7 +739,7 @@
       "@pnpm/util.lex-comparator": "3.0.2",
       "@pnpm/config.nerf-dart": "1.0.1"
     },
-    "nodeVersion": "22.22.0",
+    "nodeVersion": "22.23.4",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
@@ -774,11 +774,6 @@
     ],
     "envs": [
       "teambit.harmony/envs/core-aspect-env"
-    ]
-  },
-  "teambit.component/issues": {
-    "ignoreIssues": [
-      "CircularDependencies"
     ]
   },
   "teambit.workspace/variants": {
@@ -821,7 +816,7 @@
         "packageJson": {
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "bvm": {
-            "node": "22.22.0"
+            "node": "22.23.4"
           },
           "engines": {
             "node": ">=18.12.0"

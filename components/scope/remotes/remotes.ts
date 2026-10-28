@@ -7,16 +7,14 @@ import { CURRENT_FETCH_SCHEMA } from '@teambit/legacy.scope-api';
 import { GlobalRemotes } from './global-remotes';
 import { logger } from '@teambit/legacy.logger';
 import type { Scope as LegacyScope } from '@teambit/legacy.scope';
-import { ScopeNotFound } from '@teambit/legacy.scope';
+import { ScopeNotFound, UnexpectedNetworkError } from '@teambit/legacy.scope';
 import type { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import { prependBang } from '@teambit/legacy.utils';
 import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
-import { PrimaryOverloaded } from './exceptions';
+import { PrimaryOverloaded, ScopeNotFoundOrDenied } from './exceptions';
 import { Remote } from './remote';
 import remoteResolver from './remote-resolver/remote-resolver';
-import { UnexpectedNetworkError } from '@teambit/scope.network';
 import type { ObjectItemsStream } from '@teambit/objects';
-import { ScopeNotFoundOrDenied } from './exceptions/scope-not-found-or-denied';
 
 export class Remotes extends Map<string, Remote> {
   constructor(
@@ -27,8 +25,7 @@ export class Remotes extends Map<string, Remote> {
   }
 
   validate() {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const primary = this.values.filter((remote) => remote.primary);
+    const primary = Array.from(this.values()).filter((remote) => remote.primary);
     if (primary.length > 1) throw new PrimaryOverloaded();
     return this.forEach((remote) => remote.validate());
   }
@@ -177,13 +174,12 @@ ${failedScopesErr.join('\n')}`);
   }
 
   static load(remotes: { [key: string]: string }, thisScope?: LegacyScope): Remotes {
-    const models = [];
+    const models: [string, Remote][] = [];
 
     if (!remotes) return new Remotes(undefined, thisScope);
 
     forEach(remotes, (name, host) => {
       const remote = Remote.load(name, host, thisScope);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       models.push([remote.name, remote]);
     });
 

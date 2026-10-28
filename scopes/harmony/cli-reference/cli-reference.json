@@ -4279,7 +4279,7 @@
           ]
         ],
         "description": "creates a new lane and switches to it",
-        "extendedDescription": "a lane created from main (default-lane) is empty until components are snapped.\na lane created from another lane contains all the components of the original lane.",
+        "extendedDescription": "a lane created from main (default-lane) is empty until components are snapped.\nif main has snaps that were not exported, they are moved to the new lane, and main goes back to its remote state.\na lane created from another lane contains all the components of the original lane.",
         "group": "ungrouped",
         "private": false,
         "arguments": [

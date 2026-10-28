@@ -7,7 +7,7 @@ version: 2.1
 # Base configurations
 default_image: &default_image
   docker:
-    - image: cimg/node:22.22.0
+    - image: cimg/node:22.23.4
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -145,7 +145,10 @@ commands:
           name: install bit bundle for <<parameters.os>> <<parameters.cpu>>
           command: |
             cd <<parameters.directory>>
-            pnpm init
+            # pnpm init pins the latest pnpm in package.json by default, and the install then
+            # records that pin in an env document at the top of pnpm-lock.yaml. bvm installs
+            # Bit from the published lockfile, which has to hold only Bit's dependencies.
+            pnpm init --no-init-package-manager
             pnpm config set --location=project registry https://node-registry.bit.cloud
             pnpm config set --location=project nodeLinker hoisted
             pnpm config set --location=project packageImportMethod copy
@@ -294,7 +297,7 @@ commands:
           name: Install pnpm
           command: |
             export PNPM_HOME="$HOME/.local/share/pnpm"
-            SHELL=/bin/bash npx --yes get-pnpm@0.0.3 12.0.0-rc.7
+            SHELL=/bin/bash npx --yes get-pnpm@0.0.5 12.15.0
             "$PNPM_HOME/bin/pnpm" --version
             echo "export PNPM_HOME=\"$PNPM_HOME\"" >> $BASH_ENV
             echo 'export PATH="$PNPM_HOME/bin:$PATH"' >> $BASH_ENV
@@ -426,13 +429,13 @@ commands:
   windows_set_node_version:
     parameters:
       version:
-        default: 22.22.0
+        default: 22.23.4
         type: string
     steps:
       - run: choco upgrade nvm -y
       - run: nvm -v
-      - run: nvm install 22.22.0
-      - run: nvm use 22.22.0
+      - run: nvm install 22.23.4
+      - run: nvm use 22.23.4
       - run: node -v
 
   windows_add_bvm_to_path:
@@ -473,7 +476,7 @@ commands:
         default: 'BASE_IMAGE'
         type: string
       docker_build_base_image_arg_value:
-        default: 'node:22.22.0'
+        default: 'node:22.23.4'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -506,7 +509,7 @@ commands:
         default: 'BASE_IMAGE'
         type: string
       docker_build_base_image_arg_value:
-        default: 'node:22.22.0'
+        default: 'node:22.23.4'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -1939,8 +1942,8 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "node:22.22.0"
-          docker_tag_suffix: "-node-22.22.0"
+          docker_build_base_image_arg_value: "node:22.23.4"
+          docker_tag_suffix: "-node-22.23.4"
 
   docker_non_root_build_node_22:
     machine:
@@ -1949,10 +1952,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "node:22.22.0"
+          docker_build_base_image_arg_value: "node:22.23.4"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-22.22.0"
+          docker_tag_suffix: "-node-22.23.4"
 
   docker_build_alpine:
     machine:
@@ -1961,10 +1964,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "node:22.22.0-alpine"
+          docker_build_base_image_arg_value: "node:22.23.4-alpine"
           # image_name: "bitcli/bit-alpine"
           docker_file_name: "Dockerfile-bit-alpine"
-          docker_tag_suffix: "-alpine-node-22.22.0"
+          docker_tag_suffix: "-alpine-node-22.23.4"
 
   server_docker_build_node_22:
     machine:
@@ -1973,10 +1976,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "`npm show @teambit/bit version`-node-22.22.0"
+          docker_build_base_image_arg_value: "`npm show @teambit/bit version`-node-22.23.4"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-22.22.0"
+          docker_tag_suffix: "-node-22.23.4"
 
   # ========== Windows Jobs ==========
   windows_checkout_code:
@@ -2123,9 +2126,9 @@ jobs:
       # - run: node -v
       # - run: npm -v
       # - run: yarn -v
-      # # - run: choco install nodejs --version 22.22.0
+      # # - run: choco install nodejs --version 22.23.4
       # # - run: node -v
-      # - run: cinst nodejs --version 22.22.0
+      # - run: cinst nodejs --version 22.23.4
       # - run: node -v
 
 # ========================================

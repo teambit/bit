@@ -7,15 +7,15 @@ import type { APIDiffResult } from '@teambit/semantics.entities.semantic-schema-
 import chaiSubset from 'chai-subset';
 import type { TrackerMain } from '@teambit/tracker';
 import { TrackerAspect } from '@teambit/tracker';
-import { TypescriptAspect } from '@teambit/typescript';
 import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { ComponentID } from '@teambit/component-id';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
-import type { SchemaMain } from './schema.main.runtime';
-import { SchemaAspect } from './schema.aspect';
+import type { SchemaMain } from '@teambit/schema';
+import { SchemaAspect } from '@teambit/schema';
+import { TypescriptAspect } from './typescript.aspect';
 
 use(chaiSubset);
 
@@ -23,7 +23,12 @@ function expectToContainSubset(actual: unknown, expected: unknown) {
   (expect(actual).to as Chai.Assertion & { containSubset(subset: unknown): Chai.Assertion }).containSubset(expected);
 }
 
-describe('SchemaAspect', function () {
+/**
+ * these specs drive SchemaMain through the real typescript extractor, so they live here rather than in the schema
+ * component: schema must not depend on typescript (typescript depends on schema), and loading the typescript aspect
+ * from schema's own spec puts the two in a circular dependency. see `scripts/circular-deps-check`.
+ */
+describe('schema extraction', function () {
   this.timeout(0);
   let schema: SchemaMain;
   let workspace: Workspace;

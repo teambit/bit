@@ -64,7 +64,7 @@ describe('install command', function () {
       helper.fixtures.populateComponents(1, undefined, undefined, false);
       helper.extensions.addExtensionToVariant('*', envId);
       // Clean the node_modules as we want to run tests when node_modules is empty
-      fs.rmdirSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
+      fs.rmSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true, force: true });
       wsEmptyNM = helper.scopeHelper.cloneWorkspace(IS_WINDOWS);
     });
     describe('without --recurring-install', () => {
