@@ -71,6 +71,26 @@ fn standard_lint_multiple_components_cold_text() {
 }
 
 #[test]
+fn standard_lint_fixes_two_single_file_components_in_order() {
+    let helper = support::workspace(2, false);
+    helper.output_file("comp1/index.js", "module.exports=()=>{return Boolean(!!true);};\n");
+    helper.output_file("comp2/index.js", "module.exports=()=>{return Boolean(!!false);};\n");
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let result = support::compare_with_stdout(&helper, "lint --fix --json", duration);
+    assert!(result.status.success());
+    for name in ["comp1", "comp2"] {
+        let source =
+            std::fs::read_to_string(helper.scopes.local_path.join(name).join("index.js")).unwrap();
+        assert!(!source.contains("!!"), "{name}: {source}");
+    }
+}
+
+#[test]
 fn standard_lint_warning_error_and_fix_preserve_released_diagnostics_and_sources() {
     let helper = support::workspace(1, true);
     for (source, command, code) in [

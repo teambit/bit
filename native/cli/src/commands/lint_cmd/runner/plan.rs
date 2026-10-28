@@ -18,13 +18,17 @@ impl Plan {
             pattern: options.pattern.clone(),
             changed: options.changed,
             allow_cached_pair: false,
-            single_file_write: options.fix,
             ..Selection::default()
         };
         let loaded = Loaded::prepare(root, &selection)?;
         let components = loaded.components()?;
-        if components.len() > 2 || (components.len() > 1 && options.fix) {
-            return Err(invalid("linter multiple component fixes"));
+        if components.len() > 2
+            || (options.fix
+                && components
+                    .iter()
+                    .any(|component| component.files.len() > 1))
+        {
+            return Err(invalid("linter unsupported write batch"));
         }
         let directories = components
             .iter()
