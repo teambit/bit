@@ -74,6 +74,58 @@ fn builtin_compile_multiple_component_files_and_links_match_node() {
 }
 
 #[test]
+fn builtin_compile_two_cold_components_json_report() {
+    let helper = support::workspace(2, false);
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let result = support::compare(&helper, "compile comp1 comp2 --json");
+    assert!(result.status.success());
+}
+
+#[test]
+fn builtin_compile_two_cold_components_verbose_report() {
+    let helper = support::workspace(2, false);
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let result = support::compare_with_stdout(&helper, "compile comp1 comp2 --verbose", duration);
+    assert!(result.status.success());
+}
+
+#[test]
+fn builtin_compile_two_cold_components_reverse_selection() {
+    let helper = support::workspace(2, false);
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let result = support::compare(&helper, "compile comp2 comp1 --json");
+    assert!(result.status.success());
+}
+
+#[test]
+fn builtin_compile_two_cold_components_reverse_verbose() {
+    let helper = support::workspace(2, false);
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let result = support::compare_with_stdout(&helper, "compile comp2 comp1 --verbose", duration);
+    assert!(result.status.success());
+}
+
+#[test]
 fn builtin_compile_rewired_sources_with_cold_documentation_cache_match_node() {
     let helper = support::workspace(2, true);
     helper.output_file(

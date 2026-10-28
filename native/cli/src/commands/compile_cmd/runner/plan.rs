@@ -15,24 +15,15 @@ impl Plan {
             return Err(io::Error::other("compiler options require another service"));
         }
         let batch_size = limits::batch_size(root)?;
-        let selection = Selection {
-            pattern: None,
-            compiler: true,
-            explicit_file_order: false,
-            changed: options.changed && options.components.is_empty(),
-            allow_cached_pair: false,
-            allow_cached_many: !options.json && !options.verbose,
-            single_file_write: false,
-            exact: Some(options.components.clone()),
-        };
+        let selection = selection(options);
         let mut loaded = Loaded::prepare(root, &selection)?;
         if !options.components.is_empty() {
             loaded.progress.loads = vec![options.components.len()];
         }
         let components = loaded.components()?;
         let links = Links::prepare(root, &loaded)?;
-        let directories = links.dist_directories(root)?;
-        if components.len() > 1 && (options.verbose || options.json) {
+        let directories = links.dist_directories(root, &loaded.progress.identities)?;
+        if components.len() > 2 && (options.verbose || options.json) {
             return Err(io::Error::other("compiler ordered component report"));
         }
         let compiled =
@@ -84,4 +75,18 @@ fn validate_order(compiled: &[Compiled]) -> io::Result<()> {
         return Err(io::Error::other("compiler diagnostic component order"));
     }
     Ok(())
+}
+
+fn selection(options: &Options) -> Selection {
+    Selection {
+        pattern: None,
+        compiler: true,
+        explicit_file_order: (options.json || options.verbose)
+            && !options.components.is_empty(),
+        changed: options.changed && options.components.is_empty(),
+        allow_cached_pair: false,
+        allow_cached_many: !options.json && !options.verbose,
+        single_file_write: false,
+        exact: Some(options.components.clone()),
+    }
 }

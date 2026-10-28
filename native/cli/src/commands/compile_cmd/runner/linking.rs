@@ -49,10 +49,21 @@ impl Links {
             has_roots: config.dependency_resolver.has_root_components(),
         })
     }
-    pub(super) fn dist_directories(&self, root: &Path) -> io::Result<Vec<Vec<PathBuf>>> {
-        self.components
+    pub(super) fn dist_directories(
+        &self,
+        root: &Path,
+        identities: &[String],
+    ) -> io::Result<Vec<Vec<PathBuf>>> {
+        identities
             .iter()
-            .map(|component| {
+            .map(|identity| {
+                let component = self.components
+                    .iter()
+                    .find(|component| {
+                        identity.split('@').next()
+                            == Some(component.id.to_string_without_version().as_str())
+                    })
+                    .ok_or_else(|| io::Error::other("compiler component link identity"))?;
                 bit_install::links::component_package_copies(root, component, &self.roots)
                     .map(|dirs| {
                         dirs.into_iter()
