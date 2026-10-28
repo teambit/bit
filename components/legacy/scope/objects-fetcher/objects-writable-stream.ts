@@ -96,7 +96,9 @@ export class ObjectsWritable extends Writable {
     } else if (bitObject instanceof Version) {
       // technically it's mutable, but it's ok to have it in the same queue with high concurrency because the merge is
       // simple enough and can't interrupt others
-      await this.objectsQueue.addImmutableObject(obj.ref.toString(), () => this.mergeVersionObject(bitObject));
+      await this.objectsQueue.addImmutableObject(obj.ref.toString(), () =>
+        this.mergeVersionObject(bitObject, obj, inflatedSize)
+      );
     } else {
       await this.objectsQueue.addImmutableObject(obj.ref.toString(), () =>
         this.writeImmutableObject(bitObject, obj, inflatedSize)
@@ -146,10 +148,16 @@ export class ObjectsWritable extends Writable {
     }
   }
 
-  private async mergeVersionObject(version: Version) {
+  private async mergeVersionObject(version: Version, obj: ObjectItem, inflatedSize: number) {
     const existingVersion = (await this.repo.load(version.hash())) as Version | undefined;
     const isExistingNewer = existingVersion && existingVersion.lastModified() > version.lastModified();
     if (isExistingNewer) return;
-    await this.repo.writeObjectsToTheFS([version]);
+    // the hash of a Version is the one in its header, which is the ref it was received under. the received
+    // buffer is the object as the remote stores it; writing it as is skips the serialization, the validation
+    // re-parse and the compression of a copy that would be the same bytes.
+    const rawObjects: RawObjectsMap | undefined = version.hash().isEqual(obj.ref)
+      ? new Map([[version, { buffer: obj.buffer, inflatedSize, ref: obj.ref }]])
+      : undefined;
+    await this.repo.writeObjectsToTheFS([version], rawObjects);
   }
 }
