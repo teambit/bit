@@ -30,8 +30,9 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         Err(error) => return Ok(Outcome::Declined(format!("tester preparation: {error}"))),
     };
     let history = History::start(root, args);
-    let work =
-        move |output: &bit_install::output::Output| match plan.run(root, output, !options.json) {
+    let work = move |output: &bit_install::output::Output| {
+        warnings(output, options);
+        match plan.run(root, output, !options.json) {
             Ok(execution) => {
                 if !execution.terminated {
                     history.end(execution.report.code == 0);
@@ -42,11 +43,23 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
                 history.end(false);
                 Err(error)
             }
-        };
+        }
+    };
     if options.json {
         workspace_command::execute_json_scope(root, args, "test", work)
     } else {
         workspace_command::execute_then_scope(root, args, "test", work)
+    }
+}
+fn warnings(output: &bit_install::output::Output, options: &Options) {
+    if options.json {
+        return;
+    }
+    if options.scope.is_some() {
+        output.warning(r#"--scope is deprecated, use the pattern argument instead. e.g. "scopeName/**" for the entire scope"#);
+    }
+    if options.all {
+        output.warning("--all is deprecated, use --unmodified instead");
     }
 }
 fn format_execution(

@@ -22,9 +22,7 @@ impl Settings {
             && (!args
                 .iter()
                 .take_while(|arg| *arg != "--")
-                .any(|arg| arg == "--summary")
-                || options.all
-                || options.scope.is_some())
+                .any(|arg| arg == "--summary"))
         {
             return Err(invalid("tester text reporting"));
         }
@@ -34,7 +32,7 @@ impl Settings {
                 pattern: (!options.user_pattern.is_empty()).then(|| {
                     options.user_pattern.join(", ")
                 }),
-                changed: true,
+                changed: options.json || !options.all,
                 ..Selection::default()
             },
             summary: false,
@@ -52,6 +50,11 @@ impl Settings {
                 settings.selection.explicit_file_order = true;
             }
             settings.files = selected.paths;
+        } else if !options.json
+            && let Some(scope) = &options.scope
+        {
+            let pattern = settings.selection.pattern.as_deref().unwrap_or("**");
+            settings.selection.pattern = Some(format!("{scope}/{pattern}"));
         }
         Ok(settings)
     }

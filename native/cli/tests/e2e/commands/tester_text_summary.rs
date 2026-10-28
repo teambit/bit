@@ -118,3 +118,83 @@ Module._load=function(name,...args){if(name.includes('@teambit/')||name.includes
     assert!(!result.trace.contains("starting the JavaScript host"));
     assert!(result.stderr.is_empty(), "{result:?}");
 }
+#[test]
+fn text_summary_all_warns_and_matches_unmodified_selection() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "it('pass',()=>expect(2).toBe(2));\n");
+    let result = support::compare_with_stdout(&helper, "test --all --summary", without_duration);
+    assert!(result.status.success());
+    assert!(result.stdout.contains("--all is deprecated"));
+}
+
+#[test]
+fn text_summary_all_warns_with_explicit_file_in_ci() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "it('pass',()=>expect(2).toBe(2));\n");
+    let result = super::add::support::compare_service_output(
+        &helper,
+        "test comp1/index.spec.js -a --summary",
+        without_duration,
+        true,
+        true,
+    );
+    assert!(result.status.success());
+}
+
+#[test]
+fn text_summary_all_selects_unchanged_components() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "it('pass',()=>expect(2).toBe(2));\n");
+    support::tag(&helper);
+    let result = support::compare_with_stdout(&helper, "test --all --summary", without_duration);
+    assert!(result.status.success());
+    assert!(result.stdout.contains("1/1 tests passed across 1 components"));
+}
+
+#[test]
+fn text_summary_scope_filters_components_and_warns() {
+    let helper = support::workspace(2, true);
+    helper.output_file("comp1/index.spec.js", "it('pass',()=>expect(2).toBe(2));\n");
+    helper.output_file("comp2/index.spec.js", "it('pass',()=>expect(2).toBe(2));\n");
+    let command = format!("test comp1 --scope {} --summary", helper.scopes.remote);
+    let result = support::compare_with_stdout(&helper, &command, without_duration);
+    assert!(result.status.success());
+    assert!(result.stdout.contains("--scope is deprecated"));
+    assert!(result.stdout.contains("1/1 tests passed across 1 components"));
+}
+
+#[test]
+fn text_summary_scope_does_not_filter_explicit_files() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "it('pass',()=>expect(2).toBe(2));\n");
+    let result = support::compare_with_stdout(
+        &helper,
+        "test comp1/index.spec.js --scope example.other --summary",
+        without_duration,
+    );
+    assert!(result.status.success());
+}
+
+#[test]
+fn text_summary_scope_without_pattern_selects_the_scope() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "it('pass',()=>expect(2).toBe(2));\n");
+    let command = format!("test --scope {} --all --summary", helper.scopes.remote);
+    let result = support::compare_with_stdout(&helper, &command, without_duration);
+    assert!(result.status.success());
+    assert!(result.stdout.contains("--scope is deprecated"));
+    assert!(result.stdout.contains("--all is deprecated"));
+}
+
+#[test]
+fn text_summary_unknown_scope_declines_before_test_effects() {
+    let helper = support::workspace(1, true);
+    helper.output_file(
+        "comp1/index.spec.js",
+        "const fs=require('fs');it('pass',()=>{fs.writeFileSync('effect','x');});\n",
+    );
+    let result =
+        support::compare_declined(&helper, "test --scope example.other --summary", str::to_owned);
+    assert_eq!(result.status.code(), Some(1));
+    assert!(!helper.scopes.local_path.join("effect").exists());
+}

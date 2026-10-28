@@ -739,3 +739,21 @@ as did formatting, Clippy, Dylint, rustdoc, workspace tests and generated/scope
 checks. The full E2E run had 1,827 passes, two existing skips and three Bit
 Cloud request failures in existing fixture setup. All three passed unchanged
 on serial rerun.
+
+## Tester summary selection flags
+
+Text summaries now preserve the released `--all` and `--scope` warnings and
+selection rules. The all-components flag includes unchanged components; scope
+qualifies component patterns, while explicit file paths ignore that filter.
+JSON retains its existing released behavior for these flags. Unknown or
+unsupported selections decline before test execution.
+
+Differential cases cover both flags, their combination, scope-qualified and
+explicit-file selection, CI colors, and an unknown scope. A tagged unchanged
+component proves the all-components selection; a negative control that reverts
+it to changed-only selection fails the native-ownership assertion.
+
+Validation: all focused text-summary cases passed, along with formatting,
+Clippy, Dylint, rustdoc, workspace tests and generated/scope checks. The full
+E2E run had 1,835 passes, two existing skips and two Bit Cloud request failures
+in existing fixtures; both passed unchanged on serial rerun.
