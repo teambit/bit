@@ -6,7 +6,7 @@ import type { Component, ComponentID, GetGraphIdsOpts } from '@teambit/component
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ComponentIdList } from '@teambit/component-id';
 import type { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
-import type { CompIdGraph, DepEdgeType } from '@teambit/graph';
+import type { DepEdgeType } from '@teambit/graph';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
@@ -41,11 +41,11 @@ export function lifecycleToDepType(compDep: ComponentDependency): DepEdgeType {
 
 export class GraphIdsFromFsBuilder {
   private graph = new Graph<ComponentID, DepEdgeType>();
-  private completed: string[] = [];
+  private completed = new Set<string>();
   private depth = 1;
   private consumer: Consumer;
   private loadedComponents: { [idStr: string]: Component } = {};
-  private importedIds: string[] = [];
+  private importedIds = new Set<string>();
   // the dependencies each processed component has right now (not from its saved graph), keyed by the component id-str
   private currentDepsIds: { [idStr: string]: Set<string> } = {};
   private shouldThrowOnInvalidDeps = true; // for now it has the same value as shouldThrowOnMissingDep. change if needed
@@ -93,9 +93,9 @@ export class GraphIdsFromFsBuilder {
    * once a component from scope is imported, we know that either we have its dependency graph or all flattened deps
    */
   private async importObjects(components: Component[]) {
-    const workspaceIds = this.workspace.listIds();
-    const compOnWorkspaceOnly = components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
-    const notImported = compOnWorkspaceOnly.map((c) => c.id).filter((id) => !this.importedIds.includes(id.toString()));
+    const workspaceIdsStr = new Set(this.workspace.listIds().map((id) => id.toString()));
+    const compOnWorkspaceOnly = components.filter((comp) => workspaceIdsStr.has(comp.id.toString()));
+    const notImported = compOnWorkspaceOnly.map((c) => c.id).filter((id) => !this.importedIds.has(id.toString()));
     const exportedDeps = notImported.filter((dep) => this.workspace.isExported(dep));
     const scopeComponentsImporter = this.consumer.scope.scopeImporter;
     await scopeComponentsImporter.importMany({
@@ -106,23 +106,29 @@ export class GraphIdsFromFsBuilder {
       lane: await this.workspace.getCurrentLaneObject(),
       reason: 'for building graph-ids from the workspace',
     });
-    notImported.map((id) => this.importedIds.push(id.toString()));
+    notImported.forEach((id) => this.importedIds.add(id.toString()));
   }
 
   private async processOneComponent(component: Component) {
     const idStr = component.id.toString();
-    if (this.completed.includes(idStr)) return [];
-    const graphFromScope = await this.workspace.getSavedGraphOfComponentIfExist(component);
-    if (graphFromScope?.edges.length) {
-      const isOnWorkspace = await this.workspace.hasId(component.id);
-      if (isOnWorkspace) {
-        const allDependenciesComps = await this.processCompFromWorkspaceWithGraph(graphFromScope, component);
-        this.completed.push(idStr);
+    if (this.completed.has(idStr)) return [];
+    const isOnWorkspace = await this.workspace.hasId(component.id);
+    if (isOnWorkspace) {
+      // the node ids are enough to tell which dependencies the saved graph covers. the edges, which are costly to
+      // load for every component, are asked for only when a covered dependency is not in the graph yet.
+      const savedGraphNodeIds = await this.workspace.getSavedGraphNodeIdsOfComponentIfExist(component);
+      if (savedGraphNodeIds) {
+        const allDependenciesComps = await this.processCompFromWorkspaceWithGraph(savedGraphNodeIds, component);
+        this.completed.add(idStr);
         return allDependenciesComps;
       }
-      this.graph.merge([graphFromScope]);
-      this.completed.push(idStr);
-      return [];
+    } else {
+      const graphFromScope = await this.workspace.getSavedGraphOfComponentIfExist(component);
+      if (graphFromScope?.edges.length) {
+        this.graph.merge([graphFromScope]);
+        this.completed.add(idStr);
+        return [];
+      }
     }
 
     const deps = this.dependencyResolver.getComponentDependencies(component);
@@ -131,7 +137,7 @@ export class GraphIdsFromFsBuilder {
 
     deps.forEach((dep) => this.addDepEdge(idStr, dep));
     this.setCurrentDeps(idStr, deps);
-    this.completed.push(idStr);
+    this.completed.add(idStr);
 
     return allDependenciesComps;
   }
@@ -147,29 +153,31 @@ export class GraphIdsFromFsBuilder {
    * and get its dependencies.
    */
   private async processCompFromWorkspaceWithGraph(
-    graphFromScope: CompIdGraph,
+    savedGraphNodeIds: Set<string>,
     component: Component
   ): Promise<Component[]> {
     const deps = this.dependencyResolver.getComponentDependencies(component);
-    const workspaceIds = this.workspace.listIds();
-    const workspaceIdsStr = workspaceIds.map((id) => id.toString());
+    const workspaceIdsStr = new Set(this.workspace.listIds().map((id) => id.toString()));
     const [depsInScopeGraph, depsNotInScopeGraph] = partition(
       deps,
-      (dep) =>
-        graphFromScope.hasNode(dep.componentId.toString()) && !workspaceIdsStr.includes(dep.componentId.toString())
+      (dep) => savedGraphNodeIds.has(dep.componentId.toString()) && !workspaceIdsStr.has(dep.componentId.toString())
     );
 
     const depsInScopeGraphIds = depsInScopeGraph.map((dep) => dep.componentId.toString());
-    const depsInScopeGraphIdsNotCompleted = depsInScopeGraphIds.filter((id) => !this.completed.includes(id));
+    const depsInScopeGraphIdsNotCompleted = depsInScopeGraphIds.filter((id) => !this.completed.has(id));
     if (depsInScopeGraphIdsNotCompleted.length) {
+      const graphFromScope = await this.workspace.getSavedGraphOfComponentIfExist(component);
+      if (!graphFromScope) {
+        throw new Error(`the saved graph of ${component.id.toString()} has nodes but could not be loaded`);
+      }
       const subGraphs = graphFromScope.successorsSubgraph(depsInScopeGraphIdsNotCompleted);
       // delete any edge that its source is from the workspace. if this component is modified, this edge could be
       // incorrect. we don't need these edges anyway because we add them directly.
       subGraphs.edges.forEach((edge) => {
-        if (workspaceIdsStr.includes(edge.sourceId)) subGraphs.deleteEdge(edge.sourceId, edge.targetId);
+        if (workspaceIdsStr.has(edge.sourceId)) subGraphs.deleteEdge(edge.sourceId, edge.targetId);
       });
       this.graph.merge([subGraphs]);
-      this.completed.push(...depsInScopeGraphIdsNotCompleted);
+      depsInScopeGraphIdsNotCompleted.forEach((id) => this.completed.add(id));
     }
 
     const allDepsIds = depsNotInScopeGraph.map((d) => d.componentId);

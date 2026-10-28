@@ -676,6 +676,22 @@ export class Workspace implements ComponentFactory {
     return this.dependencyResolver.getDependencies(component);
   }
 
+  /**
+   * the ids of the nodes of the saved graph of the component (the component itself and its flattened dependencies),
+   * or null when the component has no saved graph. unlike `getSavedGraphOfComponentIfExist`, the edges are not
+   * loaded and parsed: the graph builder of the workspace asks this first and asks for the graph only when it needs
+   * the edges.
+   */
+  async getSavedGraphNodeIdsOfComponentIfExist(component: Component): Promise<Set<string> | null> {
+    if (!component.id.hasVersion()) return null;
+    const versionObj = await this.scope.getBitObjectVersionById(component.id);
+    if (!versionObj) return null;
+    const objects = this.scope.legacyScope.objects;
+    if (!(await versionObj.hasFlattenedEdges(objects))) return null;
+    const flattenedDependencies = await versionObj.loadFlattenedDependencies(objects);
+    return new Set([component.id.toString(), ...flattenedDependencies.map((id) => id.toString())]);
+  }
+
   async getSavedGraphOfComponentIfExist(component: Component) {
     if (!component.id.hasVersion()) return null;
     const flattenedEdges = await this.scope.getFlattenedEdges(component.id);
