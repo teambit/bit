@@ -156,8 +156,15 @@ fn result_sections(value: &Value, chalk: Chalk, sections: &mut Vec<String>) {
         .as_array()
         .map_or(&[][..], Vec::as_slice);
     if !tested.is_empty() {
+        let mut tested = tested.iter().collect::<Vec<_>>();
+        tested.sort_by(|left, right| {
+            crate::commands::status::collate::compare(
+                left["id"].as_str().unwrap_or_default(),
+                right["id"].as_str().unwrap_or_default(),
+            )
+        });
         let lines = tested
-            .iter()
+            .into_iter()
             .map(|row| component_line(row, chalk))
             .collect::<Vec<_>>()
             .join("\n");

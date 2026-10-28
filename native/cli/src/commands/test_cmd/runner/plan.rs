@@ -4,6 +4,7 @@ use super::{
 };
 use crate::commands::{
     color::Chalk,
+    status::collate,
     workspace_command::{
         component_service::{Component, Loaded},
         results::Report,
@@ -21,6 +22,7 @@ pub(super) struct Plan {
     tool: Option<Session>,
     coverage: Vec<Coverage>,
     settings: Settings,
+    runnable: usize,
 }
 impl Plan {
     pub(super) fn prepare(root: &Path, args: &[OsString], options: &Options) -> io::Result<Self> {
@@ -46,18 +48,19 @@ impl Plan {
                 .flatten()
         };
         let streamed = !options.json && !settings.summary && request.is_some();
-        if streamed
-            && (components.len() != 1 || io::stdout().is_terminal() || io::stderr().is_terminal())
-        {
-            return Err(invalid("tester text reporting"));
-        }
+        let runnable = if streamed {
+            count_runnable(root, &components, &loaded.progress.environment, &settings)?
+        } else {
+            0
+        };
+        validate_streaming(streamed, &loaded)?;
         let tool = request
             .as_ref()
             .map(|request| Session::prepare(request, Chalk::detect(args).enabled(), args, streamed))
             .transpose()?;
         validate_sources(&loaded.files)?;
         let coverage = prepare_coverage(root, &components, tool.is_some())?;
-        Ok(Self { loaded, tool, coverage, settings })
+        Ok(Self { loaded, tool, coverage, settings, runnable })
     }
     pub(super) fn run(
         &mut self,
@@ -83,7 +86,8 @@ impl Plan {
             ));
             if self.tool.is_some() {
                 output.console(&format!(
-                    "testing 1 components with environment {}\n",
+                    "testing {} components with environment {}\n",
+                    self.runnable,
                     chalk.cyan(&self.loaded.progress.environment),
                 ));
             }
@@ -189,4 +193,34 @@ fn prepare_coverage(
     } else {
         Ok(Vec::new())
     }
+}
+fn count_runnable(
+    root: &Path,
+    components: &[Component],
+    environment: &str,
+    settings: &Settings,
+) -> io::Result<usize> {
+    let mut count = 0;
+    for component in components {
+        if config::request_with_empty(root, component, environment, settings)?.1 {
+            count += 1;
+        }
+    }
+    Ok(count)
+}
+
+fn validate_streaming(streamed: bool, loaded: &Loaded) -> io::Result<()> {
+    if streamed && (io::stdout().is_terminal() || io::stderr().is_terminal()) {
+        return Err(invalid("tester text reporting"));
+    }
+    if streamed
+        && loaded.progress.identities.len() > 1
+        && (!collate::root_locale()
+            || loaded.progress.identities
+                .iter()
+                .any(|id| !collate::supported(id)))
+    {
+        return Err(invalid("tester text collation"));
+    }
+    Ok(())
 }
