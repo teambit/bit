@@ -88,4 +88,37 @@ describe('CheckoutAspect', function () {
       expect(list[1].currentlyUsedVersion).to.equal('0.0.2');
     });
   });
+
+  describe('checkout many components', () => {
+    let workspaceData: WorkspaceData;
+    const getManyIdsCounts: number[] = [];
+    before(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath, { numOfComponents: 3 });
+      const snapping: SnappingMain = await loadAspect(SnappingAspect, workspacePath);
+      const tagOpts = { build: false, ignoreIssues: 'MissingManuallyConfiguredPackages', unmodified: true };
+      await snapping.tag(tagOpts); // 0.0.1
+      await snapping.tag(tagOpts); // 0.0.2
+
+      // load a new instance, so the components are not in the cache
+      const harmony = await loadManyAspects([WorkspaceAspect, CheckoutAspect], workspacePath);
+      const workspace: Workspace = harmony.get(WorkspaceAspect.id);
+      const componentLoader = workspace.componentLoader;
+      const originalGetMany = componentLoader.getMany.bind(componentLoader);
+      componentLoader.getMany = (ids, ...args) => {
+        getManyIdsCounts.push(ids.length);
+        return originalGetMany(ids, ...args);
+      };
+      const checkout: CheckoutMain = harmony.get(CheckoutAspect.id);
+      await checkout.checkoutByCLIValues('', { ancestor: 1, all: true, skipNpmInstall: true });
+    });
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+    it('should load the components in one batch, not one by one', () => {
+      expect(getManyIdsCounts).to.include(3);
+      expect(getManyIdsCounts).to.not.include(1);
+    });
+  });
 });

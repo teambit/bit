@@ -88,6 +88,13 @@ export class CheckoutMain {
     const addedComponents = await this.restoreMissingComponents(checkoutProps);
     const newComponents = await this.addNewComponents(checkoutProps);
     const bitIds = ComponentIdList.fromArray(ids || []);
+    // warm the cache with one grouped load. otherwise, each workspace.get below runs the whole
+    // getMany pipeline for a single component, which is very slow for many components.
+    // failures are ignored here, the per-id load below reports them.
+    const idsInWorkspace = bitIds.filter((id) =>
+      this.workspace.consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true })
+    );
+    await this.workspace.getMany(idsInWorkspace, undefined, false);
     // don't use Promise.all, it loads the components and this operation must be in sequence.
     const allComponentStatusBeforeMerge = await mapSeries(bitIds, (id) =>
       this.getComponentStatusBeforeMergeAttempt(id, checkoutProps)

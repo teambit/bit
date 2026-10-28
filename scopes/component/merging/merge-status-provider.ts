@@ -74,6 +74,14 @@ export class MergeStatusProvider {
       // main head (a cascade is pushed with its head only). without it, the merge can't find the current version.
       await this.importer.importObjectsFromMainIfExist(ComponentIdList.fromArray(bitIds).toVersionLatest());
     }
+    if (this.workspace) {
+      // warm the cache with one grouped load. otherwise, each workspace.get in the series below runs
+      // the whole getMany pipeline for a single component, which is very slow for many components.
+      // failures are ignored here, the per-id load reports them.
+      const bitMap = this.workspace.consumer.bitMap;
+      const idsInWorkspace = compact(bitIds.map((id) => bitMap.getComponentIdIfExist(id, { ignoreVersion: true })));
+      await this.workspace.getMany(idsInWorkspace, undefined, false);
+    }
     const componentStatusBeforeMergeAttempt = await mapSeries(bitIds, (id) =>
       this.getComponentStatusBeforeMergeAttempt(id)
     );
