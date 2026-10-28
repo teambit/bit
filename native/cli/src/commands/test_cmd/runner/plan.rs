@@ -22,9 +22,6 @@ impl Plan {
         let settings = Settings::parse(root, args, options)?;
         let loaded = Loaded::prepare(root, &settings.selection)?;
         let components = loaded.components()?;
-        if !options.json && !settings.summary && !components.is_empty() {
-            return Err(invalid("tester text reporting"));
-        }
         if !components.is_empty()
             && settings.environment
                 .as_ref()
@@ -43,6 +40,9 @@ impl Plan {
                 .transpose()?
                 .flatten()
         };
+        if !options.json && !settings.summary && request.is_some() {
+            return Err(invalid("tester text reporting"));
+        }
         let tool = request
             .as_ref()
             .map(|request| Session::prepare(request, Chalk::detect(args).enabled(), args))
@@ -63,15 +63,10 @@ impl Plan {
         root: &Path,
         output: &bit_install::output::Output,
         text: bool,
+        chalk: Chalk,
     ) -> io::Result<Execution> {
         self.loaded.commit(root)?;
-        if text && self.settings.files.is_empty() {
-            for count in &self.loaded.progress.loads {
-                if *count > 0 {
-                    output.status(&format!("loading {count} component(s)"));
-                }
-            }
-        }
+        self.progress(output, text);
         let Some(identity) = self.loaded.progress.identities.first() else {
             return Ok(Execution {
                 report: Report { data: "[]".to_owned(), code: 0, details: None },
@@ -79,6 +74,13 @@ impl Plan {
                 empty: true,
             });
         };
+        if text && !self.settings.summary {
+            output.console(&format!(
+                "testing total of {} components in workspace '{}'",
+                self.loaded.progress.identities.len(),
+                chalk.cyan(&self.loaded.progress.name),
+            ));
+        }
         let mut result = self.tool
             .as_mut()
             .map_or_else(|| Ok(json!({"results":{"testResults":[]}})), Session::run)?;
@@ -88,8 +90,17 @@ impl Plan {
             Coverage::collect_many(&self.coverage, root, &mut result);
         }
         let terminated = result.get("terminated").is_some();
-        let report = self.format_report(root, &result, identity, terminated)?;
+        let report = self.format_report(root, &result, identity, terminated, text)?;
         Ok(Execution { report, terminated, empty: false })
+    }
+    fn progress(&self, output: &bit_install::output::Output, text: bool) {
+        if text && self.settings.files.is_empty() {
+            for count in &self.loaded.progress.loads {
+                if *count > 0 {
+                    output.status(&format!("loading {count} component(s)"));
+                }
+            }
+        }
     }
     fn format_report(
         &self,
@@ -97,6 +108,7 @@ impl Plan {
         result: &serde_json::Value,
         identity: &str,
         terminated: bool,
+        text: bool,
     ) -> io::Result<Report> {
         let components = self.loaded.components()?;
         let mut report = if components.len() > 1 {
@@ -105,7 +117,7 @@ impl Plan {
             report::report(result, identity)?
         };
         self.write_junit(root, result, &components, &report, terminated)?;
-        if self.settings.summary && !terminated {
+        if (self.settings.summary || text) && !terminated {
             if components.len() > 1 {
                 return multi::report_summary(
                     root,

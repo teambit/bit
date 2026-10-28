@@ -830,3 +830,17 @@ workspace tests and generated/scope checks passed. The full E2E run had 1,841
 passes, two existing skips and two Bit Cloud request failures in fixture setup;
 both cases passed unchanged on serial rerun. The preceding PR head's Rust lint
 job passed; Windows provisioning is still running.
+
+## Ordinary text with no test files
+
+Rust now renders ordinary text reports when selected built-in components have
+no test files. It preserves component-loading progress, workspace and component
+counts, sorted verbose identities, CI colors, deprecated selection warnings and
+empty JUnit reports. Ordinary text with runnable tests continues to decline
+before execution. Four focused differential cases cover the new modes, and a
+before-change control confirms they previously delegated.
+
+Validation: the focused text comparisons, formatting, Clippy, Dylint, rustdoc,
+workspace tests and generated/scope checks passed. The full E2E run had 1,844
+passes, two existing skips and three Bit Cloud fixture setup failures; all three
+passed unchanged on serial rerun.

@@ -1,6 +1,7 @@
 //! Render the released final tester summary from the native aggregate.
 use crate::commands::color::Chalk;
 use serde_json::Value;
+use std::{ffi::OsString, fmt::Write};
 
 struct Summary<'a>(&'a Value);
 impl Summary<'_> {
@@ -119,7 +120,49 @@ impl Summary<'_> {
         }
     }
 }
-pub(super) fn format_summary(value: &Value, code: i32, elapsed_ms: u128, chalk: Chalk) -> String {
+pub(super) fn format_report(
+    value: &Value,
+    code: i32,
+    elapsed_ms: u128,
+    chalk: Chalk,
+    args: &[OsString],
+) -> String {
+    let summary = format_summary(value, code, elapsed_ms, chalk);
+    let flags: Vec<_> = args
+        .iter()
+        .take_while(|arg| *arg != "--")
+        .collect();
+    if flags
+        .iter()
+        .any(|arg| *arg == "--summary")
+    {
+        return summary;
+    }
+    let ids = value["componentsWithoutTests"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
+    let mut names = ids
+        .iter()
+        .filter_map(Value::as_str)
+        .collect::<Vec<_>>();
+    names.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
+    let verbose = flags
+        .iter()
+        .any(|arg| *arg == "--verbose");
+    let hint = if verbose {
+        format!("{} components have no tests", names.len())
+    } else {
+        format!("{} components have no tests (run with --verbose to list)", names.len())
+    };
+    let mut section = chalk.dim(&hint);
+    if verbose {
+        for name in names {
+            write!(section, "\n   {} {name}", chalk.dim("›")).unwrap();
+        }
+    }
+    format!("\n{section}\n\n{summary}")
+}
+fn format_summary(value: &Value, code: i32, elapsed_ms: u128, chalk: Chalk) -> String {
     let (message, warning, hint) = Summary(value).headline(code);
     let line = if hint {
         chalk.dim(&message)

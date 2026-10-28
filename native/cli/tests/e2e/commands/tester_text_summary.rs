@@ -221,8 +221,9 @@ fn text_without_summary_and_no_changed_components_matches_node() {
 #[test]
 fn text_without_summary_and_selected_component_still_declines() {
     let helper = support::workspace(1, true);
-    let result = support::compare_declined(&helper, "test comp1", without_duration);
-    assert!(result.status.success());
+    helper.output_file("comp1/index.spec.js", "process.exit(7);\n");
+    let result = support::compare_declined(&helper, "test comp1", str::to_owned);
+    assert_eq!(result.status.code(), Some(7));
 }
 
 #[test]
@@ -238,4 +239,53 @@ fn text_summary_empty_selection_preserves_colored_ci_hint() {
         true,
     );
     assert!(result.status.success());
+}
+#[test]
+fn text_selected_components_without_tests_match_node() {
+    let helper = support::workspace(2, true);
+    let result = support::compare_with_stdout(&helper, "test --unmodified", without_duration);
+    assert!(result.status.success());
+    assert!(result.stdout.contains("2 components have no tests"));
+}
+
+#[test]
+fn text_selected_components_without_tests_verbose_match_node() {
+    let helper = support::workspace(2, true);
+    let result =
+        support::compare_with_stdout(&helper, "test --unmodified --verbose", without_duration);
+    assert!(result.status.success());
+    let first = result.stdout.find("/comp1").unwrap();
+    let second = result.stdout.find("/comp2").unwrap();
+    assert!(first < second);
+}
+
+#[test]
+fn text_selected_without_tests_preserves_ci_colors_and_scope_flags() {
+    let helper = support::workspace(1, true);
+    let command = format!("test --scope {} --all --verbose", helper.scopes.remote);
+    let result = super::add::support::compare_service_output(
+        &helper,
+        &command,
+        without_duration,
+        true,
+        true,
+    );
+    assert!(result.status.success());
+}
+
+#[test]
+fn text_selected_without_tests_writes_empty_junit() {
+    let helper = support::workspace(1, true);
+    let result = super::add::support::compare_with_artifacts(
+        &helper,
+        "test comp1 --junit reports/test.xml",
+        without_duration,
+        &super::tester_junit::project,
+    );
+    assert!(result.status.success());
+    assert!(
+        std::fs::read_to_string(helper.scopes.local_path.join("reports/test.xml"))
+            .unwrap()
+            .contains("<testsuites/>"),
+    );
 }

@@ -33,7 +33,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
     let history = History::start(root, args);
     let work = move |output: &bit_install::output::Output| {
         warnings(output, options);
-        match plan.run(root, output, !options.json) {
+        match plan.run(root, output, !options.json, crate::commands::color::Chalk::detect(args)) {
             Ok(execution) => {
                 if !execution.terminated {
                     history.end(execution.report.code == 0);
@@ -76,11 +76,12 @@ fn format_execution(
         );
     } else if !options.json && !execution.terminated {
         let value = serde_json::from_str(&report.data)?;
-        report.data = text_summary::format_summary(
+        report.data = text_summary::format_report(
             &value,
             report.code,
             started.elapsed().as_millis(),
             crate::commands::color::Chalk::detect(args),
+            args,
         );
     }
     Ok(report)
