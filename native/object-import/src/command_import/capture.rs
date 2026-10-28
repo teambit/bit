@@ -252,3 +252,6 @@ fn read(path: &Path, maximum: usize) -> io::Result<Option<Vec<u8>>> {
     }
     Ok(Some(bytes))
 }
+
+#[cfg(test)]
+mod tests;

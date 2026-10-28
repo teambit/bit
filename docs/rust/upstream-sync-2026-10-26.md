@@ -810,3 +810,23 @@ Cloud fixture failures. The capsule case passed unchanged on rerun; the custom
 environment case encountered another Cloud request failure on its first rerun
 and passed unchanged on the second. The Windows error conversion passed its
 local unit test; the actual Windows differential tests await PR CI.
+
+## Upstream raw Source fetches
+
+Merged upstream through `9d1e17110`. For a valid fetched Source, upstream now
+writes the received compressed representation directly instead of recompressing
+it. Rust already captures, verifies and publishes those exact bytes for both
+file remotes and virtual HTTP captures. New tests use a nondefault compression
+stream and assert byte-for-byte capture and publication; a negative control
+that discards the captured bytes fails.
+
+An incoming Source whose transfer reference disagrees with its content remains
+a guarded Rust boundary: the upstream Node path writes under the content hash,
+while Rust declines before publication. That pre-existing malformed-input gap is
+not counted as completed parity.
+
+Validation: the Source capture tests, formatting, Clippy, Dylint, rustdoc,
+workspace tests and generated/scope checks passed. The full E2E run had 1,841
+passes, two existing skips and two Bit Cloud request failures in fixture setup;
+both cases passed unchanged on serial rerun. The preceding PR head's Rust lint
+job passed; Windows provisioning is still running.
