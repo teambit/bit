@@ -9,6 +9,7 @@ pub(crate) mod setup;
 pub use fixtures::FOO_FIXTURE;
 
 mod fixtures;
+mod restore;
 
 use crate::known_failure::{KnownFailure, KnownResult};
 use serde_json::{Value, json};
@@ -297,13 +298,13 @@ impl Helper {
     }
 
     pub fn restore_remote_at(remote: &Path, clone: &Path) {
-        let _ = fs::remove_dir_all(remote);
+        restore::remove(remote);
         setup::copy_dir(clone, remote);
     }
 
     /// `getClonedWorkspace(clone)`.
     pub fn get_cloned_workspace(&self, clone: &Path) {
-        let _ = fs::remove_dir_all(&self.scopes.local_path);
+        restore::remove(&self.scopes.local_path);
         setup::copy_dir(clone, &self.scopes.local_path);
     }
 

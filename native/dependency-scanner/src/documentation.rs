@@ -1,6 +1,7 @@
 //! Sufficient AST proof for the pinned React/JSDoc parser's empty result.
 #[cfg(test)]
 mod tests;
+mod unexported;
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
@@ -11,13 +12,14 @@ use oxc_ast_visit::{Visit, walk};
 use oxc_parser::{ParseOptions, Parser};
 use oxc_span::SourceType;
 
-/// Prove that a bounded, valid JS/CJS data module has no React or `JSDoc` docs.
+/// Prove that a bounded, valid source or Jest snapshot has no React or `JSDoc` docs.
 ///
 /// This is deliberately sufficient rather than exhaustive: only simple data,
 /// variable declarations, static property access/assignment and literal `require`
 /// calls, `console.log` calls with data arguments and zero-argument arrows
 /// returning a string, number or boolean qualify.
-/// Other functions, classes, JSX, module declarations, other calls and
+/// Valid sources without exports also qualify, including test callbacks.
+/// Other exported functions, classes, JSX, module declarations, other calls and
 /// unsupported constructs defer to the published parser. Raw `/**` is rejected
 /// even inside strings because the pinned `JSDoc` extractor scans source text.
 /// This says nothing about existing cached documentation, which must take
@@ -27,26 +29,30 @@ pub fn proves_empty_docs(source: &[u8], relative_path: &str) -> bool {
     if source.len() > crate::limits::SOURCE_BYTES {
         return false;
     }
-    let kind = relative_path
-        .rsplit('.')
-        .next()
-        .unwrap_or_default();
-    if !matches!(kind, "js" | "cjs") {
-        return false;
-    }
+    let Some(source_type) = source_type(relative_path) else { return false };
     let Ok(source) = std::str::from_utf8(source) else { return false };
     if source.contains("/**") {
         return false;
     }
     let allocator = Allocator::default();
     let options = ParseOptions { preserve_parens: false, ..ParseOptions::default() };
-    let parsed = Parser::new(&allocator, source, SourceType::cjs()).with_options(options).parse();
+    let parsed = Parser::new(&allocator, source, source_type).with_options(options).parse();
     if parsed.fatal_error || !parsed.diagnostics.is_empty() {
         return false;
     }
     let mut proof = Proof { accepted: true, depth: 0, expressions: 0 };
     proof.visit_program(&parsed.program);
-    proof.accepted
+    proof.accepted || unexported::proven(&parsed.program)
+}
+
+fn source_type(path: &str) -> Option<SourceType> {
+    if path.ends_with(".js.snap") {
+        return Some(SourceType::cjs());
+    }
+    let kind = path.rsplit('.').next()?;
+    matches!(kind, "js" | "cjs" | "mjs" | "jsx" | "ts" | "tsx" | "mts" | "cts")
+        .then(|| SourceType::from_path(path).ok())
+        .flatten()
 }
 
 struct Proof {
@@ -89,11 +95,7 @@ impl<'a> Visit<'a> for Proof {
         walk::walk_variable_declarator(self, declaration);
     }
     fn visit_assignment_target(&mut self, target: &AssignmentTarget<'a>) {
-        if !matches!(
-            target,
-            AssignmentTarget::AssignmentTargetIdentifier(_)
-                | AssignmentTarget::StaticMemberExpression(_),
-        ) {
+        if !data_target(target) {
             self.accepted = false;
             return;
         }
@@ -120,6 +122,20 @@ fn data_expression(expression: &Expression<'_>) -> bool {
         Expression::StaticMemberExpression(member) => !member.optional,
         Expression::CallExpression(call) => literal_require(call) || console_log(call),
         Expression::ArrowFunctionExpression(arrow) => literal_arrow(arrow),
+        Expression::TemplateLiteral(template) => template.expressions.is_empty(),
+        _ => false,
+    }
+}
+
+fn data_target(target: &AssignmentTarget<'_>) -> bool {
+    match target {
+        AssignmentTarget::AssignmentTargetIdentifier(_)
+        | AssignmentTarget::StaticMemberExpression(_) => true,
+        AssignmentTarget::ComputedMemberExpression(member) => {
+            matches!(&member.object, Expression::Identifier(id) if id.name == "exports")
+                && (matches!(&member.expression, Expression::StringLiteral(_))
+                    || matches!(&member.expression, Expression::TemplateLiteral(value) if value.expressions.is_empty()))
+        }
         _ => false,
     }
 }

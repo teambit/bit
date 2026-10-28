@@ -90,7 +90,10 @@ fn append(
                 .as_str()
                 .ok_or_else(|| io::Error::other("compiler emitted content"))?;
             compiled.files.push(Emitted {
-                path: directory.join(relative),
+                path: directory
+                    .join(relative)
+                    .components()
+                    .collect(),
                 content: content.to_owned(),
             });
         }

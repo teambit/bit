@@ -456,3 +456,62 @@ passes unchanged on a serial rerun. Generated inventory/census, asset, scope and
 public-data checks pass. Local Node lint still lacks tsc. CI for the preceding
 compiler head has no reported failures at publication time, with jobs still
 running; the new head requires its own platform checks.
+
+## Built-in tester orchestration and Windows compiler paths
+
+Rust now owns single-component Node/React JSON test selection, native loader/cache
+publication, test discovery and Bit result/error projection. External Jest 29.7
+runs user tests, with external Babel and native-owned JavaScript configuration
+adapters. Installed distribution metadata resolves these tools; no Bit runtime
+module is imported on the qualified path. Configuration versions are checked before
+workspace effects. Stable native-owned assets use their own cache directory, so
+opaque global Jest transform-cache identities differ from the installed runner.
+This is not a standalone distribution or an arbitrary environment implementation.
+
+Cold test callbacks, TypeScript/TSX sources and Jest snapshots now have bounded
+AST proofs for empty documentation where appropriate. Released-parser comparisons
+confirm these results; exported component/documentation shapes remain guarded.
+Snapshots preserve exact workspace bytes on first write, repeated execution and
+mismatch. A preload rejecting Bit imports verifies external-tool-only execution.
+Twenty differential cases compare reports, exit codes, workspace/scope/remote bytes
+and loader caches, masking test start/duration fields and one qualified pair of parallel test-file
+completion orders. Sixteen independent same-path released-command replays produce
+both orders and otherwise identical complete reports. Jest retains its default
+scheduling; the external adapter is a script file so forked workers do not inherit
+an evaluated Node program. The cases cover pending/todo
+assertions, assertion failures, empty selection, React, actual TSX runtime execution,
+colors/CI, test-set exit codes, and side effects without replay. Direct test process
+exit preserves both the exit code and the unfinished command-history entry. The
+new exit regression failed before both lifecycle fixes; configured negative
+patterns also failed before preserving the exclusion prefix. Unknown negated CLI
+flags retain the released command errors in populated and empty workspaces.
+In-band user tests retain the released process arguments and working directory.
+Deliberately corrupting
+the success field fails the report comparison.
+
+Coverage consumption is native, including pre-existing reports without a coverage
+flag, reports written by user tests, malformed input, rounded totals and the
+released string-prefix inclusion behavior. A directory without the summary file
+is preserved. Cleanup failure returns the released structured environment error
+without replaying tests. The regression exposed a fixture-restoration bug: a
+read-only directory could make removal fail silently and retain outputs from the
+reference run. Restoration now removes that state or fails explicitly; its own
+regression verifies that cleanup does not follow symlinks or alter their targets.
+
+Text, multiple-component/environment groups, explicit file selection, coverage
+collection flags, JUnit, snapshot-update flags, custom providers, watch/debug and broader lifecycle
+modes remain open. Unsupported selections/options decline before workspace effects.
+Windows provisioning now includes these tester comparisons.
+
+The preceding head's Windows compiler comparisons exposed mixed separators in
+emitted paths. Reconstructing emitted paths from platform components now matches
+Node's normalized paths for text and JSON, including root-component copies.
+Existing exact-output assertions remain unchanged; Windows CI must verify the fix.
+
+Validation: formatting, Clippy, Dylint, rustdoc and all 1,816 workspace tests pass.
+All 20 focused tester cases pass. The final full E2E run reports 1,769 passes,
+two Bit Cloud failures in existing capsule/generator fixtures and two existing
+skips; both failed cases pass unchanged on serial reruns. The new fixture cleanup
+regression also passes in the full run. Generated plan/census, asset, scope and
+public-data checks pass. Local Node lint cannot run because tsc is unavailable.
+Windows and other platform CI for this batch remain pending.

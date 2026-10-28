@@ -1,9 +1,9 @@
 //! Native `bit test [pattern-or-test-file...]` (`TestCmd`, alias `at`).
 //!
-//! Handles outside-workspace validation, empty-workspace fast paths, and
-//! test-file vs component-pattern validation natively before delegating test
-//! execution to the Node.js tester runtime when components are present.
+//! Owns workspace validation and built-in single-component JSON test orchestration.
+//! External Jest runs user tests; unsupported services decline before loader effects.
 
+mod runner;
 #[cfg(test)]
 mod tests;
 
@@ -49,8 +49,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         });
     };
     let chalk = Chalk::detect(args);
-    let Ok(Some(fast)) = classify_workspace(&cwd, &root, &options, chalk) else {
-        return Ok(Outcome::Declined("test requires tester aspect runtime".into()));
+    let fast = match classify_workspace(&cwd, &root, &options, chalk) {
+        Ok(Some(fast)) => fast,
+        Ok(None) => return runner::run(&root, args, &options),
+        Err(_) => return Ok(Outcome::Declined("test requires tester aspect runtime".into())),
     };
     let is_json = options.json;
     workspace_command::execute_without_loader(&root, args, "test", move |_| {
@@ -187,28 +189,10 @@ fn apply_test_token<'a>(
     options: &mut Options,
 ) -> Option<()> {
     match token {
-        "--no-color"
-        | "--watch"
-        | "-w"
-        | "--no-watch"
-        | "--debug"
-        | "-d"
-        | "--no-debug"
-        | "--unmodified"
-        | "-u"
-        | "--no-unmodified"
-        | "--coverage"
-        | "--no-coverage"
-        | "--update-snapshot"
-        | "--no-update-snapshot"
-        | "--verbose"
-        | "--no-verbose"
-        | "--summary"
-        | "--no-summary" => {}
+        "--watch" | "-w" | "--debug" | "-d" | "--unmodified" | "-u" | "--coverage"
+        | "--update-snapshot" | "--verbose" | "--summary" => {}
         "--all" | "-a" => options.all = true,
-        "--no-all" => options.all = false,
         "--json" | "-j" => options.json = true,
-        "--no-json" => options.json = false,
         "--junit" | "--env" | "-e" => {
             take_test_val(iter.next()?)?;
         }

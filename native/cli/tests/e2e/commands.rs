@@ -34,3 +34,5 @@ mod show;
 mod snap;
 mod system_git_scope;
 mod tag;
+
+mod tester;

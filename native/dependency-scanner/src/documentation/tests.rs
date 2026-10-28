@@ -1,6 +1,29 @@
 use super::proves_empty_docs;
 
 #[test]
+fn unexported_test_callbacks_and_definitions_match_released_empty_documentation() {
+    for source in [
+        "describe('Example',()=>{it('works',()=>expect(2+2).toBe(4));it.skip('later',()=>{});it.todo('future');});",
+        "describe('Example',()=>{it('works',()=>expect(2+2).toBe(5));});",
+        "function Example() {return null;}",
+        "const Example = () => null;",
+        "class Example extends React.Component {render(){return null;}}",
+        "if (flag) { call(); } for (let index=0;index<3;index++) { other(index); }",
+        "async function example(){await Promise.resolve(42);}",
+        "console.log(() => null);",
+        "console.log(function Component() { return null; });",
+        "console.log(...values);",
+        "console['log']('value');",
+        "console.log?.('value');",
+        "@decorator class Component {}",
+    ] {
+        assert!(proves_empty_docs(source.as_bytes(), "example.spec.js"), "{source}");
+    }
+    assert!(!proves_empty_docs(b"/** documentation */ function Example() {}", "index.js"));
+    assert!(!proves_empty_docs(b"exports.Example = () => null;", "index.js"));
+}
+
+#[test]
 fn ordinary_commonjs_data_and_literal_dependency_modules_are_empty() {
     for source in [
         "module.exports = 42;",
@@ -43,7 +66,6 @@ fn documentation_and_react_component_shapes_always_defer() {
         "module.exports = React.createClass({render() { return null; }});",
         "module.exports = memo(Component);",
         "module.exports = {get value() {return 1;}};",
-        "@decorator class Component {}",
         "const {value = () => null} = object;",
     ] {
         assert!(!proves_empty_docs(source.as_bytes(), "index.js"), "{source}");
@@ -56,11 +78,6 @@ fn invalid_unsupported_and_nonliteral_modules_defer() {
         "module.exports = ;",
         "function incomplete(",
         "module.exports = require(name);",
-        "console.log(() => null);",
-        "console.log(function Component() { return null; });",
-        "console.log(...values);",
-        "console['log']('value');",
-        "console.log?.('value');",
         "module.exports = require.resolve('package');",
         "module.exports = {...other};",
         "import value from 'package'; export default value;",
@@ -68,8 +85,30 @@ fn invalid_unsupported_and_nonliteral_modules_defer() {
     ] {
         assert!(!proves_empty_docs(source.as_bytes(), "index.js"), "{source}");
     }
-    for path in ["index.jsx", "index.ts", "data.json", "README.md", "extensionless"] {
+    for path in ["data.json", "README.md", "extensionless", "data.snap"] {
         assert!(!proves_empty_docs(b"module.exports = 1;", path), "{path}");
     }
     assert!(!proves_empty_docs(&[0xff], "index.js"));
+}
+
+#[test]
+fn typed_unexported_sources_and_literal_jest_snapshots_match_empty_documentation() {
+    for kind in ["js", "cjs", "mjs", "jsx", "ts", "tsx", "mts", "cts"] {
+        assert!(proves_empty_docs(b"module.exports = 1;", &format!("index.{kind}")));
+    }
+    assert!(proves_empty_docs(b"interface Example {value:number}; it('works',()=>{const item:Example={value:42}; expect(item.value).toBe(42);});", "index.spec.ts"));
+    assert!(proves_empty_docs(
+        b"const Example=()=> <div/>; it('works',()=>expect(2+2).toBe(4));",
+        "index.spec.tsx"
+    ));
+    assert!(proves_empty_docs(
+        b"// Jest Snapshot v1\nexports[`Example 1`] = `\nObject {\n  \"value\": 42,\n}\n`;\n",
+        "index.spec.js.snap"
+    ));
+    assert!(!proves_empty_docs(b"exports[`Example ${value}`] = () => null;", "index.spec.js.snap"));
+    assert!(!proves_empty_docs(
+        b"exports[`Example 1`] = `/** documentation */`;",
+        "index.spec.js.snap"
+    ));
+    assert!(!proves_empty_docs(b"const Example=()=>null; export = Example;", "index.ts"));
 }
