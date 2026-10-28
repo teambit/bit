@@ -52,7 +52,7 @@ export class ModelComponentMerger {
 
   private deleteOrphanedVersionsOnExport() {
     // makes sure that components received with orphanedVersions, this property won't be saved
-    if (this.isExport) this.existingComponent.orphanedVersions = {};
+    if (this.isExport) this.existingComponent.clearOrphanedVersions();
   }
 
   private setHead(locallyChanged: boolean) {

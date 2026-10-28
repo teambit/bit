@@ -102,13 +102,22 @@ describe('ModelComponent', () => {
       expect(component.orphanedVersions['0.0.9']?.toString()).to.equal(ref.toString());
       expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.9');
     });
-    it('should not find an orphaned tag after the orphaned versions were replaced', () => {
+    it('should not find an orphaned tag after the orphaned versions were cleared', () => {
       const component = getModelComponent(getModelComponentFixture());
       const ref = Ref.from('e'.repeat(40));
       component.setOrphanedVersion('0.0.4', ref);
       expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.4');
-      component.orphanedVersions = {};
+      component.clearOrphanedVersions();
       expect(component.getTagOfRefIfExists(ref)).to.be.undefined;
+    });
+    it('should serialize the versions as before and not the tags index, as `bit cat-scope --json` does', () => {
+      const component = getModelComponent(getModelComponentFixture());
+      component.setOrphanedVersion('0.0.3', Ref.from(orphanedHash));
+      component.getTagOfRefIfExists(Ref.from(tagHash));
+      const serialized = JSON.parse(JSON.stringify(component));
+      expect(serialized.versions).to.have.property('0.0.1');
+      expect(serialized.orphanedVersions).to.have.property('0.0.3');
+      expect(Object.keys(serialized).filter((key) => /tag/i.test(key))).to.deep.equal([]);
     });
     it('should stay fast looking up every version of a component with many tags, and snaps that are not tags', () => {
       const size = 20000;
