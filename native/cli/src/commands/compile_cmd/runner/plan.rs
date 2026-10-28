@@ -28,7 +28,7 @@ impl Plan {
         }
         let compiled =
             emission::prepare(root, &components, &loaded.progress.identities, &directories)?;
-        validate_order(&compiled, options.json)?;
+        validate_order(root, &compiled, options)?;
         limits::outputs(&compiled)?;
         write::validate_sources(&loaded.files)?;
         Ok(Self { loaded, batch_size, links, directories, compiled })
@@ -66,13 +66,24 @@ impl Plan {
         self.links.publish(root)
     }
 }
-fn validate_order(compiled: &[Compiled], json: bool) -> io::Result<()> {
+fn validate_order(root: &Path, compiled: &[Compiled], options: &Options) -> io::Result<()> {
     let errors = compiled
         .iter()
         .filter(|row| !row.errors.is_empty())
         .count();
-    if (errors > 1 && !json) || (errors > 0 && compiled.len() > 2) {
+    if errors > 0 && compiled.len() > 2 {
         return Err(io::Error::other("compiler diagnostic component order"));
+    }
+    if errors > 1 && !options.json {
+        let cache = bit_install::dependencies::cache::invalidation::deps_dir(root);
+        if options.components.is_empty()
+            || (cache.join("index-v5").exists()
+                && !bit_install::dependencies::cache::invalidation::needs_invalidation(
+                    root, &cache,
+                )?)
+        {
+            return Err(io::Error::other("compiler diagnostic component order"));
+        }
     }
     Ok(())
 }
@@ -81,8 +92,7 @@ fn selection(options: &Options) -> Selection {
     Selection {
         pattern: None,
         compiler: true,
-        explicit_file_order: (options.json || options.verbose)
-            && !options.components.is_empty(),
+        explicit_file_order: !options.components.is_empty(),
         changed: options.changed && options.components.is_empty(),
         allow_cached_pair: false,
         allow_cached_many: !options.json && !options.verbose,

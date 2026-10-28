@@ -183,6 +183,23 @@ fn builtin_compile_two_cold_components_with_syntax_errors_json() {
 }
 
 #[test]
+fn builtin_compile_two_cold_components_with_syntax_errors_text() {
+    let helper = support::workspace(0, false);
+    helper.output_file("comp1/index.ts", "export const first = ;\n");
+    helper.output_file("comp2/index.ts", "export const second = ;\n");
+    support::setup(&helper, "add comp1 -i comp1");
+    support::setup(&helper, "add comp2 -i comp2");
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let result = support::compare_with_stdout(&helper, "compile comp2 comp1", duration);
+    assert_eq!(result.status.code(), Some(1));
+}
+
+#[test]
 fn builtin_compile_rewired_sources_with_cold_documentation_cache_match_node() {
     let helper = support::workspace(2, true);
     helper.output_file(
