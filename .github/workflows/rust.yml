@@ -81,7 +81,14 @@ jobs:
       - name: Check perfectionist
         env:
           RUSTFLAGS: '-D warnings'
-        run: cargo dylint --all -- --all-targets --workspace --features bit-cli/e2e
+        run: |
+          bash ../scripts/rust/test-dylint-git.sh
+          export DYLINT_REAL_GIT="$(command -v git)"
+          mkdir -p "$RUNNER_TEMP/dylint-git"
+          cp ../scripts/rust/dylint-git.sh "$RUNNER_TEMP/dylint-git/git"
+          chmod +x "$RUNNER_TEMP/dylint-git/git"
+          export PATH="$RUNNER_TEMP/dylint-git:$PATH"
+          cargo dylint --all -- --all-targets --workspace --features bit-cli/e2e
       - name: Check Rust documentation
         env:
           RUSTDOCFLAGS: '-D warnings'
