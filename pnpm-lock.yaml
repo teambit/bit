@@ -7063,7 +7063,7 @@ importers:
         version: file:components/ui/components-overview(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(chai@5.2.1)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/export':
         specifier: workspace:*
-        version: file:scopes/scope/export(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/scope/export(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/express':
         specifier: workspace:*
         version: file:scopes/harmony/express(react@19.2.7)(supports-color@9.4.0)
@@ -8140,7 +8140,7 @@ importers:
         version: file:components/ui/components-overview(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(chai@4.3.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/export':
         specifier: workspace:*
-        version: file:scopes/scope/export(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/scope/export(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/express':
         specifier: workspace:*
         version: file:scopes/harmony/express(react@19.2.7)(supports-color@9.4.0)
@@ -9202,7 +9202,7 @@ importers:
         version: file:components/ui/components-overview(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(chai@4.3.0)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/export':
         specifier: workspace:*
-        version: file:scopes/scope/export(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)
+        version: file:scopes/scope/export(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/express':
         specifier: workspace:*
         version: file:scopes/harmony/express(react@18.3.1)(supports-color@9.4.0)
@@ -10270,7 +10270,7 @@ importers:
         version: file:components/ui/components-overview(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(chai@4.3.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/export':
         specifier: workspace:*
-        version: file:scopes/scope/export(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/scope/export(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/express':
         specifier: workspace:*
         version: file:scopes/harmony/express(react@19.2.7)(supports-color@9.4.0)
@@ -11317,7 +11317,7 @@ importers:
         version: file:components/ui/components-overview(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(chai@4.3.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/export':
         specifier: workspace:*
-        version: file:scopes/scope/export(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/scope/export(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/express':
         specifier: workspace:*
         version: file:scopes/harmony/express(react@19.2.7)(supports-color@9.4.0)
@@ -12364,7 +12364,7 @@ importers:
         version: file:components/ui/components-overview(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(chai@4.3.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/export':
         specifier: workspace:*
-        version: file:scopes/scope/export(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/scope/export(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/express':
         specifier: workspace:*
         version: file:scopes/harmony/express(react@19.2.7)(supports-color@9.4.0)
@@ -22475,6 +22475,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       chalk:
         specifier: 4.1.2
         version: 4.1.2
@@ -32541,6 +32544,7 @@ packages:
   '@teambit/export@file:scopes/scope/export':
     resolution: {directory: scopes/scope/export, type: directory}
     peerDependencies:
+      chai: 5.2.1
       react: 19.2.7
 
   '@teambit/express@file:scopes/harmony/express':
@@ -57269,7 +57273,7 @@ snapshots:
 
   '@teambit/code.ui.inline-diff-viewer@file:components/ui/inline-diff-viewer(@testing-library/react@14.3.1)(react@18.3.1)':
     dependencies:
-      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
@@ -57649,7 +57653,7 @@ snapshots:
       '@teambit/design.ui.input.toggle': 1.0.22(react-dom@19.2.7)(react@19.2.7)
       '@teambit/react.ui.component-highlighter': 0.1.0(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      core-js: 3.13.0
+      core-js: 3.9.0
       react: 19.2.7
     transitivePeerDependencies:
       - '@types/react'
@@ -57669,7 +57673,7 @@ snapshots:
   '@teambit/community.ui.hooks.use-local-storage@1.96.6(@testing-library/react@14.3.1)(react@19.2.7)':
     dependencies:
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      core-js: 3.13.0
+      core-js: 3.9.0
       react: 19.2.7
 
   '@teambit/community.ui.scrollbar@0.0.11(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react@19.2.7)':
@@ -65646,7 +65650,7 @@ snapshots:
 
   '@teambit/docs.ui.hooks.use-element-on-fold@1.96.5(@testing-library/react-hooks@8.0.1)(react@18.3.1)':
     dependencies:
-      '@testing-library/react-hooks': 8.0.1(@types/react@19.2.18)(react-dom@18.3.1)(react-test-renderer@19.2.7)(react@18.3.1)
+      '@testing-library/react-hooks': 8.0.1(@types/react@19.2.18)(react-dom@19.2.7)(react-test-renderer@19.2.7)(react@19.2.7)
       core-js: 3.13.0
       react: 18.3.1
       use-debounce: 7.0.1(react@18.3.1)
@@ -66151,7 +66155,7 @@ snapshots:
 
   '@teambit/documenter.markdown.mdx@0.1.18(@mdx-js/react@3.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)(typescript@5.9.2)':
     dependencies:
-      '@mdx-js/react': 3.1.1(@types/react@19.2.18)(react@18.3.1)
+      '@mdx-js/react': 3.1.1(@types/react@19.2.18)(react@19.2.7)
       '@teambit/documenter.markdown.heading': 0.1.10(react-dom@18.3.1)(react@18.3.1)
       '@teambit/documenter.markdown.hybrid-live-code-snippet': 0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)(typescript@5.9.2)
       '@teambit/documenter.routing.external-link': 4.1.4(react@18.3.1)
@@ -68236,7 +68240,7 @@ snapshots:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
-  '@teambit/export@file:scopes/scope/export(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)':
+  '@teambit/export@file:scopes/scope/export(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
@@ -68266,6 +68270,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
       chalk: 4.1.2
       fs-extra: 10.0.0
       lodash: 4.18.1
@@ -68280,7 +68285,7 @@ snapshots:
       - graphql
       - supports-color
 
-  '@teambit/export@file:scopes/scope/export(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
+  '@teambit/export@file:scopes/scope/export(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
@@ -68310,6 +68315,52 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
+      chalk: 4.1.2
+      fs-extra: 10.0.0
+      lodash: 4.18.1
+      open: 8.4.2
+      p-map-series: 2.1.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+      yesno: 0.4.0
+    transitivePeerDependencies:
+      - domexception
+      - graphql
+      - supports-color
+
+  '@teambit/export@file:scopes/scope/export(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
+    dependencies:
+      '@teambit/bit-error': 0.0.404
+      '@teambit/component-id': 1.2.5
+      '@teambit/component-version': 1.0.4
+      '@teambit/component.snap-distance': file:scopes/component/snap-distance
+      '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.concurrency': file:scopes/harmony/modules/concurrency
+      '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@teambit/lane-id': 0.0.312
+      '@teambit/legacy-bit-id': 1.1.4
+      '@teambit/legacy.analytics': file:components/legacy/analytics
+      '@teambit/legacy.bit-map': file:components/legacy/bit-map
+      '@teambit/legacy.component-list': file:components/legacy/component-list(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy.constants': file:components/legacy/constants
+      '@teambit/legacy.consumer': file:components/legacy/consumer(supports-color@9.4.0)
+      '@teambit/legacy.loader': file:components/legacy/loader
+      '@teambit/legacy.logger': file:components/legacy/logger
+      '@teambit/legacy.scope': file:components/legacy/scope(supports-color@9.4.0)
+      '@teambit/legacy.scope-api': file:components/legacy/scope-api(supports-color@9.4.0)
+      '@teambit/legacy.utils': file:components/legacy/utils
+      '@teambit/scope.network': file:scopes/scope/network(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/scope.remote-actions': file:scopes/scope/remote-actions(supports-color@9.4.0)
+      '@teambit/scope.remotes': file:components/scope/remotes(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/toolbox.promise.map-pool': file:scopes/toolbox/promise/map-pool
+      '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(supports-color@9.4.0)
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 5.2.1
       chalk: 4.1.2
       fs-extra: 10.0.0
       lodash: 4.18.1
@@ -72840,7 +72891,7 @@ snapshots:
     dependencies:
       '@teambit/documenter.markdown.hybrid-live-code-snippet': 0.1.16(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)(typescript@5.9.2)
       '@teambit/documenter.ui.inline-code': 0.1.7(react@18.3.1)
-      '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@18.3.1)
+      '@teambit/mdx.ui.mdx-scope-context': 1.1.1(react@19.2.7)
       react: 18.3.1
     transitivePeerDependencies:
       - '@testing-library/react'
@@ -75843,7 +75894,7 @@ snapshots:
   '@teambit/react.modules.dom-to-react@0.1.0(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@types/react': 19.2.18
-      core-js: 3.13.0
+      core-js: 3.9.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
@@ -76607,7 +76658,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.3.1
-      core-js: 3.13.0
+      core-js: 3.9.0
       get-xpath: 3.0.1
       lodash.compact: 3.0.1
       react: 19.2.7
@@ -77105,7 +77156,7 @@ snapshots:
 
   '@teambit/react.ui.highlighter.component-metadata.bit-component-meta@0.0.21(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
-      core-js: 3.13.0
+      core-js: 3.9.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
@@ -77136,7 +77187,7 @@ snapshots:
   '@teambit/react.ui.hover-selector@0.1.0(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@types/react': 19.2.18
-      core-js: 3.13.0
+      core-js: 3.9.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
@@ -77151,7 +77202,7 @@ snapshots:
   '@teambit/react.ui.loader-fallback@file:scopes/react/ui/loader-fallback(@testing-library/react@14.3.1)(react@18.3.1)':
     dependencies:
       '@teambit/base-ui.loaders.loader-ribbon': 1.0.0(react-dom@19.2.7)(react@18.3.1)
-      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
@@ -80851,7 +80902,7 @@ snapshots:
       '@teambit/semantics.entities.semantic-schema-diff': file:components/entities/semantic-schema-diff
       '@teambit/ui-foundation.ui.hooks.use-bulk-paged-query': file:components/ui/hooks/use-bulk-paged-query(@apollo/client@3.12.11)(@testing-library/react@14.3.1)(graphql@15.8.0)(react@18.3.1)
       '@teambit/ui-foundation.ui.notifications.notification-context': 0.0.501(react-dom@18.3.1)(react@18.3.1)
-      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
@@ -82522,7 +82573,7 @@ snapshots:
 
   '@teambit/ui-foundation.ui.constants.z-indexes@0.0.487(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
-      core-js: 3.13.0
+      core-js: 3.9.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
@@ -86867,16 +86918,6 @@ snapshots:
       dom-accessibility-api: 0.6.3
       lodash: 4.18.1
       redent: 3.0.0
-
-  '@testing-library/react-hooks@8.0.1(@types/react@19.2.18)(react-dom@18.3.1)(react-test-renderer@19.2.7)(react@18.3.1)':
-    dependencies:
-      '@babel/runtime': 7.28.3
-      react: 18.3.1
-      react-error-boundary: 3.1.4(react@18.3.1)
-    optionalDependencies:
-      '@types/react': 19.2.18
-      react-dom: 18.3.1(react@18.3.1)
-      react-test-renderer: 19.2.7(react@19.2.7)
 
   '@testing-library/react-hooks@8.0.1(@types/react@19.2.18)(react-dom@19.2.7)(react-test-renderer@19.2.7)(react@19.2.7)':
     dependencies:

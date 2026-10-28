@@ -2,6 +2,7 @@
 //! Version closure before the export transaction starts.
 use super::{Prepare, invalid, model, remote};
 mod exhaustive;
+mod hidden;
 mod readme;
 mod staged;
 use crate::transfer;
@@ -22,6 +23,7 @@ pub(super) struct LaneSelected {
     pub(super) name: String,
     pub(super) hashes: LaneHashes,
     pub(super) lane: Value,
+    pub(super) local_lane_after: Option<Vec<u8>>,
     pub(super) components: SelectedComponents,
     pub(super) fork_history: Option<ForkHistory>,
 }
@@ -64,18 +66,13 @@ pub(super) fn select(input: &Prepare) -> io::Result<Option<LaneSelected>> {
                 .count(),
             candidate_count,
         });
-    for hash in [&loaded.history_hash, &loaded.hash] {
-        selected.append(ObjectItem {
-            hash: hash.clone(),
-            compressed: read_compressed(&loaded.dir, hash)?,
-            scope: None,
-        })?;
-    }
+    let (lane, local_lane_after) = hidden::append(input, &loaded, &scope, &name, &mut selected)?;
     Ok(Some(LaneSelected {
         scope,
         name,
+        local_lane_after,
         hashes: LaneHashes { lane: loaded.hash, history: loaded.history_hash },
-        lane: loaded.lane,
+        lane,
         components: SelectedComponents {
             objects: selected.objects,
             ids: selected.component_ids,

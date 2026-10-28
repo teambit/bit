@@ -60,6 +60,7 @@ struct Objects {
     lane_hash: String,
     history_hash: String,
     version_histories: Vec<super::model::HistoryBytes>,
+    local_lane_after: Option<Vec<u8>>,
 }
 
 struct Change {
@@ -164,6 +165,7 @@ fn prepare_objects(root: &Path, selected: &LaneSelected) -> io::Result<Objects> 
         lane_hash: selected.hashes.lane.clone(),
         history_hash: selected.hashes.history.clone(),
         version_histories: selected.components.histories.clone(),
+        local_lane_after: selected.local_lane_after.clone(),
     })
 }
 
@@ -247,6 +249,10 @@ impl Prepared {
             .try_for_each(|model| store.write(&model.hash, &model.after))?;
         for model in &mut self.models {
             model.before.clone_from(&model.after);
+        }
+        if let Some(after) = self.objects.local_lane_after.take() {
+            store.write(&self.objects.lane_hash, &after)?;
+            self.objects.lane = after;
         }
         if let Some(refs) = &self.published.refs.after {
             write(&refs_path(&self.workspace.root, &self.lane.scope, &self.lane.name), refs)?;

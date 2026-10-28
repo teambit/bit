@@ -359,9 +359,20 @@ fn remote_error(code: Option<u64>, error: &Value, url: &str, message: String) ->
             format!(r#"error: remote scope "{}" was not found."#, text("name")),
         ),
         Some(132 | 133) => io::Error::other(message),
+        Some(138) => io::Error::new(io::ErrorKind::NotFound, LaneNotFound(message)),
         _ => io::Error::new(io::ErrorKind::ConnectionAborted, message),
     }
 }
+
+/// A remote explicitly reported that the requested lane does not exist.
+#[derive(Debug)]
+pub struct LaneNotFound(String);
+impl std::fmt::Display for LaneNotFound {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.0)
+    }
+}
+impl std::error::Error for LaneNotFound {}
 
 /// `UnexpectedNetworkError`.
 fn unexpected(message: &str) -> io::Error {

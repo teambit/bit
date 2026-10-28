@@ -774,3 +774,39 @@ workspace tests and generated/scope checks passed. The full E2E run had 1,840
 passes, two existing skips and one Bit Cloud fixture setup failure; that case
 passed unchanged on rerun. Upstream advanced after this validation and is synced
 in the following checkpoint.
+
+## Upstream lane export reconciliation
+
+Merged upstream through `88bb28f16` (Bit 2.2.165); the later commit updates release metadata. The export delta reconciles hidden lane
+entries against the current remote lane: remote-only entries are retained,
+removed remote entries are dropped unless new entries were explicitly marked,
+visible components are excluded, and a local head replaces the remote head only
+when its version history establishes ancestry. The exported lane sets the
+one-export override when its reconciled hidden list differs from the remote;
+following acknowledgement, the local lane retains the reconciled list and clears
+the override. File and HTTP lane reads are bounded; an explicit remote
+lane-not-found response is distinguished from other remote errors.
+
+The new scenario-18 regression exercises a stale hidden entry removed remotely,
+checks the visible exported head and checks the local lane after export. Another
+case adds a remote-only hidden entry after checkout and verifies both lanes.
+The original test mapping for scenarios 17 and 18 named assertions it did not
+execute; it now maps only the fetch scenario, and the actual scenario-18 test
+owns its assertions. Unit cases cover advanced and diverged heads, remote-only
+and new entries, promoted components, and HTTP lane fetch/error routing.
+Removing remote-only preservation makes the new end-to-end test fail. The
+pre-change export failed the new local stale-entry assertion.
+
+The Windows provisioning failure reported a directory report target as access
+denied. On Windows, a directory target now produces the released absolute-path
+directory error while ordinary permission failures keep their existing message.
+The existing single- and multi-component once-only write-failure comparisons
+cover this in Windows CI; a unit case exercises the conversion locally.
+
+Validation: 15 cascade cases, 34 export cases, HTTP/reconciliation unit cases,
+formatting, Clippy, Dylint, rustdoc, workspace tests and generated/scope checks
+passed. The final full E2E run had 1,841 passes, two existing skips and two Bit
+Cloud fixture failures. The capsule case passed unchanged on rerun; the custom
+environment case encountered another Cloud request failure on its first rerun
+and passed unchanged on the second. The Windows error conversion passed its
+local unit test; the actual Windows differential tests await PR CI.

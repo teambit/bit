@@ -73,7 +73,19 @@ pub(super) fn write(path: &std::path::Path, data: &str, raw: &Value) -> io::Resu
         std::fs::create_dir_all(parent)
             .map_err(|error| filesystem_error::failure(error, "mkdir", parent))?;
     }
-    std::fs::write(path, xml).map_err(|error| filesystem_error::failure(error, "open", path))
+    std::fs::write(path, xml).map_err(|error| write_failure(error, path, cfg!(windows)))
+}
+fn write_failure(error: io::Error, path: &std::path::Path, windows: bool) -> io::Error {
+    use crate::commands::workspace_command::filesystem_error;
+    if windows && error.kind() == io::ErrorKind::PermissionDenied && path.is_dir() {
+        let absolute = std::path::absolute(path).unwrap_or_else(|_| path.to_owned());
+        return filesystem_error::failure(
+            io::Error::from(io::ErrorKind::IsADirectory),
+            "open",
+            &absolute,
+        );
+    }
+    filesystem_error::failure(error, "open", path)
 }
 
 #[cfg(test)]

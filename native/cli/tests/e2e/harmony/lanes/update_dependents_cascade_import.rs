@@ -104,11 +104,8 @@ fn scenario_13_workspace_lane_merge_main_refreshes_update_dependents() {
 }
 
 /// - `updateDependents cascade - import, fetch and promotion › scenario 16: workspace fetch picks up a producer hidden cascade › the workspace's local lane reflects the producer's cascade after fetch`
-/// - `updateDependents cascade - import, fetch and promotion › scenario 17: fetch reflects origin-side removeUpdateDependents (Cloud UI mutation) › local lane.updateDependents should be cleared after fetch`
-/// - `updateDependents cascade - import, fetch and promotion › scenario 18: export does not resurrect entries the origin dropped via UI › origin lane.updateDependents stays empty (stale workspace entry not resurrected)`
-/// - `updateDependents cascade - import, fetch and promotion › scenario 18: export does not resurrect entries the origin dropped via UI › origin lane.components still receives the cascaded comp3 head (visible export unaffected)`
 #[test]
-fn scenarios_16_17_18_fetch_and_export_with_hidden_update_dependents() {
+fn scenario_16_fetches_hidden_update_dependents() {
     let helper = Helper::new();
     let (_, comp2_initial) = build_base_remote_state(&helper);
     let remote = helper.scopes.remote.clone();
@@ -275,4 +272,78 @@ fn scenario_19_import_hidden_update_dependent_and_promote_on_snap() {
                     && comp["head"].as_str() == Some(comp2_head_promoted.as_str())
             }),
     );
+}
+
+/// - `updateDependents cascade - import, fetch and promotion › scenario 18: export does not resurrect entries the origin dropped via UI › origin lane.updateDependents stays empty (stale workspace entry not resurrected)`
+/// - `updateDependents cascade - import, fetch and promotion › scenario 18: export does not resurrect entries the origin dropped via UI › origin lane.components still receives the cascaded comp3 head (visible export unaffected)`
+/// - `updateDependents cascade - import, fetch and promotion › scenario 18: export does not resurrect entries the origin dropped via UI › the stale entry should be removed from the local lane as well`
+#[test]
+fn scenario_18_export_removes_remote_deleted_hidden_entry_locally() {
+    let helper = Helper::new();
+    build_base_remote_state(&helper);
+    let remote = &helper.scopes.remote;
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run(&format!("lane import {remote}/dev -x"));
+    helper.native(&format!("import {remote}/comp3 -x"));
+    let output = std::process::Command::new("node")
+        .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/e2e/helper/remove_hidden_lane.js"))
+        .arg(&crate::helper::setup::shared().node_cli)
+        .arg(&helper.scopes.remote_path)
+        .arg(format!("{remote}/dev"))
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+    helper.output_file(&format!("{remote}/comp3/index.js"), "module.exports = () => 'comp3-v2';");
+    helper.run("snap --skip-tests");
+    let head = helper.get_head_from_lane("dev", "comp3");
+    assert_eq!(
+        parse(&helper.native("cat-lane dev"))["updateDependents"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1,
+    );
+    helper.native("export");
+    let local = parse(&helper.native("cat-lane dev"));
+    let origin = parse(&Helper::cmd_in(&helper.scopes.remote_path, "cat-lane dev").stdout);
+    assert!(local["updateDependents"].as_array().is_none_or(Vec::is_empty));
+    assert!(origin["updateDependents"].as_array().is_none_or(Vec::is_empty));
+    assert!(
+        origin["components"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|row| row["id"]["name"] == "comp3" && row["head"] == head),
+    );
+}
+
+#[test]
+fn export_preserves_hidden_entries_added_to_the_remote_after_checkout() {
+    let helper = Helper::new();
+    build_base_remote_state(&helper);
+    let remote = &helper.scopes.remote;
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run(&format!("lane import {remote}/dev -x"));
+    helper.native(&format!("import {remote}/comp3 -x"));
+    helper.seed_hidden_update_dependent(&format!("{remote}/comp1"), &format!("{remote}/dev"));
+    helper.output_file(&format!("{remote}/comp3/index.js"), "module.exports = () => 'comp3-v2';");
+    helper.run("snap --skip-tests");
+    helper.native("export");
+    let local = parse(&helper.native("cat-lane dev"));
+    let origin = parse(&Helper::cmd_in(&helper.scopes.remote_path, "cat-lane dev").stdout);
+    assert_ne!(local["overrideUpdateDependents"], true);
+    for lane in [&local, &origin] {
+        let ids = lane["updateDependents"].as_array().unwrap();
+        assert_eq!(ids.len(), 2);
+        assert!(
+            ids.iter()
+                .any(|id| id.as_str().unwrap().contains("/comp1@")),
+        );
+        assert!(
+            ids.iter()
+                .any(|id| id.as_str().unwrap().contains("/comp2@")),
+        );
+    }
 }
