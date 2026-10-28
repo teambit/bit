@@ -18,6 +18,19 @@ fn normal_tags_take_precedence_over_orphaned_labels() {
 }
 
 #[test]
+fn newest_orphaned_tag_wins_when_no_normal_tag_exists() {
+    let hash = "a".repeat(40);
+    let model = json!({"orphanedVersions":{"0.9.0":hash,"1.0.0":hash}});
+    assert_eq!(
+        tags(&model)
+            .unwrap()
+            .get(&hash)
+            .unwrap(),
+        "1.0.0",
+    );
+}
+
+#[test]
 fn removal_metadata_is_projected_from_head_over_historical_tags() {
     let hash = "a".repeat(40);
     let tags = tags(&json!({"versions": {"1.0.0": hash}})).unwrap();

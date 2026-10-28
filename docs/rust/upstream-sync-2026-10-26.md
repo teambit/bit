@@ -877,3 +877,10 @@ preserves stored documentation data, now covered by a regression test. Full
 scope-side aspect recalculation and the reader/no-file distinction are still a
 porting gap; scope-side snapshot paths needing those callbacks remain delegated.
 The following `06ab7f06c` commit updates release metadata.
+
+Upstream `49db7bc3c` replaces repeated ref-to-tag scans with an index. Native
+history traversal and reset now build an index per immutable request, choose the
+newest normal tag before orphaned tags, and no longer let an earlier cached tag
+change the answer. Component log projection also selects the newest orphaned tag.
+The index is transient and is never serialized into a component model. A 20,000-tag
+regression checks tagged and untagged lookups; existing history-query bounds remain.

@@ -68,7 +68,14 @@ pub(super) fn select(input: Value) -> io::Result<Value> {
         selected.reverse();
     }
     let mut cached = request.last_found_tag.clone();
-    let labels = labels(&request, &selected, &mut cached)?;
+    let mut index = crate::tag_index::TagIndex::default();
+    for tag in &request.orphaned {
+        index.insert(&tag.hash, &tag.label, false);
+    }
+    for tag in &request.tags {
+        index.insert(&tag.hash, &tag.label, true);
+    }
+    let labels = labels(&request, &selected, &index, &mut cached)?;
     let mut output = json!({"selected":selected.iter().map(|index|json!({"source":index})).collect::<Vec<_>>(),"labels":labels,"lastFoundTagPresent":cached.is_some()});
     if let Some(cached) = cached {
         output["lastFoundTag"] = Value::String(cached);
@@ -78,6 +85,7 @@ pub(super) fn select(input: Value) -> io::Result<Value> {
 fn labels(
     request: &Select,
     selected: &[usize],
+    index: &crate::tag_index::TagIndex,
     cached: &mut Option<String>,
 ) -> io::Result<Vec<String>> {
     let mut total = 256
@@ -86,8 +94,8 @@ fn labels(
             .as_ref()
             .map_or(0, |value| value.len() * 6);
     let mut labels = Vec::new();
-    for index in selected {
-        let value = label(request, &request.source_only[*index], cached);
+    for selected_index in selected {
+        let value = label(index, &request.source_only[*selected_index], cached);
         total += value.len() * 6 + 3;
         if total > 4 * 1024 * 1024 {
             return Err(invalid("reset label response limit"));
@@ -125,29 +133,16 @@ fn eligible(request: &Select, hash: &str) -> io::Result<bool> {
         .ok_or_else(|| invalid("history reset lane metadata missing"))?;
     Ok(!row.missing && (row.origin_lane || row.squashed || row.unrelated))
 }
-fn label(request: &Select, hash: &str, cached: &mut Option<String>) -> String {
-    if let Some(found) = cached
-        .as_ref()
-        .and_then(|label| {
-            request.tags
-                .iter()
-                .find(|row| row.label == *label && row.hash == hash)
-        })
-    {
-        return found.label.clone();
+fn label(index: &crate::tag_index::TagIndex, hash: &str, cached: &mut Option<String>) -> String {
+    let Some((label, normal)) = index.get(hash) else {
+        return hash.to_owned();
+    };
+    if normal {
+        *cached = Some(label.to_owned());
     }
-    if let Some(found) = request.tags
-        .iter()
-        .rfind(|row| row.hash == hash)
-    {
-        *cached = Some(found.label.clone());
-        return found.label.clone();
-    }
-    request.orphaned
-        .iter()
-        .rfind(|row| row.hash == hash)
-        .map_or_else(|| hash.into(), |row| row.label.clone())
+    label.to_owned()
 }
+
 fn refs(values: &[String]) -> io::Result<()> {
     bound(values.len())?;
     for hash in values {

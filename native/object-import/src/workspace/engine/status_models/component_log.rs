@@ -253,7 +253,7 @@ fn file_date_order(left: &Value, right: &Value) -> std::cmp::Ordering {
 
 fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
     let mut tags = HashMap::new();
-    for field in ["versions", "orphanedVersions"] {
+    for field in ["orphanedVersions", "versions"] {
         let Some(versions) = model
             .get(field)
             .filter(|value| !value.is_null())
@@ -264,18 +264,10 @@ fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
         for (tag, reference) in versions {
             let reference = reference.as_str().ok_or_else(|| invalid("component log tag ref"))?;
             merge_history::hash(reference)?;
-            insert_tag(&mut tags, reference, tag, field == "versions");
+            tags.insert(reference.to_string(), tag.clone());
         }
     }
     Ok(tags)
-}
-
-fn insert_tag(tags: &mut HashMap<String, String>, reference: &str, tag: &str, ordinary: bool) {
-    if ordinary {
-        tags.insert(reference.to_string(), tag.to_string());
-    } else {
-        tags.entry(reference.to_string()).or_insert_with(|| tag.to_string());
-    }
 }
 
 #[cfg(test)]

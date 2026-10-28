@@ -278,56 +278,46 @@ pub(crate) fn begin(input: Value) -> io::Result<Value> {
     }
     let plan = json!({"objectsDirectory":request.objects_directory,"headExists":request.head_exists,"exitWhenFind":request.exit_when_find,"head":request.head_data,"skip":request.exit_when_find && request.head_exists});
     let mut cached = labels.last_found_tag;
-    let tags = labels.tags;
-    let orphaned = labels.orphaned;
+    let mut index = crate::tag_index::TagIndex::default();
+    for tag in &labels.orphaned {
+        index_value(&mut index, tag, false);
+    }
+    for tag in &labels.tags {
+        index_value(&mut index, tag, true);
+    }
     let request = Request { existing: request.existing, overlays: request.overlays };
     let mut result = populate(&request, &plan)?;
-    annotate(&mut result, &tags, &orphaned, &mut cached);
+    annotate(&mut result, &index, &mut cached);
     Ok(result)
 }
-
-fn annotate(result: &mut Value, tags: &[Value], orphaned: &[Value], cached: &mut Option<String>) {
+fn index_value(index: &mut crate::tag_index::TagIndex, value: &Value, normal: bool) {
+    if let (Some(hash), Some(label)) = (value["hash"].as_str(), value["label"].as_str()) {
+        index.insert(hash, label, normal);
+    }
+}
+fn annotate(result: &mut Value, index: &crate::tag_index::TagIndex, cached: &mut Option<String>) {
     if let Some(missing) = result.get_mut("missing").and_then(Value::as_array_mut) {
         for row in missing {
-            annotate_row(row, tags, orphaned, cached);
+            annotate_row(row, index, cached);
         }
     }
     if let Some(cached) = cached {
         result["lastFoundTag"] = json!(cached);
     }
 }
-fn annotate_row(row: &mut Value, tags: &[Value], orphaned: &[Value], cached: &mut Option<String>) {
-    let hash = row
-        .get("hash")
-        .and_then(Value::as_str)
-        .unwrap_or("");
-    let tag = tags
-        .iter()
-        .find(|tag| {
-            tag.get("label").and_then(Value::as_str) == cached.as_deref()
-                && tag.get("hash").and_then(Value::as_str) == Some(hash)
-        })
-        .or_else(|| {
-            tags.iter()
-                .rev()
-                .find(|tag| tag.get("hash").and_then(Value::as_str) == Some(hash))
-        });
-    if let Some(label) = tag
-        .and_then(|tag| tag.get("label"))
-        .and_then(Value::as_str)
-    {
+
+fn annotate_row(row: &mut Value, index: &crate::tag_index::TagIndex, cached: &mut Option<String>) {
+    let Some(hash) = row["hash"].as_str() else {
+        return;
+    };
+    let Some((label, normal)) = index.get(hash) else {
+        return;
+    };
+    if normal {
         *cached = Some(label.to_owned());
-        row["tag"] = json!(label);
-        row["kind"] = json!("tag");
-    } else if let Some(tag) = orphaned
-        .iter()
-        .rev()
-        .find(|tag| tag.get("hash").and_then(Value::as_str) == Some(hash))
-        .and_then(|tag| tag.get("label"))
-    {
-        row["tag"] = tag.clone();
-        row["kind"] = json!("tag");
     }
+    row["tag"] = json!(label);
+    row["kind"] = json!("tag");
 }
 
 fn parse(mut input: Value) -> io::Result<(Fields, Labels)> {

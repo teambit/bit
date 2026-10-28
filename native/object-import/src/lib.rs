@@ -71,6 +71,7 @@ mod snapshot;
 mod snapshot_projection;
 mod snapshot_transaction;
 mod store;
+mod tag_index;
 mod transfer;
 mod validate;
 mod workspace;

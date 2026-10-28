@@ -40,6 +40,7 @@ struct Request {
     labels: Labels,
     overlays: HashMap<String, usize>,
     stops: HashSet<String>,
+    index: crate::tag_index::TagIndex,
 }
 struct Walk {
     rows: Vec<Value>,
@@ -260,32 +261,13 @@ fn loaded(
     Ok(())
 }
 fn tag(request: &Request, cached: &mut Option<String>, hash: &str) -> Option<String> {
-    if let Some(value) = cached
-        .as_ref()
-        .filter(|label| {
-            request.labels.tags
-                .iter()
-                .any(|tag| &tag.label == *label && tag.hash == hash)
-        })
-    {
-        return Some(value.clone());
+    let (label, normal) = request.index.get(hash)?;
+    if normal {
+        *cached = Some(label.to_owned());
     }
-    let label = request.labels.tags
-        .iter()
-        .rev()
-        .find(|tag| tag.hash == hash)
-        .map(|tag| tag.label.clone());
-    if label.is_some() {
-        cached.clone_from(&label);
-    }
-    label.or_else(|| {
-        request.labels.orphaned
-            .iter()
-            .rev()
-            .find(|tag| tag.hash == hash)
-            .map(|tag| tag.label.clone())
-    })
+    Some(label.to_owned())
 }
+
 fn missing(request: &Request, walk: &mut Walk, row: &mut Value, from: Option<&str>, tagged: bool) {
     let mut missing =
         json!({"kind":if from.is_none() {"head"} else if tagged {"tag"} else {"parent"}});
@@ -306,11 +288,18 @@ fn parse(mut input: Value) -> io::Result<Request> {
             labels.insert(key.to_owned(), value);
         }
     }
-    let labels = serde_json::from_value(Value::Object(labels)).map_err(io::Error::other)?;
+    let labels: Labels = serde_json::from_value(Value::Object(labels)).map_err(io::Error::other)?;
     let fields: Fields = serde_json::from_value(input).map_err(io::Error::other)?;
     let overlays = super::overlay_indices(&fields.overlays);
     let stops = fields.stop_at.iter().cloned().collect();
-    Ok(Request { fields, labels, overlays, stops })
+    let mut index = crate::tag_index::TagIndex::default();
+    for tag in &labels.orphaned {
+        index.insert(&tag.hash, &tag.label, false);
+    }
+    for tag in &labels.tags {
+        index.insert(&tag.hash, &tag.label, true);
+    }
+    Ok(Request { fields, labels, overlays, stops, index })
 }
 
 fn metadata(row: &mut Value, reader: &crate::read_version::Reader<'_>) {

@@ -80,6 +80,14 @@ fn bfs_global_lane_marker_and_head_stop_keep_tag_cache_order() {
     assert_eq!(result["rows"], json!([]));
     assert_eq!(result["lastFoundTag"], "1.0.0");
 }
+
+#[test]
+fn bfs_uses_newest_tag_even_when_an_older_tag_was_cached() {
+    let hash = "a".repeat(40);
+    let mut state = super::State::default();
+    let result = super::apply("historyQueryBegin", json!({"objectsDirectory":std::env::temp_dir(),"start":hash,"throws":false,"lastFoundTag":"old","tags":[{"label":"old","hash":hash},{"label":"new","hash":hash}],"orphaned":[{"label":"orphan","hash":hash}],"overlays":[{"hash":hash,"parents":[],"log":{}}]}), &mut state).unwrap();
+    assert_eq!(result["rows"][0]["tag"], "new");
+}
 #[test]
 fn populate_full_traversal_deduplicates_diamond_in_first_visit_order() {
     let head = "a".repeat(40);
@@ -347,7 +355,7 @@ fn indexed_population_keeps_first_overlay_and_reports_missing_parent() {
     let parent = "b".repeat(40);
     let missing = "c".repeat(40);
     let row = |hash: &str, parents: Vec<&str>| json!({"hash":hash,"parents":parents});
-    let input = json!({"objectsDirectory":directory.path(),"head":head,"headExists":false,"exitWhenFind":true,"existing":[],"headData":row(&head,vec![&parent]),"overlays":[row(&parent,vec![&missing]),row(&parent,vec![])]});
+    let input = json!({"objectsDirectory":directory.path(),"head":head,"headExists":false,"exitWhenFind":true,"existing":[],"headData":row(&head,vec![&parent]),"overlays":[row(&parent,vec![&missing]),row(&parent,vec![])],"lastFoundTag":"old","tags":[{"label":"old","hash":missing},{"label":"new","hash":missing}]});
     let mut state = super::State::default();
     let result = super::apply("historyQueryPopulateBegin", input, &mut state).unwrap();
     assert_eq!(result["complete"], false);
@@ -360,6 +368,10 @@ fn indexed_population_keeps_first_overlay_and_reports_missing_parent() {
     );
     assert_eq!(result["added"][0]["hash"], head);
     assert_eq!(result["added"][1]["hash"], parent);
+    assert_eq!(result["missing"][0]["tag"], "new");
     assert_eq!(result["added"][1]["overlayIndex"], 0);
-    assert_eq!(result["missing"], json!([{"hash":missing,"parentOf":parent,"kind":"parent"}]));
+    assert_eq!(
+        result["missing"],
+        json!([{"hash":missing,"parentOf":parent,"kind":"tag","tag":"new"}]),
+    );
 }

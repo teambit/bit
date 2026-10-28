@@ -28,9 +28,9 @@ fn local_append_and_tag_cache_preserve_original_ref_provenance() {
         "historyResetLocalVersions",
         json!({"sourceOnly":[first_hash,second_hash],"lane":false,"metadata":[],"tags":[{"label":"old","hash":second_hash},{"label":"new","hash":second_hash}],"orphaned":[{"label":"orphan","hash":first_hash}],"lastFoundTag":"old"}),
     );
-    assert_eq!(selected["labels"], json!(["old", "orphan"]));
+    assert_eq!(selected["labels"], json!(["new", "orphan"]));
     assert_eq!(selected["selected"], json!([{"source":1},{"source":0}]));
-    assert_eq!(selected["lastFoundTag"], "old");
+    assert_eq!(selected["lastFoundTag"], "new");
 }
 #[test]
 fn lane_filter_keeps_recorded_head_and_mutated_history_only() {
