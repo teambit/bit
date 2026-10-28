@@ -4,7 +4,6 @@ import { SourceFile } from '@teambit/component.sources';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 
 describe('ConsumerComponent', function () {
-  // @ts-ignore
   this.timeout(0);
   describe('docs', () => {
     const componentProps = {

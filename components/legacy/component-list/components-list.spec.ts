@@ -7,7 +7,6 @@ type ListLocalScopeArg = Parameters<typeof ComponentsList.listLocalScope>[0];
 type ComponentsListArg = ConstructorParameters<typeof ComponentsList>[0];
 
 describe('ComponentList', function () {
-  // @ts-ignore
   this.timeout(0);
   const getModelComponent = () => ModelComponent.fromBitId(ComponentID.fromObject({ name: 'myName', scope: 'scope' }));
   const getScope = (modelComponent?: ModelComponent) =>
@@ -18,7 +17,6 @@ describe('ComponentList', function () {
     }) as unknown as ListLocalScopeArg;
   describe('listLocalScope', function () {
     before(() => {
-      // @ts-ignore
       this.timeout(0);
     });
     it('should return an empty array when there are no components in the scope', async () => {
