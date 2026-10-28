@@ -17,6 +17,9 @@ pub(super) struct Config {
 }
 
 impl Config {
+    pub(super) const fn exists(&self) -> bool {
+        self.existing
+    }
     pub(super) fn prepare(root: &Path, directories: &[&str]) -> io::Result<Self> {
         let mut config: Value = serde_json::from_str(include_str!(
             "../../../../../../scopes/react/react/typescript/tsconfig.json"

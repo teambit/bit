@@ -216,7 +216,69 @@ fn standard_lint_nested_sources_and_concurrent_fix_guard_match_node() {
     let helper = support::workspace(1, true);
     helper.output_file("comp1/nested/extra.js", "module.exports=()=>42;\n");
     support::compare_with_stdout(&helper, "lint --json", duration);
+    support::compare_with_stdout(&helper, "lint --fix --json", duration);
+}
+
+#[test]
+fn standard_lint_multiple_sources_with_one_fix_uses_existing_config() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.js", "module.exports=()=>{return Boolean(!!true);};\n");
+    helper.output_file("comp1/extra.js", "module.exports = () => 42;\n");
+    support::setup(&helper, "show comp1");
+    assert_eq!(
+        super::add::support::node(&helper.scopes.local_path, "lint --json")
+            .status
+            .code(),
+        Some(1),
+    );
+    let result = support::compare_with_stdout(&helper, "lint --fix --json", duration);
+    assert!(result.status.success());
+    assert!(
+        !std::fs::read_to_string(helper.scopes.local_path.join("comp1/index.js"))
+            .unwrap()
+            .contains("!!"),
+    );
+    assert_eq!(
+        std::fs::read_to_string(helper.scopes.local_path.join("comp1/extra.js")).unwrap(),
+        "module.exports = () => 42;\n",
+    );
+}
+
+#[test]
+fn standard_lint_multiple_simultaneous_fixes_remain_guarded() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.js", "module.exports=()=>{return Boolean(!!true);};\n");
+    helper.output_file("comp1/extra.js", "module.exports=()=>{return Boolean(!!false);};\n");
+    support::setup(&helper, "show comp1");
+    assert_eq!(
+        super::add::support::node(&helper.scopes.local_path, "lint --json")
+            .status
+            .code(),
+        Some(1),
+    );
     support::compare_declined(&helper, "lint --fix --json", duration);
+}
+
+#[cfg(unix)]
+#[test]
+fn standard_lint_multiple_sources_with_one_readonly_fix() {
+    use std::os::unix::fs::PermissionsExt;
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.js", "module.exports=()=>{return Boolean(!!true);};\n");
+    helper.output_file("comp1/extra.js", "module.exports = () => 42;\n");
+    support::setup(&helper, "show comp1");
+    assert_eq!(
+        super::add::support::node(&helper.scopes.local_path, "lint --json")
+            .status
+            .code(),
+        Some(1),
+    );
+    let path = helper.scopes.local_path.join("comp1/index.js");
+    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o444)).unwrap();
+    let result = support::compare_with_stdout(&helper, "lint --fix", text_duration);
+    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).unwrap();
+    assert!(result.status.success());
+    assert!(std::fs::read_to_string(&path).unwrap().contains("!!"));
 }
 
 #[test]

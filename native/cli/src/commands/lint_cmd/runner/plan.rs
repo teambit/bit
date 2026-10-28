@@ -10,6 +10,7 @@ pub(super) struct Plan {
     components: Vec<Component>,
     config: Option<Config>,
     tools: Vec<Session>,
+    precomputed: Option<Value>,
 }
 
 impl Plan {
@@ -24,6 +25,7 @@ impl Plan {
         let components = loaded.components()?;
         if components.len() > 8
             || (options.fix
+                && components.len() > 1
                 && components
                     .iter()
                     .any(|component| component.files.len() > 1))
@@ -46,7 +48,9 @@ impl Plan {
             }
         }
         validate_sources(&loaded.files)?;
-        Ok(Self { loaded, components, config, tools })
+        let precomputed = preflight_fixes(options, &components, config.as_ref(), &mut tools)?;
+        validate_sources(&loaded.files)?;
+        Ok(Self { loaded, components, config, tools, precomputed })
     }
 
     pub(super) fn run(
@@ -93,7 +97,8 @@ impl Plan {
                 self.loaded.progress.identities[index],
                 component.files.len(),
             ));
-            let result = tool.run()?;
+            let result =
+                if let Some(result) = self.precomputed.take() { result } else { tool.run()? };
             if let Some(error) = result.get("error") {
                 output.failure(&format!(
                     r#"service "linter" of env "{}" has failed. error: {}"#,
@@ -172,4 +177,37 @@ fn validate_sources(files: &[Value]) -> io::Result<()> {
         }
     }
     Ok(())
+}
+
+fn preflight_fixes(
+    options: &Options,
+    components: &[Component],
+    config: Option<&Config>,
+    tools: &mut [Session],
+) -> io::Result<Option<Value>> {
+    if !options.fix
+        || components
+            .first()
+            .is_none_or(|component| component.files.len() <= 1)
+    {
+        return Ok(None);
+    }
+    if config.is_none_or(|config| !config.exists()) {
+        return Err(invalid("linter fix config not cached"));
+    }
+    let result = tools
+        .first_mut()
+        .ok_or_else(|| invalid("linter fix tool"))?
+        .run()?;
+    let rows =
+        result["results"].as_array().ok_or_else(|| invalid("linter fix preflight results"))?;
+    if rows
+        .iter()
+        .filter(|row| row["output"].is_string())
+        .count()
+        > 1
+    {
+        return Err(invalid("linter concurrent fixes"));
+    }
+    Ok(Some(result))
 }
