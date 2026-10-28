@@ -3,6 +3,46 @@ use super::{Value, invalid};
 use crate::commands::workspace_command::component_service::filesystem;
 use std::{fs, io, path::Path};
 
+pub(super) fn apply(
+    check: bool,
+    output: &bit_install::output::Output,
+    loaded: &super::Loaded,
+    components: &[crate::commands::workspace_command::component_service::Component],
+    files: &[Value],
+    result: &mut Value,
+) -> io::Result<()> {
+    if check {
+        loaded.progress.print(output);
+        return Ok(());
+    }
+    if let Some(error) =
+        publish_components(&loaded.progress, output, components, &loaded.files, files)?
+    {
+        output.failure(&message(&loaded.progress.environment, &error)?);
+        *result = serde_json::json!({"results":[],"errors":[error]});
+    }
+    Ok(())
+}
+pub(super) fn publish_components(
+    progress: &super::progress::Progress,
+    output: &bit_install::output::Output,
+    components: &[crate::commands::workspace_command::component_service::Component],
+    inputs: &[Value],
+    outputs: &[Value],
+) -> io::Result<Option<Value>> {
+    progress.start(output);
+    let mut offset = 0;
+    for (index, component) in components.iter().enumerate() {
+        progress.component(output, index);
+        let end = offset + component.files.len();
+        if let Some(error) = publish(&inputs[offset..end], &outputs[offset..end])? {
+            return Ok(Some(error));
+        }
+        offset = end;
+    }
+    Ok(None)
+}
+
 pub(super) fn validate(inputs: &[Value]) -> io::Result<()> {
     for input in inputs {
         let path = path(input)?;

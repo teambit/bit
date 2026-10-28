@@ -5,7 +5,7 @@ mod tool;
 mod write;
 use super::Options;
 use crate::{commands::workspace_command, native::Outcome};
-use serde_json::{Value, json};
+use serde_json::Value;
 use std::{ffi::OsString, io, path::Path, time::Instant};
 use workspace_command::component_service::{Loaded, Selection};
 
@@ -15,13 +15,16 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         pattern: options.pattern.clone(),
         changed: options.changed,
         allow_cached_pair: options.check && options.json,
-        single_file_write: !options.check,
         ..Selection::default()
     };
     let mut loaded = match Loaded::prepare(root, &selection) {
         Ok(loaded) => loaded,
         Err(error) => return Ok(Outcome::Declined(format!("formatter load: {error}"))),
     };
+    let components = loaded.components()?;
+    if !supported_writes(options.check, &components) {
+        return Ok(Outcome::Declined("formatter concurrent source writes".to_owned()));
+    }
     let files = match tool::format(&loaded.files) {
         Ok(files) => files,
         Err(error) => return Ok(Outcome::Declined(format!("formatter tool: {error}"))),
@@ -30,13 +33,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
     write::validate(&loaded.files)?;
     let work = |output: &bit_install::output::Output| {
         loaded.commit(root)?;
-        loaded.progress.print(output);
-        if !options.check
-            && let Some(error) = write::publish(&loaded.files, &files)?
-        {
-            output.failure(&write::message(&loaded.progress.environment, &error)?);
-            result = json!({"results":[],"errors":[error]});
-        }
+        write::apply(options.check, output, &loaded, &components, &files, &mut result)?;
         report::create(&result, &loaded.progress, args, options, started.elapsed().as_secs_f64())
     };
     if options.json {
@@ -47,4 +44,15 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
 }
 fn invalid(message: &str) -> io::Error {
     io::Error::other(message)
+}
+
+fn supported_writes(
+    check: bool,
+    components: &[workspace_command::component_service::Component],
+) -> bool {
+    check
+        || (components.len() <= 2
+            && components
+                .iter()
+                .all(|component| component.files.len() <= 1))
 }

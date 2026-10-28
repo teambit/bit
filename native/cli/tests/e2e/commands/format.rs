@@ -53,6 +53,95 @@ fn standard_format_writes_match_json_text_and_repeated_clean_results() {
     assert!(support::compare_with_stdout(&helper, "format", duration).status.success());
 }
 
+#[test]
+fn standard_format_writes_two_single_file_components_in_order() {
+    let helper = support::workspace(2, false);
+    helper.output_file("comp1/index.js", "module.exports=()=>42;\n");
+    helper.output_file("comp2/index.js", "module.exports=()=>43;\n");
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let result = support::compare(&helper, "format --json");
+    assert!(result.status.success());
+    for name in ["comp1", "comp2"] {
+        let source =
+            std::fs::read_to_string(helper.scopes.local_path.join(name).join("index.js")).unwrap();
+        assert!(source.contains("module.exports = () =>"), "{name}: {source}");
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn standard_format_first_component_write_failure_preserves_prefix() {
+    use std::os::unix::fs::PermissionsExt;
+    let helper = support::workspace(2, false);
+    helper.output_file("comp1/index.js", "module.exports=()=>42;\n");
+    helper.output_file("comp2/index.js", "module.exports=()=>43;\n");
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let first = helper.scopes.local_path.join("comp1/index.js");
+    std::fs::set_permissions(&first, std::fs::Permissions::from_mode(0o444)).unwrap();
+    let result = support::compare(&helper, "format --json");
+    std::fs::set_permissions(&first, std::fs::Permissions::from_mode(0o644)).unwrap();
+    assert!(result.status.success());
+    assert_eq!(
+        std::fs::read_to_string(helper.scopes.local_path.join("comp2/index.js")).unwrap(),
+        "module.exports=()=>43;\n",
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn standard_format_first_component_write_failure_text() {
+    use std::os::unix::fs::PermissionsExt;
+    let helper = support::workspace(2, false);
+    helper.output_file("comp1/index.js", "module.exports=()=>42;\n");
+    helper.output_file("comp2/index.js", "module.exports=()=>43;\n");
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let first = helper.scopes.local_path.join("comp1/index.js");
+    std::fs::set_permissions(&first, std::fs::Permissions::from_mode(0o444)).unwrap();
+    let result = support::compare_with_stdout(&helper, "format", duration);
+    std::fs::set_permissions(&first, std::fs::Permissions::from_mode(0o644)).unwrap();
+    assert!(result.status.success());
+}
+
+#[cfg(unix)]
+#[test]
+fn standard_format_second_component_failure_keeps_first_write() {
+    use std::os::unix::fs::PermissionsExt;
+    let helper = support::workspace(2, false);
+    helper.output_file("comp1/index.js", "module.exports=()=>42;\n");
+    helper.output_file("comp2/index.js", "module.exports=()=>43;\n");
+    support::setup(&helper, "show comp1");
+    support::setup(&helper, "show comp2");
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let second = helper.scopes.local_path.join("comp2/index.js");
+    std::fs::set_permissions(&second, std::fs::Permissions::from_mode(0o444)).unwrap();
+    let result = support::compare_with_stdout(&helper, "format", duration);
+    std::fs::set_permissions(&second, std::fs::Permissions::from_mode(0o644)).unwrap();
+    assert!(result.status.success());
+    assert!(
+        std::fs::read_to_string(helper.scopes.local_path.join("comp1/index.js"))
+            .unwrap()
+            .contains("module.exports = () =>"),
+    );
+}
+
 #[cfg(unix)]
 #[test]
 fn standard_format_readonly_source_returns_owned_json_error_without_replay() {

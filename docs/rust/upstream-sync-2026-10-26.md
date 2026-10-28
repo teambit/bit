@@ -889,3 +889,5 @@ The same indexed lookup is used when reporting staged history and building a
 scope's reverse dependency graph, avoiding a tag scan for every traversed snap.
 Rebuilding the index after a model change observes removals and orphaned tags;
 constructing it leaves the serialized model unchanged.
+
+Upstream `0d4c18398` updates release metadata to 2.2.168 without a CLI behavior change.
