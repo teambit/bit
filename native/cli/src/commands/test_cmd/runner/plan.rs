@@ -4,7 +4,10 @@ use super::{
 };
 use crate::commands::{
     color::Chalk,
-    workspace_command::{component_service::Loaded, results::Report},
+    workspace_command::{
+        component_service::{Component, Loaded},
+        results::Report,
+    },
 };
 use std::{ffi::OsString, fs, io, path::Path};
 
@@ -26,7 +29,7 @@ impl Plan {
         {
             return Err(invalid("tester environment selection"));
         }
-        if components.len() > 1 && (settings.junit.is_some() || !settings.files.is_empty()) {
+        if components.len() > 1 && !settings.files.is_empty() {
             return Err(invalid("tester multiple component services"));
         }
         let request = if components.len() > 1 {
@@ -83,26 +86,22 @@ impl Plan {
         terminated: bool,
     ) -> io::Result<Report> {
         let components = self.loaded.components()?;
-        let mut report = if components.len() > 1 && self.settings.summary {
-            multi::report_summary(
-                root,
-                result,
-                &components,
-                &self.loaded.progress.identities,
-                &self.loaded.progress.environment,
-            )?
-        } else if components.len() > 1 {
+        let mut report = if components.len() > 1 {
             multi::report_detail(root, result, &components, &self.loaded.progress.identities)?
         } else {
             report::report(result, identity)?
         };
-        if !terminated
-            && self.settings.environment.is_none()
-            && let Some(path) = &self.settings.junit
-        {
-            junit::write(path, &report.data, result)?;
-        }
-        if self.settings.summary && !terminated && components.len() == 1 {
+        self.write_junit(root, result, &components, &report, terminated)?;
+        if self.settings.summary && !terminated {
+            if components.len() > 1 {
+                return multi::report_summary(
+                    root,
+                    result,
+                    &components,
+                    &self.loaded.progress.identities,
+                    &self.loaded.progress.environment,
+                );
+            }
             report.data = summary::render(
                 &report.data,
                 identity,
@@ -111,6 +110,28 @@ impl Plan {
             )?;
         }
         Ok(report)
+    }
+    fn write_junit(
+        &self,
+        root: &Path,
+        result: &serde_json::Value,
+        components: &[Component],
+        report: &Report,
+        terminated: bool,
+    ) -> io::Result<()> {
+        if terminated || self.settings.environment.is_some() {
+            return Ok(());
+        }
+        let Some(path) = &self.settings.junit else {
+            return Ok(());
+        };
+        if components.len() > 1 {
+            let raw =
+                multi::junit_rows(root, result, components, &self.loaded.progress.identities)?;
+            junit::write(path, &report.data, &raw)
+        } else {
+            junit::write(path, &report.data, result)
+        }
     }
 }
 fn validate_sources(files: &[serde_json::Value]) -> io::Result<()> {

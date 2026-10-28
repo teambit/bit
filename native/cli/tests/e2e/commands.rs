@@ -40,3 +40,4 @@ mod tester_junit;
 mod tester_modes;
 mod tester_multi;
 mod tester_multi_detail;
+mod tester_multi_junit;

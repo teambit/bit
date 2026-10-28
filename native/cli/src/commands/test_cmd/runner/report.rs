@@ -77,7 +77,11 @@ fn error(row: &Value) -> Option<Value> {
     }
     let mut value = json!({});
     for key in ["code", "type"] {
-        if let Some(entry) = source.get(key) {
+        let captured = if key == "code" { "executionErrorCode" } else { "executionErrorType" };
+        if let Some(entry) = row
+            .get(captured)
+            .or_else(|| source.get(key))
+        {
             value[key] = entry.clone();
         }
     }

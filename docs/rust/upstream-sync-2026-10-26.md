@@ -668,3 +668,29 @@ had 1,805 passes, two existing skips and one Bit Cloud setup failure; the failed
 case passed unchanged on rerun. The Dylint bootstrap repair subsequently passed
 its GitHub Actions lint job. Other platform jobs for the prior head were pending
 at this checkpoint.
+
+## Multi-component JUnit
+
+Same-environment built-in testing now writes multi-component JUnit reports,
+including summary and coverage combinations, empty reports, suite failures,
+nonzero exit codes and report-write errors. Rust groups Jest results by component
+before rendering XML so distinct suite errors remain associated with their own
+components. An explicit environment selector retains the released behavior of
+suppressing JUnit output. Multi-component explicit-file selections and the
+existing path, pattern, loader and environment guards continue to decline before
+effects.
+
+Nine focused comparisons cover those modes, direct process termination, report
+permissions, once-only side effects, and execution without loading Bit runtime
+modules. Eight same-path released runs established both suite orders and the
+validated timing projection. Another eight established both observed serialized
+error-type forms for a one-error fixture; its JSON comparison permits only those
+coupled forms while keeping the XML exact apart from suite order and timings.
+A two-error negative control that removed per-component mapping failed the XML
+comparison. Capturing Jest error code and type explicitly also preserves
+non-enumerable fields that were previously lost during serialization.
+
+Validation: 62 focused tester cases, formatting, Clippy, Dylint, rustdoc,
+generated checks and 1,817 workspace tests passed. The full E2E run had 1,814
+passes, two existing skips and one Bit Cloud setup failure; the case passed
+unchanged on rerun. Platform CI for this checkpoint is pending.

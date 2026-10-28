@@ -2,7 +2,7 @@
 use super::move_paths::support;
 use serde_json::Value;
 
-fn summary_order(output: &str) -> String {
+pub(super) fn summary_order(output: &str) -> String {
     let mut data: Value = serde_json::from_str(output).unwrap();
     sort_component_pair(&mut data["componentsWithTests"], true);
     sort_component_pair(&mut data["componentsWithoutTests"], false);

@@ -55,6 +55,7 @@ fn message(output: &mut String, kind: &str, message: Option<&str>) {
 }
 pub(super) fn collect(component: &Value, raw: &Value) -> io::Result<Vec<Case>> {
     let mut cases = Vec::new();
+    let source = source_rows(component, raw);
     for (index, file) in component["results"]["testFiles"]
         .as_array()
         .ok_or_else(|| io::Error::other("JUnit files"))?
@@ -68,7 +69,7 @@ pub(super) fn collect(component: &Value, raw: &Value) -> io::Result<Vec<Case>> {
                 name: name.to_owned(),
                 duration: None,
                 failure: None,
-                error: Some(file_error(raw, index)?),
+                error: Some(file_error(source, index)?),
                 skipped: false,
             });
         }
@@ -94,10 +95,15 @@ pub(super) fn collect(component: &Value, raw: &Value) -> io::Result<Vec<Case>> {
     }
     Ok(cases)
 }
-fn file_error(raw: &Value, index: usize) -> io::Result<String> {
-    let row = raw["results"]["testResults"]
-        .get(index)
-        .ok_or_else(|| io::Error::other("JUnit source file"))?;
+fn source_rows<'a>(component: &Value, raw: &'a Value) -> &'a Value {
+    component["componentId"]
+        .as_str()
+        .and_then(|identity| raw["componentRows"].get(identity))
+        .unwrap_or_else(|| &raw["results"]["testResults"])
+}
+
+fn file_error(rows: &Value, index: usize) -> io::Result<String> {
+    let row = rows.get(index).ok_or_else(|| io::Error::other("JUnit source file"))?;
     Ok(row["executionErrorMessage"]
         .as_str()
         .unwrap_or_default()

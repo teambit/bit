@@ -219,3 +219,26 @@ fn combine(target: &mut Value, source: &Value) {
         target["envErrors"] = source["envErrors"].clone();
     }
 }
+pub(super) fn junit_rows(
+    root: &Path,
+    raw: &Value,
+    components: &[Component],
+    identities: &[String],
+) -> io::Result<Value> {
+    let mut copy = raw.clone();
+    let Some(rows) = raw["results"]["testResults"].as_array() else {
+        return Ok(copy);
+    };
+    validate_rows(root, components, rows)?;
+    let mut grouped = serde_json::Map::new();
+    for (component, identity) in components.iter().zip(identities) {
+        let selected = rows
+            .iter()
+            .filter(|row| belongs(root, component, row))
+            .cloned()
+            .collect();
+        grouped.insert(identity.clone(), Value::Array(selected));
+    }
+    copy["componentRows"] = Value::Object(grouped);
+    Ok(copy)
+}
