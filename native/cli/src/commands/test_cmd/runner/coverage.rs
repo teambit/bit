@@ -76,8 +76,8 @@ pub(super) fn empty() -> Value {
 }
 
 fn relative(from: &Path, to: &Path) -> PathBuf {
-    let from = normalized(from);
-    let to = normalized(to);
+    let from = super::paths::normalized(from);
+    let to = super::paths::normalized(to);
     let from: Vec<_> = from.components().collect();
     let to: Vec<_> = to.components().collect();
     let shared = from
@@ -115,6 +115,9 @@ impl Coverage {
         match read(root, &self.directory, &self.main) {
             Ok(coverage) => result["coverage"] = coverage,
             Err(error) => {
+                result["errorMessage"] = json!(
+                    crate::commands::workspace_command::filesystem_error::description(&error)
+                );
                 result["error"] =
                     crate::commands::workspace_command::filesystem_error::json(&error);
                 result
@@ -124,18 +127,6 @@ impl Coverage {
             }
         }
     }
-}
-
-fn normalized(path: &Path) -> PathBuf {
-    let mut result = PathBuf::new();
-    for component in path.components() {
-        if component == std::path::Component::ParentDir {
-            result.pop();
-        } else {
-            result.push(component);
-        }
-    }
-    result
 }
 
 fn metrics_data(metrics: &Value) -> Option<Value> {

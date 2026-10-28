@@ -2,8 +2,12 @@
 mod assets;
 mod config;
 mod coverage;
+mod files;
+mod paths;
 mod plan;
 mod report;
+mod settings;
+mod summary;
 mod tool;
 
 use super::Options;

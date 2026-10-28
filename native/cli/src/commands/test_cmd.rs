@@ -134,7 +134,7 @@ fn file_belongs_to_any_component(
         .strip_prefix(root)
         .ok()
         .and_then(|path| path.to_str())
-        .map(inventory::normalize)
+        .map(|path| inventory::normalize(&path.replace(std::path::MAIN_SEPARATOR, "/")))
     else {
         return false;
     };
@@ -175,7 +175,6 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut iter = args.iter().copied();
     while let Some(token) = iter.next() {
         if token == "--" {
-            options.user_pattern.extend(iter.map(str::to_owned));
             break;
         }
         apply_test_token(token, &mut iter, &mut options)?;

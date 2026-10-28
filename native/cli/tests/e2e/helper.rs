@@ -298,7 +298,7 @@ impl Helper {
     }
 
     pub fn restore_remote_at(remote: &Path, clone: &Path) {
-        restore::remove(remote);
+        restore::remote::contents(remote);
         setup::copy_dir(clone, remote);
     }
 

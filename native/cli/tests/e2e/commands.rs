@@ -36,3 +36,4 @@ mod system_git_scope;
 mod tag;
 
 mod tester;
+mod tester_modes;

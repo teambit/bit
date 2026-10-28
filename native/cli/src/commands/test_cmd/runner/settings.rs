@@ -1,0 +1,58 @@
+//! Select supported tester modes before loader effects or external execution.
+use super::{Options, files, invalid};
+use crate::commands::workspace_command::component_service::Selection;
+use std::{
+    ffi::OsString,
+    io,
+    path::{Path, PathBuf},
+};
+
+pub(super) struct Settings {
+    pub selection: Selection,
+    pub summary: bool,
+    pub coverage: bool,
+    pub update_snapshot: bool,
+    pub files: Vec<PathBuf>,
+}
+impl Settings {
+    pub(super) fn parse(root: &Path, args: &[OsString], options: &Options) -> io::Result<Self> {
+        if !options.json {
+            return Err(invalid("tester text reporting"));
+        }
+        let selected = files::select(root, &options.user_pattern)?;
+        let mut settings = Self {
+            selection: Selection {
+                pattern: (!options.user_pattern.is_empty()).then(|| {
+                    options.user_pattern.join(", ")
+                }),
+                changed: true,
+                ..Selection::default()
+            },
+            summary: false,
+            coverage: false,
+            update_snapshot: false,
+            files: Vec::new(),
+        };
+        settings.apply(args)?;
+        if let Some(selected) = selected {
+            settings.selection.pattern = Some(selected.identity);
+            settings.files = selected.paths;
+        }
+        Ok(settings)
+    }
+    fn apply(&mut self, args: &[OsString]) -> io::Result<()> {
+        for argument in args.iter().skip(1) {
+            match argument.to_str().ok_or_else(|| invalid("tester argument"))? {
+                "--" => break,
+                "--json" | "-j" | "--verbose" => {}
+                "--unmodified" | "-u" => self.selection.changed = false,
+                "--summary" => self.summary = true,
+                "--coverage" => self.coverage = true,
+                "--update-snapshot" => self.update_snapshot = true,
+                value if value.starts_with('-') => return Err(invalid("tester runtime option")),
+                _ => {}
+            }
+        }
+        Ok(())
+    }
+}

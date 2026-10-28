@@ -515,3 +515,44 @@ skips; both failed cases pass unchanged on serial reruns. The new fixture cleanu
 regression also passes in the full run. Generated plan/census, asset, scope and
 public-data checks pass. Local Node lint cannot run because tsc is unavailable.
 Windows and other platform CI for this batch remain pending.
+
+## Tester JSON modes and upstream version sync
+
+Merged upstream `a5813e8d6` with ancestry preserved. The change since `7c0228a4f`
+updates release metadata to 2.2.164; it adds no runtime behavior requiring a Rust
+port.
+
+Built-in single-component Node/React testing now owns summary JSON, coverage
+collection, snapshot updates and explicit test-file selection. Summary projection
+preserves versionless identities, test counters, components without tests and
+environment failure messages. Coverage uses the released development-file ignore
+list and consumes/removes reports through the existing native coverage path.
+Jest and Babel remain external tools with native-owned configuration adapters;
+installed distribution metadata still resolves their dependencies.
+
+Explicit files are resolved lexically to their owning component and filtered
+against the loader's recognized test files. Duplicate paths execute once. Invalid
+existing non-test files still decline before loader effects so their released
+validation and cache effects remain intact. Multiple-component file selections,
+custom environments, text/JUnit reporting and watch/debug sessions remain gaps.
+The released CLI ignores arguments after `--`; the Rust parser now reproduces
+that behavior instead of treating those arguments as file selectors.
+
+Nine new differential cases cover summaries with passing/failing/empty tests,
+nonzero process exit codes and environment errors; empty selections; Node/React
+coverage and cleanup; snapshot updates and exact snapshot bytes; relative,
+absolute and duplicate file selectors; invalid files; and the argument separator.
+Reports, exit codes, workspace/scope contents and history remain compared. Only
+existing qualified report timing fields are masked. Failing coverage tests and
+environment failures assert that test side effects happen once. Pre-change
+negative runs caught both missing native summary support and file selection.
+
+CI on the preceding tester commit exposed two Windows differences. Restoring a
+remote now removes and verifies every child while retaining the root directory
+held by a running HTTP scope server. It does not ignore deletion errors or retain
+stale outputs. A Windows test holds a directory handle without delete sharing;
+a Unix test checks read-only children and preservation of external symlink
+targets. Windows transfer CI includes the restoration tests. The tester adapter
+also resolves its exposed CLI entry path as Node does, preserving exact
+`process.argv` bytes when the configured installation path mixes separators.
+Existing strict process-artifact comparisons caught that mismatch on Windows.

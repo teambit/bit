@@ -1,4 +1,6 @@
 //! Restored fixtures must not retain outputs when a command leaves read-only directories.
+pub(super) mod remote;
+
 use std::{fs, io, path::Path};
 
 pub(super) fn remove(path: &Path) {

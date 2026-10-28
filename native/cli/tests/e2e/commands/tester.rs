@@ -2,7 +2,7 @@
 use super::move_paths::support;
 use serde_json::Value;
 
-fn timings(output: &str) -> String {
+pub(super) fn timings(output: &str) -> String {
     let mut value: Value = serde_json::from_str(output).expect("tester JSON");
     for environment in value.as_array_mut().expect("tester environments") {
         for component in

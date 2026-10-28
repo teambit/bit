@@ -1,5 +1,6 @@
 process.argv.splice(1, 1);
 const path = require('node:path');
+process.argv[1] = path.resolve(process.argv[1]);
 const fs = require('node:fs');
 const readline = require('node:readline');
 const { createRequire } = require('node:module');
@@ -11,6 +12,7 @@ const emit = process.stdout.write.bind(process.stdout);
 const lines = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });
 let request;
 let config;
+let argv;
 lines.on('line', async line => {
   if (!request) {
     request = JSON.parse(line);
@@ -33,7 +35,8 @@ lines.on('line', async line => {
       return value;
     };
     config = resolve(request.config);
-    await installation('jest-config').readConfigs({ config: JSON.stringify(config) }, [request.root]);
+    argv = { ...request.options, config: JSON.stringify(config) };
+    await installation('jest-config').readConfigs(argv, [request.root]);
     for (const filename of Object.values(config.transform)) require(filename);
     require(config.snapshotResolver);
     react.resolve('@testing-library/jest-dom/extend-expect');
@@ -47,7 +50,7 @@ lines.on('line', async line => {
   process.stdout.write = silent;
   process.stderr.write = silent;
   try {
-    const result = await jest.runCLI({ config: JSON.stringify(config) }, [request.root]);
+    const result = await jest.runCLI(argv, [request.root]);
     for (const file of result.results.testResults) {
       for (const test of file.testResults) {
         test.formattedError = formatResultsErrors([test], config, { noStackTrace: true }) || undefined;
@@ -55,6 +58,6 @@ lines.on('line', async line => {
     }
     emit(JSON.stringify({ results: result.results, exitCode: process.exitCode }) + '\n');
   } catch (error) {
-    emit(JSON.stringify({ error, exitCode: process.exitCode }) + '\n');
+    emit(JSON.stringify({ error, errorMessage: error?.message, exitCode: process.exitCode }) + '\n');
   }
 });

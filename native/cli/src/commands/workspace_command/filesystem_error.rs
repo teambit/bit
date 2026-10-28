@@ -110,3 +110,11 @@ pub(in crate::commands) fn json(error: &io::Error) -> serde_json::Value {
     }
     result
 }
+
+/// Original Node-style message retained by an environment's summary.
+pub(in crate::commands) fn description(error: &io::Error) -> String {
+    error
+        .get_ref()
+        .and_then(|error| error.downcast_ref::<Failure>())
+        .map_or_else(|| error.to_string(), Failure::description)
+}

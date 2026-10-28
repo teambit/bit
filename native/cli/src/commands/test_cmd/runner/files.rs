@@ -1,0 +1,71 @@
+//! Resolve explicit test files without running component loaders or user tests.
+use super::{invalid, paths};
+use crate::commands::workspace_command::component_service::Component;
+use bit_install::{dependencies::glob, workspace::Bitmap};
+use std::{
+    env, io,
+    path::{Path, PathBuf},
+};
+
+pub(super) struct Selected {
+    pub identity: String,
+    pub paths: Vec<PathBuf>,
+}
+
+pub(super) fn select(root: &Path, values: &[String]) -> io::Result<Option<Selected>> {
+    if values.is_empty()
+        || !values
+            .iter()
+            .any(|value| Path::new(value).is_file())
+    {
+        return Ok(None);
+    }
+    if !values
+        .iter()
+        .all(|value| Path::new(value).is_file())
+    {
+        return Err(invalid("tester mixed file selection"));
+    }
+    let cwd = env::current_dir()?;
+    let paths: Vec<_> = values
+        .iter()
+        .map(|value| paths::normalized(&cwd.join(value)))
+        .collect();
+    let bitmap = Bitmap::load(root, None)?;
+    let identity = owner(root, &bitmap, &paths[0])?;
+    for path in &paths[1..] {
+        if owner(root, &bitmap, path)? != identity {
+            return Err(invalid("tester multiple component file selection"));
+        }
+    }
+    Ok(Some(Selected { identity, paths }))
+}
+fn owner(root: &Path, bitmap: &Bitmap, path: &Path) -> io::Result<String> {
+    let mut owners = bitmap.entries
+        .iter()
+        .filter(|entry| {
+            entry.owns_its_dir() && path.starts_with(paths::normalized(&root.join(&entry.root_dir)))
+        });
+    let identity = owners
+        .next()
+        .ok_or_else(|| invalid("tester file owner"))?
+        .id
+        .to_string_without_version();
+    if owners.next().is_some() {
+        return Err(invalid("tester overlapping component file owners"));
+    }
+    Ok(identity)
+}
+
+pub(super) fn tests(component: &Component, patterns: &[String]) -> io::Result<Vec<PathBuf>> {
+    let mut paths = Vec::new();
+    for file in &component.files {
+        let relative = file["filePath"].as_str().ok_or_else(|| invalid("tester relative file"))?;
+        if glob::match_patterns(relative, patterns) {
+            let absolute =
+                file["absolutePath"].as_str().ok_or_else(|| invalid("tester absolute file"))?;
+            paths.push(paths::normalized(Path::new(absolute)));
+        }
+    }
+    Ok(paths)
+}
