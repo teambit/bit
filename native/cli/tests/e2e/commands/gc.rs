@@ -196,7 +196,9 @@ fn bare_collection_does_not_replay_successful_moves_when_another_batch_member_fa
         .join("objects")
         .join(&blocked[..2]);
     assert!(bucket.is_dir());
-    let run = compare_with_cleanup(
+    let expected =
+        fs::read(objects::path(&helper.scopes.remote_path, "objects", &movable)).unwrap();
+    let run = compare_with_snapshot(
         &helper,
         "gc",
         false,
@@ -218,11 +220,66 @@ fn bare_collection_does_not_replay_successful_moves_when_another_batch_member_fa
             )
             .unwrap();
         },
+        |scope| parallel_move_snapshot(scope, &movable, &expected),
     );
     assert!(!run.status.success(), "{run:?}");
     assert!(objects::path(&helper.scopes.remote_path, "objects", &blocked).exists());
     assert!(!objects::path(&helper.scopes.remote_path, "objects", &movable).exists());
     assert!(objects::path(&helper.scopes.remote_path, "deleted-objects", &movable).is_file());
+}
+
+#[cfg(unix)]
+fn parallel_move_snapshot(
+    scope: &Path,
+    hash: &str,
+    expected: &[u8],
+) -> std::collections::BTreeMap<String, Vec<u8>> {
+    let mut snapshot = tree(scope);
+    let original = format!("objects/{}/{}", &hash[..2], &hash[2..]);
+    let moved = format!("deleted-objects/{}/{}", &hash[..2], &hash[2..]);
+    let source = snapshot.remove(&original);
+    let destination = snapshot.remove(&moved);
+    assert_ne!(source.is_some(), destination.is_some());
+    let source_mode = snapshot.remove(&format!("{original}:mode"));
+    let destination_mode = snapshot.remove(&format!("{moved}:mode"));
+    assert_ne!(source_mode.is_some(), destination_mode.is_some());
+    assert_eq!(source.is_some(), source_mode.is_some());
+    let bytes = source.or(destination).unwrap();
+    assert_eq!(bytes, expected);
+    snapshot.insert("parallel-move:bytes".into(), bytes);
+    snapshot.insert("parallel-move:mode".into(), source_mode.or(destination_mode).unwrap());
+    snapshot
+}
+
+#[cfg(unix)]
+#[test]
+fn parallel_move_projection_rejects_duplicate_missing_and_changed_objects() {
+    let root = tempfile::tempdir().unwrap();
+    let hash = "f".repeat(40);
+    let original = objects::path(root.path(), "objects", &hash);
+    let moved = objects::path(root.path(), "deleted-objects", &hash);
+    fs::create_dir_all(original.parent().unwrap()).unwrap();
+    fs::create_dir_all(moved.parent().unwrap()).unwrap();
+    fs::write(&original, b"fixture bytes").unwrap();
+    let first = parallel_move_snapshot(root.path(), &hash, b"fixture bytes");
+    fs::rename(&original, &moved).unwrap();
+    assert_eq!(first, parallel_move_snapshot(root.path(), &hash, b"fixture bytes"));
+    fs::write(&original, b"fixture bytes").unwrap();
+    assert!(
+        std::panic::catch_unwind(|| parallel_move_snapshot(root.path(), &hash, b"fixture bytes"))
+            .is_err(),
+    );
+    fs::remove_file(&original).unwrap();
+    fs::write(&moved, b"changed").unwrap();
+    assert!(
+        std::panic::catch_unwind(|| parallel_move_snapshot(root.path(), &hash, b"fixture bytes"))
+            .is_err(),
+    );
+    fs::remove_file(&moved).unwrap();
+    assert!(
+        std::panic::catch_unwind(|| parallel_move_snapshot(root.path(), &hash, b"fixture bytes"))
+            .is_err(),
+    );
 }
 
 #[test]

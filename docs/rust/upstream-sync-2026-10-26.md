@@ -844,3 +844,24 @@ Validation: the focused text comparisons, formatting, Clippy, Dylint, rustdoc,
 workspace tests and generated/scope checks passed. The full E2E run had 1,844
 passes, two existing skips and three Bit Cloud fixture setup failures; all three
 passed unchanged on serial rerun.
+
+## Concurrent garbage-collection failure comparison
+
+A Linux E2E shard failed because a permission error raced another object move in
+the released CLI. Sixteen same-path released runs completed the other move;
+sixteen runs with that rename deliberately delayed left it pending when the
+process exited. Both groups had identical stdout and stderr, and the only tree
+differences were the object's original and backup paths and their mode entries.
+The delayed replay reproduced the CI failure with the previous comparison.
+
+The comparison now accepts only those two observed locations for that one
+object, requiring exactly one copy with the original bytes and mode. Every other
+scope entry and the full command output remain exact, and the native run still
+asserts the successful move occurred once without replay. A separate regression
+rejects duplicate, missing and modified copies. No production behavior or test
+timeout changed.
+
+Validation: 32 focused GC cases, formatting, Clippy, Dylint, rustdoc, workspace
+tests and generated/scope checks passed. The full E2E run had 1,847 passes,
+two existing skips and one Bit Cloud fixture setup failure; the case passed
+unchanged on rerun. The preceding Windows provisioning check passed.
