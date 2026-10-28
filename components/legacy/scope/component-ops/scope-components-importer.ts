@@ -852,12 +852,9 @@ export class ScopeComponentsImporter {
     await Promise.all(
       componentsWithVersion.map(async (compWithVer) => {
         // loaded here also for the VersionDependencies created below, which read them synchronously.
-        const [flattenedDependencies, flattenedEdges] = await Promise.all([
-          compWithVer.versionObj.loadFlattenedDependencies(this.repo),
-          compWithVer.versionObj.getFlattenedEdges(this.repo),
-        ]);
+        const flattenedDependencies = await compWithVer.versionObj.loadFlattenedDependencies(this.repo);
         if (skipComponentsWithDepsGraph) {
-          if (flattenedEdges.length) return;
+          if (await compWithVer.versionObj.hasFlattenedEdges(this.repo)) return;
           if (!flattenedDependencies.length) return;
           logger.debug(
             `scopeComponentImporter, unable to get dependencies graph from ${compWithVer.componentVersion.id.toString()}, will import all its deps`
@@ -1104,8 +1101,7 @@ export class ScopeComponentsImporter {
         externalsToFetch.push(id);
         return;
       }
-      const flattenedEdges = await version.getFlattenedEdges(this.repo);
-      if (preferDependencyGraph && flattenedEdges.length) {
+      if (preferDependencyGraph && (await version.hasFlattenedEdges(this.repo))) {
         return;
       }
       const flattenedDependencies = await version.loadFlattenedDependencies(this.repo);
@@ -1175,11 +1171,8 @@ export class ScopeComponentsImporter {
     const allFlattened = await Promise.all(
       versionDeps.map(async (v) => {
         // loaded here also for the dependencies set below, which read them synchronously.
-        const [flattenedDependencies, flattenedEdges] = await Promise.all([
-          v.version.loadFlattenedDependencies(this.repo),
-          v.version.getFlattenedEdges(this.repo),
-        ]);
-        if (preferDependencyGraph && flattenedEdges.length) return [];
+        const flattenedDependencies = await v.version.loadFlattenedDependencies(this.repo);
+        if (preferDependencyGraph && (await v.version.hasFlattenedEdges(this.repo))) return [];
         return flattenedDependencies;
       })
     );
