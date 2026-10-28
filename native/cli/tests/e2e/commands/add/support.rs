@@ -69,6 +69,21 @@ pub(crate) fn compare_with_artifacts(
     compare_mode(helper, command, false, true, output, false, None)
 }
 
+pub(crate) fn compare_stream_artifacts(
+    helper: &Helper,
+    command: &str,
+    stdout: fn(&str) -> String,
+    stderr: fn(&str) -> String,
+    artifacts: &ArtifactProjection<'_>,
+) -> Run {
+    let output = Comparison {
+        stderr: Some(stderr),
+        artifacts: Some(artifacts),
+        ..Comparison::exact(stdout)
+    };
+    compare_mode(helper, command, false, true, output, false, None)
+}
+
 /// Only a caller with independently qualified complete Node errors may use variants.
 pub(crate) fn compare_with_error_variants(
     helper: &Helper,

@@ -867,3 +867,5 @@ two existing skips and one Bit Cloud fixture setup failure; the case passed
 unchanged on rerun. The preceding Windows provisioning check passed.
 
 The subsequent upstream sync to `f367980931c33240f17c1f259c7d1d000d6b7f89` updates release and CLI reference metadata; it does not add a Rust behavior gap.
+
+Upstream `e831b73da` adds release notes only; no Rust behavior change is required.

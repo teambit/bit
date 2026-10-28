@@ -172,6 +172,40 @@ fn text_multiple_components_preserve_failure() {
         support::compare_with_streams(&helper, "test --unmodified", without_duration, jest_times);
     assert_eq!(result.status.code(), Some(1));
 }
+
+#[test]
+fn text_stream_preserves_junit_and_coverage() {
+    let helper = support::workspace(1, true);
+    helper.output_file(
+        "comp1/index.spec.js",
+        "it('first',()=>{const end=Date.now()+20;while(Date.now()<end){}expect(2+2).toBe(4);});\n",
+    );
+    let remote = support::tree(&helper.scopes.remote_path);
+    let result = super::add::support::compare_stream_artifacts(
+        &helper,
+        "test comp1 --coverage --junit reports/test.xml",
+        without_duration,
+        jest_times,
+        &super::tester_junit::project,
+    );
+    assert_eq!(remote, support::tree(&helper.scopes.remote_path));
+    assert!(result.status.success());
+}
+
+#[test]
+fn text_stream_junit_failure_does_not_repeat_test() {
+    let helper = support::workspace(1, true);
+    helper.output_file("comp1/index.spec.js", "const fs=require('fs');it('first',()=>{fs.appendFileSync('test-effect','x');expect(2+2).toBe(4);});\n");
+    std::fs::create_dir(helper.scopes.local_path.join("report.xml")).unwrap();
+    let result = support::compare_with_streams(
+        &helper,
+        "test comp1 --junit report.xml",
+        str::to_owned,
+        jest_times,
+    );
+    assert_eq!(result.status.code(), Some(1));
+    assert_eq!(std::fs::read_to_string(helper.scopes.local_path.join("test-effect")).unwrap(), "x");
+}
 fn multi_component_times(output: &str) -> String {
     let time =
         regex::Regex::new(r"(?m)^Time:        ([0-9]+(?:\.[0-9]+)?) s(?:, estimated ([0-9]+) s)?$")
