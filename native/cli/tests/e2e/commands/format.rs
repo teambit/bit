@@ -225,6 +225,62 @@ fn standard_format_multiple_sources_writes_only_the_changed_file() {
     );
 }
 
+#[test]
+fn standard_format_three_cold_components_write_serially() {
+    let helper = support::workspace(3, false);
+    for index in 1..=3 {
+        helper.output_file(
+            &format!("comp{index}/index.js"),
+            &format!("module.exports=()=>{index};\n"),
+        );
+        support::setup(&helper, &format!("show comp{index}"));
+    }
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let result = support::compare(&helper, "format --json");
+    assert!(result.status.success());
+    for index in 1..=3 {
+        let source =
+            std::fs::read_to_string(helper.scopes.local_path.join(format!("comp{index}/index.js")))
+                .unwrap();
+        assert!(source.contains("module.exports = () =>"), "{source}");
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn standard_format_three_components_stops_at_middle_write_failure() {
+    use std::os::unix::fs::PermissionsExt;
+    let helper = support::workspace(3, false);
+    for index in 1..=3 {
+        helper.output_file(
+            &format!("comp{index}/index.js"),
+            &format!("module.exports=()=>{index};\n"),
+        );
+        support::setup(&helper, &format!("show comp{index}"));
+    }
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let second = helper.scopes.local_path.join("comp2/index.js");
+    std::fs::set_permissions(&second, std::fs::Permissions::from_mode(0o444)).unwrap();
+    let result = support::compare_with_stdout(&helper, "format", duration);
+    std::fs::set_permissions(&second, std::fs::Permissions::from_mode(0o644)).unwrap();
+    assert!(result.status.success());
+    assert!(
+        std::fs::read_to_string(helper.scopes.local_path.join("comp1/index.js"))
+            .unwrap()
+            .contains("module.exports = () =>"),
+    );
+    assert_eq!(
+        std::fs::read_to_string(helper.scopes.local_path.join("comp3/index.js")).unwrap(),
+        "module.exports=()=>3;\n",
+    );
+}
+
 #[cfg(unix)]
 #[test]
 fn standard_format_multiple_sources_reports_the_only_write_failure() {

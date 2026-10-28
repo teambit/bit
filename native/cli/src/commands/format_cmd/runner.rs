@@ -54,9 +54,6 @@ fn supported_writes(
     if check {
         return true;
     }
-    if components.len() > 2 {
-        return false;
-    }
     let mut offset = 0;
     for component in components {
         let end = offset + component.files.len();
