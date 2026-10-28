@@ -67,11 +67,11 @@ impl Plan {
     }
 }
 fn validate_order(compiled: &[Compiled]) -> io::Result<()> {
-    if compiled.len() > 1
-        && compiled
-            .iter()
-            .any(|row| !row.errors.is_empty())
-    {
+    let errors = compiled
+        .iter()
+        .filter(|row| !row.errors.is_empty())
+        .count();
+    if errors > 1 || (errors > 0 && compiled.len() > 2) {
         return Err(io::Error::other("compiler diagnostic component order"));
     }
     Ok(())
