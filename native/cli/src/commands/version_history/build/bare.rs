@@ -85,7 +85,7 @@ fn merge(
     };
     if existing["name"] != name
         || existing["scope"] != scope
-        || !existing["graphCompleteRefs"].as_array()?.is_empty()
+        || !existing::complete_refs(&existing["graphCompleteRefs"])?
     {
         return None;
     }

@@ -74,7 +74,8 @@ pub(super) fn content(
 ) -> Option<(Vec<u8>, usize, Value)> {
     let rows = ancestry(root, head, proofs)?;
     let (rows, count) = merge(existing, rows, name, scope)?;
-    let value = json!({"name":name,"scope":scope,"versions":rows,"graphCompleteRefs":[]});
+    let complete = existing.map_or_else(|| json!([]), |value| value["graphCompleteRefs"].clone());
+    let value = json!({"name":name,"scope":scope,"versions":rows,"graphCompleteRefs":complete});
     Some((encode(hash, &value).ok()?, count, value))
 }
 
@@ -102,6 +103,6 @@ pub(super) fn lane_content(
             rows.push(row);
         }
     }
-    let value = json!({"name":name,"scope":scope,"versions":rows,"graphCompleteRefs":[]});
+    let value = json!({"name":name,"scope":scope,"versions":rows,"graphCompleteRefs":existing["graphCompleteRefs"]});
     Some((encode(hash, &value).ok()?, count, value))
 }

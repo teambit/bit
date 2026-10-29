@@ -48,3 +48,13 @@ fn refs(value: &Value) -> Option<Vec<&str>> {
 fn valid_hash(hash: &str) -> Option<&str> {
     (hash.len() == 40 && hash.bytes().all(|byte| byte.is_ascii_hexdigit())).then_some(hash)
 }
+
+pub(super) fn complete_refs(value: &Value) -> Option<bool> {
+    let values = refs(value)?;
+    let mut unique = HashSet::new();
+    Some(
+        values
+            .into_iter()
+            .all(|value| unique.insert(value)),
+    )
+}

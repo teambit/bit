@@ -364,12 +364,15 @@ fn version_history_rebuild_preserves_unrelated_existing_entries() {
     let hash =
         format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
     let extra = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
-    let history = json!({"name":"comp1","scope":helper.scopes.remote,"versions":[{"hash":extra,"parents":[]}],"graphCompleteRefs":[]});
-    write_scope_fixture_at(scope, "VersionHistory", &hash, &history);
-    let result = super::gc::compare(&helper, "version-history build comp1", false);
-    assert!(result.stdout.contains("added 2 hashes"));
-    let (_, stored) = bit_object_import::read_scope_object(scope, &hash).unwrap().unwrap();
-    assert_eq!(stored["versions"][0]["hash"], extra);
+    for complete in [json!([]), json!([extra])] {
+        let history = json!({"name":"comp1","scope":helper.scopes.remote,"versions":[{"hash":extra,"parents":[]}],"graphCompleteRefs":complete});
+        write_scope_fixture_at(scope, "VersionHistory", &hash, &history);
+        let result = super::gc::compare(&helper, "version-history build comp1", false);
+        assert!(result.stdout.contains("added 2 hashes"));
+        let (_, stored) = bit_object_import::read_scope_object(scope, &hash).unwrap().unwrap();
+        assert_eq!(stored["versions"][0]["hash"], extra);
+        assert_eq!(stored["graphCompleteRefs"], complete);
+    }
 }
 
 #[test]
