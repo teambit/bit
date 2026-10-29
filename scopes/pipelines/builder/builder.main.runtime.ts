@@ -581,8 +581,10 @@ export class BuilderMain {
         (env) => env.id
       );
       // the same filters the pipelines apply, so tasks that won't run don't affect the decision
-      const { tasks, skipTasks } = builderOptions;
-      const isSkipped = (task: BuildTask) => Boolean(skipTasks?.length && isTaskInFilter(task, skipTasks));
+      const { tasks, skipTasks, skipTests } = builderOptions;
+      const isSkipped = (task: BuildTask) =>
+        Boolean(skipTasks?.length && isTaskInFilter(task, skipTasks)) ||
+        Boolean(skipTests && task.aspectId === Extensions.tester);
       const [buildService, ...deployServices] = this.getPipelineServices(deployPipeline);
       const buildTasks = buildService
         .getCurrentPipeline(envs)

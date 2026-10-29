@@ -150,6 +150,8 @@ describe('BuilderMain', () => {
     it('ignores the tasks that are skipped or filtered out', () => {
       expect(shouldSkip([packTask, appDeployTask], true, { skipTasks: ['deploy_application'] })).to.be.true;
       expect(shouldSkip([packTask, appDeployTask], true, { tasks: ['teambit.pkg/pkg'] })).to.be.true;
+      const testerTask = task('teambit.defender/tester', 'TestComponents'); // doesn't declare it
+      expect(shouldSkip([packTask, testerTask], true, { skipTests: true })).to.be.true;
     });
     it('installs when the tasks cannot be determined', () => {
       expect(createBuilder([packTask])['shouldSkipCapsuleInstallation']([compWithoutEnv], {}, 'tag')).to.be.false;
