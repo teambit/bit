@@ -163,7 +163,7 @@ export class BuilderMain {
     const deployPipelineToRun = forceDeploy || !disableTagAndSnapPipelines ? deployPipeline : undefined;
     if (populateArtifactsFrom) {
       isolateOptions.populateArtifactsFrom = populateArtifactsFrom;
-      if (this.shouldSkipCapsuleInstallation(components, deployPipelineToRun)) {
+      if (this.shouldSkipCapsuleInstallation(components, builderOptions, deployPipelineToRun)) {
         isolateOptions.installOptions = { ...isolateOptions.installOptions, installPackages: false };
       }
     }
@@ -569,18 +569,27 @@ export class BuilderMain {
    * tasks, and normally none of them, nor the tag/snap tasks, needs the packages installed in the capsules.
    * a task that doesn't implement `requiresCapsuleInstallation` is assumed to need them.
    */
-  private shouldSkipCapsuleInstallation(components: Component[], deployPipeline?: 'tag' | 'snap'): boolean {
+  private shouldSkipCapsuleInstallation(
+    components: Component[],
+    builderOptions: BuilderServiceOptions,
+    deployPipeline?: 'tag' | 'snap'
+  ): boolean {
     if (!isFeatureEnabled(SKIP_TAG_CAPSULE_INSTALL)) return false;
     try {
       const envs = uniqBy(
         components.map((component) => this.envs.getEnv(component)),
         (env) => env.id
       );
+      // the same filters the pipelines apply, so tasks that won't run don't affect the decision
+      const { tasks, skipTasks } = builderOptions;
+      const isSkipped = (task: BuildTask) => Boolean(skipTasks?.length && isTaskInFilter(task, skipTasks));
       const [buildService, ...deployServices] = this.getPipelineServices(deployPipeline);
       const buildTasks = buildService
         .getCurrentPipeline(envs)
-        .filter((task) => isTaskInFilter(task, [Extensions.aspect]));
-      const deployTasks = deployServices.flatMap((service) => service.getCurrentPipeline(envs));
+        .filter((task) => isTaskInFilter(task, [Extensions.aspect]) && !isSkipped(task));
+      const deployTasks = deployServices
+        .flatMap((service) => service.getCurrentPipeline(envs))
+        .filter((task) => (!tasks?.length || isTaskInFilter(task, tasks)) && !isSkipped(task));
       const tasksRequiringInstallation = [...buildTasks, ...deployTasks].filter(
         (task) => task.requiresCapsuleInstallation?.(components) ?? true
       );

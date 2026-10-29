@@ -112,8 +112,12 @@ describe('BuilderMain', () => {
         logger,
         undefined as any
       );
-    const shouldSkip = (tagTasks: any[], runTagPipeline = true) =>
-      createBuilder(tagTasks)['shouldSkipCapsuleInstallation']([comp1], runTagPipeline ? 'tag' : undefined);
+    const shouldSkip = (tagTasks: any[], runTagPipeline = true, builderOptions = {}) =>
+      createBuilder(tagTasks)['shouldSkipCapsuleInstallation'](
+        [comp1],
+        builderOptions,
+        runTagPipeline ? 'tag' : undefined
+      );
 
     const originalFeatures = process.env[ENV_VAR_FEATURE_TOGGLE];
     const setFeatures = (features: string) => {
@@ -143,8 +147,12 @@ describe('BuilderMain', () => {
     it('ignores the tag tasks when the tag pipeline does not run', () => {
       expect(shouldSkip([customTask], false)).to.be.true;
     });
+    it('ignores the tasks that are skipped or filtered out', () => {
+      expect(shouldSkip([packTask, appDeployTask], true, { skipTasks: ['deploy_application'] })).to.be.true;
+      expect(shouldSkip([packTask, appDeployTask], true, { tasks: ['teambit.pkg/pkg'] })).to.be.true;
+    });
     it('installs when the tasks cannot be determined', () => {
-      expect(createBuilder([packTask])['shouldSkipCapsuleInstallation']([compWithoutEnv], 'tag')).to.be.false;
+      expect(createBuilder([packTask])['shouldSkipCapsuleInstallation']([compWithoutEnv], {}, 'tag')).to.be.false;
     });
   });
 });

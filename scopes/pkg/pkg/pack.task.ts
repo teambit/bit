@@ -33,9 +33,10 @@ export class PackTask implements BuildTask {
   }
 
   /**
-   * packing runs the pack lifecycle scripts of the package.json, which might need the packages.
-   * the scripts of the package.json written to the capsule come from the pkg config, the component overrides and,
-   * when the artifacts are reused, the package.json of the last build (which includes the env transformations).
+   * packing needs the packages when it runs the pack lifecycle scripts of the package.json, or when it bundles
+   * dependencies (taken from node_modules).
+   * the package.json written to the capsule comes from the pkg config, the component overrides and, when the
+   * artifacts are reused, the package.json of the last build (which includes the env transformations).
    */
   requiresCapsuleInstallation(components: Component[]): boolean {
     return components.some((component) => {
@@ -43,12 +44,24 @@ export class PackTask implements BuildTask {
       const pkgJsonOfLastBuild = legacyComponent.extensions
         .findExtension(Extensions.builder)
         ?.data?.aspectsData?.find((aspectData) => aspectData.aspectId === this.aspectId)?.data?.pkgJson;
-      const scriptsSources = [
-        component.state.aspects.get(this.aspectId)?.data?.packageJsonModification?.scripts,
-        legacyComponent.overrides?.componentOverridesPackageJsonData?.scripts,
-        pkgJsonOfLastBuild?.scripts,
+      const pkgJsonSources: Array<Record<string, any> | undefined> = [
+        component.state.aspects.get(this.aspectId)?.data?.packageJsonModification,
+        legacyComponent.overrides?.componentOverridesPackageJsonData,
+        pkgJsonOfLastBuild,
       ];
-      return scriptsSources.some((scripts) => PACK_LIFECYCLE_SCRIPTS.some((script) => scripts?.[script]));
+      return pkgJsonSources.some(
+        (pkgJson) =>
+          PACK_LIFECYCLE_SCRIPTS.some((script) => pkgJson?.scripts?.[script]) ||
+          hasBundledDependencies(pkgJson?.bundledDependencies) ||
+          hasBundledDependencies(pkgJson?.bundleDependencies)
+      );
     });
   }
+}
+
+/**
+ * the value is either a list of package names or `true` to bundle all of them.
+ */
+function hasBundledDependencies(bundledDependencies: unknown): boolean {
+  return Array.isArray(bundledDependencies) ? bundledDependencies.length > 0 : Boolean(bundledDependencies);
 }
