@@ -3,6 +3,7 @@
 use crate::helper::{Helper, config, parse};
 use serde_json::json;
 use std::fs;
+mod remote_history;
 mod upstream_history;
 
 #[test]

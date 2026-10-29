@@ -1,6 +1,7 @@
 //! Native `bit version-history <sub-command>` (`vh`) (`scopes/scope/version-history/version-history-cmd.ts`).
 
 mod build;
+mod remote;
 #[cfg(test)]
 mod tests;
 mod text;
@@ -22,7 +23,7 @@ pub const COMMAND: Command = Command { name: "version-history", aliases: &["vh"]
 enum Subcommand {
     ShowJson(String),
     ShowText(String, bool),
-    Build(String, Option<String>),
+    Build(String, Option<String>, Option<String>),
     Unrecognized(String),
 }
 
@@ -45,16 +46,18 @@ fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
 fn parse_build(rest: &[&str]) -> Option<Subcommand> {
     let mut id = None;
     let mut from = None;
+    let mut remote = None;
     let mut arguments = rest.iter().copied();
     while let Some(argument) = arguments.next() {
         match argument {
             "--from-all-lanes" | "--delete-existing" => {}
             "--from-snap" if from.is_none() => from = Some(arguments.next()?.to_owned()),
+            "--remote" if remote.is_none() => remote = Some(arguments.next()?.to_owned()),
             value if !value.starts_with('-') && id.is_none() => id = Some(value.to_owned()),
             _ => return None,
         }
     }
-    Some(Subcommand::Build(id?, from))
+    Some(Subcommand::Build(id?, from, remote))
 }
 
 fn parse_show(rest: &[&str]) -> Option<Subcommand> {
@@ -93,7 +96,16 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         }
         Subcommand::ShowJson(id) => run_show_json(&root, args, &id),
         Subcommand::ShowText(id, short) => text::run(&root, args, &id, short),
-        Subcommand::Build(id, from) => build::run(&root, args, &id, from.as_deref()),
+        Subcommand::Build(id, from, Some(remote)) => {
+            if root.bare {
+                return Ok(Outcome::Declined(
+                    "bare remote history resolution requires the global remote configuration".into(
+                    ),
+                ));
+            }
+            remote::run(args, &id, from.as_deref(), &remote)
+        }
+        Subcommand::Build(id, from, None) => build::run(&root, args, &id, from.as_deref()),
     }
 }
 
