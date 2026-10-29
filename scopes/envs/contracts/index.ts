@@ -58,8 +58,57 @@ export type {
   ComponentFormatResult,
   FileFormatResult,
 } from './formatter';
-export type { SchemaExtractor, SchemaExtractorOptions, SnippetFormatter } from './schema';
-export type { Preview, EnvPreviewConfig, PreviewStrategyName } from './preview';
+export { typescriptSchemaExtractor } from './schema';
+export type {
+  SchemaExtractor,
+  SchemaExtractorOptions,
+  SnippetFormatter,
+  TypescriptSchemaExtractorOptions,
+  TypescriptSchemaProvider,
+} from './schema';
+export { COMPONENT_PREVIEW_STRATEGY_NAME } from './preview';
+export type { Preview, EnvPreviewConfig, PreviewStrategyName, RenderingContext, DocsRootProps } from './preview';
+export type {
+  Bundler,
+  BundlerResult,
+  BundlerMode,
+  Asset,
+  ChunksAssetsMap,
+  EntriesAssetsMap,
+  EntryAssets,
+  DevServer,
+  DevServerContext,
+  BundlerContext,
+  BundlerContextMetaData,
+  BundlerEntry,
+  BundlerEntryMap,
+  BundlerHtmlConfig,
+  LibraryOptions,
+  ModuleTarget,
+  Chunking,
+  Target,
+} from './bundler';
+export { AppTypeList } from './application';
+export type {
+  AppContext,
+  AppBuildContext,
+  AppDeployContext,
+  Artifact,
+  ArtifactList,
+  AppBuildResult,
+  ApplicationInstance,
+  ApplicationDeployment,
+  DeployFn,
+  BuildFn,
+  AppResult,
+  Application,
+  ApplicationType,
+  AppTypeListOptions,
+} from './application';
+export { BitBaseEvent } from './pubsub';
+export type { PubsubMain } from './pubsub';
+export type { Workspace } from './workspace';
+export * from './aspect-ids';
 export { PackageGenerator } from './package-generator';
 export type {
   PackageJsonProps,
@@ -120,4 +169,5 @@ export type {
   SchemaEnv,
   PreviewEnv,
   WorkspaceConfigEnv,
+  AppsEnv,
 } from './env-types';

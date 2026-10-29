@@ -12,3 +12,17 @@ export type { Preview } from '@teambit/preview';
 export type { PackageGenerator } from '@teambit/pkg';
 export type { TemplateList, StarterList, ComponentContext, WorkspaceContext } from '@teambit/generator';
 export type { ConfigWriterList } from '@teambit/workspace-config-files';
+export type { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
+export type {
+  AppContext,
+  AppBuildContext,
+  AppDeployContext,
+  Application,
+  ApplicationType,
+  AppTypeList,
+} from '@teambit/application';
+export type { PubsubMain } from '@teambit/pubsub';
+export type { Workspace } from '@teambit/workspace';
+export type { RenderingContext } from '@teambit/preview';
+export type { DocsRootProps } from '@teambit/docs';
+export type { TypescriptMain } from '@teambit/typescript';

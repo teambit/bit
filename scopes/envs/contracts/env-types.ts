@@ -9,6 +9,7 @@ import type { StarterList } from './starter-list';
 import type { SchemaExtractor } from './schema';
 import type { Preview } from './preview';
 import type { ConfigWriterList } from './config-writer-list';
+import type { AppTypeList } from './application';
 
 /**
  * an env. each service the env provides is a method that returns an env handler.
@@ -52,4 +53,8 @@ export interface PreviewEnv {
 
 export interface WorkspaceConfigEnv {
   workspaceConfig?(): ConfigWriterList;
+}
+
+export interface AppsEnv {
+  apps?(): EnvHandler<AppTypeList>;
 }
