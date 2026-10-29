@@ -1,3 +1,4 @@
+import fs from 'fs-extra';
 import type { CLIMain } from '@teambit/cli';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
@@ -438,7 +439,8 @@ export class ApplicationMain {
     const res = await env.run(this.appService);
     const context = res.results[0].data;
     if (!context) throw new AppNotFound(appName);
-    const hostRootDir = await this.workspace.getComponentPackagePath(component);
+    const packagePath = await this.workspace.getComponentPackagePath(component);
+    const hostRootDir = (await fs.pathExists(packagePath)) ? await fs.realpath(packagePath) : packagePath;
     const workspaceComponentDir = this.workspace.componentDir(component.id);
 
     const appContext = new AppContext(

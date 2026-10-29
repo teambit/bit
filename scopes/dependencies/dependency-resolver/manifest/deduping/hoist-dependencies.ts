@@ -274,7 +274,7 @@ function handleRangesAndVersions(
   if (bestRange.count < mostCommonVersion.count) {
     dedupedDependencies.rootDependencies[depKeyName][packageName] = mostCommonVersion.version;
     filterFunc = (item) => {
-      if (item.range === mostCommonVersion) return true;
+      if (item.range === mostCommonVersion.version) return true;
       return false;
     };
   } else {
