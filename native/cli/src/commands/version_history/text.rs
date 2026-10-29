@@ -65,12 +65,12 @@ fn format_row(
 ) -> Option<String> {
     let hash = node.hash.as_str();
     let mut pointers = Vec::new();
-    if let Some((name, _)) = lanes
-        .iter()
-        .find(|(_, head)| head == hash)
-    {
-        pointers.push(name.as_str());
-    }
+    pointers.extend(
+        lanes
+            .iter()
+            .filter(|(_, head)| head == hash)
+            .map(|(name, _)| name.as_str()),
+    );
     if model["head"].as_str() == Some(hash) {
         pointers.push("main");
     }

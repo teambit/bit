@@ -9,16 +9,26 @@ pub(super) fn lanes(root: &Path, scope: &str, component: &str) -> Option<Vec<(St
     let mut lanes = Vec::new();
     for (name, path) in lane_paths(root)? {
         if let Some(head) = lane_head(&path, scope, component)? {
-            if lanes
-                .iter()
-                .any(|(_, other)| other == &head)
-            {
-                return None;
-            }
             lanes.push((name, head));
         }
     }
+    qualify_shared_heads(&lanes)?;
+    lanes.sort_by(|left, right| right.0.cmp(&left.0));
     Some(lanes)
+}
+
+fn qualify_shared_heads(lanes: &[(String, String)]) -> Option<()> {
+    let mut remotes = std::collections::HashMap::new();
+    for (name, head) in lanes {
+        let remote = name.split_once('/')?.0;
+        if remotes
+            .insert(head, remote)
+            .is_some_and(|previous| previous != remote)
+        {
+            return None;
+        }
+    }
+    Some(())
 }
 
 fn lane_head(path: &Path, scope: &str, component: &str) -> Option<Option<String>> {

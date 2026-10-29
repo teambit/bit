@@ -83,9 +83,42 @@ fn version_history_linear_text_matches_node() {
         ".bit/refs/remotes/example/other",
         &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":head}]).to_string(),
     );
-    super::add::support::compare_declined(&helper, "version-history show comp1", |text| {
-        text.to_owned()
-    });
+    let shared = super::move_paths::support::compare(&helper, "version-history show comp1");
+    assert!(shared.stdout.contains("example/other, example/dev, main, 0.0.2"));
+    helper.output_file(
+        ".bit/refs/remotes/example/Alpha",
+        &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":head}]).to_string(),
+    );
+    let sorted = super::move_paths::support::compare(&helper, "version-history show comp1");
+    assert!(sorted.stdout.contains("example/other, example/dev, example/Alpha, main, 0.0.2"));
+    helper.output_file(
+        ".bit/refs/remotes/example/éclair",
+        &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":head}]).to_string(),
+    );
+    super::move_paths::support::compare(&helper, "version-history show comp1");
+    helper.output_file(
+        ".bit/refs/remotes/another/dev",
+        &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":head}]).to_string(),
+    );
+    super::add::support::compare_declined(
+        &helper,
+        "version-history show comp1",
+        normalize_lane_order,
+    );
+}
+
+fn normalize_lane_order(text: &str) -> String {
+    let (prefix, rest) = text.split_once(" (").unwrap();
+    let (pointers, suffix) = rest.split_once(") ").unwrap();
+    let mut parts = pointers.split(", ").collect::<Vec<_>>();
+    assert!(parts.ends_with(&["main", "0.0.2"]));
+    parts.truncate(parts.len() - 2);
+    parts.sort_unstable();
+    assert_eq!(
+        parts,
+        ["another/dev", "example/Alpha", "example/dev", "example/other", "example/éclair"],
+    );
+    format!("{prefix} ({}, main, 0.0.2) {suffix}", parts.join(", "))
 }
 
 #[test]
