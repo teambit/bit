@@ -18,15 +18,62 @@ pub(super) fn run(
     id: &str,
     from: Option<&str>,
 ) -> io::Result<Outcome> {
-    let Some(identity) = prepare(root, id, from) else {
+    let Some(identities) = select(root, id, from) else {
         return Ok(Outcome::Declined(
             "version-history rebuild requires a complete local graph".into(),
         ));
     };
     let chalk = Chalk::detect(args);
     let summary = Formatter::new(chalk).success_summary("completed building version history");
-    let report = format!("{summary}\n{}: no changes", chalk.bold(&identity));
+    let lines = identities
+        .iter()
+        .map(|id| format!("{}: no changes", chalk.bold(id)))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let report = format!("{summary}\n{lines}");
     emit_text(root, args, "build", true, report)
+}
+
+fn select(root: &ScopeRoot, id: &str, from: Option<&str>) -> Option<Vec<String>> {
+    if id == "**" && from.is_none() {
+        return all(root);
+    }
+    Some(vec![prepare(root, id, from)?])
+}
+
+fn all(root: &ScopeRoot) -> Option<Vec<String>> {
+    let scope = scope_dir_for(root);
+    let index: Value = serde_json::from_slice(&fs::read(scope.join("index.json")).ok()?).ok()?;
+    let rows = index["components"].as_array()?;
+    if rows.len() > 128 {
+        return None;
+    }
+    let mut identities = Vec::new();
+    for row in rows
+        .iter()
+        .filter(|row| row["isSymlink"] != true)
+    {
+        if let Some(identity) = selected_row(root, &scope, row)? {
+            identities.push(identity);
+        }
+    }
+    if identities.is_empty() {
+        return None;
+    }
+    Some(identities)
+}
+
+fn selected_row(root: &ScopeRoot, scope: &std::path::Path, row: &Value) -> Option<Option<String>> {
+    let hash = row["hash"].as_str()?;
+    let (kind, model) = bit_object_import::read_scope_object(scope, hash).ok()??;
+    if kind != "Component" {
+        return None;
+    }
+    let Some(head) = model["head"].as_str() else { return Some(None) };
+    let identity = format!("{}/{}", row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?);
+    prepare(root, &identity, None)?;
+    let version = super::text::tags(&model, head).unwrap_or(head);
+    Some(Some(format!("{identity}@{version}")))
 }
 
 fn prepare(root: &ScopeRoot, id: &str, from: Option<&str>) -> Option<String> {

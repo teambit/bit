@@ -5,6 +5,27 @@ use serde_json::json;
 use std::fs;
 
 #[test]
+fn version_history_rebuild_complete_pattern_matches_node() {
+    let helper = super::move_paths::support::workspace(2, true);
+    super::move_paths::support::setup(&helper, "version-history build '**'");
+    super::move_paths::support::compare(&helper, "version-history build '**'");
+    super::move_paths::support::compare_ci(
+        &helper,
+        "version-history build '**' --from-all-lanes",
+        true,
+    );
+}
+
+#[test]
+fn version_history_rebuild_pattern_with_incomplete_history_delegates() {
+    let helper = super::move_paths::support::workspace(2, true);
+    super::move_paths::support::setup(&helper, "version-history build comp1");
+    super::add::support::compare_declined(&helper, "version-history build '**'", |text| {
+        text.to_owned()
+    });
+}
+
+#[test]
 fn version_history_branched_text_matches_node() {
     let helper = super::move_paths::support::workspace(1, true);
     let history = super::move_paths::support::json(&helper, "version-history show comp1 --json");
