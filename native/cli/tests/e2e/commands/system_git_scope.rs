@@ -7,6 +7,32 @@ mod remote_history;
 mod upstream_history;
 
 #[test]
+fn version_history_rejects_no_color_before_changing_history() {
+    use sha1::{Digest, Sha1};
+    let helper = super::gc::fixture();
+    let scope = &helper.scopes.remote_path;
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = scope
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(&path).unwrap();
+    }
+    let before = super::move_paths::support::tree(scope);
+    let command = "version-history build comp1 --no-color";
+    let node = Helper::cmd_in_with(scope, command, &[("BIT_NATIVE", std::ffi::OsStr::new("off"))]);
+    let result = Helper::cmd_in(scope, command);
+    assert!(!result.native && !result.status.success(), "{result:?}");
+    assert_eq!(result.stdout, node.stdout);
+    assert_eq!(result.stderr, node.stderr);
+    assert_eq!(result.status.code(), node.status.code());
+    assert!(!path.exists());
+    assert_eq!(super::move_paths::support::tree(scope), before);
+}
+
+#[test]
 fn version_history_rebuilds_missing_bare_history_without_runtime() {
     use sha1::{Digest, Sha1};
     let helper = super::gc::fixture();

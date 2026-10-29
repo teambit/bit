@@ -18,9 +18,6 @@ pub(super) fn run(
         || remote.is_empty()
         || remote.starts_with('-')
         || from.is_some_and(|value| value.is_empty() || value.starts_with('-'))
-        || args
-            .iter()
-            .any(|arg| arg == "--no-color")
     {
         return Ok(Outcome::Declined("invalid remote history selection".into()));
     }

@@ -28,12 +28,7 @@ enum Subcommand {
 }
 
 fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
-    let filtered = args
-        .iter()
-        .copied()
-        .filter(|arg| *arg != "--no-color")
-        .collect::<Vec<_>>();
-    match filtered.as_slice() {
+    match args {
         ["show", rest @ ..] => parse_show(rest),
         ["build", rest @ ..] => parse_build(rest),
         [sub] if !sub.starts_with('-') && !matches!(*sub, "show" | "build" | "graph") => {
