@@ -85,6 +85,23 @@ describe('ObjectsWritable', () => {
     }
     expect(error?.message).to.include('does not support lanes');
   });
+  it('should finish the writes in flight before the stream fails', async () => {
+    const sources = Array.from({ length: 300 }, (_, i) => Source.from(Buffer.from(`export const failing = ${i};\n`)));
+    const items = await Promise.all(
+      sources.map(async (src) => ({ ref: src.hash(), buffer: await src.compress(), type: src.getType() }))
+    );
+    async function* fromRemote() {
+      yield* items;
+      throw new Error('the remote stream failed');
+    }
+    const storedRefs = async () => (await scope.objects.listRefs()).map((ref) => ref.toString()).sort();
+    const writable = new ObjectsWritable(scope.objects, 'writable-spec', new WriteObjectsQueue(), componentsPerRemote);
+    const error = await pipeline(Readable.from(fromRemote()), writable).catch((err) => err);
+    const refsWhenFailed = await storedRefs();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(error.message).to.equal('the remote stream failed');
+    expect(await storedRefs()).to.deep.equal(refsWhenFailed);
+  });
   it('should store a Source whose ref does not match its content under the hash of the content', async () => {
     const underWrongRef = await scope.objects.load(mismatchedRef, false);
     expect(underWrongRef).to.not.exist;

@@ -58,7 +58,8 @@ export class ObjectsWritable extends Writable {
     if (this.errors.length) return callback(this.errors[0]);
     while (this.inFlight.size >= this.objectsQueue.concurrency) {
       await Promise.race(this.inFlight);
-      if (this.errors.length) return callback(this.errors[0]);
+      // the stream is destroyed when the remote stream fails. then, don't start more writes.
+      if (this.errors.length || this.destroyed) return callback(this.errors[0]);
     }
     const writing: Promise<void> = this.writeObjectToFs(obj)
       .catch((err: any) => {
@@ -74,6 +75,16 @@ export class ObjectsWritable extends Writable {
     clearInterval(this.timeoutId);
     await Promise.all(this.inFlight);
     callback(this.errors[0]);
+  }
+
+  /**
+   * when the stream fails (the remote stream, an object or a write), the error is reported only once the objects in
+   * flight are written, so the fetch does not end while they are still written.
+   */
+  async _destroy(err: Error | null, callback: (error?: Error | null) => void) {
+    clearInterval(this.timeoutId);
+    await Promise.all(this.inFlight);
+    callback(err);
   }
 
   private async writeObjectToFs(obj: ObjectItem) {
