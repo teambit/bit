@@ -23,8 +23,9 @@
  *   --top=<n>           how many top direct dependencies to list per target (default: 15, 0 to hide)
  *   --list              print every package in the closure
  *   --json=<path>       write the results as JSON
- *   --baseline=<path>   compare the totals with a previous --json output
- *   --update-baseline   write the totals of the measured targets to baseline.json
+ *   --baseline=<path>   compare the totals with baseline.json or with a previous --json output
+ *   --update-baseline   write the totals of the measured targets to baseline.json (refused when
+ *                       some dependencies are not found in pnpm-lock.yaml)
  */
 
 const fs = require('fs');
@@ -76,7 +77,7 @@ async function collectWorkspaceManifests() {
 function readLockfile() {
   const yaml = require(require.resolve('js-yaml', { paths: [REPO_ROOT] }));
   const lockfile = yaml.load(fs.readFileSync(path.join(REPO_ROOT, 'pnpm-lock.yaml'), 'utf8'));
-  return lockfile.snapshots;
+  return { snapshots: lockfile.snapshots, packages: lockfile.packages };
 }
 
 /** "@scope/name@1.0.0(peer@1.0.0)" -> "@scope/name" */
@@ -90,9 +91,10 @@ function nameFromSnapshotKey(key) {
  * lockfile snapshot ("<pkg>@<resolved-version>").
  */
 class Resolver {
-  constructor(manifests, snapshots) {
+  constructor(manifests, { snapshots, packages }) {
     this.manifests = manifests;
     this.snapshots = snapshots;
+    this.packages = packages;
     this.unresolved = new Set();
     // the injected copies of workspace components ("@teambit/x@file:...") carry the versions pnpm
     // resolved for their third-party dependencies.
@@ -127,7 +129,11 @@ class Resolver {
       return Object.entries(deps).map(([dep, range]) => [dep, this.resolveFromWorkspaceComponent(pkg, dep, range)]);
     }
     const snapshot = this.snapshots[node];
-    const deps = { ...snapshot.dependencies, ...snapshot.optionalDependencies };
+    // pnpm also writes the resolved optional peers into optionalDependencies. npm doesn't install
+    // them for this package, so skip them. a package that really needs one reaches it on its own.
+    const peers = this.packages[node.split('(')[0]]?.peerDependencies || {};
+    const optionalDeps = Object.entries(snapshot.optionalDependencies || {}).filter(([dep]) => !peers[dep]);
+    const deps = { ...snapshot.dependencies, ...Object.fromEntries(optionalDeps) };
     return Object.entries(deps).map(([dep, version]) => [dep, this.resolveFromSnapshot(dep, version)]);
   }
 
@@ -243,6 +249,11 @@ function printResult(target, rootPkgs, results, opts) {
   }
 }
 
+/** a mode in baseline.json is a total, in a --json output it is the whole result. */
+function baselineTotal(value) {
+  return typeof value === 'object' && value !== null ? value.total : value;
+}
+
 function compareWithBaseline(totals, baselinePath) {
   const baseline = JSON.parse(fs.readFileSync(baselinePath, 'utf8'));
   console.log(`\ncompared with ${path.relative(process.cwd(), baselinePath)}:`);
@@ -252,7 +263,8 @@ function compareWithBaseline(totals, baselinePath) {
       return;
     }
     const diffs = Object.entries(modes).map(([mode, total]) => {
-      const before = baseline[target][mode];
+      const before = baselineTotal(baseline[target][mode]);
+      if (typeof before !== 'number') return `${mode} ${total} (not in the baseline)`;
       const delta = total - before;
       return `${mode} ${before} -> ${total} (${delta > 0 ? '+' : ''}${delta})`;
     });
@@ -291,6 +303,9 @@ async function main() {
   if (opts.baseline) compareWithBaseline(totals, opts.baseline);
   if (opts.json) fs.writeFileSync(opts.json, JSON.stringify(output, null, 2));
   if (opts.updateBaseline) {
+    if (resolver.unresolved.size) {
+      throw new Error('baseline.json was not updated, because some dependencies were not found in pnpm-lock.yaml');
+    }
     const baseline = fs.existsSync(BASELINE_PATH) ? JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf8')) : {};
     Object.assign(baseline, totals);
     fs.writeFileSync(BASELINE_PATH, `${JSON.stringify(baseline, null, 2)}\n`);

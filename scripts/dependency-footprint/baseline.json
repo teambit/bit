@@ -1,10 +1,10 @@
 {
   "builder": {
-    "as-is": 2083,
-    "host-aspects": 378
+    "as-is": 1889,
+    "host-aspects": 377
   },
   "env-facing": {
-    "as-is": 2887,
-    "host-aspects": 1469
+    "as-is": 2720,
+    "host-aspects": 1291
   }
 }

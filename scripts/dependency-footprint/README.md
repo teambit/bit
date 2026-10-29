@@ -15,7 +15,7 @@ Each target is measured in two modes:
 | `as-is`        | what consumers install today                                                                  |
 | `host-aspects` | core aspects are provided by the host, as if they were optional peers, so they aren't counted |
 
-The counts are close to a real install but not exact: the lockfile was resolved for this repo, while a fresh install resolves against the registry. For `@teambit/builder`, the script reports 2,083 packages, and a real `npm install` brought in 2,030.
+The counts are close to a real install but not exact: the lockfile was resolved for this repo, while a fresh install resolves against the registry. For `@teambit/builder`, the script reports 1,889 packages, and a real `npm install` brought in 2,030.
 
 ## Usage
 
@@ -30,13 +30,13 @@ node scripts/dependency-footprint/footprint.js @teambit/component env-facing
 node scripts/dependency-footprint/footprint.js --baseline=scripts/dependency-footprint/baseline.json
 ```
 
-| Option              | Description                                                        |
-| ------------------- | ------------------------------------------------------------------ |
-| `--top=<n>`         | top direct dependencies to list per target (default 15, 0 to hide) |
-| `--list`            | print every package in the closure                                 |
-| `--json=<path>`     | write the full results as JSON                                     |
-| `--baseline=<path>` | compare the totals with a baseline file                            |
-| `--update-baseline` | write the totals of the measured targets to `baseline.json`        |
+| Option              | Description                                                           |
+| ------------------- | --------------------------------------------------------------------- |
+| `--top=<n>`         | top direct dependencies to list per target (default 15, 0 to hide)    |
+| `--list`            | print every package in the closure                                    |
+| `--json=<path>`     | write the full results as JSON                                        |
+| `--baseline=<path>` | compare the totals with `baseline.json` or a previous `--json` output |
+| `--update-baseline` | write the totals of the measured targets to `baseline.json`           |
 
 For each direct dependency, the output shows its closure (everything it brings in) and its exclusive part (what would no longer be installed if that dependency were dropped). An exclusive count of 0 with a large closure means other dependencies bring in the same packages, so the dependency only stops costing anything once those are fixed too.
 
