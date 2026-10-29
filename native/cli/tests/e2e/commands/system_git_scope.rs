@@ -50,6 +50,46 @@ fn version_history_rebuild_accepts_an_empty_scope_group_name() {
     assert!(result.stdout.contains("added 2 hashes"));
 }
 
+#[cfg(target_os = "linux")]
+#[test]
+fn version_history_rebuild_accepts_the_current_named_scope_group() {
+    use sha1::{Digest, Sha1};
+    use std::os::unix::fs::MetadataExt;
+    let helper = super::gc::fixture();
+    let scope = &helper.scopes.remote_path;
+    // SAFETY: the process identity query takes no arguments and has no side effects.
+    let gid = unsafe { libc::getegid() };
+    let groups = fs::read_to_string("/etc/group").unwrap();
+    let name = groups
+        .lines()
+        .find_map(|line| {
+            let mut fields = line.split(':');
+            let name = fields.next()?;
+            fields.next()?;
+            (fields.next()?.parse::<u32>().ok()? == gid).then_some(name)
+        })
+        .unwrap();
+    let path = scope.join("scope.json");
+    let mut config: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    config["groupName"] = json!(name);
+    fs::write(path, serde_json::to_vec_pretty(&config).unwrap()).unwrap();
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let history = scope
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if history.exists() {
+        fs::remove_file(&history).unwrap();
+    }
+    let result = super::gc::compare(&helper, "version-history build comp1", false);
+    assert!(result.stdout.contains("added 2 hashes"));
+    let metadata = fs::metadata(history).unwrap();
+    assert_eq!(metadata.gid(), gid);
+    // SAFETY: the process identity query takes no arguments and has no side effects.
+    assert_eq!(metadata.uid(), unsafe { libc::geteuid() });
+}
+
 #[cfg(unix)]
 #[test]
 fn version_history_deletes_existing_history_to_trash_before_rebuilding() {

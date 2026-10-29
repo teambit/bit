@@ -1,7 +1,7 @@
 //! Plan the main and lane history publications.
 use super::{
     Path, PathBuf, Plan, ScopeRoot, Value, ancestry, encode, json, lanes, merge, metadata_proofs,
-    object_path, read, resolve_component_entry, safe_parent, sha1_hex, stored,
+    object_path, read, resolve_component_entry, sha1_hex, stored,
 };
 
 pub(super) fn prepare(
@@ -41,9 +41,7 @@ fn finish(
 ) -> Option<Plan> {
     let hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
     let path = object_path(&root.path, &hash)?;
-    if !safe_parent(&root.path, &path) {
-        return None;
-    }
+    super::group::qualify_parents(&root.path, &path, &proofs)?;
     let (existing, mode) = stored(&root.path, &hash, &path, &mut proofs)?;
     if delete_existing {
         existing.as_ref()?;

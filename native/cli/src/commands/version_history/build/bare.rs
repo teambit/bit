@@ -1,5 +1,6 @@
 //! Reconstruct qualified local-scope history and publish it atomically.
 mod existing;
+mod group;
 mod lanes;
 mod planning;
 #[cfg(test)]
@@ -122,9 +123,7 @@ fn metadata_proofs(root: &Path, scope: &str, all_lanes: bool) -> Option<Vec<(Pat
     let config_path = root.join("scope.json");
     let config_bytes = fs::read(&config_path).ok()?;
     let config: Value = serde_json::from_slice(&config_bytes).ok()?;
-    if config["name"].as_str() != Some(scope)
-        || !(config["groupName"].is_null() || config["groupName"] == "")
-    {
+    if config["name"].as_str() != Some(scope) {
         return None;
     }
     let index_path = root.join("index.json");
@@ -134,7 +133,11 @@ fn metadata_proofs(root: &Path, scope: &str, all_lanes: bool) -> Option<Vec<(Pat
     {
         return None;
     }
-    Some(vec![(config_path, config_bytes), (index_path, index_bytes)])
+    let mut proofs = vec![(config_path, config_bytes), (index_path, index_bytes)];
+    if !config["groupName"].is_null() && config["groupName"] != "" {
+        proofs.push(group::resolve(config["groupName"].as_str()?)?);
+    }
+    Some(proofs)
 }
 
 fn absent(path: &Path) -> bool {
