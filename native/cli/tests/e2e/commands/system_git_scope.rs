@@ -76,6 +76,14 @@ fn version_history_linear_text_matches_node() {
     helper.output_file("comp1/index.js", "module.exports = () => 'second';\n");
     super::move_paths::support::tag(&helper);
     super::move_paths::support::setup(&helper, "version-history build comp1");
+    let result = super::move_paths::support::compare(&helper, "version-history build comp1");
+    assert!(result.stdout.contains("no changes"));
+    assert!(!result.trace.contains("starting the JavaScript host"));
+    super::move_paths::support::compare_ci(&helper, "version-history build comp1", true);
+    super::move_paths::support::compare(
+        &helper,
+        &format!("vh build {}/comp1", helper.scopes.remote),
+    );
     let history = super::move_paths::support::json(&helper, "version-history show comp1 --json");
     assert_eq!(
         history["versions"]

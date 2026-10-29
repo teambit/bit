@@ -1,5 +1,6 @@
 //! Native `bit version-history <sub-command>` (`vh`) (`scopes/scope/version-history/version-history-cmd.ts`).
 
+mod build;
 #[cfg(test)]
 mod tests;
 mod text;
@@ -21,6 +22,7 @@ pub const COMMAND: Command = Command { name: "version-history", aliases: &["vh"]
 enum Subcommand {
     ShowJson(String),
     ShowText(String, bool),
+    Build(String),
     Unrecognized(String),
 }
 
@@ -32,6 +34,7 @@ fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         .collect::<Vec<_>>();
     match filtered.as_slice() {
         ["show", rest @ ..] => parse_show(rest),
+        ["build", id] if !id.starts_with('-') => Some(Subcommand::Build((*id).to_owned())),
         [sub] if !sub.starts_with('-') && !matches!(*sub, "show" | "build" | "graph") => {
             Some(Subcommand::Unrecognized((*sub).to_owned()))
         }
@@ -75,6 +78,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         }
         Subcommand::ShowJson(id) => run_show_json(&root, args, &id),
         Subcommand::ShowText(id, short) => text::run(&root, args, &id, short),
+        Subcommand::Build(id) => build::run(&root, args, &id),
     }
 }
 
