@@ -23,6 +23,14 @@ fn version_history_linear_text_matches_node() {
     assert!(!result.trace.contains("starting the JavaScript host"));
     super::move_paths::support::compare(&helper, "vh show comp1 --short-hash");
     super::move_paths::support::compare_ci(&helper, "version-history show comp1", true);
+    let head = helper.get_head("comp1");
+    helper.output_file(
+        ".bit/refs/remotes/example/dev",
+        &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":head}]).to_string(),
+    );
+    let lane = super::move_paths::support::compare(&helper, "version-history show comp1");
+    assert!(lane.stdout.contains("example/dev, main, 0.0.2"));
+    super::move_paths::support::compare(&helper, "vh show comp1 -s");
 }
 
 #[test]
@@ -39,6 +47,9 @@ fn version_history_text_empty_and_remote_refs_match_node() {
     }
     super::move_paths::support::compare(&helper, "version-history show comp1");
     helper.output_file(".bit/refs/remotes/example/main", "[]");
+    super::move_paths::support::compare(&helper, "version-history show comp1");
+    helper.output_file(".bit/refs/remotes/example/dev", "[]");
+    helper.output_file(".bit/refs/remotes/example/other", "[]");
     super::add::support::compare_declined(&helper, "version-history show comp1", |text| {
         text.to_owned()
     });
