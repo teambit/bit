@@ -22,7 +22,7 @@ pub const COMMAND: Command = Command { name: "version-history", aliases: &["vh"]
 enum Subcommand {
     ShowJson(String),
     ShowText(String, bool),
-    Build(String),
+    Build(String, Option<String>),
     Unrecognized(String),
 }
 
@@ -34,12 +34,27 @@ fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         .collect::<Vec<_>>();
     match filtered.as_slice() {
         ["show", rest @ ..] => parse_show(rest),
-        ["build", id] if !id.starts_with('-') => Some(Subcommand::Build((*id).to_owned())),
+        ["build", rest @ ..] => parse_build(rest),
         [sub] if !sub.starts_with('-') && !matches!(*sub, "show" | "build" | "graph") => {
             Some(Subcommand::Unrecognized((*sub).to_owned()))
         }
         _ => None,
     }
+}
+
+fn parse_build(rest: &[&str]) -> Option<Subcommand> {
+    let mut id = None;
+    let mut from = None;
+    let mut arguments = rest.iter().copied();
+    while let Some(argument) = arguments.next() {
+        match argument {
+            "--from-all-lanes" => {}
+            "--from-snap" if from.is_none() => from = Some(arguments.next()?.to_owned()),
+            value if !value.starts_with('-') && id.is_none() => id = Some(value.to_owned()),
+            _ => return None,
+        }
+    }
+    Some(Subcommand::Build(id?, from))
 }
 
 fn parse_show(rest: &[&str]) -> Option<Subcommand> {
@@ -78,7 +93,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         }
         Subcommand::ShowJson(id) => run_show_json(&root, args, &id),
         Subcommand::ShowText(id, short) => text::run(&root, args, &id, short),
-        Subcommand::Build(id) => build::run(&root, args, &id),
+        Subcommand::Build(id, from) => build::run(&root, args, &id, from.as_deref()),
     }
 }
 

@@ -92,6 +92,12 @@ fn version_history_linear_text_matches_node() {
             .len(),
         2,
     );
+    let first = history["versions"][0]["hash"].as_str().unwrap();
+    super::move_paths::support::compare(
+        &helper,
+        &format!("version-history build comp1 --from-snap {first}"),
+    );
+    super::move_paths::support::compare(&helper, "version-history build comp1 --from-all-lanes");
     let result = super::move_paths::support::compare(&helper, "version-history show comp1");
     assert!(!result.trace.contains("starting the JavaScript host"));
     super::move_paths::support::compare(&helper, "vh show comp1 --short-hash");
@@ -104,7 +110,6 @@ fn version_history_linear_text_matches_node() {
     let lane = super::move_paths::support::compare(&helper, "version-history show comp1");
     assert!(lane.stdout.contains("example/dev, main, 0.0.2"));
     super::move_paths::support::compare(&helper, "vh show comp1 -s");
-    let first = history["versions"][0]["hash"].as_str().unwrap();
     helper.output_file(
         ".bit/refs/remotes/example/other",
         &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":first}]).to_string(),

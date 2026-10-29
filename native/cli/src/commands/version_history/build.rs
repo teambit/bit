@@ -12,8 +12,13 @@ use std::{
 #[cfg(test)]
 mod tests;
 
-pub(super) fn run(root: &ScopeRoot, args: &[OsString], id: &str) -> io::Result<Outcome> {
-    let Some(identity) = prepare(root, id) else {
+pub(super) fn run(
+    root: &ScopeRoot,
+    args: &[OsString],
+    id: &str,
+    from: Option<&str>,
+) -> io::Result<Outcome> {
+    let Some(identity) = prepare(root, id, from) else {
         return Ok(Outcome::Declined(
             "version-history rebuild requires a complete local graph".into(),
         ));
@@ -24,7 +29,7 @@ pub(super) fn run(root: &ScopeRoot, args: &[OsString], id: &str) -> io::Result<O
     emit_text(root, args, "build", true, report)
 }
 
-fn prepare(root: &ScopeRoot, id: &str) -> Option<String> {
+fn prepare(root: &ScopeRoot, id: &str, from: Option<&str>) -> Option<String> {
     if id.is_empty()
         || !id
             .bytes()
@@ -42,7 +47,10 @@ fn prepare(root: &ScopeRoot, id: &str) -> Option<String> {
     if kind != "Component" {
         return None;
     }
-    let head = model["head"].as_str()?;
+    let head = from.or_else(|| model["head"].as_str())?;
+    if head.len() != 40 || !head.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return None;
+    }
     let hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
     let (kind, history) = bit_object_import::read_scope_object(&scope_dir, &hash).ok()??;
     if kind != "VersionHistory" || !complete(&history, head)? {
