@@ -5,6 +5,109 @@ use serde_json::json;
 use std::fs;
 
 #[test]
+fn version_history_rebuilds_missing_bare_history_without_runtime() {
+    use sha1::{Digest, Sha1};
+    let helper = super::gc::fixture();
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let directory = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2]);
+    if fs::read_dir(&directory).is_ok_and(|mut entries| entries.next().is_none()) {
+        fs::remove_dir(directory).unwrap();
+    }
+    let result = super::gc::compare(&helper, "version-history build comp1", false);
+    assert!(result.stdout.contains("added 2 hashes"));
+}
+
+#[test]
+fn version_history_bare_missing_version_delegates_before_writes() {
+    use sha1::{Digest, Sha1};
+    let helper = super::gc::fixture();
+    let scope = &helper.scopes.remote_path;
+    let history =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let history_path = scope
+        .join("objects")
+        .join(&history[..2])
+        .join(&history[2..]);
+    if history_path.exists() {
+        fs::remove_file(&history_path).unwrap();
+    }
+    let model_hash = format!("{:x}", Sha1::digest(format!("{}/comp1", helper.scopes.remote)));
+    let (_, model) = bit_object_import::read_scope_object(scope, &model_hash).unwrap().unwrap();
+    let head = model["head"].as_str().unwrap();
+    fs::remove_file(
+        scope
+            .join("objects")
+            .join(&head[..2])
+            .join(&head[2..]),
+    )
+    .unwrap();
+    let before = super::move_paths::support::tree(scope);
+    let result = Helper::cmd_in(scope, "version-history build comp1");
+    assert!(!result.native && result.trace.contains("delegating:"), "{result:?}");
+    assert_eq!(super::move_paths::support::tree(scope), before);
+    assert!(!history_path.exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn version_history_bare_write_failure_does_not_replay() {
+    use sha1::{Digest, Sha1};
+    use std::{ffi::OsStr, os::unix::fs::PermissionsExt};
+    let helper = super::gc::fixture();
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(&path).unwrap();
+    }
+    let parent = path.parent().unwrap();
+    fs::create_dir_all(parent).unwrap();
+    let baseline = helper.clone_remote_scope();
+    fs::set_permissions(parent, fs::Permissions::from_mode(0o555)).unwrap();
+    let expected = Helper::cmd_in_with(
+        &helper.scopes.remote_path,
+        "version-history build comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let expected_tree = super::move_paths::support::tree(&helper.scopes.remote_path);
+    fs::set_permissions(parent, fs::Permissions::from_mode(0o755)).unwrap();
+    helper.restore_remote_scope(&baseline);
+    fs::set_permissions(parent, fs::Permissions::from_mode(0o555)).unwrap();
+    let unavailable = helper.scopes.e2e_dir.join("unavailable-runtime");
+    let actual = Helper::cmd_in_with(
+        &helper.scopes.remote_path,
+        "version-history build comp1",
+        &[("BIT_NODE_BINARY", unavailable.as_os_str()), ("BIT_NODE_CLI", unavailable.as_os_str())],
+    );
+    let actual_tree = super::move_paths::support::tree(&helper.scopes.remote_path);
+    fs::set_permissions(parent, fs::Permissions::from_mode(0o755)).unwrap();
+    assert!(actual.native && !actual.status.success(), "{actual:?}");
+    assert_eq!(actual.status.code(), expected.status.code());
+    assert_eq!(actual.stdout, expected.stdout);
+    let suffix = regex::Regex::new(r"\.[0-9]+\.[0-9]+'").unwrap();
+    assert_eq!(suffix.find_iter(&expected.stderr).count(), 1, "{}", expected.stderr);
+    assert_eq!(suffix.find_iter(&actual.stderr).count(), 1, "{}", actual.stderr);
+    assert_eq!(
+        suffix.replace(&actual.stderr, ".<pid>.<count>'"),
+        suffix.replace(&expected.stderr, ".<pid>.<count>'"),
+    );
+    assert_eq!(actual_tree, expected_tree);
+}
+
+#[test]
 fn version_history_rebuild_complete_pattern_matches_node() {
     let helper = super::move_paths::support::workspace(2, true);
     super::move_paths::support::setup(&helper, "version-history build '**'");

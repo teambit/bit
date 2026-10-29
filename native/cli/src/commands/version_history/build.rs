@@ -9,6 +9,7 @@ use std::{
     fs, io,
 };
 
+mod bare;
 #[cfg(test)]
 mod tests;
 
@@ -18,6 +19,15 @@ pub(super) fn run(
     id: &str,
     from: Option<&str>,
 ) -> io::Result<Outcome> {
+    if root.bare
+        && from.is_none()
+        && !args
+            .iter()
+            .any(|arg| arg == "--from-all-lanes")
+        && let Some(plan) = bare::prepare(root, id)
+    {
+        return plan.run(root, args);
+    }
     let Some(identities) = select(root, id, from) else {
         return Ok(Outcome::Declined(
             "version-history rebuild requires a complete local graph".into(),

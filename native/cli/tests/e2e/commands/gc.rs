@@ -15,7 +15,7 @@ use flate2::{Compression, write::ZlibEncoder};
 use sha1::{Digest, Sha1};
 use std::{ffi::OsStr, fs, io::Write, path::Path};
 
-fn fixture() -> Helper {
+pub(super) fn fixture() -> Helper {
     let helper = support::workspace(1, true);
     support::setup(&helper, "export");
     helper.output_file("comp1/index.js", "module.exports=()=> 'second';\n");
@@ -23,7 +23,7 @@ fn fixture() -> Helper {
     support::setup(&helper, "export");
     helper
 }
-fn compare(helper: &Helper, command: &str, color: bool) -> Run {
+pub(super) fn compare(helper: &Helper, command: &str, color: bool) -> Run {
     compare_with_cleanup(helper, command, color, |_| {}, |_| {})
 }
 fn compare_with_cleanup(
