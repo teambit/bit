@@ -31,6 +31,13 @@ fn version_history_rebuilds_missing_bare_history_without_runtime() {
 #[cfg(unix)]
 #[test]
 fn version_history_deletes_existing_history_to_trash_before_rebuilding() {
+    for existing in 0..3 {
+        delete_history_case(existing);
+    }
+}
+
+#[cfg(unix)]
+fn delete_history_case(existing: usize) {
     use sha1::{Digest, Sha1};
     let helper = super::gc::fixture();
     let scope = &helper.scopes.remote_path;
@@ -39,7 +46,12 @@ fn version_history_deletes_existing_history_to_trash_before_rebuilding() {
     let history =
         json!({"name":"comp1","scope":helper.scopes.remote,"versions":[],"graphCompleteRefs":[]});
     write_scope_fixture_at(scope, "VersionHistory", &hash, &history);
-    fs::create_dir_all(scope.join("trash").join(&hash[..2])).unwrap();
+    if existing > 0 {
+        fs::create_dir_all(scope.join("trash")).unwrap();
+    }
+    if existing > 1 {
+        fs::create_dir_all(scope.join("trash").join(&hash[..2])).unwrap();
+    }
     let result =
         super::gc::compare(&helper, "version-history build comp1 --delete-existing", false);
     assert!(result.stdout.contains("added 2 hashes"));

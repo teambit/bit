@@ -80,6 +80,25 @@ fn failed_rebuild_after_trash_move_keeps_the_original_in_trash() {
     assert_eq!(fs::read(temporary).unwrap(), b"collision");
 }
 
+#[cfg(unix)]
+#[test]
+fn trash_move_declines_symlinked_directories_and_existing_targets() {
+    use std::os::unix::fs::symlink;
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path();
+    let source = root.join("objects/aa/object");
+    fs::create_dir_all(source.parent().unwrap()).unwrap();
+    fs::write(&source, b"source").unwrap();
+    let outside = root.join("outside");
+    fs::create_dir(&outside).unwrap();
+    symlink(&outside, root.join("trash")).unwrap();
+    assert!(super::trash::target(root, &source).is_none());
+    fs::remove_file(root.join("trash")).unwrap();
+    fs::create_dir_all(root.join("trash/aa")).unwrap();
+    fs::write(root.join("trash/aa/object"), b"existing").unwrap();
+    assert!(super::trash::target(root, &source).is_none());
+}
+
 #[test]
 fn cyclic_ancestry_declines_before_publishing() {
     use flate2::{Compression, write::ZlibEncoder};
