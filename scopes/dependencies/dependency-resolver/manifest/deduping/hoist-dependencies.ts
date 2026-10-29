@@ -261,7 +261,7 @@ function handleRangesAndVersions(
   const allVersions = groups.versions.map((item) => item.range);
   const mostCommonVersion = findMostCommonVersion(allVersions);
   // Include versions here since we might have a specific version which match the best version as well
-  const rangesVersions = indexItems.map((item) => item.range);
+  const rangesVersions = indexItems.map((item) => item.range).filter((range) => Boolean(semver.validRange(range)));
   const bestRange = findBestRange(rangesVersions);
   const lifeCycleType = getLifecycleType(indexItems);
   const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[lifeCycleType];
