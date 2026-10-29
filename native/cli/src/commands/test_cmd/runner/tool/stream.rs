@@ -145,6 +145,7 @@ fn accept(
     loop {
         match listener.accept() {
             Ok((stream, _)) => {
+                stream.set_nonblocking(false)?;
                 stream.set_read_timeout(Some(Duration::from_secs(5)))?;
                 let mut reader = BufReader::new(stream);
                 let mut line = String::new();
@@ -198,3 +199,6 @@ fn write_output(stderr: bool, bytes: &[u8]) -> io::Result<()> {
 fn join(handle: JoinHandle<io::Result<()>>) -> io::Result<()> {
     handle.join().map_err(|_| invalid("tester output thread"))?
 }
+
+#[cfg(test)]
+mod tests;
