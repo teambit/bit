@@ -3,6 +3,7 @@
 use crate::helper::{Helper, config, parse};
 use serde_json::json;
 use std::fs;
+mod upstream_history;
 
 #[test]
 fn version_history_rebuilds_missing_bare_history_without_runtime() {
@@ -29,6 +30,12 @@ fn version_history_rebuilds_missing_bare_history_without_runtime() {
 
 #[test]
 fn version_history_rebuilds_branched_bare_history_in_parent_order() {
+    for shared in [false, true] {
+        branched_history_case(shared);
+    }
+}
+
+fn branched_history_case(shared: bool) {
     use sha1::{Digest, Sha1};
     let helper = super::gc::fixture();
     let scope = &helper.scopes.remote_path;
@@ -42,7 +49,7 @@ fn version_history_rebuilds_branched_bare_history_in_parent_order() {
         .to_owned();
     let (_, mut other) = bit_object_import::read_scope_object(scope, &parent).unwrap().unwrap();
     let branch = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
-    other["parents"] = json!([]);
+    other["parents"] = if shared { json!([parent]) } else { json!([]) };
     write_scope_fixture_at(scope, "Version", branch, &other);
     version["parents"] = json!([parent, branch]);
     write_scope_fixture_at(scope, "Version", head, &version);
@@ -55,11 +62,19 @@ fn version_history_rebuilds_branched_bare_history_in_parent_order() {
     if path.exists() {
         fs::remove_file(path).unwrap();
     }
-    let result = super::gc::compare(&helper, "version-history build comp1", false);
+    let result = if shared {
+        upstream_history::compare_deduplicated(&helper, 3)
+    } else {
+        super::gc::compare(&helper, "version-history build comp1", false)
+    };
     assert!(result.stdout.contains("added 3 hashes"));
     let partial = json!({"name":"comp1","scope":helper.scopes.remote,"versions":[{"hash":head,"parents":[parent, branch]}],"graphCompleteRefs":[]});
     write_scope_fixture_at(scope, "VersionHistory", &history, &partial);
-    let result = super::gc::compare(&helper, "version-history build comp1", false);
+    let result = if shared {
+        upstream_history::compare_deduplicated(&helper, 2)
+    } else {
+        super::gc::compare(&helper, "version-history build comp1", false)
+    };
     assert!(result.stdout.contains("added 2 hashes"));
 }
 

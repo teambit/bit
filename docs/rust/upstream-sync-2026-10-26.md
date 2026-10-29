@@ -891,3 +891,12 @@ Rebuilding the index after a model change observes removals and orphaned tags;
 constructing it leaves the serialized model unchanged.
 
 Upstream `0d4c18398` updates release metadata to 2.2.168 without a CLI behavior change.
+
+The history population optimization in upstream `95d4a730f` also changes the
+rebuild report when ancestry branches share an ancestor: repeated visits count
+once. Rust now follows that behavior and rejects cycles before publication.
+The shared-ancestor rebuild was compared against an isolated official Bit
+2.2.168 installation with exact output and scope bytes. The pinned 2.2.146
+reference instead reports one additional visit in this fixture; the regression
+checks that exact version-specific count while comparing all other output and
+scope bytes exactly. Both absent and partial history objects are covered.

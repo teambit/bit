@@ -167,24 +167,53 @@ fn safe_parent(root: &Path, path: &Path) -> bool {
 }
 
 fn ancestry(root: &Path, head: &str, proofs: &mut Vec<(PathBuf, Vec<u8>)>) -> Option<Vec<Value>> {
-    let mut pending = vec![head.to_owned()];
+    let mut pending = vec![(head.to_owned(), false)];
     let mut seen = HashSet::new();
+    let mut active = HashSet::new();
     let mut rows = Vec::new();
-    while let Some(current) = pending.pop() {
-        if !seen.insert(current.clone()) || seen.len() > 128 {
+    while let Some((current, leaving)) = pending.pop() {
+        if leaving {
+            active.remove(&current);
+            seen.insert(current);
+            continue;
+        }
+        if active.contains(&current) {
             return None;
         }
-        let version = read(root, &current, "Version", proofs)?;
-        let parents = version["parents"].as_array()?;
-        if parents.len() > 8 || !version["unrelated"].is_null() || !version["squashed"].is_null() {
+        if seen.contains(&current) {
+            continue;
+        }
+        if seen.len() + active.len() >= 128 {
             return None;
         }
+        active.insert(current.clone());
+        let parents = version_parents(root, &current, proofs)?;
         rows.push(json!({"hash":current,"parents":parents}));
-        for parent in parents.iter().rev() {
-            pending.push(parent.as_str()?.to_owned());
-        }
+        pending.push((current, true));
+        pending.extend(
+            parents
+                .into_iter()
+                .rev()
+                .map(|parent| (parent, false)),
+        );
     }
     Some(rows)
+}
+
+fn version_parents(
+    root: &Path,
+    hash: &str,
+    proofs: &mut Vec<(PathBuf, Vec<u8>)>,
+) -> Option<Vec<String>> {
+    let version = read(root, hash, "Version", proofs)?;
+    let parents = version["parents"].as_array()?;
+    if parents.len() > 8 || !version["unrelated"].is_null() || !version["squashed"].is_null() {
+        return None;
+    }
+    parents
+        .iter()
+        .map(|parent| Some(parent.as_str()?.to_owned()))
+        .collect()
 }
 
 fn object_path(root: &Path, hash: &str) -> Option<PathBuf> {
