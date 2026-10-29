@@ -44,9 +44,17 @@ export class AppsBuildTask implements BuildTask {
   aspectId = ApplicationAspect.id;
   readonly location = 'end';
   constructor(
-    private application: ApplicationMain,
+    protected application: ApplicationMain,
     private opt: Options = { deploy: true }
   ) {}
+
+  /**
+   * decides whether this task should build a given app. the default task runs on every app except
+   * platforms; `PlatformAppsBuildTask` overrides this to only run on platforms.
+   */
+  protected shouldRunForApp(app: Application): boolean {
+    return app.platform !== true;
+  }
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const originalSeedersIds = context.capsuleNetwork.originalSeedersCapsules.map((c) => c.component.id.toString());
@@ -86,6 +94,7 @@ export class AppsBuildTask implements BuildTask {
     context: BuildContext
   ): Promise<OneAppResult | undefined> {
     if (!app.build) return undefined;
+    if (!this.shouldRunForApp(app)) return undefined;
     const artifactsDir = this.getArtifactDirectory();
     const capsuleRootDir = context.capsuleNetwork.capsulesRootDir;
     const appContext = await this.application.createAppBuildContext(
