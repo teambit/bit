@@ -249,7 +249,6 @@ function checkGraphvizInstalled(graphVizPath?: string) {
     shell: true,
   };
   if (graphVizPath) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     options.cwd = graphVizPath;
   }
 

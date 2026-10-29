@@ -167,7 +167,6 @@ export default class Scope {
     return id.hasScope() && !this.notExportedIds.hasWithoutVersion(id);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get groupName(): string | null | undefined {
     if (!this.scopeJson.groupName) return null;
     return this.scopeJson.groupName;
@@ -493,7 +492,6 @@ once done, to continue working, please run "bit cc"`
       const version = componentObject.id.hasVersion()
         ? componentObject.id.version
         : component.getHeadRegardlessOfLaneAsTagOrHash(true);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return component.toComponentVersion(version);
     });
     return removeNils(components);
@@ -531,9 +529,7 @@ once done, to continue working, please run "bit cc"`
   async getConsumerComponent(id: ComponentID): Promise<Component> {
     const modelComponent: ModelComponent = await this.getModelComponent(id);
     // $FlowFixMe version must be set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentVersion = modelComponent.toComponentVersion(id.version);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return componentVersion.toConsumer(this.objects);
   }
 
@@ -597,8 +593,7 @@ once done, to continue working, please run "bit cc"`
     // Remove the version before hashing since hashing with the version number will result a wrong hash
     const idWithoutVersion = ComponentID.getStringWithoutVersion(id);
     const ref = Ref.from(BitObject.makeHash(idWithoutVersion));
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.objects.load(ref);
+    return this.objects.load(ref) as Promise<ModelComponent | Symlink>;
   }
 
   async getParsedId(id: BitIdStr): Promise<ComponentID> {

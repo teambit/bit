@@ -1,4 +1,4 @@
-import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
+import { forEach, isEmpty, pickBy, mapValues, isEqual, clone } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
@@ -85,15 +85,33 @@ export type ComponentProps = {
   name: string;
   versions?: Versions;
   orphanedVersions?: Versions;
-  lang: string;
-  deprecated: boolean;
-  bindingPrefix: string;
+  lang?: string;
+  deprecated?: boolean;
+  bindingPrefix?: string;
   state?: State; // get deleted after export
   scopesList?: ScopeListItem[];
   head?: Ref;
   schema?: string | undefined;
   detachedHeads?: DetachedHeads;
 };
+
+/**
+ * the tag of each hash. a later tag of the same hash overrides an earlier one, so pass the maps by ascending
+ * precedence. within a map the newest tag wins, as tags keep insertion order.
+ */
+function indexTagsByHash(...versionsMaps: Readonly<Versions>[]): Map<string, string> {
+  const tagsByHash = new Map<string, string>();
+  for (const versions of versionsMaps) {
+    for (const tag in versions) tagsByHash.set(versions[tag].toString(), tag);
+  }
+  return tagsByHash;
+}
+
+/**
+ * the index of `getTagOfRefIfExists` per component, built on demand. kept off the component itself, so it's not
+ * serialized with it (e.g. by `bit cat-scope --json`).
+ */
+const tagsByHashIndex = new WeakMap<Component, Map<string, string>>();
 
 export const VERSION_ZERO = '0.0.0';
 
@@ -105,8 +123,11 @@ export const VERSION_ZERO = '0.0.0';
 export default class Component extends BitObject {
   scope: string;
   name: string;
-  versions: Versions;
-  orphanedVersions: Versions;
+  /**
+   * read-only from outside, so every write goes through a method of this class, which drops the tags index.
+   */
+  readonly versions: Readonly<Versions>;
+  readonly orphanedVersions: Readonly<Versions>;
   lang: string;
   /**
    * @deprecated moved to the Version object inside teambit/deprecation aspect
@@ -145,7 +166,6 @@ export default class Component extends BitObject {
   detachedHeads: DetachedHeads;
   private divergeData?: SnapsDistance;
   private _populateVersionHistoryMutex?: Mutex;
-  private lastFoundTag?: string;
   constructor(props: ComponentProps) {
     super();
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
@@ -173,13 +193,22 @@ export default class Component extends BitObject {
     return this._populateVersionHistoryMutex;
   }
 
+  private get writableVersions(): Versions {
+    return this.versions as Versions;
+  }
+
+  private get writableOrphanedVersions(): Versions {
+    return this.orphanedVersions as Versions;
+  }
+
   get versionArray(): Ref[] {
     return Object.values(this.versions);
   }
 
   setVersion(tag: string, ref: Ref) {
-    this.versions[tag] = ref;
-    delete this.orphanedVersions[tag]; // just in case it's there.
+    this.writableVersions[tag] = ref;
+    delete this.writableOrphanedVersions[tag]; // just in case it's there.
+    tagsByHashIndex.delete(this);
   }
 
   setOrphanedVersion(tag: string, ref: Ref) {
@@ -188,7 +217,20 @@ export default class Component extends BitObject {
         `unable to save orphanedVersion "${tag}" for "${this.id()}" because this tag is already part of the versions prop`
       );
     }
-    this.orphanedVersions[tag] = ref;
+    this.writableOrphanedVersions[tag] = ref;
+    tagsByHashIndex.delete(this);
+  }
+
+  clearOrphanedVersions() {
+    Object.keys(this.orphanedVersions).forEach((tag) => delete this.writableOrphanedVersions[tag]);
+    tagsByHashIndex.delete(this);
+  }
+
+  moveVersionToOrphaned(tag: string) {
+    const ref = this.versions[tag];
+    if (!ref) throw new Error(`moveVersionToOrphaned failed finding version ${tag} of ${this.id()}`);
+    delete this.writableVersions[tag];
+    this.setOrphanedVersion(tag, ref);
   }
 
   getRef(version: string): Ref | null {
@@ -546,13 +588,11 @@ export default class Component extends BitObject {
   latestExisting(repository: Repository): string {
     if (isEmpty(this.versions)) return VERSION_ZERO;
     const versions = this.listVersions('ASC');
-    let version = null;
-    let versionStr = null;
+    let version: Version | undefined;
+    let versionStr: string | undefined;
     while (!version && versions && versions.length) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       versionStr = versions.pop();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      version = this.loadVersionSync(versionStr, repository, false);
+      version = this.loadVersionSync(versionStr!, repository, false);
     }
     return versionStr || VERSION_ZERO;
   }
@@ -654,18 +694,14 @@ export default class Component extends BitObject {
   }
 
   getTagOfRefIfExists(ref: Ref): string | undefined {
-    // the same ref (usually the head) is looked up many times per command, and each scan has to list all the tags.
-    // the last hit is re-checked against the current versions, so it can't go stale when versions change. only hits
-    // in `versions` are remembered, so they keep their precedence over orphaned versions.
-    if (this.lastFoundTag && this.versions[this.lastFoundTag]?.isEqual(ref)) return this.lastFoundTag;
-    // search from the newest tag. tags are kept in insertion order and the head is usually the latest one.
-    const findIn = (versions: Versions) => findLastKey(versions, (versionRef) => versionRef.isEqual(ref));
-    const tag = findIn(this.versions);
-    if (tag) {
-      this.lastFoundTag = tag;
-      return tag;
+    // called for every version of a history walk, so it's a lookup in an index rather than a scan of all the tags.
+    // a tag in `versions` takes precedence over an orphaned one.
+    let tagsByHash = tagsByHashIndex.get(this);
+    if (!tagsByHash) {
+      tagsByHash = indexTagsByHash(this.orphanedVersions, this.versions);
+      tagsByHashIndex.set(this, tagsByHash);
     }
-    return findIn(this.orphanedVersions);
+    return tagsByHash.get(ref.toString());
   }
 
   getTag(version: string): string | undefined {
@@ -893,7 +929,19 @@ Error from "semver": ${err.message}`);
       return obj;
     }
 
-    const componentObject = {
+    const componentObject: {
+      name: string;
+      scope: string;
+      versions: Record<string, string>;
+      lang: string;
+      deprecated: boolean;
+      bindingPrefix: string;
+      remotes: ScopeListItem[];
+      schema: string | undefined;
+      detachedHeads: ReturnType<DetachedHeads['toObject']>;
+      local?: boolean;
+      state?: State;
+    } = {
       name: this.name,
       scope: this.scope,
       versions: versions(this.versions),
@@ -904,9 +952,7 @@ Error from "semver": ${err.message}`);
       schema: this.schema,
       detachedHeads: this.detachedHeads.toObject(),
     };
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.local) componentObject.local = this.local;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!isEmpty(this.state)) componentObject.state = this.state;
     // @ts-ignore
     if (!isEmpty(this.orphanedVersions)) componentObject.orphanedVersions = versions(this.orphanedVersions);
@@ -928,8 +974,7 @@ Error from "semver": ${err.message}`);
   loadVersionSync(version: string, repository: Repository, throws = true): Version {
     const versionRef = this.getRef(version);
     if (!versionRef) throw new VersionNotFound(version, this.id());
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return versionRef.loadSync(repository, throws);
+    return versionRef.loadSync(repository, throws) as Version;
   }
 
   async collectVersionsObjects(
@@ -1012,7 +1057,8 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   removeVersion(version: string): Ref {
     const objectRef = this.getRef(version);
     if (!objectRef) throw new Error(`removeVersion failed finding version ${version}`);
-    delete this.versions[version];
+    delete this.writableVersions[version];
+    tagsByHashIndex.delete(this);
     if (this.state.versions && this.state.versions[version]) delete this.state.versions[version];
     return objectRef;
   }
@@ -1300,10 +1346,8 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
 
   markVersionAsLocal(version: string) {
     if (!this.state.versions) this.state = { versions: {} };
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (!this.state.versions[version]) this.state.versions[version] = {};
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.state.versions[version].local = true;
+    if (!this.state.versions![version]) this.state.versions![version] = {};
+    this.state.versions![version].local = true;
   }
 
   /**
@@ -1312,8 +1356,7 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
    */
   getLocalVersions(): string[] {
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return [];
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return Object.keys(this.state.versions).filter((version) => this.state.versions[version].local);
+    return Object.keys(this.state.versions!).filter((version) => this.state.versions![version].local);
   }
 
   hasLocalTag(tag: string): boolean {
@@ -1460,11 +1503,12 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     const headExists = versionHistory.hasHash(head);
     if (exitWhenFind && headExists) return {};
     const getVersionObj = async (ref: Ref) => (await ref.load(repo)) as Version | undefined;
-    const versionsToAdd: Version[] = [];
+    const versionsToAdd = new Map<string, Version>(); // by hash
+    const addVersion = (version: Version) => versionsToAdd.set(version.hash().toString(), version);
     let err: Error | undefined;
     const addParentsRecursively = async (version: Version) => {
       await pMapSeries(version.parents, async (parent) => {
-        const foundParent = versionHistory.hasHash(parent) || versionsToAdd.find((v) => v.hash().isEqual(parent));
+        const foundParent = versionHistory.hasHash(parent) || versionsToAdd.has(parent.toString());
         if (exitWhenFind && foundParent) {
           return;
         }
@@ -1476,7 +1520,7 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
             : new ParentNotFound(this.id(), version.hash().toString(), parent.toString());
           return;
         }
-        versionsToAdd.push(parentVersion);
+        addVersion(parentVersion);
         await addParentsRecursively(parentVersion);
       });
     };
@@ -1485,15 +1529,15 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       return { err: new HeadNotFound(this.id(), head.toString()) };
     }
     return this.populateVersionHistoryMutex.runExclusive(async () => {
-      if (!headExists) versionsToAdd.push(headVer);
+      if (!headExists) addVersion(headVer);
       await addParentsRecursively(headVer);
-      const added = versionsToAdd.map((v) => getVersionParentsFromVersion(v));
+      const added = [...versionsToAdd.values()].map((v) => getVersionParentsFromVersion(v));
       if (err) {
         return { err, added };
       }
-      versionHistory.addFromVersionsObjects(versionsToAdd);
+      versionHistory.addFromVersionsObjects([...versionsToAdd.values()]);
       logger.debug(
-        `populateVersionHistoryIfMissingGracefully, updating ${this.id()} with ${versionsToAdd.length} versions`
+        `populateVersionHistoryIfMissingGracefully, updating ${this.id()} with ${versionsToAdd.size} versions`
       );
       await repo.writeObjectsToTheFS([versionHistory]);
       return { added };
@@ -1523,7 +1567,6 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
   }
 
   static fromBitId(bitId: ComponentID): Component {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Component({
       name: bitId.fullName,
       scope: bitId.scope,

@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import type { ModelComponent } from '@teambit/objects';
+import type { ModelComponent, Version } from '@teambit/objects';
 import { VERSION_ZERO } from '@teambit/objects';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsPendingImport, ComponentOutOfSync } from '@teambit/legacy.consumer';
@@ -64,8 +64,7 @@ export class ComponentStatusLoader {
   }
 
   private async getStatus(id: ComponentID) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const status: ComponentStatusLegacy = {};
+    const status = {} as ComponentStatusLegacy;
     const componentFromModel: ModelComponent | undefined = await this.consumer.scope.getModelComponentIfExist(id);
     let componentFromFileSystem: ConsumerComponent | undefined;
     try {
@@ -120,11 +119,10 @@ export class ComponentStatusLoader {
     // it looks like it's exactly the same code but it's not working from some reason
     const versionRef = componentFromModel.getRef(versionFromFs);
     if (!versionRef) throw new BitError(`version ${versionFromFs} was not found in ${idStr}`);
-    const versionFromModel = await this.consumer.scope.getObject(versionRef.hash);
+    const versionFromModel = (await this.consumer.scope.getObject(versionRef.hash)) as Version | undefined;
     if (!versionFromModel) {
       throw new BitError(`failed loading version ${versionFromFs} of ${idStr} from the scope`);
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     status.modified = await this.consumer.isComponentModified(versionFromModel, componentFromFileSystem);
     return status;
   }

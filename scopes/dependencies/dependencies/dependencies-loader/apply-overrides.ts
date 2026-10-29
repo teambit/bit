@@ -23,6 +23,7 @@ import { ComponentOverrides } from '@teambit/legacy.consumer-config';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
 import type { DebugDependencies, FileType } from './auto-detect-deps';
+import { getValidComponentVersion } from './auto-detect-deps';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -44,7 +45,7 @@ const DepsKeysToAllPackagesDepsKeys = {
 
 export class ApplyOverrides {
   componentId: ComponentID;
-  componentFromModel: Component;
+  componentFromModel: Component | undefined;
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
   /**
@@ -62,6 +63,14 @@ export class ApplyOverrides {
    * these overrides are from env/variants/merge-config. not ones with "force: true".
    */
   public autoDetectOverrides: Record<string, any> | undefined;
+  /**
+   * outside a workspace, when the dependencies are calculated from a new policy (e.g. a lane merge from a bare scope):
+   * the components that a workspace would have in its .bitmap, e.g. the components of the lane.
+   * a workspace takes the version of a component dependency from a forced policy, the .bitmap or the installed package
+   * (see updateDependenciesVersions). a scope has no .bitmap and no node_modules, so when this is set, the versions of
+   * the policy are applied here. otherwise, a component dependency keeps its version.
+   */
+  public workspaceComponentIds?: ComponentIdList;
   constructor(
     private component: Component,
     private depsResolver: DependencyResolverMain,
@@ -69,7 +78,6 @@ export class ApplyOverrides {
     private workspace?: Workspace
   ) {
     this.componentId = component.componentId;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
     this.allDependencies = {
       dependencies: [],
@@ -296,7 +304,7 @@ export class ApplyOverrides {
     dependency: string,
     versionRange: string,
     depField: string
-  ): { componentId?: ComponentID; packageName?: string; versionRange?: string } {
+  ): { componentId?: ComponentID; packageName?: string; versionRange?: string; versionFromConfig?: boolean } {
     if (!this.consumer) {
       // a scope has no node_modules to resolve the package from. if it's a component dependency, use it. otherwise, a
       // forced component dependency (e.g. an env's own peer, which is a runtime dep of the env) is added as a package
@@ -305,11 +313,57 @@ export class ApplyOverrides {
       if (compDep) {
         // same as the workspace (see updateDependenciesVersions), only a peer component dependency keeps its range
         const range = depField === 'peerDependencies' ? versionRange : undefined;
-        return { componentId: compDep.id, packageName: dependency, versionRange: range };
+        const idFromConfig = this.getComponentIdFromForcedVersion(compDep.id, dependency, versionRange);
+        return {
+          componentId: idFromConfig || compDep.id,
+          packageName: dependency,
+          versionRange: range,
+          versionFromConfig: Boolean(idFromConfig),
+        };
       }
     }
     const packageData = this._resolvePackageData(dependency);
     return { componentId: packageData?.componentId, packageName: packageData?.name, versionRange };
+  }
+
+  /**
+   * the scope side of resolveFromOverrides() in updateDependenciesVersions(): a forced policy sets the version of a
+   * component dependency. the version of an env's own dependency on a workspace component follows the workspace.
+   */
+  private getComponentIdFromForcedVersion(
+    id: ComponentID,
+    packageName: string,
+    forcedVersion: string
+  ): ComponentID | undefined {
+    if (!this.workspaceComponentIds) return undefined;
+    const isEnvOwn = this.overridesDependencies.envOwnPkgNames.has(packageName);
+    if (isEnvOwn && this.workspaceComponentIds.hasWithoutVersion(id)) return undefined;
+    const { version } = getValidComponentVersion(forcedVersion);
+    return version ? id.changeVersion(version) : undefined;
+  }
+
+  /**
+   * the scope side of the installed version in updateDependenciesVersions(): a workspace installs a component peer in
+   * the range of the policy, and records the installed version. so when the version is out of the range, it's changed
+   * to the version of the range. (when it's in the range, it's kept, as a workspace that has it installed would do)
+   */
+  private setComponentPeerVersionInRange(dependency: Dependency, range: string) {
+    if (!this.workspaceComponentIds || this.workspaceComponentIds.hasWithoutVersion(dependency.id)) return;
+    const version = dependency.id.version;
+    if (!version || !semver.validRange(range)) return;
+    // a snap is not in any semver range, a workspace would install a version of the range instead
+    if (semver.valid(version) && semver.satisfies(version, range)) return;
+    const { version: versionInRange } = getValidComponentVersion(range);
+    // e.g. "<2.0.0" is coerced to "2.0.0", which is out of the range. there's no version to take for such a range.
+    if (versionInRange && semver.satisfies(versionInRange, range)) {
+      dependency.id = dependency.id.changeVersion(versionInRange);
+    }
+  }
+
+  private setVersionFromConfig(id: ComponentID) {
+    const idStr = id.toStringWithoutVersion();
+    const dependenciesWithVersionFromConfig = (this.component.dependenciesWithVersionFromConfig ||= []);
+    if (!dependenciesWithVersionFromConfig.includes(idStr)) dependenciesWithVersionFromConfig.push(idStr);
   }
 
   private findComponentDepByPackageName(packageName: string): Dependency | undefined {
@@ -342,6 +396,9 @@ export class ApplyOverrides {
           const dependencyExist = existingDependencies[depField].find((d) =>
             d.id.isEqualWithoutVersion(componentData.componentId)
           );
+          // the version-maker keeps it, rather than changing it to a version snapped along (see updateDependenciesVersions)
+          if (componentData.versionFromConfig) this.setVersionFromConfig(componentData.componentId);
+          if (dependencyExist && componentData.versionFromConfig) dependencyExist.id = componentData.componentId;
           if (!dependencyExist) {
             this.overridesDependencies._addManuallyAddedDep(depField, componentData.componentId.toString());
             components[depField] ? components[depField].push(componentData) : (components[depField] = [componentData]);
@@ -733,6 +790,7 @@ export class ApplyOverrides {
     if ((existsInCompsDeps || existsInCompsDevDeps) && field === 'peerDependencies') {
       const comp = (existsInCompsDeps ?? existsInCompsDevDeps) as Dependency;
       comp.versionRange = pkgVal;
+      this.setComponentPeerVersionInRange(comp, pkgVal);
       this.allDependencies.peerDependencies.push(comp);
     } else {
       // a package has no separate version and range, so a "+" placeholder is resolved here.
@@ -744,6 +802,7 @@ export class ApplyOverrides {
 
     if (existsInCompsPeerDeps) {
       existsInCompsPeerDeps.versionRange = pkgVal;
+      this.setComponentPeerVersionInRange(existsInCompsPeerDeps, pkgVal);
     }
   }
 

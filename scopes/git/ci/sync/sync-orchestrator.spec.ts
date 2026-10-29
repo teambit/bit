@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { git } from '../git';
 import { SyncOrchestrator, assertCleanForDryRun } from './sync-orchestrator';
 import { branchToLaneName, resolveSyncConfig, syncableLaneNameForBranch } from './sync-config';
 
@@ -60,8 +61,19 @@ describe('SyncOrchestrator target guards', () => {
       lanes: { getDefaultLaneId: () => ({ name: 'main' }) },
       logger: { console() {}, consoleWarning() {}, debug() {} },
     };
-    const result = await new SyncOrchestrator(deps as any).sync({ branch: 'feature/foo' });
-    expect(result).to.equal('branch feature/foo does not map to a valid lane name; nothing to do');
+    // These queries precede the target guard. Keep this unit test independent of the
+    // checkout's size and Git latency, and restore the shared client even on failure.
+    const originalGit = { status: git.status, remote: git.remote };
+    Object.assign(git, {
+      status: async () => ({ files: [] }),
+      remote: async () => undefined,
+    });
+    try {
+      const result = await new SyncOrchestrator(deps as any).sync({ branch: 'feature/foo' });
+      expect(result).to.equal('branch feature/foo does not map to a valid lane name; nothing to do');
+    } finally {
+      Object.assign(git, originalGit);
+    }
   });
 });
 
