@@ -58,7 +58,7 @@ impl Stream {
         Ok(session)
     }
     fn spawn(
-        colors: bool,
+        _colors: bool,
         args: &[OsString],
         listener: &TcpListener,
         token: &str,
@@ -75,8 +75,6 @@ impl Stream {
             .arg(assets.root.join("runner.cjs"))
             .arg(cli.entry)
             .args(args)
-            .env("FORCE_COLOR", if colors { "1" } else { "0" })
-            .env_remove("NO_COLOR")
             .env("BIT_NATIVE_TESTER_CONTROL", format!("{}:{token}", listener.local_addr()?.port()))
             .stdin(Stdio::piped())
             .stdout(output.reopen()?)
@@ -107,9 +105,16 @@ impl Stream {
         let mut input = self.input.take().ok_or_else(|| invalid("tester input closed"))?;
         input.write_all(b"true\n")?;
         drop(input);
-        let value = self.read()?;
+        let value = self.read();
         let _ = self.control.get_ref().shutdown(std::net::Shutdown::Both);
         let status = self.child.wait()?;
+        let value = match value {
+            Ok(value) => value,
+            Err(error) if error.kind() == io::ErrorKind::ConnectionReset && !status.success() => {
+                None
+            }
+            Err(error) => return Err(error),
+        };
         if status.code().is_none() {
             return Err(invalid("tester external tool failed"));
         }

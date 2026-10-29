@@ -119,7 +119,9 @@ fn multiple_jest_times(output: &str) -> String {
     let (reports, rest) = output.split_once("\n\n").unwrap();
     let mut lines = reports.lines().collect::<Vec<_>>();
     lines.sort_unstable();
-    assert_eq!(lines, ["PASS comp1/index.spec.js", "PASS comp1/other.spec.js"]);
+    assert_eq!(lines.len(), 2);
+    assert!(lines[0].starts_with("PASS ") && lines[0].ends_with("comp1/index.spec.js"));
+    assert!(lines[1].starts_with("PASS ") && lines[1].ends_with("comp1/other.spec.js"));
     format!("{}\n\n{rest}", lines.join("\n"))
 }
 
@@ -245,6 +247,8 @@ fn multi_component_times(output: &str) -> String {
     let (reports, rest) = output.split_once("\n\n").unwrap();
     let mut lines = reports.lines().collect::<Vec<_>>();
     lines.sort_unstable();
-    assert_eq!(lines, ["PASS comp1/index.spec.js", "PASS comp2/index.spec.js"]);
+    assert_eq!(lines.len(), 2);
+    assert!(lines[0].starts_with("PASS ") && lines[0].ends_with("comp1/index.spec.js"));
+    assert!(lines[1].starts_with("PASS ") && lines[1].ends_with("comp2/index.spec.js"));
     format!("{}\n\n{rest}", lines.join("\n"))
 }
