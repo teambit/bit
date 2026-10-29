@@ -1052,6 +1052,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/config-mutator"
     },
+    "contracts": {
+        "name": "contracts",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.envs",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/envs/contracts",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@2.1.3": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
+    },
     "modules/create-element-from-string": {
         "name": "modules/create-element-from-string",
         "scope": "teambit.html",
