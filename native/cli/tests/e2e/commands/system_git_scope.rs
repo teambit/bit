@@ -165,6 +165,41 @@ fn version_history_rebuilds_multiple_lane_heads_in_index_order() {
 }
 
 #[test]
+fn version_history_rebuilds_hidden_lane_head() {
+    use sha1::{Digest, Sha1};
+    let helper = super::gc::fixture();
+    super::move_paths::support::setup(&helper, "lane create feature");
+    helper.output_file("comp1/index.js", "module.exports=()=> 'lane';\n");
+    super::move_paths::support::setup(&helper, "snap comp1 --skip-tests");
+    super::move_paths::support::setup(&helper, "export");
+    let scope = &helper.scopes.remote_path;
+    let index: serde_json::Value =
+        serde_json::from_slice(&fs::read(scope.join("index.json")).unwrap()).unwrap();
+    let lane_hash = index["lanes"][0]["hash"].as_str().unwrap();
+    let lane_path = scope
+        .join("objects")
+        .join(&lane_hash[..2])
+        .join(&lane_hash[2..]);
+    let visible = fs::read(&lane_path).unwrap();
+    let (_, mut lane) = bit_object_import::read_scope_object(scope, lane_hash).unwrap().unwrap();
+    let head = lane["components"][0]["head"].as_str().unwrap();
+    lane["updateDependents"] = json!([format!("{}/comp1@{head}", helper.scopes.remote)]);
+    lane["components"] = json!([]);
+    write_scope_fixture_at(scope, "Lane", lane_hash, &lane);
+    let history =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = scope
+        .join("objects")
+        .join(&history[..2])
+        .join(&history[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = upstream_history::compare_hidden_lane(&helper, &lane_path, &visible);
+    assert!(result.stdout.contains("added 5 hashes"));
+}
+
+#[test]
 fn version_history_rebuilds_bare_history_from_selected_snapshot() {
     use sha1::{Digest, Sha1};
     let helper = super::gc::fixture();

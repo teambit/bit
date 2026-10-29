@@ -900,3 +900,9 @@ The shared-ancestor rebuild was compared against an isolated official Bit
 reference instead reports one additional visit in this fixture; the regression
 checks that exact version-specific count while comparing all other output and
 scope bytes exactly. Both absent and partial history objects are covered.
+
+The upstream hidden-dependent lane history change is covered against the 2.2.168
+release with an actual hidden lane entry. The older 2.2.146 reference predates
+that traversal, so its comparison presents the same head as a visible entry and
+restores the hidden lane bytes before comparing all scope effects. The native
+command runs without the JavaScript runtime in both comparisons.
