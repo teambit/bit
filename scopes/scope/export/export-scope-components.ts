@@ -162,17 +162,22 @@ async function _updateVersionHistoryForVersionsWithOrigin(
 ): Promise<VersionHistory[]> {
   if (!versionObjects.length) return [];
   logger.debug(`_updateVersionHistoryForVersionsWithOrigin, found ${versionObjects.length} versions with origin`);
+  const componentKey = (scopeName?: string, name?: string) => `${scopeName}/${name}`;
+  const componentsByKey = new Map<string, ModelComponent>();
+  mergedComponents.forEach((c) => {
+    const key = componentKey(c.scope, c.name);
+    if (!componentsByKey.has(key)) componentsByKey.set(key, c); // the first one wins, as with `find`
+  });
   const componentVersionMap = new Map<ModelComponent, Version[]>();
   versionObjects.forEach((version) => {
-    const component = mergedComponents.find(
-      (c) => c.scope === version.origin?.id.scope && c.name === version.origin?.id.name
-    );
+    const component = componentsByKey.get(componentKey(version.origin?.id.scope, version.origin?.id.name));
     if (!component) {
       logger.error(`updateVersionHistoryIfNeeded, unable to find component for version ${version.hash().toString()}`);
       return;
     }
-    const versions = componentVersionMap.get(component) || [];
-    componentVersionMap.set(component, [...versions, version]);
+    const versions = componentVersionMap.get(component);
+    if (versions) versions.push(version);
+    else componentVersionMap.set(component, [version]);
   });
 
   const versionsHistory = await pMapPool(

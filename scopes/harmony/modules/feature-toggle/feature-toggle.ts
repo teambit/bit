@@ -99,6 +99,13 @@ export const HARD_DELETE_FEATURE = 'hard-delete';
 export const CAPSULE_AUTO_PRUNE = 'capsule-auto-prune';
 
 /**
+ * allow snapping/tagging components that use "+^"/"+~" versions (e.g. in env.jsonc). gated because older bit
+ * versions (including the one bit.cloud may run) write them as is to the package.json. Enable with
+ * `BIT_FEATURES=plus-range-versions` or `bit config set features=plus-range-versions`.
+ */
+export const PLUS_RANGE_VERSIONS_FEATURE = 'plus-range-versions';
+
+/**
  * Opt-in to skip the package installation in the capsules when tagging from a scope with the artifacts of the last
  * build. In that case only a few tasks run and normally none of them needs the packages. The installation still
  * happens when any of these tasks requires it (see `BuildTask.requiresCapsuleInstallation`). Enable with

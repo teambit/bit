@@ -10,7 +10,13 @@ export {
   VersionedBitmapEntry,
   fileContentsForVersioning,
 } from './bit-map';
-export { MissingBitMapComponent, MissingMainFile, InvalidBitMap } from './exceptions';
+export {
+  MissingBitMapComponent,
+  MissingMainFile,
+  InvalidBitMap,
+  ComponentNotFoundInPath,
+  IgnoredDirectory,
+} from './exceptions';
 export {
   ComponentMapData,
   ComponentMapFile,

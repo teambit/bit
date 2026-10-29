@@ -483,7 +483,7 @@ Flags: --json, --remote
 
 creates a new lane and switches to it
 
-a lane created from main (default-lane) is empty until components are snapped. a lane created from another lane contains all the components of the original lane.
+a lane created from main (default-lane) is empty until components are snapped. if main has snaps that were not exported, they are moved to the new lane, and main goes back to its remote state. a lane created from another lane contains all the components of the original lane.
 Flags: --scope <scope-name>, --alias <name>, --fork-lane-new-scope
 
 ## bit lane remove <lanes...>
@@ -807,7 +807,7 @@ Flags: --lane <lane>, --component <component>, --json
 ## bit ripple errors [job-id]
 
 show build errors for a Ripple CI job (auto-detects current lane, or your last export when on main)
-Flags: --lane <lane>, --log, --json
+Flags: --lane <lane>, --full-log, --json
 
 ## bit ripple retry [job-id]
 

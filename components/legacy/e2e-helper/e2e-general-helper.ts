@@ -61,13 +61,11 @@ export default class GeneralHelper {
     return relativeToWorkspace ? path.join('.bit/objects', objectPath) : objectPath;
   }
   installAndGetTypeScriptCompilerDir(): string {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.npm.installNpmPackage('typescript');
     return path.join(this.scopes.localPath, 'node_modules', '.bin');
   }
   setProjectAsAngular() {
     this.npm.initNpm();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.npm.installNpmPackage('@angular/core');
   }
   nodeStart(mainFilePath: string, cwd?: string) {
@@ -91,8 +89,7 @@ export default class GeneralHelper {
   static alignOutput(str?: string | undefined): string | undefined {
     if (!str) return str;
     // on Mac the directory '/var' is sometimes shown as '/private/var'
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return removeChalkCharacters(str).replace(/\/private\/var/g, '/var');
+    return removeChalkCharacters(str)!.replace(/\/private\/var/g, '/var');
   }
 
   expectToThrow(cmdFunc: Function, error: Error) {

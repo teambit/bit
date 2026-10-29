@@ -70,7 +70,6 @@ use --keep-files to preserve component files while only removing the tracking.`;
     }: {
       localResult: RemovedLocalObjects;
     } = await this.remove.remove({ componentsPattern, force, track, deleteFiles: !keepFiles });
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const localMessage = removeTemplate(localResult, false);
     // if (localMessage !== '')
     //   localMessage +=

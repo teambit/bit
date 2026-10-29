@@ -14,39 +14,20 @@ import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { getLastModifiedPathsTimestampMs } from '@teambit/toolbox.fs.last-modified';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import type { InvalidComponent } from './consumer-component';
-import { Component } from './consumer-component';
-import type { Consumer } from '@teambit/legacy.consumer';
-import { ComponentsPendingImport } from '@teambit/legacy.consumer';
+import type {
+  InvalidComponent,
+  ComponentLoadOptions,
+  DependencyLoaderOpts,
+  LoadManyResult,
+} from '@teambit/legacy.consumer-component';
+import { ConsumerComponent as Component, ComponentsPendingImport } from '@teambit/legacy.consumer-component';
+import type Consumer from './consumer';
 import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { loader } from '@teambit/legacy.loader';
 
-export type ComponentLoadOptions = {
-  loadDocs?: boolean;
-  loadCompositions?: boolean;
-  originatedFromHarmony?: boolean;
-  loadExtensions?: boolean;
-  storeInCache?: boolean;
-  storeDepsInFsCache?: boolean;
-  resolveExtensionsVersions?: boolean;
-};
-export type LoadManyResult = {
-  components: Component[];
-  invalidComponents: InvalidComponent[];
-  removedComponents: Component[];
-};
-
 type OnComponentLoadSubscriber = (component: Component, loadOpts?: ComponentLoadOptions) => Promise<Component>;
 type OnComponentIssuesCalcSubscriber = (component: Component) => Promise<ComponentIssue[]>;
-
-export type DependencyLoaderOpts = {
-  cacheResolvedDependencies: Record<string, any>;
-  cacheProjectAst?: Record<string, any>;
-  useDependenciesCache: boolean;
-  storeInFsCache?: boolean;
-  resolveExtensionsVersions?: boolean;
-};
 
 type LoadDepsFunc = (component: Component, opts: DependencyLoaderOpts) => Promise<any>;
 
@@ -394,7 +375,6 @@ it was probably created on another lane and if so, consider removing this compon
       const remoteComponent: ModelComponent | null | undefined = await this._getRemoteComponent(currentId);
       // @todo-lanes: make it work with lanes. It needs to go through the objects one by one and check
       // whether one of the hashes exist.
-      // @ts-ignore version is set here
       if (remoteComponent && remoteComponent.hasTag(currentId.version)) {
         throw new ComponentsPendingImport([currentId.toString()]);
       }

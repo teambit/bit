@@ -137,6 +137,17 @@ export class DocsMain {
     return null;
   }
 
+  /**
+   * the docs data of a component that a scope re-calculates (e.g. when it snaps a lane merge).
+   * a scope can fail to read a docs file that a workspace reads. e.g. the default doc reader loads the compiled docs
+   * file from the workspace node_modules. then, return undefined to keep the stored doc, instead of an empty one.
+   */
+  async computeDocDataInScope(component: Component) {
+    const doc = await this.computeDoc(component);
+    if (!doc && this.getDocsFiles(component).length) return undefined;
+    return { doc: doc?.toObject() };
+  }
+
   getDoc(component: IComponent) {
     const docData = component.get(DocsAspect.id)?.data?.doc;
     if (!docData) return null;
@@ -231,7 +242,7 @@ export class DocsMain {
       workspace.registerOnComponentLoad(computeDocsOnLoad);
     }
     if (scope) {
-      scope.registerOnCompAspectReCalc(computeDocsOnLoad);
+      scope.registerOnCompAspectReCalc((component) => docs.computeDocDataInScope(component));
     }
 
     graphql.register(() => docsSchema(docs));

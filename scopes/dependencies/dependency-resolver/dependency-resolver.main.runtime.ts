@@ -36,6 +36,7 @@ import {
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { DetectorHook } from './detector-hook';
+import { isPlusVersion } from './plus-version';
 import type { ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 import { Http } from '@teambit/scope.network';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
@@ -658,15 +659,15 @@ export class DependencyResolverMain {
       options.isInWorkspace ? component.id.toStringWithoutVersion() : component.id.toString()
     );
     // In case the component is it's own root we want to load it from it's own root folder
-    if (fs.pathExistsSync(selfRootDir)) {
+    if (fs.pathExistsSync(join(options.workspacePath, selfRootDir))) {
       const innerDir = join(selfRootDir, 'node_modules', pkgName);
-      if (fs.pathExistsSync(innerDir)) return innerDir;
+      if (fs.pathExistsSync(join(options.workspacePath, innerDir))) return innerDir;
       // sometime for the env itself we don't have the env package in the env root dir, because it was hoisted
       // in that case we return the dir from the root node_modules
       return this.getModulePath(component);
     }
     const dirInEnvRoot = join(this.getComponentDirInBitRoots(component, options), 'node_modules', pkgName);
-    if (fs.pathExistsSync(dirInEnvRoot)) return dirInEnvRoot;
+    if (fs.pathExistsSync(join(options.workspacePath, dirInEnvRoot))) return dirInEnvRoot;
     return this.getModulePath(component);
   }
 
@@ -1215,7 +1216,14 @@ export class DependencyResolverMain {
   //   return this.getComponentEnvPolicyFromEnv(env.env);
   // }
 
-  async getComponentEnvPolicyFromExtension(configuredExtensions: ExtensionDataList): Promise<EnvPolicy> {
+  /**
+   * an env that defines its policy in code (no env.jsonc) has to be loaded, otherwise its env definition falls back to
+   * the default env. `envPolicyIfNotLoaded` is returned in this case, rather than the default env's policy.
+   */
+  async getComponentEnvPolicyFromExtension(
+    configuredExtensions: ExtensionDataList,
+    envPolicyIfNotLoaded?: VariantPolicy
+  ): Promise<EnvPolicy | VariantPolicy> {
     const envId = await this.envs.calculateEnvIdFromExtensions(configuredExtensions);
     if (this.envs.isCoreEnv(envId)) {
       const env = await this.envs.calculateEnvFromExtensions(configuredExtensions);
@@ -1225,7 +1233,25 @@ export class DependencyResolverMain {
     const fromFile = await this.getEnvPolicyFromFile(envId);
     if (fromFile) return fromFile;
     const env = await this.envs.calculateEnvFromExtensions(configuredExtensions);
+    const isLoaded = ComponentID.fromString(env.id).isEqualWithoutVersion(ComponentID.fromString(envId));
+    if (!isLoaded && envPolicyIfNotLoaded) return envPolicyIfNotLoaded;
     return this.getComponentEnvPolicyFromEnv(env.env, { envId });
+  }
+
+  /**
+   * when the env of the component is one of the given components and it has an env.jsonc (or env.json), returns the
+   * policy of that file. e.g. an env that is snapped along with the component, whose files (merged in memory) are not
+   * the stored ones that getComponentEnvPolicyFromExtension() reads.
+   */
+  async getEnvPolicyFromComponents(
+    configuredExtensions: ExtensionDataList,
+    components: Component[]
+  ): Promise<EnvPolicy | undefined> {
+    const envId = ComponentID.fromString(await this.envs.calculateEnvIdFromExtensions(configuredExtensions));
+    const envComponent = components.find((component) => component.id.isEqualWithoutVersion(envId));
+    if (!envComponent) return undefined;
+    const legacyEnv: LegacyComponent = envComponent.state._consumer;
+    return this.getEnvPolicyFromFile(envComponent.id.toString(), legacyEnv.files, legacyEnv.dependencies.get());
   }
 
   async getEnvPolicyFromEnvId(
@@ -1325,13 +1351,8 @@ export class DependencyResolverMain {
   ): Promise<EnvPolicy | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
-    if (legacyFiles) {
-      const envJsonc = legacyFiles.find((file) => file.basename === 'env.jsonc');
-      if (envJsonc) {
-        return this.getEnvManifest(undefined, legacyFiles, envExtendsDeps);
-      }
-      return undefined;
-    }
+    // returns undefined when the files have no env.jsonc (or env.json)
+    if (legacyFiles) return this.getEnvManifest(undefined, legacyFiles, envExtendsDeps);
     const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
     return this.getEnvManifest(envComponent);
   }
@@ -1386,11 +1407,12 @@ export class DependencyResolverMain {
     configuredExtensions: ExtensionDataList,
     id: ComponentID,
     legacyFiles?: SourceFile[],
-    envExtendsDeps?: LegacyDependency[]
+    envExtendsDeps?: LegacyDependency[],
+    envPolicy?: EnvPolicy | VariantPolicy // the policy of the component's env, when the caller already calculated it
   ): Promise<VariantPolicy> {
     let policiesFromSlots: VariantPolicy = VariantPolicy.getEmpty();
     let policiesFromConfig: VariantPolicy = VariantPolicy.getEmpty();
-    const policiesFromEnv: VariantPolicy = await this.getComponentEnvPolicyFromExtension(configuredExtensions);
+    const policiesFromEnv = envPolicy ?? (await this.getComponentEnvPolicyFromExtension(configuredExtensions));
     const configuredIds = configuredExtensions.ids;
     const policiesTuples = this.policiesRegistry.toArray();
     configuredIds.forEach((extId) => {
@@ -1555,7 +1577,6 @@ export class DependencyResolverMain {
     });
     data.policy?.forEach((policy) => {
       const policyVersion = policy.value.version;
-      const allowedSpecialChars = ['+', '-'];
       if (policyVersion === '*') {
         // this is only valid for packages, not for components.
         const isComp = data.dependencies.find(
@@ -1567,7 +1588,8 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       }
       const isVersionValid = Boolean(
         this.isValidVersionSpecifier(policyVersion) ||
-          allowedSpecialChars.includes(policyVersion) ||
+          policyVersion === '-' ||
+          isPlusVersion(policyVersion) ||
           allowedPrefixes.some((prefix) => policyVersion.startsWith(prefix))
       );
       if (isVersionValid) return;
@@ -1719,6 +1741,8 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       for (const { field, targetField } of policies) {
         const deps: EnvJsoncPolicyEntry[] = envJsonc.policy?.[field] || [];
         for (const dep of deps) {
+          // a plus version follows the version resolved in the workspace, so there is nothing to update.
+          if (isPlusVersion(dep.version)) continue;
           pkgs.push({
             name: dep.name,
             currentRange: dep.version,
@@ -1991,7 +2015,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       new DevDependenciesFragment(dependencyResolver),
       new PeerDependenciesFragment(dependencyResolver),
     ]);
-    componentAspect.dependencyResolver = dependencyResolver;
+    componentAspect.registerPackageManifestFetcher(dependencyResolver);
     // TODO: solve this generics issue and remove the ts-ignore
     // @ts-ignore
     dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory(componentAspect)]);

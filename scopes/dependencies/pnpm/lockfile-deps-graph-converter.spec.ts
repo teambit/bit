@@ -1,9 +1,12 @@
 import path from 'path';
 import { ComponentID } from '@teambit/component';
 import { DependenciesGraph, type PackagesMap, type DependencyEdge } from '@teambit/objects';
+import { type ProjectManifest } from '@pnpm/types';
 import {
   convertLockfileToGraph,
   convertGraphToLockfile,
+  createLockfileToGraphCache,
+  filterLockfileByImporters,
   init as initLockfileDepsGraphConverter,
 } from './lockfile-deps-graph-converter';
 import { type BitLockfileFile } from './lynx';
@@ -548,6 +551,353 @@ describe('convertLockfileToGraph with directory packages missing from componentI
     const rootEdge = graph.findRootEdge();
     expect(rootEdge?.neighbours.map((n) => n.id)).to.eql(['foo@1.0.0']);
     expect(graph.edges.find(({ id }) => id.includes('@file:'))).to.equal(undefined);
+  });
+});
+
+describe('convertLockfileToGraph when the root importer or snapshot lacks the component', () => {
+  it('should fall back to the component importer when the root importer is missing the component entry', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {
+          // dependencies is undefined (or missing comp1)
+        },
+        'comps/comp1': {
+          dependencies: {
+            foo: { version: '1.0.0', specifier: '^1.0.0' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'foo@1.0.0': {},
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-aaa' } },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')]]),
+    });
+    const rootEdge = graph.findRootEdge();
+    expect(rootEdge?.neighbours).to.eql([
+      {
+        name: 'foo',
+        specifier: '^1.0.0',
+        id: 'foo@1.0.0',
+        lifecycle: 'runtime',
+        optional: false,
+      },
+    ]);
+  });
+
+  it('should fall back to the component importer when the locked snapshot is missing from snapshots', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+        'comps/comp1': {
+          dependencies: {
+            foo: { version: '1.0.0', specifier: '^1.0.0' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'foo@1.0.0': {},
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-aaa' } },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')]]),
+    });
+    const rootEdge = graph.findRootEdge();
+    expect(rootEdge?.neighbours).to.eql([
+      {
+        name: 'foo',
+        specifier: '^1.0.0',
+        id: 'foo@1.0.0',
+        lifecycle: 'runtime',
+        optional: false,
+      },
+    ]);
+  });
+
+  it('should scrub the component itself and circular back-edges when falling back to the component importer', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {},
+        'comps/comp1': {
+          dependencies: {
+            comp2: { version: 'file:comps/comp2', specifier: '*' },
+          },
+        },
+        'comps/comp2': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'comp1@file:comps/comp1': {
+          dependencies: {
+            comp2: 'file:comps/comp2',
+          },
+        },
+        'comp2@file:comps/comp2': {
+          dependencies: {
+            comp1: 'file:comps/comp1',
+          },
+        },
+      },
+      packages: {
+        'comp1@file:comps/comp1': {
+          resolution: { directory: 'comps/comp1', type: 'directory' },
+        },
+        'comp2@file:comps/comp2': {
+          resolution: { directory: 'comps/comp2', type: 'directory' },
+        },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+        ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+      ]),
+    });
+    const referencingComp1 = graph.edges.filter((edge) => edge.neighbours.some((n) => n.id === 'comp1@1.0.0'));
+    expect(referencingComp1).to.eql([]);
+    expect(Array.from(graph.packages.keys())).to.not.include('comp1@1.0.0');
+  });
+
+  it('should scrub circular back-edges even when the component snapshot itself is missing', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+        'comps/comp1': {
+          dependencies: {
+            comp2: { version: 'file:comps/comp2', specifier: '*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'comp2@file:comps/comp2': {
+          dependencies: {
+            comp1: 'file:comps/comp1',
+          },
+        },
+      },
+      packages: {
+        'comp2@file:comps/comp2': {
+          resolution: { directory: 'comps/comp2', type: 'directory' },
+        },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+        ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+      ]),
+    });
+    const referencingComp1 = graph.edges.filter((edge) => edge.neighbours.some((n) => n.id === 'comp1@1.0.0'));
+    expect(referencingComp1).to.eql([]);
+    expect(Array.from(graph.packages.keys())).to.not.include('comp1@1.0.0');
+  });
+
+  it('should not include packages reachable only from the root importer when falling back to the component importer', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        'node_modules/.bit_roots/env': {
+          dependencies: {
+            'root-only-pkg': { version: '2.0.0', specifier: '^2.0.0' },
+          },
+        },
+        'comps/comp1': {
+          dependencies: {
+            foo: { version: '1.0.0', specifier: '^1.0.0' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'foo@1.0.0': {},
+        'root-only-pkg@2.0.0': {},
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-aaa' } },
+        'root-only-pkg@2.0.0': { resolution: { integrity: 'sha512-bbb' } },
+      },
+    };
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')]]),
+    });
+    expect(Array.from(graph.packages.keys())).to.eql(['foo@1.0.0']);
+  });
+
+  it('should not mutate the caller lockfile when converting without a root importer', () => {
+    const lockfile: BitLockfileFile = {
+      bit: { depsRequiringBuild: [] },
+      importers: {
+        'comps/comp1': {
+          dependencies: {
+            comp2: { version: 'file:comps/comp2', specifier: '*' },
+          },
+        },
+        'comps/comp2': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'comp1@file:comps/comp1': {
+          dependencies: {
+            comp2: 'file:comps/comp2',
+          },
+        },
+        'comp2@file:comps/comp2': {
+          dependencies: {
+            comp1: 'file:comps/comp1',
+          },
+        },
+      },
+      packages: {
+        'comp1@file:comps/comp1': {
+          resolution: { directory: 'comps/comp1', type: 'directory' },
+        },
+        'comp2@file:comps/comp2': {
+          resolution: { directory: 'comps/comp2', type: 'directory' },
+        },
+      },
+    };
+    const componentIdByPkgName = new Map([
+      ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+      ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+    ]);
+    convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentIdByPkgName,
+    });
+    const graph2 = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp2',
+      componentRelativeDir: 'comps/comp2',
+      componentIdByPkgName,
+    });
+    expect(Array.from(graph2.packages.keys())).to.eql(['comp1@1.0.0']);
+  });
+});
+
+describe('filterLockfileByImporters', () => {
+  it('should narrow packages and snapshots to the transitive closure of the requested importers without mutating the source lockfile', () => {
+    const lockfile: BitLockfileFile = {
+      lockfileVersion: '9.0',
+      importers: {
+        'comps/comp1': {
+          dependencies: {
+            foo: { version: '1.0.0(bar@1.0.0)', specifier: '^1.0.0' },
+          },
+        },
+        'comps/comp2': {
+          dependencies: {
+            unreached: { version: '1.0.0', specifier: '^1.0.0' },
+          },
+        },
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-foo' } },
+        'bar@1.0.0': { resolution: { integrity: 'sha512-bar' } },
+        'baz@1.0.0': { resolution: { integrity: 'sha512-baz' } },
+        'unreached@1.0.0': { resolution: { integrity: 'sha512-unreached' } },
+      },
+      snapshots: {
+        'foo@1.0.0(bar@1.0.0)': {
+          dependencies: {
+            bar: '1.0.0',
+          },
+          optionalDependencies: {
+            baz: '1.0.0',
+          },
+        },
+        'bar@1.0.0': {},
+        'baz@1.0.0': {},
+        'unreached@1.0.0': {},
+      },
+    };
+    const filtered = filterLockfileByImporters(lockfile, ['comps/comp1']);
+    expect(Object.keys(filtered.packages!).sort()).to.eql(['bar@1.0.0', 'baz@1.0.0', 'foo@1.0.0']);
+    expect(Object.keys(filtered.snapshots!).sort()).to.eql(['bar@1.0.0', 'baz@1.0.0', 'foo@1.0.0(bar@1.0.0)']);
+    expect(Object.keys(filtered.importers!)).to.eql(['comps/comp1']);
+
+    // Mutating the top-level filtered snapshots/packages map must not mutate the original lockfile
+    delete filtered.snapshots!['foo@1.0.0(bar@1.0.0)'];
+    delete filtered.packages!['foo@1.0.0'];
+    expect(lockfile.snapshots!['foo@1.0.0(bar@1.0.0)'].dependencies!.bar).to.equal('1.0.0');
+    expect(lockfile.packages!['foo@1.0.0']).to.not.equal(undefined);
+  });
+
+  it('should retain package metadata for a reached dependency even when its snapshot is absent', () => {
+    const lockfile: BitLockfileFile = {
+      lockfileVersion: '9.0',
+      importers: {
+        'comps/comp1': {
+          dependencies: {
+            foo: { version: '1.0.0', specifier: '^1.0.0' },
+          },
+        },
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-foo' } },
+      },
+      snapshots: {},
+    };
+    const filtered = filterLockfileByImporters(lockfile, ['comps/comp1']);
+    expect(filtered.packages).to.eql({
+      'foo@1.0.0': { resolution: { integrity: 'sha512-foo' } },
+    });
+    const graph = convertLockfileToGraph(filtered, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentIdByPkgName: new Map([['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')]]),
+    });
+    expect(graph.packages.get('foo@1.0.0')).to.eql({
+      resolution: { integrity: 'sha512-foo' },
+    });
   });
 });
 
@@ -1198,6 +1548,148 @@ describe('convertGraphToLockfile on invalid graph', () => {
   });
 });
 
+// A graph is stored by a workspace whose root may provide a different version of a package than
+// the root of the install restoring it (the capsules root pins the env's peers). pnpm resolves
+// peers from the root and dedupes satisfiable ranges to it, so the restored lockfile must not keep
+// the workspace's other version next to the root's one.
+describe('convertGraphToLockfile with a root manifest that provides a package the graph resolved to another version', () => {
+  const rootDir = process.cwd();
+  const compDir = path.resolve('comps/comp1');
+  const helmetSnapshot = '@types/react-helmet@6.1.6';
+  const peerSnapshot = 'react-types-peer@1.0.0(@types/react@18.2.23)';
+  const resolve = (async () => ({ resolution: { integrity: '0000' } })) as any;
+  function createGraph(
+    opts: { peerKeyed?: boolean; overrides?: Record<string, string>; typesReactUnresolved?: boolean } = {}
+  ) {
+    const typesReactDep = opts.peerKeyed ? peerSnapshot : '@types/react@18.2.23';
+    const packages: PackagesMap = new Map([
+      [helmetSnapshot, { resolution: { integrity: 'sha512-helmet' } } as any],
+      [
+        '@types/react@18.2.23',
+        (opts.typesReactUnresolved ? {} : { resolution: { integrity: 'sha512-react18' } }) as any,
+      ],
+      [
+        'react-types-peer@1.0.0',
+        { resolution: { integrity: 'sha512-peer' }, peerDependencies: { '@types/react': '*' } } as any,
+      ],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [{ id: helmetSnapshot, name: '@types/react-helmet', specifier: '6.1.6', lifecycle: 'dev' }],
+      },
+      { id: helmetSnapshot, neighbours: [{ id: typesReactDep }] },
+      { id: peerSnapshot, attr: { pkgId: 'react-types-peer@1.0.0' }, neighbours: [{ id: '@types/react@18.2.23' }] },
+    ];
+    return new DependenciesGraph({ packages, edges, overrides: opts.overrides });
+  }
+  function convert(rootManifest: ProjectManifest, graph = createGraph()) {
+    return convertGraphToLockfile(graph, {
+      manifests: { [rootDir]: rootManifest, [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } } },
+      rootDir,
+      resolve,
+    });
+  }
+
+  it('should drop a reference to another version of a package the root pins, so the install resolves it to the root version', async () => {
+    const lockfile = await convert({ dependencies: { '@types/react': '17.0.87' } });
+    expect(lockfile.snapshots![helmetSnapshot]).to.eql({ dependencies: {} });
+    expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
+    expect(lockfile.snapshots!['@types/react@18.2.23']).to.equal(undefined);
+  });
+
+  it('should drop a peer resolution of the other version', async () => {
+    const lockfile = await convert({ dependencies: { '@types/react': '17.0.87' } }, createGraph({ peerKeyed: true }));
+    expect(lockfile.snapshots![peerSnapshot]).to.eql({ dependencies: {} });
+    expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
+  });
+
+  it('should keep a regular dependency when the root specifier is a range, a tag or a link', async () => {
+    for (const specifier of ['^17.0.0', 'latest', 'link:../types-react']) {
+      const lockfile = await convert({ dependencies: { '@types/react': specifier } });
+      expect(lockfile.snapshots![helmetSnapshot], specifier).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+    }
+  });
+
+  it('should drop a peer resolution whatever the root specifier is, since pnpm resolves peers from the root', async () => {
+    for (const specifier of ['^17.0.0', 'latest', 'link:../types-react', 'npm:@types/react@17.0.87']) {
+      const lockfile = await convert({ dependencies: { '@types/react': specifier } }, createGraph({ peerKeyed: true }));
+      expect(lockfile.snapshots![peerSnapshot], specifier).to.eql({ dependencies: {} });
+      expect(lockfile.packages!['@types/react@18.2.23'], specifier).to.equal(undefined);
+    }
+  });
+
+  it('should keep the reference when it is already the root version, however the root spells it', async () => {
+    for (const specifier of ['18.2.23', 'v18.2.23']) {
+      const lockfile = await convert({ dependencies: { '@types/react': specifier } });
+      expect(lockfile.snapshots![helmetSnapshot], specifier).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+      const peerLockfile = await convert(
+        { dependencies: { '@types/react': specifier } },
+        createGraph({ peerKeyed: true })
+      );
+      expect(peerLockfile.snapshots![peerSnapshot], specifier).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+    }
+  });
+
+  it('should keep the reference when the root provides the package only as an optional dependency', async () => {
+    const lockfile = await convert({ optionalDependencies: { '@types/react': '17.0.87' } });
+    expect(lockfile.snapshots![helmetSnapshot]).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+  });
+
+  it('should keep the reference when an override targets the package', async () => {
+    for (const overrides of [
+      { '@types/react-helmet>@types/react': '^18.0.0' },
+      { '@types/react@*': '18.2.23' },
+    ] as Record<string, string>[]) {
+      const lockfile = await convert({ dependencies: { '@types/react': '17.0.87' } }, createGraph({ overrides }));
+      expect(lockfile.snapshots![helmetSnapshot]).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+    }
+  });
+
+  it('should not send a package the dedupe orphaned to the resolver', async () => {
+    const lockfile = await convertGraphToLockfile(createGraph({ typesReactUnresolved: true }), {
+      manifests: {
+        [rootDir]: { dependencies: { '@types/react': '17.0.87' } },
+        [compDir]: { devDependencies: { '@types/react-helmet': '6.1.6' } },
+      },
+      rootDir,
+      resolve: async (wantedDep: { alias?: string }) => {
+        if (wantedDep.alias === '@types/react') throw new Error('ENOTFOUND');
+        return { resolution: { integrity: '0000' } };
+      },
+    });
+    expect(lockfile.packages!['@types/react@18.2.23']).to.equal(undefined);
+  });
+
+  it('should not take an inherited object property name, e.g. "constructor", for a package the root provides', async () => {
+    const packages: PackagesMap = new Map([
+      ['dependent@1.0.0', { resolution: { integrity: 'sha512-dependent' }, peerDependencies: { react: '*' } } as any],
+      ['constructor@1.0.0', { resolution: { integrity: 'sha512-constructor' } } as any],
+    ]);
+    const edges: DependencyEdge[] = [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [{ id: 'dependent@1.0.0', name: 'dependent', specifier: '1.0.0', lifecycle: 'runtime' }],
+      },
+      { id: 'dependent@1.0.0', neighbours: [{ id: 'constructor@1.0.0' }] },
+    ];
+    const lockfile = await convertGraphToLockfile(new DependenciesGraph({ packages, edges }), {
+      manifests: {
+        [rootDir]: { dependencies: { '@types/react': '17.0.87' } },
+        [compDir]: { dependencies: { dependent: '1.0.0' } },
+      },
+      rootDir,
+      resolve,
+    });
+    expect(lockfile.snapshots!['dependent@1.0.0']).to.eql({ dependencies: { constructor: '1.0.0' } });
+  });
+
+  it('should leave the graph alone when the root has no such dependency', async () => {
+    const lockfile = await convert({ dependencies: { react: '18.3.1' } });
+    expect(lockfile.snapshots![helmetSnapshot]).to.eql({ dependencies: { '@types/react': '18.2.23' } });
+  });
+});
+
 describe('pnpmfileChecksum', () => {
   const componentDir = 'comps/comp1';
 
@@ -1359,5 +1851,125 @@ describe('lockfile settings', () => {
 
     const lockfile = await graphToLockfile(graph);
     expect(lockfile).not.to.have.property('settings');
+  });
+});
+
+describe('createLockfileToGraphCache', () => {
+  const lockfile: BitLockfileFile = {
+    bit: { depsRequiringBuild: [] },
+    lockfileVersion: '9.0',
+    importers: {
+      '.': {},
+      'node_modules/.bit_roots/env': {
+        dependencies: {
+          comp1: { version: 'file:comps/comp1(foo@1.0.0)', specifier: '*' },
+          comp2: { version: 'file:comps/comp2(foo@1.0.0)', specifier: '*' },
+        },
+      },
+      'comps/comp1': {
+        dependencies: {
+          comp2: { version: 'file:comps/comp2(foo@1.0.0)', specifier: '*' },
+          foo: { version: '1.0.0', specifier: '^1.0.0' },
+        },
+      },
+      'comps/comp2': {
+        dependencies: {
+          comp1: { version: 'file:comps/comp1(foo@1.0.0)', specifier: '*' },
+          foo: { version: '1.0.0', specifier: '^1.0.0' },
+        },
+      },
+    },
+    snapshots: {
+      'comp1@file:comps/comp1(foo@1.0.0)': {
+        dependencies: { comp2: 'file:comps/comp2(foo@1.0.0)', foo: '1.0.0' },
+      },
+      'comp2@file:comps/comp2(foo@1.0.0)': {
+        dependencies: { comp1: 'file:comps/comp1(foo@1.0.0)', foo: '1.0.0' },
+      },
+      'foo@1.0.0': { dependencies: { bar: '2.0.0' } },
+      'bar@2.0.0': {},
+    },
+    packages: {
+      'comp1@file:comps/comp1': { resolution: { directory: 'comps/comp1', type: 'directory' } },
+      'comp2@file:comps/comp2': { resolution: { directory: 'comps/comp2', type: 'directory' } },
+      'foo@1.0.0': { resolution: { integrity: 'sha512-foo' } },
+      'bar@2.0.0': { resolution: { integrity: 'sha512-bar' } },
+    },
+  };
+
+  it('should reuse unmodified package and edge entries across components while isolating circular back-edge scrubbing', () => {
+    const componentIdByPkgName = new Map([
+      ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+      ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+    ]);
+    const cache = createLockfileToGraphCache();
+
+    const filtered1 = filterLockfileByImporters(lockfile, ['comps/comp1', 'node_modules/.bit_roots/env']);
+    const graph1 = convertLockfileToGraph(filtered1, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName,
+      cache,
+    });
+
+    const filtered2 = filterLockfileByImporters(lockfile, ['comps/comp2', 'node_modules/.bit_roots/env']);
+    const graph2 = convertLockfileToGraph(filtered2, {
+      pkgName: 'comp2',
+      componentRelativeDir: 'comps/comp2',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName,
+      cache,
+    });
+
+    // Shared non-mutated package and edge objects are reused by reference
+    expect(graph1.packages.get('foo@1.0.0')).to.equal(graph2.packages.get('foo@1.0.0'));
+    const fooEdge1 = graph1.edges.find((e) => e.id === 'foo@1.0.0');
+    const fooEdge2 = graph2.edges.find((e) => e.id === 'foo@1.0.0');
+    expect(fooEdge1).to.not.equal(undefined);
+    expect(fooEdge1).to.equal(fooEdge2);
+
+    // Circular back-edges are scrubbed per component without mutating the original lockfile
+    expect(graph1.packages.has('comp1@1.0.0')).to.equal(false);
+    expect(graph1.packages.has('comp2@1.0.0')).to.equal(true);
+    expect(graph1.edges.some((e) => e.neighbours.some((n) => n.id.startsWith('comp1@')))).to.equal(false);
+
+    expect(graph2.packages.has('comp2@1.0.0')).to.equal(false);
+    expect(graph2.packages.has('comp1@1.0.0')).to.equal(true);
+    expect(graph2.edges.some((e) => e.neighbours.some((n) => n.id.startsWith('comp2@')))).to.equal(false);
+  });
+
+  it('should invalidate cached entries when reused with a different componentIdByPkgName mapping', () => {
+    const cache = createLockfileToGraphCache();
+    const filtered1 = filterLockfileByImporters(lockfile, ['comps/comp1', 'node_modules/.bit_roots/env']);
+    const graph1 = convertLockfileToGraph(filtered1, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')],
+        ['comp2', ComponentID.fromString('my-scope/comp2@1.0.0')],
+      ]),
+      cache,
+    });
+    expect(graph1.packages.has('comp2@1.0.0')).to.equal(true);
+    expect(graph1.edges.some((e) => e.id === 'comp2@1.0.0(foo@1.0.0)')).to.equal(true);
+
+    // Reuse the same cache and lockfile objects with an updated version mapping for comp2
+    const filtered2 = filterLockfileByImporters(lockfile, ['comps/comp1', 'node_modules/.bit_roots/env']);
+    const graph2 = convertLockfileToGraph(filtered2, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('my-scope/comp1@2.0.0')],
+        ['comp2', ComponentID.fromString('my-scope/comp2@2.0.0')],
+      ]),
+      cache,
+    });
+    expect(graph2.packages.has('comp2@2.0.0')).to.equal(true);
+    expect(graph2.packages.has('comp2@1.0.0')).to.equal(false);
+    expect(graph2.edges.some((e) => e.id === 'comp2@2.0.0(foo@1.0.0)')).to.equal(true);
+    expect(graph2.edges.some((e) => e.id === 'comp2@1.0.0(foo@1.0.0)')).to.equal(false);
   });
 });

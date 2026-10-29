@@ -365,7 +365,6 @@ export class DoctorMain {
       userDetails: this._getUserDetails(),
     };
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return env;
   }
 
