@@ -77,3 +77,31 @@ pub(super) fn content(
     let value = json!({"name":name,"scope":scope,"versions":rows,"graphCompleteRefs":[]});
     Some((encode(hash, &value).ok()?, count, value))
 }
+
+pub(super) fn lane_content(
+    root: &Path,
+    hash: &str,
+    head: &str,
+    name: &str,
+    scope: &str,
+    existing: &Value,
+    proofs: &mut Vec<(PathBuf, Vec<u8>)>,
+) -> Option<(Vec<u8>, usize, Value)> {
+    let ancestors = ancestry(root, head, proofs)?;
+    let mut rows = existing["versions"].as_array()?.clone();
+    let count = ancestors.len() - usize::from(rows.contains(&ancestors[0]));
+    for row in ancestors {
+        if let Some(old) = rows
+            .iter()
+            .find(|old| old["hash"] == row["hash"])
+        {
+            if old != &row {
+                return None;
+            }
+        } else {
+            rows.push(row);
+        }
+    }
+    let value = json!({"name":name,"scope":scope,"versions":rows,"graphCompleteRefs":[]});
+    Some((encode(hash, &value).ok()?, count, value))
+}

@@ -265,7 +265,7 @@ impl Plan {
     ) -> Option<()> {
         for head in heads {
             let lane =
-                planning::content(root, hash, &head, name, scope, Some(&value), &mut self.proofs)?;
+                planning::lane_content(root, hash, &head, name, scope, &value, &mut self.proofs)?;
             self.later_payloads.push(lane.0);
             self.count += lane.1;
             value = lane.2;
