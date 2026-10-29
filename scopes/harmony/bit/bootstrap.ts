@@ -9,8 +9,8 @@ import { GLOBAL_CONFIG, GLOBAL_LOGS, WORKSPACE_JSONC } from '@teambit/legacy.con
 import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy.logger';
 import { loader } from '@teambit/legacy.loader';
 
-const RECOMMENDED_NODE_VERSIONS = '>=20.0.0 <25.0.0';
-const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <25.0.0';
+const RECOMMENDED_NODE_VERSIONS = '>=20.0.0 <27.0.0';
+const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <27.0.0';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
