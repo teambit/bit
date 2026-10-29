@@ -135,7 +135,6 @@ export class ComponentsList {
         newComponents.push(id);
       }
     });
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const newComponentsIds = new ComponentIdList(...newComponents);
     if (!load || !newComponents.length) return newComponentsIds;
 
@@ -173,8 +172,7 @@ export class ComponentsList {
 
   async listNonNewComponentsIds(loadOpts?: ComponentLoadOptions): Promise<ComponentIdList> {
     const authoredAndImported = await this.getComponentsFromFS(loadOpts);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const newComponents: ComponentIdList = await this.listNewComponents();
+    const newComponents = (await this.listNewComponents()) as ComponentIdList;
     const nonNewComponents = authoredAndImported.filter((component) => !newComponents.has(component.componentId));
     return ComponentIdList.fromArray(nonNewComponents.map((c) => c.componentId.changeVersion(undefined)));
   }
@@ -321,7 +319,6 @@ export class ComponentsList {
         const listResult = listAllResults.find((c) => c.id.isEqualWithoutVersion(componentId));
         if (!listResult) throw new Error(`failed finding ${componentId.toString()} in componentsIds`);
         // $FlowFixMe version must be set as it came from a remote
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         listResult.remoteVersion = componentId.version;
       });
     }
@@ -359,7 +356,7 @@ export class ComponentsList {
   }
 
   // components can be one of the following: Component[] | ModelComponent[] | string[] | ComponentID[]
-  static sortComponentsByName<T>(components: T): T {
+  static sortComponentsByName<T extends unknown[]>(components: T): T {
     const getName = (component) => {
       let name;
       if (component instanceof ModelComponent) {
@@ -373,7 +370,6 @@ export class ComponentsList {
         throw new Error(`sortComponentsByName expects name to be a string, got: ${name}, type: ${typeof name}`);
       return name.toUpperCase(); // ignore upper and lowercase
     };
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return components.sort((a, b) => {
       const nameA = getName(a);
       const nameB = getName(b);
@@ -389,7 +385,7 @@ export class ComponentsList {
     });
   }
 
-  static filterComponentsByWildcard<T>(components: T, idsWithWildcard: string[] | string): T {
+  static filterComponentsByWildcard<T extends unknown[]>(components: T, idsWithWildcard: string[] | string): T {
     const getBitId = (component): ComponentID => {
       if (component instanceof ModelComponent) {
         return component.toComponentId();
@@ -402,11 +398,10 @@ export class ComponentsList {
       }
       throw new TypeError(`filterComponentsByWildcard got component with the wrong type: ${typeof component}`);
     };
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return components.filter((component) => {
       const bitId: ComponentID = getBitId(component);
       return isBitIdMatchByWildcards(bitId, idsWithWildcard);
-    });
+    }) as T;
   }
 
   static getUniqueComponents(components: Component[]): Component[] {

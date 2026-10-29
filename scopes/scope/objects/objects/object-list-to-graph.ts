@@ -3,7 +3,7 @@ import { uniqBy } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
 import type { ObjectList } from './object-list';
 import type { BitObjectList } from './bit-object-list';
-import { getAllVersionsInfo } from '@teambit/component.snap-distance';
+import { getAllVersionsInfo, indexVersionObjects } from '@teambit/component.snap-distance';
 
 type BitIdNode = Node<ComponentID>;
 type DependencyType = 'runtime' | 'dev' | 'peer';
@@ -24,7 +24,7 @@ export async function objectListToGraph(objectList: ObjectList): Promise<IdGraph
 export async function bitObjectListToGraph(bitObjectsList: BitObjectList): Promise<IdGraph> {
   const exportMetadata = bitObjectsList.getExportMetadata();
   const components = bitObjectsList.getComponents();
-  const versions = bitObjectsList.getVersions();
+  const versionObjectsByHash = indexVersionObjects(bitObjectsList.getVersions());
   const nodes: BitIdNode[] = [];
   const edges: DependencyEdge[] = [];
   await Promise.all(
@@ -35,7 +35,7 @@ export async function bitObjectListToGraph(bitObjectsList: BitObjectList): Promi
       const startFrom = compFromMetadata?.head;
       const versionsInfo = await getAllVersionsInfo({
         modelComponent: component,
-        versionObjects: versions,
+        versionObjects: versionObjectsByHash,
         startFrom,
         throws: false,
       });

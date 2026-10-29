@@ -70,4 +70,29 @@ describe('bit lane merge-abort command', function () {
       helper.fs.expectPathNotToExist(`${helper.scopes.remote}/comp2`);
     });
   });
+  describe('when a lane was merged into main', () => {
+    let headOnMainBeforeMerge: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      headOnMainBeforeMerge = helper.command.getHead('comp1');
+      helper.command.createLane('lane-a');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1', '-x');
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/lane-a`, '-x');
+      helper.command.mergeAbortLane('-x');
+    });
+    it('should revert the head of main to the state before the merge', () => {
+      expect(helper.command.getHead(`${helper.scopes.remote}/comp1`)).to.equal(headOnMainBeforeMerge);
+    });
+    it('should not leave the merged snaps staged for export', () => {
+      expect(helper.command.statusJson().stagedComponents).to.have.lengthOf(0);
+    });
+  });
 });

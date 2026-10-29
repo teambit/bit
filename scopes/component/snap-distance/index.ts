@@ -7,6 +7,8 @@ export {
   hasVersionByRef,
   getAllVersionParents,
   getAllVersionsInfo,
+  indexVersionObjects,
+  VersionObjectsByHash,
   getSubsetOfVersionParents,
   getVersionParentsFromVersion,
   GetAllVersionHashesParams,

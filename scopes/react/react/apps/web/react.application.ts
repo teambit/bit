@@ -118,7 +118,7 @@ export class ReactApp implements Application {
       html: htmlConfig,
       targets: [
         {
-          entries: await this.getEntries(),
+          entries: await this.getEntries(context.hostRootDir),
           components: [context.appComponent],
           outputPath: resolve(context.workdir, calcOutputPath(context.appName, 'browser')),
           hostDependencies: this.getHostDependencies(),
@@ -324,7 +324,7 @@ export class ReactApp implements Application {
   }
 
   private async getDevServerContext(context: AppContext): Promise<DevServerContext> {
-    const entries = await this.getEntries();
+    const entries = await this.getEntries(context.hostRootDir);
     return Object.assign(context, {
       entry: entries,
       rootPath: '',

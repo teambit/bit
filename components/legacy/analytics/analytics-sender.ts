@@ -11,8 +11,7 @@ const ANALYTICS_DOMAIN = getConfig(CFG_ANALYTICS_DOMAIN_KEY) || DEFAULT_ANALYTIC
 process.on('message', (msg) => {
   // needed for the parent to make sure the child got the message
   // without it, when the message is large, the parent exits before it totally sent
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  process.send('Got the message');
+  process.send!('Got the message');
   const body = JSON.stringify(msg);
   return fetch(ANALYTICS_DOMAIN, {
     timeout: 1000,
