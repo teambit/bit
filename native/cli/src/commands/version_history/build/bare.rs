@@ -1,5 +1,6 @@
 //! Reconstruct qualified local-scope history and publish it atomically.
 mod lanes;
+mod planning;
 #[cfg(test)]
 mod tests;
 use super::{Chalk, Formatter, Outcome, ScopeRoot, Value, resolve_component_entry, sha1_hex};
@@ -18,6 +19,7 @@ pub(super) struct Plan {
     path: PathBuf,
     identity: String,
     payload: Vec<u8>,
+    later_payloads: Vec<Vec<u8>>,
     proofs: Vec<(PathBuf, Vec<u8>)>,
     count: usize,
     mode: Option<u32>,
@@ -29,53 +31,7 @@ pub(super) fn prepare(
     from: Option<&str>,
     all_lanes: bool,
 ) -> Option<Plan> {
-    if !super::supported_startup(root, &root.path)? {
-        return None;
-    }
-    let (scope, name, model_hash) = resolve_component_entry(&root.path, id)?;
-    let scope = scope?;
-    let mut proofs = metadata_proofs(&root.path, &scope, false)?;
-    if all_lanes && !lanes::unrelated_lanes(&root.path, &scope, &name, &mut proofs)? {
-        return None;
-    }
-    let model = read(&root.path, &model_hash, "Component", &mut proofs)?;
-    let head = from.or_else(|| model["head"].as_str())?;
-    let hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
-    let path = object_path(&root.path, &hash)?;
-    if !safe_parent(&root.path, &path) {
-        return None;
-    }
-    let (existing, mode) = stored(&root.path, &hash, &path, &mut proofs)?;
-    if existing
-        .as_ref()
-        .is_some_and(|value| super::complete(value, head) != Some(false))
-    {
-        return None;
-    }
-    let output = content(&root.path, &hash, head, &name, &scope, existing.as_ref(), &mut proofs)?;
-    Some(Plan {
-        path,
-        identity: format!("{scope}/{name}"),
-        payload: output.0,
-        proofs,
-        count: output.1,
-        mode,
-    })
-}
-
-fn content(
-    root: &Path,
-    hash: &str,
-    head: &str,
-    name: &str,
-    scope: &str,
-    existing: Option<&Value>,
-    proofs: &mut Vec<(PathBuf, Vec<u8>)>,
-) -> Option<(Vec<u8>, usize)> {
-    let rows = ancestry(root, head, proofs)?;
-    let (rows, count) = merge(existing, rows, name, scope)?;
-    let value = json!({"name":name,"scope":scope,"versions":rows,"graphCompleteRefs":[]});
-    Some((encode(hash, &value).ok()?, count))
+    planning::prepare(root, id, from, all_lanes)
 }
 
 fn stored(
@@ -298,10 +254,42 @@ fn encode(hash: &str, value: &Value) -> io::Result<Vec<u8>> {
 }
 
 impl Plan {
-    pub fn run(self, root: &ScopeRoot, args: &[OsString]) -> io::Result<Outcome> {
+    fn add_lanes(
+        &mut self,
+        root: &Path,
+        hash: &str,
+        name: &str,
+        scope: &str,
+        heads: Vec<String>,
+        mut value: Value,
+    ) -> Option<()> {
+        for head in heads {
+            let lane =
+                planning::content(root, hash, &head, name, scope, Some(&value), &mut self.proofs)?;
+            self.later_payloads.push(lane.0);
+            self.count += lane.1;
+            value = lane.2;
+        }
+        Some(())
+    }
+
+    pub fn run(mut self, root: &ScopeRoot, args: &[OsString]) -> io::Result<Outcome> {
         let chalk = Chalk::detect(args);
         workspace_command::execute_then_scope(&root.path, args, "build", |_| {
             self.publish().map_err(|error| filesystem_error::report(&error, chalk))?;
+            for payload in std::mem::take(&mut self.later_payloads) {
+                self.proofs.retain(|(path, _)| path != &self.path);
+                self.proofs.push((self.path.clone(), self.payload));
+                self.payload = payload;
+                self.mode = existing_mode(&self.path);
+                if self.mode.is_none() {
+                    return Err(filesystem_error::report(
+                        &io::Error::other("version-history mode changed"),
+                        chalk,
+                    ));
+                }
+                self.publish().map_err(|error| filesystem_error::report(&error, chalk))?;
+            }
             let summary =
                 Formatter::new(chalk).success_summary("completed building version history");
             Ok(Report {

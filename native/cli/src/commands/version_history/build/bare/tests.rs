@@ -12,6 +12,7 @@ fn existing_temporary_file_is_not_deleted_after_failed_creation() {
         path: path.clone(),
         identity: "fixture/component".into(),
         payload: b"data".to_vec(),
+        later_payloads: Vec::new(),
         proofs: Vec::new(),
         count: 1,
         mode: None,
@@ -19,6 +20,33 @@ fn existing_temporary_file_is_not_deleted_after_failed_creation() {
     assert!(plan.publish().is_err());
     assert_eq!(fs::read(temporary).unwrap(), b"other operation");
     assert!(!path.exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn later_publication_failure_keeps_the_first_history() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("object");
+    let mut plan = Plan {
+        path: path.clone(),
+        identity: "fixture/component".into(),
+        payload: b"first".to_vec(),
+        later_payloads: Vec::new(),
+        proofs: Vec::new(),
+        count: 2,
+        mode: None,
+    };
+    plan.publish().unwrap();
+    plan.proofs.push((path.clone(), plan.payload));
+    plan.payload = b"second".to_vec();
+    plan.mode = super::existing_mode(&path);
+    let temporary = directory
+        .path()
+        .join(format!(".object.{}.1", std::process::id()));
+    fs::write(&temporary, b"collision").unwrap();
+    assert!(plan.publish().is_err());
+    assert_eq!(fs::read(path).unwrap(), b"first");
+    assert_eq!(fs::read(temporary).unwrap(), b"collision");
 }
 
 #[test]
@@ -62,11 +90,17 @@ fn all_lanes_requires_an_empty_index_and_records_its_bytes() {
 fn matching_visible_and_hidden_lane_heads_are_not_skipped() {
     use serde_json::json;
     let mut lane = json!({"name":"feature","scope":"fixture","components":[{"id":{"scope":"fixture","name":"other"},"head":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]});
-    assert_eq!(super::lanes::lane_is_unrelated(&lane, "fixture", "component"), Some(true));
+    assert_eq!(super::lanes::lane_head(&lane, "fixture", "component"), Some(None));
     lane["updateDependents"] =
         json!(["fixture/component@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]);
-    assert_eq!(super::lanes::lane_is_unrelated(&lane, "fixture", "component"), Some(false));
+    assert_eq!(
+        super::lanes::lane_head(&lane, "fixture", "component"),
+        Some(Some("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_owned())),
+    );
     lane["updateDependents"] = json!([]);
     lane["components"][0]["id"]["name"] = json!("component");
-    assert_eq!(super::lanes::lane_is_unrelated(&lane, "fixture", "component"), Some(false));
+    assert_eq!(
+        super::lanes::lane_head(&lane, "fixture", "component"),
+        Some(Some("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_owned())),
+    );
 }
