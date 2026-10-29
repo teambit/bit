@@ -49,7 +49,10 @@ export type EnvPreviewConfig = {
   splitComponentBundle?: boolean;
 
   /**
-   * whether the env's preview pipeline can consume component source files directly.
+   * whether the env's preview pipeline can consume component source files directly
+   * (required when `bit start --use-source` is used).
+   * older envs without the matching preview/webpack config should leave this unset/false
+   * so bit falls back to the compiled dist paths for their components.
    */
   supportsUseSource?: boolean;
 };
