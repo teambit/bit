@@ -1,20 +1,27 @@
-//! Qualify at most one tracked non-default remote lane for history labels.
+//! Qualify tracked remote lane labels without relying on filesystem iteration order.
 use serde_json::Value;
 use std::{
     fs, io,
     path::{Path, PathBuf},
 };
 
-pub(super) fn one_lane(
-    root: &Path,
-    scope: &str,
-    component: &str,
-) -> Option<Option<(String, String)>> {
-    let mut paths = lane_paths(root)?;
-    if paths.len() > 1 {
-        return None;
+pub(super) fn lanes(root: &Path, scope: &str, component: &str) -> Option<Vec<(String, String)>> {
+    let mut lanes = Vec::new();
+    for (name, path) in lane_paths(root)? {
+        if let Some(head) = lane_head(&path, scope, component)? {
+            if lanes
+                .iter()
+                .any(|(_, other)| other == &head)
+            {
+                return None;
+            }
+            lanes.push((name, head));
+        }
     }
-    let Some((name, path)) = paths.pop() else { return Some(None) };
+    Some(lanes)
+}
+
+fn lane_head(path: &Path, scope: &str, component: &str) -> Option<Option<String>> {
     let rows: Value = serde_json::from_slice(&fs::read(path).ok()?).ok()?;
     let row = rows
         .as_array()?
@@ -24,7 +31,7 @@ pub(super) fn one_lane(
                 && row["id"]["name"].as_str() == Some(component)
         });
     match row {
-        Some(row) => Some(Some((name, row["head"].as_str()?.to_owned()))),
+        Some(row) => Some(Some(row["head"].as_str()?.to_owned())),
         None => Some(None),
     }
 }

@@ -31,6 +31,20 @@ fn version_history_linear_text_matches_node() {
     let lane = super::move_paths::support::compare(&helper, "version-history show comp1");
     assert!(lane.stdout.contains("example/dev, main, 0.0.2"));
     super::move_paths::support::compare(&helper, "vh show comp1 -s");
+    let first = history["versions"][0]["hash"].as_str().unwrap();
+    helper.output_file(
+        ".bit/refs/remotes/example/other",
+        &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":first}]).to_string(),
+    );
+    let lanes = super::move_paths::support::compare(&helper, "version-history show comp1");
+    assert!(lanes.stdout.contains("example/other, 0.0.1"));
+    helper.output_file(
+        ".bit/refs/remotes/example/other",
+        &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":head}]).to_string(),
+    );
+    super::add::support::compare_declined(&helper, "version-history show comp1", |text| {
+        text.to_owned()
+    });
 }
 
 #[test]
@@ -50,9 +64,7 @@ fn version_history_text_empty_and_remote_refs_match_node() {
     super::move_paths::support::compare(&helper, "version-history show comp1");
     helper.output_file(".bit/refs/remotes/example/dev", "[]");
     helper.output_file(".bit/refs/remotes/example/other", "[]");
-    super::add::support::compare_declined(&helper, "version-history show comp1", |text| {
-        text.to_owned()
-    });
+    super::move_paths::support::compare(&helper, "version-history show comp1");
 }
 
 #[test]

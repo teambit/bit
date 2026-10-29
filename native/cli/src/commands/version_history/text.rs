@@ -22,7 +22,7 @@ fn prepare(root: &ScopeRoot, id: &str, short: bool, chalk: Chalk) -> Option<Stri
     let bare = id.rsplit_once('@').map_or(id, |(name, _)| name);
     let (scope, name, model_hash) = resolve_component_entry(&scope_dir, bare)?;
     let scope = scope?;
-    let lane = refs::one_lane(&scope_dir, &scope, &name)?;
+    let lanes = refs::lanes(&scope_dir, &scope, &name)?;
     let (kind, model) = bit_object_import::read_scope_object(&scope_dir, &model_hash).ok()??;
     if kind != "Component" {
         return None;
@@ -33,7 +33,7 @@ fn prepare(root: &ScopeRoot, id: &str, short: bool, chalk: Chalk) -> Option<Stri
         None => return Some(String::new()),
         _ => return None,
     };
-    render(&history, &model, short, chalk, lane.as_ref())
+    render(&history, &model, short, chalk, &lanes)
 }
 
 fn render(
@@ -41,7 +41,7 @@ fn render(
     model: &Value,
     short: bool,
     chalk: Chalk,
-    lane: Option<&(String, String)>,
+    lanes: &[(String, String)],
 ) -> Option<String> {
     let rows = history["versions"].as_array()?;
     let mut previous: Option<&str> = None;
@@ -52,7 +52,7 @@ fn render(
         if !identities.insert(if short { &hash[..9] } else { hash }) {
             return None;
         }
-        output.push(format_row(model, hash, previous, short, chalk, lane)?);
+        output.push(format_row(model, hash, previous, short, chalk, lanes)?);
         previous = Some(hash);
     }
     output.reverse();
@@ -82,11 +82,12 @@ fn format_row(
     previous: Option<&str>,
     short: bool,
     chalk: Chalk,
-    lane: Option<&(String, String)>,
+    lanes: &[(String, String)],
 ) -> Option<String> {
     let mut pointers = Vec::new();
-    if let Some((name, head)) = lane
-        && head == hash
+    if let Some((name, _)) = lanes
+        .iter()
+        .find(|(_, head)| head == hash)
     {
         pointers.push(name.as_str());
     }
