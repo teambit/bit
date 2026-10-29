@@ -122,7 +122,9 @@ fn metadata_proofs(root: &Path, scope: &str, all_lanes: bool) -> Option<Vec<(Pat
     let config_path = root.join("scope.json");
     let config_bytes = fs::read(&config_path).ok()?;
     let config: Value = serde_json::from_slice(&config_bytes).ok()?;
-    if config["name"].as_str() != Some(scope) || !config["groupName"].is_null() {
+    if config["name"].as_str() != Some(scope)
+        || !(config["groupName"].is_null() || config["groupName"] == "")
+    {
         return None;
     }
     let index_path = root.join("index.json");

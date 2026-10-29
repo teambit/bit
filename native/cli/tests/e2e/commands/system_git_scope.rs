@@ -28,6 +28,28 @@ fn version_history_rebuilds_missing_bare_history_without_runtime() {
     assert!(result.stdout.contains("added 2 hashes"));
 }
 
+#[test]
+fn version_history_rebuild_accepts_an_empty_scope_group_name() {
+    use sha1::{Digest, Sha1};
+    let helper = super::gc::fixture();
+    let scope = &helper.scopes.remote_path;
+    let path = scope.join("scope.json");
+    let mut config: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    config["groupName"] = json!("");
+    fs::write(path, serde_json::to_vec_pretty(&config).unwrap()).unwrap();
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let history = scope
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if history.exists() {
+        fs::remove_file(history).unwrap();
+    }
+    let result = super::gc::compare(&helper, "version-history build comp1", false);
+    assert!(result.stdout.contains("added 2 hashes"));
+}
+
 #[cfg(unix)]
 #[test]
 fn version_history_deletes_existing_history_to_trash_before_rebuilding() {
