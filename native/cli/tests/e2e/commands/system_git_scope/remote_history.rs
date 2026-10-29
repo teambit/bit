@@ -203,6 +203,29 @@ fn remote_file_incomplete_client_history_declines_before_mutation() {
     );
 }
 
+#[test]
+fn remote_file_invalid_unmerged_state_declines_before_mutation() {
+    let helper = crate::commands::gc::fixture();
+    let scope = &helper.scopes.remote_path;
+    fs::write(scope.join("unmerged.json"), b"{invalid").unwrap();
+    let before = crate::commands::move_paths::support::tree(scope);
+    let command = format!("version-history build comp1 --remote {}", helper.scopes.remote);
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        &command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(!node.status.success(), "{node:?}");
+    let unavailable = helper.scopes.e2e_dir.join("unavailable-node");
+    let run = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        &command,
+        &[("BIT_NODE_BINARY", unavailable.as_os_str())],
+    );
+    assert!(!run.native, "{run:?}");
+    assert_eq!(crate::commands::move_paths::support::tree(scope), before);
+}
+
 fn workspace_scope_tree(helper: &Helper) -> std::collections::BTreeMap<String, Vec<u8>> {
     let mut tree =
         crate::commands::move_paths::support::tree(&helper.scopes.local_path.join(".bit"));

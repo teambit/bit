@@ -71,8 +71,24 @@ fn file_scope_supported(scope: &std::path::Path) -> bool {
     let index = std::fs::read(scope.join("index.json"))
         .ok()
         .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok());
-    index.is_some_and(|index| index["components"].is_array() && index["lanes"].is_array())
+    index.is_some_and(|index| {
+        ["components", "lanes"]
+            .iter()
+            .all(|key| {
+                index[key]
+                    .as_array()
+                    .is_some_and(|items| items.iter().all(Value::is_object))
+            })
+    }) && clean_unmerged(scope)
         && build::supported_startup(&root, scope) == Some(true)
+}
+
+fn clean_unmerged(scope: &std::path::Path) -> bool {
+    match std::fs::read(scope.join("unmerged.json")) {
+        Ok(bytes) => serde_json::from_slice::<Value>(&bytes)
+            .is_ok_and(|value| value.as_array().is_some_and(Vec::is_empty)),
+        Err(error) => error.kind() == io::ErrorKind::NotFound,
+    }
 }
 
 fn render(value: &Value, chalk: Chalk) -> io::Result<String> {
