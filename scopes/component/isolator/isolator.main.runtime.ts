@@ -1000,7 +1000,8 @@ export class IsolatorMain {
         capsuleWithPackageData.capsule.fs.writeFileSync(PACKAGE_JSON, JSON.stringify(currentPackageJson, null, 2));
       });
     }
-    await this.markCapsulesAsReady(capsuleList);
+    // "ready" means the packages are installed and linked, so a capsule created without them is not ready.
+    if (installOptions.installPackages) await this.markCapsulesAsReady(capsuleList);
     if (rootKind === 'scope-aspects-root') {
       await this.cache.ensureAspectCapsuleMarkers(allCapsuleList, rootOriginPath);
     }
