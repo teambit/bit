@@ -22,7 +22,7 @@ pub(super) struct Plan {
     mode: Option<u32>,
 }
 
-pub(super) fn prepare(root: &ScopeRoot, id: &str) -> Option<Plan> {
+pub(super) fn prepare(root: &ScopeRoot, id: &str, from: Option<&str>) -> Option<Plan> {
     if !super::supported_startup(root, &root.path)? {
         return None;
     }
@@ -30,7 +30,7 @@ pub(super) fn prepare(root: &ScopeRoot, id: &str) -> Option<Plan> {
     let scope = scope?;
     let mut proofs = metadata_proofs(&root.path, &scope)?;
     let model = read(&root.path, &model_hash, "Component", &mut proofs)?;
-    let head = model["head"].as_str()?;
+    let head = from.or_else(|| model["head"].as_str())?;
     let hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
     let path = object_path(&root.path, &hash)?;
     if !safe_parent(&root.path, &path) {

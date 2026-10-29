@@ -20,11 +20,10 @@ pub(super) fn run(
     from: Option<&str>,
 ) -> io::Result<Outcome> {
     if root.bare
-        && from.is_none()
         && !args
             .iter()
             .any(|arg| arg == "--from-all-lanes")
-        && let Some(plan) = bare::prepare(root, id)
+        && let Some(plan) = bare::prepare(root, id, from)
     {
         return plan.run(root, args);
     }

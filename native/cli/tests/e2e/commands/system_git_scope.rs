@@ -29,6 +29,34 @@ fn version_history_rebuilds_missing_bare_history_without_runtime() {
 }
 
 #[test]
+fn version_history_rebuilds_bare_history_from_selected_snapshot() {
+    use sha1::{Digest, Sha1};
+    let helper = super::gc::fixture();
+    let scope = &helper.scopes.remote_path;
+    let model_hash = format!("{:x}", Sha1::digest(format!("{}/comp1", helper.scopes.remote)));
+    let (_, model) = bit_object_import::read_scope_object(scope, &model_hash).unwrap().unwrap();
+    let (_, version) = bit_object_import::read_scope_object(scope, model["head"].as_str().unwrap())
+        .unwrap()
+        .unwrap();
+    let parent = version["parents"][0].as_str().unwrap();
+    let history =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = scope
+        .join("objects")
+        .join(&history[..2])
+        .join(&history[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = super::gc::compare(
+        &helper,
+        &format!("version-history build comp1 --from-snap {parent}"),
+        false,
+    );
+    assert!(result.stdout.contains("added 1 hashes"));
+}
+
+#[test]
 fn version_history_rebuilds_branched_bare_history_in_parent_order() {
     for shared in [false, true] {
         branched_history_case(shared);
