@@ -29,6 +29,23 @@ fn version_history_rebuilds_missing_bare_history_without_runtime() {
 }
 
 #[test]
+fn version_history_rebuilds_all_lanes_when_scope_has_no_lanes() {
+    use sha1::{Digest, Sha1};
+    let helper = super::gc::fixture();
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = super::gc::compare(&helper, "version-history build comp1 --from-all-lanes", false);
+    assert!(result.stdout.contains("added 2 hashes"));
+}
+
+#[test]
 fn version_history_rebuilds_bare_history_from_selected_snapshot() {
     use sha1::{Digest, Sha1};
     let helper = super::gc::fixture();

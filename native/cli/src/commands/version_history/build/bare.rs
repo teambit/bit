@@ -22,13 +22,18 @@ pub(super) struct Plan {
     mode: Option<u32>,
 }
 
-pub(super) fn prepare(root: &ScopeRoot, id: &str, from: Option<&str>) -> Option<Plan> {
+pub(super) fn prepare(
+    root: &ScopeRoot,
+    id: &str,
+    from: Option<&str>,
+    all_lanes: bool,
+) -> Option<Plan> {
     if !super::supported_startup(root, &root.path)? {
         return None;
     }
     let (scope, name, model_hash) = resolve_component_entry(&root.path, id)?;
     let scope = scope?;
-    let mut proofs = metadata_proofs(&root.path, &scope)?;
+    let mut proofs = metadata_proofs(&root.path, &scope, all_lanes)?;
     let model = read(&root.path, &model_hash, "Component", &mut proofs)?;
     let head = from.or_else(|| model["head"].as_str())?;
     let hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
@@ -139,7 +144,7 @@ fn merge(
     Some((rows, count))
 }
 
-fn metadata_proofs(root: &Path, scope: &str) -> Option<Vec<(PathBuf, Vec<u8>)>> {
+fn metadata_proofs(root: &Path, scope: &str, all_lanes: bool) -> Option<Vec<(PathBuf, Vec<u8>)>> {
     let config_path = root.join("scope.json");
     let config_bytes = fs::read(&config_path).ok()?;
     let config: Value = serde_json::from_slice(&config_bytes).ok()?;
@@ -148,6 +153,11 @@ fn metadata_proofs(root: &Path, scope: &str) -> Option<Vec<(PathBuf, Vec<u8>)>> 
     }
     let index_path = root.join("index.json");
     let index_bytes = fs::read(&index_path).ok()?;
+    if all_lanes
+        && !serde_json::from_slice::<Value>(&index_bytes).ok()?["lanes"].as_array()?.is_empty()
+    {
+        return None;
+    }
     Some(vec![(config_path, config_bytes), (index_path, index_bytes)])
 }
 

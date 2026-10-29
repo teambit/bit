@@ -43,3 +43,17 @@ fn cyclic_ancestry_declines_before_publishing() {
     assert_eq!(proofs.len(), 1);
     assert!(path.exists());
 }
+
+#[test]
+fn all_lanes_requires_an_empty_index_and_records_its_bytes() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path();
+    fs::write(root.join("scope.json"), r#"{"name":"fixture"}"#).unwrap();
+    let index = root.join("index.json");
+    fs::write(&index, r#"{"lanes":[]}"#).unwrap();
+    let proofs = super::metadata_proofs(root, "fixture", true).unwrap();
+    assert_eq!(proofs[1].1, fs::read(&index).unwrap());
+    fs::write(&index, r#"{"lanes":[{"hash":"fixture"}]}"#).unwrap();
+    assert!(super::metadata_proofs(root, "fixture", true).is_none());
+    assert!(super::metadata_proofs(root, "fixture", false).is_some());
+}
