@@ -371,6 +371,9 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 // intra-line (word-level) change emphasis
 .intra {
   background: color-mix(in srgb, $accent 16%, transparent);
+  // `<mark>` defaults to `color: MarkText` (black). Untokenized text (e.g. a Dockerfile) has no inline
+  // color, so without this the changed characters render black on the dark theme's tint.
+  color: inherit;
   border-radius: 2px;
   padding: 1px 0;
 }

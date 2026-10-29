@@ -20,6 +20,13 @@ const TIMEOUT_MINUTES_EXIT = 30;
 export class ObjectsWritable extends Writable {
   private timeoutId: NodeJS.Timeout;
   private intervalCounter = 0;
+  /**
+   * the objects being parsed and written. `_write` does not wait for an object to be written before it takes the
+   * next one from the stream, so the parse of one object overlaps the writes of the others. when the queue's
+   * concurrency of objects is in flight, `_write` waits for one of them (the queue does not write more at a time).
+   * a failed write destroys the stream, see `_destroy`.
+   */
+  private inFlight = new Set<Promise<void>>();
   constructor(
     private repo: Repository,
     private remoteName: string,
@@ -47,18 +54,37 @@ export class ObjectsWritable extends Writable {
     if (!obj.ref || !obj.buffer) {
       return callback(new Error('objectItem expected to have "ref" and "buffer" props'));
     }
-    try {
-      await this.writeObjectToFs(obj);
-      return callback();
-    } catch (err: any) {
-      logger.error(`found an issue during write of ${obj.ref.toString()}`, err);
-      return callback(err);
+    while (this.inFlight.size >= this.objectsQueue.concurrency) {
+      await Promise.race(this.inFlight);
+      // a failed write or a failed remote stream destroys the stream. then, don't start more writes.
+      if (this.destroyed) return callback();
     }
+    const writing: Promise<void> = this.writeObjectToFs(obj)
+      .catch((err: any) => {
+        logger.error(`found an issue during write of ${obj.ref.toString()}`, err);
+        // fail the stream now. the remote stream may not send another object, nor end.
+        this.destroy(err);
+      })
+      .finally(() => this.inFlight.delete(writing));
+    this.inFlight.add(writing);
+    return callback();
   }
 
   async _final(callback) {
+    // the timer keeps running until the objects in flight are written, so a stuck write still gets its warnings.
+    await Promise.all(this.inFlight);
     clearInterval(this.timeoutId);
     callback();
+  }
+
+  /**
+   * when the stream fails (the remote stream, an object or a write), the error is reported only once the objects in
+   * flight are written, so the fetch does not end while they are still written.
+   */
+  async _destroy(err: Error | null, callback: (error?: Error | null) => void) {
+    await Promise.all(this.inFlight);
+    clearInterval(this.timeoutId);
+    callback(err);
   }
 
   private async writeObjectToFs(obj: ObjectItem) {

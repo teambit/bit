@@ -659,15 +659,15 @@ export class DependencyResolverMain {
       options.isInWorkspace ? component.id.toStringWithoutVersion() : component.id.toString()
     );
     // In case the component is it's own root we want to load it from it's own root folder
-    if (fs.pathExistsSync(selfRootDir)) {
+    if (fs.pathExistsSync(join(options.workspacePath, selfRootDir))) {
       const innerDir = join(selfRootDir, 'node_modules', pkgName);
-      if (fs.pathExistsSync(innerDir)) return innerDir;
+      if (fs.pathExistsSync(join(options.workspacePath, innerDir))) return innerDir;
       // sometime for the env itself we don't have the env package in the env root dir, because it was hoisted
       // in that case we return the dir from the root node_modules
       return this.getModulePath(component);
     }
     const dirInEnvRoot = join(this.getComponentDirInBitRoots(component, options), 'node_modules', pkgName);
-    if (fs.pathExistsSync(dirInEnvRoot)) return dirInEnvRoot;
+    if (fs.pathExistsSync(join(options.workspacePath, dirInEnvRoot))) return dirInEnvRoot;
     return this.getModulePath(component);
   }
 
