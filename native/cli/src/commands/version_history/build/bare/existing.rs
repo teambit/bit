@@ -1,7 +1,7 @@
 //! Preserve canonical entries outside the selected ancestry.
 use super::{HashSet, Value, json};
 
-pub(super) fn compatible(rows: &[Value], ancestors: &[Value]) -> Option<bool> {
+pub(super) fn valid_rows(rows: &[Value]) -> Option<bool> {
     if rows.len() > 128 {
         return None;
     }
@@ -10,13 +10,6 @@ pub(super) fn compatible(rows: &[Value], ancestors: &[Value]) -> Option<bool> {
         let hash = canonical(row)?;
         if !seen.insert(hash) {
             return None;
-        }
-        if let Some(ancestor) = ancestors
-            .iter()
-            .find(|ancestor| ancestor["hash"] == hash)
-            && ancestor != row
-        {
-            return Some(false);
         }
     }
     Some(true)

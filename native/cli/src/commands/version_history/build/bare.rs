@@ -90,16 +90,30 @@ fn merge(
         return None;
     }
     let mut rows = existing["versions"].as_array()?.clone();
-    if !existing::compatible(&rows, &ancestors)? {
+    if !existing::valid_rows(&rows)? {
         return None;
     }
-    let count = ancestors.len() - usize::from(rows.contains(&ancestors[0]));
-    for row in ancestors {
-        if !rows.contains(&row) {
+    let head_exists = rows
+        .iter()
+        .any(|row| row["hash"] == ancestors[0]["hash"]);
+    let count = ancestors.len() - usize::from(head_exists);
+    refresh_rows(&mut rows, ancestors);
+    Some((rows, count))
+}
+
+fn refresh_rows(rows: &mut Vec<Value>, ancestors: Vec<Value>) {
+    for (index, row) in ancestors.into_iter().enumerate() {
+        if let Some(existing) = rows
+            .iter_mut()
+            .find(|existing| existing["hash"] == row["hash"])
+        {
+            if index != 0 {
+                *existing = row;
+            }
+        } else {
             rows.push(row);
         }
     }
-    Some((rows, count))
 }
 
 fn metadata_proofs(root: &Path, scope: &str, all_lanes: bool) -> Option<Vec<(PathBuf, Vec<u8>)>> {
@@ -263,7 +277,7 @@ impl Plan {
     ) -> Option<()> {
         for head in heads {
             let lane =
-                planning::lane_content(root, hash, &head, name, scope, &value, &mut self.proofs)?;
+                planning::content(root, hash, &head, name, scope, Some(&value), &mut self.proofs)?;
             self.later_payloads.push(lane.0);
             self.count += lane.1;
             value = lane.2;

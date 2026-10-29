@@ -109,12 +109,9 @@ fn matching_visible_and_hidden_lane_heads_are_not_skipped() {
 fn unrelated_history_entries_require_canonical_unique_rows() {
     use serde_json::json;
     let valid = json!({"hash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","parents":[]});
-    assert_eq!(super::existing::compatible(std::slice::from_ref(&valid), &[]), Some(true));
-    assert_eq!(super::existing::compatible(&[valid.clone(), valid.clone()], &[]), None);
-    let mut extra = valid.clone();
+    assert_eq!(super::existing::valid_rows(std::slice::from_ref(&valid)), Some(true));
+    assert_eq!(super::existing::valid_rows(&[valid.clone(), valid.clone()]), None);
+    let mut extra = valid;
     extra["unknown"] = json!(true);
-    assert_eq!(super::existing::compatible(&[extra], &[]), None);
-    let mut mismatch = valid.clone();
-    mismatch["parents"] = json!(["bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"]);
-    assert_eq!(super::existing::compatible(&[valid], &[mismatch]), Some(false));
+    assert_eq!(super::existing::valid_rows(&[extra]), None);
 }

@@ -376,6 +376,32 @@ fn version_history_rebuild_preserves_unrelated_existing_entries() {
 }
 
 #[test]
+fn version_history_rebuild_refreshes_stale_parents_but_preserves_existing_head() {
+    use sha1::{Digest, Sha1};
+    let helper = super::gc::fixture();
+    let scope = &helper.scopes.remote_path;
+    let model_hash = format!("{:x}", Sha1::digest(format!("{}/comp1", helper.scopes.remote)));
+    let (_, model) = bit_object_import::read_scope_object(scope, &model_hash).unwrap().unwrap();
+    let head = model["head"].as_str().unwrap();
+    let (_, version) = bit_object_import::read_scope_object(scope, head).unwrap().unwrap();
+    let parent = version["parents"][0].as_str().unwrap();
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let stale = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+    for (entry, expected_count) in [(parent, 2), (head, 1)] {
+        let history = json!({"name":"comp1","scope":helper.scopes.remote,"versions":[{"hash":entry,"parents":[stale]}],"graphCompleteRefs":[]});
+        write_scope_fixture_at(scope, "VersionHistory", &hash, &history);
+        let result = super::gc::compare(&helper, "version-history build comp1", false);
+        assert!(result.stdout.contains(&format!("added {expected_count} hashes")));
+        let (_, stored) = bit_object_import::read_scope_object(scope, &hash).unwrap().unwrap();
+        assert_eq!(
+            stored["versions"][0]["parents"],
+            if entry == head { json!([stale]) } else { json!([]) },
+        );
+    }
+}
+
+#[test]
 fn version_history_bare_missing_version_delegates_before_writes() {
     use sha1::{Digest, Sha1};
     let helper = super::gc::fixture();
