@@ -2,7 +2,12 @@
 //! conflicting requirements in their components.
 
 use super::{Deduped, IndexEntry, Item};
-use crate::manifests::{deps::Field, intersect::intersect, semver::gt, versions::is_range};
+use crate::manifests::{
+    deps::Field,
+    intersect::intersect,
+    semver::{gt, valid_range},
+    versions::is_range,
+};
 use std::io;
 
 /// Add the items `hoisted` rejects to their components (`addToComponentDependenciesMapInDeduped`).
@@ -200,9 +205,7 @@ fn handle_ranges_only(deduped: &mut Deduped, name: &str, items: &[Item]) -> io::
     Ok(())
 }
 
-/// `handleRangesAndVersions`. When the most common exact version wins, the
-/// JavaScript filter compares each range with the `{ version, count }` object
-/// itself, so every requirement also stays in its component; that is kept.
+/// `handleRangesAndVersions`: compare valid semver ranges against exact versions.
 fn handle_ranges_and_versions(
     deduped: &mut Deduped,
     name: &str,
@@ -213,12 +216,13 @@ fn handle_ranges_and_versions(
     let ranges: Vec<&str> = items
         .iter()
         .map(|item| item.range.as_str())
+        .filter(|range| valid_range(range).is_some())
         .collect();
     let best = best_range(&ranges)?;
     let field = lifecycle_field(items);
     if best.count < count {
         set_root(deduped, field, name, &version);
-        keep_in_components(deduped, name, items, |_| false);
+        keep_in_components(deduped, name, items, |item| item.range == version);
     } else {
         set_root(deduped, field, name, &best.intersected);
         keep_in_components(deduped, name, items, |item| best.ranges.contains(&item.range.as_str()));

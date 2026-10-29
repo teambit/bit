@@ -201,17 +201,14 @@ fn equal_counts_prefer_the_best_range() {
     assert_eq!(component(&deduped, 3, Field::Dependencies), Some("^6.0.0"));
 }
 
-/// When the most common exact version outnumbers the best range (a spec that
-/// is no range, like `workspace:*`), the original compares ranges with the
-/// `{ version, count }` object, so nothing is filtered: every requirement also
-/// stays in its component.
+/// Non-semver versions that win are omitted from matching components.
 #[test]
-fn most_common_version_winning_keeps_every_requirement() {
+fn most_common_version_winning_keeps_only_conflicting_requirements() {
     let deduped = single(&["workspace:*", "workspace:*", "^1.0.0"], Field::Dependencies);
     assert_eq!(root(&deduped, Field::Dependencies), Some("workspace:*"));
-    for (index, range) in [(0, "workspace:*"), (1, "workspace:*"), (2, "^1.0.0")] {
-        assert_eq!(component(&deduped, index, Field::Dependencies), Some(range));
-    }
+    assert!(!deduped.components.contains_key(&origin(0)));
+    assert!(!deduped.components.contains_key(&origin(1)));
+    assert_eq!(component(&deduped, 2, Field::Dependencies), Some("^1.0.0"));
 }
 
 #[test]
@@ -307,4 +304,16 @@ fn workspace_specs_are_excluded() {
         .map(|(name, spec)| (name.to_string(), spec.to_string()))
         .collect();
     assert_eq!(exclude_workspace(&map).into_keys().collect::<Vec<_>>(), ["c"]);
+}
+
+#[test]
+fn most_common_snap_hash_wins_over_valid_ranges() {
+    let deduped =
+        single(&["^4.0.0", "00000001", "00000001", "00000001", "^4.0.4"], Field::DevDependencies);
+    assert_eq!(root(&deduped, Field::DevDependencies), Some("00000001"));
+    for index in [1, 2, 3] {
+        assert!(!deduped.components.contains_key(&origin(index)));
+    }
+    assert_eq!(component(&deduped, 0, Field::DevDependencies), Some("^4.0.0"));
+    assert_eq!(component(&deduped, 4, Field::DevDependencies), Some("^4.0.4"));
 }

@@ -619,6 +619,45 @@ fn root_components_add_env_and_app_roots() {
 }
 
 #[test]
+fn app_root_reaches_workspace_component_with_different_dependency_version() {
+    let mut fixture = Fixture::new(vec![
+        component("example.ui", "app", Some("1.0.0"), NODE),
+        component("example.ui", "middle", Some("1.0.0"), NODE),
+        component("example.ui", "leaf", Some("2.0.0"), NODE),
+    ]);
+    fixture.config.root_components = Some(true);
+    fixture.options = ManifestOptions::new(
+        &fixture.config,
+        true,
+        Path::new(ROOT).join("node_modules/.bit_roots"),
+    );
+    let middle = fixture.components[1].clone();
+    let leaf = fixture.components[2].clone();
+    fixture.deps(
+        0,
+        ComponentDependencies {
+            components: vec![component_dep(&middle, "1.0.0")],
+            ..Default::default()
+        },
+    );
+    fixture.deps(
+        1,
+        ComponentDependencies {
+            components: vec![component_dep(&leaf, "1.0.0")],
+            ..Default::default()
+        },
+    );
+    let extra = Extra {
+        core_aspects: Vec::new(),
+        apps: vec!["example.ui/app".to_string()],
+        env_packages: IndexMap::new(),
+    };
+    let outcome = fixture.run_with(&extra);
+    let root = manifest(&outcome, "/ws/node_modules/.bit_roots/example.ui_app");
+    assert_eq!(root["dependencies"]["@example-ui/leaf"], "workspace:*");
+}
+
+#[test]
 fn hash_ignores_the_dependency_type() {
     let mut fixture = Fixture::new(vec![component("org.ui", "a", Some("1.0.0"), NODE)]);
     fixture.options.dedupe = false;
