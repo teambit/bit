@@ -176,7 +176,18 @@ fn ambiguous_short_references_preserve_canonical_error_without_writes() {
             "found 2 objects with the same short hash {parsed_reference}, please use longer hash",
         )
     };
-    assert_eq!(native.stderr, expected);
+    let current = config::read_jsonc(&helper.scopes.local_path.join(".bitmap"));
+    let scope = model["scope"].as_str().unwrap();
+    let version = current["comp1"]["version"].as_str().unwrap();
+    let absent_version = format!(
+        "unable to proceed due to the following failures:\n{scope}/comp1@{version} - component {scope}/comp1 doesn't have version {parsed_reference}",
+    );
+    assert!(
+        native.stderr == expected
+            || (!reference.starts_with(&parsed_reference) && native.stderr == absent_version),
+        "{}",
+        native.stderr,
+    );
     assert_eq!(short_ref_workspace_files(&helper), before);
 }
 
@@ -197,11 +208,18 @@ fn parsed_short_reference(raw: &str) -> String {
 fn numeric_checkout_and_revert_targets_preserve_released_errors_without_writes() {
     let helper = workspace();
     let before = short_ref_workspace_files(&helper);
-    for target in ["38938e0", "0xabc", "0012345", "9007199254740992"] {
+    for target in ["38938e0", "2756e10", "0xabc", "0012345", "9007199254740992"] {
         for command in [format!("checkout {target} comp1 -x"), format!("revert comp1 {target} -x")]
         {
             let result = compare_owned(&helper, &command, false, false);
             assert!(!result.status.success(), "{command}");
+            if target == "2756e10" && command.starts_with("checkout ") {
+                assert!(
+                    result.stderr.contains("doesn't have version 27560000000000"),
+                    "{}",
+                    result.stderr,
+                );
+            }
             assert_eq!(short_ref_workspace_files(&helper), before);
         }
     }

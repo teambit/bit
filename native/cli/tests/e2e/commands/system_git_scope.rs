@@ -27,6 +27,51 @@ fn version_history_rebuilds_missing_bare_history_without_runtime() {
     assert!(result.stdout.contains("added 2 hashes"));
 }
 
+#[cfg(unix)]
+#[test]
+fn version_history_rebuilds_partial_bare_history_and_preserves_mode() {
+    use sha1::{Digest, Sha1};
+    use std::os::unix::fs::PermissionsExt;
+    for keep_head in [false, true] {
+        let helper = super::gc::fixture();
+        let scope = &helper.scopes.remote_path;
+        let model_hash = format!("{:x}", Sha1::digest(format!("{}/comp1", helper.scopes.remote)));
+        let (_, model) = bit_object_import::read_scope_object(scope, &model_hash).unwrap().unwrap();
+        let head = model["head"].as_str().unwrap();
+        let (_, version) = bit_object_import::read_scope_object(scope, head).unwrap().unwrap();
+        let parent = version["parents"][0].as_str().unwrap();
+        let row = if keep_head {
+            json!({"hash":head,"parents":[parent]})
+        } else {
+            json!({"hash":parent,"parents":[]})
+        };
+        let history = json!({"name":"comp1","scope":helper.scopes.remote,"versions":[row],"graphCompleteRefs":[]});
+        let hash =
+            format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+        write_scope_fixture_at(scope, "VersionHistory", &hash, &history);
+        let path = scope
+            .join("objects")
+            .join(&hash[..2])
+            .join(&hash[2..]);
+        let mode = if keep_head { 0o640 } else { 0o444 };
+        fs::set_permissions(&path, fs::Permissions::from_mode(mode)).unwrap();
+        let result = super::gc::compare(&helper, "version-history build comp1", false);
+        assert!(result.stdout.contains(if keep_head {
+            "added 1 hashes"
+        } else {
+            "added 2 hashes"
+        }));
+        assert_eq!(
+            fs::metadata(path)
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o777,
+            mode,
+        );
+    }
+}
+
 #[test]
 fn version_history_bare_missing_version_delegates_before_writes() {
     use sha1::{Digest, Sha1};
@@ -159,14 +204,23 @@ fn write_history_fixture(helper: &Helper, hash: &str, history: &serde_json::Valu
 }
 
 fn write_scope_fixture(helper: &Helper, kind: &str, hash: &str, value: &serde_json::Value) {
+    write_scope_fixture_at(&helper.scopes.local_path.join(".bit"), kind, hash, value);
+}
+
+fn write_scope_fixture_at(
+    scope: &std::path::Path,
+    kind: &str,
+    hash: &str,
+    value: &serde_json::Value,
+) {
     use flate2::{Compression, write::ZlibEncoder};
     use std::io::Write;
     let body = serde_json::to_vec(value).unwrap();
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     write!(encoder, "{kind} {hash} {}\0", body.len()).unwrap();
     encoder.write_all(&body).unwrap();
-    let path = helper.scopes.local_path
-        .join(".bit/objects")
+    let path = scope
+        .join("objects")
         .join(&hash[..2])
         .join(&hash[2..]);
     fs::create_dir_all(path.parent().unwrap()).unwrap();

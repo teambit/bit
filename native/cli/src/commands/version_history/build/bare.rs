@@ -1,4 +1,4 @@
-//! Reconstruct an absent linear local-scope history and publish it atomically.
+//! Reconstruct qualified linear local-scope history and publish it atomically.
 #[cfg(test)]
 mod tests;
 use super::{Chalk, Formatter, Outcome, ScopeRoot, Value, resolve_component_entry, sha1_hex};
@@ -19,6 +19,7 @@ pub(super) struct Plan {
     payload: Vec<u8>,
     proofs: Vec<(PathBuf, Vec<u8>)>,
     count: usize,
+    mode: Option<u32>,
 }
 
 pub(super) fn prepare(root: &ScopeRoot, id: &str) -> Option<Plan> {
@@ -32,14 +33,110 @@ pub(super) fn prepare(root: &ScopeRoot, id: &str) -> Option<Plan> {
     let head = model["head"].as_str()?;
     let hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
     let path = object_path(&root.path, &hash)?;
-    if !absent(&path) || !safe_parent(&root.path, &path) {
+    if !safe_parent(&root.path, &path) {
         return None;
     }
-    let rows = ancestry(&root.path, head, &mut proofs)?;
+    let (existing, mode) = stored(&root.path, &hash, &path, &mut proofs)?;
+    if existing
+        .as_ref()
+        .is_some_and(|value| super::complete(value, head) != Some(false))
+    {
+        return None;
+    }
+    let output = content(&root.path, &hash, head, &name, &scope, existing.as_ref(), &mut proofs)?;
+    Some(Plan {
+        path,
+        identity: format!("{scope}/{name}"),
+        payload: output.0,
+        proofs,
+        count: output.1,
+        mode,
+    })
+}
+
+fn content(
+    root: &Path,
+    hash: &str,
+    head: &str,
+    name: &str,
+    scope: &str,
+    existing: Option<&Value>,
+    proofs: &mut Vec<(PathBuf, Vec<u8>)>,
+) -> Option<(Vec<u8>, usize)> {
+    let rows = ancestry(root, head, proofs)?;
+    let (rows, count) = merge(existing, rows, name, scope)?;
     let value = json!({"name":name,"scope":scope,"versions":rows,"graphCompleteRefs":[]});
-    let count = value["versions"].as_array()?.len();
-    let payload = encode(&hash, &value).ok()?;
-    Some(Plan { path, identity: format!("{scope}/{name}"), payload, proofs, count })
+    Some((encode(hash, &value).ok()?, count))
+}
+
+fn stored(
+    root: &Path,
+    hash: &str,
+    path: &Path,
+    proofs: &mut Vec<(PathBuf, Vec<u8>)>,
+) -> Option<(Option<Value>, Option<u32>)> {
+    if absent(path) {
+        return Some((None, None));
+    }
+    let mode = existing_mode(path)?;
+    Some((Some(read(root, hash, "VersionHistory", proofs)?), Some(mode)))
+}
+
+#[cfg(unix)]
+fn existing_mode(path: &Path) -> Option<u32> {
+    use std::os::unix::fs::MetadataExt;
+    let metadata = fs::symlink_metadata(path).ok()?;
+    // SAFETY: these process identity queries have no arguments or side effects.
+    let uid = unsafe { libc::geteuid() };
+    // SAFETY: these process identity queries have no arguments or side effects.
+    let gid = unsafe { libc::getegid() };
+    let parent = fs::metadata(path.parent()?).ok()?;
+    if !metadata.is_file()
+        || metadata.file_type().is_symlink()
+        || metadata.uid() != uid
+        || metadata.gid() != gid
+        || (parent.mode() & 0o2000 != 0 && parent.gid() != gid)
+    {
+        return None;
+    }
+    Some(metadata.mode() & 0o7777)
+}
+
+#[cfg(not(unix))]
+fn existing_mode(_path: &Path) -> Option<u32> {
+    None
+}
+
+fn merge(
+    existing: Option<&Value>,
+    ancestors: Vec<Value>,
+    name: &str,
+    scope: &str,
+) -> Option<(Vec<Value>, usize)> {
+    let Some(existing) = existing else {
+        let count = ancestors.len();
+        return Some((ancestors, count));
+    };
+    if existing["name"] != name
+        || existing["scope"] != scope
+        || !existing["graphCompleteRefs"].as_array()?.is_empty()
+    {
+        return None;
+    }
+    let mut rows = existing["versions"].as_array()?.clone();
+    if rows
+        .iter()
+        .any(|row| !ancestors.contains(row))
+    {
+        return None;
+    }
+    let count = ancestors.len() - usize::from(rows.contains(&ancestors[0]));
+    for row in ancestors {
+        if !rows.contains(&row) {
+            rows.push(row);
+        }
+    }
+    Some((rows, count))
 }
 
 fn metadata_proofs(root: &Path, scope: &str) -> Option<Vec<(PathBuf, Vec<u8>)>> {
@@ -155,8 +252,11 @@ impl Plan {
                 return Err(io::Error::other("version-history input changed"));
             }
         }
-        if !absent(&self.path) {
+        if self.mode.is_none() && !absent(&self.path) {
             return Err(io::Error::other("version-history appeared"));
+        }
+        if self.mode.is_some() && existing_mode(&self.path) != self.mode {
+            return Err(io::Error::other("version-history mode changed"));
         }
         let parent = self.path.parent().ok_or_else(|| io::Error::other("version-history path"))?;
         let temporary = parent.join(format!(
@@ -199,9 +299,25 @@ impl Plan {
         *created = true;
         file.write_all(&self.payload)
             .map_err(|error| filesystem_error::failure(error, "write", temporary))?;
+        preserve_mode(temporary, self.mode)?;
         fs::rename(temporary, &self.path)
             .map_err(|error| {
                 filesystem_error::paired_failure(error, "rename", temporary, &self.path)
             })
     }
+}
+
+#[cfg(unix)]
+fn preserve_mode(path: &Path, mode: Option<u32>) -> io::Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+    if let Some(mode) = mode {
+        fs::set_permissions(path, fs::Permissions::from_mode(mode))
+            .map_err(|error| filesystem_error::failure(error, "chmod", path))?;
+    }
+    Ok(())
+}
+
+#[cfg(not(unix))]
+fn preserve_mode(_path: &Path, _mode: Option<u32>) -> io::Result<()> {
+    Ok(())
 }

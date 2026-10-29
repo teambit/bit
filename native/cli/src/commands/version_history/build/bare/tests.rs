@@ -14,6 +14,7 @@ fn existing_temporary_file_is_not_deleted_after_failed_creation() {
         payload: b"data".to_vec(),
         proofs: Vec::new(),
         count: 1,
+        mode: None,
     };
     assert!(plan.publish().is_err());
     assert_eq!(fs::read(temporary).unwrap(), b"other operation");
