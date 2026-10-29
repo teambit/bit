@@ -1294,3 +1294,69 @@ describe('custom root components directory', function () {
     });
   });
 });
+
+describe('workspace component dependency with a pinned older version in rootComponents workspace', function () {
+  let helper: Helper;
+  this.timeout(0);
+  before(() => {
+    helper = new Helper();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
+    helper.fixtures.populateComponents(3);
+    helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+    helper.workspaceJsonc.addKeyVal(`${helper.scopes.remote}/comp1`, {});
+    helper.fs.outputFile(
+      'comp1/comp1.node-app.js',
+      `module.exports.default = {
+  name: 'comp1',
+  entry: require.resolve('./index.js'),
+};`
+    );
+    helper.extensions.addExtensionToVariant('comp1', 'teambit.harmony/aspect');
+    helper.extensions.addExtensionToVariant('comp1', 'teambit.dependencies/dependency-resolver', {
+      policy: {
+        dependencies: {
+          react: '16',
+        },
+      },
+    });
+    helper.extensions.addExtensionToVariant('comp2', 'teambit.dependencies/dependency-resolver', {
+      policy: {
+        peerDependencies: {
+          react: '16 || 17',
+        },
+      },
+    });
+    helper.extensions.addExtensionToVariant('comp3', 'teambit.dependencies/dependency-resolver', {
+      policy: {
+        peerDependencies: {
+          react: '16 || 17',
+        },
+      },
+    });
+    helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
+      dependencies: {
+        react: '17',
+      },
+    });
+    helper.command.tagAllWithoutBuild();
+    helper.command.dependenciesSet('comp2', `@${helper.scopes.remote}/comp3@0.0.1`);
+    helper.fs.outputFile('comp3/index.js', `module.exports = () => 'comp3 v2';`);
+    helper.command.tagWithoutBuild('comp3');
+    helper.command.install();
+  });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
+  it('should link the workspace dependency into the root component virtual store with its peer dependencies even when its bitmap version differs', () => {
+    expect(
+      fs.readJsonSync(
+        resolveFrom(helper.env.rootCompDir(`${helper.scopes.remote}/comp1`), [
+          `@${helper.scopes.remote}/comp1`,
+          `@${helper.scopes.remote}/comp2`,
+          `@${helper.scopes.remote}/comp3`,
+          'react/package.json',
+        ])
+      ).version
+    ).to.match(/^16\./);
+  });
+});
