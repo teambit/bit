@@ -41,4 +41,7 @@ const pubsub = context.getAspect<PubsubMain>(PUBSUB_ASPECT_ID);
 - Use the method syntax (`run(context: X): Y`) for methods whose parameter is a context. Services typed with the aspects' contexts then still fit.
 - Add a line for each new type to `contracts.spec.ts`. `npm run lint` fails when the contract and the aspects drift apart.
 
-Not in the contract: the webpack helpers (`@teambit/webpack`, used by the Angular envs only), and aspect-level APIs such as `DevFilesMain`, `ScopeMain` or the worker helpers. Code that needs them keeps importing the aspect.
+Not in the contract:
+
+- The webpack helpers. `WebpackConfigMutator` and `WebpackBitReporterPlugin` have their own small packages (`@teambit/webpack.modules.config-mutator`, `@teambit/webpack.plugins.webpack-bit-reporter-plugin`); import them from there, not from `@teambit/webpack`. The rest (`fallbacks`, ...) is used by the Angular envs only.
+- Aspect-level APIs such as `DevFilesMain`, `ScopeMain` or the worker helpers. Code that needs them keeps importing the aspect.
