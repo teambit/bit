@@ -4,6 +4,7 @@ mod lanes;
 mod planning;
 #[cfg(test)]
 mod tests;
+mod trash;
 use super::{Chalk, Formatter, Outcome, ScopeRoot, Value, resolve_component_entry, sha1_hex};
 use crate::commands::workspace_command::{self, filesystem_error, results::Report};
 use flate2::{Compression, write::ZlibEncoder};
@@ -31,8 +32,9 @@ pub(super) fn prepare(
     id: &str,
     from: Option<&str>,
     all_lanes: bool,
+    delete_existing: bool,
 ) -> Option<Plan> {
-    planning::prepare(root, id, from, all_lanes)
+    planning::prepare(root, id, from, all_lanes, delete_existing)
 }
 
 fn stored(
@@ -288,6 +290,13 @@ impl Plan {
     pub fn run(mut self, root: &ScopeRoot, args: &[OsString]) -> io::Result<Outcome> {
         let chalk = Chalk::detect(args);
         workspace_command::execute_then_scope(&root.path, args, "build", |_| {
+            if args
+                .iter()
+                .any(|arg| arg == "--delete-existing")
+            {
+                trash::move_history(&mut self, &root.path)
+                    .map_err(|error| filesystem_error::report(&error, chalk))?;
+            }
             self.publish().map_err(|error| filesystem_error::report(&error, chalk))?;
             for payload in std::mem::take(&mut self.later_payloads) {
                 self.proofs.retain(|(path, _)| path != &self.path);

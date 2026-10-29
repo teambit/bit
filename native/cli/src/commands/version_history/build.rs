@@ -26,9 +26,19 @@ pub(super) fn run(
             from,
             args.iter()
                 .any(|arg| arg == "--from-all-lanes"),
+            args.iter()
+                .any(|arg| arg == "--delete-existing"),
         )
     {
         return plan.run(root, args);
+    }
+    if args
+        .iter()
+        .any(|arg| arg == "--delete-existing")
+    {
+        return Ok(Outcome::Declined(
+            "version-history deletion requires a supported scope layout".into(),
+        ));
     }
     let Some(identities) = select(root, id, from) else {
         return Ok(Outcome::Declined(

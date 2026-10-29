@@ -9,6 +9,7 @@ pub(super) fn prepare(
     id: &str,
     from: Option<&str>,
     all_lanes: bool,
+    delete_existing: bool,
 ) -> Option<Plan> {
     if !super::super::supported_startup(root, &root.path)? {
         return None;
@@ -26,7 +27,7 @@ pub(super) fn prepare(
     }
     let model = read(&root.path, &model_hash, "Component", &mut proofs)?;
     let head = from.or_else(|| model["head"].as_str())?;
-    finish(root, &scope, &name, head, proofs, lane_heads)
+    finish(root, &scope, &name, head, proofs, lane_heads, delete_existing)
 }
 
 fn finish(
@@ -36,6 +37,7 @@ fn finish(
     head: &str,
     mut proofs: Vec<(PathBuf, Vec<u8>)>,
     lane_heads: Vec<String>,
+    delete_existing: bool,
 ) -> Option<Plan> {
     let hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
     let path = object_path(&root.path, &hash)?;
@@ -43,13 +45,26 @@ fn finish(
         return None;
     }
     let (existing, mode) = stored(&root.path, &hash, &path, &mut proofs)?;
-    if existing
-        .as_ref()
-        .is_some_and(|value| super::super::complete(value, head) != Some(false))
+    if delete_existing && (existing.is_none() || super::trash::target(&root.path, &path).is_none())
     {
         return None;
     }
-    let output = content(&root.path, &hash, head, name, scope, existing.as_ref(), &mut proofs)?;
+    if !delete_existing
+        && existing
+            .as_ref()
+            .is_some_and(|value| super::super::complete(value, head) != Some(false))
+    {
+        return None;
+    }
+    let output = content(
+        &root.path,
+        &hash,
+        head,
+        name,
+        scope,
+        if delete_existing { None } else { existing.as_ref() },
+        &mut proofs,
+    )?;
     let mut plan = Plan {
         path,
         identity: format!("{scope}/{name}"),

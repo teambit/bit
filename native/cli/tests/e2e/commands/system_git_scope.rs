@@ -28,6 +28,30 @@ fn version_history_rebuilds_missing_bare_history_without_runtime() {
     assert!(result.stdout.contains("added 2 hashes"));
 }
 
+#[cfg(unix)]
+#[test]
+fn version_history_deletes_existing_history_to_trash_before_rebuilding() {
+    use sha1::{Digest, Sha1};
+    let helper = super::gc::fixture();
+    let scope = &helper.scopes.remote_path;
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let history =
+        json!({"name":"comp1","scope":helper.scopes.remote,"versions":[],"graphCompleteRefs":[]});
+    write_scope_fixture_at(scope, "VersionHistory", &hash, &history);
+    fs::create_dir_all(scope.join("trash").join(&hash[..2])).unwrap();
+    let result =
+        super::gc::compare(&helper, "version-history build comp1 --delete-existing", false);
+    assert!(result.stdout.contains("added 2 hashes"));
+    assert!(
+        scope
+            .join("trash")
+            .join(&hash[..2])
+            .join(&hash[2..])
+            .is_file(),
+    );
+}
+
 #[test]
 fn version_history_rebuilds_all_lanes_when_scope_has_no_lanes() {
     use sha1::{Digest, Sha1};

@@ -49,6 +49,37 @@ fn later_publication_failure_keeps_the_first_history() {
     assert_eq!(fs::read(temporary).unwrap(), b"collision");
 }
 
+#[cfg(unix)]
+#[test]
+fn failed_rebuild_after_trash_move_keeps_the_original_in_trash() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path();
+    let bucket = "aa";
+    let leaf = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    let objects = root.join("objects").join(bucket);
+    let trash = root.join("trash").join(bucket);
+    fs::create_dir_all(&objects).unwrap();
+    fs::create_dir_all(&trash).unwrap();
+    let path = objects.join(leaf);
+    fs::write(&path, b"original").unwrap();
+    let mut plan = Plan {
+        path: path.clone(),
+        identity: "fixture/component".into(),
+        payload: b"rebuilt".to_vec(),
+        later_payloads: Vec::new(),
+        proofs: vec![(path.clone(), b"original".to_vec())],
+        count: 1,
+        mode: super::existing_mode(&path),
+    };
+    super::trash::move_history(&mut plan, root).unwrap();
+    let temporary = objects.join(format!(".{leaf}.{}.1", std::process::id()));
+    fs::write(&temporary, b"collision").unwrap();
+    assert!(plan.publish().is_err());
+    assert!(!path.exists());
+    assert_eq!(fs::read(trash.join(leaf)).unwrap(), b"original");
+    assert_eq!(fs::read(temporary).unwrap(), b"collision");
+}
+
 #[test]
 fn cyclic_ancestry_declines_before_publishing() {
     use flate2::{Compression, write::ZlibEncoder};

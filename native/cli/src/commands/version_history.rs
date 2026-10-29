@@ -48,7 +48,7 @@ fn parse_build(rest: &[&str]) -> Option<Subcommand> {
     let mut arguments = rest.iter().copied();
     while let Some(argument) = arguments.next() {
         match argument {
-            "--from-all-lanes" => {}
+            "--from-all-lanes" | "--delete-existing" => {}
             "--from-snap" if from.is_none() => from = Some(arguments.next()?.to_owned()),
             value if !value.starts_with('-') && id.is_none() => id = Some(value.to_owned()),
             _ => return None,
