@@ -5,7 +5,7 @@ import path from 'path';
 import { Readable } from 'stream';
 import { pipeline } from 'stream/promises';
 import type { ObjectItem } from '@teambit/objects';
-import { ModelComponent, Ref, Source, Version } from '@teambit/objects';
+import { Lane, ModelComponent, Ref, Source, Version } from '@teambit/objects';
 import Scope from '../scope';
 import { ObjectsWritable } from './objects-writable-stream';
 import { WriteObjectsQueue } from './write-objects-queue';
@@ -63,6 +63,27 @@ describe('ObjectsWritable', () => {
   });
   it('should collect a ModelComponent for the merge instead of writing it', async () => {
     expect(componentsPerRemote['writable-spec'].map((comp) => comp.name)).to.deep.equal(['comp']);
+  });
+  it('should store many objects streamed at once, each loadable afterwards', async () => {
+    const sources = Array.from({ length: 300 }, (_, i) => Source.from(Buffer.from(`export const n = ${i};\n`)));
+    const items = await Promise.all(
+      sources.map(async (src) => ({ ref: src.hash(), buffer: await src.compress(), type: src.getType() }))
+    );
+    await write(items);
+    scope.objects.clearCache();
+    const loaded = await Promise.all(sources.map((src) => scope.objects.load(src.hash(), true) as Promise<Source>));
+    expect(loaded.map((src) => src.contents.toString())).to.deep.equal(sources.map((src) => src.contents.toString()));
+  });
+  it('should fail the stream when an object cannot be written', async () => {
+    const lane = new Lane({ name: 'dev', scope: 'writable-spec', hash: 'f'.repeat(40), log: { date: '0' } } as any);
+    const item: ObjectItem = { ref: lane.hash(), buffer: await lane.compress(), type: lane.getType() };
+    let error: Error | undefined;
+    try {
+      await write([item]);
+    } catch (err: any) {
+      error = err;
+    }
+    expect(error?.message).to.include('does not support lanes');
   });
   it('should store a Source whose ref does not match its content under the hash of the content', async () => {
     const underWrongRef = await scope.objects.load(mismatchedRef, false);

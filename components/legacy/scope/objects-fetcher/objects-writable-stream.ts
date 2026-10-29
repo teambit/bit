@@ -20,6 +20,14 @@ const TIMEOUT_MINUTES_EXIT = 30;
 export class ObjectsWritable extends Writable {
   private timeoutId: NodeJS.Timeout;
   private intervalCounter = 0;
+  /**
+   * the objects being parsed and written. `_write` does not wait for an object to be written before it takes the
+   * next one from the stream, so the parse of one object overlaps the writes of the others. when the queue's
+   * concurrency of objects is in flight, `_write` waits for one of them (the queue does not write more at a time).
+   * errors are kept and reported by the next `_write` or by `_final`.
+   */
+  private inFlight = new Set<Promise<void>>();
+  private errors: Error[] = [];
   constructor(
     private repo: Repository,
     private remoteName: string,
@@ -47,18 +55,25 @@ export class ObjectsWritable extends Writable {
     if (!obj.ref || !obj.buffer) {
       return callback(new Error('objectItem expected to have "ref" and "buffer" props'));
     }
-    try {
-      await this.writeObjectToFs(obj);
-      return callback();
-    } catch (err: any) {
-      logger.error(`found an issue during write of ${obj.ref.toString()}`, err);
-      return callback(err);
+    if (this.errors.length) return callback(this.errors[0]);
+    while (this.inFlight.size >= this.objectsQueue.concurrency) {
+      await Promise.race(this.inFlight);
+      if (this.errors.length) return callback(this.errors[0]);
     }
+    const writing: Promise<void> = this.writeObjectToFs(obj)
+      .catch((err: any) => {
+        logger.error(`found an issue during write of ${obj.ref.toString()}`, err);
+        this.errors.push(err);
+      })
+      .finally(() => this.inFlight.delete(writing));
+    this.inFlight.add(writing);
+    return callback();
   }
 
   async _final(callback) {
     clearInterval(this.timeoutId);
-    callback();
+    await Promise.all(this.inFlight);
+    callback(this.errors[0]);
   }
 
   private async writeObjectToFs(obj: ObjectItem) {
