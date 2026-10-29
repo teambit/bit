@@ -24,10 +24,9 @@ export class ObjectsWritable extends Writable {
    * the objects being parsed and written. `_write` does not wait for an object to be written before it takes the
    * next one from the stream, so the parse of one object overlaps the writes of the others. when the queue's
    * concurrency of objects is in flight, `_write` waits for one of them (the queue does not write more at a time).
-   * errors are kept and reported by the next `_write` or by `_final`.
+   * a failed write destroys the stream, see `_destroy`.
    */
   private inFlight = new Set<Promise<void>>();
-  private errors: Error[] = [];
   constructor(
     private repo: Repository,
     private remoteName: string,
@@ -55,16 +54,16 @@ export class ObjectsWritable extends Writable {
     if (!obj.ref || !obj.buffer) {
       return callback(new Error('objectItem expected to have "ref" and "buffer" props'));
     }
-    if (this.errors.length) return callback(this.errors[0]);
     while (this.inFlight.size >= this.objectsQueue.concurrency) {
       await Promise.race(this.inFlight);
-      // the stream is destroyed when the remote stream fails. then, don't start more writes.
-      if (this.errors.length || this.destroyed) return callback(this.errors[0]);
+      // a failed write or a failed remote stream destroys the stream. then, don't start more writes.
+      if (this.destroyed) return callback();
     }
     const writing: Promise<void> = this.writeObjectToFs(obj)
       .catch((err: any) => {
         logger.error(`found an issue during write of ${obj.ref.toString()}`, err);
-        this.errors.push(err);
+        // fail the stream now. the remote stream may not send another object, nor end.
+        this.destroy(err);
       })
       .finally(() => this.inFlight.delete(writing));
     this.inFlight.add(writing);
@@ -74,7 +73,7 @@ export class ObjectsWritable extends Writable {
   async _final(callback) {
     clearInterval(this.timeoutId);
     await Promise.all(this.inFlight);
-    callback(this.errors[0]);
+    callback();
   }
 
   /**

@@ -74,16 +74,14 @@ describe('ObjectsWritable', () => {
     const loaded = await Promise.all(sources.map((src) => scope.objects.load(src.hash(), true) as Promise<Source>));
     expect(loaded.map((src) => src.contents.toString())).to.deep.equal(sources.map((src) => src.contents.toString()));
   });
-  it('should fail the stream when an object cannot be written', async () => {
+  it('should fail the stream when an object cannot be written, without waiting for the remote stream', async () => {
     const lane = new Lane({ name: 'dev', scope: 'writable-spec', hash: 'f'.repeat(40), log: { date: '0' } } as any);
-    const item: ObjectItem = { ref: lane.hash(), buffer: await lane.compress(), type: lane.getType() };
-    let error: Error | undefined;
-    try {
-      await write([item]);
-    } catch (err: any) {
-      error = err;
-    }
-    expect(error?.message).to.include('does not support lanes');
+    // the remote stream stays open: it does not send another object and does not end.
+    const fromRemote = new Readable({ objectMode: true, read() {} });
+    fromRemote.push({ ref: lane.hash(), buffer: await lane.compress(), type: lane.getType() });
+    const writable = new ObjectsWritable(scope.objects, 'writable-spec', new WriteObjectsQueue(), componentsPerRemote);
+    const error = await pipeline(fromRemote, writable).catch((err) => err);
+    expect(error.message).to.include('does not support lanes');
   });
   it('should finish the writes in flight before the stream fails', async () => {
     const sources = Array.from({ length: 300 }, (_, i) => Source.from(Buffer.from(`export const failing = ${i};\n`)));
