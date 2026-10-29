@@ -21,7 +21,7 @@ pub(super) fn prepare(
     } else {
         Vec::new()
     };
-    if lane_heads.len() > 1 || (cfg!(not(unix)) && !lane_heads.is_empty()) {
+    if lane_heads.len() > 8 || (cfg!(not(unix)) && !lane_heads.is_empty()) {
         return None;
     }
     let model = read(&root.path, &model_hash, "Component", &mut proofs)?;

@@ -114,6 +114,57 @@ fn version_history_rebuilds_divergent_lane_head_after_main_history() {
 }
 
 #[test]
+fn version_history_rebuilds_multiple_lane_heads_in_index_order() {
+    use sha1::{Digest, Sha1};
+    let helper = super::gc::fixture();
+    for lane in ["first", "second"] {
+        super::move_paths::support::setup(&helper, &format!("lane create {lane}"));
+        helper.output_file("comp1/index.js", &format!("module.exports=()=> '{lane}';\n"));
+        super::move_paths::support::setup(&helper, "snap comp1 --unmodified --skip-tests");
+        super::move_paths::support::setup(&helper, "export");
+        super::move_paths::support::setup(&helper, "switch main");
+    }
+    let index: serde_json::Value =
+        serde_json::from_slice(&fs::read(helper.scopes.remote_path.join("index.json")).unwrap())
+            .unwrap();
+    assert_eq!(index["lanes"].as_array().unwrap().len(), 2, "{index}");
+    let lanes: Vec<_> = index["lanes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|entry| {
+            bit_object_import::read_scope_object(
+                &helper.scopes.remote_path,
+                entry["hash"].as_str().unwrap(),
+            )
+            .unwrap()
+            .unwrap()
+            .1
+        })
+        .collect();
+    assert!(
+        lanes
+            .iter()
+            .all(|lane| !lane["components"]
+                .as_array()
+                .unwrap()
+                .is_empty()),
+        "{lanes:?}",
+    );
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = super::gc::compare(&helper, "version-history build comp1 --from-all-lanes", false);
+    assert!(result.stdout.contains("added 8 hashes"), "{result:?}");
+}
+
+#[test]
 fn version_history_rebuilds_bare_history_from_selected_snapshot() {
     use sha1::{Digest, Sha1};
     let helper = super::gc::fixture();
