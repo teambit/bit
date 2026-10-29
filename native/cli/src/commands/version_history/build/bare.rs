@@ -1,4 +1,4 @@
-//! Reconstruct qualified linear local-scope history and publish it atomically.
+//! Reconstruct qualified local-scope history and publish it atomically.
 #[cfg(test)]
 mod tests;
 use super::{Chalk, Formatter, Outcome, ScopeRoot, Value, resolve_component_entry, sha1_hex};
@@ -167,24 +167,24 @@ fn safe_parent(root: &Path, path: &Path) -> bool {
 }
 
 fn ancestry(root: &Path, head: &str, proofs: &mut Vec<(PathBuf, Vec<u8>)>) -> Option<Vec<Value>> {
-    let mut current = head.to_owned();
+    let mut pending = vec![head.to_owned()];
     let mut seen = HashSet::new();
     let mut rows = Vec::new();
-    loop {
+    while let Some(current) = pending.pop() {
         if !seen.insert(current.clone()) || seen.len() > 128 {
             return None;
         }
         let version = read(root, &current, "Version", proofs)?;
         let parents = version["parents"].as_array()?;
-        if parents.len() > 1 || !version["unrelated"].is_null() || !version["squashed"].is_null() {
+        if parents.len() > 8 || !version["unrelated"].is_null() || !version["squashed"].is_null() {
             return None;
         }
         rows.push(json!({"hash":current,"parents":parents}));
-        match parents.first() {
-            Some(parent) => parent.as_str()?.clone_into(&mut current),
-            None => return Some(rows),
+        for parent in parents.iter().rev() {
+            pending.push(parent.as_str()?.to_owned());
         }
     }
+    Some(rows)
 }
 
 fn object_path(root: &Path, hash: &str) -> Option<PathBuf> {

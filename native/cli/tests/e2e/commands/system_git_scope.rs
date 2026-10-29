@@ -27,6 +27,42 @@ fn version_history_rebuilds_missing_bare_history_without_runtime() {
     assert!(result.stdout.contains("added 2 hashes"));
 }
 
+#[test]
+fn version_history_rebuilds_branched_bare_history_in_parent_order() {
+    use sha1::{Digest, Sha1};
+    let helper = super::gc::fixture();
+    let scope = &helper.scopes.remote_path;
+    let model_hash = format!("{:x}", Sha1::digest(format!("{}/comp1", helper.scopes.remote)));
+    let (_, model) = bit_object_import::read_scope_object(scope, &model_hash).unwrap().unwrap();
+    let head = model["head"].as_str().unwrap();
+    let (_, mut version) = bit_object_import::read_scope_object(scope, head).unwrap().unwrap();
+    let parent = version["parents"][0]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let (_, mut other) = bit_object_import::read_scope_object(scope, &parent).unwrap().unwrap();
+    let branch = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+    other["parents"] = json!([]);
+    write_scope_fixture_at(scope, "Version", branch, &other);
+    version["parents"] = json!([parent, branch]);
+    write_scope_fixture_at(scope, "Version", head, &version);
+    let history =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = scope
+        .join("objects")
+        .join(&history[..2])
+        .join(&history[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = super::gc::compare(&helper, "version-history build comp1", false);
+    assert!(result.stdout.contains("added 3 hashes"));
+    let partial = json!({"name":"comp1","scope":helper.scopes.remote,"versions":[{"hash":head,"parents":[parent, branch]}],"graphCompleteRefs":[]});
+    write_scope_fixture_at(scope, "VersionHistory", &history, &partial);
+    let result = super::gc::compare(&helper, "version-history build comp1", false);
+    assert!(result.stdout.contains("added 2 hashes"));
+}
+
 #[cfg(unix)]
 #[test]
 fn version_history_rebuilds_partial_bare_history_and_preserves_mode() {
