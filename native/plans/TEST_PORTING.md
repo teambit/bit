@@ -3600,6 +3600,7 @@ row's fields, object path, header, logical identity, and remote index stay exact
 - [x] `e2e/harmony/root-components.e2e.ts:1195` env peer dependencies hoisting when the env is in the workspace › pnpm isolated linker › should install react to the root of the component — `harmony::root_components_harmony::known_failures::deleting_a_component_removes_from_root_and_dependent` (known failure)
 - [x] `e2e/harmony/root-components.e2e.ts:1273` create with root components on › should create the runtime component directory for the created component — `harmony::root_components_harmony::known_failures::adding_new_peer_dependency_and_removing_component` (known failure)
 - [x] `e2e/harmony/root-components.e2e.ts:1290` custom root components directory › set a valid custom location › should create the root component directory at the specified location — `harmony::root_components_harmony::known_failures::adding_new_peer_dependency_and_removing_component` (known failure)
+- [ ] `e2e/harmony/root-components.e2e.ts:1350` workspace component dependency with a pinned older version in rootComponents workspace › should link the workspace dependency into the root component virtual store with its peer dependencies even when its bitmap version differs
 
 ### `e2e/harmony/scope-cmd.e2e.ts`
 
