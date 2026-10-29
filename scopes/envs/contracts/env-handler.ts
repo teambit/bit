@@ -31,9 +31,9 @@ export interface EnvContext {
   createLogger(name?: string): Logger;
 
   /**
-   * get an instance of an aspect. the aspect must be loaded before it's requested.
+   * get an instance of an aspect. undefined when the aspect isn't loaded, e.g. the workspace in a scope.
    */
-  getAspect<T>(aspectId: string): T;
+  getAspect<T>(aspectId: string): T | undefined;
 
   /**
    * create a worker for the env.

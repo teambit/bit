@@ -83,7 +83,7 @@ export interface TypescriptSchemaProvider {
  */
 export function typescriptSchemaExtractor(options: TypescriptSchemaExtractorOptions = {}): EnvHandler<SchemaExtractor> {
   return (context: EnvContext) => {
-    const typescript = context.getAspect<TypescriptSchemaProvider | undefined>(TYPESCRIPT_ASPECT_ID);
+    const typescript = context.getAspect<TypescriptSchemaProvider>(TYPESCRIPT_ASPECT_ID);
     if (!typescript?.createSchemaExtractorFromOptions) {
       throw new Error(
         'typescriptSchemaExtractor() needs a newer version of Bit. update Bit, or use TypeScriptExtractor.from() of @teambit/typescript'
