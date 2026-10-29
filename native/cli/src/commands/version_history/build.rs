@@ -128,7 +128,7 @@ fn prepare(root: &ScopeRoot, id: &str, from: Option<&str>) -> Option<String> {
     Some(format!("{scope}/{name}"))
 }
 
-fn supported_startup(root: &ScopeRoot, scope: &std::path::Path) -> Option<bool> {
+pub(super) fn supported_startup(root: &ScopeRoot, scope: &std::path::Path) -> Option<bool> {
     let workspace = (!root.bare).then_some(root.path.as_path());
     let config = match workspace {
         Some(path) => {

@@ -126,6 +126,107 @@ fn remote_history_rebuild_changes_real_http_scope_once() {
     drop(server);
 }
 
+#[test]
+fn remote_file_history_uses_the_client_workspace_without_a_host() {
+    use sha1::{Digest, Sha1};
+    let helper = crate::commands::gc::fixture();
+    let scope = &helper.scopes.remote_path;
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let history = scope
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if history.exists() {
+        fs::remove_file(&history).unwrap();
+    }
+    let remote_before = crate::commands::move_paths::support::tree(scope);
+    let baseline = helper.clone_workspace();
+    let command = format!("version-history build comp1 --remote {}", helper.scopes.remote);
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        &command,
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    assert!(node.stdout.contains("no changes"));
+    assert_eq!(crate::commands::move_paths::support::tree(scope), remote_before);
+    let expected = workspace_scope_tree(&helper);
+    helper.get_cloned_workspace(&baseline);
+    let unavailable = helper.scopes.e2e_dir.join("unavailable-node");
+    let native = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        &command,
+        &[("BIT_NODE_BINARY", unavailable.as_os_str())],
+    );
+    assert!(native.native && native.status.success(), "{native:?}");
+    assert!(!native.trace.contains("starting the JavaScript host"), "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(crate::commands::move_paths::support::tree(scope), remote_before);
+    let actual = workspace_scope_tree(&helper);
+    let differences: Vec<_> = actual
+        .keys()
+        .chain(expected.keys())
+        .filter(|key| actual.get(*key) != expected.get(*key))
+        .collect();
+    assert!(differences.is_empty(), "{differences:?}");
+}
+
+#[test]
+fn remote_file_incomplete_client_history_declines_before_mutation() {
+    use sha1::{Digest, Sha1};
+    let helper = crate::commands::gc::fixture();
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let local = helper.scopes.local_path.join(".bit");
+    let history = local
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if history.exists() {
+        fs::remove_file(&history).unwrap();
+    }
+    let remote_before = crate::commands::move_paths::support::tree(&helper.scopes.remote_path);
+    let unavailable = helper.scopes.e2e_dir.join("unavailable-node");
+    let command = format!("version-history build comp1 --remote {}", helper.scopes.remote);
+    let run = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        &command,
+        &[("BIT_NODE_BINARY", unavailable.as_os_str())],
+    );
+    assert!(!run.native, "{run:?}");
+    assert!(!history.exists());
+    assert_eq!(
+        crate::commands::move_paths::support::tree(&helper.scopes.remote_path),
+        remote_before,
+    );
+}
+
+fn workspace_scope_tree(helper: &Helper) -> std::collections::BTreeMap<String, Vec<u8>> {
+    let mut tree =
+        crate::commands::move_paths::support::tree(&helper.scopes.local_path.join(".bit"));
+    if let Some(history) = tree.get_mut("command-history") {
+        let text = std::str::from_utf8(history).unwrap();
+        *history = text
+            .lines()
+            .map(|line| {
+                let mut fields = line.splitn(3, ' ');
+                chrono::DateTime::parse_from_rfc3339(fields.next().unwrap()).unwrap();
+                fields
+                    .next()
+                    .unwrap()
+                    .parse::<u32>()
+                    .unwrap();
+                fields.next().unwrap()
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+            .into_bytes();
+    }
+    tree
+}
+
 fn compare(command: &str, response: Value, environment: &[(&str, &OsStr)]) -> Value {
     compare_status(command, 200, response, environment)
 }

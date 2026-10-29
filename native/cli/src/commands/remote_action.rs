@@ -32,6 +32,12 @@ enum Target {
 }
 
 impl Plan {
+    pub(super) fn file_scope(&self) -> Option<&Path> {
+        match &self.target {
+            Target::File(scope) => Some(scope),
+            Target::Http { .. } => None,
+        }
+    }
     pub(super) async fn action(&self, name: &str, payload: &Value) -> io::Result<Value> {
         match &self.target {
             Target::Http { url, network } => {

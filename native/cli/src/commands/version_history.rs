@@ -103,7 +103,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
                     ),
                 ));
             }
-            remote::run(args, &id, from.as_deref(), &remote)
+            remote::run(&root, args, &id, from.as_deref(), &remote)
         }
         Subcommand::Build(id, from, None) => build::run(&root, args, &id, from.as_deref()),
     }
