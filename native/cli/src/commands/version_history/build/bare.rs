@@ -187,8 +187,8 @@ fn ancestry(root: &Path, head: &str, proofs: &mut Vec<(PathBuf, Vec<u8>)>) -> Op
             return None;
         }
         active.insert(current.clone());
-        let parents = version_parents(root, &current, proofs)?;
-        rows.push(json!({"hash":current,"parents":parents}));
+        let (parents, row) = version_parents(root, &current, proofs)?;
+        rows.push(row);
         pending.push((current, true));
         pending.extend(
             parents
@@ -204,16 +204,43 @@ fn version_parents(
     root: &Path,
     hash: &str,
     proofs: &mut Vec<(PathBuf, Vec<u8>)>,
-) -> Option<Vec<String>> {
+) -> Option<(Vec<String>, Value)> {
     let version = read(root, hash, "Version", proofs)?;
     let parents = version["parents"].as_array()?;
-    if parents.len() > 8 || !version["unrelated"].is_null() || !version["squashed"].is_null() {
+    if parents.len() > 8 {
         return None;
     }
-    parents
+    let parents: Vec<String> = parents
         .iter()
         .map(|parent| Some(parent.as_str()?.to_owned()))
-        .collect()
+        .collect::<Option<_>>()?;
+    let mut row = json!({"hash":hash,"parents":parents});
+    for (field, key) in [("unrelated", "head"), ("squashed", "previousParents")] {
+        if version[field].is_null() {
+            continue;
+        }
+        let data = &version[field];
+        data["laneId"]["name"].as_str()?;
+        data["laneId"]["scope"].as_str()?;
+        let refs = if field == "unrelated" {
+            vec![data[key].as_str()?]
+        } else {
+            data[key]
+                .as_array()?
+                .iter()
+                .map(Value::as_str)
+                .collect::<Option<Vec<_>>>()?
+        };
+        if refs.len() > 128
+            || refs
+                .iter()
+                .any(|hash| object_path(root, hash).is_none())
+        {
+            return None;
+        }
+        row[field] = data[key].clone();
+    }
+    Some((parents, row))
 }
 
 fn object_path(root: &Path, hash: &str) -> Option<PathBuf> {

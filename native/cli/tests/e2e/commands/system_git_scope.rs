@@ -57,6 +57,40 @@ fn version_history_rebuilds_bare_history_from_selected_snapshot() {
 }
 
 #[test]
+fn version_history_rebuild_preserves_unrelated_and_squashed_edges() {
+    use sha1::{Digest, Sha1};
+    let helper = super::gc::fixture();
+    let scope = &helper.scopes.remote_path;
+    let model_hash = format!("{:x}", Sha1::digest(format!("{}/comp1", helper.scopes.remote)));
+    let (_, model) = bit_object_import::read_scope_object(scope, &model_hash).unwrap().unwrap();
+    let head = model["head"].as_str().unwrap();
+    let (_, mut version) = bit_object_import::read_scope_object(scope, head).unwrap().unwrap();
+    let parent = version["parents"][0]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let lane = json!({"name":"sample-lane","scope":helper.scopes.remote});
+    version["unrelated"] = json!({"head":parent,"laneId":lane});
+    version["squashed"] = json!({"previousParents":[parent],"laneId":lane});
+    write_scope_fixture_at(scope, "Version", head, &version);
+    let history =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = scope
+        .join("objects")
+        .join(&history[..2])
+        .join(&history[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = super::gc::compare(&helper, "version-history build comp1", false);
+    assert!(result.stdout.contains("added 2 hashes"));
+    let partial = json!({"name":"comp1","scope":helper.scopes.remote,"versions":[{"hash":head,"parents":[parent],"unrelated":parent,"squashed":[parent]}],"graphCompleteRefs":[]});
+    write_scope_fixture_at(scope, "VersionHistory", &history, &partial);
+    let result = super::gc::compare(&helper, "version-history build comp1", false);
+    assert!(result.stdout.contains("added 1 hashes"));
+}
+
+#[test]
 fn version_history_rebuilds_branched_bare_history_in_parent_order() {
     for shared in [false, true] {
         branched_history_case(shared);
