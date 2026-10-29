@@ -1,10 +1,12 @@
-import type { ServiceHandlerContext } from './service-handler-context';
+import type { AsyncEnvHandler, EnvContext as ServiceHandlerContext, EnvHandler } from '@teambit/envs.contracts';
 
 /**
  * definition of the service handler.
+ * the context is the env contract's interface, checked bivariantly, so handlers typed with either the interface
+ * or the ServiceHandlerContext class are accepted.
  */
-export type ServiceHandlerFactory<T> = (context: ServiceHandlerContext) => ServiceHandler & T;
-export type AsyncServiceHandlerFactory<T> = (context: ServiceHandlerContext) => Promise<ServiceHandler & T>;
+export type ServiceHandlerFactory<T> = EnvHandler<T>;
+export type AsyncServiceHandlerFactory<T> = AsyncEnvHandler<T>;
 
 export interface ServiceHandler {
   /**

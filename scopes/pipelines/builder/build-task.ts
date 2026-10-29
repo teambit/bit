@@ -2,7 +2,7 @@ import type { Component } from '@teambit/component';
 import type { LaneId } from '@teambit/lane-id';
 import type { ExecutionContext } from '@teambit/envs';
 import type { Network } from '@teambit/isolator';
-import type { ComponentResult } from './types';
+import type { BuiltTaskResult as ContractBuiltTaskResult } from '@teambit/envs.contracts';
 import type { ArtifactDefinition } from './artifact';
 import type { TaskResultsList } from './task-results-list';
 import type { TaskResults } from './build-pipe';
@@ -118,17 +118,12 @@ export interface BuildTask {
 }
 
 // TODO: rename to BuildTaskResults
-export interface BuiltTaskResult {
-  /**
-   * build results for each of the components in the build context.
-   */
-  componentsResults: ComponentResult[];
-
+export type BuiltTaskResult = Omit<ContractBuiltTaskResult, 'artifacts'> & {
   /**
    * array of artifact definitions to generate after a successful build.
    */
   artifacts?: ArtifactDefinition[];
-}
+};
 
 export class BuildTaskHelper {
   static serializeId({ aspectId, name }: { aspectId: string; name: string }): string {

@@ -1,0 +1,47 @@
+import type { Component } from './component';
+import type { ExecutionContext } from './execution-context';
+
+export type ComponentFormatResult = {
+  /**
+   * the formatted component.
+   */
+  component: Component;
+
+  /**
+   * format results for each file of the component.
+   */
+  results: FileFormatResult[];
+};
+
+export type FileFormatResult = {
+  /**
+   * path of the formatted file.
+   */
+  filePath: string;
+
+  /**
+   * Does the file has formatting issues (needs format)
+   */
+  hasIssues: boolean;
+
+  /**
+   * The new file content after the formatting
+   */
+  newContent?: string;
+};
+
+export type FormatResults = {
+  results: ComponentFormatResult[];
+  errors: Error[];
+};
+
+export interface Formatter {
+  id: string;
+  format(context: FormatterContext): Promise<FormatResults>;
+  formatSnippet(snippet: string, filepath?: string): Promise<string>;
+  check(context: FormatterContext): Promise<FormatResults>;
+}
+export type FormatterOptions = { check?: boolean };
+export interface FormatterContext extends ExecutionContext, FormatterOptions {}
+// export interface FormatterContext extends ExecutionContext {}
+// export type FormatterContext = ExecutionContext;

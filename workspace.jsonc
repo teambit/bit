@@ -917,6 +917,9 @@
     "scopes/component/sources": {
       "teambit.pkg/pkg": {}
     },
+    "scopes/envs/contracts": {
+      "teambit.pkg/pkg": {}
+    },
     "scopes/component/snap-distance": {
       "teambit.pkg/pkg": {}
     },
