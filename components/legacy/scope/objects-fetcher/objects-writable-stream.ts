@@ -71,8 +71,9 @@ export class ObjectsWritable extends Writable {
   }
 
   async _final(callback) {
-    clearInterval(this.timeoutId);
+    // the timer keeps running until the objects in flight are written, so a stuck write still gets its warnings.
     await Promise.all(this.inFlight);
+    clearInterval(this.timeoutId);
     callback();
   }
 
@@ -81,8 +82,8 @@ export class ObjectsWritable extends Writable {
    * flight are written, so the fetch does not end while they are still written.
    */
   async _destroy(err: Error | null, callback: (error?: Error | null) => void) {
-    clearInterval(this.timeoutId);
     await Promise.all(this.inFlight);
+    clearInterval(this.timeoutId);
     callback(err);
   }
 
