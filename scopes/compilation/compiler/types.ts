@@ -1,24 +1,20 @@
 import type { BuildContext, BuildTask, BuiltTaskResult, TaskResultsList } from '@teambit/builder';
 import type { Component } from '@teambit/component';
 import type { ServiceHandler } from '@teambit/envs';
+import type {
+  CompilationInitiator,
+  CompilerOptions,
+  TranspileFileOutput,
+  TranspileFileParams,
+} from '@teambit/envs.contracts';
 
-export type TranspileFileParams = {
-  componentDir: string; // absolute path of the component's root directory
-  filePath: string; // relative path of the file inside the component directory
-};
-
-export enum CompilationInitiator {
-  CmdReport,
-  CmdJson,
-  PreStart,
-  PreWatch,
-  Start,
-  ComponentChanged,
-  AspectLoadFail,
-  ComponentAdded,
-  Install,
-  PreDevServer,
-}
+export { CompilationInitiator } from '@teambit/envs.contracts';
+export type {
+  CompilerOptions,
+  TranspileFileParams,
+  TranspileFileOutput,
+  TranspileFileOutputOneFile,
+} from '@teambit/envs.contracts';
 
 export type TranspileComponentParams = {
   component: Component;
@@ -28,45 +24,6 @@ export type TranspileComponentParams = {
 };
 
 export type TypeGeneratorCompParams = { component: Component; packageDir: string };
-
-export type TranspileFileOutputOneFile = {
-  outputText: string;
-  outputPath: string;
-};
-
-export type TranspileFileOutput = TranspileFileOutputOneFile[] | null;
-
-export interface CompilerOptions {
-  /**
-   * name of the compiler.
-   */
-  name?: string;
-
-  /**
-   * relative path of the dist directory inside the capsule. e.g. "dist".
-   */
-  distDir: string;
-
-  /**
-   * determines which ones of the generated files will be saved in the bit objects when tagging.
-   * e.g. distGlobPatterns = [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
-   * see https://github.com/mrmlnc/fast-glob for the supported glob patters syntax.
-   */
-  distGlobPatterns?: string[];
-
-  /**
-   * whether or not unsupported files (such as assets) should be copied into the dist directory
-   */
-  shouldCopyNonSupportedFiles?: boolean;
-
-  /**
-   * optional. default to "dist".
-   * useful when the build pipeline has multiple compiler tasks of the same compiler.
-   * e.g. using the same Babel compiler for two different tasks, one for creating "es5" files, and
-   * the second for creating "esm". the artifact names would be "es5" and "esm" accordingly.
-   */
-  artifactName?: string;
-}
 
 export interface Compiler extends CompilerOptions, ServiceHandler {
   /**

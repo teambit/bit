@@ -19608,9 +19608,6 @@ importers:
       cors:
         specifier: 2.8.5
         version: 2.8.5
-      cross-fetch:
-        specifier: 3.1.5
-        version: 3.1.5
       express:
         specifier: ^4.21.2
         version: 4.22.2(supports-color@9.4.0)
@@ -68920,7 +68917,6 @@ snapshots:
       apollo-utilities: 1.3.4(graphql@15.8.0)
       bufferutil: 4.0.3
       cors: 2.8.5
-      cross-fetch: 3.1.5
       express: 4.22.2(supports-color@9.4.0)
       express-graphql: 0.12.0(graphql@15.8.0)
       graphql: 15.8.0
@@ -68962,7 +68958,6 @@ snapshots:
       apollo-utilities: 1.3.4(graphql@15.8.0)
       bufferutil: 4.0.3
       cors: 2.8.5
-      cross-fetch: 3.1.5
       express: 4.22.2(supports-color@9.4.0)
       express-graphql: 0.12.0(graphql@15.8.0)
       graphql: 15.8.0

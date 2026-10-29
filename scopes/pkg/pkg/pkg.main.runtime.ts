@@ -50,9 +50,9 @@ import { PackageFragment } from './package.fragment';
 import { PackTask } from './pack.task';
 import { PkgService } from './pkg.service';
 
-export interface PackageJsonProps {
-  [key: string]: any;
-}
+import type { PackageJsonProps } from '@teambit/envs.contracts';
+
+export type { PackageJsonProps };
 
 export type PackageJsonPropsRegistry = SlotRegistry<PackageJsonProps>;
 
