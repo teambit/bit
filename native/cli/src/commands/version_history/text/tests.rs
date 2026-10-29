@@ -24,6 +24,9 @@ fn ambiguous_and_cyclic_graphs_decline() {
     let graph =
         json!({"versions":[{"hash":first,"parents":[second]},{"hash":second,"parents":[first]}]});
     assert!(render(&graph, &model, false, Chalk::new(false), &[]).is_none());
-    let duplicates = json!({"versions":{"1.0.0":first,"2.0.0":first}});
-    assert!(render(&chain, &duplicates, false, Chalk::new(false), &[]).is_none());
+    let duplicates =
+        json!({"versions":{"1.0.0":first,"2.0.0":first},"orphanedVersions":{"3.0.0":first}});
+    let rendered = render(&chain, &duplicates, false, Chalk::new(false), &[]).unwrap();
+    assert!(rendered.contains("(2.0.0)"));
+    assert!(!rendered.contains("(3.0.0)"));
 }

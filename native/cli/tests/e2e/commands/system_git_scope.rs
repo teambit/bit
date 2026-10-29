@@ -31,11 +31,15 @@ fn version_history_branched_text_matches_node() {
 }
 
 fn write_history_fixture(helper: &Helper, hash: &str, history: &serde_json::Value) {
+    write_scope_fixture(helper, "VersionHistory", hash, history);
+}
+
+fn write_scope_fixture(helper: &Helper, kind: &str, hash: &str, value: &serde_json::Value) {
     use flate2::{Compression, write::ZlibEncoder};
     use std::io::Write;
-    let body = serde_json::to_vec(history).unwrap();
+    let body = serde_json::to_vec(value).unwrap();
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
-    write!(encoder, "VersionHistory {hash} {}\0", body.len()).unwrap();
+    write!(encoder, "{kind} {hash} {}\0", body.len()).unwrap();
     encoder.write_all(&body).unwrap();
     let path = helper.scopes.local_path
         .join(".bit/objects")
@@ -43,6 +47,26 @@ fn write_history_fixture(helper: &Helper, hash: &str, history: &serde_json::Valu
         .join(&hash[2..]);
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, encoder.finish().unwrap()).unwrap();
+}
+
+#[test]
+fn version_history_prefers_newest_normal_tag_over_orphans() {
+    let helper = super::move_paths::support::workspace(1, true);
+    super::move_paths::support::setup(&helper, "version-history build comp1");
+    let scope = helper.scopes.local_path.join(".bit");
+    let index: serde_json::Value =
+        serde_json::from_slice(&fs::read(scope.join("index.json")).unwrap()).unwrap();
+    let model_hash = index["components"][0]["hash"].as_str().unwrap();
+    let (_, mut model) = bit_object_import::read_scope_object(&scope, model_hash).unwrap().unwrap();
+    let head = model["head"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    model["versions"]["0.0.2"] = json!(head);
+    model["orphanedVersions"] = json!({"0.0.3":head,"0.0.4":head});
+    write_scope_fixture(&helper, "Component", model_hash, &model);
+    let result = super::move_paths::support::compare(&helper, "version-history show comp1");
+    assert!(result.stdout.contains("main, 0.0.2"));
 }
 
 #[test]

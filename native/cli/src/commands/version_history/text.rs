@@ -50,7 +50,7 @@ fn render(
     let mut output = Vec::new();
     for index in graph.order()? {
         let node = &graph.nodes[index];
-        output.push(format_row(model, &graph, node, short, chalk, lanes)?);
+        output.push(format_row(model, &graph, node, short, chalk, lanes));
     }
     Some(output.join("\n"))
 }
@@ -62,7 +62,7 @@ fn format_row(
     short: bool,
     chalk: Chalk,
     lanes: &[(String, String)],
-) -> Option<String> {
+) -> String {
     let hash = node.hash.as_str();
     let mut pointers = Vec::new();
     pointers.extend(
@@ -74,7 +74,7 @@ fn format_row(
     if model["head"].as_str() == Some(hash) {
         pointers.push("main");
     }
-    if let Some(tag) = tags(model, hash)? {
+    if let Some(tag) = tags(model, hash) {
         pointers.push(tag);
     }
     let pointer = pointer_text(&pointers, chalk);
@@ -87,7 +87,7 @@ fn format_row(
         })
         .collect::<Vec<_>>()
         .join(", ");
-    Some(format!("{}{pointer} {edge}", chalk.bold(label)))
+    format!("{}{pointer} {edge}", chalk.bold(label))
 }
 
 fn pointer_text(pointers: &[&str], chalk: Chalk) -> String {
@@ -98,21 +98,18 @@ fn pointer_text(pointers: &[&str], chalk: Chalk) -> String {
     }
 }
 
-fn tags<'a>(model: &'a Value, hash: &str) -> Option<Option<&'a str>> {
-    let mut found = None;
+fn tags<'a>(model: &'a Value, hash: &str) -> Option<&'a str> {
     for key in ["versions", "orphanedVersions"] {
         let Some(map) = model.get(key).and_then(Value::as_object) else { continue };
-        for (tag, _) in map
+        if let Some((tag, _)) = map
             .iter()
-            .filter(|(_, value)| value.as_str() == Some(hash))
+            .rev()
+            .find(|(_, value)| value.as_str() == Some(hash))
         {
-            if found.is_some() {
-                return None;
-            }
-            found = Some(tag.as_str());
+            return Some(tag.as_str());
         }
     }
-    Some(found)
+    None
 }
 
 #[cfg(test)]
