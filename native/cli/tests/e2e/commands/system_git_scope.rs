@@ -31,7 +31,7 @@ fn version_history_rebuilds_missing_bare_history_without_runtime() {
 #[cfg(unix)]
 #[test]
 fn version_history_deletes_existing_history_to_trash_before_rebuilding() {
-    for existing in 0..3 {
+    for existing in 0..4 {
         delete_history_case(existing);
     }
 }
@@ -51,6 +51,16 @@ fn delete_history_case(existing: usize) {
     }
     if existing > 1 {
         fs::create_dir_all(scope.join("trash").join(&hash[..2])).unwrap();
+    }
+    if existing > 2 {
+        fs::write(
+            scope
+                .join("trash")
+                .join(&hash[..2])
+                .join(&hash[2..]),
+            b"old trash",
+        )
+        .unwrap();
     }
     let result =
         super::gc::compare(&helper, "version-history build comp1 --delete-existing", false);

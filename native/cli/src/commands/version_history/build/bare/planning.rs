@@ -45,9 +45,12 @@ fn finish(
         return None;
     }
     let (existing, mode) = stored(&root.path, &hash, &path, &mut proofs)?;
-    if delete_existing && (existing.is_none() || super::trash::target(&root.path, &path).is_none())
-    {
-        return None;
+    if delete_existing {
+        existing.as_ref()?;
+        let target = super::trash::target(&root.path, &path)?;
+        if !super::absent(&target) {
+            proofs.push((target.clone(), std::fs::read(target).ok()?));
+        }
     }
     if !delete_existing
         && existing

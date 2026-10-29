@@ -82,7 +82,7 @@ fn failed_rebuild_after_trash_move_keeps_the_original_in_trash() {
 
 #[cfg(unix)]
 #[test]
-fn trash_move_declines_symlinked_directories_and_existing_targets() {
+fn trash_move_declines_symlinked_directories_and_same_file_targets() {
     use std::os::unix::fs::symlink;
     let directory = tempfile::tempdir().unwrap();
     let root = directory.path();
@@ -95,7 +95,7 @@ fn trash_move_declines_symlinked_directories_and_existing_targets() {
     assert!(super::trash::target(root, &source).is_none());
     fs::remove_file(root.join("trash")).unwrap();
     fs::create_dir_all(root.join("trash/aa")).unwrap();
-    fs::write(root.join("trash/aa/object"), b"existing").unwrap();
+    fs::hard_link(&source, root.join("trash/aa/object")).unwrap();
     assert!(super::trash::target(root, &source).is_none());
 }
 

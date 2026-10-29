@@ -16,17 +16,37 @@ pub(super) fn target(root: &Path, source: &Path) -> Option<PathBuf> {
         return None;
     }
     for directory in [&trash, &parent] {
-        match fs::symlink_metadata(directory) {
-            Ok(metadata)
-                if metadata.is_dir()
-                    && !metadata.file_type().is_symlink()
-                    && metadata.dev() == device => {}
-            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-            _ => return None,
-        }
+        valid_directory(directory, device)?;
     }
     let destination = parent.join(source.file_name()?);
-    super::absent(&destination).then_some(destination)
+    match fs::symlink_metadata(&destination) {
+        Ok(metadata)
+            if metadata.is_file()
+                && !metadata.file_type().is_symlink()
+                && (metadata.dev(), metadata.ino())
+                    != (device, fs::metadata(source).ok()?.ino()) =>
+        {
+            Some(destination)
+        }
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Some(destination),
+        _ => None,
+    }
+}
+
+#[cfg(unix)]
+fn valid_directory(path: &Path, device: u64) -> Option<()> {
+    use std::os::unix::fs::MetadataExt;
+    match fs::symlink_metadata(path) {
+        Ok(metadata)
+            if metadata.is_dir()
+                && !metadata.file_type().is_symlink()
+                && metadata.dev() == device =>
+        {
+            Some(())
+        }
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Some(()),
+        _ => None,
+    }
 }
 
 #[cfg(not(unix))]
@@ -45,10 +65,21 @@ pub(super) fn move_history(plan: &mut Plan, root: &Path) -> io::Result<()> {
     }
     let target =
         target(root, &plan.path).ok_or_else(|| io::Error::other("version-history trash changed"))?;
+    let expected = plan.proofs
+        .iter()
+        .any(|(path, _)| path == &target);
+    if expected == super::absent(&target) {
+        return Err(io::Error::other("version-history trash changed"));
+    }
     let parent = target.parent().ok_or_else(|| io::Error::other("version-history trash path"))?;
     fs::create_dir_all(parent).map_err(|error| filesystem_error::failure(error, "mkdir", parent))?;
+    if expected {
+        fs::remove_file(&target)
+            .map_err(|error| filesystem_error::failure(error, "unlink", &target))?;
+    }
     fs::rename(&plan.path, &target)
         .map_err(|error| filesystem_error::paired_failure(error, "rename", &plan.path, &target))?;
+    plan.proofs.retain(|(path, _)| path != &target);
     for (path, _) in &mut plan.proofs {
         if *path == plan.path {
             path.clone_from(&target);
