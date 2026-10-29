@@ -5,6 +5,47 @@ use serde_json::json;
 use std::fs;
 
 #[test]
+fn version_history_branched_text_matches_node() {
+    let helper = super::move_paths::support::workspace(1, true);
+    let history = super::move_paths::support::json(&helper, "version-history show comp1 --json");
+    let head = helper.get_head("comp1");
+    let first = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    let second = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    let third = "cccccccccccccccccccccccccccccccccccccccc";
+    let graph = json!({"name":"comp1","scope":helper.scopes.remote,"graphCompleteRefs":[],"versions":[
+        {"hash":first,"parents":[]},
+        {"hash":second,"parents":[first]},
+        {"hash":third,"parents":[first]},
+        {"hash":head,"parents":[second,third],"squashed":[first],"unrelated":third}
+    ]});
+    write_history_fixture(&helper, history["hash"].as_str().unwrap(), &graph);
+    super::move_paths::support::compare(&helper, "version-history show comp1");
+    super::move_paths::support::compare(&helper, "vh show comp1 -s");
+    let incomplete = json!({"name":"comp1","scope":helper.scopes.remote,"graphCompleteRefs":[],"versions":[
+        {"hash":first,"parents":[second]},
+        {"hash":third,"parents":[]},
+        {"hash":head,"parents":[first]}
+    ]});
+    write_history_fixture(&helper, history["hash"].as_str().unwrap(), &incomplete);
+    super::move_paths::support::compare(&helper, "version-history show comp1");
+}
+
+fn write_history_fixture(helper: &Helper, hash: &str, history: &serde_json::Value) {
+    use flate2::{Compression, write::ZlibEncoder};
+    use std::io::Write;
+    let body = serde_json::to_vec(history).unwrap();
+    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+    write!(encoder, "VersionHistory {hash} {}\0", body.len()).unwrap();
+    encoder.write_all(&body).unwrap();
+    let path = helper.scopes.local_path
+        .join(".bit/objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(path, encoder.finish().unwrap()).unwrap();
+}
+
+#[test]
 fn version_history_linear_text_matches_node() {
     let helper = super::move_paths::support::workspace(1, false);
     super::move_paths::support::tag(&helper);

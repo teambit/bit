@@ -2,7 +2,8 @@
 use super::{
     Chalk, Outcome, ScopeRoot, Value, emit_text, resolve_component_entry, scope_dir_for, sha1_hex,
 };
-use std::{collections::HashSet, ffi::OsString, io};
+use std::{ffi::OsString, io};
+mod graph;
 mod refs;
 
 pub(super) fn run(
@@ -12,7 +13,9 @@ pub(super) fn run(
     short: bool,
 ) -> io::Result<Outcome> {
     let Some(report) = prepare(root, id, short, Chalk::detect(args)) else {
-        return Ok(Outcome::Declined("version-history text requires linear local history".into()));
+        return Ok(Outcome::Declined(
+            "version-history text requires a qualified local graph".into(),
+        ));
     };
     emit_text(root, args, "show", true, report)
 }
@@ -43,47 +46,24 @@ fn render(
     chalk: Chalk,
     lanes: &[(String, String)],
 ) -> Option<String> {
-    let rows = history["versions"].as_array()?;
-    let mut previous: Option<&str> = None;
+    let graph = graph::Graph::build(history, short)?;
     let mut output = Vec::new();
-    let mut identities = HashSet::new();
-    for row in rows {
-        let hash = validate_row(row, previous)?;
-        if !identities.insert(if short { &hash[..9] } else { hash }) {
-            return None;
-        }
-        output.push(format_row(model, hash, previous, short, chalk, lanes)?);
-        previous = Some(hash);
+    for index in graph.order()? {
+        let node = &graph.nodes[index];
+        output.push(format_row(model, &graph, node, short, chalk, lanes)?);
     }
-    output.reverse();
     Some(output.join("\n"))
-}
-
-fn validate_row<'a>(row: &'a Value, previous: Option<&str>) -> Option<&'a str> {
-    let hash = row["hash"].as_str()?;
-    let parents = row["parents"].as_array()?;
-    if hash.len() != 40
-        || !hash.bytes().all(|byte| byte.is_ascii_hexdigit())
-        || parents.len() != usize::from(previous.is_some())
-        || previous.is_some_and(|parent| parents[0].as_str() != Some(parent))
-        || !row["unrelated"].is_null()
-        || row["squashed"]
-            .as_array()
-            .is_some_and(|items| !items.is_empty())
-    {
-        return None;
-    }
-    Some(hash)
 }
 
 fn format_row(
     model: &Value,
-    hash: &str,
-    previous: Option<&str>,
+    graph: &graph::Graph,
+    node: &graph::Node,
     short: bool,
     chalk: Chalk,
     lanes: &[(String, String)],
 ) -> Option<String> {
+    let hash = node.hash.as_str();
     let mut pointers = Vec::new();
     if let Some((name, _)) = lanes
         .iter()
@@ -98,11 +78,16 @@ fn format_row(
         pointers.push(tag);
     }
     let pointer = pointer_text(&pointers, chalk);
-    let node = if short { &hash[..9] } else { hash };
-    let edge = previous.map_or(String::new(), |parent| {
-        format!("{} (parent)", if short { &parent[..9] } else { parent })
-    });
-    Some(format!("{}{pointer} {edge}", chalk.bold(node)))
+    let label = if short { &hash[..9] } else { hash };
+    let edge = node.edges
+        .iter()
+        .map(|(target, kind)| {
+            let hash = &graph.nodes[*target].hash;
+            format!("{} ({kind})", if short { &hash[..9] } else { hash })
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    Some(format!("{}{pointer} {edge}", chalk.bold(label)))
 }
 
 fn pointer_text(pointers: &[&str], chalk: Chalk) -> String {
