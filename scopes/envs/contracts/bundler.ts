@@ -2,6 +2,7 @@ import type { Server } from 'http';
 import type { LaneId } from '@teambit/lane-id';
 import type { Component } from './component';
 import type { Network } from './capsule';
+import type { PipeName } from './build';
 import type { ExecutionContext } from './execution-context';
 
 export type Asset = {
@@ -366,11 +367,6 @@ export type BundlerContextMetaData = {
 
 export interface BundlerContext extends ExecutionContext {
   /**
-   * components to bundle.
-   */
-  components: Component[];
-
-  /**
    * the capsules network of the build.
    */
   capsuleNetwork: Network;
@@ -388,7 +384,7 @@ export interface BundlerContext extends ExecutionContext {
   /**
    * the build pipeline.
    */
-  pipeName: 'build' | 'tag' | 'snap';
+  pipeName: PipeName;
 
   /**
    * current lane id, if any.

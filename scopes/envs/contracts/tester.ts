@@ -1,5 +1,5 @@
 import type { ComponentID } from '@teambit/component-id';
-import type { Component, ComponentSourceFile } from './component';
+import type { ComponentSourceFile } from './component';
 import type { ComponentMap } from './component-map';
 import type { ExecutionContext } from './execution-context';
 import type { TestsResult } from '@teambit/tests-results';
@@ -57,16 +57,6 @@ export interface TesterContext extends ExecutionContext {
    * whether the tester run for release (during bit build/tag) or not (during bit test command).
    */
   release: boolean;
-
-  /**
-   * list of components to test.
-   */
-  components: Component[];
-
-  /**
-   * component workspace.
-   */
-  // workspace: Workspace;
 
   /**
    * defines whether tester is expected to run in quiet mode.

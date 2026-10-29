@@ -58,7 +58,9 @@ export type ComponentResult = {
   component: Component;
 
   /**
-   * metadata generated during the component build. saved in the builder data of the component.
+   * metadata generated during component build.
+   * this eventually gets saved into `aspectsData` prop of the builder aspect data.
+   * it can be retrieved later on by `builder.getDataByAspect()` method.
    */
   metadata?: { [key: string]: any };
 
@@ -109,11 +111,6 @@ export interface TaskResultsList {
 }
 
 export interface BuildContext extends ExecutionContext {
-  /**
-   * all components about to be built.
-   */
-  components: Component[];
-
   /**
    * network of capsules ready to be built.
    */

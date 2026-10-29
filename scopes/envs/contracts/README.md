@@ -1,26 +1,18 @@
 # @teambit/envs.contracts
 
-The types and the few runtime values that envs and their services (compilers, testers, bundlers, app types, ...) use from Bit. It installs about 18 packages. Importing the same names from the core aspects (`@teambit/builder`, `@teambit/envs`, ...) installs thousands.
+The types and the few runtime values that envs and their services (compilers, testers, bundlers, app types, ...) use from Bit. It installs a few small packages. Importing the same names from the core aspects (`@teambit/builder`, `@teambit/envs`, ...) installs thousands.
 
 ## Migrating an env
 
 The env must run on a Bit version that includes this contract (`typescriptSchemaExtractor()` throws a clear error on older versions). An env that extends a base env (e.g. `ReactEnv`) can migrate only after its base env did.
 
-1. Change the imports of the core aspects to `@teambit/envs.contracts`. The names are the same:
+1. Import from `@teambit/envs.contracts` instead of the core aspects (`@teambit/envs`, `@teambit/builder`, `@teambit/compiler`, `@teambit/tester`, `@teambit/generator`, `@teambit/pkg`, `@teambit/bundler`, `@teambit/application`, `@teambit/component`, `@teambit/logger`, ...). Most names are the same: `EnvHandler`, `Pipeline`, `BuildContext`, `Compiler`, `TemplateList`, `Bundler`, `AppTypeList`, `Component`, `ComponentMap`, `Logger`, ... These change:
 
-   | Before                                                                                                         | After                                          |
-   | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-   | `EnvHandler`, `EnvContext`, `Env`, `*Env` interfaces (`@teambit/envs`, `@teambit/compiler`, ...)               | same names                                     |
-   | `Pipeline`, `CAPSULE_ARTIFACTS_DIR`, `BuildContext`, `TaskHandler`, ... (`@teambit/builder`)                   | same names                                     |
-   | `Compiler`, `Tester`, `Tests`, `Linter`, `Formatter`, `SchemaExtractor`, `Preview`                             | same names                                     |
-   | `TemplateList`, `StarterList`, `ComponentTemplate`, ... (`@teambit/generator`)                                 | same names                                     |
-   | `PackageGenerator` (`@teambit/pkg`), `ConfigWriterList` (`@teambit/workspace-config-files`)                    | same names                                     |
-   | `Bundler`, `DevServer`, `BundlerContext`, `DevServerContext`, `Target`, ... (`@teambit/bundler`)               | same names                                     |
-   | `Application`, `ApplicationType`, `AppTypeList`, `AppContext`, `AppBuildContext`, ... (`@teambit/application`) | same names                                     |
-   | `Component`, `ComponentMap` (`@teambit/component`), `Logger` (`@teambit/logger`)                               | same names                                     |
-   | `DocsRootProps` (`@teambit/docs`)                                                                              | `DocsRootProps<React.ComponentType>`           |
-   | `TypeScriptExtractor.from(options)` (`@teambit/typescript`)                                                    | `typescriptSchemaExtractor(options)`           |
-   | `WorkspaceAspect.id`, `PubsubAspect.id`, ...                                                                   | `WORKSPACE_ASPECT_ID`, `PUBSUB_ASPECT_ID`, ... |
+   | Before                                                      | After                                          |
+   | ----------------------------------------------------------- | ---------------------------------------------- |
+   | `DocsRootProps` (`@teambit/docs`)                           | `DocsRootProps<React.ComponentType>`           |
+   | `TypeScriptExtractor.from(options)` (`@teambit/typescript`) | `typescriptSchemaExtractor(options)`           |
+   | `WorkspaceAspect.id`, `PubsubAspect.id`, ...                | `WORKSPACE_ASPECT_ID`, `PUBSUB_ASPECT_ID`, ... |
 
 2. Remove the core aspects from the env's dependencies.
 3. Type-check the env. When a name is missing, see below.

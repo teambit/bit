@@ -47,6 +47,8 @@ export type {
   LintResult,
   LintMessage,
   ComponentLintResult,
+  EslintFixType,
+  OxlintFixType,
   FixType,
   FixTypes,
 } from './linter';

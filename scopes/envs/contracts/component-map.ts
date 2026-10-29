@@ -10,13 +10,6 @@ import type { Component } from './component';
 export class ComponentMap<T> {
   constructor(readonly hashMap: Map<string, [Component, T]>) {}
 
-  /**
-   * @deprecated please use `get` instead
-   */
-  byComponent(component: Component) {
-    return this.hashMap.get(component.id.toString());
-  }
-
   get components() {
     return this.toArray().map(([component]) => component);
   }

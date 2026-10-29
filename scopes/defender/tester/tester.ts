@@ -1,9 +1,9 @@
 import type { Component, ComponentMap } from '@teambit/component';
 import type { ExecutionContext } from '@teambit/envs';
 import type { AbstractVinyl } from '@teambit/component.sources';
-import { Tests } from '@teambit/envs.contracts';
+import type { Tests } from '@teambit/envs.contracts';
 
-export { Tests };
+export { Tests } from '@teambit/envs.contracts';
 export type { ComponentsResults } from '@teambit/envs.contracts';
 
 export type SpecFiles = ComponentMap<AbstractVinyl[]>;

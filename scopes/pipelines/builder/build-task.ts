@@ -2,24 +2,19 @@ import type { Component } from '@teambit/component';
 import type { LaneId } from '@teambit/lane-id';
 import type { ExecutionContext } from '@teambit/envs';
 import type { Network } from '@teambit/isolator';
-import type { BuiltTaskResult as ContractBuiltTaskResult } from '@teambit/envs.contracts';
+import type { BuiltTaskResult as ContractBuiltTaskResult, TaskLocation } from '@teambit/envs.contracts';
+
+export { CAPSULE_ARTIFACTS_DIR } from '@teambit/envs.contracts';
+export type { TaskLocation } from '@teambit/envs.contracts';
 import type { ArtifactDefinition } from './artifact';
 import type { TaskResultsList } from './task-results-list';
 import type { TaskResults } from './build-pipe';
 import type { PipeName } from './builder.service';
 
-export type TaskLocation = 'start' | 'end';
-
 /**
  * delimiter between task.aspectId and task.name
  */
 export const TaskIdDelimiter = ':';
-
-/**
- * A folder to write artifacts generated during a build task
- * This folder is used in the core envs and excluded by default from the package tar file (the core envs is writing this into the npmignore file)
- */
-export const CAPSULE_ARTIFACTS_DIR = 'artifacts';
 
 export interface BuildContext extends ExecutionContext {
   /**

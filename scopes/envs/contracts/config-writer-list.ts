@@ -1,5 +1,4 @@
 import type { EnvContext, EnvHandler } from './env-handler';
-import { findIndex } from 'lodash';
 import type { ConfigWriterEntry } from './config-writer-entry';
 
 export type ConfigWriterHandler = {
@@ -49,10 +48,7 @@ export class ConfigWriterList {
    */
   replace(writers: ConfigWriterHandler[]) {
     writers.forEach((writer) => {
-      // Find Writer index using _.findIndex
-      const matchIndex = findIndex(this._writers, (origWriter) => {
-        return origWriter.name === writer.name;
-      });
+      const matchIndex = this._writers.findIndex((origWriter) => origWriter.name === writer.name);
       if (matchIndex !== -1) {
         // Replace Writer at index using native splice
         this._writers.splice(matchIndex, 1, writer);

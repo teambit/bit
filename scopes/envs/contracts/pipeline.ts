@@ -1,5 +1,4 @@
 import type { EnvContext } from './env-handler';
-import { clone, findIndex } from 'lodash';
 import type { BuildTask, TaskHandler } from './build';
 
 /**
@@ -24,7 +23,7 @@ export class Pipeline {
     const buildTasks: BuildTask[] = _tasks.map((task) => {
       // @ts-ignore
       const aspectId = task.aspectId || envId;
-      const buildTask: BuildTask = Object.assign(clone(task), { aspectId });
+      const buildTask: BuildTask = Object.assign(Object.create(Object.getPrototypeOf(task)), task, { aspectId });
       return buildTask;
     });
 
@@ -54,10 +53,7 @@ export class Pipeline {
    */
   replace(tasks: TaskHandler[]) {
     tasks.forEach((task) => {
-      // Find task index using _.findIndex
-      const matchIndex = findIndex(this._tasks, (origTask) => {
-        return origTask.name === task.name;
-      });
+      const matchIndex = this._tasks.findIndex((origTask) => origTask.name === task.name);
       if (matchIndex !== -1) {
         // Replace task at index using native splice
         this._tasks.splice(matchIndex, 1, task);
@@ -89,10 +85,4 @@ export class Pipeline {
   static from(tasks: TaskHandler[]) {
     return new Pipeline(tasks);
   }
-
-  // static concat(...pipelines: EnvHandler<Pipeline>[]) {
-  //   return reduceServiceHandlersFactories(pipelines, (acc, pipeline) => {
-  //     return acc.concat(pipeline);
-  //   });
-  // }
 }
