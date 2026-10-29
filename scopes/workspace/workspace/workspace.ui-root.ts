@@ -25,6 +25,10 @@ export class WorkspaceUIRoot implements UIRoot {
     return this.workspace.name;
   }
 
+  get icon() {
+    return this.workspace.icon;
+  }
+
   get path() {
     return this.workspace.path;
   }

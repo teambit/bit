@@ -12,6 +12,11 @@ export interface UIRoot extends ComponentDir {
   name: string;
 
   /**
+   * icon of the ui root.
+   */
+  icon?: string;
+
+  /**
    * path of the ui root.
    */
   path: string;

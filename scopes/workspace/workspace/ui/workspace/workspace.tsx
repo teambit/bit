@@ -93,6 +93,18 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     if (workspace) workspaceUI.setComponents(workspace.components);
   }, [workspaceUI, workspace]);
 
+  useEffect(() => {
+    if (!workspace?.icon || typeof document === 'undefined') return;
+    const iconHref = `${workspace.icon}${workspace.icon.includes('?') ? '&' : '?'}v=${Date.now()}`;
+    let link = document.querySelector<HTMLLinkElement>('link[rel*="icon"]');
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.href = iconHref;
+  }, [workspace?.icon]);
+
   const inIframe = typeof window !== 'undefined' && window.parent && window.parent !== window;
   const isOverview = location.pathname === '/' || location.pathname === '';
   const showTopBar = !isMinimal || (isMinimal && !isOverview);

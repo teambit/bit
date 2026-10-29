@@ -30,6 +30,7 @@ export type BrowserEntry = {
   name: string;
   files: string[];
   title: string;
+  favicon?: string;
 };
 
 export default function createRspackBrowserConfig(
@@ -131,7 +132,7 @@ export default function createRspackBrowserConfig(
             filename: `${entry.name}.html`,
             chunks: [entry.name],
             inject: true,
-            templateContent: html(entry.title)(),
+            templateContent: html(entry.title, undefined, entry.favicon)(),
             minify: true,
           })
       ),

@@ -257,6 +257,7 @@ export class UiMain {
       // sequentially: `resolveAspects` imports and isolates, which is not safe to run in parallel.
       files: [await this.generateRoot(await root.resolveAspects(UIRuntime.name), rootAspectId)],
       title: root.name,
+      favicon: root.icon,
       root,
     }));
 

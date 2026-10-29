@@ -16,6 +16,10 @@ export class ScopeUIRoot implements UIRoot {
     return this.scope.name;
   }
 
+  get icon() {
+    return this.scope.icon;
+  }
+
   get path(): string {
     return this.scope.path;
   }

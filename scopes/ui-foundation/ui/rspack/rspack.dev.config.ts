@@ -31,7 +31,7 @@ export interface RspackConfigWithDevServer extends Configuration {
   devServer: DevServerConfig;
 }
 
-export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevServer {
+export function devConfig(workspaceDir, entryFiles, title, favicon?: string): RspackConfigWithDevServer {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   const host = process.env.HOST || 'localhost';
@@ -174,7 +174,7 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
       new RefreshPlugin(),
       new rspack.HtmlRspackPlugin({
         inject: true,
-        templateContent: html(title || 'My component workspace')(),
+        templateContent: html(title || 'My component workspace', undefined, favicon)(),
         chunks: ['main'],
         filename: 'index.html',
       }),
