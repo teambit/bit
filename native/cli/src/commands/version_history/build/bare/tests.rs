@@ -57,3 +57,16 @@ fn all_lanes_requires_an_empty_index_and_records_its_bytes() {
     assert!(super::metadata_proofs(root, "fixture", true).is_none());
     assert!(super::metadata_proofs(root, "fixture", false).is_some());
 }
+
+#[test]
+fn matching_visible_and_hidden_lane_heads_are_not_skipped() {
+    use serde_json::json;
+    let mut lane = json!({"name":"feature","scope":"fixture","components":[{"id":{"scope":"fixture","name":"other"},"head":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]});
+    assert_eq!(super::lanes::lane_is_unrelated(&lane, "fixture", "component"), Some(true));
+    lane["updateDependents"] =
+        json!(["fixture/component@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]);
+    assert_eq!(super::lanes::lane_is_unrelated(&lane, "fixture", "component"), Some(false));
+    lane["updateDependents"] = json!([]);
+    lane["components"][0]["id"]["name"] = json!("component");
+    assert_eq!(super::lanes::lane_is_unrelated(&lane, "fixture", "component"), Some(false));
+}

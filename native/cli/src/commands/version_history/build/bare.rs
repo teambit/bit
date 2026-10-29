@@ -1,4 +1,5 @@
 //! Reconstruct qualified local-scope history and publish it atomically.
+mod lanes;
 #[cfg(test)]
 mod tests;
 use super::{Chalk, Formatter, Outcome, ScopeRoot, Value, resolve_component_entry, sha1_hex};
@@ -33,7 +34,10 @@ pub(super) fn prepare(
     }
     let (scope, name, model_hash) = resolve_component_entry(&root.path, id)?;
     let scope = scope?;
-    let mut proofs = metadata_proofs(&root.path, &scope, all_lanes)?;
+    let mut proofs = metadata_proofs(&root.path, &scope, false)?;
+    if all_lanes && !lanes::unrelated_lanes(&root.path, &scope, &name, &mut proofs)? {
+        return None;
+    }
     let model = read(&root.path, &model_hash, "Component", &mut proofs)?;
     let head = from.or_else(|| model["head"].as_str())?;
     let hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));

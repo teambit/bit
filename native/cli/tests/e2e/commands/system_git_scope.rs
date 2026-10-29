@@ -46,6 +46,28 @@ fn version_history_rebuilds_all_lanes_when_scope_has_no_lanes() {
 }
 
 #[test]
+fn version_history_rebuilds_when_other_components_have_lane_heads() {
+    use sha1::{Digest, Sha1};
+    let helper = super::move_paths::support::workspace(2, true);
+    super::move_paths::support::setup(&helper, "export");
+    super::move_paths::support::setup(&helper, "lane create feature");
+    helper.output_file("comp2/index.js", "module.exports=()=> 'lane';\n");
+    super::move_paths::support::setup(&helper, "snap comp2 --skip-tests");
+    super::move_paths::support::setup(&helper, "export");
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = super::gc::compare(&helper, "version-history build comp1 --from-all-lanes", false);
+    assert!(result.stdout.contains("added 1 hashes"));
+}
+
+#[test]
 fn version_history_rebuilds_bare_history_from_selected_snapshot() {
     use sha1::{Digest, Sha1};
     let helper = super::gc::fixture();
