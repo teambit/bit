@@ -1,4 +1,5 @@
 //! Reconstruct qualified local-scope history and publish it atomically.
+mod existing;
 mod lanes;
 mod planning;
 #[cfg(test)]
@@ -89,10 +90,7 @@ fn merge(
         return None;
     }
     let mut rows = existing["versions"].as_array()?.clone();
-    if rows
-        .iter()
-        .any(|row| !ancestors.contains(row))
-    {
+    if !existing::compatible(&rows, &ancestors)? {
         return None;
     }
     let count = ancestors.len() - usize::from(rows.contains(&ancestors[0]));
