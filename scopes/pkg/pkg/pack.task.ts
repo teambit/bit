@@ -3,8 +3,7 @@ import type { Logger } from '@teambit/logger';
 import type { Packer } from './packer';
 import { Extensions } from '@teambit/legacy.constants';
 import type { Component } from '@teambit/component';
-
-const PACK_LIFECYCLE_SCRIPTS = ['prepack', 'prepare', 'postpack'];
+import { PACK_LIFECYCLE_SCRIPTS, packageJsonRequiresInstallation } from './package-json-requires-installation';
 
 /**
  * pack components to a .tgz file
@@ -33,35 +32,9 @@ export class PackTask implements BuildTask {
   }
 
   /**
-   * packing needs the packages when it runs the pack lifecycle scripts of the package.json, or when it bundles
-   * dependencies (taken from node_modules).
-   * the package.json written to the capsule comes from the pkg config, the component overrides and, when the
-   * artifacts are reused, the package.json of the last build (which includes the env transformations).
+   * packing runs the pack lifecycle scripts and bundles dependencies, which need the packages.
    */
   requiresCapsuleInstallation(components: Component[]): boolean {
-    return components.some((component) => {
-      const legacyComponent = component.state._consumer;
-      const pkgJsonOfLastBuild = legacyComponent.extensions
-        .findExtension(Extensions.builder)
-        ?.data?.aspectsData?.find((aspectData) => aspectData.aspectId === this.aspectId)?.data?.pkgJson;
-      const pkgJsonSources: Array<Record<string, any> | undefined> = [
-        component.state.aspects.get(this.aspectId)?.data?.packageJsonModification,
-        legacyComponent.overrides?.componentOverridesPackageJsonData,
-        pkgJsonOfLastBuild,
-      ];
-      return pkgJsonSources.some(
-        (pkgJson) =>
-          PACK_LIFECYCLE_SCRIPTS.some((script) => pkgJson?.scripts?.[script]) ||
-          hasBundledDependencies(pkgJson?.bundledDependencies) ||
-          hasBundledDependencies(pkgJson?.bundleDependencies)
-      );
-    });
+    return packageJsonRequiresInstallation(components, this.aspectId, PACK_LIFECYCLE_SCRIPTS);
   }
-}
-
-/**
- * the value is either a list of package names or `true` to bundle all of them.
- */
-function hasBundledDependencies(bundledDependencies: unknown): boolean {
-  return Array.isArray(bundledDependencies) ? bundledDependencies.length > 0 : Boolean(bundledDependencies);
 }
