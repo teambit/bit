@@ -29,6 +29,7 @@ mod remove;
 mod reset;
 mod resume_export;
 mod run_cmd;
+mod scope_fixture;
 mod search;
 mod show;
 mod snap;

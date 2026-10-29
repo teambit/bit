@@ -89,7 +89,7 @@ fn remote_history_declines_custom_startup_before_any_request() {
 #[test]
 fn remote_history_rebuild_changes_real_http_scope_once() {
     use sha1::{Digest, Sha1};
-    let helper = crate::commands::gc::fixture();
+    let helper = crate::commands::scope_fixture::fixture();
     let scope = &helper.scopes.remote_path;
     let hash =
         format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
@@ -129,7 +129,7 @@ fn remote_history_rebuild_changes_real_http_scope_once() {
 #[test]
 fn remote_file_history_uses_the_client_workspace_without_a_host() {
     use sha1::{Digest, Sha1};
-    let helper = crate::commands::gc::fixture();
+    let helper = crate::commands::scope_fixture::fixture();
     let scope = &helper.scopes.remote_path;
     let hash =
         format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
@@ -176,7 +176,7 @@ fn remote_file_history_uses_the_client_workspace_without_a_host() {
 #[test]
 fn remote_file_incomplete_client_history_declines_before_mutation() {
     use sha1::{Digest, Sha1};
-    let helper = crate::commands::gc::fixture();
+    let helper = crate::commands::scope_fixture::fixture();
     let hash =
         format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
     let local = helper.scopes.local_path.join(".bit");
@@ -205,7 +205,7 @@ fn remote_file_incomplete_client_history_declines_before_mutation() {
 
 #[test]
 fn remote_file_invalid_unmerged_state_declines_before_mutation() {
-    let helper = crate::commands::gc::fixture();
+    let helper = crate::commands::scope_fixture::fixture();
     let scope = &helper.scopes.remote_path;
     fs::write(scope.join("unmerged.json"), b"{invalid").unwrap();
     let before = crate::commands::move_paths::support::tree(scope);
