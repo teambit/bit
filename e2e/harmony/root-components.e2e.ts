@@ -1070,11 +1070,7 @@ module.exports.default = {
     helper.command.tagAllComponents();
     helper.command.export();
 
-    helper.scopeHelper.reInitWorkspace({
-      yarnRCConfig: {
-        unsafeHttpWhitelist: ['localhost'],
-      },
-    });
+    helper.scopeHelper.reInitWorkspace();
     helper.scopeHelper.addRemoteScope();
     helper.workspaceJsonc.setupDefault();
   });
@@ -1188,7 +1184,7 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
   this.timeout(0);
 
   describe('pnpm isolated linker', function () {
-    before(() => prepare('pnpm'));
+    before(prepare);
     after(() => {
       helper.scopeHelper.destroy();
     });
@@ -1204,10 +1200,10 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     });
   });
 
-  function prepare(pm: 'yarn' | 'pnpm') {
+  function prepare() {
     helper = new Helper();
     helper.scopeHelper.setWorkspaceWithRemoteScope();
-    helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/${pm}`);
+    helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     helper.env.setCustomNewEnv(
       undefined,
       undefined,

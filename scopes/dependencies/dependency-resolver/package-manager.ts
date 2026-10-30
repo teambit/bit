@@ -21,7 +21,6 @@ export type PackageExtension = {
 };
 
 export type PackageManagerInstallOptions = {
-  cacheRootDir?: string;
   /**
    * decide whether to dedup dependencies.
    */
@@ -212,7 +211,6 @@ export type ResolvedPackageVersion = {
 
 export type PackageManagerResolveRemoteVersionOptions = {
   rootDir: string;
-  cacheRootDir?: string;
   packageManagerConfigRootDir?: string;
   fullMetadata?: boolean;
   // fetchToCache?: boolean;

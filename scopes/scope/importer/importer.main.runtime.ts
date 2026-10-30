@@ -49,10 +49,9 @@ export class ImporterMain {
     private lister: ListerMain
   ) {}
 
-  async import(importOptions: ImportOptions, packageManagerArgs: string[] = []): Promise<ImportResult> {
+  async import(importOptions: ImportOptions): Promise<ImportResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
-    consumer.packageManagerArgs = packageManagerArgs;
     if (!importOptions.ids.length) {
       importOptions.objectsOnly = true;
     }
