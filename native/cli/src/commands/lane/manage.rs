@@ -164,7 +164,8 @@ fn valid_remove_comp_args(args: &[&str]) -> bool {
     while let Some(arg) = iter.next() {
         match arg {
             "--" => return count_trailing_patterns(iter, &mut pattern_count) && pattern_count == 1,
-            "--workspace-only"
+            "--no-color"
+            | "--workspace-only"
             | "--workspace-only=true"
             | "--workspace-only=false"
             | "--update-main"
@@ -269,6 +270,7 @@ fn parse_fetch_args<'a>(lane_args: &[&'a str]) -> Option<(bool, Option<&'a str>)
                 }
                 break;
             }
+            "--no-color" => {}
             "-a" | "--all" | "--all=true" => all = true,
             "--all=false" => all = false,
             val if !val.starts_with('-') && !val.is_empty() && lane_id.is_none() => {

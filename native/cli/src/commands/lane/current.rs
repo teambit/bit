@@ -16,6 +16,7 @@ pub(super) fn current(args: &[OsString], lane_args: &[&str]) -> io::Result<Outco
     for (idx, &arg) in lane_args.iter().enumerate() {
         match arg {
             "--" if idx + 1 == lane_args.len() => break,
+            "--no-color" => {}
             "--json" | "-j" | "--json=true" => json = true,
             "--json=false" => json = false,
             _ => {

@@ -83,6 +83,7 @@ fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {
                 consume_trailing_remove_names(iter, &mut names)?;
                 break;
             }
+            "--no-color" => {}
             "-f" | "--force" | "--force=true" => force = true,
             "--force=false" => force = false,
             "-s" | "--silent" | "--silent=true" => silent = true,

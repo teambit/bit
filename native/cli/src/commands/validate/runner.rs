@@ -226,7 +226,10 @@ fn execute_validation(
             invalid_skip.join(", "),
             VALID_TASKS.join(", "),
         );
-        return workspace_command::execute_without_loader(root, args, "validate", move |_| {
+        return workspace_command::execute_without_loader(root, args, "validate", move |output| {
+            for line in &lines {
+                output.console(line);
+            }
             Err(io::Error::other(err_msg))
         });
     }

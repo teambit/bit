@@ -39,7 +39,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         ));
     }
     update_workspace_policy(&root, &packages)?;
-    let terminal = Terminal::detect(&["uninstall".to_string()]);
+    let terminal = detect_terminal(args);
     let host = Arc::new(Host::new(cli, root.clone(), terminal.color));
     let info = match install::host_info(&host, &terminal) {
         Ok(info) => info,
@@ -61,6 +61,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Ok(Outcome::Exit(ExitCode::FAILURE))
         }
     }
+}
+
+fn detect_terminal(args: &[OsString]) -> Terminal {
+    let argv: Vec<String> = args
+        .iter()
+        .filter_map(|arg| arg.to_str().map(str::to_owned))
+        .collect();
+    Terminal::detect(&argv)
 }
 
 struct Prepared {

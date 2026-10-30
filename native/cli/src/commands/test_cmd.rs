@@ -233,6 +233,9 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut iter = args.iter().copied();
     while let Some(token) = iter.next() {
         if token == "--" {
+            for rest in iter {
+                options.user_pattern.push(take_test_val(rest)?);
+            }
             break;
         }
         apply_test_token(token, &mut iter, &mut options)?;
@@ -300,7 +303,7 @@ fn apply_inline_test_token(token: &str, options: &mut Options) -> Option<()> {
     } else if token.starts_with('-') {
         return None;
     } else {
-        options.user_pattern.push(token.to_owned());
+        options.user_pattern.push(take_test_val(token)?);
     }
     Some(())
 }

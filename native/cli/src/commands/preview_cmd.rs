@@ -169,19 +169,25 @@ pub(super) fn parse_serve_options(args: &[&str]) -> Option<ServeOptions> {
                 if let Some(&next) = args.get(idx + 1)
                     && !next.starts_with('-')
                 {
-                    options.port = Some(next.parse::<u16>().ok()?);
+                    options.port = parse_optional_port(next)?;
                     idx += 1;
+                } else {
+                    options.port = None;
                 }
             }
             val if let Some(port) = val
                 .strip_prefix("--port=")
                 .or_else(|| val.strip_prefix("-p=")) =>
             {
-                options.port = Some(port.parse::<u16>().ok()?);
+                options.port = parse_optional_port(port)?;
             }
             _ => return None,
         }
         idx += 1;
     }
     Some(options)
+}
+
+fn parse_optional_port(port: &str) -> Option<Option<u16>> {
+    if port.is_empty() { Some(None) } else { port.parse::<u16>().ok().map(Some) }
 }

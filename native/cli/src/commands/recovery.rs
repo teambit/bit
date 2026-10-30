@@ -67,25 +67,24 @@ fn parse(args: &[&str], kind: Kind) -> Option<Options> {
     while let Some(arg) = iter.next() {
         match arg {
             "--" => {
-                for value in iter {
-                    (kind == Kind::Component && pattern.is_none() && valid_pattern(value))
-                        .then_some(())?;
-                    pattern = Some(value.to_string());
-                }
+                consume_trailing_recovery(iter, kind, &mut pattern)?;
                 break;
             }
             "--no-color" => {}
             "--abort" | "--abort=true" if kind == Kind::Component && !abort => abort = true,
             "-s" | "--silent" | "--silent=true" if kind == Kind::Lane && !silent => silent = true,
+            "--silent=false" if kind == Kind::Lane && !silent => {}
             "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true"
                 if !skip_install =>
             {
                 skip_install = true;
             }
+            "--skip-dependency-installation=false" if !skip_install => {}
             "-sx" | "-xs" if kind == Kind::Lane && !silent && !skip_install => {
                 (silent, skip_install) = (true, true);
             }
             "--verbose" | "--verbose=true" if !verbose => verbose = true,
+            "--verbose=false" if !verbose => {}
             value if kind == Kind::Component && pattern.is_none() && valid_pattern(value) => {
                 pattern = Some(value.to_string());
             }
@@ -99,6 +98,18 @@ fn parse(args: &[&str], kind: Kind) -> Option<Options> {
         verbose,
         silent,
     })
+}
+
+fn consume_trailing_recovery<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    kind: Kind,
+    pattern: &mut Option<String>,
+) -> Option<()> {
+    for value in iter {
+        (kind == Kind::Component && pattern.is_none() && valid_pattern(value)).then_some(())?;
+        *pattern = Some(value.to_string());
+    }
+    Some(())
 }
 
 fn valid_pattern(pattern: &str) -> bool {

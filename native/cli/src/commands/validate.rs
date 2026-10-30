@@ -75,7 +75,7 @@ fn emit_fast(
     formatter: &Formatter,
     output: &bit_install::output::Output,
 ) -> io::Result<Report> {
-    let mut lines = collect_deprecation_warnings(options, formatter, output);
+    let mut lines = collect_deprecation_warnings(options, formatter);
     lines.push(format!("\n{}\n", formatter.title("Running validation checks...")));
     match fast {
         FastOutcome::Empty => {
@@ -114,21 +114,15 @@ fn emit_fast(
     }
 }
 
-fn collect_deprecation_warnings(
-    options: &Options,
-    formatter: &Formatter,
-    output: &bit_install::output::Output,
-) -> Vec<String> {
+fn collect_deprecation_warnings(options: &Options, formatter: &Formatter) -> Vec<String> {
     let mut lines = Vec::new();
     if options.all {
-        output.warning("--all is deprecated, use --unmodified instead");
         lines.push(formatter.chalk.yellow(
             "warning: --all is deprecated, use --unmodified instead",
         ));
     }
     if options.continue_on_error {
         let msg = "--continue-on-error is deprecated and will be removed in a future version. This is now the default behavior.";
-        output.warning(msg);
         lines.push(formatter.chalk.yellow(&format!("warning: {msg}")));
     }
     lines
