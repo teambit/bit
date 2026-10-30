@@ -44,24 +44,69 @@ pub(super) fn parse(args: &[OsString]) -> Option<Options> {
         .peekable();
     while let Some(arg) = args.next() {
         let arg = arg?;
+        if arg == "--no-color" {
+            continue;
+        }
         match arg {
             "--bare" | "-b" => options.bare = Some(optional(&mut args)?),
             "--agent" => options.agent = Some(optional(&mut args)?),
-            "--name" | "-n" => options.defaults.name = Some(args.next()??.to_owned()),
+            "--name" | "-n" => options.defaults.name = Some(required(&mut args)?),
             "--default-directory" | "-d" => {
-                options.defaults.directory = Some(args.next()??.to_owned());
+                options.defaults.directory = Some(required(&mut args)?);
             }
-            "--default-scope" => options.defaults.scope = Some(args.next()??.to_owned()),
-            "--generator" => options.defaults.generator = Some(args.next()??.to_owned()),
-            "--shared" | "-s" => options.shared = Some(args.next()??.to_owned()),
+            "--default-scope" => options.defaults.scope = Some(required(&mut args)?),
+            "--generator" => options.defaults.generator = Some(required(&mut args)?),
+            "--shared" | "-s" => options.shared = Some(required(&mut args)?),
+            value if inline_option(value, &mut options).is_some() => {
+                inline_option(value, &mut options)??;
+            }
             value if flag(value, &mut options) => {}
-            value if !value.starts_with('-') && options.path.is_none() => {
+            value
+                if !value.starts_with('-') && !value.is_empty() && options.path.is_none() =>
+            {
                 options.path = Some(value.to_owned());
             }
             _ => return None,
         }
     }
     Some(options)
+}
+
+fn required<'a>(args: &mut impl Iterator<Item = Option<&'a str>>) -> Option<String> {
+    let val = args.next()??;
+    (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
+}
+
+fn inline_option(arg: &str, options: &mut Options) -> Option<Option<()>> {
+    let (key, val) = arg.split_once('=')?;
+    match key {
+        "--bare" => {
+            options.bare = Some(val.to_owned());
+            Some(Some(()))
+        }
+        "--agent" => {
+            options.agent = Some(val.to_owned());
+            Some(Some(()))
+        }
+        "--name" | "--default-directory" | "--default-scope" | "--generator" | "--shared" => {
+            if val.is_empty() || val.starts_with('-') {
+                return Some(None);
+            }
+            set_inline_string(key, val, options);
+            Some(Some(()))
+        }
+        _ => None,
+    }
+}
+
+fn set_inline_string(key: &str, val: &str, options: &mut Options) {
+    match key {
+        "--name" => options.defaults.name = Some(val.to_owned()),
+        "--default-directory" => options.defaults.directory = Some(val.to_owned()),
+        "--default-scope" => options.defaults.scope = Some(val.to_owned()),
+        "--generator" => options.defaults.generator = Some(val.to_owned()),
+        _ => options.shared = Some(val.to_owned()),
+    }
 }
 
 fn optional<'a>(
@@ -77,7 +122,13 @@ fn optional<'a>(
 }
 
 fn flag(arg: &str, options: &mut Options) -> bool {
-    let value = match arg {
+    let (key, bool_val) = match arg.split_once('=') {
+        Some((key, "true")) if key.starts_with("--") => (key, true),
+        Some((key, "false")) if key.starts_with("--") => (key, false),
+        None => (arg, true),
+        _ => return false,
+    };
+    let value = match key {
         "--standalone" | "-T" => &mut options.flags.standalone,
         "--no-package-json" => &mut options.flags.no_package_json,
         "--force" | "-f" => &mut options.flags.force,
@@ -90,6 +141,6 @@ fn flag(arg: &str, options: &mut Options) -> bool {
         "--reset-lane-new" => &mut options.resets.lane_new,
         _ => return false,
     };
-    *value = true;
+    *value = bool_val;
     true
 }

@@ -156,7 +156,12 @@ fn emit_report(
 }
 
 pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
-    match args {
+    let filtered = args
+        .iter()
+        .copied()
+        .filter(|arg| *arg != "--no-color")
+        .collect::<Vec<_>>();
+    match filtered.as_slice() {
         [] => Some(Subcommand::BareList),
         ["list", rest @ ..] => parse_list_flags(rest),
         ["delete", rest @ ..] => parse_delete_flags(rest),
@@ -171,8 +176,10 @@ fn parse_list_flags(rest: &[&str]) -> Option<Subcommand> {
     let mut with_stats = false;
     for &arg in rest {
         match arg {
-            "-j" | "--json" => json = true,
-            "--with-stats" => with_stats = true,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
+            "--with-stats" | "--with-stats=true" => with_stats = true,
+            "--with-stats=false" => with_stats = false,
             _ => return None,
         }
     }
@@ -184,8 +191,10 @@ fn parse_delete_flags(rest: &[&str]) -> Option<Subcommand> {
     let mut scope_aspects = false;
     for &arg in rest {
         match arg {
-            "-a" | "--all" => all = true,
-            "--scope-aspects" => scope_aspects = true,
+            "-a" | "--all" | "--all=true" => all = true,
+            "--all=false" => all = false,
+            "--scope-aspects" | "--scope-aspects=true" => scope_aspects = true,
+            "--scope-aspects=false" => scope_aspects = false,
             _ => return None,
         }
     }

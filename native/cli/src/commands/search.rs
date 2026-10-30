@@ -158,9 +158,24 @@ fn parse_args(args: &[OsString]) -> Option<SearchArgs> {
         let str_arg = arg.to_str()?;
         match str_arg {
             "--no-color" => {}
-            "--local-only" | "-l" => local_only = true,
-            "--remote-only" | "-r" => remote_only = true,
-            "--json" | "-j" => json = true,
+            "--local-only" | "-l" | "--local-only=true" => local_only = true,
+            "--local-only=false" => local_only = false,
+            "--remote-only" | "-r" | "--remote-only=true" => remote_only = true,
+            "--remote-only=false" => remote_only = false,
+            "--json" | "-j" | "--json=true" => json = true,
+            "--json=false" => json = false,
+            "-lj" | "-jl" => {
+                local_only = true;
+                json = true;
+            }
+            "-rj" | "-jr" => {
+                remote_only = true;
+                json = true;
+            }
+            "-lr" | "-rl" => {
+                local_only = true;
+                remote_only = true;
+            }
             s if s.starts_with('-') => return None,
             s => queries.push(s.to_owned()),
         }

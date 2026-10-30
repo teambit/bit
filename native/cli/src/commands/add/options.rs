@@ -14,31 +14,49 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     };
     let mut args = args.iter();
     while let Some(arg) = args.next() {
-        if consume_value(&mut options, arg, &mut args)? {
-            continue;
+        if *arg == "--" {
+            options.tracking.paths.extend(args.map(|item| (*item).to_owned()));
+            break;
         }
-        match *arg {
-            "-o" | "--override" if !options.tracking.override_files => {
-                let _ = value(&mut args)?;
-                options.tracking.override_files = true;
-            }
-            "--root" if !options.tracking.workspace_root => options.tracking.workspace_root = true,
-            "-j" | "--json" if !options.json => options.json = true,
-            "--" => {
-                options.tracking.paths.extend(args.map(|arg| (*arg).to_owned()));
-                break;
-            }
-            path if !path.starts_with('-') => options.tracking.paths.push(path.to_owned()),
-            _ => return None,
-        }
+        apply_arg(&mut options, arg, &mut args)?;
     }
     Some(options)
 }
+
+fn apply_arg(
+    options: &mut Options,
+    arg: &str,
+    args: &mut std::slice::Iter<'_, &str>,
+) -> Option<()> {
+    if consume_value(options, arg, args)? {
+        return Some(());
+    }
+    match arg {
+        "--no-color" => {}
+        "-o" | "--override" if !options.tracking.override_files => {
+            let _ = value(args)?;
+            options.tracking.override_files = true;
+        }
+        "--root" | "--root=true" if !options.tracking.workspace_root => {
+            options.tracking.workspace_root = true;
+        }
+        "--root=false" if !options.tracking.workspace_root => {}
+        "-j" | "--json" | "--json=true" if !options.json => options.json = true,
+        "--json=false" if !options.json => {}
+        path if !path.starts_with('-') => options.tracking.paths.push(path.to_owned()),
+        _ => return None,
+    }
+    Some(())
+}
+
 fn consume_value(
     options: &mut Options,
     arg: &str,
     args: &mut std::slice::Iter<'_, &str>,
 ) -> Option<bool> {
+    if let Some(handled) = consume_inline_value(options, arg) {
+        return handled;
+    }
     let Some(slot) = string_option(options, arg) else {
         return Some(false);
     };
@@ -47,6 +65,23 @@ fn consume_value(
     }
     *slot = Some(value(args)?);
     Some(true)
+}
+
+fn consume_inline_value(options: &mut Options, arg: &str) -> Option<Option<bool>> {
+    if let Some(val) = arg.strip_prefix("--override=") {
+        if options.tracking.override_files || val.is_empty() || val.starts_with('-') {
+            return Some(None);
+        }
+        options.tracking.override_files = true;
+        return Some(Some(true));
+    }
+    let (flag, inline) = arg.split_once('=')?;
+    let slot = string_option(options, flag)?;
+    if slot.is_some() || inline.is_empty() || inline.starts_with('-') {
+        return Some(None);
+    }
+    *slot = Some(inline.to_owned());
+    Some(Some(true))
 }
 fn string_option<'a>(options: &'a mut Options, arg: &str) -> Option<&'a mut Option<String>> {
     match arg {

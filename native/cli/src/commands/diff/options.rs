@@ -51,12 +51,29 @@ pub(super) fn output_error(options: &Options) -> Option<&'static str> {
 }
 
 fn parse_arg(options: &mut Options, arg: &str, args: &[&str], index: &mut usize) -> Option<()> {
+    if arg == "--no-color" {
+        return Some(());
+    }
     if arg == "--file" && options.output.files.is_empty() {
         options.output.files = file_list(args.get(*index)?)?;
         *index += 1;
-    } else if arg.starts_with('-') {
-        set_boolean(options, arg).then_some(())?;
-    } else if options.pattern.is_none() {
+        return Some(());
+    }
+    if let Some(inline) = arg.strip_prefix("--file=") {
+        options.output.files
+            .is_empty()
+            .then_some(())?;
+        options.output.files = file_list(inline)?;
+        return Some(());
+    }
+    if arg.starts_with('-') {
+        return set_boolean(options, arg).then_some(());
+    }
+    push_positional(options, arg)
+}
+
+fn push_positional(options: &mut Options, arg: &str) -> Option<()> {
+    if options.pattern.is_none() {
         options.pattern = Some(arg.to_string());
     } else if options.versions.from.is_none() {
         options.versions.from = Some(arg.to_string());
@@ -79,7 +96,13 @@ fn file_list(value: &str) -> Option<Vec<String>> {
 }
 
 fn set_boolean(options: &mut Options, flag: &str) -> bool {
-    let field = match flag {
+    let (key, val) = match flag.split_once('=') {
+        Some((key, "true")) if key.starts_with("--") => (key, true),
+        Some((key, "false")) if key.starts_with("--") => (key, false),
+        None => (flag, true),
+        _ => return false,
+    };
+    let field = match key {
         "-j" | "--json" => &mut options.output.json,
         "--files-only" => &mut options.output.files_only,
         "--configs-only" => &mut options.output.configs_only,
@@ -93,7 +116,7 @@ fn set_boolean(options: &mut Options, flag: &str) -> bool {
     if *field {
         return false;
     }
-    *field = true;
+    *field = val;
     true
 }
 

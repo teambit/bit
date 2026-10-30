@@ -56,48 +56,73 @@ enum BuildError {
 }
 
 pub(super) fn parse_create_flags(rest: &[&str]) -> Option<Subcommand> {
-    let mut ids = Vec::new();
-    let mut seeders_only = false;
-    let mut json = false;
-    let mut base_dir = None;
-    let mut always_new = false;
-    let mut name = None;
-    let mut root_base_dir = None;
-    let mut use_hash = false;
+    let mut create = CreateArgs {
+        ids: Vec::new(),
+        seeders_only: false,
+        json: false,
+        base_dir: None,
+        always_new: false,
+        name: None,
+        root_base_dir: None,
+        use_hash: false,
+    };
     let mut args = rest.iter().copied();
     while let Some(arg) = args.next() {
-        match arg {
-            "-j" | "--json" => json = true,
-            "-s" | "--seeders-only" => seeders_only = true,
-            "-a" | "--always-new" => always_new = true,
-            "--use-hash" => use_hash = true,
-            "-i" | "--id" => name = Some(next_option_value(&mut args)?.to_owned()),
-            "-b" | "--base-dir" => base_dir = Some(next_option_value(&mut args)?.to_owned()),
-            "-r" | "--root-base-dir" => {
-                root_base_dir = Some(next_option_value(&mut args)?.to_owned());
-            }
-            "-p" | "--package-manager" => {
-                let _ = next_option_value(&mut args)?;
-            }
-            val if !val.starts_with('-') => ids.push(val.to_owned()),
+        apply_create_arg(arg, &mut args, &mut create)?;
+    }
+    Some(Subcommand::Create(create))
+}
+
+fn apply_create_arg<'a>(
+    arg: &'a str,
+    args: &mut impl Iterator<Item = &'a str>,
+    create: &mut CreateArgs,
+) -> Option<()> {
+    match arg {
+        "-j" | "--json" | "--json=true" => create.json = true,
+        "--json=false" => create.json = false,
+        "-s" | "--seeders-only" | "--seeders-only=true" => create.seeders_only = true,
+        "--seeders-only=false" => create.seeders_only = false,
+        "-a" | "--always-new" | "--always-new=true" => create.always_new = true,
+        "--always-new=false" => create.always_new = false,
+        "--use-hash" | "--use-hash=true" => create.use_hash = true,
+        "--use-hash=false" => create.use_hash = false,
+        "-i" | "--id" => create.name = Some(next_option_value(args)?.to_owned()),
+        "-b" | "--base-dir" => create.base_dir = Some(next_option_value(args)?.to_owned()),
+        "-r" | "--root-base-dir" => {
+            create.root_base_dir = Some(next_option_value(args)?.to_owned());
+        }
+        "-p" | "--package-manager" => {
+            let _ = next_option_value(args)?;
+        }
+        _ => apply_create_inline_or_id(arg, create)?,
+    }
+    Some(())
+}
+
+fn apply_create_inline_or_id(arg: &str, create: &mut CreateArgs) -> Option<()> {
+    if let Some((key, val)) = arg.split_once('=') {
+        if val.is_empty() || val.starts_with('-') {
+            return None;
+        }
+        match key {
+            "--id" => create.name = Some(val.to_owned()),
+            "--base-dir" => create.base_dir = Some(val.to_owned()),
+            "--root-base-dir" => create.root_base_dir = Some(val.to_owned()),
+            "--package-manager" => {}
             _ => return None,
         }
+    } else if !arg.starts_with('-') && !arg.is_empty() {
+        create.ids.push(arg.to_owned());
+    } else {
+        return None;
     }
-    Some(Subcommand::Create(CreateArgs {
-        ids,
-        seeders_only,
-        json,
-        base_dir,
-        always_new,
-        name,
-        root_base_dir,
-        use_hash,
-    }))
+    Some(())
 }
 
 fn next_option_value<'a>(args: &mut impl Iterator<Item = &'a str>) -> Option<&'a str> {
     let value = args.next()?;
-    (!value.starts_with('-')).then_some(value)
+    (!value.is_empty() && !value.starts_with('-')).then_some(value)
 }
 
 pub(super) fn run_create(

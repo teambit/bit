@@ -23,6 +23,8 @@ fn parses_short_flags() {
     assert_eq!(parsed.queries, vec!["foo"]);
     assert!(parsed.local_only);
     assert!(parsed.json);
+    let combined = parse_args(&os_args(&["search", "foo", "-lj", "--remote-only=false"])).unwrap();
+    assert!(combined.local_only && combined.json && !combined.remote_only);
 }
 
 #[test]

@@ -29,6 +29,8 @@ fn parses_graph_options_and_validates_remote_or_host() {
         fast_graph_error(temp.path(), &empty_remote),
         Some("please specify remote scope name or enter an id"),
     );
+    assert_eq!(parse_options(&["--layout=-bad"]), None);
+    assert!(parse_options(&["--cycles=true", "--json=false"]).unwrap().cycles);
 }
 
 #[test]

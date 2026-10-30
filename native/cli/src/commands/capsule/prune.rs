@@ -60,14 +60,27 @@ pub(super) fn parse_flags(rest: &[&str]) -> Option<PruneArgs> {
     let mut iter = rest.iter();
     while let Some(&arg) = iter.next() {
         match arg {
-            "--dry-run" => parsed.dry_run = true,
-            "--keep-workspace-caps" => parsed.keep_workspace_caps = true,
-            "--no-orphans" => parsed.no_orphans = true,
-            "--with-sizes" => parsed.with_sizes = true,
-            "-j" | "--json" => parsed.json = true,
-            "--older-than" => parsed.older_than = Some((*iter.next()?).to_owned()),
+            "--dry-run" | "--dry-run=true" => parsed.dry_run = true,
+            "--dry-run=false" => parsed.dry_run = false,
+            "--keep-workspace-caps" | "--keep-workspace-caps=true" => {
+                parsed.keep_workspace_caps = true;
+            }
+            "--keep-workspace-caps=false" => parsed.keep_workspace_caps = false,
+            "--no-orphans" | "--no-orphans=true" => parsed.no_orphans = true,
+            "--no-orphans=false" => parsed.no_orphans = false,
+            "--with-sizes" | "--with-sizes=true" => parsed.with_sizes = true,
+            "--with-sizes=false" => parsed.with_sizes = false,
+            "-j" | "--json" | "--json=true" => parsed.json = true,
+            "--json=false" => parsed.json = false,
+            "--older-than" => {
+                let next = *iter.next()?;
+                (!next.is_empty() && !next.starts_with('-')).then_some(())?;
+                parsed.older_than = Some(next.to_owned());
+            }
             value if value.starts_with("--older-than=") => {
-                parsed.older_than = Some(value["--older-than=".len()..].to_owned());
+                let val = &value["--older-than=".len()..];
+                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+                parsed.older_than = Some(val.to_owned());
             }
             _ => return None,
         }

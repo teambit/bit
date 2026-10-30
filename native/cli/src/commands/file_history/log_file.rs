@@ -27,20 +27,18 @@ use std::{
 pub(super) const COMMAND: Command = Command { name: "log-file", aliases: &[], run };
 
 fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
-    let filtered = args
-        .iter()
-        .copied()
-        .filter(|arg| *arg != "--no-color")
-        .collect::<Vec<_>>();
-    match filtered.as_slice() {
-        [path] if !path.starts_with('-') && !path.is_empty() => Some((*path, false)),
-        [path, "-o" | "--one-line"] | ["-o" | "--one-line", path]
-            if !path.starts_with('-') && !path.is_empty() =>
-        {
-            Some((*path, true))
+    let mut path = None;
+    let mut one_line = false;
+    for &arg in args {
+        match arg {
+            "--no-color" => {}
+            "-o" | "--one-line" | "--one-line=true" => one_line = true,
+            "--one-line=false" => one_line = false,
+            val if !val.starts_with('-') && !val.is_empty() && path.is_none() => path = Some(val),
+            _ => return None,
         }
-        _ => None,
     }
+    Some((path?, one_line))
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

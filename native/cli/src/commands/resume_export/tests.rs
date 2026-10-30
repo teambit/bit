@@ -14,4 +14,13 @@ fn parses_resume_export_options() {
             force: true,
         }),
     );
+    assert_eq!(
+        parse_options(&["id-1", "scope-a", "--delete=true", "--force=false"]),
+        Some(Options {
+            export_id: "id-1".into(),
+            remotes: vec!["scope-a".into()],
+            delete: true,
+            force: false,
+        }),
+    );
 }

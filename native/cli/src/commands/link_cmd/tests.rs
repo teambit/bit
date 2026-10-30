@@ -45,6 +45,8 @@ fn parses_link_options() {
             comp_summary: false,
         }),
     );
+    assert_eq!(parse_options(&["--target=-bad"]), None);
+    assert!(parse_options(&["--json=true", "--rewire=false"]).unwrap().json);
 }
 
 #[test]

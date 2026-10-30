@@ -15,13 +15,17 @@ fn parses_the_native_flags() {
             ..Options::default()
         }),
     );
+    assert_eq!(
+        parse(&["--scope=remote", "--json=true", "--ids=false", "--no-color"]),
+        Some(Options { scope: Some("remote".to_string()), json: true, ..Options::default() }),
+    );
     for args in [
         &["remote", "other"][..],
         &["-s"],
         &["-s", "-j"],
         &["-ij"],
         &["-j", "--json"],
-        &["--scope=remote"],
+        &["--scope=-bad"],
     ] {
         assert_eq!(parse(args), None, "{args:?}");
     }

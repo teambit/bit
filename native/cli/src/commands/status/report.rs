@@ -66,30 +66,43 @@ pub(super) struct Flags {
 pub(super) fn parse(args: &[&str]) -> Option<Flags> {
     let mut flags = Flags::default();
     let mut seen: Vec<&str> = Vec::new();
-    for arg in args {
-        let flag = match *arg {
-            "-w" => "--warnings",
-            "-l" => "--lanes",
-            "-c" => "--ignore-circular-dependencies",
-            _ => arg,
-        };
-        if seen.contains(&flag) {
-            return None;
+    for &arg in args {
+        if arg != "--no-color" {
+            apply_report_flag(&mut flags, &mut seen, arg)?;
         }
-        seen.push(flag);
-        let field = match flag {
-            "--lanes" => &mut flags.lanes,
-            "--verbose" => &mut flags.verbose,
-            "--warnings" => &mut flags.warnings,
-            "--strict" => &mut flags.strict,
-            "--fail-on-error" => &mut flags.fail_on_error,
-            "--expand" => &mut flags.expand,
-            "--ignore-circular-dependencies" => &mut flags.ignore_circular,
-            _ => return None,
-        };
-        *field = true;
     }
     Some(flags)
+}
+
+fn apply_report_flag<'a>(flags: &mut Flags, seen: &mut Vec<&'a str>, arg: &'a str) -> Option<()> {
+    let (raw_flag, val) = match arg.split_once('=') {
+        Some((key, "true")) if key.starts_with("--") => (key, true),
+        Some((key, "false")) if key.starts_with("--") => (key, false),
+        None => (arg, true),
+        _ => return None,
+    };
+    let flag = match raw_flag {
+        "-w" => "--warnings",
+        "-l" => "--lanes",
+        "-c" => "--ignore-circular-dependencies",
+        _ => raw_flag,
+    };
+    if seen.contains(&flag) {
+        return None;
+    }
+    seen.push(flag);
+    let field = match flag {
+        "--lanes" => &mut flags.lanes,
+        "--verbose" => &mut flags.verbose,
+        "--warnings" => &mut flags.warnings,
+        "--strict" => &mut flags.strict,
+        "--fail-on-error" => &mut flags.fail_on_error,
+        "--expand" => &mut flags.expand,
+        "--ignore-circular-dependencies" => &mut flags.ignore_circular,
+        _ => return None,
+    };
+    *field = val;
+    Some(())
 }
 
 /// The report's text and exit code.

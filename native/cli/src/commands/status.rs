@@ -57,12 +57,22 @@ fn mode(args: &[OsString]) -> Option<Mode> {
     let (filtered, _) = strip_log_flags(&arguments[1..]);
     let json = filtered
         .iter()
-        .any(|arg| matches!(*arg, "--json" | "-j"));
-    let quick = filtered.contains(&"--quick");
+        .fold(false, |acc, &arg| match arg {
+            "--json" | "-j" | "--json=true" => true,
+            "--json=false" => false,
+            _ => acc,
+        });
+    let quick = filtered
+        .iter()
+        .fold(false, |acc, &arg| match arg {
+            "--quick" | "--quick=true" => true,
+            "--quick=false" => false,
+            _ => acc,
+        });
     let report_args = filtered
         .iter()
         .copied()
-        .filter(|arg| !matches!(*arg, "--json" | "-j" | "--quick"))
+        .filter(|arg| !is_mode_flag(arg))
         .collect::<Vec<_>>();
     let flags = report::parse(&report_args)?;
     if quick {
@@ -72,6 +82,20 @@ fn mode(args: &[OsString]) -> Option<Mode> {
     } else {
         Some(Mode::Report(flags))
     }
+}
+
+fn is_mode_flag(arg: &str) -> bool {
+    matches!(
+        arg,
+        "--json"
+            | "-j"
+            | "--json=true"
+            | "--json=false"
+            | "--quick"
+            | "--quick=true"
+            | "--quick=false"
+            | "--no-color",
+    )
 }
 
 /// Strip `--log`, `--log=<level>`, or `--log <level>` from `args` and return whether logging was enabled.

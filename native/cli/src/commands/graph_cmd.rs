@@ -153,11 +153,18 @@ fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<
     let arg = args[*idx];
     match arg {
         "--no-color" => {}
-        "--png" => options.png = true,
-        "--cycles" => options.cycles = true,
-        "--include-local-only" => options.include_local_only = true,
-        "--include-dependencies" => options.include_dependencies = true,
-        "-j" | "--json" => options.json = true,
+        "--png" | "--png=true" => options.png = true,
+        "--png=false" => options.png = false,
+        "--cycles" | "--cycles=true" => options.cycles = true,
+        "--cycles=false" => options.cycles = false,
+        "--include-local-only" | "--include-local-only=true" => options.include_local_only = true,
+        "--include-local-only=false" => options.include_local_only = false,
+        "--include-dependencies" | "--include-dependencies=true" => {
+            options.include_dependencies = true;
+        }
+        "--include-dependencies=false" => options.include_dependencies = false,
+        "-j" | "--json" | "--json=true" => options.json = true,
+        "--json=false" => options.json = false,
         "-r" | "--remote" => options.remote = Some(take_optional_remote(args, idx)),
         "--layout" => options.layout = Some(take_required_layout(args, idx)?),
         _ => apply_inline_or_id(arg, options)?,
@@ -189,7 +196,7 @@ fn apply_inline_or_id(arg: &str, options: &mut Options) -> Option<()> {
     if let Some(val) = arg.strip_prefix("--remote=") {
         options.remote = Some(val.to_owned());
     } else if let Some(val) = arg.strip_prefix("--layout=") {
-        (!val.is_empty()).then_some(())?;
+        (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.layout = Some(val.to_owned());
     } else if !arg.starts_with('-') && !arg.is_empty() && options.id.is_none() {
         options.id = Some(arg.to_owned());

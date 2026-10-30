@@ -84,11 +84,18 @@ fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<
     let arg = args[*idx];
     match arg {
         "--no-color" => {}
-        "-v" | "--verbose" => options.verbose = true,
-        "--skip-pre-compilation" => options.skip_pre_compilation = true,
-        "-i" | "--import" => options.import = true,
-        "--skip-import" => options.skip_import = true,
-        "--generate-types" => options.generate_types = true,
+        "-v" | "--verbose" | "--verbose=true" => options.verbose = true,
+        "--verbose=false" => options.verbose = false,
+        "--skip-pre-compilation" | "--skip-pre-compilation=true" => {
+            options.skip_pre_compilation = true;
+        }
+        "--skip-pre-compilation=false" => options.skip_pre_compilation = false,
+        "-i" | "--import" | "--import=true" => options.import = true,
+        "--import=false" => options.import = false,
+        "--skip-import" | "--skip-import=true" => options.skip_import = true,
+        "--skip-import=false" => options.skip_import = false,
+        "--generate-types" | "--generate-types=true" => options.generate_types = true,
+        "--generate-types=false" => options.generate_types = false,
         "-t" | "--check-types" => options.check_types = Some(take_optional_check_types(args, idx)),
         "--trigger" => options.trigger = Some(take_required_trigger(args, idx)?),
         _ => apply_inline(arg, options)?,
@@ -121,7 +128,7 @@ fn apply_inline(arg: &str, options: &mut Options) -> Option<()> {
         options.check_types = Some(val.to_owned());
     } else {
         let val = arg.strip_prefix("--trigger=")?;
-        (!val.is_empty()).then_some(())?;
+        (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.trigger = Some(val.to_owned());
     }
     Some(())

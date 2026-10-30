@@ -62,6 +62,22 @@ fn parses_capsule_subcommands() {
         parse_subcommand(&["create", "comp1", "-a"]),
         Some(Subcommand::Create(CreateArgs { always_new: true, .. }))
     ));
+    assert!(matches!(
+        parse_subcommand(&[
+            "create",
+            "comp1",
+            "--id=custom",
+            "--base-dir=sub",
+            "--json=true",
+            "--no-color",
+        ]),
+        Some(Subcommand::Create(CreateArgs {
+            json: true,
+            name: Some(name),
+            base_dir: Some(base),
+            ..
+        })) if name == "custom" && base == "sub"
+    ));
     assert!(matches!(parse_subcommand(&["prune"]), Some(Subcommand::Prune(_))));
 }
 

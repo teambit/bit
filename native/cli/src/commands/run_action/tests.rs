@@ -4,9 +4,9 @@ use serde_json::json;
 #[test]
 fn parses_and_validates_run_action_json() {
     assert_eq!(parse_options(&["ExportPersist", "my-scope", "not-json"]), None);
-    assert_eq!(parse_options(&["ExportPersist", "my-scope", "{}", "--no-color"]), None);
+    assert_eq!(parse_options(&["ExportPersist", "my-scope", "{}", "--unknown"]), None);
     assert_eq!(
-        parse_options(&["ExportPersist", "my-scope", r#"{"exportId":"123"}"#]),
+        parse_options(&["ExportPersist", "my-scope", r#"{"exportId":"123"}"#, "--no-color"]),
         Some(Options {
             action_name: "ExportPersist".into(),
             remote: "my-scope".into(),

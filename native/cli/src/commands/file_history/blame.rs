@@ -18,20 +18,18 @@ use std::{collections::HashMap, env, ffi::OsString, io, path::Path};
 pub(super) const COMMAND: Command = Command { name: "blame", aliases: &[], run };
 
 pub(super) fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
-    let filtered = args
-        .iter()
-        .copied()
-        .filter(|arg| *arg != "--no-color")
-        .collect::<Vec<_>>();
-    match filtered.as_slice() {
-        [path] if !path.starts_with('-') && !path.is_empty() => Some((*path, false)),
-        [path, "-m" | "--include-message"] | ["-m" | "--include-message", path]
-            if !path.starts_with('-') && !path.is_empty() =>
-        {
-            Some((*path, true))
+    let mut path = None;
+    let mut include_message = false;
+    for &arg in args {
+        match arg {
+            "--no-color" => {}
+            "-m" | "--include-message" | "--include-message=true" => include_message = true,
+            "--include-message=false" => include_message = false,
+            val if !val.starts_with('-') && !val.is_empty() && path.is_none() => path = Some(val),
+            _ => return None,
         }
-        _ => None,
     }
+    Some((path?, include_message))
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

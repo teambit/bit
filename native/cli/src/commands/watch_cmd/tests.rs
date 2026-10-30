@@ -32,4 +32,6 @@ fn parses_watch_options_and_validates_check_types() {
         check_types_error(&invalid),
         Some(r#"check-types can be either "file" or "project". got "invalid""#.into()),
     );
+    assert_eq!(parse_options(&["--trigger=-bad"]), None);
+    assert!(parse_options(&["--verbose=true", "--import=false"]).unwrap().verbose);
 }

@@ -1,8 +1,9 @@
 //! Render the bounded linear history without loading the JavaScript runtime.
 use super::{
-    Chalk, Outcome, ScopeRoot, Value, emit_text, resolve_component_entry, scope_dir_for, sha1_hex,
+    Chalk, Outcome, ScopeRoot, Value, diagnose_component_lookup_error, emit_failure, emit_text,
+    resolve_component_entry, scope_dir_for, sha1_hex,
 };
-use std::{ffi::OsString, io};
+use std::{env, ffi::OsString, io};
 mod graph;
 mod refs;
 
@@ -12,7 +13,17 @@ pub(super) fn run(
     id: &str,
     short: bool,
 ) -> io::Result<Outcome> {
-    let Some(report) = prepare(root, id, short, Chalk::detect(args)) else {
+    let chalk = Chalk::detect(args);
+    let Some(report) = prepare(root, id, short, chalk) else {
+        let scope_dir = scope_dir_for(root);
+        let bare = id.rsplit_once('@').map_or(id, |(name, _)| name);
+        if bare.contains('/')
+            && resolve_component_entry(&scope_dir, bare).is_none()
+            && env::var_os("CI").is_none_or(|val| val.is_empty())
+            && let Some(err) = diagnose_component_lookup_error(&scope_dir, id, bare, chalk)
+        {
+            return emit_failure(root, args, "show", true, false, err);
+        }
         return Ok(Outcome::Declined(
             "version-history text requires a qualified local graph".into(),
         ));

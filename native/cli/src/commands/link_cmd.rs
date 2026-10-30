@@ -65,12 +65,20 @@ fn apply_token<'a>(
 ) -> Option<()> {
     match arg {
         "--no-color" => {}
-        "-j" | "--json" => options.json = true,
-        "-v" | "--verbose" => options.verbose = true,
-        "-r" | "--rewire" => options.rewire = true,
-        "--skip-fetching-objects" => options.skip_fetching_objects = true,
-        "--peers" => options.peers = true,
-        "--comp-summary" => options.comp_summary = true,
+        "-j" | "--json" | "--json=true" => options.json = true,
+        "--json=false" => options.json = false,
+        "-v" | "--verbose" | "--verbose=true" => options.verbose = true,
+        "--verbose=false" => options.verbose = false,
+        "-r" | "--rewire" | "--rewire=true" => options.rewire = true,
+        "--rewire=false" => options.rewire = false,
+        "--skip-fetching-objects" | "--skip-fetching-objects=true" => {
+            options.skip_fetching_objects = true;
+        }
+        "--skip-fetching-objects=false" => options.skip_fetching_objects = false,
+        "--peers" | "--peers=true" => options.peers = true,
+        "--peers=false" => options.peers = false,
+        "--comp-summary" | "--comp-summary=true" => options.comp_summary = true,
+        "--comp-summary=false" => options.comp_summary = false,
         "--target" => {
             let val = iter.next()?;
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
@@ -83,7 +91,7 @@ fn apply_token<'a>(
 
 fn apply_inline_or_id(arg: &str, options: &mut Options) -> Option<()> {
     if let Some(val) = arg.strip_prefix("--target=") {
-        (!val.is_empty()).then_some(())?;
+        (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.target = Some(val.to_owned());
     } else if !arg.starts_with('-') && !arg.is_empty() {
         options.ids.push(arg.to_owned());

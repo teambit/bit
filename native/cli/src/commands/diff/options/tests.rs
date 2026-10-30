@@ -12,6 +12,9 @@ fn accepts_workspace_diff_output_modes() {
     assert_eq!(to_version.as_deref(), Some("0.0.2"));
     assert!(parse(&["one", "--parent"]).unwrap().versions.parent);
     assert!(parse(&["one", "1.0.0", "-p"]).unwrap().versions.parent);
+    let inline = parse(&["--file=a.ts,b.ts", "--stat=true", "--no-color"]).unwrap();
+    assert_eq!(inline.output.files, ["a.ts", "b.ts"]);
+    assert!(inline.output.stat);
 }
 
 #[test]

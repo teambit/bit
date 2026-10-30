@@ -38,8 +38,10 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     for &arg in args {
         match arg {
             "--no-color" => {}
-            "--delete" => delete = true,
-            "--force" => force = true,
+            "--delete" | "--delete=true" => delete = true,
+            "--delete=false" => delete = false,
+            "--force" | "--force=true" => force = true,
+            "--force=false" => force = false,
             val if !val.starts_with('-') && !val.is_empty() => {
                 if export_id.is_none() {
                     export_id = Some(val.to_owned());

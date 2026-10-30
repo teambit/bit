@@ -10,13 +10,17 @@ mod tests;
 use super::{
     Command,
     color::Chalk,
-    debug_cat::{emit_text, emit_value, lookup::resolve_component_entry, scope_dir_for, sha1_hex},
+    debug_cat::{
+        emit_failure, emit_text, emit_value,
+        lookup::{diagnose_component_lookup_error, resolve_component_entry},
+        scope_dir_for, sha1_hex,
+    },
     lane::scope_root::{self, ScopeRoot},
     workspace_command,
 };
 use crate::native::Outcome;
 use serde_json::{Value, json};
-use std::{ffi::OsString, io};
+use std::{env, ffi::OsString, io};
 
 pub const COMMAND: Command = Command { name: "version-history", aliases: &["vh"], run };
 
@@ -29,7 +33,12 @@ enum Subcommand {
 }
 
 fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
-    match args {
+    let filtered = args
+        .iter()
+        .copied()
+        .filter(|arg| *arg != "--no-color")
+        .collect::<Vec<_>>();
+    match filtered.as_slice() {
         ["show", rest @ ..] => parse_show(rest),
         ["build", rest @ ..] => parse_build(rest),
         [sub] if !sub.starts_with('-') && !matches!(*sub, "show" | "build" | "graph") => {
@@ -45,15 +54,59 @@ fn parse_build(rest: &[&str]) -> Option<Subcommand> {
     let mut remote = None;
     let mut arguments = rest.iter().copied();
     while let Some(argument) = arguments.next() {
-        match argument {
-            "--from-all-lanes" | "--delete-existing" => {}
-            "--from-snap" if from.is_none() => from = Some(arguments.next()?.to_owned()),
-            "--remote" if remote.is_none() => remote = Some(arguments.next()?.to_owned()),
-            value if !value.starts_with('-') && id.is_none() => id = Some(value.to_owned()),
-            _ => return None,
-        }
+        apply_build_arg(argument, &mut arguments, &mut id, &mut from, &mut remote)?;
     }
     Some(Subcommand::Build(id?, from, remote))
+}
+
+fn apply_build_arg<'a>(
+    argument: &'a str,
+    arguments: &mut impl Iterator<Item = &'a str>,
+    id: &mut Option<String>,
+    from: &mut Option<String>,
+    remote: &mut Option<String>,
+) -> Option<()> {
+    match argument {
+        "--from-all-lanes"
+        | "--from-all-lanes=true"
+        | "--from-all-lanes=false"
+        | "--delete-existing"
+        | "--delete-existing=true"
+        | "--delete-existing=false" => {}
+        "--from-snap" => set_once(from, next_non_flag(arguments)?)?,
+        "--remote" => set_once(remote, next_non_flag(arguments)?)?,
+        _ => apply_build_inline_or_id(argument, id, from, remote)?,
+    }
+    Some(())
+}
+
+fn apply_build_inline_or_id(
+    argument: &str,
+    id: &mut Option<String>,
+    from: &mut Option<String>,
+    remote: &mut Option<String>,
+) -> Option<()> {
+    if let Some(inline) = argument.strip_prefix("--from-snap=") {
+        set_once(from, inline)?;
+    } else if let Some(inline) = argument.strip_prefix("--remote=") {
+        set_once(remote, inline)?;
+    } else if !argument.starts_with('-') && !argument.is_empty() && id.is_none() {
+        *id = Some(argument.to_owned());
+    } else {
+        return None;
+    }
+    Some(())
+}
+
+fn set_once(slot: &mut Option<String>, val: &str) -> Option<()> {
+    (slot.is_none() && !val.is_empty() && !val.starts_with('-')).then_some(())?;
+    *slot = Some(val.to_owned());
+    Some(())
+}
+
+fn next_non_flag<'a>(arguments: &mut impl Iterator<Item = &'a str>) -> Option<&'a str> {
+    let val = arguments.next()?;
+    (!val.is_empty() && !val.starts_with('-')).then_some(val)
 }
 
 fn parse_show(rest: &[&str]) -> Option<Subcommand> {
@@ -62,8 +115,14 @@ fn parse_show(rest: &[&str]) -> Option<Subcommand> {
     let mut short = false;
     for &arg in rest {
         match arg {
-            "-j" | "--json" => json = true,
-            "-s" | "--short-hash" => short = true,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
+            "-s" | "--short-hash" | "--short-hash=true" => short = true,
+            "--short-hash=false" => short = false,
+            "-js" | "-sj" => {
+                json = true;
+                short = true;
+            }
             val if !val.starts_with('-') && id.is_none() => id = Some(val.to_owned()),
             _ => return None,
         }
@@ -103,6 +162,12 @@ fn run_show_json(root: &ScopeRoot, args: &[OsString], id: &str) -> io::Result<Ou
     let scope_dir = scope_dir_for(root);
     let (bare_id, _) = id.rsplit_once('@').unwrap_or((id, ""));
     let Some((Some(scope), name, _)) = resolve_component_entry(&scope_dir, bare_id) else {
+        if env::var_os("CI").is_none_or(|val| val.is_empty())
+            && let Some(err) =
+                diagnose_component_lookup_error(&scope_dir, id, bare_id, Chalk::detect(args))
+        {
+            return emit_failure(root, args, "show", true, true, err);
+        }
         return Ok(Outcome::Declined("version-history show lookup delegated".into()));
     };
     let vh_hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));

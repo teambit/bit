@@ -27,6 +27,19 @@ fn parses_show_json_and_unrecognized_subcommands() {
         parse_subcommand(&["build", "comp1", "--delete-existing"]),
         Some(Subcommand::Build("comp1".into(), None, None)),
     );
-    assert_eq!(parse_subcommand(&["build", "comp1", "--no-color"]), None);
-    assert_eq!(parse_subcommand(&["show", "comp1", "--no-color"]), None);
+    assert_eq!(
+        parse_subcommand(&[
+            "build",
+            "comp1",
+            "--from-snap=abc",
+            "--remote=my-scope",
+            "--from-all-lanes=true",
+            "--no-color",
+        ]),
+        Some(Subcommand::Build("comp1".into(), Some("abc".into()), Some("my-scope".into()))),
+    );
+    assert_eq!(
+        parse_subcommand(&["show", "comp1", "-js", "--no-color"]),
+        Some(Subcommand::ShowJson("comp1".into())),
+    );
 }
