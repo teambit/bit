@@ -12,6 +12,7 @@ use super::{
     Command,
     aspect::{find_bitmap_row_ref, workspace_default_scope},
     color::Chalk,
+    inventory,
     scope_set::{Failure, selection},
     workspace_command::{self, results::Report},
 };
@@ -89,7 +90,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     for &arg in args {
         match arg {
             "--no-color" => {}
-            "-j" | "--json" => json = true,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
             val if !val.starts_with('-') && id.is_none() => id = Some(val.to_owned()),
             _ => return None,
         }
@@ -139,7 +141,16 @@ pub(super) fn find_existing_bitmap_entry<'a>(
     {
         return Some(entry);
     }
-    bitmap.entries
+    find_fallback_bitmap_entry(bitmap, raw_id, without_version, has_version)
+}
+
+fn find_fallback_bitmap_entry<'a>(
+    bitmap: &'a Bitmap,
+    raw_id: &str,
+    without_version: &str,
+    has_version: bool,
+) -> Option<&'a BitmapEntry> {
+    if let Some(entry) = bitmap.entries
         .iter()
         .find(|entry| {
             entry.owns_its_dir()
@@ -150,6 +161,24 @@ pub(super) fn find_existing_bitmap_entry<'a>(
                     entry.id.name == without_version
                 }
         })
+    {
+        return Some(entry);
+    }
+    (!has_version).then(|| find_bitmap_entry_by_dir(bitmap, without_version)).flatten()
+}
+
+fn find_bitmap_entry_by_dir<'a>(bitmap: &'a Bitmap, raw_dir: &str) -> Option<&'a BitmapEntry> {
+    let normalized = inventory::normalize(raw_dir);
+    let dir = normalized.strip_prefix("./").unwrap_or(&normalized);
+    (!dir.is_empty())
+        .then(|| {
+            bitmap.entries
+                .iter()
+                .find(|entry| {
+                    entry.owns_its_dir() && !entry.root_dir.is_empty() && entry.root_dir == dir
+                })
+        })
+        .flatten()
 }
 
 pub(super) fn is_unscoped_bitmap_row(row: &Value) -> bool {

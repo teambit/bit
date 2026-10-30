@@ -21,6 +21,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("cli arguments are not UTF-8".into()));
     };
+    if let Some(skill) = parse_unknown_skill(&argv[1..]) {
+        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            return Ok(Outcome::Declined("CI cli generate skill error delegated".into()));
+        }
+        return emit_unknown_skill(args, skill);
+    }
     if !is_generate_docs(&argv[1..]) {
         return Ok(Outcome::Declined("outside native cli generate --docs grammar".into()));
     }
@@ -38,6 +44,39 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         history.end(true);
     }
     Ok(Outcome::Exit(ExitCode::SUCCESS))
+}
+
+fn emit_unknown_skill(args: &[OsString], skill: &str) -> io::Result<Outcome> {
+    let msg = format!(r#"Unknown skill type: "{skill}". Use "commands" or "reference"."#);
+    let err = io::Error::other(msg);
+    let cwd = env::current_dir()?;
+    if let Some(root) = workspace::root(&cwd) {
+        return workspace_command::execute_without_loader(&root, args, "generate", |_| Err(err));
+    }
+    workspace_command::execute_failure_scope(&cwd, args, "generate", true, "", err)
+}
+
+pub(super) fn parse_unknown_skill<'a>(args: &[&'a str]) -> Option<&'a str> {
+    let ["generate", rest @ ..] = args else { return None };
+    if rest.contains(&"--docs") || !valid_docs_options(rest) {
+        return None;
+    }
+    let mut skill = None;
+    let mut index = 0;
+    while index < rest.len() {
+        match &rest[index..] {
+            ["--skill", value, ..] => {
+                skill = Some(*value);
+                index += 2;
+            }
+            [arg, ..] if let Some(val) = arg.strip_prefix("--skill=") => {
+                skill = Some(val);
+                index += 1;
+            }
+            _ => index += 1,
+        }
+    }
+    skill.filter(|val| *val != "commands" && *val != "reference")
 }
 
 pub(super) fn is_generate_docs(args: &[&str]) -> bool {

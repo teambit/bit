@@ -82,16 +82,17 @@ fn resolve_target_id(
         };
         return Ok((full, identity));
     }
-    resolve_scope_target_id(scope_dir, bare, explicit_ver)
+    resolve_scope_target_id(scope_dir, raw_id, bare, explicit_ver)
 }
 
 fn resolve_scope_target_id(
     scope_dir: &Path,
+    raw_id: &str,
     bare: &str,
     explicit_ver: Option<&str>,
 ) -> Result<(String, String), Failure> {
     let Some((scope_opt, comp_name, comp_hash)) = resolve_component_entry(scope_dir, bare) else {
-        return Err(Failure::Declined("component not found in workspace or scope".into()));
+        return resolve_missing_scope_target(raw_id, bare, explicit_ver);
     };
     let identity = scope_opt
         .as_deref()
@@ -107,6 +108,33 @@ fn resolve_scope_target_id(
     };
     let full = ver.map_or_else(|| identity.clone(), |ver_str| format!("{identity}@{ver_str}"));
     Ok((full, identity))
+}
+
+fn resolve_missing_scope_target(
+    raw_id: &str,
+    bare: &str,
+    explicit_ver: Option<&str>,
+) -> Result<(String, String), Failure> {
+    if raw_id.starts_with('@') || bare.is_empty() || explicit_ver == Some("") {
+        return Err(Failure::Declined("component not found in workspace or scope".into()));
+    }
+    if !bare.contains('/') && !bare.contains('.') {
+        return Err(Failure::User(format!(
+            r#"error: component ID "{raw_id}" is invalid, please use the following format: [scope]/<name>"#,
+        )));
+    }
+    if let Some((scope, name)) = bare.split_once('/')
+        && selection::valid_scope_str(scope)
+        && !name.is_empty()
+        && !name.contains("//")
+    {
+        let full = match explicit_ver {
+            Some(ver_str) if ver_str != "latest" => format!("{bare}@{ver_str}"),
+            _ => bare.to_owned(),
+        };
+        return Ok((full, bare.to_owned()));
+    }
+    Err(Failure::Declined("component not found in workspace or scope".into()))
 }
 
 fn latest_version_label(comp_val: &Value) -> Option<String> {

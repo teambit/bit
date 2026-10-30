@@ -7,6 +7,18 @@ fn parses_debug_load_options() {
         parse_options(&["comp1", "--json"]),
         Some(Options { id: "comp1".into(), json: true }),
     );
+    assert_eq!(
+        parse_options(&[
+            "comp1",
+            "--all-aspects",
+            "--skip-deps",
+            "-r",
+            "-p",
+            "teambit.envs/envs",
+            "--json=false",
+        ]),
+        Some(Options { id: "comp1".into(), json: false }),
+    );
     assert_eq!(parse_options(&[]), None);
 }
 

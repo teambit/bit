@@ -14,6 +14,7 @@ use self::runner::{ScriptFailure, execute, read_allowed_envs};
 use super::{
     Command,
     color::Chalk,
+    lane::scope_root,
     workspace_command::{self, results::Report},
 };
 use crate::{native::Outcome, workspace};
@@ -46,10 +47,20 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return missing_script_outcome(args);
     }
     let cwd = env::current_dir()?;
+    let chalk = Chalk::detect(args);
     let Some(root) = workspace::root(&cwd) else {
+        if scope_root::discover()
+            .ok()
+            .flatten()
+            .is_none()
+        {
+            let msg = chalk.yellow(NO_ENVS_CONFIG_MSG);
+            return workspace_command::execute_without_loader_scope(&cwd, args, "script", |_| {
+                Ok(Report { data: msg, code: 0, details: None })
+            });
+        }
         return Ok(Outcome::Declined("script requires a workspace".into()));
     };
-    let chalk = Chalk::detect(args);
     if let Ok(Some(msg)) = fast_workspace_message(&root, chalk) {
         return workspace_command::execute_without_loader(&root, args, "script", |_| {
             Ok(Report { data: msg, code: 0, details: None })
@@ -97,7 +108,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     for &arg in args {
         match arg {
             "--no-color" => {}
-            "-l" | "--list" => list = true,
+            "-l" | "--list" | "--list=true" => list = true,
+            "--list=false" => list = false,
             val if !val.starts_with('-') && !val.is_empty() && script_name.is_none() => {
                 script_name = Some(val.to_owned());
             }

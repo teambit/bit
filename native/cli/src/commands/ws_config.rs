@@ -24,6 +24,7 @@ use std::{
     env,
     ffi::OsString,
     io::{self, Write},
+    path::Path,
     process::ExitCode,
 };
 
@@ -114,12 +115,24 @@ fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Ou
     }
 }
 
+fn emit_outside_workspace(
+    cwd: &Path,
+    args: &[OsString],
+    subcommand: &str,
+    json_flag: bool,
+) -> io::Result<Outcome> {
+    let err =
+        io::Error::other("workspace not found. to initiate a new workspace, please use `bit init`");
+    workspace_command::execute_failure_scope(cwd, args, subcommand, json_flag, "", err)
+}
+
 fn run_list(args: &[OsString], json_flag: bool, chalk: Chalk) -> io::Result<Outcome> {
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("CI ws-config list delegated".into()));
     }
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("ws-config list requires a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return emit_outside_workspace(&cwd, args, "list", json_flag);
     };
     let Ok((_, ws)) = resolve_workspace_components(&root) else {
         return Ok(Outcome::Declined("ws-config list workspace resolution delegated".into()));
@@ -146,12 +159,16 @@ fn run_clean(
     writers: Option<&[String]>,
     json_flag: bool,
 ) -> io::Result<Outcome> {
-    if (!silent && !dry_run) || env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-        return Ok(Outcome::Declined("ws-config clean interactive/CI delegated".into()));
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("ws-config clean CI delegated".into()));
     }
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("ws-config clean requires a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return emit_outside_workspace(&cwd, args, "clean", json_flag);
     };
+    if !silent && !dry_run {
+        return Ok(Outcome::Declined("ws-config clean interactive delegated".into()));
+    }
     let Ok((_, ws)) = resolve_workspace_components(&root) else {
         return Ok(Outcome::Declined("ws-config clean workspace resolution delegated".into()));
     };
@@ -180,8 +197,9 @@ fn run_write(args: &[OsString], opts: &WriteOptions, chalk: Chalk) -> io::Result
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("CI ws-config write delegated".into()));
     }
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("ws-config write requires a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return emit_outside_workspace(&cwd, args, "write", opts.json);
     };
     let Ok((_, ws)) = resolve_workspace_components(&root) else {
         return Ok(Outcome::Declined("ws-config write workspace resolution delegated".into()));
@@ -265,8 +283,8 @@ fn parse_list(rest: &[&str]) -> Option<Subcommand> {
     let mut json = false;
     for &arg in rest {
         match arg {
-            "-j" | "--json" => json = true,
-            "--no-json" => json = false,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
             _ => return None,
         }
     }
@@ -282,11 +300,9 @@ fn parse_clean(rest: &[&str]) -> Option<Subcommand> {
     while idx < rest.len() {
         match rest[idx] {
             "-s" | "--silent" => silent = true,
-            "--no-silent" => silent = false,
             "--dry-run" => dry_run = true,
-            "--no-dry-run" => dry_run = false,
-            "-j" | "--json" => json = true,
-            "--no-json" => json = false,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
             "-w" | "--writers" => {
                 idx += 1;
                 writers = Some(split_writers(rest.get(idx)?)?);
@@ -316,24 +332,18 @@ fn parse_write(rest: &[&str]) -> Option<Subcommand> {
 fn apply_write_flag(token: &str, opts: &mut WriteOptions) -> bool {
     match token {
         "-c" | "--clean" => opts.clean = true,
-        "--no-clean" => opts.clean = false,
         "-n" | "--no-dedupe" => opts.no_dedupe = true,
-        "--dedupe" => opts.no_dedupe = false,
         "--dry-run" => {
             if opts.dry_run == DryRunMode::Off {
                 opts.dry_run = DryRunMode::PathsOnly;
             }
         }
-        "--no-dry-run" | "--no-dry-run-with-content" => opts.dry_run = DryRunMode::Off,
         "--dry-run-with-content" => opts.dry_run = DryRunMode::WithContent,
         "-v" | "--verbose" => opts.verbose = true,
-        "--no-verbose" => opts.verbose = false,
         "-s" | "--silent" => opts.silent = true,
-        "--no-silent" => opts.silent = false,
         "-f" | "--force" => opts.force = true,
-        "--no-force" => opts.force = false,
-        "-j" | "--json" => opts.json = true,
-        "--no-json" => opts.json = false,
+        "-j" | "--json" | "--json=true" => opts.json = true,
+        "--json=false" => opts.json = false,
         _ => return false,
     }
     true

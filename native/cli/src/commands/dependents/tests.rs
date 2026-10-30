@@ -12,6 +12,14 @@ fn parses_dependents_options_and_checks_bitmap_scope() {
         parse_options(&["my-scope/comp1", "-j", "--no-color"]),
         Some(Options { id: "my-scope/comp1".into(), json: true }),
     );
+    assert_eq!(
+        parse_options(&["my-scope/comp1", "--json=true"]),
+        Some(Options { id: "my-scope/comp1".into(), json: true }),
+    );
+    assert_eq!(
+        parse_options(&["my-scope/comp1", "-j", "--json=false"]),
+        Some(Options { id: "my-scope/comp1".into(), json: false }),
+    );
     assert_eq!(parse_options(&[]), None);
     assert!(is_unscoped_bitmap_row(&json!({ "scope": "", "version": "" })));
     assert!(is_unscoped_bitmap_row(&json!({ "rootDir": "comp1" })));

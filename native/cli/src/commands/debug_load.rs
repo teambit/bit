@@ -27,35 +27,78 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native debug-load grammar".into()));
     };
-    if options.json || env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-        return Ok(Outcome::Declined("CI/json debug-load delegated".into()));
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI debug-load delegated".into()));
     }
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        return Ok(Outcome::Declined("debug-load requires a workspace".into()));
+        let err = io::Error::other(
+            "workspace not found. to initiate a new workspace, please use `bit init`",
+        );
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            "debug-load",
+            options.json,
+            "",
+            err,
+        );
     };
     if let Ok(Some(err_msg)) = check_missing_workspace_component(&root, &options.id) {
-        return workspace_command::execute_then(&root, args, "debug-load", |_| {
+        return emit_debug_load_error(&root, args, options.json, err_msg);
+    }
+    Ok(Outcome::Declined("debug-load trace inspection delegated".into()))
+}
+
+fn emit_debug_load_error(
+    root: &Path,
+    args: &[OsString],
+    json_flag: bool,
+    err_msg: String,
+) -> io::Result<Outcome> {
+    if json_flag {
+        return workspace_command::execute_json(root, args, "debug-load", |_| {
             Err(io::Error::other(err_msg))
         });
     }
-    Ok(Outcome::Declined("debug-load trace inspection delegated".into()))
+    workspace_command::execute_then(root, args, "debug-load", |_| Err(io::Error::other(err_msg)))
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut id = None;
     let mut json = false;
-    for &arg in args {
-        match arg {
-            "--no-color" => {}
-            "-j" | "--json" => json = true,
+    let mut idx = 0;
+    while idx < args.len() {
+        if consume_aspect_plus_deps(args, &mut idx)? {
+            idx += 1;
+            continue;
+        }
+        match args[idx] {
+            "--no-color" | "--all-aspects" | "--skip-deps" | "-r" | "--re-load" => {}
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
             val if !val.starts_with('-') && !val.is_empty() && id.is_none() => {
                 id = Some(val.to_owned());
             }
             _ => return None,
         }
+        idx += 1;
     }
     Some(Options { id: id?, json })
+}
+
+fn consume_aspect_plus_deps(args: &[&str], idx: &mut usize) -> Option<bool> {
+    match args[*idx] {
+        "-p" | "--aspect-plus-deps" => {
+            *idx += 1;
+            let val = *args.get(*idx)?;
+            (!val.is_empty() && !val.starts_with('-')).then_some(true)
+        }
+        arg if let Some(val) = arg.strip_prefix("--aspect-plus-deps=") => {
+            (!val.is_empty()).then_some(true)
+        }
+        _ => Some(false),
+    }
 }
 
 pub(super) fn check_missing_workspace_component(

@@ -58,10 +58,23 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Ok(Report { data: String::new(), code: 0, details: None })
         });
     }
+    if has_env_jsonc_policy(&root) {
+        return Ok(Outcome::Declined("update with env.jsonc delegated".into()));
+    }
+    let collected = match collect::collect_candidates(&root, &options.patterns) {
+        Ok(val) => val,
+        Err(reason) => return Ok(Outcome::Declined(format!("update: {reason}"))),
+    };
+    if collected.candidates.is_empty() {
+        return workspace_command::execute_then(&root, args, "update", |output| {
+            output.failure(NO_DEPS_FOUND_MSG);
+            Ok(Report { data: String::new(), code: 0, details: None })
+        });
+    }
     if !options.yes {
         return Ok(Outcome::Declined("interactive update delegated".into()));
     }
-    execute_update(&root, args, &options)
+    execute_update(&root, args, &options, &collected)
 }
 
 fn run_outside_workspace(options: &Options) -> io::Result<Outcome> {
@@ -74,17 +87,12 @@ fn run_outside_workspace(options: &Options) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
-fn execute_update(root: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
-    let collected = match collect::collect_candidates(root, &options.patterns) {
-        Ok(val) => val,
-        Err(reason) => return Ok(Outcome::Declined(format!("update: {reason}"))),
-    };
-    if collected.candidates.is_empty() {
-        return workspace_command::execute_then(root, args, "update", |output| {
-            output.failure(NO_DEPS_FOUND_MSG);
-            Ok(Report { data: String::new(), code: 0, details: None })
-        });
-    }
+fn execute_update(
+    root: &Path,
+    args: &[OsString],
+    options: &Options,
+    collected: &collect::Collected,
+) -> io::Result<Outcome> {
     let updates = resolve::resolve_updates(
         root,
         &collected.candidates,
@@ -92,8 +100,12 @@ fn execute_update(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         collected.save_prefix.as_deref(),
     );
     if updates.is_empty() {
-        return workspace_command::execute_then(root, args, "update", |output| {
+        let semver = options.semver;
+        return workspace_command::execute_then(root, args, "update", move |output| {
             output.success(NO_OUTDATED_MSG, None);
+            if semver {
+                output.console("If you want to find new versions that don't match the current version ranges, retry with the --latest flag");
+            }
             Ok(Report { data: String::new(), code: 0, details: None })
         });
     }
@@ -103,6 +115,27 @@ fn execute_update(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         output.success("successfully updated dependencies", None);
         Ok(Report { data: String::new(), code: 0, details: None })
     })
+}
+
+fn has_env_jsonc_policy(root: &Path) -> bool {
+    let Ok(bytes) = fs::read(root.join(".bitmap")) else { return false };
+    let Ok(bitmap) = parse_jsonc(&bytes) else { return false };
+    let Some(rows) = bitmap.as_object() else { return false };
+    rows.iter()
+        .any(|(key, row)| {
+            !key.starts_with('$')
+                && *key != "_bit_lane"
+                && row["isAvailableOnCurrentLane"] != false
+                && row["config"]["teambit.component/remove"]["removed"] != true
+                && row["rootDir"]
+                    .as_str()
+                    .filter(|dir| !dir.is_empty())
+                    .is_some_and(|dir| {
+                        root.join(dir)
+                            .join("env.jsonc")
+                            .is_file()
+                    })
+        })
 }
 
 pub(super) fn has_no_workspace_dependencies(root: &Path) -> io::Result<bool> {
