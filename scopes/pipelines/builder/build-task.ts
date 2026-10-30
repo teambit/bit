@@ -110,6 +110,14 @@ export interface BuildTask {
    * "aspectId:name", e.g. "teambit.compilation/compiler:TypescriptCompiler".
    */
   dependencies?: string[];
+
+  /**
+   * whether the task needs the packages to be installed in the capsules in order to run.
+   * currently, it's checked only when tagging from a scope with the artifacts of the last build, where the
+   * installation is skipped if none of the running tasks needs it (behind the "skip-tag-capsule-install" feature).
+   * when not implemented, the task is considered as requiring the installation.
+   */
+  requiresCapsuleInstallation?(components: Component[]): boolean;
 }
 
 // TODO: rename to BuildTaskResults

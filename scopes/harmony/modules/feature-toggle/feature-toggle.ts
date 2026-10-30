@@ -104,3 +104,11 @@ export const CAPSULE_AUTO_PRUNE = 'capsule-auto-prune';
  * `BIT_FEATURES=plus-range-versions` or `bit config set features=plus-range-versions`.
  */
 export const PLUS_RANGE_VERSIONS_FEATURE = 'plus-range-versions';
+
+/**
+ * Opt-in to skip the package installation in the capsules when tagging from a scope with the artifacts of the last
+ * build. In that case only a few tasks run and normally none of them needs the packages. The installation still
+ * happens when any of these tasks requires it (see `BuildTask.requiresCapsuleInstallation`). Enable with
+ * `BIT_FEATURES=skip-tag-capsule-install` or `bit config set features=skip-tag-capsule-install`.
+ */
+export const SKIP_TAG_CAPSULE_INSTALL = 'skip-tag-capsule-install';

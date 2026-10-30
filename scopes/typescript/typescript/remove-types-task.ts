@@ -16,6 +16,10 @@ export class RemoveTypesTask implements BuildTask {
     return result;
   }
 
+  requiresCapsuleInstallation(): boolean {
+    return false;
+  }
+
   /**
    * the types['index.ts'] is needed only during the build to avoid errors when tsc finds the
    * same type once in the d.ts and once in the ts file.

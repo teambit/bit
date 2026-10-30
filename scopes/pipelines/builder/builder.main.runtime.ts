@@ -43,6 +43,7 @@ import { BuilderCmd } from './build.cmd';
 import type { BuildTask } from './build-task';
 import { BuildTaskHelper } from './build-task';
 import { isTaskInFilter } from './build-pipeline-order';
+import { isFeatureEnabled, SKIP_TAG_CAPSULE_INSTALL } from '@teambit/harmony.modules.feature-toggle';
 import type { TaskResults } from './build-pipe';
 import type { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
@@ -158,8 +159,14 @@ export class BuilderMain {
     const pipeResults: TaskResultsList[] = [];
     const allTasksResults: TaskResults[] = [];
     const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap, populateArtifactsFrom, loose } = options;
-    if (populateArtifactsFrom) isolateOptions.populateArtifactsFrom = populateArtifactsFrom;
     const deployPipeline = isSnap ? 'snap' : 'tag';
+    const deployPipelineToRun = forceDeploy || !disableTagAndSnapPipelines ? deployPipeline : undefined;
+    if (populateArtifactsFrom) {
+      isolateOptions.populateArtifactsFrom = populateArtifactsFrom;
+      if (this.shouldSkipCapsuleInstallation(components, builderOptions, deployPipelineToRun)) {
+        isolateOptions.installOptions = { ...isolateOptions.installOptions, installPackages: false };
+      }
+    }
     const buildEnvsExecutionResults = await this.build(
       components,
       { emptyRootDir: true, ...isolateOptions },
@@ -168,7 +175,7 @@ export class BuilderMain {
         // even when build is skipped (in case of tag-from-scope), the pre-build/post-build and teambit.harmony/aspect tasks are needed
         tasks: populateArtifactsFrom ? [Extensions.aspect] : builderOptions.tasks,
       },
-      { ignoreIssues: '*', deployPipeline: forceDeploy || !disableTagAndSnapPipelines ? deployPipeline : undefined }
+      { ignoreIssues: '*', deployPipeline: deployPipelineToRun }
     );
     if (throwOnError && !forceDeploy) buildEnvsExecutionResults.throwErrorsIfExist(loose);
     allTasksResults.push(...buildEnvsExecutionResults.tasksResults);
@@ -555,6 +562,50 @@ export class BuilderMain {
       );
     });
     return new Map([...envIdPerComp].map(([compId, envId]) => [compId, plannedTasksPerEnv.get(envId)!]));
+  }
+
+  /**
+   * when the artifacts are populated from the last build, the build pipeline runs only the teambit.harmony/aspect
+   * tasks, and normally none of them, nor the tag/snap tasks, needs the packages installed in the capsules.
+   * a task that doesn't implement `requiresCapsuleInstallation` is assumed to need them.
+   */
+  private shouldSkipCapsuleInstallation(
+    components: Component[],
+    builderOptions: BuilderServiceOptions,
+    deployPipeline?: 'tag' | 'snap'
+  ): boolean {
+    if (!isFeatureEnabled(SKIP_TAG_CAPSULE_INSTALL)) return false;
+    try {
+      const envs = uniqBy(
+        components.map((component) => this.envs.getEnv(component)),
+        (env) => env.id
+      );
+      // the same filters the pipelines apply, so tasks that won't run don't affect the decision
+      const { tasks, skipTasks, skipTests } = builderOptions;
+      const isSkipped = (task: BuildTask) =>
+        Boolean(skipTasks?.length && isTaskInFilter(task, skipTasks)) ||
+        Boolean(skipTests && task.aspectId === Extensions.tester);
+      const [buildService, ...deployServices] = this.getPipelineServices(deployPipeline);
+      const buildTasks = buildService
+        .getCurrentPipeline(envs)
+        .filter((task) => isTaskInFilter(task, [Extensions.aspect]) && !isSkipped(task));
+      const deployTasks = deployServices
+        .flatMap((service) => service.getCurrentPipeline(envs))
+        .filter((task) => (!tasks?.length || isTaskInFilter(task, tasks)) && !isSkipped(task));
+      const tasksRequiringInstallation = [...buildTasks, ...deployTasks].filter(
+        (task) => task.requiresCapsuleInstallation?.(components) ?? true
+      );
+      if (tasksRequiringInstallation.length) {
+        const taskIds = tasksRequiringInstallation.map((task) => BuildTaskHelper.serializeId(task));
+        this.logger.debug(`installing in the capsules, required by: ${taskIds.join(', ')}`);
+        return false;
+      }
+      this.logger.debug('skipping the installation in the capsules, none of the tasks requires it');
+      return true;
+    } catch (err: any) {
+      this.logger.debug(`unable to determine whether the capsules installation is needed: ${err.message}`);
+      return false;
+    }
   }
 
   private getPipelineServices(deployPipeline?: 'tag' | 'snap'): BuilderService[] {

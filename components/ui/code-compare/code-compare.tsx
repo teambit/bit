@@ -78,19 +78,12 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
     // otherwise open the first changed file.
     const firstChanged = mainFile && isChanged(mainFile) ? mainFile : sorted.find(isChanged);
     return { fileTree: sorted, firstChangedFile: firstChanged };
-  }, [
-    listLoading,
-    baseFileTree,
-    compareFileTree,
-    fileCompareDataByName,
-    mainFile,
-  ]);
+  }, [listLoading, baseFileTree, compareFileTree, fileCompareDataByName, mainFile]);
 
   const selectedFileFromParams = useCompareQueryParam('file');
 
   const selectedFile = React.useMemo(
-    () =>
-      state?.id || selectedFileFromParams || firstChangedFile || mainFile || DEFAULT_FILE,
+    () => state?.id || selectedFileFromParams || firstChangedFile || mainFile || DEFAULT_FILE,
     [state?.id, selectedFileFromParams, firstChangedFile, mainFile]
   );
   // Without an explicit file, the file to open depends on the list. Opening a fallback before the list
