@@ -128,8 +128,7 @@ fn apply_create_token<'a>(
             *scope = Some(take_value(val)?);
         }
         _ if has_inline_create_value(token) => {}
-        _ if token.starts_with('-') => return None,
-        _ => positionals.push(token.to_owned()),
+        _ => positionals.push(take_value(token)?),
     }
     Some(())
 }

@@ -1,5 +1,7 @@
 //! Native `bit internalize [component-pattern]` (`scopes/component/internalize/internalize-cmd.ts`).
 
+pub(in crate::commands) use super::lint_cmd::consume_trailing_internalize;
+
 #[cfg(test)]
 mod tests;
 
@@ -67,7 +69,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return handle_outside_workspace(&cwd, args, &options);
     };
     if !options.list && options.pattern.is_none() {
-        return handle_user_error(&root, args, options.json, MISSING_PATTERN_ERR.into());
+        return super::lint_cmd::emit_pattern_error(
+            &root,
+            args,
+            "internalize",
+            options.json,
+            MISSING_PATTERN_ERR.into(),
+        );
     }
     let chalk = Chalk::detect(args);
     match prepare(&root, &options, chalk) {
@@ -75,7 +83,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(prepared) => workspace_command::execute_then(&root, args, "internalize", |_output| {
             prepared.commit_text(chalk)
         }),
-        Err(Failure::User(message)) => handle_user_error(&root, args, options.json, message),
+        Err(Failure::User(message)) => {
+            super::lint_cmd::emit_pattern_error(&root, args, "internalize", options.json, message)
+        }
         Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("internalize: {reason}"))),
     }
 }
@@ -105,22 +115,15 @@ fn handle_outside_workspace(
     )
 }
 
-fn handle_user_error(
-    root: &Path,
-    args: &[OsString],
-    json_flag: bool,
-    message: String,
-) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-        return Ok(Outcome::Declined("CI internalize error delegated".into()));
-    }
-    super::lint_cmd::emit_pattern_error(root, args, "internalize", json_flag, message)
-}
-
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options { pattern: None, revert: false, list: false, json: false };
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_internalize(iter, &mut options.pattern)?;
+                break;
+            }
             "--no-color" => {}
             "-r" | "--revert" | "--revert=true" => options.revert = true,
             "--revert=false" => options.revert = false,

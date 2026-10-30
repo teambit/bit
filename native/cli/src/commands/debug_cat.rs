@@ -51,21 +51,20 @@ fn parse_object_options(args: &[&str]) -> Option<ObjectOptions> {
     while let Some(arg) = iter.next() {
         match arg {
             "--" => {
-                consume_trailing_slot(iter, &mut opts.hash)?;
+                super::eject::consume_trailing_eject(iter, &mut opts.hash)?;
                 break;
             }
             "-p" | "--pretty" | "--pretty=true" => opts.pretty = true,
             "--pretty=false" => opts.pretty = false,
             "-s" | "--stringify" | "--stringify=true" => opts.stringify = true,
             "--stringify=false" => opts.stringify = false,
-            "-ps" | "-sp" => {
-                opts.pretty = true;
-                opts.stringify = true;
-            }
+            "-ps" | "-sp" => (opts.pretty, opts.stringify) = (true, true),
             "--headers" | "--headers=true" => opts.headers = true,
             "--headers=false" => opts.headers = false,
             "--no-color" => {}
-            val if !val.starts_with('-') && opts.hash.is_empty() => val.clone_into(&mut opts.hash),
+            val if !val.starts_with('-') && !val.is_empty() && opts.hash.is_empty() => {
+                val.clone_into(&mut opts.hash);
+            }
             _ => return None,
         }
     }
@@ -86,13 +85,15 @@ fn parse_id_json_options(args: &[&str]) -> Option<IdJsonOptions> {
     while let Some(arg) = iter.next() {
         match arg {
             "--" => {
-                consume_trailing_slot(iter, &mut opts.id)?;
+                super::eject::consume_trailing_eject(iter, &mut opts.id)?;
                 break;
             }
             "-j" | "--json" | "--json=true" => opts.json = true,
             "--json=false" => opts.json = false,
             "--no-color" => {}
-            val if !val.starts_with('-') && opts.id.is_empty() => val.clone_into(&mut opts.id),
+            val if !val.starts_with('-') && !val.is_empty() && opts.id.is_empty() => {
+                val.clone_into(&mut opts.id);
+            }
             _ => return None,
         }
     }
@@ -105,25 +106,17 @@ fn parse_single_id(args: &[&str]) -> Option<String> {
     while let Some(arg) = iter.next() {
         match arg {
             "--" => {
-                consume_trailing_slot(iter, &mut id)?;
+                super::eject::consume_trailing_eject(iter, &mut id)?;
                 break;
             }
             "--no-color" => {}
-            val if !val.starts_with('-') && id.is_empty() => val.clone_into(&mut id),
+            val if !val.starts_with('-') && !val.is_empty() && id.is_empty() => {
+                val.clone_into(&mut id);
+            }
             _ => return None,
         }
     }
     (!id.is_empty()).then_some(id)
-}
-
-fn consume_trailing_slot<'a>(iter: impl Iterator<Item = &'a str>, slot: &mut String) -> Option<()> {
-    for rest in iter {
-        if rest.is_empty() || rest.starts_with('-') || !slot.is_empty() {
-            return None;
-        }
-        rest.clone_into(slot);
-    }
-    Some(())
 }
 
 fn run_object(args: &[OsString]) -> io::Result<Outcome> {

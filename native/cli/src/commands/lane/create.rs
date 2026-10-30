@@ -27,18 +27,16 @@ fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     let mut rest = args.iter().copied();
     while let Some(arg) = rest.next() {
         if arg == "--" {
-            let name = rest.next()?;
-            return (rest.next().is_none() && set_lane_name(&mut options.name, name)).then_some(
-                options,
-            );
+            rest.all(|name| !name.starts_with('-') && set_lane_name(&mut options.name, name))
+                .then_some(())?;
+            break;
         }
-        if !arg.starts_with('-') {
-            if !set_lane_name(&mut options.name, arg) {
-                return None;
-            }
-        } else if !apply_create_flag(&mut options, arg, &mut rest) {
-            return None;
-        }
+        let ok = if arg.starts_with('-') {
+            apply_create_flag(&mut options, arg, &mut rest)
+        } else {
+            set_lane_name(&mut options.name, arg)
+        };
+        ok.then_some(())?;
     }
     (!options.name.is_empty()).then_some(options)
 }

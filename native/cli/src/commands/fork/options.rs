@@ -38,7 +38,7 @@ pub(super) fn parse(argv: &[&str], scope_fork: bool) -> Option<Options> {
         if argument.starts_with('-') {
             parse_flag(argument, &mut arguments, &mut options)?;
         } else {
-            positions.push((*argument).to_owned());
+            positions.push(valid_fork_val(argument)?);
         }
     }
     assign_positions(positions, &mut options)?;

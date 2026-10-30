@@ -80,8 +80,13 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         json: false,
         keep_files: false,
     };
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_eject(iter, &mut options.pattern)?;
+                break;
+            }
             "--no-color" => {}
             "-f" | "--force" | "--force=true" => options.force = true,
             "--force=false" => options.force = false,
@@ -100,6 +105,17 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         }
     }
     (!options.pattern.is_empty()).then_some(options)
+}
+
+pub(super) fn consume_trailing_eject<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    pattern: &mut String,
+) -> Option<()> {
+    for val in iter {
+        (!val.is_empty() && !val.starts_with('-') && pattern.is_empty()).then_some(())?;
+        val.clone_into(pattern);
+    }
+    Some(())
 }
 
 fn apply_short_eject_flags(arg: &str, options: &mut Options) -> Option<()> {

@@ -36,9 +36,16 @@ pub(super) fn parse_merge(rest: &[&str]) -> Option<MergeOptions> {
     let mut opts = MergeOptions::default();
     let mut idx = 0;
     while idx < rest.len() {
+        if rest[idx] == "--" {
+            return (idx + 1 == rest.len()).then_some(opts);
+        }
         idx = apply_merge_arg(rest, idx, &mut opts)?;
     }
     Some(opts)
+}
+
+fn non_flag_val(val: &str) -> Option<String> {
+    (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
 }
 
 fn apply_merge_arg(rest: &[&str], idx: usize, opts: &mut MergeOptions) -> Option<usize> {
@@ -65,35 +72,35 @@ fn apply_merge_arg(rest: &[&str], idx: usize, opts: &mut MergeOptions) -> Option
 fn apply_merge_value_arg(rest: &[&str], idx: usize, opts: &mut MergeOptions) -> Option<usize> {
     match rest[idx] {
         "-r" | "--auto-merge-resolve" => {
-            opts.auto_merge_resolve = Some((*rest.get(idx + 1)?).to_owned());
+            opts.auto_merge_resolve = Some(non_flag_val(rest.get(idx + 1)?)?);
             Some(idx + 2)
         }
         "-m" | "--message" => {
-            opts.message = Some((*rest.get(idx + 1)?).to_owned());
+            opts.message = Some(non_flag_val(rest.get(idx + 1)?)?);
             Some(idx + 2)
         }
         "--commit-message" => {
-            opts.commit_message = Some((*rest.get(idx + 1)?).to_owned());
+            opts.commit_message = Some(non_flag_val(rest.get(idx + 1)?)?);
             Some(idx + 2)
         }
         "--branch" => {
-            opts.branch = Some((*rest.get(idx + 1)?).to_owned());
+            opts.branch = Some(non_flag_val(rest.get(idx + 1)?)?);
             Some(idx + 2)
         }
         "-l" | "--increment" => {
-            opts.bump.increment = Some((*rest.get(idx + 1)?).to_owned());
+            opts.bump.increment = Some(non_flag_val(rest.get(idx + 1)?)?);
             Some(idx + 2)
         }
         "--prerelease-id" => {
-            opts.bump.prerelease_id = Some((*rest.get(idx + 1)?).to_owned());
+            opts.bump.prerelease_id = Some(non_flag_val(rest.get(idx + 1)?)?);
             Some(idx + 2)
         }
         "--increment-by" => {
-            opts.bump.increment_by = Some((*rest.get(idx + 1)?).to_owned());
+            opts.bump.increment_by = Some(non_flag_val(rest.get(idx + 1)?)?);
             Some(idx + 2)
         }
         "--versions-file" => {
-            opts.bump.versions_file = Some((*rest.get(idx + 1)?).to_owned());
+            opts.bump.versions_file = Some(non_flag_val(rest.get(idx + 1)?)?);
             Some(idx + 2)
         }
         _ => apply_merge_equals_arg(rest[idx], idx, opts),
@@ -105,28 +112,28 @@ fn apply_merge_equals_arg(arg: &str, idx: usize, opts: &mut MergeOptions) -> Opt
         .strip_prefix("--auto-merge-resolve=")
         .or_else(|| arg.strip_prefix("-r="))
     {
-        opts.auto_merge_resolve = Some(val.to_owned());
+        opts.auto_merge_resolve = Some(non_flag_val(val)?);
     } else if let Some(val) = arg
         .strip_prefix("--message=")
         .or_else(|| arg.strip_prefix("-m="))
     {
-        opts.message = Some(val.to_owned());
+        opts.message = Some(non_flag_val(val)?);
     } else if let Some(val) = arg.strip_prefix("--commit-message=") {
-        opts.commit_message = Some(val.to_owned());
+        opts.commit_message = Some(non_flag_val(val)?);
     } else if let Some(val) = arg.strip_prefix("--branch=") {
-        opts.branch = Some(val.to_owned());
+        opts.branch = Some(non_flag_val(val)?);
     } else if let Some(val) = arg
         .strip_prefix("--increment=")
         .or_else(|| arg.strip_prefix("-l="))
     {
-        opts.bump.increment = Some(val.to_owned());
+        opts.bump.increment = Some(non_flag_val(val)?);
     } else if let Some(val) = arg.strip_prefix("--increment-by=") {
-        opts.bump.increment_by = Some(val.to_owned());
+        opts.bump.increment_by = Some(non_flag_val(val)?);
     } else if let Some(val) = arg.strip_prefix("--versions-file=") {
-        opts.bump.versions_file = Some(val.to_owned());
+        opts.bump.versions_file = Some(non_flag_val(val)?);
     } else {
         let val = arg.strip_prefix("--prerelease-id=")?;
-        opts.bump.prerelease_id = Some(val.to_owned());
+        opts.bump.prerelease_id = Some(non_flag_val(val)?);
     }
     Some(idx + 1)
 }

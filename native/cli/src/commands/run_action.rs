@@ -72,16 +72,8 @@ fn run_outside_scope(cwd: &std::path::Path, args: &[OsString]) -> io::Result<Out
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let filtered = args
-        .iter()
-        .copied()
-        .filter(|arg| *arg != "--no-color")
-        .collect::<Vec<_>>();
-    if filtered.len() != 3
-        || filtered
-            .iter()
-            .any(|arg| arg.is_empty() || arg.starts_with('-'))
-    {
+    let filtered = super::scope_set::collect_non_flag_tokens(args)?;
+    if filtered.len() != 3 {
         return None;
     }
     let payload = serde_json::from_str::<Value>(filtered[2]).ok()?;

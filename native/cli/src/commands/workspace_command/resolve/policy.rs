@@ -21,6 +21,11 @@ pub fn parse<'a>(args: &[&'a str], tag: bool) -> Option<(Policy, Vec<&'a str>)> 
     while index < args.len() {
         let raw = args[index];
         index += 1;
+        if raw == "--" {
+            remaining.push(raw);
+            remaining.extend_from_slice(&args[index..]);
+            break;
+        }
         match policy.consume_arg(raw, args.get(index).copied(), tag, &mut seen)? {
             Some(consumed) => index += consumed,
             None => remaining.push(raw),
@@ -74,7 +79,7 @@ impl Policy {
         match flag {
             "--ignore-issues" => {
                 self.ignore_issues = Some(
-                    next.filter(|value| !value.starts_with('-'))?
+                    next.filter(|value| !value.is_empty() && !value.starts_with('-'))?
                         .to_string(),
                 );
                 return Some(1);
@@ -90,7 +95,7 @@ impl Policy {
 
     fn inline_flag(&mut self, flag: &str, val: &str) -> Option<()> {
         if flag == "--ignore-issues" {
-            if val.starts_with('-') {
+            if val.is_empty() || val.starts_with('-') {
                 return None;
             }
             self.ignore_issues = Some(val.to_string());

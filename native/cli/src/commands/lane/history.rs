@@ -60,7 +60,7 @@ fn apply_history_arg<'a>(
                     .filter(|val| !val.is_empty() && !val.starts_with('-'))?,
             );
         }
-        value if !value.starts_with('-') && options.lane.is_none() => {
+        value if !value.starts_with('-') && !value.is_empty() && options.lane.is_none() => {
             options.lane = Some(value);
         }
         _ => return None,

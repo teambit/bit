@@ -80,6 +80,9 @@ fn parse_arg(options: &mut Options, arg: &str, args: &[&str], index: &mut usize)
 }
 
 fn push_positional(options: &mut Options, arg: &str) -> Option<()> {
+    if arg.is_empty() || arg.starts_with('-') {
+        return None;
+    }
     if options.pattern.is_none() {
         options.pattern = Some(arg.to_string());
     } else if options.versions.from.is_none() {

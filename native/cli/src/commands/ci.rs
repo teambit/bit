@@ -162,8 +162,8 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         .filter(|arg| *arg != "--no-color")
         .collect::<Vec<_>>();
     match filtered.as_slice() {
-        [] => Some(Subcommand::Bare),
-        ["verify"] => Some(Subcommand::Verify),
+        [] | ["--"] => Some(Subcommand::Bare),
+        ["verify"] | ["verify", "--"] | ["--", "verify"] => Some(Subcommand::Verify),
         ["pr", rest @ ..] if !rest.contains(&"--help") && !rest.contains(&"-h") => {
             parse_pr(rest).map(Subcommand::Pr)
         }
@@ -179,6 +179,15 @@ fn parse_sync(rest: &[&str]) -> Option<SyncOptions> {
     let mut opts = SyncOptions::default();
     let mut idx = 0;
     while idx < rest.len() {
+        if rest[idx] == "--" {
+            for &val in &rest[idx + 1..] {
+                (!val.is_empty()
+                    && !val.starts_with('-')
+                    && opts.lane.replace(val.to_owned()).is_none())
+                .then_some(())?;
+            }
+            break;
+        }
         idx += apply_sync_arg(&mut opts, rest[idx], rest.get(idx + 1).copied())?;
     }
     Some(opts)

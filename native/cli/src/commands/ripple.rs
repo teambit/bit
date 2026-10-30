@@ -250,7 +250,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         .filter(|arg| *arg != "--no-color")
         .collect::<Vec<_>>();
     match filtered.as_slice() {
-        [] => Some(Subcommand::Bare),
+        [] | ["--"] => Some(Subcommand::Bare),
         ["list", rest @ ..] if !rest.contains(&"--help") && !rest.contains(&"-h") => {
             parse_list_invalid_limit(rest)
         }
@@ -268,6 +268,12 @@ fn parse_simulate(rest: &[&str]) -> Option<Subcommand> {
     let mut iter = rest.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                return iter
+                    .next()
+                    .is_none()
+                    .then_some(Subcommand::Simulate { lane, json });
+            }
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             "--lane" => {
@@ -307,8 +313,15 @@ fn parse_no_arg_job_op(sub: &str, rest: &[&str]) -> Option<Subcommand> {
         _ => return None,
     };
     let mut json = false;
-    for &arg in rest {
+    let mut iter = rest.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                return iter
+                    .next()
+                    .is_none()
+                    .then_some(Subcommand::NoArgJobOp { sub: sub_static, json });
+            }
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             "--full-log" | "--full-log=true" | "--full-log=false" if sub_static == "errors" => {}

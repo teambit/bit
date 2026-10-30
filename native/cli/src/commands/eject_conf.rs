@@ -16,7 +16,6 @@ use bit_install::{
     workspace::{
         Bitmap, BitmapEntry, ScopeObjects,
         aspects::{self, Merger, Origin, Resolver},
-        sha1_hex,
     },
 };
 use serde_json::{Map, Value, json};
@@ -68,6 +67,13 @@ fn parse_options(args: &[&str]) -> Option<Options> {
     let mut idx = 0;
     while idx < args.len() {
         match args[idx] {
+            "--" => {
+                super::eject::consume_trailing_eject(
+                    args[idx + 1..].iter().copied(),
+                    &mut opts.pattern,
+                )?;
+                break;
+            }
             "-p" | "--propagate" => opts.propagate = consume_bool_flag(args, &mut idx),
             "--propagate=true" => opts.propagate = true,
             "--propagate=false" => opts.propagate = false,
@@ -77,7 +83,7 @@ fn parse_options(args: &[&str]) -> Option<Options> {
             "-j" | "--json" | "--json=true" => opts.json = true,
             "--json=false" => opts.json = false,
             "--no-color" => {}
-            val if !val.starts_with('-') && opts.pattern.is_empty() => {
+            val if !val.starts_with('-') && !val.is_empty() && opts.pattern.is_empty() => {
                 val.clone_into(&mut opts.pattern);
             }
             val => apply_short_flags(val, &mut opts)?,
@@ -117,8 +123,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(opts) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native eject-conf grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("eject-conf requires a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return super::lint_cmd::emit_pattern_error(
+            &cwd,
+            args,
+            "eject-conf",
+            opts.json,
+            crate::commands::log::OUTSIDE_WORKSPACE_ERR.into(),
+        );
     };
     let chalk = Chalk::detect(args);
     match prepare(&root, &opts, chalk) {
@@ -137,9 +150,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             })
         }
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
-                return Ok(Outcome::Declined("CI eject-conf error stack".into()));
-            }
             super::lint_cmd::emit_pattern_error(&root, args, "eject-conf", opts.json, message)
         }
         Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("eject-conf: {reason}"))),
@@ -322,7 +332,7 @@ fn load_version_extensions(
     let ver_hash = if ver.len() == 40 && ver.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         ver.to_owned()
     } else {
-        let model = read_model_object(objects, scope, &entry.id.name)?;
+        let model = super::lint_cmd::read_model_object(objects, scope, &entry.id.name)?;
         model["versions"]
             .get(ver)
             .and_then(Value::as_str)
@@ -337,19 +347,6 @@ fn load_version_extensions(
         .as_array()
         .cloned()
         .unwrap_or_default())
-}
-
-fn read_model_object(objects: &ScopeObjects, scope: &str, name: &str) -> Result<Value, Failure> {
-    if let Some(model) = objects
-        .read(&sha1_hex(&format!("{scope}/{name}")))
-        .map_err(|err| Failure::Declined(err.to_string()))?
-    {
-        return Ok(model);
-    }
-    objects
-        .read(&sha1_hex(name))
-        .map_err(|err| Failure::Declined(err.to_string()))?
-        .ok_or_else(|| Failure::Declined("missing model object on eject-conf".into()))
 }
 
 fn strip_local_env_version(bitmap: &Bitmap, cfg_map: Map<String, Value>) -> Map<String, Value> {

@@ -47,7 +47,7 @@ fn apply_arg<'a>(
             Some(index + 2)
         }
         arg if !undo && apply_inline_flag(arg, replacement, range) => Some(index + 1),
-        arg if !arg.starts_with('-') && pattern.is_none() => {
+        arg if !arg.starts_with('-') && !arg.is_empty() && pattern.is_none() => {
             *pattern = Some(arg);
             Some(index + 1)
         }

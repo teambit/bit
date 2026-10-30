@@ -44,7 +44,9 @@ fn apply_arg(
         "--root=false" => options.tracking.workspace_root = false,
         "-j" | "--json" | "--json=true" => options.json = true,
         "--json=false" => options.json = false,
-        path if !path.starts_with('-') => options.tracking.paths.push(path.to_owned()),
+        path if !path.starts_with('-') && !path.is_empty() => {
+            options.tracking.paths.push(path.to_owned());
+        }
         _ => return None,
     }
     Some(())

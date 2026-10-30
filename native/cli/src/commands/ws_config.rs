@@ -259,10 +259,17 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         .copied()
         .filter(|&arg| arg != "--no-color")
         .collect();
-    match filtered.as_slice() {
-        ["list", rest @ ..] => parse_list(rest),
-        ["clean", rest @ ..] => parse_clean(rest),
-        ["write", rest @ ..] => parse_write(rest),
+    let rest = filtered.get(1..)?;
+    let rest = rest
+        .strip_suffix(&["--"])
+        .unwrap_or(rest);
+    if rest.contains(&"--") {
+        return None;
+    }
+    match *filtered.first()? {
+        "list" => parse_list(rest),
+        "clean" => parse_clean(rest),
+        "write" => parse_write(rest),
         _ => None,
     }
 }

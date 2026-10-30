@@ -21,8 +21,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
         let raw = args[index];
         index += 1;
         if raw == "--" {
-            let [pos] = &args[index..] else { return None };
-            options.positional(pos)?;
+            options.trailing_positionals(&args[index..])?;
             break;
         }
         let flag = canonical_flag(raw);
@@ -34,9 +33,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
             continue;
         }
         let canonical = canonical_flag(flag.split_once('=').map_or(flag, |(name, _)| name));
-        if seen.contains(&canonical) {
-            return None;
-        }
+        (!seen.contains(&canonical)).then_some(())?;
         seen.push(canonical);
         index += options.flag(flag, args.get(index).copied())?;
     }
@@ -57,6 +54,14 @@ fn pattern(text: &str) -> bool {
 }
 
 impl Options {
+    fn trailing_positionals(&mut self, trailing: &[&str]) -> Option<()> {
+        for &pos in trailing {
+            (!pos.starts_with('-')).then_some(())?;
+            self.positional(pos)?;
+        }
+        Some(())
+    }
+
     /// The one pattern.
     fn positional(&mut self, text: &str) -> Option<()> {
         if self.pattern.is_some() || !pattern(text) {

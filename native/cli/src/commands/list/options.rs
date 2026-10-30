@@ -19,6 +19,15 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let mut seen: Vec<&str> = Vec::new();
     let mut index = 0;
     while index < args.len() {
+        if args[index] == "--" {
+            for &rest in &args[index + 1..] {
+                (!rest.is_empty()
+                    && !rest.starts_with('-')
+                    && options.remote.replace(rest.to_string()).is_none())
+                .then_some(())?;
+            }
+            break;
+        }
         index += options.step(args, index, &mut seen)?;
     }
     Some(options)

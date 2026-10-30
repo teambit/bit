@@ -66,7 +66,11 @@ fn apply_reset_arg<'a>(arg: &'a str, options: &mut Options<'a>) -> Option<()> {
             options.silent = true;
         }
         "-sa" | "-as" => options.silent = true,
-        arg if !arg.starts_with('-') && options.pattern.is_none() && arg.len() <= 4096 => {
+        arg if !arg.starts_with('-')
+            && !arg.is_empty()
+            && options.pattern.is_none()
+            && arg.len() <= 4096 =>
+        {
             options.pattern = Some(arg);
         }
         _ => return None,

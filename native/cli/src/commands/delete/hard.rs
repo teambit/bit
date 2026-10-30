@@ -221,11 +221,7 @@ fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
         if arg == "--" {
-            let val = iter.next()?;
-            if iter.next().is_some() || state.pattern.is_some() || val.is_empty() {
-                return None;
-            }
-            state.pattern = Some(val);
+            super::options::consume_trailing_delete_pattern(iter, &mut state.pattern)?;
             break;
         }
         apply_hard_arg(arg, &mut iter, &mut state)?;
@@ -267,7 +263,9 @@ fn apply_hard_arg<'a>(
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             state.has_range = true;
         }
-        value if !value.starts_with('-') && state.pattern.is_none() => state.pattern = Some(value),
+        value if !value.starts_with('-') && !value.is_empty() && state.pattern.is_none() => {
+            state.pattern = Some(value);
+        }
         _ => return None,
     }
     Some(())

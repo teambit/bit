@@ -87,11 +87,7 @@ fn run_action(args: &[OsString], label: &'static str, action: &PeerAction) -> io
 }
 
 fn parse_set_args(args: &[&str]) -> Option<PeerAction> {
-    let filtered = args
-        .iter()
-        .copied()
-        .filter(|arg| *arg != "--no-color")
-        .collect::<Vec<_>>();
+    let filtered = super::scope_set::collect_non_flag_tokens(args)?;
     let [component_id, range] = filtered.as_slice() else {
         return None;
     };
@@ -102,11 +98,7 @@ fn parse_set_args(args: &[&str]) -> Option<PeerAction> {
 }
 
 fn parse_unset_args(args: &[&str]) -> Option<PeerAction> {
-    let filtered = args
-        .iter()
-        .copied()
-        .filter(|arg| *arg != "--no-color")
-        .collect::<Vec<_>>();
+    let filtered = super::scope_set::collect_non_flag_tokens(args)?;
     let [component_id] = filtered.as_slice() else {
         return None;
     };

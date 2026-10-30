@@ -185,6 +185,9 @@ fn read(args: &[&str]) -> Option<Flags> {
 
 fn append_trailing_patterns(flags: &mut Flags, rest: &[&str]) -> bool {
     for item in rest {
+        if item.starts_with('-') {
+            return false;
+        }
         let Some(pat) = pattern(item) else {
             return false;
         };

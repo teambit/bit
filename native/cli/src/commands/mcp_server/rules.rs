@@ -33,8 +33,13 @@ pub(super) fn parse_rules(rest: &[&str]) -> Option<RulesOptions> {
     let mut should_print = false;
     let mut consumer_project = false;
     let mut force_standard = false;
-    for &arg in rest {
+    let mut iter = rest.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                crate::commands::internalize::consume_trailing_internalize(iter, &mut editor)?;
+                break;
+            }
             "-g" | "--global" | "--global=true" => is_global = true,
             "--global=false" => is_global = false,
             "-p" | "--print" | "--print=true" => should_print = true,

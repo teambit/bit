@@ -99,19 +99,26 @@ fn read_checkout<'a>(
         let raw = args[index];
         index += 1;
         if raw == "--" {
-            positionals.extend_from_slice(&args[index..]);
+            extend_non_flag_positionals(&mut positionals, &args[index..])?;
             break;
         }
         if raw == "--no-color" {
             continue;
         }
         if !raw.starts_with('-') {
+            (!raw.is_empty()).then_some(())?;
             positionals.push(raw);
             continue;
         }
         index += apply_checkout_flag(&mut flags, raw, args.get(index).copied(), allow_interactive)?;
     }
     Some((flags, positionals))
+}
+
+fn extend_non_flag_positionals<'a>(positionals: &mut Vec<&'a str>, tail: &[&'a str]) -> Option<()> {
+    tail.iter()
+        .all(|item| !item.is_empty() && !item.starts_with('-'))
+        .then(|| positionals.extend_from_slice(tail))
 }
 
 fn apply_checkout_flag(
@@ -267,7 +274,7 @@ fn revert_arguments<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, bool, bool)> 
         index += 1;
         match arg {
             "--" => {
-                positionals.extend_from_slice(&args[index..]);
+                extend_non_flag_positionals(&mut positionals, &args[index..])?;
                 break;
             }
             "--no-color" => {}
@@ -281,7 +288,7 @@ fn revert_arguments<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, bool, bool)> 
                 verbose = true;
                 skip_install = true;
             }
-            value if !value.starts_with('-') => positionals.push(value),
+            value if !value.starts_with('-') && !value.is_empty() => positionals.push(value),
             _ => return None,
         }
     }

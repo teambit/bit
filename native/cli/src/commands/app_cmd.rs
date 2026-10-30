@@ -329,6 +329,10 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut args = args.iter().copied().peekable();
     while let Some(arg) = args.next() {
         match arg {
+            "--" => {
+                consume_trailing_app_list(args, &mut saw_list)?;
+                break;
+            }
             "--no-color" => return None,
             "-j" | "--json"
                 if saw_list
@@ -347,6 +351,17 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         }
     }
     Some(Options { json })
+}
+
+fn consume_trailing_app_list<'a>(
+    args: impl Iterator<Item = &'a str>,
+    saw_list: &mut bool,
+) -> Option<()> {
+    for rest in args {
+        (rest == "list" && !*saw_list).then_some(())?;
+        *saw_list = true;
+    }
+    Some(())
 }
 
 fn inline_json_value(flag: &str) -> Option<&str> {

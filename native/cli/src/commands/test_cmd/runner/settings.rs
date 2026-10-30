@@ -53,13 +53,17 @@ impl Settings {
     fn apply(&mut self, args: &[OsString]) -> io::Result<()> {
         let mut arguments = args.iter().skip(1);
         while let Some(argument) = arguments.next() {
-            match argument.to_str().ok_or_else(|| invalid("tester argument"))? {
-                "--" => break,
-                "--json" | "-j" | "--verbose" | "--all" | "-a" => {}
+            let token = argument.to_str().ok_or_else(|| invalid("tester argument"))?;
+            if token == "--" {
+                break;
+            }
+            if self.apply_bool_flag(token) {
+                continue;
+            }
+            match token {
                 "--scope" | "-s" => {
                     arguments.next().ok_or_else(|| invalid("tester scope"))?;
                 }
-                value if value.starts_with("--scope=") => {}
                 "--env" | "-e" => {
                     self.environment = Some(
                         arguments
@@ -69,24 +73,67 @@ impl Settings {
                             .to_owned(),
                     );
                 }
-                value if value.starts_with("--env=") => {
-                    self.environment = Some(value[6..].to_owned());
-                }
-                "--unmodified" | "-u" => self.selection.changed = false,
-                "--summary" => self.summary = true,
-                "--coverage" => self.coverage = true,
-                "--update-snapshot" => self.update_snapshot = true,
                 "--junit" => {
                     self.junit = Some(PathBuf::from(
                         arguments.next().ok_or_else(|| invalid("tester junit path"))?,
                     ));
                 }
-                value if value.starts_with("--junit=") => {
-                    self.junit = Some(PathBuf::from(&value[8..]));
-                }
-                value if value.starts_with('-') => return Err(invalid("tester runtime option")),
-                _ => {}
+                value => self.apply_inline_or_short(value)?,
             }
+        }
+        Ok(())
+    }
+
+    fn apply_bool_flag(&mut self, token: &str) -> bool {
+        match token {
+            "--no-color" | "--json" | "--json=true" | "--json=false" | "-j" | "--verbose"
+            | "--verbose=true" | "--verbose=false" | "--all" | "--all=true" | "--all=false"
+            | "-a" | "--watch=false" | "--debug=false" => {}
+            "--unmodified" | "--unmodified=true" | "-u" => self.selection.changed = false,
+            "--unmodified=false" => self.selection.changed = true,
+            "--summary" | "--summary=true" => self.summary = true,
+            "--summary=false" => self.summary = false,
+            "--coverage" | "--coverage=true" => self.coverage = true,
+            "--coverage=false" => self.coverage = false,
+            "--update-snapshot" | "--update-snapshot=true" => self.update_snapshot = true,
+            "--update-snapshot=false" => self.update_snapshot = false,
+            _ => return false,
+        }
+        true
+    }
+
+    fn apply_inline_or_short(&mut self, value: &str) -> io::Result<()> {
+        if value.starts_with("--scope=") || value.starts_with("-s=") {
+            return Ok(());
+        }
+        if let Some(env_val) = value
+            .strip_prefix("--env=")
+            .or_else(|| value.strip_prefix("-e="))
+        {
+            self.environment = Some(env_val.to_owned());
+            return Ok(());
+        }
+        if let Some(junit) = value.strip_prefix("--junit=") {
+            self.junit = Some(PathBuf::from(junit));
+            return Ok(());
+        }
+        if let Some(flags) = value.strip_prefix('-') {
+            return self.apply_short_flags(flags);
+        }
+        Ok(())
+    }
+
+    fn apply_short_flags(&mut self, flags: &str) -> io::Result<()> {
+        if flags.len() < 2
+            || flags.starts_with('-')
+            || !flags
+                .chars()
+                .all(|ch| matches!(ch, 'u' | 'a' | 'j'))
+        {
+            return Err(invalid("tester runtime option"));
+        }
+        if flags.contains('u') {
+            self.selection.changed = false;
         }
         Ok(())
     }

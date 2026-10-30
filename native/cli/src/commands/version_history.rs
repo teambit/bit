@@ -54,6 +54,10 @@ fn parse_build(rest: &[&str]) -> Option<Subcommand> {
     let mut remote = None;
     let mut arguments = rest.iter().copied();
     while let Some(argument) = arguments.next() {
+        if argument == "--" {
+            super::internalize::consume_trailing_internalize(arguments, &mut id)?;
+            break;
+        }
         apply_build_arg(argument, &mut arguments, &mut id, &mut from, &mut remote)?;
     }
     Some(Subcommand::Build(id?, from, remote))
@@ -113,8 +117,13 @@ fn parse_show(rest: &[&str]) -> Option<Subcommand> {
     let mut id = None;
     let mut json = false;
     let mut short = false;
-    for &arg in rest {
+    let mut iter = rest.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                super::internalize::consume_trailing_internalize(iter, &mut id)?;
+                break;
+            }
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             "-s" | "--short-hash" | "--short-hash=true" => short = true,

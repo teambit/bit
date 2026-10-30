@@ -13,15 +13,10 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     while let Some(arg) = iter.next() {
         match arg {
             "--" => {
-                let val = iter.next()?;
-                if iter.next().is_some()
-                    || pattern.is_some()
-                    || val.is_empty()
-                    || val.starts_with('-')
-                {
-                    return None;
-                }
-                pattern = Some(val);
+                crate::commands::delete::options::consume_trailing_delete_pattern(
+                    iter,
+                    &mut pattern,
+                )?;
                 break;
             }
             "--no-color" => {}
@@ -33,7 +28,9 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
             "--force=false" => options.force = false,
             "-t" | "--track" | "--track=true" => options.track = true,
             "--track=false" => options.track = false,
-            value if !value.starts_with('-') && pattern.is_none() => pattern = Some(value),
+            value if !value.starts_with('-') && !value.is_empty() && pattern.is_none() => {
+                pattern = Some(value);
+            }
             value => apply_short_bundle(value, &mut silent, &mut options)?,
         }
     }

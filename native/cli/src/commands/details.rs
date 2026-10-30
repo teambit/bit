@@ -28,9 +28,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn valid_args(args: &[OsString]) -> bool {
-    args.iter()
-        .skip(1)
-        .all(|arg| arg.to_str() == Some("--no-color"))
+    let mut iter = args.iter().skip(1);
+    while let Some(arg) = iter.next() {
+        match arg.to_str() {
+            Some("--no-color") => {}
+            Some("--") => return iter.next().is_none(),
+            _ => return false,
+        }
+    }
+    true
 }
 
 fn render_details(dir: &Path, chalk: Chalk) -> io::Result<String> {

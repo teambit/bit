@@ -22,14 +22,14 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     };
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        return outside_workspace_import(&cwd, args, options.force_ours && options.force_theirs);
+        return outside_workspace_import(&cwd, args, options.preflight_error(true));
     };
-    if options.force_ours && options.force_theirs {
+    if let Some(err) = options.preflight_error(true) {
         // The published command loads configured aspects before it validates
         // mutually exclusive strategies, even though it never fetches a lane.
         let _providers = bootstrap(&root)?;
         return workspace_command::execute_then(&root, args, "import", |_| {
-            Err(io::Error::other("please use either --force-ours or --force-theirs, not both"))
+            Err(io::Error::other(err))
         });
     }
     let (current, _) = match list::read_current(&root) {
@@ -46,16 +46,12 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
 fn outside_workspace_import(
     cwd: &std::path::Path,
     args: &[OsString],
-    conflict: bool,
+    preflight_err: Option<&'static str>,
 ) -> io::Result<Outcome> {
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     }
-    let msg = if conflict {
-        "please use either --force-ours or --force-theirs, not both"
-    } else {
-        crate::commands::log::OUTSIDE_WORKSPACE_ERR
-    };
+    let msg = preflight_err.unwrap_or(crate::commands::log::OUTSIDE_WORKSPACE_ERR);
     workspace_command::execute_failure_scope(cwd, args, "import", false, "", io::Error::other(msg))
 }
 

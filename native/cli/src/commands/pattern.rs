@@ -45,8 +45,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(args) else {
         return Ok(Outcome::Declined("arguments outside the native `pattern` grammar".to_owned()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".to_owned()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return super::lint_cmd::emit_pattern_error(
+            &cwd,
+            args,
+            "pattern",
+            options.json,
+            crate::commands::log::OUTSIDE_WORKSPACE_ERR.into(),
+        );
     };
     let Some(default_scope) = workspace_default_scope(&root) else {
         return Ok(Outcome::Declined("unsupported workspace configuration".to_owned()));
@@ -73,16 +80,21 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn parse_options(args: &[OsString]) -> Option<Options> {
-    let tokens = args
-        .iter()
-        .skip(1)
-        .map(|arg| arg.to_str())
-        .collect::<Option<Vec<_>>>()?;
     let mut pattern = None;
     let mut json = false;
     let mut remote = false;
-    for token in tokens {
+    let mut iter = args
+        .iter()
+        .skip(1)
+        .map(|arg| arg.to_str())
+        .collect::<Option<Vec<_>>>()?
+        .into_iter();
+    while let Some(token) = iter.next() {
         match token {
+            "--" => {
+                super::internalize::consume_trailing_internalize(iter, &mut pattern)?;
+                break;
+            }
             "--no-color" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
@@ -94,7 +106,10 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
             _ => return None,
         }
     }
-    let pattern = pattern?;
+    build_pattern_options(pattern?, json, remote)
+}
+
+fn build_pattern_options(pattern: String, json: bool, remote: bool) -> Option<Options> {
     let has_state = pattern.contains('$') || pattern.contains(':') || pattern.contains(" AND ");
     let remote_missing_slash = remote
         && pattern

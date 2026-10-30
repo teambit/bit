@@ -166,7 +166,7 @@ fn apply_inline_new_token(
     } else if token.starts_with('-') {
         apply_short_new_flags(token, current_dir)?;
     } else {
-        positionals.push(token.to_owned());
+        positionals.push(take_new_val(token)?);
     }
     Some(())
 }

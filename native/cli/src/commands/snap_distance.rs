@@ -35,19 +35,7 @@ fn is_hex40(text: &str) -> bool {
 }
 
 fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut positional = Vec::new();
-    let mut iter = args.iter().copied();
-    while let Some(arg) = iter.next() {
-        match arg {
-            "--" => {
-                consume_trailing_snaps(iter, &mut positional)?;
-                break;
-            }
-            "--no-color" => {}
-            val if !val.starts_with('-') => positional.push(val),
-            _ => return None,
-        }
-    }
+    let positional = super::scope_set::collect_non_flag_tokens(args)?;
     match positional.as_slice() {
         [id] if !id.is_empty() => {
             Some(Options { id: (*id).to_owned(), source_snap: None, target_snap: None })
@@ -68,19 +56,6 @@ fn parse_options(args: &[&str]) -> Option<Options> {
         }
         _ => None,
     }
-}
-
-fn consume_trailing_snaps<'a>(
-    iter: impl Iterator<Item = &'a str>,
-    positional: &mut Vec<&'a str>,
-) -> Option<()> {
-    for rest in iter {
-        if rest.starts_with('-') {
-            return None;
-        }
-        positional.push(rest);
-    }
-    Some(())
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

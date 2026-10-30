@@ -147,7 +147,12 @@ impl Options {
         let state = text
             .split(',')
             .any(|part| part.trim().starts_with('$') || part.contains(" AND "));
-        if self.pattern.is_some() || text.len() > 4096 || text.contains('\0') || state {
+        if self.pattern.is_some()
+            || text.is_empty()
+            || text.len() > 4096
+            || text.contains('\0')
+            || state
+        {
             return None;
         }
         self.pattern = Some(text.to_string());

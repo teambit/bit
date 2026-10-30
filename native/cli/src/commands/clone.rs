@@ -66,9 +66,27 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     };
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
+        if arg == "--" {
+            for rest in iter {
+                apply_clone_positional(rest, &mut options)?;
+            }
+            break;
+        }
         apply_clone_arg(arg, &mut iter, &mut options)?;
     }
     (!options.id.is_empty()).then_some(options)
+}
+
+fn apply_clone_positional(val: &str, options: &mut Options) -> Option<()> {
+    (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+    if options.id.is_empty() {
+        val.clone_into(&mut options.id);
+    } else if options.dir.is_none() {
+        options.dir = Some(val.to_owned());
+    } else {
+        return None;
+    }
+    Some(())
 }
 
 fn apply_clone_arg<'a>(
@@ -93,16 +111,7 @@ fn apply_clone_arg<'a>(
         _ if let Some(val) = arg.strip_prefix("--remote=") => {
             options.remote = Some(take_non_flag(val)?);
         }
-        val if !val.starts_with('-') && !val.is_empty() => {
-            if options.id.is_empty() {
-                val.clone_into(&mut options.id);
-            } else if options.dir.is_none() {
-                options.dir = Some(val.to_owned());
-            } else {
-                return None;
-            }
-        }
-        _ => return None,
+        val => apply_clone_positional(val, options)?,
     }
     Some(())
 }

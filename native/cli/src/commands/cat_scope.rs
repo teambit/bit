@@ -91,7 +91,7 @@ fn apply_cat_scope_arg(opts: &mut Options, arg: &str) -> Option<()> {
             opts.json_extra = true;
         }
         "--no-color" | "--color" | "--color=true" | "--color=false" | "--color=always" => {}
-        val if !val.starts_with('-') && opts.scope_path.is_none() => {
+        val if !val.starts_with('-') && !val.is_empty() && opts.scope_path.is_none() => {
             opts.scope_path = Some(val.to_owned());
         }
         _ => return None,

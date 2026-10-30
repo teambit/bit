@@ -17,11 +17,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     while let Some(arg) = iter.next() {
         match arg {
             "--" => {
-                let val = iter.next()?;
-                if iter.next().is_some() || pattern.is_some() || val.is_empty() {
-                    return None;
-                }
-                pattern = Some(val);
+                consume_trailing_delete_pattern(iter, &mut pattern)?;
                 break;
             }
             "--no-color" | "--hard=false" | "--force=false" | "-f" | "--force" | "--force=true" => {
@@ -48,6 +44,15 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
         scope: scope(modifier),
     })
 }
+pub(in crate::commands) fn consume_trailing_delete_pattern<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    pattern: &mut Option<&'a str>,
+) -> Option<()> {
+    for val in iter {
+        (!val.is_empty() && !val.starts_with('-') && pattern.replace(val).is_none()).then_some(())?;
+    }
+    Some(())
+}
 fn apply_inline_or_pattern<'a>(
     arg: &'a str,
     modifier: &mut Option<(&'a str, &'a str)>,
@@ -65,7 +70,7 @@ fn apply_inline_or_pattern<'a>(
             && modifier.is_none_or(|(flag, _)| flag == "--snaps"))
         .then_some(())?;
         *modifier = Some(("--snaps", val));
-    } else if !arg.starts_with('-') && pattern.is_none() {
+    } else if !arg.starts_with('-') && !arg.is_empty() && pattern.is_none() {
         *pattern = Some(arg);
     } else {
         return None;

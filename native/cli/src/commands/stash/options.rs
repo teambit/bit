@@ -18,7 +18,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let (command, rest) = filtered.split_first()?;
     match *command {
         "save" | "s" => save(rest),
-        "list" if rest.is_empty() => Some(Options::List),
+        "list" if matches!(rest, [] | ["--"]) => Some(Options::List),
         "load" | "pop" => load(rest),
         sub if !sub.starts_with('-') && rest.is_empty() => {
             Some(Options::Unrecognized(sub.to_owned()))
@@ -32,6 +32,12 @@ fn save(args: &[&str]) -> Option<Options> {
     let mut message = None;
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
+        if arg == "--" {
+            return iter
+                .next()
+                .is_none()
+                .then_some(Options::Save { include_new, message });
+        }
         apply_save_arg(&mut include_new, &mut message, arg, &mut iter)?;
     }
     Some(Options::Save { include_new, message })
@@ -72,6 +78,13 @@ fn load(args: &[&str]) -> Option<Options> {
     let mut flags = LoadFlags::default();
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
+        if arg == "--" {
+            for rest in iter {
+                (!rest.is_empty() && !rest.starts_with('-') && flags.id.replace(rest).is_none())
+                    .then_some(())?;
+            }
+            break;
+        }
         flags.apply_arg(arg, &mut iter)?;
     }
     Some(flags.finish())

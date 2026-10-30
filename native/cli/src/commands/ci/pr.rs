@@ -54,6 +54,9 @@ pub(super) fn parse_pr(rest: &[&str]) -> Option<PrOptions> {
     let mut opts = PrOptions::default();
     let mut idx = 0;
     while idx < rest.len() {
+        if rest[idx] == "--" {
+            return (idx + 1 == rest.len()).then_some(opts);
+        }
         idx = apply_pr_arg(rest, idx, &mut opts)?;
     }
     Some(opts)

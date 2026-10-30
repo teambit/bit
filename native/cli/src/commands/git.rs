@@ -64,7 +64,7 @@ fn parse_args(args: &[OsString]) -> Option<Parsed> {
     match sub {
         "merge-bitmaps" => parse_merge_bitmaps(rest),
         "set-merge-driver" | "smd" => parse_set_merge_driver(rest),
-        _ if rest.is_empty() => Some(Parsed::Unrecognized(sub.to_owned())),
+        _ if matches!(rest, [] | ["--"]) => Some(Parsed::Unrecognized(sub.to_owned())),
         _ => None,
     }
 }

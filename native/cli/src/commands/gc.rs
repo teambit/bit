@@ -149,6 +149,9 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut opts = Options::default();
     let mut idx = 0;
     while idx < args.len() {
+        if args[idx] == "--" {
+            return (idx + 1 == args.len()).then_some(opts);
+        }
         idx += apply_gc_arg(&mut opts, args[idx], args.get(idx + 1).copied())?;
     }
     Some(opts)
@@ -156,6 +159,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
 
 fn apply_gc_arg(opts: &mut Options, arg: &str, next: Option<&str>) -> Option<usize> {
     if let Some(val) = arg.strip_prefix("--keep-versions=") {
+        (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         opts.keep_versions = Some(val.to_owned());
         return Some(1);
     }
@@ -174,7 +178,8 @@ fn apply_gc_arg(opts: &mut Options, arg: &str, next: Option<&str>) -> Option<usi
         "-j" | "--json" | "--json=true" => opts.json = true,
         "--json=false" => opts.json = false,
         "--keep-versions" => {
-            opts.keep_versions = Some(next?.to_owned());
+            let val = next.filter(|val| !val.is_empty() && !val.starts_with('-'))?;
+            opts.keep_versions = Some(val.to_owned());
             return Some(2);
         }
         val => apply_gc_short_flags(val, opts)?,

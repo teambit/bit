@@ -124,8 +124,13 @@ fn finish_script_outcome(
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut script_name = None;
     let mut list = false;
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                super::internalize::consume_trailing_internalize(iter, &mut script_name)?;
+                break;
+            }
             "--no-color" => {}
             "-l" | "--list" | "--list=true" => list = true,
             "--list=false" => list = false,

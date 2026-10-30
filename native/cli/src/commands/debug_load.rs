@@ -69,6 +69,13 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut json = false;
     let mut idx = 0;
     while idx < args.len() {
+        if args[idx] == "--" {
+            super::internalize::consume_trailing_internalize(
+                args[idx + 1..].iter().copied(),
+                &mut id,
+            )?;
+            break;
+        }
         if consume_aspect_plus_deps(args, &mut idx)? {
             idx += 1;
             continue;

@@ -143,6 +143,13 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut idx = 0;
     while idx < args.len() {
+        if args[idx] == "--" {
+            super::internalize::consume_trailing_internalize(
+                args[idx + 1..].iter().copied(),
+                &mut options.app_name,
+            )?;
+            break;
+        }
         apply_run_token(args, &mut idx, &mut options)?;
         idx += 1;
     }

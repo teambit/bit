@@ -187,7 +187,7 @@ impl Options {
             "forceOurs":self.force_ours,"forceTheirs":self.force_theirs,
         })
     }
-    pub(super) fn preflight_error(&self, lane_import: bool) -> Option<&'static str> {
+    pub(in crate::commands) fn preflight_error(&self, lane_import: bool) -> Option<&'static str> {
         if lane_import && self.force_ours && self.force_theirs {
             return Some("please use either --force-ours or --force-theirs, not both");
         }

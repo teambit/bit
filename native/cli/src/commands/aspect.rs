@@ -231,13 +231,13 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         ["set", rest @ ..] => parse_set(rest),
         ["unset", rest @ ..] => parse_unset(rest),
         ["update", rest @ ..] => parse_update(rest),
-        [sub]
-            if !sub.starts_with('-')
-                && !matches!(*sub, "list" | "list-core" | "get" | "set" | "unset" | "update") =>
-        {
-            Some(Subcommand::Unrecognized((*sub).to_owned()))
+        other => {
+            let tokens = super::scope_set::collect_non_flag_tokens(other)?;
+            let [sub] = tokens.as_slice() else { return None };
+            (!matches!(*sub, "list" | "list-core" | "get" | "set" | "unset" | "update")).then(
+                || Subcommand::Unrecognized((*sub).to_owned()),
+            )
         }
-        _ => None,
     }
 }
 
@@ -295,7 +295,7 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
     let (positional, debug, json) = parse_debug_json_args(rest)?;
     let (component, aspect_id) = match positional.as_slice() {
         [comp] if is_supported_pattern(comp) => ((*comp).to_owned(), None),
-        [comp, aspect] if is_supported_pattern(comp) => {
+        [comp, aspect] if is_supported_pattern(comp) && !aspect.is_empty() => {
             ((*comp).to_owned(), Some((*aspect).to_owned()))
         }
         _ => return None,
@@ -350,7 +350,7 @@ fn parse_set(rest: &[&str]) -> Option<Subcommand> {
             }
             "-m" | "--merge" | "--merge=true" => merge = true,
             "--merge=false" => merge = false,
-            val if !val.starts_with('-') => positional.push(val),
+            val if !val.starts_with('-') && !val.is_empty() => positional.push(val),
             _ => return None,
         }
     }

@@ -138,6 +138,10 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
+        if arg == "--" {
+            super::internalize::consume_trailing_internalize(iter, &mut options.pattern)?;
+            break;
+        }
         apply_validate_token(arg, &mut iter, &mut options)?;
     }
     Some(options)

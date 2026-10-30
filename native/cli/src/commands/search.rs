@@ -150,40 +150,49 @@ fn workspace_default_scope(root: &Path) -> Option<String> {
 }
 
 fn parse_args(args: &[OsString]) -> Option<SearchArgs> {
-    let mut queries = Vec::new();
-    let mut local_only = false;
-    let mut remote_only = false;
-    let mut json = false;
-    for arg in args.iter().skip(1) {
+    let mut parsed =
+        SearchArgs { queries: Vec::new(), local_only: false, remote_only: false, json: false };
+    let mut iter = args.iter().skip(1);
+    while let Some(arg) = iter.next() {
         let str_arg = arg.to_str()?;
-        match str_arg {
-            "--no-color" => {}
-            "--local-only" | "-l" | "--local-only=true" => local_only = true,
-            "--local-only=false" => local_only = false,
-            "--remote-only" | "-r" | "--remote-only=true" => remote_only = true,
-            "--remote-only=false" => remote_only = false,
-            "--json" | "-j" | "--json=true" => json = true,
-            "--json=false" => json = false,
-            "-lj" | "-jl" => {
-                local_only = true;
-                json = true;
-            }
-            "-rj" | "-jr" => {
-                remote_only = true;
-                json = true;
-            }
-            "-lr" | "-rl" => {
-                local_only = true;
-                remote_only = true;
-            }
-            "-ljr" | "-lrj" | "-jlr" | "-jrl" | "-rlj" | "-rjl" => {
-                local_only = true;
-                remote_only = true;
-                json = true;
-            }
-            s if s.starts_with('-') => return None,
-            s => queries.push(s.to_owned()),
+        if str_arg == "--" {
+            consume_trailing_search_queries(iter, &mut parsed.queries)?;
+            break;
         }
+        apply_search_arg(str_arg, &mut parsed)?;
     }
-    Some(SearchArgs { queries, local_only, remote_only, json })
+    Some(parsed)
+}
+
+fn apply_search_arg(str_arg: &str, parsed: &mut SearchArgs) -> Option<()> {
+    match str_arg {
+        "--no-color" => {}
+        "--local-only" | "-l" | "--local-only=true" => parsed.local_only = true,
+        "--local-only=false" => parsed.local_only = false,
+        "--remote-only" | "-r" | "--remote-only=true" => parsed.remote_only = true,
+        "--remote-only=false" => parsed.remote_only = false,
+        "--json" | "-j" | "--json=true" => parsed.json = true,
+        "--json=false" => parsed.json = false,
+        "-lj" | "-jl" => (parsed.local_only, parsed.json) = (true, true),
+        "-rj" | "-jr" => (parsed.remote_only, parsed.json) = (true, true),
+        "-lr" | "-rl" => (parsed.local_only, parsed.remote_only) = (true, true),
+        "-ljr" | "-lrj" | "-jlr" | "-jrl" | "-rlj" | "-rjl" => {
+            (parsed.local_only, parsed.remote_only, parsed.json) = (true, true, true);
+        }
+        query if query.starts_with('-') => return None,
+        query => parsed.queries.push(query.to_owned()),
+    }
+    Some(())
+}
+
+fn consume_trailing_search_queries<'a>(
+    iter: impl Iterator<Item = &'a OsString>,
+    queries: &mut Vec<String>,
+) -> Option<()> {
+    for arg in iter {
+        let query = arg.to_str()?;
+        (!query.is_empty() && !query.starts_with('-')).then_some(())?;
+        queries.push(query.to_owned());
+    }
+    Some(())
 }

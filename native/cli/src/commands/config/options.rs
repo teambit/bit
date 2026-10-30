@@ -57,6 +57,7 @@ impl Options {
         rest: &mut impl Iterator<Item = &'a str>,
     ) -> Option<()> {
         if !arg.starts_with('-') {
+            (!arg.is_empty()).then_some(())?;
             self.values.push(arg.to_owned());
             return Some(());
         }

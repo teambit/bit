@@ -252,8 +252,13 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut dry_run = false;
     let mut allow_staged = false;
     let mut json = false;
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                super::internalize::consume_trailing_internalize(iter, &mut pattern)?;
+                break;
+            }
             "--no-color" => {}
             "-d" | "--dry-run" | "--dry-run=true" => dry_run = true,
             "--dry-run=false" => dry_run = false,

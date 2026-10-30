@@ -149,7 +149,7 @@ impl Options {
                 self.remote = Some(val.into());
                 true
             }
-            name if !name.starts_with('-') && self.name.is_none() => {
+            name if !name.starts_with('-') && !name.is_empty() && self.name.is_none() => {
                 self.name = Some(name.into());
                 true
             }
@@ -190,7 +190,7 @@ impl Options {
 fn optional_path(args: &[&str], cursor: &mut usize) -> PathBuf {
     if let Some(path) = args
         .get(*cursor + 1)
-        .filter(|arg| !arg.starts_with('-'))
+        .filter(|arg| !arg.is_empty() && !arg.starts_with('-'))
     {
         *cursor += 1;
         PathBuf::from(path)

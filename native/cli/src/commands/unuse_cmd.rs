@@ -41,24 +41,16 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn parse_target(args: &[OsString]) -> Option<String> {
-    let mut target = None;
-    let mut iter = args.iter().skip(1);
-    while let Some(arg) = iter.next() {
-        let str_arg = arg.to_str()?;
-        if str_arg == "--" {
-            set_unique_target(&mut target, iter.next()?.to_str()?)?;
-            return iter.next().is_none().then_some(target)?;
-        }
-        if str_arg != "--no-color" {
-            set_unique_target(&mut target, str_arg)?;
-        }
-    }
-    target
-}
-
-fn set_unique_target(target: &mut Option<String>, val: &str) -> Option<()> {
-    (!val.is_empty() && !val.starts_with('-') && target.replace(val.to_owned()).is_none())
-        .then_some(())
+    let tokens = args
+        .iter()
+        .skip(1)
+        .map(|arg| arg.to_str())
+        .collect::<Option<Vec<_>>>()?;
+    let filtered = super::scope_set::collect_non_flag_tokens(&tokens)?;
+    let [target] = filtered.as_slice() else {
+        return None;
+    };
+    Some((*target).to_owned())
 }
 
 fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {

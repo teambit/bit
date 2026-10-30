@@ -21,11 +21,7 @@ impl Options {
         let mut iter = args[2..].iter().copied();
         while let Some(value) = iter.next() {
             if value == "--" {
-                let id = iter.next()?;
-                if iter.next().is_some() || !options.id.is_empty() || id.is_empty() {
-                    return None;
-                }
-                options.id = id.into();
+                crate::commands::eject::consume_trailing_eject(iter, &mut options.id)?;
                 break;
             }
             options.apply_arg(value)?;
@@ -50,7 +46,9 @@ impl Options {
                 self.skip_install = true;
                 self.json = true;
             }
-            id if !id.starts_with('-') && self.id.is_empty() => self.id = id.into(),
+            id if !id.starts_with('-') && !id.is_empty() && self.id.is_empty() => {
+                self.id = id.into();
+            }
             _ => return None,
         }
         Some(())

@@ -42,7 +42,7 @@ fn apply_cat_arg<'a>(
     }
     match arg {
         "--file" | "-f" => set_cat_file(options, next?, 2),
-        id if !id.starts_with('-') && options.id.is_none() => {
+        id if !id.starts_with('-') && !id.is_empty() && options.id.is_none() => {
             options.id = Some(id);
             Some(1)
         }

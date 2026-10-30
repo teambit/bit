@@ -162,7 +162,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         .filter(|arg| *arg != "--no-color")
         .collect::<Vec<_>>();
     match filtered.as_slice() {
-        [] => Some(Subcommand::BareList),
+        [] | ["--"] => Some(Subcommand::BareList),
         ["list", rest @ ..] => parse_list_flags(rest),
         ["delete", rest @ ..] => parse_delete_flags(rest),
         ["prune", rest @ ..] => prune::parse_flags(rest).map(Subcommand::Prune),

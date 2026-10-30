@@ -111,40 +111,56 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
 }
 
 fn parse_setup(rest: &[&str]) -> Option<SetupOptions> {
+    let mut opts = SetupOptions {
+        editor: String::new(),
+        consumer_project: false,
+        include_additional: None,
+        is_global: false,
+    };
     let mut editor = None;
-    let mut consumer_project = false;
-    let mut include_additional = None;
-    let mut is_global = false;
     let mut idx = 0;
     while idx < rest.len() {
-        match rest[idx] {
-            "--consumer-project" | "--consumer-project=true" => consumer_project = true,
-            "--consumer-project=false" => consumer_project = false,
-            "-g" | "--global" | "--global=true" => is_global = true,
-            "--global=false" => is_global = false,
-            "--include-additional" => {
-                idx += 1;
-                let val = *rest.get(idx)?;
-                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
-                include_additional = Some(val.to_owned());
-            }
-            arg if let Some(val) = arg.strip_prefix("--include-additional=") => {
-                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
-                include_additional = Some(val.to_owned());
-            }
-            arg if !arg.starts_with('-') && !arg.is_empty() && editor.is_none() => {
-                editor = Some(arg.to_owned());
-            }
-            _ => return None,
+        if rest[idx] == "--" {
+            super::internalize::consume_trailing_internalize(
+                rest[idx + 1..].iter().copied(),
+                &mut editor,
+            )?;
+            break;
         }
+        apply_setup_arg(rest, &mut idx, &mut opts, &mut editor)?;
         idx += 1;
     }
-    Some(SetupOptions {
-        editor: editor.unwrap_or_else(|| "vscode".into()),
-        consumer_project,
-        include_additional,
-        is_global,
-    })
+    opts.editor = editor.unwrap_or_else(|| "vscode".into());
+    Some(opts)
+}
+
+fn apply_setup_arg(
+    rest: &[&str],
+    idx: &mut usize,
+    opts: &mut SetupOptions,
+    editor: &mut Option<String>,
+) -> Option<()> {
+    match rest[*idx] {
+        "--consumer-project" | "--consumer-project=true" => opts.consumer_project = true,
+        "--consumer-project=false" => opts.consumer_project = false,
+        "-g" | "--global" | "--global=true" => opts.is_global = true,
+        "--global=false" => opts.is_global = false,
+        "--include-additional" => {
+            *idx += 1;
+            let val = *rest.get(*idx)?;
+            (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+            opts.include_additional = Some(val.to_owned());
+        }
+        arg if let Some(val) = arg.strip_prefix("--include-additional=") => {
+            (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+            opts.include_additional = Some(val.to_owned());
+        }
+        arg if !arg.starts_with('-') && !arg.is_empty() && editor.is_none() => {
+            *editor = Some(arg.to_owned());
+        }
+        _ => return None,
+    }
+    Some(())
 }
 
 pub(super) fn editor_display_name(editor: &str) -> &str {

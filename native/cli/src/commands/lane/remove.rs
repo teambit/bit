@@ -89,7 +89,11 @@ fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {
             "--silent=false" => silent = false,
             "-r" | "--remote" | "--remote=true" => remote = true,
             "--remote=false" => remote = false,
-            name if !name.starts_with('-') && name.len() <= 256 && names.len() < 32 => {
+            name if !name.starts_with('-')
+                && !name.is_empty()
+                && name.len() <= 256
+                && names.len() < 32 =>
+            {
                 names.push(name.to_owned());
             }
             short => apply_remove_short_bundle(short, &mut force, &mut silent, &mut remote)?,

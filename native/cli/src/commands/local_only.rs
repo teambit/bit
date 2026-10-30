@@ -42,11 +42,22 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             "arguments outside the native `local-only` grammar".to_owned(),
         ));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("local-only requires a workspace".to_owned()));
+    let cwd = env::current_dir()?;
+    let label = subcommand.loader_label();
+    let Some(root) = workspace::root(&cwd) else {
+        if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            return Ok(Outcome::Declined("CI local-only error stack".to_owned()));
+        }
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            label,
+            false,
+            "",
+            io::Error::other(crate::commands::log::OUTSIDE_WORKSPACE_ERR),
+        );
     };
     let chalk = Chalk::detect(args);
-    let label = subcommand.loader_label();
     match prepare(&root, &subcommand, chalk) {
         Ok(prepared) => {
             workspace_command::execute_then(&root, args, label, |_output| prepared.commit(chalk))
@@ -80,10 +91,7 @@ fn parse_subcommand(args: &[OsString]) -> Option<Subcommand> {
         .skip(1)
         .map(|arg| arg.to_str())
         .collect::<Option<Vec<_>>>()?;
-    let filtered = tokens
-        .into_iter()
-        .filter(|token| *token != "--no-color")
-        .collect::<Vec<_>>();
+    let filtered = super::scope_set::collect_non_flag_tokens(&tokens)?;
     match filtered.as_slice() {
         ["list"] => Some(Subcommand::List),
         ["set", pattern] if is_supported_pattern(pattern) => {

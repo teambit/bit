@@ -1,7 +1,7 @@
 //! RemoveMain.markRemoveComps: packages, one bitmap publication, then source removal.
 pub(in crate::commands) mod hard;
 pub(super) mod loading;
-mod options;
+pub(in crate::commands) mod options;
 mod policy;
 mod preparation;
 use super::{
@@ -16,14 +16,24 @@ use std::{env, ffi::OsString, io, path::Path};
 pub const COMMAND: Command = Command { name: "delete", aliases: &[], run };
 pub(super) const NON_INTERACTIVE_PROMPT_ERR: &str = "this command requires a confirmation, but this session is non-interactive (no TTY, CI, or an AI agent) so the confirmation prompt cannot be shown.\nre-run with --silent to skip the confirmation, or run the command in an interactive terminal";
 
+fn is_hard_delete(args: &[&str]) -> bool {
+    let mut hard = false;
+    for &arg in args {
+        match arg {
+            "--" => break,
+            "--hard" | "--hard=true" => hard = true,
+            "--hard=false" => hard = false,
+            _ => {}
+        }
+    }
+    hard
+}
+
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".into()));
     };
-    if argv[1..]
-        .iter()
-        .any(|arg| *arg == "--hard" || *arg == "--hard=true")
-    {
+    if is_hard_delete(&argv[1..]) {
         return hard::run(args, &argv[1..]);
     }
     let Some(options) = options::parse(&argv[1..]) else {

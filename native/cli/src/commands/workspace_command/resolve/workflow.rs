@@ -33,6 +33,11 @@ pub fn parse<'a>(args: &[&'a str], kind: Kind) -> Option<(Workflow, Vec<&'a str>
     while index < args.len() {
         let raw = args[index];
         index += 1;
+        if raw == "--" {
+            remaining.push(raw);
+            remaining.extend_from_slice(&args[index..]);
+            break;
+        }
         match workflow.consume_arg(raw, args.get(index).copied(), kind, &mut seen)? {
             Some(consumed) => index += consumed,
             None => remaining.push(raw),
@@ -71,6 +76,7 @@ impl Workflow {
         if kind == Kind::Tag {
             for (index, argument) in args.iter().enumerate() {
                 match *argument {
+                    "--" => break,
                     "--persist=skip-build" => self.build = false,
                     "--persist" => self.build = args.get(index + 1) != Some(&"skip-build"),
                     _ => {}
@@ -119,7 +125,7 @@ impl Workflow {
             }
             "--skip-tasks" => {
                 self.pipeline.skip_tasks = Some(
-                    next.filter(|value| !value.starts_with('-'))?
+                    next.filter(|value| !value.is_empty() && !value.starts_with('-'))?
                         .to_string(),
                 );
                 return Some(1);

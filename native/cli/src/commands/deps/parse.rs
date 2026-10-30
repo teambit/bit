@@ -33,10 +33,10 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
         ["diagnose", rest @ ..] => parse_diagnose(rest),
         ["circular", rest @ ..] => parse_circular(rest),
         ["write", rest @ ..] => parse_write(rest),
-        [sub] if !sub.starts_with('-') && !is_known_deps_subcommand(sub) => {
-            Some(Subcommand::Unrecognized((*sub).to_owned()))
+        other => {
+            let sub = single_dep_token(other)?;
+            (!is_known_deps_subcommand(sub)).then(|| Subcommand::Unrecognized(sub.to_owned()))
         }
-        _ => None,
     }
 }
 
@@ -74,7 +74,7 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
             "--tree=false" => tree = false,
             "--scope" | "--scope=true" => scope = true,
             "--scope=false" => scope = false,
-            value if !value.starts_with('-') => positional.push(value),
+            value if !value.starts_with('-') && !value.is_empty() => positional.push(value),
             _ => return None,
         }
     }
@@ -204,7 +204,7 @@ fn parse_set(rest: &[&str]) -> Option<Subcommand> {
             "--optional=false" => optional = false,
             "-p" | "--peer" | "--peer=true" => peer = true,
             "--peer=false" => peer = false,
-            val if !val.starts_with('-') => positional.push(val),
+            val if !val.starts_with('-') && !val.is_empty() => positional.push(val),
             val => apply_short_dep_flags(val, &mut dev, Some(&mut optional), &mut peer)?,
         }
     }
@@ -236,13 +236,22 @@ fn parse_remove_or_unset(rest: &[&str], unset: bool) -> Option<Subcommand> {
             "--dev=false" => dev = false,
             "-p" | "--peer" | "--peer=true" => peer = true,
             "--peer=false" => peer = false,
-            val if !val.starts_with('-') => positional.push(val),
+            val if !val.starts_with('-') && !val.is_empty() => positional.push(val),
             val => apply_short_dep_flags(val, &mut dev, None, &mut peer)?,
         }
     }
     let [pattern, raw_pkgs @ ..] = positional.as_slice() else {
         return None;
     };
+    let packages = collect_removal_packages(pattern, raw_pkgs)?;
+    Some(if unset {
+        Subcommand::Unset { pattern: (*pattern).to_owned(), packages, dev, peer }
+    } else {
+        Subcommand::Remove { pattern: (*pattern).to_owned(), packages, dev, peer }
+    })
+}
+
+fn collect_removal_packages(pattern: &str, raw_pkgs: &[&str]) -> Option<Vec<String>> {
     if !is_supported_pattern(pattern)
         || raw_pkgs.is_empty()
         || raw_pkgs
@@ -251,15 +260,12 @@ fn parse_remove_or_unset(rest: &[&str], unset: bool) -> Option<Subcommand> {
     {
         return None;
     }
-    let packages = raw_pkgs
-        .iter()
-        .map(|pkg| (*pkg).to_owned())
-        .collect();
-    Some(if unset {
-        Subcommand::Unset { pattern: (*pattern).to_owned(), packages, dev, peer }
-    } else {
-        Subcommand::Remove { pattern: (*pattern).to_owned(), packages, dev, peer }
-    })
+    Some(
+        raw_pkgs
+            .iter()
+            .map(|pkg| (*pkg).to_owned())
+            .collect(),
+    )
 }
 
 fn apply_short_dep_flags(
@@ -324,9 +330,7 @@ fn parse_usage_args(rest: &[&str]) -> Option<(String, Option<usize>)> {
 }
 
 fn consume_trailing_usage_dep(tail: &[&str], dep_name: &mut Option<String>) -> Option<()> {
-    let [val] = tail else { return None };
-    (!val.is_empty() && !val.starts_with('-') && dep_name.replace((*val).to_owned()).is_none())
-        .then_some(())
+    crate::commands::lint_cmd::consume_trailing_internalize(tail.iter().copied(), dep_name)
 }
 
 fn parse_write(rest: &[&str]) -> Option<Subcommand> {

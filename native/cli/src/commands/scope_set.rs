@@ -123,7 +123,10 @@ pub(super) fn collect_non_flag_tokens<'a>(rest: &[&'a str]) -> Option<Vec<&'a st
         if token == "--" {
             return collect_trailing(&mut positional, iter).then_some(positional);
         }
-        if token.starts_with('-') {
+        if token == "--no-color" {
+            continue;
+        }
+        if token.is_empty() || token.starts_with('-') {
             return None;
         }
         positional.push(token);

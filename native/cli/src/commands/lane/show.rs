@@ -241,7 +241,9 @@ fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool, bool)> {
                 json = true;
                 remote = true;
             }
-            value if !value.starts_with('-') && name.is_none() => name = Some(value),
+            value if !value.starts_with('-') && !value.is_empty() && name.is_none() => {
+                name = Some(value);
+            }
             _ => return None,
         }
     }

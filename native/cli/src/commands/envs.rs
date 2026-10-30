@@ -295,9 +295,7 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
 }
 
 fn consume_trailing_env_comp(rest: &[&str], component: &mut Option<String>) -> Option<()> {
-    let [val] = rest else { return None };
-    (!val.is_empty() && !val.starts_with('-') && component.replace((*val).to_owned()).is_none())
-        .then_some(())
+    super::lint_cmd::consume_trailing_internalize(rest.iter().copied(), component)
 }
 
 fn parse_services_val(val: &str) -> Option<Vec<String>> {

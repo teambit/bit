@@ -202,6 +202,20 @@ impl Read {
         }
         None
     }
+
+    fn trailing_positionals(&mut self, trailing: &[&str]) -> Option<()> {
+        trailing
+            .iter()
+            .all(|item| !item.is_empty() && !item.starts_with('-'))
+            .then_some(())?;
+        self.positionals.extend(
+            trailing
+                .iter()
+                .copied()
+                .map(str::to_string),
+        );
+        Some(())
+    }
 }
 
 fn is_boolean_flag(flag: &str, allow_extra: bool) -> bool {
@@ -225,12 +239,7 @@ fn read(args: &[&str], allow_extra: bool) -> Option<Read> {
         let arg = lane_alias(args[index]);
         index += 1;
         if arg == "--" {
-            read.positionals.extend(
-                args[index..]
-                    .iter()
-                    .copied()
-                    .map(str::to_string),
-            );
+            read.trailing_positionals(&args[index..])?;
             break;
         }
         if arg == "--no-color" {
@@ -238,11 +247,10 @@ fn read(args: &[&str], allow_extra: bool) -> Option<Read> {
         }
         if let Some((flag, value)) = arg.split_once('=') {
             read.inline_flag(flag, value, allow_extra)?;
-            continue;
-        }
-        if arg.starts_with('-') {
+        } else if arg.starts_with('-') {
             index += read.flag(arg, args.get(index).copied(), allow_extra)?;
         } else {
+            (!arg.is_empty()).then_some(())?;
             read.positionals.push(arg.to_string());
         }
     }

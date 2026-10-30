@@ -111,6 +111,7 @@ fn valid_docs_options(rest: &[&str]) -> bool {
 
 fn docs_option_len(rest: &[&str]) -> Option<usize> {
     match rest {
+        ["--"] => Some(1),
         ["--skill" | "-s", value, ..] if !value.starts_with('-') => Some(2),
         [
             "-d" | "-dm" | "-md" | "--docs" | "--docs=true" | "--docs=false" | "-m" | "--metadata"

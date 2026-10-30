@@ -32,20 +32,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn parse_subcommand(args: &[OsString]) -> Option<String> {
-    let mut subcommand = None;
-    for arg in args.iter().skip(1) {
-        let str_arg = arg.to_str()?;
-        if str_arg == "--no-color" {
-            continue;
-        }
-        if str_arg.starts_with('-') {
-            return None;
-        }
-        if subcommand.is_none() {
-            subcommand = Some(str_arg.to_owned());
-        } else {
-            return None;
-        }
-    }
-    subcommand
+    let tokens = args
+        .iter()
+        .skip(1)
+        .map(|arg| arg.to_str())
+        .collect::<Option<Vec<_>>>()?;
+    let filtered = super::scope_set::collect_non_flag_tokens(&tokens)?;
+    let [subcommand] = filtered.as_slice() else {
+        return None;
+    };
+    Some((*subcommand).to_owned())
 }
