@@ -215,7 +215,8 @@ fn parse_diff_options(args: &[&str]) -> Option<DiffOptions> {
     for &arg in args {
         match arg {
             "--no-color" => {}
-            "-j" | "--json" => json = true,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
             val if !val.starts_with('-') && !val.is_empty() => positional.push(val),
             _ => return None,
         }
@@ -238,8 +239,14 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     for &arg in args {
         match arg {
             "--no-color" => {}
-            "-r" | "--remote" => remote = true,
-            "-j" | "--json" => json = true,
+            "-r" | "--remote" | "--remote=true" => remote = true,
+            "--remote=false" => remote = false,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
+            "-rj" | "-jr" => {
+                remote = true;
+                json = true;
+            }
             val if !val.starts_with('-')
                 && !val.is_empty()
                 && val != "diff"

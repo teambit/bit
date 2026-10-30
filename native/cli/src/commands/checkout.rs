@@ -48,6 +48,7 @@ fn run_options(
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
+    let command = if options.revert { "revert" } else { "checkout" };
     let installer = match start_installer(&root, argv, options.execution.skip_install) {
         Ok(installer) => installer,
         Err(error) => return Ok(Outcome::Declined(format!("checkout installation: {error}"))),
@@ -58,16 +59,12 @@ fn run_options(
         Ok(prepared) => prepared,
         Err(error) if startup.committed || super::engine::is_canonical(&error) => {
             return workspace_command::checkout_lifecycle::failure(
-                &root,
-                args,
-                if options.revert { "revert" } else { "checkout" },
-                &startup,
-                error,
+                &root, args, command, &startup, error,
             );
         }
         Err(error) => return Ok(Outcome::Declined(format!("checkout: {error}"))),
     };
-    execute(&root, args, if options.revert { "revert" } else { "checkout" }, prepared, installation)
+    execute(&root, args, command, prepared, installation)
 }
 
 fn start_installer(root: &Path, argv: &[&str], skip: bool) -> io::Result<Option<Installer>> {

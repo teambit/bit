@@ -68,6 +68,29 @@ pub fn execute_failure_scope(
     })
 }
 
+/// Locate the workspace root or emit `ConsumerNotFound` outside a workspace when `CI` is unset.
+pub fn workspace_or_fail(
+    args: &[OsString],
+    command: &str,
+) -> io::Result<Result<std::path::PathBuf, Outcome>> {
+    let cwd = env::current_dir()?;
+    if let Some(root) = crate::workspace::root(&cwd) {
+        return Ok(Ok(root));
+    }
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Err(Outcome::Declined("not inside a workspace".into())));
+    }
+    execute_failure_scope(
+        &cwd,
+        args,
+        command,
+        false,
+        "",
+        io::Error::other(crate::commands::log::OUTSIDE_WORKSPACE_ERR),
+    )
+    .map(Err)
+}
+
 /// [`execute_with`] for a command whose report depends on its work.
 pub fn execute_then(
     root: &Path,

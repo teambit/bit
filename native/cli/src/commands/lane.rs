@@ -19,8 +19,8 @@ mod restoration;
 mod show;
 
 use super::{merge::report, workspace_command};
-use crate::{commands::Command, native::Outcome, workspace};
-use std::{env, ffi::OsString, io};
+use crate::{commands::Command, native::Outcome};
+use std::{ffi::OsString, io};
 
 pub const COMMAND: Command = Command { name: "lane", aliases: &["l"], run };
 
@@ -71,8 +71,9 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&grammar) else {
         return Ok(Outcome::Declined("outside the native lane merge grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let root = match workspace_command::workspace_or_fail(args, "merge")? {
+        Ok(root) => root,
+        Err(outcome) => return Ok(outcome),
     };
     match super::merge::lifecycle::run(
         &root,

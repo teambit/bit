@@ -85,11 +85,16 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     for &arg in args {
         match arg {
             "--no-color" => return None,
-            "-j" | "--json" => options.json = true,
-            "-l" | "--legacy" => options.legacy = true,
-            "-r" | "--remote" => options.remote = true,
-            "-b" | "--browser" => options.browser = true,
-            "-c" | "--compare" => options.compare = true,
+            "-j" | "--json" | "--json=true" => options.json = true,
+            "--json=false" => options.json = false,
+            "-l" | "--legacy" | "--legacy=true" => options.legacy = true,
+            "--legacy=false" => options.legacy = false,
+            "-r" | "--remote" | "--remote=true" => options.remote = true,
+            "--remote=false" => options.remote = false,
+            "-b" | "--browser" | "--browser=true" => options.browser = true,
+            "--browser=false" => options.browser = false,
+            "-c" | "--compare" | "--compare=true" => options.compare = true,
+            "--compare=false" => options.compare = false,
             short if apply_short_bundle(short, &mut options) => {}
             val if !val.starts_with('-') && !val.is_empty() && id.is_none() => {
                 id = Some(val.to_owned());

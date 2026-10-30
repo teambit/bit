@@ -4,7 +4,7 @@
 pub(super) mod request;
 
 pub(super) use self::request::confirm;
-use self::request::{lane_installation, needs_canonical_install, outside_workspace};
+use self::request::{lane_installation, needs_canonical_install};
 use crate::{
     commands::Command,
     discovery::{self, NodeCli, Target},
@@ -90,7 +90,7 @@ fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, Outcome>> {
     }
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        return outside_workspace(args, &argv, &cwd).map(Err);
+        return Ok(Err(Outcome::Declined("not inside a workspace".to_string())));
     };
     let Target::Entry(cli) = discovery::find()? else {
         return Ok(Err(Outcome::Declined(

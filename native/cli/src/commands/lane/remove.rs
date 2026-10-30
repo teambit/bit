@@ -58,19 +58,39 @@ fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {
     let mut remote = false;
     for arg in args {
         match *arg {
-            "-f" | "--force" | "--force=true" if !force => force = true,
+            "-f" | "--force" | "--force=true" => force = true,
             "--force=false" => force = false,
-            "-s" | "--silent" | "--silent=true" if !silent => silent = true,
+            "-s" | "--silent" | "--silent=true" => silent = true,
             "--silent=false" => silent = false,
-            "-r" | "--remote" | "--remote=true" if !remote => remote = true,
+            "-r" | "--remote" | "--remote=true" => remote = true,
             "--remote=false" => remote = false,
             name if !name.starts_with('-') && name.len() <= 256 && names.len() < 32 => {
                 names.push(name.to_owned());
             }
-            _ => return None,
+            short => apply_remove_short_bundle(short, &mut force, &mut silent, &mut remote)?,
         }
     }
     (silent && !names.is_empty()).then_some((names, force, remote))
+}
+
+fn apply_remove_short_bundle(
+    arg: &str,
+    force: &mut bool,
+    silent: &mut bool,
+    remote: &mut bool,
+) -> Option<()> {
+    let flags = arg
+        .strip_prefix('-')
+        .filter(|flags| !flags.is_empty() && !flags.starts_with('-'))?;
+    for ch in flags.chars() {
+        match ch {
+            'f' => *force = true,
+            's' => *silent = true,
+            'r' => *remote = true,
+            _ => return None,
+        }
+    }
+    Some(())
 }
 
 fn select(names: &[String], lanes: &[list::LaneData], force: bool) -> io::Result<Vec<String>> {

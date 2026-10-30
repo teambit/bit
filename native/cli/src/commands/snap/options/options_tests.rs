@@ -15,9 +15,9 @@ fn ordinary_snaps() {
     );
     assert!(
         parse(&["--message=inline", "--unmodified=true", "--no-color"])
-            .is_some_and(
-                |options| options.message.as_deref() == Some("inline") && options.unmodified
-            ),
+            .is_some_and(|options| {
+                options.message.as_deref() == Some("inline") && options.unmodified
+            }),
     );
 }
 

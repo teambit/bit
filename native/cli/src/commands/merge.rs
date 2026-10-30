@@ -11,8 +11,8 @@ mod failures;
 mod options;
 
 use super::workspace_command;
-use crate::{commands::Command, native::Outcome, workspace};
-use std::{env, ffi::OsString, io};
+use crate::{commands::Command, native::Outcome};
+use std::{ffi::OsString, io};
 
 pub const COMMAND: Command = Command { name: "merge", aliases: &[], run };
 
@@ -32,8 +32,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&grammar) else {
         return Ok(Outcome::Declined("outside the native merge grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let root = match workspace_command::workspace_or_fail(args, "merge")? {
+        Ok(root) => root,
+        Err(outcome) => return Ok(outcome),
     };
     lifecycle::run(
         &root,

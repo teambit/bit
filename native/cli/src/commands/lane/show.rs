@@ -204,10 +204,14 @@ fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool, bool)> {
     for arg in args {
         match *arg {
             "--no-color" => {}
-            "--json" | "-j" | "--json=true" if !json => json = true,
+            "--json" | "-j" | "--json=true" => json = true,
             "--json=false" => json = false,
-            "--remote" | "-r" | "--remote=true" if !remote => remote = true,
+            "--remote" | "-r" | "--remote=true" => remote = true,
             "--remote=false" => remote = false,
+            "-jr" | "-rj" => {
+                json = true;
+                remote = true;
+            }
             value if !value.starts_with('-') && name.is_none() => name = Some(value),
             _ => return None,
         }

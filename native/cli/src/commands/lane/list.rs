@@ -212,7 +212,10 @@ fn apply_list_arg<'a>(
     arg: &'a str,
     iter: &mut impl Iterator<Item = &'a str>,
 ) -> Option<()> {
-    if let Some(val) = arg.strip_prefix("--remote=") {
+    if let Some(val) = arg
+        .strip_prefix("--remote=")
+        .or_else(|| arg.strip_prefix("-r="))
+    {
         if flags.remote.is_some() {
             return None;
         }
@@ -221,13 +224,17 @@ fn apply_list_arg<'a>(
     }
     match arg {
         "--no-color" => {}
-        "--json" | "-j" | "--json=true" if !flags.json => flags.json = true,
+        "--json" | "-j" | "--json=true" => flags.json = true,
         "--json=false" => flags.json = false,
-        "--details" | "-d" | "--details=true" if !flags.details => flags.details = true,
+        "--details" | "-d" | "--details=true" => flags.details = true,
         "--details=false" => flags.details = false,
-        "--merged" | "--merged=true" if flags.merged.is_none() => flags.merged = Some(true),
+        "-jd" | "-dj" => {
+            flags.json = true;
+            flags.details = true;
+        }
+        "--merged" | "--merged=true" if flags.merged != Some(false) => flags.merged = Some(true),
         "--merged=false" | "--not-merged=false" if flags.merged.is_none() => {}
-        "--not-merged" | "--not-merged=true" if flags.merged.is_none() => {
+        "--not-merged" | "--not-merged=true" if flags.merged != Some(true) => {
             flags.merged = Some(false);
         }
         "--remote" | "-r" if flags.remote.is_none() => {

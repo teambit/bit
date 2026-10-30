@@ -177,9 +177,24 @@ fn apply_gc_arg(opts: &mut Options, arg: &str, next: Option<&str>) -> Option<usi
             opts.keep_versions = Some(next?.to_owned());
             return Some(2);
         }
-        _ => return None,
+        val => apply_gc_short_flags(val, opts)?,
     }
     Some(1)
+}
+
+fn apply_gc_short_flags(arg: &str, opts: &mut Options) -> Option<()> {
+    let flags = arg
+        .strip_prefix('-')
+        .filter(|flags| !flags.is_empty() && !flags.starts_with('-'))?;
+    for ch in flags.chars() {
+        match ch {
+            'd' => opts.dry_run = true,
+            'v' => opts.verbose = true,
+            'j' => opts.json = true,
+            _ => return None,
+        }
+    }
+    Some(())
 }
 
 pub(super) fn parse_keep_versions(raw: &str) -> Option<u64> {

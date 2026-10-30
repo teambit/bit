@@ -11,16 +11,34 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options { pattern: "", keep: false, force: false, track: false };
     for arg in args {
         match *arg {
-            "--no-color" | "--silent=false" | "--keep-files=false" | "--force=false"
-            | "--track=false" => {}
-            "-s" | "--silent" | "--silent=true" if !silent => silent = true,
-            "--keep-files" | "--keep-files=true" if !options.keep => options.keep = true,
-            "-f" | "--force" | "--force=true" if !options.force => options.force = true,
-            "-t" | "--track" | "--track=true" if !options.track => options.track = true,
+            "--no-color" => {}
+            "-s" | "--silent" | "--silent=true" => silent = true,
+            "--silent=false" => silent = false,
+            "--keep-files" | "--keep-files=true" => options.keep = true,
+            "--keep-files=false" => options.keep = false,
+            "-f" | "--force" | "--force=true" => options.force = true,
+            "--force=false" => options.force = false,
+            "-t" | "--track" | "--track=true" => options.track = true,
+            "--track=false" => options.track = false,
             value if !value.starts_with('-') && pattern.is_none() => pattern = Some(value),
-            _ => return None,
+            value => apply_short_bundle(value, &mut silent, &mut options)?,
         }
     }
     options.pattern = pattern?;
     silent.then_some(options)
+}
+
+fn apply_short_bundle(arg: &str, silent: &mut bool, options: &mut Options<'_>) -> Option<()> {
+    let flags = arg
+        .strip_prefix('-')
+        .filter(|flags| !flags.is_empty() && !flags.starts_with('-'))?;
+    for ch in flags.chars() {
+        match ch {
+            's' => *silent = true,
+            'f' => options.force = true,
+            't' => options.track = true,
+            _ => return None,
+        }
+    }
+    Some(())
 }

@@ -9,25 +9,36 @@ pub(super) fn parse<'a>(args: &[&'a str], undo: bool) -> Option<Options<'a>> {
     let mut range = None;
     let mut index = 0;
     while index < args.len() {
-        match args[index] {
-            "--no-color" => {}
-            "--new-id" if !undo => {
-                index += 1;
-                replacement = Some(*args.get(index)?);
-            }
-            "--range" if !undo => {
-                index += 1;
-                range = Some(*args.get(index)?);
-            }
-            arg if !undo && apply_inline_flag(arg, &mut replacement, &mut range) => {}
-            arg if !arg.starts_with('-') && pattern.is_none() => {
-                pattern = Some(arg);
-            }
-            _ => return None,
-        }
-        index += 1;
+        index = apply_arg(args, index, undo, &mut pattern, &mut replacement, &mut range)?;
     }
     Some(Options { pattern: pattern?, replacement, range })
+}
+
+fn apply_arg<'a>(
+    args: &[&'a str],
+    index: usize,
+    undo: bool,
+    pattern: &mut Option<&'a str>,
+    replacement: &mut Option<&'a str>,
+    range: &mut Option<&'a str>,
+) -> Option<usize> {
+    match args[index] {
+        "--no-color" => Some(index + 1),
+        "--new-id" if !undo && replacement.is_none() => {
+            *replacement = Some(valid_val(args.get(index + 1)?)?);
+            Some(index + 2)
+        }
+        "--range" if !undo && range.is_none() => {
+            *range = Some(valid_val(args.get(index + 1)?)?);
+            Some(index + 2)
+        }
+        arg if !undo && apply_inline_flag(arg, replacement, range) => Some(index + 1),
+        arg if !arg.starts_with('-') && pattern.is_none() => {
+            *pattern = Some(arg);
+            Some(index + 1)
+        }
+        _ => None,
+    }
 }
 
 fn apply_inline_flag<'a>(
@@ -35,19 +46,21 @@ fn apply_inline_flag<'a>(
     replacement: &mut Option<&'a str>,
     range: &mut Option<&'a str>,
 ) -> bool {
-    if let Some(val) = arg
-        .strip_prefix("--new-id=")
-        .filter(|val| !val.is_empty())
+    if let Some(val) = arg.strip_prefix("--new-id=").and_then(valid_val)
+        && replacement.is_none()
     {
         *replacement = Some(val);
         return true;
     }
-    if let Some(val) = arg
-        .strip_prefix("--range=")
-        .filter(|val| !val.is_empty())
+    if let Some(val) = arg.strip_prefix("--range=").and_then(valid_val)
+        && range.is_none()
     {
         *range = Some(val);
         return true;
     }
     false
+}
+
+fn valid_val(val: &str) -> Option<&str> {
+    (!val.is_empty() && !val.starts_with('-')).then_some(val)
 }

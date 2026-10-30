@@ -189,17 +189,24 @@ fn apply_hard_arg<'a>(
     state: &mut ParseState<'a>,
 ) -> Option<()> {
     match arg {
-        "--no-color" | "--force=false" => {}
-        "--hard" | "--hard=true" if !state.hard => state.hard = true,
-        "-s" | "--silent" | "--silent=true" if !state.silent => state.silent = true,
-        "-f" | "--force" | "--force=true" if !state.force => state.force = true,
+        "--no-color" => {}
+        "--hard" | "--hard=true" => state.hard = true,
+        "--hard=false" => state.hard = false,
+        "-s" | "--silent" | "--silent=true" => state.silent = true,
+        "--silent=false" => state.silent = false,
+        "-f" | "--force" | "--force=true" => state.force = true,
+        "--force=false" => state.force = false,
+        "-sf" | "-fs" => {
+            state.silent = true;
+            state.force = true;
+        }
         "--range" if !state.has_range => {
             let val = iter.next()?;
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             state.has_range = true;
         }
         _ if let Some(val) = arg.strip_prefix("--range=") => {
-            (!val.is_empty() && !state.has_range).then_some(())?;
+            (!val.is_empty() && !val.starts_with('-') && !state.has_range).then_some(())?;
             state.has_range = true;
         }
         value if !value.starts_with('-') && state.pattern.is_none() => state.pattern = Some(value),

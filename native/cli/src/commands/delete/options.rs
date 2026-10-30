@@ -15,14 +15,14 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
-            "--no-color"
-            | "--hard=false"
-            | "--silent=false"
-            | "--lane=false"
-            | "--update-main=false" => {}
-            "-s" | "--silent" | "--silent=true" if !silent => silent = true,
-            "--lane" | "--lane=true" if !lane => lane = true,
-            "--update-main" | "--update-main=true" if !update_main => update_main = true,
+            "--no-color" | "--hard=false" | "--force=false" | "-f" | "--force" | "--force=true" => {
+            }
+            "-s" | "--silent" | "--silent=true" | "-sf" | "-fs" => silent = true,
+            "--silent=false" => silent = false,
+            "--lane" | "--lane=true" => lane = true,
+            "--lane=false" => lane = false,
+            "--update-main" | "--update-main=true" => update_main = true,
+            "--update-main=false" => update_main = false,
             "--range" | "--snaps" if modifier.is_none() => {
                 let val = iter.next()?;
                 (!val.is_empty() && !val.starts_with('-')).then_some(())?;
@@ -39,10 +39,10 @@ fn apply_inline_or_pattern<'a>(
     pattern: &mut Option<&'a str>,
 ) -> Option<()> {
     if let Some(val) = arg.strip_prefix("--range=") {
-        (!val.is_empty() && modifier.is_none()).then_some(())?;
+        (!val.is_empty() && !val.starts_with('-') && modifier.is_none()).then_some(())?;
         *modifier = Some(("--range", val));
     } else if let Some(val) = arg.strip_prefix("--snaps=") {
-        (!val.is_empty() && modifier.is_none()).then_some(())?;
+        (!val.is_empty() && !val.starts_with('-') && modifier.is_none()).then_some(())?;
         *modifier = Some(("--snaps", val));
     } else if !arg.starts_with('-') && pattern.is_none() {
         *pattern = Some(arg);

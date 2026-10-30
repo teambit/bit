@@ -68,12 +68,19 @@ pub(super) fn unrecognized_subcommand(args: &[OsString], in_ws: bool) -> Option<
         .into_iter()
         .filter(|token| *token != "--no-color")
         .collect::<Vec<_>>();
-    let [sub] = filtered.as_slice() else {
-        return None;
-    };
-    let is_known = matches!(*sub, "fork" | "rename" | "rename-owner")
-        || (in_ws && matches!(*sub, "set" | "trust"));
-    (!sub.starts_with('-') && !is_known).then(|| (*sub).to_owned())
+    match filtered.as_slice() {
+        [sub] => {
+            let is_known = matches!(*sub, "fork" | "rename" | "rename-owner")
+                || (in_ws && matches!(*sub, "set" | "trust"));
+            (!sub.starts_with('-') && !is_known).then(|| (*sub).to_owned())
+        }
+        [sub @ ("set" | "trust"), rest @ ..]
+            if !in_ws && !rest.contains(&"--help") && !rest.contains(&"-h") =>
+        {
+            Some((*sub).to_owned())
+        }
+        _ => None,
+    }
 }
 fn run_rename(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {

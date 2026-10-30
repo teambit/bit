@@ -124,6 +124,35 @@ impl Read {
         self.values.insert(flag.to_string(), json!(value));
         Some(1)
     }
+
+    fn inline_flag(&mut self, raw_flag: &str, value: &str) -> Option<()> {
+        let flag = lane_alias(raw_flag);
+        if self.has(flag) || self.values.contains_key(flag) {
+            return None;
+        }
+        if BOOLEANS.contains(&flag) {
+            match value {
+                "true" => self.flags.push(flag.to_string()),
+                "false" => {}
+                _ => return None,
+            }
+            return Some(());
+        }
+        if flag == "--resolve-unrelated" || VALUED.contains(&flag) {
+            self.flag(flag, Some(value))?;
+            return Some(());
+        }
+        None
+    }
+}
+
+fn lane_alias(arg: &str) -> &str {
+    match arg {
+        "-x" => "--skip-dependency-installation",
+        "-r" => "--auto-merge-resolve",
+        "-m" => "--message",
+        other => other,
+    }
 }
 
 /// The boolean flags, the valued flags and the positionals.
@@ -131,21 +160,13 @@ fn read(args: &[&str]) -> Option<Read> {
     let mut read = Read::default();
     let mut index = 0;
     while index < args.len() {
-        let arg = match args[index] {
-            "--no-color" => {
-                index += 1;
-                continue;
-            }
-            "-x" => "--skip-dependency-installation",
-            "-r" => "--auto-merge-resolve",
-            "-m" => "--message",
-            other => other,
-        };
+        let arg = lane_alias(args[index]);
         index += 1;
-        if let Some((flag, value)) = arg.split_once('=')
-            && (flag == "--resolve-unrelated" || VALUED.contains(&flag))
-        {
-            read.flag(flag, Some(value))?;
+        if arg == "--no-color" {
+            continue;
+        }
+        if let Some((flag, value)) = arg.split_once('=') {
+            read.inline_flag(flag, value)?;
             continue;
         }
         if arg.starts_with('-') {

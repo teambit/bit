@@ -47,22 +47,24 @@ fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
 
 fn apply_reset_arg<'a>(arg: &'a str, options: &mut Options<'a>) -> Option<()> {
     match arg {
-        "--no-color"
-        | "--head=false"
-        | "--force=false"
-        | "--soft=false"
-        | "--never-exported=false"
-        | "--silent=false"
-        | "--all=false" => {}
-        "--head" | "--head=true" if !options.head => options.head = true,
-        "--force" | "-f" | "--force=true" if !options.force => options.force = true,
-        "--soft" | "--soft=true" if !options.soft => options.soft = true,
-        "--never-exported" | "--never-exported=true" if !options.never_exported => {
-            options.never_exported = true;
-        }
-        "--silent" | "-s" | "--silent=true" | "--all" | "-a" | "--all=true" if !options.silent => {
+        "--no-color" => {}
+        "--head" | "--head=true" => options.head = true,
+        "--head=false" => options.head = false,
+        "--force" | "-f" | "--force=true" => options.force = true,
+        "--force=false" => options.force = false,
+        "--soft" | "--soft=true" => options.soft = true,
+        "--soft=false" => options.soft = false,
+        "--never-exported" | "--never-exported=true" => options.never_exported = true,
+        "--never-exported=false" => options.never_exported = false,
+        "--silent" | "-s" | "--silent=true" | "--all" | "-a" | "--all=true" => {
             options.silent = true;
         }
+        "--silent=false" | "--all=false" => options.silent = false,
+        "-fs" | "-sf" | "-fa" | "-af" => {
+            options.force = true;
+            options.silent = true;
+        }
+        "-sa" | "-as" => options.silent = true,
         arg if !arg.starts_with('-') && options.pattern.is_none() && arg.len() <= 4096 => {
             options.pattern = Some(arg);
         }

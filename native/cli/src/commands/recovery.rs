@@ -27,10 +27,10 @@ use super::{
     },
     workspace_command::{self, format::Formatter, progress::Progress, results::Report},
 };
-use crate::{native::Outcome, workspace};
+use crate::native::Outcome;
 use bit_install::{HostInfo, output::Output};
 use serde_json::{Value, json};
-use std::{env, ffi::OsString, io, path::Path, sync::Arc};
+use std::{ffi::OsString, io, path::Path, sync::Arc};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Kind {
@@ -49,7 +49,6 @@ pub(super) struct Options {
 pub(super) fn parse_component(args: &[&str]) -> Option<Options> {
     parse(args, Kind::Component)
 }
-
 pub(super) fn parse_lane(args: &[&str]) -> Option<Options> {
     parse(args, Kind::Lane)
 }
@@ -62,28 +61,38 @@ pub(super) fn parse_lane(args: &[&str]) -> Option<Options> {
     )
 )]
 fn parse(args: &[&str], kind: Kind) -> Option<Options> {
-    let mut pattern = None;
-    let mut abort = false;
-    let mut silent = false;
-    let mut skip_install = false;
-    let mut verbose = false;
+    let (mut pattern, mut abort, mut silent, mut skip_install, mut verbose) =
+        (None, false, false, false, false);
     for arg in args {
         match *arg {
-            "--no-color" => {}
-            "--abort" if kind == Kind::Component && !abort => abort = true,
-            "-s" | "--silent" if kind == Kind::Lane && !silent => silent = true,
-            "-x" | "--skip-dependency-installation" if !skip_install => skip_install = true,
-            "--verbose" if !verbose => verbose = true,
+            "--no-color" | "--abort=false" => {}
+            "--abort" | "--abort=true" if kind == Kind::Component && !abort => abort = true,
+            "-s" | "--silent" | "--silent=true" if kind == Kind::Lane && !silent => silent = true,
+            "--silent=false" if kind == Kind::Lane => silent = false,
+            "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true"
+                if !skip_install =>
+            {
+                skip_install = true;
+            }
+            "--skip-dependency-installation=false" => skip_install = false,
+            "-sx" | "-xs" if kind == Kind::Lane && !silent && !skip_install => {
+                (silent, skip_install) = (true, true);
+            }
+            "--verbose" | "--verbose=true" if !verbose => verbose = true,
+            "--verbose=false" => verbose = false,
             value if kind == Kind::Component && pattern.is_none() && valid_pattern(value) => {
                 pattern = Some(value.to_string());
             }
             _ => return None,
         }
     }
-    if kind == Kind::Component && !abort {
-        return None;
-    }
-    Some(Options { kind, pattern, skip_install, verbose, silent })
+    (kind != Kind::Component || abort).then_some(Options {
+        kind,
+        pattern,
+        skip_install,
+        verbose,
+        silent,
+    })
 }
 
 fn valid_pattern(pattern: &str) -> bool {
@@ -108,8 +117,10 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".to_string()));
+    let command = if options.kind == Kind::Lane { "merge-abort" } else { "merge" };
+    let root = match workspace_command::workspace_or_fail(args, command)? {
+        Ok(root) => root,
+        Err(outcome) => return Ok(outcome),
     };
     // Component abort calls checkout(reset) without forwarding -x; the Node
     // command installs even when -x was supplied to merge.
@@ -118,8 +129,8 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     } else {
         match Installer::start(&root, &argv) {
             Ok(installer) => Some(installer),
-            Err(error) => {
-                return Ok(Outcome::Declined(format!("merge recovery installation: {error}")));
+            Err(err) => {
+                return Ok(Outcome::Declined(format!("merge recovery installation: {err}")));
             }
         }
     };
@@ -138,7 +149,6 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
             });
         }
         Err(error) if startup.committed => {
-            let command = if options.kind == Kind::Lane { "merge-abort" } else { "merge" };
             return workspace_command::checkout_lifecycle::failure(
                 &root, args, command, &startup, error,
             );
@@ -151,13 +161,9 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
 fn installation_session(
     installer: Option<Installer>,
 ) -> io::Result<(Option<environments::Environments>, Option<HostInfo>)> {
-    match installer {
-        Some(installer) => {
-            let (environment, info) = installer.into_parts()?;
-            Ok((Some(environment), Some(info)))
-        }
-        None => Ok((None, None)),
-    }
+    let Some(installer) = installer else { return Ok((None, None)) };
+    let (environment, info) = installer.into_parts()?;
+    Ok((Some(environment), Some(info)))
 }
 
 fn execute_prepared(
@@ -304,13 +310,13 @@ impl Prepared {
             "kind":"commandRecoveryApply","token":self.token,"fileId":file_id,
             "dependencyReadSet":read_set,
         }))?;
-        if applied.get("applied") != Some(&Value::Bool(true)) {
-            return Err(io::Error::other("recovery apply receipt"));
-        }
-        Ok(applied
+        (applied.get("applied") == Some(&Value::Bool(true)))
+            .then_some(())
+            .ok_or_else(|| io::Error::other("recovery apply receipt"))?;
+        applied
             .get("result")
-            .ok_or_else(|| io::Error::other("recovery apply result"))?
-            .clone())
+            .cloned()
+            .ok_or_else(|| io::Error::other("recovery apply result"))
     }
 }
 
@@ -321,11 +327,11 @@ fn read_environment(
     startup: &mut Startup,
     inherited: Option<environments::Environments>,
 ) -> io::Result<environments::Environments> {
-    let environment = match inherited {
-        Some(environment) => {
-            environments::read_inherited_context(engine, root, home, None, startup, environment)?.1
+    let (_, environment) = match inherited {
+        Some(env_state) => {
+            environments::read_inherited_context(engine, root, home, None, startup, env_state)?
         }
-        None => environments::read_context(engine, root, home, false, None, startup)?.1,
+        None => environments::read_context(engine, root, home, false, None, startup)?,
     };
     Ok(environment.for_checkout())
 }

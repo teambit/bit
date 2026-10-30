@@ -63,6 +63,10 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--list=false" => opts.list = false,
             "-j" | "--json" | "--json=true" => opts.json = true,
             "--json=false" => opts.json = false,
+            "-lj" | "-jl" => {
+                opts.list = true;
+                opts.json = true;
+            }
             "--include-deps" | "--include-deps=true" => opts.include_deps = true,
             "--include-deps=false" => opts.include_deps = false,
             "--no-color" => {}

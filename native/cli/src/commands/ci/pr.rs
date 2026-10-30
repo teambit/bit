@@ -76,7 +76,7 @@ fn apply_pr_arg(rest: &[&str], idx: usize, opts: &mut PrOptions) -> Option<usize
         "--keep-lane=false" => opts.keep_lane = false,
         "--skip-cleanup" | "--skip-cleanup=true" => opts.skip_cleanup = true,
         "--skip-cleanup=false" => opts.skip_cleanup = false,
-        _ => {}
+        _ => return None,
     }
     Some(idx + 1)
 }
@@ -87,24 +87,30 @@ fn apply_pr_value_arg(rest: &[&str], idx: usize, opts: &mut PrOptions) -> Option
             opts.lane = Some((*rest.get(idx + 1)?).to_owned());
             Some(idx + 2)
         }
-        arg if arg.starts_with("--lane=") => {
-            opts.lane = Some(arg["--lane=".len()..].to_owned());
+        arg if let Some(val) = arg
+            .strip_prefix("--lane=")
+            .or_else(|| arg.strip_prefix("-l=")) =>
+        {
+            opts.lane = Some(val.to_owned());
             Some(idx + 1)
         }
         "-m" | "--message" => {
             opts.message = Some((*rest.get(idx + 1)?).to_owned());
             Some(idx + 2)
         }
-        arg if arg.starts_with("--message=") => {
-            opts.message = Some(arg["--message=".len()..].to_owned());
+        arg if let Some(val) = arg
+            .strip_prefix("--message=")
+            .or_else(|| arg.strip_prefix("-m=")) =>
+        {
+            opts.message = Some(val.to_owned());
             Some(idx + 1)
         }
         "--skip-tasks" => {
             opts.skip_tasks = Some((*rest.get(idx + 1)?).to_owned());
             Some(idx + 2)
         }
-        arg if arg.starts_with("--skip-tasks=") => {
-            opts.skip_tasks = Some(arg["--skip-tasks=".len()..].to_owned());
+        arg if let Some(val) = arg.strip_prefix("--skip-tasks=") => {
+            opts.skip_tasks = Some(val.to_owned());
             Some(idx + 1)
         }
         _ => None,

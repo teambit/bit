@@ -60,6 +60,7 @@ fn apply_create_flag<'a>(
 fn apply_create_inline<'a>(options: &mut Options<'a>, flag: &'a str) -> Option<bool> {
     if let Some(val) = flag
         .strip_prefix("--scope=")
+        .or_else(|| flag.strip_prefix("-s="))
         .or_else(|| flag.strip_prefix("--remote-scope="))
     {
         return Some(set_once(&mut options.scope, val));

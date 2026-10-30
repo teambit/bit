@@ -43,7 +43,10 @@ fn apply_save_arg<'a>(
     arg: &'a str,
     iter: &mut impl Iterator<Item = &'a str>,
 ) -> Option<()> {
-    if let Some(val) = arg.strip_prefix("--message=") {
+    if let Some(val) = arg
+        .strip_prefix("--message=")
+        .or_else(|| arg.strip_prefix("-m="))
+    {
         if message.is_some() || val.is_empty() || val.starts_with('-') {
             return None;
         }
@@ -51,7 +54,7 @@ fn apply_save_arg<'a>(
         return Some(());
     }
     match arg {
-        "--include-new" | "--include-new=true" if !*include_new => *include_new = true,
+        "--include-new" | "--include-new=true" => *include_new = true,
         "--include-new=false" => *include_new = false,
         "-m" | "--message" if message.is_none() => {
             let value = iter
@@ -87,7 +90,10 @@ impl<'a> LoadFlags<'a> {
         if self.boolean(arg) {
             return Some(());
         }
-        if let Some(val) = arg.strip_prefix("--auto-merge-resolve=") {
+        if let Some(val) = arg
+            .strip_prefix("--auto-merge-resolve=")
+            .or_else(|| arg.strip_prefix("-r="))
+        {
             if self.strategy.is_some() || val.is_empty() || val.starts_with('-') {
                 return None;
             }

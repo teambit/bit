@@ -155,13 +155,13 @@ fn apply_inline_or_pattern(
 ) -> Option<()> {
     let (files, out_dir) = files_and_out;
     if let Some(val) = arg.strip_prefix("--aspect=") {
-        *aspect = Some((!val.is_empty()).then(|| val.to_owned())?);
+        *aspect = Some(take_val(val)?);
     } else if let Some(val) = arg.strip_prefix("--task=") {
-        *task = Some((!val.is_empty()).then(|| val.to_owned())?);
+        *task = Some(take_val(val)?);
     } else if let Some(val) = arg.strip_prefix("--files=") {
-        *files = Some((!val.is_empty()).then(|| val.to_owned())?);
+        *files = Some(take_val(val)?);
     } else if let Some(val) = arg.strip_prefix("--out-dir=") {
-        *out_dir = Some((!val.is_empty()).then(|| val.to_owned())?);
+        *out_dir = Some(take_val(val)?);
     } else if !arg.starts_with('-') && !arg.is_empty() && pattern.is_none() {
         *pattern = Some(arg.to_owned());
     } else {

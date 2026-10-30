@@ -9,8 +9,8 @@ use super::{
     color::Chalk,
     workspace_command::{self, format::Formatter, results::Report},
 };
-use crate::{commands::Command, native::Outcome, workspace};
-use std::{env, ffi::OsString, io, path::Path};
+use crate::{commands::Command, native::Outcome};
+use std::{ffi::OsString, io, path::Path};
 pub const COMMAND: Command = Command { name: "remove", aliases: &["rm"], run };
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
@@ -19,8 +19,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native remove grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let root = match workspace_command::workspace_or_fail(args, "remove")? {
+        Ok(root) => root,
+        Err(outcome) => return Ok(outcome),
     };
     if let Err(error) = preflight(&root, &options) {
         return Ok(Outcome::Declined(format!("remove: {error}")));

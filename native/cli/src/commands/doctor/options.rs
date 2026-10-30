@@ -38,7 +38,10 @@ impl Options {
     }
 
     fn apply_inline_valued(&mut self, arg: &str) -> bool {
-        if let Some(val) = arg.strip_prefix("--remote=") {
+        if let Some(val) = arg
+            .strip_prefix("--remote=")
+            .or_else(|| arg.strip_prefix("-r="))
+        {
             if val.is_empty() || val.starts_with('-') {
                 return false;
             }
@@ -47,14 +50,16 @@ impl Options {
         }
         let Some(val) = arg
             .strip_prefix("--save=")
+            .or_else(|| arg.strip_prefix("-s="))
             .or_else(|| arg.strip_prefix("--archive="))
+            .or_else(|| arg.strip_prefix("-a="))
         else {
             return false;
         };
         if val.is_empty() || val.starts_with('-') {
             return false;
         }
-        let archive = arg.starts_with("--archive=");
+        let archive = arg.starts_with("--archive=") || arg.starts_with("-a=");
         if archive || !self.archive {
             self.file = Some(PathBuf::from(val));
         }

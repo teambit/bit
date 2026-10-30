@@ -7,9 +7,9 @@ use super::{
     color::Chalk,
     workspace_command::{self, format::Formatter, results::Report},
 };
-use crate::{commands::Command, native::Outcome, workspace};
+use crate::{commands::Command, native::Outcome};
 use bit_object_import::component_recover::Batch;
-use std::{env, ffi::OsString, io};
+use std::{ffi::OsString, io};
 
 pub const COMMAND: Command = Command { name: "recover", aliases: &[], run };
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -19,8 +19,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native recover grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let root = match workspace_command::workspace_or_fail(args, "recover")? {
+        Ok(root) => root,
+        Err(outcome) => return Ok(outcome),
     };
     let preview = match Batch::prepare(&root, options.pattern) {
         Ok(plan) => plan,

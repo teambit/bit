@@ -21,7 +21,7 @@ pub mod versions;
 pub use execution::{
     execute_failure_scope, execute_json, execute_json_scope, execute_then, execute_then_scope,
     execute_with, execute_with_scope, execute_without_loader, execute_without_loader_scope,
-    with_error_details,
+    with_error_details, workspace_or_fail,
 };
 pub(in crate::commands) use execution::{loader_output, print_error};
 pub use snapshot::receipt::NodeCli;

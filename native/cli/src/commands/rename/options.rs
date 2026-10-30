@@ -41,10 +41,16 @@ fn apply_inline_or_positional(
     options: &mut Options,
     positions: &mut Vec<String>,
 ) -> Option<()> {
-    if let Some(val) = argument.strip_prefix("--scope=") {
-        options.scope = Some((!val.is_empty()).then(|| val.to_owned())?);
-    } else if let Some(val) = argument.strip_prefix("--path=") {
-        options.path = Some((!val.is_empty()).then(|| val.to_owned())?);
+    if let Some(val) = argument
+        .strip_prefix("--scope=")
+        .or_else(|| argument.strip_prefix("-s="))
+    {
+        options.scope = Some(take_val(val)?);
+    } else if let Some(val) = argument
+        .strip_prefix("--path=")
+        .or_else(|| argument.strip_prefix("-p="))
+    {
+        options.path = Some(take_val(val)?);
     } else if !argument.starts_with('-') && !argument.is_empty() {
         positions.push(argument.to_owned());
     } else {

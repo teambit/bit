@@ -181,14 +181,16 @@ fn revert_arguments<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, bool, bool)> 
     for arg in args {
         match *arg {
             "--no-color" => {}
-            "-v" | "--verbose" | "--verbose=true" if !verbose => verbose = true,
+            "-v" | "--verbose" | "--verbose=true" => verbose = true,
             "--verbose=false" => verbose = false,
-            "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true"
-                if !skip_install =>
-            {
+            "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
                 skip_install = true;
             }
             "--skip-dependency-installation=false" => skip_install = false,
+            "-vx" | "-xv" => {
+                verbose = true;
+                skip_install = true;
+            }
             value if !value.starts_with('-') => positionals.push(value),
             _ => return None,
         }

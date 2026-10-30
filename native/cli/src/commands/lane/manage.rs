@@ -259,7 +259,7 @@ fn parse_updates_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>, boo
         match arg {
             "--undo" | "--no-color" => {}
             "-j" | "--json" | "--json=true" => json = true,
-            "--no-json" | "--json=false" => json = false,
+            "--json=false" => json = false,
             val if !val.starts_with('-') && !val.is_empty() && lane_name.is_none() => {
                 lane_name = Some(val);
             }
@@ -309,7 +309,7 @@ fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>
         match arg {
             "--no-color" => {}
             "-j" | "--json" | "--json=true" => json = true,
-            "--no-json" | "--json=false" => json = false,
+            "--json=false" => json = false,
             "-l" | "--lane" => {
                 let val = iter
                     .next()
@@ -317,7 +317,18 @@ fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>
                 lane_name = Some(val);
             }
             "--pattern" => {
-                iter.next()?;
+                iter.next()
+                    .filter(|val| !val.is_empty() && !val.starts_with('-'))?;
+            }
+            _ if let Some(val) = arg
+                .strip_prefix("--lane=")
+                .or_else(|| arg.strip_prefix("-l=")) =>
+            {
+                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+                lane_name = Some(val);
+            }
+            _ if let Some(val) = arg.strip_prefix("--pattern=") => {
+                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             }
             val if !val.starts_with('-') => {}
             _ => return None,

@@ -76,7 +76,9 @@ impl Options {
 
     fn set_flag(&mut self, arg: &str) -> Option<()> {
         match arg {
-            "-l" | "--local" | "--local=true" => self.origin = Some("scope".to_owned()),
+            "-l" | "--local" | "--local=true" | "-lt" | "-tl" => {
+                self.origin = Some("scope".to_owned());
+            }
             "--local=false" | "--local-track=false" => {}
             "-t" | "--local-track" | "--local-track=true" => {
                 if self.origin.as_deref() != Some("scope") {
@@ -95,7 +97,9 @@ impl Options {
     ) -> Option<()> {
         let val = match arg {
             "-o" | "--origin" => rest.next()?,
-            flag => flag.strip_prefix("--origin=")?,
+            flag => flag
+                .strip_prefix("--origin=")
+                .or_else(|| flag.strip_prefix("-o="))?,
         };
         if val.is_empty() || val.starts_with('-') {
             return None;

@@ -15,12 +15,10 @@ use crate::{
         },
     },
     native::Outcome,
-    workspace,
 };
 use serde_json::{Value, json};
 use std::{
     collections::HashSet,
-    env,
     ffi::OsString,
     io::{self, Write},
     path::Path,
@@ -41,25 +39,82 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     let mut flags: Vec<&str> = Vec::new();
     let mut index = 0;
     while index < args.len() {
-        let flag = match args[index] {
-            "-m" => "--message",
-            "-x" => "--skip-dependency-installation",
-            other => other,
-        };
+        let raw = args[index];
         index += 1;
-        if !flag.starts_with('-') {
-            options.positional(flag)?;
-        } else if flags.contains(&flag) || !FLAGS.contains(&flag) {
-            return None;
-        } else {
-            flags.push(flag);
-            index += options.flag(flag, args.get(index).copied())?;
+        if raw == "--no-color" {
+            continue;
         }
+        if !raw.starts_with('-') {
+            options.positional(raw)?;
+            continue;
+        }
+        index += apply_resolve_flag(&mut options, &mut flags, raw, args.get(index).copied())?;
     }
     flags.contains(&"--resolve").then_some(options)
 }
 
 const FLAGS: [&str; 4] = ["--message", "--resolve", "--skip-dependency-installation", "--build"];
+
+fn apply_resolve_flag<'a>(
+    options: &mut Options,
+    flags: &mut Vec<&'a str>,
+    raw: &'a str,
+    next: Option<&str>,
+) -> Option<usize> {
+    if let Some((key, val)) = raw.split_once('=') {
+        let canonical = resolve_alias(key);
+        if flags.contains(&canonical) {
+            return None;
+        }
+        return apply_resolve_inline(options, flags, canonical, val);
+    }
+    let flag = resolve_alias(raw);
+    if flags.contains(&flag) || !FLAGS.contains(&flag) {
+        return None;
+    }
+    flags.push(flag);
+    options.flag(flag, next)
+}
+
+fn apply_resolve_inline<'a>(
+    options: &mut Options,
+    flags: &mut Vec<&'a str>,
+    canonical: &'a str,
+    val: &str,
+) -> Option<usize> {
+    if canonical == "--message" {
+        (!val.starts_with('-')).then_some(())?;
+        flags.push(canonical);
+        options.message = Some(val.to_owned());
+        return Some(0);
+    }
+    if FLAGS.contains(&canonical) {
+        match val {
+            "true" => {
+                flags.push(canonical);
+                if canonical == "--build" {
+                    options.build = true;
+                }
+            }
+            "false" => {
+                if canonical == "--build" {
+                    options.build = false;
+                }
+            }
+            _ => return None,
+        }
+        return Some(0);
+    }
+    None
+}
+
+fn resolve_alias(arg: &str) -> &str {
+    match arg {
+        "-m" => "--message",
+        "-x" => "--skip-dependency-installation",
+        other => other,
+    }
+}
 
 impl Options {
     /// One flag; the number of values it consumed.
@@ -89,8 +144,9 @@ impl Options {
 }
 
 pub fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".to_string()));
+    let root = match workspace_command::workspace_or_fail(args, "merge")? {
+        Ok(root) => root,
+        Err(outcome) => return Ok(outcome),
     };
     let argv = workspace_command::utf8_args(args).ok_or_else(|| decline("resolve arguments"))?;
     let mut workflow = resolve::workflow::Workflow::default();

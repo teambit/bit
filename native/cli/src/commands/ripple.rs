@@ -268,28 +268,34 @@ fn parse_simulate(rest: &[&str]) -> Option<Subcommand> {
     let mut iter = rest.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
-            "-j" | "--json" => json = true,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
             "--lane" => {
-                let val = iter.next()?;
-                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
-                lane = Some(val.to_owned());
+                lane = Some(valid_ripple_val(iter.next()?)?.to_owned());
             }
             "--scopes" | "--owners" | "--exclude-scopes" => {
-                let val = iter.next()?;
-                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+                valid_ripple_val(iter.next()?)?;
             }
-            _ if arg.starts_with("--lane=") => {
-                let val = &arg["--lane=".len()..];
-                (!val.is_empty()).then_some(())?;
-                lane = Some(val.to_owned());
-            }
-            _ if arg.starts_with("--scopes=")
-                || arg.starts_with("--owners=")
-                || arg.starts_with("--exclude-scopes=") => {}
-            _ => return None,
+            _ => apply_simulate_inline(arg, &mut lane)?,
         }
     }
     Some(Subcommand::Simulate { lane, json })
+}
+
+fn apply_simulate_inline(arg: &str, lane: &mut Option<String>) -> Option<()> {
+    if let Some(val) = arg.strip_prefix("--lane=") {
+        *lane = Some(valid_ripple_val(val)?.to_owned());
+        return Some(());
+    }
+    let val = arg
+        .strip_prefix("--scopes=")
+        .or_else(|| arg.strip_prefix("--owners="))
+        .or_else(|| arg.strip_prefix("--exclude-scopes="))?;
+    valid_ripple_val(val).map(|_| ())
+}
+
+fn valid_ripple_val(val: &str) -> Option<&str> {
+    (!val.is_empty() && !val.starts_with('-')).then_some(val)
 }
 
 fn parse_no_arg_job_op(sub: &str, rest: &[&str]) -> Option<Subcommand> {
@@ -303,8 +309,9 @@ fn parse_no_arg_job_op(sub: &str, rest: &[&str]) -> Option<Subcommand> {
     let mut json = false;
     for &arg in rest {
         match arg {
-            "-j" | "--json" => json = true,
-            "--full-log" if sub_static == "errors" => {}
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
+            "--full-log" | "--full-log=true" | "--full-log=false" if sub_static == "errors" => {}
             _ => return None,
         }
     }
@@ -317,13 +324,17 @@ fn parse_list_invalid_limit(rest: &[&str]) -> Option<Subcommand> {
     let mut idx = 0;
     while idx < rest.len() {
         match rest[idx] {
-            "-j" | "--json" => json = true,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
             "-l" | "--limit" => {
                 idx += 1;
                 limit = Some((*rest.get(idx)?).to_owned());
             }
-            arg if arg.starts_with("--limit=") => {
-                limit = Some(arg["--limit=".len()..].to_owned());
+            arg if let Some(val) = arg
+                .strip_prefix("--limit=")
+                .or_else(|| arg.strip_prefix("-l=")) =>
+            {
+                limit = Some(val.to_owned());
             }
             _ => {}
         }

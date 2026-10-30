@@ -79,6 +79,10 @@ fn parse_local_flag(
         "-p" | "--path" => options.path = Some(take_fork_val(arguments)?),
         "-e" | "--env" => options.env = Some(take_fork_val(arguments)?),
         "-r" | "--refactor" | "--refactor=true" => options.flags.refactor = true,
+        "-rx" | "-xr" => {
+            options.flags.refactor = true;
+            options.flags.skip_install = true;
+        }
         "--skip-config" | "--skip-config=true" => options.flags.skip_config = true,
         "--preserve" | "--preserve=true" => options.flags.preserve = true,
         "--no-link" | "--no-link=true" => options.flags.no_link = true,
@@ -87,14 +91,21 @@ fn parse_local_flag(
     Some(())
 }
 fn parse_local_inline(argument: &str, options: &mut Options) -> Option<Option<()>> {
-    if let Some(val) = argument.strip_prefix("--scope=") {
+    if let Some(val) = argument
+        .strip_prefix("--scope=")
+        .or_else(|| argument.strip_prefix("-s="))
+    {
         return Some(valid_fork_val(val).map(|val| options.scope = Some(val)));
     }
-    if let Some(val) = argument.strip_prefix("--path=") {
+    if let Some(val) = argument
+        .strip_prefix("--path=")
+        .or_else(|| argument.strip_prefix("-p="))
+    {
         return Some(valid_fork_val(val).map(|val| options.path = Some(val)));
     }
     argument
         .strip_prefix("--env=")
+        .or_else(|| argument.strip_prefix("-e="))
         .map(|val| valid_fork_val(val).map(|val| options.env = Some(val)))
 }
 fn take_fork_val(arguments: &mut std::slice::Iter<'_, &str>) -> Option<String> {

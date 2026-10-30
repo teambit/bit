@@ -57,7 +57,7 @@ fn apply_merge_arg(rest: &[&str], idx: usize, opts: &mut MergeOptions) -> Option
         "--no-bitmap-commit=false" => opts.no_bitmap_commit = false,
         "--skip-push" | "--skip-push=true" => opts.skip_push = true,
         "--skip-push=false" => opts.skip_push = false,
-        _ => {}
+        _ => return None,
     }
     Some(idx + 1)
 }
@@ -67,10 +67,6 @@ fn apply_merge_value_arg(rest: &[&str], idx: usize, opts: &mut MergeOptions) -> 
         "-r" | "--auto-merge-resolve" => {
             opts.auto_merge_resolve = Some((*rest.get(idx + 1)?).to_owned());
             Some(idx + 2)
-        }
-        arg if arg.starts_with("--auto-merge-resolve=") => {
-            opts.auto_merge_resolve = Some(arg["--auto-merge-resolve=".len()..].to_owned());
-            Some(idx + 1)
         }
         "-m" | "--message" => {
             opts.message = Some((*rest.get(idx + 1)?).to_owned());
@@ -105,13 +101,24 @@ fn apply_merge_value_arg(rest: &[&str], idx: usize, opts: &mut MergeOptions) -> 
 }
 
 fn apply_merge_equals_arg(arg: &str, idx: usize, opts: &mut MergeOptions) -> Option<usize> {
-    if let Some(val) = arg.strip_prefix("--message=") {
+    if let Some(val) = arg
+        .strip_prefix("--auto-merge-resolve=")
+        .or_else(|| arg.strip_prefix("-r="))
+    {
+        opts.auto_merge_resolve = Some(val.to_owned());
+    } else if let Some(val) = arg
+        .strip_prefix("--message=")
+        .or_else(|| arg.strip_prefix("-m="))
+    {
         opts.message = Some(val.to_owned());
     } else if let Some(val) = arg.strip_prefix("--commit-message=") {
         opts.commit_message = Some(val.to_owned());
     } else if let Some(val) = arg.strip_prefix("--branch=") {
         opts.branch = Some(val.to_owned());
-    } else if let Some(val) = arg.strip_prefix("--increment=") {
+    } else if let Some(val) = arg
+        .strip_prefix("--increment=")
+        .or_else(|| arg.strip_prefix("-l="))
+    {
         opts.bump.increment = Some(val.to_owned());
     } else if let Some(val) = arg.strip_prefix("--increment-by=") {
         opts.bump.increment_by = Some(val.to_owned());
