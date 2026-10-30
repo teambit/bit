@@ -191,38 +191,41 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     match filtered.as_slice() {
         ["list", rest @ ..] => parse_list(rest, false),
         ["get", rest @ ..] => parse_get(rest),
-        ["set", pattern, env]
-            if is_supported_pattern(pattern) && !env.is_empty() && !env.starts_with('-') =>
-        {
-            Some(Subcommand::Set { pattern: (*pattern).to_owned(), env: (*env).to_owned() })
-        }
-        ["unset", pattern] if is_supported_pattern(pattern) => {
-            Some(Subcommand::Unset { pattern: (*pattern).to_owned() })
-        }
-        ["replace", old_env, new_env]
-            if !old_env.is_empty()
-                && !old_env.starts_with('-')
-                && !new_env.is_empty()
-                && !new_env.starts_with('-') =>
-        {
-            Some(Subcommand::Replace {
-                old_env: (*old_env).to_owned(),
-                new_env: (*new_env).to_owned(),
-            })
-        }
+        ["set", rest @ ..] => parse_set(rest),
+        ["unset", rest @ ..] => parse_unset(rest),
+        ["replace", rest @ ..] => parse_replace(rest),
         ["update", rest @ ..] => parse_update(rest),
         rest => parse_list(rest, true),
     }
 }
 
+fn parse_set(rest: &[&str]) -> Option<Subcommand> {
+    let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
+    let [pattern, env] = tokens.as_slice() else { return None };
+    (is_supported_pattern(pattern) && !env.is_empty()).then(|| Subcommand::Set {
+        pattern: (*pattern).to_owned(),
+        env: (*env).to_owned(),
+    })
+}
+
+fn parse_unset(rest: &[&str]) -> Option<Subcommand> {
+    let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
+    let [pattern] = tokens.as_slice() else { return None };
+    is_supported_pattern(pattern).then(|| Subcommand::Unset { pattern: (*pattern).to_owned() })
+}
+
+fn parse_replace(rest: &[&str]) -> Option<Subcommand> {
+    let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
+    let [old_env, new_env] = tokens.as_slice() else { return None };
+    (!old_env.is_empty() && !new_env.is_empty()).then(|| Subcommand::Replace {
+        old_env: (*old_env).to_owned(),
+        new_env: (*new_env).to_owned(),
+    })
+}
+
 fn parse_update(rest: &[&str]) -> Option<Subcommand> {
-    if rest
-        .iter()
-        .any(|arg| arg.starts_with('-'))
-    {
-        return None;
-    }
-    match rest {
+    let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
+    match tokens.as_slice() {
         [] => Some(Subcommand::Update { env_id: None, pattern: None }),
         [env_id] if is_valid_update_env_id(env_id) => {
             Some(Subcommand::Update { env_id: Some((*env_id).to_owned()), pattern: None })
@@ -247,8 +250,15 @@ fn is_valid_update_env_id(env_id: &str) -> bool {
 
 fn parse_list(rest: &[&str], table_only: bool) -> Option<Subcommand> {
     let mut json = false;
-    for &arg in rest {
+    let mut iter = rest.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                return iter
+                    .next()
+                    .is_none()
+                    .then_some(Subcommand::List { json, table_only });
+            }
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             _ => return None,
@@ -263,6 +273,10 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
     let mut idx = 0usize;
     while idx < rest.len() {
         match rest[idx] {
+            "--" => {
+                consume_trailing_env_comp(&rest[idx + 1..], &mut component)?;
+                break;
+            }
             "--services" => {
                 idx += 1;
                 services = Some(parse_services_val(rest.get(idx)?)?);
@@ -278,6 +292,12 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
         idx += 1;
     }
     Some(Subcommand::Get { component: component?, services })
+}
+
+fn consume_trailing_env_comp(rest: &[&str], component: &mut Option<String>) -> Option<()> {
+    let [val] = rest else { return None };
+    (!val.is_empty() && !val.starts_with('-') && component.replace((*val).to_owned()).is_none())
+        .then_some(())
 }
 
 fn parse_services_val(val: &str) -> Option<Vec<String>> {

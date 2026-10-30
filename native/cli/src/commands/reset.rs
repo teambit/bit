@@ -32,7 +32,14 @@ struct Options<'a> {
 
 fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options::default();
-    for arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        if arg == "--" {
+            for rest in iter {
+                apply_reset_arg((!rest.is_empty()).then_some(rest)?, &mut options)?;
+            }
+            break;
+        }
         apply_reset_arg(arg, &mut options)?;
     }
     Some(options)
@@ -200,7 +207,7 @@ fn route_hard(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Resu
         };
         return run_batch(args, root, options.head, Some(&selected), options.force);
     }
-    let (identity, on_lane) = match identity(root, pattern) {
+    let (identity, on_lane) = match selection::identity(root, pattern) {
         Ok(identity) => identity,
         Err(_) if main_ext::missing_component(root, pattern) => {
             return workspace_command::execute_then(root, args, "reset", |_| {
@@ -389,24 +396,4 @@ fn run_soft(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result
         }
         plan.commit(&workspace_command::file_id())
     })
-}
-
-fn identity(root: &Path, pattern: &str) -> io::Result<(String, bool)> {
-    let bitmap = bitmap::read(root)?;
-    let matched: Vec<_> = bitmap.entries
-        .iter()
-        .filter(|entry| {
-            entry.identity == pattern
-                || entry.identity
-                    .split_once('/')
-                    .is_some_and(|(_, name)| name == pattern)
-        })
-        .collect();
-    if matched.len() != 1 {
-        return Err(io::Error::other("reset identity absent or ambiguous"));
-    }
-    if !matched[0].on_current_lane_including_removed(&[]) || matched[0].staged_deprecation {
-        return Err(io::Error::other("reset component unavailable on main"));
-    }
-    Ok((matched[0].identity.clone(), bitmap.lane.is_some()))
 }

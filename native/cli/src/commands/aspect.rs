@@ -229,16 +229,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         ["list-core", rest @ ..] => parse_list_core(rest),
         ["get", rest @ ..] => parse_get(rest),
         ["set", rest @ ..] => parse_set(rest),
-        ["unset", pattern, aspect_id]
-            if is_supported_pattern(pattern)
-                && !aspect_id.is_empty()
-                && !aspect_id.starts_with('-') =>
-        {
-            Some(Subcommand::Unset {
-                pattern: (*pattern).to_owned(),
-                aspect_id: (*aspect_id).to_owned(),
-            })
-        }
+        ["unset", rest @ ..] => parse_unset(rest),
         ["update", rest @ ..] => parse_update(rest),
         [sub]
             if !sub.starts_with('-')
@@ -250,47 +241,58 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     }
 }
 
-fn parse_list(rest: &[&str]) -> Option<Subcommand> {
-    let mut pattern = None;
-    let mut debug = false;
-    let mut json = false;
-    for &arg in rest {
-        match arg {
-            "-d" | "--debug" | "--debug=true" => debug = true,
-            "--debug=false" => debug = false,
-            "-j" | "--json" | "--json=true" => json = true,
-            "--json=false" => json = false,
-            "-dj" | "-jd" => {
-                debug = true;
-                json = true;
-            }
-            val if !val.starts_with('-') && pattern.is_none() && is_supported_pattern(val) => {
-                pattern = Some(val.to_owned());
-            }
-            _ => return None,
-        }
-    }
-    Some(Subcommand::List(ListOpts { pattern, debug, json }))
+fn parse_unset(rest: &[&str]) -> Option<Subcommand> {
+    let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
+    let [pattern, aspect_id] = tokens.as_slice() else { return None };
+    (is_supported_pattern(pattern) && !aspect_id.is_empty()).then(|| Subcommand::Unset {
+        pattern: (*pattern).to_owned(),
+        aspect_id: (*aspect_id).to_owned(),
+    })
 }
 
-fn parse_get(rest: &[&str]) -> Option<Subcommand> {
+fn consume_trailing<'a>(iter: impl Iterator<Item = &'a str>, out: &mut Vec<&'a str>) -> Option<()> {
+    for trailing in iter {
+        (!trailing.is_empty() && !trailing.starts_with('-')).then_some(())?;
+        out.push(trailing);
+    }
+    Some(())
+}
+
+fn parse_debug_json_args<'a>(rest: &[&'a str]) -> Option<(Vec<&'a str>, bool, bool)> {
+    let mut positional = Vec::new();
     let mut debug = false;
     let mut json = false;
-    let mut positional = Vec::new();
-    for &arg in rest {
+    let mut iter = rest.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing(iter, &mut positional)?;
+                break;
+            }
             "-d" | "--debug" | "--debug=true" => debug = true,
             "--debug=false" => debug = false,
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
-            "-dj" | "-jd" => {
-                debug = true;
-                json = true;
-            }
+            "-dj" | "-jd" => (debug, json) = (true, true),
             val if !val.starts_with('-') && !val.is_empty() => positional.push(val),
             _ => return None,
         }
     }
+    Some((positional, debug, json))
+}
+
+fn parse_list(rest: &[&str]) -> Option<Subcommand> {
+    let (positional, debug, json) = parse_debug_json_args(rest)?;
+    let pattern = match positional.as_slice() {
+        [] => None,
+        [pat] if is_supported_pattern(pat) => Some((*pat).to_owned()),
+        _ => return None,
+    };
+    Some(Subcommand::List(ListOpts { pattern, debug, json }))
+}
+
+fn parse_get(rest: &[&str]) -> Option<Subcommand> {
+    let (positional, debug, json) = parse_debug_json_args(rest)?;
     let (component, aspect_id) = match positional.as_slice() {
         [comp] if is_supported_pattern(comp) => ((*comp).to_owned(), None),
         [comp, aspect] if is_supported_pattern(comp) => {
@@ -303,8 +305,15 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
 
 fn parse_list_core(rest: &[&str]) -> Option<Subcommand> {
     let mut json = false;
-    for &arg in rest {
+    let mut iter = rest.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                return iter
+                    .next()
+                    .is_none()
+                    .then_some(Subcommand::ListCore { json });
+            }
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             _ => return None,
@@ -314,15 +323,12 @@ fn parse_list_core(rest: &[&str]) -> Option<Subcommand> {
 }
 
 fn parse_update(rest: &[&str]) -> Option<Subcommand> {
-    match rest {
-        [aspect_id] if !aspect_id.is_empty() && !aspect_id.starts_with('-') => {
+    let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
+    match tokens.as_slice() {
+        [aspect_id] if !aspect_id.is_empty() => {
             Some(Subcommand::Update { aspect_id: (*aspect_id).to_owned(), pattern: None })
         }
-        [aspect_id, pattern]
-            if !aspect_id.is_empty()
-                && !aspect_id.starts_with('-')
-                && is_supported_pattern(pattern) =>
-        {
+        [aspect_id, pattern] if !aspect_id.is_empty() && is_supported_pattern(pattern) => {
             Some(Subcommand::Update {
                 aspect_id: (*aspect_id).to_owned(),
                 pattern: Some((*pattern).to_owned()),
@@ -335,8 +341,13 @@ fn parse_update(rest: &[&str]) -> Option<Subcommand> {
 fn parse_set(rest: &[&str]) -> Option<Subcommand> {
     let mut merge = false;
     let mut positional = Vec::new();
-    for &arg in rest {
+    let mut iter = rest.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing(iter, &mut positional)?;
+                break;
+            }
             "-m" | "--merge" | "--merge=true" => merge = true,
             "--merge=false" => merge = false,
             val if !val.starts_with('-') => positional.push(val),

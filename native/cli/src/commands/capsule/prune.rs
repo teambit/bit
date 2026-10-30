@@ -60,6 +60,7 @@ pub(super) fn parse_flags(rest: &[&str]) -> Option<PruneArgs> {
     let mut iter = rest.iter();
     while let Some(&arg) = iter.next() {
         match arg {
+            "--" => return iter.next().is_none().then_some(parsed),
             "--dry-run" | "--dry-run=true" => parsed.dry_run = true,
             "--dry-run=false" => parsed.dry_run = false,
             "--keep-workspace-caps" | "--keep-workspace-caps=true" => {

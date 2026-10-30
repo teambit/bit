@@ -117,3 +117,31 @@ fn dependency_facts(rows: &[serde_json::Value]) -> io::Result<Vec<DependencyComp
 pub(super) fn validate_options(root: &Path, options: &Options<'_>) -> io::Result<()> {
     validate(&selection::bitmap(root)?, &[], options)
 }
+
+pub(in crate::commands::delete) fn validate_pre_prompt(
+    root: &Path,
+    lane_flag: bool,
+    update_main: bool,
+    hard: bool,
+) -> io::Result<()> {
+    let bitmap = selection::bitmap(root)?;
+    let lane = !bitmap["_bit_lane"].is_null();
+    if lane && !hard && !lane_flag && !update_main {
+        return Err(invalid(
+            "error: to delete components when on a lane, use either --lane or --update-main flag.\n--lane: delete the component from this lane only\n--update-main: delete the component from main after this lane is merged",
+        ));
+    }
+    if !lane && update_main {
+        return Err(invalid("--update-main is relevant only when on a lane"));
+    }
+    Ok(())
+}
+
+pub(in crate::commands::delete) fn can_prompt_user() -> bool {
+    use std::io::IsTerminal;
+    std::io::stdout().is_terminal()
+        && std::io::stdin().is_terminal()
+        && !["CI", "CLAUDECODE", "CLAUDE_CODE", "CURSOR_AGENT"]
+            .iter()
+            .any(|key| std::env::var_os(key).is_some())
+}

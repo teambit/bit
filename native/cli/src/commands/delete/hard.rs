@@ -18,9 +18,13 @@ use std::{
     sync::Arc,
 };
 
+const HARD_DELETE_GUARD_ERR: &str = "\"bit delete --hard\" permanently deletes components from the remote scope with no way to recover them, and may corrupt components that depend on them.\nit therefore requires an interactive confirmation by a human, but this session is non-interactive (no TTY, CI, or an AI agent).\nif you are an AI agent: do not attempt to work around this protection. instead, ask the user to run this command themselves in a terminal.";
+
 struct Options<'a> {
     pattern: &'a str,
+    silent: bool,
     force: bool,
+    update_main: bool,
     has_range: bool,
 }
 
@@ -40,13 +44,8 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let root = workspace::root(&cwd);
     let config_dir = global_config_dir();
     let global = bit_install::config::load_global_config(&config_dir)?;
-    if !feature_enabled(&global) {
-        return Ok(Outcome::Declined(
-            "hard-delete requires the published confirmation guard".into(),
-        ));
-    }
-    if options.has_range {
-        return emit_range_not_supported(&cwd, root.as_deref(), args);
+    if let Some(outcome) = preflight_hard_guard(&cwd, root.as_deref(), args, &options, &global)? {
+        return Ok(outcome);
     }
     let Some(context) = Context::prepare(root, global, &config_dir).ok() else {
         return Ok(Outcome::Declined("remote hard-delete connection preflight".into()));
@@ -66,16 +65,62 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     execute(args, &context, prepared, options.pattern.contains('*'))
 }
 
-fn emit_range_not_supported(
+fn preflight_hard_guard(
     cwd: &Path,
     root: Option<&Path>,
     args: &[OsString],
+    options: &Options<'_>,
+    global: &GlobalConfig,
+) -> io::Result<Option<Outcome>> {
+    if let Some(err) = preflight_workspace_hard_err(root, options.update_main) {
+        return emit_hard_error(cwd, root, args, &err.to_string()).map(Some);
+    }
+    let non_ci = env::var_os("CI").is_none_or(|val| val.is_empty());
+    if !feature_enabled(global) {
+        if !super::preparation::can_prompt_user() && non_ci {
+            return emit_hard_error(cwd, root, args, HARD_DELETE_GUARD_ERR).map(Some);
+        }
+        return Ok(Some(Outcome::Declined(
+            "hard-delete requires the published confirmation guard".into(),
+        )));
+    }
+    if !options.silent {
+        if !super::preparation::can_prompt_user() && non_ci {
+            return emit_hard_error(cwd, root, args, super::NON_INTERACTIVE_PROMPT_ERR).map(Some);
+        }
+        return Ok(Some(Outcome::Declined("interactive hard-delete confirmation prompt".into())));
+    }
+    if options.has_range {
+        return emit_hard_error(cwd, root, args, "--range is not supported with --hard flag")
+            .map(Some);
+    }
+    Ok(None)
+}
+
+fn preflight_workspace_hard_err(root: Option<&Path>, update_main: bool) -> Option<io::Error> {
+    let ws_root = root?;
+    if env::var_os("CI").is_some_and(|val| !val.is_empty())
+        || super::super::installation::Installer::needs_canonical(ws_root)
+    {
+        return None;
+    }
+    super::preparation::validate_pre_prompt(ws_root, false, update_main, true).err()
+}
+
+fn emit_hard_error(
+    cwd: &Path,
+    root: Option<&Path>,
+    args: &[OsString],
+    msg: &str,
 ) -> io::Result<Outcome> {
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-        return Ok(Outcome::Declined("CI delete --hard --range".into()));
+        return Ok(Outcome::Declined("CI delete --hard validation".into()));
     }
-    let err = io::Error::other("--range is not supported with --hard flag");
+    let err = io::Error::other(msg.to_owned());
     if let Some(ws_root) = root {
+        if super::super::installation::Installer::needs_canonical(ws_root) {
+            return Ok(Outcome::Declined("custom workspace provider hard-delete".into()));
+        }
         return workspace_command::execute_then(ws_root, args, "delete", |_| Err(err));
     }
     workspace_command::execute_failure_scope(cwd, args, "delete", false, "", err)
@@ -167,6 +212,7 @@ struct ParseState<'a> {
     hard: bool,
     silent: bool,
     force: bool,
+    update_main: bool,
     has_range: bool,
 }
 
@@ -174,11 +220,21 @@ fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut state = ParseState::default();
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
+        if arg == "--" {
+            let val = iter.next()?;
+            if iter.next().is_some() || state.pattern.is_some() || val.is_empty() {
+                return None;
+            }
+            state.pattern = Some(val);
+            break;
+        }
         apply_hard_arg(arg, &mut iter, &mut state)?;
     }
-    (state.hard && state.silent).then_some(Options {
-        pattern: state.pattern?,
+    state.hard.then_some(Options {
+        pattern: state.pattern.filter(|pat| !pat.is_empty())?,
+        silent: state.silent,
         force: state.force,
+        update_main: state.update_main,
         has_range: state.has_range,
     })
 }
@@ -189,13 +245,15 @@ fn apply_hard_arg<'a>(
     state: &mut ParseState<'a>,
 ) -> Option<()> {
     match arg {
-        "--no-color" => {}
+        "--no-color" | "--lane" | "--lane=true" | "--lane=false" => {}
         "--hard" | "--hard=true" => state.hard = true,
         "--hard=false" => state.hard = false,
         "-s" | "--silent" | "--silent=true" => state.silent = true,
         "--silent=false" => state.silent = false,
         "-f" | "--force" | "--force=true" => state.force = true,
         "--force=false" => state.force = false,
+        "--update-main" | "--update-main=true" => state.update_main = true,
+        "--update-main=false" => state.update_main = false,
         "-sf" | "-fs" => {
             state.silent = true;
             state.force = true;

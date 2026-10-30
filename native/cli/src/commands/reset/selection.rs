@@ -20,6 +20,26 @@ pub(super) fn complex(pattern: &str) -> bool {
     pattern.contains(['*', '?', '[', ']', '{', '}', '!', ',', '$', ' '])
 }
 
+pub(super) fn identity(root: &Path, pattern: &str) -> io::Result<(String, bool)> {
+    let bitmap = bitmap::read(root)?;
+    let matched: Vec<_> = bitmap.entries
+        .iter()
+        .filter(|entry| {
+            entry.identity == pattern
+                || entry.identity
+                    .split_once('/')
+                    .is_some_and(|(_, name)| name == pattern)
+        })
+        .collect();
+    if matched.len() != 1 {
+        return Err(io::Error::other("reset identity absent or ambiguous"));
+    }
+    if !matched[0].on_current_lane_including_removed(&[]) || matched[0].staged_deprecation {
+        return Err(io::Error::other("reset component unavailable on main"));
+    }
+    Ok((matched[0].identity.clone(), bitmap.lane.is_some()))
+}
+
 pub(super) fn identities(root: &Path, pattern: &str) -> io::Result<Vec<String>> {
     let bitmap = bitmap::read(root)?;
     let pool = bitmap.entries

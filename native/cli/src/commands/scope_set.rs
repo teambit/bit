@@ -99,13 +99,8 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
     let (&"set", rest) = tokens.split_first()? else {
         return None;
     };
-    if rest
-        .iter()
-        .any(|token| token.starts_with('-'))
-    {
-        return None;
-    }
-    let (scope_name, pattern) = match rest {
+    let positional = collect_non_flag_tokens(rest)?;
+    let (scope_name, pattern) = match positional.as_slice() {
         [scope] if !scope.is_empty() => ((*scope).to_owned(), None),
         [scope, pattern] if !scope.is_empty() && !pattern.is_empty() => {
             if pattern.contains(['$', ':', '@'])
@@ -119,6 +114,34 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
         _ => return None,
     };
     Some(Options { scope_name, pattern })
+}
+
+pub(super) fn collect_non_flag_tokens<'a>(rest: &[&'a str]) -> Option<Vec<&'a str>> {
+    let mut positional = Vec::new();
+    let mut iter = rest.iter().copied();
+    while let Some(token) = iter.next() {
+        if token == "--" {
+            return collect_trailing(&mut positional, iter).then_some(positional);
+        }
+        if token.starts_with('-') {
+            return None;
+        }
+        positional.push(token);
+    }
+    Some(positional)
+}
+
+fn collect_trailing<'a>(
+    positional: &mut Vec<&'a str>,
+    iter: impl Iterator<Item = &'a str>,
+) -> bool {
+    for trailing in iter {
+        if trailing.starts_with('-') || trailing.is_empty() {
+            return false;
+        }
+        positional.push(trailing);
+    }
+    true
 }
 
 fn prepare(root: &Path, options: &Options, chalk: Chalk) -> Result<Prepared, Failure> {

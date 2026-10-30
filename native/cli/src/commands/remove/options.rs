@@ -9,8 +9,21 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut pattern = None;
     let mut silent = false;
     let mut options = Options { pattern: "", keep: false, force: false, track: false };
-    for arg in args {
-        match *arg {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        match arg {
+            "--" => {
+                let val = iter.next()?;
+                if iter.next().is_some()
+                    || pattern.is_some()
+                    || val.is_empty()
+                    || val.starts_with('-')
+                {
+                    return None;
+                }
+                pattern = Some(val);
+                break;
+            }
             "--no-color" => {}
             "-s" | "--silent" | "--silent=true" => silent = true,
             "--silent=false" => silent = false,

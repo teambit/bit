@@ -83,6 +83,9 @@ fn parse_args(args: &[OsString]) -> Option<Option<String>> {
     let mut remote = None;
     let mut index = 0;
     while index < tokens.len() {
+        if tokens[index] == "--" {
+            return (index + 1 == tokens.len()).then_some(remote);
+        }
         apply_token(&tokens, &mut index, &mut remote)?;
         index += 1;
     }

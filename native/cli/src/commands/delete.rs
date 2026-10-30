@@ -14,6 +14,8 @@ use crate::{commands::Command, native::Outcome};
 use preparation::Prepared;
 use std::{env, ffi::OsString, io, path::Path};
 pub const COMMAND: Command = Command { name: "delete", aliases: &[], run };
+pub(super) const NON_INTERACTIVE_PROMPT_ERR: &str = "this command requires a confirmation, but this session is non-interactive (no TTY, CI, or an AI agent) so the confirmation prompt cannot be shown.\nre-run with --silent to skip the confirmation, or run the command in an interactive terminal";
+
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".into()));
@@ -27,7 +29,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native delete grammar".into()));
     };
-    let root = match workspace_command::workspace_or_fail(args, "delete")? {
+    let root = match resolve_delete_root(args, &options)? {
         Ok(root) => root,
         Err(outcome) => return Ok(outcome),
     };
@@ -42,6 +44,57 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     workspace_command::execute_then(&root, args, "delete", |output| {
         execute(&root, args, &options, &mut linker, output)
     })
+}
+
+fn resolve_delete_root(
+    args: &[OsString],
+    options: &options::Options<'_>,
+) -> io::Result<Result<std::path::PathBuf, Outcome>> {
+    let cwd = env::current_dir()?;
+    if let Some(root) = crate::workspace::root(&cwd) {
+        return resolve_workspace_delete(root, args, options);
+    }
+    if !options.silent {
+        if !preparation::can_prompt_user() && env::var_os("CI").is_none_or(|val| val.is_empty()) {
+            return workspace_command::execute_failure_scope(
+                &cwd,
+                args,
+                "delete",
+                false,
+                "",
+                io::Error::other(NON_INTERACTIVE_PROMPT_ERR),
+            )
+            .map(Err);
+        }
+        return Ok(Err(Outcome::Declined("interactive delete confirmation prompt".into())));
+    }
+    workspace_command::workspace_or_fail(args, "delete")
+}
+
+fn resolve_workspace_delete(
+    root: std::path::PathBuf,
+    args: &[OsString],
+    options: &options::Options<'_>,
+) -> io::Result<Result<std::path::PathBuf, Outcome>> {
+    if !super::installation::Installer::needs_canonical(&root)
+        && env::var_os("CI").is_none_or(|val| val.is_empty())
+    {
+        if let Err(err) =
+            preparation::validate_pre_prompt(&root, options.lane, options.update_main, false)
+        {
+            return workspace_command::execute_then(&root, args, "delete", |_| Err(err)).map(Err);
+        }
+        if !options.silent && !preparation::can_prompt_user() {
+            return workspace_command::execute_then(&root, args, "delete", |_| {
+                Err(io::Error::other(NON_INTERACTIVE_PROMPT_ERR))
+            })
+            .map(Err);
+        }
+    }
+    if !options.silent {
+        return Ok(Err(Outcome::Declined("interactive delete confirmation prompt".into())));
+    }
+    Ok(Ok(root))
 }
 fn execute(
     root: &Path,

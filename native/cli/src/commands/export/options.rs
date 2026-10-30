@@ -34,9 +34,23 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     };
     let mut args = args.iter().copied();
     while let Some(arg) = args.next() {
+        if arg == "--" {
+            for rest in args {
+                push_export_id(&mut options, rest)?;
+            }
+            break;
+        }
         apply_export_arg(&mut options, arg, &mut args)?;
     }
     valid_combination(&options).then_some(options)
+}
+
+fn push_export_id(options: &mut Options, item: &str) -> Option<()> {
+    if !(is_pattern(item) || valid_id(item)) || options.ids.len() >= 4096 {
+        return None;
+    }
+    options.ids.push(item.to_owned());
+    Some(())
 }
 
 fn apply_export_arg<'a>(
@@ -52,11 +66,7 @@ fn apply_export_arg<'a>(
     }
     match arg {
         "--resume" => set_resume_id(options, args.next()?),
-        item if (is_pattern(item) || valid_id(item)) && options.ids.len() < 4096 => {
-            options.ids.push(item.to_owned());
-            Some(())
-        }
-        _ => None,
+        item => push_export_id(options, item),
     }
 }
 

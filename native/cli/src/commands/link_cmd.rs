@@ -53,6 +53,13 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
+        if arg == "--" {
+            for item in iter {
+                (!item.is_empty() && !item.starts_with('-')).then_some(())?;
+                options.ids.push(item.to_owned());
+            }
+            break;
+        }
         apply_token(arg, &mut iter, &mut options)?;
     }
     Some(options)

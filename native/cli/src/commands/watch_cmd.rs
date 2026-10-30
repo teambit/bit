@@ -74,6 +74,9 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut idx = 0;
     while idx < args.len() {
+        if args[idx] == "--" {
+            return (idx + 1 == args.len()).then_some(options);
+        }
         apply_token(args, &mut idx, &mut options)?;
         idx += 1;
     }

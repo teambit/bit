@@ -153,8 +153,16 @@ fn exists_in_bitmap_or_index(bare: &str, bitmap: &Bitmap, index_rows: &[Value]) 
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                for item in iter {
+                    (!item.is_empty() && !item.starts_with('-')).then_some(())?;
+                    options.components.push(item.to_owned());
+                }
+                break;
+            }
             "--no-color" => {}
             "-c" | "--changed" | "--changed=true" => options.changed = true,
             "--changed=false" => options.changed = false,

@@ -2,6 +2,7 @@
 use bit_object_import::component_delete::Scope;
 pub(super) struct Options<'a> {
     pub pattern: &'a str,
+    pub silent: bool,
     pub lane: bool,
     pub update_main: bool,
     pub scope: Scope,
@@ -15,6 +16,14 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                let val = iter.next()?;
+                if iter.next().is_some() || pattern.is_some() || val.is_empty() {
+                    return None;
+                }
+                pattern = Some(val);
+                break;
+            }
             "--no-color" | "--hard=false" | "--force=false" | "-f" | "--force" | "--force=true" => {
             }
             "-s" | "--silent" | "--silent=true" | "-sf" | "-fs" => silent = true,
@@ -31,7 +40,13 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
             _ => apply_inline_or_pattern(arg, &mut modifier, &mut pattern)?,
         }
     }
-    silent.then_some(Options { pattern: pattern?, lane, update_main, scope: scope(modifier) })
+    Some(Options {
+        pattern: pattern.filter(|pat| !pat.is_empty())?,
+        silent,
+        lane,
+        update_main,
+        scope: scope(modifier),
+    })
 }
 fn apply_inline_or_pattern<'a>(
     arg: &'a str,

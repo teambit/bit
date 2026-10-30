@@ -12,23 +12,22 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("move arguments are not UTF-8".into()));
     };
-    let filtered: Vec<&str> = argv[1..]
-        .iter()
-        .copied()
-        .filter(|&arg| arg != "--no-color")
-        .collect();
-    let [from, to] = filtered.as_slice() else {
+    let Some((from, to)) = parse_move_args(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native move grammar".into()));
     };
-    if from.starts_with('-') || to.starts_with('-') {
-        return Ok(Outcome::Declined("outside native move grammar".into()));
-    }
     let cwd = env::current_dir()?;
     let root = match workspace_command::workspace_or_fail(args, "move")? {
         Ok(root) => root,
         Err(outcome) => return Ok(outcome),
     };
     run_workspace(&root, &cwd, args, from, to)
+}
+fn parse_move_args<'a>(args: &[&'a str]) -> Option<(&'a str, &'a str)> {
+    let positionals = super::scope_set::collect_non_flag_tokens(args)?;
+    let [from, to] = positionals.as_slice() else {
+        return None;
+    };
+    (!from.is_empty() && !to.is_empty()).then_some((*from, *to))
 }
 fn run_workspace(
     root: &std::path::Path,

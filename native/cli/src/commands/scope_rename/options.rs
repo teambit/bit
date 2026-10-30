@@ -13,7 +13,12 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     };
     let mut options = Options { owner, ..Default::default() };
     let mut names = Vec::new();
-    for arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        if arg == "--" {
+            consume_trailing_names(iter, &mut names)?;
+            break;
+        }
         apply_arg(arg, owner, &mut options, &mut names)?;
     }
     let [old, new] = names.as_slice() else { return None };
@@ -22,31 +27,51 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+fn consume_trailing_names<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    names: &mut Vec<&'a str>,
+) -> Option<()> {
+    for rest in iter {
+        (!rest.is_empty() && !rest.starts_with('-')).then_some(())?;
+        names.push(rest);
+    }
+    Some(())
+}
+
 fn apply_arg<'a>(
     arg: &'a str,
     owner: bool,
     options: &mut Options,
     names: &mut Vec<&'a str>,
 ) -> Option<()> {
+    if !arg.starts_with('-') && !arg.is_empty() {
+        names.push(arg);
+        return Some(());
+    }
     match arg {
-        "--refactor=false"
-        | "--preserve=false"
-        | "--deprecate=false"
-        | "--skip-dependency-installation=false" => {}
         "-r" | "--refactor" | "--refactor=true" => options.refactor = true,
-        "--preserve" | "--preserve=true" if !owner => options.preserve = true,
-        "--deprecate" | "--deprecate=true" if !owner => options.deprecate = true,
-        "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true"
-            if !owner =>
-        {
+        "--refactor=false" => options.refactor = false,
+        "--ast" | "--ast=true" | "--ast=false" if owner => {} // Published report deliberately does not forward this advertised flag.
+        other if !owner => apply_scope_rename_flag(other, options)?,
+        _ => return None,
+    }
+    Some(())
+}
+
+fn apply_scope_rename_flag(arg: &str, options: &mut Options) -> Option<()> {
+    match arg {
+        "--preserve" | "--preserve=true" => options.preserve = true,
+        "--preserve=false" => options.preserve = false,
+        "--deprecate" | "--deprecate=true" => options.deprecate = true,
+        "--deprecate=false" => options.deprecate = false,
+        "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
             options.skip_install = true;
         }
-        "-rx" | "-xr" if !owner => {
+        "--skip-dependency-installation=false" => options.skip_install = false,
+        "-rx" | "-xr" => {
             options.refactor = true;
             options.skip_install = true;
         }
-        "--ast" | "--ast=true" | "--ast=false" if owner => {} // Published report deliberately does not forward this advertised flag.
-        value if !value.starts_with('-') => names.push(value),
         _ => return None,
     }
     Some(())

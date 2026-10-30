@@ -85,13 +85,10 @@ fn parse_tokens(args: &[OsString]) -> Option<Vec<String>> {
     let (&"trust", rest) = tokens.split_first()? else {
         return None;
     };
-    let mut positional = Vec::new();
-    for &token in rest {
-        if token.starts_with('-') {
-            return None;
-        }
-        positional.push(token.to_owned());
-    }
+    let positional: Vec<String> = super::scope_set::collect_non_flag_tokens(rest)?
+        .into_iter()
+        .map(str::to_owned)
+        .collect();
     (positional.len() <= 2).then_some(positional)
 }
 

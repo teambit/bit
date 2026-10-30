@@ -147,9 +147,26 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut iter = args.iter().copied().peekable();
     while let Some(arg) = iter.next() {
+        if arg == "--" {
+            consume_trailing_build_pattern(iter, &mut options.pattern)?;
+            break;
+        }
         apply_token(arg, &mut iter, &mut options)?;
     }
     Some(options)
+}
+
+fn consume_trailing_build_pattern<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    pattern: &mut Option<String>,
+) -> Option<()> {
+    for val in iter {
+        if pattern.is_some() || val.is_empty() || val.starts_with('-') {
+            return None;
+        }
+        *pattern = Some(val.to_owned());
+    }
+    Some(())
 }
 
 fn apply_token<'a, Iter>(

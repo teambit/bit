@@ -165,6 +165,9 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options { show_all: false, aspect: None, json: false };
     let mut iter = args.iter().copied();
     while let Some(token) = iter.next() {
+        if token == "--" {
+            return iter.next().is_none().then_some(options);
+        }
         apply_templates_token(token, &mut iter, &mut options)?;
     }
     Some(options)

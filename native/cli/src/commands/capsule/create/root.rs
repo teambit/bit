@@ -1,13 +1,124 @@
 //! Capsule root path selection and base-directory validation.
 
 use super::{
-    super::{ScopeRoot, compute_capsules_root_dirs, object_hash_short, resolve_capsules_dir},
+    super::{
+        ScopeRoot, Subcommand, compute_capsules_root_dirs, object_hash_short, resolve_capsules_dir,
+    },
     CreateArgs,
 };
 use std::{
     io,
     path::{Component, Path, PathBuf},
 };
+
+pub(in crate::commands::capsule) fn parse_create_flags(rest: &[&str]) -> Option<Subcommand> {
+    let mut create = CreateArgs::default();
+    let mut args = rest.iter().copied();
+    while let Some(arg) = args.next() {
+        if arg == "--" {
+            consume_trailing_capsule_ids(args, &mut create.ids)?;
+            break;
+        }
+        apply_create_arg(arg, &mut args, &mut create)?;
+    }
+    Some(Subcommand::Create(create))
+}
+
+fn consume_trailing_capsule_ids<'a>(
+    args: impl Iterator<Item = &'a str>,
+    ids: &mut Vec<String>,
+) -> Option<()> {
+    for trailing in args {
+        (!trailing.is_empty() && !trailing.starts_with('-')).then_some(())?;
+        ids.push(trailing.to_owned());
+    }
+    Some(())
+}
+
+fn apply_create_arg<'a>(
+    arg: &'a str,
+    args: &mut impl Iterator<Item = &'a str>,
+    create: &mut CreateArgs,
+) -> Option<()> {
+    if apply_create_bool(arg, create) || apply_create_combined_short(arg, create) {
+        return Some(());
+    }
+    match arg {
+        "-i" | "--id" => create.name = Some(next_option_value(args)?.to_owned()),
+        "-b" | "--base-dir" => create.base_dir = Some(next_option_value(args)?.to_owned()),
+        "-r" | "--root-base-dir" => {
+            create.root_base_dir = Some(next_option_value(args)?.to_owned());
+        }
+        "-p" | "--package-manager" => {
+            let _ = next_option_value(args)?;
+        }
+        _ => apply_create_inline_or_id(arg, create)?,
+    }
+    Some(())
+}
+
+fn apply_create_bool(arg: &str, create: &mut CreateArgs) -> bool {
+    let (flag, val) = match arg.split_once('=') {
+        Some((flag, "true")) => (flag, true),
+        Some((flag, "false")) => (flag, false),
+        None => (arg, true),
+        _ => return false,
+    };
+    match flag {
+        "--install-packages" if !val => return true,
+        "-j" | "--json" if val || arg.starts_with("--") => create.json = val,
+        "-s" | "--seeders-only" if val || arg.starts_with("--") => create.seeders_only = val,
+        "-a" | "--always-new" if val || arg.starts_with("--") => create.always_new = val,
+        "--use-hash" => create.use_hash = val,
+        _ => return false,
+    }
+    true
+}
+
+fn apply_create_inline_or_id(arg: &str, create: &mut CreateArgs) -> Option<()> {
+    if let Some((key, val)) = arg.split_once('=') {
+        if val.is_empty() || val.starts_with('-') {
+            return None;
+        }
+        match key {
+            "--id" | "-i" => create.name = Some(val.to_owned()),
+            "--base-dir" | "-b" => create.base_dir = Some(val.to_owned()),
+            "--root-base-dir" | "-r" => create.root_base_dir = Some(val.to_owned()),
+            "--package-manager" | "-p" => {}
+            _ => return None,
+        }
+    } else if !arg.starts_with('-') && !arg.is_empty() {
+        create.ids.push(arg.to_owned());
+    } else {
+        return None;
+    }
+    Some(())
+}
+
+fn apply_create_combined_short(arg: &str, create: &mut CreateArgs) -> bool {
+    if !arg.starts_with('-')
+        || arg.starts_with("--")
+        || arg.len() <= 2
+        || !arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'j' | b's' | b'a'))
+    {
+        return false;
+    }
+    for byte in arg[1..].bytes() {
+        match byte {
+            b'j' => create.json = true,
+            b's' => create.seeders_only = true,
+            _ => create.always_new = true,
+        }
+    }
+    true
+}
+
+fn next_option_value<'a>(args: &mut impl Iterator<Item = &'a str>) -> Option<&'a str> {
+    let value = args.next()?;
+    (!value.is_empty() && !value.starts_with('-')).then_some(value)
+}
 
 pub(super) fn resolve_create_root(
     cwd: &Path,

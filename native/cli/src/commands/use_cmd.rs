@@ -51,21 +51,23 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 
 fn parse_target(args: &[OsString]) -> Option<String> {
     let mut target = None;
-    for arg in args.iter().skip(1) {
+    let mut iter = args.iter().skip(1);
+    while let Some(arg) = iter.next() {
         let str_arg = arg.to_str()?;
-        if str_arg == "--no-color" {
-            continue;
+        if str_arg == "--" {
+            set_unique_target(&mut target, iter.next()?.to_str()?)?;
+            return iter.next().is_none().then_some(target)?;
         }
-        if str_arg.starts_with('-') {
-            return None;
-        }
-        if target.is_none() {
-            target = Some(str_arg.to_owned());
-        } else {
-            return None;
+        if str_arg != "--no-color" {
+            set_unique_target(&mut target, str_arg)?;
         }
     }
     target
+}
+
+fn set_unique_target(target: &mut Option<String>, val: &str) -> Option<()> {
+    (!val.is_empty() && !val.starts_with('-') && target.replace(val.to_owned()).is_none())
+        .then_some(())
 }
 
 fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {

@@ -174,8 +174,15 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
 fn parse_list_flags(rest: &[&str]) -> Option<Subcommand> {
     let mut json = false;
     let mut with_stats = false;
-    for &arg in rest {
+    let mut iter = rest.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                return iter
+                    .next()
+                    .is_none()
+                    .then_some(Subcommand::List { json, with_stats });
+            }
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             "--with-stats" | "--with-stats=true" => with_stats = true,
@@ -189,8 +196,15 @@ fn parse_list_flags(rest: &[&str]) -> Option<Subcommand> {
 fn parse_delete_flags(rest: &[&str]) -> Option<Subcommand> {
     let mut all = false;
     let mut scope_aspects = false;
-    for &arg in rest {
+    let mut iter = rest.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                return iter
+                    .next()
+                    .is_none()
+                    .then_some(Subcommand::Delete { all, scope_aspects });
+            }
             "-a" | "--all" | "--all=true" => all = true,
             "--all=false" => all = false,
             "--scope-aspects" | "--scope-aspects=true" => scope_aspects = true,

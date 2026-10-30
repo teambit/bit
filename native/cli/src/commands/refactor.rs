@@ -71,21 +71,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn parse_options(args: &[OsString]) -> Option<Action> {
-    let tokens = args
+    let raw: Vec<&str> = args
         .iter()
         .skip(1)
         .map(|arg| arg.to_str())
-        .collect::<Option<Vec<_>>>()?;
-    let tokens: Vec<&str> = tokens
+        .collect::<Option<Vec<_>>>()?
         .into_iter()
         .filter(|token| *token != "--no-color")
         .collect();
-    if tokens
-        .iter()
-        .any(|token| token.starts_with('-'))
-    {
-        return None;
-    }
+    let tokens = super::scope_set::collect_non_flag_tokens(&raw)?;
     match tokens.as_slice() {
         ["dependency-name", old_id, new_id] if !old_id.is_empty() && !new_id.is_empty() => {
             Some(Action::DependencyName {
