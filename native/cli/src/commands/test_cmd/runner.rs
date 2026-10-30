@@ -52,7 +52,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         workspace_command::execute_then_scope(root, args, "test", work)
     }
 }
-fn warnings(output: &bit_install::output::Output, options: &Options) {
+pub(super) fn warnings(output: &bit_install::output::Output, options: &Options) {
     if options.json {
         return;
     }

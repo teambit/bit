@@ -58,7 +58,8 @@ fn handles_empty_workspace_mixed_patterns_and_unowned_files() {
         "unable to mix test-file paths with component patterns. the following are not files: comp1"
     ),);
 
-    let unowned = Options { user_pattern: vec!["orphan.spec.ts".to_owned()], ..base_options };
+    let unowned =
+        Options { user_pattern: vec!["orphan.spec.ts".to_owned()], ..base_options.clone() };
     let Some(FastOutcome::Error(err)) =
         classify_workspace(dir.path(), dir.path(), &unowned, Chalk::new(false))
             .expect("classify unowned")
@@ -68,4 +69,13 @@ fn handles_empty_workspace_mixed_patterns_and_unowned_files() {
     assert!(err.contains(
         r#"the file "orphan.spec.ts" does not belong to any component in this workspace, unable to test it"#
     ));
+
+    let unmatched_glob = Options { user_pattern: vec!["ui/*".to_owned()], ..base_options };
+    let Some(FastOutcome::Error(err)) =
+        classify_workspace(dir.path(), dir.path(), &unmatched_glob, Chalk::new(false))
+            .expect("classify unmatched glob")
+    else {
+        panic!("expected unmatched glob error");
+    };
+    assert_eq!(err, r#"unable to find any component matching the "ui/*" pattern"#);
 }

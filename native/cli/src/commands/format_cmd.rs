@@ -4,7 +4,12 @@ mod runner;
 #[cfg(test)]
 mod tests;
 
-use super::{Command, workspace_command};
+use super::{
+    Command,
+    color::Chalk,
+    lint_cmd::{emit_pattern_error, validate_lint_pattern},
+    workspace_command,
+};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
@@ -28,6 +33,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside native format grammar".into()));
     };
     if let Some(root) = workspace::root(&env::current_dir()?) {
+        if env::var_os("CI").is_none_or(|val| val.is_empty())
+            && let Some(err) =
+                validate_lint_pattern(&root, options.pattern.as_deref(), Chalk::detect(args))
+        {
+            return emit_pattern_error(&root, args, "format", options.json, err);
+        }
         return runner::run(&root, args, &options);
     }
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {

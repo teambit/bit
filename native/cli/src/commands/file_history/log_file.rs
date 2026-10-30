@@ -1,6 +1,6 @@
 //! The source CLI's `getFileLog` selection and `log-file` report.
 
-use super::read;
+use super::{Target, classify_target, read};
 use crate::{
     commands::{
         Command,
@@ -11,7 +11,7 @@ use crate::{
         status::js::{decline, text},
         workspace_command::{self, results::Report},
     },
-    discovery::{self, Target},
+    discovery::{self, Target as CliTarget},
     host::Host,
     native::Outcome,
     workspace,
@@ -26,26 +26,82 @@ use std::{
 
 pub(super) const COMMAND: Command = Command { name: "log-file", aliases: &[], run };
 
+fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
+    let filtered = args
+        .iter()
+        .copied()
+        .filter(|arg| *arg != "--no-color")
+        .collect::<Vec<_>>();
+    match filtered.as_slice() {
+        [path] if !path.starts_with('-') && !path.is_empty() => Some((*path, false)),
+        [path, "-o" | "--one-line"] | ["-o" | "--one-line", path]
+            if !path.starts_with('-') && !path.is_empty() =>
+        {
+            Some((*path, true))
+        }
+        _ => None,
+    }
+}
+
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("log-file arguments are not UTF-8".into()));
     };
-    let (path, one_line) = match argv.as_slice() {
-        [_, path] => (*path, false),
-        [_, path, "-o" | "--one-line"] => (*path, true),
-        _ => return Ok(Outcome::Declined("outside native log-file grammar".into())),
+    let Some((path, one_line)) = parse_args(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside native log-file grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            return Ok(Outcome::Declined("not inside a workspace".into()));
+        }
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            "log-file",
+            false,
+            "",
+            io::Error::other(log::OUTSIDE_WORKSPACE_ERR),
+        );
     };
-    if Installer::needs_canonical(&root) {
+    run_in_workspace(&root, args, path, one_line)
+}
+
+fn run_in_workspace(
+    root: &Path,
+    args: &[OsString],
+    path: &str,
+    one_line: bool,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_none_or(|val| val.is_empty()) {
+        match classify_target(root, path) {
+            Ok(Target::Unowned) => {
+                let err = format!("unable to find component for file {path}");
+                return workspace_command::execute_then(root, args, "log-file", move |_| {
+                    Err(io::Error::other(err))
+                });
+            }
+            Ok(Target::Unversioned) => {
+                let report = Report { data: String::new(), code: 0, details: None };
+                return workspace_command::execute_with(
+                    root,
+                    args,
+                    "log-file",
+                    &report,
+                    |_| Ok(()),
+                );
+            }
+            _ => {}
+        }
+    }
+    if Installer::needs_canonical(root) {
         return Ok(Outcome::Declined("log-file custom component loader".into()));
     }
-    let (identity, versions, report) = match prepare(&root, path, one_line, args) {
+    let (identity, versions, report) = match prepare(root, path, one_line, args) {
         Ok(result) => result,
         Err(error) => return Ok(Outcome::Declined(format!("log-file: {error}"))),
     };
-    published_loader(&root, args, path, &identity, &versions, &report)
+    published_loader(root, args, path, &identity, &versions, &report)
 }
 
 fn prepare(
@@ -68,7 +124,7 @@ fn published_loader(
     versions: &[String],
     report: &Report,
 ) -> io::Result<Outcome> {
-    let Target::Entry(cli) = discovery::find()? else {
+    let CliTarget::Entry(cli) = discovery::find()? else {
         return Ok(Outcome::Declined("log-file requires an installed published loader".into()));
     };
     let host = Host::new(cli, root.to_owned(), Chalk::detect(args).enabled());

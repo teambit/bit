@@ -1,13 +1,53 @@
-use super::{Chalk, Options, normalize, ordered_parents, paint, parse, render};
+use super::{
+    Chalk, LocalTarget, Options, bitmap, normalize, ordered_parents, paint, parse, render,
+    resolve_local_target,
+};
 use serde_json::json;
+use std::fs;
+use tempfile::tempdir;
 
 #[test]
 fn parses_local_and_remote_history_views() {
-    let options = parse(&["alpha", "--one-line", "--full-hash"]).unwrap();
+    let options = parse(&["alpha", "--one-line", "--full-hash", "--no-color"]).unwrap();
     assert_eq!(options.id, Some("alpha"));
     assert!(options.one_line && options.full_hash);
     assert!(parse(&["acme.ui/alpha", "--remote"]).unwrap().remote);
     assert!(parse(&["alpha", "beta"]).is_none());
+}
+
+#[test]
+fn resolves_local_target_from_root_dir_index_or_user_error() {
+    let dir = tempdir().unwrap();
+    fs::write(
+        dir.path().join(".bitmap"),
+        r#"{"comp1":{"name":"comp1","scope":"","version":"","mainFile":"index.ts","rootDir":"packages/comp1","defaultScope":"my-scope"}}"#,
+    )
+    .unwrap();
+    fs::create_dir_all(dir.path().join(".bit")).unwrap();
+    fs::write(
+        dir.path().join(".bit/index.json"),
+        r#"{"components":[{"id":{"scope":"my-scope","name":"scoped-only"},"isSymlink":false,"hash":"aaa"}]}"#,
+    )
+    .unwrap();
+    let bm = bitmap::read(dir.path()).unwrap();
+    assert_eq!(
+        resolve_local_target(dir.path(), &bm, "packages/comp1", Chalk::new(false)).unwrap(),
+        LocalTarget::NewComponent,
+    );
+    assert_eq!(
+        resolve_local_target(dir.path(), &bm, "scoped-only", Chalk::new(false)).unwrap(),
+        LocalTarget::Versioned { identity: "my-scope/scoped-only".into(), deprecation: None },
+    );
+    assert_eq!(
+        resolve_local_target(dir.path(), &bm, "missing", Chalk::new(false)).unwrap(),
+        LocalTarget::UserError(
+            r#"error: component ID "missing" is invalid, please use the following format: [scope]/<name>"#.into()
+        ),
+    );
+    assert_eq!(
+        resolve_local_target(dir.path(), &bm, "my-scope/missing", Chalk::new(false)).unwrap(),
+        LocalTarget::UserError(r#"error: component "my-scope/missing" was not found"#.into()),
+    );
 }
 
 #[test]

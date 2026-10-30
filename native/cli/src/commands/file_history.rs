@@ -17,8 +17,17 @@ use std::{
     path::{Component, Path},
 };
 
+#[derive(Debug, PartialEq, Eq)]
+pub(super) enum Target {
+    Versioned { identity: String, file: String, lane: Option<Value> },
+    Unversioned,
+    Unowned,
+}
+
 pub(super) fn read(root: &Path, input: &str) -> io::Result<(String, String, Vec<Value>)> {
-    let (identity, file, lane) = target(root, input)?;
+    let Target::Versioned { identity, file, lane } = classify_target(root, input)? else {
+        return Err(decline("file history component absent"));
+    };
     let mut engine = Engine::new()?;
     let result: Value = engine.request(&json!({
         "kind":"componentFileHistory","root":root,
@@ -35,7 +44,10 @@ pub(super) fn read(root: &Path, input: &str) -> io::Result<(String, String, Vec<
     Ok((identity, file, rows))
 }
 
-fn target(root: &Path, input: &str) -> io::Result<(String, String, Option<Value>)> {
+pub(super) fn classify_target(root: &Path, input: &str) -> io::Result<Target> {
+    if root.join("workspace.jsonc").is_file() {
+        super::status::autosync::run_if_enabled(root)?;
+    }
     let normalized = if cfg!(windows) { input.replace('\\', "/") } else { input.to_string() };
     let requested = normalized.strip_prefix("./").unwrap_or(&normalized);
     let path = Path::new(requested);
@@ -48,7 +60,7 @@ fn target(root: &Path, input: &str) -> io::Result<(String, String, Option<Value>
         return Err(decline("file history path"));
     }
     let bitmap = bitmap::read(root)?;
-    let target = bitmap.entries
+    let Some((entry, relative)) = bitmap.entries
         .iter()
         .filter_map(|entry| {
             let dir = entry.root_dir.trim_start_matches("./").trim_end_matches('/');
@@ -59,6 +71,15 @@ fn target(root: &Path, input: &str) -> io::Result<(String, String, Option<Value>
                 .map(|relative| (entry, relative))
         })
         .max_by_key(|(entry, _)| entry.root_dir.len())
-        .ok_or_else(|| decline("file history component absent"))?;
-    Ok((target.0.identity.clone(), target.1.to_string(), bitmap.lane))
+    else {
+        return Ok(Target::Unowned);
+    };
+    if entry.version.is_none() {
+        return Ok(Target::Unversioned);
+    }
+    Ok(Target::Versioned {
+        identity: entry.identity.clone(),
+        file: relative.to_string(),
+        lane: bitmap.lane,
+    })
 }

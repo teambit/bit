@@ -1,6 +1,6 @@
 //! Source-file line attribution from validated local Version history.
 
-use super::read;
+use super::{Target, classify_target, read};
 use crate::{
     commands::{
         Command,
@@ -17,22 +17,63 @@ use std::{collections::HashMap, env, ffi::OsString, io, path::Path};
 
 pub(super) const COMMAND: Command = Command { name: "blame", aliases: &[], run };
 
+pub(super) fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
+    let filtered = args
+        .iter()
+        .copied()
+        .filter(|arg| *arg != "--no-color")
+        .collect::<Vec<_>>();
+    match filtered.as_slice() {
+        [path] if !path.starts_with('-') && !path.is_empty() => Some((*path, false)),
+        [path, "-m" | "--include-message"] | ["-m" | "--include-message", path]
+            if !path.starts_with('-') && !path.is_empty() =>
+        {
+            Some((*path, true))
+        }
+        _ => None,
+    }
+}
+
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("blame arguments are not UTF-8".into()));
     };
-    let (path, include_message) = match argv.as_slice() {
-        [_, path] => (*path, false),
-        [_, path, "-m" | "--include-message"] => (*path, true),
-        _ => return Ok(Outcome::Declined("outside native blame grammar".into())),
+    let Some((path, include_message)) = parse_args(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside native blame grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            return Ok(Outcome::Declined("not inside a workspace".into()));
+        }
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            "blame",
+            false,
+            "",
+            io::Error::other(log::OUTSIDE_WORKSPACE_ERR),
+        );
     };
-    let data = match read(&root, path)
+    run_in_workspace(&root, args, path, include_message)
+}
+
+fn run_in_workspace(
+    root: &Path,
+    args: &[OsString],
+    path: &str,
+    include_message: bool,
+) -> io::Result<Outcome> {
+    let chalk = Chalk::detect(args);
+    if env::var_os("CI").is_none_or(|val| val.is_empty())
+        && matches!(classify_target(root, path), Ok(Target::Unowned | Target::Unversioned))
+    {
+        let report = Report { data: chalk.yellow("no results found"), code: 0, details: None };
+        return workspace_command::execute_with(root, args, "blame", &report, |_| Ok(()));
+    }
+    let data = match read(root, path)
         .and_then(|(_, file, rows)| {
-            let chalk = Chalk::detect(args);
-            if published_file_matches(&root, path, &file)? {
+            if published_file_matches(root, path, &file)? {
                 report(&rows, include_message, chalk)
             } else {
                 Ok(chalk.yellow("no results found"))
@@ -42,7 +83,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Err(error) => return Ok(Outcome::Declined(format!("blame: {error}"))),
     };
     let report = Report { data, code: 0, details: None };
-    workspace_command::execute_with(&root, args, "blame", &report, |_| Ok(()))
+    workspace_command::execute_with(root, args, "blame", &report, |_| Ok(()))
 }
 
 fn published_file_matches(root: &Path, input: &str, file: &str) -> io::Result<bool> {

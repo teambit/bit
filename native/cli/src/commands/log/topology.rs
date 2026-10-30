@@ -1,8 +1,146 @@
-//! The ordering of `cleargraph.toposort()` for component Version parents.
+//! The ordering of `cleargraph.toposort()` for component Version parents
+//! and local workspace/scope component resolution for `bit log`.
 
-use super::{array, decline, text};
+use super::{Chalk, array, bitmap, decline, text};
+use crate::{
+    commands::scope_set::{
+        Failure,
+        selection::{validate_component_name, validate_scope_name},
+    },
+    workspace,
+};
 use serde_json::Value;
-use std::{collections::HashMap, io};
+use std::{collections::HashMap, env, fs, io, path::Path};
+
+#[derive(Debug, PartialEq, Eq)]
+pub(super) enum LocalTarget {
+    NewComponent,
+    Versioned { identity: String, deprecation: Option<Value> },
+    UserError(String),
+}
+
+pub(super) fn resolve_local_target(
+    root: &Path,
+    bitmap: &bitmap::Bitmap,
+    raw_id: &str,
+    chalk: Chalk,
+) -> io::Result<LocalTarget> {
+    let id = raw_id.split_once('@').map_or(raw_id, |(name, _)| name);
+    if id.is_empty() {
+        return Err(decline("empty log id"));
+    }
+    if let Some(target) = resolve_from_bitmap(bitmap, id)? {
+        return Ok(target);
+    }
+    if let Some(identity) = resolve_from_scope_index(root, id)? {
+        return Ok(LocalTarget::Versioned { identity, deprecation: None });
+    }
+    diagnose_missing_local_target(root, raw_id, id, chalk)
+}
+
+fn resolve_from_bitmap(bitmap: &bitmap::Bitmap, id: &str) -> io::Result<Option<LocalTarget>> {
+    let norm_dir = id.trim_start_matches("./").trim_end_matches('/');
+    let dir_matches = bitmap.entries
+        .iter()
+        .filter(|entry| !norm_dir.is_empty() && entry.root_dir.trim_end_matches('/') == norm_dir)
+        .collect::<Vec<_>>();
+    let matches = if dir_matches.is_empty() {
+        bitmap.entries
+            .iter()
+            .filter(|entry| {
+                entry.identity == id
+                    || entry.identity
+                        .split_once('/')
+                        .is_some_and(|(_, name)| name == id)
+            })
+            .collect::<Vec<_>>()
+    } else {
+        dir_matches
+    };
+    match matches.as_slice() {
+        [] => Ok(None),
+        [target] if target.version.is_none() => Ok(Some(LocalTarget::NewComponent)),
+        [target] => Ok(Some(LocalTarget::Versioned {
+            identity: target.identity.clone(),
+            deprecation: target.deprecation.clone(),
+        })),
+        _ => Err(decline("log identity ambiguous")),
+    }
+}
+
+fn resolve_from_scope_index(root: &Path, id: &str) -> io::Result<Option<String>> {
+    let index_path = workspace::scope_path(root).join("index.json");
+    let Ok(bytes) = fs::read(index_path) else {
+        return Ok(None);
+    };
+    let index: Value = serde_json::from_slice(&bytes).map_err(|_| decline("log index json"))?;
+    let Some(rows) = index["components"].as_array().or_else(|| index.as_array()) else {
+        return Ok(None);
+    };
+    let matches = rows
+        .iter()
+        .filter(|row| {
+            row["isSymlink"] != true
+                && (row["id"]["name"].as_str() == Some(id)
+                    || match (row["id"]["scope"].as_str(), row["id"]["name"].as_str()) {
+                        (Some(scope), Some(name)) if !scope.is_empty() => {
+                            format!("{scope}/{name}") == id
+                        }
+                        _ => false,
+                    })
+        })
+        .collect::<Vec<_>>();
+    match matches.as_slice() {
+        [] => Ok(None),
+        [row] => {
+            let name = row["id"]["name"].as_str().ok_or_else(|| decline("log index name"))?;
+            Ok(Some(
+                match row["id"]["scope"]
+                    .as_str()
+                    .filter(|scope| !scope.is_empty())
+                {
+                    Some(scope) => format!("{scope}/{name}"),
+                    None => name.to_owned(),
+                },
+            ))
+        }
+        _ => Err(decline("log index identity ambiguous")),
+    }
+}
+
+fn diagnose_missing_local_target(
+    root: &Path,
+    raw_id: &str,
+    id: &str,
+    chalk: Chalk,
+) -> io::Result<LocalTarget> {
+    let scope_dir = workspace::scope_path(root);
+    if raw_id.starts_with('@')
+        || env::var_os("CI").is_some_and(|val| !val.is_empty())
+        || (!scope_dir.join("index.json").is_file() && scope_dir.join("objects").is_dir())
+    {
+        return Err(decline("log missing target delegated"));
+    }
+    if let Some((scope, name)) = id.split_once('/') {
+        if let Err(Failure::User(err)) = validate_scope_name(scope) {
+            return Ok(LocalTarget::UserError(err));
+        }
+        if let Err(Failure::User(err)) = validate_component_name(name) {
+            return Ok(LocalTarget::UserError(err));
+        }
+        let display_id = raw_id.strip_suffix("@latest").unwrap_or(raw_id);
+        return Ok(LocalTarget::UserError(format!(
+            r#"error: component "{}" was not found"#,
+            chalk.bold(display_id),
+        )));
+    }
+    if !id.contains('.') {
+        return Ok(LocalTarget::UserError(format!(
+            r#"error: component ID "{raw_id}" is invalid, please use the following format: [scope]/<name>"#,
+        )));
+    }
+    Err(decline("log unknown component"))
+}
 
 pub(super) fn ordered_parents(logs: &[Value]) -> io::Result<Vec<&Value>> {
     let edges = graph_edges(logs)?;

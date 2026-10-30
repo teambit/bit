@@ -4,9 +4,17 @@ mod runner;
 #[cfg(test)]
 mod tests;
 
-use super::{Command, workspace_command};
+use super::{
+    Command,
+    color::Chalk,
+    remote_action::startup,
+    scope_set::{Failure, selection},
+    workspace_command,
+};
 use crate::{native::Outcome, workspace};
-use std::{env, ffi::OsString, io, path::Path};
+use bit_install::workspace::Bitmap;
+use bit_object_import::parse_jsonc;
+use std::{env, ffi::OsString, fs, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "lint", aliases: &[], run };
 
@@ -30,6 +38,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     let cwd = env::current_dir()?;
     if let Some(root) = workspace::root(&cwd) {
+        if env::var_os("CI").is_none_or(|val| val.is_empty())
+            && let Some(err) =
+                validate_lint_pattern(&root, options.pattern.as_deref(), Chalk::detect(args))
+        {
+            return emit_pattern_error(&root, args, "lint", options.json, err);
+        }
         return runner::run(&root, args, &options);
     }
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
@@ -46,6 +60,40 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         );
     }
     Ok(Outcome::Declined("lint execution delegated".into()))
+}
+
+pub(super) fn emit_pattern_error(
+    root: &Path,
+    args: &[OsString],
+    cmd: &'static str,
+    json: bool,
+    err: String,
+) -> io::Result<Outcome> {
+    if json {
+        workspace_command::execute_json(root, args, cmd, move |_| Err(io::Error::other(err)))
+    } else {
+        workspace_command::execute_then(root, args, cmd, move |_| Err(io::Error::other(err)))
+    }
+}
+
+pub(super) fn validate_lint_pattern(
+    root: &Path,
+    pattern: Option<&str>,
+    chalk: Chalk,
+) -> Option<String> {
+    let pat = pattern?;
+    let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
+    if !startup::service_supported(root, &ws_config).ok()?
+        || ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true
+    {
+        return None;
+    }
+    let default_scope = ws_config["teambit.workspace/workspace"]["defaultScope"].as_str();
+    let bitmap = Bitmap::load(root, default_scope).ok()?;
+    match selection::resolve_pattern_entries(root, &bitmap, pat, chalk) {
+        Err(Failure::User(msg)) => Some(msg),
+        _ => None,
+    }
 }
 
 pub(super) fn is_missing_host(cwd: &Path) -> bool {

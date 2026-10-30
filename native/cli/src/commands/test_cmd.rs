@@ -11,11 +11,14 @@ use super::{
     Command,
     color::Chalk,
     inventory,
+    remote_action::startup,
+    scope_set::{Failure, selection},
     workspace_command::{self, results::Report},
 };
 use crate::{native::Outcome, workspace};
 use bit_install::workspace::Bitmap;
-use std::{env, ffi::OsString, io, path::Path};
+use bit_object_import::parse_jsonc;
+use std::{env, ffi::OsString, fs, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "test", aliases: &["at"], run };
 
@@ -54,20 +57,35 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(None) => return runner::run(&root, args, &options),
         Err(_) => return Ok(Outcome::Declined("test requires tester aspect runtime".into())),
     };
-    let is_json = options.json;
-    workspace_command::execute_without_loader(&root, args, "test", move |_| {
-        fast_outcome_to_report(fast, is_json)
-    })
+    emit_fast_outcome(&root, args, options, fast)
 }
 
-fn fast_outcome_to_report(fast: FastOutcome, is_json: bool) -> io::Result<Report> {
+fn emit_fast_outcome(
+    root: &Path,
+    args: &[OsString],
+    options: Options,
+    fast: FastOutcome,
+) -> io::Result<Outcome> {
     match fast {
-        FastOutcome::Empty { stdout } => Ok(Report {
-            data: if is_json { "[]".to_owned() } else { stdout },
-            code: 0,
-            details: None,
-        }),
-        FastOutcome::Error(err) => Err(io::Error::other(err)),
+        FastOutcome::Empty { stdout } => {
+            let is_json = options.json;
+            workspace_command::execute_without_loader(root, args, "test", move |_| {
+                Ok(Report {
+                    data: if is_json { "[]".to_owned() } else { stdout },
+                    code: 0,
+                    details: None,
+                })
+            })
+        }
+        FastOutcome::Error(err) if options.json => {
+            workspace_command::execute_json(root, args, "test", move |_| Err(io::Error::other(err)))
+        }
+        FastOutcome::Error(err) => {
+            workspace_command::execute_then(root, args, "test", move |output| {
+                runner::warnings(output, &options);
+                Err(io::Error::other(err))
+            })
+        }
     }
 }
 
@@ -85,10 +103,50 @@ pub(super) fn classify_workspace(
     if let Some(err) = validate_user_patterns(cwd, root, &options.user_pattern, &active_entries) {
         return Ok(Some(FastOutcome::Error(err)));
     }
+    if env::var_os("CI").is_none_or(|val| val.is_empty())
+        && options.user_pattern
+            .iter()
+            .all(|entry| !cwd.join(entry).is_file())
+        && let Some(err) = validate_test_pattern(root, options, chalk)
+    {
+        return Ok(Some(FastOutcome::Error(err)));
+    }
     if active_entries.is_empty() {
         return Ok(Some(FastOutcome::Empty { stdout: empty_test_stdout(options, chalk) }));
     }
     Ok(None)
+}
+
+fn validate_test_pattern(root: &Path, options: &Options, chalk: Chalk) -> Option<String> {
+    let pat = effective_pattern(options)?;
+    let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
+    if !startup::service_supported(root, &ws_config).ok()?
+        || ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true
+    {
+        return None;
+    }
+    let default_scope = ws_config["teambit.workspace/workspace"]["defaultScope"].as_str();
+    let bitmap = Bitmap::load(root, default_scope).ok()?;
+    match selection::resolve_pattern_entries(root, &bitmap, &pat, chalk) {
+        Err(Failure::User(msg)) => Some(msg),
+        _ => None,
+    }
+}
+
+fn effective_pattern(options: &Options) -> Option<String> {
+    let scope = (!options.json).then_some(options.scope.as_deref()).flatten();
+    if options.user_pattern.is_empty() && scope.is_none() {
+        return None;
+    }
+    let pat = if options.user_pattern.is_empty() {
+        "**".to_owned()
+    } else {
+        options.user_pattern.join(", ")
+    };
+    Some(match scope {
+        Some(scope_name) => format!("{scope_name}/{pat}"),
+        None => pat,
+    })
 }
 
 fn validate_user_patterns(
@@ -188,8 +246,8 @@ fn apply_test_token<'a>(
     options: &mut Options,
 ) -> Option<()> {
     match token {
-        "--watch" | "-w" | "--debug" | "-d" | "--unmodified" | "-u" | "--coverage"
-        | "--update-snapshot" | "--verbose" | "--summary" => {}
+        "--no-color" | "--watch" | "-w" | "--debug" | "-d" | "--unmodified" | "-u"
+        | "--coverage" | "--update-snapshot" | "--verbose" | "--summary" => {}
         "--all" | "-a" => options.all = true,
         "--json" | "-j" => options.json = true,
         "--junit" | "--env" | "-e" => {

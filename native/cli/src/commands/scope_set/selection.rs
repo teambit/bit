@@ -88,10 +88,9 @@ fn resolve_literal_entry<'a>(
 
 fn is_known_scope_or_valid_scoped_id(root: &Path, pattern: &str) -> Result<bool, Failure> {
     if let Some((scope, name)) = pattern.split_once('/') {
-        if valid_scope_str(scope) && valid_id_chunk(name) {
-            return Ok(true);
-        }
-        return Err(Failure::Declined("invalid scoped component id".to_owned()));
+        validate_scope_name(scope)?;
+        validate_component_name(name)?;
+        return Ok(true);
     }
     Ok(!pattern.contains('.') && exists_in_scope_index(root, pattern))
 }
@@ -105,6 +104,7 @@ fn exists_in_scope_index(root: &Path, name: &str) -> bool {
     };
     index["components"]
         .as_array()
+        .or_else(|| index.as_array())
         .is_some_and(|components| {
             components
                 .iter()
@@ -112,7 +112,7 @@ fn exists_in_scope_index(root: &Path, name: &str) -> bool {
         })
 }
 
-fn valid_id_chunk(chunk: &str) -> bool {
+pub(in crate::commands) fn valid_id_chunk(chunk: &str) -> bool {
     !chunk.is_empty()
         && !chunk.contains("//")
         && chunk
@@ -120,6 +120,15 @@ fn valid_id_chunk(chunk: &str) -> bool {
             .all(|ch| {
                 ch.is_ascii_lowercase() || ch.is_ascii_digit() || matches!(ch, '-' | '_' | '/')
             })
+}
+
+pub(in crate::commands) fn validate_component_name(name: &str) -> Result<(), Failure> {
+    if valid_id_chunk(name) {
+        return Ok(());
+    }
+    Err(Failure::User(format!(
+        r#"error: "{name}" is invalid, component names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "/"]"#,
+    )))
 }
 
 pub(in crate::commands) fn valid_scope_str(scope: &str) -> bool {
@@ -138,7 +147,7 @@ pub(in crate::commands) fn valid_scope_str(scope: &str) -> bool {
             })
 }
 
-pub(super) fn validate_scope_name(scope: &str) -> Result<(), Failure> {
+pub(in crate::commands) fn validate_scope_name(scope: &str) -> Result<(), Failure> {
     if valid_scope_str(scope) {
         return Ok(());
     }

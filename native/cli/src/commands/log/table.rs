@@ -1,6 +1,22 @@
 //! Borderless cli-table layout used by local and remote one-line history.
 
+use serde_json::Value;
+use std::io;
 use unicode_width::UnicodeWidthStr;
+
+pub(super) fn one_line(logs: &[Value]) -> io::Result<String> {
+    let fields = ["hash", "tag", "username", "date", "message"];
+    let rows: Vec<Vec<&str>> = logs
+        .iter()
+        .map(|row| {
+            fields
+                .iter()
+                .map(|field| row[*field].as_str().unwrap_or_default())
+                .collect()
+        })
+        .collect();
+    Ok(table(&rows))
+}
 
 pub(in crate::commands) fn table(rows: &[Vec<&str>]) -> String {
     table_with_separator(rows, " ")

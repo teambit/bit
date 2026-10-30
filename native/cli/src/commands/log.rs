@@ -7,6 +7,7 @@ pub(super) use table::{table, table_with_separator};
 use super::{
     color::Chalk,
     engine::Engine,
+    lint_cmd::emit_pattern_error,
     list::bitmap,
     status::{
         cache::cache_root,
@@ -24,12 +25,15 @@ use std::{
     path::Path,
     process::ExitCode,
 };
-use topology::ordered_parents;
+use table::one_line;
+use topology::{LocalTarget, ordered_parents, resolve_local_target};
 
 mod table;
 mod topology;
 
 pub const COMMAND: Command = Command { name: "log", aliases: &[], run };
+
+pub(super) const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Create a new workspace using 'bit new <template> <workspace-name>' or navigate to an existing workspace directory.";
 
 #[derive(Default)]
 struct Options<'a> {
@@ -47,6 +51,7 @@ fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options::default();
     for arg in args {
         let field = match *arg {
+            "--no-color" => continue,
             "-j" | "--json" => &mut options.json,
             "--parents" => &mut options.parents,
             "-o" | "--one-line" => &mut options.one_line,
@@ -75,24 +80,49 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native log grammar".into()));
     };
-    let root = workspace::root(&env::current_dir()?);
+    let cwd = env::current_dir()?;
+    let root = workspace::root(&cwd);
     if root.is_none() && !options.remote {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            return Ok(Outcome::Declined("not inside a workspace".into()));
+        }
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            "log",
+            options.json,
+            "",
+            io::Error::other(OUTSIDE_WORKSPACE_ERR),
+        );
     }
+    execute_log(args, root.as_deref(), &options)
+}
+
+fn execute_log(
+    args: &[OsString],
+    root: Option<&Path>,
+    options: &Options<'_>,
+) -> io::Result<Outcome> {
+    let chalk = Chalk::detect(args);
     let logs = match if options.remote {
-        read_remote(root.as_deref(), &options)
+        read_remote(root, options)
     } else {
-        read(root.as_deref().unwrap(), &options)
+        match read(root.unwrap(), options, chalk) {
+            Ok(Ok(logs)) => Ok(logs),
+            Ok(Err(err)) => {
+                return emit_pattern_error(root.unwrap(), args, "log", options.json, err);
+            }
+            Err(error) => Err(error),
+        }
     } {
         Ok(logs) => logs,
         Err(error) => return Ok(Outcome::Declined(format!("log: {error}"))),
     };
-    let chalk = Chalk::detect(args);
-    let output = match render(&logs, &options, chalk) {
+    let output = match render(&logs, options, chalk) {
         Ok(output) => output,
         Err(error) => return Ok(Outcome::Declined(format!("log report: {error}"))),
     };
-    emit(args, root.as_deref(), &output, &options)
+    emit(args, root, &output, options)
 }
 
 fn emit(
@@ -139,31 +169,23 @@ fn read_remote(root: Option<&Path>, options: &Options<'_>) -> io::Result<Vec<Val
     Ok(array(response.get("logs"), "remote component logs")?.to_vec())
 }
 
-fn read(root: &Path, options: &Options<'_>) -> io::Result<Vec<Value>> {
+fn read(
+    root: &Path,
+    options: &Options<'_>,
+    chalk: Chalk,
+) -> io::Result<Result<Vec<Value>, String>> {
     super::status::autosync::run_if_enabled(root)?;
     let bitmap = bitmap::read(root)?;
-    let id = options.id.ok_or_else(|| decline("log id"))?;
-    let id = id.split_once('@').map_or(id, |(name, _)| name);
-    let matches: Vec<_> = bitmap.entries
-        .iter()
-        .filter(|entry| {
-            entry.identity == id
-                || entry.identity
-                    .split_once('/')
-                    .is_some_and(|(_, name)| name == id)
-        })
-        .collect();
-    if matches.len() != 1 {
-        return Err(decline("log identity absent or ambiguous"));
-    }
-    let target = matches[0];
-    if target.version.is_none() {
-        return Ok(Vec::new());
-    }
+    let raw_id = options.id.ok_or_else(|| decline("log id"))?;
+    let (identity, deprecation) = match resolve_local_target(root, &bitmap, raw_id, chalk)? {
+        LocalTarget::NewComponent => return Ok(Ok(Vec::new())),
+        LocalTarget::UserError(err) => return Ok(Err(err)),
+        LocalTarget::Versioned { identity, deprecation } => (identity, deprecation),
+    };
     let mut engine = Engine::new()?;
     let result: Value = engine.request(&json!({
-        "kind":"componentLog", "root":root, "identity":target.identity,
-        "lane":bitmap.lane,"deprecation":target.deprecation,
+        "kind":"componentLog", "root":root, "identity":identity,
+        "lane":bitmap.lane,"deprecation":deprecation,
     }))?;
     let rows = array(result.get("versions"), "component log versions")?;
     let mut raw = rows.to_vec();
@@ -175,7 +197,7 @@ fn read(root: &Path, options: &Options<'_>) -> io::Result<Vec<Value>> {
     if !options.show_hidden {
         logs.retain(|row| row["hidden"] != true);
     }
-    Ok(logs)
+    Ok(Ok(logs))
 }
 
 pub(super) fn normalize(row: &Value) -> io::Result<Value> {
@@ -358,20 +380,6 @@ fn parents_report(logs: &[Value], chalk: Chalk) -> io::Result<Vec<String>> {
             ))
         })
         .collect()
-}
-
-fn one_line(logs: &[Value]) -> io::Result<String> {
-    let fields = ["hash", "tag", "username", "date", "message"];
-    let rows: Vec<Vec<&str>> = logs
-        .iter()
-        .map(|row| {
-            fields
-                .iter()
-                .map(|field| row[*field].as_str().unwrap_or_default())
-                .collect()
-        })
-        .collect();
-    Ok(table(&rows))
 }
 
 #[cfg(test)]
