@@ -19,26 +19,19 @@ pub(super) fn run_outside_scope(
     chalk: Chalk,
     subcommand: &Subcommand,
 ) -> io::Result<Outcome> {
-    if let Subcommand::Create(create_args) = subcommand {
-        return run_create_outside_scope(chalk, argv, create_args);
-    }
-    match argv {
-        ["capsule", "delete"] => return run_delete_all_outside_scope(cwd, args, chalk),
-        ["capsule", "delete", "--scope-aspects"] => {
-            return run_outside_failure(
-                chalk,
-                "delete",
-                false,
-                "Cannot read properties of undefined (reading 'getAspectCapsulePath')",
-            );
-        }
-        _ => {}
-    }
     match subcommand {
-        Subcommand::Delete { all: true, .. } => run_delete_all_outside_scope(cwd, args, chalk),
+        Subcommand::Create(create_args) => run_create_outside_scope(chalk, argv, create_args),
+        Subcommand::Delete { all: false, scope_aspects: true } => run_outside_failure(
+            chalk,
+            "delete",
+            false,
+            "Cannot read properties of undefined (reading 'getAspectCapsulePath')",
+        ),
+        Subcommand::Delete { all: true, .. } | Subcommand::Delete { scope_aspects: false, .. } => {
+            run_delete_all_outside_scope(cwd, args, chalk)
+        }
         Subcommand::Prune(prune_args) => prune::run_outside(cwd, args, chalk, prune_args),
         Subcommand::BareList | Subcommand::List { .. } => run_list_outside_scope(chalk, subcommand),
-        _ => Ok(Outcome::Declined("capsule requires a workspace or scope".into())),
     }
 }
 

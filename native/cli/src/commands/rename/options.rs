@@ -5,12 +5,26 @@ pub(super) fn parse(argv: &[&str]) -> Option<Options> {
     let mut positions = Vec::new();
     let mut arguments = argv.iter().copied();
     while let Some(argument) = arguments.next() {
+        if argument == "--" {
+            consume_trailing_positions(arguments, &mut positions)?;
+            break;
+        }
         apply_rename_arg(argument, &mut arguments, &mut options, &mut positions)?;
     }
     let [source, target]: [String; 2] = positions.try_into().ok()?;
     options.source = source;
     options.target = target;
     Some(options)
+}
+
+fn consume_trailing_positions<'a>(
+    arguments: impl Iterator<Item = &'a str>,
+    positions: &mut Vec<String>,
+) -> Option<()> {
+    for rest in arguments {
+        positions.push(take_val(rest)?);
+    }
+    Some(())
 }
 
 fn apply_rename_arg<'a>(

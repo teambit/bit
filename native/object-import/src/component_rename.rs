@@ -9,7 +9,7 @@ pub(crate) mod copy_refactor {
     };
 }
 
-pub use options::Options;
+pub use self::{identity::validate_name, options::Options};
 
 mod cleanup;
 mod configuration;

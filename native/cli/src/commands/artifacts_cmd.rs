@@ -129,6 +129,10 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_pattern(iter, &mut pattern)?;
+                break;
+            }
             "--no-color" => {}
             "--aspect" => aspect = Some(take_val(iter.next()?)?),
             "--task" => task = Some(take_val(iter.next()?)?),
@@ -144,6 +148,19 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         }
     }
     Some(Options { pattern: pattern?, aspect, task, files, out_dir })
+}
+
+fn consume_trailing_pattern<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    pattern: &mut Option<String>,
+) -> Option<()> {
+    for rest in iter {
+        if pattern.is_some() {
+            return None;
+        }
+        *pattern = Some(take_val(rest)?);
+    }
+    Some(())
 }
 
 fn apply_inline_or_pattern(

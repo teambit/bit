@@ -161,26 +161,49 @@ fn non_empty_object(val: &Value) -> bool {
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
-    for &arg in args {
-        match arg {
-            "--no-color" => {}
-            "-y" | "--yes" | "--yes=true" => options.yes = true,
-            "--yes=false" => options.yes = false,
-            "--patch" | "--patch=true" => options.patch = true,
-            "--patch=false" => options.patch = false,
-            "--minor" | "--minor=true" => options.minor = true,
-            "--minor=false" => options.minor = false,
-            "--major" | "--latest" | "--major=true" | "--latest=true" => options.major = true,
-            "--major=false" | "--latest=false" => options.major = false,
-            "--semver" | "--semver=true" => options.semver = true,
-            "--semver=false" => options.semver = false,
-            val if !val.starts_with('-') && !val.is_empty() => {
-                push_patterns(&mut options.patterns, val)?;
-            }
-            _ => return None,
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        if arg == "--" {
+            consume_trailing_patterns(iter, &mut options.patterns)?;
+            break;
         }
+        apply_update_arg(arg, &mut options)?;
     }
     Some(options)
+}
+
+fn apply_update_arg(arg: &str, options: &mut Options) -> Option<()> {
+    match arg {
+        "--no-color" => {}
+        "-y" | "--yes" | "--yes=true" => options.yes = true,
+        "--yes=false" => options.yes = false,
+        "--patch" | "--patch=true" => options.patch = true,
+        "--patch=false" => options.patch = false,
+        "--minor" | "--minor=true" => options.minor = true,
+        "--minor=false" => options.minor = false,
+        "--major" | "--latest" | "--major=true" | "--latest=true" => options.major = true,
+        "--major=false" | "--latest=false" => options.major = false,
+        "--semver" | "--semver=true" => options.semver = true,
+        "--semver=false" => options.semver = false,
+        val if !val.starts_with('-') && !val.is_empty() => {
+            push_patterns(&mut options.patterns, val)?;
+        }
+        _ => return None,
+    }
+    Some(())
+}
+
+fn consume_trailing_patterns<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    patterns: &mut Vec<String>,
+) -> Option<()> {
+    for rest in iter {
+        if rest.starts_with('-') || rest.is_empty() {
+            return None;
+        }
+        push_patterns(patterns, rest)?;
+    }
+    Some(())
 }
 
 fn push_patterns(patterns: &mut Vec<String>, raw: &str) -> Option<()> {

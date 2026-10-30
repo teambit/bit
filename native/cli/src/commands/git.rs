@@ -100,20 +100,15 @@ fn run_merge_bitmaps(
     other: &str,
     chalk: Chalk,
 ) -> io::Result<Outcome> {
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("merge-bitmaps requires a workspace".to_owned()));
+    let Ok((current_text, other_text)) = read_bitmap_pair(current, other) else {
+        return Ok(Outcome::Declined("merge-bitmaps input files unreadable".to_owned()));
     };
-    let strategy = match read_merge_strategy(&root) {
-        Ok(strategy) => strategy,
-        Err(error) => return Ok(Outcome::Declined(error.to_string())),
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return run_merge_bitmaps_outside(&cwd, args);
     };
-    let current_text = match fs::read_to_string(current) {
-        Ok(text) => strip_bom(&text).to_owned(),
-        Err(error) => return Ok(Outcome::Declined(error.to_string())),
-    };
-    let other_text = match fs::read_to_string(other) {
-        Ok(text) => strip_bom(&text).to_owned(),
-        Err(error) => return Ok(Outcome::Declined(error.to_string())),
+    let Ok(strategy) = read_merge_strategy(&root) else {
+        return Ok(Outcome::Declined("merge-bitmaps workspace strategy unreadable".to_owned()));
     };
     if env::var_os("CI").is_some_and(|val| !val.is_empty())
         && merge_bitmap_contents(&current_text, &other_text, &strategy).is_err()
@@ -132,6 +127,26 @@ fn run_merge_bitmaps(
         let data = Formatter::new(chalk).success_summary("bitmap files merged successfully");
         Ok(Report { data, code: 0, details: None })
     })
+}
+
+fn read_bitmap_pair(current: &str, other: &str) -> io::Result<(String, String)> {
+    let current_text = strip_bom(&fs::read_to_string(current)?).to_owned();
+    let other_text = strip_bom(&fs::read_to_string(other)?).to_owned();
+    Ok((current_text, other_text))
+}
+
+fn run_merge_bitmaps_outside(cwd: &Path, args: &[OsString]) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("merge-bitmaps requires a workspace".to_owned()));
+    }
+    workspace_command::execute_failure_scope(
+        cwd,
+        args,
+        "merge-bitmaps",
+        false,
+        "",
+        io::Error::other("Cannot read properties of undefined (reading 'bitMap')"),
+    )
 }
 
 fn read_merge_strategy(root: &Path) -> io::Result<String> {

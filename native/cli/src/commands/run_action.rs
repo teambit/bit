@@ -4,7 +4,10 @@
 mod tests;
 
 use super::{
-    Command, remote_action,
+    Command,
+    color::Chalk,
+    lane::scope_root,
+    remote_action,
     workspace_command::{self, results::Report},
 };
 use crate::native::Outcome;
@@ -27,12 +30,19 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native run-action grammar".into()));
     };
+    let cwd = env::current_dir()?;
+    if scope_root::discover()
+        .ok()
+        .flatten()
+        .is_none()
+    {
+        return run_outside_scope(&cwd, args);
+    }
     if !options.payload.is_object() {
         return Ok(Outcome::Declined("run-action options must be a JSON object".into()));
     }
     let file_supported = remote_action::supports_file(&options.action_name);
-    let Ok(Some(plan)) =
-        remote_action::prepare(&env::current_dir()?, &options.remote, false, file_supported)
+    let Ok(Some(plan)) = remote_action::prepare(&cwd, &options.remote, false, file_supported)
     else {
         return Ok(Outcome::Declined("run-action requires a configured remote".into()));
     };
@@ -41,6 +51,24 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         let result = runtime.block_on(plan.action(&options.action_name, &options.payload))?;
         report(&result)
     })
+}
+
+fn run_outside_scope(cwd: &std::path::Path, args: &[OsString]) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI run-action outside scope delegated".into()));
+    }
+    let msg = format!(
+        "error: scope not found at {}",
+        Chalk::detect(args).bold(&cwd.display().to_string()),
+    );
+    workspace_command::execute_failure_scope(
+        cwd,
+        args,
+        "run-action",
+        false,
+        "",
+        io::Error::other(msg),
+    )
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {

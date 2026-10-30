@@ -87,13 +87,16 @@ fn parse_diagnose(rest: &[&str]) -> Option<Subcommand> {
     let mut idx = 0;
     while idx < rest.len() {
         match rest[idx] {
-            "--origins" | "--origins=true" => origins = Some(true),
+            "-o" | "--origins" | "--origins=true" => origins = Some(true),
             "--origins=false" => origins = Some(false),
-            "--package" => {
+            "-p" | "--package" => {
                 idx += 1;
                 package = Some(valid_diagnose_pkg(rest.get(idx)?)?);
             }
-            arg if let Some(val) = arg.strip_prefix("--package=") => {
+            arg if let Some(val) = arg
+                .strip_prefix("--package=")
+                .or_else(|| arg.strip_prefix("-p=")) =>
+            {
                 package = Some(valid_diagnose_pkg(val)?);
             }
             _ => return None,
@@ -118,8 +121,12 @@ fn parse_circular(rest: &[&str]) -> Option<Subcommand> {
         match arg {
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
-            "--include-deps" | "--include-deps=true" => include_deps = true,
+            "-d" | "--include-deps" | "--include-deps=true" => include_deps = true,
             "--include-deps=false" => include_deps = false,
+            "-dj" | "-jd" => {
+                json = true;
+                include_deps = true;
+            }
             _ => return None,
         }
     }
@@ -271,11 +278,13 @@ fn parse_write(rest: &[&str]) -> Option<Subcommand> {
     let mut target = WriteTarget::WorkspaceJsonc;
     let mut idx = 0;
     while idx < rest.len() {
-        let raw = if rest[idx] == "--target" {
+        let raw = if matches!(rest[idx], "-t" | "--target") {
             idx += 1;
             *rest.get(idx)?
         } else {
-            rest[idx].strip_prefix("--target=")?
+            rest[idx]
+                .strip_prefix("--target=")
+                .or_else(|| rest[idx].strip_prefix("-t="))?
         };
         target = match raw {
             "workspace.jsonc" => WriteTarget::WorkspaceJsonc,

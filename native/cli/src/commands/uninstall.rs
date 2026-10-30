@@ -101,15 +101,34 @@ fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, String>> {
 
 fn parse_arguments(args: &[OsString]) -> Option<Vec<String>> {
     let mut packages = Vec::with_capacity(args.len().saturating_sub(1));
-    for arg in args.iter().skip(1) {
+    let mut iter = args.iter().skip(1);
+    while let Some(arg) = iter.next() {
         let string = arg
             .to_str()
             .filter(|text| !text.is_empty())?;
+        if string == "--" {
+            consume_trailing_packages(iter, &mut packages)?;
+            break;
+        }
         if string != "--no-color" {
             packages.push(string.to_owned());
         }
     }
     Some(packages)
+}
+
+fn consume_trailing_packages<'a>(
+    iter: impl Iterator<Item = &'a OsString>,
+    packages: &mut Vec<String>,
+) -> Option<()> {
+    for rest in iter {
+        let text = rest.to_str()?;
+        if text.is_empty() || text.starts_with('-') {
+            return None;
+        }
+        packages.push(text.to_owned());
+    }
+    Some(())
 }
 
 fn update_workspace_policy(root: &Path, packages: &[String]) -> io::Result<()> {

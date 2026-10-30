@@ -49,17 +49,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;
     let chalk = Chalk::detect(args);
     let Some(root) = workspace::root(&cwd) else {
-        if scope_root::discover()
-            .ok()
-            .flatten()
-            .is_none()
-        {
-            let msg = chalk.yellow(NO_ENVS_CONFIG_MSG);
-            return workspace_command::execute_without_loader_scope(&cwd, args, "script", |_| {
-                Ok(Report { data: msg, code: 0, details: None })
-            });
-        }
-        return Ok(Outcome::Declined("script requires a workspace".into()));
+        return run_outside_workspace(&cwd, args, chalk);
     };
     if let Ok(Some(msg)) = fast_workspace_message(&root, chalk) {
         return workspace_command::execute_without_loader(&root, args, "script", |_| {
@@ -67,6 +57,35 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         });
     }
     finish_script_outcome(&root, args, execute(&root, &options, chalk))
+}
+
+fn run_outside_workspace(cwd: &Path, args: &[OsString], chalk: Chalk) -> io::Result<Outcome> {
+    if let Some(scope) = scope_root::discover().ok().flatten() {
+        if scope.bare && bare_scope_has_no_envs(&scope.path) {
+            let msg = chalk.yellow(NO_ENVS_CONFIG_MSG);
+            return workspace_command::execute_without_loader_scope(
+                &scope.path,
+                args,
+                "script",
+                |_| Ok(Report { data: msg, code: 0, details: None }),
+            );
+        }
+        return Ok(Outcome::Declined("script requires a workspace".into()));
+    }
+    let msg = chalk.yellow(NO_ENVS_CONFIG_MSG);
+    workspace_command::execute_without_loader_scope(cwd, args, "script", |_| {
+        Ok(Report { data: msg, code: 0, details: None })
+    })
+}
+
+fn bare_scope_has_no_envs(scope_path: &Path) -> bool {
+    let Ok(bytes) = fs::read(scope_path.join("scope.json")) else {
+        return false;
+    };
+    let Ok(parsed) = parse_jsonc(&bytes) else {
+        return false;
+    };
+    read_allowed_envs(&parsed["config"]).is_empty()
 }
 
 fn missing_script_outcome(args: &[OsString]) -> io::Result<Outcome> {

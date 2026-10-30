@@ -75,6 +75,9 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     };
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
+        if arg == "--" {
+            return iter.next().is_none().then_some(options);
+        }
         apply_login_arg(arg, &mut iter, &mut options)?;
     }
     Some(options)

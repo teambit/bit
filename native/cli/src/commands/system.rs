@@ -53,8 +53,24 @@ fn parse_args(args: &[OsString]) -> Option<Parsed> {
 
 fn run_log(args: &[OsString]) -> io::Result<Outcome> {
     let log_path = cache_root().join("logs").join("debug.log");
-    let Ok(content) = fs::read_to_string(&log_path) else {
-        return Ok(Outcome::Declined("debug.log is missing or unreadable".to_owned()));
+    let content = match fs::read_to_string(&log_path) {
+        Ok(content) => content,
+        Err(err) => {
+            if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+                return Ok(Outcome::Declined("debug.log is missing or unreadable".to_owned()));
+            }
+            let history =
+                workspace::root(&env::current_dir()?).map(|root| History::start(&root, args));
+            if let Some(history) = history {
+                history.end(false);
+            }
+            let report = workspace_command::filesystem_error::report(
+                &workspace_command::filesystem_error::failure(err, "open", &log_path),
+                Chalk::detect(args),
+            );
+            writeln!(io::stdout(), "{report}")?;
+            return Ok(Outcome::Exit(ExitCode::FAILURE));
+        }
     };
     let history = workspace::root(&env::current_dir()?).map(|root| History::start(&root, args));
     writeln!(io::stdout(), "{content}")?;
