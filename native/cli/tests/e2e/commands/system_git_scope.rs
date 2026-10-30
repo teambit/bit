@@ -119,6 +119,8 @@ fn bare_scope_graph_json_matches_node_without_a_host() {
         "graph comp1 --json",
         "graph comp1 --include-dependencies --json",
         "graph comp2 --include-dependencies --json",
+        "artifacts comp1",
+        r#"artifacts "**""#,
     ] {
         let node =
             Helper::cmd_in_with(scope, command, &[("BIT_NATIVE", std::ffi::OsStr::new("off"))]);

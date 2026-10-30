@@ -26,7 +26,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         Ok(files) => files,
         Err(error) => return Ok(Outcome::Declined(format!("formatter tool: {error}"))),
     };
-    if !supported_writes(options.check, &components, &files) {
+    if !supported_writes(options.check, &components, &loaded.files, &files) {
         return Ok(Outcome::Declined("formatter concurrent source writes".to_owned()));
     }
     let mut result = loaded.result(&files)?;
@@ -49,6 +49,7 @@ fn invalid(message: &str) -> io::Error {
 fn supported_writes(
     check: bool,
     components: &[workspace_command::component_service::Component],
+    inputs: &[Value],
     files: &[Value],
 ) -> bool {
     if check {
@@ -57,22 +58,41 @@ fn supported_writes(
     let mut offset = 0;
     for component in components {
         let end = offset + component.files.len();
-        let Some(rows) = files.get(offset..end) else {
+        let (Some(in_rows), Some(out_rows)) = (inputs.get(offset..end), files.get(offset..end))
+        else {
             return false;
         };
-        if rows
-            .iter()
-            .filter(|row| {
-                row["newContent"]
-                    .as_str()
-                    .is_some_and(|content| !content.is_empty())
-            })
-            .count()
-            > 1
-        {
+        if !component_writes_supported(in_rows, out_rows) {
             return false;
         }
         offset = end;
     }
-    offset == files.len()
+    offset == files.len() && offset == inputs.len()
+}
+
+fn component_writes_supported(inputs: &[Value], outputs: &[Value]) -> bool {
+    let changed = inputs
+        .iter()
+        .zip(outputs)
+        .filter(|(_, out)| {
+            out["newContent"]
+                .as_str()
+                .is_some_and(|content| !content.is_empty())
+        })
+        .collect::<Vec<_>>();
+    if changed.len() <= 1 {
+        return true;
+    }
+    changed
+        .into_iter()
+        .all(|(input, _)| {
+            input["absolutePath"]
+                .as_str()
+                .is_some_and(|path| {
+                    std::fs::OpenOptions::new()
+                        .write(true)
+                        .open(path)
+                        .is_ok()
+                })
+        })
 }

@@ -1,4 +1,4 @@
-use super::{Subcommand, parse_subcommand, prepare, write::WriteTarget};
+use super::{Subcommand, parse_subcommand, parse_why, prepare, write::WriteTarget};
 use crate::commands::{color::Chalk, set_peer::DEP_RESOLVER_ID};
 use serde_json::{Value, json};
 use std::fs;
@@ -82,6 +82,11 @@ fn parses_deps_subcommands() {
         parse_subcommand(&["usage", "is-number", "--depth=2"]),
         Some(Subcommand::Usage { dep_name: "is-number".into(), depth: Some(2) }),
     );
+    assert_eq!(
+        parse_why(&["is-number", "--depth", "3", "--no-color"]),
+        Some(Subcommand::Why { dep_name: "is-number".into(), depth: Some(3) }),
+    );
+    assert_eq!(parse_why(&[]), None);
     assert_eq!(
         parse_subcommand(&["circular", "-j", "--include-deps"]),
         Some(Subcommand::Circular { json: true, include_deps: true }),

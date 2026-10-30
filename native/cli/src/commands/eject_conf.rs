@@ -194,13 +194,14 @@ fn prepare_entry(
         return Err(Failure::Declined("empty root_dir on eject-conf".into()));
     }
     let abs_path = ctx.root.join(&entry.root_dir).join("component.json");
-    validate_existing_comp_json(&abs_path, ctx.opts.override_existing)?;
+    let existing = load_existing_comp_json(&abs_path, ctx.opts.override_existing)?;
     let scope = entry.id.scope
         .as_deref()
         .filter(|text| !text.is_empty())
         .unwrap_or(ctx.default_scope);
     let row = find_bitmap_row_mut(bitmap_val, entry)?;
-    let extensions = build_ejected_extensions(ctx, entry, scope, row.get("config"))?;
+    let extensions =
+        build_ejected_extensions(ctx, entry, scope, row.get("config"), existing.as_ref())?;
     let changed = row
         .as_object_mut()
         .is_some_and(|row_obj| row_obj.remove("config").is_some());
@@ -238,9 +239,12 @@ fn render_ejected_file(
     Ok(EjectedFile { abs_path: abs_path.to_path_buf(), rel_path, bytes: rendered.into_bytes() })
 }
 
-fn validate_existing_comp_json(abs_path: &Path, override_existing: bool) -> Result<(), Failure> {
+fn load_existing_comp_json(
+    abs_path: &Path,
+    override_existing: bool,
+) -> Result<Option<Value>, Failure> {
     if !abs_path.exists() {
-        return Ok(());
+        return Ok(None);
     }
     if !override_existing {
         return Err(Failure::User(format!(
@@ -250,13 +254,23 @@ fn validate_existing_comp_json(abs_path: &Path, override_existing: bool) -> Resu
     }
     let existing: Value = serde_json::from_slice(&fs::read(abs_path)?)
         .map_err(|err| Failure::Declined(err.to_string()))?;
-    if existing["extensions"]
+    let comp_id = existing["componentId"]
         .as_object()
-        .is_none_or(|ext| !ext.is_empty())
+        .ok_or_else(|| Failure::Declined("missing componentId in component.json".into()))?;
+    if comp_id
+        .get("scope")
+        .and_then(Value::as_str)
+        .is_none_or(str::is_empty)
+        || comp_id
+            .get("name")
+            .and_then(Value::as_str)
+            .is_none_or(str::is_empty)
+        || existing.get("defaultScope").is_some()
+        || !existing["extensions"].is_object()
     {
-        return Err(Failure::Declined("non-empty existing component.json".into()));
+        return Err(Failure::Declined("invalid existing component.json".into()));
     }
-    Ok(())
+    Ok(Some(existing))
 }
 
 fn build_ejected_extensions(
@@ -264,17 +278,24 @@ fn build_ejected_extensions(
     entry: &BitmapEntry,
     scope: &str,
     raw_cfg: Option<&Value>,
+    existing: Option<&Value>,
 ) -> Result<Value, Failure> {
     let model_exts = load_version_extensions(&ctx.objects, scope, entry)?;
     let mut merger = Merger::new(Resolver { component: &entry.id, workspace: &ctx.ws_ids });
     if let Some(cfg_obj) = raw_cfg.and_then(Value::as_object) {
         merger.add(aspects::from_config_object(cfg_obj, &ctx.core_ids), Origin::BitmapFile);
     }
+    if let Some(ext_obj) = existing.and_then(|val| val["extensions"].as_object()) {
+        merger.add(aspects::from_config_object(ext_obj, &ctx.core_ids), Origin::ComponentJsonFile);
+    }
+    let continue_propagating = existing.is_none_or(|val| val["propagate"] == true);
     if !model_exts.is_empty() {
         let (specific, non_specific): (Vec<_>, Vec<_>) =
             aspects::from_model(&model_exts).into_iter().partition(aspects::is_specific);
         merger.add(specific, Origin::ModelSpecific);
-        merger.add(non_specific, Origin::ModelNonSpecific);
+        if continue_propagating {
+            merger.add(non_specific, Origin::ModelNonSpecific);
+        }
     }
     let merged = merger.finish();
     let cfg_map = aspects::to_config(&merged);

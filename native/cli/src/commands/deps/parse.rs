@@ -182,7 +182,22 @@ fn parse_remove_or_unset(rest: &[&str], unset: bool) -> Option<Subcommand> {
     })
 }
 
+pub(in crate::commands) fn parse_why(args: &[&str]) -> Option<Subcommand> {
+    let filtered = args
+        .iter()
+        .copied()
+        .filter(|arg| *arg != "--no-color")
+        .collect::<Vec<_>>();
+    let (dep_name, depth) = parse_usage_args(&filtered)?;
+    Some(Subcommand::Why { dep_name, depth })
+}
+
 fn parse_usage(rest: &[&str]) -> Option<Subcommand> {
+    let (dep_name, depth) = parse_usage_args(rest)?;
+    Some(Subcommand::Usage { dep_name, depth })
+}
+
+fn parse_usage_args(rest: &[&str]) -> Option<(String, Option<usize>)> {
     let mut dep_name = None;
     let mut depth = None;
     let mut idx = 0;
@@ -200,7 +215,7 @@ fn parse_usage(rest: &[&str]) -> Option<Subcommand> {
         }
         idx += 1;
     }
-    Some(Subcommand::Usage { dep_name: dep_name?, depth })
+    Some((dep_name?, depth))
 }
 
 fn parse_write(rest: &[&str]) -> Option<Subcommand> {

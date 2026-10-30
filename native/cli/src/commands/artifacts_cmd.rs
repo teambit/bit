@@ -2,13 +2,15 @@
 
 mod extractor;
 mod render;
+mod scope;
 #[cfg(test)]
 mod tests;
 
-use self::extractor::extract_and_render;
+use self::extractor::{extract_and_render, extract_scope_and_render};
 use super::{
     Command,
     color::Chalk,
+    lane::scope_root,
     scope_set::Failure,
     script::active_component_count,
     workspace_command::{self, format::Formatter, results::Report},
@@ -39,10 +41,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("CI artifacts delegated".into()));
     }
     let cwd = env::current_dir()?;
+    let formatter = Formatter::new(Chalk::detect(args));
     let Some(root) = workspace::root(&cwd) else {
+        if let Some(scope) = scope_root::discover().ok().flatten()
+            && scope.bare
+        {
+            return finish_scope_artifacts(&scope.path, args, &options, &formatter);
+        }
         return Ok(Outcome::Declined("artifacts outside workspace delegated".into()));
     };
-    let formatter = Formatter::new(Chalk::detect(args));
     if is_empty_workspace(&root).unwrap_or(false) {
         let pattern = options.pattern;
         return workspace_command::execute_without_loader(&root, args, "artifacts", move |_| {
@@ -69,6 +76,27 @@ fn finish_artifacts(
         }),
         Err(Failure::User(message)) => {
             workspace_command::execute_then(root, args, "artifacts", move |_| {
+                Err(io::Error::other(message))
+            })
+        }
+        Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("artifacts: {reason}"))),
+    }
+}
+
+fn finish_scope_artifacts(
+    scope_dir: &Path,
+    args: &[OsString],
+    options: &Options,
+    formatter: &Formatter,
+) -> io::Result<Outcome> {
+    match extract_scope_and_render(scope_dir, options, formatter) {
+        Ok(data) => {
+            workspace_command::execute_then_scope(scope_dir, args, "artifacts", move |_| {
+                Ok(Report { data, code: 0, details: None })
+            })
+        }
+        Err(Failure::User(message)) => {
+            workspace_command::execute_then_scope(scope_dir, args, "artifacts", move |_| {
                 Err(io::Error::other(message))
             })
         }

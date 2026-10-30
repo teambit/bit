@@ -104,3 +104,71 @@ fn prepares_ejected_config_for_versioned_component_from_scope_objects() {
         json!({ "policy": { "dependencies": { "lodash": "4.17.21" } } }),
     );
 }
+
+#[test]
+fn merges_existing_non_empty_component_json_when_override_is_enabled() {
+    let temp = tempdir().unwrap();
+    let root = temp.path();
+    fs::write(
+        root.join("workspace.jsonc"),
+        r#"{ "teambit.workspace/workspace": { "defaultScope": "my-scope" } }"#,
+    )
+    .unwrap();
+    fs::write(
+        root.join(".bitmap"),
+        r#"{
+  "bar": {
+    "scope": "my-scope",
+    "version": "0.0.1",
+    "mainFile": "index.js",
+    "rootDir": "bar",
+    "config": {
+      "teambit.pkg/pkg": { "packageJson": { "private": true } }
+    }
+  }
+}"#,
+    )
+    .unwrap();
+    fs::create_dir_all(root.join("bar")).unwrap();
+    fs::write(
+        root.join("bar/component.json"),
+        serde_json::to_vec_pretty(&json!({
+            "componentId": { "scope": "my-scope", "name": "bar", "version": "0.0.1" },
+            "propagate": false,
+            "extensions": {
+                "teambit.envs/envs": { "env": "teambit.harmony/node" }
+            }
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let ver_hash = "0123456789abcdef0123456789abcdef01234567";
+    let version_json = json!({
+        "extensions": [
+            {
+                "name": "teambit.dependencies/dependency-resolver",
+                "config": { "policy": { "dependencies": { "lodash": "4.17.21" } } }
+            }
+        ]
+    });
+    write_scope_object(root, "Version", ver_hash, &version_json);
+    let model_hash = sha1_hex("my-scope/bar");
+    let model_json = json!({
+        "name": "bar",
+        "scope": "my-scope",
+        "versions": { "0.0.1": ver_hash }
+    });
+    write_scope_object(root, "Component", &model_hash, &model_json);
+    let opts =
+        Options { pattern: "bar".into(), propagate: true, override_existing: true, json: false };
+    let prepared = prepare(root, &opts, Chalk::new(false)).unwrap();
+    let comp_json: Value = serde_json::from_slice(&prepared.files[0].bytes).unwrap();
+    assert_eq!(comp_json["propagate"], json!(true));
+    assert_eq!(
+        comp_json["extensions"],
+        json!({
+            "teambit.pkg/pkg": { "packageJson": { "private": true } },
+            "teambit.envs/envs": { "env": "teambit.harmony/node" }
+        }),
+    );
+}

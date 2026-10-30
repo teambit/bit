@@ -3,12 +3,14 @@
 use super::{
     Options,
     render::{render_artifacts_report, save_artifacts_to_dir},
+    scope::resolve_bare_scope_targets,
 };
 use crate::{
     commands::{
         aspect::workspace_default_scope,
         debug_cat::lookup::resolve_component_entry,
         patterns,
+        remote_action::startup,
         scope_set::{Failure, selection},
         workspace_command::format::Formatter,
     },
@@ -39,10 +41,10 @@ pub(super) struct ComponentArtifacts {
     pub artifacts: Vec<ArtifactItem>,
 }
 
-struct TargetComponent {
-    identity_no_ver: String,
-    comp_name: String,
-    version: Option<String>,
+pub(super) struct TargetComponent {
+    pub identity_no_ver: String,
+    pub comp_name: String,
+    pub version: Option<String>,
 }
 
 pub(super) fn extract_and_render(
@@ -53,14 +55,35 @@ pub(super) fn extract_and_render(
     let bitmap = load_workspace_bitmap(root)?;
     let scope_dir = workspace::scope_path(root);
     let targets = resolve_targets(root, &scope_dir, &bitmap, &options.pattern, formatter)?;
+    render_targets_artifacts(&scope_dir, &targets, options, formatter)
+}
+
+pub(super) fn extract_scope_and_render(
+    scope_dir: &Path,
+    options: &Options,
+    formatter: &Formatter,
+) -> Result<String, Failure> {
+    if startup::supported(None, scope_dir, &Value::Null, true).ok() != Some(true) {
+        return Err(Failure::Declined("bare scope requires unsupported startup".into()));
+    }
+    let targets = resolve_bare_scope_targets(scope_dir, &options.pattern)?;
+    render_targets_artifacts(scope_dir, &targets, options, formatter)
+}
+
+fn render_targets_artifacts(
+    scope_dir: &Path,
+    targets: &[TargetComponent],
+    options: &Options,
+    formatter: &Formatter,
+) -> Result<String, Failure> {
     let mut results = Vec::with_capacity(targets.len());
-    for target in &targets {
-        let mut comp_artifacts = load_component_artifacts(&scope_dir, target)?;
+    for target in targets {
+        let mut comp_artifacts = load_component_artifacts(scope_dir, target)?;
         filter_artifacts(&mut comp_artifacts.artifacts, options)?;
         results.push(comp_artifacts);
     }
     let saved_count = if let Some(out_dir) = &options.out_dir {
-        save_artifacts_to_dir(&scope_dir, &results, out_dir)?
+        save_artifacts_to_dir(scope_dir, &results, out_dir)?
     } else {
         0
     };

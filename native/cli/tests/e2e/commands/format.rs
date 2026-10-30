@@ -204,7 +204,17 @@ fn standard_format_nested_source_checks_preserve_file_order_and_guard_concurrent
     helper.output_file("comp1/aaa/extra.js", "module.exports=()=>42;\n");
     helper.output_file("comp1/z.js", "module.exports=()=>true;\n");
     support::compare(&helper, "format --check --json");
-    support::compare_declined(&helper, "format --json", str::to_owned);
+    let result = support::compare(&helper, "format --json");
+    assert!(result.status.success());
+    assert!(!result.trace.contains("starting the JavaScript host"));
+    assert_eq!(
+        std::fs::read_to_string(helper.scopes.local_path.join("comp1/aaa/extra.js")).unwrap(),
+        "module.exports = () => 42;\n",
+    );
+    assert_eq!(
+        std::fs::read_to_string(helper.scopes.local_path.join("comp1/z.js")).unwrap(),
+        "module.exports = () => true;\n",
+    );
 }
 
 #[test]

@@ -1,7 +1,7 @@
 //! Native `bit deps <set|remove|unset|reset|eject|get|usage|diagnose|blame|write|circular>` (`bit dependencies`)
 //! (`scopes/dependencies/dependencies/dependencies-cmd.ts`).
 
-pub(super) use self::parse::parse_subcommand;
+pub(super) use self::parse::{parse_subcommand, parse_why};
 
 mod blame;
 mod debug;
@@ -48,6 +48,7 @@ use std::{
 };
 
 pub const COMMAND: Command = Command { name: "deps", aliases: &["dependencies"], run };
+pub const WHY: Command = Command { name: "why", aliases: &[], run: run_why };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
@@ -59,6 +60,7 @@ pub(super) enum Subcommand {
     Get { id: String, tree: bool, scope: bool },
     Debug { id: String },
     Usage { dep_name: String, depth: Option<usize> },
+    Why { dep_name: String, depth: Option<usize> },
     Blame { component: String, dep: String },
     Diagnose { origins: bool },
     DiagnosePackage { package: String },
@@ -86,6 +88,7 @@ impl Subcommand {
             Self::Get { .. } => "get",
             Self::Debug { .. } => "debug",
             Self::Usage { .. } => "usage",
+            Self::Why { .. } => "why",
             Self::Blame { .. } => "blame",
             Self::Diagnose { .. } => "diagnose",
             Self::DiagnosePackage { .. } => "diagnose",
@@ -123,6 +126,19 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return diagnose::report::run(&root, args, chalk, *origins);
     }
     run_prepared(&root, args, &subcommand, chalk)
+}
+
+fn run_why(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("why arguments are not UTF-8".into()));
+    };
+    let Some(subcommand) = parse_why(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside native why grammar".into()));
+    };
+    let Some(root) = workspace::root(&env::current_dir()?) else {
+        return Ok(Outcome::Declined("why requires a workspace".into()));
+    };
+    run_prepared(&root, args, &subcommand, Chalk::detect(args))
 }
 
 fn run_prepared(
@@ -238,7 +254,7 @@ fn prepare_non_mutating(
         Subcommand::Debug { id } => {
             Ok(Prepared::ReadOnly(debug::prepare(root, bitmap, id, chalk)?))
         }
-        Subcommand::Usage { dep_name, depth } => {
+        Subcommand::Usage { dep_name, depth } | Subcommand::Why { dep_name, depth } => {
             Ok(Prepared::ReadOnly(prepare_usage(root, bitmap_val, dep_name, *depth, chalk)?))
         }
         Subcommand::Write { target } => {

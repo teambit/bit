@@ -235,6 +235,7 @@ pub const COMMANDS: &[Command] = &[
     version::COMMAND,
     version_history::COMMAND,
     watch_cmd::COMMAND,
+    deps::WHY,
     whoami::COMMAND,
     ws_config::COMMAND,
 ];
