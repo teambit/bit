@@ -113,10 +113,8 @@ fn apply_new_token<'a>(
     positionals: &mut Vec<String>,
 ) -> Option<()> {
     match token {
-        "--no-color" | "--standalone" | "--no-standalone" | "--skip-git" | "-s"
-        | "--no-skip-git" | "--empty" | "-e" | "--no-empty" => {}
+        "--no-color" | "--standalone" | "--skip-git" | "-s" | "--empty" | "-e" => {}
         "--current-dir" | "-c" => *current_dir = true,
-        "--no-current-dir" => *current_dir = false,
         "--aspect" | "-a" | "--template" | "-t" | "--env" => {
             *aspect = Some(take_new_val(iter.next()?)?);
         }

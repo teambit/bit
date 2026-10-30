@@ -81,19 +81,23 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn handle_missing_pattern(cwd: &Path, args: &[OsString], json_flag: bool) -> io::Result<Outcome> {
-    if json_flag || env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("missing pattern error delegated".into()));
     }
     if let Some(root) = workspace::root(cwd) {
-        workspace_command::execute_then(&root, args, "internalize", |_output| {
-            Err(io::Error::other(MISSING_PATTERN_ERR))
-        })
+        super::lint_cmd::emit_pattern_error(
+            &root,
+            args,
+            "internalize",
+            json_flag,
+            MISSING_PATTERN_ERR.into(),
+        )
     } else {
         workspace_command::execute_failure_scope(
             cwd,
             args,
             "internalize",
-            false,
+            json_flag,
             "",
             io::Error::other(MISSING_PATTERN_ERR),
         )
@@ -106,12 +110,10 @@ fn handle_user_error(
     json_flag: bool,
     message: String,
 ) -> io::Result<Outcome> {
-    if json_flag || env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-        return Ok(Outcome::Declined("CI/json internalize error delegated".into()));
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI internalize error delegated".into()));
     }
-    workspace_command::execute_then(root, args, "internalize", |_output| {
-        Err(io::Error::other(message))
-    })
+    super::lint_cmd::emit_pattern_error(root, args, "internalize", json_flag, message)
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {

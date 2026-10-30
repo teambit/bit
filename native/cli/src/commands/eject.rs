@@ -41,17 +41,18 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native eject grammar".into()));
     };
-    if options.json || env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-        return Ok(Outcome::Declined("CI/json eject delegated".into()));
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI eject delegated".into()));
     }
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
         return Ok(Outcome::Declined("eject outside workspace delegated".into()));
     };
     if let Ok(Some(err_msg)) = validate_workspace(&root, &options.pattern) {
-        return workspace_command::execute_then(&root, args, "eject", |_| {
-            Err(io::Error::other(err_msg))
-        });
+        return super::lint_cmd::emit_pattern_error(&root, args, "eject", options.json, err_msg);
+    }
+    if options.json {
+        return Ok(Outcome::Declined("json eject delegated".into()));
     }
     let ids = match select_ids(&root, &options.pattern) {
         Ok(ids) => ids,

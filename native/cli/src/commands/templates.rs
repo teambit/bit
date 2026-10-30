@@ -178,9 +178,7 @@ fn apply_templates_token<'a>(
     match token {
         "--no-color" => {}
         "--show-all" | "-s" => options.show_all = true,
-        "--no-show-all" => options.show_all = false,
         "--json" | "-j" => options.json = true,
-        "--no-json" => options.json = false,
         "--aspect" | "-a" => {
             let val = iter.next()?;
             options.aspect =

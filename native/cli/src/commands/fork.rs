@@ -22,8 +22,9 @@ fn run_mode(args: &[OsString], scope_fork: bool) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv[if scope_fork { 2 } else { 1 }..], scope_fork) else {
         return Ok(Outcome::Declined("outside native fork grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("fork requires a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return handle_outside_workspace(&cwd, args, scope_fork);
     };
     let state = match inventory::read(&root) {
         Ok(state) => state,
@@ -33,6 +34,21 @@ fn run_mode(args: &[OsString], scope_fork: bool) -> io::Result<Outcome> {
         return Ok(Outcome::Declined(reason));
     }
     execute(args, &root, &options, &state)
+}
+fn handle_outside_workspace(
+    cwd: &std::path::Path,
+    args: &[OsString],
+    scope_fork: bool,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("fork requires a workspace".into()));
+    }
+    let err = io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR);
+    if scope_fork {
+        workspace_command::execute_without_loader_scope(cwd, args, "fork", move |_| Err(err))
+    } else {
+        workspace_command::execute_failure_scope(cwd, args, "fork", false, "", err)
+    }
 }
 fn execute(
     args: &[OsString],

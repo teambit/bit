@@ -26,21 +26,30 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     {
         return super::scope_trust::run(args);
     }
-    if let Some(sub) = unrecognized_subcommand(args)
-        && let Some(root) = workspace::root(&env::current_dir()?)
-    {
-        let chalk = Chalk::detect(args);
-        let data = chalk.red(&format!(
-            r#""{sub}" is not a subcommand of "scope", please run "bit scope --help" to list the subcommands"#,
-        ));
-        return workspace_command::execute_then(&root, args, "scope", |_output| {
-            Ok(workspace_command::results::Report { data, code: 0, details: None })
-        });
+    if let Some(sub) = unrecognized_subcommand(args) {
+        return handle_unrecognized_subcommand(args, &sub);
     }
     run_rename(args)
 }
 
-fn unrecognized_subcommand(args: &[OsString]) -> Option<String> {
+fn handle_unrecognized_subcommand(args: &[OsString], sub: &str) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI scope unrecognized subcommand".into()));
+    }
+    let cwd = env::current_dir()?;
+    let chalk = Chalk::detect(args);
+    let data = chalk.red(&format!(
+        r#""{sub}" is not a subcommand of "scope", please run "bit scope --help" to list the subcommands"#,
+    ));
+    let report = workspace_command::results::Report { data, code: 0, details: None };
+    if let Some(root) = workspace::root(&cwd) {
+        workspace_command::execute_then(&root, args, "scope", move |_output| Ok(report))
+    } else {
+        workspace_command::execute_with_scope(&cwd, args, "scope", &report)
+    }
+}
+
+pub(super) fn unrecognized_subcommand(args: &[OsString]) -> Option<String> {
     let tokens = args
         .iter()
         .skip(1)
@@ -63,8 +72,9 @@ fn run_rename(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native scope rename grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("scope rename requires a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return handle_outside_workspace(&cwd, args, options.owner);
     };
     if let Err(error) = Selection::prepare(&root, &options)
         && decline_preflight(&error)
@@ -85,6 +95,24 @@ fn run_rename(args: &[OsString]) -> io::Result<Outcome> {
         workspace_command::execute_then(&root, args, "rename", |output| {
             execution::run(&root, &options, &mut linker, Chalk::detect(args), output)
         })
+    }
+}
+
+fn handle_outside_workspace(
+    cwd: &std::path::Path,
+    args: &[OsString],
+    owner: bool,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("scope rename requires a workspace".into()));
+    }
+    let err = io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR);
+    if owner {
+        workspace_command::execute_without_loader_scope(cwd, args, "rename-owner", move |_| {
+            Err(err)
+        })
+    } else {
+        workspace_command::execute_failure_scope(cwd, args, "rename", false, "", err)
     }
 }
 

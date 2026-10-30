@@ -30,6 +30,7 @@ fn parses_create_arguments_and_options() {
         }),
     );
     assert_eq!(parse_options(&["react"]), None);
+    assert_eq!(parse_options(&["react", "comp1", "--no-force"]), None);
 }
 
 #[test]

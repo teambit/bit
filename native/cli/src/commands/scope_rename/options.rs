@@ -10,6 +10,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let mut names = Vec::new();
     for arg in args {
         match *arg {
+            "--no-color" => {}
             "-r" | "--refactor" => options.refactor = true,
             "--preserve" if !owner => options.preserve = true,
             "--deprecate" if !owner => options.deprecate = true,

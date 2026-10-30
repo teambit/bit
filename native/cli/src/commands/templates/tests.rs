@@ -13,6 +13,8 @@ fn parses_templates_options() {
         Some(Options { show_all: true, aspect: Some("my-aspect".to_owned()), json: true }),
     );
     assert_eq!(parse_options(&["unexpected"]), None);
+    assert_eq!(parse_options(&["--no-show-all"]), None);
+    assert_eq!(parse_options(&["--no-json"]), None);
 }
 
 #[test]

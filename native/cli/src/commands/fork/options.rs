@@ -55,6 +55,7 @@ fn parse_flag(
     options: &mut Options,
 ) -> Option<()> {
     match argument {
+        "--no-color" => {}
         "--ast" => options.flags.ast = true,
         "-x" | "--skip-dependency-installation" => options.flags.skip_install = true,
         value if !options.scope_fork => parse_local_flag(value, arguments, options)?,

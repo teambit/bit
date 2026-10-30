@@ -7,7 +7,7 @@ use super::{
     Command,
     aspect::workspace_default_scope,
     color::Chalk,
-    scope_set::selection,
+    scope_set::{Failure, selection},
     script::active_component_count,
     workspace_command::{self, results::Report},
 };
@@ -83,9 +83,18 @@ fn execute_workspace_publish(
     let ws_val = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
     let default_scope = workspace_default_scope(&ws_val).ok();
     let bitmap = Bitmap::load(root, default_scope.as_deref())?;
-    let matched =
-        selection::resolve_pattern_entries(root, &bitmap, &options.pattern, Chalk::detect(args))
-            .unwrap_or_default();
+    let matched = match selection::resolve_pattern_entries(
+        root,
+        &bitmap,
+        &options.pattern,
+        Chalk::detect(args),
+    ) {
+        Ok(matched) => matched,
+        Err(Failure::User(err)) if !options.dry_run => {
+            return super::lint_cmd::emit_pattern_error(root, args, "publish", options.json, err);
+        }
+        Err(_) => Vec::new(),
+    };
     if matched.is_empty() {
         return empty_candidates_outcome(root, args, options.json);
     }
@@ -117,28 +126,64 @@ fn check_unexported_error(
     options: &Options,
     matched: &[&BitmapEntry],
 ) -> io::Result<Option<Outcome>> {
-    if options.allow_staged || options.dry_run {
+    if options.dry_run {
         return Ok(None);
     }
-    let unexported = collect_unexported_ids(root, matched);
-    if unexported.is_empty() {
-        return Ok(None);
+    if !options.allow_staged {
+        let unexported = collect_unexported_ids(root, matched);
+        if !unexported.is_empty() {
+            let msg = format!(
+                "unable to publish the following component(s), please make sure they are exported: {}",
+                unexported.join(", "),
+            );
+            return super::lint_cmd::emit_pattern_error(root, args, "publish", options.json, msg)
+                .map(Some);
+        }
     }
-    let msg = format!(
-        "unable to publish the following component(s), please make sure they are exported: {}",
-        unexported.join(", "),
-    );
-    workspace_command::execute_then(root, args, "publish", move |_| Err(io::Error::other(msg)))
-        .map(Some)
+    let untagged = collect_untagged_ids(root, matched);
+    if !untagged.is_empty() {
+        let msg = format!(
+            "unable to publish the following component(s), please make sure they are tagged: {}",
+            untagged.join(", "),
+        );
+        return super::lint_cmd::emit_pattern_error(root, args, "publish", options.json, msg)
+            .map(Some);
+    }
+    Ok(None)
 }
 
-fn collect_unexported_ids(root: &Path, entries: &[&BitmapEntry]) -> Vec<String> {
+pub(super) fn collect_unexported_ids(root: &Path, entries: &[&BitmapEntry]) -> Vec<String> {
     let scope = Scope::find(root);
     entries
         .iter()
         .filter(|entry| !is_entry_exported(scope.as_ref(), entry))
         .map(|entry| selection::entry_full_id(entry))
         .collect()
+}
+
+pub(super) fn collect_untagged_ids(root: &Path, entries: &[&BitmapEntry]) -> Vec<String> {
+    let scope = Scope::find(root);
+    entries
+        .iter()
+        .filter(|entry| !is_entry_in_scope(scope.as_ref(), entry))
+        .map(|entry| selection::entry_full_id(entry))
+        .collect()
+}
+
+fn is_entry_in_scope(scope: Option<&Scope>, entry: &BitmapEntry) -> bool {
+    let Some(ver) = entry.id.version
+        .as_deref()
+        .filter(|ver| !ver.is_empty())
+    else {
+        return false;
+    };
+    scope
+        .and_then(|sc| {
+            sc.model(&entry.id.to_string_without_version())
+                .ok()
+                .flatten()
+        })
+        .is_some_and(|model| model["versions"].get(ver).is_some())
 }
 
 fn is_entry_exported(scope: Option<&Scope>, entry: &BitmapEntry) -> bool {

@@ -126,9 +126,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
                 return Ok(Outcome::Declined("CI eject-conf error stack".into()));
             }
-            workspace_command::execute_then(&root, args, "eject-conf", |_output| {
-                Err(io::Error::other(message))
-            })
+            super::lint_cmd::emit_pattern_error(&root, args, "eject-conf", opts.json, message)
         }
         Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("eject-conf: {reason}"))),
     }

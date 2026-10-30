@@ -25,6 +25,10 @@ fn parses_new_arguments_and_options() {
         }),
     );
     assert_eq!(parse_options(&["react"]), None);
+    assert_eq!(parse_options(&["react", "my-workspace", "--no-standalone"]), None);
+    assert_eq!(parse_options(&["react", "my-workspace", "--no-skip-git"]), None);
+    assert_eq!(parse_options(&["react", "my-workspace", "--no-empty"]), None);
+    assert_eq!(parse_options(&["react", "my-workspace", "--no-current-dir"]), None);
 }
 
 #[test]
