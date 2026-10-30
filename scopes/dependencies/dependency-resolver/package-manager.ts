@@ -211,7 +211,6 @@ export type ResolvedPackageVersion = {
 
 export type PackageManagerResolveRemoteVersionOptions = {
   rootDir: string;
-  cacheRootDir?: string;
   packageManagerConfigRootDir?: string;
   fullMetadata?: boolean;
   // fetchToCache?: boolean;

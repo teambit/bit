@@ -25,7 +25,6 @@ import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { LoggerAspect } from '@teambit/logger';
 import {
-  CFG_PACKAGE_MANAGER_CACHE,
   CFG_REGISTRY_URL_KEY,
   CFG_USER_TOKEN_KEY,
   CFG_ISOLATED_SCOPE_CAPSULES,
@@ -138,10 +137,6 @@ export type GetLinkerOptions = {
 
 export type GetDependenciesOptions = {
   includeHidden?: boolean;
-};
-
-export type GetVersionResolverOptions = {
-  cacheRootDirectory?: string;
 };
 
 /**
@@ -821,21 +816,15 @@ export class DependencyResolverMain {
     return packageManager;
   }
 
-  async getVersionResolver(options: GetVersionResolverOptions = {}) {
+  async getVersionResolver() {
     const packageManager = this.getPackageManager();
-    const cacheRootDir = options.cacheRootDirectory || this.configStore.getConfig(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
       throw new PackageManagerNotFound(this.packageManagerName);
     }
 
-    if (cacheRootDir && !fs.pathExistsSync(cacheRootDir)) {
-      this.logger.debug(`creating package manager cache dir at ${cacheRootDir}`);
-      fs.ensureDirSync(cacheRootDir);
-    }
     const { networkConcurrency } = await this.getNetworkConfig();
-    // TODO: we should somehow pass the cache root dir to the package manager constructor
-    return new DependencyVersionResolver(packageManager, cacheRootDir, networkConcurrency);
+    return new DependencyVersionResolver(packageManager, networkConcurrency);
   }
 
   /**
@@ -1795,7 +1784,6 @@ as an alternative, you can use "+" to keep the same version installed in the wor
   async fetchFullPackageManifest(packageName: string): Promise<DependencyManifest | undefined> {
     const pm = this.getSystemPackageManager();
     const resolveOpts = {
-      cacheRootDir: this.configStore.getConfig(CFG_PACKAGE_MANAGER_CACHE),
       // We can set anything here. The rootDir option is ignored, when resolving npm-hosted packages.
       rootDir: process.cwd(),
     };
