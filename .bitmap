@@ -211,6 +211,12 @@
         "version": "2.2.175",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit",
+        "nextVersion": {
+            "version": "minor",
+            "message": "Remove Yarn package manager support",
+            "username": "david2",
+            "email": "davidnet@gmail.com"
+        },
         "config": {
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
