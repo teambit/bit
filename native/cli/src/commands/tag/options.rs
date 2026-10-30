@@ -92,6 +92,56 @@ pub fn invalid_ver(args: &[&str]) -> Option<(Options, String)> {
     Some((options, ver))
 }
 
+/// When `args` fails `validateOptions` in `TagCmd.report`, return `(warn_message, error)`.
+pub fn validate_error(args: &[&str], has_editor: bool) -> Option<(bool, String)> {
+    let flags = read(args)?;
+    let warn = flags.string("--message").is_none() && !flags.flag("--persist") && !has_editor;
+    let err = validate_options_error(&flags)?;
+    Some((warn, err))
+}
+
+fn validate_options_error(flags: &Flags) -> Option<String> {
+    let increment = flags.string("--increment");
+    let auto_tag = flags.string("--auto-tag-increment");
+    let pre_release = flags.values.get("--pre-release");
+    let prerelease =
+        |level: Option<&str>| level.is_some_and(|level| PRE_RELEASE_TYPES.contains(&level));
+    if flags.string("--prerelease-id").is_some() && !prerelease(increment) && !prerelease(auto_tag)
+    {
+        return Some(
+            "--prerelease-id should be entered along with --increment or --auto-tag-increment flag, while the increment must be one of the following: [prepatch, prerelease, preminor, premajor]"
+                .to_owned(),
+        );
+    }
+    let named_count = ["major", "minor", "patch"]
+        .into_iter()
+        .filter(|level| flags.flag(&format!("--{level}")))
+        .count()
+        + usize::from(pre_release.is_some());
+    if named_count > 1 {
+        return Some(
+            "you can use only one of the following - patch, minor, major, pre-release".to_owned(),
+        );
+    }
+    if auto_tag.is_some() && flags.flag("--skip-auto-tag") {
+        return Some(
+            "you can use either --auto-tag-increment or --skip-auto-tag, but not both".to_owned(),
+        );
+    }
+    if let Some(inc) = increment.filter(|inc| !RELEASE_TYPES.contains(inc)) {
+        return Some(format!(
+            "invalid increment-level \"{inc}\".\nsemver allows the following options only: major, premajor, minor, preminor, patch, prepatch, prerelease",
+        ));
+    }
+    auto_tag
+        .filter(|inc| !RELEASE_TYPES.contains(inc))
+        .map(|inc| {
+            format!(
+                "invalid auto-tag-increment level \"{inc}\".\nsemver allows the following options only: major, premajor, minor, preminor, patch, prepatch, prerelease",
+            )
+        })
+}
+
 fn read(args: &[&str]) -> Option<Flags> {
     let mut flags = Flags::default();
     let mut index = 0;

@@ -23,7 +23,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
             "--lane=false" => lane = false,
             "--update-main" | "--update-main=true" => update_main = true,
             "--update-main=false" => update_main = false,
-            "--range" | "--snaps" if modifier.is_none() => {
+            "--range" | "--snaps" if modifier.is_none_or(|(flag, _)| flag == arg) => {
                 let val = iter.next()?;
                 (!val.is_empty() && !val.starts_with('-')).then_some(())?;
                 modifier = Some((arg, val));
@@ -39,10 +39,16 @@ fn apply_inline_or_pattern<'a>(
     pattern: &mut Option<&'a str>,
 ) -> Option<()> {
     if let Some(val) = arg.strip_prefix("--range=") {
-        (!val.is_empty() && !val.starts_with('-') && modifier.is_none()).then_some(())?;
+        (!val.is_empty()
+            && !val.starts_with('-')
+            && modifier.is_none_or(|(flag, _)| flag == "--range"))
+        .then_some(())?;
         *modifier = Some(("--range", val));
     } else if let Some(val) = arg.strip_prefix("--snaps=") {
-        (!val.is_empty() && !val.starts_with('-') && modifier.is_none()).then_some(())?;
+        (!val.is_empty()
+            && !val.starts_with('-')
+            && modifier.is_none_or(|(flag, _)| flag == "--snaps"))
+        .then_some(())?;
         *modifier = Some(("--snaps", val));
     } else if !arg.starts_with('-') && pattern.is_none() {
         *pattern = Some(arg);

@@ -29,7 +29,7 @@ pub(super) fn show(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome>
     };
     let scope_root = match super::scope_root::discover() {
         Ok(Some(scope_root)) => scope_root,
-        Ok(None) => return Ok(Outcome::Declined("not inside a scope".into())),
+        Ok(None) => return outside_scope_show(args, name, json, remote),
         Err(error) => return Ok(Outcome::Declined(format!("lane show scope: {error}"))),
     };
     let root = scope_root.path;
@@ -57,6 +57,30 @@ pub(super) fn show(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome>
         .lock()
         .write_all(session.output().as_bytes())?;
     emit_selected(&root, scope_root.bare, args, json, lane)
+}
+
+fn outside_scope_show(
+    args: &[OsString],
+    name: Option<&str>,
+    json: bool,
+    remote: bool,
+) -> io::Result<Outcome> {
+    if std::env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("not inside a scope".into()));
+    }
+    let msg = if remote && name.is_none() {
+        "remote flag is not supported without lane name"
+    } else {
+        "Cannot read properties of undefined (reading 'legacyScope')"
+    };
+    workspace_command::execute_failure_scope(
+        &std::env::current_dir()?,
+        args,
+        "show",
+        json,
+        "",
+        io::Error::other(msg),
+    )
 }
 
 fn emit_selected(

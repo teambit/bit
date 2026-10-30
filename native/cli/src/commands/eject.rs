@@ -55,11 +55,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             io::Error::other("Cannot read properties of undefined (reading 'idsByPattern')"),
         );
     };
-    if options.json {
-        return Ok(Outcome::Declined("json eject delegated".into()));
-    }
     if let Ok(Some(err_msg)) = validate_workspace(&root, &options.pattern) {
         return super::lint_cmd::emit_pattern_error(&root, args, "eject", options.json, err_msg);
+    }
+    if options.json {
+        return Ok(Outcome::Declined("json eject delegated".into()));
     }
     let ids = match select_ids(&root, &options.pattern) {
         Ok(ids) => ids,

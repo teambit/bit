@@ -18,7 +18,7 @@ use std::{env, ffi::OsString, fs, io, iter::Peekable, path::Path};
 
 pub const COMMAND: Command = Command { name: "build", aliases: &[], run };
 
-const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Create a new workspace using 'bit new <template> <workspace-name>' or navigate to an existing workspace directory.";
+const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 const REWRITE_ERR: &str = "cannot use --rewrite without --reuse-capsules";
 const REINSTALL_ERR: &str = "cannot use --reinstall without --reuse-capsules";
 const EMPTY_BUILD_HINT: &str = r#"no components found to build. use "--unmodified" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built"#;

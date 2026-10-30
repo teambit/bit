@@ -36,11 +36,30 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&command_args) else {
         return Ok(Outcome::Declined("outside the native snap grammar".to_string()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".to_string()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return outside_workspace_snap(&cwd, args, &options, &workflow);
     };
     workflow.configure(&root, &argv[1..], resolve::Kind::Snap)?;
     run_workspace(&root, args, &options, &workflow, &policy)
+}
+
+fn outside_workspace_snap(
+    cwd: &Path,
+    args: &[OsString],
+    options: &options::Options,
+    workflow: &resolve::workflow::Workflow,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("not inside a workspace".to_string()));
+    }
+    let warn = options.message.is_none() && workflow.editor.is_none();
+    workspace_command::execute_then_scope(cwd, args, "snap", |output| {
+        if warn {
+            output.warning(MESSAGE_WARNING);
+        }
+        Err(io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR))
+    })
 }
 
 fn run_workspace(

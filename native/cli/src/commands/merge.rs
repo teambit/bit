@@ -30,7 +30,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside the native merge tooling grammar".into()));
     };
     let Some(options) = options::parse(&grammar) else {
-        return Ok(Outcome::Declined("outside the native merge grammar".into()));
+        return fallback_merge_error(args, &argv[1..]);
     };
     let root = match workspace_command::workspace_or_fail(args, "merge")? {
         Ok(root) => root,
@@ -47,5 +47,28 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             skip_install: options.skip_install,
             workflow,
         },
+    )
+}
+
+fn fallback_merge_error(args: &[OsString], raw_args: &[&str]) -> io::Result<Outcome> {
+    let Some(err_msg) = options::validate_error(raw_args) else {
+        return Ok(Outcome::Declined("outside the native merge grammar".into()));
+    };
+    if std::env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("outside the native merge grammar".into()));
+    }
+    let cwd = std::env::current_dir()?;
+    if let Some(root) = crate::workspace::root(&cwd) {
+        return workspace_command::execute_then(&root, args, "merge", |_| {
+            Err(io::Error::other(err_msg))
+        });
+    }
+    workspace_command::execute_failure_scope(
+        &cwd,
+        args,
+        "merge",
+        false,
+        "",
+        io::Error::other(err_msg),
     )
 }

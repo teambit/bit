@@ -33,7 +33,7 @@ mod topology;
 
 pub const COMMAND: Command = Command { name: "log", aliases: &[], run };
 
-pub(super) const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Create a new workspace using 'bit new <template> <workspace-name>' or navigate to an existing workspace directory.";
+pub(super) const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 
 #[derive(Default)]
 struct Options<'a> {

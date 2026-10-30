@@ -46,10 +46,14 @@ fn apply_create_flag<'a>(
         return applied;
     }
     match flag {
-        "--no-color" | "--fork-lane-new-scope=false" => true,
+        "--no-color" => true,
+        "--fork-lane-new-scope=false" => {
+            options.fork_lane_new_scope = false;
+            true
+        }
         "--scope" | "-s" | "--remote-scope" => take_non_flag(&mut options.scope, rest),
         "--alias" => take_non_flag(&mut options.alias, rest),
-        "--fork-lane-new-scope" | "--fork-lane-new-scope=true" if !options.fork_lane_new_scope => {
+        "--fork-lane-new-scope" | "--fork-lane-new-scope=true" => {
             options.fork_lane_new_scope = true;
             true
         }

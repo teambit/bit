@@ -119,14 +119,14 @@ fn run_with_command(
     let Some((json, details, merged, remote)) = parse(list_args) else {
         return Ok(Outcome::Declined("lane list flags outside the native grammar".to_string()));
     };
-    if command == "lane" && json {
+    if command == "lane" && json && remote.is_some() {
         return Ok(
             Outcome::Declined("lane without subcommand does not implement json".to_string()),
         );
     }
     let scope_root = match super::scope_root::discover() {
         Ok(Some(scope_root)) => scope_root,
-        Ok(None) => return Ok(Outcome::Declined("not inside a scope".to_string())),
+        Ok(None) => return outside_scope_list(args, command, json, remote),
         Err(error) => return Ok(Outcome::Declined(format!("lane list scope: {error}"))),
     };
     if let Some(scope) = remote {
@@ -137,6 +137,25 @@ fn run_with_command(
         Err(error) => return Ok(Outcome::Declined(format!("lane list: {error}"))),
     };
     display_local(&scope_root, args, command, json, details, merged, selection)
+}
+
+fn outside_scope_list(
+    args: &[OsString],
+    command: &'static str,
+    json: bool,
+    remote: Option<&str>,
+) -> io::Result<Outcome> {
+    if remote.is_some() || std::env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("not inside a scope".to_string()));
+    }
+    workspace_command::execute_failure_scope(
+        &std::env::current_dir()?,
+        args,
+        command,
+        json,
+        "",
+        io::Error::other("error: please run the command from a workspace or a scope directory"),
+    )
 }
 
 fn display_local(
@@ -150,7 +169,7 @@ fn display_local(
 ) -> io::Result<Outcome> {
     let root = &scope_root.path;
     let bare = scope_root.bare;
-    if json {
+    if json && command != "lane" {
         return emit_json(root, bare, args, &lanes, &current.1);
     }
     let report = Report {
@@ -161,10 +180,15 @@ fn display_local(
         code: 0,
         details: None,
     };
-    if bare {
-        workspace_command::execute_with_scope(root, args, command, &report)
-    } else {
-        workspace_command::execute_with(root, args, command, &report, |_| Ok(()))
+    match (bare, json) {
+        (true, true) => {
+            workspace_command::execute_without_loader_scope(root, args, command, |_| Ok(report))
+        }
+        (false, true) => {
+            workspace_command::execute_without_loader(root, args, command, |_| Ok(report))
+        }
+        (true, false) => workspace_command::execute_with_scope(root, args, command, &report),
+        (false, false) => workspace_command::execute_with(root, args, command, &report, |_| Ok(())),
     }
 }
 
@@ -233,10 +257,11 @@ fn apply_list_arg<'a>(
             flags.details = true;
         }
         "--merged" | "--merged=true" if flags.merged != Some(false) => flags.merged = Some(true),
-        "--merged=false" | "--not-merged=false" if flags.merged.is_none() => {}
+        "--merged=false" if flags.merged != Some(false) => flags.merged = None,
         "--not-merged" | "--not-merged=true" if flags.merged != Some(true) => {
             flags.merged = Some(false);
         }
+        "--not-merged=false" if flags.merged != Some(true) => flags.merged = None,
         "--remote" | "-r" if flags.remote.is_none() => {
             flags.remote = Some(remote_name(iter.next())?);
         }

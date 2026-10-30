@@ -21,9 +21,17 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
     let Some(values) = parse_values(lane_args) else {
         return Ok(Outcome::Declined("outside the native lane diff grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return outside_workspace_diff(&cwd, args, &values);
     };
+    if let Some(err_msg) = validate_workspace_diff(&root, &values)
+        && env::var_os("CI").is_none_or(|val| val.is_empty())
+    {
+        return workspace_command::execute_then(&root, args, "diff", |_| {
+            Err(io::Error::other(err_msg))
+        });
+    }
     let Some((from_lane, to_lane)) = select_lanes(&root, &values) else {
         return Ok(Outcome::Declined("lane diff lanes outside native support".into()));
     };
@@ -37,6 +45,67 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
     };
     let report = Report { data, code: 0, details: None };
     workspace_command::execute_with(&root, args, "diff", &report, |_| Ok(()))
+}
+
+fn outside_workspace_diff(cwd: &Path, args: &[OsString], values: &[&str]) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("not inside a workspace".into()));
+    }
+    let msg = match values {
+        [] => Some(r#"expect "values" to include at least one arg - the lane name"#.to_owned()),
+        ["main"] => {
+            Some(r#"unable to run diff between "main" and "main", they're the same lane"#.to_owned())
+        }
+        [from, to] if from == to => Some(format!(
+            r#"unable to run diff between "{from}" and "{to}", they're the same lane"#,
+        )),
+        _ if values.len() > 2 => Some(format!(
+            r#"expect "values" to include no more than two args, got {}"#,
+            values.len(),
+        )),
+        _ if super::scope_root::discover()
+            .ok()
+            .flatten()
+            .is_none() =>
+        {
+            Some("Cannot read properties of undefined (reading 'legacyScope')".to_owned())
+        }
+        _ => None,
+    };
+    let Some(err_msg) = msg else {
+        return Ok(Outcome::Declined("not inside a workspace".into()));
+    };
+    workspace_command::execute_failure_scope(
+        cwd,
+        args,
+        "diff",
+        false,
+        "",
+        io::Error::other(err_msg),
+    )
+}
+
+fn validate_workspace_diff(root: &Path, values: &[&str]) -> Option<String> {
+    if values.len() > 2 {
+        return Some(format!(
+            r#"expect "values" to include no more than two args, got {}"#,
+            values.len(),
+        ));
+    }
+    let (_, (current, _)) = list::read_for_scope(root, false, false).ok()?;
+    let current_name = current["name"].as_str().unwrap_or("main");
+    if values.is_empty() && current_name == "main" {
+        return Some(
+            "you are currently on the default branch, to run diff between lanes, please specify them"
+                .to_owned(),
+        );
+    }
+    let (from_name, to_name) = resolve_lane_names(values, current_name)?;
+    (from_name == to_name).then(|| {
+        format!(
+            r#"unable to run diff between "{from_name}" and "{to_name}", they're the same lane"#,
+        )
+    })
 }
 
 fn select_lanes(root: &Path, values: &[&str]) -> Option<(list::LaneData, list::LaneData)> {
@@ -55,10 +124,9 @@ fn select_lanes(root: &Path, values: &[&str]) -> Option<(list::LaneData, list::L
 }
 
 fn parse_values<'a>(lane_args: &[&'a str]) -> Option<Vec<&'a str>> {
-    if lane_args.len() > 2
-        || lane_args
-            .iter()
-            .any(|arg| arg.starts_with('-'))
+    if lane_args
+        .iter()
+        .any(|arg| arg.starts_with('-') || arg.is_empty())
     {
         return None;
     }

@@ -17,6 +17,84 @@ pub struct Options {
 const BOOLEAN: [&str; 4] = ["--skip-dependency-installation", "--manual", "--verbose", "--no-snap"];
 const VALUED: [&str; 2] = ["--auto-merge-resolve", "--message"];
 
+/// When `args` fails validation in `MergeCmd.report`, return the error message.
+pub fn validate_error(args: &[&str]) -> Option<&'static str> {
+    let mut flags: Vec<(&str, Value)> = Vec::new();
+    let mut positionals = 0usize;
+    let mut index = 0;
+    while index < args.len() {
+        let arg = alias(args[index]);
+        index += 1;
+        if matches!(arg, "--no-color" | "--build" | "--build=true" | "--build=false") {
+            continue;
+        }
+        if !arg.starts_with('-') {
+            positionals += 1;
+            continue;
+        }
+        index += apply_validate_flag(&mut flags, arg, args.get(index).copied())?;
+    }
+    (positionals <= 1).then(|| check_merge_flags(&flags)).flatten()
+}
+
+fn check_merge_flags(flags: &[(&str, Value)]) -> Option<&'static str> {
+    let get = |name: &str| {
+        flags
+            .iter()
+            .find(|(flag, _)| *flag == name)
+            .map(|(_, value)| value)
+    };
+    let flag = |name: &str| get(name) == Some(&Value::Bool(true));
+    if flag("--ours") || flag("--theirs") {
+        return Some(
+            r#"the "--ours" and "--theirs" flags are deprecated. use "--auto-merge-resolve" instead"#,
+        );
+    }
+    if get("--auto-merge-resolve")
+        .and_then(Value::as_str)
+        .is_some_and(|val| !matches!(val, "ours" | "theirs" | "manual"))
+    {
+        return Some("--auto-merge-resolve must be one of the following: [ours, theirs, manual]");
+    }
+    if flag("--abort") && flag("--resolve") {
+        return Some(r#"unable to use "abort" and "resolve" flags together"#);
+    }
+    if flag("--no-snap")
+        && get("--message")
+            .and_then(Value::as_str)
+            .is_some_and(|msg| !msg.is_empty())
+    {
+        return Some(r#"unable to use "noSnap" and "message" flags together"#);
+    }
+    None
+}
+
+fn apply_validate_flag<'a>(
+    flags: &mut Vec<(&'a str, Value)>,
+    arg: &'a str,
+    next: Option<&str>,
+) -> Option<usize> {
+    const EXTRA_BOOL: [&str; 4] = ["--ours", "--theirs", "--abort", "--resolve"];
+    if let Some((raw_flag, val)) = arg.split_once('=') {
+        let flag = alias(raw_flag);
+        if EXTRA_BOOL.contains(&flag) {
+            let bool_val = match val {
+                "true" => true,
+                "false" => false,
+                _ => return None,
+            };
+            flags.push((flag, json!(bool_val)));
+            return Some(0);
+        }
+        return apply_merge_inline(flags, flag, val);
+    }
+    if EXTRA_BOOL.contains(&arg) {
+        flags.push((arg, json!(true)));
+        return Some(0);
+    }
+    apply_merge_flag(flags, arg, next)
+}
+
 /// `args` starts after the command name.
 pub fn parse(args: &[&str]) -> Option<Options> {
     let mut flags: Vec<(&str, Value)> = Vec::new();

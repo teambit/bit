@@ -105,6 +105,12 @@ impl Read {
 
     /// One flag; the number of values it consumed.
     fn flag(&mut self, flag: &str, next: Option<&str>) -> Option<usize> {
+        if BOOLEANS.contains(&flag) {
+            if !self.has(flag) {
+                self.flags.push(flag.to_string());
+            }
+            return Some(0);
+        }
         if self.has(flag) || self.values.contains_key(flag) {
             return None;
         }
@@ -112,10 +118,6 @@ impl Read {
             let value = next.filter(|value| !value.starts_with('-'));
             self.values.insert(flag.to_owned(), json!(value.unwrap_or("ours")));
             return Some(usize::from(value.is_some()));
-        }
-        if BOOLEANS.contains(&flag) {
-            self.flags.push(flag.to_string());
-            return Some(0);
         }
         if !VALUED.contains(&flag) {
             return None;
@@ -127,16 +129,17 @@ impl Read {
 
     fn inline_flag(&mut self, raw_flag: &str, value: &str) -> Option<()> {
         let flag = lane_alias(raw_flag);
-        if self.has(flag) || self.values.contains_key(flag) {
-            return None;
-        }
         if BOOLEANS.contains(&flag) {
             match value {
-                "true" => self.flags.push(flag.to_string()),
-                "false" => {}
+                "true" if !self.has(flag) => self.flags.push(flag.to_string()),
+                "true" => {}
+                "false" => self.flags.retain(|known| known != flag),
                 _ => return None,
             }
             return Some(());
+        }
+        if self.has(flag) || self.values.contains_key(flag) {
+            return None;
         }
         if flag == "--resolve-unrelated" || VALUED.contains(&flag) {
             self.flag(flag, Some(value))?;

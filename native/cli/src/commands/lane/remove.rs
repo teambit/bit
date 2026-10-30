@@ -24,8 +24,9 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
         }
         return crate::commands::delete::hard::lanes(args, &names, force);
     }
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return outside_workspace_remove(&cwd, args);
     };
     let (lanes, _) = match list::read_with_merge(&root, !force) {
         Ok(lanes) => lanes,
@@ -49,6 +50,25 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
         details: None,
     };
     workspace_command::execute_with(&root, args, "remove", &report, |_| plan.commit())
+}
+
+fn outside_workspace_remove(cwd: &std::path::Path, args: &[OsString]) -> io::Result<Outcome> {
+    if super::scope_root::discover()
+        .ok()
+        .flatten()
+        .is_none()
+        && env::var_os("CI").is_none_or(|val| val.is_empty())
+    {
+        return workspace_command::execute_failure_scope(
+            cwd,
+            args,
+            "remove",
+            false,
+            "",
+            io::Error::other("Cannot read properties of undefined (reading 'legacyScope')"),
+        );
+    }
+    Ok(Outcome::Declined("not inside a workspace".into()))
 }
 
 fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {

@@ -22,7 +22,7 @@ use std::{env, ffi::OsString, fs, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "test", aliases: &["at"], run };
 
-const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Create a new workspace using 'bit new <template> <workspace-name>' or navigate to an existing workspace directory.";
+const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {

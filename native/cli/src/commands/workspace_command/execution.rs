@@ -80,15 +80,14 @@ pub fn workspace_or_fail(
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Err(Outcome::Declined("not inside a workspace".into())));
     }
-    execute_failure_scope(
-        &cwd,
-        args,
-        command,
-        false,
-        "",
-        io::Error::other(crate::commands::log::OUTSIDE_WORKSPACE_ERR),
-    )
-    .map(Err)
+    let msg = match command {
+        "delete" | "recover" => {
+            "workspace not found. to initiate a new workspace, please use `bit init`"
+        }
+        "move" => "Cannot read properties of undefined (reading 'consumer')",
+        _ => crate::commands::log::OUTSIDE_WORKSPACE_ERR,
+    };
+    execute_failure_scope(&cwd, args, command, false, "", io::Error::other(msg)).map(Err)
 }
 
 /// [`execute_with`] for a command whose report depends on its work.

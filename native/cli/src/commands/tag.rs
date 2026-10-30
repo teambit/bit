@@ -48,22 +48,121 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside the native snapshot policy grammar".to_string()));
     };
     let Some(options) = options::parse(&command_args) else {
-        if let Some((options, ver)) = options::invalid_ver(&command_args)
-            && let Some(root) = workspace::root(&env::current_dir()?)
-        {
-            workflow.configure(&root, &argv[1..], resolve::Kind::Tag)?;
-            return invalid_version_failure(&root, args, &options, &workflow, &ver);
-        }
-        return Ok(Outcome::Declined("outside the native tag grammar".to_string()));
+        return fallback_parse_error(args, &argv[1..], &command_args, &mut workflow);
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".to_string()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return outside_workspace_tag(&cwd, args, &options, &workflow);
     };
     workflow.configure(&root, &argv[1..], resolve::Kind::Tag)?;
+    if let Some(err_msg) = editor_conflict(&options, &workflow)
+        && env::var_os("CI").is_none_or(|val| val.is_empty())
+    {
+        return pre_status_failure(&root, args, &options, &workflow, err_msg);
+    }
     if let Some(ver) = options.invalid_pattern_version() {
         return invalid_version_failure(&root, args, &options, &workflow, ver);
     }
     run_workspace(&root, args, &options, &workflow, &policy)
+}
+
+fn fallback_parse_error(
+    args: &[OsString],
+    raw_args: &[&str],
+    command_args: &[&str],
+    workflow: &mut resolve::workflow::Workflow,
+) -> io::Result<Outcome> {
+    if let Some((warn, err_msg)) = options::validate_error(command_args, workflow.editor.is_some())
+        && env::var_os("CI").is_none_or(|val| val.is_empty())
+    {
+        return emit_validate_error(args, warn, &err_msg);
+    }
+    if let Some((options, ver)) = options::invalid_ver(command_args)
+        && let Some(root) = workspace::root(&env::current_dir()?)
+    {
+        workflow.configure(&root, raw_args, resolve::Kind::Tag)?;
+        return invalid_version_failure(&root, args, &options, workflow, &ver);
+    }
+    Ok(Outcome::Declined("outside the native tag grammar".to_string()))
+}
+
+fn emit_validate_error(args: &[OsString], warn: bool, err_msg: &str) -> io::Result<Outcome> {
+    let cwd = env::current_dir()?;
+    if let Some(root) = workspace::root(&cwd) {
+        return workspace_command::execute_then(&root, args, "tag", |output| {
+            if warn {
+                output.warning(MESSAGE_WARNING);
+            }
+            Err(io::Error::other(err_msg))
+        });
+    }
+    workspace_command::execute_then_scope(&cwd, args, "tag", |output| {
+        if warn {
+            output.warning(MESSAGE_WARNING);
+        }
+        Err(io::Error::other(err_msg))
+    })
+}
+
+fn editor_conflict(
+    options: &Options,
+    workflow: &resolve::workflow::Workflow,
+) -> Option<&'static str> {
+    workflow.editor.as_ref()?;
+    if options.mode == Mode::Persist {
+        Some("you can use either --editor or --persist, but not both")
+    } else if options.message.is_some() {
+        Some("you can use either --editor or --message, but not both")
+    } else {
+        None
+    }
+}
+
+fn pre_status_failure(
+    root: &Path,
+    args: &[OsString],
+    options: &Options,
+    workflow: &resolve::workflow::Workflow,
+    err_msg: &str,
+) -> io::Result<Outcome> {
+    let warn = options.message.is_none()
+        && options.mode != Mode::Persist
+        && workflow.editor.is_none();
+    let soft = options.mode == Mode::Soft || workflow.build;
+    workspace_command::execute_then(root, args, "tag", |output| {
+        if warn {
+            output.warning(MESSAGE_WARNING);
+        }
+        if !soft {
+            output.warning(REMOTE_BUILD_WARNING);
+        }
+        Err(io::Error::other(err_msg))
+    })
+}
+
+fn outside_workspace_tag(
+    cwd: &Path,
+    args: &[OsString],
+    options: &Options,
+    workflow: &resolve::workflow::Workflow,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("not inside a workspace".to_string()));
+    }
+    let warn = options.message.is_none()
+        && options.mode != Mode::Persist
+        && workflow.editor.is_none();
+    let soft = options.mode == Mode::Soft || workflow.build || options.mode == Mode::Persist;
+    let err_msg = editor_conflict(options, workflow).unwrap_or(super::log::OUTSIDE_WORKSPACE_ERR);
+    workspace_command::execute_then_scope(cwd, args, "tag", |output| {
+        if warn {
+            output.warning(MESSAGE_WARNING);
+        }
+        if !soft {
+            output.warning(REMOTE_BUILD_WARNING);
+        }
+        Err(io::Error::other(err_msg))
+    })
 }
 
 fn invalid_version_failure(

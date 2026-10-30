@@ -16,7 +16,7 @@ use std::{env, ffi::OsString, fs, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "check-types", aliases: &[], run };
 
-const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Create a new workspace using 'bit new <template> <workspace-name>' or navigate to an existing workspace directory.";
+const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 const EMPTY_CHECK_TYPES_HINT: &str = "no components found to check.\nuse \"--unmodified\" flag to check all components or specify the ids to check.\notherwise, only new and modified components will be checked";
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]

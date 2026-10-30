@@ -200,13 +200,13 @@ fn apply_hard_arg<'a>(
             state.silent = true;
             state.force = true;
         }
-        "--range" if !state.has_range => {
+        "--range" => {
             let val = iter.next()?;
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             state.has_range = true;
         }
         _ if let Some(val) = arg.strip_prefix("--range=") => {
-            (!val.is_empty() && !val.starts_with('-') && !state.has_range).then_some(())?;
+            (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             state.has_range = true;
         }
         value if !value.starts_with('-') && state.pattern.is_none() => state.pattern = Some(value),
