@@ -23,7 +23,7 @@ import { ComponentOverrides } from '@teambit/legacy.consumer-config';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
 import type { DebugDependencies, FileType } from './auto-detect-deps';
-import { getValidComponentVersion } from './auto-detect-deps';
+import { getValidComponentVersion, getVersionInRangeIfOutOfIt } from './auto-detect-deps';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -343,21 +343,14 @@ export class ApplyOverrides {
   }
 
   /**
-   * the scope side of the installed version in updateDependenciesVersions(): a workspace installs a component peer in
-   * the range of the policy, and records the installed version. so when the version is out of the range, it's changed
-   * to the version of the range. (when it's in the range, it's kept, as a workspace that has it installed would do)
+   * the scope side of peerVersionInRange() in updateDependenciesVersions(): when the version of a component peer is
+   * out of the range of the policy, it's changed to the version of the range. (when it's in the range, it's kept)
    */
   private setComponentPeerVersionInRange(dependency: Dependency, range: string) {
     if (!this.workspaceComponentIds || this.workspaceComponentIds.hasWithoutVersion(dependency.id)) return;
     const version = dependency.id.version;
-    if (!version || !semver.validRange(range)) return;
-    // a snap is not in any semver range, a workspace would install a version of the range instead
-    if (semver.valid(version) && semver.satisfies(version, range)) return;
-    const { version: versionInRange } = getValidComponentVersion(range);
-    // e.g. "<2.0.0" is coerced to "2.0.0", which is out of the range. there's no version to take for such a range.
-    if (versionInRange && semver.satisfies(versionInRange, range)) {
-      dependency.id = dependency.id.changeVersion(versionInRange);
-    }
+    const versionInRange = version ? getVersionInRangeIfOutOfIt(version, range) : undefined;
+    if (versionInRange) dependency.id = dependency.id.changeVersion(versionInRange);
   }
 
   private setVersionFromConfig(id: ComponentID) {
