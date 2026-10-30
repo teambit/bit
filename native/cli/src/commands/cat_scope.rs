@@ -42,18 +42,43 @@ struct ScopeEntry {
 fn parse_options(args: &[&str]) -> Option<Options> {
     let mut opts = Options::default();
     for &arg in args {
-        match arg {
-            "-f" | "--full" => opts.full = true,
-            "-j" | "--json" => opts.json = true,
-            "-e" | "--json-extra" => opts.json_extra = true,
-            "--no-color" | "--color" | "--color=true" | "--color=false" | "--color=always" => {}
-            val if !val.starts_with('-') && opts.scope_path.is_none() => {
-                opts.scope_path = Some(val.to_owned());
-            }
-            _ => return None,
-        }
+        apply_cat_scope_arg(&mut opts, arg)?;
     }
     Some(opts)
+}
+
+fn apply_cat_scope_arg(opts: &mut Options, arg: &str) -> Option<()> {
+    match arg {
+        "-f" | "--full" | "--full=true" => opts.full = true,
+        "--full=false" => opts.full = false,
+        "-j" | "--json" | "--json=true" => opts.json = true,
+        "--json=false" => opts.json = false,
+        "-e" | "--json-extra" | "--json-extra=true" => opts.json_extra = true,
+        "--json-extra=false" => opts.json_extra = false,
+        "-fj" | "-jf" => {
+            opts.full = true;
+            opts.json = true;
+        }
+        "-fe" | "-ef" => {
+            opts.full = true;
+            opts.json_extra = true;
+        }
+        "-je" | "-ej" => {
+            opts.json = true;
+            opts.json_extra = true;
+        }
+        "-fje" | "-fej" | "-jfe" | "-jef" | "-efj" | "-ejf" => {
+            opts.full = true;
+            opts.json = true;
+            opts.json_extra = true;
+        }
+        "--no-color" | "--color" | "--color=true" | "--color=false" | "--color=always" => {}
+        val if !val.starts_with('-') && opts.scope_path.is_none() => {
+            opts.scope_path = Some(val.to_owned());
+        }
+        _ => return None,
+    }
+    Some(())
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

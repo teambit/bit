@@ -179,26 +179,41 @@ fn parse_sync(rest: &[&str]) -> Option<SyncOptions> {
     let mut opts = SyncOptions::default();
     let mut idx = 0;
     while idx < rest.len() {
-        match rest[idx] {
-            "--all" => opts.all = true,
-            "--main" => opts.main = true,
-            "--dry-run" => opts.dry_run = true,
-            "--init" => opts.init = true,
-            "--branch" => {
-                idx += 1;
-                opts.branch = Some((*rest.get(idx)?).to_owned());
-            }
-            arg if arg.starts_with("--branch=") => {
-                opts.branch = Some(arg["--branch=".len()..].to_owned());
-            }
-            arg if !arg.starts_with('-') && opts.lane.is_none() => {
-                opts.lane = Some(arg.to_owned());
-            }
-            _ => return None,
-        }
-        idx += 1;
+        idx += apply_sync_arg(&mut opts, rest[idx], rest.get(idx + 1).copied())?;
     }
     Some(opts)
+}
+
+fn apply_sync_arg(opts: &mut SyncOptions, arg: &str, next: Option<&str>) -> Option<usize> {
+    if let Some(val) = arg.strip_prefix("--branch=") {
+        if val.is_empty() || val.starts_with('-') {
+            return None;
+        }
+        opts.branch = Some(val.to_owned());
+        return Some(1);
+    }
+    match arg {
+        "--all" | "--all=true" => opts.all = true,
+        "--all=false" => opts.all = false,
+        "--main" | "--main=true" => opts.main = true,
+        "--main=false" => opts.main = false,
+        "--dry-run" | "--dry-run=true" => opts.dry_run = true,
+        "--dry-run=false" => opts.dry_run = false,
+        "--init" | "--init=true" => opts.init = true,
+        "--init=false" => opts.init = false,
+        "--branch" => {
+            opts.branch = Some(
+                next.filter(|val| !val.is_empty() && !val.starts_with('-'))?
+                    .into(),
+            );
+            return Some(2);
+        }
+        val if !val.starts_with('-') && opts.lane.is_none() => {
+            opts.lane = Some(val.to_owned());
+        }
+        _ => return None,
+    }
+    Some(1)
 }
 
 pub(super) fn validate_sync_options(opts: &SyncOptions) -> Result<(), String> {

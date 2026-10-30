@@ -13,6 +13,12 @@ fn ordinary_snaps() {
     assert!(
         parse(&["-u", "--unmerged"]).is_some_and(|options| options.unmodified && options.unmerged),
     );
+    assert!(
+        parse(&["--message=inline", "--unmodified=true", "--no-color"])
+            .is_some_and(
+                |options| options.message.as_deref() == Some("inline") && options.unmodified
+            ),
+    );
 }
 
 #[test]

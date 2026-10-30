@@ -47,11 +47,16 @@ fn apply_merge_arg(rest: &[&str], idx: usize, opts: &mut MergeOptions) -> Option
         return Some(next_idx);
     }
     match arg {
-        "-p" | "--patch" => opts.bump.patch = true,
-        "--minor" => opts.bump.minor = true,
-        "--major" => opts.bump.major = true,
-        "--no-bitmap-commit" => opts.no_bitmap_commit = true,
-        "--skip-push" => opts.skip_push = true,
+        "-p" | "--patch" | "--patch=true" => opts.bump.patch = true,
+        "--patch=false" => opts.bump.patch = false,
+        "--minor" | "--minor=true" => opts.bump.minor = true,
+        "--minor=false" => opts.bump.minor = false,
+        "--major" | "--major=true" => opts.bump.major = true,
+        "--major=false" => opts.bump.major = false,
+        "--no-bitmap-commit" | "--no-bitmap-commit=true" => opts.no_bitmap_commit = true,
+        "--no-bitmap-commit=false" => opts.no_bitmap_commit = false,
+        "--skip-push" | "--skip-push=true" => opts.skip_push = true,
+        "--skip-push=false" => opts.skip_push = false,
         _ => {}
     }
     Some(idx + 1)
@@ -108,6 +113,10 @@ fn apply_merge_equals_arg(arg: &str, idx: usize, opts: &mut MergeOptions) -> Opt
         opts.branch = Some(val.to_owned());
     } else if let Some(val) = arg.strip_prefix("--increment=") {
         opts.bump.increment = Some(val.to_owned());
+    } else if let Some(val) = arg.strip_prefix("--increment-by=") {
+        opts.bump.increment_by = Some(val.to_owned());
+    } else if let Some(val) = arg.strip_prefix("--versions-file=") {
+        opts.bump.versions_file = Some(val.to_owned());
     } else {
         let val = arg.strip_prefix("--prerelease-id=")?;
         opts.bump.prerelease_id = Some(val.to_owned());

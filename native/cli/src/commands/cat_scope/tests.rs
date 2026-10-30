@@ -20,6 +20,19 @@ fn parses_cat_scope_flags_including_full() {
         parse_options(&["--full"]),
         Some(Options { scope_path: None, full: true, json: false, json_extra: false }),
     );
+    assert_eq!(
+        parse_options(&["-fje", "my-scope"]),
+        Some(Options {
+            scope_path: Some("my-scope".into()),
+            full: true,
+            json: true,
+            json_extra: true,
+        }),
+    );
+    assert_eq!(
+        parse_options(&["--full=true", "--json=false"]),
+        Some(Options { scope_path: None, full: true, json: false, json_extra: false }),
+    );
 }
 
 #[test]

@@ -64,22 +64,21 @@ fn apply_pr_arg(rest: &[&str], idx: usize, opts: &mut PrOptions) -> Option<usize
         return Some(next_idx);
     }
     match rest[idx] {
-        "-b" | "--build" => Some(consume_bool_flag(rest, idx, &mut opts.build)),
-        "-s" | "--strict" => Some(consume_bool_flag(rest, idx, &mut opts.strict)),
-        "-d" | "--dry-run" => {
-            opts.dry_run = true;
-            Some(idx + 1)
-        }
-        "--keep-lane" => {
-            opts.keep_lane = true;
-            Some(idx + 1)
-        }
-        "--skip-cleanup" => {
-            opts.skip_cleanup = true;
-            Some(idx + 1)
-        }
-        _ => Some(idx + 1),
+        "-b" | "--build" => return Some(consume_bool_flag(rest, idx, &mut opts.build)),
+        "--build=true" => opts.build = true,
+        "--build=false" => opts.build = false,
+        "-s" | "--strict" => return Some(consume_bool_flag(rest, idx, &mut opts.strict)),
+        "--strict=true" => opts.strict = true,
+        "--strict=false" => opts.strict = false,
+        "-d" | "--dry-run" | "--dry-run=true" => opts.dry_run = true,
+        "--dry-run=false" => opts.dry_run = false,
+        "--keep-lane" | "--keep-lane=true" => opts.keep_lane = true,
+        "--keep-lane=false" => opts.keep_lane = false,
+        "--skip-cleanup" | "--skip-cleanup=true" => opts.skip_cleanup = true,
+        "--skip-cleanup=false" => opts.skip_cleanup = false,
+        _ => {}
     }
+    Some(idx + 1)
 }
 
 fn apply_pr_value_arg(rest: &[&str], idx: usize, opts: &mut PrOptions) -> Option<usize> {

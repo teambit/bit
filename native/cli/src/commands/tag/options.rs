@@ -98,6 +98,9 @@ fn read(args: &[&str]) -> Option<Flags> {
     while index < args.len() {
         let argument = alias(args[index]);
         index += 1;
+        if argument == "--no-color" {
+            continue;
+        }
         if !argument.starts_with('-') {
             flags.patterns.push(pattern(argument)?.to_string());
             continue;

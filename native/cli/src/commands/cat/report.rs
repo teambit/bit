@@ -3,7 +3,10 @@
 use super::Options;
 use crate::commands::status::js::decline;
 use serde_json::{Map, Value, json};
-use std::io;
+use std::{
+    io,
+    path::{Component, Path},
+};
 
 pub(super) fn render(value: &Value, options: &Options<'_>) -> io::Result<String> {
     let files = value["files"].as_array().ok_or_else(|| decline("cat files"))?;
@@ -89,4 +92,40 @@ fn text_config(config: &Value) -> io::Result<String> {
         }
     }
     Ok(lines.join("\n"))
+}
+
+pub(super) fn source_files(directory: &Path, names: &[String]) -> io::Result<Vec<Value>> {
+    if names.len() > 16_384 {
+        return Err(decline("cat workspace file count budget"));
+    }
+    let mut current = Vec::with_capacity(names.len());
+    let mut remaining = 96 * 1024 * 1024_u64;
+    for name in names {
+        if !safe_relative(name) {
+            return Err(decline("cat workspace file path"));
+        }
+        let path = directory.join(name);
+        let metadata = std::fs::symlink_metadata(&path)?;
+        if metadata.file_type().is_symlink()
+            || !metadata.is_file()
+            || metadata.len() > 8 * 1024 * 1024
+            || metadata.len() > remaining
+        {
+            return Err(decline("cat workspace file shape or size"));
+        }
+        let bytes = std::fs::read(path)?;
+        remaining = remaining
+            .checked_sub(bytes.len() as u64)
+            .ok_or_else(|| decline("cat workspace source budget"))?;
+        current.push(json!({"path":name,"content":String::from_utf8_lossy(&bytes)}));
+    }
+    Ok(current)
+}
+
+pub(super) fn safe_relative(path: &str) -> bool {
+    path == "."
+        || (!path.is_empty()
+            && Path::new(path)
+                .components()
+                .all(|component| matches!(component, Component::Normal(_))))
 }

@@ -24,14 +24,19 @@ pub fn parse(args: &[&str]) -> Option<Options> {
             other => other,
         };
         index += 1;
+        if flag == "--no-color" {
+            continue;
+        }
         if !flag.starts_with('-') {
             options.positional(flag)?;
-        } else if seen.contains(&flag) {
-            return None;
-        } else {
-            seen.push(flag);
-            index += options.flag(flag, args.get(index).copied())?;
+            continue;
         }
+        let canonical = flag.split_once('=').map_or(flag, |(name, _)| name);
+        if seen.contains(&canonical) {
+            return None;
+        }
+        seen.push(canonical);
+        index += options.flag(flag, args.get(index).copied())?;
     }
     Some(options)
 }
@@ -53,15 +58,25 @@ impl Options {
 
     /// One flag; the number of values it consumed.
     fn flag(&mut self, flag: &str, next: Option<&str>) -> Option<usize> {
+        if let Some(val) = flag.strip_prefix("--message=") {
+            if val.starts_with('-') {
+                return None;
+            }
+            self.message = Some(val.to_string());
+            return Some(0);
+        }
         match flag {
             "--message" => {
                 let message = next.filter(|message| !message.starts_with('-'))?;
                 self.message = Some(message.to_string());
                 return Some(1);
             }
-            "--unmodified" => self.unmodified = true,
-            "--unmerged" => self.unmerged = true,
-            "--skip-auto-snap" => self.skip_auto_snap = true,
+            "--unmodified" | "--unmodified=true" => self.unmodified = true,
+            "--unmodified=false" => self.unmodified = false,
+            "--unmerged" | "--unmerged=true" => self.unmerged = true,
+            "--unmerged=false" => self.unmerged = false,
+            "--skip-auto-snap" | "--skip-auto-snap=true" => self.skip_auto_snap = true,
+            "--skip-auto-snap=false" => self.skip_auto_snap = false,
             _ => return None,
         }
         Some(0)

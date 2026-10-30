@@ -22,7 +22,7 @@ use std::{
     env,
     ffi::OsString,
     io::{self, Write},
-    path::{Component, Path},
+    path::Path,
     process::ExitCode,
 };
 
@@ -41,24 +41,47 @@ fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options::default();
     let mut index = 0;
     while let Some(arg) = args.get(index) {
-        match *arg {
-            "--file" | "-f" if options.file.is_none() => {
-                index += 1;
-                options.file = Some(
-                    args.get(index)
-                        .copied()
-                        .filter(|file| !file.is_empty())?,
-                );
-            }
-            "--config" | "-c" if !options.config => options.config = true,
-            "--all" | "-a" if !options.all => options.all = true,
-            "--json" | "-j" if !options.json => options.json = true,
-            id if !id.starts_with('-') && options.id.is_none() => options.id = Some(id),
-            _ => return None,
-        }
-        index += 1;
+        index += apply_cat_arg(&mut options, arg, args.get(index + 1).copied())?;
     }
     options.id.map(|_| options)
+}
+
+fn apply_cat_arg<'a>(
+    options: &mut Options<'a>,
+    arg: &'a str,
+    next: Option<&'a str>,
+) -> Option<usize> {
+    if let Some(val) = arg.strip_prefix("--file=") {
+        return set_cat_file(options, val, 1);
+    }
+    match arg {
+        "--no-color" | "--config=false" | "--all=false" | "--json=false" => Some(1),
+        "--file" | "-f" => set_cat_file(options, next?, 2),
+        "--config" | "-c" | "--config=true" => set_cat_bool(&mut options.config),
+        "--all" | "-a" | "--all=true" => set_cat_bool(&mut options.all),
+        "--json" | "-j" | "--json=true" => set_cat_bool(&mut options.json),
+        id if !id.starts_with('-') && options.id.is_none() => {
+            options.id = Some(id);
+            Some(1)
+        }
+        _ => None,
+    }
+}
+
+fn set_cat_file<'a>(options: &mut Options<'a>, val: &'a str, consumed: usize) -> Option<usize> {
+    if options.file.is_some() || val.is_empty() || val.starts_with('-') {
+        return None;
+    }
+    options.file = Some(val);
+    Some(consumed)
+}
+
+fn set_cat_bool(slot: &mut bool) -> Option<usize> {
+    if *slot {
+        return None;
+    }
+    *slot = true;
+    Some(1)
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -353,7 +376,7 @@ struct WorkspaceFiles {
 }
 
 fn workspace_files(root: &Path, entry: &bitmap::Entry) -> io::Result<WorkspaceFiles> {
-    if !safe_relative(&entry.root_dir) {
+    if !report::safe_relative(&entry.root_dir) {
         return Err(decline("cat workspace root path"));
     }
     let config = bit_install::config::WorkspaceConfig::load(root)?;
@@ -379,41 +402,5 @@ fn workspace_files(root: &Path, entry: &bitmap::Entry) -> io::Result<WorkspaceFi
             "test":false,
         })).collect::<Vec<_>>(),
     });
-    Ok(WorkspaceFiles { files: source_files(&component.dir, &component.files)?, docs })
-}
-
-fn source_files(directory: &Path, names: &[String]) -> io::Result<Vec<Value>> {
-    if names.len() > 16_384 {
-        return Err(decline("cat workspace file count budget"));
-    }
-    let mut current = Vec::with_capacity(names.len());
-    let mut remaining = 96 * 1024 * 1024_u64;
-    for name in names {
-        if !safe_relative(name) {
-            return Err(decline("cat workspace file path"));
-        }
-        let path = directory.join(name);
-        let metadata = std::fs::symlink_metadata(&path)?;
-        if metadata.file_type().is_symlink()
-            || !metadata.is_file()
-            || metadata.len() > 8 * 1024 * 1024
-            || metadata.len() > remaining
-        {
-            return Err(decline("cat workspace file shape or size"));
-        }
-        let bytes = std::fs::read(path)?;
-        remaining = remaining
-            .checked_sub(bytes.len() as u64)
-            .ok_or_else(|| decline("cat workspace source budget"))?;
-        current.push(json!({"path":name,"content":String::from_utf8_lossy(&bytes)}));
-    }
-    Ok(current)
-}
-
-fn safe_relative(path: &str) -> bool {
-    path == "."
-        || (!path.is_empty()
-            && Path::new(path)
-                .components()
-                .all(|component| matches!(component, Component::Normal(_))))
+    Ok(WorkspaceFiles { files: report::source_files(&component.dir, &component.files)?, docs })
 }

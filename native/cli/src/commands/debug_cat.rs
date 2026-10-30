@@ -49,9 +49,16 @@ fn parse_object_options(args: &[&str]) -> Option<ObjectOptions> {
     let mut opts = ObjectOptions::default();
     for &arg in args {
         match arg {
-            "-p" | "--pretty" => opts.pretty = true,
-            "-s" | "--stringify" => opts.stringify = true,
-            "--headers" => opts.headers = true,
+            "-p" | "--pretty" | "--pretty=true" => opts.pretty = true,
+            "--pretty=false" => opts.pretty = false,
+            "-s" | "--stringify" | "--stringify=true" => opts.stringify = true,
+            "--stringify=false" => opts.stringify = false,
+            "-ps" | "-sp" => {
+                opts.pretty = true;
+                opts.stringify = true;
+            }
+            "--headers" | "--headers=true" => opts.headers = true,
+            "--headers=false" => opts.headers = false,
             "--no-color" => {}
             val if !val.starts_with('-') && opts.hash.is_empty() => val.clone_into(&mut opts.hash),
             _ => return None,
@@ -72,7 +79,8 @@ fn parse_id_json_options(args: &[&str]) -> Option<IdJsonOptions> {
     let mut opts = IdJsonOptions::default();
     for &arg in args {
         match arg {
-            "-j" | "--json" => opts.json = true,
+            "-j" | "--json" | "--json=true" => opts.json = true,
+            "--json=false" => opts.json = false,
             "--no-color" => {}
             val if !val.starts_with('-') && opts.id.is_empty() => val.clone_into(&mut opts.id),
             _ => return None,

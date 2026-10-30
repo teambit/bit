@@ -121,6 +121,9 @@ fn split<'a>(args: &[&'a str]) -> Option<(Vec<String>, Vec<&'a str>)> {
     let mut ids = Vec::new();
     let mut flags: Vec<&str> = Vec::new();
     for arg in args {
+        if *arg == "--no-color" {
+            continue;
+        }
         let duplicate = flags.contains(arg);
         let invalid_id =
             arg.is_empty() || arg.len() > 4096 || arg.contains('\0') || ids.len() >= 4096;

@@ -34,21 +34,38 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     };
     let mut args = args.iter().copied();
     while let Some(arg) = args.next() {
-        if set_boolean_flag(&mut options, arg) {
-            continue;
-        }
-        match arg {
-            "--resume" if options.resume.is_none() => {
-                options.resume = Some(resume_id(&mut args)?);
-            }
-            pattern if is_pattern(pattern) && options.ids.len() < 4096 => {
-                options.ids.push(pattern.to_owned());
-            }
-            id if valid_id(id) && options.ids.len() < 4096 => options.ids.push(id.to_owned()),
-            _ => return None,
-        }
+        apply_export_arg(&mut options, arg, &mut args)?;
     }
     valid_combination(&options).then_some(options)
+}
+
+fn apply_export_arg<'a>(
+    options: &mut Options,
+    arg: &str,
+    args: &mut impl Iterator<Item = &'a str>,
+) -> Option<()> {
+    if arg == "--no-color" || set_boolean_flag(options, arg) {
+        return Some(());
+    }
+    if let Some(val) = arg.strip_prefix("--resume=") {
+        return set_resume_id(options, val);
+    }
+    match arg {
+        "--resume" => set_resume_id(options, args.next()?),
+        item if (is_pattern(item) || valid_id(item)) && options.ids.len() < 4096 => {
+            options.ids.push(item.to_owned());
+            Some(())
+        }
+        _ => None,
+    }
+}
+
+fn set_resume_id(options: &mut Options, client_id: &str) -> Option<()> {
+    if options.resume.is_some() || !valid_client_id(client_id) {
+        return None;
+    }
+    options.resume = Some(client_id.to_owned());
+    Some(())
 }
 
 fn valid_combination(options: &Options) -> bool {
@@ -61,7 +78,13 @@ fn valid_combination(options: &Options) -> bool {
 }
 
 fn set_boolean_flag(options: &mut Options, arg: &str) -> bool {
-    let slot = match arg {
+    let (flag, val) = match arg.split_once('=') {
+        Some((flag, "true")) => (flag, true),
+        Some((flag, "false")) => (flag, false),
+        None => (arg, true),
+        _ => return false,
+    };
+    let slot = match flag {
         "--eject" | "-e" => &mut options.lifecycle.eject,
         "--open-browser" => &mut options.lifecycle.open_browser,
         "--all" | "-a" => &mut options.all,
@@ -77,7 +100,7 @@ fn set_boolean_flag(options: &mut Options, arg: &str) -> bool {
     if *slot {
         return false;
     }
-    *slot = true;
+    *slot = val;
     true
 }
 
@@ -86,11 +109,6 @@ pub(super) fn is_pattern(pattern: &str) -> bool {
         && !pattern.starts_with('-')
         && pattern.contains('*')
         && !pattern.contains('\0')
-}
-
-fn resume_id<'a>(args: &mut impl Iterator<Item = &'a str>) -> Option<String> {
-    let client_id = args.next()?;
-    valid_client_id(client_id).then(|| client_id.to_owned())
 }
 
 fn valid_client_id(id: &str) -> bool {

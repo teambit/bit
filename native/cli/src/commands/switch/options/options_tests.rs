@@ -21,6 +21,12 @@ fn accepts_complete_switches_without_dependency_installation() {
     let conflicting =
         parse(&["s/dev", "--skip-fetch", "-x", "--force-ours", "--force-theirs"]).unwrap();
     assert!(conflicting.force_ours && conflicting.force_theirs);
+    let inline =
+        parse(&["s/dev", "--skip-fetch=true", "--pattern=foo", "--alias=my-alias", "--no-color"])
+            .unwrap();
+    assert!(inline.skip_fetch);
+    assert_eq!(inline.adoption.pattern.as_deref(), Some("foo"));
+    assert_eq!(inline.adoption.alias.as_deref(), Some("my-alias"));
 }
 
 #[test]

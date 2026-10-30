@@ -50,27 +50,39 @@ struct Options<'a> {
 fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options::default();
     for arg in args {
-        let field = match *arg {
-            "--no-color" => continue,
-            "-j" | "--json" => &mut options.json,
-            "--parents" => &mut options.parents,
-            "-o" | "--one-line" => &mut options.one_line,
-            "-f" | "--full-hash" => &mut options.full_hash,
-            "-m" | "--full-message" => &mut options.full_message,
-            "--show-hidden" => &mut options.show_hidden,
-            "-r" | "--remote" => &mut options.remote,
-            id if !id.starts_with('-') && options.id.is_none() => {
-                options.id = Some(id);
-                continue;
-            }
-            _ => return None,
-        };
-        if *field {
-            return None;
-        }
-        *field = true;
+        apply_log_arg(&mut options, arg)?;
     }
     options.id.map(|_| options)
+}
+
+fn apply_log_arg<'a>(options: &mut Options<'a>, arg: &'a str) -> Option<()> {
+    let field = match arg {
+        "--no-color"
+        | "--json=false"
+        | "--parents=false"
+        | "--one-line=false"
+        | "--full-hash=false"
+        | "--full-message=false"
+        | "--show-hidden=false"
+        | "--remote=false" => return Some(()),
+        "-j" | "--json" | "--json=true" => &mut options.json,
+        "--parents" | "--parents=true" => &mut options.parents,
+        "-o" | "--one-line" | "--one-line=true" => &mut options.one_line,
+        "-f" | "--full-hash" | "--full-hash=true" => &mut options.full_hash,
+        "-m" | "--full-message" | "--full-message=true" => &mut options.full_message,
+        "--show-hidden" | "--show-hidden=true" => &mut options.show_hidden,
+        "-r" | "--remote" | "--remote=true" => &mut options.remote,
+        id if !id.starts_with('-') && options.id.is_none() => {
+            options.id = Some(id);
+            return Some(());
+        }
+        _ => return None,
+    };
+    if *field {
+        return None;
+    }
+    *field = true;
+    Some(())
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

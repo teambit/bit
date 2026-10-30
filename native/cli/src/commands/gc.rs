@@ -149,26 +149,37 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut opts = Options::default();
     let mut idx = 0;
     while idx < args.len() {
-        match args[idx] {
-            "--no-color" => {}
-            "-d" | "--dry-run" => opts.dry_run = true,
-            "--backup" => opts.backup = true,
-            "--restore" => opts.restore = true,
-            "--restore-overwrite" => opts.restore_overwrite = true,
-            "-v" | "--verbose" => opts.verbose = true,
-            "-j" | "--json" => opts.json = true,
-            "--keep-versions" => {
-                idx += 1;
-                opts.keep_versions = Some((*args.get(idx)?).to_owned());
-            }
-            arg if arg.starts_with("--keep-versions=") => {
-                opts.keep_versions = Some(arg["--keep-versions=".len()..].to_owned());
-            }
-            _ => return None,
-        }
-        idx += 1;
+        idx += apply_gc_arg(&mut opts, args[idx], args.get(idx + 1).copied())?;
     }
     Some(opts)
+}
+
+fn apply_gc_arg(opts: &mut Options, arg: &str, next: Option<&str>) -> Option<usize> {
+    if let Some(val) = arg.strip_prefix("--keep-versions=") {
+        opts.keep_versions = Some(val.to_owned());
+        return Some(1);
+    }
+    match arg {
+        "--no-color" => {}
+        "-d" | "--dry-run" | "--dry-run=true" => opts.dry_run = true,
+        "--dry-run=false" => opts.dry_run = false,
+        "--backup" | "--backup=true" => opts.backup = true,
+        "--backup=false" => opts.backup = false,
+        "--restore" | "--restore=true" => opts.restore = true,
+        "--restore=false" => opts.restore = false,
+        "--restore-overwrite" | "--restore-overwrite=true" => opts.restore_overwrite = true,
+        "--restore-overwrite=false" => opts.restore_overwrite = false,
+        "-v" | "--verbose" | "--verbose=true" => opts.verbose = true,
+        "--verbose=false" => opts.verbose = false,
+        "-j" | "--json" | "--json=true" => opts.json = true,
+        "--json=false" => opts.json = false,
+        "--keep-versions" => {
+            opts.keep_versions = Some(next?.to_owned());
+            return Some(2);
+        }
+        _ => return None,
+    }
+    Some(1)
 }
 
 pub(super) fn parse_keep_versions(raw: &str) -> Option<u64> {

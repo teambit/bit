@@ -55,9 +55,11 @@ fn parse_flag(
     options: &mut Options,
 ) -> Option<()> {
     match argument {
-        "--no-color" => {}
-        "--ast" => options.flags.ast = true,
-        "-x" | "--skip-dependency-installation" => options.flags.skip_install = true,
+        "--no-color" | "--ast=false" | "--skip-dependency-installation=false" => {}
+        "--ast" | "--ast=true" => options.flags.ast = true,
+        "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
+            options.flags.skip_install = true;
+        }
         value if !options.scope_fork => parse_local_flag(value, arguments, options)?,
         _ => return None,
     }
@@ -68,17 +70,38 @@ fn parse_local_flag(
     arguments: &mut std::slice::Iter<'_, &str>,
     options: &mut Options,
 ) -> Option<()> {
+    if let Some(handled) = parse_local_inline(argument, options) {
+        return handled;
+    }
     match argument {
-        "-s" | "--scope" => options.scope = Some((*arguments.next()?).into()),
-        "-p" | "--path" => options.path = Some((*arguments.next()?).into()),
-        "-e" | "--env" => options.env = Some((*arguments.next()?).into()),
-        "-r" | "--refactor" => options.flags.refactor = true,
-        "--skip-config" => options.flags.skip_config = true,
-        "--preserve" => options.flags.preserve = true,
-        "--no-link" => options.flags.no_link = true,
+        "--refactor=false" | "--skip-config=false" | "--preserve=false" | "--no-link=false" => {}
+        "-s" | "--scope" => options.scope = Some(take_fork_val(arguments)?),
+        "-p" | "--path" => options.path = Some(take_fork_val(arguments)?),
+        "-e" | "--env" => options.env = Some(take_fork_val(arguments)?),
+        "-r" | "--refactor" | "--refactor=true" => options.flags.refactor = true,
+        "--skip-config" | "--skip-config=true" => options.flags.skip_config = true,
+        "--preserve" | "--preserve=true" => options.flags.preserve = true,
+        "--no-link" | "--no-link=true" => options.flags.no_link = true,
         _ => return None,
     }
     Some(())
+}
+fn parse_local_inline(argument: &str, options: &mut Options) -> Option<Option<()>> {
+    if let Some(val) = argument.strip_prefix("--scope=") {
+        return Some(valid_fork_val(val).map(|val| options.scope = Some(val)));
+    }
+    if let Some(val) = argument.strip_prefix("--path=") {
+        return Some(valid_fork_val(val).map(|val| options.path = Some(val)));
+    }
+    argument
+        .strip_prefix("--env=")
+        .map(|val| valid_fork_val(val).map(|val| options.env = Some(val)))
+}
+fn take_fork_val(arguments: &mut std::slice::Iter<'_, &str>) -> Option<String> {
+    valid_fork_val(arguments.next()?)
+}
+fn valid_fork_val(val: &str) -> Option<String> {
+    (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
 }
 impl Options {
     pub fn multiple(&self) -> bool {

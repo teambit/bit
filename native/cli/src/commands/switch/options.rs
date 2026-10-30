@@ -34,6 +34,9 @@ fn parse_mode(args: &[&str], import: bool) -> Option<Options> {
     let mut seen = HashSet::new();
     let mut values = args.iter().copied();
     while let Some(value) = values.next() {
+        if value == "--no-color" {
+            continue;
+        }
         if value.starts_with('-') {
             let key = flag(&mut options, value, &mut values, import)?;
             if !seen.insert(key) {
@@ -58,15 +61,61 @@ fn flag<'a>(
     values: &mut impl Iterator<Item = &'a str>,
     import: bool,
 ) -> Option<&'static str> {
+    if let Some(key) = inline_flag(options, flag, import) {
+        return key;
+    }
     let key = match flag {
-        "-x" | "--skip-dependency-installation" => set(&mut options.skip_install, "install"),
-        "--force-ours" => set(&mut options.force_ours, "ours"),
-        "--force-theirs" => set(&mut options.force_theirs, "theirs"),
+        "-x" | "--skip-dependency-installation" => set(&mut options.skip_install, true, "install"),
+        "--force-ours" => set(&mut options.force_ours, true, "ours"),
+        "--force-theirs" => set(&mut options.force_theirs, true, "theirs"),
         "-p" | "--pattern" => take(&mut options.adoption.pattern, values, "pattern")?,
         "-r" | "--auto-merge-resolve" => take(&mut options.adoption.strategy, values, "strategy")?,
         other if !import => switch_flag(options, other, values)?,
         _ => return None,
     };
+    Some(key)
+}
+fn inline_flag(options: &mut Options, flag: &str, import: bool) -> Option<Option<&'static str>> {
+    let (name, val) = flag.split_once('=')?;
+    Some(match name {
+        "--skip-dependency-installation" => {
+            set_inline_bool(&mut options.skip_install, val, "install")
+        }
+        "--force-ours" => set_inline_bool(&mut options.force_ours, val, "ours"),
+        "--force-theirs" => set_inline_bool(&mut options.force_theirs, val, "theirs"),
+        "--pattern" => set_inline_str(&mut options.adoption.pattern, val, "pattern"),
+        "--auto-merge-resolve" => set_inline_str(&mut options.adoption.strategy, val, "strategy"),
+        other if !import => switch_inline_flag(options, other, val),
+        _ => None,
+    })
+}
+fn switch_inline_flag(options: &mut Options, name: &str, val: &str) -> Option<&'static str> {
+    match name {
+        "--skip-fetch" => set_inline_bool(&mut options.skip_fetch, val, "fetch"),
+        "--verbose" => set_inline_bool(&mut options.verbose, val, "verbose"),
+        "--workspace-only" => {
+            set_inline_bool(&mut options.adoption.workspace_only, val, "workspace")
+        }
+        "--json" => set_inline_bool(&mut options.adoption.json, val, "json"),
+        "--head" => set_inline_bool(&mut options.adoption.head, val, "head"),
+        "--get-all" => set_inline_bool(&mut options.adoption.get_all, val, "all"),
+        "--alias" => set_inline_str(&mut options.adoption.alias, val, "alias"),
+        _ => None,
+    }
+}
+fn set_inline_bool(slot: &mut bool, val: &str, key: &'static str) -> Option<&'static str> {
+    let enabled = match val {
+        "true" => true,
+        "false" => false,
+        _ => return None,
+    };
+    Some(set(slot, enabled, key))
+}
+fn set_inline_str(slot: &mut Option<String>, val: &str, key: &'static str) -> Option<&'static str> {
+    if val.is_empty() || val.starts_with('-') {
+        return None;
+    }
+    *slot = Some(val.to_owned());
     Some(key)
 }
 fn switch_flag<'a>(
@@ -75,18 +124,18 @@ fn switch_flag<'a>(
     values: &mut impl Iterator<Item = &'a str>,
 ) -> Option<&'static str> {
     Some(match flag {
-        "--skip-fetch" => set(&mut options.skip_fetch, "fetch"),
-        "--verbose" => set(&mut options.verbose, "verbose"),
-        "--workspace-only" => set(&mut options.adoption.workspace_only, "workspace"),
-        "-j" | "--json" => set(&mut options.adoption.json, "json"),
-        "-h" | "--head" => set(&mut options.adoption.head, "head"),
-        "-a" | "--get-all" => set(&mut options.adoption.get_all, "all"),
+        "--skip-fetch" => set(&mut options.skip_fetch, true, "fetch"),
+        "--verbose" => set(&mut options.verbose, true, "verbose"),
+        "--workspace-only" => set(&mut options.adoption.workspace_only, true, "workspace"),
+        "-j" | "--json" => set(&mut options.adoption.json, true, "json"),
+        "-h" | "--head" => set(&mut options.adoption.head, true, "head"),
+        "-a" | "--get-all" => set(&mut options.adoption.get_all, true, "all"),
         "-n" | "--alias" => take(&mut options.adoption.alias, values, "alias")?,
         _ => return None,
     })
 }
-fn set(slot: &mut bool, key: &'static str) -> &'static str {
-    *slot = true;
+fn set(slot: &mut bool, val: bool, key: &'static str) -> &'static str {
+    *slot = val;
     key
 }
 fn take<'a>(
