@@ -201,6 +201,9 @@ export class ReactApp implements Application {
     const installer = this.dependencyResolver.getInstaller({
       packageManager: 'teambit.dependencies/pnpm',
       rootDir: capsuleSsrDir,
+      // the ssr dir is deployed as is, so its node_modules must be flat and self-contained
+      nodeLinker: 'hoisted',
+      installingContext: { inCapsule: true },
     });
     await installer.install(capsuleSsrDir, this.getSsrPolicy(), new ComponentMap(new Map()));
     return ssrAppDir;

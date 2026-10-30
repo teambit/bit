@@ -558,7 +558,7 @@ The backend schema and the query the frontend sends have drifted apart. Compare 
 | Using git for version control                                                   | Bit only — no git in the workspace                                                                                        |
 | Guessing a component ID                                                         | Check `package.json` under `componentId` or use `bit list`                                                                |
 | Creating a component that already exists                                        | Always `bit list` and search MCP first                                                                                    |
-| Using `npm install` or `pnpm`                                                   | Use `bit install` to install packages                                                                                     |
+| Using `npm install` or `pnpm`                                                   | Use `bit install` — unless the workspace uses `externalPackageManager` mode                                               |
 | Using `tsc` or `npx tsc` to check types                                         | Use `bit validate`, `bit check-types`, or `bit test`                                                                      |
 | Trying to create a scope from the CLI                                           | Scopes only exist on Bit Cloud — use the `create_scope` MCP tool                                                          |
 | Creating a scope for a domain that already has one                              | Run `read_scope` / `list_components` first — reuse the existing scope                                                     |

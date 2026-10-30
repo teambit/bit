@@ -741,7 +741,7 @@ export class DependencyResolverMain {
     const packageManager = this.packageManagerSlot.get(packageManagerName);
 
     if (!packageManager) {
-      throw new PackageManagerNotFound(this.packageManagerName);
+      throw new PackageManagerNotFound(packageManagerName);
     }
 
     const preInstallSubscribers = this.getPreInstallSubscribers();
