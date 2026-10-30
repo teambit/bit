@@ -42,14 +42,18 @@ describe('isUnsupportedQueryError', () => {
 
   it('recognizes a 400 response whose server message was dropped by the client', () => {
     // Bit Cloud's error link turns the 400 into a GraphQL error carrying only Apollo's message.
-    expect(isUnsupportedQueryError({ graphQLErrors: [{ message: 'Response not successful: Received status code 400' }] })).toBe(true);
+    expect(
+      isUnsupportedQueryError({ graphQLErrors: [{ message: 'Response not successful: Received status code 400' }] })
+    ).toBe(true);
     expect(isUnsupportedQueryError({ networkError: { statusCode: 400 } })).toBe(true);
   });
 
   it('does not treat other failures as a schema mismatch', () => {
     expect(isUnsupportedQueryError({ graphQLErrors: [{ message: 'timeout' }] })).toBe(false);
     expect(isUnsupportedQueryError({ networkError: new Error('Failed to fetch') })).toBe(false);
-    expect(isUnsupportedQueryError({ graphQLErrors: [{ message: 'Response not successful: Received status code 500' }] })).toBe(false);
+    expect(
+      isUnsupportedQueryError({ graphQLErrors: [{ message: 'Response not successful: Received status code 500' }] })
+    ).toBe(false);
     expect(isUnsupportedQueryError(undefined)).toBe(false);
   });
 });
@@ -68,10 +72,9 @@ it('stops at once and reports unsupported when the server schema lacks the query
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <MockedProvider mocks={mocks}>{children}</MockedProvider>
   );
-  const { result } = renderHook(
-    () => useBulkPagedQuery({ query: QUERY, resultField: 'items', pairs, pageSize: 25 }),
-    { wrapper }
-  );
+  const { result } = renderHook(() => useBulkPagedQuery({ query: QUERY, resultField: 'items', pairs, pageSize: 25 }), {
+    wrapper,
+  });
 
   await waitFor(() => expect(result.current.unsupported).toBe(true));
   expect(result.current.loading).toBe(false);
@@ -97,7 +100,9 @@ it('keeps loaded results and retries when a later page fails', async () => {
   const mocks = [
     {
       request: { query: PAGED, variables: { pairs, offset: 0, limit: 1, host: undefined } },
-      result: { data: { getHost: { __typename: 'ComponentHost', id: 'h', items: [{ __typename: 'Item', name: 'a' }] } } },
+      result: {
+        data: { getHost: { __typename: 'ComponentHost', id: 'h', items: [{ __typename: 'Item', name: 'a' }] } },
+      },
     },
     // the second page fails with a 400: that is not a schema mismatch, the first page worked.
     {

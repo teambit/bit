@@ -102,7 +102,6 @@ import { HttpHelper } from '../http-helper';
     before(async () => {
       httpHelper = new HttpHelper(helper);
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents();

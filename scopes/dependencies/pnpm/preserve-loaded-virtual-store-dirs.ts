@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import type { Logger } from '@teambit/logger';
+import { dirSpellings, loadedModuleFiles } from './loaded-module-files';
 
 /**
  * Keeps packages the running process has loaded from `node_modules/.pnpm` requireable across an
@@ -30,60 +31,17 @@ import type { Logger } from '@teambit/logger';
  * directories that back `require.cache` entries for the same reason this module exists, and a later
  * command's prune - whose process has nothing loaded from it - removes it.
  *
- * CJS modules are found in `require.cache`. ESM modules live in node's ESM module map, which has
- * no enumeration API, so aspect-loader records every file it loads through dynamic `import()` in a
- * `Symbol.for`-keyed global set (see aspect-loader's record-loaded-esm-file.ts, the writer side of
- * this contract - keep the two in sync; a symbol rather than an import because the dependency
- * between these packages runs the other way). For ESM only entry files are recorded, not their
- * transitive static imports - those are fully loaded into memory and are not re-read, while an
- * entry's own package directory, where deferred imports and config-file reads point, is restored
- * wholly.
+ * A package loaded from somewhere else under the workspace's node_modules - a root component's own
+ * node_modules, say - is exposed to the same hazard by a different mechanism, and is preserved by
+ * preserve-loaded-nested-pkg-dirs.ts.
  */
-const LOADED_ESM_FILES = Symbol.for('bit.loaded-esm-module-files');
-
-function loadedModuleFiles(): string[] {
-  return [...Object.keys(require.cache), ...recordedEsmFiles()];
-}
-
-/**
- * the ESM loads aspect-loader recorded. the contract is a global under a well-known symbol, so it
- * is held by convention rather than by types and anything could occupy the key - a value that is
- * not a set of paths is treated as absent rather than allowed to throw, since this runs inside
- * every install and prune, where CJS preservation still works without it.
- */
-function recordedEsmFiles(): string[] {
-  const recorded = (globalThis as { [LOADED_ESM_FILES]?: unknown })[LOADED_ESM_FILES] as
-    | Iterable<unknown>
-    | undefined;
-  if (!recorded || typeof recorded[Symbol.iterator] !== 'function') return [];
-  return [...recorded].filter((file): file is string => typeof file === 'string');
-}
-
-/**
- * the spellings of the virtual store that loaded module paths can start with: the given one and its
- * realpath. node resolves a module's filename through its realpath, so the require.cache keys for a
- * workspace reached through a symlink - the normal case on macOS, where a temp dir under /var is
- * really under /private/var - are spelled differently from the rootDir the install was handed.
- * Comparing against the given spelling alone would match nothing there and silently turn the whole
- * preservation into a no-op. The given spelling is kept too, for --preserve-symlinks.
- */
-function virtualStoreDirSpellings(virtualStoreDir: string): string[] {
-  const resolved = path.resolve(virtualStoreDir);
-  let real: string;
-  try {
-    real = fs.realpathSync(resolved);
-  } catch {
-    return [resolved]; // not there yet (a first install, a lockfile-only run) - nothing is loaded from it either
-  }
-  return real === resolved ? [resolved] : [resolved, real];
-}
 
 /**
  * the loaded module files (require.cache plus the recorded ESM loads) that live under the given
  * virtual store, as the spelling of the store each one matched plus the path segments below it.
  */
 function* loadedFilesUnderVirtualStore(virtualStoreDir: string): Generator<{ storeDir: string; segments: string[] }> {
-  const stores = virtualStoreDirSpellings(virtualStoreDir).map((dir) => ({ dir, prefix: `${dir}${path.sep}` }));
+  const stores = dirSpellings(virtualStoreDir).map((dir) => ({ dir, prefix: `${dir}${path.sep}` }));
   for (const filename of loadedModuleFiles()) {
     const store = stores.find(({ prefix }) => filename.startsWith(prefix));
     if (!store) continue;

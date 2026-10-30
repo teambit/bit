@@ -40,27 +40,66 @@ function resolveFromCurrDir(packageName: string, aspectName: string): string | u
     return undefined;
   }
 }
+/**
+ * where a bundled distribution keeps the packages it ships, relative to its root. it installs only
+ * `@teambit/bit` at that root and nests every other `@teambit/*` as a shim package inside it - see
+ * `scopes/harmony/modules/cli-bundler/config.ts`, which explains why the nesting is what makes a
+ * bare `require('@teambit/<name>')` resolve to the shim.
+ */
+const BUNDLED_SHIMS_DIR = join('node_modules', '@teambit', 'bit', 'dist', 'core-aspects', 'node_modules');
+
+/**
+ * resolve a package that ships inside a bit installation, whichever layout that installation has:
+ * `<dir>/node_modules/<pkg>` for the module-per-file distribution, the nested shim for a bundled
+ * one. this is what makes a bundled bit installed by bvm usable at all - the path below it is the
+ * only one that exists there, and callers that got the non-existing one instead either threw
+ * ("unable to find <aspect> in <path>", on the first aspect the CLI needed) or linked a workspace
+ * to a directory that isn't there.
+ *
+ * when neither layout has the package, the module-per-file path is returned anyway - that is what
+ * callers used to get unconditionally, and several of them answer a missing directory with a
+ * fallback of their own, so handing them `undefined` would turn that into a throw.
+ */
+export function resolvePackageFromBitInstallation(bitDir: string, packageName: string): string {
+  const fromRoot = resolve(bitDir, 'node_modules', packageName);
+  if (existsSync(fromRoot)) return fromRoot;
+  const fromShims = resolve(bitDir, BUNDLED_SHIMS_DIR, packageName);
+  if (existsSync(fromShims)) return fromShims;
+  return fromRoot;
+}
+
 function resolveFromBvmDir(packageName: string): string | undefined {
   const currentBitDir = findCurrentBvmDir();
-  if (currentBitDir) {
-    return resolve(currentBitDir, 'node_modules', packageName);
-  }
-  return undefined;
+  if (!currentBitDir) return undefined;
+  return resolvePackageFromBitInstallation(currentBitDir, packageName);
 }
 
 function getAspectDirFromPath(id: string, pathsToResolveAspects?: string[], isCore = true): string {
   const aspectName = getCoreAspectName(id);
-  const packageName = isCore ? getCoreAspectPackageName(id) : getNonCorePackageName(id);
+  // a non-core aspect is resolved by the package name a component gets when it is published
+  // ("@teambit/react.react"). an env that *used* to be a core aspect is not core anymore, yet every
+  // published version of it carries the core-aspects package name ("@teambit/react") - it was core
+  // when they were published. fall back to it, so such an env resolves under either convention.
+  const packageNames = isCore
+    ? [getCoreAspectPackageName(id)]
+    : [getNonCorePackageName(id), getCoreAspectPackageName(id)];
 
-  if (pathsToResolveAspects && pathsToResolveAspects.length) {
-    const fromPaths = resolveFromPaths(packageName, aspectName, pathsToResolveAspects);
-    return fromPaths;
-  }
-  const isRunFromBvmDir = isRunFromBvm();
-  const resolvers = isRunFromBvmDir ? [resolveFromBvmDir, resolveFromCurrDir] : [resolveFromCurrDir, resolveFromBvmDir];
-  for (const resolver of resolvers) {
-    const currResolved = resolver(packageName, aspectName);
-    if (currResolved) return currResolved;
+  for (const packageName of packageNames) {
+    if (pathsToResolveAspects && pathsToResolveAspects.length) {
+      try {
+        return resolveFromPaths(packageName, aspectName, pathsToResolveAspects);
+      } catch {
+        continue;
+      }
+    }
+    const isRunFromBvmDir = isRunFromBvm();
+    const resolvers = isRunFromBvmDir
+      ? [resolveFromBvmDir, resolveFromCurrDir]
+      : [resolveFromCurrDir, resolveFromBvmDir];
+    for (const resolver of resolvers) {
+      const currResolved = resolver(packageName, aspectName);
+      if (currResolved) return currResolved;
+    }
   }
   throw new Error(`unable to find ${aspectName}`);
 }
@@ -139,10 +178,13 @@ export function getCoreAspectPackageName(id: string): string {
  * id for example: 'org.frontend/ui/button'
  * convert it to package-name, for example: '@org/frontend.ui.button'
  */
-function getNonCorePackageName(id: string): string {
+export function getNonCorePackageName(id: string): string {
   const [scope, ...name] = id.split('/');
   const aspectName = name.join('.');
-  return `@${scope.replace('.', '/')}.${aspectName}`;
+  // a scope that has an owner ("teambit.react") splits into the npm scope and the first segment of
+  // the name ("@teambit/react.<name>"); a scope without one is the npm scope on its own.
+  const scopePrefix = scope.includes('.') ? `@${scope.replace('.', '/')}.` : `@${scope}/`;
+  return `${scopePrefix}${aspectName}`;
 }
 
 export async function getAspectDef(aspectName: string, runtime?: string) {

@@ -12,11 +12,13 @@ const logger = {
 };
 
 function createDependencyResolverMain(envs: Record<string, any> = {}) {
+  // none of these envs used to be a core aspect, so the back-compat lookups are off by default
+  const envsWithDefaults = { isLegacyCoreEnv: () => false, getLegacyCoreEnvPolicy: () => undefined, ...envs };
   return new DependencyResolverMain(
     {} as any,
     {} as any,
     {} as any,
-    envs as any,
+    envsWithDefaults as any,
     logger as any,
     {} as any,
     {} as any,
@@ -632,6 +634,7 @@ describe('DepenendencyResolverMain.getComponentEnvPolicyFromEnv()', () => {
       {} as any,
       {
         isCoreEnv: () => false,
+        isLegacyCoreEnv: () => false,
       } as any,
       {} as any,
       {} as any,
