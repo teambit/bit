@@ -23,12 +23,12 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub(super) struct CompJsonEdit {
+pub(in crate::commands) struct CompJsonEdit {
     pub path: PathBuf,
     pub bytes: Vec<u8>,
 }
 
-pub(super) struct BitmapMutation {
+pub(in crate::commands) struct BitmapMutation {
     pub root: PathBuf,
     pub reason: String,
     pub bitmap_before: Vec<u8>,
@@ -38,7 +38,7 @@ pub(super) struct BitmapMutation {
 }
 
 impl BitmapMutation {
-    pub(super) fn load(root: &Path) -> Result<(Self, Bitmap), Failure> {
+    pub(in crate::commands) fn load(root: &Path) -> Result<(Self, Bitmap), Failure> {
         let workspace_bytes = fs::read(root.join("workspace.jsonc"))?;
         let bitmap_before = fs::read(root.join(".bitmap"))?;
         let workspace_val = bit_object_import::parse_jsonc(&workspace_bytes)?;
@@ -58,7 +58,7 @@ impl BitmapMutation {
         ))
     }
 
-    pub(super) fn flush(&self) -> io::Result<()> {
+    pub(in crate::commands) fn flush(&self) -> io::Result<()> {
         for edit in &self.comp_json_edits {
             fs::write(&edit.path, &edit.bytes)?;
         }
@@ -91,7 +91,7 @@ pub(super) struct ListActionSpec<'a> {
     pub merge_previous: bool,
 }
 
-pub(super) fn apply_dep_resolver_config(
+pub(in crate::commands) fn apply_dep_resolver_config(
     mutation: &mut BitmapMutation,
     entry: &BitmapEntry,
     config: Value,

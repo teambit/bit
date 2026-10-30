@@ -1,7 +1,10 @@
 //! Native `bit deps <set|remove|unset|reset|eject|get|usage|diagnose|blame|write|circular>` (`bit dependencies`)
 //! (`scopes/dependencies/dependencies/dependencies-cmd.ts`).
 
-pub(super) use self::parse::{parse_subcommand, parse_why};
+pub(super) use self::{
+    mutation::{BitmapMutation, apply_dep_resolver_config},
+    parse::{parse_subcommand, parse_why},
+};
 
 mod blame;
 mod debug;
@@ -20,10 +23,7 @@ mod write;
 
 use self::{
     get::prepare_get,
-    mutation::{
-        BitmapMutation, ListActionSpec, SetSpec, format_json_indent_4, prepare_list_action,
-        prepare_set,
-    },
+    mutation::{ListActionSpec, SetSpec, format_json_indent_4, prepare_list_action, prepare_set},
     remove::{RemoveSpec, RemovedByComp, prepare_remove, render_remove},
     usage::prepare_usage,
     write::{WriteTarget, commit_write, prepare_write},
@@ -111,21 +111,44 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return run_unrecognized(args, sub, chalk);
     }
     let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("deps requires a workspace".into()));
+        return run_without_workspace(args, &subcommand, chalk);
     };
-    if let Subcommand::Circular { json, include_deps } = &subcommand {
-        return run_circular(&root, args, chalk, *json, *include_deps);
+    run_in_workspace(&root, args, &subcommand, chalk)
+}
+
+fn run_without_workspace(
+    args: &[OsString],
+    subcommand: &Subcommand,
+    chalk: Chalk,
+) -> io::Result<Outcome> {
+    if let Subcommand::Get { id, tree, .. } = subcommand
+        && let Some(scope) = scope_root::discover().ok().flatten()
+        && scope.bare
+    {
+        return get::run_bare_scope(&scope, args, id, *tree, chalk);
     }
-    if let Subcommand::DiagnosePackage { package } = &subcommand {
-        return diagnose::run_package(&root, args, package, chalk);
+    Ok(Outcome::Declined("deps requires a workspace".into()))
+}
+
+fn run_in_workspace(
+    root: &Path,
+    args: &[OsString],
+    subcommand: &Subcommand,
+    chalk: Chalk,
+) -> io::Result<Outcome> {
+    if let Subcommand::Circular { json, include_deps } = subcommand {
+        return run_circular(root, args, chalk, *json, *include_deps);
     }
-    if let Subcommand::Blame { component, dep } = &subcommand {
-        return blame::run(&root, args, component, dep, chalk);
+    if let Subcommand::DiagnosePackage { package } = subcommand {
+        return diagnose::run_package(root, args, package, chalk);
     }
-    if let Subcommand::Diagnose { origins } = &subcommand {
-        return diagnose::report::run(&root, args, chalk, *origins);
+    if let Subcommand::Blame { component, dep } = subcommand {
+        return blame::run(root, args, component, dep, chalk);
     }
-    run_prepared(&root, args, &subcommand, chalk)
+    if let Subcommand::Diagnose { origins } = subcommand {
+        return diagnose::report::run(root, args, chalk, *origins);
+    }
+    run_prepared(root, args, subcommand, chalk)
 }
 
 fn run_why(args: &[OsString]) -> io::Result<Outcome> {

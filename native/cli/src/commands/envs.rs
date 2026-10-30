@@ -1,4 +1,4 @@
-//! Native `bit envs <list|get|set|unset|replace>` (`bit env ...`) (`scopes/envs/envs/envs.cmd.ts`).
+//! Native `bit envs <list|get|set|unset|replace|update>` (`bit env ...`) (`scopes/envs/envs/envs.cmd.ts`).
 
 mod inspect;
 mod mutation;
@@ -37,6 +37,7 @@ pub(super) enum Subcommand {
     Set { pattern: String, env: String },
     Unset { pattern: String },
     Replace { old_env: String, new_env: String },
+    Update { env_id: Option<String>, pattern: Option<String> },
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -67,7 +68,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
                 run_get(&root, args, component, services.as_deref(), chalk),
             );
         }
-        Subcommand::Set { .. } | Subcommand::Unset { .. } | Subcommand::Replace { .. } => {}
+        Subcommand::Set { .. }
+        | Subcommand::Unset { .. }
+        | Subcommand::Replace { .. }
+        | Subcommand::Update { .. } => {}
     }
     let label = subcommand.loader_label();
     let result = prepare(&root, &subcommand, chalk)
@@ -106,6 +110,7 @@ impl Subcommand {
             Self::Set { .. } => "set",
             Self::Unset { .. } => "unset",
             Self::Replace { .. } => "replace",
+            Self::Update { .. } => "update",
         }
     }
 }
@@ -140,8 +145,39 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
                 new_env: (*new_env).to_owned(),
             })
         }
+        ["update", rest @ ..] => parse_update(rest),
         _ => None,
     }
+}
+
+fn parse_update(rest: &[&str]) -> Option<Subcommand> {
+    if rest
+        .iter()
+        .any(|arg| arg.starts_with('-'))
+    {
+        return None;
+    }
+    match rest {
+        [] => Some(Subcommand::Update { env_id: None, pattern: None }),
+        [env_id] if is_valid_update_env_id(env_id) => {
+            Some(Subcommand::Update { env_id: Some((*env_id).to_owned()), pattern: None })
+        }
+        [env_id, pattern] if is_valid_update_env_id(env_id) && is_supported_pattern(pattern) => {
+            Some(Subcommand::Update {
+                env_id: Some((*env_id).to_owned()),
+                pattern: Some((*pattern).to_owned()),
+            })
+        }
+        _ => None,
+    }
+}
+
+fn is_valid_update_env_id(env_id: &str) -> bool {
+    let bare = env_id
+        .split('@')
+        .next()
+        .unwrap_or(env_id);
+    !bare.is_empty() && !env_id.starts_with('-') && is_supported_pattern(bare)
 }
 
 fn parse_list(rest: &[&str]) -> Option<Subcommand> {

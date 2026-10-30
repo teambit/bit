@@ -1,11 +1,15 @@
+pub(in crate::commands) use self::update::{
+    find_component_aspect, resolve_latest_aspect_version, update_in_bitmap_row, update_in_comp_json,
+};
+
 mod comp_json;
 mod update;
 
 use self::{
-    comp_json::{set_in_comp_json, unset_in_comp_json},
-    update::{UpdatePlan, prepare_update, unset_in_bitmap_row},
+    comp_json::{set_in_comp_json, unset_in_bitmap_row, unset_in_comp_json},
+    update::{UpdatePlan, prepare_update},
 };
-use super::{Subcommand, is_supported_pattern};
+use super::{Subcommand, inspect::get::collect_get_entries, is_supported_pattern};
 use crate::commands::{
     color::Chalk,
     scope_set::{Failure, selection},
@@ -18,7 +22,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub(super) struct CompJsonEdit {
+pub(in crate::commands) struct CompJsonEdit {
     pub path: PathBuf,
     pub bytes: Vec<u8>,
 }
@@ -43,7 +47,7 @@ pub(super) struct MutationBatch {
 
 pub(super) enum Prepared {
     Set(MutationBatch),
-    Unset(MutationBatch),
+    Unset { pattern: String, batch: MutationBatch },
     Update(UpdatePlan),
     Unrecognized(String),
 }
@@ -188,29 +192,37 @@ fn prepare_unset(
     let mut bitmap_changed = false;
     let mut comp_json_edits = Vec::new();
     for entry in matched {
+        let entry_id = entry.id.to_string_without_version();
+        let entries = collect_get_entries(&ctx.root, &entry_id, Some(&bare_aspect), ctx.chalk)?;
+        let Some(exist) = entries.into_iter().next() else {
+            continue;
+        };
         let comp_json_path = (!entry.root_dir.is_empty())
             .then(|| ctx.root.join(&entry.root_dir).join("component.json"))
             .filter(|path| path.is_file());
         if let Some(path) = comp_json_path {
-            comp_json_edits.push(unset_in_comp_json(path, &bare_aspect)?);
+            comp_json_edits.push(unset_in_comp_json(path, &bare_aspect, &exist.id)?);
         } else {
-            unset_in_bitmap_row(&ctx.root, &mut ctx.bitmap_val, entry, &bare_aspect)?;
+            unset_in_bitmap_row(&mut ctx.bitmap_val, entry, &bare_aspect, &exist.id)?;
             bitmap_changed = true;
         }
         ids.push(selection::entry_full_id(entry));
     }
-    Ok(Prepared::Unset(MutationBatch {
-        root: ctx.root,
-        aspect_id: resolved_aspect_id,
-        ids,
-        bitmap_before: ctx.bitmap_before,
-        bitmap_val: ctx.bitmap_val,
-        bitmap_changed,
-        comp_json_edits,
-    }))
+    Ok(Prepared::Unset {
+        pattern: pattern.to_owned(),
+        batch: MutationBatch {
+            root: ctx.root,
+            aspect_id: resolved_aspect_id,
+            ids,
+            bitmap_before: ctx.bitmap_before,
+            bitmap_val: ctx.bitmap_val,
+            bitmap_changed,
+            comp_json_edits,
+        },
+    })
 }
 
-pub(super) fn resolve_aspect_identity(
+pub(in crate::commands) fn resolve_aspect_identity(
     bitmap: &Bitmap,
     raw: &str,
 ) -> Result<(String, String), Failure> {
@@ -233,7 +245,7 @@ pub(super) fn resolve_aspect_identity(
     Err(Failure::Declined("unscoped non-workspace aspect id".into()))
 }
 
-pub(super) fn find_matching_aspect_key(
+pub(in crate::commands) fn find_matching_aspect_key(
     map: &Map<String, Value>,
     bare_aspect: &str,
 ) -> Option<String> {
@@ -308,9 +320,16 @@ impl Prepared {
                 persist_aspect_edits(&batch, &format!("aspect-set ({})", batch.aspect_id))?;
                 render_updated(&formatter, &batch.ids)
             }
-            Self::Unset(batch) => {
+            Self::Unset { pattern, batch } => {
                 persist_aspect_edits(&batch, &format!("aspect-unset ({})", batch.aspect_id))?;
-                render_updated(&formatter, &batch.ids)
+                if batch.ids.is_empty() {
+                    formatter.hint(&format!(
+                        "unable to find any matching components for {} pattern",
+                        chalk.bold(&pattern),
+                    ))
+                } else {
+                    render_updated(&formatter, &batch.ids)
+                }
             }
             Self::Update(plan) => plan.commit(&formatter, chalk)?,
             Self::Unrecognized(sub) => chalk.red(&format!(

@@ -163,7 +163,10 @@ fn apply_update_to_entry(
     Ok(bitmap_changed)
 }
 
-fn resolve_latest_aspect_version(root: &Path, bare_aspect: &str) -> Option<String> {
+pub(in crate::commands) fn resolve_latest_aspect_version(
+    root: &Path,
+    bare_aspect: &str,
+) -> Option<String> {
     let aspect_scope = bare_aspect.split('/').next()?;
     let hash = bit_install::policy::scope::hex_sha1(bare_aspect.as_bytes());
     for scope_dir in candidate_scope_dirs(root, aspect_scope) {
@@ -213,7 +216,7 @@ fn read_latest_model_version(scope_dir: &Path, hash: &str) -> Option<String> {
         .or_else(|| Some(head.to_owned()))
 }
 
-pub(super) fn find_component_aspect(
+pub(in crate::commands) fn find_component_aspect(
     root: &Path,
     bitmap_val: &Value,
     entry: &BitmapEntry,
@@ -293,7 +296,7 @@ fn extension_bare_id(ext: &Value) -> Option<String> {
     Some(format!("{scope_str}/{name_str}"))
 }
 
-fn update_in_comp_json(
+pub(in crate::commands) fn update_in_comp_json(
     path: PathBuf,
     bare_aspect: &str,
     target_aspect_id: &str,
@@ -313,7 +316,7 @@ fn update_in_comp_json(
     Ok(CompJsonEdit { path, bytes })
 }
 
-fn update_in_bitmap_row(
+pub(in crate::commands) fn update_in_bitmap_row(
     bitmap_val: &mut Value,
     entry: &BitmapEntry,
     bare_aspect: &str,
@@ -332,61 +335,5 @@ fn update_in_bitmap_row(
         cfg_obj.remove(&old_key);
     }
     cfg_obj.insert(target_aspect_id.to_owned(), cfg_val.clone());
-    Ok(())
-}
-
-pub(super) fn unset_in_bitmap_row(
-    root: &Path,
-    bitmap_val: &mut Value,
-    entry: &BitmapEntry,
-    bare_aspect: &str,
-) -> Result<(), Failure> {
-    let model_aspect = find_component_aspect(root, bitmap_val, entry, bare_aspect);
-    let row = find_bitmap_row_mut(bitmap_val, entry)?;
-    if remove_bitmap_config_key(row, bare_aspect)? {
-        return Ok(());
-    }
-    if let Some((ver_opt, _)) = model_aspect {
-        return mark_model_aspect_minus(row, bare_aspect, ver_opt.as_deref());
-    }
-    Err(Failure::Declined("aspect not in bitmap config".into()))
-}
-
-fn remove_bitmap_config_key(row: &mut Value, bare_aspect: &str) -> Result<bool, Failure> {
-    let Some(cfg_obj) = row.get_mut("config").and_then(Value::as_object_mut) else {
-        return Ok(false);
-    };
-    let Some(found_key) = find_matching_aspect_key(cfg_obj, bare_aspect) else {
-        return Ok(false);
-    };
-    if cfg_obj.get(&found_key).and_then(Value::as_str) == Some("-") {
-        return Err(Failure::Declined("aspect already minus in bitmap".into()));
-    }
-    cfg_obj.remove(&found_key);
-    if cfg_obj.is_empty()
-        && let Some(row_obj) = row.as_object_mut()
-    {
-        row_obj.remove("config");
-    }
-    Ok(true)
-}
-
-fn mark_model_aspect_minus(
-    row: &mut Value,
-    bare_aspect: &str,
-    ver_opt: Option<&str>,
-) -> Result<(), Failure> {
-    let key = match ver_opt {
-        Some(ver) if !ver.is_empty() => format!("{bare_aspect}@{ver}"),
-        _ => bare_aspect.to_owned(),
-    };
-    let row_obj =
-        row.as_object_mut().ok_or_else(|| Failure::Declined("bitmap row object".into()))?;
-    let cfg = row_obj
-        .entry("config")
-        .or_insert_with(|| json!({}));
-    let cfg_obj =
-        cfg.as_object_mut().ok_or_else(|| Failure::Declined("bitmap config object".into()))?;
-    cfg_obj.insert(key, json!("-"));
     Ok(())
 }

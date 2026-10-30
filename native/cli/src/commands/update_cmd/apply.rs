@@ -1,10 +1,9 @@
 use super::{collect::Target, resolve::ResolvedUpdate};
 use crate::{
     commands::{
-        aspect::{
-            serialize_json_preserving_newline, workspace_default_scope, write_bitmap_if_changed,
-        },
-        set_peer::{DEP_RESOLVER_ID, apply_dep_resolver_config},
+        aspect::serialize_json_preserving_newline,
+        deps::{BitmapMutation, apply_dep_resolver_config},
+        set_peer::DEP_RESOLVER_ID,
         workspace_command,
     },
     workspace,
@@ -13,7 +12,6 @@ use bit_install::{
     command::edit_workspace_config, dependencies::cache::invalidation::deps_dir, jsonc::Document,
     workspace::Bitmap,
 };
-use bit_object_import::parse_jsonc;
 use serde_json::{Value, json};
 use std::{
     collections::BTreeMap,
@@ -135,26 +133,18 @@ fn apply_bitmap_updates(root: &Path, updates: &[ResolvedUpdate]) -> io::Result<(
     if bitmap_updates.is_empty() {
         return Ok(());
     }
-    let bitmap_before = fs::read(root.join(".bitmap"))?;
-    let mut bitmap_val = parse_jsonc(&bitmap_before)?;
-    let bitmap = load_workspace_bitmap(root)?;
-    let changed = apply_bitmap_entry_updates(root, &mut bitmap_val, &bitmap, &bitmap_updates);
-    write_bitmap_if_changed(root, &bitmap_before, &bitmap_val, changed, "update (dependencies)")
-}
-
-fn load_workspace_bitmap(root: &Path) -> io::Result<Bitmap> {
-    let ws_val = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    let default_scope = workspace_default_scope(&ws_val).ok();
-    Bitmap::load(root, default_scope.as_deref()).map_err(io::Error::other)
+    let (mut mutation, bitmap) =
+        BitmapMutation::load(root).map_err(|_| io::Error::other("failed to load .bitmap"))?;
+    apply_bitmap_entry_updates(&mut mutation, &bitmap, &bitmap_updates);
+    mutation.reason = "update (dependencies)".into();
+    mutation.flush()
 }
 
 fn apply_bitmap_entry_updates(
-    root: &Path,
-    bitmap_val: &mut Value,
+    mutation: &mut BitmapMutation,
     bitmap: &Bitmap,
     bitmap_updates: &[(&str, &ResolvedUpdate)],
-) -> bool {
-    let mut changed = false;
+) {
     for &(comp_name, upd) in bitmap_updates {
         let Some(entry) = bitmap.entries
             .iter()
@@ -169,9 +159,6 @@ fn apply_bitmap_entry_updates(
                 },
             },
         });
-        if apply_dep_resolver_config(root, bitmap_val, entry, cfg, true, true).unwrap_or(false) {
-            changed = true;
-        }
+        let _ = apply_dep_resolver_config(mutation, entry, cfg, true, true);
     }
-    changed
 }

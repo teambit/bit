@@ -1,6 +1,6 @@
 //! Native `bit aspect get <component-name> [aspect-id]`.
 
-use super::{InspectCtx, RawOrigin, collect_raw_origins, find_ws_comp};
+use super::{InspectCtx, RawOrigin, collect_raw_origins, debug::run_get_debug, find_ws_comp};
 use crate::{
     commands::{
         aspect::{GetOpts, mutation::BitmapContext},
@@ -28,6 +28,9 @@ pub(in crate::commands::aspect) fn run_get(
     opts: &GetOpts,
     chalk: Chalk,
 ) -> Result<Outcome, Failure> {
+    if opts.debug {
+        return run_get_debug(root, args, opts, chalk);
+    }
     let entries = collect_get_entries(root, &opts.component, opts.aspect_id.as_deref(), chalk)?;
     if opts.json {
         let payload = build_get_json(&entries, opts.aspect_id.as_deref());
@@ -89,7 +92,10 @@ fn merge_origins(
     merger.finish()
 }
 
-fn ensure_default_env_aspects(merged: &mut Vec<AspectEntry>, comp: Option<&WorkspaceComponent>) {
+pub(super) fn ensure_default_env_aspects(
+    merged: &mut Vec<AspectEntry>,
+    comp: Option<&WorkspaceComponent>,
+) {
     let env_id = comp.map_or("teambit.harmony/node", |item| item.env_id.as_str());
     let env_bare = aspect_id_without_version(env_id);
     if !merged
@@ -120,7 +126,7 @@ fn ensure_default_env_aspects(merged: &mut Vec<AspectEntry>, comp: Option<&Works
     }
 }
 
-fn build_get_json(entries: &[AspectEntry], aspect_filter: Option<&str>) -> Value {
+pub(super) fn build_get_json(entries: &[AspectEntry], aspect_filter: Option<&str>) -> Value {
     if aspect_filter.is_some() {
         return entries
             .first()

@@ -1,7 +1,7 @@
 use super::{
     Subcommand,
     inspect::{format_envs_list, render_env_get},
-    mutation::remove_env_from_map,
+    mutation::{prepare, remove_env_from_map},
     parse_subcommand,
 };
 use crate::commands::color::Chalk;
@@ -17,6 +17,17 @@ fn parses_envs_subcommands() {
     assert_eq!(
         parse_subcommand(&["unset", "comp1"]),
         Some(Subcommand::Unset { pattern: "comp1".into() }),
+    );
+    assert_eq!(
+        parse_subcommand(&["update"]),
+        Some(Subcommand::Update { env_id: None, pattern: None }),
+    );
+    assert_eq!(
+        parse_subcommand(&["update", "my-scope/env@2.0.0", "comp*"]),
+        Some(Subcommand::Update {
+            env_id: Some("my-scope/env@2.0.0".into()),
+            pattern: Some("comp*".into()),
+        }),
     );
     assert_eq!(
         parse_subcommand(&["list"]),
@@ -109,7 +120,8 @@ fn renders_envs_list_and_get_with_scripts() {
                 "version": "",
                 "mainFile": "index.js",
                 "rootDir": "comp1"
-            }
+            },
+            "$schema-version": "17.0.0"
         }"#,
     )
     .unwrap();
@@ -118,4 +130,15 @@ fn renders_envs_list_and_get_with_scripts() {
     assert!(get_out.contains("Environment: my-scope/env-with-scripts"), "{get_out}");
     assert!(get_out.contains("available scripts:"), "{get_out}");
     assert!(get_out.contains("test-script: echo hello from script"), "{get_out}");
+
+    let replace_cmd = Subcommand::Replace {
+        old_env: "my-scope/env-with-scripts".into(),
+        new_env: "teambit.react/react".into(),
+    };
+    let report = prepare(root, &replace_cmd, Chalk::new(false))
+        .ok()
+        .unwrap()
+        .commit(Chalk::new(false))
+        .unwrap();
+    assert!(report.data.contains("added teambit.react/react env"), "{}", report.data);
 }

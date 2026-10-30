@@ -40,9 +40,9 @@ fn sets_and_unsets_peer_in_bitmap() {
 
     let set_act = PeerAction::Set { component_id: "comp1".into(), range: "^1.0.0".into() };
     let prepared = prepare(dir.path(), &set_act, Chalk::new(false)).expect("prepare set-peer");
-    assert!(prepared.bitmap_changed);
+    assert!(prepared.mutation.bitmap_changed);
     assert_eq!(
-        prepared.bitmap_val["comp1"]["config"][DEP_RESOLVER_ID],
+        prepared.mutation.bitmap_val["comp1"]["config"][DEP_RESOLVER_ID],
         json!({ "peer": true, "defaultPeerRange": "^1.0.0" }),
     );
     let report = prepared
@@ -53,7 +53,56 @@ fn sets_and_unsets_peer_in_bitmap() {
     let unset_act = PeerAction::Unset { component_id: "comp1".into() };
     let unset_prep =
         prepare(dir.path(), &unset_act, Chalk::new(false)).expect("prepare unset-peer");
-    assert!(unset_prep.bitmap_changed);
-    let after: Value = unset_prep.bitmap_val;
+    assert!(unset_prep.mutation.bitmap_changed);
+    let after: Value = unset_prep.mutation.bitmap_val;
     assert_eq!(after["comp1"]["config"][DEP_RESOLVER_ID], json!({}));
+}
+
+#[test]
+fn sets_peer_in_component_json_when_present() {
+    let dir = tempdir().expect("tempdir");
+    fs::write(
+        dir.path().join("workspace.jsonc"),
+        r#"{ "teambit.workspace/workspace": { "defaultScope": "my-scope" } }"#,
+    )
+    .expect("write workspace.jsonc");
+    fs::write(
+        dir.path().join(".bitmap"),
+        r#"{ "comp1": { "scope": "", "version": "", "mainFile": "index.ts", "rootDir": "comp1" }, "$schema-version": "17.0.0" }"#,
+    )
+    .expect("write .bitmap");
+    fs::create_dir_all(dir.path().join("comp1")).expect("mkdir comp1");
+    fs::write(
+        dir.path().join("comp1/component.json"),
+        r#"{
+  "componentId": { "scope": "my-scope", "name": "comp1" },
+  "propagate": false,
+  "extensions": {
+    "teambit.dependencies/dependency-resolver": {
+      "policy": { "dependencies": { "lodash": "4.17.21" } }
+    }
+  }
+}
+"#,
+    )
+    .expect("write component.json");
+
+    let set_act = PeerAction::Set { component_id: "comp1".into(), range: "^2.0.0".into() };
+    let prepared = prepare(dir.path(), &set_act, Chalk::new(false)).expect("prepare set-peer");
+    assert!(!prepared.mutation.bitmap_changed);
+    assert_eq!(prepared.mutation.comp_json_edits.len(), 1);
+    prepared
+        .commit(Chalk::new(false))
+        .expect("commit set-peer");
+    let updated: Value =
+        serde_json::from_slice(&fs::read(dir.path().join("comp1/component.json")).unwrap())
+            .unwrap();
+    assert_eq!(
+        updated["extensions"][DEP_RESOLVER_ID],
+        json!({
+            "policy": { "dependencies": { "lodash": "4.17.21" } },
+            "peer": true,
+            "defaultPeerRange": "^2.0.0"
+        }),
+    );
 }

@@ -1,7 +1,9 @@
 //! Native `bit aspect <list|list-core|get|set|unset|update>` (`scopes/harmony/aspect/aspect.cmd.ts`).
 
 pub(in crate::commands) use self::mutation::{
-    deep_merge, find_bitmap_row_mut, find_bitmap_row_ref, serialize_json_preserving_newline,
+    CompJsonEdit, deep_merge, find_bitmap_row_mut, find_bitmap_row_ref, find_component_aspect,
+    find_matching_aspect_key, resolve_aspect_identity, resolve_latest_aspect_version,
+    serialize_json_preserving_newline, update_in_bitmap_row, update_in_comp_json,
     workspace_default_scope, write_bitmap_if_changed,
 };
 

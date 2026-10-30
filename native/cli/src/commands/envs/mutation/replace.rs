@@ -4,51 +4,109 @@ use super::{
 use crate::commands::{
     aspect::find_bitmap_row_ref,
     scope_set::{Failure, selection},
+    script::resolve_workspace_components,
 };
-use bit_install::workspace::{Bitmap, BitmapEntry};
+use bit_install::{
+    config::aspect_id_without_version,
+    workspace::{Bitmap, BitmapEntry},
+};
 use serde_json::{Map, Value};
 use std::{fs, path::Path};
 
 pub(super) fn prepare_replace(
-    mut ctx: BitmapContext,
+    ctx: BitmapContext,
     old_env: &str,
     new_env: &str,
 ) -> Result<Prepared, Failure> {
     let (env_display_id, env_no_ver) =
         resolve_verified_env(&ctx.root, &ctx.bitmap, &ctx.bitmap_val, new_env)?;
     let old_bare = resolve_old_env_bare(&ctx.bitmap, old_env);
-    let mut ids = Vec::new();
-    let mut bitmap_changed = false;
-    let mut comp_json_edits = Vec::new();
-    for entry in ctx.bitmap.entries.iter().filter(|entry| entry.owns_its_dir()) {
-        if !entry_uses_env(&ctx.root, &ctx.bitmap_val, entry, &old_bare, old_env) {
-            continue;
-        }
-        let comp_json_path = (!entry.root_dir.is_empty())
-            .then(|| ctx.root.join(&entry.root_dir).join("component.json"))
-            .filter(|path| path.is_file());
-        if let Some(path) = comp_json_path {
-            comp_json_edits.push(set_env_in_comp_json(path, &env_no_ver)?);
+    let (_, ws) =
+        resolve_workspace_components(&ctx.root).map_err(|err| Failure::Declined(err.to_string()))?;
+    let mut batch = EnvBatch {
+        root: ctx.root,
+        ids: Vec::new(),
+        bitmap_before: ctx.bitmap_before,
+        bitmap_val: ctx.bitmap_val,
+        bitmap_changed: false,
+        comp_json_edits: Vec::new(),
+    };
+    let mut available_envs = Vec::new();
+    for (entry, comp) in ws.active() {
+        if component_matches_old_env(
+            &batch.root,
+            &batch.bitmap_val,
+            entry,
+            &comp.env_id,
+            &old_bare,
+            old_env,
+        ) {
+            apply_replace_to_entry(&mut batch, entry, &env_no_ver)?;
         } else {
-            set_env_in_bitmap_row(&mut ctx.bitmap_val, entry, &env_no_ver)?;
-            bitmap_changed = true;
+            record_available_env(&mut available_envs, &comp.env_id);
         }
-        ids.push(selection::entry_full_id(entry));
     }
+    ensure_replaced_components(&batch.ids, old_env, &available_envs)?;
+    Ok(Prepared::Replace { env_display_id, batch })
+}
+
+fn record_available_env(available_envs: &mut Vec<String>, env_id: &str) {
+    if !available_envs
+        .iter()
+        .any(|item| item == env_id)
+    {
+        available_envs.push(env_id.to_owned());
+    }
+}
+
+fn apply_replace_to_entry(
+    batch: &mut EnvBatch,
+    entry: &BitmapEntry,
+    env_no_ver: &str,
+) -> Result<(), Failure> {
+    if let Some(path) = comp_json_file(&batch.root, entry) {
+        batch.comp_json_edits.push(set_env_in_comp_json(path, env_no_ver)?);
+    } else {
+        set_env_in_bitmap_row(&mut batch.bitmap_val, entry, env_no_ver)?;
+        batch.bitmap_changed = true;
+    }
+    batch.ids.push(selection::entry_full_id(entry));
+    Ok(())
+}
+
+fn ensure_replaced_components(
+    ids: &[String],
+    old_env: &str,
+    available_envs: &[String],
+) -> Result<(), Failure> {
     if ids.is_empty() {
-        return Err(Failure::Declined("no components found for env replace".into()));
+        return Err(Failure::User(format!(
+            "unable to find components that use \"{old_env}\" env.\nthe following envs are used in this workspace: {}",
+            available_envs.join(", "),
+        )));
     }
-    Ok(Prepared::Replace {
-        env_display_id,
-        batch: EnvBatch {
-            root: ctx.root,
-            ids,
-            bitmap_before: ctx.bitmap_before,
-            bitmap_val: ctx.bitmap_val,
-            bitmap_changed,
-            comp_json_edits,
-        },
-    })
+    Ok(())
+}
+
+fn comp_json_file(root: &Path, entry: &BitmapEntry) -> Option<std::path::PathBuf> {
+    (!entry.root_dir.is_empty())
+        .then(|| root.join(&entry.root_dir).join("component.json"))
+        .filter(|path| path.is_file())
+}
+
+fn component_matches_old_env(
+    root: &Path,
+    bitmap_val: &Value,
+    entry: &BitmapEntry,
+    comp_env_id: &str,
+    old_bare: &str,
+    raw_old_env: &str,
+) -> bool {
+    let comp_bare = aspect_id_without_version(comp_env_id);
+    raw_old_env == comp_env_id
+        || raw_old_env == comp_bare
+        || old_bare == comp_bare
+        || entry_uses_env(root, bitmap_val, entry, old_bare, raw_old_env)
 }
 
 fn resolve_old_env_bare(bitmap: &Bitmap, old_env: &str) -> String {

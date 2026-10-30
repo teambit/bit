@@ -5,28 +5,18 @@ mod tests;
 
 use super::{
     Command,
-    aspect::{
-        deep_merge, find_bitmap_row_mut, find_bitmap_row_ref, is_supported_pattern,
-        workspace_default_scope, write_bitmap_if_changed,
-    },
+    aspect::{find_bitmap_row_mut, find_bitmap_row_ref, is_supported_pattern},
     color::Chalk,
     debug_cat::lookup::{load_cat_component, resolve_component_entry},
+    deps::{BitmapMutation, apply_dep_resolver_config},
     lane::scope_root::ScopeRoot,
     scope_set::{Failure, selection},
     workspace_command::{self, format::Formatter, results::Report},
 };
 use crate::{native::Outcome, workspace};
-use bit_install::{
-    dependencies::cache::invalidation::deps_dir,
-    workspace::{Bitmap, BitmapEntry},
-};
+use bit_install::workspace::BitmapEntry;
 use serde_json::{Map, Value, json};
-use std::{
-    env,
-    ffi::OsString,
-    fs, io,
-    path::{Path, PathBuf},
-};
+use std::{env, ffi::OsString, fs, io, path::Path};
 
 pub const SET_PEER: Command = Command { name: "set-peer", aliases: &[], run: run_set };
 pub const UNSET_PEER: Command = Command { name: "unset-peer", aliases: &[], run: run_unset };
@@ -40,12 +30,8 @@ enum PeerAction {
 }
 
 struct Prepared {
-    root: PathBuf,
-    reason: String,
+    mutation: BitmapMutation,
     summary: &'static str,
-    bitmap_before: Vec<u8>,
-    bitmap_val: Value,
-    bitmap_changed: bool,
 }
 
 fn run_set(args: &[OsString]) -> io::Result<Outcome> {
@@ -132,11 +118,7 @@ fn is_safe_range_arg(range: &str) -> bool {
 }
 
 fn prepare(root: &Path, action: &PeerAction, chalk: Chalk) -> Result<Prepared, Failure> {
-    let workspace_bytes = fs::read(root.join("workspace.jsonc"))?;
-    let bitmap_before = fs::read(root.join(".bitmap"))?;
-    let workspace_val = bit_object_import::parse_jsonc(&workspace_bytes)?;
-    let mut bitmap_val = bit_object_import::parse_jsonc(&bitmap_before)?;
-    let bitmap = Bitmap::load(root, Some(&workspace_default_scope(&workspace_val)?))?;
+    let (mut mutation, bitmap) = BitmapMutation::load(root)?;
     let component_id = match action {
         PeerAction::Set { component_id, .. } | PeerAction::Unset { component_id } => component_id,
     };
@@ -144,95 +126,35 @@ fn prepare(root: &Path, action: &PeerAction, chalk: Chalk) -> Result<Prepared, F
     let [entry] = matched.as_slice() else {
         return Err(Failure::Declined("multiple entries on set-peer/unset-peer".into()));
     };
-    let (bitmap_changed, reason, summary) =
-        apply_peer_action(root, &mut bitmap_val, entry, action)?;
-    Ok(Prepared {
-        root: root.to_path_buf(),
-        reason,
-        summary,
-        bitmap_before,
-        bitmap_val,
-        bitmap_changed,
-    })
+    let summary = apply_peer_action(&mut mutation, entry, action)?;
+    Ok(Prepared { mutation, summary })
 }
 
 fn apply_peer_action(
-    root: &Path,
-    bitmap_val: &mut Value,
+    mutation: &mut BitmapMutation,
     entry: &BitmapEntry,
     action: &PeerAction,
-) -> Result<(bool, String, &'static str), Failure> {
+) -> Result<&'static str, Failure> {
     match action {
         PeerAction::Set { component_id, range } => {
             let cfg = json!({ "peer": true, "defaultPeerRange": range });
-            let changed = apply_dep_resolver_config(root, bitmap_val, entry, cfg, true, true)?;
-            Ok((
-                changed,
-                format!("set-peer ({component_id})"),
-                "successfully marked the component as a peer component",
-            ))
+            apply_dep_resolver_config(mutation, entry, cfg, true, true)?;
+            mutation.reason = format!("set-peer ({component_id})");
+            Ok("successfully marked the component as a peer component")
         }
         PeerAction::Unset { component_id } => {
-            let mut cfg =
-                load_dep_resolver_config(root, bitmap_val, entry)?.unwrap_or_else(|| json!({}));
+            let mut cfg = load_dep_resolver_config(&mutation.root, &mutation.bitmap_val, entry)?
+                .unwrap_or_else(|| json!({}));
             if let Some(obj) = cfg.as_object_mut() {
                 obj.remove("peer");
                 obj.remove("defaultPeerRange");
             }
-            let changed = set_bitmap_dep_resolver_config(bitmap_val, entry, cfg)?;
-            Ok((
-                changed,
-                format!("unset-peer ({component_id})"),
-                "successfully marked the component as not a peer component",
-            ))
+            mutation.bitmap_changed =
+                set_bitmap_dep_resolver_config(&mut mutation.bitmap_val, entry, cfg)?;
+            mutation.reason = format!("unset-peer ({component_id})");
+            Ok("successfully marked the component as not a peer component")
         }
     }
-}
-
-pub(in crate::commands) fn apply_dep_resolver_config(
-    root: &Path,
-    bitmap_val: &mut Value,
-    entry: &BitmapEntry,
-    config: Value,
-    merge_existing: bool,
-    merge_previous: bool,
-) -> Result<bool, Failure> {
-    if !entry.root_dir.is_empty()
-        && root
-            .join(&entry.root_dir)
-            .join("component.json")
-            .exists()
-    {
-        return Err(Failure::Declined("component.json exists".into()));
-    }
-    let effective = if merge_previous {
-        match load_dep_resolver_config(root, bitmap_val, entry)? {
-            Some(mut prev) => {
-                deep_merge(&mut prev, &config);
-                prev
-            }
-            None => config,
-        }
-    } else {
-        config
-    };
-    let row = find_bitmap_row_mut(bitmap_val, entry)?;
-    let current = row
-        .get("config")
-        .and_then(|cfg| cfg.get(DEP_RESOLVER_ID));
-    if current == Some(&effective) {
-        return Ok(false);
-    }
-    let new_cfg = match (merge_existing, current) {
-        (true, Some(existing)) if existing.is_object() => {
-            let mut merged = existing.clone();
-            deep_merge(&mut merged, &effective);
-            merged
-        }
-        _ => effective,
-    };
-    insert_dep_resolver_config(row, new_cfg)?;
-    Ok(true)
 }
 
 fn set_bitmap_dep_resolver_config(
@@ -389,14 +311,7 @@ fn collect_forced_policy_entries(arr: &[Value]) -> Map<String, Value> {
 
 impl Prepared {
     fn commit(self, chalk: Chalk) -> io::Result<Report> {
-        write_bitmap_if_changed(
-            &self.root,
-            &self.bitmap_before,
-            &self.bitmap_val,
-            self.bitmap_changed,
-            &self.reason,
-        )?;
-        let _ = fs::remove_dir_all(deps_dir(&self.root));
+        self.mutation.flush()?;
         let formatter = Formatter::new(chalk);
         Ok(Report { data: formatter.success_summary(self.summary), code: 0, details: None })
     }

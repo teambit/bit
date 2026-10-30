@@ -18,6 +18,13 @@ struct ItemMatch {
     excluded: bool,
 }
 
+#[derive(Debug, Clone, Copy)]
+struct MatchedVariant<'a> {
+    pattern: &'a str,
+    specificity: f64,
+    config: &'a Map<String, Value>,
+}
+
 const NO_MATCH: ItemMatch = ItemMatch { matched: false, specificity: -1.0, excluded: false };
 
 /// The variants matching a component, merged.
@@ -28,6 +35,7 @@ pub struct VariantConfig {
     pub propagate: bool,
     pub default_scope: Option<String>,
     pub max_specificity: f64,
+    pub matched_rules: Vec<(String, f64)>,
 }
 
 /// `byRootDirAndName`: every pattern matching the component's root dir or
@@ -46,33 +54,41 @@ fn sorted_matches<'a>(
     variants: &'a [(String, Map<String, Value>)],
     root_dir: &str,
     name: &str,
-) -> io::Result<Vec<(f64, &'a Map<String, Value>)>> {
+) -> io::Result<Vec<MatchedVariant<'a>>> {
     let mut matches = Vec::new();
     for (pattern, config) in variants {
         let found = is_match_pattern(root_dir, name, pattern)?;
         if found.matched && !found.excluded {
-            matches.push((found.specificity, config));
+            matches.push(MatchedVariant {
+                pattern: pattern.as_str(),
+                specificity: found.specificity,
+                config,
+            });
         }
     }
-    matches.sort_by(|left, right| left.0.total_cmp(&right.0));
+    matches.sort_by(|left, right| left.specificity.total_cmp(&right.specificity));
     matches.reverse();
     Ok(matches)
 }
 
 /// Aspects of the matches until one stops propagation; the first default scope.
-fn merge_matches(matches: Vec<(f64, &Map<String, Value>)>) -> VariantConfig {
+fn merge_matches(matches: Vec<MatchedVariant<'_>>) -> VariantConfig {
     let mut result =
         VariantConfig { propagate: true, max_specificity: -1.0, ..VariantConfig::default() };
-    result.max_specificity = matches.first().map_or(-1.0, |(specificity, _)| *specificity);
-    for (_, config) in matches {
+    result.max_specificity = matches.first().map_or(-1.0, |item| item.specificity);
+    result.matched_rules = matches
+        .iter()
+        .map(|item| (item.pattern.to_owned(), item.specificity))
+        .collect();
+    for item in matches {
         if result.default_scope.is_none() {
-            result.default_scope = config
+            result.default_scope = item.config
                 .get("defaultScope")
                 .and_then(Value::as_str)
                 .map(str::to_owned);
         }
         if result.propagate {
-            let aspects = config
+            let aspects = item.config
                 .iter()
                 .filter(|(key, _)| !INTERNAL_FIELDS.contains(&key.as_str()));
             result.extensions.push(
@@ -81,7 +97,7 @@ fn merge_matches(matches: Vec<(f64, &Map<String, Value>)>) -> VariantConfig {
                     .collect(),
             );
         }
-        if config.get("propagate") == Some(&Value::Bool(false)) {
+        if item.config.get("propagate") == Some(&Value::Bool(false)) {
             result.propagate = false;
         }
     }

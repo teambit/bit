@@ -79,6 +79,10 @@ fn parses_deps_subcommands() {
         Some(Subcommand::Get { id: "comp1".into(), tree: false, scope: true }),
     );
     assert_eq!(
+        parse_subcommand(&["get", "my-scope/comp1@0.0.1", "-t"]),
+        Some(Subcommand::Get { id: "my-scope/comp1@0.0.1".into(), tree: true, scope: false }),
+    );
+    assert_eq!(
         parse_subcommand(&["usage", "is-number", "--depth=2"]),
         Some(Subcommand::Usage { dep_name: "is-number".into(), depth: Some(2) }),
     );

@@ -29,6 +29,57 @@ pub(in crate::commands) fn load_cat_component(
     (v_kind == "Version").then_some(ver_val)
 }
 
+pub(in crate::commands) fn resolve_scope_target_id(
+    scope_root: &ScopeRoot,
+    scope_dir: &Path,
+    raw_id: &str,
+) -> Option<(String, String)> {
+    let (bare_id, version_opt) = raw_id
+        .rsplit_once('@')
+        .map_or((raw_id, None), |(id, ver)| (id, Some(ver)));
+    if bare_id.is_empty() || version_opt == Some("") {
+        return None;
+    }
+    let (id_without_ver, comp_val) = load_scope_component_model(scope_dir, bare_id)?;
+    let ver_str = match version_opt {
+        Some(ver) if ver != "latest" => ver.to_owned(),
+        _ => resolve_head_version_label(&comp_val)?,
+    };
+    let id_with_ver = format!("{id_without_ver}@{ver_str}");
+    load_cat_component(scope_root, scope_dir, &id_with_ver)?;
+    Some((id_with_ver, id_without_ver))
+}
+
+fn load_scope_component_model(scope_dir: &Path, bare_id: &str) -> Option<(String, Value)> {
+    let (comp_scope, comp_name, comp_hash) = resolve_component_entry(scope_dir, bare_id)?;
+    let (kind, comp_val) = bit_object_import::read_scope_object(scope_dir, &comp_hash).ok()??;
+    if kind != "Component" {
+        return None;
+    }
+    let id_without_ver = match comp_scope
+        .as_deref()
+        .filter(|scope| !scope.is_empty())
+    {
+        Some(scope) => format!("{scope}/{comp_name}"),
+        None => comp_name,
+    };
+    Some((id_without_ver, comp_val))
+}
+
+fn resolve_head_version_label(comp_val: &Value) -> Option<String> {
+    let head = comp_val["head"].as_str()?;
+    Some(
+        comp_val["versions"]
+            .as_object()
+            .and_then(|vers| {
+                vers.iter()
+                    .find(|(_, hash)| hash.as_str() == Some(head))
+                    .map(|(tag, _)| tag.clone())
+            })
+            .unwrap_or_else(|| head.to_owned()),
+    )
+}
+
 fn current_lane_head(
     root: &ScopeRoot,
     scope_dir: &Path,

@@ -50,18 +50,28 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
         match arg {
             "-t" | "--tree" => tree = true,
             "--scope" => scope = true,
-            value
-                if id.is_none()
-                    && !value.starts_with('-')
-                    && is_supported_pattern(value)
-                    && !value.contains(['*', ',', '!']) =>
-            {
+            value if id.is_none() && is_supported_get_id(value) => {
                 id = Some(value);
             }
             _ => return None,
         }
     }
     Some(Subcommand::Get { id: id?.to_owned(), tree, scope })
+}
+
+fn is_supported_get_id(value: &str) -> bool {
+    if value.is_empty() || value.starts_with('-') {
+        return false;
+    }
+    let (bare, ver) = value
+        .rsplit_once('@')
+        .map_or((value, None), |(bare, ver)| (bare, Some(ver)));
+    !bare.is_empty()
+        && is_supported_pattern(bare)
+        && !bare.contains(['*', ',', '!'])
+        && ver.is_none_or(|ver| {
+            !ver.is_empty() && !ver.contains('@') && !ver.chars().any(char::is_whitespace)
+        })
 }
 
 fn parse_blame(rest: &[&str]) -> Option<Subcommand> {

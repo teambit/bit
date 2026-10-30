@@ -5,18 +5,24 @@ use super::{
     usage::TreeNode,
     usage_render::render_archy,
 };
-use crate::commands::{
-    color::Chalk,
-    debug_cat::lookup::load_cat_component,
-    dependents::render_honeywell_table,
-    lane::scope_root::ScopeRoot,
-    scope_set::{Failure, selection},
-    set_peer::load_dep_resolver_config,
+use crate::{
+    commands::{
+        color::Chalk,
+        debug_cat::lookup::{load_cat_component, resolve_scope_target_id},
+        dependents::render_honeywell_table,
+        lane::scope_root::ScopeRoot,
+        scope_set::{Failure, selection},
+        set_peer::load_dep_resolver_config,
+        workspace_command::{self, results::Report},
+    },
+    native::Outcome,
 };
 use bit_install::workspace::Bitmap;
 use serde_json::Value;
 use std::{
     collections::{HashSet, VecDeque},
+    ffi::OsString,
+    io,
     path::Path,
 };
 
@@ -25,6 +31,37 @@ struct DepInfoRow {
     depth: usize,
     parent: String,
     dependency_type: &'static str,
+}
+
+pub(super) fn run_bare_scope(
+    scope: &ScopeRoot,
+    args: &[OsString],
+    id: &str,
+    tree: bool,
+    chalk: Chalk,
+) -> io::Result<Outcome> {
+    let scope_root = ScopeRoot { path: scope.path.clone(), bare: true };
+    let Some((id_with_ver, id_without_ver)) = resolve_scope_target_id(&scope_root, &scope.path, id)
+    else {
+        return Ok(Outcome::Declined("deps get: bare scope component not found".into()));
+    };
+    let Ok(rows) = collect_scope_rows_from_dir(
+        &scope_root,
+        &scope.path,
+        &id_with_ver,
+        if tree { 64 } else { 8 },
+    ) else {
+        return Ok(Outcome::Declined("deps get: bare scope dependency model unavailable".into()));
+    };
+    let Ok(data) = render_get_result(&id_with_ver, &id_without_ver, rows, tree, chalk) else {
+        return Ok(Outcome::Declined("deps get: bare scope render declined".into()));
+    };
+    workspace_command::execute_with_scope(
+        &scope.path,
+        args,
+        "get",
+        &Report { data, code: 0, details: None },
+    )
 }
 
 pub(super) fn prepare_get(
@@ -36,15 +73,34 @@ pub(super) fn prepare_get(
     scope: bool,
     chalk: Chalk,
 ) -> Result<String, Failure> {
-    let matched = selection::resolve_pattern_entries(root, bitmap, id, chalk)?;
+    let (bare_input, explicit_ver) = id
+        .rsplit_once('@')
+        .map_or((id, None), |(bare, ver)| (bare, Some(ver)));
+    let matched = match selection::resolve_pattern_entries(root, bitmap, bare_input, chalk) {
+        Ok(entries) => entries,
+        Err(err) => {
+            return try_prepare_scope_only_get(root, id, tree, chalk)?.ok_or(err);
+        }
+    };
     let [entry] = matched.as_slice() else {
         return Err(Failure::Declined("multiple entries for deps get".into()));
     };
-    let id_with_ver = selection::entry_full_id(entry);
     let ctx = WorkspaceDepsContext::load(root)?;
-    if scope {
-        return prepare_scope_get(root, &ctx, entry, &id_with_ver, tree, chalk);
+    if scope || explicit_ver.is_some_and(|ver| Some(ver) != entry.id.version.as_deref()) {
+        return prepare_scope_get(root, &ctx, entry, explicit_ver, tree, chalk);
     }
+    prepare_workspace_entry_get(root, &ctx, bitmap_val, entry, tree, chalk)
+}
+
+fn prepare_workspace_entry_get(
+    root: &Path,
+    ctx: &WorkspaceDepsContext,
+    bitmap_val: &Value,
+    entry: &bit_install::workspace::BitmapEntry,
+    tree: bool,
+    chalk: Chalk,
+) -> Result<String, Failure> {
+    let id_with_ver = selection::entry_full_id(entry);
     let component = ctx
         .find_workspace_component(entry)
         .ok_or_else(|| Failure::Declined("missing workspace component".into()))?;
@@ -58,7 +114,7 @@ pub(super) fn prepare_get(
     );
     let rows = collect_dep_info_rows(
         root,
-        &ctx,
+        ctx,
         bitmap_val,
         &id_with_ver,
         &deps,
@@ -67,27 +123,56 @@ pub(super) fn prepare_get(
     render_get_result(&id_with_ver, &entry.id.to_string_without_version(), rows, tree, chalk)
 }
 
+fn try_prepare_scope_only_get(
+    root: &Path,
+    id: &str,
+    tree: bool,
+    chalk: Chalk,
+) -> Result<Option<String>, Failure> {
+    let scope_dir = crate::workspace::scope_path(root);
+    let scope_root = ScopeRoot { path: root.to_path_buf(), bare: false };
+    let Some((id_with_ver, id_without_ver)) = resolve_scope_target_id(&scope_root, &scope_dir, id)
+    else {
+        return Ok(None);
+    };
+    let rows = collect_scope_rows_from_dir(
+        &scope_root,
+        &scope_dir,
+        &id_with_ver,
+        if tree { 64 } else { 8 },
+    )?;
+    render_get_result(&id_with_ver, &id_without_ver, rows, tree, chalk).map(Some)
+}
+
 fn prepare_scope_get(
     root: &Path,
     ctx: &WorkspaceDepsContext,
     entry: &bit_install::workspace::BitmapEntry,
-    id_with_ver: &str,
+    explicit_ver: Option<&str>,
     tree: bool,
     chalk: Chalk,
 ) -> Result<String, Failure> {
-    let Some(version) = entry.id.version.as_deref() else {
+    let Some(version) = explicit_ver.or(entry.id.version.as_deref()) else {
         return Err(Failure::Declined("deps get --scope requires a stored version".into()));
     };
     if version.is_empty() || version == "latest" || version == "0.0.1-new" {
         return Err(Failure::Declined("deps get --scope requires a stored version".into()));
     }
-    let rows = collect_scope_rows(root, ctx, id_with_ver, if tree { 64 } else { 8 })?;
-    render_get_result(id_with_ver, &entry.id.to_string_without_version(), rows, tree, chalk)
+    let id_without_ver = entry.id.to_string_without_version();
+    let id_with_ver = format!("{id_without_ver}@{version}");
+    let scope_root = ScopeRoot { path: root.to_path_buf(), bare: false };
+    let rows = collect_scope_rows_from_dir(
+        &scope_root,
+        &ctx.ws.scope_path,
+        &id_with_ver,
+        if tree { 64 } else { 8 },
+    )?;
+    render_get_result(&id_with_ver, &id_without_ver, rows, tree, chalk)
 }
 
-fn collect_scope_rows(
-    root: &Path,
-    ctx: &WorkspaceDepsContext,
+fn collect_scope_rows_from_dir(
+    scope_root: &ScopeRoot,
+    scope_dir: &Path,
     root_id: &str,
     max_depth: usize,
 ) -> Result<Vec<DepInfoRow>, Failure> {
@@ -98,7 +183,7 @@ fn collect_scope_rows(
         if depth >= max_depth {
             continue;
         }
-        let children = scope_child_deps_checked(root, ctx, &curr_id)
+        let children = scope_child_deps_in_dir(scope_root, scope_dir, &curr_id)
             .ok_or_else(|| Failure::Declined("scope dependency model unavailable".into()))?;
         for (child_id, dep_type) in children {
             push_dep_row(
@@ -130,7 +215,7 @@ fn render_get_result(
         {
             return Err(Failure::Declined("deps get tree with shared or cyclic components".into()));
         }
-        return Ok(render_dep_tree(id_with_ver, &rows));
+        return Ok(render_archy(&assemble_dep_tree(id_with_ver, &rows)));
     }
     if rows.is_empty() {
         return Ok(format!(
@@ -140,24 +225,13 @@ fn render_get_result(
     Ok(render_dep_info_table(id_with_ver, rows, chalk))
 }
 
-fn render_dep_tree(root_id: &str, rows: &[DepInfoRow]) -> String {
-    let tree = assemble_dep_tree(root_id, rows);
-    render_archy(&tree)
-}
-
 fn assemble_dep_tree(id: &str, rows: &[DepInfoRow]) -> TreeNode {
     let children = rows
         .iter()
         .filter(|row| row.parent == id)
         .map(|row| assemble_dep_tree(&row.id, rows))
         .collect();
-    TreeNode {
-        label: id
-            .strip_suffix("@0.0.1-new")
-            .unwrap_or(id)
-            .to_owned(),
-        children,
-    }
+    TreeNode { label: display_id(id), children }
 }
 
 fn render_dep_info_table(root_id: &str, rows: Vec<DepInfoRow>, chalk: Chalk) -> String {
@@ -259,7 +333,8 @@ fn child_component_deps(
     if let Some(children) = workspace_child_deps(root, ctx, bitmap_val, bare) {
         return children;
     }
-    scope_child_deps(root, ctx, comp_id)
+    let scope_root = ScopeRoot { path: root.to_path_buf(), bare: false };
+    scope_child_deps_in_dir(&scope_root, &ctx.ws.scope_path, comp_id).unwrap_or_default()
 }
 
 fn workspace_child_deps(
@@ -287,24 +362,15 @@ fn workspace_child_deps(
     )
 }
 
-fn scope_child_deps(
-    root: &Path,
-    ctx: &WorkspaceDepsContext,
-    comp_id: &str,
-) -> Vec<(String, &'static str)> {
-    scope_child_deps_checked(root, ctx, comp_id).unwrap_or_default()
-}
-
-fn scope_child_deps_checked(
-    root: &Path,
-    ctx: &WorkspaceDepsContext,
+fn scope_child_deps_in_dir(
+    scope_root: &ScopeRoot,
+    scope_dir: &Path,
     comp_id: &str,
 ) -> Option<Vec<(String, &'static str)>> {
     if !comp_id.contains('@') {
         return None;
     }
-    let scope_root = ScopeRoot { path: root.to_path_buf(), bare: false };
-    let ver_val = load_cat_component(&scope_root, &ctx.ws.scope_path, comp_id)?;
+    let ver_val = load_cat_component(scope_root, scope_dir, comp_id)?;
     let mut children = Vec::new();
     for (field, kind) in [("dependencies", "prod"), ("devDependencies", "dev")] {
         let Some(arr) = ver_val[field].as_array() else { continue };

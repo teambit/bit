@@ -130,7 +130,8 @@ fn sets_and_merges_aspect_in_component_json() {
                 "version": "",
                 "mainFile": "index.js",
                 "rootDir": "comp1"
-            }
+            },
+            "$schema-version": "17.0.0"
         }"#,
     )
     .unwrap();
@@ -162,4 +163,58 @@ fn sets_and_merges_aspect_in_component_json() {
         updated["extensions"]["my-scope/my-aspect@0.0.1"],
         json!({ "a": 1, "b": 20, "c": 30 }),
     );
+}
+
+#[test]
+fn unsets_variant_inherited_aspect_and_parses_get_debug() {
+    assert_eq!(
+        parse_subcommand(&["get", "comp1", "--debug", "--json"]),
+        Some(Subcommand::Get(GetOpts {
+            component: "comp1".into(),
+            aspect_id: None,
+            debug: true,
+            json: true,
+        })),
+    );
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    fs::create_dir_all(root.join("comp1")).unwrap();
+    fs::write(root.join("comp1/index.js"), "module.exports = () => 1;\n").unwrap();
+    fs::write(
+        root.join("workspace.jsonc"),
+        r#"{
+            "teambit.workspace/workspace": { "defaultScope": "my-scope" },
+            "teambit.workspace/variants": {
+                "*": { "teambit.pkg/pkg": { "packageJson": { "private": true } } }
+            }
+        }"#,
+    )
+    .unwrap();
+    fs::write(
+        root.join(".bitmap"),
+        r#"{
+            "comp1": {
+                "scope": "",
+                "version": "",
+                "mainFile": "index.js",
+                "rootDir": "comp1"
+            },
+            "$schema-version": "17.0.0"
+        }"#,
+    )
+    .unwrap();
+    let sub = Subcommand::Unset { pattern: "comp1".into(), aspect_id: "teambit.pkg/pkg".into() };
+    let report = prepare(root, &sub, Chalk::new(false))
+        .ok()
+        .unwrap()
+        .commit(Chalk::new(false))
+        .unwrap();
+    assert!(
+        report.data.contains("the following component(s) have been updated"),
+        "{}",
+        report.data,
+    );
+    let bitmap: serde_json::Value =
+        bit_object_import::parse_jsonc(&fs::read(root.join(".bitmap")).unwrap()).unwrap();
+    assert_eq!(bitmap["comp1"]["config"]["teambit.pkg/pkg"], json!("-"));
 }

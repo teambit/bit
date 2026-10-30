@@ -1,5 +1,6 @@
 //! Native `bit aspect list [pattern]` and `bit aspect get <component-name> [aspect-id]`.
 
+pub(super) mod debug;
 pub(super) mod get;
 
 use super::{CORE_ASPECT_IDS, ListOpts, mutation::BitmapContext};
@@ -36,6 +37,7 @@ pub(super) struct RawOrigin {
     pub level: &'static str,
     pub prefer_ws: bool,
     pub entries: Vec<AspectEntry>,
+    pub extra_data: Option<Value>,
 }
 
 pub(super) struct InspectCtx<'a> {
@@ -201,46 +203,39 @@ fn append_origin_sources(
     }
 }
 
+impl RawOrigin {
+    const fn simple(
+        source: &'static str,
+        level: &'static str,
+        prefer_ws: bool,
+        entries: Vec<AspectEntry>,
+    ) -> Self {
+        Self { source, level, prefer_ws, entries, extra_data: None }
+    }
+}
+
 pub(super) fn collect_raw_origins(
     ictx: &InspectCtx<'_>,
     entry: &BitmapEntry,
 ) -> Result<Vec<RawOrigin>, Failure> {
     let mut origins = Vec::new();
     if let Some(cfg) = &entry.config {
-        origins.push(RawOrigin {
-            source: "BitmapFile",
-            level: "component",
-            prefer_ws: false,
-            entries: aspects::from_config_object(cfg, &ictx.core_ids),
-        });
+        origins.push(RawOrigin::simple(
+            "BitmapFile",
+            "component",
+            false,
+            aspects::from_config_object(cfg, &ictx.core_ids),
+        ));
     }
     append_merge_origin(&mut origins, ictx, entry)?;
-    let (comp_json_exts, mut propagate) = read_comp_json_origins(ictx.root, entry, &ictx.core_ids)?;
+    let (comp_json_exts, propagate) = read_comp_json_origins(ictx.root, entry, &ictx.core_ids)?;
     if let Some(entries) = comp_json_exts {
-        origins.push(RawOrigin {
-            source: "ComponentJsonFile",
-            level: "component",
-            prefer_ws: false,
-            entries,
-        });
+        origins.push(RawOrigin::simple("ComponentJsonFile", "component", false, entries));
     }
     let (specific, non_specific) = read_model_origins(&ictx.objects, entry)?;
-    origins.push(RawOrigin {
-        source: "ModelSpecific",
-        level: "component",
-        prefer_ws: true,
-        entries: specific,
-    });
-    if propagate {
-        propagate = append_variant_origin(&mut origins, ictx, entry)?;
-    }
-    if propagate {
-        origins.push(RawOrigin {
-            source: "ModelNonSpecific",
-            level: "workspace",
-            prefer_ws: true,
-            entries: non_specific,
-        });
+    origins.push(RawOrigin::simple("ModelSpecific", "component", true, specific));
+    if propagate && append_variant_origin(&mut origins, ictx, entry)? {
+        origins.push(RawOrigin::simple("ModelNonSpecific", "workspace", true, non_specific));
     }
     Ok(origins)
 }
@@ -260,6 +255,7 @@ fn append_merge_origin(
             level: "workspace",
             prefer_ws: true,
             entries: aspects::from_config_object(&merge.config, &ictx.core_ids),
+            extra_data: None,
         });
     }
     Ok(())
@@ -293,11 +289,23 @@ fn append_variant_origin(
         .iter()
         .map(|ext| aspects::from_config_object(ext, &ictx.core_ids))
         .collect();
+    let applied_rules = variant.matched_rules
+        .iter()
+        .map(|(pattern, spec)| {
+            let spec_val = if (*spec - ((*spec as i64) as f64)).abs() < f64::EPSILON {
+                json!(*spec as i64)
+            } else {
+                json!(*spec)
+            };
+            json!({ "pattern": pattern, "specificity": spec_val })
+        })
+        .collect::<Vec<_>>();
     origins.push(RawOrigin {
         source: "WorkspaceVariants",
         level: "workspace",
         prefer_ws: true,
         entries: aspects::merge_lists(lists),
+        extra_data: Some(json!({ "appliedRules": applied_rules })),
     });
     Ok(variant.propagate)
 }
@@ -330,7 +338,7 @@ fn read_comp_json_origins(
     Ok((list, propagate))
 }
 
-fn resolve_aspect_id(aspect: &mut AspectEntry, ws_ids: &[ComponentId], prefer_ws: bool) {
+pub(super) fn resolve_aspect_id(aspect: &mut AspectEntry, ws_ids: &[ComponentId], prefer_ws: bool) {
     if aspect.core {
         return;
     }
@@ -361,7 +369,14 @@ pub(super) fn render_list_table(
         .map(|(comp_id, sources)| vec![chalk.cyan(comp_id), format_sources_cell(sources, debug)])
         .collect::<Vec<_>>();
     let full = table::render(&["", ""], &rows, colors);
-    strip_empty_table_header(&full)
+    let lines = full.lines().collect::<Vec<_>>();
+    if lines.len() >= 4 {
+        let mut kept = Vec::with_capacity(lines.len() - 2);
+        kept.push(lines[0]);
+        kept.extend_from_slice(&lines[3..]);
+        return kept.join("\n");
+    }
+    full
 }
 
 fn format_sources_cell(sources: &[AspectSourceItem], debug: bool) -> String {
@@ -379,15 +394,4 @@ fn format_sources_cell(sources: &[AspectSourceItem], debug: bool) -> String {
         })
         .collect::<Vec<_>>()
         .join("\n")
-}
-
-fn strip_empty_table_header(rendered: &str) -> String {
-    let lines = rendered.lines().collect::<Vec<_>>();
-    if lines.len() >= 4 {
-        let mut kept = Vec::with_capacity(lines.len() - 2);
-        kept.push(lines[0]);
-        kept.extend_from_slice(&lines[3..]);
-        return kept.join("\n");
-    }
-    rendered.to_owned()
 }

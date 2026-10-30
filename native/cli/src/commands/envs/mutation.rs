@@ -1,11 +1,15 @@
 mod replace;
+mod update;
 
-use self::replace::{prepare_replace, resolve_verified_env};
+use self::{
+    replace::{prepare_replace, resolve_verified_env},
+    update::{EnvUpdatePlan, prepare_update},
+};
 use super::{CORE_ENVS, Subcommand};
 use crate::commands::{
     aspect::{
-        find_bitmap_row_mut, serialize_json_preserving_newline, workspace_default_scope,
-        write_bitmap_if_changed,
+        CompJsonEdit, find_bitmap_row_mut, serialize_json_preserving_newline,
+        workspace_default_scope, write_bitmap_if_changed,
     },
     color::Chalk,
     scope_set::{Failure, selection},
@@ -17,11 +21,6 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-
-pub(super) struct CompJsonEdit {
-    pub path: PathBuf,
-    pub bytes: Vec<u8>,
-}
 
 pub(super) struct EnvBatch {
     pub root: PathBuf,
@@ -36,6 +35,7 @@ pub(super) enum Prepared {
     Set { env_display_id: String, batch: EnvBatch },
     Unset(EnvBatch),
     Replace { env_display_id: String, batch: EnvBatch },
+    Update(EnvUpdatePlan),
 }
 
 pub(super) struct BitmapContext {
@@ -68,6 +68,9 @@ pub(super) fn prepare(
         Subcommand::Set { pattern, env } => prepare_set(ctx, pattern, env),
         Subcommand::Unset { pattern } => prepare_unset(ctx, pattern),
         Subcommand::Replace { old_env, new_env } => prepare_replace(ctx, old_env, new_env),
+        Subcommand::Update { env_id, pattern } => {
+            prepare_update(ctx, env_id.as_deref(), pattern.as_deref())
+        }
         Subcommand::List { .. } | Subcommand::Get { .. } => {
             Err(Failure::Declined("handled by inspect".into()))
         }
@@ -314,6 +317,7 @@ impl Prepared {
                     batch.ids.join("\n"),
                 )
             }
+            Self::Update(plan) => plan.commit(&formatter, chalk, install_hint)?,
         };
         Ok(Report { data, code: 0, details: None })
     }
