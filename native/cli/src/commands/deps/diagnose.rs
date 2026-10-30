@@ -12,7 +12,7 @@ use crate::{
     native::Outcome,
 };
 use pnpm_lockfile::Lockfile;
-use std::{ffi::OsString, fs, io, path::Path};
+use std::{env, ffi::OsString, fmt::Write as _, fs, io, path::Path};
 
 struct PackageReport<'a> {
     package_name: &'a str,
@@ -32,7 +32,15 @@ pub(super) fn run_package(
 ) -> io::Result<Outcome> {
     let report = match inspect(root, package) {
         Ok(report) => report,
-        Err(Failure::Declined(reason) | Failure::User(reason)) => {
+        Err(Failure::User(message)) => {
+            if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+                return Ok(Outcome::Declined("CI deps diagnose error stack".into()));
+            }
+            return workspace_command::execute_then(root, args, "diagnose", |_| {
+                Err(io::Error::other(message))
+            });
+        }
+        Err(Failure::Declined(reason)) => {
             return Ok(Outcome::Declined(format!("deps diagnose: {reason}")));
         }
     };
@@ -45,7 +53,10 @@ pub(super) fn run_package(
 fn inspect<'a>(root: &Path, package: &'a str) -> Result<PackageReport<'a>, Failure> {
     let virtual_store = root.join("node_modules/.pnpm");
     if !virtual_store.is_dir() {
-        return Err(Failure::Declined("pnpm virtual store is missing".into()));
+        return Err(Failure::User(format!(
+            r#""bit deps diagnose --package" requires a pnpm-managed workspace. Expected "{}" to exist. Run "bit install" first."#,
+            virtual_store.display(),
+        )));
     }
     let prefix = format!("{}@", package.replacen('/', "+", 1));
     let mut pnpm_dirs = entries(&virtual_store)?
@@ -154,6 +165,39 @@ fn render(report: &PackageReport<'_>, chalk: Chalk) -> String {
         index = end;
     }
     lines.join("\n")
+}
+
+pub(super) fn table(rows: &[Vec<String>]) -> String {
+    let widths = (0..rows[0].len())
+        .map(|column| {
+            rows.iter()
+                .map(|row| row[column].chars().count())
+                .max()
+                .unwrap_or_default()
+        })
+        .collect::<Vec<_>>();
+    let mut lines = Vec::new();
+    for row in rows {
+        let mut line = String::from("  ");
+        for (index, cell) in row.iter().enumerate() {
+            write!(&mut line, "{cell:<width$}", width = widths[index]).expect("write to String");
+            line.push_str(if index + 1 == row.len() { " " } else { "    " });
+        }
+        lines.push(line);
+    }
+    lines.join("\n")
+}
+
+pub(super) fn locale_number(value: usize) -> String {
+    let digits = value.to_string();
+    let mut result = String::new();
+    for (index, digit) in digits.chars().enumerate() {
+        if index > 0 && (digits.len() - index).is_multiple_of(3) {
+            result.push(',');
+        }
+        result.push(digit);
+    }
+    result
 }
 
 #[cfg(test)]

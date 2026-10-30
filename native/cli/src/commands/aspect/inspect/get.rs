@@ -15,12 +15,12 @@ use bit_install::{
     config::{ENVS_ASPECT, aspect_id_without_version},
     model::WorkspaceComponent,
     workspace::{
-        AspectEntry,
+        AspectEntry, Bitmap, BitmapEntry,
         aspects::{Merger, Origin, Resolver},
     },
 };
 use serde_json::{Map, Value, json};
-use std::{ffi::OsString, path::Path};
+use std::{ffi::OsString, fs, path::Path};
 
 pub(in crate::commands::aspect) fn run_get(
     root: &Path,
@@ -57,10 +57,7 @@ pub(in crate::commands::aspect) fn collect_get_entries(
     let ctx = BitmapContext::load(root, chalk)?;
     let (ws_config, ws) =
         resolve_workspace_components(root).map_err(|err| Failure::Declined(err.to_string()))?;
-    let entry = selection::resolve_pattern_entries(root, &ctx.bitmap, component, chalk)?
-        .into_iter()
-        .next()
-        .ok_or_else(|| Failure::User(format!("component {component} was not found")))?;
+    let entry = resolve_component_for_get(root, &ctx.bitmap, component, chalk)?;
     let inspect_ctx = InspectCtx::new(root, &ws_config, &ws, &ctx.bitmap)?;
     let raw_origins = collect_raw_origins(&inspect_ctx, entry)?;
     let mut merged = merge_origins(entry, &inspect_ctx.ws_ids, raw_origins);
@@ -70,6 +67,66 @@ pub(in crate::commands::aspect) fn collect_get_entries(
         merged.retain(|item| item.id == target || aspect_id_without_version(&item.id) == bare);
     }
     Ok(merged)
+}
+
+pub(in crate::commands::aspect) fn resolve_component_for_get<'a>(
+    root: &Path,
+    bitmap: &'a Bitmap,
+    component: &str,
+    chalk: Chalk,
+) -> Result<&'a BitmapEntry, Failure> {
+    match selection::resolve_pattern_entries(root, bitmap, component, chalk) {
+        Ok(entries) => entries
+            .into_iter()
+            .next()
+            .ok_or_else(|| Failure::User(format!("component {component} was not found"))),
+        Err(Failure::User(msg)) => {
+            let bare = component
+                .split('@')
+                .next()
+                .unwrap_or(component);
+            if !bare.contains('/') && scope_index_lookup(root, bare).is_none() {
+                return Err(Failure::User(missing_scope_error(component)));
+            }
+            Err(Failure::User(msg))
+        }
+        Err(err) => Err(err),
+    }
+}
+
+pub(in crate::commands::aspect) fn missing_scope_error(raw: &str) -> String {
+    format!(
+        r#"Failed parsing the string "{raw}": scope is missing. Maybe try to add the scope name prior to the component name, such as "scopeName/componentName""#,
+    )
+}
+
+pub(in crate::commands::aspect) fn scope_index_lookup(root: &Path, bare: &str) -> Option<String> {
+    let scope_dir = crate::workspace::scope_path(root);
+    let rows = serde_json::from_slice::<Value>(&fs::read(scope_dir.join("index.json")).ok()?)
+        .ok()?
+        .as_array()?
+        .clone();
+    let matches = rows
+        .iter()
+        .filter(|row| row["isSymlink"] != true && row["id"]["name"].as_str() == Some(bare))
+        .collect::<Vec<_>>();
+    let [row] = matches.as_slice() else {
+        return None;
+    };
+    let scope = row["id"]["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .map(str::to_owned)
+        .or_else(|| {
+            let scope_json =
+                serde_json::from_slice::<Value>(&fs::read(scope_dir.join("scope.json")).ok()?)
+                    .ok()?;
+            scope_json["name"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+                .map(str::to_owned)
+        })?;
+    Some(format!("{scope}/{bare}"))
 }
 
 fn merge_origins(

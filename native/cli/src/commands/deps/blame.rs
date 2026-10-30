@@ -13,7 +13,7 @@ use crate::{
 };
 use bit_install::model::{ComponentId, WorkspaceComponent};
 use serde_json::{Value, json};
-use std::{ffi::OsString, io, path::Path};
+use std::{env, ffi::OsString, fs, io, path::Path};
 
 struct BlameRow {
     hash: String,
@@ -33,7 +33,15 @@ pub(super) fn run(
 ) -> io::Result<Outcome> {
     let rows = match inspect(root, component, dependency) {
         Ok(rows) => rows,
-        Err(Failure::Declined(reason) | Failure::User(reason)) => {
+        Err(Failure::User(message)) => {
+            if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+                return Ok(Outcome::Declined("CI deps blame error stack".into()));
+            }
+            return workspace_command::execute_then(root, args, "blame", |_| {
+                Err(io::Error::other(message))
+            });
+        }
+        Err(Failure::Declined(reason)) => {
             return Ok(Outcome::Declined(format!("deps blame: {reason}")));
         }
     };
@@ -45,7 +53,12 @@ pub(super) fn run(
 
 fn inspect(root: &Path, component: &str, dependency: &str) -> Result<Vec<BlameRow>, Failure> {
     let ctx = WorkspaceDepsContext::load(root)?;
-    let (id, workspace_component) = find_component(&ctx, component)?;
+    let Some((id, workspace_component)) = find_component(root, &ctx, component)? else {
+        return Ok(Vec::new());
+    };
+    if id.version.as_deref().is_none_or(str::is_empty) {
+        return Ok(Vec::new());
+    }
     let mut logs = read_logs(root, id)?;
     logs.reverse();
     logs.sort_by(log::raw_date_order);
@@ -96,19 +109,51 @@ fn version_from_log(
 }
 
 fn find_component<'a>(
+    root: &Path,
     ctx: &'a WorkspaceDepsContext,
     query: &str,
-) -> Result<(&'a ComponentId, &'a WorkspaceComponent), Failure> {
-    let matches = ctx.ws.components
+) -> Result<Option<(&'a ComponentId, &'a WorkspaceComponent)>, Failure> {
+    let bare = query.split('@').next().unwrap_or(query);
+    let normalized = bare.trim_start_matches("./").trim_end_matches('/');
+    let matches = ctx.ws.entries
         .iter()
-        .filter(|component| {
-            component.id.name == query || component.id.to_string_without_version() == query
+        .zip(&ctx.ws.components)
+        .filter(|(entry, component)| {
+            entry.owns_its_dir()
+                && (component.id.name == bare
+                    || component.id.to_string_without_version() == bare
+                    || (!entry.root_dir.is_empty() && entry.root_dir == normalized))
         })
+        .map(|(_, component)| component)
         .collect::<Vec<_>>();
-    let [component] = matches.as_slice() else {
-        return Err(Failure::Declined("component absent or ambiguous".into()));
+    if let [component] = matches.as_slice() {
+        return Ok(Some((&component.id, component)));
+    }
+    if !matches.is_empty() {
+        return Err(Failure::Declined("component ambiguous".into()));
+    }
+    if !bare.contains('/') && !exists_in_scope_index(root, bare) {
+        return Err(Failure::User(format!(
+            r#"Failed parsing the string "{query}": scope is missing. Maybe try to add the scope name prior to the component name, such as "scopeName/componentName""#,
+        )));
+    }
+    if bare.contains('/') && !exists_in_scope_index(root, bare) {
+        return Ok(None);
+    }
+    Err(Failure::Declined("scope-only component blame delegated".into()))
+}
+
+fn exists_in_scope_index(root: &Path, bare: &str) -> bool {
+    let index_path = crate::workspace::scope_path(root).join("index.json");
+    let Ok(bytes) = fs::read(index_path) else {
+        return false;
     };
-    Ok((&component.id, component))
+    let Ok(Value::Array(rows)) = serde_json::from_slice::<Value>(&bytes) else {
+        return false;
+    };
+    let target_name = bare.split_once('/').map_or(bare, |(_, name)| name);
+    rows.iter()
+        .any(|row| row["isSymlink"] != true && row["id"]["name"].as_str() == Some(target_name))
 }
 
 fn read_logs(root: &Path, id: &ComponentId) -> Result<Vec<Value>, Failure> {

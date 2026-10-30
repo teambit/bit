@@ -74,10 +74,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if let Subcommand::ListCore { json: json_flag } = subcommand {
         return run_list_core(args, json_flag);
     }
+    let chalk = Chalk::detect(args);
+    if let Subcommand::Unrecognized(sub) = &subcommand {
+        return run_unrecognized(args, sub, chalk);
+    }
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("aspect requires a workspace".into()));
     };
-    let chalk = Chalk::detect(args);
     match &subcommand {
         Subcommand::List(opts) => {
             return finish_outcome(&root, args, "list", run_list(&root, args, opts, chalk));
@@ -157,6 +160,25 @@ fn run_list_core(args: &[OsString], json_flag: bool) -> io::Result<Outcome> {
             workspace_command::execute_then(&root.path, args, "list-core", |_| Ok(report))
         }
         Some(root) => workspace_command::execute_with_scope(&root.path, args, "list-core", &report),
+        None => {
+            let mut stdout = io::stdout().lock();
+            writeln!(stdout, "{}", report.data)?;
+            stdout.flush()?;
+            Ok(Outcome::Exit(ExitCode::SUCCESS))
+        }
+    }
+}
+
+fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Outcome> {
+    let data = chalk.red(&format!(
+        r#""{sub}" is not a subcommand of "aspect", please run "bit aspect --help" to list the subcommands"#,
+    ));
+    let report = Report { data, code: 0, details: None };
+    match scope_root::discover().ok().flatten() {
+        Some(root) if !root.bare => {
+            workspace_command::execute_then(&root.path, args, "aspect", |_| Ok(report))
+        }
+        Some(root) => workspace_command::execute_with_scope(&root.path, args, "aspect", &report),
         None => {
             let mut stdout = io::stdout().lock();
             writeln!(stdout, "{}", report.data)?;
@@ -301,8 +323,8 @@ fn parse_set(rest: &[&str]) -> Option<Subcommand> {
 
 pub(in crate::commands) fn is_supported_pattern(pattern: &str) -> bool {
     !pattern.is_empty()
-        && !pattern.starts_with('-')
-        && !pattern.contains(['$', ':', '@'])
+        && !pattern.starts_with(['-', '@'])
+        && !pattern.contains(['$', ':'])
         && !pattern.contains(" AND ")
         && !pattern.starts_with("teambit.")
 }

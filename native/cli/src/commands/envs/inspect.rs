@@ -18,8 +18,8 @@ use bit_install::{
     model::WorkspaceComponent,
     workspace::{BitmapEntry, CORE_ENVS, Workspace},
 };
-use serde_json::json;
-use std::{ffi::OsString, path::Path};
+use serde_json::{Value, json};
+use std::{env, ffi::OsString, fs, io, path::Path};
 
 pub(super) fn run_list(
     root: &Path,
@@ -179,4 +179,150 @@ fn render_scripts_service(
         .collect::<Vec<_>>()
         .join("\n");
     Some(format!("{service_title}\n\n{header}\n{lines}"))
+}
+
+pub(super) fn run_bare_scope_list(
+    scope_dir: &Path,
+    args: &[OsString],
+    chalk: Chalk,
+) -> io::Result<Outcome> {
+    let Some(pairs) = collect_bare_scope_envs(scope_dir) else {
+        return Ok(Outcome::Declined("bare-scope envs list has non-core env".into()));
+    };
+    let data = format_envs_list(&pairs, true, chalk, table::colors(args));
+    let report = Report { data, code: 0, details: None };
+    workspace_command::execute_with_scope(scope_dir, args, "envs", &report)
+}
+
+pub(super) fn run_bare_scope_get(
+    scope_dir: &Path,
+    args: &[OsString],
+    component: &str,
+    chalk: Chalk,
+) -> io::Result<Outcome> {
+    let Some(rows) = load_bare_scope_index(scope_dir) else {
+        return Ok(Outcome::Declined("bare-scope index missing".into()));
+    };
+    let (bare, req_ver) = component
+        .split_once('@')
+        .map_or((component, None), |(bare, ver)| (bare, Some(ver)));
+    let matched = rows
+        .iter()
+        .find(|row| {
+            row["isSymlink"] != true
+                && (row["id"]["name"].as_str() == Some(bare)
+                    || bare_row_full_id(scope_dir, row).as_deref() == Some(bare))
+        });
+    let Some(row) = matched else {
+        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            return Ok(Outcome::Declined("CI bare-scope envs get error delegated".into()));
+        }
+        let msg = if bare.contains('/') {
+            format!("component for env {component} was not found")
+        } else {
+            format!(
+                r#"Failed parsing the string "{component}": scope is missing. Maybe try to add the scope name prior to the component name, such as "scopeName/componentName""#,
+            )
+        };
+        return workspace_command::execute_failure_scope(
+            scope_dir,
+            args,
+            "get",
+            false,
+            "",
+            io::Error::other(msg),
+        );
+    };
+    let Some(env_id) = bare_row_core_env(scope_dir, row, req_ver) else {
+        return Ok(Outcome::Declined("bare-scope component has non-core env".into()));
+    };
+    let data = Formatter::new(chalk).title(&format!("Environment: {env_id}"));
+    let report = Report { data, code: 0, details: None };
+    workspace_command::execute_with_scope(scope_dir, args, "get", &report)
+}
+
+fn collect_bare_scope_envs(scope_dir: &Path) -> Option<Vec<(String, String)>> {
+    let rows = load_bare_scope_index(scope_dir)?;
+    let mut pairs = Vec::new();
+    for row in &rows {
+        if row["isSymlink"] == true {
+            continue;
+        }
+        let full_id = bare_row_full_id_with_ver(scope_dir, row)?;
+        let env_id = bare_row_core_env(scope_dir, row, None)?;
+        pairs.push((full_id, env_id));
+    }
+    pairs.sort_by(|left, right| left.0.cmp(&right.0));
+    Some(pairs)
+}
+
+fn load_bare_scope_index(scope_dir: &Path) -> Option<Vec<Value>> {
+    serde_json::from_slice::<Value>(&fs::read(scope_dir.join("index.json")).ok()?)
+        .ok()?
+        .as_array()
+        .cloned()
+}
+
+fn bare_row_full_id(scope_dir: &Path, row: &Value) -> Option<String> {
+    let name = row["id"]["name"].as_str()?;
+    let scope = row["id"]["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .map(str::to_owned)
+        .or_else(|| {
+            let scope_json =
+                serde_json::from_slice::<Value>(&fs::read(scope_dir.join("scope.json")).ok()?)
+                    .ok()?;
+            scope_json["name"].as_str().map(str::to_owned)
+        })?;
+    Some(format!("{scope}/{name}"))
+}
+
+fn bare_row_full_id_with_ver(scope_dir: &Path, row: &Value) -> Option<String> {
+    let base = bare_row_full_id(scope_dir, row)?;
+    let hash = row["hash"].as_str()?;
+    let (kind, comp_obj) = bit_object_import::read_scope_object(scope_dir, hash).ok()??;
+    if kind != "Component" || comp_obj["deprecated"] == true || comp_obj["deleted"] == true {
+        return None;
+    }
+    let head = comp_obj["head"].as_str()?;
+    let ver = comp_obj["versions"]
+        .as_object()
+        .and_then(|vers| {
+            vers.iter()
+                .find(|(_, ver_hash)| ver_hash.as_str() == Some(head))
+                .map(|(tag, _)| tag.as_str())
+        })
+        .unwrap_or(head);
+    Some(format!("{base}@{ver}"))
+}
+
+fn bare_row_core_env(scope_dir: &Path, row: &Value, req_ver: Option<&str>) -> Option<String> {
+    let hash = row["hash"].as_str()?;
+    let (kind, comp_obj) = bit_object_import::read_scope_object(scope_dir, hash).ok()??;
+    if kind != "Component" {
+        return None;
+    }
+    let ver_hash = match req_ver {
+        Some(ver) => comp_obj["versions"][ver].as_str().unwrap_or(ver),
+        None => comp_obj["head"].as_str()?,
+    };
+    let (ver_kind, ver_obj) = bit_object_import::read_scope_object(scope_dir, ver_hash).ok()??;
+    if ver_kind != "Version" {
+        return None;
+    }
+    let env_id = ver_obj["extensions"]
+        .as_array()
+        .and_then(|exts| {
+            exts.iter()
+                .find(|ext| ext["name"].as_str() == Some("teambit.envs/envs"))
+                .and_then(|ext| {
+                    ext["config"]["env"]
+                        .as_str()
+                        .or_else(|| ext["data"]["id"].as_str())
+                })
+        })
+        .unwrap_or("teambit.harmony/node");
+    let bare_env = aspect_id_without_version(env_id);
+    CORE_ENVS.contains(&bare_env).then(|| env_id.to_owned())
 }

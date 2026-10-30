@@ -1,6 +1,6 @@
 //! Workspace dependency diagnosis text report.
 
-use super::entries;
+use super::{entries, locale_number, table};
 use crate::{
     commands::{
         color::Chalk,
@@ -15,7 +15,7 @@ use crate::{
     },
     native::Outcome,
 };
-use std::{collections::HashMap, ffi::OsString, fmt::Write as _, io, path::Path};
+use std::{collections::HashMap, env, ffi::OsString, io, path::Path};
 
 struct PackageInfo {
     name: String,
@@ -47,7 +47,15 @@ pub(in crate::commands::deps) fn run(
 ) -> io::Result<Outcome> {
     let diagnosis = match inspect(root, origins) {
         Ok(diagnosis) => diagnosis,
-        Err(Failure::Declined(reason) | Failure::User(reason)) => {
+        Err(Failure::User(message)) => {
+            if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+                return Ok(Outcome::Declined("CI deps diagnose error stack".into()));
+            }
+            return workspace_command::execute_then(root, args, "diagnose", |_| {
+                Err(io::Error::other(message))
+            });
+        }
+        Err(Failure::Declined(reason)) => {
             return Ok(Outcome::Declined(format!("deps diagnose: {reason}")));
         }
     };
@@ -61,13 +69,19 @@ pub(in crate::commands::deps) fn run(
 }
 
 fn inspect(root: &Path, origins: bool) -> Result<Diagnosis, Failure> {
+    let ctx = WorkspaceDepsContext::load(root)?;
     let store = root.join("node_modules/.pnpm");
     if !store.is_dir() {
-        return Err(Failure::Declined("pnpm virtual store is missing".into()));
+        if !ctx.ws.components.is_empty() {
+            return Err(Failure::Declined("pnpm store missing with active components".into()));
+        }
+        return Err(Failure::User(format!(
+            r#""bit deps diagnose" requires a pnpm-managed workspace. Expected "{}" to exist. Run "bit install" first."#,
+            store.display(),
+        )));
     }
     let entries = entries(&store)?;
     let copies = count_copies(&entries);
-    let ctx = WorkspaceDepsContext::load(root)?;
     let (bitmap, _) = BitmapMutation::load(root)?;
     let mut packages = collect_component_packages(&ctx, &bitmap.bitmap_val)?;
     for package in &mut packages {
@@ -381,37 +395,4 @@ fn peer_table(rows: &[Vec<String>], chalk: Chalk) -> String {
         }
     }
     lines.join("\n")
-}
-
-fn table(rows: &[Vec<String>]) -> String {
-    let widths = (0..rows[0].len())
-        .map(|column| {
-            rows.iter()
-                .map(|row| row[column].chars().count())
-                .max()
-                .unwrap_or_default()
-        })
-        .collect::<Vec<_>>();
-    let mut lines = Vec::new();
-    for row in rows {
-        let mut line = String::from("  ");
-        for (index, cell) in row.iter().enumerate() {
-            write!(&mut line, "{cell:<width$}", width = widths[index]).expect("write to String");
-            line.push_str(if index + 1 == row.len() { " " } else { "    " });
-        }
-        lines.push(line);
-    }
-    lines.join("\n")
-}
-
-fn locale_number(value: usize) -> String {
-    let digits = value.to_string();
-    let mut result = String::new();
-    for (index, digit) in digits.chars().enumerate() {
-        if index > 0 && (digits.len() - index).is_multiple_of(3) {
-            result.push(',');
-        }
-        result.push(digit);
-    }
-    result
 }

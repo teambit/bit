@@ -2,14 +2,14 @@
 
 use super::{
     InspectCtx, RawOrigin, collect_raw_origins, find_ws_comp,
-    get::{build_get_json, ensure_default_env_aspects, render_get_text},
+    get::{build_get_json, ensure_default_env_aspects, render_get_text, resolve_component_for_get},
     resolve_aspect_id,
 };
 use crate::{
     commands::{
         aspect::{GetOpts, mutation::BitmapContext},
         color::Chalk,
-        scope_set::{Failure, selection},
+        scope_set::Failure,
         script::resolve_workspace_components,
         workspace_command::{self, format::Formatter, results::Report},
     },
@@ -69,10 +69,7 @@ fn collect_debug_report(
     let ctx = BitmapContext::load(root, chalk)?;
     let (ws_config, ws) =
         resolve_workspace_components(root).map_err(|err| Failure::Declined(err.to_string()))?;
-    let entry = selection::resolve_pattern_entries(root, &ctx.bitmap, component, chalk)?
-        .into_iter()
-        .next()
-        .ok_or_else(|| Failure::User(format!("component {component} was not found")))?;
+    let entry = resolve_component_for_get(root, &ctx.bitmap, component, chalk)?;
     let inspect_ctx = InspectCtx::new(root, &ws_config, &ws, &ctx.bitmap)?;
     let raw_origins = collect_raw_origins(&inspect_ctx, entry)?;
     let (before, after) = merge_debug_origins(entry, &inspect_ctx.ws_ids, raw_origins);

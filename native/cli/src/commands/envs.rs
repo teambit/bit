@@ -6,16 +6,19 @@ mod mutation;
 mod tests;
 
 use self::{
-    inspect::{run_get, run_list},
+    inspect::{run_bare_scope_get, run_bare_scope_list, run_get, run_list},
     mutation::prepare,
 };
 use super::{
-    Command, aspect::is_supported_pattern, color::Chalk, scope_set::Failure, workspace_command,
+    Command, aspect::is_supported_pattern, color::Chalk, lane::scope_root, scope_set::Failure,
+    workspace_command,
 };
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "envs", aliases: &["env"], run };
+
+const WORKSPACE_NOT_FOUND_ERR: &str = "error: workspace not found";
 
 pub(super) const CORE_ENVS: &[&str] = &[
     "teambit.harmony/aspect",
@@ -47,25 +50,80 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(subcommand) = parse_subcommand(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native envs grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("envs requires a workspace".into()));
-    };
+    let cwd = env::current_dir()?;
     let chalk = Chalk::detect(args);
-    match &subcommand {
-        Subcommand::List { json, table_only } => {
-            return finish_outcome(
-                &root,
+    let Some(root) = workspace::root(&cwd) else {
+        return run_without_workspace(&cwd, args, &subcommand, chalk);
+    };
+    run_in_workspace(&root, args, &subcommand, chalk)
+}
+
+fn run_without_workspace(
+    cwd: &Path,
+    args: &[OsString],
+    subcommand: &Subcommand,
+    chalk: Chalk,
+) -> io::Result<Outcome> {
+    if let Some(scope) = scope_root::discover().ok().flatten()
+        && scope.bare
+    {
+        return match subcommand {
+            Subcommand::List { json: false, table_only: true } => {
+                run_bare_scope_list(&scope.path, args, chalk)
+            }
+            Subcommand::Get { component, services: None } => {
+                run_bare_scope_get(&scope.path, args, component, chalk)
+            }
+            _ => Ok(Outcome::Declined("envs bare-scope subcommand delegated".into())),
+        };
+    }
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI envs outside workspace delegated".into()));
+    }
+    match subcommand {
+        Subcommand::List { json: false, table_only: true } => {
+            workspace_command::execute_failure_scope(
+                cwd,
                 args,
                 "envs",
-                run_list(&root, args, *json, *table_only, chalk),
+                false,
+                "",
+                io::Error::other(WORKSPACE_NOT_FOUND_ERR),
+            )
+        }
+        Subcommand::Get { .. } => workspace_command::execute_failure_scope(
+            cwd,
+            args,
+            "get",
+            false,
+            "",
+            io::Error::other(WORKSPACE_NOT_FOUND_ERR),
+        ),
+        _ => Ok(Outcome::Declined("envs requires a workspace".into())),
+    }
+}
+
+fn run_in_workspace(
+    root: &Path,
+    args: &[OsString],
+    subcommand: &Subcommand,
+    chalk: Chalk,
+) -> io::Result<Outcome> {
+    match subcommand {
+        Subcommand::List { json, table_only } => {
+            return finish_outcome(
+                root,
+                args,
+                "envs",
+                run_list(root, args, *json, *table_only, chalk),
             );
         }
         Subcommand::Get { component, services } => {
             return finish_outcome(
-                &root,
+                root,
                 args,
                 "get",
-                run_get(&root, args, component, services.as_deref(), chalk),
+                run_get(root, args, component, services.as_deref(), chalk),
             );
         }
         Subcommand::Set { .. }
@@ -74,12 +132,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         | Subcommand::Update { .. } => {}
     }
     let label = subcommand.loader_label();
-    let result = prepare(&root, &subcommand, chalk)
+    let result = prepare(root, subcommand, chalk)
         .and_then(|prepared| {
-            workspace_command::execute_then(&root, args, label, |_output| prepared.commit(chalk))
+            workspace_command::execute_then(root, args, label, |_output| prepared.commit(chalk))
                 .map_err(|err| Failure::Declined(err.to_string()))
         });
-    finish_outcome(&root, args, label, result)
+    finish_outcome(root, args, label, result)
 }
 
 fn finish_outcome(

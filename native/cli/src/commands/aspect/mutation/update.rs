@@ -61,7 +61,7 @@ pub(super) fn prepare_update(
     raw_aspect_id: &str,
     pattern: Option<&str>,
 ) -> Result<Prepared, Failure> {
-    let (_, bare_aspect) = resolve_aspect_identity(&ctx.bitmap, raw_aspect_id)?;
+    let (_, bare_aspect) = resolve_aspect_identity(&ctx.root, &ctx.bitmap, raw_aspect_id)?;
     let target_ver = resolve_target_version(&ctx.root, raw_aspect_id, &bare_aspect)?;
     let target_aspect_id = format!("{bare_aspect}@{target_ver}");
     let entries = select_update_entries(&ctx.root, &ctx.bitmap, pattern, ctx.chalk)?;

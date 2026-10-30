@@ -9,7 +9,10 @@ use self::{
     comp_json::{set_in_comp_json, unset_in_bitmap_row, unset_in_comp_json},
     update::{UpdatePlan, prepare_update},
 };
-use super::{Subcommand, inspect::get::collect_get_entries, is_supported_pattern};
+use super::{
+    Subcommand,
+    inspect::get::{collect_get_entries, missing_scope_error, scope_index_lookup},
+};
 use crate::commands::{
     color::Chalk,
     scope_set::{Failure, selection},
@@ -124,7 +127,7 @@ fn prepare_set(
             .filter(|path| path.is_file());
         if let Some(path) = comp_json_path {
             let (resolved_aspect_id, bare_aspect) =
-                resolve_aspect_identity(&ctx.bitmap, aspect_id)?;
+                resolve_aspect_identity(&ctx.root, &ctx.bitmap, aspect_id)?;
             comp_json_edits.push(set_in_comp_json(
                 path,
                 &resolved_aspect_id,
@@ -187,7 +190,8 @@ fn prepare_unset(
     aspect_id: &str,
 ) -> Result<Prepared, Failure> {
     let matched = selection::resolve_pattern_entries(&ctx.root, &ctx.bitmap, pattern, ctx.chalk)?;
-    let (resolved_aspect_id, bare_aspect) = resolve_aspect_identity(&ctx.bitmap, aspect_id)?;
+    let (resolved_aspect_id, bare_aspect) =
+        resolve_aspect_identity(&ctx.root, &ctx.bitmap, aspect_id)?;
     let mut ids = Vec::with_capacity(matched.len());
     let mut bitmap_changed = false;
     let mut comp_json_edits = Vec::new();
@@ -223,26 +227,33 @@ fn prepare_unset(
 }
 
 pub(in crate::commands) fn resolve_aspect_identity(
+    root: &Path,
     bitmap: &Bitmap,
     raw: &str,
 ) -> Result<(String, String), Failure> {
-    let bare = raw.split('@').next().unwrap_or(raw);
+    let (bare, ver) = raw
+        .split_once('@')
+        .map_or((raw, None), |(bare, ver)| (bare, Some(ver)));
     if let Some(entry) = bitmap.entries
         .iter()
         .find(|entry| {
             entry.owns_its_dir()
-                && (entry.id.to_string_without_version() == bare || entry.id.name == bare)
+                && (entry.id.to_string_without_version() == bare
+                    || entry.id.name == bare
+                    || (!entry.root_dir.is_empty() && entry.root_dir == bare))
         })
     {
         return Ok((selection::entry_full_id(entry), entry.id.to_string_without_version()));
     }
-    if bare.contains('/') && is_supported_pattern(bare) {
-        return Ok((raw.to_owned(), bare.to_owned()));
-    }
     if bare.contains('/') {
         return Ok((raw.to_owned(), bare.to_owned()));
     }
-    Err(Failure::Declined("unscoped non-workspace aspect id".into()))
+    if let Some(scoped_bare) = scope_index_lookup(root, bare) {
+        let full =
+            ver.map_or_else(|| scoped_bare.clone(), |ver_str| format!("{scoped_bare}@{ver_str}"));
+        return Ok((full, scoped_bare));
+    }
+    Err(Failure::User(missing_scope_error(raw)))
 }
 
 pub(in crate::commands) fn find_matching_aspect_key(

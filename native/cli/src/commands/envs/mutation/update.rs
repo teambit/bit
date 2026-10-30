@@ -157,7 +157,7 @@ fn resolve_single_target_env(
     raw: &str,
     from_list: bool,
 ) -> Result<TargetEnv, Failure> {
-    let (_, bare) = resolve_aspect_identity(bitmap, raw)?;
+    let (_, bare) = resolve_aspect_identity(root, bitmap, raw)?;
     let ws_entry = bitmap.entries
         .iter()
         .find(|entry| entry.owns_its_dir() && entry.id.to_string_without_version() == bare);

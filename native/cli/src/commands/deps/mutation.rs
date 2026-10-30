@@ -9,6 +9,7 @@ use crate::{
         color::Chalk,
         scope_set::{Failure, selection},
         set_peer::{DEP_RESOLVER_ID, load_dep_resolver_config},
+        workspace_command::format::Formatter,
     },
     workspace,
 };
@@ -271,4 +272,42 @@ pub(super) fn format_json_indent_4(val: &Value) -> io::Result<String> {
         serde_json::Serializer::with_formatter(&mut buf, PrettyFormatter::with_indent(b"    "));
     val.serialize(&mut ser).map_err(io::Error::other)?;
     String::from_utf8(buf).map_err(io::Error::other)
+}
+
+pub(super) fn commit_set(
+    formatter: &Formatter,
+    mutation: &BitmapMutation,
+    changed_comps: &[String],
+    added_packages: &Value,
+) -> io::Result<String> {
+    mutation.flush()?;
+    let comp_items = changed_comps
+        .iter()
+        .map(|comp| formatter.item(comp))
+        .collect::<Vec<_>>();
+    let comp_section = formatter.section("changed components", "", &comp_items);
+    let pkg_section = format!(
+        "{}\n{}",
+        formatter.title("added packages"),
+        format_json_indent_4(added_packages)?,
+    );
+    Ok(Formatter::join(&[
+        formatter.success_summary("successfully updated dependencies"),
+        comp_section,
+        pkg_section,
+    ]))
+}
+
+pub(super) fn commit_list_action(
+    formatter: &Formatter,
+    mutation: &BitmapMutation,
+    summary: &str,
+    comps: &[String],
+) -> io::Result<String> {
+    mutation.flush()?;
+    let items = comps
+        .iter()
+        .map(|comp| formatter.item(comp))
+        .collect::<Vec<_>>();
+    Ok(Formatter::join(&[formatter.success_summary(summary), items.join("\n")]))
 }

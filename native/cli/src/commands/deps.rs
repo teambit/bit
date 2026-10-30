@@ -23,7 +23,9 @@ mod write;
 
 use self::{
     get::prepare_get,
-    mutation::{ListActionSpec, SetSpec, format_json_indent_4, prepare_list_action, prepare_set},
+    mutation::{
+        ListActionSpec, SetSpec, commit_list_action, commit_set, prepare_list_action, prepare_set,
+    },
     remove::{RemoveSpec, RemovedByComp, prepare_remove, render_remove},
     usage::prepare_usage,
     write::{WriteTarget, commit_write, prepare_write},
@@ -49,6 +51,8 @@ use std::{
 
 pub const COMMAND: Command = Command { name: "deps", aliases: &["dependencies"], run };
 pub const WHY: Command = Command { name: "why", aliases: &[], run: run_why };
+
+const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Create a new workspace using 'bit new <template> <workspace-name>' or navigate to an existing workspace directory.";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
@@ -110,13 +114,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if let Subcommand::Unrecognized(sub) = &subcommand {
         return run_unrecognized(args, sub, chalk);
     }
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return run_without_workspace(args, &subcommand, chalk);
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return run_without_workspace(&cwd, args, &subcommand, chalk);
     };
     run_in_workspace(&root, args, &subcommand, chalk)
 }
 
 fn run_without_workspace(
+    cwd: &Path,
     args: &[OsString],
     subcommand: &Subcommand,
     chalk: Chalk,
@@ -127,7 +133,32 @@ fn run_without_workspace(
     {
         return get::run_bare_scope(&scope, args, id, *tree, chalk);
     }
-    Ok(Outcome::Declined("deps requires a workspace".into()))
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI deps outside workspace delegated".into()));
+    }
+    match subcommand {
+        Subcommand::Debug { .. }
+        | Subcommand::Usage { .. }
+        | Subcommand::Why { .. }
+        | Subcommand::Diagnose { .. }
+        | Subcommand::DiagnosePackage { .. } => workspace_command::execute_failure_scope(
+            cwd,
+            args,
+            subcommand.loader_label(),
+            false,
+            "",
+            io::Error::other(OUTSIDE_WORKSPACE_ERR),
+        ),
+        Subcommand::Circular { json, .. } => workspace_command::execute_failure_scope(
+            cwd,
+            args,
+            "circular",
+            *json,
+            "",
+            io::Error::other(OUTSIDE_WORKSPACE_ERR),
+        ),
+        _ => Ok(Outcome::Declined("deps requires a workspace".into())),
+    }
 }
 
 fn run_in_workspace(
@@ -158,10 +189,12 @@ fn run_why(args: &[OsString]) -> io::Result<Outcome> {
     let Some(subcommand) = parse_why(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native why grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("why requires a workspace".into()));
+    let cwd = env::current_dir()?;
+    let chalk = Chalk::detect(args);
+    let Some(root) = workspace::root(&cwd) else {
+        return run_without_workspace(&cwd, args, &subcommand, chalk);
     };
-    run_prepared(&root, args, &subcommand, Chalk::detect(args))
+    run_prepared(&root, args, &subcommand, chalk)
 }
 
 fn run_prepared(
@@ -352,42 +385,4 @@ impl Prepared {
         };
         Ok(Report { data, code: 0, details: None })
     }
-}
-
-fn commit_set(
-    formatter: &Formatter,
-    mutation: &BitmapMutation,
-    changed_comps: &[String],
-    added_packages: &Value,
-) -> io::Result<String> {
-    mutation.flush()?;
-    let comp_items = changed_comps
-        .iter()
-        .map(|comp| formatter.item(comp))
-        .collect::<Vec<_>>();
-    let comp_section = formatter.section("changed components", "", &comp_items);
-    let pkg_section = format!(
-        "{}\n{}",
-        formatter.title("added packages"),
-        format_json_indent_4(added_packages)?,
-    );
-    Ok(Formatter::join(&[
-        formatter.success_summary("successfully updated dependencies"),
-        comp_section,
-        pkg_section,
-    ]))
-}
-
-fn commit_list_action(
-    formatter: &Formatter,
-    mutation: &BitmapMutation,
-    summary: &str,
-    comps: &[String],
-) -> io::Result<String> {
-    mutation.flush()?;
-    let items = comps
-        .iter()
-        .map(|comp| formatter.item(comp))
-        .collect::<Vec<_>>();
-    Ok(Formatter::join(&[formatter.success_summary(summary), items.join("\n")]))
 }
