@@ -166,8 +166,12 @@ fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<
         "-j" | "--json" | "--json=true" => options.json = true,
         "--json=false" => options.json = false,
         "-r" | "--remote" => options.remote = Some(take_optional_remote(args, idx)),
-        "-rj" | "-jr" => {
+        "-rj" => {
             options.remote = Some(String::new());
+            options.json = true;
+        }
+        "-jr" => {
+            options.remote = Some(take_optional_remote(args, idx));
             options.json = true;
         }
         "--layout" => options.layout = Some(take_required_layout(args, idx)?),

@@ -113,10 +113,35 @@ fn apply_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
         .or_else(|| arg.strip_prefix("-u="))
     {
         options.ui_root_name = Some(val.to_owned());
+    } else if apply_combined_short(arg, options) {
     } else if !arg.starts_with('-') && !arg.is_empty() && options.pattern.is_none() {
         options.pattern = Some(arg.to_owned());
     } else {
         return None;
     }
     Some(())
+}
+
+fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
+    let Some(flags) = arg.strip_prefix('-') else {
+        return false;
+    };
+    if flags.len() < 2
+        || flags.starts_with('-')
+        || !flags
+            .chars()
+            .all(|ch| matches!(ch, 'd' | 'r' | 's' | 'n' | 'v'))
+    {
+        return false;
+    }
+    for ch in flags.chars() {
+        match ch {
+            'd' => options.dev = true,
+            'r' => options.rebuild = true,
+            's' => options.skip_ui_build = true,
+            'n' => options.no_browser = true,
+            _ => {}
+        }
+    }
+    true
 }

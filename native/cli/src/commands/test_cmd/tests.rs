@@ -25,6 +25,10 @@ fn parses_test_arguments_and_options() {
             json: true,
         }),
     );
+    assert_eq!(
+        parse_options(&["-wduaj"]),
+        Some(Options { user_pattern: Vec::new(), all: true, scope: None, json: true }),
+    );
 }
 
 #[test]

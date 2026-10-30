@@ -76,45 +76,72 @@ fn apply_pr_arg(rest: &[&str], idx: usize, opts: &mut PrOptions) -> Option<usize
         "--keep-lane=false" => opts.keep_lane = false,
         "--skip-cleanup" | "--skip-cleanup=true" => opts.skip_cleanup = true,
         "--skip-cleanup=false" => opts.skip_cleanup = false,
+        arg if apply_combined_short(arg, opts) => {}
         _ => return None,
     }
     Some(idx + 1)
 }
 
+fn apply_combined_short(arg: &str, opts: &mut PrOptions) -> bool {
+    let Some(flags) = arg.strip_prefix('-') else {
+        return false;
+    };
+    if flags.len() < 2
+        || flags.starts_with('-')
+        || !flags
+            .chars()
+            .all(|ch| matches!(ch, 'b' | 's' | 'd'))
+    {
+        return false;
+    }
+    for ch in flags.chars() {
+        match ch {
+            'b' => opts.build = true,
+            's' => opts.strict = true,
+            _ => opts.dry_run = true,
+        }
+    }
+    true
+}
+
 fn apply_pr_value_arg(rest: &[&str], idx: usize, opts: &mut PrOptions) -> Option<usize> {
     match rest[idx] {
         "-l" | "--lane" => {
-            opts.lane = Some((*rest.get(idx + 1)?).to_owned());
+            opts.lane = Some(valid_pr_val(rest.get(idx + 1)?)?);
             Some(idx + 2)
         }
         arg if let Some(val) = arg
             .strip_prefix("--lane=")
             .or_else(|| arg.strip_prefix("-l=")) =>
         {
-            opts.lane = Some(val.to_owned());
+            opts.lane = Some(valid_pr_val(val)?);
             Some(idx + 1)
         }
         "-m" | "--message" => {
-            opts.message = Some((*rest.get(idx + 1)?).to_owned());
+            opts.message = Some(valid_pr_val(rest.get(idx + 1)?)?);
             Some(idx + 2)
         }
         arg if let Some(val) = arg
             .strip_prefix("--message=")
             .or_else(|| arg.strip_prefix("-m=")) =>
         {
-            opts.message = Some(val.to_owned());
+            opts.message = Some(valid_pr_val(val)?);
             Some(idx + 1)
         }
         "--skip-tasks" => {
-            opts.skip_tasks = Some((*rest.get(idx + 1)?).to_owned());
+            opts.skip_tasks = Some(valid_pr_val(rest.get(idx + 1)?)?);
             Some(idx + 2)
         }
         arg if let Some(val) = arg.strip_prefix("--skip-tasks=") => {
-            opts.skip_tasks = Some(val.to_owned());
+            opts.skip_tasks = Some(valid_pr_val(val)?);
             Some(idx + 1)
         }
         _ => None,
     }
+}
+
+fn valid_pr_val(val: &str) -> Option<String> {
+    (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
 }
 
 fn consume_bool_flag(rest: &[&str], idx: usize, target: &mut bool) -> usize {

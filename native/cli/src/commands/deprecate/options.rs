@@ -24,11 +24,11 @@ fn apply_arg<'a>(
 ) -> Option<usize> {
     match args[index] {
         "--no-color" => Some(index + 1),
-        "--new-id" if !undo && replacement.is_none() => {
+        "--new-id" if !undo => {
             *replacement = Some(valid_val(args.get(index + 1)?)?);
             Some(index + 2)
         }
-        "--range" if !undo && range.is_none() => {
+        "--range" if !undo => {
             *range = Some(valid_val(args.get(index + 1)?)?);
             Some(index + 2)
         }
@@ -46,15 +46,11 @@ fn apply_inline_flag<'a>(
     replacement: &mut Option<&'a str>,
     range: &mut Option<&'a str>,
 ) -> bool {
-    if let Some(val) = arg.strip_prefix("--new-id=").and_then(valid_val)
-        && replacement.is_none()
-    {
+    if let Some(val) = arg.strip_prefix("--new-id=").and_then(valid_val) {
         *replacement = Some(val);
         return true;
     }
-    if let Some(val) = arg.strip_prefix("--range=").and_then(valid_val)
-        && range.is_none()
-    {
+    if let Some(val) = arg.strip_prefix("--range=").and_then(valid_val) {
         *range = Some(val);
         return true;
     }

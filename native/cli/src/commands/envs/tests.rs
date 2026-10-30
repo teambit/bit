@@ -49,6 +49,10 @@ fn parses_envs_subcommands() {
             services: Some(vec!["teambit.workspace/scripts".into()]),
         }),
     );
+    assert_eq!(parse_subcommand(&["get", "comp1", "--services", ""]), None);
+    assert_eq!(parse_subcommand(&["get", "comp1", "--services="]), None);
+    assert_eq!(parse_subcommand(&["get", "comp1", "--services", "--json"]), None);
+    assert_eq!(parse_subcommand(&["get", "comp1", "--services=-bad"]), None);
 }
 
 #[test]

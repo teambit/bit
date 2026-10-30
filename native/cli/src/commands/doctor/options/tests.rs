@@ -30,6 +30,13 @@ fn optional_paths_and_diagnosis_names_are_distinct() {
     assert!(!inline.list);
     assert!(Options::parse(&["--remote", "--json"]).is_none());
     assert!(Options::parse(&["--unknown"]).is_none());
+    let combined = Options::parse(&["-jnpe"]).unwrap();
+    assert!(
+        combined.json
+            && combined.include.node_modules
+            && combined.include.public
+            && combined.include.exclude_scope,
+    );
 }
 
 #[test]

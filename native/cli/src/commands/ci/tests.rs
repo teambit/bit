@@ -1,11 +1,25 @@
 use super::{
-    Subcommand, SyncOptions, merge::MergeOptions, parse_subcommand, validate_sync_options,
+    Subcommand, SyncOptions, merge::MergeOptions, parse_subcommand, pr::PrOptions,
+    validate_sync_options,
 };
 
 #[test]
 fn parses_ci_subcommands_and_validates_sync_flags() {
     assert_eq!(parse_subcommand(&[]), Some(Subcommand::Bare));
     assert_eq!(parse_subcommand(&["verify"]), Some(Subcommand::Verify));
+    assert_eq!(
+        parse_subcommand(&["pr", "-bsd", "-l", "my-lane", "-m", "my-msg"]),
+        Some(Subcommand::Pr(PrOptions {
+            lane: Some("my-lane".into()),
+            message: Some("my-msg".into()),
+            build: true,
+            strict: true,
+            dry_run: true,
+            ..PrOptions::default()
+        })),
+    );
+    assert_eq!(parse_subcommand(&["pr", "--lane", "--strict"]), None);
+    assert_eq!(parse_subcommand(&["pr", "--message="]), None);
     assert_eq!(
         parse_subcommand(&["merge", "-r", "invalid"]),
         Some(Subcommand::Merge(MergeOptions {

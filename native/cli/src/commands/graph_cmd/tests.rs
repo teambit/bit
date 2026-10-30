@@ -31,6 +31,9 @@ fn parses_graph_options_and_validates_remote_or_host() {
     );
     assert_eq!(parse_options(&["--layout=-bad"]), None);
     assert!(parse_options(&["--cycles=true", "--json=false"]).unwrap().cycles);
+    let jr = parse_options(&["-jr", "my-remote"]).unwrap();
+    assert_eq!(jr.remote.as_deref(), Some("my-remote"));
+    assert!(jr.json);
 }
 
 #[test]

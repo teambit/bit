@@ -296,12 +296,35 @@ fn apply_inline_test_token(token: &str, options: &mut Options) -> Option<()> {
         .or_else(|| token.strip_prefix("-e="))
     {
         take_test_val(val)?;
+    } else if apply_combined_short(token, options) {
     } else if token.starts_with('-') {
         return None;
     } else {
         options.user_pattern.push(token.to_owned());
     }
     Some(())
+}
+
+fn apply_combined_short(token: &str, options: &mut Options) -> bool {
+    let Some(flags) = token.strip_prefix('-') else {
+        return false;
+    };
+    if flags.len() < 2
+        || flags.starts_with('-')
+        || !flags
+            .chars()
+            .all(|ch| matches!(ch, 'w' | 'd' | 'u' | 'a' | 'j'))
+    {
+        return false;
+    }
+    for ch in flags.chars() {
+        match ch {
+            'a' => options.all = true,
+            'j' => options.json = true,
+            _ => {}
+        }
+    }
+    true
 }
 
 fn take_test_val(val: &str) -> Option<String> {

@@ -19,8 +19,19 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv[1..], undo) else {
         return Ok(Outcome::Declined("outside native deprecation grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            return Ok(Outcome::Declined("not inside a workspace".into()));
+        }
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            if undo { "undeprecate" } else { "deprecate" },
+            false,
+            "",
+            io::Error::other("Cannot read properties of undefined (reading 'idsByPattern')"),
+        );
     };
     run_workspace(&root, args, &options, undo)
 }

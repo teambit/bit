@@ -19,6 +19,8 @@ fn parses_debug_load_options() {
         ]),
         Some(Options { id: "comp1".into(), json: false }),
     );
+    assert_eq!(parse_options(&["comp1", "-rj"]), Some(Options { id: "comp1".into(), json: true }));
+    assert_eq!(parse_options(&["comp1", "-jr"]), Some(Options { id: "comp1".into(), json: true }));
     assert_eq!(parse_options(&[]), None);
 }
 

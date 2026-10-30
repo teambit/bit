@@ -256,23 +256,10 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
         match rest[idx] {
             "--services" => {
                 idx += 1;
-                let val = *rest.get(idx)?;
-                services = Some(
-                    val.split(',')
-                        .map(str::trim)
-                        .filter(|item| !item.is_empty())
-                        .map(str::to_owned)
-                        .collect(),
-                );
+                services = Some(parse_services_val(rest.get(idx)?)?);
             }
             arg if let Some(val) = arg.strip_prefix("--services=") => {
-                services = Some(
-                    val.split(',')
-                        .map(str::trim)
-                        .filter(|item| !item.is_empty())
-                        .map(str::to_owned)
-                        .collect(),
-                );
+                services = Some(parse_services_val(val)?);
             }
             val if !val.starts_with('-') && !val.is_empty() && component.is_none() => {
                 component = Some(val.to_owned());
@@ -282,4 +269,17 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
         idx += 1;
     }
     Some(Subcommand::Get { component: component?, services })
+}
+
+fn parse_services_val(val: &str) -> Option<Vec<String>> {
+    if val.is_empty() || val.starts_with('-') {
+        return None;
+    }
+    let items: Vec<String> = val
+        .split(',')
+        .map(str::trim)
+        .filter(|item| !item.is_empty())
+        .map(str::to_owned)
+        .collect();
+    (!items.is_empty()).then_some(items)
 }

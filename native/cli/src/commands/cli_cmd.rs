@@ -92,7 +92,7 @@ fn docs_enabled(rest: &[&str]) -> bool {
     let mut enabled = false;
     for &arg in rest {
         match arg {
-            "-d" | "--docs" | "--docs=true" => enabled = true,
+            "-d" | "-dm" | "-md" | "--docs" | "--docs=true" => enabled = true,
             "--docs=false" => enabled = false,
             _ => {}
         }
@@ -113,7 +113,7 @@ fn docs_option_len(rest: &[&str]) -> Option<usize> {
     match rest {
         ["--skill" | "-s", value, ..] if !value.starts_with('-') => Some(2),
         [
-            "-d" | "--docs" | "--docs=true" | "--docs=false" | "-m" | "--metadata"
+            "-d" | "-dm" | "-md" | "--docs" | "--docs=true" | "--docs=false" | "-m" | "--metadata"
             | "--metadata=true" | "--metadata=false" | "--no-color",
             ..,
         ] => Some(1),

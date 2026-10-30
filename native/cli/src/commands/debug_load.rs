@@ -85,7 +85,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             | "--re-load"
             | "--re-load=true"
             | "--re-load=false" => {}
-            "-j" | "--json" | "--json=true" => json = true,
+            "-j" | "-rj" | "-jr" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             val if !val.starts_with('-') && !val.is_empty() && id.is_none() => {
                 id = Some(val.to_owned());

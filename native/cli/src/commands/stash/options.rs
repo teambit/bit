@@ -47,7 +47,7 @@ fn apply_save_arg<'a>(
         .strip_prefix("--message=")
         .or_else(|| arg.strip_prefix("-m="))
     {
-        if message.is_some() || val.is_empty() || val.starts_with('-') {
+        if val.is_empty() || val.starts_with('-') {
             return None;
         }
         *message = Some(val.to_owned());
@@ -56,7 +56,7 @@ fn apply_save_arg<'a>(
     match arg {
         "--include-new" | "--include-new=true" => *include_new = true,
         "--include-new=false" => *include_new = false,
-        "-m" | "--message" if message.is_none() => {
+        "-m" | "--message" => {
             let value = iter
                 .next()
                 .filter(|value| !value.is_empty() && !value.starts_with('-'))?;
@@ -94,14 +94,14 @@ impl<'a> LoadFlags<'a> {
             .strip_prefix("--auto-merge-resolve=")
             .or_else(|| arg.strip_prefix("-r="))
         {
-            if self.strategy.is_some() || val.is_empty() || val.starts_with('-') {
+            if val.is_empty() || val.starts_with('-') {
                 return None;
             }
             self.strategy = Some(val);
             return Some(());
         }
         match arg {
-            "-r" | "--auto-merge-resolve" if self.strategy.is_none() => {
+            "-r" | "--auto-merge-resolve" => {
                 self.strategy = Some(
                     iter.next()
                         .filter(|value| !value.is_empty() && !value.starts_with('-'))?,
@@ -122,9 +122,6 @@ impl<'a> LoadFlags<'a> {
             "--manual=false" => (&mut self.manual, false),
             _ => return false,
         };
-        if *flag && val {
-            return false;
-        }
         *flag = val;
         true
     }

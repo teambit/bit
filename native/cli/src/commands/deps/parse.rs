@@ -82,21 +82,33 @@ fn parse_blame(rest: &[&str]) -> Option<Subcommand> {
 }
 
 fn parse_diagnose(rest: &[&str]) -> Option<Subcommand> {
-    if rest.is_empty() || rest == ["--origins=false"] {
-        return Some(Subcommand::Diagnose { origins: false });
+    let mut origins = None;
+    let mut package = None;
+    let mut idx = 0;
+    while idx < rest.len() {
+        match rest[idx] {
+            "--origins" | "--origins=true" => origins = Some(true),
+            "--origins=false" => origins = Some(false),
+            "--package" => {
+                idx += 1;
+                package = Some(valid_diagnose_pkg(rest.get(idx)?)?);
+            }
+            arg if let Some(val) = arg.strip_prefix("--package=") => {
+                package = Some(valid_diagnose_pkg(val)?);
+            }
+            _ => return None,
+        }
+        idx += 1;
     }
-    if rest == ["--origins"] || rest == ["--origins=true"] {
-        return Some(Subcommand::Diagnose { origins: true });
+    match (origins, package) {
+        (None, Some(package)) => Some(Subcommand::DiagnosePackage { package }),
+        (origins, None) => Some(Subcommand::Diagnose { origins: origins.unwrap_or(false) }),
+        (Some(_), Some(_)) => None,
     }
-    let package = match rest {
-        ["--package", package] => *package,
-        [arg] if arg.starts_with("--package=") => arg.strip_prefix("--package=")?,
-        _ => return None,
-    };
-    if package.is_empty() || package.starts_with('-') {
-        return None;
-    }
-    Some(Subcommand::DiagnosePackage { package: package.to_owned() })
+}
+
+fn valid_diagnose_pkg(val: &str) -> Option<String> {
+    (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
 }
 
 fn parse_circular(rest: &[&str]) -> Option<Subcommand> {
@@ -256,13 +268,22 @@ fn parse_usage_args(rest: &[&str]) -> Option<(String, Option<usize>)> {
 }
 
 fn parse_write(rest: &[&str]) -> Option<Subcommand> {
-    let target = match rest {
-        [] | ["--target=workspace.jsonc"] | ["--target", "workspace.jsonc"] => {
-            WriteTarget::WorkspaceJsonc
-        }
-        ["--target=package.json"] | ["--target", "package.json"] => WriteTarget::PackageJson,
-        _ => return None,
-    };
+    let mut target = WriteTarget::WorkspaceJsonc;
+    let mut idx = 0;
+    while idx < rest.len() {
+        let raw = if rest[idx] == "--target" {
+            idx += 1;
+            *rest.get(idx)?
+        } else {
+            rest[idx].strip_prefix("--target=")?
+        };
+        target = match raw {
+            "workspace.jsonc" => WriteTarget::WorkspaceJsonc,
+            "package.json" => WriteTarget::PackageJson,
+            _ => return None,
+        };
+        idx += 1;
+    }
     Some(Subcommand::Write { target })
 }
 

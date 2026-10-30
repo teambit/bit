@@ -6,6 +6,8 @@ fn parses_cli_generate_docs_and_renders_frontmatter() {
     assert!(is_generate_docs(&["generate", "--docs", "--no-color"]));
     assert!(is_generate_docs(&["generate", "--docs", "--metadata.id=cli"]));
     assert!(is_generate_docs(&["generate", "--metadata", "--docs"]));
+    assert!(is_generate_docs(&["generate", "-dm"]));
+    assert!(is_generate_docs(&["generate", "-md"]));
     assert!(is_generate_docs(&["generate", "--docs", "--skill", "commands"]));
     assert!(is_generate_docs(&["generate", "--docs", "--skill=reference"]));
     assert!(!is_generate_docs(&["generate"]));

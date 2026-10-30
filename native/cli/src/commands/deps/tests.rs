@@ -104,6 +104,19 @@ fn parses_deps_subcommands() {
         parse_subcommand(&["write", "--target=package.json"]),
         Some(Subcommand::Write { target: WriteTarget::PackageJson }),
     );
+    assert_eq!(
+        parse_subcommand(&["write", "--target=package.json", "--target", "workspace.jsonc"]),
+        Some(Subcommand::Write { target: WriteTarget::WorkspaceJsonc }),
+    );
+    assert_eq!(
+        parse_subcommand(&["diagnose", "--origins", "--origins=false"]),
+        Some(Subcommand::Diagnose { origins: false }),
+    );
+    assert_eq!(
+        parse_subcommand(&["diagnose", "--package", "pkg-a", "--package=pkg-b"]),
+        Some(Subcommand::DiagnosePackage { package: "pkg-b".into() }),
+    );
+    assert_eq!(parse_subcommand(&["diagnose", "--origins", "--package", "pkg-a"]), None);
 }
 
 #[test]

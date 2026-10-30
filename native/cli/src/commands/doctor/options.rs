@@ -84,7 +84,30 @@ impl Options {
                 self.include.exclude_scope = true;
             }
             "--exclude-local-scope=false" => self.include.exclude_scope = false,
-            _ => return false,
+            _ => return self.apply_combined_short(arg),
+        }
+        true
+    }
+
+    fn apply_combined_short(&mut self, arg: &str) -> bool {
+        let Some(flags) = arg.strip_prefix('-') else {
+            return false;
+        };
+        if flags.len() < 2
+            || flags.starts_with('-')
+            || !flags
+                .chars()
+                .all(|ch| matches!(ch, 'j' | 'n' | 'p' | 'e'))
+        {
+            return false;
+        }
+        for ch in flags.chars() {
+            match ch {
+                'j' => self.json = true,
+                'n' => self.include.node_modules = true,
+                'p' => self.include.public = true,
+                _ => self.include.exclude_scope = true,
+            }
         }
         true
     }
