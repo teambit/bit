@@ -51,7 +51,24 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv) else {
         return Ok(Outcome::Declined("outside the native import grammar".to_string()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        if options.operation == "import"
+            && !(options.output.json && options.ids.is_empty())
+            && env::var_os("CI").is_none_or(|val| val.is_empty())
+        {
+            let msg = options
+                .validation_error()
+                .unwrap_or_else(|| super::log::OUTSIDE_WORKSPACE_ERR.to_owned());
+            return workspace_command::execute_failure_scope(
+                &cwd,
+                args,
+                "import",
+                options.output.json,
+                "",
+                io::Error::other(msg),
+            );
+        }
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
     execution::run(&root, args, &options)

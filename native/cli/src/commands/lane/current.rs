@@ -12,13 +12,26 @@ use std::{
 
 /// `LaneCurrentCmd`: the bitmap's current lane and the local tracking alias.
 pub(super) fn current(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
-    let json = match lane_args {
-        [] | ["--json=false"] => false,
-        ["--json" | "-j" | "--json=true"] => true,
-        _ => return Ok(Outcome::Declined("lane current flags outside the native grammar".into())),
-    };
+    let mut json = false;
+    for &arg in lane_args {
+        match arg {
+            "--json" | "-j" | "--json=true" => json = true,
+            "--json=false" => json = false,
+            _ => {
+                return Ok(Outcome::Declined(
+                    "lane current flags outside the native grammar".into(),
+                ));
+            }
+        }
+    }
     let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+        write_current(
+            &mut io::stdout().lock(),
+            &json!({"name": "main", "scope": Value::Null}),
+            "main",
+            json,
+        )?;
+        return Ok(Outcome::Exit(ExitCode::SUCCESS));
     };
     let (id, alias) = match read_current(&root) {
         Ok(data) => data,

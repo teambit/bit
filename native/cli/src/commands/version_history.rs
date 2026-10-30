@@ -139,7 +139,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside native version-history grammar".into()));
     };
     let Ok(Some(root)) = scope_root::discover() else {
-        return Ok(Outcome::Declined("version-history requires a scope".into()));
+        return run_without_scope(args, &subcommand);
     };
     match subcommand {
         Subcommand::Unrecognized(sub) => {
@@ -155,6 +155,42 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             remote::run(&root, args, &id, from.as_deref(), &remote)
         }
         Subcommand::Build(id, from, None) => build::run(&root, args, &id, from.as_deref()),
+    }
+}
+
+fn run_without_scope(args: &[OsString], subcommand: &Subcommand) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("version-history requires a scope".into()));
+    }
+    let cwd = env::current_dir()?;
+    match subcommand {
+        Subcommand::Unrecognized(sub) => {
+            let msg = Chalk::detect(args).red(&format!(
+                r#""{sub}" is not a subcommand of "version-history", please run "bit version-history --help" to list the subcommands"#,
+            ));
+            let report = workspace_command::results::Report { data: msg, code: 0, details: None };
+            workspace_command::execute_with_scope(&cwd, args, "version-history", &report)
+        }
+        Subcommand::ShowJson(_) => super::debug_cat::emit_scope_not_found(args, "show", true),
+        Subcommand::ShowText(_, _) => workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            "show",
+            false,
+            "",
+            io::Error::other("Cannot read properties of undefined (reading 'resolveComponentId')"),
+        ),
+        Subcommand::Build(_, _, None) => workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            "build",
+            false,
+            "",
+            io::Error::other("Cannot read properties of undefined (reading 'idsByPattern')"),
+        ),
+        Subcommand::Build(_, _, Some(_)) => {
+            Ok(Outcome::Declined("version-history requires a scope".into()))
+        }
     }
 }
 

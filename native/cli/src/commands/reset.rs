@@ -19,6 +19,7 @@ use std::{env, ffi::OsString, io, path::Path};
 pub const COMMAND: Command = Command { name: "reset", aliases: &[], run };
 const LANE_CI_DIAGNOSTIC: &str = "CI lane reset diagnostics require the published stack";
 
+#[derive(Default)]
 struct Options<'a> {
     pattern: Option<&'a str>,
     head: bool,
@@ -30,15 +31,7 @@ struct Options<'a> {
 }
 
 fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
-    let mut options = Options {
-        pattern: None,
-        head: false,
-        force: false,
-        soft: false,
-        silent: false,
-        never_exported: false,
-        selected: None,
-    };
+    let mut options = Options::default();
     for arg in args {
         apply_reset_arg(arg, &mut options)?;
     }
@@ -80,19 +73,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(mut options) = parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native reset grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return run_without_workspace(&cwd, args, &options);
     };
-    if !options.soft
-        && !options.never_exported
-        && options.pattern.is_some_and(selection::stateful)
-        && env::var_os("CI").is_some_and(|value| !value.is_empty())
-        && bitmap::read(&root)?.lane.is_some()
-    {
+    if needs_lane_ci_decline(&root, &options)? {
         return Ok(Outcome::Declined(LANE_CI_DIAGNOSTIC.into()));
     }
     let mut startup = super::status::autosync::Startup::default();
-    if !(options.soft && options.head && !options.never_exported)
+    if !(options.never_exported || options.soft && options.head)
         && let Some(pattern) = options.pattern.filter(|pattern| selection::stateful(pattern))
     {
         match selection::states(&root, pattern, &mut startup) {
@@ -101,6 +90,37 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         }
     }
     run_prepared(args, &root, &options, &startup)
+}
+
+fn needs_lane_ci_decline(root: &Path, options: &Options<'_>) -> io::Result<bool> {
+    if options.soft
+        || options.never_exported
+        || !options.pattern.is_some_and(selection::stateful)
+        || env::var_os("CI").is_none_or(|value| value.is_empty())
+    {
+        return Ok(false);
+    }
+    Ok(bitmap::read(root)?.lane.is_some())
+}
+
+fn run_without_workspace(
+    cwd: &Path,
+    args: &[OsString],
+    options: &Options<'_>,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+        return Ok(Outcome::Declined("not inside a workspace".into()));
+    }
+    let msg = if options.never_exported {
+        "Cannot read properties of undefined (reading 'consumer')"
+    } else if options.soft && options.head {
+        "please specify either --soft or --head flag, not both"
+    } else if options.pattern.is_some() || options.silent {
+        super::log::OUTSIDE_WORKSPACE_ERR
+    } else {
+        return Ok(Outcome::Declined("not inside a workspace".into()));
+    };
+    workspace_command::execute_failure_scope(cwd, args, "reset", false, "", io::Error::other(msg))
 }
 
 fn run_prepared(
@@ -138,23 +158,12 @@ fn selection_failure(
 
 fn dispatch(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result<Outcome> {
     if options.never_exported {
-        return route_never_exported(args, root, options);
+        return run_never_exported(args, root);
     }
     if options.soft {
         return route_soft(args, root, options);
     }
     route_hard(args, root, options)
-}
-
-fn route_never_exported(
-    args: &[OsString],
-    root: &Path,
-    options: &Options<'_>,
-) -> io::Result<Outcome> {
-    if options.pattern.is_some() || options.head || options.force || options.soft {
-        return Ok(Outcome::Declined("outside the native never-exported grammar".into()));
-    }
-    run_never_exported(args, root)
 }
 
 fn route_soft(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result<Outcome> {

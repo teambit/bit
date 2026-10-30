@@ -20,6 +20,12 @@ fn missing_ids(options: &Options) -> Option<&'static str> {
     if !options.ids.is_empty() {
         return None;
     }
+    if options.write.dependencies.import_dependencies {
+        return Some(r#"you have to specify ids to use "--dependencies" flag"#);
+    }
+    if options.write.dependencies.import_head_dependencies {
+        return Some(r#"you have to specify ids to use "--dependencies-head" flag"#);
+    }
     let dependents = &options.selection.dependents;
     if dependents.enabled {
         return Some(r#"you have to specify ids to use "--dependents" flag"#);

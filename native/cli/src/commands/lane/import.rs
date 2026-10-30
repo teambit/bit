@@ -20,8 +20,9 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some(options) = super::super::switch::import_options(&argv[2..]) else {
         return Ok(Outcome::Declined("outside the native lane import grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return outside_workspace_import(&cwd, args, options.force_ours && options.force_theirs);
     };
     if options.force_ours && options.force_theirs {
         // The published command loads configured aspects before it validates
@@ -40,6 +41,22 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     }
     let providers = bootstrap(&root)?;
     active(&root, args, &options.lane, &current, providers)
+}
+
+fn outside_workspace_import(
+    cwd: &std::path::Path,
+    args: &[OsString],
+    conflict: bool,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("not inside a workspace".into()));
+    }
+    let msg = if conflict {
+        "please use either --force-ours or --force-theirs, not both"
+    } else {
+        crate::commands::log::OUTSIDE_WORKSPACE_ERR
+    };
+    workspace_command::execute_failure_scope(cwd, args, "import", false, "", io::Error::other(msg))
 }
 
 fn bootstrap(root: &std::path::Path) -> io::Result<Option<ProjectedLinker>> {

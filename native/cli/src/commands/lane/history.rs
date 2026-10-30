@@ -45,7 +45,7 @@ fn apply_history_arg<'a>(
         return Some(());
     }
     match arg {
-        "--json" | "-j" | "--json=true" if !options.json => options.json = true,
+        "--json" | "-j" | "--json=true" => options.json = true,
         "--json=false" => options.json = false,
         "--id" if options.id.is_none() => {
             options.id = Some(
@@ -65,10 +65,9 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
     let Some(options) = parse(lane_args) else {
         return Ok(Outcome::Declined("lane history flags outside the native grammar".into()));
     };
-    let scope_root = match super::scope_root::discover() {
-        Ok(Some(scope_root)) => scope_root,
-        Ok(None) => return Ok(Outcome::Declined("not inside a scope".into())),
-        Err(error) => return Ok(Outcome::Declined(format!("lane history scope: {error}"))),
+    let scope_root = match discover_or_fail(args, &options)? {
+        Ok(scope_root) => scope_root,
+        Err(outcome) => return Ok(outcome),
     };
     let root = scope_root.path;
     let mut session = scope_root.bare.then(|| Session::for_scope(&root, args));
@@ -90,6 +89,32 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
         Err(error) => return Ok(Outcome::Declined(format!("lane history: {error}"))),
     };
     finish(&root, scope_root.bare, args, &options, session.as_ref(), &mut engine, &prepared)
+}
+
+fn discover_or_fail(
+    args: &[OsString],
+    options: &Options<'_>,
+) -> io::Result<Result<super::scope_root::ScopeRoot, Outcome>> {
+    match super::scope_root::discover() {
+        Ok(Some(scope_root)) => Ok(Ok(scope_root)),
+        Ok(None) => {
+            if options.lane.is_none_or(|name| name == "main")
+                && std::env::var_os("CI").is_none_or(|val| val.is_empty())
+            {
+                return workspace_command::execute_failure_scope(
+                    &std::env::current_dir()?,
+                    args,
+                    "history",
+                    options.json,
+                    "",
+                    io::Error::other("unable to show history of the default lane (main)"),
+                )
+                .map(Err);
+            }
+            Ok(Err(Outcome::Declined("not inside a scope".into())))
+        }
+        Err(error) => Ok(Err(Outcome::Declined(format!("lane history scope: {error}")))),
+    }
 }
 
 fn finish(

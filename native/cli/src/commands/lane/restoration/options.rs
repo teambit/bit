@@ -27,19 +27,15 @@ impl Options {
     fn apply_arg(&mut self, value: &str) -> Option<()> {
         match value {
             "--no-color" => {}
-            "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true"
-                if !self.skip_install =>
-            {
+            "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
                 self.skip_install = true;
             }
             "--skip-dependency-installation=false" => self.skip_install = false,
-            "--restore-deleted-components" | "--restore-deleted-components=true"
-                if self.revert && !self.restore_deleted =>
-            {
+            "--restore-deleted-components" | "--restore-deleted-components=true" if self.revert => {
                 self.restore_deleted = true;
             }
             "--restore-deleted-components=false" if self.revert => self.restore_deleted = false,
-            "-j" | "--json" | "--json=true" if self.revert && !self.json => self.json = true,
+            "-j" | "--json" | "--json=true" if self.revert => self.json = true,
             "--json=false" if self.revert => self.json = false,
             id if !id.starts_with('-') && self.id.is_empty() => self.id = id.into(),
             _ => return None,

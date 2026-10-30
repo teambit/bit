@@ -46,14 +46,15 @@ fn run_options(
     options: &options::Options,
     lane_import: bool,
 ) -> io::Result<Outcome> {
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return outside_workspace_switch(&cwd, args, options, lane_import);
+    };
     if !options.supported_pattern() || options.adoption.json {
         return Ok(Outcome::Declined(
             "switch requires an unsupported selector or JSON handler".into(),
         ));
     }
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".to_string()));
-    };
     let installer = match start_installer(&root, argv, options.skip_install) {
         Ok(installer) => installer,
         Err(error) => return Ok(Outcome::Declined(format!("switch installation: {error}"))),
@@ -74,6 +75,24 @@ fn run_options(
         Err(error) => return Ok(Outcome::Declined(format!("switch: {error}"))),
     };
     execute(&root, args, prepared, installation, lane_import)
+}
+
+fn outside_workspace_switch(
+    cwd: &Path,
+    args: &[OsString],
+    options: &options::Options,
+    lane_import: bool,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("not inside a workspace".to_string()));
+    }
+    let msg = if lane_import && options.force_ours && options.force_theirs {
+        "please use either --force-ours or --force-theirs, not both"
+    } else {
+        super::log::OUTSIDE_WORKSPACE_ERR
+    };
+    let cmd = if lane_import { "import" } else { "switch" };
+    workspace_command::execute_failure_scope(cwd, args, cmd, false, "", io::Error::other(msg))
 }
 
 fn start_installer(root: &Path, argv: &[&str], skip: bool) -> io::Result<Option<Installer>> {

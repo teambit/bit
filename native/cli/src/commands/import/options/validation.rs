@@ -45,7 +45,9 @@ fn valid_dependencies(
         return false;
     }
     let active = enabled || options.raw_depth.is_some();
-    !active || !objects_only && !ids.is_empty() && !override_existing && !merge && path.is_none()
+    !active
+        || (!objects_only && !ids.is_empty() && !override_existing && !merge && path.is_none())
+        || (ids.is_empty() && enabled && options.raw_depth.is_none())
 }
 
 fn valid_merge_mode(

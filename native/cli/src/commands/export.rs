@@ -39,8 +39,19 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse(&arguments[1..]) else {
         return Ok(Outcome::Declined("ids or flags outside the native export".to_string()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".to_string()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            return Ok(Outcome::Declined("not inside a workspace".to_string()));
+        }
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            "export",
+            options.json,
+            "",
+            io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR),
+        );
     };
     match bootstrap(&root, &options) {
         Ok((engine, lifecycle)) => run_started(&root, args, &options, engine, &lifecycle),

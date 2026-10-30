@@ -67,39 +67,48 @@ fn run_without_workspace(
     if let Some(scope) = scope_root::discover().ok().flatten()
         && scope.bare
     {
-        return match subcommand {
-            Subcommand::List { json: false, table_only: true } => {
-                run_bare_scope_list(&scope.path, args, chalk)
-            }
-            Subcommand::Get { component, services: None } => {
-                run_bare_scope_get(&scope.path, args, component, chalk)
-            }
-            _ => Ok(Outcome::Declined("envs bare-scope subcommand delegated".into())),
-        };
+        return run_bare_scope(&scope.path, args, subcommand, chalk);
     }
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("CI envs outside workspace delegated".into()));
     }
-    match subcommand {
-        Subcommand::List { json: false, table_only: true } => {
-            workspace_command::execute_failure_scope(
-                cwd,
-                args,
-                "envs",
-                false,
-                "",
-                io::Error::other(WORKSPACE_NOT_FOUND_ERR),
-            )
+    let label = match subcommand {
+        Subcommand::List { table_only: true, .. }
+        | Subcommand::Set { .. }
+        | Subcommand::Unset { .. }
+        | Subcommand::Replace { .. }
+        | Subcommand::Update { .. } => "envs",
+        Subcommand::Get { .. } => "get",
+        Subcommand::List { .. } => {
+            return Ok(Outcome::Declined("envs requires a workspace".into()));
         }
-        Subcommand::Get { .. } => workspace_command::execute_failure_scope(
-            cwd,
-            args,
-            "get",
-            false,
-            "",
-            io::Error::other(WORKSPACE_NOT_FOUND_ERR),
-        ),
-        _ => Ok(Outcome::Declined("envs requires a workspace".into())),
+    };
+    workspace_command::execute_failure_scope(
+        cwd,
+        args,
+        label,
+        false,
+        "",
+        io::Error::other(WORKSPACE_NOT_FOUND_ERR),
+    )
+}
+
+fn run_bare_scope(
+    scope_path: &Path,
+    args: &[OsString],
+    subcommand: &Subcommand,
+    chalk: Chalk,
+) -> io::Result<Outcome> {
+    match subcommand {
+        Subcommand::List { table_only: true, .. }
+        | Subcommand::Set { .. }
+        | Subcommand::Unset { .. }
+        | Subcommand::Replace { .. }
+        | Subcommand::Update { .. } => run_bare_scope_list(scope_path, args, chalk),
+        Subcommand::Get { component, services: None } => {
+            run_bare_scope_get(scope_path, args, component, chalk)
+        }
+        _ => Ok(Outcome::Declined("envs bare-scope subcommand delegated".into())),
     }
 }
 

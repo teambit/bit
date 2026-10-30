@@ -30,14 +30,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        if let Options::Unrecognized(sub) = &options
-            && env::var_os("CI").is_none_or(|val| val.is_empty())
-        {
-            let report =
-                Report { data: unrecognized_stash_report(args, sub), code: 0, details: None };
-            return workspace_command::execute_with_scope(&cwd, args, "stash", &report);
-        }
-        return Ok(Outcome::Declined("not inside a workspace".to_owned()));
+        return run_without_workspace(&cwd, args, &options);
     };
     let command = match &options {
         Options::Save { .. } => "save",
@@ -178,6 +171,24 @@ fn unrecognized_stash_report(args: &[OsString], sub: &str) -> String {
         r#"{} "{sub}" is not a subcommand of "stash", please run "bit stash --help" to list the subcommands"#,
         format.error_symbol(),
     )
+}
+
+fn run_without_workspace(cwd: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("not inside a workspace".to_owned()));
+    }
+    let (cmd, msg) = match options {
+        Options::Unrecognized(sub) => {
+            let report =
+                Report { data: unrecognized_stash_report(args, sub), code: 0, details: None };
+            return workspace_command::execute_with_scope(cwd, args, "stash", &report);
+        }
+        Options::Save { .. } => ("save", super::log::OUTSIDE_WORKSPACE_ERR),
+        Options::Load { .. } => ("load", super::log::OUTSIDE_WORKSPACE_ERR),
+        Options::Error(err) => ("load", err.as_str()),
+        Options::List => ("list", "Cannot read properties of undefined (reading 'scope')"),
+    };
+    workspace_command::execute_failure_scope(cwd, args, cmd, false, "", io::Error::other(msg))
 }
 
 fn list_report(rows: &[Value]) -> io::Result<String> {

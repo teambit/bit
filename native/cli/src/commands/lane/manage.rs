@@ -1,13 +1,13 @@
 //! Local, unexported lane metadata changes.
-use super::{list, scope_root};
+
+pub(super) use query::{history_diff, updates};
+
+mod query;
+
+use super::list;
 use crate::{
     commands::{
         color::Chalk,
-        debug_cat::{
-            emit_failure,
-            lookup::{diagnose_lane_lookup_error, resolve_lane_entry},
-            scope_dir_for,
-        },
         engine::Engine,
         workspace_command::{self, results::Report},
     },
@@ -54,8 +54,14 @@ pub(super) fn remove_readme(args: &[OsString], lane_args: &[&str]) -> io::Result
         [name] if !name.is_empty() && !name.starts_with('-') => Some(*name),
         _ => return Ok(Outcome::Declined("outside the native lane remove-readme grammar".into())),
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return outside_workspace_failure(
+            &cwd,
+            args,
+            "remove-readme",
+            "unable to remove the lane readme component outside of Bit workspace",
+        );
     };
     let user = workspace_command::User::load(&root)?;
     let plan =
@@ -63,27 +69,26 @@ pub(super) fn remove_readme(args: &[OsString], lane_args: &[&str]) -> io::Result
             Ok(plan) => plan,
             Err(error) => return Ok(Outcome::Declined(format!("lane remove-readme: {error}"))),
         };
+    commit_readme_plan(&root, args, plan)
+}
+
+fn commit_readme_plan(root: &Path, args: &[OsString], plan: ReadmePlan) -> io::Result<Outcome> {
     match plan {
         ReadmePlan::NoReadme(label) => {
-            workspace_command::execute_then(&root, args, "remove-readme", |_| {
+            workspace_command::execute_then(root, args, "remove-readme", |_| {
                 Err(io::Error::other(format!(
                     "there is no readme component added to the lane {label}",
                 )))
             })
         }
         ReadmePlan::Remove(ref removal) => {
-            let chalk = Chalk::detect(args);
-            let report = Report {
-                data: chalk.green(&format!(
+            let data = Chalk::detect(args)
+                .green(&format!(
                     "the readme component has been successfully removed from the lane {}",
                     removal.label(),
-                )),
-                code: 0,
-                details: None,
-            };
-            workspace_command::execute_with(&root, args, "remove-readme", &report, |_| {
-                plan.commit()
-            })
+                ));
+            let report = Report { data, code: 0, details: None };
+            workspace_command::execute_with(root, args, "remove-readme", &report, |_| plan.commit())
         }
     }
 }
@@ -92,8 +97,14 @@ pub(super) fn remove_comp(args: &[OsString], lane_args: &[&str]) -> io::Result<O
     if !valid_remove_comp_args(lane_args) {
         return Ok(Outcome::Declined("outside the native lane remove-comp grammar".into()));
     }
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return outside_workspace_failure(
+            &cwd,
+            args,
+            "remove-comp",
+            r#"bit lane remove-comp has been removed. please use "bit remove" or "bit delete" instead"#,
+        );
     };
     workspace_command::execute_then(&root, args, "remove-comp", |_| {
         Err(io::Error::other(
@@ -125,8 +136,14 @@ fn execute(
     command: &str,
     report: impl FnOnce(&Plan, Chalk) -> String,
 ) -> io::Result<Outcome> {
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        let msg = if command == "rename" {
+            "unable to rename a lane outside of Bit workspace"
+        } else {
+            "unable to change-scope of a lane outside of Bit workspace"
+        };
+        return outside_workspace_failure(&cwd, args, command, msg);
     };
     let user = workspace_command::User::load(&root)?;
     let plan = match Plan::prepare(&root, change, user.log(), &workspace_command::uuid_v4()?) {
@@ -141,7 +158,16 @@ pub(super) fn fetch(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome
     let Some((all, lane_id)) = parse_fetch_args(lane_args) else {
         return Ok(Outcome::Declined("outside the native lane fetch grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        if !all && lane_id.is_none() {
+            return outside_workspace_failure(
+                &cwd,
+                args,
+                "fetch",
+                "you are not checked out to any lane. please specify a lane-id to fetch or use --all flag",
+            );
+        }
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
     if all {
@@ -174,7 +200,7 @@ fn parse_fetch_args<'a>(lane_args: &[&'a str]) -> Option<(bool, Option<&'a str>)
     let mut lane_id = None;
     for &arg in lane_args {
         match arg {
-            "-a" | "--all" | "--all=true" if !all => all = true,
+            "-a" | "--all" | "--all=true" => all = true,
             "--all=false" => all = false,
             val if !val.starts_with('-') && !val.is_empty() && lane_id.is_none() => {
                 lane_id = Some(val);
@@ -192,8 +218,14 @@ pub(super) fn eject(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome
     if pattern.starts_with('-') || pattern.is_empty() {
         return Ok(Outcome::Declined("outside the native lane eject grammar".into()));
     }
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return outside_workspace_failure(
+            &cwd,
+            args,
+            "eject",
+            "unable to eject a component outside of Bit workspace",
+        );
     };
     let ids = match select_ids(&root, pattern) {
         Ok(ids) => ids,
@@ -210,146 +242,14 @@ pub(super) fn eject(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome
     crate::commands::eject::eject_from_lane(&root, args, &ids, models)
 }
 
-pub(super) fn updates(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
-    let Some((lane_name, json)) = parse_updates_args(lane_args) else {
-        return Ok(Outcome::Declined("outside the native lane updates grammar".into()));
-    };
-    let Ok(Some(root)) = scope_root::discover() else {
-        return Ok(Outcome::Declined("lane updates outside workspace delegated".into()));
-    };
-    if root.bare && lane_name.is_none() {
-        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-            return Ok(Outcome::Declined("CI lane updates bare scope delegated".into()));
-        }
-        return emit_failure(
-            &root,
-            args,
-            "updates",
-            true,
-            json,
-            r#"unable to detect the current lane, specify a lane name, e.g. "bit lane updates scope/name""#.into(),
-        );
+fn outside_workspace_failure(
+    cwd: &Path,
+    args: &[OsString],
+    command: &str,
+    msg: &str,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("not inside a workspace".into()));
     }
-    let is_main = match lane_name {
-        Some(name) => name == "main",
-        None => is_checked_out_to_main(&root.path)?,
-    };
-    if is_main {
-        return emit_failure(
-            &root,
-            args,
-            "updates",
-            true,
-            json,
-            "the default lane (main) has no cascaded updates. switch to a lane or specify a lane name".into(),
-        );
-    }
-    if let Some(name) = lane_name
-        && let Some(err) = unscoped_lane_error(&scope_dir_for(&root), name)
-    {
-        return emit_failure(&root, args, "updates", true, json, err);
-    }
-    Ok(Outcome::Declined("lane updates remote lookup delegated".into()))
-}
-
-fn parse_updates_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>, bool)> {
-    let mut lane_name = None;
-    let mut json = false;
-    for &arg in lane_args {
-        match arg {
-            "--undo" | "--no-color" => {}
-            "-j" | "--json" | "--json=true" => json = true,
-            "--json=false" => json = false,
-            val if !val.starts_with('-') && !val.is_empty() && lane_name.is_none() => {
-                lane_name = Some(val);
-            }
-            _ => return None,
-        }
-    }
-    Some((lane_name, json))
-}
-
-pub(super) fn history_diff(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
-    let Some((lane_name, json)) = parse_history_diff_args(lane_args) else {
-        return Ok(Outcome::Declined("outside the native lane history-diff grammar".into()));
-    };
-    let Ok(Some(root)) = scope_root::discover() else {
-        return Ok(Outcome::Declined("lane history-diff outside workspace delegated".into()));
-    };
-    let is_main = match lane_name {
-        Some(name) => name == "main",
-        None => root.bare || is_checked_out_to_main(&root.path)?,
-    };
-    if is_main {
-        if root.bare && env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-            return Ok(Outcome::Declined("CI lane history-diff bare scope delegated".into()));
-        }
-        return emit_failure(
-            &root,
-            args,
-            "history-diff",
-            true,
-            json,
-            "unable to show diff-history of the default lane (main)".into(),
-        );
-    }
-    if let Some(name) = lane_name
-        && let Some(err) = unscoped_lane_error(&scope_dir_for(&root), name)
-    {
-        return emit_failure(&root, args, "history-diff", true, json, err);
-    }
-    Ok(Outcome::Declined("lane history-diff remote lookup delegated".into()))
-}
-
-fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>, bool)> {
-    let mut lane_name = None;
-    let mut json = false;
-    let mut iter = lane_args.iter().copied();
-    while let Some(arg) = iter.next() {
-        match arg {
-            "--no-color" => {}
-            "-j" | "--json" | "--json=true" => json = true,
-            "--json=false" => json = false,
-            "-l" | "--lane" => {
-                let val = iter
-                    .next()
-                    .filter(|val| !val.is_empty() && !val.starts_with('-'))?;
-                lane_name = Some(val);
-            }
-            "--pattern" => {
-                iter.next()
-                    .filter(|val| !val.is_empty() && !val.starts_with('-'))?;
-            }
-            _ if let Some(val) = arg
-                .strip_prefix("--lane=")
-                .or_else(|| arg.strip_prefix("-l=")) =>
-            {
-                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
-                lane_name = Some(val);
-            }
-            _ if let Some(val) = arg.strip_prefix("--pattern=") => {
-                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
-            }
-            val if !val.starts_with('-') => {}
-            _ => return None,
-        }
-    }
-    Some((lane_name, json))
-}
-
-fn unscoped_lane_error(scope_dir: &Path, name: &str) -> Option<String> {
-    if name.contains('/')
-        || name == "main"
-        || env::var_os("CI").is_some_and(|val| !val.is_empty())
-        || resolve_lane_entry(scope_dir, name).is_some()
-    {
-        return None;
-    }
-    let err = diagnose_lane_lookup_error(scope_dir, name, false)?;
-    (!err.ends_with("was not found!")).then_some(err)
-}
-
-fn is_checked_out_to_main(root: &Path) -> io::Result<bool> {
-    let (current, _) = list::read_current(root)?;
-    Ok(current["name"] == "main")
+    workspace_command::execute_failure_scope(cwd, args, command, false, "", io::Error::other(msg))
 }

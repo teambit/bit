@@ -163,6 +163,11 @@ fn semantic_adoption_errors_parse_for_owned_validation_after_provider_startup() 
 
 fn semantic_errors() -> Vec<(&'static [&'static str], &'static str)> {
     vec![
+        (&["import", "--dependencies"], r#"you have to specify ids to use "--dependencies" flag"#),
+        (
+            &["import", "--dependencies-head"],
+            r#"you have to specify ids to use "--dependencies-head" flag"#,
+        ),
         (&["import", "--track-only"], r#"you have to specify ids to use "--track-only" flag"#),
         (
             &["import", "--dependents", "--silent"],
