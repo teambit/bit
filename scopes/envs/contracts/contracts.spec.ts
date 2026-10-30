@@ -103,6 +103,7 @@ describe('envs contracts', () => {
   it('should export the runtime values', async () => {
     const contract = await import('./index');
     expect(contract.CAPSULE_ARTIFACTS_DIR).to.equal('artifacts');
+    expect(contract.BUNDLE_UI_DIR).to.equal('ui-bundle');
     expect(contract.Pipeline.from([]).tasks).to.deep.equal([]);
     expect(contract.COMPONENT_PREVIEW_STRATEGY_NAME).to.equal('component');
     expect(contract.WORKSPACE_ASPECT_ID).to.equal('teambit.workspace/workspace');
@@ -123,9 +124,21 @@ describe('envs contracts', () => {
     expect(calls).to.deep.equal([{ tsconfig: 'tsconfig.json' }]);
   });
 
-  it('should throw a clear error when Bit is too old for typescriptSchemaExtractor', async () => {
-    const { typescriptSchemaExtractor } = await import('./index');
-    const context = { getAspect: () => ({}) } as any;
-    expect(() => typescriptSchemaExtractor()(context)).to.throw(/newer version of Bit/);
+  it('should create the TypeScript schema extractor on Bit versions without createSchemaExtractorFromOptions', async () => {
+    const { typescriptSchemaExtractor, TYPESCRIPT_ASPECT_ID, WORKSPACE_ASPECT_ID } = await import('./index');
+    const extractor = { extract: async () => ({}) as any, dispose: () => {} };
+    const calls: unknown[][] = [];
+    const typescriptAspect = {
+      createSchemaExtractor: (...args: unknown[]) => {
+        calls.push(args);
+        return extractor;
+      },
+    };
+    const aspects = { [TYPESCRIPT_ASPECT_ID]: typescriptAspect, [WORKSPACE_ASPECT_ID]: { path: '/workspace' } };
+    const context = { getAspect: (id: string) => aspects[id] } as any;
+    const compilerOptions = { strict: true } as any;
+    expect(typescriptSchemaExtractor({ tsconfig: '/no/such/dir', compilerOptions })(context)).to.equal(extractor);
+    expect(calls).to.have.length(1);
+    expect(calls[0].slice(1, 3)).to.deep.equal(['/workspace', '/workspace']);
   });
 });

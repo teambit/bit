@@ -1,6 +1,7 @@
 import type { Component } from './component';
 import type { EnvContext, EnvHandler } from './env-handler';
-import { TYPESCRIPT_ASPECT_ID } from './aspect-ids';
+import { getTsconfig } from 'get-tsconfig';
+import { SCOPE_ASPECT_ID, TYPESCRIPT_ASPECT_ID, WORKSPACE_ASPECT_ID } from './aspect-ids';
 import type { APISchema } from '@teambit/semantics.entities.semantic-schema';
 
 export interface SchemaExtractor {
@@ -73,7 +74,19 @@ export type TypescriptSchemaExtractorOptions = {
  * the part of the typescript aspect that creates schema extractors.
  */
 export interface TypescriptSchemaProvider {
-  createSchemaExtractorFromOptions(options: TypescriptSchemaExtractorOptions, context: EnvContext): SchemaExtractor;
+  /**
+   * available from Bit 2.2.174.
+   */
+  createSchemaExtractorFromOptions?(options: TypescriptSchemaExtractorOptions, context: EnvContext): SchemaExtractor;
+
+  createSchemaExtractor(
+    tsconfig: any,
+    tsserverPath?: string,
+    contextPath?: string,
+    schemaTransformers?: unknown[],
+    apiTransformers?: unknown[],
+    includeFiles?: string[]
+  ): SchemaExtractor;
 }
 
 /**
@@ -84,11 +97,22 @@ export interface TypescriptSchemaProvider {
 export function typescriptSchemaExtractor(options: TypescriptSchemaExtractorOptions = {}): EnvHandler<SchemaExtractor> {
   return (context: EnvContext) => {
     const typescript = context.getAspect<TypescriptSchemaProvider>(TYPESCRIPT_ASPECT_ID);
-    if (!typescript?.createSchemaExtractorFromOptions) {
-      throw new Error(
-        'typescriptSchemaExtractor() needs a newer version of Bit. update Bit, or use TypeScriptExtractor.from() of @teambit/typescript'
-      );
-    }
-    return typescript.createSchemaExtractorFromOptions(options, context);
+    if (!typescript) throw new Error('typescriptSchemaExtractor() needs the typescript aspect, which is not loaded');
+    if (typescript.createSchemaExtractorFromOptions)
+      return typescript.createSchemaExtractorFromOptions(options, context);
+    // older Bit versions. the same as `TypeScriptExtractor.from()`, apart from the logger name.
+    const tsconfig = getTsconfig(options.tsconfig)?.config || { compilerOptions: options.compilerOptions };
+    const rootPath =
+      context.getAspect<{ path: string }>(WORKSPACE_ASPECT_ID)?.path ||
+      context.getAspect<{ path: string }>(SCOPE_ASPECT_ID)?.path ||
+      '';
+    return typescript.createSchemaExtractor(
+      tsconfig,
+      rootPath,
+      rootPath,
+      options.schemaTransformers,
+      options.apiTransformers,
+      options.includeFiles
+    );
   };
 }

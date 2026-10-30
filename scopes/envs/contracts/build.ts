@@ -11,6 +11,11 @@ import type { Pipeline } from './pipeline';
  */
 export const CAPSULE_ARTIFACTS_DIR = 'artifacts';
 
+/**
+ * the directory of the ui pre-bundle, inside the CAPSULE_ARTIFACTS_DIR.
+ */
+export const BUNDLE_UI_DIR = 'ui-bundle';
+
 export type TaskLocation = 'start' | 'end';
 
 export type PipeName = 'build' | 'tag' | 'snap';
