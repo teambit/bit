@@ -6,12 +6,13 @@ mod tests;
 use super::{
     Command,
     color::Chalk,
+    scope_set::{Failure, selection},
     script::active_component_count,
     workspace_command::{self, results::Report},
 };
 use crate::{native::Outcome, workspace};
-use bit_install::config::WorkspaceConfig;
-use bit_object_import::{component_remove::select_ids, parse_jsonc};
+use bit_install::{config::WorkspaceConfig, workspace::Bitmap};
+use bit_object_import::parse_jsonc;
 use std::{env, ffi::OsString, fs, io, path::Path};
 
 pub const GENERATE_PREVIEW: Command =
@@ -77,11 +78,16 @@ fn try_run_workspace_generate(
     };
     let count = active_component_count(&bitmap_val);
     if let Some(pat) = options.pattern.as_deref() {
-        if let Err(err) = select_ids(root, pat)
-            && err.to_string().starts_with("unable to find any matching")
+        let Ok(bitmap) = Bitmap::load(root, ws_config.workspace.default_scope.as_deref()) else {
+            return Ok(None);
+        };
+        if let Err(Failure::User(msg)) =
+            selection::resolve_pattern_entries(root, &bitmap, pat, Chalk::detect(args))
         {
             let outcome =
-                workspace_command::execute_then(root, args, "generate-preview", move |_| Err(err))?;
+                workspace_command::execute_then(root, args, "generate-preview", move |_| {
+                    Err(io::Error::other(msg))
+                })?;
             return Ok(Some(outcome));
         }
         return Ok(None);

@@ -34,18 +34,21 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("CI format delegated".into()));
     }
     let cwd = env::current_dir()?;
-    if is_missing_host(&cwd, &options) {
-        return workspace_command::execute_without_loader_scope(&cwd, args, "format", |_| {
-            Err(io::Error::other(HOST_NOT_FOUND_ERR))
-        });
+    if is_missing_host(&cwd) {
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            "format",
+            options.json,
+            "",
+            io::Error::other(HOST_NOT_FOUND_ERR),
+        );
     }
     Ok(Outcome::Declined("format execution delegated".into()))
 }
 
-pub(super) fn is_missing_host(cwd: &Path, options: &Options) -> bool {
-    options.pattern.is_none()
-        && !options.changed
-        && workspace::root(cwd).is_none()
+pub(super) fn is_missing_host(cwd: &Path) -> bool {
+    workspace::root(cwd).is_none()
         && !cwd.join("scope.json").is_file()
         && !cwd.join(".bit").is_dir()
 }

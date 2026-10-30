@@ -5,20 +5,33 @@ mod tests;
 
 use super::{
     Command,
+    color::Chalk,
     workspace_command::{self, results::Report},
 };
 use crate::{native::Outcome, workspace};
-use std::{env, ffi::OsString, io, path::Path};
+use bit_object_import::parse_jsonc;
+use serde_json::{Value, json};
+use std::{
+    env,
+    ffi::OsString,
+    fs,
+    io::{self, Write},
+    path::Path,
+    process::ExitCode,
+};
 
 pub const COMMAND: Command = Command { name: "ripple", aliases: &[], run };
 
 const BARE_RIPPLE_MSG: &str =
     "[ripple] please specify a subcommand. See --help for available commands.";
+const NO_JOB_MSG: &str = "Could not find a Ripple CI job. Provide a job ID, use --lane, or run from a workspace with a recent export.";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
     Bare,
     ListInvalidLimit { raw: String, json: bool },
+    Simulate { lane: Option<String>, json: bool },
+    NoArgJobOp { sub: &'static str, json: bool },
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -34,6 +47,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Subcommand::Bare => run_bare(&cwd, root_opt.as_deref(), args),
         Subcommand::ListInvalidLimit { raw, json } => {
             emit_invalid_limit(&cwd, root_opt.as_deref(), args, &raw, json)
+        }
+        Subcommand::Simulate { lane, json } => {
+            run_simulate(&cwd, root_opt.as_deref(), args, lane.as_deref(), json)
+        }
+        Subcommand::NoArgJobOp { sub, json } => {
+            run_no_arg_job_op(&cwd, root_opt.as_deref(), args, sub, json)
         }
     }
 }
@@ -54,15 +73,173 @@ fn emit_invalid_limit(
     raw: &str,
     json_flag: bool,
 ) -> io::Result<Outcome> {
-    if json_flag || env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-        return Ok(Outcome::Declined("CI/json ripple error delegated".into()));
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI ripple error delegated".into()));
     }
     let msg = format!(r#"invalid --limit value "{raw}": expected a positive integer"#);
+    emit_ripple_error(cwd, root_opt, args, "list", json_flag, msg)
+}
+
+fn run_simulate(
+    cwd: &Path,
+    root_opt: Option<&Path>,
+    args: &[OsString],
+    lane_flag: Option<&str>,
+    json_flag: bool,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI ripple simulate delegated".into()));
+    }
+    let Some(err) = diagnose_simulate_error(root_opt, lane_flag) else {
+        return Ok(Outcome::Declined("ripple simulate remote call delegated".into()));
+    };
+    emit_ripple_error(cwd, root_opt, args, "simulate", json_flag, err)
+}
+
+fn diagnose_simulate_error(root_opt: Option<&Path>, lane_flag: Option<&str>) -> Option<String> {
+    let (current_lane, is_exported) = read_workspace_lane_state(root_opt)?;
+    let Some(lane) = lane_flag else {
+        let Some(curr) = current_lane else {
+            return Some(
+                "a simulation requires a lane. switch to a lane or pass --lane <scope/lane-name>"
+                    .into(),
+            );
+        };
+        return (!is_exported).then(|| never_exported_err(&curr));
+    };
+    diagnose_simulate_lane_flag(lane, current_lane.as_deref(), is_exported)
+}
+
+fn diagnose_simulate_lane_flag(
+    lane: &str,
+    current_lane: Option<&str>,
+    is_exported: bool,
+) -> Option<String> {
+    if lane == "main" {
+        return Some(default_lane_err(lane));
+    }
+    let Some((_, name)) = lane
+        .split_once('/')
+        .filter(|(scope_str, name_str)| !scope_str.is_empty() && !name_str.is_empty())
+    else {
+        return Some(invalid_lane_err(lane));
+    };
+    if name == "main" {
+        return Some(default_lane_err(lane));
+    }
+    (current_lane == Some(lane) && !is_exported).then(|| never_exported_err(lane))
+}
+
+fn never_exported_err(lane: &str) -> String {
+    format!(
+        r#"lane "{lane}" was never exported. a simulation runs against the lane on bit.cloud, run "bit export" first"#,
+    )
+}
+
+fn default_lane_err(lane: &str) -> String {
+    format!(
+        r#""{lane}" is the default lane. a simulation needs a lane whose changes are tested against their dependents on main"#,
+    )
+}
+
+fn invalid_lane_err(lane: &str) -> String {
+    format!(
+        r#"invalid --lane "{lane}", expected "scope/lane-name". unable to parse "{lane}" as a valid lane-id, expected "scope/lane-name" format"#,
+    )
+}
+
+fn read_workspace_lane_state(root_opt: Option<&Path>) -> Option<(Option<String>, bool)> {
+    let Some(root) = root_opt else {
+        return Some((None, false));
+    };
+    let ws_val = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
+    if ws_val["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
+        return None;
+    }
+    let bitmap = parse_jsonc(&fs::read(root.join(".bitmap")).ok()?).ok()?;
+    let lane_obj = &bitmap["_bit_lane"];
+    if lane_obj.is_null() {
+        return Some((None, false));
+    }
+    let name = lane_obj["id"]["name"].as_str().unwrap_or("main");
+    if name == "main" || name.is_empty() {
+        return Some((None, false));
+    }
+    let scope = lane_obj["id"]["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())?;
+    let exported = lane_obj["exported"].as_bool().unwrap_or(false);
+    Some((Some(format!("{scope}/{name}")), exported))
+}
+
+fn run_no_arg_job_op(
+    cwd: &Path,
+    root_opt: Option<&Path>,
+    args: &[OsString],
+    sub: &'static str,
+    json_flag: bool,
+) -> io::Result<Outcome> {
+    if let Some(root) = root_opt {
+        let Some((None, _)) = read_workspace_lane_state(Some(root)) else {
+            return Ok(Outcome::Declined("ripple job op on lane delegated".into()));
+        };
+        if workspace::scope_path(root).join("last-export.json").exists() {
+            return Ok(Outcome::Declined("ripple job op with last-export delegated".into()));
+        }
+    }
+    if json_flag {
+        return emit_no_job_json(root_opt, args, sub);
+    }
+    let chalk = Chalk::detect(args);
+    let report = Report { data: chalk.red(NO_JOB_MSG), code: 0, details: None };
+    if let Some(root) = root_opt {
+        workspace_command::execute_then(root, args, sub, |_| Ok(report))
+    } else {
+        workspace_command::execute_with_scope(cwd, args, sub, &report)
+    }
+}
+
+fn emit_no_job_json(
+    root_opt: Option<&Path>,
+    args: &[OsString],
+    sub: &'static str,
+) -> io::Result<Outcome> {
+    let val: Value = match sub {
+        "log" => json!({ "job": null }),
+        "errors" => {
+            json!({ "error": "No job found", "job": null, "ciNodes": [], "containerLogs": {} })
+        }
+        _ => json!({ "error": NO_JOB_MSG }),
+    };
+    let data = serde_json::to_string_pretty(&val)?;
+    if let Some(root) = root_opt {
+        return workspace_command::execute_json(root, args, sub, |_| {
+            Ok(Report { data, code: 0, details: None })
+        });
+    }
+    let mut stdout = io::stdout().lock();
+    stdout.write_all(data.as_bytes())?;
+    stdout.flush()?;
+    Ok(Outcome::Exit(ExitCode::SUCCESS))
+}
+
+fn emit_ripple_error(
+    cwd: &Path,
+    root_opt: Option<&Path>,
+    args: &[OsString],
+    command: &str,
+    json_flag: bool,
+    msg: String,
+) -> io::Result<Outcome> {
     let err = io::Error::other(msg);
     if let Some(root) = root_opt {
-        workspace_command::execute_then(root, args, "list", |_| Err(err))
+        if json_flag {
+            workspace_command::execute_json(root, args, command, |_| Err(err))
+        } else {
+            workspace_command::execute_then(root, args, command, |_| Err(err))
+        }
     } else {
-        workspace_command::execute_failure_scope(cwd, args, "list", false, "", err)
+        workspace_command::execute_failure_scope(cwd, args, command, json_flag, "", err)
     }
 }
 
@@ -77,8 +254,61 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         ["list", rest @ ..] if !rest.contains(&"--help") && !rest.contains(&"-h") => {
             parse_list_invalid_limit(rest)
         }
+        ["simulate", rest @ ..] if !rest.contains(&"--help") && !rest.contains(&"-h") => {
+            parse_simulate(rest)
+        }
+        [sub @ ("log" | "errors" | "retry" | "stop"), rest @ ..] => parse_no_arg_job_op(sub, rest),
         _ => None,
     }
+}
+
+fn parse_simulate(rest: &[&str]) -> Option<Subcommand> {
+    let mut lane = None;
+    let mut json = false;
+    let mut iter = rest.iter().copied();
+    while let Some(arg) = iter.next() {
+        match arg {
+            "-j" | "--json" => json = true,
+            "--lane" => {
+                let val = iter.next()?;
+                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+                lane = Some(val.to_owned());
+            }
+            "--scopes" | "--owners" | "--exclude-scopes" => {
+                let val = iter.next()?;
+                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+            }
+            _ if arg.starts_with("--lane=") => {
+                let val = &arg["--lane=".len()..];
+                (!val.is_empty()).then_some(())?;
+                lane = Some(val.to_owned());
+            }
+            _ if arg.starts_with("--scopes=")
+                || arg.starts_with("--owners=")
+                || arg.starts_with("--exclude-scopes=") => {}
+            _ => return None,
+        }
+    }
+    Some(Subcommand::Simulate { lane, json })
+}
+
+fn parse_no_arg_job_op(sub: &str, rest: &[&str]) -> Option<Subcommand> {
+    let sub_static = match sub {
+        "log" => "log",
+        "errors" => "errors",
+        "retry" => "retry",
+        "stop" => "stop",
+        _ => return None,
+    };
+    let mut json = false;
+    for &arg in rest {
+        match arg {
+            "-j" | "--json" => json = true,
+            "--full-log" if sub_static == "errors" => {}
+            _ => return None,
+        }
+    }
+    Some(Subcommand::NoArgJobOp { sub: sub_static, json })
 }
 
 fn parse_list_invalid_limit(rest: &[&str]) -> Option<Subcommand> {

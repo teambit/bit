@@ -8,6 +8,5 @@ fn parses_format_options_and_detects_missing_host() {
         Options { pattern: Some("ui/*".into()), changed: true, check: true, json: true },
     );
     let temp = tempfile::tempdir().unwrap();
-    assert!(is_missing_host(temp.path(), &Options::default()));
-    assert!(!is_missing_host(temp.path(), &opts));
+    assert!(is_missing_host(temp.path()));
 }

@@ -35,18 +35,21 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("CI lint delegated".into()));
     }
-    if is_missing_host(&cwd, &options) {
-        return workspace_command::execute_without_loader_scope(&cwd, args, "lint", |_| {
-            Err(io::Error::other(HOST_NOT_FOUND_ERR))
-        });
+    if is_missing_host(&cwd) {
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            "lint",
+            options.json,
+            "",
+            io::Error::other(HOST_NOT_FOUND_ERR),
+        );
     }
     Ok(Outcome::Declined("lint execution delegated".into()))
 }
 
-pub(super) fn is_missing_host(cwd: &Path, options: &Options) -> bool {
-    options.pattern.is_none()
-        && !options.changed
-        && workspace::root(cwd).is_none()
+pub(super) fn is_missing_host(cwd: &Path) -> bool {
+    workspace::root(cwd).is_none()
         && !cwd.join("scope.json").is_file()
         && !cwd.join(".bit").is_dir()
 }

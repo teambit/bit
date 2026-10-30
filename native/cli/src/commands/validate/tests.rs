@@ -1,5 +1,5 @@
 use super::{
-    FastOutcome, Options, classify_workspace,
+    Chalk, FastOutcome, Options, classify_workspace,
     lint_and_types::{check_ts_content, lint_source_content},
     parse_options,
 };
@@ -41,6 +41,7 @@ fn classifies_empty_workspace_and_skip_tasks() {
                 continue_on_error: false,
                 skip_tasks: None,
             },
+            Chalk::new(false),
         )
         .unwrap(),
         Some(FastOutcome::Empty),
@@ -70,6 +71,7 @@ fn classifies_empty_workspace_and_skip_tasks() {
                 continue_on_error: false,
                 skip_tasks: Some("invalid-task".into()),
             },
+            Chalk::new(false),
         )
         .unwrap(),
         Some(FastOutcome::InvalidSkipTasks { count: 1, invalid: vec!["invalid-task".into()] }),

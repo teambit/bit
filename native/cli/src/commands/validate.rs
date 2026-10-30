@@ -8,10 +8,12 @@ mod tests;
 use super::{
     Command,
     color::Chalk,
+    scope_set::{Failure, selection},
     script::active_component_count,
     workspace_command::{self, format::Formatter, results::Report},
 };
 use crate::{native::Outcome, workspace};
+use bit_install::workspace::Bitmap;
 use bit_object_import::{component_remove::select_ids, parse_jsonc};
 use std::{env, ffi::OsString, fs, io, path::Path};
 
@@ -46,8 +48,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Err(io::Error::other(OUTSIDE_WORKSPACE_ERR))
         });
     };
-    if let Ok(Some(fast)) = classify_workspace(&root, &options) {
-        let chalk = Chalk::detect(args);
+    let chalk = Chalk::detect(args);
+    if let Ok(Some(fast)) = classify_workspace(&root, &options, chalk) {
         let formatter = Formatter::new(chalk);
         return workspace_command::execute_without_loader(&root, args, "validate", |output| {
             emit_fast(&options, fast, &formatter, output)
@@ -62,6 +64,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum FastOutcome {
     Empty,
+    Error(String),
     InvalidSkipTasks { count: usize, invalid: Vec<String> },
     SkippedAll { count: usize },
 }
@@ -81,7 +84,16 @@ fn emit_fast(
             lines.push(msg.into());
             Ok(Report { data: lines.join("\n"), code: 0, details: None })
         }
+        FastOutcome::Error(msg) => {
+            for line in &lines {
+                output.console(line);
+            }
+            Err(io::Error::other(msg))
+        }
         FastOutcome::InvalidSkipTasks { count, invalid } => {
+            for line in &lines {
+                output.console(line);
+            }
             output.console(&format!("Validating {count} component(s)\n"));
             Err(io::Error::other(format!(
                 "unknown skip-tasks: {}. available tasks: {}",
@@ -159,6 +171,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
 pub(super) fn classify_workspace(
     root: &Path,
     options: &Options,
+    chalk: Chalk,
 ) -> io::Result<Option<FastOutcome>> {
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
     if ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
@@ -168,6 +181,15 @@ pub(super) fn classify_workspace(
     let all_count = active_component_count(&bitmap);
     if all_count == 0 && options.pattern.is_none() {
         return Ok(Some(FastOutcome::Empty));
+    }
+    if let Some(pat) = &options.pattern {
+        let default_scope = ws_config["teambit.workspace/workspace"]["defaultScope"].as_str();
+        let loaded_bitmap = Bitmap::load(root, default_scope)?;
+        if let Err(Failure::User(msg)) =
+            selection::resolve_pattern_entries(root, &loaded_bitmap, pat, chalk)
+        {
+            return Ok(Some(FastOutcome::Error(msg)));
+        }
     }
     let Some(raw_skip) = &options.skip_tasks else {
         return Ok(None);

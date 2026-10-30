@@ -7,10 +7,12 @@ mod tests;
 use super::{
     Command,
     color::Chalk,
+    scope_set::{Failure, selection},
     script::active_component_count,
     workspace_command::{self, format::Formatter, results::Report},
 };
 use crate::{native::Outcome, workspace};
+use bit_install::workspace::Bitmap;
 use bit_object_import::parse_jsonc;
 use std::{env, ffi::OsString, fs, io, iter::Peekable, path::Path};
 
@@ -76,19 +78,47 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Err(io::Error::other(OUTSIDE_WORKSPACE_ERR))
         });
     };
+    run_in_workspace(&cwd, &root, args, &options)
+}
+
+fn run_in_workspace(
+    cwd: &Path,
+    root: &Path,
+    args: &[OsString],
+    options: &Options,
+) -> io::Result<Outcome> {
     if let Some(target) = &options.list_tasks {
-        return runner::run_list_tasks(&root, args, target);
+        return runner::run_list_tasks(root, args, target);
     }
-    if is_empty_build_workspace(&root, &options).unwrap_or(false) {
+    if is_empty_build_workspace(root, options).unwrap_or(false) {
         let formatter = Formatter::new(Chalk::detect(args));
-        return workspace_command::execute_without_loader(&root, args, "build", move |_| {
+        return workspace_command::execute_without_loader(root, args, "build", move |_| {
             Ok(Report { data: formatter.hint(EMPTY_BUILD_HINT), code: 0, details: None })
         });
     }
-    if let Some(outcome) = runner::try_run(&cwd, &root, args, &options)? {
+    if let Some(err) = validate_build_pattern(root, options, Chalk::detect(args)) {
+        return workspace_command::execute_then(root, args, "build", move |_| {
+            Err(io::Error::other(err))
+        });
+    }
+    if let Some(outcome) = runner::try_run(cwd, root, args, options)? {
         return Ok(outcome);
     }
     Ok(Outcome::Declined("build pipeline execution delegated".into()))
+}
+
+fn validate_build_pattern(root: &Path, options: &Options, chalk: Chalk) -> Option<String> {
+    let pat = options.pattern.as_deref()?;
+    let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
+    if ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
+        return None;
+    }
+    let default_scope = ws_config["teambit.workspace/workspace"]["defaultScope"].as_str();
+    let bitmap = Bitmap::load(root, default_scope).ok()?;
+    match selection::resolve_pattern_entries(root, &bitmap, pat, chalk) {
+        Err(Failure::User(msg)) => Some(msg),
+        _ => None,
+    }
 }
 
 pub(super) fn flag_error(capsules: &CapsuleFlags) -> Option<&'static str> {
@@ -102,7 +132,7 @@ pub(super) fn flag_error(capsules: &CapsuleFlags) -> Option<&'static str> {
 }
 
 pub(super) fn is_empty_build_workspace(root: &Path, options: &Options) -> io::Result<bool> {
-    if options.list_tasks.is_some() {
+    if options.list_tasks.is_some() || options.pattern.is_some() {
         return Ok(false);
     }
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
