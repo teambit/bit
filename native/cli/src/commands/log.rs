@@ -17,6 +17,7 @@ use super::{
 };
 use crate::{commands::Command, history::History, native::Outcome, workspace};
 use chrono::{DateTime, Local};
+use options::{Options, parse};
 use serde_json::{Map, Value, json};
 use std::{
     env,
@@ -28,86 +29,13 @@ use std::{
 use table::one_line;
 use topology::{LocalTarget, ordered_parents, resolve_local_target};
 
+mod options;
 mod table;
 mod topology;
 
 pub const COMMAND: Command = Command { name: "log", aliases: &[], run };
 
 pub(super) const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
-
-#[derive(Default)]
-struct Options<'a> {
-    id: Option<&'a str>,
-    json: bool,
-    parents: bool,
-    one_line: bool,
-    full_hash: bool,
-    full_message: bool,
-    show_hidden: bool,
-    remote: bool,
-}
-
-fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
-    let mut options = Options::default();
-    for arg in args {
-        apply_log_arg(&mut options, arg)?;
-    }
-    options.id.map(|_| options)
-}
-
-fn apply_log_arg<'a>(options: &mut Options<'a>, arg: &'a str) -> Option<()> {
-    if arg == "--no-color" || apply_log_combined_short(options, arg) {
-        return Some(());
-    }
-    if !arg.starts_with('-') && options.id.is_none() {
-        options.id = Some(arg);
-        return Some(());
-    }
-    let (flag, val) = match arg.split_once('=') {
-        Some((flag, "true")) if flag.starts_with("--") => (flag, true),
-        Some((flag, "false")) if flag.starts_with("--") => (flag, false),
-        None => (arg, true),
-        _ => return None,
-    };
-    let field = match flag {
-        "-j" | "--json" => &mut options.json,
-        "--parents" => &mut options.parents,
-        "-o" | "--one-line" => &mut options.one_line,
-        "-f" | "--full-hash" => &mut options.full_hash,
-        "-m" | "--full-message" => &mut options.full_message,
-        "--show-hidden" => &mut options.show_hidden,
-        "-r" | "--remote" => &mut options.remote,
-        _ => return None,
-    };
-    *field = val;
-    Some(())
-}
-
-fn apply_log_combined_short(options: &mut Options<'_>, arg: &str) -> bool {
-    if !arg.starts_with('-')
-        || arg.starts_with("--")
-        || arg.len() <= 2
-        || !arg[1..]
-            .bytes()
-            .all(|byte| matches!(byte, b'j' | b'o' | b'f' | b'm' | b'r'))
-    {
-        return false;
-    }
-    for byte in arg[1..].bytes() {
-        *log_short_field(options, byte) = true;
-    }
-    true
-}
-
-fn log_short_field<'a>(options: &'a mut Options<'_>, byte: u8) -> &'a mut bool {
-    match byte {
-        b'j' => &mut options.json,
-        b'o' => &mut options.one_line,
-        b'f' => &mut options.full_hash,
-        b'm' => &mut options.full_message,
-        _ => &mut options.remote,
-    }
-}
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {

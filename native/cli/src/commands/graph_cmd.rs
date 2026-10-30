@@ -131,8 +131,9 @@ pub(super) fn fast_graph_error(cwd: &Path, options: &Options) -> Option<&'static
         return None;
     }
     if workspace::root(cwd).is_none()
-        && !cwd.join("scope.json").is_file()
-        && !cwd.join(".bit").is_dir()
+        && !cwd
+            .ancestors()
+            .any(|dir| dir.join("scope.json").is_file() || dir.join(".bit").is_dir())
     {
         return Some(HOST_NOT_FOUND_ERR);
     }
@@ -143,10 +144,24 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut idx = 0;
     while idx < args.len() {
+        if args[idx] == "--" {
+            consume_trailing_graph_id(&args[idx + 1..], &mut options)?;
+            break;
+        }
         apply_token(args, &mut idx, &mut options)?;
         idx += 1;
     }
     Some(options)
+}
+
+fn consume_trailing_graph_id(rest: &[&str], options: &mut Options) -> Option<()> {
+    for &arg in rest {
+        if arg.starts_with('-') || arg.is_empty() || options.id.is_some() {
+            return None;
+        }
+        options.id = Some(arg.to_owned());
+    }
+    Some(())
 }
 
 fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<()> {

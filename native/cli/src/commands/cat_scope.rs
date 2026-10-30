@@ -41,10 +41,28 @@ struct ScopeEntry {
 
 fn parse_options(args: &[&str]) -> Option<Options> {
     let mut opts = Options::default();
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        if arg == "--" {
+            consume_trailing_scope_path(iter, &mut opts.scope_path)?;
+            break;
+        }
         apply_cat_scope_arg(&mut opts, arg)?;
     }
     Some(opts)
+}
+
+fn consume_trailing_scope_path<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    scope_path: &mut Option<String>,
+) -> Option<()> {
+    for rest in iter {
+        if rest.is_empty() || rest.starts_with('-') || scope_path.is_some() {
+            return None;
+        }
+        *scope_path = Some(rest.to_owned());
+    }
+    Some(())
 }
 
 fn apply_cat_scope_arg(opts: &mut Options, arg: &str) -> Option<()> {

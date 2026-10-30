@@ -81,12 +81,12 @@ fn take_depth<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, Option<String>)> {
     let mut depth = None;
     let mut position = 0;
     while position < args.len() {
-        if args[position] == "--dependencies-depth" {
+        if let Some(value) = args[position].strip_prefix("--dependencies-depth=") {
+            set_bounded_option(&mut depth, value)?;
+            position += 1;
+        } else if args[position] == "--dependencies-depth" {
             let value = *args.get(position + 1)?;
-            if depth.is_some() || value.is_empty() || value.starts_with('-') || value.len() > 4096 {
-                return None;
-            }
-            depth = Some(value.to_owned());
+            set_bounded_option(&mut depth, value)?;
             position += 2;
         } else {
             remaining.push(args[position]);
@@ -101,12 +101,15 @@ fn take_path<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, Option<String>)> {
     let mut path = None;
     let mut position = 0;
     while position < args.len() {
-        if args[position] == "-p" || args[position] == "--path" {
+        if let Some(value) = args[position]
+            .strip_prefix("--path=")
+            .or_else(|| args[position].strip_prefix("-p="))
+        {
+            set_bounded_option(&mut path, value)?;
+            position += 1;
+        } else if args[position] == "-p" || args[position] == "--path" {
             let value = *args.get(position + 1)?;
-            if path.is_some() || value.is_empty() || value.starts_with('-') || value.len() > 4096 {
-                return None;
-            }
-            path = Some(value.to_owned());
+            set_bounded_option(&mut path, value)?;
             position += 2;
         } else {
             remaining.push(args[position]);
@@ -114,6 +117,14 @@ fn take_path<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, Option<String>)> {
         }
     }
     Some((remaining, path))
+}
+
+fn set_bounded_option(slot: &mut Option<String>, value: &str) -> Option<()> {
+    if slot.is_some() || value.is_empty() || value.starts_with('-') || value.len() > 4096 {
+        return None;
+    }
+    *slot = Some(value.to_owned());
+    Some(())
 }
 
 /// The ids and the distinct flags.

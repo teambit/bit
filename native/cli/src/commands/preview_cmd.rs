@@ -118,6 +118,10 @@ pub(super) fn parse_generate_options(args: &[&str]) -> Option<GenerateOptions> {
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_preview_pattern(iter, &mut options.pattern)?;
+                break;
+            }
             "--no-color" => {}
             "-n" | "--name" => {
                 let val = iter.next()?;
@@ -138,6 +142,19 @@ pub(super) fn parse_generate_options(args: &[&str]) -> Option<GenerateOptions> {
         }
     }
     Some(options)
+}
+
+fn consume_trailing_preview_pattern<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    pattern: &mut Option<String>,
+) -> Option<()> {
+    for rest in iter {
+        if rest.is_empty() || rest.starts_with('-') || pattern.is_some() {
+            return None;
+        }
+        *pattern = Some(rest.to_owned());
+    }
+    Some(())
 }
 
 pub(super) fn parse_serve_options(args: &[&str]) -> Option<ServeOptions> {

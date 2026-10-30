@@ -50,22 +50,35 @@ fn run_options(
     let Some(root) = workspace::root(&cwd) else {
         return outside_workspace_switch(&cwd, args, options, lane_import);
     };
+    if let Some(outcome) = preflight_switch_error(&root, args, options, lane_import) {
+        return outcome;
+    }
     if !options.supported_pattern() || options.adoption.json {
         return Ok(Outcome::Declined(
             "switch requires an unsupported selector or JSON handler".into(),
         ));
     }
-    let installer = match start_installer(&root, argv, options.skip_install) {
+    run_workspace(&root, args, argv, options, lane_import)
+}
+
+fn run_workspace(
+    root: &Path,
+    args: &[OsString],
+    argv: &[&str],
+    options: &options::Options,
+    lane_import: bool,
+) -> io::Result<Outcome> {
+    let installer = match start_installer(root, argv, options.skip_install) {
         Ok(installer) => installer,
         Err(error) => return Ok(Outcome::Declined(format!("switch installation: {error}"))),
     };
     let (environment, installation) = installation_session(installer)?;
     let mut startup = super::status::autosync::Startup::default();
-    let prepared = match prepare(&root, args, options, &mut startup, environment) {
+    let prepared = match prepare(root, args, options, &mut startup, environment) {
         Ok(prepared) => prepared,
         Err(error) if startup.committed || super::engine::is_canonical(&error) => {
             return workspace_command::checkout_lifecycle::failure(
-                &root,
+                root,
                 args,
                 if lane_import { "import" } else { "switch" },
                 &startup,
@@ -74,7 +87,7 @@ fn run_options(
         }
         Err(error) => return Ok(Outcome::Declined(format!("switch: {error}"))),
     };
-    execute(&root, args, prepared, installation, lane_import)
+    execute(root, args, prepared, installation, lane_import)
 }
 
 fn outside_workspace_switch(
@@ -93,6 +106,24 @@ fn outside_workspace_switch(
     };
     let cmd = if lane_import { "import" } else { "switch" };
     workspace_command::execute_failure_scope(cwd, args, cmd, false, "", io::Error::other(msg))
+}
+
+fn preflight_switch_error(
+    root: &Path,
+    args: &[OsString],
+    options: &options::Options,
+    lane_import: bool,
+) -> Option<io::Result<Outcome>> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) || Installer::needs_canonical(root) {
+        return None;
+    }
+    let msg = options.preflight_error(lane_import)?;
+    let cmd = if lane_import { "import" } else { "switch" };
+    let err = io::Error::other(msg);
+    if options.adoption.json {
+        return Some(workspace_command::execute_json(root, args, cmd, |_| Err(err)));
+    }
+    Some(workspace_command::execute_then(root, args, cmd, |_| Err(err)))
 }
 
 fn start_installer(root: &Path, argv: &[&str], skip: bool) -> io::Result<Option<Installer>> {
@@ -237,7 +268,7 @@ fn prepare(
         checkout_import,
         imports,
         install_ids,
-        warnings: warnings(options),
+        warnings: options.warnings(),
     })
 }
 
@@ -251,16 +282,6 @@ fn writer_ids(plan: &Value) -> io::Result<Vec<String>> {
     }
     rows.iter()
         .map(|id| text(Some(id)).map(str::to_owned))
-        .collect()
-}
-
-fn warnings(options: &options::Options) -> Vec<String> {
-    [(options.adoption.get_all, "get-all"), (options.adoption.head, "head")]
-        .into_iter()
-        .filter(|(enabled, _)| *enabled)
-        .map(|(_, name)| {
-            format!("the --{name} flag is deprecated and currently the default behavior")
-        })
         .collect()
 }
 

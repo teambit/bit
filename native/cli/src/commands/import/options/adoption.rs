@@ -23,6 +23,10 @@ pub(super) fn values<'a>(args: &[&'a str]) -> Option<Values<'a>> {
     let mut values = Values { args: Vec::new(), write_deps: None, dependents_via: None };
     let mut arguments = args.iter();
     while let Some(argument) = arguments.next() {
+        if let Some(handled) = inline_value(&mut values, argument) {
+            handled?;
+            continue;
+        }
         let field = match *argument {
             "--write-deps" => &mut values.write_deps,
             "--dependents-via" => &mut values.dependents_via,
@@ -32,12 +36,24 @@ pub(super) fn values<'a>(args: &[&'a str]) -> Option<Values<'a>> {
             }
         };
         let value = *arguments.next()?;
-        if field.is_some() || value.is_empty() || value.starts_with('-') || value.len() > 4096 {
-            return None;
-        }
-        *field = Some(value.to_owned());
+        set_adoption_slot(field, value)?;
     }
     Some(values)
+}
+fn inline_value(values: &mut Values<'_>, argument: &str) -> Option<Option<()>> {
+    if let Some(val) = argument.strip_prefix("--write-deps=") {
+        return Some(set_adoption_slot(&mut values.write_deps, val));
+    }
+    argument
+        .strip_prefix("--dependents-via=")
+        .map(|val| set_adoption_slot(&mut values.dependents_via, val))
+}
+fn set_adoption_slot(field: &mut Option<String>, value: &str) -> Option<()> {
+    if field.is_some() || value.is_empty() || value.starts_with('-') || value.len() > 4096 {
+        return None;
+    }
+    *field = Some(value.to_owned());
+    Some(())
 }
 impl AdoptionOptions {
     pub(super) fn parse(flags: &[&str], write_deps: Option<String>) -> Self {

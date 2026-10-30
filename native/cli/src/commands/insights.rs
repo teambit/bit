@@ -57,8 +57,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut opts = Options::default();
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_insight_names(iter, &mut opts.names)?;
+                break;
+            }
             "-l" | "--list" | "--list=true" => opts.list = true,
             "--list=false" => opts.list = false,
             "-j" | "--json" | "--json=true" => opts.json = true,
@@ -81,6 +86,19 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             .collect();
     }
     Some(opts)
+}
+
+fn consume_trailing_insight_names<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    names: &mut Vec<String>,
+) -> Option<()> {
+    for rest in iter {
+        if rest.is_empty() || rest.starts_with('-') {
+            return None;
+        }
+        names.push(rest.to_owned());
+    }
+    Some(())
 }
 
 fn run_named_insights(

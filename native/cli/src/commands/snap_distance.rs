@@ -36,8 +36,13 @@ fn is_hex40(text: &str) -> bool {
 
 fn parse_options(args: &[&str]) -> Option<Options> {
     let mut positional = Vec::new();
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_snaps(iter, &mut positional)?;
+                break;
+            }
             "--no-color" => {}
             val if !val.starts_with('-') => positional.push(val),
             _ => return None,
@@ -63,6 +68,19 @@ fn parse_options(args: &[&str]) -> Option<Options> {
         }
         _ => None,
     }
+}
+
+fn consume_trailing_snaps<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    positional: &mut Vec<&'a str>,
+) -> Option<()> {
+    for rest in iter {
+        if rest.starts_with('-') {
+            return None;
+        }
+        positional.push(rest);
+    }
+    Some(())
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -123,12 +141,14 @@ fn emit_missing_target_error(root: &ScopeRoot, args: &[OsString]) -> io::Result<
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("CI snap-distance error stack".into()));
     }
-    let err = io::Error::other("either provide both source and target snaps or none");
-    if root.bare {
-        workspace_command::execute_failure_scope(&root.path, args, "snap-distance", true, "", err)
-    } else {
-        workspace_command::execute_then(&root.path, args, "snap-distance", |_| Err(err))
-    }
+    emit_failure(
+        root,
+        args,
+        "snap-distance",
+        true,
+        false,
+        "either provide both source and target snaps or none".into(),
+    )
 }
 
 fn compute_local_remote_distance(

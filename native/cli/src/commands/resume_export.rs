@@ -35,23 +35,46 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut remotes = Vec::new();
     let mut delete = false;
     let mut force = false;
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_resume_args(iter, &mut export_id, &mut remotes)?;
+                break;
+            }
             "--no-color" => {}
             "--delete" | "--delete=true" => delete = true,
             "--delete=false" => delete = false,
             "--force" | "--force=true" => force = true,
             "--force=false" => force = false,
             val if !val.starts_with('-') && !val.is_empty() => {
-                if export_id.is_none() {
-                    export_id = Some(val.to_owned());
-                } else {
-                    remotes.push(val.to_owned());
-                }
+                push_resume_arg(val, &mut export_id, &mut remotes);
             }
             _ => return None,
         }
     }
     (!remotes.is_empty()).then_some(())?;
     Some(Options { export_id: export_id?, remotes, delete, force })
+}
+
+fn consume_trailing_resume_args<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    export_id: &mut Option<String>,
+    remotes: &mut Vec<String>,
+) -> Option<()> {
+    for rest in iter {
+        if rest.is_empty() || rest.starts_with('-') {
+            return None;
+        }
+        push_resume_arg(rest, export_id, remotes);
+    }
+    Some(())
+}
+
+fn push_resume_arg(val: &str, export_id: &mut Option<String>, remotes: &mut Vec<String>) {
+    if export_id.is_none() {
+        *export_id = Some(val.to_owned());
+    } else {
+        remotes.push(val.to_owned());
+    }
 }

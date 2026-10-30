@@ -37,14 +37,24 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 
 pub(super) fn is_outside_workspace_and_scope(cwd: &Path) -> bool {
     workspace::root(cwd).is_none()
-        && !cwd.join("scope.json").is_file()
-        && !cwd.join(".bit/scope.json").is_file()
+        && !cwd
+            .ancestors()
+            .any(|dir| {
+                dir.join("scope.json").is_file()
+                    || dir.join(".bit/scope.json").is_file()
+                    || dir.join(".bit").is_dir()
+            })
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut ui_root_name = None;
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_ui_type(iter, &mut ui_root_name)?;
+                break;
+            }
             "--no-color" => {}
             val if !val.starts_with('-') && !val.is_empty() && ui_root_name.is_none() => {
                 ui_root_name = Some(val.to_owned());
@@ -53,4 +63,17 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         }
     }
     Some(Options { ui_root_name })
+}
+
+fn consume_trailing_ui_type<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    ui_root_name: &mut Option<String>,
+) -> Option<()> {
+    for rest in iter {
+        if rest.starts_with('-') || rest.is_empty() || ui_root_name.is_some() {
+            return None;
+        }
+        *ui_root_name = Some(rest.to_owned());
+    }
+    Some(())
 }

@@ -20,8 +20,13 @@ pub(super) const COMMAND: Command = Command { name: "blame", aliases: &[], run }
 pub(super) fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
     let mut path = None;
     let mut include_message = false;
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_path(iter, &mut path)?;
+                break;
+            }
             "--no-color" => {}
             "-m" | "--include-message" | "--include-message=true" => include_message = true,
             "--include-message=false" => include_message = false,
@@ -30,6 +35,19 @@ pub(super) fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
         }
     }
     Some((path?, include_message))
+}
+
+fn consume_trailing_path<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    path: &mut Option<&'a str>,
+) -> Option<()> {
+    for rest in iter {
+        if rest.is_empty() || rest.starts_with('-') || path.is_some() {
+            return None;
+        }
+        *path = Some(rest);
+    }
+    Some(())
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

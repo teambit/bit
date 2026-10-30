@@ -27,6 +27,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = Options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native doctor grammar".into()));
     };
+    if options.validate().is_err() && env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI doctor option validation error stack".into()));
+    }
     if colored_unknown(&options, Chalk::detect(args)) {
         return Ok(Outcome::Declined("published colored diagnosis error stack".into()));
     }
@@ -39,18 +42,34 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Err(error) => return Ok(Outcome::Declined(format!("doctor remote preflight: {error}"))),
     };
     let cwd = env::current_dir()?;
-    let root = bit_workspace_config::workspace_root(&cwd).unwrap_or(cwd);
     let work = |output: &bit_install::output::Output| {
         produce(&options, context.as_ref(), remote.as_ref(), Chalk::detect(args), output)
     };
-    if options.json {
-        workspace_command::execute_json(&root, args, "doctor", work)
+    execute_doctor(&cwd, args, options.json, work)
+}
+fn execute_doctor<Work>(
+    cwd: &std::path::Path,
+    args: &[OsString],
+    json: bool,
+    work: Work,
+) -> io::Result<Outcome>
+where
+    Work: FnOnce(&bit_install::output::Output) -> io::Result<Report>,
+{
+    if let Some(root) = bit_workspace_config::workspace_root(cwd) {
+        if json {
+            workspace_command::execute_json(&root, args, "doctor", work)
+        } else {
+            workspace_command::execute_then(&root, args, "doctor", work)
+        }
+    } else if json {
+        workspace_command::execute_json_scope(cwd, args, "doctor", work)
     } else {
-        workspace_command::execute_then(&root, args, "doctor", work)
+        workspace_command::execute_then_scope(cwd, args, "doctor", work)
     }
 }
 fn prepare_context(options: &Options) -> io::Result<Option<Context>> {
-    if options.list {
+    if options.list || options.validate().is_err() {
         return Ok(None);
     }
     let context = Context::load()?;
@@ -61,7 +80,7 @@ fn prepare_remote(
     context: Option<&Context>,
     options: &Options,
 ) -> io::Result<Option<remote::Plan>> {
-    if options.list {
+    if options.list || options.validate().is_err() {
         return Ok(None);
     }
     remote::prepare(context.ok_or_else(|| io::Error::other("missing doctor context"))?, options)

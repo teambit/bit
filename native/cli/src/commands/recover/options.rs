@@ -6,8 +6,13 @@ pub(super) struct Options<'a> {
 }
 pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options { pattern: "", skip_installation: false, skip_config: false };
-    for arg in args {
-        match *arg {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        match arg {
+            "--" => {
+                consume_trailing_pattern(iter, &mut options.pattern)?;
+                break;
+            }
             "--no-color" => {}
             "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
                 options.skip_installation = true;
@@ -24,4 +29,17 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
         }
     }
     (!options.pattern.is_empty()).then_some(options)
+}
+
+fn consume_trailing_pattern<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    pattern: &mut &'a str,
+) -> Option<()> {
+    for rest in iter {
+        if rest.is_empty() || rest.starts_with('-') || !pattern.is_empty() {
+            return None;
+        }
+        *pattern = rest;
+    }
+    Some(())
 }

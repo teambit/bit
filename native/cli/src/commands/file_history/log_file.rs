@@ -29,8 +29,13 @@ pub(super) const COMMAND: Command = Command { name: "log-file", aliases: &[], ru
 fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
     let mut path = None;
     let mut one_line = false;
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_path(iter, &mut path)?;
+                break;
+            }
             "--no-color" => {}
             "-o" | "--one-line" | "--one-line=true" => one_line = true,
             "--one-line=false" => one_line = false,
@@ -39,6 +44,19 @@ fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
         }
     }
     Some((path?, one_line))
+}
+
+fn consume_trailing_path<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    path: &mut Option<&'a str>,
+) -> Option<()> {
+    for rest in iter {
+        if rest.is_empty() || rest.starts_with('-') || path.is_some() {
+            return None;
+        }
+        *path = Some(rest);
+    }
+    Some(())
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

@@ -67,8 +67,9 @@ pub(super) fn missing_scope_error(
 pub(super) fn is_missing_scope(cwd: &Path, options: &Options) -> bool {
     options.scope_path.is_none()
         && workspace::root(cwd).is_none()
-        && !cwd.join("scope.json").is_file()
-        && !cwd.join(".bit").is_dir()
+        && !cwd
+            .ancestors()
+            .any(|dir| dir.join("scope.json").is_file() || dir.join(".bit").is_dir())
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
@@ -84,6 +85,10 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_pack_positions(iter, &mut options)?;
+                break;
+            }
             "--no-color" => {}
             "-o" | "--override" | "--override=true" => options.override_existing = true,
             "--override=false" => options.override_existing = false,
@@ -102,6 +107,19 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         }
     }
     (!options.comp_id.is_empty()).then_some(options)
+}
+
+fn consume_trailing_pack_positions<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    options: &mut Options,
+) -> Option<()> {
+    for rest in iter {
+        if rest.starts_with('-') || rest.is_empty() {
+            return None;
+        }
+        apply_inline_or_positional(rest, options)?;
+    }
+    Some(())
 }
 
 fn apply_inline_or_positional(arg: &str, options: &mut Options) -> Option<()> {

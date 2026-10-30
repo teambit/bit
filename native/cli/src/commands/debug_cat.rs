@@ -47,8 +47,13 @@ struct ObjectOptions {
 
 fn parse_object_options(args: &[&str]) -> Option<ObjectOptions> {
     let mut opts = ObjectOptions::default();
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_slot(iter, &mut opts.hash)?;
+                break;
+            }
             "-p" | "--pretty" | "--pretty=true" => opts.pretty = true,
             "--pretty=false" => opts.pretty = false,
             "-s" | "--stringify" | "--stringify=true" => opts.stringify = true,
@@ -77,8 +82,13 @@ struct IdJsonOptions {
 
 fn parse_id_json_options(args: &[&str]) -> Option<IdJsonOptions> {
     let mut opts = IdJsonOptions::default();
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_slot(iter, &mut opts.id)?;
+                break;
+            }
             "-j" | "--json" | "--json=true" => opts.json = true,
             "--json=false" => opts.json = false,
             "--no-color" => {}
@@ -90,15 +100,30 @@ fn parse_id_json_options(args: &[&str]) -> Option<IdJsonOptions> {
 }
 
 fn parse_single_id(args: &[&str]) -> Option<String> {
-    let mut id = None;
-    for &arg in args {
+    let mut id = String::new();
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_slot(iter, &mut id)?;
+                break;
+            }
             "--no-color" => {}
-            val if !val.starts_with('-') && id.is_none() => id = Some(val.to_owned()),
+            val if !val.starts_with('-') && id.is_empty() => val.clone_into(&mut id),
             _ => return None,
         }
     }
-    id.filter(|text| !text.is_empty())
+    (!id.is_empty()).then_some(id)
+}
+
+fn consume_trailing_slot<'a>(iter: impl Iterator<Item = &'a str>, slot: &mut String) -> Option<()> {
+    for rest in iter {
+        if rest.is_empty() || rest.starts_with('-') || !slot.is_empty() {
+            return None;
+        }
+        rest.clone_into(slot);
+    }
+    Some(())
 }
 
 fn run_object(args: &[OsString]) -> io::Result<Outcome> {

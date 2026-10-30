@@ -22,12 +22,26 @@ impl Options {
         let mut options = Self::default();
         let mut cursor = 0;
         while let Some(&arg) = args.get(cursor) {
+            if arg == "--" {
+                options.consume_trailing_name(&args[cursor + 1..])?;
+                break;
+            }
             if !options.apply_arg(args, &mut cursor, arg) {
                 return None;
             }
             cursor += 1;
         }
         Some(options)
+    }
+
+    fn consume_trailing_name(&mut self, rest: &[&str]) -> Option<()> {
+        for &arg in rest {
+            if arg.is_empty() || arg.starts_with('-') || self.name.is_some() {
+                return None;
+            }
+            self.name = Some(arg.into());
+        }
+        Some(())
     }
 
     fn apply_arg(&mut self, args: &[&str], cursor: &mut usize, arg: &str) -> bool {

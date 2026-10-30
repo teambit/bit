@@ -83,8 +83,10 @@ fn inline_flag(options: &mut Options, flag: &str, import: bool) -> Option<Option
         }
         "--force-ours" => set_inline_bool(&mut options.force_ours, val, "ours"),
         "--force-theirs" => set_inline_bool(&mut options.force_theirs, val, "theirs"),
-        "--pattern" => set_inline_str(&mut options.adoption.pattern, val, "pattern"),
-        "--auto-merge-resolve" => set_inline_str(&mut options.adoption.strategy, val, "strategy"),
+        "--pattern" | "-p" => set_inline_str(&mut options.adoption.pattern, val, "pattern"),
+        "--auto-merge-resolve" | "-r" => {
+            set_inline_str(&mut options.adoption.strategy, val, "strategy")
+        }
         other if !import => switch_inline_flag(options, other, val),
         _ => None,
     })
@@ -99,7 +101,7 @@ fn switch_inline_flag(options: &mut Options, name: &str, val: &str) -> Option<&'
         "--json" => set_inline_bool(&mut options.adoption.json, val, "json"),
         "--head" => set_inline_bool(&mut options.adoption.head, val, "head"),
         "--get-all" => set_inline_bool(&mut options.adoption.get_all, val, "all"),
-        "--alias" => set_inline_str(&mut options.adoption.alias, val, "alias"),
+        "--alias" | "-n" => set_inline_str(&mut options.adoption.alias, val, "alias"),
         _ => None,
     }
 }
@@ -173,6 +175,25 @@ impl Options {
             "skipDependencyInstallation":true,"verbose":self.verbose,
             "forceOurs":self.force_ours,"forceTheirs":self.force_theirs,
         })
+    }
+    pub(super) fn preflight_error(&self, lane_import: bool) -> Option<&'static str> {
+        if lane_import && self.force_ours && self.force_theirs {
+            return Some("please use either --force-ours or --force-theirs, not both");
+        }
+        let invalid_strategy = self.adoption.strategy
+            .as_deref()
+            .is_some_and(|strategy| !matches!(strategy, "ours" | "theirs" | "manual"))
+            && !(lane_import && (self.force_ours || self.force_theirs));
+        invalid_strategy.then_some("merge must be one of the following: ours, theirs, manual")
+    }
+    pub(super) fn warnings(&self) -> Vec<String> {
+        [(self.adoption.get_all, "get-all"), (self.adoption.head, "head")]
+            .into_iter()
+            .filter(|(enabled, _)| *enabled)
+            .map(|(_, name)| {
+                format!("the --{name} flag is deprecated and currently the default behavior")
+            })
+            .collect()
     }
     pub(super) fn supported_pattern(&self) -> bool {
         self.adoption.pattern
