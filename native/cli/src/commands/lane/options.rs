@@ -28,11 +28,21 @@ const BOOLEANS: [&str; 11] = [
     "--workspace",
     "--exclude-non-lane-comps",
 ];
+const EXTRA_BOOLEANS: [&str; 8] = [
+    "--ours",
+    "--theirs",
+    "--tag",
+    "--keep-readme",
+    "--ignore-config-changes",
+    "--include-non-lane-comps",
+    "--detach-head",
+    "--loose",
+];
 const VALUED: [&str; 3] = ["--auto-merge-resolve", "--message", "--pattern"];
 
 /// `args` starts after `lane merge`.
 pub fn parse(args: &[&str]) -> Option<Options> {
-    let read = read(args)?;
+    let read = read(args, false)?;
     let [name, rest @ ..] = read.positionals.as_slice() else { return None };
     let pattern = read.pattern(rest)?;
     if !lane_name(name) || read.conflicting(pattern) {
@@ -59,6 +69,20 @@ pub fn parse(args: &[&str]) -> Option<Options> {
         skip_install: read.has("--skip-dependency-installation"),
         flags: read.flags.clone(),
     })
+}
+
+/// Deterministic option validation error thrown by `MergeLaneCmd.report` before merging.
+pub fn validate_error(args: &[&str]) -> Option<&'static str> {
+    let read = read(args, true)?;
+    let [_name, rest @ ..] = read.positionals.as_slice() else { return None };
+    if rest.len() > 1 || (!rest.is_empty() && read.value("--pattern").is_some()) {
+        return None;
+    }
+    let pattern = rest
+        .first()
+        .map(String::as_str)
+        .or_else(|| read.value("--pattern"));
+    read.report_validation_error(pattern)
 }
 
 /// The arguments as entered.
@@ -103,9 +127,40 @@ impl Read {
             || (self.has("--include-deps") && pattern.is_none() && !self.has("--workspace"))
     }
 
+    fn report_validation_error(&self, pattern: Option<&str>) -> Option<&'static str> {
+        if self.has("--ours") || self.has("--theirs") {
+            return Some(
+                r#"the "--ours" and "--theirs" flags are deprecated. use "--auto-merge-resolve" instead. see "bit lane merge --help" for more information"#,
+            );
+        }
+        if self
+            .value("--auto-merge-resolve")
+            .is_some_and(|val| !matches!(val, "ours" | "theirs" | "manual"))
+        {
+            return Some(
+                "--auto-merge-resolve must be one of the following: [ours, theirs, manual]",
+            );
+        }
+        if self.has("--no-auto-snap")
+            && self
+                .value("--message")
+                .is_some_and(|msg| !msg.is_empty())
+        {
+            return Some(r#"unable to use "no-snap" and "message" flags together"#);
+        }
+        if self.has("--include-deps") && pattern.is_none() && !self.has("--workspace") {
+            return Some(
+                r#""--include-deps" flag is relevant only for --workspace and --pattern flags"#,
+            );
+        }
+        self.value("--resolve-unrelated")
+            .is_some_and(|val| !matches!(val, "ours" | "theirs" | "manual"))
+            .then_some("--resolve-unrelated must be one of the following: [ours, theirs, manual]")
+    }
+
     /// One flag; the number of values it consumed.
-    fn flag(&mut self, flag: &str, next: Option<&str>) -> Option<usize> {
-        if BOOLEANS.contains(&flag) {
+    fn flag(&mut self, flag: &str, next: Option<&str>, allow_extra: bool) -> Option<usize> {
+        if is_boolean_flag(flag, allow_extra) {
             if !self.has(flag) {
                 self.flags.push(flag.to_string());
             }
@@ -127,9 +182,9 @@ impl Read {
         Some(1)
     }
 
-    fn inline_flag(&mut self, raw_flag: &str, value: &str) -> Option<()> {
+    fn inline_flag(&mut self, raw_flag: &str, value: &str, allow_extra: bool) -> Option<()> {
         let flag = lane_alias(raw_flag);
-        if BOOLEANS.contains(&flag) {
+        if is_boolean_flag(flag, allow_extra) {
             match value {
                 "true" if !self.has(flag) => self.flags.push(flag.to_string()),
                 "true" => {}
@@ -142,11 +197,15 @@ impl Read {
             return None;
         }
         if flag == "--resolve-unrelated" || VALUED.contains(&flag) {
-            self.flag(flag, Some(value))?;
+            self.flag(flag, Some(value), allow_extra)?;
             return Some(());
         }
         None
     }
+}
+
+fn is_boolean_flag(flag: &str, allow_extra: bool) -> bool {
+    BOOLEANS.contains(&flag) || (allow_extra && EXTRA_BOOLEANS.contains(&flag))
 }
 
 fn lane_alias(arg: &str) -> &str {
@@ -159,21 +218,30 @@ fn lane_alias(arg: &str) -> &str {
 }
 
 /// The boolean flags, the valued flags and the positionals.
-fn read(args: &[&str]) -> Option<Read> {
+fn read(args: &[&str], allow_extra: bool) -> Option<Read> {
     let mut read = Read::default();
     let mut index = 0;
     while index < args.len() {
         let arg = lane_alias(args[index]);
         index += 1;
+        if arg == "--" {
+            read.positionals.extend(
+                args[index..]
+                    .iter()
+                    .copied()
+                    .map(str::to_string),
+            );
+            break;
+        }
         if arg == "--no-color" {
             continue;
         }
         if let Some((flag, value)) = arg.split_once('=') {
-            read.inline_flag(flag, value)?;
+            read.inline_flag(flag, value, allow_extra)?;
             continue;
         }
         if arg.starts_with('-') {
-            index += read.flag(arg, args.get(index).copied())?;
+            index += read.flag(arg, args.get(index).copied(), allow_extra)?;
         } else {
             read.positionals.push(arg.to_string());
         }

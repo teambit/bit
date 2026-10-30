@@ -69,11 +69,10 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside the native lane tooling grammar".into()));
     };
     let Some(options) = options::parse(&grammar) else {
-        return Ok(Outcome::Declined("outside the native lane merge grammar".into()));
+        return fallback_lane_merge_error(args, &grammar);
     };
-    let root = match workspace_command::workspace_or_fail(args, "merge")? {
-        Ok(root) => root,
-        Err(outcome) => return Ok(outcome),
+    let Some(root) = crate::workspace::root(&std::env::current_dir()?) else {
+        return emit_lane_merge_error(args, "unable to merge a lane outside of Bit workspace");
     };
     match super::merge::lifecycle::run(
         &root,
@@ -98,4 +97,23 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
         }
         outcome => Ok(outcome),
     }
+}
+
+fn fallback_lane_merge_error(args: &[OsString], grammar: &[&str]) -> io::Result<Outcome> {
+    let Some(err_msg) = options::validate_error(grammar) else {
+        return Ok(Outcome::Declined("outside the native lane merge grammar".into()));
+    };
+    emit_lane_merge_error(args, err_msg)
+}
+
+fn emit_lane_merge_error(args: &[OsString], err_msg: &'static str) -> io::Result<Outcome> {
+    if std::env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI lane merge validation".into()));
+    }
+    let cwd = std::env::current_dir()?;
+    let err = io::Error::other(err_msg);
+    if let Some(root) = crate::workspace::root(&cwd) {
+        return workspace_command::execute_then(&root, args, "merge", |_| Err(err));
+    }
+    workspace_command::execute_failure_scope(&cwd, args, "merge", false, "", err)
 }

@@ -25,9 +25,22 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
     };
     let Some(options) = options::parse(&argv[1..]) else {
-        return Ok(Outcome::Declined("outside the native checkout grammar".to_string()));
+        return fallback_checkout_error(args, &argv[1..]);
     };
     run_options(args, &argv, &options)
+}
+
+fn fallback_checkout_error(args: &[OsString], raw_args: &[&str]) -> io::Result<Outcome> {
+    let Some(err_msg) = options::validate_error(raw_args) else {
+        return Ok(Outcome::Declined("outside the native checkout grammar".to_string()));
+    };
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI checkout option validation".to_string()));
+    }
+    let Some(root) = workspace::root(&env::current_dir()?) else {
+        return Ok(Outcome::Declined("not inside a workspace".to_string()));
+    };
+    workspace_command::execute_then(&root, args, "checkout", |_| Err(io::Error::other(err_msg)))
 }
 
 fn run_revert(args: &[OsString]) -> io::Result<Outcome> {
@@ -45,7 +58,14 @@ fn run_options(
     argv: &[&str],
     options: &options::Options,
 ) -> io::Result<Outcome> {
-    let Some(root) = workspace::root(&env::current_dir()?) else {
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        if options.revert && env::var_os("CI").is_none_or(|val| val.is_empty()) {
+            return workspace_command::execute_then_scope(&cwd, args, "revert", |output| {
+                output.status("reverting components...");
+                Err(io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR))
+            });
+        }
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
     let command = if options.revert { "revert" } else { "checkout" };

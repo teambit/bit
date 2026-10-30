@@ -23,18 +23,32 @@ struct Options<'a> {
 }
 
 fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
-    let (name, rest) = args.split_first()?;
-    if name.is_empty() || name.starts_with('-') {
-        return None;
-    }
-    let mut options = Options { name, scope: None, alias: None, fork_lane_new_scope: false };
-    let mut rest = rest.iter().copied();
-    while let Some(flag) = rest.next() {
-        if !apply_create_flag(&mut options, flag, &mut rest) {
+    let mut options = Options { name: "", scope: None, alias: None, fork_lane_new_scope: false };
+    let mut rest = args.iter().copied();
+    while let Some(arg) = rest.next() {
+        if arg == "--" {
+            let name = rest.next()?;
+            return (rest.next().is_none() && set_lane_name(&mut options.name, name)).then_some(
+                options,
+            );
+        }
+        if !arg.starts_with('-') {
+            if !set_lane_name(&mut options.name, arg) {
+                return None;
+            }
+        } else if !apply_create_flag(&mut options, arg, &mut rest) {
             return None;
         }
     }
-    Some(options)
+    (!options.name.is_empty()).then_some(options)
+}
+
+fn set_lane_name<'a>(slot: &mut &'a str, name: &'a str) -> bool {
+    if !slot.is_empty() || name.is_empty() {
+        return false;
+    }
+    *slot = name;
+    true
 }
 
 fn apply_create_flag<'a>(

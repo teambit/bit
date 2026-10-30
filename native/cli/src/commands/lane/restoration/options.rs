@@ -18,7 +18,16 @@ impl Options {
             skip_install: false,
             json: false,
         };
-        for value in &args[2..] {
+        let mut iter = args[2..].iter().copied();
+        while let Some(value) = iter.next() {
+            if value == "--" {
+                let id = iter.next()?;
+                if iter.next().is_some() || !options.id.is_empty() || id.is_empty() {
+                    return None;
+                }
+                options.id = id.into();
+                break;
+            }
             options.apply_arg(value)?;
         }
         (!options.id.is_empty()).then_some(options)
@@ -37,6 +46,10 @@ impl Options {
             "--restore-deleted-components=false" if self.revert => self.restore_deleted = false,
             "-j" | "--json" | "--json=true" if self.revert => self.json = true,
             "--json=false" if self.revert => self.json = false,
+            "-xj" | "-jx" if self.revert => {
+                self.skip_install = true;
+                self.json = true;
+            }
             id if !id.starts_with('-') && self.id.is_empty() => self.id = id.into(),
             _ => return None,
         }

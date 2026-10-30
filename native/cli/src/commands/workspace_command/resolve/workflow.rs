@@ -31,18 +31,18 @@ pub fn parse<'a>(args: &[&'a str], kind: Kind) -> Option<(Workflow, Vec<&'a str>
     let mut seen = HashSet::new();
     let mut index = 0;
     while index < args.len() {
-        let flag = if args[index] == "-b" { "--build" } else { args[index] };
+        let raw = args[index];
         index += 1;
-        if tooling_flag(flag, kind) {
-            if !seen.insert(flag) {
-                return None;
-            }
-            index += workflow.flag(flag, args.get(index).copied())?;
-        } else {
-            remaining.push(args[index - 1]);
+        match workflow.consume_arg(raw, args.get(index).copied(), kind, &mut seen)? {
+            Some(consumed) => index += consumed,
+            None => remaining.push(raw),
         }
     }
     Some((workflow, remaining))
+}
+
+fn workflow_alias(raw: &str) -> &str {
+    if raw == "-b" { "--build" } else { raw }
 }
 
 fn tooling_flag(flag: &str, kind: Kind) -> bool {
@@ -80,6 +80,34 @@ impl Workflow {
         Ok(())
     }
 
+    fn consume_arg<'a>(
+        &mut self,
+        raw: &'a str,
+        next: Option<&'a str>,
+        kind: Kind,
+        seen: &mut HashSet<&'a str>,
+    ) -> Option<Option<usize>> {
+        if let Some((raw_name, val)) = raw.split_once('=') {
+            let name = workflow_alias(raw_name);
+            if !tooling_flag(name, kind) {
+                return Some(None);
+            }
+            if !seen.insert(name) {
+                return None;
+            }
+            self.inline_flag(name, val)?;
+            return Some(Some(0));
+        }
+        let flag = workflow_alias(raw);
+        if !tooling_flag(flag, kind) {
+            return Some(None);
+        }
+        if !seen.insert(flag) {
+            return None;
+        }
+        self.flag(flag, next).map(Some)
+    }
+
     fn flag(&mut self, flag: &str, next: Option<&str>) -> Option<usize> {
         match flag {
             "--build" => self.build = true,
@@ -106,6 +134,43 @@ impl Workflow {
             _ => return None,
         }
         Some(0)
+    }
+
+    fn inline_flag(&mut self, flag: &str, val: &str) -> Option<()> {
+        match flag {
+            "--editor" => {
+                if val.starts_with('-') {
+                    return None;
+                }
+                self.editor = (!val.is_empty()).then(|| val.to_owned());
+                return Some(());
+            }
+            "--skip-tasks" => {
+                if val.is_empty() || val.starts_with('-') {
+                    return None;
+                }
+                self.pipeline.skip_tasks = Some(val.to_string());
+                return Some(());
+            }
+            _ => {}
+        }
+        let enabled = match val {
+            "true" => true,
+            "false" => false,
+            _ => return None,
+        };
+        match flag {
+            "--build" => self.build = enabled,
+            "--skip-tests" => self.pipeline.skip_tests = enabled,
+            "--disable-tag-pipeline" | "--disable-snap-pipeline" => {
+                self.pipeline.disable = enabled;
+            }
+            "--ignore-build-errors" => self.pipeline.ignore_errors = enabled,
+            "--fail-fast" => self.pipeline.fail_fast = enabled,
+            "--loose" => self.pipeline.loose = enabled,
+            _ => return None,
+        }
+        Some(())
     }
 
     /// `VersionMaker.build` adapter parameters; all object/version state stays native.

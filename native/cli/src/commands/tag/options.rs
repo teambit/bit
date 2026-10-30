@@ -95,7 +95,10 @@ pub fn invalid_ver(args: &[&str]) -> Option<(Options, String)> {
 /// When `args` fails `validateOptions` in `TagCmd.report`, return `(warn_message, error)`.
 pub fn validate_error(args: &[&str], has_editor: bool) -> Option<(bool, String)> {
     let flags = read(args)?;
-    let warn = flags.string("--message").is_none() && !flags.flag("--persist") && !has_editor;
+    let warn = flags.string("--message").is_none()
+        && !flags.flag("--persist")
+        && flags.string("--persist").is_none()
+        && !has_editor;
     let err = validate_options_error(&flags)?;
     Some((warn, err))
 }
@@ -128,6 +131,18 @@ fn validate_options_error(flags: &Flags) -> Option<String> {
             "you can use either --auto-tag-increment or --skip-auto-tag, but not both".to_owned(),
         );
     }
+    invalid_increment_error(increment, auto_tag)
+        .or_else(|| {
+            flags
+                .string("--persist")
+                .map(|_| {
+                    "unknown value for --persist, use either --persist or --persist=skip-build"
+                        .to_owned()
+                })
+        })
+}
+
+fn invalid_increment_error(increment: Option<&str>, auto_tag: Option<&str>) -> Option<String> {
     if let Some(inc) = increment.filter(|inc| !RELEASE_TYPES.contains(inc)) {
         return Some(format!(
             "invalid increment-level \"{inc}\".\nsemver allows the following options only: major, premajor, minor, preminor, patch, prepatch, prerelease",
@@ -148,6 +163,9 @@ fn read(args: &[&str]) -> Option<Flags> {
     while index < args.len() {
         let raw = args[index];
         index += 1;
+        if raw == "--" {
+            return append_trailing_patterns(&mut flags, &args[index..]).then_some(flags);
+        }
         if raw == "--no-color" {
             continue;
         }
@@ -155,18 +173,7 @@ fn read(args: &[&str]) -> Option<Flags> {
             flags.patterns.push(pattern(raw)?.to_string());
             continue;
         }
-        let (key, value, consume_next) = if let Some((raw_key, inline)) = raw.split_once('=') {
-            let key = alias(raw_key);
-            (key, inline_option_value(raw_key, key, inline)?, false)
-        } else {
-            let key = alias(raw);
-            let next = args
-                .get(index)
-                .copied()
-                .filter(|value| !value.starts_with('-'));
-            let (value, consume) = option_value(key, next)?;
-            (key, value, consume)
-        };
+        let (key, value, consume_next) = read_flag_entry(raw, args.get(index).copied())?;
         if flags.values.contains_key(key) {
             return None;
         }
@@ -176,11 +183,35 @@ fn read(args: &[&str]) -> Option<Flags> {
     Some(flags)
 }
 
+fn append_trailing_patterns(flags: &mut Flags, rest: &[&str]) -> bool {
+    for item in rest {
+        let Some(pat) = pattern(item) else {
+            return false;
+        };
+        flags.patterns.push(pat.to_string());
+    }
+    true
+}
+
+fn read_flag_entry<'a>(raw: &'a str, next: Option<&str>) -> Option<(&'a str, Value, bool)> {
+    if let Some((raw_key, inline)) = raw.split_once('=') {
+        let key = alias(raw_key);
+        return Some((key, inline_option_value(raw_key, key, inline)?, false));
+    }
+    let key = alias(raw);
+    let next = next.filter(|value| !value.starts_with('-'));
+    let (value, consume) = option_value(key, next)?;
+    Some((key, value, consume))
+}
+
 fn inline_option_value(raw_key: &str, key: &str, inline: &str) -> Option<Value> {
     if let Some(val) = inline_bool_value(raw_key, key, inline) {
         return Some(val);
     }
-    if STRINGS.contains(&key) && !inline.is_empty() && !inline.starts_with('-') {
+    if (STRINGS.contains(&key) || key == "--persist")
+        && !inline.is_empty()
+        && !inline.starts_with('-')
+    {
         return Some(json!(inline));
     }
     if key == "--pre-release" && !inline.starts_with('-') {
@@ -190,8 +221,12 @@ fn inline_option_value(raw_key: &str, key: &str, inline: &str) -> Option<Value> 
 }
 
 fn inline_bool_value(raw_key: &str, key: &str, inline: &str) -> Option<Value> {
-    if key == "--persist" && (inline == "skip-build" || inline == "true") {
-        return Some(json!(true));
+    if key == "--persist" {
+        return match inline {
+            "skip-build" | "true" => Some(json!(true)),
+            "false" => Some(json!(false)),
+            _ => None,
+        };
     }
     if BOOLEANS.contains(&key) && raw_key.starts_with("--") {
         return match inline {
@@ -238,7 +273,7 @@ fn pattern(text: &str) -> Option<&str> {
 
 /// `validateOptions`, and the increment and exact version checks.
 fn validate(flags: &Flags) -> Option<Options> {
-    if flags.flag("--soft") && flags.flag("--persist") {
+    if (flags.flag("--soft") && flags.flag("--persist")) || flags.string("--persist").is_some() {
         return None;
     }
     Some(Options {
@@ -294,30 +329,17 @@ fn release(flags: &Flags) -> Option<Release> {
 /// `validateOptions`: the release type, the auto-tag release type and the
 /// pre-release id.
 fn levels(flags: &Flags) -> Option<(String, Option<String>, Option<String>)> {
+    if validate_options_error(flags).is_some() {
+        return None;
+    }
     let increment = flags.string("--increment");
     let auto_tag = flags.string("--auto-tag-increment");
     let pre_release = flags.values.get("--pre-release");
-    let prerelease =
-        |level: Option<&str>| level.is_some_and(|level| PRE_RELEASE_TYPES.contains(&level));
-    if flags.string("--prerelease-id").is_some() && !prerelease(increment) && !prerelease(auto_tag)
-    {
-        return None;
-    }
     let named = ["major", "minor", "patch"]
         .into_iter()
-        .filter(|level| flags.flag(&format!("--{level}")));
-    let named: Vec<&str> = named.collect();
-    let conflicting = named.len() + usize::from(pre_release.is_some()) > 1;
-    let unknown = [increment, auto_tag]
-        .iter()
-        .flatten()
-        .any(|level| !RELEASE_TYPES.contains(level));
-    let both_auto_tag_flags = auto_tag.is_some() && flags.flag("--skip-auto-tag");
-    if conflicting || unknown || both_auto_tag_flags {
-        return None;
-    }
+        .find(|level| flags.flag(&format!("--{level}")));
     let release_type = increment
-        .or_else(|| named.first().copied())
+        .or(named)
         .or_else(|| pre_release.map(|_| "prerelease"))
         .unwrap_or("patch");
     let pre_release_id = flags

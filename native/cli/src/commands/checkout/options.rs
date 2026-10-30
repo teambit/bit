@@ -46,36 +46,91 @@ const BOOLEAN: [&str; 8] = [
 
 /// `args` starts after the command name.
 pub fn parse(args: &[&str]) -> Option<Options> {
+    let (flags, positionals) = read_checkout(args, false)?;
+    build(&flags, &positionals)
+}
+
+/// Deterministic option validation error thrown by `CheckoutCmd.report` before checkout runs.
+pub fn validate_error(args: &[&str]) -> Option<&'static str> {
+    let (flags, positionals) = read_checkout(args, true)?;
+    if positionals.is_empty() || positionals.len() > 2 {
+        return None;
+    }
+    let to = numeric_target::normalize(positionals[0]);
+    if flags.get("--force-ours") == Some(&Value::Bool(true))
+        && flags.get("--force-theirs") == Some(&Value::Bool(true))
+    {
+        return Some("please use either --force-ours or --force-theirs, not both");
+    }
+    if flags
+        .get("--auto-merge-resolve")
+        .and_then(Value::as_str)
+        .is_some_and(|val| !matches!(val, "ours" | "theirs" | "manual"))
+    {
+        return Some("--auto-merge-resolve must be one of the following: [ours, theirs, manual]");
+    }
+    validate_target_error(&flags, &to)
+}
+
+fn validate_target_error(flags: &Map<String, Value>, to: &str) -> Option<&'static str> {
+    if flags.get("--workspace-only") == Some(&Value::Bool(true)) && to != "head" {
+        return Some(
+            r#"--workspace-only is only relevant when running "bit checkout head" on a lane"#,
+        );
+    }
+    if flags.get("--include-new-from-scope") == Some(&Value::Bool(true)) && to != "head" {
+        return Some(
+            r#"--include-new-from-scope is only relevant when running "bit checkout head""#,
+        );
+    }
+    to.strip_prefix("head~")
+        .filter(|after| numeric_target::head_tilde_is_nan(after))
+        .map(|_| r#"the character after "head~" must be a number, got NaN"#)
+}
+
+fn read_checkout<'a>(
+    args: &[&'a str],
+    allow_interactive: bool,
+) -> Option<(Map<String, Value>, Vec<&'a str>)> {
     let mut flags: Map<String, Value> = Map::new();
     let mut positionals: Vec<&str> = Vec::new();
     let mut index = 0;
     while index < args.len() {
-        let arg = alias(args[index]);
+        let raw = args[index];
         index += 1;
-        if arg == "--no-color" {
+        if raw == "--" {
+            positionals.extend_from_slice(&args[index..]);
+            break;
+        }
+        if raw == "--no-color" {
             continue;
         }
-        if !arg.starts_with('-') {
-            positionals.push(arg);
+        if !raw.starts_with('-') {
+            positionals.push(raw);
             continue;
         }
-        index += apply_checkout_flag(&mut flags, arg, args.get(index).copied())?;
+        index += apply_checkout_flag(&mut flags, raw, args.get(index).copied(), allow_interactive)?;
     }
-    build(&flags, &positionals)
+    Some((flags, positionals))
 }
 
 fn apply_checkout_flag(
     flags: &mut Map<String, Value>,
-    arg: &str,
+    raw: &str,
     next: Option<&str>,
+    allow_interactive: bool,
 ) -> Option<usize> {
-    if let Some((flag, val)) = arg.split_once('=') {
-        return apply_checkout_inline(flags, alias(flag), val);
+    if let Some((flag, val)) = raw.split_once('=') {
+        return apply_checkout_inline(flags, alias(flag), val, allow_interactive);
     }
+    if raw.starts_with('-') && !raw.starts_with("--") && raw.len() > 2 {
+        return apply_short_bundle(flags, &raw[1..], allow_interactive);
+    }
+    let arg = alias(raw);
     if flags.contains_key(arg) {
         return None;
     }
-    if BOOLEAN.contains(&arg) {
+    if BOOLEAN.contains(&arg) || (allow_interactive && arg == "--interactive-merge") {
         flags.insert(arg.to_string(), json!(true));
         return Some(0);
     }
@@ -87,11 +142,38 @@ fn apply_checkout_flag(
     None
 }
 
-fn apply_checkout_inline(flags: &mut Map<String, Value>, flag: &str, val: &str) -> Option<usize> {
+fn apply_short_bundle(
+    flags: &mut Map<String, Value>,
+    bundle: &str,
+    allow_interactive: bool,
+) -> Option<usize> {
+    for ch in bundle.chars() {
+        let canonical = match ch {
+            'x' => "--skip-dependency-installation",
+            'a' => "--all",
+            'v' => "--verbose",
+            'e' => "--workspace-only",
+            'i' if allow_interactive => "--interactive-merge",
+            _ => return None,
+        };
+        if flags.contains_key(canonical) {
+            return None;
+        }
+        flags.insert(canonical.to_string(), json!(true));
+    }
+    Some(0)
+}
+
+fn apply_checkout_inline(
+    flags: &mut Map<String, Value>,
+    flag: &str,
+    val: &str,
+    allow_interactive: bool,
+) -> Option<usize> {
     if flags.contains_key(flag) {
         return None;
     }
-    if BOOLEAN.contains(&flag) {
+    if BOOLEAN.contains(&flag) || (allow_interactive && flag == "--interactive-merge") {
         let bool_val = match val {
             "true" => true,
             "false" => false,
@@ -114,6 +196,7 @@ fn alias(arg: &str) -> &str {
         "-a" => "--all",
         "-v" => "--verbose",
         "-e" => "--workspace-only",
+        "-i" => "--interactive-merge",
         _ => arg,
     }
 }
@@ -126,7 +209,7 @@ fn build(flags: &Map<String, Value>, positionals: &[&str]) -> Option<Options> {
         return None;
     }
     let to = numeric_target::normalize(positionals.first()?);
-    if !valid_to(&to) {
+    if !numeric_target::valid_to(&to) {
         return None;
     }
     if (flag("--workspace-only") || flag("--include-new-from-scope")) && to != "head" {
@@ -162,7 +245,7 @@ pub fn parse_revert(args: &[&str]) -> Option<Options> {
     let (positionals, verbose, skip_install) = revert_arguments(args)?;
     let [pattern, to] = positionals.as_slice() else { return None };
     let to = numeric_target::normalize(to);
-    if !valid_pattern(pattern) || !(to == "main" || valid_revert_version(&to)) {
+    if !valid_pattern(pattern) || !(to == "main" || numeric_target::valid_revert_version(&to)) {
         return None;
     }
     Some(Options {
@@ -178,8 +261,15 @@ fn revert_arguments<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, bool, bool)> 
     let mut positionals = Vec::new();
     let mut verbose = false;
     let mut skip_install = false;
-    for arg in args {
-        match *arg {
+    let mut index = 0;
+    while index < args.len() {
+        let arg = args[index];
+        index += 1;
+        match arg {
+            "--" => {
+                positionals.extend_from_slice(&args[index..]);
+                break;
+            }
             "--no-color" => {}
             "-v" | "--verbose" | "--verbose=true" => verbose = true,
             "--verbose=false" => verbose = false,
@@ -196,13 +286,6 @@ fn revert_arguments<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, bool, bool)> 
         }
     }
     Some((positionals, verbose, skip_install))
-}
-
-fn valid_revert_version(to: &str) -> bool {
-    if matches!(to, "head" | "latest" | "reset") || to.starts_with("head~") {
-        return false;
-    }
-    valid_to(to)
 }
 
 /// The merge strategy: `None` when invalid, `Some(None)` when not given.
@@ -222,49 +305,6 @@ fn strategy(flags: &Map<String, Value>) -> Option<Option<&str>> {
 /// Component pattern syntax is evaluated against the authoritative workspace pool.
 fn valid_pattern(pattern: &str) -> bool {
     !pattern.is_empty() && pattern.len() <= 4096 && !pattern.chars().any(char::is_control)
-}
-
-/// `head`, `latest`, `reset`, `main`, `head~N`, a snap hash or a semver tag.
-fn valid_to(to: &str) -> bool {
-    if matches!(to, "head" | "latest" | "reset" | "main") {
-        return true;
-    }
-    if let Some(steps) = to.strip_prefix("head~") {
-        return !steps.is_empty() && steps.bytes().all(|byte| byte.is_ascii_digit());
-    }
-    if (3..=40).contains(&to.len()) && to.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-        return true;
-    }
-    valid_tag(to)
-}
-
-/// `[0-9]+\.[0-9]+\.[0-9]+(?:-[a-zA-Z0-9.-]+)?(?:\+[a-zA-Z0-9.-]+)?`.
-fn valid_tag(to: &str) -> bool {
-    let identifier = |text: &str| {
-        !text.is_empty()
-            && text
-                .chars()
-                .all(|character| character.is_ascii_alphanumeric() || ".-".contains(character))
-    };
-    let (main, build) = match to.split_once('+') {
-        Some((main, build)) => (main, Some(build)),
-        None => (to, None),
-    };
-    if build.is_some_and(|build| !identifier(build)) {
-        return false;
-    }
-    let (core, prerelease) = match main.split_once('-') {
-        Some((core, prerelease)) => (core, Some(prerelease)),
-        None => (main, None),
-    };
-    if prerelease.is_some_and(|prerelease| !identifier(prerelease)) {
-        return false;
-    }
-    let parts: Vec<&str> = core.split('.').collect();
-    parts.len() == 3
-        && parts
-            .iter()
-            .all(|part| !part.is_empty() && part.bytes().all(|b| b.is_ascii_digit()))
 }
 
 impl Options {

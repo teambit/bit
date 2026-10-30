@@ -31,18 +31,20 @@ pub(in crate::commands) fn workflow<'a>(
 ) -> Option<(resolve::workflow::Workflow, Vec<&'a str>)> {
     let count = args
         .iter()
-        .filter(|arg| **arg == "--build")
+        .filter(|arg| matches!(**arg, "--build" | "--build=true" | "--build=false"))
         .count();
     if count > 1 {
         return None;
     }
     let mut workflow = resolve::workflow::Workflow::default();
-    workflow.build = count == 1;
+    workflow.build = args
+        .iter()
+        .any(|arg| matches!(*arg, "--build" | "--build=true"));
     Some((
         workflow,
         args.iter()
             .copied()
-            .filter(|arg| *arg != "--build")
+            .filter(|arg| !matches!(*arg, "--build" | "--build=true" | "--build=false"))
             .collect(),
     ))
 }

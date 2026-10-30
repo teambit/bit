@@ -18,8 +18,14 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     let mut seen: Vec<&str> = Vec::new();
     let mut index = 0;
     while index < args.len() {
-        let flag = canonical_flag(args[index]);
+        let raw = args[index];
         index += 1;
+        if raw == "--" {
+            let [pos] = &args[index..] else { return None };
+            options.positional(pos)?;
+            break;
+        }
+        let flag = canonical_flag(raw);
         if flag == "--no-color" {
             continue;
         }

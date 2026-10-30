@@ -22,10 +22,10 @@ use serde_json::{Value, json};
 use std::{env, ffi::OsString, io, path::Path};
 
 pub(super) fn rename(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
-    let [new_name] = lane_args else {
+    let Some((new_name, lane_name)) = parse_lane_target_args(lane_args) else {
         return Ok(Outcome::Declined("outside the native lane rename grammar".into()));
     };
-    execute(args, Change::Rename(new_name), "rename", |plan, chalk| {
+    execute(args, Change::Rename(new_name), lane_name, "rename", |plan, chalk| {
         format!(
             "the lane {}'s name has been changed to {}.",
             chalk.bold(plan.old_name()),
@@ -35,10 +35,10 @@ pub(super) fn rename(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcom
 }
 
 pub(super) fn change_scope(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
-    let [new_scope] = lane_args else {
+    let Some((new_scope, lane_name)) = parse_lane_target_args(lane_args) else {
         return Ok(Outcome::Declined("outside the native lane change-scope grammar".into()));
     };
-    execute(args, Change::Scope(new_scope), "change-scope", |plan, chalk| {
+    execute(args, Change::Scope(new_scope), lane_name, "change-scope", |plan, chalk| {
         format!(
             "the remote-scope of {} has been changed from {} to {}",
             chalk.bold(plan.old_name()),
@@ -46,6 +46,48 @@ pub(super) fn change_scope(args: &[OsString], lane_args: &[&str]) -> io::Result<
             chalk.bold(new_scope),
         )
     })
+}
+
+fn parse_lane_target_args<'a>(args: &[&'a str]) -> Option<(&'a str, Option<&'a str>)> {
+    let mut target = None;
+    let mut lane_name = None;
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        if arg == "--" {
+            let val = iter.next()?;
+            return (iter.next().is_none() && set_unique(&mut target, val)).then_some((
+                target?, lane_name,
+            ));
+        }
+        apply_lane_target_arg(arg, &mut iter, &mut target, &mut lane_name)?;
+    }
+    Some((target?, lane_name))
+}
+
+fn apply_lane_target_arg<'a>(
+    arg: &'a str,
+    iter: &mut impl Iterator<Item = &'a str>,
+    target: &mut Option<&'a str>,
+    lane_name: &mut Option<&'a str>,
+) -> Option<()> {
+    if arg == "--no-color" {
+        return Some(());
+    }
+    if matches!(arg, "-l" | "--lane-name") {
+        let val = iter.next()?;
+        return (!val.starts_with('-') && set_unique(lane_name, val)).then_some(());
+    }
+    if let Some(val) = arg
+        .strip_prefix("--lane-name=")
+        .or_else(|| arg.strip_prefix("-l="))
+    {
+        return (!val.starts_with('-') && set_unique(lane_name, val)).then_some(());
+    }
+    (!arg.starts_with('-') && set_unique(target, arg)).then_some(())
+}
+
+fn set_unique<'a>(slot: &mut Option<&'a str>, val: &'a str) -> bool {
+    !val.is_empty() && slot.replace(val).is_none()
 }
 
 pub(super) fn remove_readme(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
@@ -133,6 +175,7 @@ fn valid_remove_comp_args(args: &[&str]) -> bool {
 fn execute(
     args: &[OsString],
     change: Change<'_>,
+    lane_name: Option<&str>,
     command: &str,
     report: impl FnOnce(&Plan, Chalk) -> String,
 ) -> io::Result<Outcome> {
@@ -145,6 +188,9 @@ fn execute(
         };
         return outside_workspace_failure(&cwd, args, command, msg);
     };
+    if lane_name.is_some() {
+        return Ok(Outcome::Declined(format!("lane {command}: explicit --lane-name")));
+    }
     let user = workspace_command::User::load(&root)?;
     let plan = match Plan::prepare(&root, change, user.log(), &workspace_command::uuid_v4()?) {
         Ok(plan) => plan,

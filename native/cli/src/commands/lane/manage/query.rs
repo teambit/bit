@@ -79,9 +79,20 @@ fn updates_in_scope(
 fn parse_updates_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>, bool)> {
     let mut lane_name = None;
     let mut json = false;
-    for &arg in lane_args {
+    let mut iter = lane_args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
-            "--undo" | "--no-color" => {}
+            "--" => {
+                match (iter.next(), iter.next()) {
+                    (None, None) => {}
+                    (Some(val), None) if !val.is_empty() && lane_name.is_none() => {
+                        lane_name = Some(val);
+                    }
+                    _ => return None,
+                }
+                break;
+            }
+            "--undo" | "--undo=true" | "--undo=false" | "--no-color" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             val if !val.starts_with('-') && !val.is_empty() && lane_name.is_none() => {
@@ -151,6 +162,7 @@ fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>
     let mut iter = lane_args.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
+            "--" => break,
             "--no-color" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
