@@ -6,7 +6,10 @@ mod tests;
 use super::{
     Command,
     color::Chalk,
+    debug_cat::lookup::resolve_component_entry,
     inventory,
+    lane::scope_root,
+    remote_action::startup,
     workspace_command::{self, results::Report},
 };
 use crate::{native::Outcome, workspace};
@@ -19,8 +22,10 @@ use serde_json::Value;
 use std::{
     env,
     ffi::OsString,
-    fs, io,
+    fs,
+    io::{self, Write},
     path::{Path, PathBuf},
+    process::ExitCode,
 };
 
 pub const COMMAND: Command = Command { name: "refactor", aliases: &[], run };
@@ -51,13 +56,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(action) = parse_options(args) else {
         return Ok(Outcome::Declined("arguments outside the native `refactor` grammar".to_owned()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("refactor requires a workspace".to_owned()));
-    };
     let chalk = Chalk::detect(args);
     match action {
-        Action::Unrecognized(sub) => run_unrecognized(&root, args, &sub, chalk),
+        Action::Unrecognized(sub) => run_unrecognized(args, &sub, chalk),
         Action::DependencyName { old_id, new_id } => {
+            let Some(root) = workspace::root(&env::current_dir()?) else {
+                return Ok(Outcome::Declined("refactor requires a workspace".to_owned()));
+            };
             run_dependency_name(&root, args, &old_id, &new_id)
         }
     }
@@ -69,6 +74,10 @@ fn parse_options(args: &[OsString]) -> Option<Action> {
         .skip(1)
         .map(|arg| arg.to_str())
         .collect::<Option<Vec<_>>>()?;
+    let tokens: Vec<&str> = tokens
+        .into_iter()
+        .filter(|token| *token != "--no-color")
+        .collect();
     if tokens
         .iter()
         .any(|token| token.starts_with('-'))
@@ -89,21 +98,31 @@ fn parse_options(args: &[OsString]) -> Option<Action> {
     }
 }
 
-fn run_unrecognized(
-    root: &Path,
-    args: &[OsString],
-    sub: &str,
-    chalk: Chalk,
-) -> io::Result<Outcome> {
-    if load_workspace(root).is_err() {
-        return Ok(Outcome::Declined("invalid workspace configuration".to_owned()));
-    }
+fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Outcome> {
     let data = chalk.red(&format!(
         r#""{sub}" is not a subcommand of "refactor", please run "bit refactor --help" to list the subcommands"#,
     ));
-    workspace_command::execute_then(root, args, "refactor", |_output| {
-        Ok(Report { data, code: 0, details: None })
-    })
+    let report = Report { data, code: 0, details: None };
+    match scope_root::discover().ok().flatten() {
+        Some(root) if !root.bare => {
+            if load_workspace(&root.path).is_err() {
+                return Ok(Outcome::Declined("invalid workspace configuration".to_owned()));
+            }
+            workspace_command::execute_then(&root.path, args, "refactor", |_output| Ok(report))
+        }
+        Some(root) => {
+            if startup::supported(None, &root.path, &Value::Null, true).ok() != Some(true) {
+                return Ok(Outcome::Declined("bare scope requires unsupported startup".to_owned()));
+            }
+            workspace_command::execute_with_scope(&root.path, args, "refactor", &report)
+        }
+        None => {
+            let mut stdout = io::stdout().lock();
+            writeln!(stdout, "{}", report.data)?;
+            stdout.flush()?;
+            Ok(Outcome::Exit(ExitCode::SUCCESS))
+        }
+    }
 }
 
 fn run_dependency_name(
@@ -192,6 +211,9 @@ fn resolve_package_name(root: &Path, ws: &Workspace, raw_id: &str) -> Result<Str
         return Ok(comp.package_name.clone());
     }
     if exists_in_scope_index(root, raw_id) {
+        if let Some(pkg) = resolve_scope_package_name(root, raw_id) {
+            return Ok(pkg);
+        }
         return Err(Failure::Declined("component exists only in local scope".to_owned()));
     }
     if is_valid_scoped_package_name(raw_id) {
@@ -200,6 +222,49 @@ fn resolve_package_name(root: &Path, ws: &Workspace, raw_id: &str) -> Result<Str
     Err(Failure::User(format!(
         r#"refactoring: the id "{raw_id}" is neither a valid scoped-package-name nor an existing component-id"#,
     )))
+}
+
+fn resolve_scope_package_name(root: &Path, raw_id: &str) -> Option<String> {
+    let scope_dir = workspace::scope_path(root);
+    let (bare, explicit_ver) = raw_id
+        .rsplit_once('@')
+        .map_or((raw_id, None), |(id, ver)| (id, Some(ver)));
+    let (_, _, comp_hash) = resolve_component_entry(&scope_dir, bare)?;
+    let (kind, comp_val) = bit_object_import::read_scope_object(&scope_dir, &comp_hash).ok()??;
+    if kind != "Component" {
+        return None;
+    }
+    let ver_hash = match explicit_ver {
+        Some(ver) if ver != "latest" => comp_val["versions"][ver].as_str().unwrap_or(ver),
+        _ => comp_val["head"].as_str()?,
+    };
+    let (vkind, ver_val) = bit_object_import::read_scope_object(&scope_dir, ver_hash).ok()??;
+    if vkind != "Version" {
+        return None;
+    }
+    extract_version_package_name(&ver_val)
+}
+
+fn extract_version_package_name(ver_val: &Value) -> Option<String> {
+    let exts = ver_val["extensions"].as_array()?;
+    for ext in exts {
+        if ext["name"].as_str() == Some("teambit.dependencies/dependency-resolver")
+            && let Some(pkg) = ext["data"]["packageName"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        {
+            return Some(pkg.to_owned());
+        }
+        if ext["name"].as_str() == Some("teambit.pkg/pkg")
+            && let Some(pkg) = ext["config"]["packageJson"]["name"]
+                .as_str()
+                .or_else(|| ext["data"]["packageJson"]["name"].as_str())
+                .filter(|val| !val.is_empty())
+        {
+            return Some(pkg.to_owned());
+        }
+    }
+    None
 }
 
 fn is_valid_scoped_package_name(name: &str) -> bool {

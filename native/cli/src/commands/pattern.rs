@@ -82,14 +82,12 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
     let mut remote = false;
     for token in tokens {
         match token {
+            "--no-color" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             "-r" | "--remote" | "--remote=true" => remote = true,
             "--remote=false" => remote = false,
-            "-jr" | "-rj" => {
-                json = true;
-                remote = true;
-            }
+            "-jr" | "-rj" => (json, remote) = (true, true),
             flag if flag.starts_with('-') => return None,
             value if pattern.is_none() && !value.is_empty() => pattern = Some(value.to_owned()),
             _ => return None,

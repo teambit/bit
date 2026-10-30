@@ -1,27 +1,55 @@
-use super::{Options, find_cycles, parse_options};
+use super::{Options, find_cycles, has_duplicate_versions, parse_options};
 use crate::commands::graph_cmd::model::CompGraph;
 
 #[test]
-fn parses_insights_list_flags() {
+fn parses_insights_list_and_named_flags() {
     assert_eq!(
         parse_options(&["-l"]),
-        Some(Options { list: true, json: false, circular: false, include_deps: false }),
+        Some(Options { list: true, json: false, include_deps: false, names: Vec::new() }),
     );
     assert_eq!(
         parse_options(&["--list", "--json"]),
-        Some(Options { list: true, json: true, circular: false, include_deps: false }),
+        Some(Options { list: true, json: true, include_deps: false, names: Vec::new() }),
     );
     assert_eq!(parse_options(&[]), None);
     assert_eq!(
         parse_options(&["circular"]),
-        Some(Options { list: false, json: false, circular: true, include_deps: false }),
+        Some(Options {
+            list: false,
+            json: false,
+            include_deps: false,
+            names: vec!["circular".into()],
+        }),
     );
     assert_eq!(parse_options(&["--list", "circular"]), None);
-    assert_eq!(parse_options(&["circular", "--no-color"]), None);
     assert_eq!(
-        parse_options(&["circular", "--json"]),
-        Some(Options { list: false, json: true, circular: true, include_deps: false }),
+        parse_options(&["circular", "--no-color"]),
+        Some(Options {
+            list: false,
+            json: false,
+            include_deps: false,
+            names: vec!["circular".into()],
+        }),
     );
+    assert_eq!(
+        parse_options(&["circular", "duplicate dependencies", "--json"]),
+        Some(Options {
+            list: false,
+            json: true,
+            include_deps: false,
+            names: vec!["circular".into(), "duplicate dependencies".into()],
+        }),
+    );
+}
+
+#[test]
+fn detects_duplicate_version_nodes_in_graph() {
+    let mut graph = CompGraph::default();
+    graph.add_node("scope/a@0.0.1".into());
+    graph.add_node("scope/b@0.0.1".into());
+    assert!(!has_duplicate_versions(&graph));
+    graph.add_node("scope/a@0.0.2".into());
+    assert!(has_duplicate_versions(&graph));
 }
 
 #[test]

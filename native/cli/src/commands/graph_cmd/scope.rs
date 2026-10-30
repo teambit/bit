@@ -21,6 +21,21 @@ pub(super) fn execute_scope_graph(
     render_scope_graph(&graph, options.json, formatter)
 }
 
+pub(crate) fn scope_insight_graph(scope_dir: &Path) -> Result<(CompGraph, Vec<String>), Failure> {
+    let scope_name = validate_bare_scope(scope_dir)?;
+    let local_components = load_local_scope_components(scope_dir, &scope_name)?;
+    let local_ids: Vec<String> = local_components
+        .iter()
+        .map(|(id, _)| id.clone())
+        .collect();
+    let mut graph = CompGraph::default();
+    for (node_id, ver_val) in &local_components {
+        populate_saved_version_graph(scope_dir, node_id, ver_val, &mut graph)?;
+    }
+    graph.sort_deterministic();
+    Ok((graph, local_ids))
+}
+
 fn build_scope_graph(scope_dir: &Path, options: &Options) -> Result<CompGraph, Failure> {
     let scope_name = validate_bare_scope(scope_dir)?;
     let local_components = load_local_scope_components(scope_dir, &scope_name)?;

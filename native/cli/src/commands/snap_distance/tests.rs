@@ -2,15 +2,25 @@ use super::{Options, compute_snap_distance, parse_options};
 use serde_json::json;
 
 #[test]
-fn parses_three_positional_arguments() {
+fn parses_one_two_or_three_positional_arguments() {
     let s1 = "1111111111111111111111111111111111111111";
     let s2 = "2222222222222222222222222222222222222222";
     assert_eq!(
         parse_options(&["comp1", s1, s2]),
-        Some(Options { id: "comp1".into(), source_snap: s1.into(), target_snap: s2.into() }),
+        Some(Options {
+            id: "comp1".into(),
+            source_snap: Some(s1.into()),
+            target_snap: Some(s2.into()),
+        }),
     );
-    assert_eq!(parse_options(&["comp1", s1]), None);
-    assert_eq!(parse_options(&["comp1"]), None);
+    assert_eq!(
+        parse_options(&["comp1", s1]),
+        Some(Options { id: "comp1".into(), source_snap: Some(s1.into()), target_snap: None }),
+    );
+    assert_eq!(
+        parse_options(&["comp1"]),
+        Some(Options { id: "comp1".into(), source_snap: None, target_snap: None }),
+    );
 }
 
 #[test]

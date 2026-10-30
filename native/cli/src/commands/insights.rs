@@ -1,4 +1,4 @@
-//! Native insight listing and `bit insights circular` (`scopes/explorer/insights/insights.cmd.ts`).
+//! Native insight listing and `bit insights [names...]` (`scopes/explorer/insights/insights.cmd.ts`).
 
 pub(super) mod render;
 #[cfg(test)]
@@ -7,15 +7,15 @@ mod tests;
 use super::{
     Command,
     color::Chalk,
-    graph_cmd::{builder::insight_graph, model::CompGraph},
-    lane::scope_root,
+    graph_cmd::{builder::insight_graph, model::CompGraph, scope::scope_insight_graph},
+    lane::scope_root::{self, ScopeRoot},
     scope_set::Failure,
     workspace_command::{self, results::Report},
 };
-use crate::{history::History, native::Outcome, workspace};
-use serde_json::json;
+use crate::{history::History, native::Outcome};
+use serde_json::{Value, json};
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     env,
     ffi::OsString,
     io::{self, Write},
@@ -30,8 +30,14 @@ const CORE_INSIGHTS: [&str; 2] = ["circular", "duplicate dependencies"];
 pub(super) struct Options {
     pub list: bool,
     pub json: bool,
-    pub circular: bool,
     pub include_deps: bool,
+    pub names: Vec<String>,
+}
+
+struct EvaluatedInsight {
+    message: String,
+    rendered_data: String,
+    json_entry: Value,
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -41,16 +47,169 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(opts) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native insights grammar".into()));
     };
-    if opts.circular {
-        return run_circular(args, &opts);
-    }
-    let rendered = serde_json::to_string_pretty(&json!(CORE_INSIGHTS))?;
     let root_opt = scope_root::discover().ok().flatten();
+    if opts.list {
+        let rendered = serde_json::to_string_pretty(&json!(CORE_INSIGHTS))?;
+        return emit_output(root_opt.as_ref(), args, opts.json, rendered);
+    }
+    run_named_insights(root_opt.as_ref(), args, &opts)
+}
+
+pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
+    let mut opts = Options::default();
+    for &arg in args {
+        match arg {
+            "-l" | "--list" | "--list=true" => opts.list = true,
+            "--list=false" | "--no-list" => opts.list = false,
+            "-j" | "--json" | "--json=true" => opts.json = true,
+            "--json=false" | "--no-json" => opts.json = false,
+            "--include-deps" | "--include-deps=true" => opts.include_deps = true,
+            "--include-deps=false" | "--no-include-deps" => opts.include_deps = false,
+            "--no-color" => {}
+            val if !val.starts_with('-') && !val.is_empty() => opts.names.push(val.to_owned()),
+            _ => return None,
+        }
+    }
+    if opts.list && !opts.names.is_empty() {
+        return None;
+    }
+    (opts.list || !opts.names.is_empty()).then_some(opts)
+}
+
+fn run_named_insights(
+    root_opt: Option<&ScopeRoot>,
+    args: &[OsString],
+    opts: &Options,
+) -> io::Result<Outcome> {
+    let needs_graph = opts.names
+        .iter()
+        .any(|name| CORE_INSIGHTS.contains(&name.as_str()));
+    let graph_and_seeders = if needs_graph {
+        let Some(root) = root_opt else {
+            return emit_host_not_found();
+        };
+        let loaded =
+            if root.bare { scope_insight_graph(&root.path) } else { insight_graph(&root.path) };
+        match loaded {
+            Ok(pair) => Some(pair),
+            Err(Failure::Declined(reason) | Failure::User(reason)) => {
+                return Ok(Outcome::Declined(format!("insights: {reason}")));
+            }
+        }
+    } else {
+        None
+    };
+    let chalk = Chalk::detect(args);
+    let Some(results) = evaluate_insights(opts, graph_and_seeders.as_ref(), chalk) else {
+        return Ok(Outcome::Declined("insights duplicate dependencies non-empty".into()));
+    };
     if opts.json {
-        let history = root_opt
-            .as_ref()
-            .filter(|root| !root.bare)
-            .map(|root| History::start(&root.path, args));
+        let arr: Vec<Value> = results
+            .into_iter()
+            .map(|item| item.json_entry)
+            .collect();
+        let data = serde_json::to_string_pretty(&arr)?;
+        return emit_output(root_opt, args, true, data);
+    }
+    let data = results
+        .into_iter()
+        .map(|item| {
+            format!("\n{}\n  {}", chalk.cyan(&chalk.bold(&item.message)), item.rendered_data)
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    emit_output(root_opt, args, false, data)
+}
+
+fn evaluate_insights(
+    opts: &Options,
+    graph_and_seeders: Option<&(CompGraph, Vec<String>)>,
+    chalk: Chalk,
+) -> Option<Vec<EvaluatedInsight>> {
+    let mut results = Vec::new();
+    for name in &opts.names {
+        match name.as_str() {
+            "circular" => {
+                let (graph, seeders) = graph_and_seeders?;
+                results.push(evaluate_circular(graph, seeders, opts.include_deps, chalk));
+            }
+            "duplicate dependencies" => {
+                let (graph, _) = graph_and_seeders?;
+                results.push(evaluate_duplicate_dependencies(graph)?);
+            }
+            _ => {}
+        }
+    }
+    Some(results)
+}
+
+fn evaluate_circular(
+    graph: &CompGraph,
+    seeders: &[String],
+    include_deps: bool,
+    chalk: Chalk,
+) -> EvaluatedInsight {
+    let cycles = find_cycles(graph, seeders, include_deps);
+    let count = cycles.len();
+    let message = format!("Found {count} cycle{}.", if count == 1 { "" } else { "s" });
+    let rendered_data = render::cycles(&cycles, chalk);
+    let json_entry = json!({
+        "metaData": {
+            "name": "circular",
+            "description": "Get all circular dependencies in component graph"
+        },
+        "message": message,
+        "data": cycles,
+    });
+    EvaluatedInsight { message, rendered_data, json_entry }
+}
+
+fn evaluate_duplicate_dependencies(graph: &CompGraph) -> Option<EvaluatedInsight> {
+    if has_duplicate_versions(graph) {
+        return None;
+    }
+    let message = "Found 0 duplicate dependencies.".to_owned();
+    let json_entry = json!({
+        "metaData": {
+            "name": "duplicate dependencies",
+            "description": "Get all duplicate dependencies in component graph"
+        },
+        "data": [],
+        "message": message,
+    });
+    Some(EvaluatedInsight { message, rendered_data: String::new(), json_entry })
+}
+
+fn has_duplicate_versions(graph: &CompGraph) -> bool {
+    let mut seen = HashSet::with_capacity(graph.nodes.len());
+    for node in &graph.nodes {
+        let bare = node.split('@').next().unwrap_or(node);
+        if !seen.insert(bare) {
+            return true;
+        }
+    }
+    false
+}
+
+fn emit_host_not_found() -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI insights error stack".into()));
+    }
+    let mut stdout = io::stdout().lock();
+    writeln!(stdout, "Host was not found")?;
+    stdout.flush()?;
+    Ok(Outcome::Exit(ExitCode::from(1)))
+}
+
+fn emit_output(
+    root_opt: Option<&ScopeRoot>,
+    args: &[OsString],
+    json_out: bool,
+    rendered: String,
+) -> io::Result<Outcome> {
+    if json_out {
+        let history =
+            root_opt.filter(|root| !root.bare).map(|root| History::start(&root.path, args));
         let mut stdout = io::stdout().lock();
         stdout.write_all(rendered.as_bytes())?;
         stdout.flush()?;
@@ -72,53 +231,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Ok(Outcome::Exit(ExitCode::SUCCESS))
         }
     }
-}
-
-pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut opts = Options::default();
-    for &arg in args {
-        match arg {
-            "-l" | "--list" => opts.list = true,
-            "-j" | "--json" => opts.json = true,
-            "circular" if !opts.circular && !opts.list => opts.circular = true,
-            "--include-deps" => opts.include_deps = true,
-            _ => return None,
-        }
-    }
-    (opts.list || opts.circular).then_some(opts)
-}
-
-fn run_circular(args: &[OsString], opts: &Options) -> io::Result<Outcome> {
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("insights circular requires a workspace".into()));
-    };
-    let cycles = match workspace_cycles(&root, opts.include_deps) {
-        Ok(cycles) => cycles,
-        Err(Failure::Declined(reason) | Failure::User(reason)) => {
-            return Ok(Outcome::Declined(format!("insights circular: {reason}")));
-        }
-    };
-    let count = cycles.len();
-    let message = format!("Found {count} cycle{}.", if count == 1 { "" } else { "s" });
-    if !opts.json {
-        let chalk = Chalk::detect(args);
-        let rendered = render::cycles(&cycles, chalk);
-        let data = format!("\n{}\n  {rendered}", chalk.cyan(&chalk.bold(&message)));
-        return workspace_command::execute_then(&root, args, "insights", |_| {
-            Ok(Report { data, code: 0, details: None })
-        });
-    }
-    let data = serde_json::to_string_pretty(&json!([{
-        "metaData": {
-            "name": "circular",
-            "description": "Get all circular dependencies in component graph"
-        },
-        "message": message,
-        "data": cycles,
-    }]))?;
-    workspace_command::execute_json(&root, args, "insights", |_| {
-        Ok(Report { data, code: 0, details: None })
-    })
 }
 
 /// Shared `GraphMain.getGraphIds().findCycles` projection for the two CLI commands.

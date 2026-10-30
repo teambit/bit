@@ -243,7 +243,7 @@ fn match_ws_dep(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<Strin
     None
 }
 
-pub(super) fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
+pub(crate) fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
     if ver == "latest" {
         return comp_val["head"].as_str().map(str::to_owned);
     }

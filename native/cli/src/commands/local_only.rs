@@ -160,17 +160,7 @@ fn prepare_set(
     let matched = selection::resolve_pattern_entries(root, bitmap, pattern, chalk)?;
     let mut staged = Vec::new();
     for entry in &matched {
-        if entry.id.version
-            .as_deref()
-            .is_some_and(|version| !version.is_empty())
-        {
-            let row = find_bitmap_row_ref(&bitmap_val, entry)?;
-            if row["scope"]
-                .as_str()
-                .is_some_and(|scope| !scope.is_empty())
-            {
-                return Err(Failure::Declined("exported versioned component".to_owned()));
-            }
+        if is_entry_staged_for_local_only(root, &bitmap_val, entry)? {
             staged.push(selection::entry_full_id(entry));
         }
     }
@@ -187,6 +177,34 @@ fn prepare_set(
         ids.push(selection::entry_full_id(entry));
     }
     Ok(Prepared::Set { root: root.to_path_buf(), ids, bitmap_before, bitmap_val })
+}
+
+fn is_entry_staged_for_local_only(
+    root: &Path,
+    bitmap_val: &Value,
+    entry: &BitmapEntry,
+) -> Result<bool, Failure> {
+    let Some(version) = entry.id.version
+        .as_deref()
+        .filter(|ver| !ver.is_empty())
+    else {
+        return Ok(false);
+    };
+    let row = find_bitmap_row_ref(bitmap_val, entry)?;
+    let Some(scope) = row["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())
+    else {
+        return Ok(true);
+    };
+    if !bitmap_val["_bit_lane"].is_null() && bitmap_val["_bit_lane"]["id"]["name"] != "main" {
+        return Err(Failure::Declined("exported component on a lane".to_owned()));
+    }
+    if entry.root_dir.is_empty() || !root.join(&entry.root_dir).is_dir() {
+        return Err(Failure::Declined("exported component directory missing".to_owned()));
+    }
+    super::snap_distance::is_component_staged_on_main(root, scope, &entry.id.name, version)
+        .ok_or_else(|| Failure::Declined("exported versioned component".to_owned()))
 }
 
 fn prepare_unset(

@@ -28,7 +28,7 @@ pub(crate) struct CompGraph {
 }
 
 impl CompGraph {
-    pub(super) fn add_node(&mut self, id: String) {
+    pub(crate) fn add_node(&mut self, id: String) {
         if !self.nodes.contains(&id) {
             self.nodes.push(id);
         }

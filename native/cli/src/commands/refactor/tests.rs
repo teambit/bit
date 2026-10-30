@@ -1,4 +1,5 @@
-use super::{Action, parse_options, replace_package_name};
+use super::{Action, extract_version_package_name, parse_options, replace_package_name};
+use serde_json::json;
 use std::ffi::OsString;
 
 fn parse(words: &[&str]) -> Option<Action> {
@@ -12,19 +13,32 @@ fn parse(words: &[&str]) -> Option<Action> {
 #[test]
 fn parses_dependency_name_and_unrecognized_subcommands() {
     assert_eq!(
-        parse(&["refactor", "dependency-name", "@scope/old", "new-comp"]),
+        parse(&["refactor", "dependency-name", "@scope/old", "new-comp", "--no-color"]),
         Some(Action::DependencyName {
             old_id: "@scope/old".to_owned(),
             new_id: "new-comp".to_owned(),
         }),
     );
     assert_eq!(
-        parse(&["refactor", "unknown-sub"]),
+        parse(&["refactor", "unknown-sub", "--no-color"]),
         Some(Action::Unrecognized("unknown-sub".to_owned())),
     );
     assert_eq!(parse(&["refactor"]), None);
     assert_eq!(parse(&["refactor", "--help"]), None);
     assert_eq!(parse(&["refactor", "dependency-name", "only-one"]), None);
+}
+
+#[test]
+fn extracts_package_name_from_version_extensions() {
+    let ver = json!({
+        "extensions": [
+            {
+                "name": "teambit.dependencies/dependency-resolver",
+                "data": { "packageName": "@org/my-scope.comp1" }
+            }
+        ]
+    });
+    assert_eq!(extract_version_package_name(&ver).as_deref(), Some("@org/my-scope.comp1"));
 }
 
 #[test]

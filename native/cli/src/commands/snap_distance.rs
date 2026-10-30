@@ -1,30 +1,28 @@
 //! Native `bit snap-distance <component-id> [source-snap] [target-snap]` (`scopes/component/snapping/snap-distance-cmd.ts`).
 
+mod graph;
 #[cfg(test)]
 mod tests;
 
+use self::graph::{build_parents_map, collect_successors, compute_snap_distance};
 use super::{
     Command,
     debug_cat::{emit_text, lookup::resolve_component_entry, scope_dir_for, sha1_hex},
-    lane::scope_root,
+    graph_cmd::builder::resolve_ver_hash,
+    lane::scope_root::{self, ScopeRoot},
     workspace_command,
 };
 use crate::native::Outcome;
 use serde_json::{Value, json};
-use std::{
-    collections::{HashMap, HashSet, VecDeque},
-    ffi::OsString,
-    io,
-    path::Path,
-};
+use std::{collections::HashSet, env, ffi::OsString, fs, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "snap-distance", aliases: &[], run };
 
 #[derive(Debug, PartialEq, Eq)]
 struct Options {
     id: String,
-    source_snap: String,
-    target_snap: String,
+    source_snap: Option<String>,
+    target_snap: Option<String>,
 }
 
 fn is_hex40(text: &str) -> bool {
@@ -40,17 +38,26 @@ fn parse_options(args: &[&str]) -> Option<Options> {
             _ => return None,
         }
     }
-    let [id, source_snap, target_snap] = positional.as_slice() else {
-        return None;
-    };
-    if id.is_empty() || !is_hex40(source_snap) || !is_hex40(target_snap) {
-        return None;
+    match positional.as_slice() {
+        [id] if !id.is_empty() => {
+            Some(Options { id: (*id).to_owned(), source_snap: None, target_snap: None })
+        }
+        [id, source_snap] if !id.is_empty() && !source_snap.is_empty() => Some(Options {
+            id: (*id).to_owned(),
+            source_snap: Some((*source_snap).to_owned()),
+            target_snap: None,
+        }),
+        [id, source_snap, target_snap]
+            if !id.is_empty() && is_hex40(source_snap) && is_hex40(target_snap) =>
+        {
+            Some(Options {
+                id: (*id).to_owned(),
+                source_snap: Some((*source_snap).to_owned()),
+                target_snap: Some((*target_snap).to_owned()),
+            })
+        }
+        _ => None,
     }
-    Some(Options {
-        id: (*id).to_owned(),
-        source_snap: (*source_snap).to_owned(),
-        target_snap: (*target_snap).to_owned(),
-    })
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -63,34 +70,200 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Ok(Some(root)) = scope_root::discover() else {
         return Ok(Outcome::Declined("snap-distance requires a scope".into()));
     };
-    let scope_dir = scope_dir_for(&root);
-    let (bare_id, _) = opts.id
-        .rsplit_once('@')
-        .unwrap_or((&opts.id, ""));
-    let Some((Some(scope), name, _)) = resolve_component_entry(&scope_dir, bare_id) else {
+    if opts.source_snap.is_some() && opts.target_snap.is_none() {
+        let scope_dir = scope_dir_for(&root);
+        let bare = opts.id.rsplit_once('@').map_or(opts.id.as_str(), |(id, _)| id);
+        if resolve_component_entry(&scope_dir, bare).is_some_and(|(sc, _, _)| sc.is_some()) {
+            return emit_missing_target_error(&root, args);
+        }
         return Ok(Outcome::Declined("snap-distance component lookup delegated".into()));
-    };
-    let vh_hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
-    let Some(vh_val) = load_version_history_with_local_versions(
-        &scope_dir,
-        &vh_hash,
-        &opts.source_snap,
-        &opts.target_snap,
-    ) else {
-        return Ok(Outcome::Declined("snap-distance VersionHistory missing".into()));
-    };
-    let Some(result) = compute_snap_distance(&vh_val, &opts.source_snap, &opts.target_snap) else {
+    }
+    let Some(result) = evaluate_snap_distance(&root, &opts) else {
         return Ok(Outcome::Declined("snap-distance delegated".into()));
     };
     let data = serde_json::to_string_pretty(&result)?;
     emit_text(&root, args, "snap-distance", true, data)
 }
 
+fn evaluate_snap_distance(root: &ScopeRoot, opts: &Options) -> Option<Value> {
+    let scope_dir = scope_dir_for(root);
+    let bare_id = opts.id.rsplit_once('@').map_or(opts.id.as_str(), |(id, _)| id);
+    let (Some(scope), name, comp_hash) = resolve_component_entry(&scope_dir, bare_id)? else {
+        return None;
+    };
+    let vh_hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
+    match (&opts.source_snap, &opts.target_snap) {
+        (Some(source), Some(target)) => {
+            let vh_val = load_version_history_with_local_versions(
+                &scope_dir,
+                &vh_hash,
+                &[source.as_str(), target.as_str()],
+            )?;
+            compute_snap_distance(&vh_val, source, target)
+        }
+        (None, None) => {
+            compute_local_remote_distance(root, &scope_dir, &scope, &name, &comp_hash, &vh_hash)
+        }
+        _ => None,
+    }
+}
+
+fn emit_missing_target_error(root: &ScopeRoot, args: &[OsString]) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI snap-distance error stack".into()));
+    }
+    let err = io::Error::other("either provide both source and target snaps or none");
+    if root.bare {
+        workspace_command::execute_failure_scope(&root.path, args, "snap-distance", true, "", err)
+    } else {
+        workspace_command::execute_then(&root.path, args, "snap-distance", |_| Err(err))
+    }
+}
+
+fn compute_local_remote_distance(
+    root: &ScopeRoot,
+    scope_dir: &Path,
+    scope: &str,
+    name: &str,
+    comp_hash: &str,
+    vh_hash: &str,
+) -> Option<Value> {
+    let ws_ver = if root.bare {
+        None
+    } else {
+        let bytes = fs::read(root.path.join(".bitmap")).ok()?;
+        let bitmap = bit_object_import::parse_jsonc(&bytes).ok()?;
+        if !bitmap["_bit_lane"].is_null() && bitmap["_bit_lane"]["id"]["name"] != "main" {
+            return None;
+        }
+        find_bitmap_version(&bitmap, scope, name)
+    };
+    let (kind, model) = bit_object_import::read_scope_object(scope_dir, comp_hash).ok()??;
+    if kind != "Component" {
+        return None;
+    }
+    let local_head = ws_ver
+        .as_deref()
+        .and_then(|ver| resolve_ver_hash(&model, ver))
+        .or_else(|| model["head"].as_str().map(str::to_owned));
+    let remote_head = read_remote_main_head(scope_dir, scope, name)?;
+    distance_from_heads(scope_dir, vh_hash, local_head.as_deref(), remote_head.as_deref())
+}
+
+pub(super) fn is_component_staged_on_main(
+    root: &Path,
+    scope: &str,
+    name: &str,
+    ws_version: &str,
+) -> Option<bool> {
+    let scope_dir = bit_object_import::scope_path(root);
+    let (_, _, comp_hash) = resolve_component_entry(&scope_dir, &format!("{scope}/{name}"))?;
+    let (kind, model) = bit_object_import::read_scope_object(&scope_dir, &comp_hash).ok()??;
+    if kind != "Component" {
+        return None;
+    }
+    let local_head = resolve_ver_hash(&model, ws_version)?;
+    let (v_kind, _) = bit_object_import::read_scope_object(&scope_dir, &local_head).ok()??;
+    if v_kind != "Version" {
+        return None;
+    }
+    let remote_head = read_remote_main_head(&scope_dir, scope, name)?;
+    let vh_hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
+    let dist =
+        distance_from_heads(&scope_dir, &vh_hash, Some(&local_head), remote_head.as_deref())?;
+    Some(!dist["snapsOnSourceOnly"].as_array()?.is_empty())
+}
+
+fn distance_from_heads(
+    scope_dir: &Path,
+    vh_hash: &str,
+    local_head: Option<&str>,
+    remote_head: Option<&str>,
+) -> Option<Value> {
+    match (local_head, remote_head) {
+        (None, None) => Some(json!({ "snapsOnSourceOnly": [], "snapsOnTargetOnly": [] })),
+        (Some(lh), Some(rh)) if lh == rh => {
+            Some(json!({ "snapsOnSourceOnly": [], "snapsOnTargetOnly": [] }))
+        }
+        (Some(lh), Some(rh)) => {
+            let vh = load_version_history_with_local_versions(scope_dir, vh_hash, &[lh, rh])?;
+            compute_snap_distance(&vh, lh, rh)
+        }
+        (Some(lh), None) => {
+            let snaps = collect_head_hashes(scope_dir, vh_hash, lh)?;
+            Some(json!({ "snapsOnSourceOnly": snaps, "snapsOnTargetOnly": [] }))
+        }
+        (None, Some(rh)) => {
+            let snaps = collect_head_hashes(scope_dir, vh_hash, rh)?;
+            Some(json!({ "snapsOnSourceOnly": [], "snapsOnTargetOnly": snaps }))
+        }
+    }
+}
+
+fn collect_head_hashes(scope_dir: &Path, vh_hash: &str, head: &str) -> Option<Vec<Value>> {
+    let vh = load_version_history_with_local_versions(scope_dir, vh_hash, &[head])?;
+    let parents_map = build_parents_map(&vh)?;
+    let snaps = collect_successors(&parents_map, head)?;
+    Some(
+        snaps
+            .into_iter()
+            .map(|snap| json!({ "hash": snap }))
+            .collect(),
+    )
+}
+
+fn find_bitmap_version(bitmap: &Value, scope: &str, name: &str) -> Option<String> {
+    let full = format!("{scope}/{name}");
+    for (key, row) in bitmap.as_object()? {
+        if key == "$schema-version" || key == "_bit_lane" || !row.is_object() {
+            continue;
+        }
+        let row_name = row["name"].as_str().unwrap_or(key);
+        let row_scope = row["scope"]
+            .as_str()
+            .filter(|val| !val.is_empty())
+            .or_else(|| row["defaultScope"].as_str())
+            .unwrap_or_default();
+        if row_name == name && (row_scope.is_empty() || row_scope == scope || key == &full) {
+            return row["version"]
+                .as_str()
+                .filter(|ver| !ver.is_empty())
+                .map(str::to_owned);
+        }
+    }
+    None
+}
+
+fn read_remote_main_head(scope_dir: &Path, scope: &str, name: &str) -> Option<Option<String>> {
+    let path = scope_dir
+        .join("refs")
+        .join("remote")
+        .join(scope)
+        .join("main");
+    let bytes = match fs::read(path) {
+        Ok(bytes) => bytes,
+        Err(err) if err.kind() == io::ErrorKind::NotFound => return Some(None),
+        Err(_) => return None,
+    };
+    let entries: Value = serde_json::from_slice(&bytes).ok()?;
+    for item in entries.as_array()? {
+        if item["id"]["scope"].as_str() == Some(scope) && item["id"]["name"].as_str() == Some(name)
+        {
+            return Some(
+                item["head"]
+                    .as_str()
+                    .filter(|head| !head.is_empty())
+                    .map(str::to_owned),
+            );
+        }
+    }
+    Some(None)
+}
+
 fn load_version_history_with_local_versions(
     scope_dir: &Path,
     vh_hash: &str,
-    source_snap: &str,
-    target_snap: &str,
+    heads: &[&str],
 ) -> Option<Value> {
     let mut versions = match bit_object_import::read_scope_object(scope_dir, vh_hash) {
         Ok(Some((kind, val))) if kind == "VersionHistory" => val["versions"].as_array()?.clone(),
@@ -101,7 +274,10 @@ fn load_version_history_with_local_versions(
         .iter()
         .filter_map(|ver| ver["hash"].as_str().map(str::to_owned))
         .collect();
-    let mut stack = vec![source_snap.to_owned(), target_snap.to_owned()];
+    let mut stack: Vec<String> = heads
+        .iter()
+        .map(|&h| h.to_owned())
+        .collect();
     while let Some(hash) = stack.pop() {
         if known.contains(&hash) {
             continue;
@@ -120,147 +296,14 @@ fn load_version_history_with_local_versions(
 
 fn read_version_parents(scope_dir: &Path, hash: &str) -> Option<Vec<String>> {
     let (kind, ver) = bit_object_import::read_scope_object(scope_dir, hash).ok()??;
-    if kind != "Version" {
-        return None;
-    }
-    Some(
+    (kind == "Version").then(|| {
         ver["parents"]
             .as_array()
             .map(|arr| {
                 arr.iter()
                     .filter_map(|parent| parent.as_str().map(str::to_owned))
-                    .collect::<Vec<_>>()
+                    .collect()
             })
-            .unwrap_or_default(),
-    )
-}
-
-fn compute_snap_distance(vh_val: &Value, source: &str, target: &str) -> Option<Value> {
-    let parents_map = build_parents_map(vh_val)?;
-    if !parents_map.contains_key(source) || !parents_map.contains_key(target) {
-        return None;
-    }
-    if source == target {
-        return Some(json!({
-            "snapsOnSourceOnly": [],
-            "snapsOnTargetOnly": [],
-        }));
-    }
-    let source_arr = collect_successors(&parents_map, source)?;
-    let target_arr = collect_successors(&parents_map, target)?;
-    let target_set: HashSet<&str> = target_arr.iter().copied().collect();
-    let source_set: HashSet<&str> = source_arr.iter().copied().collect();
-    let common_snaps: Vec<&str> = source_arr
-        .iter()
-        .copied()
-        .filter(|snap| target_set.contains(snap))
-        .collect();
-    let closest_common = find_closest_common(&parents_map, source, target, &common_snaps)?;
-    let on_source_only = source_arr
-        .into_iter()
-        .filter(|snap| !target_set.contains(snap))
-        .map(|snap| json!({"hash": snap}))
-        .collect::<Vec<_>>();
-    let on_target_only = target_arr
-        .into_iter()
-        .filter(|snap| !source_set.contains(snap))
-        .map(|snap| json!({"hash": snap}))
-        .collect::<Vec<_>>();
-    Some(json!({
-        "snapsOnSourceOnly": on_source_only,
-        "snapsOnTargetOnly": on_target_only,
-        "commonSnapBeforeDiverge": { "hash": closest_common },
-    }))
-}
-
-fn build_parents_map(vh_val: &Value) -> Option<HashMap<&str, Vec<&str>>> {
-    let versions = vh_val["versions"].as_array()?;
-    let mut parents_map = HashMap::with_capacity(versions.len());
-    for entry in versions {
-        let hash = entry["hash"].as_str()?;
-        let parents = entry["parents"]
-            .as_array()?
-            .iter()
-            .map(Value::as_str)
-            .collect::<Option<Vec<_>>>()?;
-        parents_map.insert(hash, parents);
-    }
-    Some(parents_map)
-}
-
-fn find_closest_common<'a>(
-    parents_map: &HashMap<&'a str, Vec<&'a str>>,
-    source: &'a str,
-    target: &'a str,
-    common_snaps: &[&'a str],
-) -> Option<&'a str> {
-    if let [single] = common_snaps {
-        return Some(*single);
-    }
-    if common_snaps.is_empty() {
-        return None;
-    }
-    let common_set: HashSet<&str> = common_snaps.iter().copied().collect();
-    let closest_source = bfs_first(parents_map, source, &common_set)?;
-    let closest_target = bfs_first(parents_map, target, &common_set)?;
-    if closest_source == closest_target {
-        return Some(closest_source);
-    }
-    let source_succ = collect_successors(parents_map, closest_source)?;
-    Some(if source_succ.contains(&closest_target) { closest_source } else { closest_target })
-}
-
-fn collect_successors<'a>(
-    parents_map: &HashMap<&'a str, Vec<&'a str>>,
-    start: &'a str,
-) -> Option<Vec<&'a str>> {
-    let mut visited = HashSet::new();
-    let mut result = Vec::new();
-    let mut stack = vec![start];
-    while let Some(curr) = stack.pop() {
-        if !visited.insert(curr) {
-            continue;
-        }
-        result.push(curr);
-        push_unvisited_parents(parents_map, curr, &visited, &mut stack)?;
-    }
-    Some(result)
-}
-
-fn push_unvisited_parents<'a>(
-    parents_map: &HashMap<&'a str, Vec<&'a str>>,
-    curr: &'a str,
-    visited: &HashSet<&'a str>,
-    stack: &mut Vec<&'a str>,
-) -> Option<()> {
-    for &parent in parents_map.get(curr)?.iter().rev() {
-        if !parents_map.contains_key(parent) {
-            return None;
-        }
-        if !visited.contains(parent) {
-            stack.push(parent);
-        }
-    }
-    Some(())
-}
-
-fn bfs_first<'a>(
-    parents_map: &HashMap<&'a str, Vec<&'a str>>,
-    start: &'a str,
-    targets: &HashSet<&'a str>,
-) -> Option<&'a str> {
-    let mut visited = HashSet::new();
-    let mut queue = VecDeque::from([start]);
-    while let Some(curr) = queue.pop_front() {
-        if !visited.insert(curr) {
-            continue;
-        }
-        if targets.contains(curr) {
-            return Some(curr);
-        }
-        for &parent in parents_map.get(curr)? {
-            queue.push_back(parent);
-        }
-    }
-    None
+            .unwrap_or_default()
+    })
 }

@@ -2,7 +2,7 @@
 
 pub(super) mod builder;
 pub(super) mod model;
-mod scope;
+pub(super) mod scope;
 #[cfg(test)]
 mod tests;
 

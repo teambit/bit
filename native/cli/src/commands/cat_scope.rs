@@ -1,5 +1,6 @@
 //! Native `bit cat-scope [scopePath] [-f|--full] [-j|--json] [-e|--json-extra]`.
 
+mod json;
 #[cfg(test)]
 mod tests;
 
@@ -11,7 +12,7 @@ use super::{
     workspace_command,
 };
 use crate::{history::History, native::Outcome, workspace};
-use serde_json::{Map, Value, json};
+use serde_json::{Map, Value};
 use std::{
     env,
     ffi::OsString,
@@ -52,7 +53,7 @@ fn parse_options(args: &[&str]) -> Option<Options> {
             _ => return None,
         }
     }
-    (!opts.full).then_some(opts)
+    Some(opts)
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -80,11 +81,19 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if opts.json {
         return emit_json_entries(&current_root, args, entries);
     }
-    let rows = entries
-        .into_iter()
-        .map(|entry| vec![entry.id, format!("obj: {}", entry.hash), entry.kind.to_owned()])
-        .collect::<Vec<_>>();
-    let rendered = table::render(&["id", "Object", "Type"], &rows, table::colors(args));
+    let rendered = if opts.full {
+        entries
+            .into_iter()
+            .map(|entry| format!("> {}\n\n{}\n", entry.hash, entry.id))
+            .collect::<Vec<_>>()
+            .join("\n")
+    } else {
+        let rows = entries
+            .into_iter()
+            .map(|entry| vec![entry.id, format!("obj: {}", entry.hash), entry.kind.to_owned()])
+            .collect::<Vec<_>>();
+        table::render(&["id", "Object", "Type"], &rows, table::colors(args))
+    };
     emit_text(&current_root, args, "cat-scope", false, rendered)
 }
 
@@ -173,11 +182,21 @@ fn read_index_entry(scope_dir: &Path, hash: &str, opts: &Options) -> Option<Opti
             let raw: Value = serde_json::from_slice(&body).ok()?;
             Some(Some(build_symlink_entry(&raw, opts)?))
         }
-        "Lane" if opts.json => None,
         "Lane" => {
             let raw: Value = serde_json::from_slice(&body).ok()?;
-            Some(Some(build_lane_entry(&raw, hash)?))
+            Some(Some(build_lane_entry(&raw, hash, opts)?))
         }
+        "ScopeMeta" if opts.full => {
+            let raw: Value = serde_json::from_slice(&body).ok()?;
+            Some(Some(build_scope_meta_entry(&raw, hash, opts)?))
+        }
+        "Version" if opts.full && !opts.json => Some(Some(ScopeEntry {
+            id: hash.to_owned(),
+            hash: hash.to_owned(),
+            kind: "Version",
+            json_obj: None,
+        })),
+        "Version" if opts.full && opts.json => None,
         _ => Some(None),
     }
 }
@@ -190,7 +209,7 @@ fn build_component_entry(raw: &Value, opts: &Options) -> Option<ScopeEntry> {
     let id = format!("{scope}/{name}");
     let hash = sha1_hex(&id);
     let json_obj = if opts.json {
-        Some(build_component_json_obj(raw, scope, name, &hash, opts.json_extra)?)
+        Some(json::build_component_json_obj(raw, scope, name, &hash, opts.json_extra)?)
     } else {
         None
     };
@@ -210,89 +229,6 @@ fn extract_boxed_name(raw: &Value) -> Option<String> {
             None => base_name.to_owned(),
         },
     )
-}
-
-fn build_component_json_obj(
-    raw: &Value,
-    scope: &str,
-    name: String,
-    hash: &str,
-    json_extra: bool,
-) -> Option<Value> {
-    let mut map = Map::new();
-    map.insert("validateBeforePersist".into(), Value::Bool(true));
-    map.insert("laneDataIsPopulated".into(), Value::Bool(false));
-    map.insert("scope".into(), Value::String(scope.to_owned()));
-    map.insert("name".into(), Value::String(name));
-    map.insert("versions".into(), map_ref_dict(raw.get("versions"))?);
-    map.insert("orphanedVersions".into(), map_ref_dict(raw.get("orphanedVersions"))?);
-    let lang = raw["lang"].as_str().unwrap_or("javascript");
-    map.insert("lang".into(), Value::String(lang.to_owned()));
-    map.insert("deprecated".into(), Value::Bool(raw["deprecated"].as_bool().unwrap_or(false)));
-    let binding_prefix = raw["bindingPrefix"]
-        .as_str()
-        .map_or_else(|| format!("@{}", scope.split('.').next().unwrap_or(scope)), str::to_owned);
-    map.insert("bindingPrefix".into(), Value::String(binding_prefix));
-    map.insert(
-        "state".into(),
-        raw.get("state")
-            .cloned()
-            .unwrap_or_else(|| json!({})),
-    );
-    map.insert(
-        "scopesList".into(),
-        raw.get("remotes")
-            .cloned()
-            .unwrap_or_else(|| json!([])),
-    );
-    if let Some(head) = raw["head"].as_str() {
-        map.insert("head".into(), json!({"hash": head}));
-    }
-    let schema = raw["schema"]
-        .as_str()
-        .unwrap_or_else(|| if raw["head"].is_string() { "1.0.0" } else { "0.0.0" });
-    map.insert("schema".into(), Value::String(schema.to_owned()));
-    map.insert("detachedHeads".into(), build_detached_heads(raw.get("detachedHeads"))?);
-    if json_extra {
-        map.insert("hash".into(), Value::String(hash.to_owned()));
-        map.insert("type".into(), Value::String("ModelComponent".into()));
-    }
-    Some(Value::Object(map))
-}
-
-fn map_ref_dict(val: Option<&Value>) -> Option<Value> {
-    let mut out = Map::new();
-    let Some(obj) = val.and_then(Value::as_object) else {
-        return Some(Value::Object(out));
-    };
-    for (key, hash_val) in obj {
-        out.insert(key.clone(), json!({"hash": hash_val.as_str()?}));
-    }
-    Some(Value::Object(out))
-}
-
-fn build_detached_heads(val: Option<&Value>) -> Option<Value> {
-    let mut map = Map::new();
-    let heads = match val.and_then(|inner| inner["heads"].as_array()) {
-        Some(arr) => arr
-            .iter()
-            .map(|item| Some(json!({"hash": item.as_str()?})))
-            .collect::<Option<Vec<_>>>()?,
-        None => Vec::new(),
-    };
-    let deleted = match val.and_then(|inner| inner["deleted"].as_array()) {
-        Some(arr) => arr
-            .iter()
-            .map(|item| Some(json!({"hash": item.as_str()?})))
-            .collect::<Option<Vec<_>>>()?,
-        None => Vec::new(),
-    };
-    map.insert("heads".into(), Value::Array(heads));
-    if let Some(curr) = val.and_then(|inner| inner["current"].as_str()) {
-        map.insert("current".into(), json!({"hash": curr}));
-    }
-    map.insert("deleted".into(), Value::Array(deleted));
-    Some(Value::Object(map))
 }
 
 fn build_symlink_entry(raw: &Value, opts: &Options) -> Option<ScopeEntry> {
@@ -317,7 +253,7 @@ fn build_symlink_entry(raw: &Value, opts: &Options) -> Option<ScopeEntry> {
     Some(ScopeEntry { id, hash, kind: "Symlink", json_obj })
 }
 
-fn build_lane_entry(raw: &Value, fallback_hash: &str) -> Option<ScopeEntry> {
+fn build_lane_entry(raw: &Value, fallback_hash: &str, opts: &Options) -> Option<ScopeEntry> {
     let name = raw["name"]
         .as_str()
         .filter(|text| !text.is_empty())?;
@@ -329,5 +265,34 @@ fn build_lane_entry(raw: &Value, fallback_hash: &str) -> Option<ScopeEntry> {
         .as_str()
         .unwrap_or(fallback_hash)
         .to_owned();
-    Some(ScopeEntry { id, hash, kind: "Lane", json_obj: None })
+    let json_obj = if opts.json {
+        Some(json::build_lane_json_obj(raw, scope, name, &hash, opts.json_extra)?)
+    } else {
+        None
+    };
+    Some(ScopeEntry { id, hash, kind: "Lane", json_obj })
+}
+
+fn build_scope_meta_entry(raw: &Value, hash: &str, opts: &Options) -> Option<ScopeEntry> {
+    let name = raw["name"]
+        .as_str()
+        .filter(|text| !text.is_empty())?
+        .to_owned();
+    let json_obj = opts.json.then(|| {
+        let mut map = Map::new();
+        map.insert("validateBeforePersist".into(), Value::Bool(true));
+        if let Some(lic) = raw
+            .get("license")
+            .filter(|val| !val.is_null())
+        {
+            map.insert("license".into(), lic.clone());
+        }
+        map.insert("name".into(), Value::String(name.clone()));
+        if opts.json_extra {
+            map.insert("hash".into(), Value::String(hash.to_owned()));
+            map.insert("type".into(), Value::String("ScopeMeta".into()));
+        }
+        Value::Object(map)
+    });
+    Some(ScopeEntry { id: name, hash: hash.to_owned(), kind: "ScopeMeta", json_obj })
 }

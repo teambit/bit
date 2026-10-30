@@ -1,5 +1,9 @@
 //! Native `bit eject <component-pattern>` (`scopes/workspace/eject/eject-cmd.ts`).
 
+pub(super) mod lane;
+
+pub(super) use self::lane::eject_from_lane;
+
 #[cfg(test)]
 mod tests;
 
@@ -7,6 +11,7 @@ use super::{
     Command,
     aspect::write_bitmap_if_changed,
     color::Chalk,
+    snap_distance::is_component_staged_on_main,
     workspace_command::{self, results::Report},
 };
 use crate::{native::Outcome, workspace};
@@ -99,8 +104,11 @@ pub(super) fn validate_workspace(root: &Path, pattern: &str) -> io::Result<Optio
     Ok(None)
 }
 
+#[derive(Default)]
 struct EjectSummary {
     ejected: Vec<String>,
+    modified: Vec<String>,
+    staged: Vec<String>,
     not_exported: Vec<String>,
     self_hosted: Vec<String>,
 }
@@ -118,8 +126,7 @@ fn execute_eject(
         .and_then(|bytes| parse_jsonc(&bytes).ok())
         .unwrap_or_else(|| json!({}));
     let remotes = scope_json["remotes"].as_object();
-    let mut summary =
-        EjectSummary { ejected: Vec::new(), not_exported: Vec::new(), self_hosted: Vec::new() };
+    let mut summary = EjectSummary::default();
     for id in ids {
         eject_one_component(root, options, &mut bitmap, remotes, id, &mut summary)?;
     }
@@ -127,7 +134,7 @@ fn execute_eject(
         write_bitmap_if_changed(root, &bitmap_before, &bitmap, true, "eject")?;
         let _ = fs::remove_dir_all(deps_dir(root));
     }
-    Ok(format_eject_template(&summary.ejected, &summary.not_exported, &summary.self_hosted, chalk))
+    Ok(format_eject_template(&summary, chalk))
 }
 
 fn eject_one_component(
@@ -142,8 +149,6 @@ fn eject_one_component(
     let name = row["name"].as_str().unwrap_or(&key);
     let scope = row["scope"].as_str().unwrap_or_default();
     let version = row["version"].as_str().unwrap_or_default();
-    let root_dir = row["rootDir"].as_str().unwrap_or_default();
-    let main_file = row["mainFile"].as_str().unwrap_or("index.js");
     if scope.is_empty() || version.is_empty() {
         summary.not_exported.push(id.to_owned());
         return Ok(());
@@ -152,6 +157,26 @@ fn eject_one_component(
         summary.self_hosted.push(id.to_owned());
         return Ok(());
     }
+    if !options.force && check_modified_or_staged(root, &row, scope, name, version, id, summary) {
+        return Ok(());
+    }
+    eject_hub_package_and_untrack(root, options, bitmap, &key, &row, scope, name)?;
+    summary.ejected.push(id.to_owned());
+    Ok(())
+}
+
+fn eject_hub_package_and_untrack(
+    root: &Path,
+    options: &Options,
+    bitmap: &mut Value,
+    key: &str,
+    row: &Value,
+    scope: &str,
+    name: &str,
+) -> io::Result<()> {
+    let version = row["version"].as_str().unwrap_or_default();
+    let root_dir = row["rootDir"].as_str().unwrap_or_default();
+    let main_file = row["mainFile"].as_str().unwrap_or("index.js");
     let pkg_name = pkg_name_for(scope, name);
     remove_nm_pkg(root, &pkg_name);
     if !options.skip_dependency_installation && root_dir != "." {
@@ -159,108 +184,32 @@ fn eject_one_component(
         materialize_ejected_package(root, &pkg_name, scope, name, version, main_file, root_dir)?;
     }
     if let Some(obj) = bitmap.as_object_mut() {
-        obj.remove(&key);
+        obj.remove(key);
     }
     if !options.keep_files && !root_dir.is_empty() && root_dir != "." {
         let _ = fs::remove_dir_all(root.join(root_dir));
     }
-    summary.ejected.push(id.to_owned());
     Ok(())
 }
 
-pub(super) fn eject_from_lane(
+fn check_modified_or_staged(
     root: &Path,
-    args: &[OsString],
-    ids: &[String],
-    models: &[Value],
-) -> io::Result<Outcome> {
-    let chalk = Chalk::detect(args);
-    workspace_command::execute_then(root, args, "eject", |_| {
-        let bitmap_before = fs::read(root.join(".bitmap"))?;
-        let mut bitmap = parse_jsonc(&bitmap_before)?;
-        let mut ejected = Vec::new();
-        for id in ids {
-            let main_version = resolve_main_version(models, id)?;
-            if eject_one_lane_component(root, &mut bitmap, id, &main_version)? {
-                ejected.push(id.clone());
-            }
-        }
-        write_bitmap_if_changed(root, &bitmap_before, &bitmap, !ejected.is_empty(), "eject")?;
-        let _ = fs::remove_dir_all(deps_dir(root));
-        let title = chalk.green("successfully ejected the following components");
-        let body = ejected.join("\n");
-        Ok(Report { data: format!("{title}\n{body}"), code: 0, details: None })
-    })
-}
-
-fn resolve_main_version(models: &[Value], id: &str) -> io::Result<String> {
-    let identity = id.split('@').next().unwrap_or(id);
-    let model = models
-        .iter()
-        .find(|model| {
-            format!(
-                "{}/{}",
-                model["scope"].as_str().unwrap_or_default(),
-                model["name"].as_str().unwrap_or_default(),
-            ) == identity
-        })
-        .ok_or_else(|| {
-            io::Error::other(format!(r#"unable to eject "{id}" as it has no main version"#))
-        })?;
-    let head_hash = model["head"]
-        .as_str()
-        .ok_or_else(|| {
-            io::Error::other(format!(r#"unable to eject "{id}" as it has no main version"#))
-        })?;
-    Ok(version_for_hash(&model["versions"], head_hash).unwrap_or_else(|| head_hash.to_owned()))
-}
-
-fn version_for_hash(versions: &Value, head_hash: &str) -> Option<String> {
-    for (ver, hash) in versions.as_object()? {
-        if hash.as_str() == Some(head_hash) {
-            return Some(ver.clone());
-        }
-    }
-    None
-}
-
-fn eject_one_lane_component(
-    root: &Path,
-    bitmap: &mut Value,
+    row: &Value,
+    scope: &str,
+    name: &str,
+    version: &str,
     id: &str,
-    main_version: &str,
-) -> io::Result<bool> {
-    let Some((key, row)) = find_bitmap_row(bitmap, id) else { return Ok(false) };
-    let name = row["name"].as_str().unwrap_or(&key);
-    let scope = row["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .or_else(|| row["defaultScope"].as_str())
-        .unwrap_or_default();
-    let root_dir = row["rootDir"].as_str().unwrap_or_default();
-    let main_file = row["mainFile"].as_str().unwrap_or("index.js");
-    let pkg_name = pkg_name_for(scope, name);
-    remove_nm_pkg(root, &pkg_name);
-    if root_dir != "." {
-        add_dependency_to_workspace_jsonc(root, &pkg_name, main_version)?;
-        materialize_ejected_package(
-            root,
-            &pkg_name,
-            scope,
-            name,
-            main_version,
-            main_file,
-            root_dir,
-        )?;
+    summary: &mut EjectSummary,
+) -> bool {
+    if lane::is_hub_component_modified(root, row, scope, name, version) == Some(true) {
+        summary.modified.push(id.to_owned());
+        return true;
     }
-    if bitmap[&key]["config"].is_null() {
-        bitmap[&key]["config"] = json!({});
+    if is_component_staged_on_main(root, scope, name, version) == Some(true) {
+        summary.staged.push(id.to_owned());
+        return true;
     }
-    bitmap[&key]["config"]["teambit.component/remove"] = json!({ "removed": true });
-    if !root_dir.is_empty() && root_dir != "." {
-        let _ = fs::remove_dir_all(root.join(root_dir));
-    }
-    Ok(true)
+    false
 }
 
 fn find_bitmap_row(bitmap: &Value, id: &str) -> Option<(String, Value)> {
@@ -360,38 +309,53 @@ fn copy_dir_files(src: &Path, dst: &Path) -> io::Result<()> {
     Ok(())
 }
 
-fn format_eject_template(
-    ejected: &[String],
-    not_exported: &[String],
-    self_hosted: &[String],
-    chalk: Chalk,
-) -> String {
+fn format_eject_template(summary: &EjectSummary, chalk: Chalk) -> String {
     use std::fmt::Write;
     let mut out = String::new();
-    if !ejected.is_empty() {
-        let list = chalk.bold(&ejected.join(", "));
+    if !summary.ejected.is_empty() {
+        let list = chalk.bold(&summary.ejected.join(", "));
         out.push_str(&chalk.green(&format!(
             "successfully ejected the following components {list}\n",
         )));
     }
-    let mut failure_body = String::new();
-    if !not_exported.is_empty() {
-        let _ = writeln!(
-            failure_body,
-            "local components that were not exported yet: {}",
-            not_exported.join(", "),
-        );
-    }
-    if !self_hosted.is_empty() {
-        let _ = writeln!(
-            failure_body,
-            "components that were exported to a self hosted scope (not bit.cloud): {}",
-            self_hosted.join(", "),
-        );
-    }
+    let failure_body = build_failure_body(summary, chalk);
     if !failure_body.is_empty() {
         let title = chalk.red("failed to eject the following components\n");
         let _ = write!(out, "{}{}", chalk.underline(&title), chalk.red(&failure_body));
     }
     out
+}
+
+fn build_failure_body(summary: &EjectSummary, chalk: Chalk) -> String {
+    use std::fmt::Write;
+    let mut body = String::new();
+    if !summary.modified.is_empty() {
+        let _ = writeln!(
+            body,
+            "stopped the eject process for the following components because they have local changes.\n{}\nejecting modified components discards all local, unstaged, changes.\nuse 'bit diff <component id>' to see the changes and decide if to 'bit tag' them or not.\nuse the '--force' flag to discard local modifications and proceed with the eject process.",
+            chalk.bold(&summary.modified.join(", ")),
+        );
+    }
+    if !summary.staged.is_empty() {
+        let _ = writeln!(
+            body,
+            "components with local versions (use --force to ignore): {}",
+            summary.staged.join(", "),
+        );
+    }
+    if !summary.not_exported.is_empty() {
+        let _ = writeln!(
+            body,
+            "local components that were not exported yet: {}",
+            summary.not_exported.join(", "),
+        );
+    }
+    if !summary.self_hosted.is_empty() {
+        let _ = writeln!(
+            body,
+            "components that were exported to a self hosted scope (not bit.cloud): {}",
+            summary.self_hosted.join(", "),
+        );
+    }
+    body
 }
