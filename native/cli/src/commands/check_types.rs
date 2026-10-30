@@ -84,15 +84,35 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     for &arg in args {
         match arg {
             "--no-color" => {}
-            "-a" | "--all" => options.all = true,
-            "-u" | "--unmodified" => options.unmodified = true,
-            "--strict" => options.strict = true,
-            "-j" | "--json" => options.json = true,
+            "-a" | "--all" | "--all=true" => options.all = true,
+            "--all=false" => options.all = false,
+            "-u" | "--unmodified" | "--unmodified=true" => options.unmodified = true,
+            "--unmodified=false" => options.unmodified = false,
+            "--strict" | "--strict=true" => options.strict = true,
+            "--strict=false" => options.strict = false,
+            "-j" | "--json" | "--json=true" => options.json = true,
+            "--json=false" => options.json = false,
             val if !val.starts_with('-') && !val.is_empty() && options.pattern.is_none() => {
                 options.pattern = Some(val.to_owned());
             }
-            _ => return None,
+            val => apply_short_flags(val, &mut options)?,
         }
     }
     Some(options)
+}
+
+fn apply_short_flags(arg: &str, options: &mut Options) -> Option<()> {
+    let flags = arg.strip_prefix('-')?;
+    if flags.is_empty() || flags.starts_with('-') {
+        return None;
+    }
+    for ch in flags.chars() {
+        match ch {
+            'a' => options.all = true,
+            'u' => options.unmodified = true,
+            'j' => options.json = true,
+            _ => return None,
+        }
+    }
+    Some(())
 }

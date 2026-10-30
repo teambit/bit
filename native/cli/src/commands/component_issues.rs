@@ -208,9 +208,8 @@ fn parse(args: &[&str]) -> Option<bool> {
     let mut json = false;
     for &arg in args {
         match arg {
-            "-j" | "--json" if !json => json = true,
-            "--json=true" if !json => json = true,
-            "--json=false" if !json => {}
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
             "--no-color" => {}
             _ => return None,
         }

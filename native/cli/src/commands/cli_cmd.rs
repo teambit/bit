@@ -58,18 +58,22 @@ fn emit_unknown_skill(args: &[OsString], skill: &str) -> io::Result<Outcome> {
 
 pub(super) fn parse_unknown_skill<'a>(args: &[&'a str]) -> Option<&'a str> {
     let ["generate", rest @ ..] = args else { return None };
-    if rest.contains(&"--docs") || !valid_docs_options(rest) {
+    if docs_enabled(rest) || !valid_docs_options(rest) {
         return None;
     }
     let mut skill = None;
     let mut index = 0;
     while index < rest.len() {
         match &rest[index..] {
-            ["--skill", value, ..] => {
+            ["--skill" | "-s", value, ..] => {
                 skill = Some(*value);
                 index += 2;
             }
-            [arg, ..] if let Some(val) = arg.strip_prefix("--skill=") => {
+            [arg, ..]
+                if let Some(val) = arg
+                    .strip_prefix("--skill=")
+                    .or_else(|| arg.strip_prefix("-s=")) =>
+            {
                 skill = Some(val);
                 index += 1;
             }
@@ -81,7 +85,19 @@ pub(super) fn parse_unknown_skill<'a>(args: &[&'a str]) -> Option<&'a str> {
 
 pub(super) fn is_generate_docs(args: &[&str]) -> bool {
     let ["generate", rest @ ..] = args else { return false };
-    rest.contains(&"--docs") && valid_docs_options(rest)
+    docs_enabled(rest) && valid_docs_options(rest)
+}
+
+fn docs_enabled(rest: &[&str]) -> bool {
+    let mut enabled = false;
+    for &arg in rest {
+        match arg {
+            "-d" | "--docs" | "--docs=true" => enabled = true,
+            "--docs=false" => enabled = false,
+            _ => {}
+        }
+    }
+    enabled
 }
 
 fn valid_docs_options(rest: &[&str]) -> bool {
@@ -95,10 +111,22 @@ fn valid_docs_options(rest: &[&str]) -> bool {
 
 fn docs_option_len(rest: &[&str]) -> Option<usize> {
     match rest {
-        ["--skill", value, ..] if !value.starts_with('-') => Some(2),
-        ["--docs" | "--metadata" | "--no-color", ..] => Some(1),
+        ["--skill" | "-s", value, ..] if !value.starts_with('-') => Some(2),
+        [
+            "-d" | "--docs" | "--docs=true" | "--docs=false" | "-m" | "--metadata"
+            | "--metadata=true" | "--metadata=false" | "--no-color",
+            ..,
+        ] => Some(1),
         [arg, ..] if arg.starts_with("--metadata.") && arg.contains('=') => Some(1),
-        [arg, ..] if arg.starts_with("--skill=") && arg.len() > "--skill=".len() => Some(1),
+        [arg, ..]
+            if let Some(val) = arg
+                .strip_prefix("--skill=")
+                .or_else(|| arg.strip_prefix("-s="))
+                && !val.is_empty()
+                && !val.starts_with('-') =>
+        {
+            Some(1)
+        }
         _ => None,
     }
 }

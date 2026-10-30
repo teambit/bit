@@ -1,11 +1,37 @@
 //! Retained installer Host requests and the scoped lane installation boundary.
 
 use super::JsHost;
-use crate::{commands::status::cache::cache_root, host::Host};
+use crate::{
+    commands::{status::cache::cache_root, workspace_command},
+    host::Host,
+    native::Outcome,
+};
 use bit_install::config::{WorkspaceConfig, load_global_config, scope_path};
 use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
-use std::{io, path::Path, sync::Arc};
+use std::{env, ffi::OsString, io, path::Path, sync::Arc};
+
+const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Create a new workspace using 'bit new <template> <workspace-name>' or navigate to an existing workspace directory.";
+
+pub(super) fn outside_workspace(
+    args: &[OsString],
+    argv: &[String],
+    cwd: &Path,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_none_or(|val| val.is_empty())
+        && matches!(bit_install::options::parse(argv), Ok(bit_install::options::Parsed::Install(_)))
+    {
+        return workspace_command::execute_failure_scope(
+            cwd,
+            args,
+            "install",
+            false,
+            "",
+            io::Error::other(OUTSIDE_WORKSPACE_ERR),
+        );
+    }
+    Ok(Outcome::Declined("not inside a workspace".to_string()))
+}
 
 pub(super) fn needs_canonical_install(root: &Path) -> bool {
     configured_root_aspects(root).unwrap_or(true)

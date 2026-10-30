@@ -156,16 +156,38 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     for &arg in args {
         match arg {
             "--no-color" => {}
-            "-c" | "--changed" => options.changed = true,
-            "-v" | "--verbose" => options.verbose = true,
-            "-j" | "--json" => options.json = true,
-            "-d" | "--delete-dist-dir" => options.delete_dist_dir = true,
-            "--generate-types" => options.generate_types = true,
+            "-c" | "--changed" | "--changed=true" => options.changed = true,
+            "--changed=false" => options.changed = false,
+            "-v" | "--verbose" | "--verbose=true" => options.verbose = true,
+            "--verbose=false" => options.verbose = false,
+            "-j" | "--json" | "--json=true" => options.json = true,
+            "--json=false" => options.json = false,
+            "-d" | "--delete-dist-dir" | "--delete-dist-dir=true" => options.delete_dist_dir = true,
+            "--delete-dist-dir=false" => options.delete_dist_dir = false,
+            "--generate-types" | "--generate-types=true" => options.generate_types = true,
+            "--generate-types=false" => options.generate_types = false,
             val if !val.starts_with('-') && !val.is_empty() => {
                 options.components.push(val.to_owned());
             }
-            _ => return None,
+            val => apply_short_compile_flags(val, &mut options)?,
         }
     }
     Some(options)
+}
+
+fn apply_short_compile_flags(arg: &str, options: &mut Options) -> Option<()> {
+    let flags = arg.strip_prefix('-')?;
+    if flags.is_empty() || flags.starts_with('-') {
+        return None;
+    }
+    for ch in flags.chars() {
+        match ch {
+            'c' => options.changed = true,
+            'v' => options.verbose = true,
+            'j' => options.json = true,
+            'd' => options.delete_dist_dir = true,
+            _ => return None,
+        }
+    }
+    Some(())
 }

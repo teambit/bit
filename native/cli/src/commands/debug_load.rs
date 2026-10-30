@@ -74,7 +74,17 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             continue;
         }
         match args[idx] {
-            "--no-color" | "--all-aspects" | "--skip-deps" | "-r" | "--re-load" => {}
+            "--no-color"
+            | "--all-aspects"
+            | "--all-aspects=true"
+            | "--all-aspects=false"
+            | "--skip-deps"
+            | "--skip-deps=true"
+            | "--skip-deps=false"
+            | "-r"
+            | "--re-load"
+            | "--re-load=true"
+            | "--re-load=false" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             val if !val.starts_with('-') && !val.is_empty() && id.is_none() => {
@@ -94,8 +104,11 @@ fn consume_aspect_plus_deps(args: &[&str], idx: &mut usize) -> Option<bool> {
             let val = *args.get(*idx)?;
             (!val.is_empty() && !val.starts_with('-')).then_some(true)
         }
-        arg if let Some(val) = arg.strip_prefix("--aspect-plus-deps=") => {
-            (!val.is_empty()).then_some(true)
+        arg if let Some(val) = arg
+            .strip_prefix("--aspect-plus-deps=")
+            .or_else(|| arg.strip_prefix("-p=")) =>
+        {
+            (!val.is_empty() && !val.starts_with('-')).then_some(true)
         }
         _ => Some(false),
     }

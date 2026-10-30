@@ -194,7 +194,7 @@ struct Flag {
 }
 
 /// `(long name, alias, arity)` as `install.cmd.tsx` and the global flags declare them.
-const FLAGS: [(&str, Option<&str>, Arity); 21] = [
+const FLAGS: [(&str, Option<&str>, Arity); 22] = [
     ("type", Some("t"), Arity::Value),
     ("update", Some("u"), Arity::Switch),
     ("update-existing", None, Arity::Switch),
@@ -216,6 +216,7 @@ const FLAGS: [(&str, Option<&str>, Arity); 21] = [
     ("safe-mode", None, Arity::Switch),
     ("token", None, Arity::Value),
     ("json", Some("j"), Arity::Switch),
+    ("no-color", None, Arity::Switch),
 ];
 
 fn flag(name: &str) -> io::Result<Flag> {
@@ -240,7 +241,7 @@ fn apply(
         "allow-scripts" => scripts.allow = value,
         "disallow-scripts" => scripts.disallow = value,
         "log" => options.log = Some(value.unwrap_or_default()),
-        "safe-mode" | "token" | "json" => {}
+        "safe-mode" | "token" | "json" | "no-color" => {}
         _ => *switch(options, key)? = enabled,
     }
     Ok(())

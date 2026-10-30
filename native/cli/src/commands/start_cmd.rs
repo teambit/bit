@@ -57,14 +57,27 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--no-color"
             | "-v"
             | "--verbose"
+            | "--verbose=true"
+            | "--verbose=false"
             | "--show-internal-urls"
+            | "--show-internal-urls=true"
+            | "--show-internal-urls=false"
             | "--use-root-modules"
-            | "--use-source" => {}
-            "-d" | "--dev" => options.dev = true,
-            "-r" | "--rebuild" => options.rebuild = true,
-            "--skip-ui-build" => options.skip_ui_build = true,
-            "-n" | "--no-browser" => options.no_browser = true,
-            "--skip-compilation" => options.skip_compilation = true,
+            | "--use-root-modules=true"
+            | "--use-root-modules=false"
+            | "--use-source"
+            | "--use-source=true"
+            | "--use-source=false" => {}
+            "-d" | "--dev" | "--dev=true" => options.dev = true,
+            "--dev=false" => options.dev = false,
+            "-r" | "--rebuild" | "--rebuild=true" => options.rebuild = true,
+            "--rebuild=false" => options.rebuild = false,
+            "-s" | "--skip-ui-build" | "--skip-ui-build=true" => options.skip_ui_build = true,
+            "--skip-ui-build=false" => options.skip_ui_build = false,
+            "-n" | "--no-browser" | "--no-browser=true" => options.no_browser = true,
+            "--no-browser=false" => options.no_browser = false,
+            "--skip-compilation" | "--skip-compilation=true" => options.skip_compilation = true,
+            "--skip-compilation=false" => options.skip_compilation = false,
             "-p" | "--port" => {
                 options.port = Some(take_optional_arg(args, &mut idx));
             }
@@ -90,9 +103,15 @@ fn take_optional_arg(args: &[&str], idx: &mut usize) -> String {
 }
 
 fn apply_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
-    if let Some(val) = arg.strip_prefix("--port=") {
+    if let Some(val) = arg
+        .strip_prefix("--port=")
+        .or_else(|| arg.strip_prefix("-p="))
+    {
         options.port = Some(val.to_owned());
-    } else if let Some(val) = arg.strip_prefix("--ui-root-name=") {
+    } else if let Some(val) = arg
+        .strip_prefix("--ui-root-name=")
+        .or_else(|| arg.strip_prefix("-u="))
+    {
         options.ui_root_name = Some(val.to_owned());
     } else if !arg.starts_with('-') && !arg.is_empty() && options.pattern.is_none() {
         options.pattern = Some(arg.to_owned());

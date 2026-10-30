@@ -22,6 +22,18 @@ fn parses_git_subcommands_and_flags() {
         Some(Parsed::SetMergeDriver { global: true }),
     );
     assert_eq!(
+        parse_args(&[
+            OsString::from("git"),
+            OsString::from("smd"),
+            OsString::from("--global=false"),
+        ]),
+        Some(Parsed::SetMergeDriver { global: false }),
+    );
+    assert_eq!(
+        parse_args(&[OsString::from("git"), OsString::from("smd"), OsString::from("--no-global")]),
+        None,
+    );
+    assert_eq!(
         parse_args(&[OsString::from("git"), OsString::from("unknown")]),
         Some(Parsed::Unrecognized("unknown".to_owned())),
     );

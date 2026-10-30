@@ -145,19 +145,22 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     while let Some(arg) = iter.next() {
         match arg {
             "--no-color" => {}
-            "-a" | "--all" => all = true,
-            "-u" | "--unmodified" => unmodified = true,
-            "--fail-fast" => fail_fast = true,
-            "-c" | "--continue-on-error" => continue_on_error = true,
+            "-a" | "--all" | "--all=true" => all = true,
+            "--all=false" => all = false,
+            "-u" | "--unmodified" | "--unmodified=true" => unmodified = true,
+            "--unmodified=false" => unmodified = false,
+            "--fail-fast" | "--fail-fast=true" => fail_fast = true,
+            "--fail-fast=false" => fail_fast = false,
+            "-c" | "--continue-on-error" | "--continue-on-error=true" => continue_on_error = true,
+            "--continue-on-error=false" => continue_on_error = false,
             "--skip-tasks" => {
                 let val = iter.next()?;
-                if val.starts_with('-') {
-                    return None;
-                }
+                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
                 skip_tasks = Some(val.to_owned());
             }
-            arg if arg.starts_with("--skip-tasks=") => {
-                skip_tasks = Some(arg["--skip-tasks=".len()..].to_owned());
+            arg if let Some(val) = arg.strip_prefix("--skip-tasks=") => {
+                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+                skip_tasks = Some(val.to_owned());
             }
             val if !val.starts_with('-') && !val.is_empty() && pattern.is_none() => {
                 pattern = Some(val.to_owned());

@@ -160,19 +160,10 @@ fn apply_token<'a, Iter>(
 where
     Iter: Iterator<Item = &'a str>,
 {
+    if apply_switch(arg, options) {
+        return Some(());
+    }
     match arg {
-        "--no-color" | "--install" | "--cache-packages-on-capsule-root" => {}
-        "--skip-tests" => options.pipeline.skip_tests = true,
-        "--loose" => options.pipeline.loose = true,
-        "--reset" => options.pipeline.reset = true,
-        "--include-snap" => options.pipeline.include_snap = true,
-        "--include-tag" => options.pipeline.include_tag = true,
-        "-u" | "--unmodified" => options.unmodified = true,
-        "-d" | "--dev" => options.dev = true,
-        "--reuse-capsules" => options.capsules.reuse_capsules = true,
-        "--rewrite" => options.capsules.rewrite = true,
-        "--reinstall" => options.capsules.reinstall = true,
-        "--fail-fast" => options.pipeline.fail_fast = true,
         "--tasks" => options.pipeline.tasks = Some(take_val(iter.next()?)?),
         "--list-tasks" => {
             let next = iter.next_if(|val| !val.is_empty() && !val.starts_with('-'));
@@ -187,15 +178,54 @@ where
     Some(())
 }
 
+fn apply_switch(arg: &str, options: &mut Options) -> bool {
+    match arg {
+        "--no-color"
+        | "--install"
+        | "--install=true"
+        | "--install=false"
+        | "--cache-packages-on-capsule-root"
+        | "--cache-packages-on-capsule-root=true"
+        | "--cache-packages-on-capsule-root=false" => {}
+        "--skip-tests" | "--skip-tests=true" => options.pipeline.skip_tests = true,
+        "--skip-tests=false" => options.pipeline.skip_tests = false,
+        "--loose" | "--loose=true" => options.pipeline.loose = true,
+        "--loose=false" => options.pipeline.loose = false,
+        "--reset" | "--reset=true" => options.pipeline.reset = true,
+        "--reset=false" => options.pipeline.reset = false,
+        "--include-snap" | "--include-snap=true" => options.pipeline.include_snap = true,
+        "--include-snap=false" => options.pipeline.include_snap = false,
+        "--include-tag" | "--include-tag=true" => options.pipeline.include_tag = true,
+        "--include-tag=false" => options.pipeline.include_tag = false,
+        "-u" | "--unmodified" | "--unmodified=true" => options.unmodified = true,
+        "--unmodified=false" => options.unmodified = false,
+        "-d" | "--dev" | "--dev=true" => options.dev = true,
+        "--dev=false" => options.dev = false,
+        "--reuse-capsules" | "--reuse-capsules=true" => options.capsules.reuse_capsules = true,
+        "--reuse-capsules=false" => options.capsules.reuse_capsules = false,
+        "--rewrite" | "--rewrite=true" => options.capsules.rewrite = true,
+        "--rewrite=false" => options.capsules.rewrite = false,
+        "--reinstall" | "--reinstall=true" => options.capsules.reinstall = true,
+        "--reinstall=false" => options.capsules.reinstall = false,
+        "--fail-fast" | "--fail-fast=true" => options.pipeline.fail_fast = true,
+        "--fail-fast=false" => options.pipeline.fail_fast = false,
+        _ => return false,
+    }
+    true
+}
+
 fn apply_inline_or_positional(arg: &str, options: &mut Options) -> Option<()> {
     if let Some(val) = arg.strip_prefix("--tasks=") {
-        options.pipeline.tasks = Some((!val.is_empty()).then(|| val.to_owned())?);
+        options.pipeline.tasks = Some(take_val(val)?);
     } else if let Some(val) = arg.strip_prefix("--list-tasks=") {
-        options.list_tasks = Some((!val.is_empty()).then(|| val.to_owned())?);
+        options.list_tasks = Some(take_val(val)?);
     } else if let Some(val) = arg.strip_prefix("--skip-tasks=") {
-        options.pipeline.skip_tasks = Some((!val.is_empty()).then(|| val.to_owned())?);
-    } else if let Some(val) = arg.strip_prefix("--ignore-issues=") {
-        (!val.is_empty()).then_some(())?;
+        options.pipeline.skip_tasks = Some(take_val(val)?);
+    } else if let Some(val) = arg
+        .strip_prefix("--ignore-issues=")
+        .or_else(|| arg.strip_prefix("-i="))
+    {
+        take_val(val)?;
     } else if !arg.starts_with('-') && !arg.is_empty() && options.pattern.is_none() {
         options.pattern = Some(arg.to_owned());
     } else {

@@ -4,7 +4,7 @@
 pub(super) mod request;
 
 pub(super) use self::request::confirm;
-use self::request::{lane_installation, needs_canonical_install};
+use self::request::{lane_installation, needs_canonical_install, outside_workspace};
 use crate::{
     commands::Command,
     discovery::{self, NodeCli, Target},
@@ -33,7 +33,7 @@ pub const COMMAND: Command = Command { name: "install", aliases: &["in"], run };
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Prepared { argv, cli, cwd, root } = match prepare(args)? {
         Ok(prepared) => prepared,
-        Err(reason) => return Ok(Outcome::Declined(reason)),
+        Err(outcome) => return Ok(outcome),
     };
     if needs_canonical_install(&root) {
         return Ok(Outcome::Declined(
@@ -76,28 +76,32 @@ struct Prepared {
     root: PathBuf,
 }
 
-/// The checks that leave the command to the Node.js CLI; `Err` names the reason.
-fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, String>> {
+/// The checks that leave the command to the Node.js CLI; `Err` names the outcome.
+fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, Outcome>> {
     let Some(argv) = utf8(args) else {
-        return Ok(Err("arguments are not UTF-8".to_string()));
+        return Ok(Err(Outcome::Declined("arguments are not UTF-8".to_string())));
     };
     // `bit install --help` is rendered by the Node.js CLI's command registry.
     if argv
         .iter()
         .any(|arg| arg == "--help" || arg == "-h")
     {
-        return Ok(Err("--help".to_string()));
-    }
-    let Target::Entry(cli) = discovery::find()? else {
-        return Ok(Err("the Node.js CLI is only reachable as a wrapper".to_string()));
-    };
-    if cli.bit_dir.is_none() {
-        return Ok(Err("the entry is not inside an @teambit/bit package".to_string()));
+        return Ok(Err(Outcome::Declined("--help".to_string())));
     }
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        return Ok(Err("not inside a workspace".to_string()));
+        return outside_workspace(args, &argv, &cwd).map(Err);
     };
+    let Target::Entry(cli) = discovery::find()? else {
+        return Ok(Err(Outcome::Declined(
+            "the Node.js CLI is only reachable as a wrapper".to_string(),
+        )));
+    };
+    if cli.bit_dir.is_none() {
+        return Ok(Err(Outcome::Declined(
+            "the entry is not inside an @teambit/bit package".to_string(),
+        )));
+    }
     Ok(Ok(Prepared { argv, cli, cwd, root }))
 }
 
@@ -185,7 +189,10 @@ impl Terminal {
     pub fn detect(argv: &[String]) -> Self {
         let tty = io::stdout().is_terminal();
         Self {
-            color: color_enabled(tty),
+            color: !argv
+                .iter()
+                .any(|arg| arg == "--no-color")
+                && color_enabled(tty),
             // Ora's `is-interactive` excludes dumb terminals and any defined CI variable.
             tty: tty
                 && env::var_os("TERM").is_none_or(|term| term != "dumb")

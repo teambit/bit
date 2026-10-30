@@ -35,11 +35,21 @@ pub(super) fn parse_rules(rest: &[&str]) -> Option<RulesOptions> {
     let mut force_standard = false;
     for &arg in rest {
         match arg {
-            "-g" | "--global" => is_global = true,
-            "-p" | "--print" => should_print = true,
-            "--consumer-project" => consumer_project = true,
-            "--force-standard" => force_standard = true,
-            val if !val.starts_with('-') && editor.is_none() => editor = Some(val.to_owned()),
+            "-g" | "--global" | "--global=true" => is_global = true,
+            "--global=false" => is_global = false,
+            "-p" | "--print" | "--print=true" => should_print = true,
+            "--print=false" => should_print = false,
+            "-gp" | "-pg" => {
+                is_global = true;
+                should_print = true;
+            }
+            "--consumer-project" | "--consumer-project=true" => consumer_project = true,
+            "--consumer-project=false" => consumer_project = false,
+            "--force-standard" | "--force-standard=true" => force_standard = true,
+            "--force-standard=false" => force_standard = false,
+            val if !val.starts_with('-') && !val.is_empty() && editor.is_none() => {
+                editor = Some(val.to_owned());
+            }
             _ => return None,
         }
     }

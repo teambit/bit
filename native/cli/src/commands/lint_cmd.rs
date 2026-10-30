@@ -59,7 +59,24 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             io::Error::other(HOST_NOT_FOUND_ERR),
         );
     }
-    Ok(Outcome::Declined("lint execution delegated".into()))
+    workspace_command::execute_failure_scope(
+        &cwd,
+        args,
+        "lint",
+        options.json,
+        "",
+        io::Error::other(bare_scope_error(options.pattern.as_deref(), options.changed)),
+    )
+}
+
+pub(super) fn bare_scope_error(pattern: Option<&str>, changed: bool) -> &'static str {
+    if pattern.is_some_and(|pat| !pat.is_empty()) {
+        "Cannot read properties of undefined (reading 'idsByPattern')"
+    } else if changed {
+        "Cannot read properties of undefined (reading 'getNewAndModifiedIds')"
+    } else {
+        "Cannot read properties of undefined (reading 'getMany')"
+    }
 }
 
 pub(super) fn emit_pattern_error(
@@ -118,9 +135,12 @@ fn apply_token<'a>(
 ) -> Option<()> {
     match arg {
         "--no-color" => {}
-        "-c" | "--changed" => options.changed = true,
-        "-f" | "--fix" => options.fix = true,
-        "-j" | "--json" => options.json = true,
+        "-c" | "--changed" | "--changed=true" => options.changed = true,
+        "--changed=false" => options.changed = false,
+        "-f" | "--fix" | "--fix=true" => options.fix = true,
+        "--fix=false" => options.fix = false,
+        "-j" | "--json" | "--json=true" => options.json = true,
+        "--json=false" => options.json = false,
         "--fix-type" => {
             let val = iter.next()?;
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
@@ -133,7 +153,7 @@ fn apply_token<'a>(
 
 fn apply_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
     if let Some(val) = arg.strip_prefix("--fix-type=") {
-        (!val.is_empty()).then_some(())?;
+        (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.fix_type = Some(val.to_owned());
     } else if !arg.starts_with('-') && !arg.is_empty() && options.pattern.is_none() {
         options.pattern = Some(arg.to_owned());

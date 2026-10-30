@@ -7,9 +7,10 @@ fn parses_globals_json_flags() {
     assert_eq!(parse_json_flag(&[OsString::from("globals"), OsString::from("-j")]), Some(true));
     assert_eq!(parse_json_flag(&[OsString::from("globals"), OsString::from("--json")]), Some(true));
     assert_eq!(
-        parse_json_flag(&[OsString::from("globals"), OsString::from("--no-json")]),
+        parse_json_flag(&[OsString::from("globals"), OsString::from("--json=false")]),
         Some(false),
     );
+    assert_eq!(parse_json_flag(&[OsString::from("globals"), OsString::from("--no-json")]), None);
     assert_eq!(parse_json_flag(&[OsString::from("globals"), OsString::from("--help")]), None);
     assert_eq!(parse_json_flag(&[OsString::from("globals"), OsString::from("extra")]), None);
 }

@@ -49,7 +49,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         let arg = args[idx];
         match arg {
             "--no-color" => {}
-            "-c" | "--compile" => options.compile = true,
+            "-c" | "--compile" | "--compile=true" => options.compile = true,
+            "--compile=false" => options.compile = false,
             "-p" | "--port" => {
                 if let Some(&next) = args.get(idx + 1)
                     && !next.starts_with('-')
@@ -58,8 +59,11 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                     idx += 1;
                 }
             }
-            val if val.starts_with("--port=") => {
-                options.port = Some(val["--port=".len()..].parse::<u16>().ok()?);
+            val if let Some(port) = val
+                .strip_prefix("--port=")
+                .or_else(|| val.strip_prefix("-p=")) =>
+            {
+                options.port = Some(port.parse::<u16>().ok()?);
             }
             _ => return None,
         }

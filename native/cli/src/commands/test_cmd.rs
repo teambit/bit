@@ -246,10 +246,35 @@ fn apply_test_token<'a>(
     options: &mut Options,
 ) -> Option<()> {
     match token {
-        "--no-color" | "--watch" | "-w" | "--debug" | "-d" | "--unmodified" | "-u"
-        | "--coverage" | "--update-snapshot" | "--verbose" | "--summary" => {}
-        "--all" | "-a" => options.all = true,
-        "--json" | "-j" => options.json = true,
+        "--no-color"
+        | "--watch"
+        | "--watch=true"
+        | "--watch=false"
+        | "-w"
+        | "--debug"
+        | "--debug=true"
+        | "--debug=false"
+        | "-d"
+        | "--unmodified"
+        | "--unmodified=true"
+        | "--unmodified=false"
+        | "-u"
+        | "--coverage"
+        | "--coverage=true"
+        | "--coverage=false"
+        | "--update-snapshot"
+        | "--update-snapshot=true"
+        | "--update-snapshot=false"
+        | "--verbose"
+        | "--verbose=true"
+        | "--verbose=false"
+        | "--summary"
+        | "--summary=true"
+        | "--summary=false" => {}
+        "--all" | "--all=true" | "-a" => options.all = true,
+        "--all=false" => options.all = false,
+        "--json" | "--json=true" | "-j" => options.json = true,
+        "--json=false" => options.json = false,
         "--junit" | "--env" | "-e" => {
             take_test_val(iter.next()?)?;
         }
@@ -260,13 +285,17 @@ fn apply_test_token<'a>(
 }
 
 fn apply_inline_test_token(token: &str, options: &mut Options) -> Option<()> {
-    if let Some(val) = token.strip_prefix("--scope=") {
-        options.scope = Some((!val.is_empty()).then(|| val.to_owned())?);
+    if let Some(val) = token
+        .strip_prefix("--scope=")
+        .or_else(|| token.strip_prefix("-s="))
+    {
+        options.scope = Some(take_test_val(val)?);
     } else if let Some(val) = token
         .strip_prefix("--junit=")
         .or_else(|| token.strip_prefix("--env="))
+        .or_else(|| token.strip_prefix("-e="))
     {
-        (!val.is_empty()).then_some(())?;
+        take_test_val(val)?;
     } else if token.starts_with('-') {
         return None;
     } else {

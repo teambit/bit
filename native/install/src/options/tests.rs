@@ -14,7 +14,15 @@ fn options(args: &[&str]) -> InstallOptions {
 
 #[test]
 fn parses_packages_and_switches() {
-    let parsed = options(&["in", "lodash", "react@18", "-u", "--skip-compile", "--skipImport"]);
+    let parsed = options(&[
+        "in",
+        "lodash",
+        "react@18",
+        "-u",
+        "--skip-compile",
+        "--skipImport",
+        "--no-color",
+    ]);
     assert_eq!(parsed.packages, ["lodash", "react@18"]);
     assert!(parsed.update);
     assert!(parsed.skip_compile);

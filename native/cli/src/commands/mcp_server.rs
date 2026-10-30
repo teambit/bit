@@ -118,16 +118,23 @@ fn parse_setup(rest: &[&str]) -> Option<SetupOptions> {
     let mut idx = 0;
     while idx < rest.len() {
         match rest[idx] {
-            "--consumer-project" => consumer_project = true,
-            "-g" | "--global" => is_global = true,
+            "--consumer-project" | "--consumer-project=true" => consumer_project = true,
+            "--consumer-project=false" => consumer_project = false,
+            "-g" | "--global" | "--global=true" => is_global = true,
+            "--global=false" => is_global = false,
             "--include-additional" => {
                 idx += 1;
-                include_additional = Some((*rest.get(idx)?).to_owned());
+                let val = *rest.get(idx)?;
+                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+                include_additional = Some(val.to_owned());
             }
-            arg if arg.starts_with("--include-additional=") => {
-                include_additional = Some(arg["--include-additional=".len()..].to_owned());
+            arg if let Some(val) = arg.strip_prefix("--include-additional=") => {
+                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+                include_additional = Some(val.to_owned());
             }
-            arg if !arg.starts_with('-') && editor.is_none() => editor = Some(arg.to_owned()),
+            arg if !arg.starts_with('-') && !arg.is_empty() && editor.is_none() => {
+                editor = Some(arg.to_owned());
+            }
             _ => return None,
         }
         idx += 1;

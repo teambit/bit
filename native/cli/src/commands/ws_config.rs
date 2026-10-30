@@ -299,15 +299,20 @@ fn parse_clean(rest: &[&str]) -> Option<Subcommand> {
     let mut idx = 0usize;
     while idx < rest.len() {
         match rest[idx] {
-            "-s" | "--silent" => silent = true,
-            "--dry-run" => dry_run = true,
+            "-s" | "--silent" | "--silent=true" => silent = true,
+            "--silent=false" => silent = false,
+            "--dry-run" | "--dry-run=true" => dry_run = true,
+            "--dry-run=false" => dry_run = false,
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             "-w" | "--writers" => {
                 idx += 1;
                 writers = Some(split_writers(rest.get(idx)?)?);
             }
-            arg if let Some(val) = arg.strip_prefix("--writers=") => {
+            arg if let Some(val) = arg
+                .strip_prefix("--writers=")
+                .or_else(|| arg.strip_prefix("-w=")) =>
+            {
                 writers = Some(split_writers(val)?);
             }
             _ => return None,
@@ -331,17 +336,34 @@ fn parse_write(rest: &[&str]) -> Option<Subcommand> {
 
 fn apply_write_flag(token: &str, opts: &mut WriteOptions) -> bool {
     match token {
-        "-c" | "--clean" => opts.clean = true,
-        "-n" | "--no-dedupe" => opts.no_dedupe = true,
-        "--dry-run" => {
+        "-c" | "--clean" | "--clean=true" => opts.clean = true,
+        "--clean=false" => opts.clean = false,
+        "-n" | "--no-dedupe" | "--no-dedupe=true" => opts.no_dedupe = true,
+        "--no-dedupe=false" => opts.no_dedupe = false,
+        "--dry-run" | "--dry-run=true" => {
             if opts.dry_run == DryRunMode::Off {
                 opts.dry_run = DryRunMode::PathsOnly;
             }
         }
-        "--dry-run-with-content" => opts.dry_run = DryRunMode::WithContent,
-        "-v" | "--verbose" => opts.verbose = true,
-        "-s" | "--silent" => opts.silent = true,
-        "-f" | "--force" => opts.force = true,
+        "--dry-run=false" => {
+            if opts.dry_run == DryRunMode::PathsOnly {
+                opts.dry_run = DryRunMode::Off;
+            }
+        }
+        "--dry-run-with-content" | "--dry-run-with-content=true" => {
+            opts.dry_run = DryRunMode::WithContent;
+        }
+        "--dry-run-with-content=false" => {
+            if opts.dry_run == DryRunMode::WithContent {
+                opts.dry_run = DryRunMode::Off;
+            }
+        }
+        "-v" | "--verbose" | "--verbose=true" => opts.verbose = true,
+        "--verbose=false" => opts.verbose = false,
+        "-s" | "--silent" | "--silent=true" => opts.silent = true,
+        "--silent=false" => opts.silent = false,
+        "-f" | "--force" | "--force=true" => opts.force = true,
+        "--force=false" => opts.force = false,
         "-j" | "--json" | "--json=true" => opts.json = true,
         "--json=false" => opts.json = false,
         _ => return false,
@@ -355,7 +377,10 @@ fn apply_write_value_flag(rest: &[&str], idx: &mut usize, opts: &mut WriteOption
             *idx += 1;
             opts.writers = Some(split_writers(rest.get(*idx)?)?);
         }
-        arg if let Some(val) = arg.strip_prefix("--writers=") => {
+        arg if let Some(val) = arg
+            .strip_prefix("--writers=")
+            .or_else(|| arg.strip_prefix("-w=")) =>
+        {
             opts.writers = Some(split_writers(val)?);
         }
         _ => return None,

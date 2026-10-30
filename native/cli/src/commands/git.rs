@@ -87,7 +87,7 @@ fn parse_set_merge_driver(rest: &[&str]) -> Option<Parsed> {
     for &token in rest {
         match token {
             "-g" | "--global" | "--global=true" => global = true,
-            "--no-global" | "--global=false" => global = false,
+            "--global=false" => global = false,
             _ => return None,
         }
     }

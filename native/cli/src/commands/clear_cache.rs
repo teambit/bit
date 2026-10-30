@@ -92,18 +92,17 @@ fn parse_args(args: &[OsString]) -> Option<Option<String>> {
 fn apply_token(tokens: &[&str], index: &mut usize, remote: &mut Option<String>) -> Option<()> {
     match tokens[*index] {
         "--no-color" => Some(()),
-        "-r" | "--remote" if remote.is_none() => {
+        "-r" | "--remote" => {
             *index += 1;
             let value = *tokens.get(*index)?;
             (!value.is_empty() && !value.starts_with('-')).then(|| *remote = Some(value.to_owned()))
         }
-        token if remote.is_none() => {
+        token => {
             let value = token
                 .strip_prefix("--remote=")
                 .or_else(|| token.strip_prefix("-r="))?;
             (!value.is_empty() && !value.starts_with('-')).then(|| *remote = Some(value.to_owned()))
         }
-        _ => None,
     }
 }
 

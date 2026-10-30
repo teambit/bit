@@ -7,9 +7,10 @@ fn parses_version_json_flags() {
     assert_eq!(parse_json_flag(&[OsString::from("version"), OsString::from("-j")]), Some(true));
     assert_eq!(parse_json_flag(&[OsString::from("version"), OsString::from("--json")]), Some(true));
     assert_eq!(
-        parse_json_flag(&[OsString::from("version"), OsString::from("--no-json")]),
+        parse_json_flag(&[OsString::from("version"), OsString::from("--json=false")]),
         Some(false),
     );
+    assert_eq!(parse_json_flag(&[OsString::from("version"), OsString::from("--no-json")]), None);
     assert_eq!(parse_json_flag(&[OsString::from("version"), OsString::from("--help")]), None);
 }
 

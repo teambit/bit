@@ -124,9 +124,11 @@ pub(super) fn parse_generate_options(args: &[&str]) -> Option<GenerateOptions> {
                 (!val.is_empty() && !val.starts_with('-')).then_some(())?;
                 options.name = Some(val.to_owned());
             }
-            val if val.starts_with("--name=") => {
-                let name = &val["--name=".len()..];
-                (!name.is_empty()).then_some(())?;
+            val if let Some(name) = val
+                .strip_prefix("--name=")
+                .or_else(|| val.strip_prefix("-n=")) =>
+            {
+                (!name.is_empty() && !name.starts_with('-')).then_some(())?;
                 options.name = Some(name.to_owned());
             }
             val if !val.starts_with('-') && !val.is_empty() && options.pattern.is_none() => {
@@ -153,8 +155,11 @@ pub(super) fn parse_serve_options(args: &[&str]) -> Option<ServeOptions> {
                     idx += 1;
                 }
             }
-            val if val.starts_with("--port=") => {
-                options.port = Some(val["--port=".len()..].parse::<u16>().ok()?);
+            val if let Some(port) = val
+                .strip_prefix("--port=")
+                .or_else(|| val.strip_prefix("-p=")) =>
+            {
+                options.port = Some(port.parse::<u16>().ok()?);
             }
             _ => return None,
         }
