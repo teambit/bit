@@ -114,7 +114,11 @@ export async function updateDependenciesVersions(
     const { id, packageName } = dependency;
     const resolved = resolveVersion(id, depType, packageName);
     const { range, fromConfig } = resolved;
-    const resolvedVersion = fromConfig ? resolved.version : peerVersionInRange(dependency, depType, resolved.version);
+    // the range that is recorded below. a range of a strategy (e.g. the workspace policy) replaces the one of the policy
+    const recordedRange = (supportComponentRange && range) || dependency.versionRange;
+    const resolvedVersion = fromConfig
+      ? resolved.version
+      : peerVersionInRange(dependency, depType, resolved.version, recordedRange);
     if (!resolvedVersion) {
       return;
     }
@@ -139,10 +143,14 @@ export async function updateDependenciesVersions(
    * take the version of the range, otherwise it's installed and recorded although the range doesn't allow it.
    * a component of the workspace keeps its version.
    */
-  function peerVersionInRange(dependency: Dependency, depType: DepType, version?: string): string | undefined {
-    const policyRange = dependency.versionRange;
-    if (depType !== 'peerDependencies' || !version || !policyRange || getIdFromBitMap(dependency.id)) return version;
-    return getVersionInRangeIfOutOfIt(version, policyRange) || version;
+  function peerVersionInRange(
+    dependency: Dependency,
+    depType: DepType,
+    version?: string,
+    range?: string
+  ): string | undefined {
+    if (depType !== 'peerDependencies' || !version || !range || getIdFromBitMap(dependency.id)) return version;
+    return getVersionInRangeIfOutOfIt(version, range) || version;
   }
   function updateDependencies(dependencies: Dependencies, depType: DepType) {
     dependencies.get().forEach((dep) => updateDependency(dep, depType));

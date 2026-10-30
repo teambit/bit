@@ -15,10 +15,12 @@ async function resolvePeerVersion({
   range,
   inBitmap = false,
   forced,
+  workspacePolicy,
 }: {
   range: string;
   inBitmap?: boolean;
   forced?: string;
+  workspacePolicy?: string;
 }): Promise<string | undefined> {
   const peer = new Dependency(linkId.changeVersion('2.0.1'), [], linkPkg, range);
   const component: any = {
@@ -35,8 +37,8 @@ async function resolvePeerVersion({
     consumer: { bitmapIdsFromCurrentLane: ComponentIdList.fromArray(inBitmap ? [linkId.changeVersion('2.0.5')] : []) },
   };
   const depsResolver = {
-    calcComponentRangePrefixByConsumerComponent: () => undefined,
-    getWorkspacePolicyManifest: () => ({ dependencies: {} }),
+    calcComponentRangePrefixByConsumerComponent: () => (workspacePolicy ? '^' : undefined),
+    getWorkspacePolicyManifest: () => ({ dependencies: workspacePolicy ? { [linkPkg]: workspacePolicy } : {} }),
   } as unknown as DependencyResolverMain;
   const overridesDependencies: any = {
     envOwnPkgNames: new Set(),
@@ -66,6 +68,9 @@ describe('updateDependenciesVersions, a component peer with a range from a polic
   });
   it('should keep a forced version', async () => {
     expect(await resolvePeerVersion({ range: '^2.0.3', forced: '2.0.2' })).to.equal('2.0.2');
+  });
+  it('should check the version against the range of the workspace policy when it replaces the range', async () => {
+    expect(await resolvePeerVersion({ range: '^2.0.3', workspacePolicy: '^2.0.0' })).to.equal('2.0.1');
   });
   it('should keep the version found when the range has no version in it', async () => {
     expect(await resolvePeerVersion({ range: '<2.0.0' })).to.equal('2.0.1');
