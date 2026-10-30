@@ -122,6 +122,13 @@ export async function updateDependenciesVersions(
     if (!resolvedVersion) {
       return;
     }
+    if (resolvedVersion !== resolved.version) {
+      const debugDep = debugDependencies?.find((dep) => dep.id.isEqualWithoutVersion(id));
+      if (debugDep) {
+        debugDep.versionResolvedFrom = `${debugDep.versionResolvedFrom} (out of the range ${recordedRange})`;
+        debugDep.version = resolvedVersion;
+      }
+    }
     if (fromConfig) dependenciesWithVersionFromConfig.push(id.toStringWithoutVersion());
     dependency.id = dependency.id.changeVersion(resolvedVersion);
     if (supportComponentRange) {

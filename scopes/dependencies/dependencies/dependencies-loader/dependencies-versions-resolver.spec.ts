@@ -16,11 +16,13 @@ async function resolvePeerVersion({
   inBitmap = false,
   forced,
   workspacePolicy,
+  debugDependencies,
 }: {
   range: string;
   inBitmap?: boolean;
   forced?: string;
   workspacePolicy?: string;
+  debugDependencies?: any[];
 }): Promise<string | undefined> {
   const peer = new Dependency(linkId.changeVersion('2.0.1'), [], linkPkg, range);
   const component: any = {
@@ -50,7 +52,7 @@ async function resolvePeerVersion({
     component,
     overridesDependencies,
     undefined,
-    undefined,
+    debugDependencies,
     false
   );
   return component.peerDependencies.get()[0].id.version;
@@ -59,6 +61,14 @@ async function resolvePeerVersion({
 describe('updateDependenciesVersions, a component peer with a range from a policy', () => {
   it('should take the version of the range when the version found is out of the range', async () => {
     expect(await resolvePeerVersion({ range: '^2.0.3' })).to.equal('2.0.3');
+  });
+  it('should show the version of the range in the dependencies debug', async () => {
+    const debugDependencies = [{ id: linkId.changeVersion('2.0.1') }];
+    await resolvePeerVersion({ range: '^2.0.3', debugDependencies });
+    expect(debugDependencies[0]).to.include({
+      version: '2.0.3',
+      versionResolvedFrom: 'Model (out of the range ^2.0.3)',
+    });
   });
   it('should keep the version found when it is in the range', async () => {
     expect(await resolvePeerVersion({ range: '^2.0.0' })).to.equal('2.0.1');
