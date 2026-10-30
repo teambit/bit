@@ -3,12 +3,16 @@
 
 pub(in crate::commands) mod lookup;
 
-use self::lookup::{load_cat_component, resolve_component_entry, resolve_lane_entry};
+use self::lookup::{
+    diagnose_component_lookup_error, diagnose_lane_lookup_error, load_cat_component,
+    resolve_component_entry, resolve_lane_entry,
+};
 use super::{
     Command,
+    color::Chalk,
     lane::scope_root::{self, ScopeRoot},
     workspace_command::{
-        self, execute_then, execute_with_scope, execute_without_loader,
+        self, execute_failure_scope, execute_then, execute_with_scope, execute_without_loader,
         execute_without_loader_scope, results::Report,
     },
 };
@@ -17,6 +21,7 @@ use serde::Serialize;
 use serde_json::{Value, json, ser::PrettyFormatter};
 use sha1::{Digest, Sha1};
 use std::{
+    env,
     ffi::OsString,
     io::{self, Write},
     path::{Path, PathBuf},
@@ -144,6 +149,11 @@ fn run_lane(args: &[OsString]) -> io::Result<Outcome> {
     };
     let scope_dir = scope_dir_for(&root);
     let Some((_, _, hash)) = resolve_lane_entry(&scope_dir, &id) else {
+        if env::var_os("CI").is_none_or(|val| val.is_empty())
+            && let Some(err) = diagnose_lane_lookup_error(&scope_dir, &id, false)
+        {
+            return emit_failure(&root, args, "cat-lane", false, false, err);
+        }
         return Ok(Outcome::Declined("cat-lane lane lookup delegated".into()));
     };
     let Ok(Some((kind, mut val))) = bit_object_import::read_scope_object(&scope_dir, &hash) else {
@@ -171,6 +181,11 @@ fn run_lane_history(args: &[OsString]) -> io::Result<Outcome> {
     };
     let scope_dir = scope_dir_for(&root);
     let Some((scope, name, lane_hash)) = resolve_lane_entry(&scope_dir, &id) else {
+        if env::var_os("CI").is_none_or(|val| val.is_empty())
+            && let Some(err) = diagnose_lane_lookup_error(&scope_dir, &id, true)
+        {
+            return emit_failure(&root, args, "cat-lane-history", true, false, err);
+        }
         return Ok(Outcome::Declined("cat-lane-history lane lookup delegated".into()));
     };
     let history_hash = sha1_hex(&format!("{lane_hash}:LaneHistory"));
@@ -200,6 +215,12 @@ fn run_version_history(args: &[OsString]) -> io::Result<Outcome> {
         .rsplit_once('@')
         .unwrap_or((&opts.id, ""));
     let Some((Some(scope), name, _)) = resolve_component_entry(&scope_dir, bare_id) else {
+        if env::var_os("CI").is_none_or(|val| val.is_empty())
+            && let Some(err) =
+                diagnose_component_lookup_error(&scope_dir, &opts.id, bare_id, Chalk::detect(args))
+        {
+            return emit_failure(&root, args, "cat-version-history", true, opts.json, err);
+        }
         return Ok(Outcome::Declined("cat-version-history component lookup delegated".into()));
     };
     let vh_hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
@@ -287,6 +308,25 @@ pub(in crate::commands) fn emit_text(
         (true, false) => execute_without_loader_scope(&root.path, args, command, |_| Ok(report)),
         (false, true) => execute_then(&root.path, args, command, |_| Ok(report)),
         (true, true) => execute_with_scope(&root.path, args, command, &report),
+    }
+}
+
+pub(in crate::commands) fn emit_failure(
+    root: &ScopeRoot,
+    args: &[OsString],
+    command: &str,
+    loader: bool,
+    json_flag: bool,
+    msg: String,
+) -> io::Result<Outcome> {
+    let quiet = json_flag || !loader;
+    let err = io::Error::other(msg);
+    if root.bare {
+        execute_failure_scope(&root.path, args, command, quiet, "", err)
+    } else if quiet {
+        execute_without_loader(&root.path, args, command, |_| Err(err))
+    } else {
+        execute_then(&root.path, args, command, |_| Err(err))
     }
 }
 

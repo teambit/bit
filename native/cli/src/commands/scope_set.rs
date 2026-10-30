@@ -92,7 +92,10 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
         .iter()
         .skip(1)
         .map(|arg| arg.to_str())
-        .collect::<Option<Vec<_>>>()?;
+        .collect::<Option<Vec<_>>>()?
+        .into_iter()
+        .filter(|token| *token != "--no-color")
+        .collect::<Vec<_>>();
     let (&"set", rest) = tokens.split_first()? else {
         return None;
     };

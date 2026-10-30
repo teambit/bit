@@ -37,6 +37,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut force = false;
     for &arg in args {
         match arg {
+            "--no-color" => {}
             "--delete" => delete = true,
             "--force" => force = true,
             val if !val.starts_with('-') && !val.is_empty() => {

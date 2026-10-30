@@ -1,8 +1,13 @@
 //! Local, unexported lane metadata changes.
-use super::list;
+use super::{list, scope_root};
 use crate::{
     commands::{
         color::Chalk,
+        debug_cat::{
+            emit_failure,
+            lookup::{diagnose_lane_lookup_error, resolve_lane_entry},
+            scope_dir_for,
+        },
         engine::Engine,
         workspace_command::{self, results::Report},
     },
@@ -205,64 +210,105 @@ pub(super) fn eject(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome
 }
 
 pub(super) fn updates(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
-    let Some(lane_name) = parse_updates_args(lane_args) else {
+    let Some((lane_name, json)) = parse_updates_args(lane_args) else {
         return Ok(Outcome::Declined("outside the native lane updates grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
+    let Ok(Some(root)) = scope_root::discover() else {
         return Ok(Outcome::Declined("lane updates outside workspace delegated".into()));
     };
+    if root.bare && lane_name.is_none() {
+        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            return Ok(Outcome::Declined("CI lane updates bare scope delegated".into()));
+        }
+        return emit_failure(
+            &root,
+            args,
+            "updates",
+            true,
+            json,
+            r#"unable to detect the current lane, specify a lane name, e.g. "bit lane updates scope/name""#.into(),
+        );
+    }
     let is_main = match lane_name {
         Some(name) => name == "main",
-        None => is_checked_out_to_main(&root)?,
+        None => is_checked_out_to_main(&root.path)?,
     };
     if is_main {
-        return workspace_command::execute_then(&root, args, "updates", |_| {
-            Err(io::Error::other(
-                "the default lane (main) has no cascaded updates. switch to a lane or specify a lane name",
-            ))
-        });
+        return emit_failure(
+            &root,
+            args,
+            "updates",
+            true,
+            json,
+            "the default lane (main) has no cascaded updates. switch to a lane or specify a lane name".into(),
+        );
+    }
+    if let Some(name) = lane_name
+        && let Some(err) = unscoped_lane_error(&scope_dir_for(&root), name)
+    {
+        return emit_failure(&root, args, "updates", true, json, err);
     }
     Ok(Outcome::Declined("lane updates remote lookup delegated".into()))
 }
 
-fn parse_updates_args<'a>(lane_args: &[&'a str]) -> Option<Option<&'a str>> {
+fn parse_updates_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>, bool)> {
     let mut lane_name = None;
+    let mut json = false;
     for &arg in lane_args {
         match arg {
-            "--undo" => {}
+            "--undo" | "--no-color" => {}
+            "-j" | "--json" | "--json=true" => json = true,
+            "--no-json" | "--json=false" => json = false,
             val if !val.starts_with('-') && !val.is_empty() && lane_name.is_none() => {
                 lane_name = Some(val);
             }
             _ => return None,
         }
     }
-    Some(lane_name)
+    Some((lane_name, json))
 }
 
 pub(super) fn history_diff(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
-    let Some(lane_name) = parse_history_diff_args(lane_args) else {
+    let Some((lane_name, json)) = parse_history_diff_args(lane_args) else {
         return Ok(Outcome::Declined("outside the native lane history-diff grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
+    let Ok(Some(root)) = scope_root::discover() else {
         return Ok(Outcome::Declined("lane history-diff outside workspace delegated".into()));
     };
     let is_main = match lane_name {
         Some(name) => name == "main",
-        None => is_checked_out_to_main(&root)?,
+        None => root.bare || is_checked_out_to_main(&root.path)?,
     };
     if is_main {
-        return workspace_command::execute_then(&root, args, "history-diff", |_| {
-            Err(io::Error::other("unable to show diff-history of the default lane (main)"))
-        });
+        if root.bare && env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            return Ok(Outcome::Declined("CI lane history-diff bare scope delegated".into()));
+        }
+        return emit_failure(
+            &root,
+            args,
+            "history-diff",
+            true,
+            json,
+            "unable to show diff-history of the default lane (main)".into(),
+        );
+    }
+    if let Some(name) = lane_name
+        && let Some(err) = unscoped_lane_error(&scope_dir_for(&root), name)
+    {
+        return emit_failure(&root, args, "history-diff", true, json, err);
     }
     Ok(Outcome::Declined("lane history-diff remote lookup delegated".into()))
 }
 
-fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<Option<&'a str>> {
+fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>, bool)> {
     let mut lane_name = None;
+    let mut json = false;
     let mut iter = lane_args.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
+            "--no-color" => {}
+            "-j" | "--json" | "--json=true" => json = true,
+            "--no-json" | "--json=false" => json = false,
             "-l" | "--lane" => {
                 let val = iter
                     .next()
@@ -276,7 +322,19 @@ fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<Option<&'a str>>
             _ => return None,
         }
     }
-    Some(lane_name)
+    Some((lane_name, json))
+}
+
+fn unscoped_lane_error(scope_dir: &Path, name: &str) -> Option<String> {
+    if name.contains('/')
+        || name == "main"
+        || env::var_os("CI").is_some_and(|val| !val.is_empty())
+        || resolve_lane_entry(scope_dir, name).is_some()
+    {
+        return None;
+    }
+    let err = diagnose_lane_lookup_error(scope_dir, name, false)?;
+    (!err.ends_with("was not found!")).then_some(err)
 }
 
 fn is_checked_out_to_main(root: &Path) -> io::Result<bool> {

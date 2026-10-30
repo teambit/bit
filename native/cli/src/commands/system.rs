@@ -34,14 +34,21 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn parse_args(args: &[OsString]) -> Option<Parsed> {
-    let [_, sub] = args else {
+    let tokens = args
+        .iter()
+        .skip(1)
+        .map(|arg| arg.to_str())
+        .collect::<Option<Vec<_>>>()?
+        .into_iter()
+        .filter(|token| *token != "--no-color")
+        .collect::<Vec<_>>();
+    let [sub] = tokens.as_slice() else {
         return None;
     };
-    let sub = sub.to_str()?;
-    if sub.is_empty() || sub.starts_with('-') || sub == "tail-log" {
+    if sub.is_empty() || sub.starts_with('-') || *sub == "tail-log" {
         return None;
     }
-    if sub == "log" { Some(Parsed::Log) } else { Some(Parsed::Unrecognized(sub.to_owned())) }
+    if *sub == "log" { Some(Parsed::Log) } else { Some(Parsed::Unrecognized((*sub).to_owned())) }
 }
 
 fn run_log(args: &[OsString]) -> io::Result<Outcome> {

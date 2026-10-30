@@ -28,7 +28,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn valid_args(args: &[OsString]) -> bool {
-    args.len() == 1
+    args.iter()
+        .skip(1)
+        .all(|arg| arg.to_str() == Some("--no-color"))
 }
 
 fn render_details(dir: &Path, chalk: Chalk) -> io::Result<String> {

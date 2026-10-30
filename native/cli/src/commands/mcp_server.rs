@@ -37,6 +37,7 @@ pub(super) struct SetupOptions {
 pub(super) enum Subcommand {
     Setup(SetupOptions),
     Rules(RulesOptions),
+    Unrecognized(String),
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -46,11 +47,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(subcommand) = parse_subcommand(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native mcp-server grammar".into()));
     };
+    if let Subcommand::Unrecognized(sub) = &subcommand {
+        return run_unrecognized(args, sub);
+    }
     let cwd = env::current_dir()?;
     let chalk = Chalk::detect(args);
     let (label, report) = match &subcommand {
         Subcommand::Setup(opts) => ("setup", execute_setup(&cwd, opts, chalk)),
         Subcommand::Rules(opts) => ("rules", execute_rules(&cwd, opts, chalk)),
+        Subcommand::Unrecognized(_) => unreachable!(),
     };
     let history = workspace::root(&cwd).map(|root| History::start(&root, args));
     let output = workspace_command::loader_output(chalk, false);
@@ -65,6 +70,30 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+fn run_unrecognized(args: &[OsString], sub: &str) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI mcp-server unrecognized delegated".into()));
+    }
+    let cwd = env::current_dir()?;
+    let msg = format!(
+        r#""{sub}" is not a subcommand of "mcp-server", please run "bit mcp-server --help" to list the subcommands"#,
+    );
+    if let Some(root) = workspace::root(&cwd) {
+        workspace_command::execute_without_loader(&root, args, "mcp-server", |_| {
+            Err(io::Error::other(msg))
+        })
+    } else {
+        workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            "mcp-server",
+            true,
+            "",
+            io::Error::other(msg),
+        )
+    }
+}
+
 pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     let filtered = args
         .iter()
@@ -74,6 +103,9 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     match filtered.as_slice() {
         ["setup", rest @ ..] => parse_setup(rest).map(Subcommand::Setup),
         ["rules", rest @ ..] => rules::parse_rules(rest).map(Subcommand::Rules),
+        [sub] if !sub.is_empty() && !sub.starts_with('-') && *sub != "start" => {
+            Some(Subcommand::Unrecognized((*sub).to_owned()))
+        }
         _ => None,
     }
 }

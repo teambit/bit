@@ -53,7 +53,10 @@ fn parse_args(args: &[OsString]) -> Option<Parsed> {
         .iter()
         .skip(1)
         .map(|arg| arg.to_str())
-        .collect::<Option<Vec<_>>>()?;
+        .collect::<Option<Vec<_>>>()?
+        .into_iter()
+        .filter(|token| *token != "--no-color")
+        .collect::<Vec<_>>();
     let (&sub, rest) = tokens.split_first()?;
     if sub.is_empty() || sub.starts_with('-') {
         return None;

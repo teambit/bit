@@ -4,8 +4,8 @@
 mod tests;
 
 use super::{Command, workspace_command};
-use crate::native::Outcome;
-use std::{ffi::OsString, io};
+use crate::{native::Outcome, workspace};
+use std::{env, ffi::OsString, io};
 
 pub const COMMAND: Command = Command { name: "server", aliases: &[], run };
 
@@ -21,6 +21,23 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     if parse_options(&argv[1..]).is_none() {
         return Ok(Outcome::Declined("outside native server grammar".into()));
+    }
+    if env::var_os("CI").is_none_or(|val| val.is_empty()) {
+        let cwd = env::current_dir()?;
+        if workspace::root(&cwd).is_none() {
+            let msg = format!(
+                "unable to run bit-server, the current directory {} is not a workspace",
+                cwd.display(),
+            );
+            return workspace_command::execute_failure_scope(
+                &cwd,
+                args,
+                "server",
+                false,
+                "",
+                io::Error::other(msg),
+            );
+        }
     }
     Ok(Outcome::Declined("server execution delegated".into()))
 }

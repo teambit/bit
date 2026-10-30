@@ -44,6 +44,7 @@ fn parses_setup_and_rules_subcommands() {
         })),
     );
     assert_eq!(parse_subcommand(&["start"]), None);
+    assert_eq!(parse_subcommand(&["unknown"]), Some(Subcommand::Unrecognized("unknown".into())));
     assert_eq!(parse_subcommand(&[]), None);
 }
 

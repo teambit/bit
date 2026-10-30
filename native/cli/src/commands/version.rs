@@ -43,6 +43,7 @@ fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     for raw in args.iter().skip(1) {
         let token = raw.to_str()?;
         match token {
+            "--no-color" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--no-json" | "--json=false" => json = false,
             _ => return None,

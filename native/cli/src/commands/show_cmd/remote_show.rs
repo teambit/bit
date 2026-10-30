@@ -341,12 +341,28 @@ pub(super) fn ext_id_str(ext: &Value) -> Option<&str> {
         .or_else(|| ext["extensionId"]["name"].as_str())
 }
 
-fn render_remote_outcome(
+pub(super) fn render_remote_outcome(
     cwd: &Path,
     args: &[OsString],
     options: &Options,
     loaded: &LoadedComponent,
 ) -> io::Result<Option<Outcome>> {
+    let report = format_remote_report(options, loaded)?;
+    let outcome = if let Some(root) = workspace::root(cwd) {
+        if options.json {
+            workspace_command::execute_json(&root, args, "show", |_| Ok(report))?
+        } else {
+            workspace_command::execute_then(&root, args, "show", |_| Ok(report))?
+        }
+    } else if options.json {
+        workspace_command::execute_json_scope(cwd, args, "show", |_| Ok(report))?
+    } else {
+        workspace_command::execute_with_scope(cwd, args, "show", &report)?
+    };
+    Ok(Some(outcome))
+}
+
+fn format_remote_report(options: &Options, loaded: &LoadedComponent) -> io::Result<Report> {
     let data = if options.json {
         let value =
             if options.legacy { render::legacy_json(loaded) } else { render::harmony_json(loaded) };
@@ -354,17 +370,5 @@ fn render_remote_outcome(
     } else {
         render::text_report(loaded)
     };
-    let report = Report { data, code: 0, details: None };
-    if let Some(root) = workspace::root(cwd) {
-        let outcome = if options.json {
-            workspace_command::execute_json(&root, args, "show", |_| Ok(report))?
-        } else {
-            workspace_command::execute_then(&root, args, "show", |_| Ok(report))?
-        };
-        Ok(Some(outcome))
-    } else {
-        let outcome =
-            workspace_command::execute_without_loader_scope(cwd, args, "show", |_| Ok(report))?;
-        Ok(Some(outcome))
-    }
+    Ok(Report { data, code: 0, details: None })
 }

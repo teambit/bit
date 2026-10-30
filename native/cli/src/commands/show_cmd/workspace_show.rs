@@ -62,10 +62,16 @@ pub(super) fn try_run(
     args: &[OsString],
     options: &Options,
 ) -> io::Result<Option<Outcome>> {
-    if options.remote || options.compare || options.browser || options.id.contains('@') {
+    if options.remote || options.compare || options.browser {
         return Ok(None);
     }
     let Some(root) = workspace::root(cwd) else {
+        if cwd.join("scope.json").is_file()
+            && cwd.join("objects").is_dir()
+            && let Some(loaded) = remote_show::load_from_local_scope(cwd, &options.id)
+        {
+            return remote_show::render_remote_outcome(cwd, args, options, &loaded);
+        }
         return Ok(None);
     };
     if let Some(err_msg) = invalid_default_scope_error(&root) {
@@ -146,16 +152,30 @@ pub(super) fn load_target_outcome(root: &Path, options: &Options) -> TargetOutco
     if has_bitmap_peer_component(&ws) {
         return TargetOutcome::Declined;
     }
-    let Some((entry, component)) = find_component(&ws, &options.id) else {
-        if !options.json
-            && ws.entries.is_empty()
+    resolve_target_in_workspace(root, &ws_config, &ws, options)
+}
+
+fn resolve_target_in_workspace(
+    root: &Path,
+    ws_config: &WorkspaceConfig,
+    ws: &Workspace,
+    options: &Options,
+) -> TargetOutcome {
+    if let Some((bare_id, _)) = options.id.rsplit_once('@') {
+        if find_component(ws, bare_id).is_none()
             && let Some(loaded) = remote_show::load_from_local_scope(&ws.scope_path, &options.id)
         {
             return TargetOutcome::Loaded(Box::new(loaded));
         }
         return TargetOutcome::Declined;
+    }
+    let Some((entry, component)) = find_component(ws, &options.id) else {
+        if let Some(loaded) = remote_show::load_from_local_scope(&ws.scope_path, &options.id) {
+            return TargetOutcome::Loaded(Box::new(loaded));
+        }
+        return TargetOutcome::Declined;
     };
-    build_workspace_target(root, &ws_config, &ws, entry, component)
+    build_workspace_target(root, ws_config, ws, entry, component)
 }
 
 fn build_workspace_target(
