@@ -75,17 +75,20 @@ pub(super) fn try_run(
         return Ok(None);
     };
     if let Some(err_msg) = invalid_default_scope_error(&root) {
-        let outcome = workspace_command::execute_then(&root, args, "show", move |_| {
-            Err(io::Error::other(err_msg))
-        })?;
+        let outcome =
+            super::super::lint_cmd::emit_pattern_error(&root, args, "show", options.json, err_msg)?;
         return Ok(Some(outcome));
     }
     match load_target_outcome(&root, options) {
         TargetOutcome::Loaded(loaded) => render_workspace_outcome(&root, args, options, &loaded),
         TargetOutcome::OutdatedObjects => {
-            let outcome = workspace_command::execute_then(&root, args, "show", |_| {
-                Err(io::Error::other(IMPORT_PENDING))
-            })?;
+            let outcome = super::super::lint_cmd::emit_pattern_error(
+                &root,
+                args,
+                "show",
+                options.json,
+                IMPORT_PENDING.into(),
+            )?;
             Ok(Some(outcome))
         }
         TargetOutcome::Declined => Ok(None),

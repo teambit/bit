@@ -1,4 +1,7 @@
-use super::{Action, extract_version_package_name, parse_options, replace_package_name};
+use super::{
+    Action, Failure, extract_version_package_name, parse_options,
+    prepare_bare_scope_dependency_name, replace_package_name,
+};
 use serde_json::json;
 use std::ffi::OsString;
 
@@ -55,4 +58,12 @@ const keep = '@scope/older';
     assert!(replaced.contains(r#"from "@scope/new/sub/path";"#));
     assert!(replaced.contains("'~@scope/new/styles.scss'"));
     assert!(replaced.contains("'@scope/older'"));
+
+    let temp = tempfile::tempdir().unwrap();
+    let ok = prepare_bare_scope_dependency_name(temp.path(), "@scope/old", "@scope/new").unwrap();
+    assert_eq!(ok, "the following components have been changed (@scope/old => @scope/new):\n");
+    assert!(matches!(
+        prepare_bare_scope_dependency_name(temp.path(), "@scope/same", "@scope/same"),
+        Err(Failure::User(msg)) if msg.contains("are the same"),
+    ));
 }

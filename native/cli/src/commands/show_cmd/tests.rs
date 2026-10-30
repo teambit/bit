@@ -22,6 +22,17 @@ fn parses_show_options_and_detects_missing_host_errors() {
             compare: true,
         },
     );
+    assert_eq!(
+        parse_options(&["comp1", "-jlr"]),
+        Some(Options {
+            id: "comp1".into(),
+            json: true,
+            legacy: true,
+            remote: true,
+            browser: false,
+            compare: false,
+        }),
+    );
     let temp = tempfile::tempdir().unwrap();
     assert!(missing_host_error(temp.path(), &opts).unwrap().contains("--legacy"));
     let local_opts = parse_options(&["comp1"]).unwrap();

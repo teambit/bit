@@ -36,6 +36,7 @@ enum Action {
     Unrecognized(String),
 }
 
+#[derive(Debug)]
 enum Failure {
     Declined(String),
     User(String),
@@ -60,10 +61,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     match action {
         Action::Unrecognized(sub) => run_unrecognized(args, &sub, chalk),
         Action::DependencyName { old_id, new_id } => {
-            let Some(root) = workspace::root(&env::current_dir()?) else {
-                return Ok(Outcome::Declined("refactor requires a workspace".to_owned()));
-            };
-            run_dependency_name(&root, args, &old_id, &new_id)
+            let cwd = env::current_dir()?;
+            if let Some(root) = workspace::root(&cwd) {
+                return run_dependency_name(&root, args, &old_id, &new_id);
+            }
+            run_dependency_name_non_workspace(&cwd, args, &old_id, &new_id)
         }
     }
 }
@@ -128,10 +130,10 @@ fn run_unrecognized(args: &[OsString], sub: &str, chalk: Chalk) -> io::Result<Ou
 fn run_dependency_name(
     root: &Path,
     args: &[OsString],
-    old_id: &str,
-    new_id: &str,
+    old: &str,
+    new: &str,
 ) -> io::Result<Outcome> {
-    match prepare_dependency_name(root, old_id, new_id) {
+    match prepare_dependency_name(root, old, new) {
         Ok(prepared) => workspace_command::execute_then(root, args, "dependency-name", |_output| {
             for (path, bytes) in &prepared.writes {
                 fs::write(path, bytes)?;
@@ -142,12 +144,55 @@ fn run_dependency_name(
             if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
                 return Ok(Outcome::Declined("CI refactor error stack".to_owned()));
             }
-            workspace_command::execute_then(root, args, "dependency-name", |_output| {
-                Err(io::Error::other(message))
-            })
+            super::lint_cmd::emit_pattern_error(root, args, "dependency-name", false, message)
         }
         Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("refactor: {reason}"))),
     }
+}
+
+fn run_dependency_name_non_workspace(
+    cwd: &Path,
+    args: &[OsString],
+    old: &str,
+    new: &str,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI non-workspace refactor delegated".to_owned()));
+    }
+    let Some(sr) = scope_root::discover().ok().flatten() else {
+        return emit_scope_error(cwd, args, "Host was not found");
+    };
+    match prepare_bare_scope_dependency_name(&sr.path, old, new) {
+        Ok(data) => {
+            let report = Report { data, code: 0, details: None };
+            workspace_command::execute_with_scope(&sr.path, args, "dependency-name", &report)
+        }
+        Err(Failure::User(msg)) => emit_scope_error(&sr.path, args, &msg),
+        Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("refactor: {reason}"))),
+    }
+}
+
+fn emit_scope_error(cwd: &Path, args: &[OsString], msg: &str) -> io::Result<Outcome> {
+    let err = io::Error::other(msg.to_owned());
+    workspace_command::execute_failure_scope(cwd, args, "dependency-name", false, "", err)
+}
+
+fn prepare_bare_scope_dependency_name(
+    scope_dir: &Path,
+    old: &str,
+    new: &str,
+) -> Result<String, Failure> {
+    let old_pkg = resolve_bare_scope_package_name(scope_dir, old)?;
+    let new_pkg = resolve_bare_scope_package_name(scope_dir, new)?;
+    if old_pkg == new_pkg {
+        return Err(Failure::User(format!(
+            "refactoring: the old package-name and the new package-name are the same: {old_pkg}",
+        )));
+    }
+    if scope_has_components(scope_dir) {
+        return Err(Failure::Declined("bare scope has components".to_owned()));
+    }
+    Ok(format!("the following components have been changed ({old_pkg} => {new_pkg}):\n"))
 }
 
 fn load_workspace(root: &Path) -> Result<Workspace, Failure> {
@@ -210,8 +255,12 @@ fn resolve_package_name(root: &Path, ws: &Workspace, raw_id: &str) -> Result<Str
     {
         return Ok(comp.package_name.clone());
     }
-    if exists_in_scope_index(root, raw_id) {
-        if let Some(pkg) = resolve_scope_package_name(root, raw_id) {
+    resolve_bare_scope_package_name(&workspace::scope_path(root), raw_id)
+}
+
+fn resolve_bare_scope_package_name(scope_dir: &Path, raw_id: &str) -> Result<String, Failure> {
+    if exists_in_scope_index(scope_dir, raw_id) {
+        if let Some(pkg) = resolve_scope_package_name(scope_dir, raw_id) {
             return Ok(pkg);
         }
         return Err(Failure::Declined("component exists only in local scope".to_owned()));
@@ -224,13 +273,12 @@ fn resolve_package_name(root: &Path, ws: &Workspace, raw_id: &str) -> Result<Str
     )))
 }
 
-fn resolve_scope_package_name(root: &Path, raw_id: &str) -> Option<String> {
-    let scope_dir = workspace::scope_path(root);
+fn resolve_scope_package_name(scope_dir: &Path, raw_id: &str) -> Option<String> {
     let (bare, explicit_ver) = raw_id
         .rsplit_once('@')
         .map_or((raw_id, None), |(id, ver)| (id, Some(ver)));
-    let (_, _, comp_hash) = resolve_component_entry(&scope_dir, bare)?;
-    let (kind, comp_val) = bit_object_import::read_scope_object(&scope_dir, &comp_hash).ok()??;
+    let (_, _, comp_hash) = resolve_component_entry(scope_dir, bare)?;
+    let (kind, comp_val) = bit_object_import::read_scope_object(scope_dir, &comp_hash).ok()??;
     if kind != "Component" {
         return None;
     }
@@ -238,7 +286,7 @@ fn resolve_scope_package_name(root: &Path, raw_id: &str) -> Option<String> {
         Some(ver) if ver != "latest" => comp_val["versions"][ver].as_str().unwrap_or(ver),
         _ => comp_val["head"].as_str()?,
     };
-    let (vkind, ver_val) = bit_object_import::read_scope_object(&scope_dir, ver_hash).ok()??;
+    let (vkind, ver_val) = bit_object_import::read_scope_object(scope_dir, ver_hash).ok()??;
     if vkind != "Version" {
         return None;
     }
@@ -275,16 +323,24 @@ fn is_valid_scoped_package_name(name: &str) -> bool {
         && !name.contains("..")
 }
 
-fn exists_in_scope_index(root: &Path, id: &str) -> bool {
-    let Ok(bytes) = fs::read(workspace::scope_path(root).join("index.json")) else {
-        return false;
-    };
-    let Ok(index) = serde_json::from_slice::<Value>(&bytes) else {
-        return false;
-    };
+fn scope_has_components(scope_dir: &Path) -> bool {
+    fs::read(scope_dir.join("index.json"))
+        .ok()
+        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
+        .and_then(|index| index["components"].as_array().cloned())
+        .is_some_and(|comps| {
+            comps
+                .iter()
+                .any(|item| item["isSymlink"] != true)
+        })
+}
+
+fn exists_in_scope_index(scope_dir: &Path, id: &str) -> bool {
     let without_version = id.split('@').next().unwrap_or(id);
-    index["components"]
-        .as_array()
+    fs::read(scope_dir.join("index.json"))
+        .ok()
+        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
+        .and_then(|index| index["components"].as_array().cloned())
         .is_some_and(|components| {
             components
                 .iter()
@@ -306,7 +362,7 @@ fn refactor_component(
     for rel_file in &comp.files {
         let path = comp.dir.join(rel_file);
         let bytes = fs::read(&path)?;
-        if is_binary(&bytes) {
+        if bytes[..bytes.len().min(512)].contains(&0) {
             continue;
         }
         let content = String::from_utf8_lossy(&bytes);
@@ -317,11 +373,6 @@ fn refactor_component(
         }
     }
     Ok(comp_changed)
-}
-
-fn is_binary(bytes: &[u8]) -> bool {
-    let sample = &bytes[..bytes.len().min(512)];
-    sample.contains(&0)
 }
 
 fn replace_package_name(input: &str, old_name: &str, new_name: &str) -> Result<String, Failure> {

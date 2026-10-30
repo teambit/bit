@@ -18,7 +18,7 @@ pub const COMMAND: Command = Command { name: "show", aliases: &[], run };
 const REMOTE_NO_HOST_ERR: &str = "error: the current directory is not a workspace nor a scope. the full \"bit show\" is not supported.\nto see the legacy bit show, please use \"--legacy\" flag";
 const LOCAL_NO_HOST_ERR: &str = "Could not find a workspace or scope. Consider using --remote or run inside a valid workspace or scope.";
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub id: String,
     pub json: bool,
@@ -43,6 +43,16 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
     let cwd = env::current_dir()?;
     if let Some(err) = missing_host_error(&cwd, &options) {
+        if options.json {
+            return workspace_command::execute_failure_scope(
+                &cwd,
+                args,
+                "show",
+                true,
+                "",
+                io::Error::other(err),
+            );
+        }
         return workspace_command::execute_without_loader_scope(&cwd, args, "show", |_| {
             Err(io::Error::other(err))
         });
@@ -71,24 +81,45 @@ pub(super) fn missing_host_error(cwd: &Path, options: &Options) -> Option<&'stat
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut id = None;
-    let mut json = false;
-    let mut legacy = false;
-    let mut remote = false;
-    let mut browser = false;
-    let mut compare = false;
+    let mut options = Options::default();
     for &arg in args {
         match arg {
             "--no-color" => return None,
-            "-j" | "--json" => json = true,
-            "-l" | "--legacy" => legacy = true,
-            "-r" | "--remote" => remote = true,
-            "-b" | "--browser" => browser = true,
-            "-c" | "--compare" => compare = true,
+            "-j" | "--json" => options.json = true,
+            "-l" | "--legacy" => options.legacy = true,
+            "-r" | "--remote" => options.remote = true,
+            "-b" | "--browser" => options.browser = true,
+            "-c" | "--compare" => options.compare = true,
+            short if apply_short_bundle(short, &mut options) => {}
             val if !val.starts_with('-') && !val.is_empty() && id.is_none() => {
                 id = Some(val.to_owned());
             }
             _ => return None,
         }
     }
-    Some(Options { id: id?, json, legacy, remote, browser, compare })
+    options.id = id?;
+    Some(options)
+}
+
+fn apply_short_bundle(arg: &str, options: &mut Options) -> bool {
+    if !arg.starts_with('-')
+        || arg.starts_with("--")
+        || arg.len() <= 2
+        || !arg[1..]
+            .chars()
+            .all(|ch| matches!(ch, 'j' | 'l' | 'r' | 'b' | 'c'))
+    {
+        return false;
+    }
+    for ch in arg[1..].chars() {
+        match ch {
+            'j' => options.json = true,
+            'l' => options.legacy = true,
+            'r' => options.remote = true,
+            'b' => options.browser = true,
+            'c' => options.compare = true,
+            _ => unreachable!(),
+        }
+    }
+    true
 }

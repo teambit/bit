@@ -23,6 +23,10 @@ impl Options {
             .skip(1)
             .map(|arg| arg.to_str())
             .collect::<Option<Vec<_>>>()?;
+        let tokens = tokens
+            .into_iter()
+            .filter(|token| *token != "--no-color")
+            .collect::<Vec<_>>();
         let (command, rest) = split_subcommand(&tokens)?;
         let (global, values) = parse_flags_and_values(rest)?;
         let action = match (command, values.as_slice()) {

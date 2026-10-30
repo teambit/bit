@@ -92,7 +92,9 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--no-color" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
-            val if !val.starts_with('-') && id.is_none() => id = Some(val.to_owned()),
+            val if !val.starts_with('-') && !val.is_empty() && id.is_none() => {
+                id = Some(val.to_owned());
+            }
             _ => return None,
         }
     }

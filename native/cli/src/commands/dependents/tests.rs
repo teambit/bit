@@ -21,6 +21,7 @@ fn parses_dependents_options_and_checks_bitmap_scope() {
         Some(Options { id: "my-scope/comp1".into(), json: false }),
     );
     assert_eq!(parse_options(&[]), None);
+    assert_eq!(parse_options(&[""]), None);
     assert!(is_unscoped_bitmap_row(&json!({ "scope": "", "version": "" })));
     assert!(is_unscoped_bitmap_row(&json!({ "rootDir": "comp1" })));
     assert!(!is_unscoped_bitmap_row(&json!({ "scope": "my-scope", "version": "0.0.1" })));

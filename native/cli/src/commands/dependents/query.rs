@@ -123,11 +123,9 @@ fn resolve_missing_scope_target(
             r#"error: component ID "{raw_id}" is invalid, please use the following format: [scope]/<name>"#,
         )));
     }
-    if let Some((scope, name)) = bare.split_once('/')
-        && selection::valid_scope_str(scope)
-        && !name.is_empty()
-        && !name.contains("//")
-    {
+    if let Some((scope, name)) = bare.split_once('/') {
+        selection::validate_scope_name(scope)?;
+        selection::validate_component_name(name)?;
         let full = match explicit_ver {
             Some(ver_str) if ver_str != "latest" => format!("{bare}@{ver_str}"),
             _ => bare.to_owned(),
