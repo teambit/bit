@@ -69,11 +69,12 @@ fn parse_target(args: &[OsString]) -> Option<String> {
 }
 
 fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {
-    let aspect_id = resolve_aspect_id(root, target)?;
     let ws_path = root.join("workspace.jsonc");
     let content = fs::read_to_string(&ws_path)?;
     let doc = Document::parse(&content)?;
-    if is_extension_configured(&doc.value(), &aspect_id) {
+    let doc_val = doc.value();
+    let aspect_id = resolve_aspect_id(root, &doc_val, target)?;
+    if is_extension_configured(&doc_val, &aspect_id) {
         return Err(Failure::User(format!(
             "error: the extension {aspect_id} is already configured in the config file",
         )));
@@ -96,11 +97,24 @@ fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {
     Ok(Report { data: summary, code: 0, details: None })
 }
 
-fn resolve_aspect_id(root: &Path, target: &str) -> Result<String, Failure> {
-    let bitmap = Bitmap::load(root, None)?;
+fn resolve_aspect_id(root: &Path, doc_val: &Value, target: &str) -> Result<String, Failure> {
+    let default_scope = doc_val["teambit.workspace/workspace"]["defaultScope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty());
+    let bitmap = Bitmap::load(root, default_scope)?;
+    let bare = target
+        .split('@')
+        .next()
+        .unwrap_or(target);
+    let normalized = bare.trim_start_matches("./").trim_end_matches('/');
     let entry = bitmap.entries
         .iter()
-        .find(|entry| entry.id.to_string_without_version() == target || entry.id.name == target);
+        .find(|entry| {
+            entry.owns_its_dir()
+                && (entry.id.to_string_without_version() == bare
+                    || entry.id.name == bare
+                    || (!entry.root_dir.is_empty() && entry.root_dir == normalized))
+        });
     let Some(entry) = entry else {
         return Err(Failure::Declined("non-workspace aspect requires canonical import".to_owned()));
     };

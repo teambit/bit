@@ -101,8 +101,8 @@ fn parse_subcommand(args: &[OsString]) -> Option<Subcommand> {
 
 fn is_supported_pattern(pattern: &str) -> bool {
     !pattern.is_empty()
-        && !pattern.starts_with('-')
-        && !pattern.contains(['$', ':', '@'])
+        && !pattern.starts_with(['-', '@'])
+        && !pattern.contains(['$', ':'])
         && !pattern.contains(" AND ")
         && !pattern.starts_with("teambit.")
 }
@@ -197,11 +197,18 @@ fn is_entry_staged_for_local_only(
     else {
         return Ok(true);
     };
-    if !bitmap_val["_bit_lane"].is_null() && bitmap_val["_bit_lane"]["id"]["name"] != "main" {
-        return Err(Failure::Declined("exported component on a lane".to_owned()));
-    }
     if entry.root_dir.is_empty() || !root.join(&entry.root_dir).is_dir() {
         return Err(Failure::Declined("exported component directory missing".to_owned()));
+    }
+    if !bitmap_val["_bit_lane"].is_null() && bitmap_val["_bit_lane"]["id"]["name"] != "main" {
+        return super::snap_distance::is_component_staged_on_lane(
+            root,
+            bitmap_val,
+            scope,
+            &entry.id.name,
+            version,
+        )
+        .ok_or_else(|| Failure::Declined("exported component on a lane".to_owned()));
     }
     super::snap_distance::is_component_staged_on_main(root, scope, &entry.id.name, version)
         .ok_or_else(|| Failure::Declined("exported versioned component".to_owned()))

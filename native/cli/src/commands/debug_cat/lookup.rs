@@ -191,37 +191,33 @@ pub(in crate::commands) fn resolve_component_entry(
     bare_id: &str,
 ) -> Option<(Option<String>, String, String)> {
     let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
-    let comps = index["components"].as_array()?;
-    let active = comps
+    let active: Vec<&Value> = index["components"]
+        .as_array()?
         .iter()
         .filter(|row| row["isSymlink"] != true)
-        .collect::<Vec<_>>();
-    let exact = active
+        .collect();
+    let exact: Vec<&Value> = active
         .iter()
+        .copied()
         .filter(|row| {
             let name = row["id"]["name"].as_str().unwrap_or_default();
-            match row["id"]["scope"]
+            row["id"]["scope"]
                 .as_str()
                 .filter(|scope| !scope.is_empty())
-            {
-                Some(scope) => format!("{scope}/{name}") == bare_id,
-                None => name == bare_id,
-            }
+                .map_or_else(|| name == bare_id, |scope| format!("{scope}/{name}") == bare_id)
         })
-        .collect::<Vec<_>>();
-    if let [row] = exact.as_slice() {
-        return Some((
-            row["id"]["scope"].as_str().map(str::to_owned),
-            row["id"]["name"].as_str()?.to_owned(),
-            row["hash"].as_str()?.to_owned(),
-        ));
-    }
-    let by_name = active
-        .iter()
-        .filter(|row| row["id"]["name"].as_str() == Some(bare_id))
-        .collect::<Vec<_>>();
-    let [row] = by_name.as_slice() else {
-        return None;
+        .collect();
+    let row = if let [exact_row] = exact.as_slice() {
+        *exact_row
+    } else {
+        let by_name: Vec<&Value> = active
+            .into_iter()
+            .filter(|row| row["id"]["name"].as_str() == Some(bare_id))
+            .collect();
+        let [name_row] = by_name.as_slice() else {
+            return None;
+        };
+        *name_row
     };
     Some((
         row["id"]["scope"].as_str().map(str::to_owned),
@@ -241,10 +237,9 @@ pub(in crate::commands) fn diagnose_lane_lookup_error(
         serde_json::from_slice(&fs::read(scope_dir.join("scope.json")).ok()?).ok()?;
     scope_json["name"].as_str()?;
     if let Some((scope, name)) = id.split_once('/') {
-        if scope.is_empty() || name.is_empty() || name.contains('/') {
-            return None;
-        }
-        return Some(missing_lane_msg(id, scope, name, for_history));
+        return (!scope.is_empty() && !name.is_empty() && !name.contains('/')).then(|| {
+            missing_lane_msg(id, scope, name, for_history)
+        });
     }
     if id == "main" {
         return Some(missing_lane_msg("main", "", "main", for_history));
@@ -279,21 +274,84 @@ pub(in crate::commands) fn diagnose_unscoped_lane_error(
     lanes: &[Value],
     id: &str,
 ) -> Option<String> {
-    let count = lanes
+    match lanes
         .iter()
         .filter(|row| row["id"]["name"].as_str() == Some(id))
-        .count();
-    if count == 0 {
-        return Some(format!(
+        .count()
+    {
+        0 => Some(format!(
             r#"lane "{id}" was not found locally. Please try with scope name, e.g. my-org.my-scope/{id}"#,
-        ));
-    }
-    if count > 1 {
-        return Some(format!(
+        )),
+        count if count > 1 => Some(format!(
             r#"found more than one lane with the name "{id}", please specify the scope in a form of "<scope>/{id}""#,
-        ));
+        )),
+        _ => None,
     }
-    None
+}
+
+pub(in crate::commands) fn diagnose_cat_component_error(
+    root: &ScopeRoot,
+    scope_dir: &Path,
+    raw_id: &str,
+    chalk: Chalk,
+) -> Option<String> {
+    let (bare_id, version_opt) = raw_id
+        .rsplit_once('@')
+        .map_or((raw_id, None), |(id, ver)| (id, Some(ver)));
+    if bare_id.is_empty() || version_opt == Some("") {
+        return None;
+    }
+    let Some((comp_scope, comp_name, comp_hash)) = resolve_component_entry(scope_dir, bare_id)
+    else {
+        return diagnose_component_lookup_error(scope_dir, raw_id, bare_id, chalk);
+    };
+    let (kind, comp_val) = bit_object_import::read_scope_object(scope_dir, &comp_hash).ok()??;
+    let ver = (kind == "Component").then_some(version_opt).flatten()?;
+    let comp_id = comp_scope
+        .as_deref()
+        .filter(|scope| !scope.is_empty())
+        .map_or_else(|| comp_name.clone(), |scope| format!("{scope}/{comp_name}"));
+    let lane_head = (ver == "latest")
+        .then(|| current_lane_head(root, scope_dir, comp_scope.as_deref(), &comp_name))
+        .flatten();
+    diagnose_version_error(scope_dir, &comp_id, &comp_val, ver, lane_head.as_deref(), chalk)
+}
+
+fn diagnose_version_error(
+    scope_dir: &Path,
+    comp_id: &str,
+    comp_val: &Value,
+    ver: &str,
+    lane_head: Option<&str>,
+    chalk: Chalk,
+) -> Option<String> {
+    if ver == "latest" {
+        let ver_hash = lane_head
+            .map(str::to_owned)
+            .or_else(|| comp_val["head"].as_str().map(str::to_owned))?;
+        let ver_label = resolve_head_version_label(comp_val).unwrap_or_else(|| ver_hash.clone());
+        return bit_object_import::read_scope_object(scope_dir, &ver_hash)
+            .ok()?
+            .is_none()
+            .then(|| missing_version_on_fs_msg(&ver_label, comp_id));
+    }
+    let Some(ver_hash) = resolve_version_hash(comp_val, ver) else {
+        return Some(format!(
+            r#"error: version "{}" of component {} was not found."#,
+            chalk.bold(ver),
+            chalk.bold(comp_id),
+        ));
+    };
+    bit_object_import::read_scope_object(scope_dir, &ver_hash)
+        .ok()?
+        .is_none()
+        .then(|| missing_version_on_fs_msg(ver, comp_id))
+}
+
+fn missing_version_on_fs_msg(ver: &str, comp_id: &str) -> String {
+    format!(
+        "error: version \"{ver}\" of component {comp_id} was not found on the filesystem.\ntry running \"bit import\". if it doesn't help, try running \"bit import {comp_id} --objects\"",
+    )
 }
 
 pub(in crate::commands) fn diagnose_component_lookup_error(
@@ -332,17 +390,13 @@ fn diagnose_unscoped_component_error(
     if bare_id.contains('.') {
         return None;
     }
-    let count = comps
+    match comps
         .iter()
         .filter(|row| row["isSymlink"] != true && row["id"]["name"].as_str() == Some(bare_id))
-        .count();
-    if count == 0 {
-        return Some(format!(
-            "scope.getParsedId, the component {raw_id} must include a scope-name",
-        ));
+        .count()
+    {
+        0 => Some(format!("scope.getParsedId, the component {raw_id} must include a scope-name")),
+        count if count > 2 => Some("getHashFromIndex expect to get zero or one result".to_owned()),
+        _ => None,
     }
-    if count > 2 {
-        return Some("getHashFromIndex expect to get zero or one result".to_owned());
-    }
-    None
 }

@@ -131,6 +131,7 @@ fn load_workspace_ids(root: &Path) -> Vec<String> {
     };
     bitmap.entries
         .iter()
+        .filter(|entry| entry.owns_its_dir())
         .map(|entry| entry.id.to_string_without_version())
         .collect()
 }

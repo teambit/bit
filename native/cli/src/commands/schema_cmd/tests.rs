@@ -1,10 +1,7 @@
 use super::{
-    Options,
-    extractor::{
-        extract_stored_schema, is_entry_modified_on_disk, match_workspace_entries,
-        resolve_scope_schema_json,
-    },
-    is_missing_host, parse_options,
+    DiffOptions, Options, ParsedCommand,
+    extractor::{extract_stored_schema, is_entry_modified_on_disk, resolve_scope_schema_json},
+    is_missing_host, parse_command, parse_options,
 };
 use bit_install::workspace::Bitmap;
 use flate2::{Compression, write::ZlibEncoder};
@@ -17,6 +14,15 @@ fn parses_schema_options_and_detects_missing_host() {
     assert_eq!(parse_options(&[]), None);
     let opts = parse_options(&["comp1", "-j"]).expect("parse options");
     assert_eq!(opts, Options { pattern: "comp1".into(), remote: false, json: true });
+    assert_eq!(
+        parse_command(&["diff", "comp1", "0.0.1", "0.0.2", "-j"]),
+        Some(ParsedCommand::Diff(DiffOptions {
+            component: "comp1".into(),
+            base_version: "0.0.1".into(),
+            compare_version: "0.0.2".into(),
+            json: true,
+        })),
+    );
 
     let temp = tempdir().expect("tempdir");
     assert!(is_missing_host(temp.path(), &opts));
@@ -25,7 +31,7 @@ fn parses_schema_options_and_detects_missing_host() {
 }
 
 #[test]
-fn matches_workspace_entries_and_extracts_stored_schema() {
+fn extracts_stored_schema() {
     let temp = tempdir().expect("tempdir");
     fs::write(
         temp.path().join(".bitmap"),
@@ -33,10 +39,6 @@ fn matches_workspace_entries_and_extracts_stored_schema() {
     )
     .expect("write bitmap");
     let bitmap = Bitmap::load(temp.path(), Some("my-scope")).expect("load bitmap");
-    assert_eq!(match_workspace_entries(&bitmap, "nonexistent").expect("match").len(), 0);
-    assert_eq!(match_workspace_entries(&bitmap, "bar/foo").expect("match").len(), 1);
-    assert_eq!(match_workspace_entries(&bitmap, "**/bar/*").expect("match").len(), 1);
-
     let ver_val = json!({
         "extensions": [{
             "name": "teambit.semantics/schema",

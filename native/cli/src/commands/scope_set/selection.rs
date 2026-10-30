@@ -53,7 +53,14 @@ fn resolve_literal_entry<'a>(
     pattern: &str,
     chalk: Chalk,
 ) -> Result<Vec<&'a BitmapEntry>, Failure> {
-    let normalized = inventory::normalize(pattern);
+    if pattern.starts_with('@') {
+        return Err(Failure::Declined("package name selector".to_owned()));
+    }
+    let bare = pattern.rsplit_once('@').map_or(pattern, |(id, _)| id);
+    if bare.is_empty() {
+        return Err(Failure::Declined("empty component id".to_owned()));
+    }
+    let normalized = inventory::normalize(bare);
     let directory = normalized.strip_prefix("./").unwrap_or(&normalized);
     let found = bitmap.entries
         .iter()
@@ -62,20 +69,20 @@ fn resolve_literal_entry<'a>(
             bitmap.entries
                 .iter()
                 .find(|entry| {
-                    entry.id.to_string_without_version() == pattern || entry.id.name == pattern
+                    entry.id.to_string_without_version() == bare || entry.id.name == bare
                 })
         });
     if let Some(entry) = found.filter(|entry| entry.owns_its_dir()) {
         return Ok(vec![entry]);
     }
-    if found.is_some() || is_known_scope_or_valid_scoped_id(root, pattern)? {
+    if found.is_some() || is_known_scope_or_valid_scoped_id(root, bare)? {
         return Err(Failure::User(format!(
             "error: component \"{}\" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit create' (see 'bit create --help' for more information)",
             chalk.bold(pattern),
         )));
     }
     Err(Failure::User(format!(
-        r#"error: component ID "{pattern}" is invalid, please use the following format: [scope]/<name>"#,
+        r#"error: component ID "{bare}" is invalid, please use the following format: [scope]/<name>"#,
     )))
 }
 

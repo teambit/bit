@@ -113,14 +113,27 @@ fn resolve_configured_aspect_key(
     doc_val: &Value,
     target: &str,
 ) -> Option<(String, String)> {
-    if let Some(key) = find_extension_key(doc_val, target) {
-        return Some((key, target.to_owned()));
+    let bare = target
+        .split('@')
+        .next()
+        .unwrap_or(target);
+    if let Some(key) =
+        find_extension_key(doc_val, target).or_else(|| find_extension_key(doc_val, bare))
+    {
+        return Some((key, bare.to_owned()));
     }
-    if let Ok(bitmap) = Bitmap::load(root, None) {
+    let default_scope = doc_val["teambit.workspace/workspace"]["defaultScope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty());
+    if let Ok(bitmap) = Bitmap::load(root, default_scope) {
+        let normalized = bare.trim_start_matches("./").trim_end_matches('/');
         let entry = bitmap.entries
             .iter()
             .find(|entry| {
-                entry.id.to_string_without_version() == target || entry.id.name == target
+                entry.owns_its_dir()
+                    && (entry.id.to_string_without_version() == bare
+                        || entry.id.name == bare
+                        || (!entry.root_dir.is_empty() && entry.root_dir == normalized))
             });
         if let Some(entry) = entry {
             let id = entry.id.to_string_without_version();

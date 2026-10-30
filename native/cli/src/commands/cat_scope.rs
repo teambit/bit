@@ -6,7 +6,7 @@ mod tests;
 
 use super::{
     Command,
-    debug_cat::{emit_text, sha1_hex},
+    debug_cat::{emit_scope_not_found, emit_text, sha1_hex},
     lane::scope_root::{self, ScopeRoot},
     list::table,
     workspace_command,
@@ -69,6 +69,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         None => cwd,
     };
     let Some(target_scope_dir) = resolve_scope_dir(&target_dir) else {
+        if opts.scope_path.is_none()
+            && scope_root::discover()
+                .ok()
+                .flatten()
+                .is_none()
+        {
+            return emit_scope_not_found(args, "cat-scope", true);
+        }
         return Ok(Outcome::Declined("cat-scope target is not a valid scope".into()));
     };
     let Some(entries) = collect_scope_entries(&target_scope_dir, &opts) else {
@@ -81,7 +89,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if opts.json {
         return emit_json_entries(&current_root, args, entries);
     }
-    let rendered = if opts.full {
+    let rendered = render_text_entries(args, opts.full, entries);
+    emit_text(&current_root, args, "cat-scope", false, rendered)
+}
+
+fn render_text_entries(args: &[OsString], full: bool, entries: Vec<ScopeEntry>) -> String {
+    if full {
         entries
             .into_iter()
             .map(|entry| format!("> {}\n\n{}\n", entry.hash, entry.id))
@@ -93,8 +106,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             .map(|entry| vec![entry.id, format!("obj: {}", entry.hash), entry.kind.to_owned()])
             .collect::<Vec<_>>();
         table::render(&["id", "Object", "Type"], &rows, table::colors(args))
-    };
-    emit_text(&current_root, args, "cat-scope", false, rendered)
+    }
 }
 
 fn emit_json_entries(

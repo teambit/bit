@@ -2,7 +2,14 @@
 
 use crate::{
     commands::{
-        aspect::workspace_default_scope, debug_cat::lookup::resolve_component_entry, patterns,
+        aspect::workspace_default_scope,
+        color::Chalk,
+        debug_cat::lookup::resolve_component_entry,
+        patterns,
+        scope_set::{
+            Failure,
+            selection::{resolve_pattern_entries, valid_scope_str},
+        },
     },
     workspace,
 };
@@ -11,7 +18,7 @@ use serde_json::Value;
 use std::{fs, path::Path};
 
 pub(super) enum WorkspaceSchemaOutcome {
-    Empty,
+    Error(String),
     Schemas(Vec<Value>),
     Declined,
 }
@@ -20,16 +27,16 @@ pub(super) fn resolve_workspace_schema(
     root: &Path,
     pattern: &str,
     json_flag: bool,
+    chalk: Chalk,
 ) -> WorkspaceSchemaOutcome {
     let Some(bitmap) = load_bitmap(root) else {
         return WorkspaceSchemaOutcome::Declined;
     };
-    let Some(entries) = match_workspace_entries(&bitmap, pattern) else {
-        return WorkspaceSchemaOutcome::Declined;
+    let entries = match resolve_pattern_entries(root, &bitmap, pattern, chalk) {
+        Ok(entries) => entries,
+        Err(Failure::User(msg)) => return WorkspaceSchemaOutcome::Error(msg),
+        Err(Failure::Declined(_)) => return WorkspaceSchemaOutcome::Declined,
     };
-    if entries.is_empty() {
-        return WorkspaceSchemaOutcome::Empty;
-    }
     if !json_flag {
         return WorkspaceSchemaOutcome::Declined;
     }
@@ -42,6 +49,55 @@ pub(super) fn resolve_workspace_schema(
         schemas.push(schema);
     }
     WorkspaceSchemaOutcome::Schemas(schemas)
+}
+
+pub(super) fn diagnose_workspace_diff_error(
+    root: &Path,
+    pattern: &str,
+    chalk: Chalk,
+) -> Option<String> {
+    let bitmap = load_bitmap(root)?;
+    match resolve_pattern_entries(root, &bitmap, pattern, chalk) {
+        Err(Failure::User(msg)) => Some(msg),
+        Ok(entries) if entries.len() > 1 => Some(format!(
+            r#"pattern "{pattern}" matches {} components. please specify a single component."#,
+            entries.len(),
+        )),
+        _ => None,
+    }
+}
+
+pub(super) fn diagnose_scope_schema_error(scope_dir: &Path, pattern: &str) -> Option<String> {
+    if pattern.contains(['$', ':']) || pattern.contains(" AND ") {
+        return None;
+    }
+    if pattern.contains(['*', ',']) {
+        let candidates = scope_pattern_candidates(scope_dir)?;
+        let refs = candidates
+            .iter()
+            .map(|(id, _)| id.as_str())
+            .collect::<Vec<_>>();
+        let matched = patterns::matching(&refs, &patterns::split(pattern)).ok()?;
+        return matched
+            .is_empty()
+            .then(|| format!(r#"unable to find any component matching the "{pattern}" pattern"#));
+    }
+    if pattern.contains('!') {
+        return None;
+    }
+    let (bare_id, explicit_ver) = pattern
+        .rsplit_once('@')
+        .map_or((pattern, None), |(id, ver)| (id, Some(ver)));
+    if bare_id.is_empty() || explicit_ver == Some("") || bare_id.starts_with('@') {
+        return None;
+    }
+    let (scope, name) = bare_id.split_once('/')?;
+    if !valid_scope_str(scope) || name.is_empty() || name.contains("//") {
+        return None;
+    }
+    resolve_component_entry(scope_dir, bare_id)
+        .is_none()
+        .then(|| format!(r#"unable to find "{pattern}" in the scope"#))
 }
 
 pub(super) fn resolve_scope_schema_json(scope_dir: &Path, pattern: &str) -> Option<Vec<Value>> {
@@ -134,49 +190,6 @@ fn load_bitmap(root: &Path) -> Option<Bitmap> {
     }
     let default_scope = workspace_default_scope(&ws_val).ok()?;
     Bitmap::load(root, Some(&default_scope)).ok()
-}
-
-pub(super) fn match_workspace_entries<'a>(
-    bitmap: &'a Bitmap,
-    pattern: &str,
-) -> Option<Vec<&'a BitmapEntry>> {
-    let active: Vec<&BitmapEntry> = bitmap.entries
-        .iter()
-        .filter(|entry| entry.owns_its_dir())
-        .collect();
-    if active.is_empty() {
-        return Some(Vec::new());
-    }
-    if pattern.contains(['$', ':']) {
-        return None;
-    }
-    if !pattern.contains(['*', ',', '!']) {
-        let bare = pattern.rsplit_once('@').map_or(pattern, |(id, _)| id);
-        let normalized = bare.trim_start_matches("./").trim_end_matches('/');
-        let matched = active
-            .into_iter()
-            .filter(|entry| {
-                entry.id.to_string_without_version() == bare
-                    || entry.id.name == bare
-                    || (!entry.root_dir.is_empty() && entry.root_dir == normalized)
-            })
-            .collect();
-        return Some(matched);
-    }
-    let ids: Vec<String> = active
-        .iter()
-        .map(|entry| entry.id.to_string_without_version())
-        .collect();
-    let id_refs: Vec<&str> = ids.iter().map(String::as_str).collect();
-    let matched_ids = patterns::matching(&id_refs, &patterns::split(pattern)).ok()?;
-    let matched = active
-        .into_iter()
-        .filter(|entry| {
-            let full = entry.id.to_string_without_version();
-            matched_ids.contains(&full.as_str())
-        })
-        .collect();
-    Some(matched)
 }
 
 fn load_unmodified_entry_schema(

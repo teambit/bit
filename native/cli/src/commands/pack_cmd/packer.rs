@@ -105,26 +105,29 @@ fn resolve_from_workspace(
     let ws_val = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
     let default_scope = workspace_default_scope(&ws_val).ok();
     let bitmap = Bitmap::load(root, default_scope.as_deref()).ok()?;
+    let normalized = bare_id.trim_start_matches("./").trim_end_matches('/');
     let entry = bitmap.entries
         .iter()
         .find(|entry| {
             entry.owns_its_dir()
                 && (entry.id.to_string_without_version() == bare_id
                     || entry.id.name == bare_id
-                    || entry.key == bare_id)
+                    || entry.key == bare_id
+                    || (!entry.root_dir.is_empty()
+                        && entry.root_dir.trim_end_matches('/') == normalized))
         })?;
     let scope_name = entry.id.scope
         .clone()
         .or(default_scope)
         .unwrap_or_else(|| "my-scope".to_owned());
     let version = explicit_ver
-        .map(str::to_owned)
         .or_else(|| {
             entry.id.version
-                .clone()
+                .as_deref()
                 .filter(|ver| !ver.is_empty())
         })
-        .unwrap_or_else(|| "0.0.1".to_owned());
+        .unwrap_or("0.0.1")
+        .to_owned();
     let comp_dir = root.join(&entry.root_dir);
     let mut files = Vec::new();
     collect_dir_files(&comp_dir, &comp_dir, &mut files).ok()?;

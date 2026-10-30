@@ -4,8 +4,8 @@
 pub(in crate::commands) mod lookup;
 
 use self::lookup::{
-    diagnose_component_lookup_error, diagnose_lane_lookup_error, load_cat_component,
-    resolve_component_entry, resolve_lane_entry,
+    diagnose_cat_component_error, diagnose_component_lookup_error, diagnose_lane_lookup_error,
+    load_cat_component, resolve_component_entry, resolve_lane_entry,
 };
 use super::{
     Command,
@@ -101,10 +101,23 @@ fn run_object(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside native cat-object grammar".into()));
     };
     let Ok(Some(root)) = scope_root::discover() else {
-        return Ok(Outcome::Declined("cat-object requires a scope".into()));
+        return emit_scope_not_found(args, "cat-object", true);
     };
     let scope_dir = scope_dir_for(&root);
     let Some(data) = render_cat_object(&scope_dir, &opts) else {
+        if !opts.headers
+            && env::var_os("CI").is_none_or(|val| val.is_empty())
+            && matches!(bit_object_import::read_raw_scope_object(&scope_dir, &opts.hash), Ok(None))
+        {
+            return emit_failure(
+                &root,
+                args,
+                "cat-object",
+                false,
+                false,
+                "object not found".into(),
+            );
+        }
         return Ok(Outcome::Declined("cat-object delegated".into()));
     };
     emit_text(&root, args, "cat-object", false, data)
@@ -145,7 +158,7 @@ fn run_lane(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside native cat-lane grammar".into()));
     };
     let Ok(Some(root)) = scope_root::discover() else {
-        return Ok(Outcome::Declined("cat-lane requires a scope".into()));
+        return emit_scope_not_found(args, "cat-lane", true);
     };
     let scope_dir = scope_dir_for(&root);
     let Some((_, _, hash)) = resolve_lane_entry(&scope_dir, &id) else {
@@ -177,7 +190,7 @@ fn run_lane_history(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside native cat-lane-history grammar".into()));
     };
     let Ok(Some(root)) = scope_root::discover() else {
-        return Ok(Outcome::Declined("cat-lane-history requires a scope".into()));
+        return emit_scope_not_found(args, "cat-lane-history", false);
     };
     let scope_dir = scope_dir_for(&root);
     let Some((scope, name, lane_hash)) = resolve_lane_entry(&scope_dir, &id) else {
@@ -208,7 +221,7 @@ fn run_version_history(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside native cat-version-history grammar".into()));
     };
     let Ok(Some(root)) = scope_root::discover() else {
-        return Ok(Outcome::Declined("cat-version-history requires a scope".into()));
+        return emit_scope_not_found(args, "cat-version-history", opts.json);
     };
     let scope_dir = scope_dir_for(&root);
     let (bare_id, _) = opts.id
@@ -249,13 +262,37 @@ fn run_component(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside native cat-component grammar".into()));
     };
     let Ok(Some(root)) = scope_root::discover() else {
-        return Ok(Outcome::Declined("cat-component requires a scope".into()));
+        return emit_scope_not_found(args, "cat-component", opts.json);
     };
     let scope_dir = scope_dir_for(&root);
     let Some(val) = load_cat_component(&root, &scope_dir, &opts.id) else {
+        if env::var_os("CI").is_none_or(|val| val.is_empty())
+            && let Some(err) =
+                diagnose_cat_component_error(&root, &scope_dir, &opts.id, Chalk::detect(args))
+        {
+            return emit_failure(&root, args, "cat-component", true, opts.json, err);
+        }
         return Ok(Outcome::Declined("cat-component delegated".into()));
     };
     emit_value(&root, args, "cat-component", opts.json, &val)
+}
+
+pub(in crate::commands) fn emit_scope_not_found(
+    args: &[OsString],
+    command: &str,
+    quiet: bool,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_none_or(|val| val.is_empty())
+        && let Ok(cwd) = env::current_dir()
+        && cwd
+            .ancestors()
+            .all(|dir| !dir.join(".git").exists())
+    {
+        let chalk = Chalk::detect(args);
+        let msg = format!("error: scope not found at {}", chalk.bold(&cwd.display().to_string()));
+        return execute_failure_scope(&cwd, args, command, quiet, "", io::Error::other(msg));
+    }
+    Ok(Outcome::Declined(format!("{command} requires a scope")))
 }
 
 pub(in crate::commands) fn scope_dir_for(root: &ScopeRoot) -> PathBuf {

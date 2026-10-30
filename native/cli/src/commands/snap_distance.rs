@@ -7,7 +7,12 @@ mod tests;
 use self::graph::{build_parents_map, collect_successors, compute_snap_distance};
 use super::{
     Command,
-    debug_cat::{emit_text, lookup::resolve_component_entry, scope_dir_for, sha1_hex},
+    color::Chalk,
+    debug_cat::{
+        emit_failure, emit_scope_not_found, emit_text,
+        lookup::{diagnose_component_lookup_error, resolve_component_entry},
+        scope_dir_for, sha1_hex,
+    },
     graph_cmd::builder::resolve_ver_hash,
     lane::scope_root::{self, ScopeRoot},
     workspace_command,
@@ -68,15 +73,21 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside native snap-distance grammar".into()));
     };
     let Ok(Some(root)) = scope_root::discover() else {
-        return Ok(Outcome::Declined("snap-distance requires a scope".into()));
+        return emit_scope_not_found(args, "snap-distance", false);
     };
-    if opts.source_snap.is_some() && opts.target_snap.is_none() {
-        let scope_dir = scope_dir_for(&root);
-        let bare = opts.id.rsplit_once('@').map_or(opts.id.as_str(), |(id, _)| id);
-        if resolve_component_entry(&scope_dir, bare).is_some_and(|(sc, _, _)| sc.is_some()) {
-            return emit_missing_target_error(&root, args);
+    let scope_dir = scope_dir_for(&root);
+    let bare = opts.id.rsplit_once('@').map_or(opts.id.as_str(), |(id, _)| id);
+    if resolve_component_entry(&scope_dir, bare).is_none_or(|(sc, _, _)| sc.is_none()) {
+        if env::var_os("CI").is_none_or(|val| val.is_empty())
+            && let Some(err) =
+                diagnose_component_lookup_error(&scope_dir, &opts.id, bare, Chalk::detect(args))
+        {
+            return emit_failure(&root, args, "snap-distance", true, false, err);
         }
         return Ok(Outcome::Declined("snap-distance component lookup delegated".into()));
+    }
+    if opts.source_snap.is_some() && opts.target_snap.is_none() {
+        return emit_missing_target_error(&root, args);
     }
     let Some(result) = evaluate_snap_distance(&root, &opts) else {
         return Ok(Outcome::Declined("snap-distance delegated".into()));
@@ -172,6 +183,68 @@ pub(super) fn is_component_staged_on_main(
     let dist =
         distance_from_heads(&scope_dir, &vh_hash, Some(&local_head), remote_head.as_deref())?;
     Some(!dist["snapsOnSourceOnly"].as_array()?.is_empty())
+}
+
+pub(super) fn is_component_staged_on_lane(
+    root: &Path,
+    bitmap_val: &Value,
+    scope: &str,
+    name: &str,
+    ws_version: &str,
+) -> Option<bool> {
+    let scope_dir = bit_object_import::scope_path(root);
+    let (_, _, comp_hash) = resolve_component_entry(&scope_dir, &format!("{scope}/{name}"))?;
+    let (kind, model) = bit_object_import::read_scope_object(&scope_dir, &comp_hash).ok()??;
+    if kind != "Component" {
+        return None;
+    }
+    let local_head = resolve_ver_hash(&model, ws_version)?;
+    let (v_kind, _) = bit_object_import::read_scope_object(&scope_dir, &local_head).ok()??;
+    if v_kind != "Version" {
+        return None;
+    }
+    let lane_scope = bitmap_val["_bit_lane"]["id"]["scope"].as_str()?;
+    let lane_name = bitmap_val["_bit_lane"]["id"]["name"].as_str()?;
+    if let Some(remote_lane_head) =
+        read_remote_lane_head(&scope_dir, lane_scope, lane_name, scope, name)?
+    {
+        return Some(remote_lane_head != local_head);
+    }
+    let remote_main = read_remote_main_head(&scope_dir, scope, name)?;
+    Some(remote_main.as_deref() != Some(local_head.as_str()))
+}
+
+fn read_remote_lane_head(
+    scope_dir: &Path,
+    lane_scope: &str,
+    lane_name: &str,
+    comp_scope: &str,
+    comp_name: &str,
+) -> Option<Option<String>> {
+    let path = scope_dir
+        .join("refs")
+        .join("remote")
+        .join(lane_scope)
+        .join(lane_name);
+    let bytes = match fs::read(path) {
+        Ok(bytes) => bytes,
+        Err(err) if err.kind() == io::ErrorKind::NotFound => return Some(None),
+        Err(_) => return None,
+    };
+    let entries: Value = serde_json::from_slice(&bytes).ok()?;
+    for item in entries.as_array()? {
+        if item["id"]["scope"].as_str() == Some(comp_scope)
+            && item["id"]["name"].as_str() == Some(comp_name)
+        {
+            return Some(
+                item["head"]
+                    .as_str()
+                    .filter(|head| !head.is_empty())
+                    .map(str::to_owned),
+            );
+        }
+    }
+    Some(None)
 }
 
 fn distance_from_heads(

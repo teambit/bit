@@ -5,10 +5,12 @@ mod extractor;
 mod tests;
 
 use self::extractor::{
-    WorkspaceSchemaOutcome, resolve_scope_schema_json, resolve_workspace_schema,
+    WorkspaceSchemaOutcome, diagnose_scope_schema_error, diagnose_workspace_diff_error,
+    resolve_scope_schema_json, resolve_workspace_schema,
 };
 use super::{
     Command,
+    color::Chalk,
     lane::scope_root,
     workspace_command::{self, results::Report},
 };
@@ -32,44 +34,102 @@ pub(super) struct Options {
     pub json: bool,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct DiffOptions {
+    pub component: String,
+    pub base_version: String,
+    pub compare_version: String,
+    pub json: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) enum ParsedCommand {
+    Schema(Options),
+    Diff(DiffOptions),
+}
+
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("schema arguments are not UTF-8".into()));
     };
-    let Some(options) = parse_options(&argv[1..]) else {
+    let Some(parsed) = parse_command(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native schema grammar".into()));
     };
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("CI schema delegated".into()));
     }
     let cwd = env::current_dir()?;
-    if is_missing_host(&cwd, &options) {
-        return workspace_command::execute_without_loader_scope(&cwd, args, "schema", |_| {
-            Err(io::Error::other(HOST_NOT_FOUND_ERR))
-        });
+    match parsed {
+        ParsedCommand::Diff(diff_opts) => run_diff(&cwd, args, &diff_opts),
+        ParsedCommand::Schema(options) => {
+            if is_missing_host(&cwd, &options) {
+                return workspace_command::execute_failure_scope(
+                    &cwd,
+                    args,
+                    "schema",
+                    options.json,
+                    "",
+                    io::Error::other(HOST_NOT_FOUND_ERR),
+                );
+            }
+            if !options.remote
+                && let Some(outcome) = try_run_local(&cwd, args, &options)?
+            {
+                return Ok(outcome);
+            }
+            Ok(Outcome::Declined("schema extraction delegated".into()))
+        }
     }
-    if !options.remote
-        && let Some(outcome) = try_run_local(&cwd, args, &options)?
+}
+
+fn run_diff(cwd: &Path, args: &[OsString], opts: &DiffOptions) -> io::Result<Outcome> {
+    if workspace::root(cwd).is_none()
+        && !cwd.join("scope.json").is_file()
+        && !cwd.join(".bit").is_dir()
     {
-        return Ok(outcome);
+        return workspace_command::execute_failure_scope(
+            cwd,
+            args,
+            "diff",
+            opts.json,
+            "",
+            io::Error::other(HOST_NOT_FOUND_ERR),
+        );
     }
-    Ok(Outcome::Declined("schema extraction delegated".into()))
+    if let Some(root) = workspace::root(cwd) {
+        if let Some(err) =
+            diagnose_workspace_diff_error(&root, &opts.component, Chalk::detect(args))
+        {
+            return emit_workspace_error(&root, args, "diff", opts.json, err);
+        }
+        return Ok(Outcome::Declined("schema diff delegated".into()));
+    }
+    if let Some(scope) = scope_root::discover().ok().flatten()
+        && scope.bare
+        && let Some(err) = diagnose_scope_schema_error(&scope.path, &opts.component)
+    {
+        return workspace_command::execute_failure_scope(
+            &scope.path,
+            args,
+            "diff",
+            opts.json,
+            "",
+            io::Error::other(err),
+        );
+    }
+    Ok(Outcome::Declined("schema diff delegated".into()))
 }
 
 fn try_run_local(cwd: &Path, args: &[OsString], options: &Options) -> io::Result<Option<Outcome>> {
     if let Some(root) = workspace::root(cwd) {
-        return match resolve_workspace_schema(&root, &options.pattern, options.json) {
-            WorkspaceSchemaOutcome::Empty if options.json => {
-                workspace_command::execute_json(&root, args, "schema", |_| {
-                    Ok(Report { data: "[]".into(), code: 0, details: None })
-                })
-                .map(Some)
-            }
-            WorkspaceSchemaOutcome::Empty => {
-                workspace_command::execute_then(&root, args, "schema", |_| {
-                    Ok(Report { data: String::new(), code: 0, details: None })
-                })
-                .map(Some)
+        return match resolve_workspace_schema(
+            &root,
+            &options.pattern,
+            options.json,
+            Chalk::detect(args),
+        ) {
+            WorkspaceSchemaOutcome::Error(err) => {
+                emit_workspace_error(&root, args, "schema", options.json, err).map(Some)
             }
             WorkspaceSchemaOutcome::Schemas(schemas) => {
                 let data = serde_json::to_string_pretty(&schemas).map_err(io::Error::other)?;
@@ -81,10 +141,21 @@ fn try_run_local(cwd: &Path, args: &[OsString], options: &Options) -> io::Result
             WorkspaceSchemaOutcome::Declined => Ok(None),
         };
     }
-    if options.json
-        && let Some(scope) = scope_root::discover().ok().flatten()
+    if let Some(scope) = scope_root::discover().ok().flatten()
         && scope.bare
-        && let Some(schemas) = resolve_scope_schema_json(&scope.path, &options.pattern)
+    {
+        return try_run_bare_scope(&scope.path, args, options);
+    }
+    Ok(None)
+}
+
+fn try_run_bare_scope(
+    scope_dir: &Path,
+    args: &[OsString],
+    options: &Options,
+) -> io::Result<Option<Outcome>> {
+    if options.json
+        && let Some(schemas) = resolve_scope_schema_json(scope_dir, &options.pattern)
     {
         let data = serde_json::to_string_pretty(&schemas).map_err(io::Error::other)?;
         let mut stdout = io::stdout().lock();
@@ -92,7 +163,32 @@ fn try_run_local(cwd: &Path, args: &[OsString], options: &Options) -> io::Result
         stdout.flush()?;
         return Ok(Some(Outcome::Exit(ExitCode::SUCCESS)));
     }
+    if let Some(err) = diagnose_scope_schema_error(scope_dir, &options.pattern) {
+        return workspace_command::execute_failure_scope(
+            scope_dir,
+            args,
+            "schema",
+            options.json,
+            "",
+            io::Error::other(err),
+        )
+        .map(Some);
+    }
     Ok(None)
+}
+
+fn emit_workspace_error(
+    root: &Path,
+    args: &[OsString],
+    command: &str,
+    json: bool,
+    err: String,
+) -> io::Result<Outcome> {
+    if json {
+        workspace_command::execute_json(root, args, command, |_| Err(io::Error::other(err)))
+    } else {
+        workspace_command::execute_then(root, args, command, |_| Err(io::Error::other(err)))
+    }
 }
 
 pub(super) fn is_missing_host(cwd: &Path, options: &Options) -> bool {
@@ -100,6 +196,39 @@ pub(super) fn is_missing_host(cwd: &Path, options: &Options) -> bool {
         && workspace::root(cwd).is_none()
         && !cwd.join("scope.json").is_file()
         && !cwd.join(".bit").is_dir()
+}
+
+pub(super) fn parse_command(args: &[&str]) -> Option<ParsedCommand> {
+    if args
+        .iter()
+        .find(|arg| !arg.starts_with('-'))
+        == Some(&"diff")
+    {
+        return parse_diff_options(args).map(ParsedCommand::Diff);
+    }
+    parse_options(args).map(ParsedCommand::Schema)
+}
+
+fn parse_diff_options(args: &[&str]) -> Option<DiffOptions> {
+    let mut positional = Vec::new();
+    let mut json = false;
+    for &arg in args {
+        match arg {
+            "--no-color" => {}
+            "-j" | "--json" => json = true,
+            val if !val.starts_with('-') && !val.is_empty() => positional.push(val),
+            _ => return None,
+        }
+    }
+    let ["diff", component, base_version, compare_version] = positional.as_slice() else {
+        return None;
+    };
+    Some(DiffOptions {
+        component: (*component).to_owned(),
+        base_version: (*base_version).to_owned(),
+        compare_version: (*compare_version).to_owned(),
+        json,
+    })
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
@@ -110,10 +239,12 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         match arg {
             "--no-color" => {}
             "-r" | "--remote" => remote = true,
-            "--no-remote" => remote = false,
             "-j" | "--json" => json = true,
-            "--no-json" => json = false,
-            val if !val.starts_with('-') && !val.is_empty() && pattern.is_none() => {
+            val if !val.starts_with('-')
+                && !val.is_empty()
+                && val != "diff"
+                && pattern.is_none() =>
+            {
                 pattern = Some(val.to_owned());
             }
             _ => return None,
