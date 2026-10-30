@@ -29,9 +29,26 @@ impl Options {
             Self { command, values: Vec::new(), origin: None, detailed: false, json: false };
         let mut iterator = values.into_iter();
         while let Some(arg) = iterator.next() {
+            if arg == "--" {
+                options.consume_trailing_values(iterator)?;
+                break;
+            }
             options.argument(arg, &mut iterator)?;
         }
         options.valid().then_some(options)
+    }
+
+    fn consume_trailing_values<'a>(
+        &mut self,
+        iterator: impl Iterator<Item = &'a str>,
+    ) -> Option<()> {
+        for rest in iterator {
+            if rest.is_empty() || rest.starts_with('-') {
+                return None;
+            }
+            self.values.push(rest.to_owned());
+        }
+        Some(())
     }
 
     fn argument<'a>(

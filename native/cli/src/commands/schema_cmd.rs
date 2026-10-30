@@ -83,10 +83,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn run_diff(cwd: &Path, args: &[OsString], opts: &DiffOptions) -> io::Result<Outcome> {
-    if workspace::root(cwd).is_none()
-        && !cwd.join("scope.json").is_file()
-        && !cwd.join(".bit").is_dir()
-    {
+    if is_outside_any_host(cwd) {
         return workspace_command::execute_failure_scope(
             cwd,
             args,
@@ -192,10 +189,14 @@ fn emit_workspace_error(
 }
 
 pub(super) fn is_missing_host(cwd: &Path, options: &Options) -> bool {
-    !options.remote
-        && workspace::root(cwd).is_none()
-        && !cwd.join("scope.json").is_file()
-        && !cwd.join(".bit").is_dir()
+    !options.remote && is_outside_any_host(cwd)
+}
+
+fn is_outside_any_host(cwd: &Path) -> bool {
+    workspace::root(cwd).is_none()
+        && !cwd
+            .ancestors()
+            .any(|dir| dir.join("scope.json").is_file() || dir.join(".bit").is_dir())
 }
 
 pub(super) fn parse_command(args: &[&str]) -> Option<ParsedCommand> {

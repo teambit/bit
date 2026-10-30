@@ -54,8 +54,13 @@ fn split_subcommand<'a>(tokens: &'a [&'a str]) -> Option<(&'static str, &'a [&'a
 fn parse_flags_and_values<'a>(tokens: &[&'a str]) -> Option<(bool, Vec<&'a str>)> {
     let mut global = false;
     let mut values = Vec::new();
-    for &token in tokens {
+    let mut iter = tokens.iter().copied();
+    while let Some(token) = iter.next() {
         match token {
+            "--" => {
+                consume_trailing_values(iter, &mut values)?;
+                break;
+            }
             "-g" | "--global" | "--global=true" => global = true,
             "--global=false" => global = false,
             flag if flag.starts_with('-') => return None,
@@ -63,6 +68,19 @@ fn parse_flags_and_values<'a>(tokens: &[&'a str]) -> Option<(bool, Vec<&'a str>)
         }
     }
     Some((global, values))
+}
+
+fn consume_trailing_values<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    values: &mut Vec<&'a str>,
+) -> Option<()> {
+    for rest in iter {
+        if rest.starts_with('-') || rest.is_empty() {
+            return None;
+        }
+        values.push(rest);
+    }
+    Some(())
 }
 
 fn valid_target(value: &str) -> bool {

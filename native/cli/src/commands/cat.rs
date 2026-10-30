@@ -1,7 +1,9 @@
 //! `CatCmd`: inspect validated stored Sources without returning file bodies through Node.
 
+mod options;
 mod report;
 
+use self::options::{Options, parse};
 use super::{
     Command,
     add::docs,
@@ -28,92 +30,10 @@ use std::{
 
 pub const COMMAND: Command = Command { name: "cat", aliases: &[], run };
 
-#[derive(Default)]
-struct Options<'a> {
-    id: Option<&'a str>,
-    file: Option<&'a str>,
-    config: bool,
-    all: bool,
-    json: bool,
-}
-
-fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
-    let mut options = Options::default();
-    let mut index = 0;
-    while let Some(arg) = args.get(index) {
-        index += apply_cat_arg(&mut options, arg, args.get(index + 1).copied())?;
-    }
-    options.id.map(|_| options)
-}
-
-fn apply_cat_arg<'a>(
-    options: &mut Options<'a>,
-    arg: &'a str,
-    next: Option<&'a str>,
-) -> Option<usize> {
-    if let Some(val) = arg
-        .strip_prefix("--file=")
-        .or_else(|| arg.strip_prefix("-f="))
-    {
-        return set_cat_file(options, val, 1);
-    }
-    if apply_cat_combined_short(options, arg) || apply_cat_bool(options, arg) || arg == "--no-color"
-    {
-        return Some(1);
-    }
-    match arg {
-        "--file" | "-f" => set_cat_file(options, next?, 2),
-        id if !id.starts_with('-') && options.id.is_none() => {
-            options.id = Some(id);
-            Some(1)
-        }
-        _ => None,
-    }
-}
-
-fn apply_cat_bool(options: &mut Options<'_>, arg: &str) -> bool {
-    let (flag, val) = match arg.split_once('=') {
-        Some((flag, "true")) => (flag, true),
-        Some((flag, "false")) => (flag, false),
-        None => (arg, true),
-        _ => return false,
-    };
-    match flag {
-        "--config" | "-c" if val || arg.starts_with("--") => options.config = val,
-        "--all" | "-a" if val || arg.starts_with("--") => options.all = val,
-        "--json" | "-j" if val || arg.starts_with("--") => options.json = val,
-        _ => return false,
-    }
-    true
-}
-
-fn apply_cat_combined_short(options: &mut Options<'_>, arg: &str) -> bool {
-    if !arg.starts_with('-')
-        || arg.starts_with("--")
-        || arg.len() <= 2
-        || !arg[1..]
-            .bytes()
-            .all(|byte| matches!(byte, b'c' | b'a' | b'j'))
-    {
-        return false;
-    }
-    for byte in arg[1..].bytes() {
-        match byte {
-            b'c' => options.config = true,
-            b'a' => options.all = true,
-            _ => options.json = true,
-        }
-    }
-    true
-}
-
-fn set_cat_file<'a>(options: &mut Options<'a>, val: &'a str, consumed: usize) -> Option<usize> {
-    if options.file.is_some() || val.is_empty() || val.starts_with('-') {
-        return None;
-    }
-    options.file = Some(val);
-    Some(consumed)
-}
+const FILE_WITH_CONFIG_ERR: &str =
+    "--file cannot be used with --config. use --all to show both files and config";
+const NO_HOST_ERR: &str =
+    "unable to find a component host. please run this command from within a Bit workspace or scope";
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(arguments) = workspace_command::utf8_args(args) else {
@@ -122,11 +42,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse(&arguments[1..]) else {
         return Ok(Outcome::Declined("outside native cat grammar".into()));
     };
+    let cwd = env::current_dir()?;
     if options.file.is_some() && options.config && !options.all {
-        return Ok(Outcome::Declined("published cat option error".into()));
+        return emit_file_with_config_error(&cwd, args, options.json);
     }
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("cat requires a supported workspace".into()));
+    let Some(root) = workspace::root(&cwd) else {
+        return run_outside_workspace(&cwd, args, options.json);
     };
     let prepared = match prepare(&root, &options) {
         Ok(prepared) => prepared,
@@ -138,6 +59,48 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         }
     };
     present(&root, args, &options, prepared)
+}
+
+fn emit_file_with_config_error(cwd: &Path, args: &[OsString], json: bool) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("published cat option error".into()));
+    }
+    if let Some(root) = workspace::root(cwd) {
+        if json {
+            return workspace_command::execute_json(&root, args, "cat", |_| {
+                Err(io::Error::other(FILE_WITH_CONFIG_ERR))
+            });
+        }
+        return workspace_command::execute_then(&root, args, "cat", |_| {
+            Err(io::Error::other(FILE_WITH_CONFIG_ERR))
+        });
+    }
+    workspace_command::execute_failure_scope(
+        cwd,
+        args,
+        "cat",
+        json,
+        "",
+        io::Error::other(FILE_WITH_CONFIG_ERR),
+    )
+}
+
+fn run_outside_workspace(cwd: &Path, args: &[OsString], json: bool) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty())
+        || cwd
+            .ancestors()
+            .any(|dir| dir.join("scope.json").is_file() || dir.join(".bit").is_dir())
+    {
+        return Ok(Outcome::Declined("cat requires a supported workspace".into()));
+    }
+    workspace_command::execute_failure_scope(
+        cwd,
+        args,
+        "cat",
+        json,
+        "",
+        io::Error::other(NO_HOST_ERR),
+    )
 }
 
 fn present(

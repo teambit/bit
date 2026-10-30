@@ -40,9 +40,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        return workspace_command::execute_without_loader_scope(&cwd, args, "check-types", |_| {
-            Err(io::Error::other(OUTSIDE_WORKSPACE_ERR))
-        });
+        return emit_outside_workspace(&cwd, args, &options);
     };
     if options.pattern.is_none() && is_empty_workspace(&root).unwrap_or(false) {
         return emit_empty_check_types(&root, args, &options);
@@ -51,6 +49,26 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(outcome);
     }
     Ok(Outcome::Declined("check-types execution delegated".into()))
+}
+
+fn emit_outside_workspace(cwd: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
+    if options.json {
+        return workspace_command::execute_failure_scope(
+            cwd,
+            args,
+            "check-types",
+            true,
+            "",
+            io::Error::other(OUTSIDE_WORKSPACE_ERR),
+        );
+    }
+    let all = options.all;
+    workspace_command::execute_without_loader_scope(cwd, args, "check-types", move |output| {
+        if all {
+            output.warning("--all is deprecated, use --unmodified instead");
+        }
+        Err(io::Error::other(OUTSIDE_WORKSPACE_ERR))
+    })
 }
 
 fn emit_empty_check_types(

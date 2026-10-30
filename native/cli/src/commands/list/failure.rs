@@ -7,6 +7,42 @@ use std::{
     process::ExitCode,
 };
 
+const REMOTE_LOCAL_CONFLICT_ERR: &str =
+    "The --local-scope and --scope flags cannot be used when listing a remote scope.";
+
+pub(super) fn preflight(
+    cwd: &Path,
+    root: Option<&Path>,
+    args: &[OsString],
+    options: &Options,
+) -> Option<io::Result<Outcome>> {
+    if std::env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return None;
+    }
+    if options.remote.is_some() && (options.local_scope || options.scope.is_some()) {
+        return Some(emit_error(cwd, root, args, options.json, REMOTE_LOCAL_CONFLICT_ERR));
+    }
+    None
+}
+
+fn emit_error(
+    cwd: &Path,
+    root: Option<&Path>,
+    args: &[OsString],
+    json: bool,
+    msg: &'static str,
+) -> io::Result<Outcome> {
+    if let Some(root) = root {
+        if json {
+            return workspace_command::execute_json(root, args, "list", |_| {
+                Err(io::Error::other(msg))
+            });
+        }
+        return workspace_command::execute_then(root, args, "list", |_| Err(io::Error::other(msg)));
+    }
+    workspace_command::execute_failure_scope(cwd, args, "list", json, "", io::Error::other(msg))
+}
+
 pub(super) fn owned(
     root: Option<&Path>,
     args: &[OsString],

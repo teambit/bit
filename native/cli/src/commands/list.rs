@@ -39,7 +39,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse(&arguments[1..]) else {
         return Ok(Outcome::Declined("flags outside the native `list` grammar".to_string()));
     };
-    let root = workspace::root(&env::current_dir()?);
+    let cwd = env::current_dir()?;
+    let root = workspace::root(&cwd);
+    if let Some(outcome) = failure::preflight(&cwd, root.as_deref(), args, &options) {
+        return outcome;
+    }
     if let Some(reason) = unsupported(root.as_deref(), &options) {
         return Ok(Outcome::Declined(reason.into()));
     }

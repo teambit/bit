@@ -44,8 +44,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 
 pub(super) fn is_outside_workspace_and_scope(cwd: &Path) -> bool {
     workspace::root(cwd).is_none()
-        && !cwd.join("scope.json").is_file()
-        && !cwd.join(".bit/scope.json").is_file()
+        && !cwd
+            .ancestors()
+            .any(|dir| {
+                dir.join("scope.json").is_file()
+                    || dir.join(".bit/scope.json").is_file()
+                    || dir.join(".bit").is_dir()
+            })
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {

@@ -71,8 +71,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 pub(super) fn missing_host_error(cwd: &Path, options: &Options) -> Option<&'static str> {
     if options.legacy
         || workspace::root(cwd).is_some()
-        || cwd.join("scope.json").is_file()
-        || cwd.join(".bit").is_dir()
+        || cwd
+            .ancestors()
+            .any(|dir| dir.join("scope.json").is_file() || dir.join(".bit").is_dir())
     {
         return None;
     }

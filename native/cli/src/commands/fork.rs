@@ -24,7 +24,7 @@ fn run_mode(args: &[OsString], scope_fork: bool) -> io::Result<Outcome> {
     };
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        return handle_outside_workspace(&cwd, args, scope_fork);
+        return handle_outside_workspace(&cwd, args, &options, scope_fork);
     };
     let state = match inventory::read(&root) {
         Ok(state) => state,
@@ -38,12 +38,18 @@ fn run_mode(args: &[OsString], scope_fork: bool) -> io::Result<Outcome> {
 fn handle_outside_workspace(
     cwd: &std::path::Path,
     args: &[OsString],
+    options: &options::Options,
     scope_fork: bool,
 ) -> io::Result<Outcome> {
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("fork requires a workspace".into()));
     }
-    let err = io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR);
+    let msg = if !scope_fork && options.multiple() && options.target.is_some() {
+        "target-component-name is not allowed when using patterns"
+    } else {
+        super::log::OUTSIDE_WORKSPACE_ERR
+    };
+    let err = io::Error::other(msg);
     if scope_fork {
         workspace_command::execute_without_loader_scope(cwd, args, "fork", move |_| Err(err))
     } else {
@@ -56,7 +62,10 @@ fn execute(
     options: &options::Options,
     state: &serde_json::Value,
 ) -> io::Result<Outcome> {
+    let invalid_pattern_target =
+        !options.scope_fork && options.multiple() && options.target.is_some();
     let install = !options.flags.skip_install
+        && !invalid_pattern_target
         && (options.multiple() || inventory::selected(state, &options.source).is_none());
     let mut linker = if install {
         ProjectedLinker::prepare_with_installation(root, args)?

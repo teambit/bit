@@ -44,11 +44,29 @@ pub(super) fn parse(args: &[OsString]) -> Option<Options> {
         .peekable();
     while let Some(arg) = args.next() {
         let arg = arg?;
+        if arg == "--" {
+            consume_trailing_init_path(args, &mut options)?;
+            break;
+        }
         if arg != "--no-color" {
             apply_arg(arg, &mut args, &mut options)?;
         }
     }
     Some(options)
+}
+
+fn consume_trailing_init_path<'a>(
+    args: impl Iterator<Item = Option<&'a str>>,
+    options: &mut Options,
+) -> Option<()> {
+    for rest in args {
+        let val = rest?;
+        if val.is_empty() || val.starts_with('-') || options.path.is_some() {
+            return None;
+        }
+        options.path = Some(val.to_owned());
+    }
+    Some(())
 }
 
 fn apply_arg<'a>(

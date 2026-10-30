@@ -115,8 +115,9 @@ pub(super) fn validate_lint_pattern(
 
 pub(super) fn is_missing_host(cwd: &Path) -> bool {
     workspace::root(cwd).is_none()
-        && !cwd.join("scope.json").is_file()
-        && !cwd.join(".bit").is_dir()
+        && !cwd
+            .ancestors()
+            .any(|dir| dir.join("scope.json").is_file() || dir.join(".bit").is_dir())
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {

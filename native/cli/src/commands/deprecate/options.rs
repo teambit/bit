@@ -9,9 +9,23 @@ pub(super) fn parse<'a>(args: &[&'a str], undo: bool) -> Option<Options<'a>> {
     let mut range = None;
     let mut index = 0;
     while index < args.len() {
+        if args[index] == "--" {
+            consume_trailing_pattern(&args[index + 1..], &mut pattern)?;
+            break;
+        }
         index = apply_arg(args, index, undo, &mut pattern, &mut replacement, &mut range)?;
     }
     Some(Options { pattern: pattern?, replacement, range })
+}
+
+fn consume_trailing_pattern<'a>(rest: &[&'a str], pattern: &mut Option<&'a str>) -> Option<()> {
+    for &arg in rest {
+        if pattern.is_some() {
+            return None;
+        }
+        *pattern = Some(valid_val(arg)?);
+    }
+    Some(())
 }
 
 fn apply_arg<'a>(

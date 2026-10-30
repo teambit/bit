@@ -31,23 +31,40 @@ pub(super) fn parse(argv: &[&str], scope_fork: bool) -> Option<Options> {
     let mut positions = Vec::new();
     let mut arguments = argv.iter();
     while let Some(argument) = arguments.next() {
+        if *argument == "--" {
+            consume_trailing_positions(arguments, &mut positions)?;
+            break;
+        }
         if argument.starts_with('-') {
             parse_flag(argument, &mut arguments, &mut options)?;
         } else {
             positions.push((*argument).to_owned());
         }
     }
-    if positions.is_empty() || positions.len() > if scope_fork { 3 } else { 2 } {
+    assign_positions(positions, &mut options)?;
+    Some(options)
+}
+fn assign_positions(mut positions: Vec<String>, options: &mut Options) -> Option<()> {
+    if positions.is_empty() || positions.len() > if options.scope_fork { 3 } else { 2 } {
         return None;
     }
     options.source = positions.remove(0);
-    if scope_fork {
+    if options.scope_fork {
         options.scope = positions.first().cloned();
         options.pattern = positions.get(1).cloned();
     } else {
         options.target = positions.first().cloned();
     }
-    Some(options)
+    Some(())
+}
+fn consume_trailing_positions<'a>(
+    arguments: impl Iterator<Item = &'a &'a str>,
+    positions: &mut Vec<String>,
+) -> Option<()> {
+    for rest in arguments {
+        positions.push(valid_fork_val(rest)?);
+    }
+    Some(())
 }
 fn parse_flag(
     argument: &str,

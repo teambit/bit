@@ -1,0 +1,88 @@
+//! Option parsing for `bit cat`.
+
+#[derive(Default)]
+pub(super) struct Options<'a> {
+    pub(super) id: Option<&'a str>,
+    pub(super) file: Option<&'a str>,
+    pub(super) config: bool,
+    pub(super) all: bool,
+    pub(super) json: bool,
+}
+
+pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
+    let mut options = Options::default();
+    let mut index = 0;
+    while let Some(arg) = args.get(index) {
+        index += apply_cat_arg(&mut options, arg, args.get(index + 1).copied())?;
+    }
+    options.id.map(|_| options)
+}
+
+fn apply_cat_arg<'a>(
+    options: &mut Options<'a>,
+    arg: &'a str,
+    next: Option<&'a str>,
+) -> Option<usize> {
+    if let Some(val) = arg
+        .strip_prefix("--file=")
+        .or_else(|| arg.strip_prefix("-f="))
+    {
+        return set_cat_file(options, val, 1);
+    }
+    if apply_cat_combined_short(options, arg) || apply_cat_bool(options, arg) || arg == "--no-color"
+    {
+        return Some(1);
+    }
+    match arg {
+        "--file" | "-f" => set_cat_file(options, next?, 2),
+        id if !id.starts_with('-') && options.id.is_none() => {
+            options.id = Some(id);
+            Some(1)
+        }
+        _ => None,
+    }
+}
+
+fn apply_cat_bool(options: &mut Options<'_>, arg: &str) -> bool {
+    let (flag, val) = match arg.split_once('=') {
+        Some((flag, "true")) => (flag, true),
+        Some((flag, "false")) => (flag, false),
+        None => (arg, true),
+        _ => return false,
+    };
+    match flag {
+        "--config" | "-c" if val || arg.starts_with("--") => options.config = val,
+        "--all" | "-a" if val || arg.starts_with("--") => options.all = val,
+        "--json" | "-j" if val || arg.starts_with("--") => options.json = val,
+        _ => return false,
+    }
+    true
+}
+
+fn apply_cat_combined_short(options: &mut Options<'_>, arg: &str) -> bool {
+    if !arg.starts_with('-')
+        || arg.starts_with("--")
+        || arg.len() <= 2
+        || !arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'c' | b'a' | b'j'))
+    {
+        return false;
+    }
+    for byte in arg[1..].bytes() {
+        match byte {
+            b'c' => options.config = true,
+            b'a' => options.all = true,
+            _ => options.json = true,
+        }
+    }
+    true
+}
+
+fn set_cat_file<'a>(options: &mut Options<'a>, val: &'a str, consumed: usize) -> Option<usize> {
+    if options.file.is_some() || val.is_empty() || val.starts_with('-') {
+        return None;
+    }
+    options.file = Some(val);
+    Some(consumed)
+}
