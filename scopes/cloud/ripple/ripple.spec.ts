@@ -284,3 +284,33 @@ describe('RippleMain.getComponentBuildSummary()', () => {
     expect(await getRequestedComponentId('org.scope/comp@def456')).to.equal('org.scope/comp@def456');
   });
 });
+
+describe('RippleMain.getCiGraphNodesOfComponent()', () => {
+  const node = (id: string, versionedId: string) => ({
+    id,
+    attr: JSON.stringify({ ids: [versionedId], status: { name: `container-${id}`, phase: 'SUCCESS' } }),
+  });
+  const job = {
+    ciGraph: JSON.stringify({
+      nodes: [node('1', 'org.scope/button@abc123'), node('2', 'org.scope/card@def456')],
+    }),
+  };
+  const ripple = createRippleMain();
+
+  it('should return all the nodes when no component is given', () => {
+    expect(ripple.getCiGraphNodesOfComponent(job).map((n) => n.containerName)).to.deep.equal([
+      'container-1',
+      'container-2',
+    ]);
+  });
+
+  it('should return the node of the component, with or without a version', () => {
+    for (const id of ['org.scope/card', 'org.scope/card@def456']) {
+      expect(ripple.getCiGraphNodesOfComponent(job, id).map((n) => n.containerName)).to.deep.equal(['container-2']);
+    }
+  });
+
+  it('should return no nodes when the component is not in the job', () => {
+    expect(ripple.getCiGraphNodesOfComponent(job, 'org.scope/other')).to.deep.equal([]);
+  });
+});

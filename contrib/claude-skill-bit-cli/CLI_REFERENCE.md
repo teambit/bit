@@ -802,7 +802,7 @@ Flags: --all, --owner <owner>, --scope <scope>, --lane <lane>, --user <user>, --
 ## bit ripple log [job-id]
 
 show job details and component build task summaries (auto-detects current lane, or your last export when on main)
-Flags: --lane <lane>, --component <component>, --json
+Flags: --lane <lane>, --component <component>, --full-log, --json
 
 ## bit ripple errors [job-id]
 
