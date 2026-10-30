@@ -33,7 +33,7 @@ export type DedupedDependencies = {
  * Main function to dedupe dependencies
  * It will optimized the dependencies structure to make sure there is minimum duplication of the same dependency (as a result of conflicted versions)
  * it will take everything possible to be defined in the root, and only conflicts in the components
- * it's similar to what happens when you use yarn workspaces
+ * it's similar to what happens in package-manager workspaces
  *
  * @export
  * @returns {DedupedDependencies}

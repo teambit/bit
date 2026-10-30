@@ -34,7 +34,7 @@ describe('DiffViewer', () => {
       expect(markup).toContain('data-diff-new-line="1"');
     });
 
-    it('tags each split cell with only its own side\'s line number', () => {
+    it("tags each split cell with only its own side's line number", () => {
       const markup = renderToStaticMarkup(
         <DiffViewer fileName="a.ts" oldContent={oldContent} newContent={newContent} view="split" />
       );
@@ -158,7 +158,9 @@ describe('DiffViewer', () => {
     });
 
     it('widens the line-number gutter for numbers longer than three digits', () => {
-      const short = renderToStaticMarkup(<DiffViewer fileName="a.ts" oldContent="a\n" newContent="b\n" view="unified" />);
+      const short = renderToStaticMarkup(
+        <DiffViewer fileName="a.ts" oldContent="a\n" newContent="b\n" view="unified" />
+      );
       expect(short).toContain('--diff-gutter-width:50px');
 
       const many = `${Array.from({ length: 12000 }, (_, i) => `l${i}`).join('\n')}\n`;
