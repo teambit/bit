@@ -96,6 +96,98 @@ fn run_action_executes_file_pending_directory_actions_and_declines_other_file_ac
     assert_eq!(crate::commands::move_paths::support::tree(&helper.scopes.remote_path), before);
 }
 
+#[test]
+fn clear_cache_remote_dispatches_http_action_and_declines_file_remotes() {
+    for bare in [false, true] {
+        for (command, status, response) in [
+            ("clear-cache --remote fixture.scope", 200, json!(true)),
+            ("cc -r fixture.scope", 200, json!(false)),
+            ("clear-cache --remote=fixture.scope", 500, json!({"message":"fixture cache failure"})),
+        ] {
+            verify_clear_cache_remote_case(bare, command, status, response);
+        }
+    }
+
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    let unavailable = helper.scopes.e2e_dir.join("unavailable-node");
+    let declined = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        &format!("clear-cache --remote {}", helper.scopes.remote),
+        &[("BIT_NODE_BINARY", unavailable.as_os_str())],
+    );
+    assert!(!declined.native, "{declined:?}");
+}
+
+fn verify_clear_cache_remote_case(bare: bool, command: &str, status: u16, response: Value) {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    let root = if bare { &helper.scopes.remote_path } else { &helper.scopes.local_path };
+    let server = Server::start(2, move |_| (status, response.clone()));
+    let globals = helper.scopes.e2e_dir.join("globals");
+    setup_clear_cache_globals(&globals, root, bare, &server.url);
+    let node = Helper::cmd_in_with(
+        root,
+        command,
+        &[("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let expected_history = (!bare).then(|| normalized_history(root));
+    if !bare {
+        let _ = fs::remove_file(root.join(".bit/command-history"));
+    }
+    let unavailable = helper.scopes.e2e_dir.join("unavailable-node");
+    let native = Helper::cmd_in_with(
+        root,
+        command,
+        &[("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NODE_BINARY", unavailable.as_os_str())],
+    );
+    assert!(native.native && !native.trace.contains("starting the JavaScript host"), "{native:?}");
+    assert_eq!(node.status.success(), status == 200, "{node:?}");
+    assert_eq!(native.stdout, node.stdout, "{node:?} {native:?}");
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(native.status.code(), node.status.code());
+    if let Some(expected_history) = expected_history {
+        assert_eq!(normalized_history(root), expected_history);
+    }
+    let requests = server.finish();
+    assert_eq!(requests[0], requests[1]);
+    assert_eq!(requests[0].body, json!({"name":"ClearCacheAction","options":{}}));
+}
+
+fn setup_clear_cache_globals(globals: &Path, root: &Path, bare: bool, url: &str) {
+    fs::create_dir_all(globals.join("config")).unwrap();
+    fs::copy(
+        crate::helper::setup::shared().root.join("globals/config/config.json"),
+        globals.join("config/config.json"),
+    )
+    .unwrap();
+    if bare {
+        fs::write(
+            globals.join("config/global-remotes.json"),
+            serde_json::to_vec(&json!({"fixture.scope":url})).unwrap(),
+        )
+        .unwrap();
+    } else {
+        configure_http(root, url);
+    }
+}
+
+fn normalized_history(root: &Path) -> Vec<String> {
+    let text = fs::read_to_string(root.join(".bit/command-history")).unwrap_or_default();
+    text.lines()
+        .map(|line| {
+            let mut fields = line.splitn(3, ' ');
+            chrono::DateTime::parse_from_rfc3339(fields.next().unwrap()).unwrap();
+            fields
+                .next()
+                .unwrap()
+                .parse::<u32>()
+                .unwrap();
+            fields.next().unwrap().to_owned()
+        })
+        .collect()
+}
+
 fn configure_http(root: &Path, url: &str) {
     let config = if root.join("scope.json").is_file() {
         root.join("scope.json")

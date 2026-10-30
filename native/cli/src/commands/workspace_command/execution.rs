@@ -1,4 +1,5 @@
 //! Command-owned publication, report output, and history after preflight.
+pub(in crate::commands) use error::print as print_error;
 pub use error::with_error_details;
 mod error;
 use super::{Report, cache};

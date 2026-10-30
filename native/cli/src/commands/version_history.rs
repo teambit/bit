@@ -1,10 +1,11 @@
 //! Native `bit version-history <sub-command>` (`vh`) (`scopes/scope/version-history/version-history-cmd.ts`).
 
+pub(super) mod text;
+
 mod build;
 mod remote;
 #[cfg(test)]
 mod tests;
-mod text;
 
 use super::{
     Command,

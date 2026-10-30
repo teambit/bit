@@ -56,6 +56,91 @@ fn version_history_rebuilds_missing_bare_history_without_runtime() {
 }
 
 #[test]
+fn version_history_build_patterns_match_glob_comma_and_negation_in_workspaces_and_bare_scopes() {
+    use sha1::{Digest, Sha1};
+    let helper = super::move_paths::support::workspace(2, true);
+    super::move_paths::support::setup(&helper, "export");
+    let unavailable = helper.scopes.e2e_dir.join("unavailable-runtime");
+    for root in [&helper.scopes.local_path, &helper.scopes.remote_path] {
+        for pattern in [
+            r#""*/comp*""#,
+            r#""**, !*/comp2""#,
+            &format!(r#""{0}/comp1, {0}/comp2""#, helper.scopes.remote),
+        ] {
+            let command = format!("version-history build {pattern}");
+            let node =
+                Helper::cmd_in_with(root, &command, &[("BIT_NATIVE", std::ffi::OsStr::new("off"))]);
+            let native = Helper::cmd_in_with(
+                root,
+                &command,
+                &[
+                    ("BIT_NODE_BINARY", unavailable.as_os_str()),
+                    ("BIT_NODE_CLI", unavailable.as_os_str()),
+                ],
+            );
+            assert!(
+                native.native && !native.trace.contains("starting the JavaScript host"),
+                "{native:?}",
+            );
+            assert_eq!(native.status.code(), node.status.code());
+            assert_eq!(native.stdout, node.stdout, "{command}");
+            assert_eq!(native.stderr, node.stderr, "{command}");
+        }
+    }
+
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let rebuilt =
+        super::scope_fixture::compare(&helper, r#"version-history build "**, !*/comp2""#, false);
+    assert!(
+        rebuilt.stdout.contains(&format!("{}/comp1@0.0.1: added 1 hashes", helper.scopes.remote)),
+        "{rebuilt:?}",
+    );
+}
+
+#[test]
+fn bare_scope_graph_json_matches_node_without_a_host() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    super::move_paths::support::setup(&helper, "tag --skip-tests");
+    super::move_paths::support::setup(&helper, "export");
+    let scope = &helper.scopes.remote_path;
+    let unavailable = helper.scopes.e2e_dir.join("unavailable-runtime");
+    for command in [
+        "graph --json",
+        "graph comp1 --json",
+        "graph comp1 --include-dependencies --json",
+        "graph comp2 --include-dependencies --json",
+    ] {
+        let node =
+            Helper::cmd_in_with(scope, command, &[("BIT_NATIVE", std::ffi::OsStr::new("off"))]);
+        let native = Helper::cmd_in_with(
+            scope,
+            command,
+            &[
+                ("BIT_NODE_BINARY", unavailable.as_os_str()),
+                ("BIT_NODE_CLI", unavailable.as_os_str()),
+            ],
+        );
+        assert!(
+            native.native && !native.trace.contains("starting the JavaScript host"),
+            "{native:?}",
+        );
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+}
+
+#[test]
 fn version_history_rebuild_accepts_an_empty_scope_group_name() {
     use sha1::{Digest, Sha1};
     let helper = super::scope_fixture::fixture();

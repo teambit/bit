@@ -50,14 +50,14 @@ fn filters_graph_seeders_local_only_and_cycles() {
         cyclic.edges,
         vec![
             GraphEdge {
-                id: "scope/a@0.0.1 -> scope/b@0.0.1".into(),
+                id: "scope/a@0.0.1->scope/b@0.0.1".into(),
                 source_id: "scope/a@0.0.1".into(),
                 target_id: "scope/b@0.0.1".into(),
                 attr: "prod".into(),
                 bidirectional: false,
             },
             GraphEdge {
-                id: "scope/b@0.0.1 -> scope/a@0.0.1".into(),
+                id: "scope/b@0.0.1->scope/a@0.0.1".into(),
                 source_id: "scope/b@0.0.1".into(),
                 target_id: "scope/a@0.0.1".into(),
                 attr: "dev".into(),

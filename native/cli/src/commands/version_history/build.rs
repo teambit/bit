@@ -57,35 +57,64 @@ pub(super) fn run(
 }
 
 fn select(root: &ScopeRoot, id: &str, from: Option<&str>) -> Option<Vec<String>> {
-    if id == "**" && from.is_none() {
-        return all(root);
+    if id.contains('*') || id.contains(',') {
+        return by_pattern(root, id, from);
     }
     Some(vec![prepare(root, id, from)?])
 }
 
-fn all(root: &ScopeRoot) -> Option<Vec<String>> {
+fn by_pattern(root: &ScopeRoot, pattern: &str, from: Option<&str>) -> Option<Vec<String>> {
+    if pattern
+        .split(',')
+        .map(str::trim)
+        .any(|part| part.starts_with('$') || part.contains(" AND "))
+    {
+        return None;
+    }
     let scope = scope_dir_for(root);
+    let candidates = index_candidates(&scope)?;
+    let refs = candidates
+        .iter()
+        .map(|(id, _)| id.as_str())
+        .collect::<Vec<_>>();
+    let matched: HashSet<String> =
+        crate::commands::patterns::matching(&refs, &crate::commands::patterns::split(pattern))
+            .ok()?
+            .into_iter()
+            .map(str::to_owned)
+            .collect();
+    if matched.is_empty() || (matched.len() > 1 && from.is_some()) {
+        return None;
+    }
+    let mut identities = Vec::with_capacity(matched.len());
+    for (identity, versioned) in candidates {
+        if matched.contains(&identity) {
+            prepare(root, &identity, from)?;
+            identities.push(versioned);
+        }
+    }
+    Some(identities)
+}
+
+fn index_candidates(scope: &std::path::Path) -> Option<Vec<(String, String)>> {
     let index: Value = serde_json::from_slice(&fs::read(scope.join("index.json")).ok()?).ok()?;
     let rows = index["components"].as_array()?;
     if rows.len() > 128 {
         return None;
     }
-    let mut identities = Vec::new();
+    let mut candidates = Vec::new();
     for row in rows
         .iter()
         .filter(|row| row["isSymlink"] != true)
     {
-        if let Some(identity) = selected_row(root, &scope, row)? {
-            identities.push(identity);
+        if let Some(candidate) = candidate_row(scope, row)? {
+            candidates.push(candidate);
         }
     }
-    if identities.is_empty() {
-        return None;
-    }
-    Some(identities)
+    Some(candidates)
 }
 
-fn selected_row(root: &ScopeRoot, scope: &std::path::Path, row: &Value) -> Option<Option<String>> {
+fn candidate_row(scope: &std::path::Path, row: &Value) -> Option<Option<(String, String)>> {
     let hash = row["hash"].as_str()?;
     let (kind, model) = bit_object_import::read_scope_object(scope, hash).ok()??;
     if kind != "Component" {
@@ -93,9 +122,8 @@ fn selected_row(root: &ScopeRoot, scope: &std::path::Path, row: &Value) -> Optio
     }
     let Some(head) = model["head"].as_str() else { return Some(None) };
     let identity = format!("{}/{}", row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?);
-    prepare(root, &identity, None)?;
     let version = super::text::tags(&model, head).unwrap_or(head);
-    Some(Some(format!("{identity}@{version}")))
+    Some(Some((identity.clone(), format!("{identity}@{version}"))))
 }
 
 fn prepare(root: &ScopeRoot, id: &str, from: Option<&str>) -> Option<String> {

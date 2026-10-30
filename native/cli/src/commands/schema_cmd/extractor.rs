@@ -45,7 +45,13 @@ pub(super) fn resolve_workspace_schema(
 }
 
 pub(super) fn resolve_scope_schema_json(scope_dir: &Path, pattern: &str) -> Option<Vec<Value>> {
-    if pattern.contains(['*', ',', '!', '$', ':']) {
+    if pattern.contains(['$', ':']) || pattern.contains(" AND ") {
+        return None;
+    }
+    if pattern.contains('*') || pattern.contains(',') {
+        return resolve_scope_pattern_schemas(scope_dir, pattern);
+    }
+    if pattern.contains('!') {
         return None;
     }
     let (bare_id, explicit_ver) = pattern
@@ -55,17 +61,69 @@ pub(super) fn resolve_scope_schema_json(scope_dir: &Path, pattern: &str) -> Opti
         return None;
     }
     let (_, _, comp_hash) = resolve_component_entry(scope_dir, bare_id)?;
-    let (kind, comp_val) = bit_object_import::read_scope_object(scope_dir, &comp_hash).ok()??;
+    Some(vec![read_component_schema(scope_dir, &comp_hash, explicit_ver.unwrap_or("latest"))?])
+}
+
+fn read_component_schema(scope_dir: &Path, comp_hash: &str, req_ver: &str) -> Option<Value> {
+    let (kind, comp_val) = bit_object_import::read_scope_object(scope_dir, comp_hash).ok()??;
     if kind != "Component" {
         return None;
     }
-    let ver_hash = resolve_version_hash(&comp_val, explicit_ver.unwrap_or("latest"))?;
+    let ver_hash = resolve_version_hash(&comp_val, req_ver)?;
     let (ver_kind, ver_val) = bit_object_import::read_scope_object(scope_dir, &ver_hash).ok()??;
     if ver_kind != "Version" {
         return None;
     }
-    let schema = extract_stored_schema(scope_dir, &ver_val)?;
-    Some(vec![schema])
+    extract_stored_schema(scope_dir, &ver_val)
+}
+
+fn resolve_scope_pattern_schemas(scope_dir: &Path, pattern: &str) -> Option<Vec<Value>> {
+    let candidates = scope_pattern_candidates(scope_dir)?;
+    let refs = candidates
+        .iter()
+        .map(|(id, _)| id.as_str())
+        .collect::<Vec<_>>();
+    let matched: std::collections::HashSet<String> =
+        patterns::matching(&refs, &patterns::split(pattern))
+            .ok()?
+            .into_iter()
+            .map(str::to_owned)
+            .collect();
+    if matched.is_empty() {
+        return None;
+    }
+    let mut schemas = Vec::with_capacity(matched.len());
+    for (identity, comp_hash) in candidates {
+        if matched.contains(&identity) {
+            schemas.push(read_component_schema(scope_dir, &comp_hash, "latest")?);
+        }
+    }
+    Some(schemas)
+}
+
+fn scope_pattern_candidates(scope_dir: &Path) -> Option<Vec<(String, String)>> {
+    let index: Value = serde_json::from_slice(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
+    let rows = index["components"].as_array()?;
+    if rows.len() > 128 {
+        return None;
+    }
+    let mut candidates = Vec::new();
+    for row in rows
+        .iter()
+        .filter(|row| row["isSymlink"] != true)
+    {
+        let comp_hash = row["hash"].as_str()?.to_owned();
+        let (kind, comp_val) = bit_object_import::read_scope_object(scope_dir, &comp_hash).ok()??;
+        if kind != "Component" {
+            return None;
+        }
+        if comp_val["head"].as_str().is_none() {
+            continue;
+        }
+        let identity = format!("{}/{}", row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?);
+        candidates.push((identity, comp_hash));
+    }
+    Some(candidates)
 }
 
 fn load_bitmap(root: &Path) -> Option<Bitmap> {

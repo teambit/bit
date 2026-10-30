@@ -19,7 +19,7 @@ pub fn with_error_details(error: io::Error, details: String) -> io::Error {
     io::Error::new(error.kind(), WithDetails { error, details })
 }
 
-pub(super) fn print(error: &io::Error, chalk: Chalk) {
+pub(in crate::commands) fn print(error: &io::Error, chalk: Chalk) {
     eprintln!("{}", chalk.red(&error.to_string()));
     if let Some(error) = error.get_ref().and_then(|error| error.downcast_ref::<WithDetails>()) {
         eprintln!("{}", error.details);

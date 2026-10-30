@@ -1,5 +1,6 @@
-use super::{clear_caches, format_report, parse_args};
+use super::{clear_caches, format_remote_report, format_report, parse_args};
 use crate::commands::color::Chalk;
+use serde_json::json;
 use std::{ffi::OsString, fs};
 
 fn args(items: &[&str]) -> Vec<OsString> {
@@ -10,11 +11,30 @@ fn args(items: &[&str]) -> Vec<OsString> {
 }
 
 #[test]
-fn parses_plain_invocation_and_declines_remote_flag() {
-    assert!(parse_args(&args(&["clear-cache"])));
-    assert!(parse_args(&args(&["cc", "--no-color"])));
-    assert!(!parse_args(&args(&["clear-cache", "--remote", "my-scope"])));
-    assert!(!parse_args(&args(&["clear-cache", "-r", "my-scope"])));
+fn parses_plain_and_remote_invocations() {
+    assert_eq!(parse_args(&args(&["clear-cache"])), Some(None));
+    assert_eq!(parse_args(&args(&["cc", "--no-color"])), Some(None));
+    assert_eq!(
+        parse_args(&args(&["clear-cache", "--remote", "my-scope"])),
+        Some(Some("my-scope".to_owned())),
+    );
+    assert_eq!(
+        parse_args(&args(&["clear-cache", "-r", "my-scope", "--no-color"])),
+        Some(Some("my-scope".to_owned())),
+    );
+    assert_eq!(parse_args(&args(&["cc", "--remote=my-scope"])), Some(Some("my-scope".to_owned())));
+    assert_eq!(parse_args(&args(&["clear-cache", "--remote"])), None);
+    assert_eq!(parse_args(&args(&["clear-cache", "--remote", "--no-color"])), None);
+    assert_eq!(parse_args(&args(&["clear-cache", "positional"])), None);
+}
+
+#[test]
+fn formats_remote_report_for_truthy_and_falsy_responses() {
+    let chalk = Chalk::new(false);
+    let ok = format_remote_report("my-scope", &json!(true), chalk);
+    assert!(ok.contains(r#"cleaned the cache of "my-scope""#));
+    let failed = format_remote_report("my-scope", &json!(false), chalk);
+    assert!(failed.contains(r#"failed cleaning the cache of "my-scope""#));
 }
 
 #[test]

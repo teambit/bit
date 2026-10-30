@@ -2,13 +2,15 @@
 
 pub(super) mod builder;
 pub(super) mod model;
+mod scope;
 #[cfg(test)]
 mod tests;
 
-use self::builder::execute_workspace_graph;
+use self::{builder::execute_workspace_graph, scope::execute_scope_graph};
 use super::{
     Command,
     color::Chalk,
+    lane::scope_root,
     scope_set::Failure,
     workspace_command::{self, format::Formatter, results::Report},
 };
@@ -49,10 +51,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if options.remote.is_some() || options.png {
         return Ok(Outcome::Declined("remote/png graph delegated".into()));
     }
-    let Some(root) = workspace::root(&cwd) else {
-        return Ok(Outcome::Declined("bare scope graph delegated".into()));
-    };
-    finish_graph(&root, args, &options)
+    if let Some(root) = workspace::root(&cwd) {
+        return finish_graph(&root, args, &options);
+    }
+    if let Some(scope) = scope_root::discover().ok().flatten()
+        && scope.bare
+    {
+        return finish_scope_graph(&scope.path, args, &options);
+    }
+    Ok(Outcome::Declined("bare scope graph delegated".into()))
 }
 
 fn emit_fast_graph_error(cwd: &Path, args: &[OsString], err: &'static str) -> io::Result<Outcome> {
@@ -84,6 +91,31 @@ fn finish_graph(root: &Path, args: &[OsString], options: &Options) -> io::Result
         }
         Err(Failure::User(message)) => {
             workspace_command::execute_then(root, args, "graph", move |_| {
+                Err(io::Error::other(message))
+            })
+        }
+        Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("graph: {reason}"))),
+    }
+}
+
+fn finish_scope_graph(scope: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
+    let formatter = Formatter::new(Chalk::detect(args));
+    match execute_scope_graph(scope, options, &formatter) {
+        Ok(data) if options.json => {
+            workspace_command::execute_json_scope(scope, args, "graph", move |_| {
+                Ok(Report { data, code: 0, details: None })
+            })
+        }
+        Ok(data) => workspace_command::execute_then_scope(scope, args, "graph", move |_| {
+            Ok(Report { data, code: 0, details: None })
+        }),
+        Err(Failure::User(message)) if options.json => {
+            workspace_command::execute_json_scope(scope, args, "graph", move |_| {
+                Err(io::Error::other(message))
+            })
+        }
+        Err(Failure::User(message)) => {
+            workspace_command::execute_then_scope(scope, args, "graph", move |_| {
                 Err(io::Error::other(message))
             })
         }

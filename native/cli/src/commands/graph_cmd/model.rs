@@ -37,7 +37,7 @@ impl CompGraph {
     pub(crate) fn add_edge(&mut self, source_id: String, target_id: String, attr: &str) {
         self.add_node(source_id.clone());
         self.add_node(target_id.clone());
-        let edge_id = format!("{source_id} -> {target_id}");
+        let edge_id = format!("{source_id}->{target_id}");
         if let Some(existing) = self.edges
             .iter_mut()
             .find(|edge| edge.id == edge_id)

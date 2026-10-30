@@ -98,7 +98,7 @@ fn pointer_text(pointers: &[&str], chalk: Chalk) -> String {
     }
 }
 
-pub(super) fn tags<'a>(model: &'a Value, hash: &str) -> Option<&'a str> {
+pub(in crate::commands) fn tags<'a>(model: &'a Value, hash: &str) -> Option<&'a str> {
     for key in ["versions", "orphanedVersions"] {
         let Some(map) = model.get(key).and_then(Value::as_object) else { continue };
         if let Some((tag, _)) = map

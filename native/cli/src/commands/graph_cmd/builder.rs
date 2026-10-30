@@ -243,7 +243,10 @@ fn match_ws_dep(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<Strin
     None
 }
 
-fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
+pub(super) fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
+    if ver == "latest" {
+        return comp_val["head"].as_str().map(str::to_owned);
+    }
     comp_val["versions"]
         .get(ver)
         .and_then(Value::as_str)
@@ -256,7 +259,7 @@ fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
         })
 }
 
-fn format_dep_id(id_val: &Value) -> Option<String> {
+pub(super) fn format_dep_id(id_val: &Value) -> Option<String> {
     let name = id_val["name"].as_str()?;
     let ver = id_val["version"].as_str().unwrap_or_default();
     let base = match id_val["scope"]
