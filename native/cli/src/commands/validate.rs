@@ -22,7 +22,7 @@ pub const COMMAND: Command = Command { name: "validate", aliases: &[], run };
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Create a new workspace using 'bit new <template> <workspace-name>' or navigate to an existing workspace directory.";
 const VALID_TASKS: &[&str] = &["check-types", "lint", "test"];
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub pattern: Option<String>,
     pub all: bool,
@@ -135,40 +135,74 @@ fn collect_deprecation_warnings(
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut pattern = None;
-    let mut all = false;
-    let mut unmodified = false;
-    let mut fail_fast = false;
-    let mut continue_on_error = false;
-    let mut skip_tasks = None;
+    let mut options = Options::default();
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
-        match arg {
-            "--no-color" => {}
-            "-a" | "--all" | "--all=true" => all = true,
-            "--all=false" => all = false,
-            "-u" | "--unmodified" | "--unmodified=true" => unmodified = true,
-            "--unmodified=false" => unmodified = false,
-            "--fail-fast" | "--fail-fast=true" => fail_fast = true,
-            "--fail-fast=false" => fail_fast = false,
-            "-c" | "--continue-on-error" | "--continue-on-error=true" => continue_on_error = true,
-            "--continue-on-error=false" => continue_on_error = false,
-            "--skip-tasks" => {
-                let val = iter.next()?;
-                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
-                skip_tasks = Some(val.to_owned());
-            }
-            arg if let Some(val) = arg.strip_prefix("--skip-tasks=") => {
-                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
-                skip_tasks = Some(val.to_owned());
-            }
-            val if !val.starts_with('-') && !val.is_empty() && pattern.is_none() => {
-                pattern = Some(val.to_owned());
-            }
-            _ => return None,
+        apply_validate_token(arg, &mut iter, &mut options)?;
+    }
+    Some(options)
+}
+
+fn apply_validate_token<'a>(
+    arg: &'a str,
+    iter: &mut impl Iterator<Item = &'a str>,
+    options: &mut Options,
+) -> Option<()> {
+    if apply_validate_combined_short(arg, options) {
+        return Some(());
+    }
+    match arg {
+        "--no-color" => {}
+        "-a" | "--all" | "--all=true" => options.all = true,
+        "--all=false" => options.all = false,
+        "-u" | "--unmodified" | "--unmodified=true" => options.unmodified = true,
+        "--unmodified=false" => options.unmodified = false,
+        "--fail-fast" | "--fail-fast=true" => options.fail_fast = true,
+        "--fail-fast=false" => options.fail_fast = false,
+        "-c" | "--continue-on-error" | "--continue-on-error=true" => {
+            options.continue_on_error = true;
+        }
+        "--continue-on-error=false" => options.continue_on_error = false,
+        "--skip-tasks" => {
+            let val = iter.next()?;
+            (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+            options.skip_tasks = Some(val.to_owned());
+        }
+        _ => apply_validate_inline_or_pattern(arg, options)?,
+    }
+    Some(())
+}
+
+fn apply_validate_combined_short(arg: &str, options: &mut Options) -> bool {
+    if !arg.starts_with('-')
+        || arg.starts_with("--")
+        || arg.len() <= 2
+        || !arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'a' | b'u' | b'c'))
+    {
+        return false;
+    }
+    for byte in arg[1..].bytes() {
+        match byte {
+            b'a' => options.all = true,
+            b'u' => options.unmodified = true,
+            _ => options.continue_on_error = true,
         }
     }
-    Some(Options { pattern, all, unmodified, fail_fast, continue_on_error, skip_tasks })
+    true
+}
+
+fn apply_validate_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
+    if let Some(val) = arg.strip_prefix("--skip-tasks=") {
+        (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+        options.skip_tasks = Some(val.to_owned());
+    } else if !arg.starts_with('-') && !arg.is_empty() && options.pattern.is_none() {
+        options.pattern = Some(arg.to_owned());
+    } else {
+        return None;
+    }
+    Some(())
 }
 
 pub(super) fn classify_workspace(

@@ -82,11 +82,14 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
 
 fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<()> {
     let arg = args[*idx];
+    if apply_combined_short(arg, options) {
+        return Some(());
+    }
     match arg {
         "--no-color" => {}
         "-v" | "--verbose" | "--verbose=true" => options.verbose = true,
         "--verbose=false" => options.verbose = false,
-        "--skip-pre-compilation" | "--skip-pre-compilation=true" => {
+        "-Y" | "--skip-pre-compilation" | "--skip-pre-compilation=true" => {
             options.skip_pre_compilation = true;
         }
         "--skip-pre-compilation=false" => options.skip_pre_compilation = false,
@@ -101,6 +104,26 @@ fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<
         _ => apply_inline(arg, options)?,
     }
     Some(())
+}
+
+fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
+    if !arg.starts_with('-')
+        || arg.starts_with("--")
+        || arg.len() <= 2
+        || !arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'v' | b'i' | b'Y'))
+    {
+        return false;
+    }
+    for byte in arg[1..].bytes() {
+        match byte {
+            b'v' => options.verbose = true,
+            b'i' => options.import = true,
+            _ => options.skip_pre_compilation = true,
+        }
+    }
+    true
 }
 
 fn take_optional_check_types(args: &[&str], idx: &mut usize) -> String {
@@ -124,7 +147,10 @@ fn take_required_trigger(args: &[&str], idx: &mut usize) -> Option<String> {
 }
 
 fn apply_inline(arg: &str, options: &mut Options) -> Option<()> {
-    if let Some(val) = arg.strip_prefix("--check-types=") {
+    if let Some(val) = arg
+        .strip_prefix("--check-types=")
+        .or_else(|| arg.strip_prefix("-t="))
+    {
         options.check_types = Some(val.to_owned());
     } else {
         let val = arg.strip_prefix("--trigger=")?;

@@ -36,12 +36,20 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native dependents grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("dependents requires a workspace".into()));
-    };
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("CI dependents delegated".into()));
     }
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            "dependents",
+            options.json,
+            "",
+            io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR),
+        );
+    };
     if let Ok(Some(err_msg)) = check_new_component(&root, &options.id) {
         return emit_dependents_err(&root, args, options.json, err_msg);
     }

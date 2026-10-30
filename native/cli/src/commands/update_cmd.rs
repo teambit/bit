@@ -164,13 +164,18 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     for &arg in args {
         match arg {
             "--no-color" => {}
-            "-y" | "--yes" => options.yes = true,
-            "--patch" => options.patch = true,
-            "--minor" => options.minor = true,
-            "--major" | "--latest" => options.major = true,
-            "--semver" => options.semver = true,
+            "-y" | "--yes" | "--yes=true" => options.yes = true,
+            "--yes=false" => options.yes = false,
+            "--patch" | "--patch=true" => options.patch = true,
+            "--patch=false" => options.patch = false,
+            "--minor" | "--minor=true" => options.minor = true,
+            "--minor=false" => options.minor = false,
+            "--major" | "--latest" | "--major=true" | "--latest=true" => options.major = true,
+            "--major=false" | "--latest=false" => options.major = false,
+            "--semver" | "--semver=true" => options.semver = true,
+            "--semver=false" => options.semver = false,
             val if !val.starts_with('-') && !val.is_empty() => {
-                push_patterns(&mut options.patterns, val);
+                push_patterns(&mut options.patterns, val)?;
             }
             _ => return None,
         }
@@ -178,11 +183,15 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
-fn push_patterns(patterns: &mut Vec<String>, raw: &str) {
+fn push_patterns(patterns: &mut Vec<String>, raw: &str) -> Option<()> {
     for part in raw.split(',') {
         let trimmed = part.trim();
+        if trimmed.starts_with('-') {
+            return None;
+        }
         if !trimmed.is_empty() {
             patterns.push(trimmed.to_owned());
         }
     }
+    Some(())
 }

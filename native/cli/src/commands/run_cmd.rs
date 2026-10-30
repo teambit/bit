@@ -143,39 +143,83 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut idx = 0;
     while idx < args.len() {
-        let arg = args[idx];
-        match arg {
-            "--no-color" => return None,
-            "-d" | "--dev" => options.dev = true,
-            "-v" | "--verbose" => options.verbose = true,
-            "-w" | "--watch" => options.watch = true,
-            "-n" | "--no-browser" => options.no_browser = true,
-            "-p" | "--port" => {
-                if let Some(&next) = args.get(idx + 1)
-                    && !next.starts_with('-')
-                {
-                    options.port = Some(next.to_owned());
-                    idx += 1;
-                } else {
-                    options.port = Some(String::new());
-                }
-            }
-            "-a" | "--args" => {
-                let next = *args.get(idx + 1)?;
-                options.args = Some(next.to_owned());
-                idx += 1;
-            }
-            _ => apply_inline_or_app(arg, &mut options)?,
-        }
+        apply_run_token(args, &mut idx, &mut options)?;
         idx += 1;
     }
     Some(options)
 }
 
+fn apply_run_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<()> {
+    let arg = args[*idx];
+    if arg == "--no-color" {
+        return None;
+    }
+    if apply_run_bool_or_short(arg, options) {
+        return Some(());
+    }
+    match arg {
+        "-p" | "--port" => {
+            if let Some(&next) = args.get(*idx + 1)
+                && !next.starts_with('-')
+            {
+                options.port = Some(next.to_owned());
+                *idx += 1;
+            } else {
+                options.port = Some(String::new());
+            }
+        }
+        "-a" | "--args" => {
+            let next = *args.get(*idx + 1)?;
+            options.args = Some(next.to_owned());
+            *idx += 1;
+        }
+        _ => apply_inline_or_app(arg, options)?,
+    }
+    Some(())
+}
+
+fn apply_run_bool_or_short(arg: &str, options: &mut Options) -> bool {
+    if arg.starts_with('-')
+        && !arg.starts_with("--")
+        && arg.len() > 2
+        && arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'd' | b'v' | b'w' | b'n'))
+    {
+        for byte in arg[1..].bytes() {
+            match byte {
+                b'd' => options.dev = true,
+                b'v' => options.verbose = true,
+                b'w' => options.watch = true,
+                _ => options.no_browser = true,
+            }
+        }
+        return true;
+    }
+    match arg {
+        "-d" | "--dev" | "--dev=true" => options.dev = true,
+        "--dev=false" => options.dev = false,
+        "-v" | "--verbose" | "--verbose=true" => options.verbose = true,
+        "--verbose=false" => options.verbose = false,
+        "-w" | "--watch" | "--watch=true" => options.watch = true,
+        "--watch=false" => options.watch = false,
+        "-n" | "--no-browser" | "--no-browser=true" => options.no_browser = true,
+        "--no-browser=false" => options.no_browser = false,
+        _ => return false,
+    }
+    true
+}
+
 fn apply_inline_or_app(arg: &str, options: &mut Options) -> Option<()> {
-    if let Some(val) = arg.strip_prefix("--port=") {
+    if let Some(val) = arg
+        .strip_prefix("--port=")
+        .or_else(|| arg.strip_prefix("-p="))
+    {
         options.port = Some(val.to_owned());
-    } else if let Some(val) = arg.strip_prefix("--args=") {
+    } else if let Some(val) = arg
+        .strip_prefix("--args=")
+        .or_else(|| arg.strip_prefix("-a="))
+    {
         options.args = Some(val.to_owned());
     } else if !arg.starts_with('-') && !arg.is_empty() && options.app_name.is_none() {
         options.app_name = Some(arg.to_owned());

@@ -51,21 +51,60 @@ fn apply_cat_arg<'a>(
     arg: &'a str,
     next: Option<&'a str>,
 ) -> Option<usize> {
-    if let Some(val) = arg.strip_prefix("--file=") {
+    if let Some(val) = arg
+        .strip_prefix("--file=")
+        .or_else(|| arg.strip_prefix("-f="))
+    {
         return set_cat_file(options, val, 1);
     }
+    if apply_cat_combined_short(options, arg) || apply_cat_bool(options, arg) || arg == "--no-color"
+    {
+        return Some(1);
+    }
     match arg {
-        "--no-color" | "--config=false" | "--all=false" | "--json=false" => Some(1),
         "--file" | "-f" => set_cat_file(options, next?, 2),
-        "--config" | "-c" | "--config=true" => set_cat_bool(&mut options.config),
-        "--all" | "-a" | "--all=true" => set_cat_bool(&mut options.all),
-        "--json" | "-j" | "--json=true" => set_cat_bool(&mut options.json),
         id if !id.starts_with('-') && options.id.is_none() => {
             options.id = Some(id);
             Some(1)
         }
         _ => None,
     }
+}
+
+fn apply_cat_bool(options: &mut Options<'_>, arg: &str) -> bool {
+    let (flag, val) = match arg.split_once('=') {
+        Some((flag, "true")) => (flag, true),
+        Some((flag, "false")) => (flag, false),
+        None => (arg, true),
+        _ => return false,
+    };
+    match flag {
+        "--config" | "-c" if val || arg.starts_with("--") => options.config = val,
+        "--all" | "-a" if val || arg.starts_with("--") => options.all = val,
+        "--json" | "-j" if val || arg.starts_with("--") => options.json = val,
+        _ => return false,
+    }
+    true
+}
+
+fn apply_cat_combined_short(options: &mut Options<'_>, arg: &str) -> bool {
+    if !arg.starts_with('-')
+        || arg.starts_with("--")
+        || arg.len() <= 2
+        || !arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'c' | b'a' | b'j'))
+    {
+        return false;
+    }
+    for byte in arg[1..].bytes() {
+        match byte {
+            b'c' => options.config = true,
+            b'a' => options.all = true,
+            _ => options.json = true,
+        }
+    }
+    true
 }
 
 fn set_cat_file<'a>(options: &mut Options<'a>, val: &'a str, consumed: usize) -> Option<usize> {
@@ -76,23 +115,11 @@ fn set_cat_file<'a>(options: &mut Options<'a>, val: &'a str, consumed: usize) ->
     Some(consumed)
 }
 
-fn set_cat_bool(slot: &mut bool) -> Option<usize> {
-    if *slot {
-        return None;
-    }
-    *slot = true;
-    Some(1)
-}
-
 fn run(args: &[OsString]) -> io::Result<Outcome> {
-    let arguments = args
-        .iter()
-        .map(|arg| arg.to_str())
-        .collect::<Option<Vec<_>>>();
-    let Some(options) = arguments
-        .as_deref()
-        .and_then(|arguments| parse(&arguments[1..]))
-    else {
+    let Some(arguments) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("outside native cat grammar".into()));
+    };
+    let Some(options) = parse(&arguments[1..]) else {
         return Ok(Outcome::Declined("outside native cat grammar".into()));
     };
     if options.file.is_some() && options.config && !options.all {
@@ -129,17 +156,12 @@ fn present(
     };
     io::stdout().write_all(prepared.output.as_bytes())?;
     if !options.json {
-        return workspace_command::execute_with(
-            root,
-            args,
-            "cat",
-            &workspace_command::results::Report { data: rendered, code: 0, details: None },
-            |_| {
-                prepared.docs
-                    .take()
-                    .map_or(Ok(()), docs::CatDocs::publish)
-            },
-        );
+        let report = workspace_command::results::Report { data: rendered, code: 0, details: None };
+        return workspace_command::execute_with(root, args, "cat", &report, |_| {
+            prepared.docs
+                .take()
+                .map_or(Ok(()), docs::CatDocs::publish)
+        });
     }
     json_output(root, args, &rendered, prepared.docs.take())
 }
@@ -206,15 +228,8 @@ fn prepare(root: &Path, options: &Options<'_>) -> Result<Prepared, Failure> {
     let mut source = if current_version {
         read_current(root, &entry, options)?
     } else {
-        Read {
-            value: read_stored(
-                root,
-                &entry,
-                explicit.ok_or_else(|| decline("cat stored version"))?,
-                &mut engine,
-            )?,
-            ..Default::default()
-        }
+        let ver = explicit.ok_or_else(|| decline("cat stored version"))?;
+        Read { value: read_stored(root, &entry, ver, &mut engine)?, ..Default::default() }
     };
     source.value["id"] = json!(entry.identity);
     let metadata =

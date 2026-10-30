@@ -90,6 +90,9 @@ fn apply_token<'a>(
 }
 
 fn apply_inline_or_id(arg: &str, options: &mut Options) -> Option<()> {
+    if apply_combined_short(arg, options) {
+        return Some(());
+    }
     if let Some(val) = arg.strip_prefix("--target=") {
         (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.target = Some(val.to_owned());
@@ -99,4 +102,24 @@ fn apply_inline_or_id(arg: &str, options: &mut Options) -> Option<()> {
         return None;
     }
     Some(())
+}
+
+fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
+    if !arg.starts_with('-')
+        || arg.starts_with("--")
+        || arg.len() <= 2
+        || !arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'j' | b'v' | b'r'))
+    {
+        return false;
+    }
+    for byte in arg[1..].bytes() {
+        match byte {
+            b'j' => options.json = true,
+            b'v' => options.verbose = true,
+            _ => options.rewire = true,
+        }
+    }
+    true
 }

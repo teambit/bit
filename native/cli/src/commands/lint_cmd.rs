@@ -152,6 +152,9 @@ fn apply_token<'a>(
 }
 
 fn apply_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
+    if apply_combined_short(arg, options) {
+        return Some(());
+    }
     if let Some(val) = arg.strip_prefix("--fix-type=") {
         (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.fix_type = Some(val.to_owned());
@@ -161,4 +164,24 @@ fn apply_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
         return None;
     }
     Some(())
+}
+
+fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
+    if !arg.starts_with('-')
+        || arg.starts_with("--")
+        || arg.len() <= 2
+        || !arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'c' | b'f' | b'j'))
+    {
+        return false;
+    }
+    for byte in arg[1..].bytes() {
+        match byte {
+            b'c' => options.changed = true,
+            b'f' => options.fix = true,
+            _ => options.json = true,
+        }
+    }
+    true
 }

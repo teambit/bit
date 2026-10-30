@@ -176,6 +176,11 @@ fn parse_args(args: &[OsString]) -> Option<SearchArgs> {
                 local_only = true;
                 remote_only = true;
             }
+            "-ljr" | "-lrj" | "-jlr" | "-jrl" | "-rlj" | "-rjl" => {
+                local_only = true;
+                remote_only = true;
+                json = true;
+            }
             s if s.starts_with('-') => return None,
             s => queries.push(s.to_owned()),
         }

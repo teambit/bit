@@ -201,6 +201,10 @@ fn apply_switch(arg: &str, options: &mut Options) -> bool {
         "--unmodified=false" => options.unmodified = false,
         "-d" | "--dev" | "--dev=true" => options.dev = true,
         "--dev=false" => options.dev = false,
+        "-ud" | "-du" => {
+            options.unmodified = true;
+            options.dev = true;
+        }
         "--reuse-capsules" | "--reuse-capsules=true" => options.capsules.reuse_capsules = true,
         "--reuse-capsules=false" => options.capsules.reuse_capsules = false,
         "--rewrite" | "--rewrite=true" => options.capsules.rewrite = true,

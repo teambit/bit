@@ -254,11 +254,11 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     if let Some(sub) = parse_unrecognized(args) {
         return Some(Subcommand::Unrecognized(sub.to_owned()));
     }
-    let filtered = args
+    let filtered: Vec<_> = args
         .iter()
         .copied()
-        .filter(|arg| *arg != "--no-color")
-        .collect::<Vec<_>>();
+        .filter(|&arg| arg != "--no-color")
+        .collect();
     match filtered.as_slice() {
         ["list", rest @ ..] => parse_list(rest),
         ["clean", rest @ ..] => parse_clean(rest),
@@ -268,14 +268,12 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
 }
 
 pub(super) fn parse_unrecognized<'a>(args: &[&'a str]) -> Option<&'a str> {
-    let filtered = args
+    let filtered: Vec<_> = args
         .iter()
         .copied()
-        .filter(|arg| *arg != "--no-color")
-        .collect::<Vec<_>>();
-    let [sub] = filtered.as_slice() else {
-        return None;
-    };
+        .filter(|&arg| arg != "--no-color")
+        .collect();
+    let [sub] = filtered.as_slice() else { return None };
     (!sub.starts_with('-') && !matches!(*sub, "write" | "clean" | "list")).then_some(*sub)
 }
 
@@ -292,11 +290,7 @@ fn parse_list(rest: &[&str]) -> Option<Subcommand> {
 }
 
 fn parse_clean(rest: &[&str]) -> Option<Subcommand> {
-    let mut silent = false;
-    let mut dry_run = false;
-    let mut writers = None;
-    let mut json = false;
-    let mut idx = 0usize;
+    let (mut silent, mut dry_run, mut writers, mut json, mut idx) = (false, false, None, false, 0);
     while idx < rest.len() {
         match rest[idx] {
             "-s" | "--silent" | "--silent=true" => silent = true,
@@ -305,17 +299,8 @@ fn parse_clean(rest: &[&str]) -> Option<Subcommand> {
             "--dry-run=false" => dry_run = false,
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
-            "-w" | "--writers" => {
-                idx += 1;
-                writers = Some(split_writers(rest.get(idx)?)?);
-            }
-            arg if let Some(val) = arg
-                .strip_prefix("--writers=")
-                .or_else(|| arg.strip_prefix("-w=")) =>
-            {
-                writers = Some(split_writers(val)?);
-            }
-            _ => return None,
+            "-sj" | "-js" => (silent, json) = (true, true),
+            _ => writers = Some(parse_writers_arg(rest, &mut idx)?),
         }
         idx += 1;
     }
@@ -327,7 +312,7 @@ fn parse_write(rest: &[&str]) -> Option<Subcommand> {
     let mut idx = 0usize;
     while idx < rest.len() {
         if !apply_write_flag(rest[idx], &mut opts) {
-            apply_write_value_flag(rest, &mut idx, &mut opts)?;
+            opts.writers = Some(parse_writers_arg(rest, &mut idx)?);
         }
         idx += 1;
     }
@@ -335,68 +320,94 @@ fn parse_write(rest: &[&str]) -> Option<Subcommand> {
 }
 
 fn apply_write_flag(token: &str, opts: &mut WriteOptions) -> bool {
+    if apply_write_combined_short(token, opts) || apply_write_bool(token, opts) {
+        return true;
+    }
     match token {
-        "-c" | "--clean" | "--clean=true" => opts.clean = true,
-        "--clean=false" => opts.clean = false,
-        "-n" | "--no-dedupe" | "--no-dedupe=true" => opts.no_dedupe = true,
-        "--no-dedupe=false" => opts.no_dedupe = false,
-        "--dry-run" | "--dry-run=true" => {
-            if opts.dry_run == DryRunMode::Off {
-                opts.dry_run = DryRunMode::PathsOnly;
-            }
+        "--dry-run" | "--dry-run=true" if opts.dry_run == DryRunMode::Off => {
+            opts.dry_run = DryRunMode::PathsOnly;
         }
-        "--dry-run=false" => {
-            if opts.dry_run == DryRunMode::PathsOnly {
+        "--dry-run" | "--dry-run=true" | "--dry-run=false" | "--dry-run-with-content=false" => {
+            if token == "--dry-run=false" && opts.dry_run == DryRunMode::PathsOnly
+                || token == "--dry-run-with-content=false"
+                    && opts.dry_run == DryRunMode::WithContent
+            {
                 opts.dry_run = DryRunMode::Off;
             }
         }
         "--dry-run-with-content" | "--dry-run-with-content=true" => {
             opts.dry_run = DryRunMode::WithContent;
         }
-        "--dry-run-with-content=false" => {
-            if opts.dry_run == DryRunMode::WithContent {
-                opts.dry_run = DryRunMode::Off;
-            }
-        }
-        "-v" | "--verbose" | "--verbose=true" => opts.verbose = true,
-        "--verbose=false" => opts.verbose = false,
-        "-s" | "--silent" | "--silent=true" => opts.silent = true,
-        "--silent=false" => opts.silent = false,
-        "-f" | "--force" | "--force=true" => opts.force = true,
-        "--force=false" => opts.force = false,
-        "-j" | "--json" | "--json=true" => opts.json = true,
-        "--json=false" => opts.json = false,
         _ => return false,
     }
     true
 }
 
-fn apply_write_value_flag(rest: &[&str], idx: &mut usize, opts: &mut WriteOptions) -> Option<()> {
+fn apply_write_bool(token: &str, opts: &mut WriteOptions) -> bool {
+    let (flag, val) = match token.split_once('=') {
+        Some((flag, "true")) => (flag, true),
+        Some((flag, "false")) => (flag, false),
+        None => (token, true),
+        _ => return false,
+    };
+    if !val && !token.starts_with("--") {
+        return false;
+    }
+    let slot = match flag {
+        "-c" | "--clean" => &mut opts.clean,
+        "-n" | "--no-dedupe" => &mut opts.no_dedupe,
+        "-v" | "--verbose" => &mut opts.verbose,
+        "-s" | "--silent" => &mut opts.silent,
+        "-f" | "--force" => &mut opts.force,
+        "-j" | "--json" => &mut opts.json,
+        _ => return false,
+    };
+    *slot = val;
+    true
+}
+
+fn apply_write_combined_short(token: &str, opts: &mut WriteOptions) -> bool {
+    if !token.starts_with('-')
+        || token.starts_with("--")
+        || token.len() <= 2
+        || !token[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'c' | b'n' | b'v' | b's' | b'f' | b'j'))
+    {
+        return false;
+    }
+    for byte in token[1..].bytes() {
+        match byte {
+            b'c' => opts.clean = true,
+            b'n' => opts.no_dedupe = true,
+            b'v' => opts.verbose = true,
+            b's' => opts.silent = true,
+            b'f' => opts.force = true,
+            _ => opts.json = true,
+        }
+    }
+    true
+}
+
+fn parse_writers_arg(rest: &[&str], idx: &mut usize) -> Option<Vec<String>> {
     match rest[*idx] {
         "-w" | "--writers" => {
             *idx += 1;
-            opts.writers = Some(split_writers(rest.get(*idx)?)?);
+            split_writers(rest.get(*idx)?)
         }
-        arg if let Some(val) = arg
-            .strip_prefix("--writers=")
-            .or_else(|| arg.strip_prefix("-w=")) =>
-        {
-            opts.writers = Some(split_writers(val)?);
-        }
-        _ => return None,
+        arg => split_writers(
+            arg.strip_prefix("--writers=")
+                .or_else(|| arg.strip_prefix("-w="))?,
+        ),
     }
-    Some(())
 }
 
 fn split_writers(raw: &str) -> Option<Vec<String>> {
-    if raw.is_empty() || raw.starts_with('-') {
-        return None;
-    }
-    Some(
+    (!raw.is_empty() && !raw.starts_with('-')).then(|| {
         raw.split(',')
             .map(str::trim)
             .filter(|item| !item.is_empty())
             .map(str::to_owned)
-            .collect(),
-    )
+            .collect()
+    })
 }

@@ -32,7 +32,7 @@ use self::{
     root::resolve_create_root,
 };
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct CreateArgs {
     pub ids: Vec<String>,
     pub seeders_only: bool,
@@ -56,16 +56,7 @@ enum BuildError {
 }
 
 pub(super) fn parse_create_flags(rest: &[&str]) -> Option<Subcommand> {
-    let mut create = CreateArgs {
-        ids: Vec::new(),
-        seeders_only: false,
-        json: false,
-        base_dir: None,
-        always_new: false,
-        name: None,
-        root_base_dir: None,
-        use_hash: false,
-    };
+    let mut create = CreateArgs::default();
     let mut args = rest.iter().copied();
     while let Some(arg) = args.next() {
         apply_create_arg(arg, &mut args, &mut create)?;
@@ -78,15 +69,10 @@ fn apply_create_arg<'a>(
     args: &mut impl Iterator<Item = &'a str>,
     create: &mut CreateArgs,
 ) -> Option<()> {
+    if apply_create_bool(arg, create) || apply_create_combined_short(arg, create) {
+        return Some(());
+    }
     match arg {
-        "-j" | "--json" | "--json=true" => create.json = true,
-        "--json=false" => create.json = false,
-        "-s" | "--seeders-only" | "--seeders-only=true" => create.seeders_only = true,
-        "--seeders-only=false" => create.seeders_only = false,
-        "-a" | "--always-new" | "--always-new=true" => create.always_new = true,
-        "--always-new=false" => create.always_new = false,
-        "--use-hash" | "--use-hash=true" => create.use_hash = true,
-        "--use-hash=false" => create.use_hash = false,
         "-i" | "--id" => create.name = Some(next_option_value(args)?.to_owned()),
         "-b" | "--base-dir" => create.base_dir = Some(next_option_value(args)?.to_owned()),
         "-r" | "--root-base-dir" => {
@@ -100,16 +86,34 @@ fn apply_create_arg<'a>(
     Some(())
 }
 
+fn apply_create_bool(arg: &str, create: &mut CreateArgs) -> bool {
+    let (flag, val) = match arg.split_once('=') {
+        Some((flag, "true")) => (flag, true),
+        Some((flag, "false")) => (flag, false),
+        None => (arg, true),
+        _ => return false,
+    };
+    match flag {
+        "--install-packages" if !val => return true,
+        "-j" | "--json" if val || arg.starts_with("--") => create.json = val,
+        "-s" | "--seeders-only" if val || arg.starts_with("--") => create.seeders_only = val,
+        "-a" | "--always-new" if val || arg.starts_with("--") => create.always_new = val,
+        "--use-hash" => create.use_hash = val,
+        _ => return false,
+    }
+    true
+}
+
 fn apply_create_inline_or_id(arg: &str, create: &mut CreateArgs) -> Option<()> {
     if let Some((key, val)) = arg.split_once('=') {
         if val.is_empty() || val.starts_with('-') {
             return None;
         }
         match key {
-            "--id" => create.name = Some(val.to_owned()),
-            "--base-dir" => create.base_dir = Some(val.to_owned()),
-            "--root-base-dir" => create.root_base_dir = Some(val.to_owned()),
-            "--package-manager" => {}
+            "--id" | "-i" => create.name = Some(val.to_owned()),
+            "--base-dir" | "-b" => create.base_dir = Some(val.to_owned()),
+            "--root-base-dir" | "-r" => create.root_base_dir = Some(val.to_owned()),
+            "--package-manager" | "-p" => {}
             _ => return None,
         }
     } else if !arg.starts_with('-') && !arg.is_empty() {
@@ -118,6 +122,26 @@ fn apply_create_inline_or_id(arg: &str, create: &mut CreateArgs) -> Option<()> {
         return None;
     }
     Some(())
+}
+
+fn apply_create_combined_short(arg: &str, create: &mut CreateArgs) -> bool {
+    if !arg.starts_with('-')
+        || arg.starts_with("--")
+        || arg.len() <= 2
+        || !arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'j' | b's' | b'a'))
+    {
+        return false;
+    }
+    for byte in arg[1..].bytes() {
+        match byte {
+            b'j' => create.json = true,
+            b's' => create.seeders_only = true,
+            _ => create.always_new = true,
+        }
+    }
+    true
 }
 
 fn next_option_value<'a>(args: &mut impl Iterator<Item = &'a str>) -> Option<&'a str> {
@@ -295,14 +319,13 @@ fn outgoing_edges(from_idx: usize, source_blob: &str, active: &[&BitmapEntry]) -
 }
 
 fn references_component(source_blob: &str, comp_name: &str) -> bool {
-    let slash_single = format!("/{comp_name}'");
-    let slash_double = format!(r#"/{comp_name}""#);
-    let dot_single = format!(".{comp_name}'");
-    let dot_double = format!(r#".{comp_name}""#);
-    source_blob.contains(&slash_single)
-        || source_blob.contains(&slash_double)
-        || source_blob.contains(&dot_single)
-        || source_blob.contains(&dot_double)
+    ['/', '.']
+        .into_iter()
+        .any(|prefix| {
+            ['\'', '"']
+                .into_iter()
+                .any(|quote| source_blob.contains(&format!("{prefix}{comp_name}{quote}")))
+        })
 }
 
 fn collect_component_sources(comp_dir: &Path) -> String {

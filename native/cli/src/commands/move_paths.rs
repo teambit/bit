@@ -4,7 +4,7 @@ use super::{
     color::Chalk,
     workspace_command::{self, format::Formatter, results::Report},
 };
-use crate::{native::Outcome, workspace};
+use crate::native::Outcome;
 use bit_object_import::component_move::Plan;
 use std::{env, ffi::OsString, io};
 pub const COMMAND: Command = Command { name: "move", aliases: &["mv"], run };
@@ -24,8 +24,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside native move grammar".into()));
     }
     let cwd = env::current_dir()?;
-    let Some(root) = workspace::root(&cwd) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let root = match workspace_command::workspace_or_fail(args, "move")? {
+        Ok(root) => root,
+        Err(outcome) => return Ok(outcome),
     };
     run_workspace(&root, &cwd, args, from, to)
 }
