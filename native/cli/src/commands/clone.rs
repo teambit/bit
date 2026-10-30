@@ -78,14 +78,20 @@ fn apply_clone_arg<'a>(
 ) -> Option<()> {
     match arg {
         "--no-color" => {}
-        "-x" | "--skip-dependency-installation" => options.skip_dependency_installation = true,
+        "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
+            options.skip_dependency_installation = true;
+        }
+        "--skip-dependency-installation=false" => options.skip_dependency_installation = false,
         "-l" | "--lane" => options.lane = Some(take_non_flag(iter.next()?)?),
         "--remote" => options.remote = Some(take_non_flag(iter.next()?)?),
-        _ if let Some(val) = arg.strip_prefix("--lane=") => {
-            options.lane = Some(non_empty(val)?);
+        _ if let Some(val) = arg
+            .strip_prefix("--lane=")
+            .or_else(|| arg.strip_prefix("-l=")) =>
+        {
+            options.lane = Some(take_non_flag(val)?);
         }
         _ if let Some(val) = arg.strip_prefix("--remote=") => {
-            options.remote = Some(non_empty(val)?);
+            options.remote = Some(take_non_flag(val)?);
         }
         val if !val.starts_with('-') && !val.is_empty() => {
             if options.id.is_empty() {
@@ -103,10 +109,6 @@ fn apply_clone_arg<'a>(
 
 fn take_non_flag(val: &str) -> Option<String> {
     (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
-}
-
-fn non_empty(val: &str) -> Option<String> {
-    (!val.is_empty()).then(|| val.to_owned())
 }
 
 pub(super) fn validate_outside_workspace(

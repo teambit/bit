@@ -255,9 +255,16 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     for &arg in args {
         match arg {
             "--no-color" => {}
-            "-d" | "--dry-run" => dry_run = true,
-            "--allow-staged" => allow_staged = true,
-            "-j" | "--json" => json = true,
+            "-d" | "--dry-run" | "--dry-run=true" => dry_run = true,
+            "--dry-run=false" => dry_run = false,
+            "--allow-staged" | "--allow-staged=true" => allow_staged = true,
+            "--allow-staged=false" => allow_staged = false,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
+            "-dj" | "-jd" => {
+                dry_run = true;
+                json = true;
+            }
             val if !val.starts_with('-') && !val.is_empty() && pattern.is_none() => {
                 pattern = Some(val.to_owned());
             }

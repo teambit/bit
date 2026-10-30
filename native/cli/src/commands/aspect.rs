@@ -78,8 +78,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if let Subcommand::Unrecognized(sub) = &subcommand {
         return run_unrecognized(args, sub, chalk);
     }
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("aspect requires a workspace".into()));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return run_outside_workspace(&cwd, args, &subcommand);
     };
     match &subcommand {
         Subcommand::List(opts) => {
@@ -101,6 +102,35 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
                 .map_err(|err| Failure::Declined(err.to_string()))
         });
     finish_outcome(&root, args, label, result)
+}
+
+fn run_outside_workspace(
+    cwd: &Path,
+    args: &[OsString],
+    subcommand: &Subcommand,
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI aspect outside workspace delegated".into()));
+    }
+    let (json, prop) = match subcommand {
+        Subcommand::List(opts) if opts.pattern.is_none() => (opts.json, "listIds"),
+        Subcommand::List(opts) => (opts.json, "idsByPattern"),
+        Subcommand::Get(opts) => (opts.json, "resolveComponentId"),
+        Subcommand::Set { .. } | Subcommand::Unset { .. } => (false, "idsByPattern"),
+        Subcommand::Update { .. } => (false, "resolveComponentId"),
+        Subcommand::ListCore { .. } | Subcommand::Unrecognized(_) => {
+            return Ok(Outcome::Declined("aspect requires a workspace".into()));
+        }
+    };
+    let msg = format!("Cannot read properties of undefined (reading '{prop}')");
+    workspace_command::execute_failure_scope(
+        cwd,
+        args,
+        subcommand.loader_label(),
+        json,
+        "",
+        io::Error::other(msg),
+    )
 }
 
 fn finish_outcome(
@@ -226,8 +256,14 @@ fn parse_list(rest: &[&str]) -> Option<Subcommand> {
     let mut json = false;
     for &arg in rest {
         match arg {
-            "-d" | "--debug" => debug = true,
-            "-j" | "--json" => json = true,
+            "-d" | "--debug" | "--debug=true" => debug = true,
+            "--debug=false" => debug = false,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
+            "-dj" | "-jd" => {
+                debug = true;
+                json = true;
+            }
             val if !val.starts_with('-') && pattern.is_none() && is_supported_pattern(val) => {
                 pattern = Some(val.to_owned());
             }
@@ -243,8 +279,14 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
     let mut positional = Vec::new();
     for &arg in rest {
         match arg {
-            "-d" | "--debug" => debug = true,
-            "-j" | "--json" => json = true,
+            "-d" | "--debug" | "--debug=true" => debug = true,
+            "--debug=false" => debug = false,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
+            "-dj" | "-jd" => {
+                debug = true;
+                json = true;
+            }
             val if !val.starts_with('-') && !val.is_empty() => positional.push(val),
             _ => return None,
         }
@@ -263,7 +305,8 @@ fn parse_list_core(rest: &[&str]) -> Option<Subcommand> {
     let mut json = false;
     for &arg in rest {
         match arg {
-            "-j" | "--json" => json = true,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
             _ => return None,
         }
     }
@@ -294,7 +337,8 @@ fn parse_set(rest: &[&str]) -> Option<Subcommand> {
     let mut positional = Vec::new();
     for &arg in rest {
         match arg {
-            "-m" | "--merge" => merge = true,
+            "-m" | "--merge" | "--merge=true" => merge = true,
+            "--merge=false" => merge = false,
             val if !val.starts_with('-') => positional.push(val),
             _ => return None,
         }

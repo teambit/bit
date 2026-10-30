@@ -113,8 +113,11 @@ fn apply_new_token<'a>(
     positionals: &mut Vec<String>,
 ) -> Option<()> {
     match token {
-        "--no-color" | "--standalone" | "--skip-git" | "-s" | "--empty" | "-e" => {}
-        "--current-dir" | "-c" => *current_dir = true,
+        "--no-color" | "--standalone" | "--standalone=true" | "--standalone=false"
+        | "--skip-git" | "--skip-git=true" | "--skip-git=false" | "-s" | "--empty"
+        | "--empty=true" | "--empty=false" | "-e" => {}
+        "--current-dir" | "--current-dir=true" | "-c" => *current_dir = true,
+        "--current-dir=false" => *current_dir = false,
         "--aspect" | "-a" | "--template" | "-t" | "--env" => {
             *aspect = Some(take_new_val(iter.next()?)?);
         }
@@ -130,7 +133,7 @@ fn apply_new_token<'a>(
                 iter.next();
             }
         }
-        _ => apply_inline_new_token(token, aspect, load_from, positionals)?,
+        _ => apply_inline_new_token(token, aspect, load_from, current_dir, positionals)?,
     }
     Some(())
 }
@@ -139,23 +142,44 @@ fn apply_inline_new_token(
     token: &str,
     aspect: &mut Option<String>,
     load_from: &mut Option<String>,
+    current_dir: &mut bool,
     positionals: &mut Vec<String>,
 ) -> Option<()> {
     if let Some(val) = token
         .strip_prefix("--aspect=")
+        .or_else(|| token.strip_prefix("-a="))
         .or_else(|| token.strip_prefix("--template="))
+        .or_else(|| token.strip_prefix("-t="))
         .or_else(|| token.strip_prefix("--env="))
     {
-        *aspect = Some((!val.is_empty()).then(|| val.to_owned())?);
+        *aspect = Some(take_new_val(val)?);
     } else if let Some(val) = token.strip_prefix("--load-from=") {
-        *load_from = Some((!val.is_empty()).then(|| val.to_owned())?);
-    } else if let Some(val) = token.strip_prefix("--default-scope=") {
-        (!val.is_empty()).then_some(())?;
+        *load_from = Some(take_new_val(val)?);
+    } else if let Some(val) = token
+        .strip_prefix("--default-scope=")
+        .or_else(|| token.strip_prefix("-d="))
+    {
+        take_new_val(val)?;
     } else if token.starts_with("--agent=") {
     } else if token.starts_with('-') {
-        return None;
+        apply_short_new_flags(token, current_dir)?;
     } else {
         positionals.push(token.to_owned());
+    }
+    Some(())
+}
+
+fn apply_short_new_flags(token: &str, current_dir: &mut bool) -> Option<()> {
+    let flags = token.strip_prefix('-')?;
+    if flags.is_empty() || flags.starts_with('-') {
+        return None;
+    }
+    for ch in flags.chars() {
+        match ch {
+            's' | 'e' => {}
+            'c' => *current_dir = true,
+            _ => return None,
+        }
     }
     Some(())
 }

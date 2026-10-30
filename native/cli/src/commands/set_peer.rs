@@ -55,8 +55,19 @@ fn run_unset(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn run_action(args: &[OsString], label: &'static str, action: &PeerAction) -> io::Result<Outcome> {
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined(format!("{label} requires a workspace")));
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            return Ok(Outcome::Declined(format!("CI {label} outside workspace")));
+        }
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            label,
+            false,
+            "",
+            io::Error::other("Cannot read properties of undefined (reading 'resolveComponentId')"),
+        );
     };
     let chalk = Chalk::detect(args);
     match prepare(&root, action, chalk) {

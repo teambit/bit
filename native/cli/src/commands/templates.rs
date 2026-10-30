@@ -177,15 +177,25 @@ fn apply_templates_token<'a>(
 ) -> Option<()> {
     match token {
         "--no-color" => {}
-        "--show-all" | "-s" => options.show_all = true,
-        "--json" | "-j" => options.json = true,
+        "--show-all" | "--show-all=true" | "-s" => options.show_all = true,
+        "--show-all=false" => options.show_all = false,
+        "--json" | "--json=true" | "-j" => options.json = true,
+        "--json=false" => options.json = false,
+        "-sj" | "-js" => {
+            options.show_all = true;
+            options.json = true;
+        }
         "--aspect" | "-a" => {
             let val = iter.next()?;
             options.aspect =
                 Some((!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())?);
         }
-        _ if let Some(val) = token.strip_prefix("--aspect=") => {
-            options.aspect = Some((!val.is_empty()).then(|| val.to_owned())?);
+        _ if let Some(val) = token
+            .strip_prefix("--aspect=")
+            .or_else(|| token.strip_prefix("-a=")) =>
+        {
+            options.aspect =
+                Some((!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())?);
         }
         _ => return None,
     }

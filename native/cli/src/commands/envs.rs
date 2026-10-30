@@ -180,9 +180,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         .filter(|arg| *arg != "--no-color")
         .collect::<Vec<_>>();
     match filtered.as_slice() {
-        [] => Some(Subcommand::List { json: false, table_only: true }),
-        ["-j" | "--json"] => Some(Subcommand::List { json: true, table_only: true }),
-        ["list", rest @ ..] => parse_list(rest),
+        ["list", rest @ ..] => parse_list(rest, false),
         ["get", rest @ ..] => parse_get(rest),
         ["set", pattern, env]
             if is_supported_pattern(pattern) && !env.is_empty() && !env.starts_with('-') =>
@@ -204,7 +202,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
             })
         }
         ["update", rest @ ..] => parse_update(rest),
-        _ => None,
+        rest => parse_list(rest, true),
     }
 }
 
@@ -238,15 +236,16 @@ fn is_valid_update_env_id(env_id: &str) -> bool {
     !bare.is_empty() && !env_id.starts_with('-') && is_supported_pattern(bare)
 }
 
-fn parse_list(rest: &[&str]) -> Option<Subcommand> {
+fn parse_list(rest: &[&str], table_only: bool) -> Option<Subcommand> {
     let mut json = false;
     for &arg in rest {
         match arg {
-            "-j" | "--json" => json = true,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
             _ => return None,
         }
     }
-    Some(Subcommand::List { json, table_only: false })
+    Some(Subcommand::List { json, table_only })
 }
 
 fn parse_get(rest: &[&str]) -> Option<Subcommand> {

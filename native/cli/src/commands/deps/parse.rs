@@ -9,9 +9,6 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
         .copied()
         .filter(|arg| *arg != "--no-color")
         .collect::<Vec<_>>();
-    if filtered.first() == Some(&"circular") && args.contains(&"--no-color") {
-        return None;
-    }
     match filtered.as_slice() {
         ["set", rest @ ..] => parse_set(rest),
         ["remove", rest @ ..] => parse_remove_or_unset(rest, false),
@@ -48,8 +45,10 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
     let mut scope = false;
     for &arg in rest {
         match arg {
-            "-t" | "--tree" => tree = true,
-            "--scope" => scope = true,
+            "-t" | "--tree" | "--tree=true" => tree = true,
+            "--tree=false" => tree = false,
+            "--scope" | "--scope=true" => scope = true,
+            "--scope=false" => scope = false,
             value if id.is_none() && is_supported_get_id(value) => {
                 id = Some(value);
             }
@@ -83,10 +82,10 @@ fn parse_blame(rest: &[&str]) -> Option<Subcommand> {
 }
 
 fn parse_diagnose(rest: &[&str]) -> Option<Subcommand> {
-    if rest.is_empty() {
+    if rest.is_empty() || rest == ["--origins=false"] {
         return Some(Subcommand::Diagnose { origins: false });
     }
-    if rest == ["--origins"] {
+    if rest == ["--origins"] || rest == ["--origins=true"] {
         return Some(Subcommand::Diagnose { origins: true });
     }
     let package = match rest {
@@ -105,8 +104,10 @@ fn parse_circular(rest: &[&str]) -> Option<Subcommand> {
     let mut include_deps = false;
     for &arg in rest {
         match arg {
-            "-j" | "--json" => json = true,
-            "--include-deps" => include_deps = true,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
+            "--include-deps" | "--include-deps=true" => include_deps = true,
+            "--include-deps=false" => include_deps = false,
             _ => return None,
         }
     }
@@ -138,11 +139,14 @@ fn parse_set(rest: &[&str]) -> Option<Subcommand> {
     let mut positional = Vec::new();
     for &arg in rest {
         match arg {
-            "-d" | "--dev" => dev = true,
-            "-o" | "--optional" => optional = true,
-            "-p" | "--peer" => peer = true,
+            "-d" | "--dev" | "--dev=true" => dev = true,
+            "--dev=false" => dev = false,
+            "-o" | "--optional" | "--optional=true" => optional = true,
+            "--optional=false" => optional = false,
+            "-p" | "--peer" | "--peer=true" => peer = true,
+            "--peer=false" => peer = false,
             val if !val.starts_with('-') => positional.push(val),
-            _ => return None,
+            val => apply_short_dep_flags(val, &mut dev, Some(&mut optional), &mut peer)?,
         }
     }
     let [pattern, raw_pkgs @ ..] = positional.as_slice() else {
@@ -164,10 +168,12 @@ fn parse_remove_or_unset(rest: &[&str], unset: bool) -> Option<Subcommand> {
     let mut positional = Vec::new();
     for &arg in rest {
         match arg {
-            "-d" | "--dev" => dev = true,
-            "-p" | "--peer" => peer = true,
+            "-d" | "--dev" | "--dev=true" => dev = true,
+            "--dev=false" => dev = false,
+            "-p" | "--peer" | "--peer=true" => peer = true,
+            "--peer=false" => peer = false,
             val if !val.starts_with('-') => positional.push(val),
-            _ => return None,
+            val => apply_short_dep_flags(val, &mut dev, None, &mut peer)?,
         }
     }
     let [pattern, raw_pkgs @ ..] = positional.as_slice() else {
@@ -190,6 +196,27 @@ fn parse_remove_or_unset(rest: &[&str], unset: bool) -> Option<Subcommand> {
     } else {
         Subcommand::Remove { pattern: (*pattern).to_owned(), packages, dev, peer }
     })
+}
+
+fn apply_short_dep_flags(
+    arg: &str,
+    dev: &mut bool,
+    mut optional: Option<&mut bool>,
+    peer: &mut bool,
+) -> Option<()> {
+    let flags = arg.strip_prefix('-')?;
+    if flags.is_empty() || flags.starts_with('-') {
+        return None;
+    }
+    for ch in flags.chars() {
+        match ch {
+            'd' => *dev = true,
+            'o' => **optional.as_mut()? = true,
+            'p' => *peer = true,
+            _ => return None,
+        }
+    }
+    Some(())
 }
 
 pub(in crate::commands) fn parse_why(args: &[&str]) -> Option<Subcommand> {

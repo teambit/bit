@@ -69,31 +69,45 @@ fn parse_options(args: &[&str]) -> Option<Options> {
     while idx < args.len() {
         match args[idx] {
             "-p" | "--propagate" => opts.propagate = consume_bool_flag(args, &mut idx),
+            "--propagate=true" => opts.propagate = true,
+            "--propagate=false" => opts.propagate = false,
             "-o" | "--override" => opts.override_existing = consume_bool_flag(args, &mut idx),
-            "-j" | "--json" => opts.json = true,
+            "--override=true" => opts.override_existing = true,
+            "--override=false" => opts.override_existing = false,
+            "-j" | "--json" | "--json=true" => opts.json = true,
+            "--json=false" => opts.json = false,
             "--no-color" => {}
             val if !val.starts_with('-') && opts.pattern.is_empty() => {
                 val.clone_into(&mut opts.pattern);
             }
-            _ => return None,
+            val => apply_short_flags(val, &mut opts)?,
         }
         idx += 1;
     }
     is_supported_pattern(&opts.pattern).then_some(opts)
 }
 
-fn consume_bool_flag(args: &[&str], idx: &mut usize) -> bool {
-    match args.get(*idx + 1).copied() {
-        Some("true") => {
-            *idx += 1;
-            true
+fn apply_short_flags(arg: &str, opts: &mut Options) -> Option<()> {
+    let flags = arg
+        .strip_prefix('-')
+        .filter(|flags| !flags.is_empty() && !flags.starts_with('-'))?;
+    for ch in flags.chars() {
+        match ch {
+            'p' => opts.propagate = true,
+            'o' => opts.override_existing = true,
+            'j' => opts.json = true,
+            _ => return None,
         }
-        Some("false") => {
-            *idx += 1;
-            false
-        }
-        _ => true,
     }
+    Some(())
+}
+
+fn consume_bool_flag(args: &[&str], idx: &mut usize) -> bool {
+    if let Some(val @ ("true" | "false")) = args.get(*idx + 1).copied() {
+        *idx += 1;
+        return val == "true";
+    }
+    true
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -159,9 +173,7 @@ fn prepare_selected(
     let mut bitmap_changed = false;
     for entry in matched {
         let (file, changed) = prepare_entry(ctx, bitmap_val, entry)?;
-        if changed {
-            bitmap_changed = true;
-        }
+        bitmap_changed |= changed;
         files.push(file);
     }
     Ok((files, bitmap_changed))
@@ -173,7 +185,7 @@ fn build_prepare_ctx<'a>(
     default_scope: &'a str,
     opts: &'a Options,
 ) -> Result<PrepareCtx<'a>, Failure> {
-    let core_ids: Vec<String> =
+    let core_ids =
         serde_json::from_str(CORE_ASPECT_IDS).map_err(|err| Failure::Declined(err.to_string()))?;
     let ws_ids = bitmap.entries
         .iter()
@@ -198,13 +210,11 @@ fn prepare_entry(
         .filter(|text| !text.is_empty())
         .unwrap_or(ctx.default_scope);
     let row = find_bitmap_row_mut(bitmap_val, entry)?;
-    let extensions =
-        build_ejected_extensions(ctx, entry, scope, row.get("config"), existing.as_ref())?;
+    let exts = build_ejected_extensions(ctx, entry, scope, row.get("config"), existing.as_ref())?;
     let changed = row
         .as_object_mut()
-        .is_some_and(|row_obj| row_obj.remove("config").is_some());
-    let file = render_ejected_file(&abs_path, entry, scope, ctx.opts, &extensions)?;
-    Ok((file, changed))
+        .is_some_and(|obj| obj.remove("config").is_some());
+    Ok((render_ejected_file(&abs_path, entry, scope, ctx.opts, &exts)?, changed))
 }
 
 fn render_ejected_file(
@@ -221,20 +231,19 @@ fn render_ejected_file(
         Some(ver) => json!({ "scope": scope, "name": entry.id.name, "version": ver }),
         None => json!({ "scope": scope, "name": entry.id.name }),
     };
-    let comp_json = json!({
-        "componentId": comp_id,
-        "propagate": opts.propagate,
-        "extensions": extensions,
-    });
-    let rendered = format!(
-        "{}\n",
-        serde_json::to_string_pretty(&comp_json).map_err(|err| Failure::Declined(err.to_string()))?,
-    );
+    let comp_json =
+        json!({ "componentId": comp_id, "propagate": opts.propagate, "extensions": extensions });
+    let json_str =
+        serde_json::to_string_pretty(&comp_json).map_err(|err| Failure::Declined(err.to_string()))?;
     let rel_path = Path::new(&entry.root_dir)
         .join("component.json")
         .to_string_lossy()
         .into_owned();
-    Ok(EjectedFile { abs_path: abs_path.to_path_buf(), rel_path, bytes: rendered.into_bytes() })
+    Ok(EjectedFile {
+        abs_path: abs_path.to_path_buf(),
+        rel_path,
+        bytes: format!("{json_str}\n").into_bytes(),
+    })
 }
 
 fn load_existing_comp_json(
@@ -255,20 +264,19 @@ fn load_existing_comp_json(
     let comp_id = existing["componentId"]
         .as_object()
         .ok_or_else(|| Failure::Declined("missing componentId in component.json".into()))?;
-    if comp_id
-        .get("scope")
-        .and_then(Value::as_str)
-        .is_none_or(str::is_empty)
-        || comp_id
-            .get("name")
-            .and_then(Value::as_str)
-            .is_none_or(str::is_empty)
+    let invalid = ["scope", "name"]
+        .iter()
+        .any(|key| {
+            comp_id
+                .get(*key)
+                .and_then(Value::as_str)
+                .is_none_or(str::is_empty)
+        })
         || existing.get("defaultScope").is_some()
-        || !existing["extensions"].is_object()
-    {
-        return Err(Failure::Declined("invalid existing component.json".into()));
-    }
-    Ok(Some(existing))
+        || !existing["extensions"].is_object();
+    (!invalid)
+        .then_some(Some(existing))
+        .ok_or_else(|| Failure::Declined("invalid existing component.json".into()))
 }
 
 fn build_ejected_extensions(
@@ -332,10 +340,10 @@ fn load_version_extensions(
 }
 
 fn read_model_object(objects: &ScopeObjects, scope: &str, name: &str) -> Result<Value, Failure> {
-    let scoped = objects
+    if let Some(model) = objects
         .read(&sha1_hex(&format!("{scope}/{name}")))
-        .map_err(|err| Failure::Declined(err.to_string()))?;
-    if let Some(model) = scoped {
+        .map_err(|err| Failure::Declined(err.to_string()))?
+    {
         return Ok(model);
     }
     objects
@@ -345,29 +353,26 @@ fn read_model_object(objects: &ScopeObjects, scope: &str, name: &str) -> Result<
 }
 
 fn strip_local_env_version(bitmap: &Bitmap, cfg_map: Map<String, Value>) -> Map<String, Value> {
-    let env_bare = cfg_map
+    let local_env = cfg_map
         .get("teambit.envs/envs")
         .and_then(|val| val["env"].as_str())
-        .filter(|text| !text.is_empty());
-    let local_env = env_bare
         .filter(|bare| {
-            bitmap.entries
-                .iter()
-                .any(|entry| entry.owns_its_dir() && entry.id.to_string_without_version() == *bare)
+            !bare.is_empty()
+                && bitmap.entries
+                    .iter()
+                    .any(|entry| {
+                        entry.owns_its_dir() && entry.id.to_string_without_version() == *bare
+                    })
         })
         .map(str::to_owned);
-    let mut out = Map::new();
-    for (key, val) in cfg_map {
-        if val.as_str() == Some("-") {
-            continue;
-        }
-        let target_key = match local_env.as_deref() {
-            Some(bare) if key.starts_with(&format!("{bare}@")) => bare.to_owned(),
-            _ => key,
-        };
-        out.insert(target_key, val);
-    }
-    out
+    cfg_map
+        .into_iter()
+        .filter(|(_, val)| val.as_str() != Some("-"))
+        .map(|(key, val)| match local_env.as_deref() {
+            Some(bare) if key.starts_with(&format!("{bare}@")) => (bare.to_owned(), val),
+            _ => (key, val),
+        })
+        .collect()
 }
 
 impl Prepared {

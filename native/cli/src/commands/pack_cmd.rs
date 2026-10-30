@@ -72,55 +72,72 @@ pub(super) fn is_missing_scope(cwd: &Path, options: &Options) -> bool {
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut comp_id = None;
-    let mut scope_path = None;
-    let mut out_dir = None;
-    let mut override_existing = false;
-    let mut keep = false;
-    let mut prefix = false;
-    let mut json = false;
+    let mut options = Options {
+        comp_id: String::new(),
+        scope_path: None,
+        out_dir: None,
+        override_existing: false,
+        keep: false,
+        prefix: false,
+        json: false,
+    };
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
             "--no-color" => {}
-            "-o" | "--override" | "--override=true" => override_existing = true,
-            "--override=false" => override_existing = false,
-            "-k" | "--keep" | "--keep=true" => keep = true,
-            "--keep=false" => keep = false,
-            "-p" | "--prefix" | "--prefix=true" => prefix = true,
-            "--prefix=false" => prefix = false,
-            "-j" | "--json" | "--json=true" => json = true,
-            "--json=false" => json = false,
+            "-o" | "--override" | "--override=true" => options.override_existing = true,
+            "--override=false" => options.override_existing = false,
+            "-k" | "--keep" | "--keep=true" => options.keep = true,
+            "--keep=false" => options.keep = false,
+            "-p" | "--prefix" | "--prefix=true" => options.prefix = true,
+            "--prefix=false" => options.prefix = false,
+            "-j" | "--json" | "--json=true" => options.json = true,
+            "--json=false" => options.json = false,
             "-d" | "--out-dir" => {
                 let val = iter.next()?;
                 (!val.is_empty() && !val.starts_with('-')).then_some(())?;
-                out_dir = Some(val.to_owned());
+                options.out_dir = Some(val.to_owned());
             }
-            _ => apply_inline_or_positional(arg, &mut comp_id, &mut scope_path, &mut out_dir)?,
+            _ => apply_inline_or_positional(arg, &mut options)?,
         }
     }
-    Some(Options { comp_id: comp_id?, scope_path, out_dir, override_existing, keep, prefix, json })
+    (!options.comp_id.is_empty()).then_some(options)
 }
 
-fn apply_inline_or_positional(
-    arg: &str,
-    comp_id: &mut Option<String>,
-    scope_path: &mut Option<String>,
-    out_dir: &mut Option<String>,
-) -> Option<()> {
-    if let Some(val) = arg.strip_prefix("--out-dir=") {
-        (!val.is_empty()).then_some(())?;
-        *out_dir = Some(val.to_owned());
+fn apply_inline_or_positional(arg: &str, options: &mut Options) -> Option<()> {
+    if let Some(val) = arg
+        .strip_prefix("--out-dir=")
+        .or_else(|| arg.strip_prefix("-d="))
+    {
+        (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+        options.out_dir = Some(val.to_owned());
     } else if !arg.starts_with('-') && !arg.is_empty() {
-        if comp_id.is_none() {
-            *comp_id = Some(arg.to_owned());
-        } else if scope_path.is_none() {
-            *scope_path = Some(arg.to_owned());
+        if options.comp_id.is_empty() {
+            arg.clone_into(&mut options.comp_id);
+        } else if options.scope_path.is_none() {
+            options.scope_path = Some(arg.to_owned());
         } else {
             return None;
         }
     } else {
+        apply_short_pack_flags(arg, options)?;
+    }
+    Some(())
+}
+
+fn apply_short_pack_flags(arg: &str, options: &mut Options) -> Option<()> {
+    let flags = arg.strip_prefix('-')?;
+    if flags.is_empty() || flags.starts_with('-') {
         return None;
+    }
+    for ch in flags.chars() {
+        match ch {
+            'o' => options.override_existing = true,
+            'k' => options.keep = true,
+            'p' => options.prefix = true,
+            'j' => options.json = true,
+            _ => return None,
+        }
     }
     Some(())
 }

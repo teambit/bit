@@ -46,7 +46,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        return Ok(Outcome::Declined("eject outside workspace delegated".into()));
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            "eject",
+            options.json,
+            "",
+            io::Error::other("Cannot read properties of undefined (reading 'idsByPattern')"),
+        );
     };
     if options.json {
         return Ok(Outcome::Declined("json eject delegated".into()));
@@ -66,31 +73,49 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut pattern = None;
-    let mut force = false;
-    let mut skip_dependency_installation = false;
-    let mut json = false;
-    let mut keep_files = false;
+    let mut options = Options {
+        pattern: String::new(),
+        force: false,
+        skip_dependency_installation: false,
+        json: false,
+        keep_files: false,
+    };
     for &arg in args {
         match arg {
             "--no-color" => {}
-            "-f" | "--force" | "--force=true" => force = true,
-            "--force=false" => force = false,
+            "-f" | "--force" | "--force=true" => options.force = true,
+            "--force=false" => options.force = false,
             "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
-                skip_dependency_installation = true;
+                options.skip_dependency_installation = true;
             }
-            "--skip-dependency-installation=false" => skip_dependency_installation = false,
-            "-j" | "--json" | "--json=true" => json = true,
-            "--json=false" => json = false,
-            "--keep-files" | "--keep-files=true" => keep_files = true,
-            "--keep-files=false" => keep_files = false,
-            val if !val.starts_with('-') && !val.is_empty() && pattern.is_none() => {
-                pattern = Some(val.to_owned());
+            "--skip-dependency-installation=false" => options.skip_dependency_installation = false,
+            "-j" | "--json" | "--json=true" => options.json = true,
+            "--json=false" => options.json = false,
+            "--keep-files" | "--keep-files=true" => options.keep_files = true,
+            "--keep-files=false" => options.keep_files = false,
+            val if !val.starts_with('-') && !val.is_empty() && options.pattern.is_empty() => {
+                val.clone_into(&mut options.pattern);
             }
+            val => apply_short_eject_flags(val, &mut options)?,
+        }
+    }
+    (!options.pattern.is_empty()).then_some(options)
+}
+
+fn apply_short_eject_flags(arg: &str, options: &mut Options) -> Option<()> {
+    let flags = arg.strip_prefix('-')?;
+    if flags.is_empty() || flags.starts_with('-') {
+        return None;
+    }
+    for ch in flags.chars() {
+        match ch {
+            'f' => options.force = true,
+            'x' => options.skip_dependency_installation = true,
+            'j' => options.json = true,
             _ => return None,
         }
     }
-    Some(Options { pattern: pattern?, force, skip_dependency_installation, json, keep_files })
+    Some(())
 }
 
 pub(super) fn validate_workspace(root: &Path, pattern: &str) -> io::Result<Option<String>> {

@@ -113,14 +113,17 @@ fn apply_create_token<'a>(
     positionals: &mut Vec<String>,
 ) -> Option<()> {
     match token {
-        "--no-color" | "--force" | "-f" => {}
+        "--no-color" | "--force" | "--force=true" | "--force=false" | "-f" => {}
         "--scope" | "-s" => *scope = Some(take_value(iter.next()?)?),
         "--namespace" | "-n" | "--aspect" | "-a" | "--template" | "-t" | "--path" | "-p"
         | "--env" | "-e" => {
             take_value(iter.next()?)?;
         }
-        _ if let Some(val) = token.strip_prefix("--scope=") => {
-            *scope = Some((!val.is_empty()).then(|| val.to_owned())?);
+        _ if let Some(val) = token
+            .strip_prefix("--scope=")
+            .or_else(|| token.strip_prefix("-s=")) =>
+        {
+            *scope = Some(take_value(val)?);
         }
         _ if has_inline_create_value(token) => {}
         _ if token.starts_with('-') => return None,
@@ -134,11 +137,22 @@ fn take_value(val: &str) -> Option<String> {
 }
 
 fn has_inline_create_value(token: &str) -> bool {
-    ["--namespace=", "--aspect=", "--template=", "--path=", "--env="]
-        .iter()
-        .any(|prefix| {
-            token
-                .strip_prefix(prefix)
-                .is_some_and(|val| !val.is_empty())
-        })
+    [
+        "--namespace=",
+        "-n=",
+        "--aspect=",
+        "-a=",
+        "--template=",
+        "-t=",
+        "--path=",
+        "-p=",
+        "--env=",
+        "-e=",
+    ]
+    .iter()
+    .any(|prefix| {
+        token
+            .strip_prefix(prefix)
+            .is_some_and(|val| !val.is_empty() && !val.starts_with('-'))
+    })
 }

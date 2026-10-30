@@ -136,28 +136,41 @@ fn run_without_workspace(
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("CI deps outside workspace delegated".into()));
     }
+    let Some((json, msg)) = outside_workspace_failure(subcommand) else {
+        return Ok(Outcome::Declined("deps requires a workspace".into()));
+    };
+    workspace_command::execute_failure_scope(
+        cwd,
+        args,
+        subcommand.loader_label(),
+        json,
+        "",
+        io::Error::other(msg),
+    )
+}
+
+fn outside_workspace_failure(subcommand: &Subcommand) -> Option<(bool, &'static str)> {
     match subcommand {
         Subcommand::Debug { .. }
         | Subcommand::Usage { .. }
         | Subcommand::Why { .. }
         | Subcommand::Diagnose { .. }
-        | Subcommand::DiagnosePackage { .. } => workspace_command::execute_failure_scope(
-            cwd,
-            args,
-            subcommand.loader_label(),
-            false,
-            "",
-            io::Error::other(OUTSIDE_WORKSPACE_ERR),
-        ),
-        Subcommand::Circular { json, .. } => workspace_command::execute_failure_scope(
-            cwd,
-            args,
-            "circular",
-            *json,
-            "",
-            io::Error::other(OUTSIDE_WORKSPACE_ERR),
-        ),
-        _ => Ok(Outcome::Declined("deps requires a workspace".into())),
+        | Subcommand::DiagnosePackage { .. } => Some((false, OUTSIDE_WORKSPACE_ERR)),
+        Subcommand::Circular { json, .. } => Some((*json, OUTSIDE_WORKSPACE_ERR)),
+        Subcommand::Set { .. }
+        | Subcommand::Remove { .. }
+        | Subcommand::Unset { .. }
+        | Subcommand::Reset { .. }
+        | Subcommand::Eject { .. } => {
+            Some((false, "Cannot read properties of undefined (reading 'idsByPattern')"))
+        }
+        Subcommand::Blame { .. } | Subcommand::Get { .. } => {
+            Some((false, "Cannot read properties of undefined (reading 'resolveComponentId')"))
+        }
+        Subcommand::Write { .. } => {
+            Some((false, "Cannot read properties of undefined (reading 'writeDependencies')"))
+        }
+        Subcommand::Unrecognized(_) => None,
     }
 }
 

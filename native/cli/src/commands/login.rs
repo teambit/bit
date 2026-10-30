@@ -111,13 +111,19 @@ fn apply_login_arg<'a>(
 }
 
 fn apply_inline_login_arg(arg: &str, options: &mut Options) -> Option<()> {
-    if let Some(val) = arg.strip_prefix("--cloud-domain=") {
-        options.cloud_domain = Some((!val.is_empty()).then(|| val.to_owned())?);
-    } else if let Some(val) = arg.strip_prefix("--port=") {
-        options.port = Some((!val.is_empty()).then(|| val.to_owned())?);
+    if let Some(val) = arg
+        .strip_prefix("--cloud-domain=")
+        .or_else(|| arg.strip_prefix("-d="))
+    {
+        options.cloud_domain = Some(take_val(val)?);
+    } else if let Some(val) = arg
+        .strip_prefix("--port=")
+        .or_else(|| arg.strip_prefix("-p="))
+    {
+        options.port = Some(take_val(val)?);
     } else {
         let val = arg.strip_prefix("--machine-name=")?;
-        options.machine_name = Some((!val.is_empty()).then(|| val.to_owned())?);
+        options.machine_name = Some(take_val(val)?);
     }
     Some(())
 }

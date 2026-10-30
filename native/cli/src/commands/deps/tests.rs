@@ -96,7 +96,10 @@ fn parses_deps_subcommands() {
         Some(Subcommand::Circular { json: true, include_deps: true }),
     );
     assert_eq!(parse_subcommand(&["circular", "--unknown"]), None);
-    assert_eq!(parse_subcommand(&["circular", "--no-color"]), None);
+    assert_eq!(
+        parse_subcommand(&["circular", "--no-color"]),
+        Some(Subcommand::Circular { json: false, include_deps: false }),
+    );
     assert_eq!(
         parse_subcommand(&["write", "--target=package.json"]),
         Some(Subcommand::Write { target: WriteTarget::PackageJson }),

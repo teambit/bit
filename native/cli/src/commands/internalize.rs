@@ -63,12 +63,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside native internalize grammar".into()));
     };
     let cwd = env::current_dir()?;
-    if !options.list && options.pattern.is_none() {
-        return handle_missing_pattern(&cwd, args, options.json);
-    }
     let Some(root) = workspace::root(&cwd) else {
-        return Ok(Outcome::Declined("internalize requires a workspace".into()));
+        return handle_outside_workspace(&cwd, args, &options);
     };
+    if !options.list && options.pattern.is_none() {
+        return handle_user_error(&root, args, options.json, MISSING_PATTERN_ERR.into());
+    }
     let chalk = Chalk::detect(args);
     match prepare(&root, &options, chalk) {
         Ok(prepared) if options.json => prepared.commit_json(&root, args),
@@ -80,28 +80,29 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
-fn handle_missing_pattern(cwd: &Path, args: &[OsString], json_flag: bool) -> io::Result<Outcome> {
+fn handle_outside_workspace(
+    cwd: &Path,
+    args: &[OsString],
+    options: &Options,
+) -> io::Result<Outcome> {
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
-        return Ok(Outcome::Declined("missing pattern error delegated".into()));
+        return Ok(Outcome::Declined("CI internalize outside workspace delegated".into()));
     }
-    if let Some(root) = workspace::root(cwd) {
-        super::lint_cmd::emit_pattern_error(
-            &root,
-            args,
-            "internalize",
-            json_flag,
-            MISSING_PATTERN_ERR.into(),
-        )
+    let msg = if !options.list && options.pattern.is_none() {
+        MISSING_PATTERN_ERR
+    } else if options.list {
+        "Cannot read properties of undefined (reading 'listIds')"
     } else {
-        workspace_command::execute_failure_scope(
-            cwd,
-            args,
-            "internalize",
-            json_flag,
-            "",
-            io::Error::other(MISSING_PATTERN_ERR),
-        )
-    }
+        "Cannot read properties of undefined (reading 'idsByPattern')"
+    };
+    workspace_command::execute_failure_scope(
+        cwd,
+        args,
+        "internalize",
+        options.json,
+        "",
+        io::Error::other(msg),
+    )
 }
 
 fn handle_user_error(
@@ -117,27 +118,45 @@ fn handle_user_error(
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut pattern = None;
-    let mut revert = false;
-    let mut list = false;
-    let mut json = false;
+    let mut options = Options { pattern: None, revert: false, list: false, json: false };
     for &arg in args {
         match arg {
             "--no-color" => {}
-            "-r" | "--revert" => revert = true,
-            "-l" | "--list" => list = true,
-            "-j" | "--json" => json = true,
-            val if !val.starts_with('-') && pattern.is_none() => pattern = Some(val.to_owned()),
-            _ => return None,
+            "-r" | "--revert" | "--revert=true" => options.revert = true,
+            "--revert=false" => options.revert = false,
+            "-l" | "--list" | "--list=true" => options.list = true,
+            "--list=false" => options.list = false,
+            "-j" | "--json" | "--json=true" => options.json = true,
+            "--json=false" => options.json = false,
+            val if !val.starts_with('-') && options.pattern.is_none() => {
+                options.pattern = Some(val.to_owned());
+            }
+            val => apply_short_internalize_flags(val, &mut options)?,
         }
     }
-    if !list
-        && let Some(pat) = &pattern
+    if !options.list
+        && let Some(pat) = &options.pattern
         && !is_supported_pattern(pat)
     {
         return None;
     }
-    Some(Options { pattern, revert, list, json })
+    Some(options)
+}
+
+fn apply_short_internalize_flags(arg: &str, options: &mut Options) -> Option<()> {
+    let flags = arg.strip_prefix('-')?;
+    if flags.is_empty() || flags.starts_with('-') {
+        return None;
+    }
+    for ch in flags.chars() {
+        match ch {
+            'r' => options.revert = true,
+            'l' => options.list = true,
+            'j' => options.json = true,
+            _ => return None,
+        }
+    }
+    Some(())
 }
 
 fn prepare(root: &Path, options: &Options, chalk: Chalk) -> Result<Prepared, Failure> {

@@ -67,7 +67,7 @@ fn apply_whoami_arg<'a>(
         return Some(());
     }
     let tok = str_arg.strip_prefix("--token=")?;
-    (!tok.is_empty()).then_some(())?;
+    (!tok.is_empty() && !tok.starts_with('-')).then_some(())?;
     *token = Some(tok.to_owned());
     Some(())
 }
