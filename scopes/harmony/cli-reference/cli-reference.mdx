@@ -2358,11 +2358,12 @@ view, retry, and manage Ripple CI jobs that build your components in the cloud a
 | -------- | :------------------------------------------------------------------------------------------------: |
 | `job-id` | the Ripple CI job ID (optional — auto-detects from current lane, or your last export when on main) |
 
-| **Option**                | **Option alias** | **Description**                                                     |
-| ------------------------- | :--------------: | ------------------------------------------------------------------- |
-| `--lane <lane>`           |                  | lane ID to find the latest job for (default: detected from .bitmap) |
-| `--component <component>` |       `-c`       | show build tasks for a specific component (full component ID)       |
-| `--json`                  |       `-j`       | return the output as JSON                                           |
+| **Option**                | **Option alias** | **Description**                                                                              |
+| ------------------------- | :--------------: | -------------------------------------------------------------------------------------------- |
+| `--lane <lane>`           |                  | lane ID to find the latest job for (default: detected from .bitmap)                          |
+| `--component <component>` |       `-c`       | show build tasks for a specific component (full component ID)                                |
+| `--full-log`              |                  | show the full build log of the job (or of the component with --component), in any job status |
+| `--json`                  |       `-j`       | return the output as JSON                                                                    |
 
 ### ripple errors
 

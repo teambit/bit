@@ -2,10 +2,17 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import Table from 'cli-table';
 import type { LastExportData } from '@teambit/export';
-import { formatSuccessSummary, formatWarningSummary, formatItem, formatHint, joinSections } from '@teambit/cli';
+import {
+  formatSuccessSummary,
+  formatWarningSummary,
+  formatItem,
+  formatHint,
+  formatTitle,
+  joinSections,
+} from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
-import type { RippleMain, RippleJob, CiGraphNode, SimulateNetwork } from './ripple.main.runtime';
+import type { RippleMain, RippleJob, RippleJobFull, CiGraphNode, SimulateNetwork } from './ripple.main.runtime';
 import { colorPhase, isFailedPhase, isSuccessPhase, stripAnsi, resolveJobId, formatAge } from './ripple-utils';
 
 /**
@@ -210,6 +217,8 @@ export class RippleLogCmd implements Command {
   options: CommandOptions = [
     ['', 'lane <lane>', 'lane ID to find the latest job for (default: detected from .bitmap)'],
     ['c', 'component <component>', 'show build tasks for a specific component (full component ID)'],
+    // not "--log", which is bit's global flag for printing its own logs.
+    ['', 'full-log', 'show the full build log of the job (or of the component with --component), in any job status'],
     ['j', 'json', 'return the output as JSON'],
   ];
 
@@ -230,7 +239,7 @@ export class RippleLogCmd implements Command {
     return { job, error: undefined, source: resolved.source, lastExport: resolved.lastExport };
   }
 
-  async report([jobId]: [string], flags: { lane?: string; component?: string }) {
+  async report([jobId]: [string], flags: { lane?: string; component?: string; fullLog?: boolean }) {
     const { job, error, source, lastExport } = await this.resolveJob(jobId, flags);
     if (!job) {
       if (jobId) return chalk.red(`Job "${jobId}" not found.`);
@@ -261,8 +270,38 @@ export class RippleLogCmd implements Command {
     } else {
       this.appendComponentList(lines, job);
     }
+    if (flags.fullLog) await this.appendFullLog(lines, job, flags.component);
 
     return lines.join('\n');
+  }
+
+  private async appendFullLog(lines: string[], job: RippleJobFull, componentId?: string) {
+    const { nodes, logMap } = await this.fetchLogs(job, componentId);
+    if (!nodes.length) {
+      lines.push('');
+      lines.push(chalk.yellow(`No build log found for component "${componentId}" in this job.`));
+      return;
+    }
+    for (const node of nodes) {
+      lines.push('');
+      lines.push(formatTitle(`Build log of ${node.componentIds.join(', ')}`));
+      const messages = logMap.get(node.containerName);
+      if (!messages?.length) {
+        lines.push(formatHint('  Build log not available.'));
+        continue;
+      }
+      messages.forEach((message) => lines.push(`  ${stripAnsi(message)}`));
+    }
+  }
+
+  /** the build logs of all the containers of the job, or of the container that built the given component. */
+  private async fetchLogs(job: RippleJobFull, componentId?: string) {
+    const nodes = this.ripple.getCiGraphNodesOfComponent(job, componentId);
+    const logMap = await this.ripple.getContainerLogs(
+      job.id,
+      nodes.map((node) => node.containerName)
+    );
+    return { nodes, logMap };
   }
 
   private async appendComponentDetail(lines: string[], job: RippleJob, componentId: string) {
@@ -336,13 +375,15 @@ export class RippleLogCmd implements Command {
     }
   }
 
-  async json([jobId]: [string], flags: { lane?: string; component?: string }) {
+  async json([jobId]: [string], flags: { lane?: string; component?: string; fullLog?: boolean }) {
     const { job, source, lastExport } = await this.resolveJob(jobId, flags);
+    const containerLogs =
+      job && flags.fullLog ? Object.fromEntries((await this.fetchLogs(job, flags.component)).logMap) : undefined;
     if (flags.component && job) {
       const summary = await this.ripple.getComponentBuildSummary(job, flags.component);
-      return { job, componentBuild: summary, source, lastExport };
+      return { job, componentBuild: summary, containerLogs, source, lastExport };
     }
-    return { job, source, lastExport };
+    return { job, containerLogs, source, lastExport };
   }
 }
 

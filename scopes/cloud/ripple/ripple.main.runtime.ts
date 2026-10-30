@@ -287,6 +287,14 @@ export class RippleMain {
     }
   }
 
+  /** the ci graph nodes of the job, or only the node that built the given component (with or without a version). */
+  getCiGraphNodesOfComponent(job: { ciGraph?: string }, componentId?: string): CiGraphNode[] {
+    const nodes = this.getCiGraphNodes(job);
+    if (!componentId) return nodes;
+    const idWithoutVersion = stripComponentVersion(componentId);
+    return nodes.filter((node) => node.componentIds.includes(idWithoutVersion));
+  }
+
   /**
    * the build summary needs the component version built in the job. when it is missing (e.g. an id copied from
    * "bit ripple log", which lists the ids without versions), take it from the job's ciGraph.

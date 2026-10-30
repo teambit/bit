@@ -1388,6 +1388,11 @@
             "show build tasks for a specific component (full component ID)"
           ],
           [
+            "",
+            "full-log",
+            "show the full build log of the job (or of the component with --component), in any job status"
+          ],
+          [
             "j",
             "json",
             "return the output as JSON"
