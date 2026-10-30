@@ -3,7 +3,7 @@ export type { Component, ComponentSourceFile, ComponentDependencyEntry, Componen
 export { ComponentMap } from './component-map';
 export type { Capsule, CapsuleList, Network } from './capsule';
 export type { ExecutionContext, EnvRuntime } from './execution-context';
-export { CAPSULE_ARTIFACTS_DIR } from './build';
+export { BUNDLE_UI_DIR, CAPSULE_ARTIFACTS_DIR } from './build';
 export type {
   TaskLocation,
   PipeName,

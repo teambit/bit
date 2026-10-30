@@ -4,7 +4,7 @@ The types and the few runtime values that envs and their services (compilers, te
 
 ## Migrating an env
 
-The env must run on a Bit version that includes this contract (`typescriptSchemaExtractor()` throws a clear error on older versions). An env that extends a base env (e.g. `ReactEnv`) can migrate only after its base env did.
+The contract is a regular package, so it works with any recent Bit version. An env that extends a base env (e.g. `ReactEnv`) can migrate only after its base env did.
 
 1. Import from `@teambit/envs.contracts` instead of the core aspects (`@teambit/envs`, `@teambit/builder`, `@teambit/compiler`, `@teambit/tester`, `@teambit/generator`, `@teambit/pkg`, `@teambit/bundler`, `@teambit/application`, `@teambit/component`, `@teambit/logger`, ...). Most names are the same: `EnvHandler`, `Pipeline`, `BuildContext`, `Compiler`, `TemplateList`, `Bundler`, `AppTypeList`, `Component`, `ComponentMap`, `Logger`, ... These change:
 
