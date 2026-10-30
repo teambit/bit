@@ -23,9 +23,6 @@ impl Plan {
         let components = loaded.components()?;
         let links = Links::prepare(root, &loaded)?;
         let directories = links.dist_directories(root, &loaded.progress.identities)?;
-        if components.len() > 2 && (options.verbose || options.json) {
-            return Err(io::Error::other("compiler ordered component report"));
-        }
         let compiled =
             emission::prepare(root, &components, &loaded.progress.identities, &directories)?;
         validate_order(root, &compiled, options)?;
@@ -71,16 +68,17 @@ fn validate_order(root: &Path, compiled: &[Compiled], options: &Options) -> io::
         .iter()
         .filter(|row| !row.errors.is_empty())
         .count();
-    if errors > 0 && compiled.len() > 2 {
+    if options.changed
+        && options.components.is_empty()
+        && compiled.len() > 1
+        && (options.verbose || options.json || errors > 1)
+    {
         return Err(io::Error::other("compiler diagnostic component order"));
     }
-    if errors > 1 && !options.json {
+    if errors > 1 && !options.json && !options.verbose {
         let cache = bit_install::dependencies::cache::invalidation::deps_dir(root);
-        if options.components.is_empty()
-            || (cache.join("index-v5").exists()
-                && !bit_install::dependencies::cache::invalidation::needs_invalidation(
-                    root, &cache,
-                )?)
+        if cache.join("index-v5").exists()
+            && !bit_install::dependencies::cache::invalidation::needs_invalidation(root, &cache)?
         {
             return Err(io::Error::other("compiler diagnostic component order"));
         }

@@ -245,6 +245,38 @@ fn standard_lint_multiple_sources_with_one_fix_uses_existing_config() {
 }
 
 #[test]
+fn standard_lint_multiple_multi_source_components_with_one_fix_each_uses_existing_config() {
+    let helper = support::workspace(2, false);
+    for (index, boolean) in [(1, "true"), (2, "false")] {
+        helper.output_file(
+            &format!("comp{index}/index.js"),
+            &format!("module.exports=()=>{{return Boolean(!!{boolean});}};\n"),
+        );
+        helper.output_file(&format!("comp{index}/extra.js"), "module.exports = () => 42;\n");
+        support::setup(&helper, &format!("show comp{index}"));
+    }
+    assert_eq!(
+        super::add::support::node(&helper.scopes.local_path, "lint --json")
+            .status
+            .code(),
+        Some(1),
+    );
+    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
+        &helper.scopes.local_path,
+    ))
+    .unwrap();
+    let result = support::compare_with_stdout(&helper, "lint --fix --json", duration);
+    assert!(result.status.success());
+    for name in ["comp1", "comp2"] {
+        assert!(
+            !std::fs::read_to_string(helper.scopes.local_path.join(name).join("index.js"))
+                .unwrap()
+                .contains("!!"),
+        );
+    }
+}
+
+#[test]
 fn standard_lint_multiple_simultaneous_fixes_remain_guarded() {
     let helper = support::workspace(1, true);
     helper.output_file("comp1/index.js", "module.exports=()=>{return Boolean(!!true);};\n");

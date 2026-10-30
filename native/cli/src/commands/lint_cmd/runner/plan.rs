@@ -10,7 +10,7 @@ pub(super) struct Plan {
     components: Vec<Component>,
     config: Option<Config>,
     tools: Vec<Session>,
-    precomputed: Option<Value>,
+    precomputed: Vec<Option<Value>>,
 }
 
 impl Plan {
@@ -23,13 +23,7 @@ impl Plan {
         };
         let loaded = Loaded::prepare(root, &selection)?;
         let components = loaded.components()?;
-        if components.len() > 8
-            || (options.fix
-                && components.len() > 1
-                && components
-                    .iter()
-                    .any(|component| component.files.len() > 1))
-        {
+        if components.len() > 8 {
             return Err(invalid("linter unsupported write batch"));
         }
         let directories = components
@@ -86,9 +80,10 @@ impl Plan {
     ) -> io::Result<Value> {
         let total = self.components.len();
         let mut rows = Vec::new();
-        for (index, (component, tool)) in self.components
+        for (index, ((component, tool), precomputed)) in self.components
             .iter()
             .zip(&mut self.tools)
+            .zip(&mut self.precomputed)
             .enumerate()
         {
             output.status(&format!(
@@ -97,8 +92,7 @@ impl Plan {
                 self.loaded.progress.identities[index],
                 component.files.len(),
             ));
-            let result =
-                if let Some(result) = self.precomputed.take() { result } else { tool.run()? };
+            let result = if let Some(result) = precomputed.take() { result } else { tool.run()? };
             if let Some(error) = result.get("error") {
                 output.failure(&format!(
                     r#"service "linter" of env "{}" has failed. error: {}"#,
@@ -184,30 +178,28 @@ fn preflight_fixes(
     components: &[Component],
     config: Option<&Config>,
     tools: &mut [Session],
-) -> io::Result<Option<Value>> {
-    if !options.fix
-        || components
-            .first()
-            .is_none_or(|component| component.files.len() <= 1)
-    {
-        return Ok(None);
+) -> io::Result<Vec<Option<Value>>> {
+    let mut precomputed = Vec::with_capacity(components.len());
+    for (component, tool) in components.iter().zip(tools) {
+        if !options.fix || component.files.len() <= 1 {
+            precomputed.push(None);
+            continue;
+        }
+        if config.is_none_or(|config| !config.exists()) {
+            return Err(invalid("linter fix config not cached"));
+        }
+        let result = tool.run()?;
+        let rows =
+            result["results"].as_array().ok_or_else(|| invalid("linter fix preflight results"))?;
+        if rows
+            .iter()
+            .filter(|row| row["output"].is_string())
+            .count()
+            > 1
+        {
+            return Err(invalid("linter concurrent fixes"));
+        }
+        precomputed.push(Some(result));
     }
-    if config.is_none_or(|config| !config.exists()) {
-        return Err(invalid("linter fix config not cached"));
-    }
-    let result = tools
-        .first_mut()
-        .ok_or_else(|| invalid("linter fix tool"))?
-        .run()?;
-    let rows =
-        result["results"].as_array().ok_or_else(|| invalid("linter fix preflight results"))?;
-    if rows
-        .iter()
-        .filter(|row| row["output"].is_string())
-        .count()
-        > 1
-    {
-        return Err(invalid("linter concurrent fixes"));
-    }
-    Ok(Some(result))
+    Ok(precomputed)
 }

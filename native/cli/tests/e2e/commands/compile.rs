@@ -200,6 +200,36 @@ fn builtin_compile_two_cold_components_with_syntax_errors_text() {
 }
 
 #[test]
+fn builtin_compile_three_cold_components_json_verbose_and_diagnostic_reports() {
+    let helper = support::workspace(0, false);
+    for (name, source) in [
+        ("comp1", "export const first: number = 1;\n"),
+        ("comp2", "export const second: number = 2;\n"),
+        ("comp3", "export const third: number = 3;\n"),
+    ] {
+        helper.output_file(&format!("{name}/index.ts"), source);
+        support::setup(&helper, &format!("add {name} -i {name}"));
+        support::setup(&helper, &format!("show {name}"));
+    }
+    let deps_cache =
+        bit_install::dependencies::cache::invalidation::deps_dir(&helper.scopes.local_path);
+    std::fs::remove_dir_all(&deps_cache).unwrap();
+    let result = support::compare(&helper, "compile comp3 comp1 comp2 --json");
+    assert!(result.status.success());
+    std::fs::remove_dir_all(&deps_cache).unwrap();
+    let result = support::compare_with_stdout(&helper, "compile --verbose", duration);
+    assert!(result.status.success());
+
+    helper.output_file("comp2/index.ts", "export const second = ;\n");
+    helper.output_file("comp3/index.ts", "export const third = ;\n");
+    support::setup(&helper, "show comp2");
+    support::setup(&helper, "show comp3");
+    std::fs::remove_dir_all(&deps_cache).unwrap();
+    let result = support::compare_with_stdout(&helper, "compile", duration);
+    assert_eq!(result.status.code(), Some(1));
+}
+
+#[test]
 fn builtin_compile_rewired_sources_with_cold_documentation_cache_match_node() {
     let helper = support::workspace(2, true);
     helper.output_file(
