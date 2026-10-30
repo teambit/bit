@@ -50,6 +50,16 @@ import { BitError } from '@teambit/bit-error';
  */
 export class FlattenedEdgesGetter {
   private graph = new Graph<ComponentID, DepEdgeType>();
+  /**
+   * the edges of `graph` by source then target, in insertion order. the traversal reads them instead of building a
+   * sub-graph per component.
+   */
+  private outEdges = new Map<string, Map<string, DepEdgeType>>();
+  /**
+   * nodes whose out-edges were added from the flattened edges of a version. the flattened edges of a version hold all
+   * the out-edges of every node in them, so the same node in the flattened edges of another version adds nothing.
+   */
+  private sourcesWithFlattenedEdges = new Set<string>();
   private missingFromGraph: ComponentID[] = [];
   private depEdgesCache = new Map<string, Map<string, DepEdge>>();
   constructor(
@@ -90,10 +100,10 @@ export class FlattenedEdgesGetter {
   }
 
   populateFlattenedAndEdgesForComp(component: ConsumerComponent) {
-    const graphFromIds = this.graph.successorsSubgraph(component.id.toString());
-    const edgesFromGraph = graphFromIds.edges.map((edge) => this.getDepEdge(edge));
+    const { nodeIds, edges } = this.successorsOf(component.id.toString());
+    const edgesFromGraph = edges.map(([sourceId, targetId, type]) => this.getDepEdge(sourceId, targetId, type));
 
-    const flattenedFromGraphIncludeItself = graphFromIds.nodes.map((node) => node.attr);
+    const flattenedFromGraphIncludeItself = nodeIds.map((nodeId) => this.graph.node(nodeId)!.attr);
     const flattenedFromGraph = flattenedFromGraphIncludeItself.filter((id) => !id.isEqual(component.id));
     flattenedFromGraph.forEach((dep) => throwWhenDepNotIncluded(component.id, dep));
 
@@ -101,23 +111,61 @@ export class FlattenedEdgesGetter {
     component.flattenedEdges = edgesFromGraph;
   }
 
-  private getDepEdge(edge: Edge<DepEdgeType>): DepEdge {
-    let byTarget = this.depEdgesCache.get(edge.sourceId);
+  /**
+   * the nodes reachable from the given node (the node itself first) and the edges between them, in the order a
+   * depth-first walk meets them: the same order as `graph.successorsSubgraph()`, without building a graph per call.
+   */
+  private successorsOf(rootId: string): { nodeIds: string[]; edges: Array<[string, string, DepEdgeType]> } {
+    const nodeIds = [rootId];
+    const visited = new Set([rootId]);
+    const edges: Array<[string, string, DepEdgeType]> = [];
+    const stack: Array<[string, string]> = [];
+    const pushSuccessors = (nodeId: string) => {
+      const targets = this.outEdges.get(nodeId);
+      if (!targets) return;
+      const targetIds = [...targets.keys()];
+      for (let i = targetIds.length - 1; i >= 0; i -= 1) stack.push([nodeId, targetIds[i]]);
+    };
+    pushSuccessors(rootId);
+    while (stack.length) {
+      const [parent, successor] = stack.pop() as [string, string];
+      edges.push([parent, successor, this.outEdges.get(parent)!.get(successor) as DepEdgeType]);
+      if (!visited.has(successor)) {
+        visited.add(successor);
+        nodeIds.push(successor);
+        pushSuccessors(successor);
+      }
+    }
+    return { nodeIds, edges };
+  }
+
+  private getDepEdge(sourceId: string, targetId: string, type: DepEdgeType): DepEdge {
+    let byTarget = this.depEdgesCache.get(sourceId);
     if (!byTarget) {
       byTarget = new Map();
-      this.depEdgesCache.set(edge.sourceId, byTarget);
+      this.depEdgesCache.set(sourceId, byTarget);
     }
-    const existing = byTarget.get(edge.targetId);
-    if (existing && existing.type === edge.attr) {
+    const existing = byTarget.get(targetId);
+    if (existing && existing.type === type) {
       return existing;
     }
     const depEdge: DepEdge = {
-      source: this.graph.node(edge.sourceId)?.attr || ComponentID.fromString(edge.sourceId),
-      target: this.graph.node(edge.targetId)?.attr || ComponentID.fromString(edge.targetId),
-      type: edge.attr as DepEdgeType,
+      source: this.graph.node(sourceId)?.attr || ComponentID.fromString(sourceId),
+      target: this.graph.node(targetId)?.attr || ComponentID.fromString(targetId),
+      type,
     };
-    byTarget.set(edge.targetId, depEdge);
+    byTarget.set(targetId, depEdge);
     return depEdge;
+  }
+
+  private setEdge(sourceId: string, targetId: string, type: DepEdgeType) {
+    this.graph.setEdge(new Edge(sourceId, targetId, type));
+    let byTarget = this.outEdges.get(sourceId);
+    if (!byTarget) {
+      byTarget = new Map();
+      this.outEdges.set(sourceId, byTarget);
+    }
+    byTarget.set(targetId, type);
   }
 
   private async importMissingAndAddToGraph() {
@@ -195,11 +243,16 @@ ${missingEdges.map((e) => e.toString()).join('\n')}`);
   }
 
   private addFlattenedEdgesToGraph(flattenedEdges: DepEdge[]) {
+    const sources = new Set<string>();
     flattenedEdges.forEach(({ source, target, type }) => {
-      this.graph.setNode(new Node(source.toString(), source));
+      const sourceId = source.toString();
+      if (this.sourcesWithFlattenedEdges.has(sourceId)) return;
+      sources.add(sourceId);
+      this.graph.setNode(new Node(sourceId, source));
       this.graph.setNode(new Node(target.toString(), target));
-      this.graph.setEdge(new Edge(source.toString(), target.toString(), type));
+      this.setEdge(sourceId, target.toString(), type);
     });
+    sources.forEach((sourceId) => this.sourcesWithFlattenedEdges.add(sourceId));
   }
 
   private populateMissingFromGraph() {
@@ -222,7 +275,7 @@ ${missingEdges.map((e) => e.toString()).join('\n')}`);
   private addEdges(compId: ComponentID, dependencies: ConsumerComponent['dependencies'], label: DepEdgeType) {
     dependencies.get().forEach((dep) => {
       this.graph.setNode(new Node(dep.id.toString(), dep.id));
-      this.graph.setEdge(new Edge(compId.toString(), dep.id.toString(), label));
+      this.setEdge(compId.toString(), dep.id.toString(), label);
     });
   }
 }
