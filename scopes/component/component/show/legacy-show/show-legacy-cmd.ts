@@ -22,7 +22,6 @@ export function actionLegacy(
 ): Promise<any> {
   return show({
     id,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     json,
     remote,
     compare,
@@ -123,33 +122,28 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
     const fields = getFields();
     const rows = compact(
       fields.map((field) => {
-        const arr = [];
+        const arr: string[] = [];
         if (!printableOriginalComponent[field] && !printableComponentToCompare[field]) return null;
         const title = `${field[0].toUpperCase()}${field.slice(1)}`.replace(/([A-Z])/g, ' $1').trim();
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         arr.push(field in componentsDiffs && field !== 'id' ? c.red(title) : c.cyan(title));
         if (printableComponentToCompare[field] instanceof Array) {
           arr.push(
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             printableComponentToCompare[field]
               .map((str) => calculatePadRightLength(str, COLUMN_WIDTH))
               .join(' ')
               .trim()
           );
         } else {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           arr.push(printableComponentToCompare[field]);
         }
         if (printableOriginalComponent[field] instanceof Array) {
           arr.push(
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             printableOriginalComponent[field]
               .map((str) => calculatePadRightLength(str, COLUMN_WIDTH))
               .join(' ')
               .trim()
           );
         } else {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           arr.push(printableOriginalComponent[field]);
         }
         return arr;
@@ -186,16 +180,14 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
       return '';
     }
 
-    const dependencyHeader = [];
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const dependencyHeader: string[][] = [];
     dependencyHeader.push(['Dependencies']);
     const getDependenciesRows = (dependencies, title?: string) => {
-      const dependencyRows = [];
+      const dependencyRows: string[][] = [];
       dependencies.forEach((dependency) => {
         let dependencyId = dependency.id.toString();
         dependencyId = title ? `${dependencyId} (${title})` : dependencyId;
         const row = [dependencyId];
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         dependencyRows.push(row);
       });
       return dependencyRows;

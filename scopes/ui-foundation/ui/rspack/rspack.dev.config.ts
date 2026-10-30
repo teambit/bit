@@ -1,7 +1,6 @@
 import { rspack, type Configuration } from '@rspack/core';
 import type { Configuration as DevServerConfig } from '@rspack/dev-server';
 import RefreshPlugin from '@rspack/plugin-react-refresh';
-import { fallbacksProvidePluginConfig } from '@teambit/webpack';
 import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
@@ -19,6 +18,7 @@ import {
   sourceMapRule,
   fontRule,
   styleRules,
+  processFallback,
 } from './rspack.common';
 
 const clientHost = process.env.WDS_SOCKET_HOST;
@@ -178,7 +178,7 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
         chunks: ['main'],
         filename: 'index.html',
       }),
-      new rspack.ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
+      new rspack.ProvidePlugin({ process: processFallback }),
     ],
   };
 }

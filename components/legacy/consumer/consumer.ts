@@ -16,7 +16,7 @@ import {
   LATEST,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
+import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound, UnexpectedPackageName } from '@teambit/legacy.scope';
 import type { Lane, ModelComponent } from '@teambit/objects';
 import { Version } from '@teambit/objects';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
@@ -32,16 +32,16 @@ import type {
 } from '@teambit/legacy.utils';
 import { parseScope } from '@teambit/legacy.utils';
 import type { NextVersion } from '@teambit/legacy.bit-map';
-import { BitMap } from '@teambit/legacy.bit-map';
+import { BitMap, isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { Dependencies, ComponentLoadOptions, LoadManyResult } from '@teambit/legacy.consumer-component';
-import { ConsumerComponent as Component, ComponentLoader } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import { ComponentLoader } from './component-loader';
 import { PackageJsonFile } from '@teambit/component.sources';
 import type { ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
-import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
 import type { FsCache } from '@teambit/workspace.modules.fs-cache';
 
 type ConsumerProps = {
@@ -70,7 +70,6 @@ export default class Consumer {
   scope: Scope;
   bitMap: BitMap;
   isolated = false; // Mark that the consumer instance is of isolated env and not real
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dirStructure: DirStructure;
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   componentLoader: ComponentLoader;
@@ -86,14 +85,18 @@ export default class Consumer {
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   async setBitMap() {
-    this.bitMap = await BitMap.load(this.getPath(), this.config.defaultScope, this.config.ignoredFiles);
+    this.bitMap = await BitMap.load(
+      this.getPath(),
+      this.config.defaultScope,
+      this.config.ignoredFiles,
+      this.config.trackAllFiles
+    );
   }
 
   setPackageJson(packageJson: PackageJsonFile) {
     this.packageJson = packageJson;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
       this._dirStructure = new DirStructure(this.config.componentsDefaultDirectory);
@@ -267,11 +270,25 @@ export default class Consumer {
     return consumerComp;
   }
 
+  /**
+   * @deprecated load components via the workspace aspect instead: `workspace.get()` (then
+   * `component.state._consumer` when the legacy ConsumerComponent is needed).
+   * loading directly through the consumer skips the env-first grouped load pipeline of the
+   * workspace aspect (see workspace-component-loader.buildLoadGroups), so when the component's env
+   * is not loaded yet, dependency policies may silently fall back to defaults, producing a
+   * component with wrong dependency data (phantom "modified" status, wrong diff, etc.).
+   * the remaining callers are the workspace-component-loader bridge itself and legacy code that
+   * has no access to the workspace aspect.
+   */
   async loadComponent(id: ComponentID, loadOpts?: ComponentLoadOptions): Promise<Component> {
     const { components } = await this.loadComponents(ComponentIdList.fromArray([id]), true, loadOpts);
     return components[0];
   }
 
+  /**
+   * @deprecated load components via the workspace aspect instead: `workspace.getMany()`.
+   * see the deprecation note on `loadComponent` above for the reasoning.
+   */
   async loadComponents(
     ids: ComponentIdList,
     throwOnFailure = true,
@@ -331,15 +348,26 @@ export default class Consumer {
         fileFromFs.test = fileFromModel.test;
       });
 
-      // prefix your command with "BIT_LOG=*" to see the actual id changes
-      if (process.env.BIT_LOG && componentFromModel.calculateHash().hash !== version.calculateHash().hash) {
-        console.log('-------------------componentFromModel------------------------'); // eslint-disable-line no-console
-        console.log(componentFromModel.id()); // eslint-disable-line no-console
-        console.log('------------------------componentFromFileSystem (version)----'); // eslint-disable-line no-console
-        console.log(version.id()); // eslint-disable-line no-console
-        console.log('-------------------------END---------------------------------'); // eslint-disable-line no-console
+      // a workspace-root component written below the workspace root has its versioned .bitmap left
+      // out (see isWorkspaceMapFile): the live map is the workspace's own. there the map stays behind,
+      // and its absence is not a modification.
+      const modelFiles = componentFromModel.files;
+      if (componentFromFileSystem.componentMap?.rootDir !== WORKSPACE_ROOT_DIR) {
+        componentFromModel.files = modelFiles.filter((file) => !isWorkspaceMapFile(file.relativePath));
       }
-      componentFromFileSystem._isModified = componentFromModel.calculateHash().hash !== version.calculateHash().hash;
+      try {
+        // prefix your command with "BIT_LOG=*" to see the actual id changes
+        if (process.env.BIT_LOG && componentFromModel.calculateHash().hash !== version.calculateHash().hash) {
+          console.log('-------------------componentFromModel------------------------'); // eslint-disable-line no-console
+          console.log(componentFromModel.id()); // eslint-disable-line no-console
+          console.log('------------------------componentFromFileSystem (version)----'); // eslint-disable-line no-console
+          console.log(version.id()); // eslint-disable-line no-console
+          console.log('-------------------------END---------------------------------'); // eslint-disable-line no-console
+        }
+        componentFromFileSystem._isModified = componentFromModel.calculateHash().hash !== version.calculateHash().hash;
+      } finally {
+        componentFromModel.files = modelFiles;
+      }
     }
     return componentFromFileSystem._isModified;
 
@@ -502,13 +530,15 @@ export default class Consumer {
     const config = await LegacyWorkspaceConfig.loadIfExist(consumerInfo.path, scope.path);
     const consumer = new Consumer({
       projectPath: consumerInfo.path,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      config,
+      config: config!, // the existence of the workspace config was verified above (hasWorkspaceConfig)
       scope,
     });
     await consumer.setBitMap();
-    scope.currentLaneIdFunc = consumer.getCurrentLaneIdIfExist.bind(consumer);
-    scope.notExportedIdsFunc = consumer.getNotExportedIds.bind(consumer);
+    // the scope is cached for the whole process (Scope.scopeCache) and must not keep the consumer, and through it the
+    // workspace and the whole harmony instance, alive.
+    const consumerRef = new WeakRef(consumer);
+    scope.currentLaneIdFunc = () => consumerRef.deref()?.getCurrentLaneIdIfExist();
+    scope.notExportedIdsFunc = () => consumerRef.deref()?.getNotExportedIds() ?? new ComponentIdList();
     logger.commandHistoryBasePath = scope.getPath();
     return consumer;
   }

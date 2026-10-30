@@ -12,24 +12,36 @@ import type { Doclet } from '@teambit/semantics.doc-parser';
 import { parser as docsParser } from '@teambit/semantics.doc-parser';
 import { logger } from '@teambit/legacy.logger';
 import type { Version, DepEdge, Log, ScopeListItem, DependenciesGraph, ModelComponent } from '@teambit/objects';
-import type { PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import type { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
-import { IgnoredDirectory } from './exceptions/ignored-directory';
+import { fileContentsForVersioning, IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.bit-map';
 import type { Dist, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
 import { License, SourceFile } from '@teambit/component.sources';
 import type { ComponentConfigLoadOptions } from '@teambit/legacy.consumer-config';
 import { ComponentConfig, ComponentOverrides, getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
-import type { Consumer } from '@teambit/legacy.consumer';
-import { ComponentOutOfSync, ComponentsPendingImport } from '@teambit/legacy.consumer';
 import type { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
-import { ComponentNotFoundInPath } from './exceptions/component-not-found-in-path';
 import MainFileRemoved from './exceptions/main-file-removed';
-import type { ComponentLoadOptions } from './component-loader';
+import { ComponentOutOfSync } from './exceptions/component-out-of-sync';
+import { ComponentsPendingImport } from './exceptions/components-pending-import';
+import type { ComponentLoadOptions } from './component-load-options';
+
+/**
+ * the parts of the legacy Consumer a component is loaded from the filesystem with.
+ * restated rather than imported because the consumer depends on this component.
+ */
+export type LoadingWorkspace = {
+  scope: { getModelComponentIfExist(id: ComponentID): Promise<ModelComponent | undefined> };
+  bitMap: { trackDirectoryChanges(componentMap: ComponentMap): Promise<void> };
+  componentFsCache: FsCache;
+  isLegacy: boolean;
+  getPath(): PathOsBasedAbsolute;
+  loadComponentFromModelIfExist(id: ComponentID): Promise<Component | undefined>;
+};
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -53,12 +65,16 @@ export type ComponentProps = {
   devDependencies?: Dependency[];
   peerDependencies?: Dependency[];
   flattenedDependencies?: ComponentIdList;
+  /**
+   * used instead of `flattenedDependencies` to have them computed only once they're read
+   */
+  loadFlattenedDependencies?: () => ComponentIdList;
   flattenedEdges?: DepEdge[];
   packageDependencies?: Record<string, string>;
   devPackageDependencies?: Record<string, string>;
   peerPackageDependencies?: Record<string, string>;
-  overrides: ComponentOverrides;
-  defaultScope: string | null;
+  overrides?: ComponentOverrides; // not available when loading from the filesystem, it is set later by the dependencies loader
+  defaultScope?: string | null;
   packageJsonFile?: PackageJsonFile;
   packageJsonChangedProps?: { [key: string]: any };
   files: SourceFile[];
@@ -71,7 +87,7 @@ export type ComponentProps = {
   log?: Log;
   schema?: string;
   scopesList?: ScopeListItem[];
-  extensions: ExtensionDataList;
+  extensions?: ExtensionDataList;
   componentFromModel?: Component;
   modelComponent?: ModelComponent;
   buildStatus?: BuildStatus;
@@ -94,13 +110,12 @@ export class Component {
   bindingPrefix: string;
   mainFile: PathOsBased;
   bitJson: ComponentConfig | undefined;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dependencies: Dependencies;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
   peerDependencies: Dependencies;
   dependenciesGraph?: DependenciesGraph;
-  flattenedDependencies: ComponentIdList;
+  private _flattenedDependencies?: ComponentIdList;
+  private loadFlattenedDependencies?: () => ComponentIdList;
   flattenedEdges: DepEdge[];
   packageDependencies: Record<string, string>;
   devPackageDependencies: Record<string, string>;
@@ -119,15 +134,18 @@ export class Component {
   componentFromModel: Component | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   modelComponent?: ModelComponent; // populated when loadedFromFileSystem is true and it exists in the model
   issues: IssuesList;
+  /**
+   * ids (without version) of the dependencies whose version is set by the config (e.g. "bit deps set") and not
+   * resolved from the workspace. populated when loading the dependencies in the workspace. not saved in the model.
+   */
+  dependenciesWithVersionFromConfig?: string[];
   deprecated: boolean;
   protected removed?: boolean; // was it soft-removed. to get this data please use isRemoved() method.
-  defaultScope: string | null;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  defaultScope: string | null | undefined;
   _isModified: boolean;
   packageJsonFile: PackageJsonFile | undefined; // populated when loadedFromFileSystem or when writing the components. for author it never exists
   packageJsonChangedProps: Record<string, any> | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | undefined;
   /**
@@ -170,6 +188,7 @@ export class Component {
     devDependencies,
     peerDependencies,
     flattenedDependencies,
+    loadFlattenedDependencies,
     flattenedEdges,
     packageDependencies,
     devPackageDependencies,
@@ -201,12 +220,13 @@ export class Component {
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
     this.setPeerDependencies(peerDependencies);
-    this.flattenedDependencies = flattenedDependencies || new ComponentIdList();
+    if (flattenedDependencies) this.flattenedDependencies = flattenedDependencies;
+    else this.loadFlattenedDependencies = loadFlattenedDependencies;
     this.flattenedEdges = flattenedEdges || [];
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
-    this.overrides = overrides;
+    this.overrides = overrides!;
     this.defaultScope = defaultScope;
     this.packageJsonFile = packageJsonFile;
     this.packageJsonChangedProps = packageJsonChangedProps;
@@ -231,6 +251,21 @@ export class Component {
         throw new BitError(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
       }
     });
+  }
+
+  get flattenedDependencies(): ComponentIdList {
+    if (!this._flattenedDependencies) {
+      this._flattenedDependencies = this.loadFlattenedDependencies
+        ? this.loadFlattenedDependencies()
+        : new ComponentIdList();
+      this.loadFlattenedDependencies = undefined;
+    }
+    return this._flattenedDependencies;
+  }
+
+  set flattenedDependencies(flattenedDependencies: ComponentIdList) {
+    this._flattenedDependencies = flattenedDependencies;
+    this.loadFlattenedDependencies = undefined;
   }
 
   /**
@@ -305,6 +340,20 @@ export class Component {
 
   get extensionDependencies() {
     return new Dependencies(this.extensions.extensionsBitIds.map((id) => new Dependency(id, [])));
+  }
+
+  isDependencyVersionFromConfig(id: ComponentID): boolean {
+    return Boolean(this.dependenciesWithVersionFromConfig?.includes(id.toStringWithoutVersion()));
+  }
+
+  /**
+   * "package@version" of the dependencies whose version is set by the config (see dependenciesWithVersionFromConfig).
+   */
+  getDependenciesWithVersionFromConfig(filter: (id: ComponentID) => boolean = () => true): string[] {
+    if (!this.dependenciesWithVersionFromConfig?.length) return [];
+    return this.getAllDependencies()
+      .filter((dep) => this.isDependencyVersionFromConfig(dep.id) && filter(dep.id))
+      .map((dep) => `${dep.packageName || dep.id.toStringWithoutVersion()}@${dep.id.version}`);
   }
 
   getAllDependencies(): Dependency[] {
@@ -464,7 +513,6 @@ export class Component {
       schema,
       extensions,
     } = object;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Component({
       name: box ? `${box}/${name}` : name,
       version,
@@ -516,7 +564,7 @@ export class Component {
   }: {
     componentMap: ComponentMap;
     id: ComponentID;
-    consumer: Consumer;
+    consumer: LoadingWorkspace;
     loadOpts?: ComponentLoadOptions;
   }): Promise<Component> {
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
@@ -553,9 +601,7 @@ export class Component {
     const files = await getLoadedFiles(consumer, componentMap, id, compDirAbs);
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
-    const docsP = _getDocsForFiles(files, consumer.componentFsCache);
-    const docs = await Promise.all(docsP);
-    const flattenedDocs = docs ? flatten(docs) : [];
+    const flattenedDocs = await getDocsFromFiles(files, consumer.componentFsCache);
     // probably componentConfig.defaultScope is not needed. try to remove it.
     // once we changed BitId to ComponentId, the defaultScope is always part of the id.
     const defaultScope = id.hasScope() ? componentConfig.defaultScope : id.scope;
@@ -573,11 +619,8 @@ export class Component {
       bitJson: componentConfig,
       mainFile: componentMap.mainFile,
       files,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      loadedFromFileSystem: true,
       componentFromModel,
       modelComponent,
-      componentMap,
       docs: flattenedDocs,
       deprecated,
       schema: getSchema(),
@@ -591,7 +634,7 @@ export class Component {
 }
 
 async function getLoadedFiles(
-  consumer: Consumer,
+  consumer: LoadingWorkspace,
   componentMap: ComponentMap,
   id: ComponentID,
   bitDir: string
@@ -600,10 +643,11 @@ async function getLoadedFiles(
     logger.error(`rethrowing an error of ${componentMap.noFilesError.message}`);
     throw componentMap.noFilesError;
   }
-  await componentMap.trackDirectoryChangesHarmony(consumer.getPath(), consumer.config.ignoredFiles);
+  await consumer.bitMap.trackDirectoryChanges(componentMap);
   const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);
     const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath(), { test: file.test || false });
+    sourceFile.contents = fileContentsForVersioning(componentMap, file.relativePath, sourceFile.contents);
     return sourceFile;
   });
   const filePaths = componentMap.getAllFilesPaths();
@@ -613,6 +657,13 @@ async function getLoadedFiles(
   return sourceFiles;
 }
 
-function _getDocsForFiles(files: SourceFile[], componentFsCache: FsCache): Array<Promise<Doclet[]>> {
-  return files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file, componentFsCache)));
+/**
+ * parse the docs (JSDoc) of the component files, except test files.
+ * `componentFsCache` is relevant for files on the filesystem (a workspace), see the doc-parser.
+ */
+export async function getDocsFromFiles(files: SourceFile[], componentFsCache?: FsCache): Promise<Doclet[]> {
+  const docs = await Promise.all(
+    files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file, componentFsCache)))
+  );
+  return flatten(docs);
 }

@@ -14,11 +14,10 @@ import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/ha
 import { LaneId } from '@teambit/lane-id';
 import type { AgentOptions } from '@teambit/toolbox.network.agent';
 import { getAgent } from '@teambit/toolbox.network.agent';
-import type { ListScopeResult } from '@teambit/legacy.component-list';
 import type { Network } from '../network';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import type { LaneData, ScopeDescriptor } from '@teambit/legacy.scope';
+import type { LaneData, ScopeDescriptor, ListScopeResult } from '@teambit/legacy.scope';
 import { RemovedObjects } from '@teambit/legacy.scope';
 import type { DoctorResponse } from '@teambit/doctor';
 import { globalFlags } from '@teambit/cli';
@@ -53,6 +52,7 @@ import { logger } from '@teambit/legacy.logger';
 import type { ObjectItemsStream, ComponentLog } from '@teambit/objects';
 import { ObjectList } from '@teambit/objects';
 import type { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
+import type { AuthData } from '@teambit/scope.remote-actions';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
@@ -117,7 +117,6 @@ type Agent = HttpsProxyAgent | HttpAgent | HttpAgent.HttpsAgent | HttpProxyAgent
  * fetched from HTTP Authorization header.
  * (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization)
  */
-export type AuthData = { type: string; credentials: string };
 export const DEFAULT_AUTH_TYPE = 'Bearer';
 
 export class Http implements Network {
@@ -175,7 +174,11 @@ export class Http implements Network {
       fetchRetryMaxtimeout: getAsNumber(CFG_FETCH_RETRY_MAXTIMEOUT) ?? 60000,
       fetchTimeout: getAsNumber(CFG_FETCH_TIMEOUT) ?? 60000,
       localAddress: obj[CFG_LOCAL_ADDRESS],
-      maxSockets: getAsNumber(CFG_MAX_SOCKETS) ?? 15,
+      // No fallback on purpose, as for networkConcurrency below: the pnpm
+      // engine applies maxSockets as a hard per-registry cap, so a default
+      // of 15 throttled every install's downloads to 15 connections. Bit's
+      // own agent applies its default in `withAgentSocketDefault`.
+      maxSockets: getAsNumber(CFG_MAX_SOCKETS),
       // No fallback on purpose: when the user hasn't configured it, leave it
       // undefined so the package manager applies its own adaptive default
       // (pnpm: min(96, max(cpuCores * 3, 64))). A hardcoded 16 here overrode
@@ -202,7 +205,7 @@ export class Http implements Network {
   }
 
   static async getAgent(uri: string, agentOpts: AgentOptions): Promise<Agent> {
-    const agent = await getAgent(uri, agentOpts);
+    const agent = await getAgent(uri, withAgentSocketDefault(agentOpts));
     return agent;
   }
 
@@ -764,6 +767,19 @@ export class Http implements Network {
     }));
   }
 
+  async removeLaneUpdateDependents(laneId: string, ids?: string[]): Promise<boolean> {
+    const REMOVE_LANE_UPDATE_DEPENDENTS = gql`
+      query RemoveLaneUpdateDependents($laneId: String!, $ids: [String!]) {
+        lanes {
+          removeUpdateDependents(laneId: $laneId, ids: $ids)
+        }
+      }
+    `;
+
+    const res = await this.graphClientRequest(REMOVE_LANE_UPDATE_DEPENDENTS, Verb.WRITE, { laneId, ids });
+    return Boolean(res.lanes.removeUpdateDependents);
+  }
+
   private async searchWithSuggest(
     queryStr: string
   ): Promise<{ components?: string[]; lanes?: string[]; organizations?: string[]; scopes?: string[] }> {
@@ -940,6 +956,16 @@ export class Http implements Network {
     const graphClient = new GraphQLClient(graphQlUrl, { headers, fetch: graphQlFetcher });
     return new Http(graphClient, token, host, scopeName, proxyConfig, agent, localScopeName, networkConfig);
   }
+}
+
+/**
+ * The socket limit of Bit's own HTTP agent when `network.max_sockets` is not
+ * configured.
+ */
+export const DEFAULT_AGENT_MAX_SOCKETS = 15;
+
+export function withAgentSocketDefault<T extends { maxSockets?: number }>(agentOpts: T): T & { maxSockets: number } {
+  return { ...agentOpts, maxSockets: agentOpts.maxSockets ?? DEFAULT_AGENT_MAX_SOCKETS };
 }
 
 export function getAuthHeader(token: string) {

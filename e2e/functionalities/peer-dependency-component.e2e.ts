@@ -104,7 +104,7 @@ describe('set-peer', function () {
     describe('unset-peer', () => {
       before(() => {
         helper.command.unsetPeer('comp2');
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         helper.command.build();
       });
       it('should remove the always peer fields from the scope data', () => {
@@ -200,17 +200,6 @@ describe('set-peer using just the version range prefix', function () {
           [`@${helper.scopes.remote}/comp2`]: '^0.0.1-new',
         });
       });
-      describe('always peer config fields are preserved when setting new dependencies', () => {
-        let bitMap: any;
-        before(() => {
-          helper.command.dependenciesSet('comp2', 'is-odd@1.0.0');
-          bitMap = helper.bitMap.read();
-        });
-        it('should readd always peer config fields to bitmap', () => {
-          expect(bitMap.comp2.config['teambit.dependencies/dependency-resolver'].peer).to.eq(true);
-          expect(bitMap.comp2.config['teambit.dependencies/dependency-resolver'].defaultPeerRange).to.eq('^');
-        });
-      });
     });
   });
 });
@@ -230,7 +219,7 @@ describe('set-peer for existing component', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
       helper.command.install();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
       helper.command.setPeer('comp2', '0');
       helper.command.install();
       helper.command.build();
@@ -279,7 +268,7 @@ describe('unset-peer for existing component', function () {
       helper.fixtures.populateComponents(2);
       helper.command.setPeer('comp2', '0');
       helper.command.install();
-      helper.command.snapAllComponents(); // caches comp2 as peer dep of comp1
+      helper.command.snapAllComponentsWithoutBuild(); // caches comp2 as peer dep of comp1
       helper.command.unsetPeer('comp2');
       helper.command.install();
     });

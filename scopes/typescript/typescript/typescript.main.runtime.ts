@@ -2,7 +2,8 @@ import ts from 'typescript';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import type { Compiler } from '@teambit/compiler';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
@@ -30,12 +31,13 @@ import { WatcherAspect } from '@teambit/watcher';
 import type { Component, ComponentID } from '@teambit/component';
 import type { BuilderMain } from '@teambit/builder';
 import { BuilderAspect } from '@teambit/builder';
-import type { EnvsMain } from '@teambit/envs';
+import type { EnvContext, EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import { flatten } from 'lodash';
 import { TypeScriptExtractor } from './typescript.extractor';
+import type { ExtractorOptions } from './extractor-options';
 import type { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
 import { TypeScriptParser } from './typescript.parser';
@@ -275,6 +277,14 @@ export class TypescriptMain {
     const transformersFunc = Array.from(this.schemaTransformerSlot.values());
     // backward compatibility for transformers that are not wrapped with a function (bit < 1.9.80)
     return transformersFunc.map((transformer) => (Array.isArray(transformer) ? transformer : transformer())).flat();
+  }
+
+  /**
+   * create a schema extractor from the options an env passes. this is what `typescriptSchemaExtractor()`
+   * of the envs contract calls, so envs don't need to import `TypeScriptExtractor`.
+   */
+  createSchemaExtractorFromOptions(options: ExtractorOptions, context: EnvContext): SchemaExtractor {
+    return TypeScriptExtractor.from(options)(context);
   }
 
   /**

@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 import React from 'react';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { ComponentModel, ComponentUI } from '@teambit/component';

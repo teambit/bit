@@ -24,14 +24,13 @@ import {
   PENDING_OBJECTS_DIR,
 } from '@teambit/legacy.constants';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import type { Consumer } from '@teambit/legacy.consumer';
-import { UnexpectedPackageName } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
 import { isValidPath, type PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import RemoveModelComponents from './component-ops/remove-model-components';
+import type { RemovalWorkspace } from './component-ops/remove-model-components';
 import { ScopeComponentsImporter } from './component-ops/scope-components-importer';
 import type { ComponentVersion } from './component-version';
-import { ComponentNotFound, ScopeNotFound } from './exceptions';
+import { ComponentNotFound, ScopeNotFound, UnexpectedPackageName } from './exceptions';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import Lanes from './lanes/lanes';
 import type {
@@ -168,7 +167,6 @@ export default class Scope {
     return id.hasScope() && !this.notExportedIds.hasWithoutVersion(id);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get groupName(): string | null | undefined {
     if (!this.scopeJson.groupName) return null;
     return this.scopeJson.groupName;
@@ -431,7 +429,7 @@ once done, to continue working, please run "bit cc"`
    * Remove components from scope
    * @force Boolean - remove component from scope even if other components use it
    */
-  async removeMany(bitIds: ComponentIdList, force: boolean, consumer?: Consumer): Promise<RemovedObjects> {
+  async removeMany(bitIds: ComponentIdList, force: boolean, consumer?: RemovalWorkspace): Promise<RemovedObjects> {
     logger.debug(`scope.removeMany ${bitIds.toString()} with force flag: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'removeMany',
@@ -494,7 +492,6 @@ once done, to continue working, please run "bit cc"`
       const version = componentObject.id.hasVersion()
         ? componentObject.id.version
         : component.getHeadRegardlessOfLaneAsTagOrHash(true);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return component.toComponentVersion(version);
     });
     return removeNils(components);
@@ -532,9 +529,7 @@ once done, to continue working, please run "bit cc"`
   async getConsumerComponent(id: ComponentID): Promise<Component> {
     const modelComponent: ModelComponent = await this.getModelComponent(id);
     // $FlowFixMe version must be set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentVersion = modelComponent.toComponentVersion(id.version);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return componentVersion.toConsumer(this.objects);
   }
 
@@ -598,8 +593,7 @@ once done, to continue working, please run "bit cc"`
     // Remove the version before hashing since hashing with the version number will result a wrong hash
     const idWithoutVersion = ComponentID.getStringWithoutVersion(id);
     const ref = Ref.from(BitObject.makeHash(idWithoutVersion));
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.objects.load(ref);
+    return this.objects.load(ref) as Promise<ModelComponent | Symlink>;
   }
 
   async getParsedId(id: BitIdStr): Promise<ComponentID> {
@@ -670,8 +664,18 @@ once done, to continue working, please run "bit cc"`
     return this.objects.readObjectsFromPendingDir(pendingDir);
   }
 
-  async removePendingDir(clientId: string) {
+  /**
+   * whether this scope still holds the pending objects of the given client-id. because
+   * `ExportPersist` deletes the pending-dir as soon as it persisted, a "false" here means this scope
+   * either persisted this export already or never took part in it.
+   */
+  async hasPendingDir(clientId: string): Promise<boolean> {
+    return fs.pathExists(this.getPendingDirPath(clientId));
+  }
+
+  async removePendingDir(clientId: string): Promise<{ existed: boolean }> {
     const pendingDir = this.getPendingDirPath(clientId);
+    const existed = await this.hasPendingDir(clientId);
     try {
       await fs.remove(pendingDir); // no error is thrown if not exists
     } catch (err: any) {
@@ -685,6 +689,7 @@ once done, to continue working, please run "bit cc"`
         throw err;
       }
     }
+    return { existed };
   }
 
   async garbageCollect(opts: GarbageCollectorOpts) {
@@ -760,8 +765,11 @@ once done, to continue working, please run "bit cc"`
     this.objects.scopeJson = scopeJson;
   }
 
-  public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
-    if (!isFeatureEnabled(DEPS_GRAPH)) return undefined;
+  public async getDependenciesGraphByComponentIds(
+    componentIds: ComponentID[],
+    options?: { ignoreFeatureToggle?: boolean }
+  ): Promise<DependenciesGraph | undefined> {
+    if (!options?.ignoreFeatureToggle && !isFeatureEnabled(DEPS_GRAPH)) return undefined;
     let allGraph: DependenciesGraph | undefined;
     await pMapPool(
       componentIds,

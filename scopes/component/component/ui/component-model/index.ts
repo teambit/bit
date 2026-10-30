@@ -1,1 +1,8 @@
-export { ComponentModel, ComponentModelProps } from './component-model';
+export {
+  ComponentModel,
+  ComponentModelProps,
+  DeprecationInfo,
+  RegularCompDescriptor,
+  ComponentPreviewSize,
+  ComponentPreviewSizedFile,
+} from './component-model';

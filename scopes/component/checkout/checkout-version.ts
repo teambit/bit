@@ -4,6 +4,7 @@ import type { Version } from '@teambit/objects';
 import type { SourceFile } from '@teambit/component.sources';
 import { RemovePath, DataToPersist } from '@teambit/component.sources';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
+import { isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
@@ -63,10 +64,10 @@ export async function applyVersion(
     throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
   const { mergeStrategy, forceOurs } = checkoutProps;
   let filesStatus = {};
-  if ((mergeResults?.hasConflicts && mergeStrategy === MergeOptions.ours) || forceOurs) {
-    // even when isLane is true, the mergeResults is possible only when the component is on the filesystem
-    // otherwise it's impossible to have conflicts
-    if (!componentFromFS) throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
+  // "keep ours" is meaningful only when the component is on the filesystem. during a lane
+  // switch/import (isLane), a component may exist on the lane but not in the workspace at all -
+  // there are no local files to preserve, so fall through and write it from the model.
+  if (componentFromFS && ((mergeResults?.hasConflicts && mergeStrategy === MergeOptions.ours) || forceOurs)) {
     componentFromFS.files.forEach((file) => {
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
@@ -127,6 +128,9 @@ export async function removeFilesIfNeeded(
   const dataToPersist = new DataToPersist();
   filePathsFromFS.forEach((file) => {
     const filename = pathNormalizeToLinux(file.relative);
+    // the live .bitmap is never deleted from a versioned copy, see isWorkspaceMapFile. only the root
+    // component tracks it, an ordinary component's is a file like any other.
+    if (isWorkspaceMapFile(filename) && componentFromFS.componentMap?.rootDir === WORKSPACE_ROOT_DIR) return;
     if (!filesStatus[filename]) {
       // @ts-ignore todo: typescript has a good point here. it should be the string "removed", not chalk.green(removed).
       filesStatus[filename] = FileStatus.removed;

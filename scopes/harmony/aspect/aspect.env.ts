@@ -18,7 +18,7 @@ import type { BuildTask } from '@teambit/builder';
 import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import type { Bundler, BundlerContext } from '@teambit/bundler';
-import type { WebpackConfigTransformer } from '@teambit/webpack';
+import type { WebpackConfigTransformer } from '@teambit/webpack.webpack-bundler';
 import type { Tester } from '@teambit/tester';
 import type { PreviewStrategyName } from '@teambit/preview';
 import { COMPONENT_PREVIEW_STRATEGY_NAME } from '@teambit/preview';

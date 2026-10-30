@@ -43,7 +43,7 @@ describe('custom env', function () {
       helper.fixtures.populateComponents(1, undefined, undefined, false);
       helper.extensions.addExtensionToVariant('*', envId);
       // Clean the node_modules as we want to run tests when node_modules is empty
-      fs.rmdirSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
+      fs.rmSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true, force: true });
     });
     it('should show the correct env in bit show (with no loaded indication)', () => {
       const componentShowParsed = helper.command.showComponentParsedHarmonyByTitle('comp1', 'env');
@@ -84,7 +84,7 @@ describe('custom env', function () {
       describe('tag again', () => {
         before(() => {
           // helper.command.tagWithoutBuild(envName, '-f');
-          helper.command.tagComponent(envName, 'message', '--unmodified');
+          helper.command.tagWithoutBuild(envName, '--unmodified');
         });
         it('should have the correct env in the envs aspect data after additional tag', () => {
           const comp1 = helper.command.catComponent('comp1@latest');
@@ -180,20 +180,21 @@ describe('custom env', function () {
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.showComponent(envId);
       helper.command.tagAllComponents();
+      helper.command.tagAllComponents('--unmodified');
       helper.command.export();
 
       helper.scopeHelper.reInitWorkspace();
       // Clean the capsule dir to make sure it's empty before we continue
       const scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
       if (fs.pathExistsSync(scopeAspectsCapsulesRootDir)) {
-        fs.rmdirSync(scopeAspectsCapsulesRootDir, { recursive: true });
+        fs.rmSync(scopeAspectsCapsulesRootDir, { recursive: true, force: true });
       }
 
       helper.scopeHelper.addRemoteScope();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.extensions.workspaceJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', true);
       helper.fixtures.populateComponents(1);
-      helper.command.setEnv('comp1', envId);
+      helper.command.setEnv('comp1', `${envId}@0.0.1`);
       helper.command.install();
     });
     after(() => {
@@ -217,6 +218,25 @@ describe('custom env', function () {
     it('should not create scope aspect capsule', () => {
       const scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
       expect(scopeAspectsCapsulesRootDir).to.not.be.a.path();
+    });
+    describe('another component uses an env version that is not installed', () => {
+      before(() => {
+        helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";');
+        helper.command.addComponent('comp2');
+        // no "bit install" (e.g. comp2 was imported with --skip-dependency-installation), so only 0.0.1 is installed
+        helper.command.setEnv('comp2', `${envId}@0.0.2`);
+      });
+      it('bit status should show the NonLoadedEnv issue rather than loading the installed 0.0.1 as 0.0.2', () => {
+        helper.command.expectStatusToHaveIssue(IssuesClasses.NonLoadedEnv.name);
+      });
+      it('bit snap should be blocked', () => {
+        const snapOutput = helper.general.runWithTryCatch('bit snap -m msg');
+        expect(snapOutput).to.have.string('failed loading env');
+      });
+      it('bit install should install the requested version and fix the issue', () => {
+        helper.command.install();
+        helper.command.expectStatusToNotHaveIssue(IssuesClasses.NonLoadedEnv.name);
+      });
     });
   });
 
@@ -253,10 +273,6 @@ describe('custom env', function () {
       it('should show a descriptive error when tagging the component', () => {
         const tagOutput = helper.general.runWithTryCatch('bit tag -m msg');
         expect(tagOutput).to.have.string('failed loading env - external env without a version');
-      });
-      describe('running any other command', () => {
-        // @Gilad TODO
-        it.skip('should warn or error about the misconfigured env and suggest to enter the version', () => {});
       });
     });
 
@@ -307,8 +323,9 @@ describe('custom env', function () {
       });
       it('should remove the env not only from envs/envs but also from root', () => {
         const bitMap = helper.bitMap.read();
-        expect(bitMap.comp1.config).to.not.have.property(`${envId}@0.0.1`);
-        expect(bitMap.comp1.config).to.not.have.property(Extensions.envs);
+        // the env was the only config, so the entire "config" property is removed.
+        // this covers both the root aspect-id and envs/envs.
+        expect(bitMap.comp1).to.not.have.property('config');
       });
     });
     describe('set up the env and then replace it with another env without mentioning the version', () => {
@@ -373,6 +390,11 @@ describe('custom env', function () {
       it('bit status should show the RemovedEnv issue', () => {
         helper.command.expectStatusToHaveIssue(IssuesClasses.RemovedEnv.name);
       });
+      it('bit envs should show the env as deleted', () => {
+        const envsOutput = helper.command.envs();
+        expect(envsOutput).to.have.string('(deleted)');
+        expect(envsOutput).to.have.string(envName);
+      });
       it('replacing the env should fix the issue', () => {
         helper.command.replaceEnv(envId, `${envId}@0.0.2`);
         helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedEnv.name);
@@ -414,9 +436,6 @@ describe('custom env', function () {
       it('bit status should not show it as an issue', () => {
         helper.command.expectStatusToNotHaveIssue(IssuesClasses.MultipleEnvs.name);
       });
-    });
-    after(() => {
-      npmCiRegistry.destroy();
     });
   });
 });

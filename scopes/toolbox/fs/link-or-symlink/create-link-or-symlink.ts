@@ -6,6 +6,9 @@ import * as path from 'path';
 import { logger } from '@teambit/legacy.logger';
 import symlinkDir from 'symlink-dir';
 
+const EEXIST_MAX_ATTEMPTS = 5;
+const EEXIST_RETRY_DELAY_MS = 50;
+
 /**
  * create a link (hard-link). if not possible (e.g. it's a directory) or avoidHardLink is true, use symlink.
  * on Windows, if symlink is not possible (permissions issue), use junction.
@@ -36,8 +39,7 @@ export function createLinkOrSymlink(
     logger.trace(
       `createLinkOrSymlink, generating a symlink on ${destPath} pointing to ${srcPath}, avoidHardLink=${avoidHardLink}`
     );
-    if (avoidHardLink) symlink();
-    else link();
+    writeLinkRetryingOnEexist();
   } catch (err: any) {
     if (err.code === 'EEXIST' && isDestLinkedCorrectly(srcPath, destPath)) {
       logger.trace(
@@ -51,6 +53,34 @@ export function createLinkOrSymlink(
 Symlink${winMsg} from: ${srcPath}, to: ${destPath} failed.
 Please use "--log=trace" flag to get more info about the error.
 Original error: ${err}`);
+  }
+
+  /**
+   * the dest was just removed, yet the link can still fail with EEXIST. on Windows, a file deleted while another
+   * process (antivirus, indexer, IDE) holds it open stays "delete pending" and keeps its name until the handle is
+   * closed. another process may also re-create the dest in between. both are transient, so retry a few times.
+   */
+  function writeLinkRetryingOnEexist() {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        if (avoidHardLink) symlink();
+        else link();
+        return;
+      } catch (err: any) {
+        if (err.code !== 'EEXIST' || attempt >= EEXIST_MAX_ATTEMPTS || isDestLinkedCorrectly(srcPath, destPath)) {
+          throw err;
+        }
+        logger.trace(`createLinkOrSymlink, EEXIST on ${destPath}, retrying (attempt ${attempt})`);
+        sleepSync(EEXIST_RETRY_DELAY_MS * attempt);
+        if (isDestLinkedCorrectly(srcPath, destPath)) return; // another process linked it meanwhile
+        try {
+          fs.removeSync(destPath);
+        } catch (removeErr: any) {
+          // still locked by the other process. the next attempt retries the removal as well.
+          if (removeErr.code !== 'EPERM' && removeErr.code !== 'EBUSY') throw removeErr;
+        }
+      }
+    }
   }
 
   function symlink() {
@@ -130,6 +160,10 @@ Original error: ${err}`);
       }
     }
   }
+}
+
+function sleepSync(ms: number) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
 function isDestLinkedCorrectly(src: string, dest: string): boolean {

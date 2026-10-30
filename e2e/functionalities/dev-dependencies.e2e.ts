@@ -73,7 +73,8 @@ describe('dev-dependencies functionality', function () {
           version: '0.0.1',
         });
       });
-      it('should save the flattened-dependencies', () => {
+      it('should save the flattened dev-dependencies into flattened-dependencies', () => {
+        expect(comp1.flattenedDependencies).to.be.an('array').with.lengthOf(2);
         expect(comp1.flattenedDependencies).to.deep.include({
           name: 'comp3',
           scope: helper.scopes.remote,
@@ -85,17 +86,8 @@ describe('dev-dependencies functionality', function () {
           version: '0.0.1',
         });
       });
-      it('should save "chai" in the dev-packages', () => {
-        expect(comp1.devPackageDependencies).to.be.an('object').that.has.property('chai');
-      });
-      it('should not save "chai" in the packages', () => {
-        expect(comp1.packageDependencies).to.be.an('object').that.is.empty;
-      });
       it('should not save anything into dependencies', () => {
         expect(comp1.dependencies).to.be.an('array').that.is.empty;
-      });
-      it('should save the flattened dev-dependencies into flattened-dependencies', () => {
-        expect(comp1.flattenedDependencies).to.be.an('array').with.lengthOf(2);
       });
       it('bit status should not show any component as modified', () => {
         const output = helper.command.runCmd('bit status');

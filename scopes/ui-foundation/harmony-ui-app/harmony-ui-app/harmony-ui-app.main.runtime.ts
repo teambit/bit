@@ -1,6 +1,6 @@
 import type { ApplicationMain } from '@teambit/application';
 import { ApplicationAspect } from '@teambit/application';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import type { ComponentMain } from '@teambit/component';

@@ -27,6 +27,10 @@ const utilFallbackPath = require.resolve('util/');
 const vmFallbackPath = require.resolve('vm-browserify');
 const zlibFallbackPath = require.resolve('browserify-zlib');
 
+/**
+ * @deprecated `@teambit/webpack.webpack-bundler` ships its own copy of this and no longer reads
+ * it from here. Kept only for backward-compatible `from '@teambit/webpack'` imports.
+ */
 export const fallbacks = {
   assert: assertFallbackPath,
   events: eventsFallbackPath,

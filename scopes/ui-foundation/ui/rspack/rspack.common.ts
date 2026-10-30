@@ -1,5 +1,5 @@
 import type { RuleSetRule } from '@rspack/core';
-import { fallbacks } from '@teambit/webpack';
+import { excludeNodeModulesJs } from '@teambit/webpack.modules.exclude-node-modules-js';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 
 export { RspackManifestPlugin } from 'rspack-manifest-plugin';
@@ -40,6 +40,11 @@ export function resolveAlias(opts?: { profile?: boolean }): Record<string, strin
     '@teambit/component.ui.component-compare.context': require.resolve(
       '@teambit/component.ui.component-compare.context'
     ),
+    // carries `ssrBrowserContext`, which the ssr render fills in and `useUserAgent` reads. the ui
+    // graph pulls in several versions of this package, and an unaliased copy gives the provider and
+    // the consumer two different contexts - the consumer then sees `undefined`, takes the browser
+    // fallback, and dereferences `window` while rendering on the server.
+    '@teambit/ui-foundation.ui.hooks.use-user-agent': require.resolve('@teambit/ui-foundation.ui.hooks.use-user-agent'),
     '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
     '@teambit/base-ui.graph.tree.recursive-tree': require.resolve('@teambit/base-ui.graph.tree.recursive-tree'),
     '@teambit/semantics.entities.semantic-schema': require.resolve('@teambit/semantics.entities.semantic-schema'),
@@ -51,9 +56,12 @@ export function resolveAlias(opts?: { profile?: boolean }): Record<string, strin
   };
 }
 
+const pathFallback = require.resolve('path-browserify');
+export const processFallback = require.resolve('process/browser');
+
 export const resolveFallback = {
   module: false,
-  path: fallbacks.path,
+  path: pathFallback,
   dgram: false,
   dns: false,
   fs: false,
@@ -62,14 +70,14 @@ export const resolveFallback = {
   net: false,
   tls: false,
   child_process: false,
-  process: fallbacks.process,
+  process: processFallback,
 } as const;
 
 export const resolveFallbackDev = {
   fs: false,
-  path: fallbacks.path,
+  path: pathFallback,
   stream: false,
-  process: fallbacks.process,
+  process: processFallback,
 } as const;
 
 // Keep CSS module imports webpack-compatible: `import styles from './x.module.scss'`.
@@ -82,7 +90,7 @@ export const cssParser = {
 export function swcRule(options?: { dev?: boolean; refresh?: boolean }): RuleSetRule {
   return {
     test: /\.(js|mjs|jsx|ts|tsx)$/,
-    exclude: /node_modules/,
+    exclude: excludeNodeModulesJs,
     use: {
       loader: 'builtin:swc-loader',
       options: {

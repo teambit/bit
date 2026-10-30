@@ -17,6 +17,7 @@ import { EnvAspect } from '@teambit/env';
 import { EmptyEnvAspect } from '@teambit/empty-env';
 import { ExpressAspect } from '@teambit/express';
 import { GeneratorAspect } from '@teambit/generator';
+import { WorkspaceStarterAspect } from '@teambit/workspace-starter';
 import { HarmonyUiAppAspect } from '@teambit/harmony-ui-app';
 import { GraphAspect } from '@teambit/graph';
 import { GraphqlAspect } from '@teambit/graphql';
@@ -48,6 +49,7 @@ import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 import { InstallAspect } from '@teambit/install';
+import { WorkspaceRootAspect } from '@teambit/workspace-root';
 import { LinterAspect } from '@teambit/linter';
 import { FormatterAspect } from '@teambit/formatter';
 import { ValidatorAspect } from '@teambit/validator';
@@ -124,6 +126,7 @@ export const manifestsMap = {
   [WorkspaceAspect.id]: WorkspaceAspect,
   [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesAspect,
   [InstallAspect.id]: InstallAspect,
+  [WorkspaceRootAspect.id]: WorkspaceRootAspect,
   [ESLintAspect.id]: ESLintAspect,
   [PrettierAspect.id]: PrettierAspect,
   [CompilerAspect.id]: CompilerAspect,
@@ -143,6 +146,7 @@ export const manifestsMap = {
   [MultiCompilerAspect.id]: MultiCompilerAspect,
   [UIAspect.id]: UIAspect,
   [GeneratorAspect.id]: GeneratorAspect,
+  [WorkspaceStarterAspect.id]: WorkspaceStarterAspect,
   [EnvsAspect.id]: EnvsAspect,
   [EnvAspect.id]: EnvAspect,
   [EmptyEnvAspect.id]: EmptyEnvAspect,

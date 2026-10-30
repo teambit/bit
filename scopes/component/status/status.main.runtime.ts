@@ -1,5 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import pMapSeries from 'p-map-series';
 import type { LaneId } from '@teambit/lane-id';
 import type { IssuesList } from '@teambit/component-issues';
@@ -13,7 +14,6 @@ import type { Component, InvalidComponent } from '@teambit/component';
 import type { RemoveMain } from '@teambit/remove';
 import { RemoveAspect } from '@teambit/remove';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { ComponentsPendingImport } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import type { ModelComponent } from '@teambit/objects';
 import type { InsightsMain } from '@teambit/insights';
@@ -25,6 +25,7 @@ import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
 import type { MiniStatusOpts } from './mini-status-cmd';
 import { MiniStatusCmd } from './mini-status-cmd';
+import { splitPendingImport } from './split-pending-import';
 import type { LoggerMain, Logger } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { MergingMain } from '@teambit/merging';
@@ -131,11 +132,8 @@ export class StatusMain {
     const autoTagPendingComponentsIds = await this.workspace.listAutoTagPendingComponentIds();
     const locallySoftRemoved = await componentsList.listLocallySoftRemoved();
     const remotelySoftRemoved = await componentsList.listRemotelySoftRemoved();
-    const importPendingComponents = allInvalidComponents
-      .filter((c) => c.err instanceof ComponentsPendingImport)
-      .map((i) => i.id);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const invalidComponents = allInvalidComponents.filter((c) => !(c.error instanceof ComponentsPendingImport));
+    const { importPendingComponents: importPending, invalidComponents } = splitPendingImport(allInvalidComponents);
+    const importPendingComponents = importPending.map((i) => i.id);
     const divergeInvalid = await this.divergeDataErrorsToInvalidComp(allComps);
     invalidComponents.push(...divergeInvalid);
     const idsDuringMergeState = componentsList.listDuringMergeStateComponents();

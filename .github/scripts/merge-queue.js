@@ -13,10 +13,20 @@
  *   the label is the durable priority store, applied/removed from the PR page like any label.
  * - Gate: this script owns the `merge-queue/turn` commit status, which is a required check on
  *   master. It stays `pending` on every queued PR except the one whose turn it is; flipping it to
- *   `success` lets GitHub's own auto-merge perform the actual squash-merge. The bot never merges.
- * - Turn-taking ("fast" mode): when master is settled, the FIRST queued PR that is green,
- *   mergeable, and up to date with master gets the turn. PRs with failing/pending checks or
+ *   `success` lets GitHub's own auto-merge perform the actual squash-merge (see "Merge fallback" below).
+ * - Turn-taking ("fast" mode): when master is settled, the FIRST queued PR that is approved,
+ *   green, mergeable, and up to date with master gets the turn. PRs with failing/pending checks or
  *   conflicts keep their queue position but are passed over until they recover.
+ * - Merge fallback: GitHub's auto-merge only re-evaluates a PR on certain events, and the gate's
+ *   own `success` status (posted with the workflow's GITHUB_TOKEN) doesn't reliably wake it — a PR
+ *   whose turn comes long after its last CircleCI status can sit "merging now" indefinitely. So
+ *   once a turn is older than AUTO_MERGE_GRACE_MS and the PR is still open, the bot squash-merges
+ *   it itself, pinned to the head sha that was granted the turn and using the commit message the
+ *   PR's auto-merge request would have used.
+ * - Review gate: the merge fallback's token belongs to an admin, and admins bypass master's
+ *   required-review rule (enforce_admins is off, see the rollout note) — so the script itself must
+ *   enforce it. A PR whose reviewDecision isn't APPROVED never gets the turn, is never
+ *   auto-updated, and is never merged by the fallback; a winner that loses its approval is demoted.
  * - A granted turn is revoked when auto-merge hasn't fired within 15m (something outside this
  *   model blocks the merge, e.g. a review requirement) or when master becomes busy first — the
  *   queue then moves on instead of stalling behind the stuck PR.
@@ -30,16 +40,21 @@
  *   A FAILED `bit_merge` still counts as settled on purpose: Slack already alerts on it, and a
  *   queued PR may be the fix — blocking the queue would deadlock.
  * - Visibility: the gate status description shows each PR's position/reason, and a pinned
- *   "Merge Queue Dashboard" issue (label: merge-queue) is kept up to date.
+ *   "Merge Queue Dashboard" issue (label: merge-queue) is kept up to date. The oldest open one is
+ *   canonical — its URL is the "Details" link on every gate status — and duplicates (a stale issue
+ *   listing can fork the dashboard) are closed automatically.
  *
  * The loop is stateless and idempotent: every run re-derives the queue from the GitHub + CircleCI
- * APIs, so a skipped or crashed run costs nothing. It runs from three places for redundancy:
- * the GitHub Actions workflow (event-driven + cron), a CircleCI scheduled workflow
- * (merge_queue_heartbeat, every 10m — survives Actions outages on independent infrastructure),
- * and, as a break-glass, any machine: GITHUB_TOKEN=<pat> node .github/scripts/merge-queue.js
- * (add MERGE_QUEUE_DRY_RUN=true to observe without mutating).
+ * APIs, so a skipped or crashed run costs nothing. It normally runs from the GitHub Actions
+ * workflow (event-driven + cron) and, as a break-glass (e.g. during an Actions outage), from any
+ * machine: GITHUB_TOKEN=<pat> node .github/scripts/merge-queue.js
+ * (add MERGE_QUEUE_DRY_RUN=true to observe without mutating). A CircleCI heartbeat used to run
+ * it every 10m as outage insurance; removed 2026-08 — it flooded the CircleCI pipeline views.
  *
- * Required env: GITHUB_TOKEN (statuses+issues write). Optional: CIRCLE_TOKEN (CircleCI API,
+ * Required env: GITHUB_TOKEN (statuses+issues write). Optional: MERGE_QUEUE_MERGE_TOKEN — used only
+ * for the merge fallback; master restricts pushes to the bit-core team, which GITHUB_TOKEN isn't
+ * part of, so this must be a bit-core member's token (contents + pull-requests write). Without it
+ * the fallback tries GITHUB_TOKEN, logs the refusal, and the turn times out as before. Optional: CIRCLE_TOKEN (CircleCI API,
  * read) — the project is public so unauthenticated reads work; set it only to avoid shared-IP
  * rate limits (e.g. on hosted runners). Either way a failed CircleCI read fails the run — the
  * queue never treats "couldn't check bit_merge" as settled.
@@ -76,6 +91,8 @@ const PIPELINE_CREATION_GRACE_MS = 30 * 60 * 1000;
 // a winner whose success gate is older than this and still unmerged is blocked by something
 // outside this script's model (e.g. a review requirement) — demote it so the queue moves on
 const STUCK_WINNER_TIMEOUT_MS = 15 * 60 * 1000;
+// auto-merge normally fires within seconds of the gate turning success; past this, the bot merges
+const AUTO_MERGE_GRACE_MS = 2 * 60 * 1000;
 // job statuses meaning bit_merge is still going to run or is running (incl. waiting in the
 // CircleCI serial-group). Terminal statuses (success/failed/canceled/...) mean settled.
 const ACTIVE_JOB_STATUSES = new Set(['running', 'queued', 'not_running', 'blocked', 'on_hold', 'retried']);
@@ -94,15 +111,16 @@ const NOT_QUEUED_DESCRIPTION = 'not queued — enable auto-merge (squash) to joi
 
 const githubToken = process.env.GITHUB_TOKEN;
 const circleToken = process.env.CIRCLE_TOKEN;
+const mergeToken = process.env.MERGE_QUEUE_MERGE_TOKEN || githubToken;
 // MERGE_QUEUE_DRY_RUN=true: read everything, decide everything, mutate nothing (no statuses, no
 // dashboard writes). For local testing and safe rollout observation.
 const dryRun = process.env.MERGE_QUEUE_DRY_RUN === 'true';
 
-async function githubRequest(method, path, body) {
+async function githubRequest(method, path, body, token = githubToken) {
   const options = {
     method,
     headers: {
-      authorization: `Bearer ${githubToken}`,
+      authorization: `Bearer ${token}`,
       accept: 'application/vnd.github+json',
       'x-github-api-version': '2022-11-28',
     },
@@ -131,7 +149,7 @@ async function githubGraphql(query) {
 
 // transient CircleCI failures get bounded retries: the reconcile is this queue's outage
 // fallback, and (especially unauthenticated) reads can hit rate limits or blips — one 429/5xx
-// must not abort a whole heartbeat run. Hard failures (401/404/...) still throw immediately,
+// must not abort a whole reconcile run. Hard failures (401/404/...) still throw immediately,
 // and exhausting retries throws too: "couldn't check bit_merge" is never treated as settled.
 const RETRYABLE_CIRCLE_STATUSES = new Set([429, 500, 502, 503, 504]);
 
@@ -245,6 +263,7 @@ async function fetchOpenPullRequestsPage(cursor) {
           isDraft
           mergeable
           mergeStateStatus
+          reviewDecision
           headRefOid
           labels(first: 20) {
             nodes {
@@ -253,7 +272,7 @@ async function fetchOpenPullRequestsPage(cursor) {
           }
           baseRefName
           author { login }
-          autoMergeRequest { enabledAt }
+          autoMergeRequest { enabledAt mergeMethod commitHeadline commitBody }
           commits(last: 1) {
             nodes {
               commit {
@@ -314,6 +333,15 @@ function getCheckContexts(pullRequest) {
 
 function isPriorityPullRequest(pullRequest) {
   return pullRequest.labels.nodes.some((label) => label.name === PRIORITY_LABEL);
+}
+
+/**
+ * Master requires an approving review, but the merge fallback's admin token bypasses that rule —
+ * so it's enforced here. Strict on purpose: a null reviewDecision (no review rule applies) also
+ * blocks, so dropping the branch rule can't silently turn the queue into an unreviewed merge path.
+ */
+function isApproved(pullRequest) {
+  return pullRequest.reviewDecision === 'APPROVED';
 }
 
 /** true when the PR has more check contexts than the single page we fetched */
@@ -419,6 +447,9 @@ function describeQueueEntry({ entry, index, queueSize, winner, updateCandidate, 
       description: `${position} — checks failing (${checks.failing[0]}${extra}), passed over until green`,
     };
   }
+  if (!isApproved(pullRequest)) {
+    return { state: 'pending', description: `${position} — awaiting an approving review` };
+  }
   if (entry === updateCandidate) {
     return { state: 'pending', description: `${position} — updating branch with master, checks will re-run` };
   }
@@ -458,6 +489,41 @@ async function updateBranchWithMaster(pullRequest) {
   }
 }
 
+/**
+ * Merge fallback for a winner whose auto-merge didn't fire (see the header). `sha` makes the merge
+ * a compare-and-swap on the head that was granted the turn: a push since then gets a 409 instead
+ * of merging unchecked commits. Failures are logged, never thrown — the next cycle retries, and
+ * the stuck-winner timeout still moves the queue on if the merge keeps being refused.
+ */
+async function mergeStuckWinner(pullRequest) {
+  // last line of defense: the merge token bypasses required reviews, so never merge unapproved
+  if (!isApproved(pullRequest)) {
+    console.log(`  #${pullRequest.number}: not merging directly — reviewDecision is ${pullRequest.reviewDecision}`);
+    return;
+  }
+  const { mergeMethod, commitHeadline, commitBody } = pullRequest.autoMergeRequest;
+  console.log(
+    `merging #${pullRequest.number} directly — auto-merge did not fire within ${AUTO_MERGE_GRACE_MS / 1000}s`
+  );
+  if (dryRun) return;
+  try {
+    await githubRequest(
+      'PUT',
+      `/repos/${OWNER}/${REPO}/pulls/${pullRequest.number}/merge`,
+      {
+        sha: pullRequest.headRefOid,
+        merge_method: (mergeMethod || 'SQUASH').toLowerCase(),
+        ...(commitHeadline ? { commit_title: commitHeadline } : {}),
+        ...(commitBody ? { commit_message: commitBody } : {}),
+      },
+      mergeToken
+    );
+    console.log(`  #${pullRequest.number}: merged`);
+  } catch (error) {
+    console.log(`  failed to merge #${pullRequest.number}: ${error.message}`);
+  }
+}
+
 function escapeTableCell(text) {
   return text.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
 }
@@ -468,6 +534,7 @@ function dashboardEntryState({ entry, winner, updateCandidate }) {
   if (entry.demoted) return '⚠️ turn revoked, see its merge-queue/turn status';
   if (pullRequest.mergeable === 'CONFLICTING') return '⚠️ conflicts with master';
   if (checks.state === 'failing') return `❌ failing: ${escapeTableCell(checks.failing.join(', '))}`;
+  if (!isApproved(pullRequest)) return '👀 awaiting approval';
   if (entry === updateCandidate) return '🔄 updating branch with master';
   if (pullRequest.mergeStateStatus === 'BEHIND') return '⏳ behind master, awaiting auto-update';
   if (checks.state === 'pending') return '⏳ checks running';
@@ -495,16 +562,95 @@ async function ensureDashboardLabel() {
   }
 }
 
-async function findDashboardIssue() {
+// Only an exact match may be PATCHed: the issues endpoint returns PRs too, and the label alone
+// doesn't prove an item is the dashboard — overwriting anything else's body would corrupt it.
+// A renamed dashboard is therefore not found and a fresh one gets created (close the old one);
+// that failure mode is deliberate, corruption is not an acceptable one.
+function isDashboardIssue(issue) {
+  return (
+    !issue.pull_request &&
+    issue.state === 'open' &&
+    issue.title === DASHBOARD_TITLE &&
+    issue.labels.some((label) => label.name === DASHBOARD_LABEL)
+  );
+}
+
+async function findDashboardNumbersViaRest() {
   const issues = await githubRequest(
     'GET',
     `/repos/${OWNER}/${REPO}/issues?labels=${DASHBOARD_LABEL}&state=open&per_page=100`
   );
-  // Only an exact match may be PATCHed: the issues endpoint returns PRs too, and the label alone
-  // doesn't prove an item is the dashboard — overwriting anything else's body would corrupt it.
-  // A renamed dashboard is therefore not found and a fresh one gets created (close the old one);
-  // that failure mode is deliberate, corruption is not an acceptable one.
-  return issues.find((issue) => !issue.pull_request && issue.title === DASHBOARD_TITLE);
+  return issues.filter((issue) => !issue.pull_request && issue.title === DASHBOARD_TITLE).map((issue) => issue.number);
+}
+
+// second, independent read path for the same question — candidate numbers only, the authoritative
+// issue objects come from the by-number reads in findDashboardIssues. GraphQL's issues connection
+// never contains PRs, so only the title guard is needed here.
+async function findDashboardNumbersViaGraphql() {
+  const query = `{
+    repository(owner: "${OWNER}", name: "${REPO}") {
+      issues(first: 100, states: OPEN, labels: ["${DASHBOARD_LABEL}"]) {
+        nodes { number title }
+      }
+    }
+  }`;
+  const data = await githubGraphql(query);
+  return data.repository.issues.nodes.filter((issue) => issue.title === DASHBOARD_TITLE).map((issue) => issue.number);
+}
+
+// Returns every open dashboard, oldest first. Oldest wins: the dashboard URL is the "Details" link
+// on every gate status, so the canonical issue has to stay put across runs (and across a duplicate
+// slipping in) instead of hopping to whatever was created last.
+//
+// Both listings are index-backed and occasionally stale, and that staleness is what forked the
+// dashboard in the first place: on 2026-09-01 the REST listing returned the dashboard at 13:56 and
+// omitted it (open, labeled, never renamed) at 14:00, so the run created a second one. Hence:
+// - both paths are queried every run and their candidates unioned, because a PARTIAL miss is as
+//   damaging as an empty one — a listing that drops the oldest but keeps a newer duplicate would
+//   crown the duplicate, move every gate's "Details" link, and hide the original from the cleanup
+//   that is supposed to heal the fork;
+// - every candidate is then re-read by number, a direct record lookup rather than an index query,
+//   which catches staleness in the other direction too: a duplicate an earlier run already closed
+//   would otherwise be closed — and commented on — again on every subsequent run.
+// Both paths missing the dashboard at once can still fork it; closeDuplicateDashboards heals that.
+async function findDashboardIssues() {
+  const candidateNumbers = new Set(await findDashboardNumbersViaRest());
+  for (const number of await findDashboardNumbersViaGraphql()) {
+    if (candidateNumbers.has(number)) continue;
+    console.log(`dashboard lookup: #${number} is missing from the REST listing but present in GraphQL — using it`);
+    candidateNumbers.add(number);
+  }
+
+  const dashboards = [];
+  for (const number of [...candidateNumbers].sort((a, b) => a - b)) {
+    let issue;
+    try {
+      issue = await githubRequest('GET', `/repos/${OWNER}/${REPO}/issues/${number}`);
+    } catch (error) {
+      if (error.status !== 404) throw error;
+      console.log(`dashboard lookup: ignoring #${number} — it no longer exists`);
+      continue;
+    }
+    if (isDashboardIssue(issue)) dashboards.push(issue);
+    else console.log(`dashboard lookup: ignoring #${number} — a direct read says it is not an open dashboard`);
+  }
+  return dashboards;
+}
+
+async function closeDuplicateDashboards(duplicates, canonicalIssue) {
+  for (const duplicate of duplicates) {
+    console.log(
+      `closing duplicate dashboard issue #${duplicate.number} (superseded by #${canonicalIssue.number})${dryRun ? ' (skipped: dry run)' : ''}`
+    );
+    if (dryRun) continue;
+    await githubRequest('POST', `/repos/${OWNER}/${REPO}/issues/${duplicate.number}/comments`, {
+      body: `Duplicate merge-queue dashboard, superseded by #${canonicalIssue.number} — closing automatically. The live queue is at ${canonicalIssue.html_url}.`,
+    });
+    await githubRequest('PATCH', `/repos/${OWNER}/${REPO}/issues/${duplicate.number}`, {
+      state: 'closed',
+      state_reason: 'not_planned',
+    });
+  }
 }
 
 async function updateDashboard({ masterState, entries, winner, updateCandidate, dashboardIssue }) {
@@ -569,7 +715,8 @@ async function main() {
   // looked up before the status posts so the gate's "Details" link can point at the dashboard.
   // On the first run ever it doesn't exist yet — statuses go out without a link and self-heal
   // next cycle (the targetUrl comparison in postGateStatus re-posts them).
-  const dashboardIssue = await findDashboardIssue();
+  const dashboardIssues = await findDashboardIssues();
+  const dashboardIssue = dashboardIssues[0];
   const dashboardUrl = dashboardIssue?.html_url;
   const gateStatusFailures = [];
 
@@ -601,7 +748,9 @@ async function main() {
   for (const entry of entries) {
     const gate = getGateStatus(entry.pullRequest);
     if (gate?.state !== 'SUCCESS') continue;
-    if (!masterState.settled) {
+    if (!isApproved(entry.pullRequest)) {
+      entry.demoted = 'approval missing or withdrawn — turn revoked until approved';
+    } else if (!masterState.settled) {
       entry.demoted = `master became busy before auto-merge fired (${masterState.reason}) — turn revoked`;
     } else if (Date.now() - new Date(gate.createdAt).getTime() > STUCK_WINNER_TIMEOUT_MS) {
       entry.demoted = `auto-merge did not fire within ${STUCK_WINNER_TIMEOUT_MS / 60000}m — passed over; check review or other merge requirements`;
@@ -611,15 +760,16 @@ async function main() {
     if (entry.demoted) console.log(`demoting #${entry.pullRequest.number}: ${entry.demoted}`);
   }
 
-  // fast mode: the first queued PR that is fully green, mergeable, and up to date takes the turn;
-  // PRs ahead of it that are red/pending/conflicting/behind keep their position but are passed
-  // over this round.
+  // fast mode: the first queued PR that is approved, fully green, mergeable, and up to date takes
+  // the turn; PRs ahead of it that are unapproved/red/pending/conflicting/behind keep their
+  // position but are passed over this round.
   const winner =
     stickyWinner ??
     (masterState.settled
       ? entries.find(
           (entry) =>
             !entry.demoted &&
+            isApproved(entry.pullRequest) &&
             entry.checks.state === 'ready' &&
             entry.pullRequest.mergeable === 'MERGEABLE' &&
             entry.pullRequest.mergeStateStatus !== 'BEHIND'
@@ -627,14 +777,24 @@ async function main() {
       : undefined);
   if (winner) console.log(`winner: #${winner.pullRequest.number} — ${GATE_CONTEXT} success`);
 
+  // only a sticky winner has a gate old enough to judge; a fresh winner gets its success status
+  // below and auto-merge's chance to fire first
+  if (winner && winner === stickyWinner) {
+    const gateAgeMs = Date.now() - new Date(getGateStatus(winner.pullRequest).createdAt).getTime();
+    if (gateAgeMs > AUTO_MERGE_GRACE_MS) await mergeStuckWinner(winner.pullRequest);
+  }
+
   // Master's strict up-to-date protection means a behind PR can never merge, and every bump
   // commit puts ALL open PRs behind — so when nothing can merge right now, press "Update branch"
-  // on the first eligible behind PR. Skipped while a winner exists or bit_merge is running: the
-  // update would be invalidated by the master commit that's about to land either way.
+  // on the first eligible behind PR. Unapproved PRs are skipped: they can't take the turn, so
+  // updating them would only burn CI and starve approved PRs behind them. Skipped while a winner
+  // exists or bit_merge is running: the update would be invalidated by the master commit that's
+  // about to land either way.
   const updateCandidate =
     masterState.settled && !winner
       ? entries.find(
           (entry) =>
+            isApproved(entry.pullRequest) &&
             entry.pullRequest.mergeable === 'MERGEABLE' &&
             entry.checks.state !== 'failing' &&
             entry.pullRequest.mergeStateStatus === 'BEHIND'
@@ -678,6 +838,15 @@ async function main() {
   }
 
   await updateDashboard({ masterState, entries, winner, updateCandidate, dashboardIssue });
+  if (dashboardIssue && dashboardIssues.length > 1) {
+    try {
+      await closeDuplicateDashboards(dashboardIssues.slice(1), dashboardIssue);
+    } catch (error) {
+      // cosmetic cleanup — a stale second dashboard is confusing, not dangerous, and the next run
+      // retries it. Never fail a reconcile (or skip the gate-status report below) over it.
+      console.log(`failed to close duplicate dashboard issues: ${error.message}`);
+    }
+  }
   if (gateStatusFailures.length) {
     console.log(
       `reconcile finished with gate-status failures on: ${gateStatusFailures.map((n) => `#${n}`).join(', ')}`

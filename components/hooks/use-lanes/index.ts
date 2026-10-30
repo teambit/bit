@@ -1,5 +1,7 @@
-export { LanesContext, LanesContextModel, useLanesContext } from './lanes-context';
-export { LanesProvider, LanesProviderProps, IgnoreDerivingFromUrl } from './lanes-provider';
+export { LanesContext, useLanesContext } from './lanes-context';
+export type { LanesContextModel } from './lanes-context';
+export { LanesProvider } from './lanes-provider';
+export type { LanesProviderProps, IgnoreDerivingFromUrl } from './lanes-provider';
 export { useLanes } from './use-lanes';
 export type {
   UseLanesOptions as UseLaneOptions,

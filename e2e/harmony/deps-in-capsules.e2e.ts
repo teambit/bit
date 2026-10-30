@@ -16,21 +16,18 @@ chai.use(chaiString);
   let envName1;
   let envId2;
   let envName2;
-  let npmCiRegistry: NpmCiRegistry;
-  before(async () => {
+  before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
-    npmCiRegistry = new NpmCiRegistry(helper);
-    await npmCiRegistry.init();
-    npmCiRegistry.configureCiInPackageJsonHarmony();
+    new NpmCiRegistry(helper).configureCiInPackageJsonHarmony();
     envName1 = helper.env.setCustomEnv('node-env-1');
     envId1 = `${helper.scopes.remote}/${envName1}`;
     envName2 = helper.env.setCustomEnv('node-env-2');
     envId2 = `${helper.scopes.remote}/${envName2}`;
     helper.command.install('lodash.get lodash.flatten');
     helper.command.compile();
-    helper.command.tagAllComponents();
+    helper.command.tagAllWithoutBuild();
     helper.command.export();
 
     helper.scopeHelper.reInitWorkspace();
@@ -74,8 +71,5 @@ chai.use(chaiString);
       const comp2PkgJson = fs.readJsonSync(path.join(nodeEnv2CapsuleDir, 'package.json'));
       expect(path.join(nodeEnv2CapsuleDir, 'node_modules', comp2PkgJson.name)).to.be.a.path();
     });
-  });
-  after(() => {
-    npmCiRegistry.destroy();
   });
 });

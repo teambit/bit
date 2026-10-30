@@ -95,22 +95,15 @@ describe('merge functionality', function () {
         it('should indicate that there were files with conflicts', () => {
           expect(output).to.have.string('conflicts');
         });
-        it('should rewrite the file with the conflict with the conflicts segments', () => {
-          expect(fileContent).to.have.string('<<<<<<<');
-          expect(fileContent).to.have.string('>>>>>>>');
-          expect(fileContent).to.have.string('=======');
-        });
-        it('should label the conflicts segments according to the versions', () => {
+        it('should rewrite the file with the conflicts segments labeled according to the versions', () => {
           expect(fileContent).to.have.string('<<<<<<< 0.0.1 modified'); // current-change
+          expect(fileContent).to.have.string('=======');
           expect(fileContent).to.have.string('>>>>>>> 0.0.2'); // incoming-change
         });
-        it('should show the component as modified', () => {
+        it('should show the component as modified and update bitmap with the imported version', () => {
           const statusOutput = helper.command.runCmd('bit status');
           expect(statusOutput).to.have.string('modified components');
-        });
-        it('should update bitmap with the imported version', () => {
-          const bitMap = helper.bitMap.read();
-          expect(bitMap.comp2.version).to.equal('0.0.2');
+          expect(helper.bitMap.read().comp2.version).to.equal('0.0.2');
         });
       });
       describe('merge with strategy=theirs', () => {
@@ -127,13 +120,10 @@ describe('merge functionality', function () {
         it('should rewrite the file according to the imported version', () => {
           expect(fileContent).to.have.string(fixtures.isTypeV2);
         });
-        it('should not show the component as modified', () => {
+        it('should not show the component as modified and update bitmap with the imported version', () => {
           const statusOutput = helper.command.runCmd('bit status');
           expect(statusOutput).to.not.have.string('modified components');
-        });
-        it('should update bitmap with the imported version', () => {
-          const bitMap = helper.bitMap.read();
-          expect(bitMap.comp2.version).to.equal('0.0.2');
+          expect(helper.bitMap.read().comp2.version).to.equal('0.0.2');
         });
       });
       describe('merge with strategy=ours', () => {
@@ -181,10 +171,6 @@ describe('merge functionality', function () {
         it('should not show the component as modified', () => {
           const statusOutput = helper.command.runCmd('bit status');
           expect(statusOutput).to.not.have.string('modified components');
-        });
-        it('should update bitmap with the imported version', () => {
-          const bitMap = helper.bitMap.read();
-          expect(bitMap.comp2.version).to.equal('0.0.2');
         });
       });
     });

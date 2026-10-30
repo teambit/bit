@@ -36,23 +36,18 @@ describe('bit reset command', function () {
         helper.scopeHelper.getClonedWorkspace(localScope);
         helper.command.tagWithoutBuild('bar/foo', '--unmodified');
         const catComponent = helper.command.catComponent('bar/foo');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.2');
 
         helper.command.reset('bar/foo', true);
       });
       it('should delete only the specified tag', () => {
         const catComponent = helper.command.catComponent('bar/foo');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.not.have.property('0.0.2');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.1');
       });
       it('should delete the specified version from the "state" attribute', () => {
         const catComponent = helper.command.catComponent('bar/foo');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.state.versions).to.not.have.property('0.0.2');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.state.versions).to.have.property('0.0.1');
       });
       it('bit show should work', () => {
@@ -70,7 +65,6 @@ describe('bit reset command', function () {
           helper.scopeHelper.getClonedWorkspace(localScope);
           helper.command.tagWithoutBuild('bar/foo', '--unmodified');
           const catComponent = helper.command.catComponent('bar/foo');
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(catComponent.versions).to.have.property('0.0.2');
 
           helper.command.reset('bar/foo');
@@ -89,7 +83,6 @@ describe('bit reset command', function () {
         helper.command.export();
         helper.command.tagWithoutBuild('bar/foo', '--unmodified');
         const catComponent = helper.command.catComponent('bar/foo');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.2');
       });
       describe('untagging without version', () => {
@@ -98,9 +91,7 @@ describe('bit reset command', function () {
         });
         it('should delete only the local tag and leave the exported tag', () => {
           const catComponent = helper.command.catComponent('bar/foo');
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(catComponent.versions).to.not.have.property('0.0.2');
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(catComponent.versions).to.have.property('0.0.1');
         });
       });
@@ -147,7 +138,7 @@ describe('bit reset command', function () {
       let untagOutput;
       before(() => {
         helper.scopeHelper.getClonedWorkspace(localScope);
-        helper.command.tagIncludeUnmodified('0.0.5');
+        helper.command.tagIncludeUnmodifiedWithoutBuild('0.0.5');
         untagOutput = helper.command.resetAll('--head');
       });
       it('should display a descriptive successful message', () => {
@@ -205,7 +196,7 @@ describe('bit reset command', function () {
           helper.scopeHelper.reInitRemoteScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.export();
-          helper.command.tagIncludeUnmodified('1.0.5');
+          helper.command.tagIncludeUnmodifiedWithoutBuild('1.0.5');
           try {
             output = helper.command.reset('utils/is-type');
           } catch (err: any) {

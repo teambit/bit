@@ -187,4 +187,58 @@ describe('ExtensionDataList', () => {
       expect(configArr[1].data).to.be.undefined;
     });
   });
+  describe('to config array, internal fields and removed extensions', () => {
+    let entry: ExtensionDataEntry;
+    let configArr;
+    before(() => {
+      entry = new ExtensionDataEntry(undefined, ComponentID.fromString('my-scope/ext1'), undefined, {
+        conf1: 'val1',
+        __specific: true,
+      });
+      const removedEntry = new ExtensionDataEntry(undefined, ComponentID.fromString('my-scope/ext2'), undefined, '-');
+      configArr = ExtensionDataList.fromArray([entry, removedEntry]).toConfigArray();
+    });
+    it('should leave out the internal fields without changing the original config', () => {
+      expect(configArr[0].config).to.deep.equal({ conf1: 'val1' });
+      expect(entry.rawConfig).to.deep.equal({ conf1: 'val1', __specific: true });
+    });
+    it('should return an empty config for a removed extension', () => {
+      expect(configArr[1]).to.deep.equal({ id: 'my-scope/ext2', config: {} });
+    });
+  });
+  describe('adjust envs on config object', () => {
+    it('should move the env version to the root of the object', () => {
+      const conf: Record<string, any> = { 'teambit.envs/envs': { env: 'my-scope/my-env@1.0.0' } };
+      ExtensionDataList.adjustEnvsOnConfigObject(conf);
+      expect(conf).to.deep.equal({ 'teambit.envs/envs': { env: 'my-scope/my-env' }, 'my-scope/my-env@1.0.0': {} });
+    });
+    it('should keep the env specific when it is set specifically', () => {
+      const conf: Record<string, any> = { 'teambit.envs/envs': { env: 'my-scope/my-env@1.0.0', __specific: true } };
+      ExtensionDataList.adjustEnvsOnConfigObject(conf);
+      expect(conf).to.deep.equal({
+        'teambit.envs/envs': { env: 'my-scope/my-env', __specific: true },
+        'my-scope/my-env@1.0.0': { __specific: true },
+      });
+    });
+  });
+  describe('without the env replaced by a config object', () => {
+    const list = ExtensionDataList.fromArray([
+      new ExtensionDataEntry(undefined, undefined, 'teambit.envs/envs', { env: 'my-scope/old-env' }),
+      ...ExtensionDataList.fromConfigObject({ 'my-scope/old-env@1.0.0': {}, 'my-scope/ext1': { conf1: 'val1' } }),
+    ]);
+    const withoutEnvReplacedBy = (env?: string) => {
+      const conf: Record<string, any> = env ? { 'teambit.envs/envs': { env } } : {};
+      ExtensionDataList.adjustEnvsOnConfigObject(conf);
+      return list.withoutEnvReplacedBy(conf).ids;
+    };
+    it('should remove the entry of the previous env when the config sets another env', () => {
+      expect(withoutEnvReplacedBy('my-scope/new-env@2.0.0')).to.deep.equal(['teambit.envs/envs', 'my-scope/ext1']);
+    });
+    it('should keep the env entry when the config sets another version of the same env', () => {
+      expect(withoutEnvReplacedBy('my-scope/old-env@2.0.0')).to.deep.equal(list.ids);
+    });
+    it('should keep the env entry when the config does not set an env', () => {
+      expect(withoutEnvReplacedBy()).to.deep.equal(list.ids);
+    });
+  });
 });

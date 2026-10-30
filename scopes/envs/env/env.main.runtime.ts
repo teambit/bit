@@ -1,6 +1,6 @@
 import type { AspectMain } from '@teambit/aspect';
 import { AspectAspect } from '@teambit/aspect';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { Environment, EnvsMain, EnvTransformer } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';

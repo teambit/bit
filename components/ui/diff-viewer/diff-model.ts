@@ -8,6 +8,9 @@ export type DiffLineItem = {
   oldLn?: number;
   newLn?: number;
   text: string;
+  /** Side-specific source text for context lines matched with comparison-only normalization. */
+  oldText?: string;
+  newText?: string;
   /** half-open `[start, end)` character ranges that actually changed (paired add/del lines only). */
   intra?: Array<[number, number]>;
 };
@@ -27,8 +30,20 @@ const DEFAULT_CONTEXT = 3;
  * lines. Keeping the complete line list (rather than only hunks) lets collapsed gaps be expanded
  * later without recomputing.
  */
-export function computeDiffLines(oldContent: string, newContent: string): DiffLineItem[] {
-  const parts = diffLines(oldContent ?? '', newContent ?? '');
+export type ComputeDiffOptions = { ignoreTrimWhitespace?: boolean };
+
+export function computeDiffLines(
+  oldContent: string,
+  newContent: string,
+  options: ComputeDiffOptions = {}
+): DiffLineItem[] {
+  const oldSource = normalizeLineEndings(oldContent ?? '');
+  const newSource = normalizeLineEndings(newContent ?? '');
+  const oldSourceLines = splitSourceLines(oldSource);
+  const newSourceLines = splitSourceLines(newSource);
+  const parts = diffLines(oldSource, newSource, {
+    ignoreWhitespace: options.ignoreTrimWhitespace,
+  });
   const items: DiffLineItem[] = [];
   let oldLn = 1;
   let newLn = 1;
@@ -38,14 +53,32 @@ export function computeDiffLines(oldContent: string, newContent: string): DiffLi
     // a trailing newline produces a spurious empty final element — drop it.
     if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
     for (const text of lines) {
-      if (part.added) items.push({ type: 'add', newLn: newLn++, text });
-      else if (part.removed) items.push({ type: 'del', oldLn: oldLn++, text });
-      else items.push({ type: 'context', oldLn: oldLn++, newLn: newLn++, text });
+      if (part.added) {
+        items.push({ type: 'add', newLn, text: newSourceLines[newLn - 1] ?? text });
+        newLn++;
+      } else if (part.removed) {
+        items.push({ type: 'del', oldLn, text: oldSourceLines[oldLn - 1] ?? text });
+        oldLn++;
+      } else {
+        const oldText = oldSourceLines[oldLn - 1] ?? text;
+        const newText = newSourceLines[newLn - 1] ?? text;
+        items.push({ type: 'context', oldLn: oldLn++, newLn: newLn++, text: newText, oldText, newText });
+      }
     }
   }
 
   fillIntraLineRanges(items);
   return items;
+}
+
+function normalizeLineEndings(content: string): string {
+  return content.replace(/\r\n/g, '\n');
+}
+
+function splitSourceLines(content: string): string[] {
+  const lines = content.split(/\r?\n/);
+  if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+  return lines;
 }
 
 export function statsFromItems(items: DiffLineItem[]): DiffStats {
@@ -176,13 +209,23 @@ export function intraLineDiff(
  * Group the full line list into rendered line-blocks and collapsible gaps of unchanged lines. Long
  * stretches of unchanged code between changes are collapsed to `context` lines on each side; the rest
  * becomes a `gap` that can be expanded on demand.
+ *
+ * `isAnchor` marks unchanged lines that must stay visible too, e.g. a line with a review comment. They
+ * keep their context lines like a change does.
  */
-export function buildSections(items: DiffLineItem[], context: number = DEFAULT_CONTEXT): DiffSection[] {
+export function buildSections(
+  items: DiffLineItem[],
+  context: number = DEFAULT_CONTEXT,
+  isAnchor?: (item: DiffLineItem) => boolean
+): DiffSection[] {
+  // a line that must stay visible: a change, or an anchor the host asked to keep.
+  const keep = items.map((item) => item.type !== 'context' || !!isAnchor?.(item));
   const changedIdx: number[] = [];
   for (let i = 0; i < items.length; i++) {
-    if (items[i].type !== 'context') changedIdx.push(i);
+    if (keep[i]) changedIdx.push(i);
   }
   if (changedIdx.length === 0) {
+    if (context >= items.length) return items.length ? [{ kind: 'lines', items }] : [];
     // an unchanged file: collapse everything into one expandable gap.
     return items.length ? [{ kind: 'gap', id: 'gap-all', hidden: items }] : [];
   }
@@ -201,13 +244,13 @@ export function buildSections(items: DiffLineItem[], context: number = DEFAULT_C
     const runStart = cursor;
     let runEnd = cursor;
     while (runEnd <= last) {
-      if (items[runEnd].type !== 'context') {
+      if (keep[runEnd]) {
         runEnd++;
         continue;
       }
       // measure the unchanged stretch
       let u = runEnd;
-      while (u <= last && items[u].type === 'context') u++;
+      while (u <= last && !keep[u]) u++;
       const gapLen = u - runEnd;
       if (gapLen <= context * 2) {
         runEnd = u; // short gap — keep inline
@@ -222,7 +265,7 @@ export function buildSections(items: DiffLineItem[], context: number = DEFAULT_C
     }
     // collapse the long unchanged stretch, keeping `context` lines on each side
     let u = runEnd;
-    while (u <= last && items[u].type === 'context') u++;
+    while (u <= last && !keep[u]) u++;
     const keepTopEnd = runEnd + context;
     const keepBottomStart = u - context;
     sections.push({ kind: 'lines', items: items.slice(runEnd, keepTopEnd) });
@@ -284,4 +327,43 @@ export function pairForSplit(items: DiffLineItem[]): SplitRow[] {
     for (let k = 0; k < max; k++) rows.push({ left: dels[k], right: adds[k] });
   }
   return rows;
+}
+
+/** how many lines a collapsed gap shows from its top and bottom edge. */
+export type GapState = { top: number; bottom: number };
+
+/**
+ * Split the revealed lines out of every gap they fall in: a gap becomes alternating runs of visible lines
+ * and smaller gaps. Deriving this from the lines the reader revealed, not from per-gap state, keeps them
+ * visible when the sections are rebuilt with new gap ids, including when two gaps merge around them.
+ */
+export function revealInGaps(sections: DiffSection[], revealed: ReadonlySet<DiffLineItem>): DiffSection[] {
+  if (revealed.size === 0) return sections;
+  const result: DiffSection[] = [];
+  for (const section of sections) {
+    if (section.kind !== 'gap' || !section.hidden.some((item) => revealed.has(item))) {
+      result.push(section);
+      continue;
+    }
+    let run: DiffLineItem[] = [];
+    let runRevealed = false;
+    let runStart = 0;
+    const flush = () => {
+      if (run.length === 0) return;
+      if (runRevealed) result.push({ kind: 'lines', items: run });
+      else result.push({ kind: 'gap', id: `${section.id}:${runStart}`, hidden: run });
+    };
+    section.hidden.forEach((item, i) => {
+      const isRevealed = revealed.has(item);
+      if (run.length > 0 && isRevealed !== runRevealed) {
+        flush();
+        run = [];
+        runStart = i;
+      }
+      runRevealed = isRevealed;
+      run.push(item);
+    });
+    flush();
+  }
+  return result;
 }

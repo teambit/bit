@@ -1,9 +1,17 @@
-import type { Component } from '@teambit/component';
-import type { Dependency, DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { Component, ComponentDependencyList } from '@teambit/component';
 import { Edge, Graph, Node } from '@teambit/graph.cleargraph';
 import type { ComponentID } from '@teambit/component-id';
 import { normalize } from 'path';
 import type { Capsule } from './capsule';
+
+/**
+ * the parts of the dependency-resolver that `toposort` uses. typed narrowly so the public type of the capsule list
+ * (and of everything that exposes it, e.g. `BuildContext`) doesn't reference the dependency-resolver aspect.
+ */
+export type CapsuleListDependencyResolver = {
+  getPackageName(component: Component): string;
+  getDependencies(component: Component): ComponentDependencyList;
+};
 
 export default class CapsuleList extends Array<Capsule> {
   getCapsule(id: ComponentID): Capsule | undefined {
@@ -48,7 +56,7 @@ export default class CapsuleList extends Array<Capsule> {
     return graph;
   }
   // Sort the capsules by their dependencies. The capsules with no dependencies will be first. Returns a new array.
-  async toposort(depResolver: DependencyResolverMain): Promise<CapsuleList> {
+  async toposort(depResolver: CapsuleListDependencyResolver): Promise<CapsuleList> {
     const components = this.getAllComponents();
     const graph = new Graph<Component, string>();
 
@@ -59,7 +67,7 @@ export default class CapsuleList extends Array<Capsule> {
     for (const node of graph.nodes) {
       // eslint-disable-next-line no-await-in-loop
       const deps = await depResolver.getDependencies(node.attr);
-      deps.forEach((dep: Dependency) => {
+      deps.forEach((dep) => {
         const depPkgName = dep.getPackageName?.();
         if (depPkgName && graph.hasNode(depPkgName)) {
           graph.setEdge(new Edge(node.id, depPkgName, dep.lifecycle));

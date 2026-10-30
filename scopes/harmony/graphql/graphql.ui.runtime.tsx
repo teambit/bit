@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import React from 'react';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import { BatchHttpLink } from '@apollo/client/link/batch-http';
 import { InMemoryCache, ApolloClient, ApolloLink, HttpLink } from '@apollo/client';
 import type { DefaultOptions, NormalizedCacheObject, Operation } from '@apollo/client';
@@ -8,8 +8,6 @@ import { WebSocketLink } from '@apollo/client/link/ws';
 import { onError } from '@apollo/client/link/error';
 import { getMainDefinition } from '@apollo/client/utilities';
 import type { OperationDefinitionNode } from 'graphql';
-
-import crossFetch from 'cross-fetch';
 
 import { createSplitLink } from './create-link';
 import { GraphQLProvider } from './graphql-provider';
@@ -72,12 +70,14 @@ export class GraphqlUI {
     return client;
   }
 
+  // use the global fetch (node 18+) rather than cross-fetch: its node-fetch@2 calls the deprecated `url.parse`,
+  // which prints a DEP0169 warning from the bundled SSR output on every request.
   createSsrClient({ serverUrl, headers }: { serverUrl: string; headers: any }) {
     const httpLink = new HttpLink({
       uri: serverUrl,
       credentials: 'include',
       headers,
-      fetch: crossFetch,
+      fetch,
     });
     const batchHttpLink = new BatchHttpLink({
       uri: serverUrl,
@@ -85,7 +85,7 @@ export class GraphqlUI {
       batchInterval: this.config.batchInterval,
       batchMax: this.config.batchMax,
       headers,
-      fetch: crossFetch,
+      fetch,
     });
     const transport = ApolloLink.split(this.shouldBatch, batchHttpLink, httpLink);
 

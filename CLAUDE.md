@@ -6,6 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 For comprehensive Bit MCP workflow instructions and core principles, see: `.github/instructions/bit.instructions.md`
 
+## Public Repo Hygiene
+
+This repo is open source. Commits, branch names, PR titles/descriptions, and PR comments are public.
+
+- **No private data**: Never use real component-ids, package names, scope/org names, or people's names (these often come from the prompt or from a bug report) in commits, PRs, or PR comments — they may be private. Use made-up placeholders instead (e.g. `my-org.my-scope/button`).
+- **No private commands**: Some internal `bit` commands are defined outside this repo and must not be mentioned publicly. Before naming a `bit` command in a commit, branch, or PR, verify it's defined here (`grep -rn "name = '<command>" scopes components`). If it isn't, describe the behavior instead (e.g. "a lane merge from a bare scope", "snapping from a scope"). Internal API names that live in this repo (e.g. `snapFromScope`, `mergeSnaps`) are fine to mention.
+- **No private commands in generated files either**: `bit cli generate` reports whatever the running binary loaded, so regenerating the CLI reference with a bit that also loads an aspect from another workspace writes that workspace's commands into `scopes/harmony/cli-reference/*` and `contrib/claude-skill-bit-cli/*`. `npm run generate-cli-reference-json` runs `scripts/check-cli-reference-groups.js`, which fails on any command whose group this repo doesn't declare — never commit a regenerated reference without that check passing, and run the whole chain (`generate-cli-reference`, `-json`, `-docs`, `generate-cli-skill`, `generate-core-aspects-ids`) so the files stay consistent.
+
 ## CLI Output Style Guide
 
 When modifying CLI command output, follow the style guide: `scopes/harmony/cli/cli-output-style-guide.md`
@@ -30,6 +38,13 @@ Use the shared formatting toolkit from `@teambit/cli` (`scopes/harmony/cli/outpu
 
 ### Testing
 
+**IMPORTANT — prefer unit tests (`.spec.ts`) over e2e tests.** E2e tests are extremely expensive: they dominate CI time and are responsible for ~80% of our CircleCI credit spend. When adding test coverage:
+
+- Default to unit tests: `.spec.ts` files alongside the source, run with `bit test`.
+- Only write an e2e test when the scenario genuinely cannot be covered by a unit test — e.g. it requires a real workspace + remote scope and a flow spanning multiple bit commands (tag/export/import/lane flows).
+- Before creating a new e2e **file**, check if an existing e2e file already covers the area and add a `describe`/`it` there instead — each new file adds fixed setup overhead on CI.
+- Keep any e2e test minimal: fewest components, fewest commands, no redundant variations of the same flow.
+
 - `bit test` - Run unit tests for components/aspects
 - `bit test --debug` - Run unit tests in debug mode (prints workspace location, keeps workspaces)
 - `npm run e2e-test` - Run end-to-end tests (can take hours, usually run on CI)
@@ -45,7 +60,7 @@ Use the shared formatting toolkit from `@teambit/cli` (`scopes/harmony/cli/outpu
 - Running without `.only` will execute the ENTIRE test suite which takes hours
 - Example: Change `describe('my test', ...)` to `describe.only('my test', ...)`
 
-**Bug reproduction testing:** When asked to reproduce a bug, create an e2e test instead of creating test directories in the current workspace. You cannot create nested Bit workspaces. E2E test helpers provide workspace creation methods that use temporary directories and automatically clean up after tests.
+**Bug reproduction testing:** When asked to reproduce a bug, first try to reproduce it with a unit test (`.spec.ts`) at the level of the component that owns the logic. Only fall back to an e2e test when the bug spans multiple bit commands or requires a real workspace/remote-scope flow. Never create test directories in the current workspace — you cannot create nested Bit workspaces; the e2e test helpers provide workspace creation methods that use temporary directories and automatically clean up after tests.
 
 ### Linting and Formatting
 
@@ -104,6 +119,8 @@ Each aspect follows a standard structure:
 - `.ui.runtime.ts` - UI runtime implementation (if applicable)
 - `.docs.mdx` - Documentation
 - `.composition.tsx` - Component compositions for testing
+
+**New aspects must use the core-aspect env** (`teambit.harmony/envs/core-aspect-env`), like every other aspect here. No variant sets it, so a new component otherwise falls back to `teambit.harmony/node`. Pass it when creating the aspect: `bit create bit-aspect <name> --scope <scope> --env teambit.harmony/envs/core-aspect-env`. If the component was added with `bit add` (which has no env flag), run `bit envs set <component-id> teambit.harmony/envs/core-aspect-env` right after. Verify with `bit envs get <component-id>`. The same fallback hits any new component: give a non-aspect component the env of its siblings (e.g. `teambit.node/envs/node-babel-mocha` for `scopes/*/modules/*`, `teambit.node/envs/node-typescript-mocha` for `scopes/toolbox/*`).
 
 ### Configuration
 

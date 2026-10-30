@@ -19,7 +19,7 @@ import type { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
 import type { Logger } from '@teambit/logger';
 import type { TagResults, SnappingMain } from './snapping.main.runtime';
-import type { BasicTagParams } from './version-maker';
+import type { BasicTagParams, DependentWithPinnedDeps } from './version-maker';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
@@ -79,6 +79,11 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
     '',
     'increment-by <number>',
     '(default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3.',
+  ],
+  [
+    '',
+    'skip-published-versions',
+    'skip versions that are already in the registry. useful when a previous run published the packages but failed before exporting',
   ],
   [
     'i',
@@ -171,6 +176,7 @@ use for official releases. for development versions, use 'bit snap' instead.`;
       noLockDeps = false,
       failFast = false,
       incrementBy = 1,
+      skipPublishedVersions = false,
       detachHead,
       loose = false,
     } = options;
@@ -225,6 +231,7 @@ To undo local tag use the "bit reset" command.`
       rebuildDepsGraph,
       noLockDeps,
       incrementBy,
+      skipPublishedVersions,
       version: ver,
       failFast,
       detachHead,
@@ -343,6 +350,7 @@ export function tagResultReport(results: TagResults): string | Report {
   };
 
   const removedSection = outputIdsIfExists('removed components', removedComponents);
+  const pinnedSection = dependentsWithPinnedDepsSection(results.dependentsWithPinnedDeps, 'tagged');
 
   const publishSection = (() => {
     const { publishedPackages } = results;
@@ -360,6 +368,12 @@ export function tagResultReport(results: TagResults): string | Report {
 
   const warningsSection =
     warnings && warnings.length ? warnings.map((w) => `${warnSymbol} ${chalk.yellow(w)}`).join('\n') : '';
+
+  const workspaceRootHint = results.autoAddedWorkspaceRoot
+    ? formatHint(
+        `(${compInBold(results.autoAddedWorkspaceRoot)} is the workspace-root component. it was new or modified, so it was tagged along: the other components record the root version they were tagged with)`
+      )
+    : '';
 
   const summaryMsg = `${totalCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged${exportedIds ? ' and exported' : ''}`;
   const summary = formatSuccessSummary(summaryMsg);
@@ -401,7 +415,9 @@ export function tagResultReport(results: TagResults): string | Report {
   const data = joinSections([
     newSection,
     changedSection,
+    workspaceRootHint,
     autoTagSection,
+    pinnedSection,
     removedSection,
     publishSection,
     exportedSection,
@@ -419,6 +435,8 @@ export function tagResultReport(results: TagResults): string | Report {
   const details = joinSections([
     newDetailed,
     changedDetailed,
+    workspaceRootHint,
+    pinnedSection,
     removedSection,
     publishSection,
     exportedSection,
@@ -438,6 +456,25 @@ export function tagResultOutput(results: TagResults): string {
 export function compInBold(id: ComponentID): string {
   const version = id.hasVersion() ? `@${id.version}` : '';
   return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
+}
+
+export function dependentsWithPinnedDepsSection(
+  dependents: DependentWithPinnedDeps[] | undefined,
+  action: 'tagged' | 'snapped'
+): string {
+  if (!dependents?.length) return '';
+  const items = dependents.map((dependent) =>
+    formatItem(`${compInBold(dependent.id)} ${chalk.dim(`(${dependent.pinnedDependencies.join(', ')})`)}`, warnSymbol)
+  );
+  const section = formatSection(
+    `dependents not auto-${action}`,
+    `their config sets the version of the ${action} dependency ("bit deps set", variants or env), so they keep using it`,
+    items
+  );
+  const hint = formatHint(
+    '(to use the workspace version, remove the version from the config, e.g. "bit deps unset <component> <package>")'
+  );
+  return `${section}\n${hint}`;
 }
 
 export function outputIdsIfExists(label: string, ids?: ComponentIdList) {

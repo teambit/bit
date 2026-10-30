@@ -1,14 +1,11 @@
 import type { ComponentType } from 'react';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
-import type { ComponentCompareUI } from '@teambit/component-compare';
-import { ComponentCompareAspect } from '@teambit/component-compare';
 import type { ComponentUI, ComponentModel } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { GraphAspect } from './graph.aspect';
 import { GraphSection } from './ui/graph.section';
-import { GraphCompareSection } from './graph.compare.section';
 import { DependenciesGraph } from './ui/dependencies-graph';
 
 export interface ComponentWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -38,7 +35,7 @@ export class GraphUI {
   }
 
   constructor(private componentWidgetSlot: ComponentWidgetSlot) {}
-  static dependencies = [ComponentAspect, ComponentCompareAspect];
+  static dependencies = [ComponentAspect];
   static runtime = UIRuntime;
   static slots = [Slot.withType<ComponentWidget>()];
   static defaultConfig = {
@@ -46,17 +43,14 @@ export class GraphUI {
   };
 
   static async provider(
-    [componentUI, componentCompare]: [ComponentUI, ComponentCompareUI],
+    [componentUI]: [ComponentUI],
     config: GraphUIConfig,
     [componentWidgetSlot]: [ComponentWidgetSlot]
   ) {
     const graphUI = new GraphUI(componentWidgetSlot);
     const section = new GraphSection(componentWidgetSlot);
-    const graphSection = new GraphCompareSection();
     if (config.componentTab) componentUI.registerNavigation(section.navigationLink, section.order);
     componentUI.registerRoute(section.route);
-    componentCompare.registerNavigation(graphSection);
-    componentCompare.registerRoutes([graphSection.route]);
     return graphUI;
   }
 }

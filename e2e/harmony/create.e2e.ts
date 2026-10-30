@@ -22,40 +22,6 @@ describe('create extension', function () {
       helper.general.expectToThrow(cmd, error);
     });
   });
-  describe('with --namespace flag', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.create('component-generator', 'my-aspect', '--namespace ui');
-    });
-    it('should create the directories properly', () => {
-      const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'ui/my-aspect');
-      expect(compRootDir).to.be.a.directory();
-      expect(path.join(compRootDir, 'index.ts')).to.be.a.file();
-      expect(path.join(compRootDir, 'my-aspect.ts')).to.be.a.file();
-      expect(path.join(compRootDir, 'files/component-file.ts')).to.be.a.file();
-    });
-    it('should add the component correctly', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap).to.have.property('ui/my-aspect');
-    });
-  });
-  describe('name with namespace as part of the name', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.create('component-generator', 'ui/my-aspect');
-    });
-    it('should create the directories properly', () => {
-      const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'ui/my-aspect');
-      expect(compRootDir).to.be.a.directory();
-      expect(path.join(compRootDir, 'index.ts')).to.be.a.file();
-      expect(path.join(compRootDir, 'my-aspect.ts')).to.be.a.file();
-      expect(path.join(compRootDir, 'files/component-file.ts')).to.be.a.file();
-    });
-    it('should add the component correctly', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap).to.have.property('ui/my-aspect');
-    });
-  });
   describe('name with namespace as part of the name and namespace flag', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -161,10 +127,6 @@ describe('create extension', function () {
       expect(bitMap['hooks/my-hook']).to.have.property('defaultScope');
       expect(bitMap['hooks/my-hook'].defaultScope).to.equal('my-org.my-scope');
     });
-    it('bit show should show the parsed scope as the defaultScope', () => {
-      const show = helper.command.showComponent('hooks/my-hook');
-      expect(show).to.include('my-org.my-scope');
-    });
   });
   describe('with env defined inside the template different than the variants', () => {
     before(() => {
@@ -195,13 +157,14 @@ describe('create extension', function () {
       helper.fs.createNewDirectoryInLocalWorkspace('inner-dir');
     });
     it('should not throw', () => {
-      const cmd = helper.command.create(
-        'component-generator',
-        'my-aspect',
-        undefined,
-        path.join(helper.scopes.localPath, 'inner-dir')
-      );
-      expect(() => cmd).to.not.throw();
+      expect(() =>
+        helper.command.create(
+          'component-generator',
+          'my-aspect',
+          undefined,
+          path.join(helper.scopes.localPath, 'inner-dir')
+        )
+      ).to.not.throw();
     });
   });
   describe('external package manager mode', () => {

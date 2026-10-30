@@ -1,6 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatItem, formatTitle, formatSuccessSummary, formatHint } from '@teambit/cli';
+import { formatBytes, formatItem, formatTitle, formatSuccessSummary, formatHint } from '@teambit/cli';
 import type { CapsuleList, IsolateComponentsOptions, IsolatorMain, PruneCapsulesReport } from '@teambit/isolator';
 import { CAPSULE_ORIGIN_FILE } from '@teambit/isolator';
 import type { ScopeMain } from '@teambit/scope';
@@ -10,13 +10,6 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 import type { Workspace } from './workspace';
-
-function formatBytes(bytes: number): string {
-  if (!bytes) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
-  return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
-}
 
 /**
  * Coerce a CLI/config value to a finite number, or undefined if it's missing,

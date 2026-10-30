@@ -1,6 +1,7 @@
-import { Aspect, RuntimeDefinition } from '@teambit/harmony';
+import { Aspect } from '@teambit/harmony';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 
-export const MainRuntime = new RuntimeDefinition('main');
+export { MainRuntime };
 
 export const CLIAspect = Aspect.create({
   id: 'teambit.harmony/cli',

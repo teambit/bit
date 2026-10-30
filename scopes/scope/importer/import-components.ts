@@ -44,6 +44,12 @@ export type ImportOptions = {
   mergeStrategy?: MergeStrategy;
   filterEnvs?: string[];
   writeToPath?: string;
+  /**
+   * a directory per component, keyed by the id without its version, for writing components that each
+   * go to its own place in one import rather than one import per directory (see the same prop on
+   * ManyComponentsWriterParams).
+   */
+  writeToPathPerId?: Record<string, string>;
   writeConfig?: boolean;
   override?: boolean;
   installNpmPackages: boolean; // default: true
@@ -162,6 +168,9 @@ export default class ImportComponents {
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     const versionDependenciesArr = await this._importComponentsObjects(bitIds, {
       lane,
+      // getBitIdsForLanes() includes the hidden lane.updateDependents. route them to the lane's scope, where
+      // their cascade snaps live. their origin scope has main only.
+      includeUpdateDependents: true,
     });
 
     if (lane) {
@@ -387,6 +396,7 @@ export default class ImportComponents {
     return {
       components,
       writeToPath: this.options.writeToPath,
+      writeToPathPerId: this.options.writeToPathPerId,
       writeConfig: this.options.writeConfig,
       skipDependencyInstallation: !this.options.installNpmPackages,
       skipWriteConfigFiles: !this.options.writeConfigFiles,
@@ -543,10 +553,12 @@ if you just want to get a quick look into this snap, create a new workspace and 
       fromOriginalScope = false,
       lane,
       ignoreMissingHead = false,
+      includeUpdateDependents = false,
     }: {
       fromOriginalScope?: boolean;
       lane?: Lane;
       ignoreMissingHead?: boolean;
+      includeUpdateDependents?: boolean;
     }
   ): Promise<VersionDependencies[]> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
@@ -560,6 +572,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
       // empty, until it's exported. going to the remote and asking this component will throw an error if ignoreMissingHead is false
       ignoreMissingHead: true,
       includeUnexported: this.options.isLaneFromRemote,
+      includeUpdateDependents,
       reason: `of their latest on ${lane ? `lane ${lane.id()}` : 'main'}`,
     });
 
@@ -570,6 +583,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
           ids,
           ignoreMissingHead,
           lane,
+          includeUpdateDependents,
           preferDependencyGraph: !this.options.fetchDeps,
           // when user is running "bit import", we want to re-fetch if it wasn't built. todo: check if this can be disabled when not needed
           reFetchUnBuiltVersion: true,
@@ -578,7 +592,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
           throwForSeederNotFound: false,
           reason: this.options.fetchDeps
             ? 'for getting all dependencies'
-            : `for getting dependencies of components that don't have dependency-graph`,
+            : 'for getting missing versions and dependencies',
         });
 
     return results;
@@ -721,7 +735,9 @@ if you just want to get a quick look into this snap, create a new workspace and 
   private async getAllFlattenedDeps(bitIds: ComponentID[]): Promise<ComponentIdList> {
     const remoteComps = await this.scope.scopeImporter.getManyRemoteComponents(bitIds);
     const versions = remoteComps.getVersions();
-    return ComponentIdList.uniqFromArray(versions.flatMap((v) => [...v.flattenedDependencies]));
+    // the objects aren't written to the scope yet, so the flattened dependencies are loaded from the received objects.
+    const flattenedDeps = await Promise.all(versions.map((v) => v.loadFlattenedDependencies(remoteComps)));
+    return ComponentIdList.uniqFromArray(flattenedDeps.flatMap((deps) => [...deps]));
   }
 
   /**
@@ -740,7 +756,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
     const missingEdges: string[] = [];
     for (const { component, versionStr, version } of componentsAndVersions) {
       const edges = await version.getFlattenedEdges(this.scope.objects);
-      if (!edges.length && version.flattenedDependencies.length) {
+      if (!edges.length && (await version.loadFlattenedDependencies(this.scope.objects)).length) {
         missingEdges.push(`${component.toComponentId().toStringWithoutVersion()}@${versionStr}`);
         continue;
       }
@@ -965,7 +981,8 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
     if (!componentStatus.modified) return mergeStatus;
     const componentModel = await this.consumer.scope.getModelComponent(component.id);
     const existingBitMapBitId = this.consumer.bitMap.getComponentId(component.id, { ignoreVersion: true });
-    const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
+    const fsWorkspaceComponent = await this.workspace.get(existingBitMapBitId);
+    const fsComponent = fsWorkspaceComponent.state._consumer;
     const currentlyUsedVersion = existingBitMapBitId.version;
     const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);
     const otherComponent: Version = await componentModel.loadVersion(component.id.version, this.consumer.scope.objects);
@@ -1095,6 +1112,7 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
     const manyComponentsWriterOpts: ManyComponentsWriterParams = {
       components: componentsToWrite,
       writeToPath: this.options.writeToPath,
+      writeToPathPerId: this.options.writeToPathPerId,
       writeConfig: this.options.writeConfig,
       skipDependencyInstallation: !this.options.installNpmPackages,
       skipWriteConfigFiles: !this.options.writeConfigFiles,

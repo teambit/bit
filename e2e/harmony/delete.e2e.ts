@@ -107,23 +107,18 @@ describe('bit delete command', function () {
     'deleting a component on a lane that has no dependents in the workspace',
     () => {
       let comp1PkgName: string;
-      before(async () => {
+      before(() => {
         helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(2); // comp1 -> comp2, nothing depends on comp1
         comp1PkgName = helper.general.getPackageNameByCompName('comp1');
-        npmCiRegistry = new NpmCiRegistry(helper);
-        npmCiRegistry.configureCiInPackageJsonHarmony();
-        await npmCiRegistry.init();
-        helper.command.tagAllComponents();
+        new NpmCiRegistry(helper).configureCiInPackageJsonHarmony();
+        helper.command.tagAllWithoutBuild();
         helper.command.export();
         helper.command.createLane();
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.export();
         helper.command.softRemoveOnLane('comp1');
-      });
-      after(() => {
-        npmCiRegistry.destroy();
       });
       it('should not add the deleted component to the workspace policy (no dependents to fix)', () => {
         const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
@@ -420,13 +415,13 @@ describe('bit delete command', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
       helper.command.softRemoveOnLane('comp1');
       const bitmap = helper.bitMap.read();
       bitmapEntryBefore = bitmap.comp1;
-      helper.command.snapAllComponents('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
       output = helper.command.resetAll();
     });
     it('should reset the deleted component', () => {
@@ -474,6 +469,30 @@ describe('bit delete command', function () {
     // because the entry was still in ".bit/staged-config/main.json".
     it('bit status should not throw an error', () => {
       expect(() => helper.command.status()).not.to.throw();
+    });
+  });
+  describe('hard-delete guard in non-interactive sessions', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+    });
+    it('should fail with guidance instead of hanging when a confirmation is needed but there is no TTY', () => {
+      const output = helper.general.runWithTryCatch('bit delete comp1');
+      expect(output).to.have.string('re-run with --silent');
+    });
+    it('should block --hard when non-interactive and the hard-delete feature is not enabled, even with --silent', () => {
+      const output = helper.general.runWithTryCatch('bit delete comp1 --hard --silent');
+      expect(output).to.have.string('requires an interactive confirmation by a human');
+      // the component should still exist on the remote
+      expect(() =>
+        helper.command.catComponent(`${helper.scopes.remote}/comp1`, helper.scopes.remotePath)
+      ).to.not.throw();
+    });
+    it('should allow --hard when the hard-delete feature is explicitly enabled', () => {
+      expect(() => helper.command.removeComponentFromRemote(`${helper.scopes.remote}/comp1`)).to.not.throw();
+      expect(() => helper.command.catComponent(`${helper.scopes.remote}/comp1`, helper.scopes.remotePath)).to.throw();
     });
   });
 });

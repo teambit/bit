@@ -1,6 +1,6 @@
 import type { Component } from '@teambit/component';
 import type { APISchema } from '@teambit/semantics.entities.semantic-schema';
-import type { Formatter } from '@teambit/formatter';
+import type { SchemaExtractorOptions } from '@teambit/envs.contracts';
 
 export interface SchemaExtractor {
   /**
@@ -16,14 +16,4 @@ export interface SchemaExtractor {
   dispose(): void;
 }
 
-export type SchemaExtractorOptions = {
-  formatter?: Formatter;
-  tsserverPath?: string;
-  contextPath?: string;
-  skipInternals?: boolean;
-  /**
-   * Component-relative includes. Exact if no wildcard; glob-lite if contains * or **.
-   * Always materialized under `internals` unless already part of the public API graph.
-   */
-  includeFiles?: string[];
-};
+export type { SnippetFormatter, SchemaExtractorOptions } from '@teambit/envs.contracts';

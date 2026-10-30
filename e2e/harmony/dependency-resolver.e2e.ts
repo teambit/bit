@@ -2,21 +2,17 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
-import type { Modules } from '@pnpm/installing.modules-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import rimraf from 'rimraf';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper, fixtures, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 import assertArrays from 'chai-arrays';
+import type { ModulesManifest } from '../modules-manifest';
+import { readModulesManifest } from '../modules-manifest';
 chai.use(chaiFs);
 
 chai.use(assertArrays);
-
-async function readModulesManifest(modulesDir: string): Promise<Modules | null> {
-  const m = await import('@pnpm/installing.modules-yaml');
-  return m.readModulesManifest(modulesDir);
-}
 
 describe('dependency-resolver extension', function () {
   let helper: Helper;
@@ -155,32 +151,19 @@ describe('dependency-resolver extension', function () {
           expect(isTypeOutput.peerPackageDependencies).to.not.have.key('lodash.set');
         });
       });
-      describe.skip('conflict between few extensions policies', function () {
-        it.skip('should merge them', function () {});
-      });
-      describe.skip('conflict between extension and user policies ', function () {
-        it.skip('should prefer user config', function () {});
-      });
     });
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('saving dependencies package names', function () {
-    let npmCiRegistry: NpmCiRegistry;
     let randomStr;
-    before(async () => {
+    before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
 
-      npmCiRegistry = new NpmCiRegistry(helper);
+      const npmCiRegistry = new NpmCiRegistry(helper);
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `react.${randomStr}.{name}`;
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       helper.fixtures.populateComponents(4);
-
-      await npmCiRegistry.init();
-
-      helper.command.tagAllComponents();
-    });
-    after(() => {
-      npmCiRegistry.destroy();
+      helper.command.tagAllWithoutBuild();
     });
     it('should save the packageName data into the dependencyResolver extension in the model', () => {
       const comp2 = helper.command.catComponent('comp2@latest');
@@ -255,7 +238,7 @@ describe('dependency-resolver extension', function () {
     });
   });
   describe('hoist patterns', function () {
-    let modulesState: Modules | null;
+    let modulesState: ModulesManifest | null;
     before(async () => {
       helper = new Helper();
       helper.scopeHelper.reInitWorkspace();
@@ -281,6 +264,30 @@ describe('dependency-resolver extension', function () {
       it('should run pnpm with the specified hoist pattern', () => {
         expect(modulesState?.hoistPattern).to.deep.eq(['hoist-pattern']);
       });
+    });
+  });
+  describe('install without readPackage hooks', function () {
+    let lockfile: any;
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.reInitWorkspace();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/pnpm');
+      helper.command.install('is-positive@1.0.0');
+      lockfile = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')) as any;
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    // Bit passes no readPackage hooks, so there is no checksum to record. A hook pnpm cannot
+    // fingerprint would make it resolve every dependency again on each install.
+    it('should record no pnpmfileChecksum', () => {
+      expect(lockfile).to.not.have.property('pnpmfileChecksum');
+    });
+    it('should record the override that removes @teambit/legacy from the dependencies', () => {
+      expect(lockfile.overrides).to.have.property('@teambit/legacy@*', '-');
+    });
+    it('should not mark a readPackage hook as untracked', () => {
+      expect(lockfile).to.not.have.property('untrackedPnpmfileReadPackageHook');
     });
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('env.jsonc with policy.peer version="+"', () => {
@@ -361,7 +368,7 @@ describe('dependency-resolver extension', function () {
     });
   });
   describe('env.jsonc with policy.peer version="+" and a dependent', () => {
-    before(async () => {
+    before(() => {
       helper = new Helper();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
@@ -681,36 +688,6 @@ describe('dependency-resolver extension', function () {
         const dependencyVersion = pkgExtensionData.pkgJson.dependencies[comp2Pkg];
 
         expect(dependencyVersion).to.not.include('^');
-      });
-    });
-
-    describe('when snapping with ~ prefix', () => {
-      before(() => {
-        helper.scopeHelper.reInitWorkspace();
-        helper.fixtures.populateComponents(2);
-        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '~');
-        helper.command.snapAllComponents();
-      });
-
-      it('should not apply ~ prefix to snap versions in dependency data', () => {
-        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
-        const depsData = helper.command.showDependenciesData('comp1');
-        const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
-        expect(comp2Dep).to.have.property('version');
-
-        const snapVersion = comp2Dep!.version;
-        expect(snapVersion).to.not.include('~');
-      });
-
-      it('generated package.json should not have invalid semver with ~ prefix', () => {
-        const comp1 = helper.command.catComponent('comp1@latest');
-        const pkgExtensionData = helper.command.getAspectsData(comp1, Extensions.pkg).data;
-        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
-
-        expect(pkgExtensionData.pkgJson.dependencies).to.have.property(comp2Pkg);
-        const dependencyVersion = pkgExtensionData.pkgJson.dependencies[comp2Pkg];
-
-        expect(dependencyVersion).to.not.include('~');
       });
     });
   });

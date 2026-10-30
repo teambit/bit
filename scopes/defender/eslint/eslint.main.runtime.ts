@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 // import { Linter as ESLinter, ESLint as ESLintLib } from 'eslint';
 import type { ESLint as ESLintLib } from 'eslint';
 import type { Linter, LinterContext, LinterMain } from '@teambit/linter';

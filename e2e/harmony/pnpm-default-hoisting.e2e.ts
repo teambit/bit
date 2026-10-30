@@ -1,16 +1,12 @@
 import { expect } from 'chai';
 import path from 'path';
-import type { Modules } from '@pnpm/installing.modules-yaml';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-async function readModulesManifest(modulesDir: string): Promise<Modules | null> {
-  const m = await import('@pnpm/installing.modules-yaml');
-  return m.readModulesManifest(modulesDir);
-}
+import type { ModulesManifest } from '../modules-manifest';
+import { readModulesManifest } from '../modules-manifest';
 
 describe('pnpm install with default settings', function () {
   let helper: Helper;
-  let modulesState: Modules | null;
+  let modulesState: ModulesManifest | null;
   this.timeout(0);
   before(async () => {
     helper = new Helper();

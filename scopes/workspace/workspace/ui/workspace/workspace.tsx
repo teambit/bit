@@ -99,7 +99,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   if (!workspace) {
     // While the light workspace query resolves, show a full-shell skeleton instead of a blank
     // screen. The heavy per-component data (status, issues) streams in after first paint.
-    return <WorkspaceSkeleton />;
+    return <WorkspaceSkeleton isMinimal={isMinimal} showTopBar={showTopBar} />;
   }
 
   return (
@@ -136,7 +136,6 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
                   {isMinimal && <WorkspaceBreadcrumb />}
                 </div>
               )}
-              // @ts-ignore - getting an error of "Types have separate declarations of a private property 'registerFn'." for some reason after upgrading teambit.harmony/harmony from 0.4.6 to 0.4.7
               menu={menuSlot}
             />
           )}

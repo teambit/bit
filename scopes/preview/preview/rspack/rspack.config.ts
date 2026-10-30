@@ -1,5 +1,6 @@
 import { rspack, type Configuration } from '@rspack/core';
 import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
+import { excludeNodeModulesJs } from '@teambit/webpack.modules.exclude-node-modules-js';
 import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
 import { RspackManifestPlugin } from 'rspack-manifest-plugin';
 import { generateAssetManifest } from '@teambit/rspack.modules.generate-asset-manifest';
@@ -123,7 +124,7 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
         },
         {
           test: /\.(js|mjs|jsx|ts|tsx)$/,
-          exclude: /node_modules/,
+          exclude: excludeNodeModulesJs,
           use: {
             loader: 'builtin:swc-loader',
             options: {
@@ -243,7 +244,7 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
             },
             {
               // transforms admonition syntax (:::type content → :::type[content]) for mdx v3
-              loader: require.resolve('@teambit/react/dist/webpack/mdx-pre-loader.cjs'),
+              loader: require.resolve('./mdx-pre-loader.cjs'),
             },
           ],
           type: 'javascript/auto',

@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import { flatten } from 'lodash';
 import { SubMenu } from '@teambit/design.controls.menu';
 import { useThemePicker, useThemeByName } from '@teambit/base-react.themes.theme-switcher';
@@ -118,8 +118,8 @@ export class CloudUI {
                     link: 'https://support.bit.cloud',
                   },
                   {
-                    label: 'Bit Community Slack',
-                    link: 'https://join.slack.com/t/bit-dev-community/shared_invite/zt-29pmawrp1-ehfEzYbQyuAC3CNA_jYPvA',
+                    label: 'Bit Community Discord',
+                    link: 'https://discord.bit.cloud/',
                   },
                 ] as any,
               }}

@@ -7,13 +7,18 @@ import type * as WDS from 'webpack-dev-server';
 import { inspect } from 'util';
 import { WebpackAspect } from './webpack.aspect';
 
-//@ts-ignore - ignoring ts errors here because WDS.Configuration is a complex type that might break
 // between versions, leads to errors such as:
 // error TS2430: Interface 'WebpackConfigWithDevServer' incorrectly extends interface 'Configuration'.
 export interface WebpackConfigWithDevServer extends Configuration {
   devServer: WDS.Configuration;
   favicon?: string;
 }
+
+/**
+ * @deprecated duplicated by `@teambit/webpack.webpack-dev-server`'s own `WebpackDevServer`, which is
+ * what the react/node/aspect envs actually build with now. Use that package instead - depending on
+ * both pulls in two independently-resolved webpack instances.
+ */
 export class WebpackDevServer implements DevServer {
   private readonly WsDevServer: typeof WDS;
   constructor(

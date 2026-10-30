@@ -1,5 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { Workspace } from '@teambit/workspace';
@@ -18,8 +19,7 @@ import { LoggerAspect } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import { ScopeComponentsImporter } from '@teambit/legacy.scope';
-import { importAllArtifactsFromLane } from '@teambit/component.sources';
+import { ScopeComponentsImporter, importAllArtifactsFromLane } from '@teambit/legacy.scope';
 import type { InstallMain } from '@teambit/install';
 import { InstallAspect } from '@teambit/install';
 import { type ComponentID, ComponentIdList } from '@teambit/component-id';

@@ -14,6 +14,7 @@ import type {
   InvalidComponent,
   ResolveAspectsOptions,
   AspectList,
+  GetGraphIdsOpts,
 } from '@teambit/component';
 import { AspectEntry } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
@@ -42,7 +43,7 @@ import type { LaneId } from '@teambit/lane-id';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { loadConsumer } from '@teambit/legacy.consumer';
 import type { GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
-import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
+import { fileContentsForVersioning, MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { LoadFailure } from '@teambit/harmony.modules.load-trace';
@@ -64,7 +65,7 @@ import {
 import path from 'path';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import type { WatchOptions } from '@teambit/watcher';
+import type { WatchOptions } from './watch-options';
 import type { ComponentLog, Lane } from '@teambit/objects';
 import type { JsonVinyl } from '@teambit/component.sources';
 import { SourceFile, DataToPersist, PackageJsonFile } from '@teambit/component.sources';
@@ -418,7 +419,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getAutoTagInfo(changedComponents: ComponentIdList) {
-    return getAutoTagInfo(this.consumer, changedComponents);
+    return getAutoTagInfo(this, changedComponents);
   }
 
   async listAutoTagPendingComponentIds(): Promise<ComponentID[]> {
@@ -426,7 +427,7 @@ export class Workspace implements ComponentFactory {
     const modifiedComponents = (await this.modified()).map((c) => c.id);
     const newComponents = (await componentsList.listNewComponents()) as ComponentIdList;
     if (!modifiedComponents || !modifiedComponents.length) return [];
-    const autoTagPending = await getAutoTagPending(this.consumer, ComponentIdList.fromArray(modifiedComponents));
+    const autoTagPending = await getAutoTagPending(this, ComponentIdList.fromArray(modifiedComponents));
     const localOnly = this.listLocalOnly();
     const comps = autoTagPending
       .filter((autoTagComp) => !newComponents.has(autoTagComp.componentId))
@@ -635,7 +636,11 @@ export class Workspace implements ComponentFactory {
     return this.buildOneGraphForComponents(ids, undefined, undefined, shouldThrowOnMissingDep);
   }
 
-  async getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<CompIdGraph> {
+  async getGraphIds(
+    ids?: ComponentID[],
+    shouldThrowOnMissingDep = true,
+    opts: GetGraphIdsOpts = {}
+  ): Promise<CompIdGraph> {
     if (!ids || ids.length < 1) ids = this.listIds();
 
     const graphIdsFromFsBuilder = new GraphIdsFromFsBuilder(
@@ -644,7 +649,7 @@ export class Workspace implements ComponentFactory {
       this.dependencyResolver,
       shouldThrowOnMissingDep
     );
-    return graphIdsFromFsBuilder.buildGraph(ids);
+    return graphIdsFromFsBuilder.buildGraph(ids, opts);
   }
 
   async getUnavailableOnMainComponents(): Promise<ComponentID[]> {
@@ -676,7 +681,8 @@ export class Workspace implements ComponentFactory {
     const flattenedEdges = await this.scope.getFlattenedEdges(component.id);
     const versionObj = await this.scope.getBitObjectVersionById(component.id);
     if (!flattenedEdges || !versionObj) return null;
-    if (!flattenedEdges.length && versionObj.flattenedDependencies.length) {
+    const flattenedDependencies = await versionObj.loadFlattenedDependencies(this.scope.legacyScope.objects);
+    if (!flattenedEdges.length && flattenedDependencies.length) {
       // there are flattenedDependencies, so must be edges, if they're empty, it's because the component was tagged
       // with a version < ~0.0.901, so this flattenedEdges wasn't exist.
       return null;
@@ -693,7 +699,7 @@ export class Workspace implements ComponentFactory {
     const currentVersion = getCurrentVersionAsTagIfPossible();
 
     flattenedBitIdCompIdMap[component.id.changeVersion(currentVersion).toString()] = component.id;
-    versionObj.flattenedDependencies.forEach((bitId) => {
+    flattenedDependencies.forEach((bitId) => {
       flattenedBitIdCompIdMap[bitId.toString()] = bitId;
     });
     const getCompIdByIdStr = (idStr: string): ComponentID => {
@@ -771,7 +777,9 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     const compDirAbs = path.join(this.path, compDir);
     const sourceFilesVinyls = bitMapEntry.files.map((file) => {
       const filePath = path.join(compDirAbs, file.relativePath);
-      return SourceFile.load(filePath, compDirAbs, this.path, {});
+      const sourceFile = SourceFile.load(filePath, compDirAbs, this.path, {});
+      sourceFile.contents = fileContentsForVersioning(bitMapEntry, file.relativePath, sourceFile.contents);
+      return sourceFile;
     });
     const repo = this.scope.legacyScope.objects;
     const getModelFiles = async () => {
@@ -869,14 +877,18 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   clearComponentCache(id: ComponentID) {
-    this.componentLoader.clearComponentCache(id);
-    this.componentStatusLoader.clearOneComponentCache(id);
-    this.consumer.clearOneComponentCache(id);
-    this._componentList = new ComponentsList(this);
+    this.clearComponentsCache([id]);
   }
 
   clearComponentsCache(ids: ComponentID[]) {
-    ids.forEach((id) => this.clearComponentCache(id));
+    if (!ids.length) return; // nothing to clear, avoid scanning the caches for nothing
+    const uniqueIds = uniqBy(ids, (id) => id.toString());
+    this.componentLoader.clearComponentsCache(uniqueIds);
+    uniqueIds.forEach((id) => {
+      this.componentStatusLoader.clearOneComponentCache(id);
+      this.consumer.clearOneComponentCache(id);
+    });
+    this._componentList = new ComponentsList(this);
   }
 
   async warmCache() {
@@ -2466,20 +2478,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   async resolveEnvManifest(envId: string, envExtendsDeps: LegacyDependency[] = []): Promise<EnvJsonc> {
     if (this.aspectLoader.isCoreEnv(envId)) return {};
 
-    const splitted = envId.split('@');
-    const envIdWithVersion = envId.startsWith('@') ? `@${splitted[1]}` : splitted[0];
-    const foundEnv = envExtendsDeps.find(
-      (dep) => dep.id.toStringWithoutVersion() === envIdWithVersion || dep.packageName === envIdWithVersion
-    );
-    let id = envId;
-    if (foundEnv?.id) {
-      if (foundEnv.id.version.includes('-new')) {
-        id = foundEnv.id.toStringWithoutVersion();
-      } else {
-        id = foundEnv.id.toString();
-      }
-    }
-
+    const id = this.envs.getParentEnvIdToLoad(envId, envExtendsDeps);
     const resolvedEnvComponentId = await this.resolveComponentId(id);
 
     // We need to load the env component with the slot and extensions to get the env manifest of the parent

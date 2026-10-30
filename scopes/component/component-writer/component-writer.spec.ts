@@ -1,0 +1,437 @@
+import { expect } from 'chai';
+import fs from 'fs-extra';
+import os from 'os';
+import path from 'path';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
+import { WORKSPACE_JSONC } from '@teambit/legacy.constants';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import ComponentWriter, { isOwnedByNestedComponent } from './component-writer';
+import { ComponentWriterMain } from './component-writer.main.runtime';
+
+describe('isOwnedByNestedComponent', () => {
+  const nested = ['packages/comp1', 'packages/comp2'];
+  it('should claim a file inside a nested component', () => {
+    expect(isOwnedByNestedComponent('packages/comp1/index.js', nested)).to.be.true;
+  });
+  it('should claim a file deeper inside a nested component', () => {
+    expect(isOwnedByNestedComponent('packages/comp1/src/util.js', nested)).to.be.true;
+  });
+  it('should leave a file the root owns', () => {
+    expect(isOwnedByNestedComponent('packages/readme.md', nested)).to.be.false;
+    expect(isOwnedByNestedComponent('workspace.jsonc', nested)).to.be.false;
+  });
+  it('should not claim a directory that merely shares a prefix with a nested one', () => {
+    expect(isOwnedByNestedComponent('packages/comp10/index.js', nested)).to.be.false;
+  });
+  it('should claim the nested root-dir itself, a file cannot sit where the directory is', () => {
+    // an older root carries it as a plain file, from before the component was extracted there.
+    // writing it over the directory fails the checkout with EISDIR - see isOwnedByNestedComponent
+    expect(isOwnedByNestedComponent('packages/comp1', nested)).to.be.true;
+  });
+  it('should not claim a sibling whose name merely starts with a nested one', () => {
+    expect(isOwnedByNestedComponent('packages/comp10', nested)).to.be.false;
+  });
+  it('should claim nothing when no component is nested, the ordinary case', () => {
+    expect(isOwnedByNestedComponent('packages/comp1/index.js', [])).to.be.false;
+  });
+});
+
+describe('populateFilesToWriteToComponentDir', () => {
+  /**
+   * the method only reads these fields off the writer. building it through the constructor would
+   * need a consumer and a scope, which say nothing about the file-set it produces.
+   */
+  function writerFor(files: string[], nestedRootDirs: string[], writeToPath = '.') {
+    const written: string[] = [];
+    const writer = Object.create(ComponentWriter.prototype);
+    Object.assign(writer, {
+      writeToPath,
+      override: true,
+      writeConfig: false,
+      deleteBitDirContent: false,
+      bitMap: { getNestedRootDirs: () => nestedRootDirs },
+      component: {
+        files: files.map((relative) => ({ relative })),
+        dataToPersist: { addFile: (file: any) => written.push(file.relative) },
+        license: undefined,
+      },
+    });
+    return { writer, written };
+  }
+
+  it('should not write over the source of a component nested in the root, an old version still carries it', async () => {
+    // the root was snapped before comp1 was extracted out of it, so that version holds comp1's files
+    const { writer, written } = writerFor(
+      ['workspace.jsonc', 'packages/comp1/index.js', 'readme.md'],
+      ['packages/comp1']
+    );
+    await writer.populateFilesToWriteToComponentDir();
+    expect(written).to.deep.equal(['workspace.jsonc', 'readme.md']);
+  });
+
+  it('should write every file when nothing is nested', async () => {
+    const { writer, written } = writerFor(['workspace.jsonc', 'packages/comp1/index.js'], []);
+    await writer.populateFilesToWriteToComponentDir();
+    expect(written).to.deep.equal(['workspace.jsonc', 'packages/comp1/index.js']);
+  });
+
+  it('should keep skipping the live .bitmap, which is never written from a versioned copy', async () => {
+    const { writer, written } = writerFor(['.bitmap', 'workspace.jsonc'], []);
+    await writer.populateFilesToWriteToComponentDir();
+    expect(written).to.deep.equal(['workspace.jsonc']);
+  });
+
+  it('should skip it for an ordinary component too, no component but the root ever tracks one', async () => {
+    // the scan drops a `.bitmap` at any other component's root (see getScanIgnorePatterns), so what a
+    // component versions is what a write lands
+    const { writer, written } = writerFor(['.bitmap', 'index.js'], [], 'comp1');
+    await writer.populateFilesToWriteToComponentDir();
+    expect(written).to.deep.equal(['index.js']);
+  });
+});
+
+describe('the workspace-root import preflight checks', () => {
+  /**
+   * the checks read the incoming files, the nested root-dirs and the paths on disk. going through
+   * writeMany would need a workspace and a scope, which say nothing about which paths they look at.
+   */
+  function runtimeFor(nestedRootDirs: string[], workspacePath: string) {
+    const main = Object.create(ComponentWriterMain.prototype);
+    // `consumer` is a getter on the class, so it is defined rather than assigned
+    Object.defineProperty(main, 'consumer', {
+      value: {
+        bitMap: { getNestedRootDirs: () => nestedRootDirs, components: [] },
+        toAbsolutePath: (relativePath: string) => path.join(workspacePath, relativePath),
+      },
+    });
+    return main;
+  }
+  const componentFor = (files: string[]) =>
+    ({ id: { toString: () => 'my-scope/ws-root' }, files: files.map((relative) => ({ relative })) }) as any;
+
+  let workspacePath: string;
+  beforeEach(async () => {
+    workspacePath = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-preflight-'));
+  });
+  afterEach(async () => {
+    await fs.remove(workspacePath);
+  });
+
+  it('should ignore a symlink inside a nested component, the write never goes through it', async () => {
+    // an older root version still carries comp1's files, but the writer leaves that directory alone
+    await fs.ensureDir(path.join(workspacePath, 'packages'));
+    await fs.symlink(os.tmpdir(), path.join(workspacePath, 'packages/comp1'));
+    const main = runtimeFor(['packages/comp1'], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['packages/comp1/index.js']))).to.not.throw();
+  });
+
+  it('should ignore the live .bitmap, which the write does not land either', async () => {
+    // a workspace whose own .bitmap is a symbolic link must not fail an import over a file the writer
+    // skips anyway (see isWorkspaceMapFile)
+    const target = path.join(workspacePath, 'elsewhere');
+    await fs.ensureDir(target);
+    await fs.symlink(target, path.join(workspacePath, '.bitmap'));
+    const main = runtimeFor([], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['.bitmap', 'README.md']))).to.not.throw();
+  });
+
+  it('should refuse a symlinked component.json when the config file is written', async () => {
+    // it is generated rather than versioned, so it is not among the component's files - it still
+    // lands at the root, and the writer forces override on it
+    const target = path.join(workspacePath, 'elsewhere');
+    await fs.ensureDir(target);
+    await fs.symlink(target, path.join(workspacePath, 'component.json'));
+    const main = runtimeFor([], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['README.md']), true)).to.throw('is a symbolic link');
+  });
+
+  it('should refuse it even when the caller asked for no config file, the writer turns it on itself', async () => {
+    // a config file already at the rootDir makes the writer write one whatever the caller passed
+    // (see populateComponentsFilesToWrite), and a symlink pointing at an existing file is read as
+    // one. so the flag does not settle whether a write lands here.
+    const target = path.join(workspacePath, 'elsewhere');
+    await fs.ensureDir(target);
+    await fs.symlink(target, path.join(workspacePath, 'component.json'));
+    const main = runtimeFor([], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['README.md']), false)).to.throw('is a symbolic link');
+  });
+
+  it('should leave a broken symlink alone, the writer does not write through it either', async () => {
+    // it resolves to nothing, so the writer does not read it as an existing config file and no
+    // config is written. failing the whole import over it would be for nothing.
+    await fs.symlink(path.join(workspacePath, 'missing'), path.join(workspacePath, 'component.json'));
+    const main = runtimeFor([], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['README.md']), false)).to.not.throw();
+  });
+
+  it('should still refuse a symlink on the way to a file the root does own', async () => {
+    await fs.symlink(os.tmpdir(), path.join(workspacePath, 'docs'));
+    const main = runtimeFor(['packages/comp1'], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['docs/readme.md']))).to.throw('is a symbolic link');
+  });
+
+  it('should refuse a symlink at the file itself, not only above it', async () => {
+    const outsideFile = path.join(workspacePath, 'theirs.md');
+    await fs.writeFile(outsideFile, 'theirs\n');
+    await fs.symlink(outsideFile, path.join(workspacePath, 'README.md'));
+    const main = runtimeFor([], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['README.md']))).to.throw('is a symbolic link');
+  });
+
+  it('should refuse a dangling symlink, whose target does not exist, rather than write through it', async () => {
+    // a stat would say there is nothing there and let the write create the target; the check lstats
+    await fs.symlink(path.join(workspacePath, 'missing-target'), path.join(workspacePath, 'README.md'));
+    const main = runtimeFor([], workspacePath);
+    expect(() => main.throwForSymlinksInTheWay(componentFor(['README.md']))).to.throw('is a symbolic link');
+  });
+});
+
+describe('the conflict check at the workspace root', () => {
+  /** the same harness as above, with a say in what the map already tracks */
+  function runtimeTracking(components: any[], workspacePath: string) {
+    const main = Object.create(ComponentWriterMain.prototype);
+    Object.defineProperty(main, 'consumer', {
+      value: {
+        bitMap: { getNestedRootDirs: () => [], components },
+        toAbsolutePath: (relativePath: string) => path.join(workspacePath, relativePath),
+      },
+    });
+    return main;
+  }
+  const rootCarrying = (relative: string, content: string) =>
+    ({
+      id: { toString: () => 'my-scope/ws-root' },
+      files: [{ relative, contents: Buffer.from(content) }],
+    }) as any;
+
+  let workspacePath: string;
+  beforeEach(async () => {
+    workspacePath = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-root-conflict-'));
+  });
+  afterEach(async () => {
+    await fs.remove(workspacePath);
+  });
+
+  it('should replace the workspace.jsonc "bit init" generated, while nothing is tracked yet', async () => {
+    await fs.outputFile(path.join(workspacePath, WORKSPACE_JSONC), 'generated by bit init\n');
+    const main = runtimeTracking([], workspacePath);
+    expect(() =>
+      main.throwForOccupiedWorkspaceRoot(rootCarrying(WORKSPACE_JSONC, 'the versioned one\n'), {
+        throwForExistingDir: true,
+      })
+    ).to.not.throw();
+  });
+
+  it('should protect the workspace.jsonc of a workspace that already tracks something', async () => {
+    // past `bit init` the file is the user's own, like every other file at the root, so replacing it
+    // takes --override. a map holding one component is not a freshly initialized workspace, whichever
+    // component it is - the exemption is about what `bit init` just wrote, not about who owns the root
+    await fs.outputFile(path.join(workspacePath, WORKSPACE_JSONC), 'the user edited this\n');
+    const main = runtimeTracking([{ id: { isEqualWithoutVersion: () => true } }], workspacePath);
+    expect(() =>
+      main.throwForOccupiedWorkspaceRoot(rootCarrying(WORKSPACE_JSONC, 'the versioned one\n'), {
+        throwForExistingDir: true,
+      })
+    ).to.throw(WORKSPACE_JSONC);
+  });
+});
+
+describe('the guard on what may be written to the workspace root', () => {
+  // workspace-root's own spec covers the marker; a stub detector stands in for it here
+  const extensions = ExtensionDataList.fromArray([]);
+  const component = { id: { toString: () => 'my-scope/comp1' }, extensions } as any;
+  const writerWith = (detector?: (exts: ExtensionDataList) => boolean) => {
+    const main = Object.create(ComponentWriterMain.prototype);
+    if (detector) main.registerWorkspaceRootDetector(detector);
+    return main;
+  };
+
+  it('should refuse a component the detector does not take for a workspace root', () => {
+    expect(() => writerWith(() => false).throwForNonWorkspaceRootComponent(component)).to.throw(
+      'not a workspace-root component'
+    );
+  });
+
+  it('should accept a component the detector takes for a workspace root', () => {
+    expect(() => writerWith((exts) => exts === extensions).throwForNonWorkspaceRootComponent(component)).to.not.throw();
+  });
+
+  it('should refuse any component when no detector is registered', () => {
+    expect(() => writerWith().throwForNonWorkspaceRootComponent(component)).to.throw('not a workspace-root component');
+  });
+});
+
+describe('writing the workspace-root component in the same batch as a component nested in it', () => {
+  /**
+   * the batch goes through fixDirsIfNested, which moves a component aside when another one is to be
+   * written inside it. the root must come out of it untouched: it owns "." by definition, and the
+   * components below it are the normal case rather than a collision.
+   */
+  function runFixDirs(writeToPaths: string[], existingRootDirs: string[] = []) {
+    const main = Object.create(ComponentWriterMain.prototype);
+    Object.defineProperty(main, 'workspace', { value: { bitMap: { getAllRootDirs: () => existingRootDirs } } });
+    const writers = writeToPaths.map((writeToPath) => ({
+      writeToPath,
+      component: { id: { scope: 'my-org.my-scope' } },
+    }));
+    main.fixDirsIfNested(writers);
+    return writers.map((writer) => writer.writeToPath);
+  }
+
+  it('should leave both where they were asked to go', () => {
+    expect(runFixDirs([WORKSPACE_ROOT_DIR, 'packages/comp1'])).to.deep.equal([WORKSPACE_ROOT_DIR, 'packages/comp1']);
+  });
+
+  it('should leave the root alone when the workspace already tracks a component inside it', () => {
+    expect(runFixDirs([WORKSPACE_ROOT_DIR], ['packages/comp1'])).to.deep.equal([WORKSPACE_ROOT_DIR]);
+  });
+
+  it('should leave a component alone when the workspace already tracks the root', () => {
+    expect(runFixDirs(['packages/comp1'], [WORKSPACE_ROOT_DIR])).to.deep.equal(['packages/comp1']);
+  });
+
+  it('should still move an ordinary component that another one is written inside of', () => {
+    // the rule the root is untouched by, so the cases above are not passing on an inert branch
+    expect(runFixDirs(['bar', 'bar/foo'])).to.deep.equal(['bar_1', 'bar/foo']);
+  });
+});
+
+describe('deciding whether the directory-conflict check applies to a component', () => {
+  /**
+   * the decision turns on whether *this* component was asked to go somewhere, which is not the same
+   * question as the directory it ends up at: without --path that directory is the default one, and
+   * with --path-per-id the batch-level path answers for the wrong component. so it is resolved the
+   * same way the write itself resolves it.
+   */
+  function shouldSkip(opts: Record<string, any>, rootDir?: string, dir = 'some-dir') {
+    const main = Object.create(ComponentWriterMain.prototype);
+    const component = { id: { toStringWithoutVersion: () => 'my-scope/comp1' } };
+    return main.shouldSkipDirConflictCheck(component, dir, rootDir === undefined ? undefined : { rootDir }, opts);
+  }
+
+  it('should check a component asked for a directory it does not already own', () => {
+    expect(shouldSkip({ writeToPath: 'some-dir' }, 'other-dir')).to.be.false;
+  });
+
+  it('should skip a component asked for the directory it holds today, it overrides itself in place', () => {
+    expect(shouldSkip({ writeToPath: 'some-dir' }, 'some-dir')).to.be.true;
+  });
+
+  it('should skip a tracked component that was asked for nothing, it goes to its default directory', () => {
+    expect(shouldSkip({}, 'other-dir')).to.be.true;
+  });
+
+  it('should take the path asked for this component, not the one asked for the batch', () => {
+    expect(shouldSkip({ writeToPathPerId: { 'my-scope/comp1': 'some-dir' } }, 'other-dir')).to.be.false;
+  });
+
+  it('should check a component that is not tracked yet, whatever was asked for it', () => {
+    expect(shouldSkip({})).to.be.false;
+  });
+
+  it('should skip everything when nothing is written to the filesystem at all', () => {
+    expect(shouldSkip({ skipWritingToFs: true, writeToPath: 'some-dir' }, 'other-dir')).to.be.true;
+  });
+
+  it('should treat a component already tracked at the workspace root as any other tracked directory', () => {
+    // re-importing a tracked component updates the files it owns, and the root is not an exception
+    // to that. what needs --override is a component arriving at a root someone else's files are at,
+    // which has no map entry yet - the !componentMap branch of throwErrorWhenDirectoryNotEmpty is
+    // where that is decided, and this skip never reaches past it.
+    expect(shouldSkip({}, WORKSPACE_ROOT_DIR, WORKSPACE_ROOT_DIR)).to.be.true;
+    expect(shouldSkip({ writeToPath: WORKSPACE_ROOT_DIR }, WORKSPACE_ROOT_DIR, WORKSPACE_ROOT_DIR)).to.be.true;
+  });
+});
+
+describe('the destination of an already tracked workspace-root component', () => {
+  it('should be the workspace root, whatever path the caller derived without --path', async () => {
+    const writer = Object.create(ComponentWriter.prototype);
+    Object.assign(writer, {
+      // what composeRelativeComponentPath returns when no --path is given
+      writeToPath: 'my-scope/ws-root',
+      override: true,
+      writeConfig: false,
+      skipUpdatingBitMap: true,
+      existingComponentMap: { rootDir: WORKSPACE_ROOT_DIR, getRootDir: () => WORKSPACE_ROOT_DIR },
+      bitMap: { getNestedRootDirs: () => [] },
+      consumer: undefined,
+      component: {
+        id: { toString: () => 'my-scope/ws-root' },
+        isLegacy: false,
+        files: [{ relative: 'README.md', basename: 'README.md', path: 'README.md', updatePaths: () => {} }],
+      },
+    });
+    await writer.populateComponentsFilesToWrite();
+    expect(writer.writeToPath).to.equal(WORKSPACE_ROOT_DIR);
+  });
+});
+
+describe('the default dir of a component whose dir is used by a component of another owner', () => {
+  const idOf = (id: string) => ({
+    scope: id.split('/')[0],
+    toString: () => id,
+    toStringWithoutVersion: () => id,
+    isEqualWithoutVersion: (other: { toString: () => string }) => other.toString() === id,
+  });
+  const componentOf = (id: string) => ({ id: idOf(id) }) as any;
+  /** the default "defaultDirectory" template, {scope}/{name}, which omits the owner */
+  const composeRelativeComponentPath = (id: { toString: () => string }) => {
+    const [scopeId, ...name] = id.toString().split('/');
+    return [scopeId.split('.').pop(), ...name].join('/');
+  };
+  function runtimeTracking(rootDirs: Record<string, string>, workspacePath: string) {
+    const main = Object.create(ComponentWriterMain.prototype);
+    const warnings: string[] = [];
+    Object.defineProperty(main, 'consumer', {
+      value: {
+        bitMap: {
+          getComponentIdByRootPath: (rootDir: string) => (rootDirs[rootDir] ? idOf(rootDirs[rootDir]) : undefined),
+          getAllTrackDirs: () => rootDirs,
+        },
+        composeRelativeComponentPath,
+        toAbsolutePath: (relativePath: string) => path.join(workspacePath, relativePath),
+      },
+    });
+    Object.defineProperty(main, 'logger', { value: { consoleWarning: (msg: string) => warnings.push(msg) } });
+    return { main, warnings };
+  }
+
+  let workspacePath: string;
+  beforeEach(async () => {
+    workspacePath = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-default-dir-'));
+  });
+  afterEach(async () => {
+    await fs.remove(workspacePath);
+  });
+
+  it('should prefix the dir with the owner name and warn about it', () => {
+    const { main, warnings } = runtimeTracking({ 'ui/button': 'org1.ui/button' }, workspacePath);
+    expect(main.getDefaultDir(componentOf('org2.ui/button'), true)).to.equal('org2/ui/button');
+    expect(warnings[0]).to.have.string('org1.ui/button');
+  });
+  it('should keep the default dir when it is free', () => {
+    const { main } = runtimeTracking({}, workspacePath);
+    expect(main.getDefaultDir(componentOf('org2.ui/button'), true)).to.equal('ui/button');
+  });
+  it('should keep the default dir when it is used by the same component', () => {
+    const { main } = runtimeTracking({ 'ui/button': 'org2.ui/button' }, workspacePath);
+    expect(main.getDefaultDir(componentOf('org2.ui/button'), true)).to.equal('ui/button');
+  });
+  it('should keep the default dir when the owner dir is not empty, so the conflict check reports it', async () => {
+    await fs.outputFile(path.join(workspacePath, 'org2/ui/button/index.js'), '');
+    const { main } = runtimeTracking({ 'ui/button': 'org1.ui/button' }, workspacePath);
+    expect(main.getDefaultDir(componentOf('org2.ui/button'), true)).to.equal('ui/button');
+  });
+  it('should keep the default dir when the owner dir is nested in a tracked dir, which would move it unchecked', () => {
+    const { main } = runtimeTracking({ 'ui/button': 'org1.ui/button', 'org2/ui': 'org2.misc/ui' }, workspacePath);
+    expect(main.getDefaultDir(componentOf('org2.ui/button'), true)).to.equal('ui/button');
+  });
+  it('should keep the default dir when the scope has no owner', () => {
+    const { main } = runtimeTracking({ 'my-scope/button': 'other-scope/button' }, workspacePath);
+    expect(main.getDefaultDir(componentOf('my-scope/button'), true)).to.equal('my-scope/button');
+  });
+  it('should not look for another dir when asked not to, e.g. the component is already in .bitmap', () => {
+    const { main } = runtimeTracking({ 'ui/button': 'org1.ui/button' }, workspacePath);
+    expect(main.getDefaultDir(componentOf('org2.ui/button'), false)).to.equal('ui/button');
+  });
+});

@@ -1,7 +1,7 @@
 import { mergeSchemas } from '@graphql-tools/schema';
 import NoIntrospection from 'graphql-disable-introspection';
 import { GraphQLModule } from '@graphql-modules/core';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { Logger, LoggerMain } from '@teambit/logger';
@@ -172,9 +172,7 @@ export class GraphqlMain {
           this.logger.error('graphql got an error during running the following query:', req.body);
           this.logger.error('graphql error ', err);
           return Object.assign(err, {
-            // @ts-ignore
             ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
-            // @ts-ignore
             HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err?.originalError?.code,
           });
         });

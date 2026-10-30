@@ -1,9 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-
-chai.use(chaiFs);
 
 /**
  * Reproduces the `bit ci pr` (reuse-lane) failure where an unmodified dependency was BUILT but never

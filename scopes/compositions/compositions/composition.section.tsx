@@ -1,5 +1,6 @@
 import type { Section } from '@teambit/component';
 import React from 'react';
+import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import { Compositions } from './compositions';
 import type {
   CompositionsUI,
@@ -26,6 +27,11 @@ export class CompositionsSection implements Section {
   navigationLink = {
     href: '~compositions',
     children: 'Preview',
+    displayName: 'Preview',
+    // Preview is the most important view in minimal (Hope) mode: a text tab right after Overview on
+    // desktop, and on mobile an icon pinned next to the compact "More" menu that holds Overview.
+    primaryInMinimalMode: true,
+    minimalMobileChildren: <MenuWidgetIcon icon="preview" tooltipContent="Preview" />,
   };
 
   route = {

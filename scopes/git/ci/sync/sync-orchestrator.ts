@@ -1,4 +1,5 @@
 import { formatTitle, formatWarningSummary } from '@teambit/cli';
+import fs from 'fs';
 import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
 import type { Logger } from '@teambit/logger';
@@ -8,9 +9,10 @@ import type { CheckoutMain } from '@teambit/checkout';
 import { CiAspect } from '../ci.aspect';
 import type { CiMain, CiWorkspaceConfig } from '../ci.main.runtime';
 import { git } from '../git';
-import type { CiSyncConfig } from './sync-config';
+import type { CiSyncConfig, LaneTarget } from './sync-config';
 import {
   branchToLaneName,
+  isValidGitBranchName,
   laneNameToBranch,
   parseLaneTarget,
   resolveSyncConfig,
@@ -21,7 +23,9 @@ import { HALT_SUMMARY_PREFIX, REFUSED_SUMMARY_PREFIX, LaneSyncExecutor } from '.
 import { MainSyncExecutor } from './main-sync-executor';
 import { selectGitHostProvider } from './git-host-provider';
 import { gitRepoRoot, isNonContentPath, listRemoteBranches } from './git-ops';
-import { deriveOwnerRepo, renderInitChecklist, scaffoldWorkflowFiles } from './init-scaffold';
+import { readBranchLanePointer } from './sync-state';
+import { chooseInitDefaultBranch, deriveOwnerRepo, renderInitReport, scaffoldWorkflowFiles } from './init-scaffold';
+import { UNKNOWN_REPO, scaffoldAgentsMd } from './agents-md';
 
 /**
  * Refuse a `--dry-run` whose plan would be computed by force-checking-out branches over uncommitted
@@ -141,6 +145,7 @@ export class SyncOrchestrator {
     const mainSync = new MainSyncExecutor({
       checkout: this.deps.checkout,
       lanes: this.deps.lanes,
+      workspace: this.deps.workspace,
       ci: this.deps.ci,
       logger: this.deps.logger,
       gitHost,
@@ -167,11 +172,8 @@ export class SyncOrchestrator {
       if (!laneName) return `branch ${branch} does not map to a valid lane name; nothing to do`;
       const skipReason = this.laneNotSyncableReason(laneName, cfg, mainLaneName, defaultBranch);
       if (skipReason) return `${skipReason} (branch ${branch})`;
-      // A branch name carries no scope, so this path can only resolve the lane against `defaultScope`;
-      // resolving a foreign-hosted lane to the wrong scope is safe (no-op, never a deletion).
-      return this.summarizeSync([
-        await laneSync.syncLane({ hostScope: defaultScope, name: laneName }, { dryRun: opts.dryRun }),
-      ]);
+      const target = await this.branchLaneTarget(laneSync, branch, laneName);
+      return this.summarizeSync([await laneSync.syncLane(target, { dryRun: opts.dryRun })]);
     }
 
     if (opts.lane) {
@@ -186,19 +188,17 @@ export class SyncOrchestrator {
     // `--all` (also the no-arguments default): every mapped lane, then the main scope. Sequential on
     // purpose — the lanes share one workspace and one git checkout.
     const lines: string[] = [];
-    const { lanes: lanesToSync, errors } = await this.listLanesToSync(cfg, mainLaneName, defaultBranch);
+    const { lanes: lanesToSync, errors } = await this.listLanesToSync(cfg, mainLaneName, defaultBranch, laneSync);
     lines.push(...errors);
     this.deps.logger.console(
       formatTitle(
         `Reconciling ${lanesToSync.length} mapped lane(s) of ${defaultScope}` +
-          `${lanesToSync.length ? `: ${lanesToSync.join(', ')}` : ''}`
+          `${lanesToSync.length ? `: ${lanesToSync.map(({ name }) => name).join(', ')}` : ''}`
       )
     );
-    for (const laneName of lanesToSync) {
-      // Every enumerated target is hosted on `defaultScope` by construction; foreign-hosted lanes are
-      // explicit-target only.
+    for (const target of lanesToSync) {
       // oxlint-disable-next-line no-await-in-loop
-      lines.push(await laneSync.syncLane({ hostScope: defaultScope, name: laneName }, { dryRun: opts.dryRun }));
+      lines.push(await laneSync.syncLane(target, { dryRun: opts.dryRun }));
     }
     lines.push(await mainSync.syncMain({ dryRun: opts.dryRun }));
     return this.summarizeSync(lines);
@@ -206,11 +206,18 @@ export class SyncOrchestrator {
 
   /**
    * `bit ci sync --init` — one-command onboarding: scaffolds the two workflow files, adds the sync
-   * config block to workspace.jsonc if missing, and prints the manual-steps checklist. Safe to
-   * re-run: existing files are skipped, an existing config block is left alone; it never reconciles.
+   * config block to workspace.jsonc if missing, puts the sync rules for coding agents into AGENTS.md,
+   * and returns the report of the steps left. Safe to re-run: existing files are skipped, an existing
+   * config block or AGENTS.md sync section is left alone; it never reconciles.
    */
   private async syncInit(): Promise<string> {
-    const defaultBranch = await this.deps.ci.getDefaultBranchName();
+    const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
+    const origin = typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined;
+    // The remote knows the default branch. When it can't answer (no origin, a repository not pushed
+    // yet, a server out of reach), guess: the checked-out branch when it's main or master, else main.
+    // A feature branch is never the guess: it would go into the workflows' branch filters.
+    const detectedBranch = await this.deps.ci.detectDefaultBranchName();
+    const defaultBranch = chooseInitDefaultBranch(detectedBranch, await this.currentBranchOr(''));
 
     // Workflows belong to the repository, not the workspace: GitHub only discovers them at
     // `<repo-root>/.github/workflows`, and a bit workspace may be a subdirectory.
@@ -224,30 +231,102 @@ export class SyncOrchestrator {
       );
     }
 
-    const fileOutcomes = scaffoldWorkflowFiles(scaffoldRoot, defaultBranch);
-    // Report the path relative to where the user is standing, not to the workspace.
-    const displayPath = (relativePath: string) => {
-      const abs = path.join(scaffoldRoot, relativePath);
-      const fromCwd = path.relative(process.cwd(), abs);
-      return fromCwd && !fromCwd.startsWith('..') ? fromCwd : abs;
-    };
-    const fileLines = fileOutcomes.map((outcome) =>
-      outcome.status === 'written'
-        ? `wrote ${displayPath(outcome.relativePath)} (default branch: ${defaultBranch})`
-        : `skipped ${displayPath(outcome.relativePath)} (already exists — bit ci sync --init never overwrites)`
+    // A workspace below the repository root: the actions must chdir into it (`ws-dir`).
+    // Real paths: git reports the root with symlinks resolved (macOS `/tmp` is `/private/tmp`).
+    const realPath = (p: string) => (fs.existsSync(p) ? fs.realpathSync(p) : p);
+    const wsDir = path.relative(realPath(scaffoldRoot), realPath(this.deps.workspace.path)).split(path.sep).join('/');
+    const fileOutcomes = scaffoldWorkflowFiles(
+      scaffoldRoot,
+      defaultBranch,
+      wsDir && !wsDir.startsWith('..') ? wsDir : undefined
     );
-
+    // Report the path relative to where the user is standing (`../../.github/...` from a nested
+    // workspace), not to the workspace, so it is right to paste. Absolute only across drives.
+    const displayPath = (abs: string) => {
+      const fromCwd = path.relative(process.cwd(), abs);
+      return fromCwd && !path.isAbsolute(fromCwd) ? fromCwd : abs;
+    };
     const configAdded = await this.ensureSyncConfigBlock();
-    const configLine = configAdded
-      ? 'added "teambit.git/ci": { "sync": {} } to workspace.jsonc'
-      : 'workspace.jsonc already configures "teambit.git/ci".sync — left untouched';
+    // AGENTS.md belongs to the workspace, where agents run bit commands.
+    const ownerRepo = deriveOwnerRepo(origin);
+    const agentsOutcome = scaffoldAgentsMd(this.deps.workspace.path, {
+      scope: this.deps.workspace.defaultScope ?? '<owner>.<scope>',
+      repo: ownerRepo
+        ? `${ownerRepo.host === 'github.com' ? '' : `${ownerRepo.host}/`}${ownerRepo.owner}/${ownerRepo.repo}`
+        : UNKNOWN_REPO,
+      defaultBranch,
+    });
+    // No commit yet: the first commit must take the whole workspace, not only the files --init wrote.
+    const repoHasCommits = await git
+      .raw(['rev-parse', '--verify', '--quiet', 'HEAD'])
+      .then((out) => out.trim().length > 0)
+      .catch(() => false);
 
-    const remoteUrl = await git.remote(['get-url', 'origin']).catch(() => undefined);
-    const ownerRepo = deriveOwnerRepo(typeof remoteUrl === 'string' ? remoteUrl.trim() : undefined);
+    // What step 1 must stage: of the files --init handles, those git shows as new or changed. One that
+    // .gitignore matches is listed apart, because `git add` refuses an ignored path named on the command line.
+    const handled = [
+      ...fileOutcomes.map((outcome) => path.join(scaffoldRoot, outcome.relativePath)),
+      path.join(this.deps.workspace.path, 'workspace.jsonc'),
+      path.join(this.deps.workspace.path, agentsOutcome.relativePath),
+    ];
+    const toStage: string[] = [];
+    const ignored: string[] = [];
+    if (repoRoot) {
+      for (const abs of handled) {
+        // Ignored first: `git status` hides an ignored file, so it would look unchanged. `check-ignore`
+        // skips tracked files and prints the path only when it is ignored (it exits 1 otherwise). It
+        // needs no commit, and the first commit's `git add -A` skips an ignored file too.
+        // oxlint-disable-next-line no-await-in-loop
+        const isIgnored = await git
+          .raw(['check-ignore', '--', abs])
+          .then((out) => out.trim().length > 0)
+          .catch(() => false);
+        if (isIgnored) {
+          ignored.push(displayPath(abs));
+          continue;
+        }
+        // the first commit stages everything with `git add -A`
+        if (!repoHasCommits) continue;
+        // oxlint-disable-next-line no-await-in-loop
+        const changed = await git
+          .raw(['status', '--porcelain', '--untracked-files=all', '--', abs])
+          .then((out) => out.trim().length > 0)
+          .catch(() => true);
+        if (changed) toStage.push(displayPath(abs));
+      }
+    }
 
-    const summary = ['bit ci sync --init', ...fileLines, configLine, renderInitChecklist(ownerRepo)].join('\n');
-    this.deps.logger.console(summary);
-    return summary;
+    // Returned, not logged: the command prints what `report()` returns.
+    return renderInitReport({
+      scopeId: this.deps.workspace.defaultScope,
+      ownerRepo,
+      originUrl: origin,
+      defaultBranch,
+      defaultBranchGuessed: !detectedBranch,
+      // the workflows live at the repository root, which may be above the workspace
+      repoRootFromCwd: path.relative(process.cwd(), scaffoldRoot) || '.',
+      repoHasCommits,
+      inGitRepo: Boolean(repoRoot),
+      files: [
+        ...fileOutcomes.map((outcome) => ({
+          ...outcome,
+          displayPath: displayPath(path.join(scaffoldRoot, outcome.relativePath)),
+        })),
+        { ...agentsOutcome, displayPath: displayPath(path.join(this.deps.workspace.path, agentsOutcome.relativePath)) },
+      ],
+      configDisplayPath: displayPath(path.join(this.deps.workspace.path, 'workspace.jsonc')),
+      configAdded,
+      ...(repoRoot ? { toStage, ignored } : {}),
+    });
+  }
+
+  /** The checked-out branch when it is a usable name (not detached, not option-like), else `fallback`. */
+  private async currentBranchOr(fallback: string): Promise<string> {
+    const current = await git
+      .raw(['branch', '--show-current'])
+      .then((out) => out.trim())
+      .catch(() => '');
+    return current && isValidGitBranchName(current) ? current : fallback;
   }
 
   /**
@@ -295,7 +374,7 @@ export class SyncOrchestrator {
   }
 
   /**
-   * The lane names to reconcile on an `--all` run (sorted), plus one HALTED line per enumeration
+   * The lanes to reconcile on an `--all` run (sorted by name), plus one HALTED line per enumeration
    * failure. The list is the union of the remote's lanes AND the lane-mapped branches on `origin` —
    * a lane deleted on bit.cloud is gone from the first source, and only the branch side can make
    * `close-pr` fire for it. An enumeration failure is reported rather than thrown, so the half that
@@ -304,8 +383,9 @@ export class SyncOrchestrator {
   private async listLanesToSync(
     cfg: Required<CiSyncConfig>,
     mainLaneName: string,
-    defaultBranch: string
-  ): Promise<{ lanes: string[]; errors: string[] }> {
+    defaultBranch: string,
+    laneSync: LaneSyncExecutor
+  ): Promise<{ lanes: LaneTarget[]; errors: string[] }> {
     if (!cfg.lanes.length) {
       this.deps.logger.console(
         formatWarningSummary('sync.lanes is empty — lane mirroring is disabled, reconciling the main scope only')
@@ -313,14 +393,15 @@ export class SyncOrchestrator {
       return { lanes: [], errors: [] };
     }
     const errors: string[] = [];
-    const names = new Set<string>();
+    const targets = new Map<string, LaneTarget>();
+    const add = (target: LaneTarget) => targets.set(`${target.hostScope}/${target.name}`, target);
     const remote = this.deps.workspace.defaultScope;
 
     try {
       const lanes = await this.deps.lanes.getLanes({ remote });
       lanes.forEach((lane) => {
         const name = lane.id?.name ?? lane.name;
-        if (name) names.add(name);
+        if (name) add({ hostScope: remote, name });
       });
     } catch (e: any) {
       const msg = e?.toString() ?? '';
@@ -348,7 +429,8 @@ export class SyncOrchestrator {
           );
           continue;
         }
-        names.add(laneName);
+        // oxlint-disable-next-line no-await-in-loop
+        add(await this.branchLaneTarget(laneSync, branch, laneName));
       }
     } catch (e: any) {
       errors.push(
@@ -357,11 +439,25 @@ export class SyncOrchestrator {
       );
     }
 
-    const lanes = [...names]
-      .filter((name) => name !== mainLaneName)
-      .filter((name) => shouldSyncLane(name, cfg))
-      .sort();
+    const lanes = [...targets.values()]
+      .filter(({ name }) => name !== mainLaneName)
+      .filter(({ name }) => shouldSyncLane(name, cfg))
+      .sort((a, b) => a.name.localeCompare(b.name));
     return { lanes, errors };
+  }
+
+  /**
+   * The lane a lane-mapped branch mirrors. A branch name carries no scope, so a lane that another scope
+   * hosts is found only through the lane pointer in the branch's `.bitmap`. A pointer to a lane of
+   * another name comes from a branch cut from that lane's branch, and must not redirect this one.
+   */
+  private async branchLaneTarget(laneSync: LaneSyncExecutor, branch: string, laneName: string): Promise<LaneTarget> {
+    const defaultScope = this.deps.workspace.defaultScope;
+    // a failed fetch must not throw here: syncLane fetches again and turns the failure into a halt
+    await laneSync.fetchOnce().catch(() => undefined);
+    const pointer = await readBranchLanePointer(branch, defaultScope);
+    const target = pointer ? parseLaneTarget(pointer, defaultScope) : undefined;
+    return target?.name === laneName ? target : { hostScope: defaultScope, name: laneName };
   }
 
   /**

@@ -33,6 +33,14 @@ export interface GitHostProvider {
   comment(prNumber: number, body: string): Promise<void>;
 
   addLabel(prNumber: number, label: string): Promise<void>;
+
+  /**
+   * Update the comment containing `marker` in place, or post a new one when none exists yet
+   * (`options.createIfAbsent` defaults to true). Optional: a provider that doesn't implement this
+   * is treated as not supporting the run-summary surface — callers skip rather than fall back to a
+   * plain, never-updated `comment`, which would leave one stale copy per push.
+   */
+  upsertComment?(prNumber: number, marker: string, body: string, options?: { createIfAbsent?: boolean }): Promise<void>;
 }
 
 /** The git host to use this run, or nothing plus the reason PR operations are being skipped. */

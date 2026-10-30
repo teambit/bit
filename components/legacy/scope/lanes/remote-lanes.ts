@@ -16,6 +16,13 @@ import { logger } from '@teambit/legacy.logger';
 type Lanes = { [laneName: string]: LaneComponent[] };
 
 /**
+ * names the filesystem puts among the remote-lane files. a lane may legitimately be called any of
+ * these, so the name alone is never reason to skip one - it only excuses a file that also failed
+ * to read as a lane.
+ */
+const FS_METADATA_FILES = ['.DS_Store', 'Thumbs.db', 'desktop.ini'];
+
+/**
  * A remote lane's `scope` and `name` originate from a Lane object served by a remote scope, i.e.
  * untrusted input, and are used as path segments when composing the remote-lane refs file path. A
  * traversal shape there could escape the scope's refs directory and let a malicious/compromised
@@ -150,14 +157,49 @@ export class RemoteLanes {
     }
   }
 
+  /**
+   * every head this scope tracks for a remote, keyed by component-id, the default lane (main)
+   * included. unlike `getAllRemoteLaneIds`, nothing is filtered out - the garbage collector needs
+   * all of them, since a head we track for a remote must never be deleted.
+   */
+  async getAllRefsPerComponent(): Promise<Map<string, Ref[]>> {
+    // `dot: true` because a scope or lane name may start with a dot, and glob skips those by
+    // default. missing one here would let the collector delete a head it must keep. that also
+    // sweeps up whatever the filesystem leaves lying around, hence `nodir` and the rescue below.
+    const laneIds = await this.listLaneFiles({ dot: true, nodir: true });
+    const refsPerComponent = new Map<string, Ref[]>();
+    await pMapSeries(laneIds, async (laneId) => {
+      let laneComponents: LaneComponent[];
+      try {
+        laneComponents = await this.getRemoteLane(laneId);
+      } catch (err: any) {
+        // `.DS_Store` and friends live here on some systems and are not lanes. they're recognised
+        // by failing to read rather than by name, because a lane is allowed to be called that and
+        // dropping a real one would delete the head it holds. anything else that fails to read is
+        // a lane we can't account for, and the caller must not proceed without it.
+        if (FS_METADATA_FILES.includes(laneId.name)) return;
+        throw err;
+      }
+      laneComponents.forEach(({ id, head }) => {
+        const key = id.toStringWithoutVersion();
+        const existing = refsPerComponent.get(key);
+        if (existing) existing.push(head);
+        else refsPerComponent.set(key, [head]);
+      });
+    });
+    return refsPerComponent;
+  }
+
   async getAllRemoteLaneIds(): Promise<LaneId[]> {
-    const matches = await glob(path.join('*', '*'), { cwd: this.basePath });
+    const laneIds = await this.listLaneFiles();
+    return laneIds.filter((remoteLaneId) => !remoteLaneId.isDefault() && remoteLaneId.name !== PREVIOUS_DEFAULT_LANE);
+  }
+
+  private async listLaneFiles(globOptions: { dot?: boolean; nodir?: boolean } = {}): Promise<LaneId[]> {
+    const matches = await glob(path.join('*', '*'), { cwd: this.basePath, ...globOptions });
     // in the future, lane-name might have slashes, so until the first slash is the scope.
     // the rest are the name
-    return matches
-      .map((match) => match.split(path.sep))
-      .map(([head, ...tail]) => LaneId.from(tail.join('/'), head))
-      .filter((remoteLaneId) => !remoteLaneId.isDefault() && remoteLaneId.name !== PREVIOUS_DEFAULT_LANE);
+    return matches.map((match) => match.split(path.sep)).map(([head, ...tail]) => LaneId.from(tail.join('/'), head));
   }
 
   async getAllRemoteLaneIdsOfScope(scopeName: string): Promise<LaneId[]> {

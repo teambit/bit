@@ -278,22 +278,35 @@ describe('ci commands', function () {
   describe('bit ci pr reuses the existing remote lane across subsequent PR commits', () => {
     let firstPrOutput: string;
     let secondPrOutput: string;
+    let comp3HeadAfterFirstRun: string;
+    let comp3HeadAfterSecondRun: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       setupGitRemote();
-      setupComponentsAndInitialCommit();
+      setupComponentsAndInitialCommit(3);
+
+      const getComp3RemoteLaneHead = () => {
+        const lane = JSON.parse(
+          helper.command.runCmd(`bit lane show ${helper.scopes.remote}/feature-reuse-lane-test --remote --json`)
+        );
+        const comp3 = lane.components.find((component: any) => component.id.endsWith('/comp3'));
+        if (!comp3) throw new Error(`comp3 was not found on the reused lane: ${JSON.stringify(lane.components)}`);
+        return comp3.head;
+      };
 
       helper.command.runCmd('git checkout -b feature/reuse-lane-test');
 
-      helper.fs.outputFile('comp1/comp1.js', 'console.log("first commit");');
-      helper.command.runCmd('git add comp1/comp1.js');
+      helper.fs.outputFile('comp3/comp3.js', 'console.log("first commit");');
+      helper.command.runCmd('git add comp3/comp3.js');
       helper.command.runCmd('git commit -m "feat: first commit"');
       firstPrOutput = helper.command.runCmd('bit ci pr --keep-lane --message "first"');
+      comp3HeadAfterFirstRun = getComp3RemoteLaneHead();
 
       helper.fs.outputFile('comp2/comp2.js', 'console.log("second commit");');
       helper.command.runCmd('git add comp2/comp2.js');
       helper.command.runCmd('git commit -m "feat: second commit"');
       secondPrOutput = helper.command.runCmd('bit ci pr --keep-lane --message "second"');
+      comp3HeadAfterSecondRun = getComp3RemoteLaneHead();
     });
     it('should report that the lane was reused on the second run', () => {
       const cleanOutput = removeChalkCharacters(secondPrOutput) as string;
@@ -309,6 +322,9 @@ describe('ci commands', function () {
       const remoteLanes = helper.command.listRemoteLanesParsed();
       const matching = remoteLanes.lanes.filter((l: any) => l.name === 'feature-reuse-lane-test');
       expect(matching).to.have.lengthOf(1);
+    });
+    it('should preserve the head of a component that was unchanged in the second run', () => {
+      expect(comp3HeadAfterSecondRun).to.equal(comp3HeadAfterFirstRun);
     });
   });
 
@@ -916,6 +932,47 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
     });
   });
 
+  describe('bit ci merge when the merged lane has no change against main', () => {
+    let mergeOutput: string;
+    let defaultBranch: string;
+    let bareRepoPath: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      bareRepoPath = setupGitRemote();
+      defaultBranch = setupComponentsAndInitialCommit();
+
+      helper.command.createLane('no-change-lane');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.command.runCmd('git checkout -b no-change-lane');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "chore: lane state"');
+
+      // Simulate the PR merge: the default branch gets the lane's .bitmap
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge no-change-lane');
+      helper.command.runCmd(`git push origin ${defaultBranch}`);
+      expect(helper.command.runCmd('git show HEAD:.bitmap')).to.include('"_bit_lane"');
+
+      mergeOutput = helper.command.runCmd('bit ci merge');
+    });
+    it('should tag nothing', () => {
+      expect(mergeOutput).to.include('No components were tagged');
+      const comp1 = helper.command.listParsed().find((comp) => comp.id.includes('comp1'));
+      expect(comp1?.currentVersion).to.equal('0.0.1');
+    });
+    it("should commit and push main's .bitmap: no lane pointer, the main versions", () => {
+      const pushed = helper.command.runCmd(`git --git-dir=${bareRepoPath} show ${defaultBranch}:.bitmap`);
+      expect(pushed).to.not.include('"_bit_lane"');
+      expect(pushed).to.include('"version": "0.0.1"');
+    });
+    it('should leave a clean workspace on main', () => {
+      expect(helper.command.runCmd('git status --porcelain').trim()).to.equal('');
+      helper.command.expectStatusToBeClean();
+    });
+  });
+
   describe('bit ci merge when lane has config changes (env-set)', () => {
     let mergeOutput: string;
     before(() => {
@@ -1020,6 +1077,50 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
     it('should delete the remote lane', () => {
       const remoteLanes = helper.command.listRemoteLanesParsed();
       expect(remoteLanes.lanes).to.have.lengthOf(0);
+    });
+  });
+
+  describe('bit ci merge of a cross-scope lane carrying a NEW component of another scope', () => {
+    // the foreign component has no main config, so its lane config differs, but it has no .bitmap entry here
+    let otherScope: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope('-other-scope');
+      otherScope = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      setupGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit(1);
+
+      helper.command.createLane('cross-scope-lane');
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1 on the lane";');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.runCmd('git checkout -b feature/cross-scope');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: comp1 on the lane"');
+
+      // Another repository adds a NEW component of the other scope, with its own config, to the lane.
+      const devPath = helper.scopeHelper.cloneWorkspace();
+      fs.outputFileSync(path.join(devPath, 'comp2', 'index.js'), 'module.exports = () => "comp2";');
+      helper.command.runCmd('bit add comp2', devPath);
+      helper.command.runCmd(`bit scope set ${otherScope} comp2`, devPath);
+      helper.command.runCmd('bit env set comp2 teambit.harmony/node', devPath);
+      helper.command.runCmd('bit snap --message "comp2 on the lane"', devPath);
+      helper.command.runCmd('bit export', devPath);
+
+      // This repository now sees the whole lane, foreign component included.
+      helper.command.import();
+
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge feature/cross-scope');
+      helper.command.runCmd('bit ci merge --message "merge cross-scope lane"');
+    });
+    it('should tag and export only the component this workspace tracks', () => {
+      const list = helper.command.listRemoteScopeParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      expect(comp1?.localVersion).to.equal('0.0.2');
+      expect(helper.fs.readFile('.bitmap')).to.not.include(otherScope);
     });
   });
 

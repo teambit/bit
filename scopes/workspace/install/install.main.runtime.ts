@@ -5,7 +5,8 @@ import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspac
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import type { CLIMain, CommandList } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect, formatWarningSummary } from '@teambit/cli';
 import chalk from 'chalk';
 import yesno from 'yesno';
 import type { Workspace } from '@teambit/workspace';
@@ -43,6 +44,7 @@ import type {
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
   DependencyInstaller,
+  PackageManager,
   PackageManagerInstallOptions,
   WorkspacePolicyEntry,
   LinkingOptions,
@@ -52,7 +54,13 @@ import type {
   WorkspacePolicy,
   UpdatedComponent,
 } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect, ComponentDependency, ensureHoistedDependencyResolution } from '@teambit/dependency-resolver';
+import {
+  DependencyResolverAspect,
+  ComponentDependency,
+  ensureHoistedDependencyResolution,
+  isPlusVersion,
+  resolvePlusVersion,
+} from '@teambit/dependency-resolver';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 import type { Logger, LoggerMain } from '@teambit/logger';
@@ -68,7 +76,11 @@ import { BundlerAspect } from '@teambit/bundler';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { EXTERNAL_PM_POSTINSTALL_SCRIPT } from '@teambit/host-initializer';
-import { DependencyTypeNotSupportedInPolicy, UnpublishedComponentDependency } from './exceptions';
+import {
+  DependencyTypeNotSupportedInPolicy,
+  RestoreNotSupportedByPackageManager,
+  UnpublishedComponentDependency,
+} from './exceptions';
 import type { UnpublishedSnapDependency } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -110,6 +122,7 @@ export type WorkspaceInstallOptions = {
   writeConfigFiles?: boolean;
   skipPrune?: boolean;
   dependenciesGraph?: DependenciesGraph;
+  restoreFromDependenciesGraph?: boolean;
   allowScripts?: Record<string, boolean>;
 };
 
@@ -134,6 +147,11 @@ export class InstallMain {
   private visitedAspects: Set<string> = new Set();
 
   private oldNonLoadedEnvs: string[] = [];
+
+  /** nesting depth of _installModules, so the install marker is written once and removed by the outermost call */
+  private runningInstalls = 0;
+
+  private installMarkerUpdate = Promise.resolve();
 
   constructor(
     private dependencyResolver: DependencyResolverMain,
@@ -191,41 +209,51 @@ export class InstallMain {
       }
     }
 
-    // set workspace in install context
+    // set workspace in install context. `_installModules` sets these too, but the work below it
+    // (_addPackages, the preInstallSlot) already runs as part of the installation, and a stale
+    // "after package manager" flag from an earlier install in this process would let it compile
+    // against the pre-install dependency state.
     this.workspace.inInstallContext = true;
     this.workspace.inInstallAfterPmContext = false;
-    if (packages && packages.length) {
-      await this._addPackages(packages, options);
-    }
-    if (options?.addMissingPeers) {
-      const compDirMap = await this.getComponentsDirectory([]);
-      const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
-      const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
-      const pmInstallOptions: PackageManagerInstallOptions = {
-        dedupe: options?.dedupe,
-        copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
-        copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
-        dependencyFilterFn: depsFilterFn,
-        overrides: this.dependencyResolver.config.overrides,
-        hoistPatterns: this.dependencyResolver.config.hoistPatterns,
-        packageImportMethod: this.dependencyResolver.config.packageImportMethod,
-      };
-      const missingPeers = await this.dependencyResolver.getMissingPeerDependencies(
-        this.workspace.path,
-        mergedRootPolicy,
-        compDirMap,
-        pmInstallOptions
-      );
-      if (missingPeers) {
-        const missingPeerPackages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
-        await this._addPackages(missingPeerPackages, options);
-      } else {
-        this.logger.console('No missing peer dependencies found.');
+    let res: ComponentMap<string>;
+    try {
+      if (packages && packages.length) {
+        await this._addPackages(packages, options);
       }
+      if (options?.addMissingPeers) {
+        const compDirMap = await this.getComponentsDirectory([]);
+        const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
+        const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
+        const pmInstallOptions: PackageManagerInstallOptions = {
+          dedupe: options?.dedupe,
+          copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
+          copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
+          dependencyFilterFn: depsFilterFn,
+          overrides: this.dependencyResolver.config.overrides,
+          hoistPatterns: this.dependencyResolver.config.hoistPatterns,
+          packageImportMethod: this.dependencyResolver.config.packageImportMethod,
+        };
+        const missingPeers = await this.dependencyResolver.getMissingPeerDependencies(
+          this.workspace.path,
+          mergedRootPolicy,
+          compDirMap,
+          pmInstallOptions
+        );
+        if (missingPeers) {
+          const missingPeerPackages = Object.entries(missingPeers).map(([peerName, range]) => `${peerName}@${range}`);
+          await this._addPackages(missingPeerPackages, options);
+        } else {
+          this.logger.console('No missing peer dependencies found.');
+        }
+      }
+      await pMapSeries(this.preInstallSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
+      res = await this._installModules(options);
+    } finally {
+      // in a finally: a caller that catches the failure and carries on - "bit clone" keeps the
+      // workspace it made when the install fails - would otherwise leave the flag set, and the
+      // component loader suppresses missing modules and aspect-loading errors while it is
+      this.workspace.inInstallContext = false;
     }
-    await pMapSeries(this.preInstallSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
-    const res = await this._installModules(options);
-    this.workspace.inInstallContext = false;
 
     await this.ipcEvents.publishIpcEvent('onPostInstall');
 
@@ -352,11 +380,46 @@ export class InstallMain {
   }
 
   private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
+    // components are loaded here before the envs are loaded as aspects, so envs legitimately appear
+    // "not loaded" while this runs. every caller is by definition running an installation, so the
+    // flags that mute those premature warnings belong here rather than at each entry point - an
+    // entry point that forgot them reported "env was not loaded (run bit install)" on a healthy
+    // workspace, while itself running the very install it suggested.
+    const prevInInstallContext = this.workspace.inInstallContext;
+    const prevInInstallAfterPmContext = this.workspace.inInstallAfterPmContext;
+    this.workspace.inInstallContext = true;
+    this.workspace.inInstallAfterPmContext = false;
+    this.logger.profile('install.total');
+    // let other bit processes of this workspace know not to write into node_modules meanwhile (nested installs share
+    // one marker). see IpcEventsMain.markInstallStarted()
+    if (this.runningInstalls++ === 0) await this.updateInstallMarker(() => this.ipcEvents.markInstallStarted());
+    try {
+      return await this._installModulesProfiled(options);
+    } finally {
+      if (--this.runningInstalls === 0) await this.updateInstallMarker(() => this.ipcEvents.markInstallEnded());
+      this.logger.profile('install.total');
+      this.workspace.inInstallContext = prevInInstallContext;
+      this.workspace.inInstallAfterPmContext = prevInInstallAfterPmContext;
+    }
+  }
+
+  /**
+   * serialized, so the removal by an ending install can't land after the write of an install that started meanwhile
+   */
+  private updateInstallMarker(update: () => Promise<void>): Promise<void> {
+    this.installMarkerUpdate = this.installMarkerUpdate.then(update).catch((err) => {
+      this.logger.debug(`failed to update the install marker: ${err.message}`);
+    });
+    return this.installMarkerUpdate;
+  }
+
+  private async _installModulesProfiled(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
     if (options?.allowScripts) {
       this.dependencyResolver.updateAllowedScripts(options.allowScripts);
       await this.dependencyResolver.persistConfig('update allowScripts configuration');
     }
     const pm = this.dependencyResolver.getPackageManager();
+    this.ensurePackageManagerSupportsRestore(options, pm);
     this.logger.console(
       `installing dependencies in workspace using ${pm?.name} (${chalk.cyan(
         this.dependencyResolver.packageManagerName
@@ -382,23 +445,30 @@ export class InstallMain {
       linkDepsResolvedFromEnv: !hasRootComponents,
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
-    const { linkedRootDeps } = await this.calculateLinks(linkOpts);
+    const { linkedRootDeps } = await this.logger.profileAsync('install.calculateLinks', () =>
+      this.calculateLinks([], linkOpts)
+    );
     // eslint-disable-next-line prefer-const
-    let { mergedRootPolicy, componentsAndManifests: current } = await this._getComponentsManifestsAndRootPolicy(
-      installer,
-      {
-        ...calcManifestsOpts,
-        addMissingDeps: options?.addMissingDeps,
-        skipUnavailable: options?.skipUnavailable,
-        linkedRootDeps,
-      }
+    let { mergedRootPolicy, componentsAndManifests: current } = await this.logger.profileAsync(
+      'install.getComponentManifests',
+      () =>
+        this._getComponentsManifestsAndRootPolicy(installer, {
+          ...calcManifestsOpts,
+          addMissingDeps: options?.addMissingDeps,
+          skipUnavailable: options?.skipUnavailable,
+          linkedRootDeps,
+        })
     );
 
+    const dependenciesGraph = await this.logger.profileAsync('install.resolveDependenciesGraph', () =>
+      this.resolveDependenciesGraph(options, { hasRootComponents })
+    );
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
       autoInstallPeers: this.dependencyResolver.config.autoInstallPeers,
       dedupePeers: this.dependencyResolver.config.dedupePeers,
-      dependenciesGraph: options?.dependenciesGraph,
+      dependenciesGraph,
+      failOnDependenciesGraphError: options?.restoreFromDependenciesGraph,
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
       allowScripts: this.dependencyResolver.getAllowedScripts(),
@@ -432,27 +502,28 @@ export class InstallMain {
       // are not added to the manifests.
       // This is an issue when installation is done using root components.
       hasMissingLocalComponents = hasRootComponents && hasComponentsFromWorkspaceInMissingDeps(current);
-      let installResult: { dependenciesChanged: boolean };
-      try {
-        installResult = await installer.installComponents(
-          this.workspace.path,
-          current.manifests,
-          mergedRootPolicy,
-          current.componentDirectoryMap,
-          {
-            linkedDependencies,
-            installTeambitBit: false,
-            forcedHarmonyVersion,
-          },
-          pmInstallOptions
-        );
-      } catch (err: any) {
-        // when the package manager can't find a version, the culprit is usually a component dependency that
-        // resolves to a snap which was never published (e.g. a hidden lane update-dependent whose Ripple build
-        // failed or hasn't completed). replace the cryptic "No matching version found" with an actionable
-        // message. re-throws the original error otherwise.
-        throw this.enrichUnpublishedSnapDepError(err, current.componentDirectoryMap.components);
-      }
+      const installResult = await this.logger.profileAsync('install.packageManagerInstall', async () => {
+        try {
+          return await installer.installComponents(
+            this.workspace.path,
+            current.manifests,
+            mergedRootPolicy,
+            current.componentDirectoryMap,
+            {
+              linkedDependencies,
+              installTeambitBit: false,
+              forcedHarmonyVersion,
+            },
+            pmInstallOptions
+          );
+        } catch (err: any) {
+          // when the package manager can't find a version, the culprit is usually a component dependency that
+          // resolves to a snap which was never published (e.g. a hidden lane update-dependent whose Ripple build
+          // failed or hasn't completed). replace the cryptic "No matching version found" with an actionable
+          // message. re-throws the original error otherwise.
+          throw this.enrichUnpublishedSnapDepError(err, current.componentDirectoryMap.components);
+        }
+      });
       const { dependenciesChanged } = installResult;
       this.workspace.inInstallAfterPmContext = true;
       // the install that switches a workspace onto the global virtual store runs with bootstrap's
@@ -463,11 +534,13 @@ export class InstallMain {
         ensureHoistedDependencyResolution(this.workspace.path);
       }
       let cacheCleared = false;
-      await this.linkCodemods(compDirMap);
-      await this.syncCoreAspectLinksForEnvs(compDirMap);
+      await this.logger.profileAsync('install.linkCodemods', () => this.linkCodemods(compDirMap));
+      await this.logger.profileAsync('install.syncCoreAspectLinksForEnvs', () =>
+        this.syncCoreAspectLinksForEnvs(compDirMap)
+      );
       const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
-      await this.reloadMovedEnvs();
-      await this.reloadNonLoadedEnvs();
+      await this.logger.profileAsync('install.reloadMovedEnvs', () => this.reloadMovedEnvs());
+      await this.logger.profileAsync('install.reloadNonLoadedEnvs', () => this.reloadNonLoadedEnvs());
 
       const shouldClearCacheOnInstall = this.shouldClearCacheOnInstall();
       if (options?.compile ?? true) {
@@ -479,10 +552,12 @@ export class InstallMain {
           // incorrectly in case the env was not loaded correctly before the installation.
           // We don't want to clear the failed to load envs because we want to show the warning at the end
           // await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
-          await this.workspace.clearCache();
+          await this.logger.profileAsync('install.clearCache', () => this.workspace.clearCache());
           cacheCleared = true;
         }
-        await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
+        await this.logger.profileAsync('install.compile', () =>
+          this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install })
+        );
 
         // Right now we don't need to load extensions/execute load slot at this point
         // await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install }, undefined, {
@@ -492,7 +567,9 @@ export class InstallMain {
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
       if (options?.writeConfigFiles ?? true) {
-        await this.tryWriteConfigFiles(!cacheCleared && shouldClearCacheOnInstall);
+        await this.logger.profileAsync('install.writeConfigFiles', () =>
+          this.tryWriteConfigFiles(!cacheCleared && shouldClearCacheOnInstall)
+        );
       }
       if (!dependenciesChanged) break;
       if (!options?.recurringInstall) break;
@@ -505,9 +582,13 @@ export class InstallMain {
         // We need to clear cache before creating the new component manifests.
         // this.workspace.consumer.componentLoader.clearComponentsCache();
         // We don't want to clear the failed to load envs because we want to show the warning at the end
-        await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+        await this.logger.profileAsync('install.clearCache', () =>
+          this.workspace.clearCache({ skipClearFailedToLoadEnvs: true })
+        );
       }
-      current = await this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts);
+      current = await this.logger.profileAsync('install.getComponentManifests', () =>
+        this._getComponentsManifests(installer, mergedRootPolicy, calcManifestsOpts)
+      );
       installCycle += 1;
     } while ((!prevManifests.has(manifestsHash(current.manifests)) || hasMissingLocalComponents) && installCycle < 5);
     // the core aspects are compiled by now, so drop the links added above and let the envs resolve
@@ -516,14 +597,16 @@ export class InstallMain {
     if (!options?.lockfileOnly && !options?.skipPrune) {
       // We clean node_modules only after the last install.
       // Otherwise, we might load an env from a location that we later remove.
-      try {
-        await installer.pruneModules(this.workspace.path);
-        // Ignoring the error here as it's not critical and we don't want to fail the install process
-      } catch (err: any) {
-        this.logger.error(`failed running pnpm prune with error`, err);
-      }
+      await this.logger.profileAsync('install.pruneModules', async () => {
+        try {
+          await installer.pruneModules(this.workspace.path);
+          // Ignoring the error here as it's not critical and we don't want to fail the install process
+        } catch (err: any) {
+          this.logger.error(`failed running pnpm prune with error`, err);
+        }
+      });
       // After pruning we need reload moved envs, as during the pruning the old location might be deleted
-      await this.reloadMovedEnvs();
+      await this.logger.profileAsync('install.reloadMovedEnvs', () => this.reloadMovedEnvs());
     }
     // this is now commented out because we assume we don't need it anymore.
     // even when the env was not loaded before and it is loaded now, it should be fine because the dependencies-data
@@ -537,6 +620,42 @@ export class InstallMain {
   private shouldClearCacheOnInstall(): boolean {
     const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
     return nonLoadedEnvs.length > 0;
+  }
+
+  private ensurePackageManagerSupportsRestore(
+    options: ModulesInstallOptions | undefined,
+    packageManager: PackageManager | undefined
+  ) {
+    if (options?.restoreFromDependenciesGraph && !packageManager?.supportsDependencyGraphRestoration) {
+      throw new RestoreNotSupportedByPackageManager(packageManager?.name ?? this.dependencyResolver.packageManagerName);
+    }
+  }
+
+  private async resolveDependenciesGraph(
+    options: ModulesInstallOptions | undefined,
+    context: { hasRootComponents: boolean }
+  ): Promise<DependenciesGraph | undefined> {
+    if (options?.dependenciesGraph) return options.dependenciesGraph;
+    if (!options?.restoreFromDependenciesGraph) return undefined;
+    if (!context.hasRootComponents) {
+      this.logger.console(
+        formatWarningSummary(
+          '--restore requires "rootComponents: true" in the dependency-resolver config; falling back to a regular install.'
+        )
+      );
+      return undefined;
+    }
+    const graph = await this.workspace.scope.getDependenciesGraphByComponentIds(this.workspace.listIds(), {
+      ignoreFeatureToggle: true,
+    });
+    if (!graph) {
+      this.logger.console(
+        formatWarningSummary(
+          '--restore was requested but no workspace component has a stored dependency graph. Falling back to a regular install.'
+        )
+      );
+    }
+    return graph;
   }
 
   /**
@@ -718,12 +837,19 @@ export class InstallMain {
         })
       )
     );
-    await Promise.all(
-      loadedPlugins.map((plugin) => {
-        const runtime = plugin.getRuntime(MainRuntime);
-        return runtime?.provider(undefined, undefined, undefined, this.harmony);
-      })
-    );
+    // the provider registers the plugin, so run them one by one. a plugin that fails to load gets its component
+    // (and deps) compiled and is then re-loaded. in parallel, these compilations write the same files (e.g. of a
+    // shared env) while another plugin imports them. a failing plugin doesn't stop the others from registering.
+    let firstError: Error | undefined;
+    await pMapSeries(loadedPlugins, async (plugin) => {
+      const runtime = plugin.getRuntime(MainRuntime);
+      try {
+        await runtime?.provider(undefined, undefined, undefined, this.harmony);
+      } catch (err: any) {
+        firstError ??= err;
+      }
+    });
+    if (firstError) throw firstError;
   }
 
   /**
@@ -829,7 +955,7 @@ export class InstallMain {
     if (clearCache) {
       await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
     }
-    const { err } = await this.wsConfigFiles.writeConfigFiles({
+    const { err, writeResults } = await this.wsConfigFiles.writeConfigFiles({
       clean: true,
       silent: true,
       dedupe: true,
@@ -840,7 +966,11 @@ export class InstallMain {
       this.logger.consoleFailure(
         `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`
       );
+      return;
     }
+    const skippedWarning = this.wsConfigFiles.formatSkippedFilesWarning(writeResults?.skippedPaths);
+    // the formatted section already starts with the shared warning symbol, so no need for consoleWarning here.
+    if (skippedWarning) this.logger.console(`\n${skippedWarning}`);
   }
 
   private async addConfiguredAspectsToWorkspacePolicy(): Promise<WorkspacePolicy> {
@@ -1039,7 +1169,7 @@ export class InstallMain {
 
   /**
    * Get the env's own peer dependencies from its policy (env.jsonc).
-   * Resolves "+" version placeholders using workspaceDeps.
+   * Resolves "+" (and "+^"/"+~") version placeholders using workspaceDeps.
    */
   private async _getEnvDependencies(
     envId: ComponentID,
@@ -1052,13 +1182,8 @@ export class InstallMain {
       policy.selfPolicy.entries
         .filter(({ force, value }) => force && value.version !== '-')
         .map(({ dependencyId, value }) => {
-          let version = value.version;
           // Resolve "+" version placeholders using workspace dependencies
-          // Similar to WorkspaceManifest._resolvePlusVersions
-          if (version === '+') {
-            version = workspaceDeps[dependencyId] || '*';
-          }
-          return [dependencyId, version];
+          return [dependencyId, resolvePlusVersion(value.version, workspaceDeps[dependencyId])];
         })
     );
   }
@@ -1190,7 +1315,8 @@ export class InstallMain {
             const depEntry = deps.find(({ name }) => name === pkg.name);
             if (depEntry) {
               depEntry.version = pkg.latestRange;
-              if (field === 'peers' && depEntry.supportedRange) {
+              // a plus supportedRange follows the version, so it doesn't need to be widened.
+              if (field === 'peers' && depEntry.supportedRange && !isPlusVersion(depEntry.supportedRange)) {
                 if (!semver.intersects(pkg.latestRange, depEntry.supportedRange)) {
                   depEntry.supportedRange = `${depEntry.supportedRange} || ${pkg.latestRange}`;
                 }
@@ -1285,6 +1411,9 @@ export class InstallMain {
     const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
     components.forEach((component) => {
       if (component.state._consumer.removed) return;
+      // the workspace-root component is not a package (see getComponentsDirectory): a workspace dependency
+      // by the name it would have had is no duplicate of it
+      if (this.workspace.componentDir(component.id) === this.workspace.path) return;
       const pkgName = componentIdToPackageName(component.state._consumer);
       const found = workspacePolicy.find(pkgName);
       if (found) {
@@ -1335,10 +1464,11 @@ export class InstallMain {
    * This information may then be passed to the package manager, which will create the links on its own.
    */
   async calculateLinks(
+    ids: ComponentID[],
     options: WorkspaceLinkOptions = {}
   ): Promise<{ linkResults: WorkspaceLinkResults; linkedRootDeps: Record<string, string> }> {
     await pMapSeries(this.preLinkSlot.values(), (fn) => fn(options)); // import objects if not disabled in options
-    const compDirMap = await this.getComponentsDirectory([]);
+    const compDirMap = await this.getComponentsDirectory(ids);
     const linker = this.dependencyResolver.getLinker({
       rootDir: this.workspace.path,
       linkingOptions: options,
@@ -1382,8 +1512,9 @@ export class InstallMain {
     return linkToNodeModulesWithCodemod(this.workspace, bitIds, options?.rewire ?? false);
   }
 
-  async link(options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
-    const { linkResults, linkedRootDeps } = await this.calculateLinks(options);
+  async link(ids: string[], options: WorkspaceLinkOptions = {}): Promise<WorkspaceLinkResults> {
+    const componentIds = await Promise.all(ids.map((id) => this.workspace.resolveComponentId(id)));
+    const { linkResults, linkedRootDeps } = await this.calculateLinks(componentIds, options);
     await createLinks(options.linkToDir ?? this.workspace.path, linkedRootDeps, {
       avoidHardLink: true,
       skipIfSymlinkValid: true,
@@ -1451,10 +1582,17 @@ export class InstallMain {
     // loading seeders during installation causes regressions where lane imports fail with errors like:
     // "Cannot find module '/private/tmp/a27cc147/node_modules/@teambit/node.envs.node-babel-mocha/dist/node-babel-mocha.bit-env.js'"
     // The env aspect files are not yet available during the initial installation phase.
+    const loadOpts = { loadSeedersAsAspects: false };
     const components = ids.length
-      ? await this.workspace.getMany(ids)
-      : await this.workspace.list(undefined, { loadSeedersAsAspects: false });
-    return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id));
+      ? await this.workspace.getMany(ids, loadOpts)
+      : await this.workspace.list(undefined, loadOpts);
+    // the workspace-root component's dir is the workspace root itself. it is not an installable
+    // package - it holds the workspace's own config files, nothing depends on it, and handing its
+    // dir to the package manager makes it collide with the root project (pnpm resolves it to an
+    // empty "file:" spec and fails to build the lockfile).
+    return ComponentMap.as<string>(components, (component) => this.workspace.componentDir(component.id)).filter(
+      (componentDir) => componentDir !== this.workspace.path
+    );
   }
 
   private async onRootAspectAddedSubscriber(_aspectId: ComponentID, inWs: boolean): Promise<void> {
@@ -1487,7 +1625,7 @@ export class InstallMain {
       return;
     }
     if (needLink) {
-      await this.link();
+      await this.link([]);
     }
   }
 

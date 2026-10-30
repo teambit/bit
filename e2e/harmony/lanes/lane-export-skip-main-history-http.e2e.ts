@@ -110,7 +110,7 @@ function killProc(proc: ChildProcess) {
       helper.command.export();
       helper.scopeHelper.getClonedWorkspace(laneWs);
       helper.command.import();
-      helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs');
       mergeSnap = helper.command.getHeadOfLane('dev', 'comp1');
 
       // start HTTP server on the lane scope, swap workspace's lane remote to HTTP, then export

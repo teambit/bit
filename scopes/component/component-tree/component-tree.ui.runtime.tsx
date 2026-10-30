@@ -1,6 +1,6 @@
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 
 import type { ComponentTreeNode } from './component-tree-node';
 import { ComponentTreeAspect } from './component-tree.aspect';

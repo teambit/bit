@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from 'react';
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { uniq } from 'lodash';
 import classNames from 'classnames';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
@@ -11,13 +11,11 @@ import {
   useUpdatedUrlFromQuery,
 } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useCode } from '@teambit/code.ui.queries.get-component-code';
-import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
-import { DarkTheme } from '@teambit/design.themes.dark-theme';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { CodeCompareTree } from './code-compare-tree';
 import type { CodeCompareViewProps } from './code-compare-view';
-import { CodeCompareView } from './code-compare-view';
+import { CodeCompareView, CodeCompareViewLoader } from './code-compare-view';
 import { Widget } from './code-compare.widgets';
 
 import styles from './code-compare.module.scss';
@@ -45,41 +43,52 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   const [isSidebarOpen, setSidebarOpenness] = useState(false);
   const baseHost = 'teambit.scope/scope';
   const compareHost = compare?.hasLocalChanges ? 'teambit.workspace/workspace' : 'teambit.scope/scope';
-  const { fileTree: baseFileTree = [], mainFile } = useCode(hidden ? undefined : base?.model.id, baseHost);
-  const { fileTree: compareFileTree = [] } = useCode(hidden ? undefined : compare?.model.id, compareHost);
+  const {
+    fileTree: baseFileTree,
+    mainFile: baseMainFile,
+    loading: baseTreeLoading,
+  } = useCode(hidden ? undefined : base?.model.id, baseHost);
+  const {
+    fileTree: compareFileTree,
+    mainFile: compareMainFile,
+    loading: compareTreeLoading,
+  } = useCode(hidden ? undefined : compare?.model.id, compareHost);
+  // a new component has no base, so its main file comes from the compare side.
+  const mainFile = baseMainFile || compareMainFile;
 
   const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
-  const anyFileHasDiffStatus = useRef<boolean>(false);
+  // `undefined` while the compare data loads; `null` when there is none. The diff waits for the same.
+  const compareDataLoading = !!componentCompareContext && fileCompareDataByName === undefined;
+  const listLoading = baseTreeLoading || compareTreeLoading || compareDataLoading;
 
-  const fileTree = useMemo(() => {
-    const allFiles = uniq<string>(baseFileTree.concat(compareFileTree));
-    anyFileHasDiffStatus.current = false;
-    // sort by diff status
-    return !fileCompareDataByName
-      ? allFiles
-      : allFiles.sort((a, b) => {
-          const aCompareResult = fileCompareDataByName.get(a);
-          const bCompareResult = fileCompareDataByName.get(b);
-          const noStatus = (status?: string) => !status || status === 'UNCHANGED';
-          const aStatus = aCompareResult?.status;
-          const bStatus = bCompareResult?.status;
-          if (!noStatus(aStatus) && !noStatus(bStatus)) return 0;
-          if (!noStatus(aStatus)) return -1;
-          if (!noStatus(bStatus)) return 1;
-          if (!anyFileHasDiffStatus.current) anyFileHasDiffStatus.current = true;
-          if (aStatus?.toLowerCase() === 'new') return -1;
-          if (bStatus?.toLowerCase() === 'new') return 1;
-          return 0;
-        });
-  }, [fileCompareDataByName?.size, baseFileTree.length, compareFileTree.length, hidden]);
+  // Build the list only when both file trees and the compare data have landed. Building it earlier
+  // reshuffled the file tabs and the tree on first load: the two trees resolve in either order, and
+  // the changed files moved to the top only when the compare data arrived.
+  const { fileTree, firstChangedFile } = useMemo(() => {
+    if (listLoading) return { fileTree: [] as string[] };
+    const allFiles = uniq<string>((baseFileTree || []).concat(compareFileTree || []));
+    if (!fileCompareDataByName) return { fileTree: allFiles };
+    const isChanged = (file: string) => {
+      const status = fileCompareDataByName.get(file)?.status;
+      return !!status && status !== 'UNCHANGED';
+    };
+    // changed files first. the sort is stable, so each group keeps the order of the file trees.
+    const sorted = [...allFiles].sort((a, b) => Number(isChanged(b)) - Number(isChanged(a)));
+    // open the main file when it changed. that includes a new component, where every file is NEW.
+    // otherwise open the first changed file.
+    const firstChanged = mainFile && isChanged(mainFile) ? mainFile : sorted.find(isChanged);
+    return { fileTree: sorted, firstChangedFile: firstChanged };
+  }, [listLoading, baseFileTree, compareFileTree, fileCompareDataByName, mainFile]);
 
   const selectedFileFromParams = useCompareQueryParam('file');
 
   const selectedFile = React.useMemo(
-    () =>
-      state?.id || selectedFileFromParams || (anyFileHasDiffStatus.current ? fileTree[0] : mainFile || DEFAULT_FILE),
-    [state?.id, selectedFileFromParams, fileTree, mainFile]
+    () => state?.id || selectedFileFromParams || firstChangedFile || mainFile || DEFAULT_FILE,
+    [state?.id, selectedFileFromParams, firstChangedFile, mainFile]
   );
+  // Without an explicit file, the file to open depends on the list. Opening a fallback before the list
+  // lands would load and show that file, then switch to the first changed file.
+  const waitForList = !state?.id && !selectedFileFromParams && listLoading;
 
   const controlledHref = useUpdatedUrlFromQuery({});
   const useHref = (node: any) => {
@@ -103,7 +112,14 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
 
   return (
-    <ThemeSwitcher themes={[DarkTheme]} className={classNames(styles.themeContainer, className)}>
+    // No theme override here: the diff must inherit the page's theme.
+    //
+    // This used to be `<ThemeSwitcher themes={[DarkTheme]}>`, from when Monaco rendered the diff and
+    // its editor was always dark. The shiki viewer paints every token with a sentinel that resolves
+    // to a Bit design-system CSS variable (`--syntax-*-color`), and both the base and dark themes
+    // define those — so forcing DarkTheme here pinned the diff dark on a light page and made it the
+    // only surface that ignored the user's theme.
+    <div className={classNames(styles.themeContainer, className)}>
       <SplitPane
         layout={sidebarOpenness}
         size={200}
@@ -124,8 +140,11 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
             }}
             role="button"
             tabIndex={0}
+            aria-label={isSidebarOpen ? 'Collapse file tree' : 'Expand file tree'}
+            // the icon is a remote SVG; passing it as a mask lets CSS paint it with a theme color
+            style={{ ['--code-compare-sidebar-icon' as string]: `url(${sidebarIconUrl})` } as React.CSSProperties}
           >
-            <img src={sidebarIconUrl} alt="sidebar-icon" />
+            <span className={styles.sidebarIcon} aria-hidden="true" />
           </div>
           <CodeCompareTree
             className={styles.codeCompareTree}
@@ -141,16 +160,24 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
         </Pane>
         <HoverSplitter className={styles.splitter} />
         <Pane className={classNames(styles.right, styles.dark, !isSidebarOpen && styles.collapsed)}>
-          <CodeView
-            widgets={[Widget]}
-            fileName={selectedFile}
-            files={fileTree}
-            getHref={useHref}
-            onTabClicked={hook?.onClick}
-            fileIconSlot={fileIconSlot}
-          />
+          {waitForList ? (
+            // the loader is absolutely positioned (it overlays the diff area while a file loads), so it
+            // needs its own positioned box here. Without one it covers every drawer on the page.
+            <div className={styles.listLoader}>
+              <CodeCompareViewLoader className={styles.listLoaderSkeleton} />
+            </div>
+          ) : (
+            <CodeView
+              widgets={[Widget]}
+              fileName={selectedFile}
+              files={fileTree}
+              getHref={useHref}
+              onTabClicked={hook?.onClick}
+              fileIconSlot={fileIconSlot}
+            />
+          )}
         </Pane>
       </SplitPane>
-    </ThemeSwitcher>
+    </div>
   );
 }

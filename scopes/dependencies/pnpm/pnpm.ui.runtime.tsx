@@ -1,5 +1,5 @@
 import React from 'react';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import { Install } from '@teambit/ui-foundation.ui.use-box.menu';
 import type { ComponentUI, ConsumePlugin } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';

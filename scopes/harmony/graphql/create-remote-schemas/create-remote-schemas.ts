@@ -5,7 +5,6 @@ import { makeRemoteExecutableSchema, introspectSchema } from 'apollo-server';
 import { WebSocketLink } from 'apollo-link-ws';
 import { split, ApolloLink } from 'apollo-link';
 import { getMainDefinition } from 'apollo-utilities';
-import { SubscriptionClient } from 'subscriptions-transport-ws';
 import ws from 'ws';
 import type { GraphQLServer } from '../graphql-server';
 
@@ -36,9 +35,17 @@ async function getRemoteSchema({ uri, subscriptionsUri }) {
     });
   }
 
-  // Create WebSocket link with custom client
-  const client = new SubscriptionClient(subscriptionsUri, { reconnect: true }, ws);
-  const wsLink = new WebSocketLink(client);
+  // Pass the config rather than a pre-built SubscriptionClient. WebSocketLink tells the two
+  // apart with `paramsOrClient instanceof SubscriptionClient`, and that check fails whenever
+  // apollo-link-ws resolves a different physical copy of subscriptions-transport-ws than this
+  // file does - which a hoisted node_modules layout produces as soon as two versions of the
+  // package end up in the tree. It then reads `.uri` off the client (a real one stores `.url`),
+  // so the client is built with an undefined URL and `new URL(undefined)` throws.
+  const wsLink = new WebSocketLink({
+    uri: subscriptionsUri,
+    options: { reconnect: true },
+    webSocketImpl: ws,
+  });
 
   // Using the ability to split links, we can send data to each link
   // depending on what kind of operation is being sent

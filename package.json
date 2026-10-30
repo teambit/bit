@@ -6,7 +6,7 @@
     "node": ">=22.13.0"
   },
   "lint-staged": {
-    "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "oxlint --deny-warnings",
+    "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "oxlint --deny-warnings --no-error-on-unmatched-pattern",
     "*.{ts,js,jsx,tsx,css,scss,md,mdx}": [
       "prettier --write",
       "git add"
@@ -29,6 +29,7 @@
     "lint-circle": "mkdir -p junit && oxlint --deny-warnings --format junit scopes e2e components > junit/oxlint-results.xml",
     "lint:fix": "oxlint --fix scopes e2e components",
     "lint-full": "./scripts/validate-import-named-aspects.sh && ./scripts/validate-no-ramda.sh && node scripts/validate-pkg-exist-in-pkg-json.js && npm run lint",
+    "analyze-bundle": "node scripts/analyze-bundle.mjs",
     "format": "prettier \"{e2e,scopes,components}/**/*.{ts,js,jsx,css,scss,tsx,md,mdx}\" --write",
     "prettier:check": "prettier --list-different \"{e2e,scopes,components}/**/*.{ts,js,jsx,css,scss,tsx,md,mdx}\"",
     "mocha-circleci": "cross-env NODE_OPTIONS='--no-warnings --max-old-space-size=5000' registry-mock prepare && mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors --exit",
@@ -50,7 +51,7 @@
     "assert:master": "node ./scripts/assert-master.js",
     "nightly": "npm run assert:master && git tag -d manual-nightly && git push --delete origin manual-nightly && git tag manual-nightly && git push origin manual-nightly",
     "generate-cli-reference": "bit cli generate > scopes/harmony/cli-reference/cli-reference.mdx && prettier scopes/harmony/cli-reference/cli-reference.mdx --write",
-    "generate-cli-reference-json": "bit cli generate --json > scopes/harmony/cli-reference/cli-reference.json",
+    "generate-cli-reference-json": "bit cli generate --json > scopes/harmony/cli-reference/cli-reference.json && node scripts/check-cli-reference-groups.js",
     "generate-cli-reference-docs": "bit cli generate --docs > scopes/harmony/cli-reference/cli-reference.docs.mdx",
     "generate-cli-skill": "bit cli generate --skill commands > contrib/claude-skill-bit-cli/SKILL.md && bit cli generate --skill reference > contrib/claude-skill-bit-cli/CLI_REFERENCE.md && prettier contrib/claude-skill-bit-cli/SKILL.md contrib/claude-skill-bit-cli/CLI_REFERENCE.md --write",
     "generate-core-aspects-ids": "bit aspect list-core --json > scopes/harmony/testing/load-aspect/core-aspects-ids.json",

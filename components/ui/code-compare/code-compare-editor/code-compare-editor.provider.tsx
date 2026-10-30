@@ -1,21 +1,14 @@
 /* eslint-disable react/prop-types */
 import type { ReactNode } from 'react';
-import React, { createContext, useContext } from 'react';
-
-const CodeCompareEditorContext = createContext<any>(null);
+import React from 'react';
 
 type CodeCompareEditorProviderProps = {
   children: ReactNode;
 };
 
 export const CodeCompareEditorProvider: React.FC<CodeCompareEditorProviderProps> = ({ children }) => {
-  const DiffEditor = React.lazy(() => {
-    return import('@monaco-editor/react').then((module) => ({ default: module.DiffEditor }));
-  });
-
-  return <CodeCompareEditorContext.Provider value={DiffEditor}>{children}</CodeCompareEditorContext.Provider>;
+  return <>{children}</>;
 };
 
-export const useCodeCompareEditor = () => {
-  return useContext(CodeCompareEditorContext);
-};
+/** @deprecated the Shiki diff renderer no longer needs an injected editor component. */
+export const useCodeCompareEditor = () => null;

@@ -76,7 +76,7 @@ const commandHistoryFile = 'command-history';
 class BitLogger implements IBitLogger {
   logger: PinoLogger;
   private profiler: Profiler;
-  private onBeforeExitFns: Function[] = [];
+  private onBeforeExitFns = new Map<string | symbol, Function>();
 
   private _isDaemon = false; // 'bit cli' is a daemon as it should never exit the process, unless the user kills it
   private _rotationTimer: ReturnType<typeof setInterval> | undefined;
@@ -207,22 +207,66 @@ class BitLogger implements IBitLogger {
    * [2020-12-04 16:24:46.110 -0500] INFO	 (31641): loadingComponent: 18ms. (total repeating 32ms)
    */
   profile(id: string, console?: boolean, level: Level = 'info') {
+    const shouldWriteToConsole = console || this.shouldConsoleProfiler;
+    // profiling keeps state per id and formats a message. when the line is going to be discarded
+    // anyway, skip it altogether - otherwise turning the level off removes only the printing, not
+    // the cost of the profiling itself.
+    // the check (and later the write) use the dedicated file logger, not `this.logger` - which
+    // `switchToConsoleLogger`/`switchToSSELogger` can repoint at a console/SSE-only pino instance
+    // with its own level - so profiling always persists to debug.log regardless of the active
+    // display mode. the file logger's level can still change between the two calls of a
+    // measurement (e.g. via `bit --log`), so also drop the measurement this call would have
+    // closed. only the measurement of this id is dropped, to not touch the ones of a request that
+    // runs in parallel.
+    if (!shouldWriteToConsole && !pinoLogger.isLevelEnabled(level)) {
+      this.profiler.discard(id);
+      return;
+    }
     const msg = this.profiler.profile(id);
     if (!msg) return;
     const fullMsg = `${id}: ${msg}`;
-    console || this.shouldConsoleProfiler ? this.console(fullMsg) : this[level](fullMsg);
+    // always record it in the log file, and also print it to the screen when requested. (previously
+    // these were mutually exclusive, so enabling console output silently dropped the debug.log entry)
+    pinoLogger[level](this.withTracePrefix(level, fullMsg));
+    if (shouldWriteToConsole) this.console(fullMsg);
   }
 
-  registerOnBeforeExitFn(fn: Function) {
-    this.onBeforeExitFns.push(fn);
+  /**
+   * @param key when given, a later registration with the same key replaces this one. pass it for a hook that each
+   * harmony load registers, so a process that loads harmony more than once keeps one copy of the hook, and not one
+   * per load (each copy keeps its harmony instance in memory).
+   */
+  registerOnBeforeExitFn(fn: Function, key?: string) {
+    this.onBeforeExitFns.set(key ?? Symbol('on-before-exit'), fn);
   }
 
-  async runOnBeforeExitFns() {
-    return pMapSeries(this.onBeforeExitFns, (fn) => fn());
+  /**
+   * @returns whether all the hooks succeeded
+   */
+  async runOnBeforeExitFns(): Promise<boolean> {
+    // each hook runs once. "bit cli" gets here after every command, and must not run the same hooks again each time.
+    const fns = [...this.onBeforeExitFns.values()];
+    this.onBeforeExitFns.clear();
+    let allSucceeded = true;
+    // the hooks are independent clean-ups, so one that fails must not stop the others
+    await pMapSeries(fns, async (fn) => {
+      try {
+        await fn();
+      } catch (err: any) {
+        allSucceeded = false;
+        const msg = `an on-before-exit hook failed: ${err?.message ?? err}`;
+        this.error(msg, err);
+        process.stderr.write(`${msg}\n`);
+      }
+    });
+    return allSucceeded;
   }
 
-  async exitAfterFlush(code = 0, commandName: string, cliOutput = '') {
+  async exitAfterFlush(commandCode = 0, commandName: string, cliOutput = '') {
     await Analytics.sendData();
+    const hooksSucceeded = await this.runOnBeforeExitFns();
+    // a failed clean-up fails the command, as it did when a failing hook stopped the exit with an error
+    const code = hooksSucceeded ? commandCode : commandCode || 1;
     const isSuccess = code === 0;
     const level = isSuccess ? 'info' : 'error';
     if (cliOutput) {
@@ -239,7 +283,6 @@ class BitLogger implements IBitLogger {
     // finalLogger[level](msg);
     this.logger[level](msg);
     this.writeCommandHistoryEnd(code);
-    await this.runOnBeforeExitFns();
     if (!this.isDaemon) process.exit(code);
   }
 

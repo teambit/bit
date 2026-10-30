@@ -66,6 +66,11 @@ class ServerPortFileNotFound extends Error {
     super(`server port file not found at ${filePath}`);
   }
 }
+class ServerPortFileInvalid extends Error {
+  constructor(filePath: string, content: string) {
+    super(`server port file at ${filePath} does not contain a valid port: "${content}"`);
+  }
+}
 class ServerIsNotRunning extends Error {
   constructor(port: number) {
     super(`bit server is not running on port ${port}`);
@@ -94,7 +99,12 @@ export class ServerCommander {
 
       process.exit(0);
     } catch (err: any) {
-      if (err instanceof ScopeNotFound || err instanceof ServerPortFileNotFound || err instanceof ServerIsNotRunning) {
+      if (
+        err instanceof ScopeNotFound ||
+        err instanceof ServerPortFileNotFound ||
+        err instanceof ServerPortFileInvalid ||
+        err instanceof ServerIsNotRunning
+      ) {
         throw err;
       }
       loader.off();
@@ -115,7 +125,12 @@ export class ServerCommander {
     if (process.argv.includes(CMD_SERVER_PORT_DELETE)) return this.deletePortAndExit();
     if (process.argv.includes(CMD_SERVER_TOKEN)) return this.printServerTokenAndExit();
     printBitVersionIfAsked();
-    const port = await this.getExistingUsedPort();
+    // deliberately not validating the port here (see getExistingUsedPort): that costs two `lsof`
+    // subprocesses, ~320ms on every single command, to establish something the request itself
+    // already proves. Each server writes its token into its own scope dir, so a port file left
+    // behind pointing at another workspace's server gets a 401, and a dead port gets ECONNREFUSED
+    // — both handled below by dropping the stale file and falling back to running in-process.
+    const port = await this.getExistingPort();
     const url = `http://${resolveDialHost()}:${port}/api`;
     const shouldUsePTY = process.env.BIT_CLI_SERVER_PTY === 'true';
 
@@ -137,27 +152,58 @@ export class ServerCommander {
     const endpoint = `cli-raw`;
     const pwd = process.cwd();
     const body = { command: args, pwd, envBitFeatures: process.env.BIT_FEATURES, ttyPath, isPty: shouldUsePTY };
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    const token = this.getServerTokenIfExists();
-    if (token) headers.Authorization = `Bearer ${token}`;
-    let res;
-    try {
-      res = await fetch(`${url}/${endpoint}`, {
-        method: 'post',
-        body: JSON.stringify(body),
-        headers,
-      });
-    } catch (err: any) {
-      if (err.code === 'ECONNREFUSED') {
-        await this.deleteServerPortFile();
-        throw new ServerIsNotRunning(port);
+    const post = async (authToken?: string) => {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authToken) headers.Authorization = `Bearer ${authToken}`;
+      try {
+        return await fetch(`${url}/${endpoint}`, {
+          method: 'post',
+          body: JSON.stringify(body),
+          headers,
+        });
+      } catch (err: any) {
+        if (err.code === 'ECONNREFUSED') {
+          await this.deleteServerPortFile();
+          throw new ServerIsNotRunning(port);
+        }
+        throw new Error(`failed to run command "${args.join(' ')}" on the server. ${err.message}`);
       }
-      throw new Error(`failed to run command "${args.join(' ')}" on the server. ${err.message}`);
+    };
+
+    const token = this.getServerTokenIfExists();
+    let res = await post(token);
+
+    // a 401 has two possible causes, and they need opposite handling: either the port file points
+    // at a different workspace's server (stale, and dealt with below), or our own server restarted
+    // and rotated its token after we read it. The server writes the token file before it registers
+    // any route, so a server able to answer us has already published its current token — if what's
+    // on disk no longer matches what we sent, this is the restart case and retrying is enough.
+    // Without this, an unlucky command spanning a restart would delete the port file of a server
+    // that is alive and healthy, hiding it from every later client.
+    if (res.status === 401) {
+      const currentToken = this.getServerTokenIfExists();
+      if (currentToken && currentToken !== token) res = await post(currentToken);
     }
 
     if (res.ok) {
       const results = await res.json();
+      // bit-server always answers this route with a { data, exitCode } object. Anything else means
+      // the port file points at some other listener that happened to accept the POST, so fail safe
+      // rather than reporting a foreign response as the command's result: drop the port file and
+      // let the command run in-process.
+      if (!results || typeof results !== 'object') {
+        await this.deleteServerPortFile();
+        throw new ServerIsNotRunning(port);
+      }
       return results;
+    }
+
+    // 401 (still, after the retry above): the server on this port belongs to a different workspace,
+    // so it doesn't recognize our token. 404: whatever is listening there is not a bit server.
+    // Either way the port file is stale — drop it and let the caller fall back to in-process.
+    if (res.status === 401 || res.status === 404) {
+      await this.deleteServerPortFile();
+      throw new ServerIsNotRunning(port);
     }
 
     let jsonResponse;
@@ -269,7 +315,12 @@ Please run the command "bit server-forever" first to start the server.`)
       process.stdout.write(port.toString());
       process.exit(0);
     } catch (err: any) {
-      if (err instanceof ScopeNotFound || err instanceof ServerPortFileNotFound || err instanceof ServerIsNotRunning) {
+      if (
+        err instanceof ScopeNotFound ||
+        err instanceof ServerPortFileNotFound ||
+        err instanceof ServerPortFileInvalid ||
+        err instanceof ServerIsNotRunning
+      ) {
         process.exit(0);
       }
       console.error(err.message); // eslint-disable-line no-console
@@ -358,6 +409,14 @@ Please run the command "bit server-forever" first to start the server.`)
     }
   }
 
+  /**
+   * the port from the port file, proven to be served by a process whose cwd is this workspace.
+   *
+   * Only the `cli-server-port` command uses this. Its whole job is to answer "is there a usable
+   * server?" for external clients such as the VS Code extension, which expect no output when there
+   * isn't one — so it's worth two `lsof` subprocesses there. Running an actual command doesn't pay
+   * that: see the note in runCommandWithHttpServer.
+   */
   private async getExistingUsedPort(): Promise<number> {
     const port = await this.getExistingPort();
     const shouldSkipPortValidation = process.argv.includes(SKIP_PORT_VALIDATION_ARG);
@@ -386,15 +445,25 @@ Please run the command "bit server-forever" first to start the server.`)
 
   private async getExistingPort(): Promise<number> {
     const filePath = this.getServerPortFilePath();
+    let fileContent: string;
     try {
-      const fileContent = await fs.readFile(filePath, 'utf8');
-      return parseInt(fileContent, 10);
+      fileContent = await fs.readFile(filePath, 'utf8');
     } catch (err: any) {
       if (err.code === 'ENOENT') {
         throw new ServerPortFileNotFound(filePath);
       }
       throw err;
     }
+    const port = parseInt(fileContent.trim(), 10);
+    // the server writes this file with a plain overwrite, so a reader can catch it empty or
+    // half-written. Left unchecked that becomes NaN (or a truncated number) and surfaces as an
+    // opaque fetch failure, which exits instead of falling back in-process. Deliberately not
+    // deleting the file: a torn read means the server is mid-write, and the next command will see
+    // the complete value.
+    if (!Number.isInteger(port) || port <= 0 || port > 65535) {
+      throw new ServerPortFileInvalid(filePath, fileContent.trim());
+    }
+    return port;
   }
 
   private async deleteServerPortFile() {

@@ -11,6 +11,8 @@ import {
   isSyncAuthoredMessage,
   parseBranchBitmap,
   parseDevCommitCount,
+  statusReportsUnsyncedWork,
+  touchesBeyondBitmap,
 } from './sync-state';
 
 const DEFAULT_SCOPE = 'acme.shop';
@@ -200,11 +202,57 @@ const DEV_COMMIT_COUNTS: Array<[string, string, boolean]> = [
   ['git writing an error where the count was expected', 'fatal: bad revision', true],
 ];
 
+describe('statusReportsUnsyncedWork', () => {
+  const empty = {
+    newComponents: [],
+    modifiedComponents: [],
+    stagedComponents: [],
+    locallySoftRemoved: [],
+    pendingUpdateDependents: [],
+    mergePendingComponents: [],
+    componentsDuringMergeState: [],
+    invalidComponents: [],
+    importPendingComponents: [],
+  };
+
+  it('an all-empty status is converged', () => {
+    expect(statusReportsUnsyncedWork(empty)).to.equal(false);
+  });
+
+  it('a modified component is work', () => {
+    expect(statusReportsUnsyncedWork({ ...empty, modifiedComponents: ['comp1'] })).to.equal(true);
+  });
+
+  // An unloadable component is UNKNOWN, not converged: its sources may hold the branch's work, and
+  // "not knowing" must route to the snap (which fails loudly), never to a silent converged answer.
+  it('an invalid (unloadable) component is work, not convergence', () => {
+    expect(statusReportsUnsyncedWork({ ...empty, invalidComponents: [{ id: 'comp1' }] })).to.equal(true);
+  });
+
+  // StatusMain SPLITS pending-import errors out of invalidComponents — same unknown, different array.
+  it('a pending-import component is the same unknown, not convergence', () => {
+    expect(statusReportsUnsyncedWork({ ...empty, importPendingComponents: ['comp1'] })).to.equal(true);
+  });
+});
+
 describe('parseDevCommitCount', () => {
   DEV_COMMIT_COUNTS.forEach(([name, raw, hasDevCommits]) => {
     it(`${hasDevCommits ? 'keeps the branch' : 'permits retirement'} for ${name}`, () => {
       expect(parseDevCommitCount(raw), JSON.stringify(raw)).to.equal(hasDevCommits);
     });
+  });
+});
+
+describe('touchesBeyondBitmap', () => {
+  it('is false for an empty diff and for a .bitmap-only commit', () => {
+    expect(touchesBeyondBitmap('')).to.equal(false);
+    expect(touchesBeyondBitmap('\n')).to.equal(false);
+    expect(touchesBeyondBitmap('.bitmap\n')).to.equal(false);
+  });
+
+  it('is true when any source file rides in the same commit as the .bitmap write', () => {
+    expect(touchesBeyondBitmap('.bitmap\ncomp1/index.js\n')).to.equal(true);
+    expect(touchesBeyondBitmap('comp1/index.js\n')).to.equal(true);
   });
 });
 

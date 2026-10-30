@@ -14,6 +14,7 @@ import type { Configuration as WdsConfiguration } from '@rspack/dev-server';
 import { RspackDevServer } from '@rspack/dev-server';
 import type { ComponentServer } from '@teambit/bundler';
 import { createSsrMiddleware } from './ssr-middleware';
+import { getUiRootEntryName, getUiRootHtmlFilename } from './bundle-ui.task';
 import type { StartPlugin } from './start-plugin';
 import type { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
@@ -285,12 +286,14 @@ export class UIServer {
     app.use(express.static(root, { index: false }));
     const port = await Port.getPortFromRange(portRange || [3100, 3200]);
     await this.setupServerSideRendering({ root, port, app });
-    app.use(fallback('index.html', { root }));
+    // the bundle covers every UI root in one compilation, so there is no single `index.html` - each
+    // root gets its own document naming only the chunks that root's entry needs.
+    app.use(fallback(getUiRootHtmlFilename(this.uiRootExtension), { root }));
     server.listen(port);
     this._port = port;
 
-    // important: we use the string of the following message for the http.e2e.ts. if you change the message,
-    // please make sure you change the `HTTP_SERVER_READY_MSG` const.
+    // important: the e2e HttpHelper waits on this exact string to know the server is up (it builds
+    // it per UI root, in `readyMessageFor`). if you change the message, change that too.
     const readyMessage = `UI server of ${this.uiRootExtension} is listening to port ${port}`;
     this.logger.info(readyMessage);
     this.setReady();
@@ -303,6 +306,8 @@ export class UIServer {
       root,
       port,
       title: this.uiRoot.name,
+      // which entry of the (multi-entry) bundle this root's assets belong to
+      entryName: getUiRootEntryName(this.uiRootExtension),
       logger: this.logger,
     });
 

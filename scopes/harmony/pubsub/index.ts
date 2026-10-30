@@ -4,5 +4,6 @@ export type { PubsubMain } from './pubsub.main.runtime';
 export type { PubsubPreview } from './pubsub.preview.runtime';
 export type { PubsubUI } from './pubsub.ui.runtime';
 export { BitBaseEvent } from './bit-base-event';
+export { ClickInsideAnIframeEvent } from './click-inside-an-iframe';
 export type { PubSubRegistry } from './pubsub-context';
 export { usePubSub, usePubSubIframe } from './pubsub-context';

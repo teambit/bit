@@ -21,7 +21,8 @@ export class ComponentVersion {
   }
 
   async flattenedDependencies(repository: Repository): Promise<ComponentIdList> {
-    return this.getVersion(repository).then((version) => version.flattenedDependencies);
+    const version = await this.getVersion(repository);
+    return version.loadFlattenedDependencies(repository);
   }
 
   toComponentId(): ComponentID {
@@ -37,7 +38,6 @@ export class ComponentVersion {
   }
 
   toConsumer(repo: Repository): Promise<ConsumerComponent> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.component.toConsumerComponent(this.version, this.component.scope, repo);
   }
 }

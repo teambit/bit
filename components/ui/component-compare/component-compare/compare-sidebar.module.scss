@@ -37,11 +37,28 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
   }
 }
 
+// At narrow embedded widths, keep the diff usable by falling back to the pre-sidebar layout.
+// Use a container query because compare can be embedded in a pane much narrower than the viewport.
+@container component-compare-layout (max-width: 640px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+// Fallback for browsers without container-query support.
+@media screen and (max-width: 640px) {
+  .sidebar {
+    display: none;
+  }
+}
+
 .sidebarHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  height: 44px;
+  padding: 0 16px;
+  box-sizing: border-box;
   font-size: 12px;
   font-weight: 600;
   color: $text-secondary;

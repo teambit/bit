@@ -2,7 +2,8 @@
 /* eslint-disable import/no-unresolved */
 
 import type { CLIMain, Command } from '@teambit/cli';
-import { CLIAspect, getArgsData, getCommandName, getFlagsData, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect, getArgsData, getCommandName, getFlagsData } from '@teambit/cli';
 import childProcess from 'child_process';
 import stripAnsi from 'strip-ansi';
 import fs from 'fs-extra';
@@ -1435,6 +1436,18 @@ export class CliMcpServerMain {
                 `This workspace-modifying operation must be run directly in the terminal where the user has full visibility and control.`
             );
           }
+        }
+
+        // hard-delete permanently deletes components from the remote scope and can corrupt
+        // dependents — never allow it from an agent context, regardless of how the flag was passed
+        const hasHardFlag = flags.hard || args.some((arg: string) => arg === '--hard' || arg.startsWith('--hard='));
+        if (command === 'delete' && hasHardFlag) {
+          return this.formatAsCallToolResult(
+            `Error: "delete --hard" is not available through the MCP server. ` +
+              `It permanently deletes components from the remote scope with no way to recover them, and may corrupt components that depend on them. ` +
+              `If a permanent deletion is truly intended, ask the user to run the command themselves in a terminal. ` +
+              `For the common case, use "delete" without --hard (soft-delete, recoverable via "bit recover").`
+          );
         }
 
         // Also check for the shorthand 'switch' command (which is an alias for 'lane switch')

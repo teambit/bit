@@ -180,6 +180,8 @@ export type PackageManagerInstallOptions = {
 
   dependenciesGraph?: DependenciesGraph;
 
+  failOnDependenciesGraphError?: boolean;
+
   forcedHarmonyVersion?: string;
 
   /**
@@ -227,6 +229,8 @@ export interface PackageManager {
    * Name of the package manager
    */
   name: string;
+
+  readonly supportsDependencyGraphRestoration?: boolean;
   /**
    * install dependencies
    * @param componentDirectoryMap

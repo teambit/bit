@@ -21,19 +21,19 @@ import {
 import json from 'comment-json';
 import userHome from 'user-home';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import type { RuntimeDefinition, Extension, Aspect } from '@teambit/harmony';
 import { Harmony } from '@teambit/harmony';
 import { Config } from '@teambit/harmony/harmony-config';
 import { readConfigFile } from '@teambit/harmony/harmony-config/config-reader';
 import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
-import { loadConsumer } from '@teambit/legacy.consumer';
+import { loadConsumer, ComponentLoader } from '@teambit/legacy.consumer';
 import type { WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { BitError } from '@teambit/bit-error';
-import { ComponentLoader } from '@teambit/legacy.consumer-component';
 import { LegacyWorkspaceConfig, ComponentOverrides, ComponentConfig } from '@teambit/legacy.consumer-config';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { satisfies } from 'semver';
@@ -54,6 +54,8 @@ import type { EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { GeneratorMain } from '@teambit/generator';
 import { GeneratorAspect } from '@teambit/generator';
+import type { WorkspaceRootMain } from '@teambit/workspace-root';
+import { WorkspaceRootAspect } from '@teambit/workspace-root';
 import { HostInitializerMain } from '@teambit/host-initializer';
 
 async function loadLegacyConfig(config: any) {
@@ -301,6 +303,9 @@ export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]
     restoreGlobalsFromSnapshot,
     isCoreAspect,
   });
+  // `bit clone` loads bit for the workspace it creates. same reason as the generator: this aspect
+  // depends on workspace-root, so workspace-root cannot import it.
+  harmony.get<WorkspaceRootMain>(WorkspaceRootAspect.id).setLoadBit(loadBit);
   return harmony;
 }
 

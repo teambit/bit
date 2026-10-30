@@ -8,7 +8,7 @@ import type { Logger } from '@teambit/logger';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { WorkspacePolicy } from '@teambit/dependency-resolver';
 import compact from 'lodash.compact';
-import type { WebpackConfigTransformer } from '@teambit/webpack';
+import type { WebpackConfigTransformer } from '@teambit/webpack.webpack-bundler';
 import { BitError } from '@teambit/bit-error';
 import type { ReactEnv } from '../../react.env';
 import type { ReactAppBuildResult } from './react-build-result';
@@ -118,7 +118,7 @@ export class ReactApp implements Application {
       html: htmlConfig,
       targets: [
         {
-          entries: await this.getEntries(),
+          entries: await this.getEntries(context.hostRootDir),
           components: [context.appComponent],
           outputPath: resolve(context.workdir, calcOutputPath(context.appName, 'browser')),
           hostDependencies: this.getHostDependencies(),
@@ -323,7 +323,7 @@ export class ReactApp implements Application {
   }
 
   private async getDevServerContext(context: AppContext): Promise<DevServerContext> {
-    const entries = await this.getEntries();
+    const entries = await this.getEntries(context.hostRootDir);
     return Object.assign(context, {
       entry: entries,
       rootPath: '',

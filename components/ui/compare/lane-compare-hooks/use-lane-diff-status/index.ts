@@ -1,5 +1,5 @@
-export {
-  useLaneDiffStatus,
+export { useLaneDiffStatus } from './use-lane-diff-status';
+export type {
   LaneDiffStatusQueryResponse,
   UseLaneDiffStatusResult,
   UseLaneDiffStatus,

@@ -29,13 +29,18 @@ export function useCurrentUser(): {
 } {
   const [setRedirectUrl] = useMutation(SET_REDIRECT_URL_MUTATION);
 
+  // read the href during render rather than inside the dependency array: a dependency array is
+  // evaluated on every render, including the server-side one, where `window` does not exist. the
+  // effect body itself never runs on the server, so only the dependency needed guarding.
+  const redirectUrl = typeof window === 'undefined' ? undefined : window.location.href;
+
   React.useEffect(() => {
-    const redirectUrl = window.location.href;
+    if (!redirectUrl) return;
     setRedirectUrl({ variables: { redirectUrl } }).catch((error) => {
       // eslint-disable-next-line no-console
       console.error('Error setting redirect URL:', error);
     });
-  }, [window.location.href]);
+  }, [redirectUrl]);
 
   const { data, loading } = useDataQuery(CURRENT_USER_QUERY, {
     fetchPolicy: 'cache-first',

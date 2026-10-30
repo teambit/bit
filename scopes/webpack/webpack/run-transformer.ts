@@ -1,6 +1,10 @@
 import type { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 import type { WebpackConfigDevServerTransformer, WebpackConfigTransformer } from './webpack.main.runtime';
 
+/**
+ * @deprecated equivalent to `@teambit/webpack.webpack-bundler`'s `runTransformers`. Kept only for
+ * backward-compatible `from '@teambit/webpack'` imports.
+ */
 export function runTransformersWithContext(
   config: WebpackConfigMutator,
   transformers: Array<WebpackConfigTransformer | WebpackConfigDevServerTransformer> = [],

@@ -3,6 +3,7 @@ import groupArray from 'group-array';
 import partition from 'lodash.partition';
 import type { Workspace } from '@teambit/workspace';
 import { ComponentIdList } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { compact, isEmpty } from 'lodash';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
@@ -10,6 +11,7 @@ import { logger } from '@teambit/legacy.logger';
 import { Http } from '@teambit/scope.network';
 import { Remotes } from '@teambit/scope.remotes';
 import { deleteComponentsFiles } from './delete-component-files';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import type { RemovedObjects } from '@teambit/legacy.scope';
 import pMapSeries from 'p-map-series';
@@ -17,6 +19,12 @@ import type { Consumer } from '@teambit/legacy.consumer';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { getNodeModulesPathOfComponent } from '@teambit/pkg.modules.component-package-name';
 import { RemovedLocalObjects } from './removed-local-objects';
+import type { PackageNameData, RemoveStatus } from './load-free-checks';
+import {
+  findComponentUsingAsAspect,
+  getPackageNameDataWithoutLoading,
+  getStatusWithoutLoading,
+} from './load-free-checks';
 
 export type RemoveComponentsResult = { localResult: RemovedLocalObjects; remoteResult: RemovedObjects[] };
 
@@ -117,33 +125,20 @@ async function removeLocal(
   if (!force) {
     const newIds: string[] = [];
     await pMapSeries(bitIds, async (id) => {
-      try {
-        const componentStatus = await workspace.getComponentStatusById(id);
-        if (componentStatus.newlyCreated) newIds.push(id.toStringWithoutVersion());
-        if (componentStatus.modified) modifiedComponents.push(id);
-        else nonModifiedComponents.push(id);
-      } catch (err: any) {
-        // if a component has an error, such as, missing main file, we do want to allow removing that component
-        if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
-          nonModifiedComponents.push(id);
-        } else {
-          throw err;
-        }
-      }
+      const status = (await getStatusWithoutLoading(workspace, id)) ?? (await getStatusByLoading(workspace, id));
+      if (status.newlyCreated) newIds.push(id.toStringWithoutVersion());
+      if (status.modified) modifiedComponents.push(id);
+      else nonModifiedComponents.push(id);
     });
     if (newIds.length) {
-      const list = await workspace.listWithInvalid();
-      list.components.forEach((c) => {
-        if (bitIds.hasWithoutVersion(c.id)) return; // it gets deleted anyway
-        const aspectIds = c.state.aspects.ids;
-        const used = newIds.find((newId) => aspectIds.includes(newId));
-        if (used)
-          throw new BitError(`Unable to remove ${c.id.toStringWithoutVersion()}.
-This component is 1) an aspect 2) is used by other components, such as "${c.id.toStringWithoutVersion()}" 3) it's a new component so it can't be installed as a package.
+      // the ones being removed are excluded, they get deleted anyway
+      const found = await findComponentUsingAsAspect(workspace, newIds, bitIds);
+      if (found)
+        throw new BitError(`Unable to remove ${found.usedId}.
+This component is 1) an aspect 2) is used by other components, such as "${found.user.toStringWithoutVersion()}" 3) it's a new component so it can't be installed as a package.
 Removing this component from the workspace will disrupt the functionality of other components that depend on it, and resolving these issues may not be straightforward.
 If you understand the risks and wish to proceed with the removal, please use the --force flag.
 `);
-      });
     }
   }
   const idsToRemove = force ? bitIds : nonModifiedComponents;
@@ -155,7 +150,7 @@ If you understand the risks and wish to proceed with the removal, please use the
   const idsToCleanFromWorkspace = ComponentIdList.fromArray(
     idsToRemove.filter((id) => newComponents.hasWithoutVersion(id))
   );
-  const { components: componentsToRemove } = await consumer.loadComponents(idsToRemove, false);
+  const componentsToRemove = await getPackageNameDataOfMany(workspace, idsToRemove);
   const { removedComponentIds, missingComponents, dependentBits, removedFromLane } = await consumer.scope.removeMany(
     idsToRemoveFromScope,
     force,
@@ -167,8 +162,10 @@ If you understand the risks and wish to proceed with the removal, please use the
     if (deleteFiles) await deleteComponentsFiles(consumer, idsToCleanFromWorkspace);
     if (!track) {
       const removedComponents = componentsToRemove.filter((c) => idsToCleanFromWorkspace.hasWithoutVersion(c.id));
-      await consumer.packageJson.removeComponentsFromDependencies(removedComponents);
-      await removeComponentsFromNodeModules(consumer, removedComponents);
+      // the root is untracked only. it was never a package, see withoutWorkspaceRoot.
+      const packageComponents = withoutWorkspaceRoot(consumer, removedComponents);
+      await consumer.packageJson.removeComponentsFromDependencies(packageComponents);
+      await removeComponentsFromNodeModules(consumer, packageComponents);
       await consumer.cleanFromBitMap(idsToCleanFromWorkspace);
       await workspace.cleanFromConfig(idsToCleanFromWorkspace);
       await workspace.removeFromStagedConfig(idsToCleanFromWorkspace);
@@ -183,9 +180,42 @@ If you understand the risks and wish to proceed with the removal, please use the
   );
 }
 
-export async function removeComponentsFromNodeModules(consumer: Consumer, components: ConsumerComponent[]) {
+async function getStatusByLoading(workspace: Workspace, id: ComponentID): Promise<RemoveStatus> {
+  try {
+    const { newlyCreated = false, modified = false } = await workspace.getComponentStatusById(id);
+    return { newlyCreated, modified };
+  } catch (err: any) {
+    // if a component has an error, such as, missing main file, we do want to allow removing that component
+    if (ConsumerComponent.isComponentInvalidByErrorType(err)) return { newlyCreated: false, modified: false };
+    throw err;
+  }
+}
+
+/**
+ * load only the components whose package-name data can't be calculated without loading them.
+ */
+async function getPackageNameDataOfMany(workspace: Workspace, ids: ComponentIdList): Promise<PackageNameData[]> {
+  const withoutLoading = await pMapSeries(ids, (id) => getPackageNameDataWithoutLoading(workspace, id));
+  const idsToLoad = ids.filter((_id, index) => !withoutLoading[index]);
+  const loaded = idsToLoad.length ? await workspace.getMany(idsToLoad, undefined, false) : [];
+  return [...compact(withoutLoading), ...loaded.map((comp) => comp.state._consumer)];
+}
+
+/**
+ * the workspace-root component is never installed nor linked - it is the workspace, not a package - so
+ * there is nothing of it to remove from the manifests or from node_modules, and the package name its
+ * id derives may belong to a dependency of the same name.
+ */
+function withoutWorkspaceRoot(consumer: Consumer, components: PackageNameData[]): PackageNameData[] {
+  return components.filter(
+    (c) => consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })?.rootDir !== WORKSPACE_ROOT_DIR
+  );
+}
+
+export async function removeComponentsFromNodeModules(consumer: Consumer, components: PackageNameData[]) {
   logger.debug(`removeComponentsFromNodeModules: ${components.map((c) => c.id.toString()).join(', ')}`);
-  const pathsToRemoveWithNulls = components.map((c) => {
+  const linkedComponents = withoutWorkspaceRoot(consumer, components);
+  const pathsToRemoveWithNulls = linkedComponents.map((c) => {
     return getNodeModulesPathOfComponent({ ...c, id: c.id });
   });
   const pathsToRemove = compact(pathsToRemoveWithNulls);

@@ -1,1 +1,2 @@
-export { docsFields, useDocs, Properties, DefaultValue } from './get-docs';
+export { docsFields, useDocs } from './get-docs';
+export type { Properties, DefaultValue } from './get-docs';

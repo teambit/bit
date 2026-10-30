@@ -4,7 +4,7 @@ import type { ILegacyWorkspaceConfig, WorkspaceConfigLoadFunction } from '@teamb
 import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import type { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { GlobalConfig, Harmony } from '@teambit/harmony';
 import path from 'path';
 import type { WorkspaceConfigFileProps, WorkspaceExtensionProps } from './workspace-config';

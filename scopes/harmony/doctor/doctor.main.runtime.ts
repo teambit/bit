@@ -1,5 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import path from 'path';
 import fs from 'fs-extra';
 import os from 'os';
@@ -361,7 +362,6 @@ export class DoctorMain {
       userDetails: this._getUserDetails(),
     };
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return env;
   }
 

@@ -3,7 +3,10 @@ import classNames from 'classnames';
 import type { HTMLAttributes } from 'react';
 import React, { useMemo } from 'react';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
-import { createElement } from 'react-syntax-highlighter';
+// deep import on purpose: the package root re-exports `default-highlight` (highlight.js with every
+// language) and `prism` (refractor with every language) alongside the light builds, so importing
+// anything from the root pulls ~2.3 MB into the bundle and defeats the `prism-light` import below.
+import createElement from 'react-syntax-highlighter/dist/esm/create-element';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 import markDownSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';

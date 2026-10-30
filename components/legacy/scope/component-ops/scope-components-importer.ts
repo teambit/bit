@@ -26,8 +26,7 @@ import type {
 import { ObjectList, Ref } from '@teambit/objects';
 import type { ComponentDef } from '../repositories/sources';
 import type SourcesRepository from '../repositories/sources';
-import type { Remotes } from '@teambit/scope.remotes';
-import { getScopeRemotes } from '@teambit/scope.remotes';
+import type { Remotes } from '../scope-remotes';
 import { VersionDependencies } from '../version-dependencies';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
@@ -37,7 +36,7 @@ import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import type { HashesPerRemotes } from '../exceptions/missing-objects';
 import { MissingObjects } from '../exceptions/missing-objects';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
-import type { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import type { FETCH_OPTIONS } from '../objects-fetcher/fetch-options';
 
 type HashesPerRemote = { [remoteName: string]: string[] };
 
@@ -62,6 +61,13 @@ export class ScopeComponentsImporter {
    * (especially when "importer" is not used, because the importer has a fallback to go to the main scope).
    */
   shouldOnlyFetchFromCurrentLane = false;
+  /**
+   * set by the scope aspect to `getScopeRemotes` of @teambit/scope.remotes, which can't be imported here
+   * because the remotes package depends on this one.
+   */
+  static getRemotes: (scope: Scope) => Promise<Remotes> = async () => {
+    throw new Error('ScopeComponentsImporter.getRemotes was not set. make sure the scope aspect is loaded');
+  };
   private constructor(private scope: Scope) {
     if (!scope) throw new Error('unable to instantiate ScopeComponentsImporter without Scope');
     this.sources = scope.sources;
@@ -188,7 +194,7 @@ export class ScopeComponentsImporter {
     );
     const uniqExternals = ComponentIdList.uniqFromArray(externalsToFetch);
     logger.debug('importMany', `total missing externals: ${uniqExternals.length}`);
-    const remotes = await getScopeRemotes(this.scope);
+    const remotes = await ScopeComponentsImporter.getRemotes(this.scope);
     // we don't care about the VersionDeps returned here as it may belong to the dependencies
     const importedComps = await this.getExternalMany(uniqExternals, remotes, {
       throwForDependencyNotFound,
@@ -293,7 +299,7 @@ export class ScopeComponentsImporter {
       return false;
     });
     const versionDeps = await this.multipleCompsDefsToVersionDeps(existingDefs);
-    const remotes = await getScopeRemotes(this.scope);
+    const remotes = await ScopeComponentsImporter.getRemotes(this.scope);
     logger.debugAndAddBreadCrumb(
       'importManyFromOriginalScopes',
       'successfully fetched local components and their dependencies. Going to fetch externals'
@@ -517,7 +523,7 @@ export class ScopeComponentsImporter {
   }
 
   async importLanes(remoteLaneIds: LaneId[], includeLaneHistory = false): Promise<Lane[]> {
-    const remotes = await getScopeRemotes(this.scope);
+    const remotes = await ScopeComponentsImporter.getRemotes(this.scope);
     const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), {
       type: 'lane',
       includeLaneHistory,
@@ -566,7 +572,7 @@ export class ScopeComponentsImporter {
       );
       if (isEmpty(groupedHashedMissing)) return;
 
-      const remotes = await getScopeRemotes(this.scope);
+      const remotes = await ScopeComponentsImporter.getRemotes(this.scope);
       const allObjects = await new ObjectFetcher(
         this.repo,
         this.scope,
@@ -586,7 +592,7 @@ export class ScopeComponentsImporter {
   }
 
   async checkWhatHashesExistOnRemote(remoteName: string, hashes: string[]): Promise<string[]> {
-    const remotes: Remotes = await getScopeRemotes(this.scope);
+    const remotes: Remotes = await ScopeComponentsImporter.getRemotes(this.scope);
     const remote = await remotes.resolve(remoteName);
     const getExistingLegacy = async () => {
       const multipleStreams = await remotes.fetch({ [remoteName]: hashes }, { type: 'object' });
@@ -719,7 +725,7 @@ export class ScopeComponentsImporter {
     if (!this.scope.isExported(id)) {
       throw new Error(`unable to get remote component "${id.toString()}", the scope was not exported yet`);
     }
-    const remotes = await getScopeRemotes(this.scope);
+    const remotes = await ScopeComponentsImporter.getRemotes(this.scope);
     let bitObjectsList: BitObjectList;
     try {
       const streams = await remotes.fetch({ [id.scope as string]: [id.toString()] });
@@ -742,7 +748,7 @@ export class ScopeComponentsImporter {
         throw new Error(`unable to get remote component "${id.toString()}", the scope was not exported yet`);
       }
     });
-    const remotes = await getScopeRemotes(this.scope);
+    const remotes = await ScopeComponentsImporter.getRemotes(this.scope);
     const grouped = groupByScopeName(ids);
     const streams = await remotes.fetch(grouped);
     return this.multipleStreamsToBitObjects(streams);
@@ -845,15 +851,19 @@ export class ScopeComponentsImporter {
     const flattenedDepsToFetch = new ComponentIdList();
     await Promise.all(
       componentsWithVersion.map(async (compWithVer) => {
-        const flattenedEdges = await compWithVer.versionObj.getFlattenedEdges(this.repo);
+        // loaded here also for the VersionDependencies created below, which read them synchronously.
+        const [flattenedDependencies, flattenedEdges] = await Promise.all([
+          compWithVer.versionObj.loadFlattenedDependencies(this.repo),
+          compWithVer.versionObj.getFlattenedEdges(this.repo),
+        ]);
         if (skipComponentsWithDepsGraph) {
           if (flattenedEdges.length) return;
-          if (!compWithVer.versionObj.flattenedDependencies.length) return;
+          if (!flattenedDependencies.length) return;
           logger.debug(
             `scopeComponentImporter, unable to get dependencies graph from ${compWithVer.componentVersion.id.toString()}, will import all its deps`
           );
         }
-        flattenedDepsToFetch.add(compWithVer.versionObj.flattenedDependencies);
+        flattenedDepsToFetch.add(flattenedDependencies);
       })
     );
 
@@ -862,9 +872,9 @@ export class ScopeComponentsImporter {
     const compVersionsOfDeps = this.componentsDefToComponentsVersion(compDefsOfDeps, false, true);
 
     const versionDeps = componentsWithVersion.map(({ componentVersion, versionObj }) => {
-      const dependencies = versionObj.flattenedDependencies.map((dep) =>
-        compVersionsOfDeps.find((c) => c.toComponentId().isEqual(dep))
-      );
+      const dependencies = versionObj
+        .getLoadedFlattenedDependencies()
+        .map((dep) => compVersionsOfDeps.find((c) => c.toComponentId().isEqual(dep)));
       return new VersionDependencies(componentVersion, compact(dependencies), versionObj);
     });
     return versionDeps;
@@ -983,7 +993,7 @@ export class ScopeComponentsImporter {
     }
   ): Promise<void> {
     if (!ids.length) return;
-    const remotes = await getScopeRemotes(this.scope);
+    const remotes = await ScopeComponentsImporter.getRemotes(this.scope);
     logger.debug(`getExternalManyWithoutDeps, total ids: ${ids.length}, localFetch: ${localFetch.toString()}`);
     const defs: ComponentDef[] = await this.sources.getMany(ids, true);
     const left = defs.filter((def) => !localFetch || !def.component);
@@ -1098,7 +1108,8 @@ export class ScopeComponentsImporter {
       if (preferDependencyGraph && flattenedEdges.length) {
         return;
       }
-      const flattenedDepsToLocate = version.flattenedDependencies.filter((dep) => !existingCache.has(dep));
+      const flattenedDependencies = await version.loadFlattenedDependencies(this.repo);
+      const flattenedDepsToLocate = flattenedDependencies.filter((dep) => !existingCache.has(dep));
       const flattenedDepsDefs = await this.sources.getMany(flattenedDepsToLocate, reFetchUnBuiltVersion);
       const allFlattenedExist = flattenedDepsDefs.every((def) => {
         if (!def.component) return false;
@@ -1163,9 +1174,13 @@ export class ScopeComponentsImporter {
     const versionDeps = compact(versionDepsWithNulls);
     const allFlattened = await Promise.all(
       versionDeps.map(async (v) => {
-        const flattenedEdges = await v.version.getFlattenedEdges(this.repo);
+        // loaded here also for the dependencies set below, which read them synchronously.
+        const [flattenedDependencies, flattenedEdges] = await Promise.all([
+          v.version.loadFlattenedDependencies(this.repo),
+          v.version.getFlattenedEdges(this.repo),
+        ]);
         if (preferDependencyGraph && flattenedEdges.length) return [];
-        return v.version.getAllFlattenedDependencies();
+        return flattenedDependencies;
       })
     );
     const allFlattenedUniq = ComponentIdList.uniqFromArray(flatten(allFlattened));
@@ -1180,9 +1195,9 @@ export class ScopeComponentsImporter {
       })
     );
     versionDeps.forEach((versionDep) => {
-      const deps = versionDep.version.flattenedDependencies.map((dep) =>
-        flattenedComponentVersions.find((c) => c.toComponentId().isEqual(dep))
-      );
+      const deps = versionDep.version
+        .getLoadedFlattenedDependencies()
+        .map((dep) => flattenedComponentVersions.find((c) => c.toComponentId().isEqual(dep)));
       versionDep.dependencies = compact(deps);
     });
 

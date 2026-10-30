@@ -6,10 +6,11 @@ import { BuildStatus } from '@teambit/legacy.constants';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
 import type { ComponentObjects } from '../component-objects';
-import type { SnapsDistance, VersionInfo } from '@teambit/component.snap-distance';
+import type { SnapsDistance, VersionInfo, VersionObjectsByHash } from '@teambit/component.snap-distance';
 import {
   getAllVersionHashes,
   getAllVersionsInfo,
+  indexVersionObjects,
   getSubsetOfVersionParents,
   getVersionParentsFromVersion,
   getDivergeData,
@@ -151,7 +152,6 @@ export default class SourceRepository {
     const isSnap = isHash(bitId.version);
     const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId._legacy.getVersion().versionNum}`;
     if (isSnap) {
-      // @ts-ignore
       const snap = await this.objects().load(new Ref(bitId.version));
       if (!snap) {
         logger.trace(`sources.get, ${msg} object was not found on the filesystem`);
@@ -159,13 +159,11 @@ export default class SourceRepository {
       }
       return returnComponent(snap as Version);
     }
-    // @ts-ignore
     if (!component.hasTagIncludeOrphaned(bitId.version)) {
       logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
       return undefined;
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const versionHash = component.versionsIncludeOrphaned[bitId.version];
+    const versionHash = component.getRef(bitId.version as string) as Ref;
     const version = (await this.objects().load(versionHash)) as Version;
     if (!version) {
       logger.trace(`sources.get, ${msg} object was not found on the filesystem`);
@@ -191,7 +189,7 @@ export default class SourceRepository {
       if (isSnap) {
         return this.objects().has(new Ref(ver));
       }
-      const versionHash = component.versionsIncludeOrphaned[ver];
+      const versionHash = component.getRef(ver);
       if (!versionHash) {
         return false;
       }
@@ -215,8 +213,7 @@ export default class SourceRepository {
         // eslint-disable-next-line @typescript-eslint/return-await
         return this._findComponentBySymlink(foundComponent);
       }
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (foundComponent) return foundComponent;
+      if (foundComponent) return foundComponent as ModelComponent;
     } catch (err: any) {
       logger.error(`findComponent got an error ${err}`);
     }
@@ -235,8 +232,7 @@ if you have the steps to reproduce the issue, please open a Github issue with th
 to quickly fix the issue, please delete the object at "${this.objects().objectPath(symlink.hash())}"`
       );
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return foundComponent;
+    return foundComponent as ModelComponent;
   }
 
   getObjects(id: ComponentID): Promise<ComponentObjects> {
@@ -494,7 +490,7 @@ please either remove the component (bit remove) or remove the lane.`);
    * changes where done on a lane, this function will not do anything because modelComponent
    * hasn't changed.
    */
-  async merge(incomingComp: ModelComponent, versionObjects: Version[]): Promise<MergeResult> {
+  async merge(incomingComp: ModelComponent, versionObjects: Version[] | VersionObjectsByHash): Promise<MergeResult> {
     const existingComp = await this._findComponent(incomingComp);
     if (existingComp && incomingComp.isEqual(existingComp)) {
       return { mergedComponent: incomingComp, mergedVersions: [] };
@@ -538,7 +534,7 @@ please either remove the component (bit remove) or remove the lane.`);
   private async getMergedSnaps(
     existingHead: Ref | undefined,
     incomingComp: ModelComponent,
-    versionObjects: Version[]
+    versionObjects: Version[] | VersionObjectsByHash
   ): Promise<string[]> {
     const allIncomingVersionsInfoUntilExistingHead = await getAllVersionsInfo({
       modelComponent: incomingComp,
@@ -565,10 +561,12 @@ please either remove the component (bit remove) or remove the lane.`);
   ): Promise<{ mergeResults: MergeResult[]; errors: Error[] }> {
     const mergeResults: MergeResult[] = [];
     const errors: Array<MergeConflict | ComponentNeedsUpdate> = [];
+    // each component is merged with the versions of all components. index them once rather than per component.
+    const versionObjectsByHash = indexVersionObjects(versions);
     await Promise.all(
       components.map(async (component) => {
         try {
-          const result = await this.merge(component, versions);
+          const result = await this.merge(component, versionObjectsByHash);
           mergeResults.push(result);
         } catch (err: any) {
           if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {

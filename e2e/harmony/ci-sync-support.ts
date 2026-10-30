@@ -107,11 +107,16 @@ export function syncE2eHelpers(getHelper: () => Helper) {
 
   /**
    * Run a bit command capturing stdout, stderr AND the exit code — `bit ci sync` reports halts by
-   * exiting non-zero with the summary on stderr, and `runCmd` throws on non-zero.
+   * exiting non-zero with the summary on stderr, and `runCmd` throws on non-zero. `env` is added to the
+   * inherited environment.
    */
-  function runBit(cmd: string, cwd: string = h().scopes.localPath): { output: string; exitCode: number } {
+  function runBit(
+    cmd: string,
+    cwd: string = h().scopes.localPath,
+    env?: Record<string, string>
+  ): { output: string; exitCode: number } {
     const full = cmd.startsWith('bit ') ? `${h().command.bitBin} ${cmd.slice(4)}` : cmd;
-    const res = execa.sync(full, { cwd, shell: true, reject: false });
+    const res = execa.sync(full, { cwd, shell: true, reject: false, env });
     const combined = `${res.stdout || ''}\n${res.stderr || ''}`;
     return { output: (removeChalkCharacters(combined) as string) || '', exitCode: res.exitCode ?? -1 };
   }
@@ -275,5 +280,32 @@ export function syncE2eHelpers(getHelper: () => Helper) {
     branchSideCommit,
     makeLocalScopeCold,
     scopeObjectCount,
+  };
+}
+
+/**
+ * Arm a `pre-push` hook in the suite's local clone — the only way to interleave a remote update into
+ * the command's own push. Pins `core.hooksPath` as insurance against a global override on the machine
+ * running the suite. Returns the disarm callback for the test's `finally`; it removes the hook AND
+ * restores the prior `core.hooksPath`, so no config change leaks into later tests.
+ */
+export function armPrePushHook(getHelper: () => Helper, script: string): () => void {
+  const helper = getHelper();
+  const hookPath = path.join(helper.scopes.localPath, '.git', 'hooks', 'pre-push');
+  let priorHooksPath: string | undefined;
+  try {
+    priorHooksPath = helper.command.runCmd('git config --local --get core.hooksPath').trim() || undefined;
+  } catch {
+    priorHooksPath = undefined; // unset — `git config --get` exits non-zero
+  }
+  helper.command.runCmd('git config core.hooksPath .git/hooks');
+  fs.outputFileSync(hookPath, `#!/bin/sh\n${script}\nexit 0\n`);
+  fs.chmodSync(hookPath, 0o755);
+  return () => {
+    fs.removeSync(hookPath);
+    // quoted: a machine-level prior value can hold whitespace, and runCmd goes through a shell
+    helper.command.runCmd(
+      priorHooksPath ? `git config core.hooksPath "${priorHooksPath}"` : 'git config --unset core.hooksPath'
+    );
   };
 }

@@ -1,1 +1,1 @@
-export { ComponentCompareProps, TabItem } from './component-compare-props';
+export type { ComponentCompareProps, TabItem } from './component-compare-props';

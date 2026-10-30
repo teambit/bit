@@ -1,10 +1,11 @@
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
-import { compact, flatten, isEqual, pick } from 'lodash';
+import { compact, flatten, isEqual, pick, uniqBy } from 'lodash';
 import { isFeatureEnabled, DISABLE_CAPSULE_OPTIMIZATION } from '@teambit/harmony.modules.feature-toggle';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
@@ -12,7 +13,7 @@ import { ComponentMap, ComponentAspect } from '@teambit/component';
 import type { ComponentMain, ComponentFactory, Component } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
-import type { GraphMain } from '@teambit/graph';
+import type { ComponentIdGraph, GraphMain } from '@teambit/graph';
 import { GraphAspect } from '@teambit/graph';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
@@ -27,12 +28,13 @@ import type {
   PackageManagerInstallOptions,
   NodeLinker,
 } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE, resolvePlusVersion } from '@teambit/dependency-resolver';
 import type { Logger, LoggerMain, LongProcessLogger } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import type { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
+import { importMultipleDistsArtifacts } from '@teambit/legacy.scope';
 import type { GlobalConfigMain } from '@teambit/global-config';
 import { GlobalConfigAspect } from '@teambit/global-config';
 import {
@@ -50,7 +52,6 @@ import {
   deserializeArtifactFiles,
   getArtifactFilesByExtension,
   getArtifactFilesExcludeExtension,
-  importMultipleDistsArtifacts,
   DataToPersist,
   RemovePath,
 } from '@teambit/component.sources';
@@ -68,10 +69,12 @@ import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { CapsuleCache } from './capsule-cache';
+import { enforceDependencyClosedPackageSet } from './dependency-closed-package-set';
 import type { CapsuleKind, PruneCapsulesOptions, PruneCapsulesReport } from './capsule-cache';
 import { IsolatorAspect } from './isolator.aspect';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
+import { removeHiddenPeerDependencies } from './remove-hidden-peer-dependencies';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 
@@ -478,6 +481,7 @@ export class IsolatorMain {
         filteredComps,
         seeders,
         host,
+        successorsSubgraph,
         opts.originalSeeders
       );
       this.logger.debug(
@@ -589,6 +593,8 @@ export class IsolatorMain {
     cacheLockFileOnly = false
   ): void {
     this.logger.info(`registering process.on(exit) to move capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
+    // keyed by the dirs, so isolating again into the same dated dir doesn't add another hook for the same move
+    const hookKey = `teambit.component/isolator:move-capsules:${datedCapsuleDir}:${targetCapsuleDir}:${cacheLockFileOnly}`;
     this.cli.registerOnBeforeExit(async () => {
       const allDirs = await this.getAllCapsulesDirsFromRoot(datedCapsuleDir);
       if (cacheLockFileOnly) {
@@ -596,7 +602,7 @@ export class IsolatorMain {
       } else {
         await this.moveCapsulesToTargetDir(allDirs, datedCapsuleDir, targetCapsuleDir);
       }
-    });
+    }, hookKey);
   }
 
   private async getAllCapsulesDirsFromRoot(rootDir: string): Promise<string[]> {
@@ -786,6 +792,11 @@ export class IsolatorMain {
     cyclicMemberIds?: Set<string>
   ): Promise<CapsuleList> {
     this.logger.debug(`createCapsules, ${components.length} components`);
+    // the same component can be requested twice, e.g. an env of a scope's components that is also
+    // a component in that scope may be registered both with and without a version, resolving to the
+    // same id. two capsules on the same path then fail updateWithCurrentPackageJsonData ("found
+    // duplicate capsules").
+    components = uniqBy(components, (component) => component.id.toString());
 
     let longProcessLogger;
     if (opts.context?.aspects) {
@@ -1479,8 +1490,9 @@ export class IsolatorMain {
         const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
         const entry = dep.toManifest();
         if (entry) {
-          manifest[keyName][entry.packageName] =
-            dep.versionRange && dep.versionRange !== '+' ? dep.versionRange : version;
+          manifest[keyName][entry.packageName] = dep.versionRange
+            ? resolvePlusVersion(dep.versionRange, version)
+            : version;
         }
       });
       await Promise.all(promises);
@@ -1518,7 +1530,10 @@ export class IsolatorMain {
     clonedFiles.forEach((file) => file.updatePaths({ newBase: writeToPath }));
     dataToPersist.removePath(new RemovePath(writeToPath));
     clonedFiles.map((file) => dataToPersist.addFile(file));
-    const packageJson = this.preparePackageJsonToWrite(component, writeToPath, ids);
+    const shouldMergePkgJsonFromLastBuild = Boolean(
+      populateArtifactsFromComps && !opts?.populateArtifactsIgnorePkgJson
+    );
+    const packageJson = this.preparePackageJsonToWrite(component, writeToPath, ids, shouldMergePkgJsonFromLastBuild);
     if (!legacyComp.id.hasVersion()) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');
@@ -1530,10 +1545,14 @@ export class IsolatorMain {
     await PackageJsonTransformer.applyTransformers(component, packageJson as any);
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
-    if (populateArtifactsFromComps && !opts?.populateArtifactsIgnorePkgJson) {
+    if (populateArtifactsFromComps && shouldMergePkgJsonFromLastBuild) {
       const compParent = this.getCompForArtifacts(component, populateArtifactsFromComps);
       this.mergePkgJsonFromLastBuild(compParent, packageJson);
     }
+    removeHiddenPeerDependencies(
+      packageJson.packageJsonObject,
+      this.dependencyResolver.getHiddenPeerDependencies(component)
+    );
     dataToPersist.addFile(packageJson.toVinylFile());
     const artifacts = await this.getArtifacts(component, legacyScope, populateArtifactsFromComps);
     dataToPersist.addManyFiles(artifacts);
@@ -1579,10 +1598,16 @@ export class IsolatorMain {
     return compParent;
   }
 
+  /**
+   * @param includePeers whether to write the component peers. needed when the package.json of the last build is merged
+   * into this one (see mergePkgJsonFromLastBuild), which keeps only the dependencies that exist here. otherwise, a peer
+   * keeps the version of the last build, e.g. a lane snap of a component that was tagged since then.
+   */
   private preparePackageJsonToWrite(
     component: Component,
     bitDir: string,
-    componentDepsToIgnore: ComponentIdList
+    componentDepsToIgnore: ComponentIdList,
+    includePeers = false
   ): PackageJsonFile {
     const legacyComp: ConsumerComponent = component.state._consumer;
     const compDeps = this.dependencyResolver.getComponentDependencies(component);
@@ -1601,13 +1626,16 @@ export class IsolatorMain {
           id: depId,
           isDependency: true,
         });
-        acc[packageName] = versionWithRange || packageDependency;
+        acc[packageName] = versionWithRange
+          ? resolvePlusVersion(versionWithRange, packageDependency, versionWithRange)
+          : packageDependency;
         return acc;
       }, {});
     };
     const bitDependencies = getBitDependencies(legacyComp.dependencies.getAllIds());
     const bitDevDependencies = getBitDependencies(legacyComp.devDependencies.getAllIds());
     const bitExtensionDependencies = getBitDependencies(legacyComp.extensions.extensionsBitIds);
+    const bitPeerDependencies = includePeers ? getBitDependencies(legacyComp.peerDependencies.getAllIds()) : {};
     const packageJson = PackageJsonFile.createFromComponent(bitDir, legacyComp);
     const main = pathNormalizeToLinux(legacyComp.mainFile);
     packageJson.addOrUpdateProperty('main', main);
@@ -1617,6 +1645,7 @@ export class IsolatorMain {
         ...bitDevDependencies,
         ...bitExtensionDependencies,
       });
+      packageJsonFile.addPeerDependencies(bitPeerDependencies);
     };
     addDependencies(packageJson);
     const currentVersion = getComponentPackageVersion(component);
@@ -1685,6 +1714,7 @@ export class IsolatorMain {
     components: Component[],
     seederIds: ComponentID[],
     host: ComponentFactory,
+    graph: ComponentIdGraph,
     originalSeeders?: ComponentID[]
   ): Promise<Component[]> {
     this.logger.debug(`filterUnmodifiedExportedDependencies: filtering ${components.length} components`);
@@ -1693,7 +1723,8 @@ export class IsolatorMain {
     // @ts-ignore it's there, but we can't have the type of ScopeMain here to not create a circular dependency
     const remotes = await scope.getRemoteScopes();
 
-    const filtered: Component[] = [];
+    const capsuleIds = new Set<string>();
+    const packageCandidateIds = new Set<string>();
 
     // Precompute version-normalized ID sets so membership is O(1) per component instead of a linear scan.
     // `toStringWithoutVersion()` is the string equivalent of `isEqual(id, { ignoreVersion: true })`.
@@ -1708,7 +1739,7 @@ export class IsolatorMain {
 
       if (seederIdsNoVersion.has(componentIdNoVersion)) {
         // Always include seeders (modified components and their dependents)
-        filtered.push(component);
+        capsuleIds.add(componentIdStr);
         continue;
       }
 
@@ -1718,7 +1749,7 @@ export class IsolatorMain {
       // then have to resolve it as an installed package instead of referencing the freshly-built capsule.
       // Keep it so the graph stays consistent across `bit build` and `bit tag` (both include it as a capsule).
       if (originalSeederIdsNoVersion?.has(componentIdNoVersion)) {
-        filtered.push(component);
+        capsuleIds.add(componentIdStr);
         continue;
       }
       // For dependencies, check if they are exported and unmodified
@@ -1730,7 +1761,7 @@ export class IsolatorMain {
       const isModified = await component.isModified();
       if (isModified) {
         // Always include modified components
-        filtered.push(component);
+        capsuleIds.add(componentIdStr);
         continue;
       }
 
@@ -1752,11 +1783,35 @@ export class IsolatorMain {
         wasPublished;
 
       if (canBeInstalled) {
-        this.logger.debug(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);
+        packageCandidateIds.add(componentIdStr);
       } else {
-        filtered.push(component);
+        capsuleIds.add(componentIdStr);
       }
     }
+
+    /**
+     * The package side of the optimized graph must be dependency-closed. If an installed package
+     * points back to a component kept as a capsule, Node can load both the package's recorded
+     * dependency version and the locally linked capsule version in one process. For stateful Bit
+     * modules this breaks class identity (`instanceof`), Harmony singletons, remotes, and caches.
+     *
+     * Start with components that must be capsules, then propagate backwards through every graph
+     * edge until no package candidate depends on a capsule. This handles runtime, dev, peer, and
+     * transitive crossings without disabling optimization for a dependency subtree that is wholly
+     * installable from the registry.
+     */
+    const promotions = enforceDependencyClosedPackageSet(graph, capsuleIds, packageCandidateIds);
+    promotions.forEach(({ dependentId, dependencyId }) =>
+      this.logger.debug(
+        `[OPTIMIZATION] Keeping ${dependentId} in capsule graph because it depends on capsule ${dependencyId}`
+      )
+    );
+
+    const filtered = components.filter((component) => {
+      if (capsuleIds.has(component.id.toString())) return true;
+      this.logger.debug(`[OPTIMIZATION] Excluding unmodified exported dependency: ${component.id.toString()}`);
+      return false;
+    });
 
     this.logger.debug(
       `filterUnmodifiedExportedDependencies: kept ${filtered.length} out of ${components.length} components`

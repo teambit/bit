@@ -8,7 +8,7 @@ import type { IssuesList } from '@teambit/component-issues';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { RelativePath, ImportSpecifier, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { Dependency } from '@teambit/legacy.consumer-component';
-import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
+import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
 import { getExt } from '@teambit/toolbox.fs.extension-getter';
@@ -57,7 +57,7 @@ type PushToDepsArrayOpts = {
 export class AutoDetectDeps {
   componentId: ComponentID;
   componentMap: ComponentMap;
-  componentFromModel: Component;
+  componentFromModel: Component | undefined;
   consumerPath: PathOsBased;
   tree: DependenciesTree;
   allDependencies: AllDependencies;
@@ -77,7 +77,6 @@ export class AutoDetectDeps {
     this.componentId = component.componentId;
     // the consumerComponent is coming from the workspace, so it must have the componentMap prop
     this.componentMap = this.component.componentMap as ComponentMap;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
     this.consumerPath = this.consumer.getPath();
     this.allDependencies = {
@@ -93,6 +92,7 @@ export class AutoDetectDeps {
     this.processedFiles = [];
     this.issues = component.issues;
     this.debugDependenciesData = { components: [] };
+    this.autoDetectConfigMerge = workspace.getAutoDetectConfigMerge(component.id) || {};
   }
 
   get consumer(): Consumer {
@@ -516,9 +516,21 @@ export class AutoDetectDeps {
     };
     const processMissingPackages = () => {
       if (isEmpty(missing.packages)) return;
-      const missingPackages = missing.packages;
-      if (!isEmpty(missingPackages)) {
-        this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages, fileType);
+      // A newly imported component may import packages whose folders aren't in node_modules yet.
+      // If the model already records them as packageDependencies, treat them as resolved using the
+      // model's version so they end up in the workspace manifest and get installed — rather than
+      // surfacing as MissingPackagesDependenciesOnFs issues.
+      if (this.componentFromModel) {
+        const modelDeps = this.componentFromModel.getAllPackageDependencies();
+        const treePackages = this.tree[originFile].packages;
+        missing.packages = missing.packages.filter((pkgName) => {
+          if (!modelDeps[pkgName]) return true;
+          treePackages[pkgName] = modelDeps[pkgName];
+          return false;
+        });
+      }
+      if (!isEmpty(missing.packages)) {
+        this._pushToMissingPackagesDependenciesIssues(originFile, missing.packages, fileType);
       }
     };
     processMissingFiles();
@@ -656,6 +668,8 @@ export class AutoDetectDeps {
    * when requiring packages in typescript, sometimes there are the types packages with the same
    * name, which the user probably wants as well. for example, requiring `foo` package, will also
    * add `@types/foo` to the devDependencies if it has been found in the user `package.json` file.
+   * otherwise, it's taken from the merge config (during a merge, e.g. when the other side added it), and then from the
+   * model.
    *
    * ideally this should be in bit-javascript. however, the decision where to put these `@types`
    * packages (dependencies/devDependencies) is done here according to the user `package.json`
@@ -667,31 +681,19 @@ export class AutoDetectDeps {
     const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
     const depsHost = this.depsResolver.getWorkspacePolicyManifest();
-    const addFromConfig = (packageName: string): boolean => {
-      if (!depsHost) return false;
-      return DEPENDENCIES_FIELDS.some((depField) => {
-        if (!depsHost[depField]) return false;
-        const typesPackage = packageToDefinetlyTyped(packageName);
-        if (!depsHost[depField][typesPackage]) return false;
-        Object.assign(this.allPackagesDependencies.devPackageDependencies, {
-          [typesPackage]: depsHost[depField][typesPackage],
-        });
-        return true;
-      });
-    };
-    const addFromModel = (packageName: string) => {
-      if (!this.componentFromModel) return;
-      const typesPackage = packageToDefinetlyTyped(packageName);
-      const typedPackageFromModel = this.componentFromModel.devPackageDependencies[typesPackage];
-      if (!typedPackageFromModel) return;
-      Object.assign(this.allPackagesDependencies.devPackageDependencies, {
-        [typesPackage]: typedPackageFromModel,
-      });
-    };
+    const versionFromPolicy = (policy: Record<string, any>, typesPackage: string): string | undefined =>
+      DEPENDENCIES_FIELDS.map((depField) => policy[depField]?.[typesPackage]).find(Boolean);
 
     packageNames.forEach((packageName) => {
-      const added = addFromConfig(packageName);
-      if (!added) addFromModel(packageName);
+      const typesPackage = packageToDefinetlyTyped(packageName);
+      const version =
+        versionFromPolicy(depsHost, typesPackage) ||
+        versionFromPolicy(this.autoDetectConfigMerge, typesPackage) ||
+        this.componentFromModel?.devPackageDependencies[typesPackage];
+      // a removal in a policy stops the fallback, so the package is not added from the model
+      if (version && version !== MANUALLY_REMOVE_DEPENDENCY) {
+        this.allPackagesDependencies.devPackageDependencies[typesPackage] = version;
+      }
     });
   }
 

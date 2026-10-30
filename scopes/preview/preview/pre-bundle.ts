@@ -3,6 +3,7 @@ import { promisify } from 'util';
 import { rspack } from '@rspack/core';
 import fs, { existsSync, outputFileSync, readJsonSync } from 'fs-extra';
 import type { AspectDefinition } from '@teambit/aspect-loader';
+import { logger } from '@teambit/legacy.logger';
 import {
   createHarmonyImports,
   createImports,
@@ -14,6 +15,7 @@ import normalizePath from 'normalize-path';
 import { PreviewAspect } from './preview.aspect';
 import { clearConsole } from './pre-bundle-utils';
 import { getPreviewDistDir } from './mk-temp-dir';
+import { writeBundleStats } from './bundle-stats';
 import { createRspackConfig } from './rspack/rspack.config';
 
 const previewDistDir = getPreviewDistDir();
@@ -110,14 +112,49 @@ export async function buildPreBundlePreview(resolvedAspects: AspectDefinition[],
   );
   const config = createRspackConfig(outputDir, mainEntry);
   const compiler = rspack(config as any);
-  const compilerRun = promisify(compiler.run.bind(compiler));
-  const results = await compilerRun();
-  if (!results) throw new Error();
-  if (results?.hasErrors()) {
-    clearConsole();
-    throw new Error(results?.toString({}));
+  try {
+    const compilerRun = promisify(compiler.run.bind(compiler));
+    const results = await compilerRun();
+    if (!results) throw new Error();
+    if (results?.hasErrors()) {
+      clearConsole();
+      throw new Error(results?.toString({}));
+    }
+    // opt-in, same switch the ui bundle uses - see `BUNDLE_STATS_ENV_VAR`. never fails the build.
+    try {
+      writeBundleStats(results, 'preview');
+    } catch (err: any) {
+      logger.debug(`failed writing preview bundle stats: ${err?.message || err}`);
+    }
+    return results;
+  } finally {
+    await closeRspackCompiler(compiler);
   }
-  return results;
+}
+
+/**
+ * Release the compiler's module graph, and rspack's native side of it, as soon as the bundle is
+ * done. Both callers keep the process alive well past this point: the PreBundlePreview build task
+ * runs once per env inside a `bit build` that runs every task in one process, and `bit start`
+ * pre-bundles on demand in a server that then keeps running.
+ *
+ * Never throws - it runs from a `finally`, and a cleanup failure must not replace the build error
+ * that sent us there. A failure is logged rather than swallowed, otherwise a compiler that never
+ * releases looks exactly like one that does.
+ */
+async function closeRspackCompiler(compiler: { close?: (callback: (err?: Error | null) => void) => void }) {
+  const close = compiler.close;
+  if (typeof close !== 'function') return;
+  try {
+    await new Promise<void>((done) => {
+      close.call(compiler, (err) => {
+        if (err) logger.debug(`failed closing the preview rspack compiler: ${err.message || err}`);
+        done();
+      });
+    });
+  } catch (err: any) {
+    logger.debug(`failed closing the preview rspack compiler: ${err?.message || err}`);
+  }
 }
 
 export async function generateBundlePreviewEntry(rootAspectId: string, previewPreBundlePath: string, config: object) {

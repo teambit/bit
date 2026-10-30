@@ -5,6 +5,10 @@ type Params = {
   devServerID: string;
 };
 
+/**
+ * @deprecated not published by anything in this aspect (nor by `@teambit/webpack.webpack-bundler`/
+ * `@teambit/webpack.webpack-dev-server`, its replacements). Kept only for backward-compatible imports.
+ */
 export class WebpackCompilationStartedEvent extends BitBaseEvent<Params> {
   static readonly TYPE = 'webpack-compilation-started';
 

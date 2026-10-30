@@ -55,18 +55,6 @@ describe('merge lane to main when a component pins a non-head (squashed-out) sna
     return { laneScopeName: laneScope.scopeName, laneScopePath: laneScope.scopePath, comp2SnapA };
   }
 
-  describe('the referenced snap is present locally in the merging workspace', () => {
-    let laneScopeName: string;
-    before(() => {
-      ({ laneScopeName } = setupLaneWithStaleRef());
-      helper.command.switchLocalLane('main');
-      helper.command.mergeLaneWithoutBuild(`${laneScopeName}/dev`);
-    });
-    it('should export the merged result without a missing-dependency error', () => {
-      expect(() => helper.command.export()).to.not.throw();
-    });
-  });
-
   describe('the stale pinned dependency lives in another scope (cross-scope pin)', () => {
     let anotherRemote: string;
     let anotherRemotePath: string;

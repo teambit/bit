@@ -91,13 +91,11 @@ describe('track directories functionality', function () {
     describe('tagging the component', () => {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(localScope);
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
       });
       it('should save the files with relativePaths relative to the rootDir', () => {
         const output = helper.command.catComponent('utils/bar@latest');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(output.files[0].relativePath).to.equal('foo.js');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(output.mainFile).to.equal('foo.js');
       });
       describe('then adding a new file to the directory', () => {
@@ -154,7 +152,7 @@ describe('track directories functionality', function () {
         helper.scopeHelper.getClonedWorkspace(localScope);
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         helper.command.export();
         helper.command.importComponent('utils/bar');
       });

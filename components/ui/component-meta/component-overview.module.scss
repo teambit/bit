@@ -43,6 +43,23 @@
   .tab {
     border-bottom: 0;
   }
+
+  // Mobile: ResponsiveNavbar hides any tab that doesn't fit its container (and reserves extra
+  // room for its "…" overflow button), so at phone widths the second tab ("Modify component")
+  // collapses into a bare "…". Sizing the nav to its content makes the width check always pass
+  // (this wrapper scrolls instead), and the now-useless overflow button is dropped so its
+  // reserved width can't hide the last tab.
+  @media screen and (max-width: $br-md) {
+    overflow-x: auto;
+
+    .nav {
+      min-width: max-content;
+
+      > div:last-child {
+        display: none;
+      }
+    }
+  }
 }
 
 .copyBox {

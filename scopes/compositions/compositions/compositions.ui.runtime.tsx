@@ -4,7 +4,7 @@ import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { ComponentUI } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import { CompositionCompareSection } from '@teambit/compositions.ui.composition-compare-section';
 import { CompositionCompare } from '@teambit/compositions.ui.composition-compare';
 import { InlinePreviewCompare } from '@teambit/preview.ui.inline-preview-compare';

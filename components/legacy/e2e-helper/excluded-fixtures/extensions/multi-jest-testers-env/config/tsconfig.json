@@ -1,5 +1,12 @@
 {
   "extends": "@teambit/react.react-env/config/tsconfig.json",
+  "compilerOptions": {
+    // the base config sets moduleResolution "node" (node10), which TS6 reports as TS5107.
+    "ignoreDeprecations": "6.0",
+    // TS6 no longer picks up node_modules/@types automatically, so the jest globals
+    // (describe/it/expect) have to be requested by name.
+    "types": ["jest"]
+  },
   "exclude": [
     "artifacts",
     "public",

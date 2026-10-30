@@ -1,5 +1,6 @@
 import type { UiUI } from '@teambit/ui';
-import { UIAspect, UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
+import { UIAspect } from '@teambit/ui';
 import type { ReactNode } from 'react';
 import React, { useEffect, useReducer } from 'react';
 import { v1 } from 'uuid';

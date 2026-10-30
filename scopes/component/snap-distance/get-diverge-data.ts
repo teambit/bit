@@ -1,13 +1,16 @@
 import { difference } from 'lodash';
 import type { Graph } from '@teambit/graph.cleargraph';
-import type { UnmergedComponent } from '@teambit/legacy.scope';
-import { NoCommonSnap, VersionNotFoundOnFS } from '@teambit/legacy.scope';
+import { NoCommonSnap } from './no-common-snap';
+import { VersionNotFoundOnFS } from './version-not-found-on-fs';
 import type { ModelComponent, Repository, VersionParents } from '@teambit/objects';
 import { Ref, versionParentsToGraph } from '@teambit/objects';
 import { SnapsDistance } from './snaps-distance';
 import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
 import { TargetHeadNotFound } from './target-head-not-found';
 import { LocalHeadNotFound } from './local-head-not-found';
+
+/** the part of legacy-scope's UnmergedComponent read here. restated because legacy-scope depends on snap-distance. */
+type UnmergedData = { head: Ref; unrelated?: unknown };
 
 /**
  * *** NEW WAY ***
@@ -113,7 +116,7 @@ export function getDivergeDataBetweenTwoSnaps(
   versionParents: VersionParents[],
   localHead: Ref,
   targetHead: Ref,
-  unmergedData?: UnmergedComponent,
+  unmergedData?: UnmergedData,
   throws = true,
   throwForNoCommonSnap = false
 ): SnapsDistance {
@@ -127,17 +130,19 @@ export function getDivergeDataBetweenTwoSnaps(
 
   const targetSet = new Set(targetArr);
   let commonSnaps = sourceArr.filter((snap) => targetSet.has(snap));
+  let commonSnapsSet = new Set(commonSnaps);
 
   if (!commonSnaps.length) {
     sourceSubgraph = graph.successorsSubgraph(localHead.toString());
     targetSubgraph = graph.successorsSubgraph(targetHead.toString());
     const sourceFullArr = sourceSubgraph.nodes.map((n) => n.id);
-    const targetFullArr = targetSubgraph.nodes.map((n) => n.id);
-    commonSnaps = sourceFullArr.filter((snap) => targetFullArr.includes(snap));
+    const targetFullSet = new Set(targetSubgraph.nodes.map((n) => n.id));
+    commonSnaps = sourceFullArr.filter((snap) => targetFullSet.has(snap));
+    commonSnapsSet = new Set(commonSnaps);
     if (commonSnaps.length) {
       // these commonSnaps are not from "parents", they're either squashed or unrelated. remove them from the arrays.
-      sourceArr = sourceArr.filter((snap) => !commonSnaps.includes(snap));
-      targetArr = targetArr.filter((snap) => !commonSnaps.includes(snap));
+      sourceArr = sourceArr.filter((snap) => !commonSnapsSet.has(snap));
+      targetArr = targetArr.filter((snap) => !commonSnapsSet.has(snap));
     }
   }
 
@@ -145,7 +150,7 @@ export function getDivergeDataBetweenTwoSnaps(
     if (!commonSnaps.length) return undefined;
     if (commonSnaps.length === 1) return commonSnaps[0];
     // find the closest common snap by traversing the source subgraph BFS
-    const stopFn = (n: string) => commonSnaps.includes(n);
+    const stopFn = (n: string) => commonSnapsSet.has(n);
     const closestCommonSnapSource = traverseBFS(sourceSubgraph, localHead.toString(), stopFn);
     if (!closestCommonSnapSource)
       throw new Error('getDivergeData, traverseBFS was unable to find the closest common snap from source');

@@ -209,12 +209,29 @@ export default class Lane extends BitObject {
     if (!this.updateDependents?.length) this.updateDependents = undefined;
     this.hasChanged = true;
   }
+  /**
+   * remove several entries in one pass. matches by component-id and not by version, the same rule the
+   * lane merge uses to reconcile these entries.
+   */
+  removeComponentsFromUpdateDependents(componentIds: ComponentID[]) {
+    if (!this.updateDependents?.length || !componentIds.length) return;
+    const remaining = this.updateDependents.filter(
+      (entry) => !componentIds.some((toRemove) => toRemove.isEqualWithoutVersion(entry))
+    );
+    if (remaining.length === this.updateDependents.length) return;
+    this.updateDependents = remaining.length ? remaining : undefined;
+    this.hasChanged = true;
+  }
   addComponentToUpdateDependents(componentId: ComponentID) {
     if (!componentId.hasVersion()) {
       throw new ValidationError(`Lane.addComponentToUpdateDependents: ${componentId.toString()} is missing a version`);
     }
     this.removeComponentFromUpdateDependentsIfExist(componentId);
     (this.updateDependents ||= []).push(componentId);
+    this.hasChanged = true;
+  }
+  setUpdateDependents(componentIds: ComponentID[]) {
+    this.updateDependents = componentIds.length ? componentIds : undefined;
     this.hasChanged = true;
   }
   removeAllUpdateDependents() {

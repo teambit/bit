@@ -158,14 +158,16 @@ export class CLIParser {
 
   private parseCommandWithSubCommands(command: Command) {
     const yargsCommand = this.getYargsCommand(command);
-    const builderFunc = () => {
+    // registering the sub-commands has to happen from a builder, which replaces the adapter's own
+    // builder. that one registers this command's flags, positionals and examples, so without
+    // delegating to it, running the parent with any of its own flags fails as an unknown argument.
+    const registerOwnOptions = yargsCommand.builder as (yargsInstance: typeof yargs) => typeof yargs;
+    const builderFunc = (yargsInstance: typeof yargs) => {
       command.commands?.forEach((cmd) => {
         const subCommand = this.getYargsCommand(cmd);
         this.addYargsCommand(subCommand);
       });
-      // since the "builder" method is overridden, the global flags of the main command are gone, this fixes it.
-      yargs.options(YargsAdapter.getGlobalOptions(command));
-      return yargs;
+      return registerOwnOptions(yargsInstance);
     };
     yargsCommand.builder = builderFunc;
     this.addYargsCommand(yargsCommand);

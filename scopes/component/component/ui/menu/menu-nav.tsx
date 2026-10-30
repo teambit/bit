@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import classnames from 'classnames';
 import { ResponsiveNavbar } from '@teambit/design.navigation.responsive-navbar';
 import type { TabProps } from '@teambit/design.navigation.responsive-navbar';
+import { Dropdown } from '@teambit/design.inputs.dropdown';
+import { MenuItem } from '@teambit/design.inputs.selectors.menu-item';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import { TopBarNav } from '../top-bar-nav';
 import styles from './menu.module.scss';
@@ -72,11 +74,25 @@ export function CollapsibleMenuNav({
     return (_widgetPlugins || []).filter((widget) => !widget[1].props.hideInMinimalMode).sort(sortFn);
   }, [widgetSlot, widgetPlugins, isMinimal]);
 
-  const links = [...plugins, ...widgets].map(([, menuItem], index) => {
-    // these styles keep plugins to the left and widgets to the right.
-    const lastPluginStyle = plugins.length - 1 === index ? { marginRight: 'auto' } : {};
+  // in minimal mode, primary tabs (e.g. Preview) render outside the ResponsiveNavbar, which would
+  // otherwise collapse any tab but the first when space runs out. The first tab is kept with them
+  // to preserve its position (the navbar never collapses it either); all other tabs stay collapsible.
+  const hasPrimary = isMinimal && plugins.some(([, { props }]) => props.primaryInMinimalMode);
+  const fixedPlugins = hasPrimary
+    ? plugins.filter(([, { props }], index) => index === 0 || props.primaryInMinimalMode)
+    : [];
+  const collapsiblePlugins = plugins.filter((plugin) => !fixedPlugins.includes(plugin));
+  const responsiveItems = [...collapsiblePlugins, ...widgets];
 
-    const firstWidgetStyle = plugins.length === index ? { marginLeft: 'auto' } : {};
+  // `activeTabIndex` refers to the full list; map it to the responsive list (-1 when a fixed tab is active)
+  const responsiveActiveIndex =
+    activeTabIndex === undefined ? undefined : responsiveItems.indexOf([...plugins, ...widgets][activeTabIndex]);
+
+  const links = responsiveItems.map(([, menuItem], index) => {
+    // these styles keep plugins to the left and widgets to the right.
+    const lastPluginStyle = collapsiblePlugins.length - 1 === index ? { marginRight: 'auto' } : {};
+
+    const firstWidgetStyle = collapsiblePlugins.length === index ? { marginLeft: 'auto' } : {};
 
     return {
       component: TopBarNavComponent,
@@ -89,17 +105,80 @@ export function CollapsibleMenuNav({
   });
 
   return (
-    <ResponsiveNavbar
-      navClassName={classnames(styles.tab, className)}
-      secondaryNavClassName={secondaryNavClassName}
-      style={{ width: '100%', height: '100%' }}
-      priority="none"
-      tabs={links}
-      defaultActiveIndex={activeTabIndex}
-      alwaysShowActiveTab={alwaysShowActiveTab}
-    >
-      {children}
-    </ResponsiveNavbar>
+    <>
+      {isMinimal && (
+        <MinimalMenuNav navItems={[...plugins, ...widgets]} secondaryNavClassName={secondaryNavClassName} />
+      )}
+      {fixedPlugins.length > 0 && (
+        <div className={styles.minimalFixedNav}>
+          {fixedPlugins.map(([, { props }], index) => (
+            <TopBarNavComponent key={`minimal-fixed-${index}`} menuItemProps={props} isInMenu={false} />
+          ))}
+        </div>
+      )}
+      <ResponsiveNavbar
+        navClassName={classnames(styles.tab, isMinimal && styles.hideMinimalMobileNav, className)}
+        secondaryNavClassName={secondaryNavClassName}
+        style={{ width: '100%', height: '100%' }}
+        priority="none"
+        tabs={links}
+        defaultActiveIndex={responsiveActiveIndex}
+        alwaysShowActiveTab={alwaysShowActiveTab}
+      >
+        {children}
+      </ResponsiveNavbar>
+    </>
+  );
+}
+
+function MinimalMenuNav({
+  navItems,
+  secondaryNavClassName,
+}: {
+  navItems: [string, NavPlugin][];
+  secondaryNavClassName?: string;
+}) {
+  if (navItems.length === 0) return null;
+
+  // primary tabs (e.g. Preview) stay pinned on mobile, right after the More menu that holds the
+  // rest (Overview first); they render their compact `minimalMobileChildren` (an icon) when given.
+  const primaryItems = navItems.filter(([, { props }]) => props.primaryInMinimalMode);
+  const moreItems = navItems.filter(([, { props }]) => !props.primaryInMinimalMode);
+
+  return (
+    <div className={styles.minimalMoreNav}>
+      {moreItems.length > 0 && (
+        <Dropdown
+          placeholderContent={
+            <div className={styles.minimalMoreButton} aria-label="More component sections">
+              <img src="https://static.bit.dev/bit-icons/more-h.svg" alt="" />
+            </div>
+          }
+          dropClass={secondaryNavClassName}
+          position="bottom-end"
+          placeholderBorder={false}
+          clickToggles
+          margin={8}
+        >
+          {moreItems.map(([, { props }], index) => (
+            <MenuItem className={styles.minimalMenuItem} key={`minimal-dropdown-${index}`}>
+              <TopBarNavComponent menuItemProps={props} isInMenu />
+            </MenuItem>
+          ))}
+        </Dropdown>
+      )}
+      {primaryItems.map(([, { props }], index) => (
+        <TopBarNavComponent
+          key={`minimal-primary-${index}`}
+          menuItemProps={{
+            ...props,
+            children: props.minimalMobileChildren ?? props.children,
+            className: classnames(props.className, styles.minimalPrimaryTab),
+          }}
+          isInMenu={false}
+        />
+      ))}
+    </div>
   );
 }
 

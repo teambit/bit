@@ -1,39 +1,7 @@
-import type { Component } from '@teambit/component';
 import type { FormatterContext } from './formatter-context';
+import type { FormatResults } from '@teambit/envs.contracts';
 
-export type ComponentFormatResult = {
-  /**
-   * the formatted component.
-   */
-  component: Component;
-
-  /**
-   * format results for each file of the component.
-   */
-  results: FileFormatResult[];
-};
-
-export type FileFormatResult = {
-  /**
-   * path of the formatted file.
-   */
-  filePath: string;
-
-  /**
-   * Does the file has formatting issues (needs format)
-   */
-  hasIssues: boolean;
-
-  /**
-   * The new file content after the formatting
-   */
-  newContent?: string;
-};
-
-export type FormatResults = {
-  results: ComponentFormatResult[];
-  errors: Error[];
-};
+export type { ComponentFormatResult, FileFormatResult, FormatResults } from '@teambit/envs.contracts';
 
 export interface Formatter {
   id: string;

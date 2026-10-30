@@ -168,7 +168,18 @@ flag changes only the dependents, so you can combine it with the detection.
    bit export
    ```
 
-3. **Archive the remote lane.** This step is house-keeping.
+3. **Archive the remote lane.** This step is house-keeping, with one condition. A lane can carry
+   components of several scopes. Every component this run tagged and exported is released (while
+   the lane still sits at the head it was tagged from), so a
+   repository that holds components of several scopes archives as before. Any other component
+   of another scope is released only if its lane head is already
+   on its own main — in main's history, or released onto main's head: the same sources, package
+   and component dependencies and extension config (that is what a `bit ci merge` in that
+   scope's repository leaves behind); a component the lane deletes is released once its main is
+   removed. While such a component is pending, the lane is left open
+   and the command names it; the last scope to release archives the lane. An open lane whose
+   branch was merged stays converged; delete the branch only after the archive.
+   To archive by hand: `bit lane remove --remote <scope>/<lane>`.
 4. **Commit the lock-file updates**
 
    ```bash
@@ -232,16 +243,22 @@ bit ci sync --init
 ```
 
 `--init` writes `.github/workflows/bit-sync.yml` and `bit-release.yml`, with the real default branch of this
-repository in both files. `--init` adds `"teambit.git/ci": { "sync": {} }` to `workspace.jsonc` if the key is
+repository in both files. When the workspace is below the repository root, `--init` writes the files at the
+root and sets `ws-dir` to the workspace directory in both. `--init` adds `"teambit.git/ci": { "sync": {} }` to `workspace.jsonc` if the key is
 absent. The edit keeps the comments in the file, and it changes no existing `sync` setting. `--init` then
-prints the steps that need a person:
+prints one short report: the files it changed, and three steps that need a person, as commands to paste:
 
-- the `BIT_CONFIG_ACCESS_TOKEN` secret
-- the optional `BIT_SYNC_GH_TOKEN` token
-- the bit.cloud webhook recipe
-- a `fetch-depth: 0` reminder
+1. Commit the files `--init` changed, and push. With no `origin`, create the repository with `gh repo create`.
+2. Set the `BIT_CONFIG_ACCESS_TOKEN` secret, allow GitHub Actions to open pull requests, and optionally set
+   the `BIT_SYNC_GH_TOKEN` secret.
+3. Optional: make Bit -> Git instant. On github.com, install the `bit-git-sync` GitHub App and add its
+   webhook URL to the scope. On GitHub Enterprise Server, add a webhook that calls the repository
+   `dispatches` API.
 
-`--init` reports an existing file as skipped, and overwrites no file, so a second run is safe. `--init`
+The commands name the repository of `origin`. When `origin` is not a GitHub remote yet, `--init` prints
+only the push step, then tells you to run `--init` again after you push.
+
+`--init` reports an existing file as unchanged, and overwrites no file, so a second run is safe. `--init`
 writes the files, then exits. Do not combine `--init` with a lane argument or with another flag.
 
 ### Usage
@@ -254,7 +271,7 @@ bit ci sync [lane] [--branch <branch>] [--all] [--main] [--dry-run] [--init]
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | _(no args)_ | The same as `--all`.                                                                                                                                                                                                                                                                                                                                                                   |
 | `[lane]`    | One lane. Give the lane name, which the command resolves against `defaultScope`, or a scope-qualified id such as `other-org.other-scope/my-lane`. The `lanes` patterns still filter the lane, and those patterns match the lane **name**.                                                                                                                                              |
-| `--branch`  | The command resolves the lane from a branch name through the mapping config. Use the flag for a push-triggered run. The flag carries a branch name only, so the command assumes `defaultScope`.                                                                                                                                                                                        |
+| `--branch`  | The command resolves the lane from a branch name through the mapping config. Use the flag for a push-triggered run. The flag carries a branch name only. The command reads the lane id from the committed `.bitmap` of the branch, and otherwise assumes `defaultScope`.                                                                                                               |
 | `--all`     | Every mapped lane, plus the main scope. The run includes a lane that exists only as a branch. The command therefore retires the branch and the pull request of a lane that bit.cloud deleted.                                                                                                                                                                                          |
 | `--main`    | Only the main scope, against the default branch.                                                                                                                                                                                                                                                                                                                                       |
 | `--dry-run` | The command reports the action for each target. The command pushes nothing, and the command creates, closes, labels and comments no pull request. The run is not read-only on disk: the command writes the working tree, `.bitmap` and the local scope, then restores them. The command therefore refuses a dirty working tree. The command exits non-zero if the plan needs a person. |
@@ -310,6 +327,11 @@ For each mapped lane, the command compares the remote head of the lane with the 
 An `--all` run visits two sets of targets: the lanes that match the `lanes` patterns, and the lane-mapped
 branches on `origin`. The second set makes the cleanup possible. A lane that bit.cloud deleted is absent from
 the first set, so a run that reads lanes only would leave an orphan branch and an open pull request.
+
+The command resolves each branch of the second set against the lane that the committed `.bitmap` of the branch
+points at, when that pointer has the lane name of the branch. Other branches resolve against `defaultScope`.
+So after another scope archives a lane that this repository mirrors, the next `--all` run closes its pull
+request.
 
 ### Halts and conflicts
 
@@ -377,29 +399,42 @@ Set a `branchPrefix`, or an explicit `lanes` list, to leave developer branches o
 ### Cross-scope lanes
 
 The hosting scope of a lane holds the lane object. The scopes of the components of the lane show which
-repositories the change touches. The two are different. This version supports one shape only: the content of
-the lane must live in one scope, the `defaultScope` of this workspace. The hosting scope can be another
-scope, and a scope-qualified id addresses such a lane.
+repositories the change touches. The two are different. The hosting scope can be any scope — a
+scope-qualified id addresses a lane hosted elsewhere:
 
 ```bash
 bit ci sync my-lane                       # hosted on this workspace's defaultScope
-bit ci sync other-org.other-scope/my-lane # hosted elsewhere, content still in this repo's scope
+bit ci sync other-org.other-scope/my-lane # hosted elsewhere
 ```
 
 The branch mapping always uses the lane **name**, so a lane that another scope hosts maps to the same branch
 as before. Every request to Bit uses the full `hostScope/name` id.
 
-**The command never mirrors a lane that has components outside `defaultScope`.** Such a mirror writes the
-components of another repository into this repository, and exports them from here. A lane like this is still
-legitimate, so only the report depends on how the command reached the lane:
+**The command mirrors a lane's `defaultScope` slice.** A lane may carry components from several scopes; this
+repository sources only one of them. The mirror materializes, fingerprints, snaps and exports the components
+of `defaultScope` alone. The lane's other components are never written into this repository — the branch
+consumes them as package dependencies at their lane versions, and their sources live in their own scopes'
+repositories (each of which can mirror the same lane's own slice). The pull request lists the mirrored slice
+and, separately, the foreign components the lane also carries.
 
-| How the command reached the lane                                     | Outcome   | Exit | Pull request touched         |
-| -------------------------------------------------------------------- | --------- | ---- | ---------------------------- |
-| **Enumerated** — an `--all` run, or a push or webhook `--branch` run | `skipped` | 0    | no                           |
-| **Named** — `bit ci sync my-lane`                                    | refusal   | ≠ 0  | no                           |
-| **The lane became cross-scope during a live mirror**                 | `HALTED`  | ≠ 0  | yes — labelled and commented |
+Two consequences of slice-based reconciliation are worth knowing:
 
-The skip keeps the exit code at 0 on purpose: a permanent cross-scope lane must not fail every scheduled run.
+- A change that touches **only** foreign components does not move this repository's mirror: the branch keeps
+  building against the foreign versions recorded when its own components last changed, and catches up on the
+  next change to an own-scope component.
+- An exported change from this repository updates only the own-scope components on the lane; the foreign
+  entries keep their heads.
+
+A lane with **no** `defaultScope` components at all has nothing to mirror here. Only the report depends on
+how the command reached such a lane:
+
+| How the command reached the lane                                      | Outcome   | Exit | Pull request touched         |
+| --------------------------------------------------------------------- | --------- | ---- | ---------------------------- |
+| **Enumerated** — an `--all` run, or a push or webhook `--branch` run  | `skipped` | 0    | no                           |
+| **Named** — `bit ci sync my-lane`                                     | refusal   | ≠ 0  | no                           |
+| **Every `defaultScope` component left the lane during a live mirror** | `HALTED`  | ≠ 0  | yes — labelled and commented |
+
+The skip keeps the exit code at 0 on purpose: a standing foreign lane must not fail every scheduled run.
 A named lane exits non-zero, so the user learns why nothing happened. That exit is a plain refusal, because
 the command writes nothing and labels no pull request. The command refuses two lanes that map to one branch
 in the same way, and neither lane takes the branch. The command never lane-maps the default branch or
@@ -442,6 +477,14 @@ operation and every Bit operation, and skips only the pull-request operations.
 For GitHub, the command reads **`BIT_GITHUB_TOKEN` before `GITHUB_TOKEN`**. GitHub Actions sets
 `GITHUB_TOKEN` on every job, so an override needs the higher priority. The command reads the repository from
 `GITHUB_REPOSITORY`. If that variable is absent, the command reads the `origin` remote.
+
+On GitHub Enterprise Server, the command also claims an `origin` remote on the host that `GITHUB_SERVER_URL`
+names, and sends the API requests for that host to `GITHUB_API_URL`. GitHub Actions sets both variables on
+every job. Outside Actions, set `GITHUB_SERVER_URL` (for example `https://ghe.example.com`); without
+`GITHUB_API_URL` the API defaults to `https://ghe.example.com/api/v3`. A `GITHUB_API_URL` must be on the server
+host or on `api.<server host>` (GHE.com data residency), and must be `https` when the server is; any other
+value is refused with a warning and the GitHub provider stays unconfigured, so the enterprise token is never
+sent elsewhere. A github.com remote on such a runner still uses `https://api.github.com`.
 
 ---
 
