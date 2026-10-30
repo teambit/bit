@@ -18,7 +18,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".into()));
     };
-    if argv[1..].contains(&"--hard") {
+    if argv[1..]
+        .iter()
+        .any(|arg| *arg == "--hard" || *arg == "--hard=true")
+    {
         return hard::run(args, &argv[1..]);
     }
     let Some(options) = options::parse(&argv[1..]) else {

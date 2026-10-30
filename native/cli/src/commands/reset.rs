@@ -4,13 +4,9 @@ mod main_ext;
 mod reports;
 mod selection;
 
-use reports::{batch_report, report, soft_report};
+use reports::{batch_report, never_exported_report, report, soft_report};
 
-use super::{
-    color::Chalk,
-    list::bitmap,
-    workspace_command::{self, format::Formatter, results::Report},
-};
+use super::{color::Chalk, list::bitmap, workspace_command};
 use crate::{commands::Command, native::Outcome, workspace};
 use bit_object_import::{
     reset_lane::Batch as LaneBatch,
@@ -34,26 +30,45 @@ struct Options<'a> {
 }
 
 fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
-    let mut pattern = None;
-    let mut head = false;
-    let mut force = false;
-    let mut soft = false;
-    let mut silent = false;
-    let mut never_exported = false;
+    let mut options = Options {
+        pattern: None,
+        head: false,
+        force: false,
+        soft: false,
+        silent: false,
+        never_exported: false,
+        selected: None,
+    };
     for arg in args {
-        match *arg {
-            "--head" if !head => head = true,
-            "--force" | "-f" if !force => force = true,
-            "--soft" if !soft => soft = true,
-            "--never-exported" if !never_exported => never_exported = true,
-            "--silent" | "-s" | "--all" | "-a" if !silent => silent = true,
-            arg if !arg.starts_with('-') && pattern.is_none() && arg.len() <= 4096 => {
-                pattern = Some(arg);
-            }
-            _ => return None,
-        }
+        apply_reset_arg(arg, &mut options)?;
     }
-    Some(Options { pattern, head, force, soft, silent, never_exported, selected: None })
+    Some(options)
+}
+
+fn apply_reset_arg<'a>(arg: &'a str, options: &mut Options<'a>) -> Option<()> {
+    match arg {
+        "--no-color"
+        | "--head=false"
+        | "--force=false"
+        | "--soft=false"
+        | "--never-exported=false"
+        | "--silent=false"
+        | "--all=false" => {}
+        "--head" | "--head=true" if !options.head => options.head = true,
+        "--force" | "-f" | "--force=true" if !options.force => options.force = true,
+        "--soft" | "--soft=true" if !options.soft => options.soft = true,
+        "--never-exported" | "--never-exported=true" if !options.never_exported => {
+            options.never_exported = true;
+        }
+        "--silent" | "-s" | "--silent=true" | "--all" | "-a" | "--all=true" if !options.silent => {
+            options.silent = true;
+        }
+        arg if !arg.starts_with('-') && options.pattern.is_none() && arg.len() <= 4096 => {
+            options.pattern = Some(arg);
+        }
+        _ => return None,
+    }
+    Some(())
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -75,7 +90,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined(LANE_CI_DIAGNOSTIC.into()));
     }
     let mut startup = super::status::autosync::Startup::default();
-    if let Some(pattern) = options.pattern.filter(|pattern| selection::stateful(pattern)) {
+    if !(options.soft && options.head && !options.never_exported)
+        && let Some(pattern) = options.pattern.filter(|pattern| selection::stateful(pattern))
+    {
         match selection::states(&root, pattern, &mut startup) {
             Ok(selected) => options.selected = Some(selected),
             Err(error) => return selection_failure(args, &root, &startup, error),
@@ -139,7 +156,15 @@ fn route_never_exported(
 }
 
 fn route_soft(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result<Outcome> {
-    if options.head || (options.pattern.is_none() && !options.silent) {
+    if options.head {
+        if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            return Ok(Outcome::Declined("CI reset soft+head".into()));
+        }
+        return workspace_command::execute_then(root, args, "reset", |_| {
+            Err(io::Error::other("please specify either --soft or --head flag, not both"))
+        });
+    }
+    if options.pattern.is_none() && !options.silent {
         return Ok(Outcome::Declined("outside the native soft reset grammar".into()));
     }
     run_soft(args, root, options)
@@ -211,22 +236,7 @@ fn run_never_exported(args: &[OsString], root: &Path) -> io::Result<Outcome> {
         Ok(plan) => plan,
         Err(error) => return Ok(Outcome::Declined(format!("never-exported reset: {error}"))),
     };
-    let formatter = Formatter::new(Chalk::detect(args));
-    let items = plan.labels
-        .iter()
-        .map(|label| formatter.item(label))
-        .collect::<Vec<_>>();
-    let count = items.len();
-    let report = Report {
-        data: Formatter::join(&[
-            formatter.section("reset never-exported components", "", &items),
-            formatter.success_summary(&format!(
-                "successfully reset {count} never-exported component(s)",
-            )),
-        ]),
-        code: 0,
-        details: None,
-    };
+    let report = never_exported_report(args, &plan.labels);
     workspace_command::execute_with(root, args, "reset", &report, |_| {
         plan.commit(&workspace_command::file_id())
     })

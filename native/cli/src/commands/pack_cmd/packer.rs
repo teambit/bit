@@ -41,10 +41,8 @@ pub(super) fn try_pack(
 ) -> io::Result<Option<Outcome>> {
     let ws_root = workspace::root(cwd);
     let Some(scope_dir) = resolve_target_scope(cwd, ws_root.as_deref(), options) else {
-        return workspace_command::execute_without_loader_scope(cwd, args, "pack", |_| {
-            Err(io::Error::other("scope not found"))
-        })
-        .map(Some);
+        return super::missing_scope_error(ws_root.as_deref().unwrap_or(cwd), args, options.json)
+            .map(Some);
     };
     let Some(comp) = resolve_component(ws_root.as_deref(), &scope_dir, &options.comp_id) else {
         return Ok(None);

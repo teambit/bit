@@ -19,6 +19,10 @@ fn parses_pattern_and_flags() {
         parse(&["pattern", "scope/**", "--remote", "-j"]),
         Some(Options { pattern: "scope/**".to_owned(), json: true, remote: true }),
     );
+    assert_eq!(
+        parse(&["pattern", "$modified", "--remote"]),
+        Some(Options { pattern: "$modified".to_owned(), json: false, remote: true }),
+    );
 }
 
 #[test]

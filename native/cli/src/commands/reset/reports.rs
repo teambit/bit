@@ -75,3 +75,22 @@ pub(super) fn batch_report<'a>(
         details: None,
     }
 }
+
+pub(super) fn never_exported_report(args: &[OsString], labels: &[String]) -> Report {
+    let formatter = Formatter::new(Chalk::detect(args));
+    let items = labels
+        .iter()
+        .map(|label| formatter.item(label))
+        .collect::<Vec<_>>();
+    let count = items.len();
+    Report {
+        data: Formatter::join(&[
+            formatter.section("reset never-exported components", "", &items),
+            formatter.success_summary(&format!(
+                "successfully reset {count} never-exported component(s)",
+            )),
+        ]),
+        code: 0,
+        details: None,
+    }
+}

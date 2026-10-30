@@ -8,10 +8,19 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options { pattern: "", skip_installation: false, skip_config: false };
     for arg in args {
         match *arg {
-            "-x" | "--skip-dependency-installation" if !options.skip_installation => {
+            "--no-color"
+            | "--skip-dependency-installation=false"
+            | "--skip-write-config-files=false" => {}
+            "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true"
+                if !options.skip_installation =>
+            {
                 options.skip_installation = true;
             }
-            "--skip-write-config-files" if !options.skip_config => options.skip_config = true,
+            "--skip-write-config-files" | "--skip-write-config-files=true"
+                if !options.skip_config =>
+            {
+                options.skip_config = true;
+            }
             value if !value.starts_with('-') && options.pattern.is_empty() => {
                 options.pattern = value;
             }

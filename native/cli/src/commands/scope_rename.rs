@@ -8,28 +8,37 @@ use bit_object_import::component_scope_rename::Selection;
 use std::{env, ffi::OsString, io};
 pub const COMMAND: Command = Command { name: "scope", aliases: &[], run };
 fn run(args: &[OsString]) -> io::Result<Outcome> {
-    if args
-        .get(1)
-        .is_some_and(|arg| arg == "fork")
-    {
+    let first = first_subcommand(args);
+    if first.as_deref() == Some("fork") {
         return super::fork::run_scope(args);
     }
-    if args
-        .get(1)
-        .is_some_and(|arg| arg == "set")
-    {
-        return super::scope_set::run(args);
+    if first.as_deref() == Some("set") {
+        let outcome = super::scope_set::run(args)?;
+        if !matches!(outcome, Outcome::Declined(_)) {
+            return Ok(outcome);
+        }
     }
-    if args
-        .get(1)
-        .is_some_and(|arg| arg == "trust")
-    {
-        return super::scope_trust::run(args);
+    if first.as_deref() == Some("trust") {
+        let outcome = super::scope_trust::run(args)?;
+        if !matches!(outcome, Outcome::Declined(_)) {
+            return Ok(outcome);
+        }
     }
-    if let Some(sub) = unrecognized_subcommand(args) {
+    let in_ws = env::current_dir()
+        .ok()
+        .is_some_and(|cwd| workspace::root(&cwd).is_some());
+    if let Some(sub) = unrecognized_subcommand(args, in_ws) {
         return handle_unrecognized_subcommand(args, &sub);
     }
     run_rename(args)
+}
+
+fn first_subcommand(args: &[OsString]) -> Option<String> {
+    args.iter()
+        .skip(1)
+        .filter_map(|arg| arg.to_str())
+        .find(|token| *token != "--no-color")
+        .map(str::to_owned)
 }
 
 fn handle_unrecognized_subcommand(args: &[OsString], sub: &str) -> io::Result<Outcome> {
@@ -49,7 +58,7 @@ fn handle_unrecognized_subcommand(args: &[OsString], sub: &str) -> io::Result<Ou
     }
 }
 
-pub(super) fn unrecognized_subcommand(args: &[OsString]) -> Option<String> {
+pub(super) fn unrecognized_subcommand(args: &[OsString], in_ws: bool) -> Option<String> {
     let tokens = args
         .iter()
         .skip(1)
@@ -62,8 +71,9 @@ pub(super) fn unrecognized_subcommand(args: &[OsString]) -> Option<String> {
     let [sub] = filtered.as_slice() else {
         return None;
     };
-    (!sub.starts_with('-') && !matches!(*sub, "fork" | "set" | "trust" | "rename" | "rename-owner"))
-        .then(|| (*sub).to_owned())
+    let is_known = matches!(*sub, "fork" | "rename" | "rename-owner")
+        || (in_ws && matches!(*sub, "set" | "trust"));
+    (!sub.starts_with('-') && !is_known).then(|| (*sub).to_owned())
 }
 fn run_rename(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {

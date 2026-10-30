@@ -21,6 +21,7 @@ use std::{
 struct Options<'a> {
     pattern: &'a str,
     force: bool,
+    has_range: bool,
 }
 
 struct Context {
@@ -35,13 +36,17 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some(options) = parse(argv) else {
         return Ok(Outcome::Declined("outside the native remote hard-delete grammar".into()));
     };
-    let root = workspace::root(&env::current_dir()?);
+    let cwd = env::current_dir()?;
+    let root = workspace::root(&cwd);
     let config_dir = global_config_dir();
     let global = bit_install::config::load_global_config(&config_dir)?;
     if !feature_enabled(&global) {
         return Ok(Outcome::Declined(
             "hard-delete requires the published confirmation guard".into(),
         ));
+    }
+    if options.has_range {
+        return emit_range_not_supported(&cwd, root.as_deref(), args);
     }
     let Some(context) = Context::prepare(root, global, &config_dir).ok() else {
         return Ok(Outcome::Declined("remote hard-delete connection preflight".into()));
@@ -59,6 +64,21 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
         }
     };
     execute(args, &context, prepared, options.pattern.contains('*'))
+}
+
+fn emit_range_not_supported(
+    cwd: &Path,
+    root: Option<&Path>,
+    args: &[OsString],
+) -> io::Result<Outcome> {
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI delete --hard --range".into()));
+    }
+    let err = io::Error::other("--range is not supported with --hard flag");
+    if let Some(ws_root) = root {
+        return workspace_command::execute_then(ws_root, args, "delete", |_| Err(err));
+    }
+    workspace_command::execute_failure_scope(cwd, args, "delete", false, "", err)
 }
 
 pub(in crate::commands) fn lanes(
@@ -141,21 +161,51 @@ fn receipt_report(receipts: &[Value], lanes: bool, args: &[OsString]) -> String 
     }
 }
 
+#[derive(Default)]
+struct ParseState<'a> {
+    pattern: Option<&'a str>,
+    hard: bool,
+    silent: bool,
+    force: bool,
+    has_range: bool,
+}
+
 fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
-    let mut pattern = None;
-    let mut hard = false;
-    let mut silent = false;
-    let mut force = false;
-    for arg in args {
-        match *arg {
-            "--hard" if !hard => hard = true,
-            "-s" | "--silent" if !silent => silent = true,
-            "-f" | "--force" if !force => force = true,
-            value if !value.starts_with('-') && pattern.is_none() => pattern = Some(value),
-            _ => return None,
-        }
+    let mut state = ParseState::default();
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        apply_hard_arg(arg, &mut iter, &mut state)?;
     }
-    (hard && silent).then_some(Options { pattern: pattern?, force })
+    (state.hard && state.silent).then_some(Options {
+        pattern: state.pattern?,
+        force: state.force,
+        has_range: state.has_range,
+    })
+}
+
+fn apply_hard_arg<'a>(
+    arg: &'a str,
+    iter: &mut impl Iterator<Item = &'a str>,
+    state: &mut ParseState<'a>,
+) -> Option<()> {
+    match arg {
+        "--no-color" | "--force=false" => {}
+        "--hard" | "--hard=true" if !state.hard => state.hard = true,
+        "-s" | "--silent" | "--silent=true" if !state.silent => state.silent = true,
+        "-f" | "--force" | "--force=true" if !state.force => state.force = true,
+        "--range" if !state.has_range => {
+            let val = iter.next()?;
+            (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+            state.has_range = true;
+        }
+        _ if let Some(val) = arg.strip_prefix("--range=") => {
+            (!val.is_empty() && !state.has_range).then_some(())?;
+            state.has_range = true;
+        }
+        value if !value.starts_with('-') && state.pattern.is_none() => state.pattern = Some(value),
+        _ => return None,
+    }
+    Some(())
 }
 
 fn feature_enabled(global: &GlobalConfig) -> bool {

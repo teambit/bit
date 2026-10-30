@@ -113,11 +113,9 @@ pub(super) fn validate_outside_workspace(
     cwd: &Path,
     options: &Options,
 ) -> io::Result<Option<String>> {
-    let Some(comp_name) = parse_component_name(&options.id) else {
-        return Ok(Some(format!(
-            r#"error: component ID "{}" is invalid, please use the following format: [scope]/<name>"#,
-            options.id,
-        )));
+    let comp_name = match validate_component_id(&options.id) {
+        Ok(name) => name,
+        Err(err) => return Ok(Some(err)),
     };
     let raw_target = options.dir.as_deref().unwrap_or(&comp_name);
     let resolved_lexical = resolve_clone_path(cwd, raw_target);
@@ -141,6 +139,30 @@ pub(super) fn validate_outside_workspace(
         )));
     }
     Ok(None)
+}
+
+fn validate_component_id(id: &str) -> Result<String, String> {
+    let Some((scope, full_name)) = id
+        .split('@')
+        .next()
+        .and_then(|without_ver| without_ver.split_once('/'))
+        .filter(|(scope, full_name)| !scope.is_empty() && !full_name.is_empty())
+    else {
+        return Err(format!(
+            r#"error: component ID "{id}" is invalid, please use the following format: [scope]/<name>"#,
+        ));
+    };
+    if let Err(super::scope_set::Failure::User(err)) =
+        super::scope_set::selection::validate_scope_name(scope)
+            .and_then(|()| super::scope_set::selection::validate_component_name(full_name))
+    {
+        return Err(err);
+    }
+    parse_component_name(id).ok_or_else(|| {
+        format!(
+            r#"error: component ID "{id}" is invalid, please use the following format: [scope]/<name>"#,
+        )
+    })
 }
 
 pub(super) fn parse_component_name(id_str: &str) -> Option<String> {

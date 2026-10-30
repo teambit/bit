@@ -26,4 +26,6 @@ fn rejects_invalid_args() {
     assert_eq!(parse_args(&os_args(&["whoami", "unexpected"])), None);
     assert_eq!(parse_args(&os_args(&["whoami", "--unknown-flag"])), None);
     assert_eq!(parse_args(&os_args(&["whoami", "--token"])), None);
+    assert_eq!(parse_args(&os_args(&["whoami", "--token", "--help"])), None);
+    assert_eq!(parse_args(&os_args(&["whoami", "--token="])), None);
 }

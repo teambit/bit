@@ -6,11 +6,12 @@ use super::{
     engine::Engine,
     inventory, patterns,
     remote_resolution::Session,
+    scope_set::selection::{entry_full_id, valid_id_chunk, valid_scope_str},
     status::cache::cache_root,
     workspace_command::{self, NodeCli, format::Formatter, results::Report},
 };
 use crate::{native::Outcome, workspace};
-use bit_install::workspace::{Bitmap, BitmapEntry};
+use bit_install::workspace::Bitmap;
 use serde_json::{Value, json};
 use std::{
     env,
@@ -94,7 +95,14 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
         }
     }
     let pattern = pattern?;
-    if pattern.contains('$') || pattern.contains(':') || pattern.contains(" AND ") {
+    let has_state = pattern.contains('$') || pattern.contains(':') || pattern.contains(" AND ");
+    let remote_missing_slash = remote
+        && pattern
+            .split(',')
+            .map(str::trim)
+            .filter(|part| !part.starts_with('!'))
+            .any(|part| !part.contains('/'));
+    if has_state && !remote_missing_slash {
         return None;
     }
     Some(Options { pattern, json, remote })
@@ -174,7 +182,7 @@ fn find_bitmap_literal(bitmap: &Bitmap, pattern: &str) -> Option<Vec<String>> {
 
 fn is_known_empty_literal(root: &Path, pattern: &str) -> Result<bool, Failure> {
     if let Some((scope, name)) = pattern.split_once('/') {
-        if valid_scope_name(scope) && valid_id_chunk(name) {
+        if valid_scope_str(scope) && valid_id_chunk(name) {
             return Ok(true);
         }
         return Err(Failure::Declined("invalid scoped literal component id".to_owned()));
@@ -199,45 +207,11 @@ fn exists_in_scope_index(root: &Path, name: &str) -> bool {
         })
 }
 
-fn valid_id_chunk(chunk: &str) -> bool {
-    !chunk.is_empty()
-        && !chunk.contains("//")
-        && chunk
-            .chars()
-            .all(|ch| {
-                ch.is_ascii_lowercase() || ch.is_ascii_digit() || matches!(ch, '-' | '_' | '/')
-            })
-}
-
-fn valid_scope_name(scope: &str) -> bool {
-    let valid_part = |part: &str| {
-        !part.is_empty()
-            && part
-                .chars()
-                .all(|ch| {
-                    ch.is_ascii_lowercase()
-                        || ch.is_ascii_digit()
-                        || matches!(ch, '$' | '-' | '_' | '!')
-                })
-    };
-    match scope.split_once('.') {
-        Some((left, right)) => !right.contains('.') && valid_part(left) && valid_part(right),
-        None => scope.len() >= 2 && valid_part(scope),
-    }
-}
-
-fn entry_full_id(entry: &BitmapEntry) -> String {
-    let identity = entry.id.to_string_without_version();
-    match &entry.id.version {
-        Some(version) if !version.is_empty() && version != "latest" => {
-            format!("{identity}@{version}")
-        }
-        _ => identity,
-    }
-}
-
 fn remote_ids(root: &Path, pattern: &str, session: &mut Session) -> Result<Vec<String>, Failure> {
     let scopes = remote_scopes_from_pattern(pattern)?;
+    if scopes.is_empty() {
+        return Ok(Vec::new());
+    }
     let cli = NodeCli::find()?;
     let mut engine = Engine::new()?;
     let mut all_ids = Vec::new();

@@ -35,14 +35,33 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
     let cwd = env::current_dir()?;
     if is_missing_scope(&cwd, &options) {
-        return workspace_command::execute_without_loader_scope(&cwd, args, "pack", |_| {
-            Err(io::Error::other(SCOPE_NOT_FOUND_ERR))
-        });
+        return missing_scope_error(&cwd, args, options.json);
     }
     if let Some(outcome) = packer::try_pack(&cwd, args, &options)? {
         return Ok(outcome);
     }
     Ok(Outcome::Declined("pack execution delegated".into()))
+}
+
+pub(super) fn missing_scope_error(
+    host_dir: &Path,
+    args: &[OsString],
+    json: bool,
+) -> io::Result<Outcome> {
+    if json {
+        workspace_command::execute_failure_scope(
+            host_dir,
+            args,
+            "pack",
+            true,
+            "",
+            io::Error::other(SCOPE_NOT_FOUND_ERR),
+        )
+    } else {
+        workspace_command::execute_without_loader_scope(host_dir, args, "pack", |_| {
+            Err(io::Error::other(SCOPE_NOT_FOUND_ERR))
+        })
+    }
 }
 
 pub(super) fn is_missing_scope(cwd: &Path, options: &Options) -> bool {
@@ -64,10 +83,14 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     while let Some(arg) = iter.next() {
         match arg {
             "--no-color" => {}
-            "-o" | "--override" => override_existing = true,
-            "-k" | "--keep" => keep = true,
-            "-p" | "--prefix" => prefix = true,
-            "-j" | "--json" => json = true,
+            "-o" | "--override" | "--override=true" => override_existing = true,
+            "--override=false" => override_existing = false,
+            "-k" | "--keep" | "--keep=true" => keep = true,
+            "--keep=false" => keep = false,
+            "-p" | "--prefix" | "--prefix=true" => prefix = true,
+            "--prefix=false" => prefix = false,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
             "-d" | "--out-dir" => {
                 let val = iter.next()?;
                 (!val.is_empty() && !val.starts_with('-')).then_some(())?;

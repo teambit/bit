@@ -11,10 +11,12 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options { pattern: "", keep: false, force: false, track: false };
     for arg in args {
         match *arg {
-            "-s" | "--silent" if !silent => silent = true,
-            "--keep-files" if !options.keep => options.keep = true,
-            "-f" | "--force" if !options.force => options.force = true,
-            "-t" | "--track" if !options.track => options.track = true,
+            "--no-color" | "--silent=false" | "--keep-files=false" | "--force=false"
+            | "--track=false" => {}
+            "-s" | "--silent" | "--silent=true" if !silent => silent = true,
+            "--keep-files" | "--keep-files=true" if !options.keep => options.keep = true,
+            "-f" | "--force" | "--force=true" if !options.force => options.force = true,
+            "-t" | "--track" | "--track=true" if !options.track => options.track = true,
             value if !value.starts_with('-') && pattern.is_none() => pattern = Some(value),
             _ => return None,
         }

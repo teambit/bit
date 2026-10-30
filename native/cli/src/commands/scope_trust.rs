@@ -78,15 +78,15 @@ fn parse_tokens(args: &[OsString]) -> Option<Vec<String>> {
         .iter()
         .skip(1)
         .map(|arg| arg.to_str())
-        .collect::<Option<Vec<_>>>()?;
+        .collect::<Option<Vec<_>>>()?
+        .into_iter()
+        .filter(|token| *token != "--no-color")
+        .collect::<Vec<_>>();
     let (&"trust", rest) = tokens.split_first()? else {
         return None;
     };
     let mut positional = Vec::new();
     for &token in rest {
-        if token == "--no-color" {
-            continue;
-        }
         if token.starts_with('-') {
             return None;
         }

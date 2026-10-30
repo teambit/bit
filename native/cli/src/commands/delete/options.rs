@@ -15,15 +15,41 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
         match arg {
-            "-s" | "--silent" if !silent => silent = true,
-            "--lane" if !lane => lane = true,
-            "--update-main" if !update_main => update_main = true,
-            "--range" | "--snaps" if modifier.is_none() => modifier = Some((arg, iter.next()?)),
-            value if !value.starts_with('-') && pattern.is_none() => pattern = Some(value),
-            _ => return None,
+            "--no-color"
+            | "--hard=false"
+            | "--silent=false"
+            | "--lane=false"
+            | "--update-main=false" => {}
+            "-s" | "--silent" | "--silent=true" if !silent => silent = true,
+            "--lane" | "--lane=true" if !lane => lane = true,
+            "--update-main" | "--update-main=true" if !update_main => update_main = true,
+            "--range" | "--snaps" if modifier.is_none() => {
+                let val = iter.next()?;
+                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+                modifier = Some((arg, val));
+            }
+            _ => apply_inline_or_pattern(arg, &mut modifier, &mut pattern)?,
         }
     }
     silent.then_some(Options { pattern: pattern?, lane, update_main, scope: scope(modifier) })
+}
+fn apply_inline_or_pattern<'a>(
+    arg: &'a str,
+    modifier: &mut Option<(&'a str, &'a str)>,
+    pattern: &mut Option<&'a str>,
+) -> Option<()> {
+    if let Some(val) = arg.strip_prefix("--range=") {
+        (!val.is_empty() && modifier.is_none()).then_some(())?;
+        *modifier = Some(("--range", val));
+    } else if let Some(val) = arg.strip_prefix("--snaps=") {
+        (!val.is_empty() && modifier.is_none()).then_some(())?;
+        *modifier = Some(("--snaps", val));
+    } else if !arg.starts_with('-') && pattern.is_none() {
+        *pattern = Some(arg);
+    } else {
+        return None;
+    }
+    Some(())
 }
 fn scope(modifier: Option<(&str, &str)>) -> Scope {
     match modifier {

@@ -47,22 +47,29 @@ fn parse_args(args: &[OsString]) -> Option<Option<String>> {
     let mut token = None;
     let mut iter = args.iter().skip(1);
     while let Some(arg) = iter.next() {
-        let str_arg = arg.to_str()?;
-        if str_arg == "--no-color" {
-            continue;
-        }
-        if str_arg == "--token" {
-            let next_arg = iter.next()?.to_str()?;
-            token = Some(next_arg.to_owned());
-            continue;
-        }
-        if let Some(tok) = str_arg.strip_prefix("--token=") {
-            token = Some(tok.to_owned());
-            continue;
-        }
-        return None;
+        apply_whoami_arg(arg.to_str()?, &mut iter, &mut token)?;
     }
     Some(token)
+}
+
+fn apply_whoami_arg<'a>(
+    str_arg: &str,
+    iter: &mut impl Iterator<Item = &'a OsString>,
+    token: &mut Option<String>,
+) -> Option<()> {
+    if str_arg == "--no-color" {
+        return Some(());
+    }
+    if str_arg == "--token" {
+        let next_arg = iter.next()?.to_str()?;
+        (!next_arg.is_empty() && !next_arg.starts_with('-')).then_some(())?;
+        *token = Some(next_arg.to_owned());
+        return Some(());
+    }
+    let tok = str_arg.strip_prefix("--token=")?;
+    (!tok.is_empty()).then_some(())?;
+    *token = Some(tok.to_owned());
+    Some(())
 }
 
 fn resolve_user(cli_token: Option<&str>) -> io::Result<Option<String>> {

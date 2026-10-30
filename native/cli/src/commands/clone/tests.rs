@@ -58,4 +58,32 @@ fn validates_non_empty_dir_and_unscoped_lane() {
     .unwrap()
     .unwrap();
     assert!(lane_err.contains("the lane must be given with its scope"), "{lane_err}");
+
+    let invalid_scope = validate_outside_workspace(
+        temp.path(),
+        &Options {
+            id: "BAD_SCOPE/ws".into(),
+            dir: Some("empty-target".into()),
+            lane: None,
+            remote: None,
+            skip_dependency_installation: false,
+        },
+    )
+    .unwrap()
+    .unwrap();
+    assert!(invalid_scope.contains("component scope names can only contain"), "{invalid_scope}");
+
+    let invalid_name = validate_outside_workspace(
+        temp.path(),
+        &Options {
+            id: "my-scope/BAD_NAME".into(),
+            dir: Some("empty-target".into()),
+            lane: None,
+            remote: None,
+            skip_dependency_installation: false,
+        },
+    )
+    .unwrap()
+    .unwrap();
+    assert!(invalid_name.contains("component names can only contain"), "{invalid_name}");
 }

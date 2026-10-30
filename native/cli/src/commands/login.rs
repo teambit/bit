@@ -31,27 +31,35 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native login grammar".into()));
     };
-    if !options.json
-        && options.default_cloud_domain
+    if options.default_cloud_domain
         && options.cloud_domain.is_some()
         && env::var_os("CI").is_none_or(|val| val.is_empty())
     {
-        let cwd = env::current_dir()?;
-        if let Some(root) = workspace::root(&cwd) {
-            return workspace_command::execute_then(&root, args, "login", |_| {
+        return emit_conflicting_domain_error(args, options.json);
+    }
+    Ok(Outcome::Declined("interactive browser login delegated".into()))
+}
+
+fn emit_conflicting_domain_error(args: &[OsString], json: bool) -> io::Result<Outcome> {
+    let cwd = env::current_dir()?;
+    if let Some(root) = workspace::root(&cwd) {
+        if json {
+            return workspace_command::execute_json(&root, args, "login", |_| {
                 Err(io::Error::other(CONFLICTING_DOMAIN_ERR))
             });
         }
-        return workspace_command::execute_failure_scope(
-            &cwd,
-            args,
-            "login",
-            false,
-            "",
-            io::Error::other(CONFLICTING_DOMAIN_ERR),
-        );
+        return workspace_command::execute_then(&root, args, "login", |_| {
+            Err(io::Error::other(CONFLICTING_DOMAIN_ERR))
+        });
     }
-    Ok(Outcome::Declined("interactive browser login delegated".into()))
+    workspace_command::execute_failure_scope(
+        &cwd,
+        args,
+        "login",
+        json,
+        "",
+        io::Error::other(CONFLICTING_DOMAIN_ERR),
+    )
 }
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
@@ -79,11 +87,21 @@ fn apply_login_arg<'a>(
 ) -> Option<()> {
     match arg {
         "--no-color" => {}
-        "--skip-config-update" => options.skip_config_update = true,
-        "--refresh-token" => options.refresh_token = true,
-        "--default-cloud-domain" => options.default_cloud_domain = true,
-        "--no-browser" | "--suppress-browser-launch" => options.no_browser = true,
-        "-j" | "--json" => options.json = true,
+        "--skip-config-update" | "--skip-config-update=true" => options.skip_config_update = true,
+        "--skip-config-update=false" => options.skip_config_update = false,
+        "--refresh-token" | "--refresh-token=true" => options.refresh_token = true,
+        "--refresh-token=false" => options.refresh_token = false,
+        "--default-cloud-domain" | "--default-cloud-domain=true" => {
+            options.default_cloud_domain = true;
+        }
+        "--default-cloud-domain=false" => options.default_cloud_domain = false,
+        "--no-browser"
+        | "--no-browser=true"
+        | "--suppress-browser-launch"
+        | "--suppress-browser-launch=true" => options.no_browser = true,
+        "--no-browser=false" | "--suppress-browser-launch=false" => options.no_browser = false,
+        "-j" | "--json" | "--json=true" => options.json = true,
+        "--json=false" => options.json = false,
         "-d" | "--cloud-domain" => options.cloud_domain = Some(take_val(iter.next()?)?),
         "-p" | "--port" => options.port = Some(take_val(iter.next()?)?),
         "--machine-name" => options.machine_name = Some(take_val(iter.next()?)?),

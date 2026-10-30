@@ -3,23 +3,56 @@ use bit_object_import::component_rename::Options;
 pub(super) fn parse(argv: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut positions = Vec::new();
-    let mut arguments = argv.iter();
+    let mut arguments = argv.iter().copied();
     while let Some(argument) = arguments.next() {
-        match *argument {
-            "--no-color" => {}
-            "-s" | "--scope" => options.scope = Some((*arguments.next()?).to_owned()),
-            "-p" | "--path" => options.path = Some((*arguments.next()?).to_owned()),
-            "-r" | "--refactor" => options.refactor = true,
-            "--preserve" => options.preserve = true,
-            "--deprecate" => options.deprecate = true,
-            "--delete" => {}
-            "--ast" => options.ast = true,
-            value if !value.starts_with('-') => positions.push(value.to_owned()),
-            _ => return None,
-        }
+        apply_rename_arg(argument, &mut arguments, &mut options, &mut positions)?;
     }
     let [source, target]: [String; 2] = positions.try_into().ok()?;
     options.source = source;
     options.target = target;
     Some(options)
+}
+
+fn apply_rename_arg<'a>(
+    argument: &'a str,
+    arguments: &mut impl Iterator<Item = &'a str>,
+    options: &mut Options,
+    positions: &mut Vec<String>,
+) -> Option<()> {
+    match argument {
+        "--no-color" | "--delete" | "--delete=true" | "--delete=false" => {}
+        "-s" | "--scope" => options.scope = Some(take_val(arguments.next()?)?),
+        "-p" | "--path" => options.path = Some(take_val(arguments.next()?)?),
+        "-r" | "--refactor" | "--refactor=true" => options.refactor = true,
+        "--refactor=false" => options.refactor = false,
+        "--preserve" | "--preserve=true" => options.preserve = true,
+        "--preserve=false" => options.preserve = false,
+        "--deprecate" | "--deprecate=true" => options.deprecate = true,
+        "--deprecate=false" => options.deprecate = false,
+        "--ast" | "--ast=true" => options.ast = true,
+        "--ast=false" => options.ast = false,
+        _ => apply_inline_or_positional(argument, options, positions)?,
+    }
+    Some(())
+}
+
+fn apply_inline_or_positional(
+    argument: &str,
+    options: &mut Options,
+    positions: &mut Vec<String>,
+) -> Option<()> {
+    if let Some(val) = argument.strip_prefix("--scope=") {
+        options.scope = Some((!val.is_empty()).then(|| val.to_owned())?);
+    } else if let Some(val) = argument.strip_prefix("--path=") {
+        options.path = Some((!val.is_empty()).then(|| val.to_owned())?);
+    } else if !argument.starts_with('-') && !argument.is_empty() {
+        positions.push(argument.to_owned());
+    } else {
+        return None;
+    }
+    Some(())
+}
+
+fn take_val(val: &str) -> Option<String> {
+    (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
 }
