@@ -48,7 +48,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         {
             return finish_scope_artifacts(&scope.path, args, &options, &formatter);
         }
-        return Ok(Outcome::Declined("artifacts outside workspace delegated".into()));
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            "artifacts",
+            true,
+            "",
+            io::Error::other("Host was not found"),
+        );
     };
     if is_empty_workspace(&root).unwrap_or(false) {
         let pattern = options.pattern;

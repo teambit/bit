@@ -12,7 +12,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("move arguments are not UTF-8".into()));
     };
-    let [from, to] = argv[1..] else {
+    let filtered: Vec<&str> = argv[1..]
+        .iter()
+        .copied()
+        .filter(|&arg| arg != "--no-color")
+        .collect();
+    let [from, to] = filtered.as_slice() else {
         return Ok(Outcome::Declined("outside native move grammar".into()));
     };
     if from.starts_with('-') || to.starts_with('-') {

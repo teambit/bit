@@ -179,7 +179,9 @@ pub(super) fn external_dependencies(
     }
     let mut names: Vec<String> = Vec::new();
     for (dir, manifest) in manifests {
-        let Some(name) = manifest.get("name").and_then(Value::as_str) else { continue };
+        let Some(name) = manifest.get("name").and_then(Value::as_str) else {
+            continue;
+        };
         if dir.as_path() != input.root
             && !names
                 .iter()

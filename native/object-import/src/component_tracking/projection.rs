@@ -239,7 +239,9 @@ fn bitmap_row(
     existing: Option<&Value>,
     options: &Options,
 ) -> Value {
-    let mut row=existing.cloned().unwrap_or_else(||json!({"name":candidate.name,"scope":"","version":"","defaultScope":candidate.scope}));
+    let mut row = existing.cloned().unwrap_or_else(
+        || json!({"name":candidate.name,"scope":"","version":"","defaultScope":candidate.scope}),
+    );
     row["mainFile"] = json!(main);
     row["rootDir"] = json!(candidate.directory);
     let config = if candidate.directory == "." {

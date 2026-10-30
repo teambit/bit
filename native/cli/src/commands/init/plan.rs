@@ -157,7 +157,9 @@ pub(super) fn backup_bytes(
             _ => None,
         })
         .unwrap_or_else(|| {
-            let cleared = plan.actions.iter().any(|action| matches!(action, Action::Empty(path) if metadata_path.starts_with(path)));
+            let cleared = plan.actions.iter().any(
+                |action| matches!(action, Action::Empty(path) if metadata_path.starts_with(path)),
+            );
             if cleared { Vec::new() } else { fs::read(&metadata_path).unwrap_or_default() }
         });
     bytes.extend(format!("{id} \n").as_bytes());

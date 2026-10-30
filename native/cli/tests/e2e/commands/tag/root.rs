@@ -59,10 +59,12 @@ fn assert_root_sources(helper: &Helper, node_workspace: &std::path::Path) {
     assert!(
         !root_files
             .iter()
-            .any(|file| file["relativePath"]
-                .as_str()
-                .unwrap()
-                .starts_with("comp1/")),
+            .any(|file| {
+                file["relativePath"]
+                    .as_str()
+                    .unwrap()
+                    .starts_with("comp1/")
+            }),
     );
     let oracle = Helper::cmd_in_with(
         node_workspace,

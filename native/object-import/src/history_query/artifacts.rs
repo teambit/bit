@@ -3,7 +3,9 @@ use serde_json::Value;
 use std::io;
 
 pub(super) fn validate(value: &Value) -> io::Result<()> {
-    let Some(entries) = value.get("extensions").and_then(Value::as_array) else { return Ok(()) };
+    let Some(entries) = value.get("extensions").and_then(Value::as_array) else {
+        return Ok(());
+    };
     let Some(builder) = entries
         .iter()
         .find(|entry| {

@@ -65,11 +65,69 @@ pub(super) fn execute_workspace_graph(
 pub(crate) fn insight_graph(root: &Path) -> Result<(CompGraph, Vec<String>), Failure> {
     let (_, ws) =
         resolve_workspace_components(root).map_err(|err| Failure::Declined(err.to_string()))?;
+    let scope_dir = workspace::scope_path(root);
+    if has_unimported_npm_bit_dep(root, &scope_dir, &ws) {
+        return Err(Failure::Declined("unimported npm bit component".into()));
+    }
     let seeders = ws
         .active()
         .map(|(entry, _)| selection::entry_full_id(entry))
         .collect();
-    Ok((build_full_graph(&workspace::scope_path(root), &ws), seeders))
+    Ok((build_full_graph(&scope_dir, &ws), seeders))
+}
+
+fn has_unimported_npm_bit_dep(root: &Path, scope_dir: &Path, ws: &Workspace) -> bool {
+    for (_, comp) in ws.active() {
+        for rel_file in &comp.files {
+            let Ok(source) = fs::read_to_string(comp.dir.join(rel_file)) else { continue };
+            let Ok(scanned) = bit_dependency_scanner::scan_source(rel_file.clone(), source) else {
+                continue;
+            };
+            let Some(specifiers) = scanned["dependencies"].as_object() else { continue };
+            if specifiers
+                .keys()
+                .any(|spec| is_unimported_npm_spec(root, scope_dir, ws, &comp.id.name, spec))
+            {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn is_unimported_npm_spec(
+    root: &Path,
+    scope_dir: &Path,
+    ws: &Workspace,
+    self_name: &str,
+    raw_spec: &str,
+) -> bool {
+    if match_ws_dep(ws, self_name, raw_spec).is_some() {
+        return false;
+    }
+    let Some(dep_id) = npm_bit_dep_id(root, raw_spec) else {
+        return false;
+    };
+    read_version_by_dep_id(scope_dir, &dep_id).is_none()
+}
+
+fn npm_bit_dep_id(root: &Path, raw_spec: &str) -> Option<String> {
+    let pkg_name = if raw_spec.starts_with('@') {
+        let mut parts = raw_spec.splitn(3, '/');
+        let scope = parts.next()?;
+        let name = parts.next()?;
+        format!("{scope}/{name}")
+    } else {
+        raw_spec.split('/').next()?.to_owned()
+    };
+    let bytes = fs::read(
+        root.join("node_modules")
+            .join(pkg_name)
+            .join("package.json"),
+    )
+    .ok()?;
+    let val: Value = serde_json::from_slice(&bytes).ok()?;
+    format_dep_id(&val["componentId"])
 }
 
 fn resolve_seeder_id(ws: &Workspace, raw_id: &str) -> Result<String, Failure> {

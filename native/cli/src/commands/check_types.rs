@@ -44,7 +44,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Err(io::Error::other(OUTSIDE_WORKSPACE_ERR))
         });
     };
-    if is_empty_workspace(&root).unwrap_or(false) {
+    if options.pattern.is_none() && is_empty_workspace(&root).unwrap_or(false) {
         return emit_empty_check_types(&root, args, &options);
     }
     if let Some(outcome) = checker::try_run(&root, args, &options)? {

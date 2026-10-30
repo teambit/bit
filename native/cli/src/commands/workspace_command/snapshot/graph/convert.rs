@@ -135,7 +135,9 @@ fn locked_neighbours(snapshot: &Value, own: &Value) -> io::Result<Vec<Value>> {
 /// workspace dependency, would point at the dropped package.
 fn scrub_back_edge(snapshot: &mut Value, package: &str, version: &str) {
     for field in ["dependencies", "optionalDependencies"] {
-        let Some(deps) = snapshot.get_mut(field).and_then(Value::as_object_mut) else { continue };
+        let Some(deps) = snapshot.get_mut(field).and_then(Value::as_object_mut) else {
+            continue;
+        };
         if deps.get(package).and_then(Value::as_str) != Some(version) {
             continue;
         }

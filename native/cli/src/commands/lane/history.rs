@@ -62,7 +62,9 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
     let mut engine = Engine::new()?;
     let prepared = match inspect(&root, scope_root.bare, host.as_deref(), &options, &mut engine) {
         Ok(value) => value,
-        Err(error) if session.as_ref().is_some_and(Session::owned) => return Err(error),
+        Err(error) if session.as_ref().is_some_and(Session::owned) => {
+            return Err(error);
+        }
         Err(error) => return Ok(Outcome::Declined(format!("lane history: {error}"))),
     };
     finish(&root, scope_root.bare, args, &options, session.as_ref(), &mut engine, &prepared)

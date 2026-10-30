@@ -529,9 +529,10 @@ fn diff_with_component_level_peer_dependency() -> KnownResult<()> {
     assert!(
         !modified
             .iter()
-            .any(|msg| msg
-                .as_str()
-                .is_some_and(|s| s.contains("comp1"))),
+            .any(|msg| {
+                msg.as_str()
+                    .is_some_and(|s| s.contains("comp1"))
+            }),
     );
 
     // bit diff should not show a phantom peer-dependency change

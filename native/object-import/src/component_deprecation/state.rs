@@ -83,7 +83,9 @@ fn range_state(config: &mut Value, id: &str, model: &Value) {
     else {
         return;
     };
-    let Some(version) = id.rsplit_once('@').map(|(_, version)| version) else { return };
+    let Some(version) = id.rsplit_once('@').map(|(_, version)| version) else {
+        return;
+    };
     let tag = model["versions"]
         .as_object()
         .and_then(|versions| {

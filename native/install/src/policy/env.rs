@@ -73,7 +73,9 @@ fn legacy_peers(config: &Value) -> Vec<PolicyEntry> {
 }
 
 fn from_key(config: &Value, key: &str, options: &KeyOptions) -> io::Result<Vec<PolicyEntry>> {
-    let Some(items) = config.get(key).and_then(Value::as_array) else { return Ok(Vec::new()) };
+    let Some(items) = config.get(key).and_then(Value::as_array) else {
+        return Ok(Vec::new());
+    };
     items
         .iter()
         .map(|item| key_entry(item, key, options))

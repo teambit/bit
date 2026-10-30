@@ -10,6 +10,7 @@ pub(super) fn parse<'a>(args: &[&'a str], undo: bool) -> Option<Options<'a>> {
     let mut index = 0;
     while index < args.len() {
         match args[index] {
+            "--no-color" => {}
             "--new-id" if !undo => {
                 index += 1;
                 replacement = Some(*args.get(index)?);

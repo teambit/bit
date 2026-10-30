@@ -35,6 +35,11 @@ fn resolve_bare_literal_target(
         return Err(Failure::Declined("invalid component id".into()));
     }
     let Some((Some(scope), comp_name, _)) = resolve_component_entry(scope_dir, bare_id) else {
+        if !bare_id.starts_with('@')
+            && (!bare_id.contains('/') || bare_id.starts_with(&format!("{scope_name}/")))
+        {
+            return Err(Failure::User(format!(r#"unable to find "{pattern}" in the scope"#)));
+        }
         return Err(Failure::Declined("literal component not found in bare scope".into()));
     };
     if scope != scope_name {
@@ -67,7 +72,9 @@ fn resolve_bare_pattern_targets(
     let matched = patterns::matching(&refs, &patterns::split(pattern))
         .map_err(|_| Failure::Declined("unsupported bare scope artifacts pattern".into()))?;
     if matched.is_empty() {
-        return Err(Failure::Declined("no matching components in bare scope".into()));
+        return Err(Failure::User(format!(
+            r#"unable to find any component matching the "{pattern}" pattern"#,
+        )));
     }
     let mut targets = Vec::with_capacity(matched.len());
     for id in matched {

@@ -141,7 +141,9 @@ fn lane_info(lane: &Value) -> Option<LaneInfo> {
 fn throw_for_duplicate_root_dirs(path: &Path, json: &Map<String, Value>) -> io::Result<()> {
     let mut seen = HashSet::new();
     for (key, value) in json {
-        let Some(root_dir) = value.get("rootDir").and_then(Value::as_str) else { continue };
+        let Some(root_dir) = value.get("rootDir").and_then(Value::as_str) else {
+            continue;
+        };
         if !seen.insert(root_dir) {
             return Err(invalid(
                 path,

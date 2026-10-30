@@ -161,7 +161,9 @@ fn local_references(list: &[Dep<'_>], input: &ManifestInput<'_>) -> DependencyMa
         .collect();
     let mut references = DependencyMap::new();
     for dep in list {
-        let Some(id) = dep.component.filter(|_| !dep.is_extension) else { continue };
+        let Some(id) = dep.component.filter(|_| !dep.is_extension) else {
+            continue;
+        };
         if core_ids.contains(&without_version(&dep.id())) {
             continue;
         }

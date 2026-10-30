@@ -15,7 +15,7 @@ use super::{
 use crate::{history::History, native::Outcome};
 use serde_json::{Value, json};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     env,
     ffi::OsString,
     io::{self, Write},
@@ -60,20 +60,23 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     for &arg in args {
         match arg {
             "-l" | "--list" | "--list=true" => opts.list = true,
-            "--list=false" | "--no-list" => opts.list = false,
+            "--list=false" => opts.list = false,
             "-j" | "--json" | "--json=true" => opts.json = true,
-            "--json=false" | "--no-json" => opts.json = false,
+            "--json=false" => opts.json = false,
             "--include-deps" | "--include-deps=true" => opts.include_deps = true,
-            "--include-deps=false" | "--no-include-deps" => opts.include_deps = false,
+            "--include-deps=false" => opts.include_deps = false,
             "--no-color" => {}
             val if !val.starts_with('-') && !val.is_empty() => opts.names.push(val.to_owned()),
             _ => return None,
         }
     }
-    if opts.list && !opts.names.is_empty() {
-        return None;
+    if !opts.list && opts.names.is_empty() {
+        opts.names = CORE_INSIGHTS
+            .iter()
+            .map(|&name| name.to_owned())
+            .collect();
     }
-    (opts.list || !opts.names.is_empty()).then_some(opts)
+    Some(opts)
 }
 
 fn run_named_insights(
@@ -101,7 +104,7 @@ fn run_named_insights(
     };
     let chalk = Chalk::detect(args);
     let Some(results) = evaluate_insights(opts, graph_and_seeders.as_ref(), chalk) else {
-        return Ok(Outcome::Declined("insights duplicate dependencies non-empty".into()));
+        return Ok(Outcome::Declined("insights duplicate dependencies non-semver".into()));
     };
     if opts.json {
         let arr: Vec<Value> = results
@@ -134,8 +137,8 @@ fn evaluate_insights(
                 results.push(evaluate_circular(graph, seeders, opts.include_deps, chalk));
             }
             "duplicate dependencies" => {
-                let (graph, _) = graph_and_seeders?;
-                results.push(evaluate_duplicate_dependencies(graph)?);
+                let (graph, seeders) = graph_and_seeders?;
+                results.push(evaluate_duplicate_dependencies(graph, seeders)?);
             }
             _ => {}
         }
@@ -164,31 +167,20 @@ fn evaluate_circular(
     EvaluatedInsight { message, rendered_data, json_entry }
 }
 
-fn evaluate_duplicate_dependencies(graph: &CompGraph) -> Option<EvaluatedInsight> {
-    if has_duplicate_versions(graph) {
-        return None;
-    }
-    let message = "Found 0 duplicate dependencies.".to_owned();
+fn evaluate_duplicate_dependencies(
+    graph: &CompGraph,
+    seeders: &[String],
+) -> Option<EvaluatedInsight> {
+    let (message, rendered_data, data) = render::duplicate_dependencies(graph, seeders)?;
     let json_entry = json!({
         "metaData": {
             "name": "duplicate dependencies",
             "description": "Get all duplicate dependencies in component graph"
         },
-        "data": [],
+        "data": data,
         "message": message,
     });
-    Some(EvaluatedInsight { message, rendered_data: String::new(), json_entry })
-}
-
-fn has_duplicate_versions(graph: &CompGraph) -> bool {
-    let mut seen = HashSet::with_capacity(graph.nodes.len());
-    for node in &graph.nodes {
-        let bare = node.split('@').next().unwrap_or(node);
-        if !seen.insert(bare) {
-            return true;
-        }
-    }
-    false
+    Some(EvaluatedInsight { message, rendered_data, json_entry })
 }
 
 fn emit_host_not_found() -> io::Result<Outcome> {

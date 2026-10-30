@@ -26,10 +26,8 @@ pub const COMMAND: Command = Command { name: "mini-status", aliases: &["ms"], ru
 const MAX_COMPONENTS: usize = 4096;
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
-    let json = match args {
-        [_] => false,
-        [_, flag] if flag == "--json" || flag == "-j" => true,
-        _ => return Ok(Outcome::Declined("only `--json` or no flags run natively".to_string())),
+    let Some(json) = parse_json_flag(args) else {
+        return Ok(Outcome::Declined("only `--json` or no flags run natively".to_string()));
     };
     let report = |summary: &Summary, chalk: Chalk| {
         if json {
@@ -39,6 +37,19 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         }
     };
     print(args, report, serde_json::to_string_pretty, false)
+}
+
+fn parse_json_flag(args: &[OsString]) -> Option<bool> {
+    let mut json = false;
+    for arg in &args[1..] {
+        match arg.to_str()? {
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
+            "--no-color" => {}
+            _ => return None,
+        }
+    }
+    Some(json)
 }
 
 /// `bit status --quick`: `StatusCmd.reportQuick`, or with `--json` the

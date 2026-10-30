@@ -6,7 +6,10 @@ use std::{fs, path::Path};
 fn seed(cache: &Path, path: &Path, docs: &str) -> f64 {
     bit_install::dependencies::cache::put(cache, path.to_str().unwrap(), docs).unwrap();
     bit_object_import::read_dependency_cache(cache, path.to_str().unwrap())
-        .unwrap().unwrap()["timestamp"].as_f64().unwrap()
+        .unwrap()
+        .unwrap()["timestamp"]
+        .as_f64()
+        .unwrap()
 }
 
 #[test]

@@ -40,7 +40,9 @@ pub(super) fn blame(request: Request, cache: &mut Cache) -> io::Result<Value> {
         if pending.is_empty() {
             break;
         }
-        let Some(parent) = log.get("parentFileHash").and_then(Value::as_str) else { continue };
+        let Some(parent) = log.get("parentFileHash").and_then(Value::as_str) else {
+            continue;
+        };
         let new = sources.text(reference(log, "fileHash")?)?;
         let old = sources.text(parent)?;
         assign(&lines::diff(&old, &new)?, log, log_index, &mut rows, &mut pending)?;

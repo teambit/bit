@@ -4,7 +4,7 @@ use super::{Options, emit_empty_check_types};
 use crate::{
     commands::{
         color::Chalk,
-        inventory,
+        scope_set::{Failure, selection::resolve_pattern_entries},
         workspace_command::{self, format::Formatter, results::Report},
     },
     native::Outcome,
@@ -12,7 +12,7 @@ use crate::{
 use bit_install::{
     config::WorkspaceConfig,
     model::WorkspaceComponent,
-    workspace::{BitmapEntry, Workspace},
+    workspace::{Bitmap, BitmapEntry, Workspace},
 };
 use serde_json::json;
 use std::{ffi::OsString, fs, io, path::Path};
@@ -33,10 +33,18 @@ pub(super) fn try_run(
     if root.join("merge-conflict").exists() {
         return Ok(None);
     }
-    let Some(ws) = load_workspace(root) else {
+    let Some((ws, bitmap)) = load_workspace(root) else {
         return Ok(None);
     };
-    let matched = match_components(&ws, options.pattern.as_deref());
+    let matched =
+        match match_components(root, &ws, &bitmap, options.pattern.as_deref(), Chalk::detect(args))
+        {
+            Ok(list) => list,
+            Err(Failure::User(message)) => {
+                return emit_pattern_error(root, args, options, message).map(Some);
+            }
+            Err(Failure::Declined(_)) => return Ok(None),
+        };
     if matched.is_empty() {
         return emit_empty_check_types(root, args, options).map(Some);
     }
@@ -55,40 +63,52 @@ pub(super) fn try_run(
     Ok(Some(outcome))
 }
 
-fn load_workspace(root: &Path) -> Option<Workspace> {
+fn emit_pattern_error(
+    root: &Path,
+    args: &[OsString],
+    options: &Options,
+    message: String,
+) -> io::Result<Outcome> {
+    let all = options.all;
+    workspace_command::execute_without_loader(root, args, "check-types", move |out| {
+        if all {
+            out.warning("--all is deprecated, use --unmodified instead");
+        }
+        Err(io::Error::other(message))
+    })
+}
+
+fn load_workspace(root: &Path) -> Option<(Workspace, Bitmap)> {
     let ws_config = WorkspaceConfig::load(root).ok()?;
     if ws_config.workspace.bitmap_auto_sync == Some(true) {
         return None;
     }
+    let bitmap = Bitmap::load(root, ws_config.workspace.default_scope.as_deref()).ok()?;
     let core_ids: Vec<String> = serde_json::from_str(CORE_ASPECT_IDS).ok()?;
-    Workspace::load(root, &ws_config, &core_ids).ok()
+    let ws = Workspace::load(root, &ws_config, &core_ids).ok()?;
+    Some((ws, bitmap))
 }
 
 fn match_components<'a>(
+    root: &Path,
     ws: &'a Workspace,
+    bitmap: &Bitmap,
     pattern: Option<&str>,
-) -> Vec<(&'a BitmapEntry, &'a WorkspaceComponent)> {
+    chalk: Chalk,
+) -> Result<Vec<(&'a BitmapEntry, &'a WorkspaceComponent)>, Failure> {
     let Some(raw) = pattern else {
-        return ws.active().collect();
+        return Ok(ws.active().collect());
     };
-    let normalized = inventory::normalize(raw);
-    let dir = normalized
-        .strip_prefix("./")
-        .unwrap_or(&normalized)
-        .trim_end_matches('/');
-    let prefix = dir.strip_suffix("/*").unwrap_or(dir);
-    ws.active()
-        .filter(|(entry, _)| {
-            let full = entry.id.to_string_without_version();
-            let root_dir = entry.root_dir.trim_end_matches('/');
-            full == raw
-                || entry.id.name == raw
-                || entry.key == raw
-                || root_dir == dir
-                || full.contains(prefix)
-                || root_dir.starts_with(prefix)
+    let entries = resolve_pattern_entries(root, bitmap, raw, chalk)?;
+    Ok(ws
+        .active()
+        .filter(|(cand, _)| {
+            let bare = cand.id.to_string_without_version();
+            entries
+                .iter()
+                .any(|entry| entry.id.to_string_without_version() == bare)
         })
-        .collect()
+        .collect())
 }
 
 fn collect_diagnostics(

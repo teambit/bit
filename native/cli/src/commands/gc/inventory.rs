@@ -326,7 +326,9 @@ fn collect_unmerged_item(item: &Value, roots: &mut Vec<String>) {
     {
         roots.push(head.to_owned());
     }
-    let Some(unrel) = item.get("unrelated").and_then(Value::as_object) else { return };
+    let Some(unrel) = item.get("unrelated").and_then(Value::as_object) else {
+        return;
+    };
     for key in ["headOnCurrentLane", "unrelatedHead"] {
         if let Some(hash) = unrel.get(key).and_then(Value::as_str) {
             roots.push(hash.to_owned());

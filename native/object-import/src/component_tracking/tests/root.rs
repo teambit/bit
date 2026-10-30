@@ -73,10 +73,11 @@ fn root_tracks_bitmap_but_not_scope() {
     assert!(
         !files
             .iter()
-            .any(|file| file
-                .as_str()
-                .unwrap()
-                .starts_with(".bit/")),
+            .any(|file| {
+                file.as_str()
+                    .unwrap()
+                    .starts_with(".bit/")
+            }),
     );
     std::fs::remove_dir_all(root).unwrap();
 }

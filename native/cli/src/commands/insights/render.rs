@@ -1,7 +1,9 @@
-//! `renderCycles` from `@teambit/component-issues` for insight text reports.
+//! `renderCycles` and `DuplicateDependencies` formatting for `bit insights`.
 
-use crate::commands::color::Chalk;
-use std::fmt::Write as _;
+use crate::commands::{color::Chalk, graph_cmd::model::CompGraph};
+use serde::Serialize;
+use serde_json::{Value, json};
+use std::{collections::HashSet, fmt::Write as _};
 
 const ARROW: &str = "  ───>  ";
 const ARROW_LEN: usize = 8;
@@ -175,4 +177,151 @@ fn vertical(names: &[String], chalk: Chalk) -> String {
         chalk.dim("  (back to start)"),
     ));
     lines.join("\n")
+}
+
+#[derive(Serialize)]
+struct DuplicateEntry {
+    #[serde(rename = "compId")]
+    comp_id: String,
+    #[serde(rename = "latestVersion")]
+    latest_version: String,
+    outdated: Vec<OutdatedVersion>,
+}
+
+#[derive(Serialize)]
+struct OutdatedVersion {
+    version: String,
+    dependents: Vec<String>,
+}
+
+pub(crate) fn duplicate_dependencies(
+    graph: &CompGraph,
+    seeders: &[String],
+) -> Option<(String, String, Value)> {
+    let entries = collect_duplicates(graph, seeders)?;
+    if entries.is_empty() {
+        return Some(("Found 0 duplicate dependencies.".into(), String::new(), json!([])));
+    }
+    let count = entries.len();
+    let noun = if count == 1 { "dependency" } else { "dependencies" };
+    let message = format!("Found {count} duplicate {noun}.");
+    let rendered = render_duplicate_entries(&entries);
+    let data = serde_json::to_value(&entries).ok()?;
+    Some((message, rendered, data))
+}
+
+fn collect_duplicates(graph: &CompGraph, seeders: &[String]) -> Option<Vec<DuplicateEntry>> {
+    let seeder_bare: HashSet<&str> = seeders
+        .iter()
+        .map(|id| strip_ver(id))
+        .collect();
+    let mut entries = Vec::new();
+    for (comp_id, versions) in group_versions(&graph.nodes) {
+        if versions.len() > 1 && (seeder_bare.is_empty() || seeder_bare.contains(comp_id)) {
+            entries.push(build_duplicate_entry(comp_id, &versions, graph)?);
+        }
+    }
+    Some(entries)
+}
+
+fn group_versions(nodes: &[String]) -> Vec<(&str, Vec<&str>)> {
+    let mut groups: Vec<(&str, Vec<&str>)> = Vec::new();
+    for node in nodes {
+        let bare = strip_ver(node);
+        if let Some((_, list)) = groups
+            .iter_mut()
+            .find(|(id, _)| *id == bare)
+        {
+            list.push(node.as_str());
+        } else {
+            groups.push((bare, vec![node.as_str()]));
+        }
+    }
+    groups
+}
+
+fn build_duplicate_entry(
+    comp_id: &str,
+    versions: &[&str],
+    graph: &CompGraph,
+) -> Option<DuplicateEntry> {
+    let mut outdated: Vec<OutdatedVersion> = versions[1..]
+        .iter()
+        .map(|&ver| OutdatedVersion {
+            version: ver.to_owned(),
+            dependents: immediate_dependents(graph, ver),
+        })
+        .collect();
+    if outdated.len() > 1 {
+        sort_outdated_desc(&mut outdated)?;
+    }
+    Some(DuplicateEntry {
+        comp_id: comp_id.to_owned(),
+        latest_version: versions[0].to_owned(),
+        outdated,
+    })
+}
+
+fn immediate_dependents(graph: &CompGraph, target: &str) -> Vec<String> {
+    graph.edges
+        .iter()
+        .filter(|edge| edge.target_id == target)
+        .map(|edge| edge.source_id.clone())
+        .collect()
+}
+
+fn sort_outdated_desc(outdated: &mut [OutdatedVersion]) -> Option<()> {
+    let mut parsed = Vec::with_capacity(outdated.len());
+    for item in outdated.iter() {
+        let (_, ver) = item.version.rsplit_once('@')?;
+        parsed.push(node_semver::Version::parse(ver).ok()?);
+    }
+    let mut indexed: Vec<(node_semver::Version, OutdatedVersion)> = parsed
+        .into_iter()
+        .zip(
+            outdated
+                .iter()
+                .map(|item| OutdatedVersion {
+                    version: item.version.clone(),
+                    dependents: item.dependents.clone(),
+                }),
+        )
+        .collect();
+    indexed.sort_by(|(v1, _), (v2, _)| v2.cmp(v1));
+    for (slot, (_, item)) in outdated.iter_mut().zip(indexed) {
+        *slot = item;
+    }
+    Some(())
+}
+
+fn render_duplicate_entries(entries: &[DuplicateEntry]) -> String {
+    entries
+        .iter()
+        .map(|entry| {
+            let sub_list = entry.outdated
+                .iter()
+                .map(|dep| {
+                    let dep_ids = dep.dependents
+                        .iter()
+                        .map(|dependent| format!("---- {dependent}"))
+                        .collect::<Vec<_>>()
+                        .join("\n");
+                    format!("-- {} used by:\n{dep_ids}", dep.version)
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+            format!(
+                "\n- {} has {} versions (latest is {}) \n{sub_list}",
+                entry.comp_id,
+                entry.outdated.len() + 1,
+                entry.latest_version,
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn strip_ver(id: &str) -> &str {
+    id.rsplit_once('@')
+        .map_or(id, |(bare, _)| if bare.is_empty() { id } else { bare })
 }

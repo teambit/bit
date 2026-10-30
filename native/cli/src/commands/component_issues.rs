@@ -211,6 +211,7 @@ fn parse(args: &[&str]) -> Option<bool> {
             "-j" | "--json" if !json => json = true,
             "--json=true" if !json => json = true,
             "--json=false" if !json => {}
+            "--no-color" => {}
             _ => return None,
         }
     }
