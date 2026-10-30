@@ -116,6 +116,7 @@ fn bare_scope_graph_json_matches_node_without_a_host() {
     let unavailable = helper.scopes.e2e_dir.join("unavailable-runtime");
     for command in [
         "graph --json",
+        "graph --cycles --json",
         "graph comp1 --json",
         "graph comp1 --include-dependencies --json",
         "graph comp2 --include-dependencies --json",

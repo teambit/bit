@@ -191,11 +191,20 @@ fn preflight_fixes(
         let result = tool.run()?;
         let rows =
             result["results"].as_array().ok_or_else(|| invalid("linter fix preflight results"))?;
-        if rows
+        let fixed_paths = rows
             .iter()
             .filter(|row| row["output"].is_string())
-            .count()
-            > 1
+            .filter_map(|row| row["filePath"].as_str())
+            .collect::<Vec<_>>();
+        if fixed_paths.len() > 1
+            && !fixed_paths
+                .iter()
+                .all(|path| {
+                    fs::OpenOptions::new()
+                        .write(true)
+                        .open(path)
+                        .is_ok()
+                })
         {
             return Err(invalid("linter concurrent fixes"));
         }

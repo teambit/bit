@@ -1,6 +1,5 @@
 use super::{
-    BitmapContext, EnvBatch, Prepared, resolve_verified_env, set_env_in_bitmap_row,
-    set_env_in_comp_json,
+    BitmapContext, CORE_ENVS, EnvBatch, Prepared, set_env_in_bitmap_row, set_env_in_comp_json,
 };
 use crate::commands::{
     aspect::find_bitmap_row_ref,
@@ -112,4 +111,93 @@ fn map_uses_env(map: &Map<String, Value>, old_bare: &str, raw_old_env: &str) -> 
     let prefix = format!("{old_bare}@");
     map.keys()
         .any(|key| key == old_bare || key == raw_old_env || key.starts_with(&prefix))
+}
+
+pub(super) fn resolve_verified_env(
+    root: &Path,
+    bitmap: &Bitmap,
+    bitmap_val: &Value,
+    raw_env: &str,
+) -> Result<(String, String), Failure> {
+    if CORE_ENVS.contains(&raw_env) {
+        return Ok((raw_env.to_owned(), raw_env.to_owned()));
+    }
+    let normalized = raw_env.trim_start_matches("./");
+    let Some(env_entry) = bitmap.entries
+        .iter()
+        .find(|entry| {
+            entry.owns_its_dir()
+                && ((!entry.root_dir.is_empty() && entry.root_dir == normalized)
+                    || entry.id.to_string_without_version() == raw_env
+                    || entry.id.name == raw_env)
+        })
+    else {
+        return Err(Failure::Declined(format!("non-core non-workspace env {raw_env}")));
+    };
+    if !is_workspace_entry_an_env(root, bitmap_val, env_entry) {
+        return Err(Failure::Declined(format!(
+            "workspace component {raw_env} not verified as env",
+        )));
+    }
+    Ok((selection::entry_full_id(env_entry), env_entry.id.to_string_without_version()))
+}
+
+fn is_workspace_entry_an_env(root: &Path, bitmap_val: &Value, entry: &BitmapEntry) -> bool {
+    if let Ok(row) = find_bitmap_row_ref(bitmap_val, entry)
+        && is_env_config(&row["config"])
+    {
+        return true;
+    }
+    if !entry.root_dir.is_empty() {
+        let comp_dir = root.join(&entry.root_dir);
+        if let Ok(bytes) = fs::read(comp_dir.join("component.json"))
+            && let Ok(parsed) = serde_json::from_slice::<Value>(&bytes)
+            && is_env_config(&parsed["extensions"])
+        {
+            return true;
+        }
+        if dir_has_bit_env_plugin(&comp_dir) {
+            return true;
+        }
+    }
+    false
+}
+
+fn is_env_config(cfg: &Value) -> bool {
+    let Some(obj) = cfg.as_object() else {
+        return false;
+    };
+    if obj.contains_key("teambit.envs/env")
+        || obj
+            .keys()
+            .any(|key| key.starts_with("bitdev.general/envs/bit-env"))
+    {
+        return true;
+    }
+    matches!(
+        obj.get("teambit.envs/envs")
+            .and_then(|val| val["env"].as_str()),
+        Some("teambit.envs/env" | "bitdev.general/envs/bit-env"),
+    )
+}
+
+fn dir_has_bit_env_plugin(dir: &Path) -> bool {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return false;
+    };
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if path.is_dir() {
+            if dir_has_bit_env_plugin(&path) {
+                return true;
+            }
+        } else if path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name.contains(".bit-env."))
+        {
+            return true;
+        }
+    }
+    false
 }

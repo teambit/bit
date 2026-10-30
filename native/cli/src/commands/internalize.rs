@@ -189,14 +189,6 @@ fn is_entry_internal(
     bitmap_val: &Value,
     entry: &BitmapEntry,
 ) -> Result<bool, Failure> {
-    if !entry.root_dir.is_empty()
-        && root
-            .join(&entry.root_dir)
-            .join("component.json")
-            .exists()
-    {
-        return Err(Failure::Declined("component.json exists".into()));
-    }
     let row = find_bitmap_row_ref(bitmap_val, entry)?;
     if let Some(cfg) = row
         .get("config")
@@ -207,7 +199,30 @@ fn is_entry_internal(
         }
         return Ok(cfg["internal"].as_bool().unwrap_or(false));
     }
+    if let Some(internal) = is_comp_json_entry_internal(root, entry)? {
+        return Ok(internal);
+    }
     is_scope_entry_internal(root, entry)
+}
+
+fn is_comp_json_entry_internal(root: &Path, entry: &BitmapEntry) -> Result<Option<bool>, Failure> {
+    if entry.root_dir.is_empty() {
+        return Ok(None);
+    }
+    let comp_json_path = root.join(&entry.root_dir).join("component.json");
+    if !comp_json_path.exists() {
+        return Ok(None);
+    }
+    let bytes = fs::read(&comp_json_path)?;
+    let parsed: Value =
+        serde_json::from_slice(&bytes).map_err(|err| Failure::Declined(err.to_string()))?;
+    let Some(cfg) = parsed["extensions"].get(INTERNALIZE_ASPECT_ID) else {
+        return Ok(None);
+    };
+    if cfg.as_str() == Some("-") {
+        return Ok(Some(false));
+    }
+    Ok(Some(cfg["internal"].as_bool().unwrap_or(false)))
 }
 
 fn is_scope_entry_internal(root: &Path, entry: &BitmapEntry) -> Result<bool, Failure> {

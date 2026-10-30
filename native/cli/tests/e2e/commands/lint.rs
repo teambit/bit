@@ -288,7 +288,13 @@ fn standard_lint_multiple_simultaneous_fixes_remain_guarded() {
             .code(),
         Some(1),
     );
-    support::compare_declined(&helper, "lint --fix --json", duration);
+    let result = support::compare_with_stdout(&helper, "lint --fix --json", duration);
+    assert!(result.status.success());
+    for file in ["comp1/index.js", "comp1/extra.js"] {
+        assert!(
+            !std::fs::read_to_string(helper.scopes.local_path.join(file)).unwrap().contains("!!"),
+        );
+    }
 }
 
 #[cfg(unix)]

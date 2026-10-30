@@ -5,7 +5,7 @@ use super::{
         get::{collect_get_entries, render_get_text},
         render_list_table,
     },
-    mutation::deep_merge,
+    mutation::{deep_merge, prepare},
     parse_subcommand,
 };
 use crate::commands::color::Chalk;
@@ -109,4 +109,57 @@ fn lists_and_gets_component_aspects() {
     let get_str = render_get_text(&get_entries, Chalk::new(false));
     assert!(get_str.contains("name:   teambit.component/forking"), "{get_str}");
     assert!(get_str.contains(r#""forkedFrom": "other/comp1""#), "{get_str}");
+}
+
+#[test]
+fn sets_and_merges_aspect_in_component_json() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    fs::create_dir_all(root.join("comp1")).unwrap();
+    fs::write(root.join("comp1/index.js"), "module.exports = () => 1;\n").unwrap();
+    fs::write(
+        root.join("workspace.jsonc"),
+        r#"{ "teambit.workspace/workspace": { "defaultScope": "my-scope" } }"#,
+    )
+    .unwrap();
+    fs::write(
+        root.join(".bitmap"),
+        r#"{
+            "comp1": {
+                "scope": "",
+                "version": "",
+                "mainFile": "index.js",
+                "rootDir": "comp1"
+            }
+        }"#,
+    )
+    .unwrap();
+    fs::write(
+        root.join("comp1/component.json"),
+        r#"{
+  "componentId": { "scope": "my-scope", "name": "comp1" },
+  "propagate": false,
+  "extensions": {
+    "my-scope/my-aspect@0.0.1": { "a": 1, "b": 2 }
+  }
+}
+"#,
+    )
+    .unwrap();
+    let sub = Subcommand::Set {
+        pattern: "comp1".into(),
+        aspect_id: "my-scope/my-aspect".into(),
+        config: json!({ "b": 20, "c": 30 }),
+        merge: true,
+    };
+    let prepared = prepare(root, &sub, Chalk::new(false)).ok().unwrap();
+    prepared
+        .commit(Chalk::new(false))
+        .unwrap();
+    let updated: serde_json::Value =
+        serde_json::from_slice(&fs::read(root.join("comp1/component.json")).unwrap()).unwrap();
+    assert_eq!(
+        updated["extensions"]["my-scope/my-aspect@0.0.1"],
+        json!({ "a": 1, "b": 20, "c": 30 }),
+    );
 }

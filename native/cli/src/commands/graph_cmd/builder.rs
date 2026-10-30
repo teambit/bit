@@ -45,7 +45,7 @@ pub(super) fn execute_workspace_graph(
     if !options.include_dependencies {
         graph.filter_local_only(&local_ids);
     }
-    if options.cycles {
+    if options.cycles && !options.json {
         graph.filter_cycles();
     }
     graph.sort_deterministic();

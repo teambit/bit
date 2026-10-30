@@ -52,6 +52,8 @@ fn removes_existing_env_and_versioned_entry_from_config_map() {
     assert!(!map.contains_key("my-scope/my-env@0.0.1"));
     assert!(!map.contains_key("teambit.envs/envs"));
     assert!(map.contains_key("teambit.component/forking"));
+    assert!(!remove_env_from_map(map));
+    assert!(map.contains_key("teambit.component/forking"));
 }
 
 #[test]

@@ -17,9 +17,6 @@ pub(super) fn execute_scope_graph(
     options: &Options,
     formatter: &Formatter,
 ) -> Result<String, Failure> {
-    if options.cycles && options.json {
-        return Err(Failure::Declined("bare scope cycles json delegated".into()));
-    }
     let graph = build_scope_graph(scope_dir, options)?;
     render_scope_graph(&graph, options.json, formatter)
 }
@@ -62,7 +59,7 @@ fn apply_scope_filters(
         }
         graph.filter_local_only(local_ids);
     }
-    if options.cycles {
+    if options.cycles && !options.json {
         graph.filter_cycles();
     }
     Ok(())
