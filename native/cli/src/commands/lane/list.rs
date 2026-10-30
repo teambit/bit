@@ -22,7 +22,7 @@ use crate::{
     history::History,
     native::Outcome,
 };
-use metadata::{readme, report, report_others, updates};
+use metadata::{Tracking, lane, report, report_others};
 use serde_json::{Map, Value, json};
 use std::{
     ffi::OsString,
@@ -156,7 +156,7 @@ fn display_local(
     let report = Report {
         data: match merged {
             Some(only_merged) => merged::report(&lanes, only_merged, Chalk::detect(args)),
-            None => report(&lanes, &current.0, Chalk::detect(args), details),
+            None => report(&lanes, &current.0, Chalk::detect(args), details, bare),
         },
         code: 0,
         details: None,
@@ -190,48 +190,57 @@ fn emit_json(
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[derive(Default)]
+struct ListFlags<'a> {
+    json: bool,
+    details: bool,
+    merged: Option<bool>,
+    remote: Option<&'a str>,
+}
+
 fn parse<'a>(args: &[&'a str]) -> Option<(bool, bool, Option<bool>, Option<&'a str>)> {
-    let (mut json, mut details, mut merged, mut remote) = (false, false, None, None);
-    let mut args = args.iter().copied();
-    while let Some(arg) = args.next() {
-        match arg {
-            "--json" | "-j" if !json => json = true,
-            "--details" | "-d" if !details => details = true,
-            "--merged" if merged.is_none() => merged = Some(true),
-            "--not-merged" if merged.is_none() => merged = Some(false),
-            "--remote" | "-r" if remote.is_none() => remote = Some(remote_name(args.next())?),
-            _ => return None,
-        }
+    let mut flags = ListFlags::default();
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        apply_list_arg(&mut flags, arg, &mut iter)?;
     }
-    Some((json, details, merged, remote))
+    Some((flags.json, flags.details, flags.merged, flags.remote))
+}
+
+fn apply_list_arg<'a>(
+    flags: &mut ListFlags<'a>,
+    arg: &'a str,
+    iter: &mut impl Iterator<Item = &'a str>,
+) -> Option<()> {
+    if let Some(val) = arg.strip_prefix("--remote=") {
+        if flags.remote.is_some() {
+            return None;
+        }
+        flags.remote = Some(remote_name(Some(val))?);
+        return Some(());
+    }
+    match arg {
+        "--no-color" => {}
+        "--json" | "-j" | "--json=true" if !flags.json => flags.json = true,
+        "--json=false" => flags.json = false,
+        "--details" | "-d" | "--details=true" if !flags.details => flags.details = true,
+        "--details=false" => flags.details = false,
+        "--merged" | "--merged=true" if flags.merged.is_none() => flags.merged = Some(true),
+        "--merged=false" | "--not-merged=false" if flags.merged.is_none() => {}
+        "--not-merged" | "--not-merged=true" if flags.merged.is_none() => {
+            flags.merged = Some(false);
+        }
+        "--remote" | "-r" if flags.remote.is_none() => {
+            flags.remote = Some(remote_name(iter.next())?);
+        }
+        _ => return None,
+    }
+    Some(())
 }
 
 fn remote_name(name: Option<&str>) -> Option<&str> {
     name.map(str::trim)
         .filter(|name| !name.is_empty() && !name.starts_with('-'))
-}
-
-/// The lanes `scope.json` tracks: `localLane` per remote lane.
-struct Tracking(Vec<Value>);
-
-impl Tracking {
-    fn read(scope: &Value) -> Self {
-        Self(
-            scope["lanes"]["tracking"]
-                .as_array()
-                .cloned()
-                .unwrap_or_default(),
-        )
-    }
-
-    /// `getLocalTrackedLaneByRemoteName(name, scope)`.
-    fn alias(&self, name: &str, scope: &str) -> Option<String> {
-        self.0
-            .iter()
-            .find(|row| row["remoteLane"] == name && row["remoteScope"] == scope)
-            .and_then(|row| row["localLane"].as_str())
-            .map(str::to_string)
-    }
 }
 
 /// The lanes then main, and the current lane's id with
@@ -323,40 +332,6 @@ fn with_alias(current: Value, tracking: &Tracking) -> io::Result<(Value, String)
         .alias(name, text(current.get("scope"))?)
         .unwrap_or_else(|| name.to_string());
     Ok((current, alias))
-}
-
-/// A lane of the index: its id, alias and components that are not deleted.
-fn lane(row: &Value, tracking: &Tracking) -> io::Result<LaneData> {
-    let value = &row["lane"];
-    if value["schema"] != DELETED_DATA_SCHEMA {
-        return Err(decline("a lane Node migrates to record deleted components"));
-    }
-    let name = text(value.get("name"))?;
-    let scope = text(value.get("scope"))?;
-    let components = array(value.get("components"), "lane components")?
-        .iter()
-        .filter(|component| component["isDeleted"] != true)
-        .map(|component| {
-            let id = &component["id"];
-            Ok(json!({
-                "id": format!("{}/{}", text(id.get("scope"))?, text(id.get("name"))?),
-                "head": text(component.get("head"))?,
-            }))
-        })
-        .collect::<io::Result<Vec<_>>>()?;
-    let update_dependents = updates(value)?;
-    let readme_component = readme(value)?;
-    Ok(LaneData {
-        id: json!({"name": name, "scope": scope}),
-        alias: tracking
-            .alias(name, scope)
-            .filter(|alias| alias != name),
-        components,
-        update_dependents,
-        readme_component,
-        is_merged: row["isMerged"].as_bool(),
-        lane: Some((value["log"].clone(), text(row.get("hash"))?.to_string())),
-    })
 }
 
 /// `getIdsOfDefaultLane()`: the bitmap's ids, a versioned one at its model's

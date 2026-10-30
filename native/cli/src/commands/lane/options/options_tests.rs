@@ -18,6 +18,13 @@ fn lane_merges_with_their_options() {
         parse(&["remote/dev", "--pattern", "remote/*", "-x"]).unwrap().pattern.as_deref(),
         Some("remote/*"),
     );
+    assert_eq!(
+        parse(&["remote/dev", "--pattern=remote/*", "--auto-merge-resolve=ours", "--no-color"])
+            .unwrap()
+            .strategy
+            .as_deref(),
+        Some("ours"),
+    );
 }
 
 #[test]

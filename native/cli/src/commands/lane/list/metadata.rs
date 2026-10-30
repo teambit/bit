@@ -1,7 +1,67 @@
 //! Lane readme and hidden update-dependent metadata for inspection.
-use super::{Chalk, Formatter, LaneData, array, decline, text};
+use super::{Chalk, DELETED_DATA_SCHEMA, Formatter, LaneData, array, decline, text};
 use serde_json::{Value, json};
 use std::io;
+
+/// The lanes `scope.json` tracks: `localLane` per remote lane.
+pub(in crate::commands::lane::list) struct Tracking(pub(in crate::commands::lane::list) Vec<Value>);
+
+impl Tracking {
+    pub(super) fn read(scope: &Value) -> Self {
+        Self(
+            scope["lanes"]["tracking"]
+                .as_array()
+                .cloned()
+                .unwrap_or_default(),
+        )
+    }
+
+    /// `getLocalTrackedLaneByRemoteName(name, scope)`.
+    pub(super) fn alias(&self, name: &str, scope: &str) -> Option<String> {
+        self.0
+            .iter()
+            .find(|row| row["remoteLane"] == name && row["remoteScope"] == scope)
+            .and_then(|row| row["localLane"].as_str())
+            .map(str::to_string)
+    }
+}
+
+/// A lane of the index: its id, alias and components that are not deleted.
+pub(in crate::commands::lane::list) fn lane(
+    row: &Value,
+    tracking: &Tracking,
+) -> io::Result<LaneData> {
+    let value = &row["lane"];
+    if value["schema"] != DELETED_DATA_SCHEMA {
+        return Err(decline("a lane Node migrates to record deleted components"));
+    }
+    let name = text(value.get("name"))?;
+    let scope = text(value.get("scope"))?;
+    let components = array(value.get("components"), "lane components")?
+        .iter()
+        .filter(|component| component["isDeleted"] != true)
+        .map(|component| {
+            let id = &component["id"];
+            Ok(json!({
+                "id": format!("{}/{}", text(id.get("scope"))?, text(id.get("name"))?),
+                "head": text(component.get("head"))?,
+            }))
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    let update_dependents = updates(value)?;
+    let readme_component = readme(value)?;
+    Ok(LaneData {
+        id: json!({"name": name, "scope": scope}),
+        alias: tracking
+            .alias(name, scope)
+            .filter(|alias| alias != name),
+        components,
+        update_dependents,
+        readme_component,
+        is_merged: row["isMerged"].as_bool(),
+        lane: Some((value["log"].clone(), text(row.get("hash"))?.to_string())),
+    })
+}
 
 pub(super) fn updates(value: &Value) -> io::Result<Option<Vec<Value>>> {
     let update_dependents = value
@@ -77,19 +137,32 @@ pub(in crate::commands::lane) fn components_report(lane: &LaneData, format: &For
 }
 
 /// `LaneListCmd.report` for compact and detailed lane lists.
-pub(super) fn report(lanes: &[LaneData], current: &Value, chalk: Chalk, details: bool) -> String {
+pub(super) fn report(
+    lanes: &[LaneData],
+    current: &Value,
+    chalk: Chalk,
+    details: bool,
+    bare: bool,
+) -> String {
     let format = Formatter::new(chalk);
     let current_lane = lanes
         .iter()
         .find(|lane| lane.id == *current);
     let current_output = report_current(current_lane, current, chalk, details, &format);
     let others = report_others(lanes, current, chalk, details, &format);
-    let hints = if details {
-        "use --merged and --not-merged to see which of the lanes is fully merged\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'"
+    let first_hint = if details {
+        "use --merged and --not-merged to see which of the lanes is fully merged"
     } else {
-        "use 'bit lane list --details' or 'bit lane show <lane-name>' for more info\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'"
+        "use 'bit lane list --details' or 'bit lane show <lane-name>' for more info"
     };
-    Formatter::join(&[current_output, others, format.hint(hints)])
+    let hints = if bare {
+        first_hint.to_owned()
+    } else {
+        format!(
+            "{first_hint}\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'",
+        )
+    };
+    Formatter::join(&[current_output, others, format.hint(&hints)])
 }
 
 fn report_current(

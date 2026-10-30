@@ -25,18 +25,40 @@ struct Options<'a> {
 
 fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     let mut options = Options { lane: None, id: None, json: false };
-    let mut args = args.iter().copied();
-    while let Some(arg) = args.next() {
-        match arg {
-            "--json" | "-j" if !options.json => options.json = true,
-            "--id" if options.id.is_none() => options.id = Some(args.next()?),
-            value if !value.starts_with('-') && options.lane.is_none() => {
-                options.lane = Some(value);
-            }
-            _ => return None,
-        }
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        apply_history_arg(&mut options, arg, &mut iter)?;
     }
     Some(options)
+}
+
+fn apply_history_arg<'a>(
+    options: &mut Options<'a>,
+    arg: &'a str,
+    iter: &mut impl Iterator<Item = &'a str>,
+) -> Option<()> {
+    if let Some(val) = arg.strip_prefix("--id=") {
+        if options.id.is_some() || val.is_empty() || val.starts_with('-') {
+            return None;
+        }
+        options.id = Some(val);
+        return Some(());
+    }
+    match arg {
+        "--json" | "-j" | "--json=true" if !options.json => options.json = true,
+        "--json=false" => options.json = false,
+        "--id" if options.id.is_none() => {
+            options.id = Some(
+                iter.next()
+                    .filter(|val| !val.is_empty() && !val.starts_with('-'))?,
+            );
+        }
+        value if !value.starts_with('-') && options.lane.is_none() => {
+            options.lane = Some(value);
+        }
+        _ => return None,
+    }
+    Some(())
 }
 
 pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {

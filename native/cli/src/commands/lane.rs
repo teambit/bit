@@ -25,9 +25,13 @@ use std::{env, ffi::OsString, io};
 pub const COMMAND: Command = Command { name: "lane", aliases: &["l"], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
-    let Some(argv) = workspace_command::utf8_args(args) else {
+    let Some(raw_argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
     };
+    let argv: Vec<&str> = raw_argv
+        .into_iter()
+        .filter(|arg| *arg != "--no-color")
+        .collect();
     match argv.get(1).copied() {
         None => list::run_default(args, &argv[1..]),
         Some(flag) if flag.starts_with('-') => list::run_default(args, &argv[1..]),

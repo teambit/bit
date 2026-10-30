@@ -25,29 +25,69 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     while index < args.len() {
         let arg = alias(args[index]);
         index += 1;
+        if arg == "--no-color" {
+            continue;
+        }
         if !arg.starts_with('-') {
             positionals.push(arg);
             continue;
         }
-        if flags
-            .iter()
-            .any(|(name, _)| *name == arg)
-        {
-            return None;
-        }
-        if BOOLEAN.contains(&arg) {
-            flags.push((arg, json!(true)));
-        } else if VALUED.contains(&arg) {
-            let value = args
-                .get(index)
-                .filter(|value| !value.is_empty() && !value.starts_with('-'))?;
-            index += 1;
-            flags.push((arg, json!(value)));
-        } else {
-            return None;
-        }
+        index += apply_merge_flag(&mut flags, arg, args.get(index).copied())?;
     }
     build(&flags, &positionals)
+}
+
+fn apply_merge_flag<'a>(
+    flags: &mut Vec<(&'a str, Value)>,
+    arg: &'a str,
+    next: Option<&str>,
+) -> Option<usize> {
+    if let Some((flag, val)) = arg.split_once('=') {
+        return apply_merge_inline(flags, alias(flag), val);
+    }
+    if flags
+        .iter()
+        .any(|(name, _)| *name == arg)
+    {
+        return None;
+    }
+    if BOOLEAN.contains(&arg) {
+        flags.push((arg, json!(true)));
+        return Some(0);
+    }
+    if VALUED.contains(&arg) {
+        let value = next.filter(|value| !value.is_empty() && !value.starts_with('-'))?;
+        flags.push((arg, json!(value)));
+        return Some(1);
+    }
+    None
+}
+
+fn apply_merge_inline<'a>(
+    flags: &mut Vec<(&'a str, Value)>,
+    flag: &'a str,
+    val: &str,
+) -> Option<usize> {
+    if flags
+        .iter()
+        .any(|(name, _)| *name == flag)
+    {
+        return None;
+    }
+    if BOOLEAN.contains(&flag) {
+        let bool_val = match val {
+            "true" => true,
+            "false" => false,
+            _ => return None,
+        };
+        flags.push((flag, json!(bool_val)));
+        return Some(0);
+    }
+    if VALUED.contains(&flag) && !val.is_empty() && !val.starts_with('-') {
+        flags.push((flag, json!(val)));
+        return Some(0);
+    }
+    None
 }
 
 fn alias(arg: &str) -> &str {

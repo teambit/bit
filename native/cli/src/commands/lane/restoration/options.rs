@@ -19,19 +19,32 @@ impl Options {
             json: false,
         };
         for value in &args[2..] {
-            match *value {
-                "-x" | "--skip-dependency-installation" if !options.skip_install => {
-                    options.skip_install = true;
-                }
-                "--restore-deleted-components" if revert && !options.restore_deleted => {
-                    options.restore_deleted = true;
-                }
-                "-j" | "--json" if revert && !options.json => options.json = true,
-                id if !id.starts_with('-') && options.id.is_empty() => options.id = id.into(),
-                _ => return None,
-            }
+            options.apply_arg(value)?;
         }
         (!options.id.is_empty()).then_some(options)
+    }
+
+    fn apply_arg(&mut self, value: &str) -> Option<()> {
+        match value {
+            "--no-color" => {}
+            "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true"
+                if !self.skip_install =>
+            {
+                self.skip_install = true;
+            }
+            "--skip-dependency-installation=false" => self.skip_install = false,
+            "--restore-deleted-components" | "--restore-deleted-components=true"
+                if self.revert && !self.restore_deleted =>
+            {
+                self.restore_deleted = true;
+            }
+            "--restore-deleted-components=false" if self.revert => self.restore_deleted = false,
+            "-j" | "--json" | "--json=true" if self.revert && !self.json => self.json = true,
+            "--json=false" if self.revert => self.json = false,
+            id if !id.starts_with('-') && self.id.is_empty() => self.id = id.into(),
+            _ => return None,
+        }
+        Some(())
     }
 
     pub fn command(&self) -> &'static str {

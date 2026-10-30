@@ -13,6 +13,22 @@ fn parses_eject_options() {
             keep_files: true,
         }),
     );
+    assert_eq!(
+        parse_options(&[
+            "comp1",
+            "--force=true",
+            "--skip-dependency-installation=false",
+            "--json=true",
+            "--keep-files=false",
+        ]),
+        Some(Options {
+            pattern: "comp1".into(),
+            force: true,
+            skip_dependency_installation: false,
+            json: true,
+            keep_files: false,
+        }),
+    );
     assert_eq!(parse_options(&[]), None);
 }
 

@@ -104,7 +104,6 @@ fn is_supported_pattern(pattern: &str) -> bool {
         && !pattern.starts_with(['-', '@'])
         && !pattern.contains(['$', ':'])
         && !pattern.contains(" AND ")
-        && !pattern.starts_with("teambit.")
 }
 
 fn prepare(root: &Path, subcommand: &Subcommand, chalk: Chalk) -> Result<Prepared, Failure> {

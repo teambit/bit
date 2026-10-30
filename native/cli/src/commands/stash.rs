@@ -28,12 +28,21 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native stash grammar".to_owned()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        if let Options::Unrecognized(sub) = &options
+            && env::var_os("CI").is_none_or(|val| val.is_empty())
+        {
+            let report =
+                Report { data: unrecognized_stash_report(args, sub), code: 0, details: None };
+            return workspace_command::execute_with_scope(&cwd, args, "stash", &report);
+        }
         return Ok(Outcome::Declined("not inside a workspace".to_owned()));
     };
     let command = match &options {
         Options::Save { .. } => "save",
         Options::List => "list",
+        Options::Unrecognized(_) => "stash",
         _ => "load",
     };
     let mut startup = Startup::default();
@@ -61,6 +70,7 @@ enum Prepared {
         tracked: Option<Value>,
         count: usize,
     },
+    Unrecognized(String),
     Error(String),
 }
 
@@ -73,6 +83,10 @@ fn prepare(root: &Path, options: Options, startup: &mut Startup) -> io::Result<P
         Options::List => {
             super::status::environments::quick(root, &workspace_command::home(), startup)?;
             stash_store::list(&bit_install::config::scope_path(root)).map(Prepared::List)
+        }
+        Options::Unrecognized(sub) => {
+            super::status::environments::quick(root, &workspace_command::home(), startup)?;
+            Ok(Prepared::Unrecognized(sub))
         }
         Options::Error(error) => {
             super::status::environments::quick(root, &workspace_command::home(), startup)?;
@@ -142,6 +156,7 @@ fn execute(
     let format = Formatter::new(Chalk::detect(args));
     let data = match prepared {
         Prepared::Error(error) => return Err(io::Error::other(error)),
+        Prepared::Unrecognized(sub) => unrecognized_stash_report(args, &sub),
         Prepared::List(rows) => list_report(&rows)?,
         Prepared::Load { metadata, planned, tracked, count } => {
             apply_load(root, &metadata, *planned, tracked)?;
@@ -155,6 +170,14 @@ fn execute(
         }
     };
     Ok(Report { data, code: 0, details: None })
+}
+
+fn unrecognized_stash_report(args: &[OsString], sub: &str) -> String {
+    let format = Formatter::new(Chalk::detect(args));
+    format!(
+        r#"{} "{sub}" is not a subcommand of "stash", please run "bit stash --help" to list the subcommands"#,
+        format.error_symbol(),
+    )
 }
 
 fn list_report(rows: &[Value]) -> io::Result<String> {

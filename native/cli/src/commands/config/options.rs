@@ -16,6 +16,7 @@ impl Options {
             .skip(1)
             .map(|arg| arg.to_str())
             .collect::<Option<Vec<_>>>()?;
+        values.retain(|arg| *arg != "--no-color");
         let command = if values
             .first()
             .is_some_and(|arg| !arg.starts_with('-'))
@@ -45,12 +46,20 @@ impl Options {
         match self.command.as_str() {
             "set" => self.set_flag(arg),
             "list" => match arg {
-                "-j" | "--json" => {
+                "-j" | "--json" | "--json=true" => {
                     self.json = true;
                     Some(())
                 }
-                "-d" | "--detailed" => {
+                "--json=false" => {
+                    self.json = false;
+                    Some(())
+                }
+                "-d" | "--detailed" | "--detailed=true" => {
                     self.detailed = true;
+                    Some(())
+                }
+                "--detailed=false" => {
+                    self.detailed = false;
                     Some(())
                 }
                 "-dj" | "-jd" => {
@@ -67,8 +76,9 @@ impl Options {
 
     fn set_flag(&mut self, arg: &str) -> Option<()> {
         match arg {
-            "-l" | "--local" => self.origin = Some("scope".to_owned()),
-            "-t" | "--local-track" => {
+            "-l" | "--local" | "--local=true" => self.origin = Some("scope".to_owned()),
+            "--local=false" | "--local-track=false" => {}
+            "-t" | "--local-track" | "--local-track=true" => {
                 if self.origin.as_deref() != Some("scope") {
                     self.origin = Some("workspace".to_owned());
                 }
@@ -83,10 +93,14 @@ impl Options {
         arg: &str,
         rest: &mut impl Iterator<Item = &'a str>,
     ) -> Option<()> {
-        self.origin = Some(match arg {
-            "-o" | "--origin" => rest.next()?.to_owned(),
-            flag => flag.strip_prefix("--origin=")?.to_owned(),
-        });
+        let val = match arg {
+            "-o" | "--origin" => rest.next()?,
+            flag => flag.strip_prefix("--origin=")?,
+        };
+        if val.is_empty() || val.starts_with('-') {
+            return None;
+        }
+        self.origin = Some(val.to_owned());
         Some(())
     }
 

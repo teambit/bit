@@ -48,11 +48,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&cwd) else {
         return Ok(Outcome::Declined("eject outside workspace delegated".into()));
     };
-    if let Ok(Some(err_msg)) = validate_workspace(&root, &options.pattern) {
-        return super::lint_cmd::emit_pattern_error(&root, args, "eject", options.json, err_msg);
-    }
     if options.json {
         return Ok(Outcome::Declined("json eject delegated".into()));
+    }
+    if let Ok(Some(err_msg)) = validate_workspace(&root, &options.pattern) {
+        return super::lint_cmd::emit_pattern_error(&root, args, "eject", options.json, err_msg);
     }
     let ids = match select_ids(&root, &options.pattern) {
         Ok(ids) => ids,
@@ -74,10 +74,16 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     for &arg in args {
         match arg {
             "--no-color" => {}
-            "-f" | "--force" => force = true,
-            "-x" | "--skip-dependency-installation" => skip_dependency_installation = true,
-            "-j" | "--json" => json = true,
-            "--keep-files" => keep_files = true,
+            "-f" | "--force" | "--force=true" => force = true,
+            "--force=false" => force = false,
+            "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
+                skip_dependency_installation = true;
+            }
+            "--skip-dependency-installation=false" => skip_dependency_installation = false,
+            "-j" | "--json" | "--json=true" => json = true,
+            "--json=false" => json = false,
+            "--keep-files" | "--keep-files=true" => keep_files = true,
+            "--keep-files=false" => keep_files = false,
             val if !val.starts_with('-') && !val.is_empty() && pattern.is_none() => {
                 pattern = Some(val.to_owned());
             }

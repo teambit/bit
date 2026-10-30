@@ -21,33 +21,98 @@ impl Options {
     pub fn parse(args: &[&str]) -> Option<Self> {
         let mut options = Self::default();
         let mut cursor = 0;
-        while let Some(arg) = args.get(cursor) {
-            match *arg {
-                "--json" | "-j" => options.json = true,
-                "--list" => options.list = true,
-                "--include-node-modules" | "-n" => options.include.node_modules = true,
-                "--include-public" | "-p" => options.include.public = true,
-                "--exclude-local-scope" | "-e" => options.include.exclude_scope = true,
-                "--save" | "-s" | "--archive" | "-a" => {
-                    let archive = matches!(*arg, "--archive" | "-a");
-                    let path = optional_path(args, &mut cursor);
-                    if archive || !options.archive {
-                        options.file = Some(path);
-                    }
-                    options.archive |= archive;
-                }
-                "--remote" | "-r" => {
-                    cursor += 1;
-                    options.remote = Some((*args.get(cursor)?).into());
-                }
-                name if !name.starts_with('-') && options.name.is_none() => {
-                    options.name = Some(name.into());
-                }
-                _ => return None,
+        while let Some(&arg) = args.get(cursor) {
+            if !options.apply_arg(args, &mut cursor, arg) {
+                return None;
             }
             cursor += 1;
         }
         Some(options)
+    }
+
+    fn apply_arg(&mut self, args: &[&str], cursor: &mut usize, arg: &str) -> bool {
+        if self.apply_boolean(arg) || self.apply_inline_valued(arg) {
+            return true;
+        }
+        self.apply_valued_or_name(args, cursor, arg)
+    }
+
+    fn apply_inline_valued(&mut self, arg: &str) -> bool {
+        if let Some(val) = arg.strip_prefix("--remote=") {
+            if val.is_empty() || val.starts_with('-') {
+                return false;
+            }
+            self.remote = Some(val.into());
+            return true;
+        }
+        let Some(val) = arg
+            .strip_prefix("--save=")
+            .or_else(|| arg.strip_prefix("--archive="))
+        else {
+            return false;
+        };
+        if val.is_empty() || val.starts_with('-') {
+            return false;
+        }
+        let archive = arg.starts_with("--archive=");
+        if archive || !self.archive {
+            self.file = Some(PathBuf::from(val));
+        }
+        self.archive |= archive;
+        true
+    }
+
+    fn apply_boolean(&mut self, arg: &str) -> bool {
+        match arg {
+            "--no-color" => {}
+            "--json" | "-j" | "--json=true" => self.json = true,
+            "--json=false" => self.json = false,
+            "--list" | "--list=true" => self.list = true,
+            "--list=false" => self.list = false,
+            "--include-node-modules" | "-n" | "--include-node-modules=true" => {
+                self.include.node_modules = true;
+            }
+            "--include-node-modules=false" => self.include.node_modules = false,
+            "--include-public" | "-p" | "--include-public=true" => self.include.public = true,
+            "--include-public=false" => self.include.public = false,
+            "--exclude-local-scope" | "-e" | "--exclude-local-scope=true" => {
+                self.include.exclude_scope = true;
+            }
+            "--exclude-local-scope=false" => self.include.exclude_scope = false,
+            _ => return false,
+        }
+        true
+    }
+
+    fn apply_valued_or_name(&mut self, args: &[&str], cursor: &mut usize, arg: &str) -> bool {
+        match arg {
+            "--save" | "-s" | "--archive" | "-a" => {
+                let archive = matches!(arg, "--archive" | "-a");
+                let path = optional_path(args, cursor);
+                if archive || !self.archive {
+                    self.file = Some(path);
+                }
+                self.archive |= archive;
+                true
+            }
+            "--remote" | "-r" => {
+                *cursor += 1;
+                let Some(val) = args
+                    .get(*cursor)
+                    .copied()
+                    .filter(|val| !val.is_empty() && !val.starts_with('-'))
+                else {
+                    return false;
+                };
+                self.remote = Some(val.into());
+                true
+            }
+            name if !name.starts_with('-') && self.name.is_none() => {
+                self.name = Some(name.into());
+                true
+            }
+            _ => false,
+        }
     }
     pub fn validate(&self) -> Result<(), String> {
         if self.list {

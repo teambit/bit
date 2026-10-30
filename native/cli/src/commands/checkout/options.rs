@@ -52,26 +52,59 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     while index < args.len() {
         let arg = alias(args[index]);
         index += 1;
+        if arg == "--no-color" {
+            continue;
+        }
         if !arg.starts_with('-') {
             positionals.push(arg);
             continue;
         }
-        if flags.contains_key(arg) {
-            return None;
-        }
-        if BOOLEAN.contains(&arg) {
-            flags.insert(arg.to_string(), json!(true));
-        } else if arg == "--auto-merge-resolve" {
-            let value = args
-                .get(index)
-                .filter(|value| !value.is_empty() && !value.starts_with('-'))?;
-            index += 1;
-            flags.insert(arg.to_string(), json!(value));
-        } else {
-            return None;
-        }
+        index += apply_checkout_flag(&mut flags, arg, args.get(index).copied())?;
     }
     build(&flags, &positionals)
+}
+
+fn apply_checkout_flag(
+    flags: &mut Map<String, Value>,
+    arg: &str,
+    next: Option<&str>,
+) -> Option<usize> {
+    if let Some((flag, val)) = arg.split_once('=') {
+        return apply_checkout_inline(flags, alias(flag), val);
+    }
+    if flags.contains_key(arg) {
+        return None;
+    }
+    if BOOLEAN.contains(&arg) {
+        flags.insert(arg.to_string(), json!(true));
+        return Some(0);
+    }
+    if arg == "--auto-merge-resolve" {
+        let value = next.filter(|value| !value.is_empty() && !value.starts_with('-'))?;
+        flags.insert(arg.to_string(), json!(value));
+        return Some(1);
+    }
+    None
+}
+
+fn apply_checkout_inline(flags: &mut Map<String, Value>, flag: &str, val: &str) -> Option<usize> {
+    if flags.contains_key(flag) {
+        return None;
+    }
+    if BOOLEAN.contains(&flag) {
+        let bool_val = match val {
+            "true" => true,
+            "false" => false,
+            _ => return None,
+        };
+        flags.insert(flag.to_string(), json!(bool_val));
+        return Some(0);
+    }
+    if flag == "--auto-merge-resolve" && !val.is_empty() && !val.starts_with('-') {
+        flags.insert(flag.to_string(), json!(val));
+        return Some(0);
+    }
+    None
 }
 
 fn alias(arg: &str) -> &str {
@@ -147,8 +180,15 @@ fn revert_arguments<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, bool, bool)> 
     let mut skip_install = false;
     for arg in args {
         match *arg {
-            "-v" | "--verbose" if !verbose => verbose = true,
-            "-x" | "--skip-dependency-installation" if !skip_install => skip_install = true,
+            "--no-color" => {}
+            "-v" | "--verbose" | "--verbose=true" if !verbose => verbose = true,
+            "--verbose=false" => verbose = false,
+            "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true"
+                if !skip_install =>
+            {
+                skip_install = true;
+            }
+            "--skip-dependency-installation=false" => skip_install = false,
             value if !value.starts_with('-') => positionals.push(value),
             _ => return None,
         }

@@ -40,8 +40,13 @@ fn reports_the_current_lane_and_the_others() {
         lane: None,
     };
     let dev = lane(&row("1.0.0"), &Tracking(Vec::new())).unwrap();
-    let output =
-        report(&[dev, main], &json!({"name": "main", "scope": "local"}), Chalk::new(false), false);
+    let output = report(
+        &[dev, main],
+        &json!({"name": "main", "scope": "local"}),
+        Chalk::new(false),
+        false,
+        false,
+    );
     assert_eq!(
         output,
         "current lane - main\n\navailable lanes (1)\n   \u{203A} s/dev (1 components)\n\nuse 'bit lane list --details' or 'bit lane show <lane-name>' for more info\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'",
@@ -60,8 +65,13 @@ fn detailed_list_preserves_the_blank_line_after_an_empty_current_lane() {
         lane: None,
     };
     let dev = lane(&row("1.0.0"), &Tracking(Vec::new())).unwrap();
-    let output =
-        report(&[dev, main], &json!({"name": "main", "scope": "s"}), Chalk::new(false), true);
+    let output = report(
+        &[dev, main],
+        &json!({"name": "main", "scope": "s"}),
+        Chalk::new(false),
+        true,
+        false,
+    );
     assert!(output.starts_with("current lane - main\n\n\n> s/dev\ncomponents (1)\n"));
     assert!(output.ends_with(
         "switch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'"
@@ -109,7 +119,7 @@ fn keeps_hidden_updates_and_readme_separate_from_visible_components() {
         lane: None,
     };
     let output =
-        report(&[lane, main], &json!({"name":"main","scope":"s"}), Chalk::new(false), false);
+        report(&[lane, main], &json!({"name":"main","scope":"s"}), Chalk::new(false), false, false);
     assert!(output.contains("s/dev (1 components) readme: s/docs/readme - 123456"));
 }
 
@@ -119,6 +129,7 @@ fn unsnapped_readme_has_the_node_warning_and_snap_hint() {
     row["lane"]["readmeComponent"] = json!({"id":{"scope":"s","name":"docs/readme"}});
     let lane = lane(&row, &Tracking(Vec::new())).unwrap();
     assert_eq!(lane.json()["readmeComponent"], json!({"id":"s/docs/readme"}));
-    let output = report(&[lane], &json!({"name":"dev","scope":"s"}), Chalk::new(false), false);
+    let output =
+        report(&[lane], &json!({"name":"dev","scope":"s"}), Chalk::new(false), false, false);
     assert!(output.contains(r#"⚠ readme: s/docs/readme - (unsnapped) - use "bit snap docs/readme" to snap before exporting"#));
 }

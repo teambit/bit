@@ -132,14 +132,20 @@ fn read(args: &[&str]) -> Option<Read> {
     let mut index = 0;
     while index < args.len() {
         let arg = match args[index] {
+            "--no-color" => {
+                index += 1;
+                continue;
+            }
             "-x" => "--skip-dependency-installation",
             "-r" => "--auto-merge-resolve",
             "-m" => "--message",
             other => other,
         };
         index += 1;
-        if let Some(value) = arg.strip_prefix("--resolve-unrelated=") {
-            read.flag("--resolve-unrelated", Some(value))?;
+        if let Some((flag, value)) = arg.split_once('=')
+            && (flag == "--resolve-unrelated" || VALUED.contains(&flag))
+        {
+            read.flag(flag, Some(value))?;
             continue;
         }
         if arg.starts_with('-') {

@@ -35,6 +35,19 @@ pub(super) fn show(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome>
     let root = scope_root.path;
     let mut session =
         if scope_root.bare { Session::new(None, args) } else { Session::new(Some(&root), args) };
+    if remote && name.is_none() {
+        if std::env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            return Ok(Outcome::Declined("CI lane show remote without name delegated".into()));
+        }
+        return owned_failure(
+            &root,
+            scope_root.bare,
+            args,
+            json,
+            &session,
+            io::Error::other("remote flag is not supported without lane name"),
+        );
+    }
     let lane = match select_or_exit(&root, scope_root.bare, args, json, name, remote, &mut session)?
     {
         Ok(lane) => lane,
@@ -190,14 +203,14 @@ fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool, bool)> {
     let mut name = None;
     for arg in args {
         match *arg {
-            "--json" | "-j" if !json => json = true,
-            "--remote" | "-r" if !remote => remote = true,
+            "--no-color" => {}
+            "--json" | "-j" | "--json=true" if !json => json = true,
+            "--json=false" => json = false,
+            "--remote" | "-r" | "--remote=true" if !remote => remote = true,
+            "--remote=false" => remote = false,
             value if !value.starts_with('-') && name.is_none() => name = Some(value),
             _ => return None,
         }
-    }
-    if remote && name.is_none() {
-        return None;
     }
     Some((name, json, remote))
 }

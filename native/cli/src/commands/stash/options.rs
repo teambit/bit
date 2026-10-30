@@ -5,15 +5,24 @@ pub(super) enum Options {
     Save { include_new: bool, message: Option<String> },
     List,
     Load { id: Option<String>, checkout: Value },
+    Unrecognized(String),
     Error(String),
 }
 
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
-    let (command, args) = args.split_first()?;
+    let filtered: Vec<&str> = args
+        .iter()
+        .copied()
+        .filter(|arg| *arg != "--no-color")
+        .collect();
+    let (command, rest) = filtered.split_first()?;
     match *command {
-        "save" | "s" => save(args),
-        "list" if args.is_empty() => Some(Options::List),
-        "load" | "pop" => load(args),
+        "save" | "s" => save(rest),
+        "list" if rest.is_empty() => Some(Options::List),
+        "load" | "pop" => load(rest),
+        sub if !sub.starts_with('-') && rest.is_empty() => {
+            Some(Options::Unrecognized(sub.to_owned()))
+        }
         _ => None,
     }
 }
@@ -21,41 +30,46 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
 fn save(args: &[&str]) -> Option<Options> {
     let mut include_new = false;
     let mut message = None;
-    let mut args = args.iter();
-    while let Some(arg) = args.next() {
-        match *arg {
-            "--include-new" if !include_new => include_new = true,
-            "-m" | "--message" if message.is_none() => {
-                let value = args
-                    .next()
-                    .filter(|value| !value.is_empty() && !value.starts_with('-'))?;
-                message = Some((*value).to_owned());
-            }
-            // The published boolean reaches idsByPattern; leave its error stack to Node.
-            _ => return None,
-        }
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        apply_save_arg(&mut include_new, &mut message, arg, &mut iter)?;
     }
     Some(Options::Save { include_new, message })
 }
 
+fn apply_save_arg<'a>(
+    include_new: &mut bool,
+    message: &mut Option<String>,
+    arg: &'a str,
+    iter: &mut impl Iterator<Item = &'a str>,
+) -> Option<()> {
+    if let Some(val) = arg.strip_prefix("--message=") {
+        if message.is_some() || val.is_empty() || val.starts_with('-') {
+            return None;
+        }
+        *message = Some(val.to_owned());
+        return Some(());
+    }
+    match arg {
+        "--include-new" | "--include-new=true" if !*include_new => *include_new = true,
+        "--include-new=false" => *include_new = false,
+        "-m" | "--message" if message.is_none() => {
+            let value = iter
+                .next()
+                .filter(|value| !value.is_empty() && !value.starts_with('-'))?;
+            *message = Some(value.to_owned());
+        }
+        // The published boolean reaches idsByPattern; leave its error stack to Node.
+        _ => return None,
+    }
+    Some(())
+}
+
 fn load(args: &[&str]) -> Option<Options> {
     let mut flags = LoadFlags::default();
-    let mut args = args.iter();
-    while let Some(arg) = args.next() {
-        if flags.boolean(arg) {
-            continue;
-        }
-        match *arg {
-            "-r" | "--auto-merge-resolve" if flags.strategy.is_none() => {
-                flags.strategy = Some(
-                    *args
-                        .next()
-                        .filter(|value| !value.starts_with('-'))?,
-                );
-            }
-            value if !value.starts_with('-') && flags.id.is_none() => flags.id = Some(value),
-            _ => return None,
-        }
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        flags.apply_arg(arg, &mut iter)?;
     }
     Some(flags.finish())
 }
@@ -68,18 +82,44 @@ struct LoadFlags<'a> {
     manual: bool,
     strategy: Option<&'a str>,
 }
-impl LoadFlags<'_> {
+impl<'a> LoadFlags<'a> {
+    fn apply_arg(&mut self, arg: &'a str, iter: &mut impl Iterator<Item = &'a str>) -> Option<()> {
+        if self.boolean(arg) {
+            return Some(());
+        }
+        if let Some(val) = arg.strip_prefix("--auto-merge-resolve=") {
+            if self.strategy.is_some() || val.is_empty() || val.starts_with('-') {
+                return None;
+            }
+            self.strategy = Some(val);
+            return Some(());
+        }
+        match arg {
+            "-r" | "--auto-merge-resolve" if self.strategy.is_none() => {
+                self.strategy = Some(
+                    iter.next()
+                        .filter(|value| !value.is_empty() && !value.starts_with('-'))?,
+                );
+            }
+            value if !value.starts_with('-') && self.id.is_none() => self.id = Some(value),
+            _ => return None,
+        }
+        Some(())
+    }
     fn boolean(&mut self, arg: &str) -> bool {
-        let flag = match arg {
-            "--force-ours" => &mut self.ours,
-            "--force-theirs" => &mut self.theirs,
-            "--manual" => &mut self.manual,
+        let (flag, val) = match arg {
+            "--force-ours" | "--force-ours=true" => (&mut self.ours, true),
+            "--force-ours=false" => (&mut self.ours, false),
+            "--force-theirs" | "--force-theirs=true" => (&mut self.theirs, true),
+            "--force-theirs=false" => (&mut self.theirs, false),
+            "--manual" | "--manual=true" => (&mut self.manual, true),
+            "--manual=false" => (&mut self.manual, false),
             _ => return false,
         };
-        if *flag {
+        if *flag && val {
             return false;
         }
-        *flag = true;
+        *flag = val;
         true
     }
 

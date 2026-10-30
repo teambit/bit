@@ -69,6 +69,7 @@ fn parse(args: &[&str], kind: Kind) -> Option<Options> {
     let mut verbose = false;
     for arg in args {
         match *arg {
+            "--no-color" => {}
             "--abort" if kind == Kind::Component && !abort => abort = true,
             "-s" | "--silent" if kind == Kind::Lane && !silent => silent = true,
             "-x" | "--skip-dependency-installation" if !skip_install => skip_install = true,

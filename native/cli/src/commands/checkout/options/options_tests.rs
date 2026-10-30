@@ -33,6 +33,13 @@ fn accepts_the_native_subset() {
     assert!(parse(&["head~2", "-x"]).is_some());
     assert!(parse(&["head", "-e", "-x"]).unwrap().workspace_only);
     assert_eq!(
+        parse(&["head", "--workspace-only=true", "--auto-merge-resolve=theirs", "--no-color"])
+            .unwrap()
+            .strategy
+            .as_deref(),
+        Some("theirs"),
+    );
+    assert_eq!(
         parse(&["head", "--workspace-only", "-x"]).unwrap().request()["workspaceOnly"],
         true,
     );

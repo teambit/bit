@@ -24,29 +24,75 @@ struct Options<'a> {
 
 fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     let (name, rest) = args.split_first()?;
+    if name.is_empty() || name.starts_with('-') {
+        return None;
+    }
     let mut options = Options { name, scope: None, alias: None, fork_lane_new_scope: false };
     let mut rest = rest.iter().copied();
     while let Some(flag) = rest.next() {
-        match flag {
-            "--scope" | "-s" | "--remote-scope" if options.scope.is_none() => {
-                options.scope = Some(rest.next()?);
-            }
-            "--alias" if options.alias.is_none() => options.alias = Some(rest.next()?),
-            "--fork-lane-new-scope" if !options.fork_lane_new_scope => {
-                options.fork_lane_new_scope = true;
-            }
-            _ => return None,
+        if !apply_create_flag(&mut options, flag, &mut rest) {
+            return None;
         }
     }
     Some(options)
+}
+
+fn apply_create_flag<'a>(
+    options: &mut Options<'a>,
+    flag: &'a str,
+    rest: &mut impl Iterator<Item = &'a str>,
+) -> bool {
+    if let Some(applied) = apply_create_inline(options, flag) {
+        return applied;
+    }
+    match flag {
+        "--no-color" | "--fork-lane-new-scope=false" => true,
+        "--scope" | "-s" | "--remote-scope" => take_non_flag(&mut options.scope, rest),
+        "--alias" => take_non_flag(&mut options.alias, rest),
+        "--fork-lane-new-scope" | "--fork-lane-new-scope=true" if !options.fork_lane_new_scope => {
+            options.fork_lane_new_scope = true;
+            true
+        }
+        _ => false,
+    }
+}
+
+fn apply_create_inline<'a>(options: &mut Options<'a>, flag: &'a str) -> Option<bool> {
+    if let Some(val) = flag
+        .strip_prefix("--scope=")
+        .or_else(|| flag.strip_prefix("--remote-scope="))
+    {
+        return Some(set_once(&mut options.scope, val));
+    }
+    flag.strip_prefix("--alias=").map(|val| set_once(&mut options.alias, val))
+}
+
+fn set_once<'a>(slot: &mut Option<&'a str>, val: &'a str) -> bool {
+    if slot.is_some() || val.is_empty() || val.starts_with('-') {
+        return false;
+    }
+    *slot = Some(val);
+    true
+}
+
+fn take_non_flag<'a>(slot: &mut Option<&'a str>, rest: &mut impl Iterator<Item = &'a str>) -> bool {
+    let Some(val) = rest.next() else {
+        return false;
+    };
+    set_once(slot, val)
 }
 
 pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
     let Some(options) = parse(lane_args) else {
         return Ok(Outcome::Declined("outside the native lane create grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let root = match resolve_workspace_or_fail(
+        args,
+        "create",
+        super::super::log::OUTSIDE_WORKSPACE_ERR,
+    )? {
+        Ok(root) => root,
+        Err(outcome) => return Ok(outcome),
     };
     let scope =
         if let Some(scope) = options.scope { scope.to_string() } else { default_scope(&root)? };
@@ -80,8 +126,13 @@ pub(super) fn merge_move(args: &[OsString], lane_args: &[&str]) -> io::Result<Ou
     else {
         return Ok(Outcome::Declined("outside the native lane merge-move grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".into()));
+    let root = match resolve_workspace_or_fail(
+        args,
+        "merge-move",
+        "this command makes sense only when checked out to a lane. otherwise, there is no lane to revert to.\nin order to move all local merge changes to a new lane, you can simply create a new lane (bit lane create)",
+    )? {
+        Ok(root) => root,
+        Err(outcome) => return Ok(outcome),
     };
     if let Some(err_msg) = validate_merge_move_state(&root)? {
         return workspace_command::execute_then(&root, args, "merge-move", |_| {
@@ -108,6 +159,29 @@ pub(super) fn merge_move(args: &[OsString], lane_args: &[&str]) -> io::Result<Ou
     };
     let report = merge_move_report(&plan, &options, Chalk::detect(args));
     workspace_command::execute_with(&root, args, "merge-move", &report, |_| plan.commit())
+}
+
+fn resolve_workspace_or_fail(
+    args: &[OsString],
+    command: &'static str,
+    err_msg: &'static str,
+) -> io::Result<Result<std::path::PathBuf, Outcome>> {
+    let cwd = env::current_dir()?;
+    if let Some(root) = workspace::root(&cwd) {
+        return Ok(Ok(root));
+    }
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Err(Outcome::Declined("CI lane outside workspace".into())));
+    }
+    workspace_command::execute_failure_scope(
+        &cwd,
+        args,
+        command,
+        false,
+        "",
+        io::Error::other(err_msg),
+    )
+    .map(Err)
 }
 
 fn validate_merge_move_state(root: &Path) -> io::Result<Option<String>> {

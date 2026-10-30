@@ -58,9 +58,12 @@ fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {
     let mut remote = false;
     for arg in args {
         match *arg {
-            "-f" | "--force" if !force => force = true,
-            "-s" | "--silent" if !silent => silent = true,
-            "-r" | "--remote" if !remote => remote = true,
+            "-f" | "--force" | "--force=true" if !force => force = true,
+            "--force=false" => force = false,
+            "-s" | "--silent" | "--silent=true" if !silent => silent = true,
+            "--silent=false" => silent = false,
+            "-r" | "--remote" | "--remote=true" if !remote => remote = true,
+            "--remote=false" => remote = false,
             name if !name.starts_with('-') && name.len() <= 256 && names.len() < 32 => {
                 names.push(name.to_owned());
             }

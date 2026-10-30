@@ -67,7 +67,8 @@ fn prepare_remote(
     remote::prepare(context.ok_or_else(|| io::Error::other("missing doctor context"))?, options)
 }
 fn colored_unknown(options: &Options, chalk: Chalk) -> bool {
-    !options.list
+    env::var_os("CI").is_some_and(|val| !val.is_empty())
+        && !options.list
         && options.remote.is_none()
         && chalk.enabled()
         && options.name

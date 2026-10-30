@@ -23,6 +23,12 @@ fn optional_paths_and_diagnosis_names_are_distinct() {
     let options = Options::parse(&["validate git exec", "--save", "report.txt", "-j"]).unwrap();
     assert_eq!(options.name.as_deref(), Some("validate git exec"));
     assert_eq!(options.file.unwrap().to_str(), Some("report.txt"));
+    let inline =
+        Options::parse(&["--remote=origin", "--json=true", "--list=false", "--no-color"]).unwrap();
+    assert_eq!(inline.remote.as_deref(), Some("origin"));
+    assert!(inline.json);
+    assert!(!inline.list);
+    assert!(Options::parse(&["--remote", "--json"]).is_none());
     assert!(Options::parse(&["--unknown"]).is_none());
 }
 

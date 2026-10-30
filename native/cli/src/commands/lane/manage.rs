@@ -174,7 +174,8 @@ fn parse_fetch_args<'a>(lane_args: &[&'a str]) -> Option<(bool, Option<&'a str>)
     let mut lane_id = None;
     for &arg in lane_args {
         match arg {
-            "-a" | "--all" if !all => all = true,
+            "-a" | "--all" | "--all=true" if !all => all = true,
+            "--all=false" => all = false,
             val if !val.starts_with('-') && !val.is_empty() && lane_id.is_none() => {
                 lane_id = Some(val);
             }

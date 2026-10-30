@@ -18,6 +18,10 @@ fn parses_set_unset_list_and_unrecognized_subcommands() {
         parse_subcommand(&args(&["local-only", "unset", "comp*"])),
         Some(Subcommand::Unset("comp*".to_owned())),
     );
+    assert_eq!(
+        parse_subcommand(&args(&["local-only", "set", "teambit.scope/comp1"])),
+        Some(Subcommand::Set("teambit.scope/comp1".to_owned())),
+    );
     assert_eq!(parse_subcommand(&args(&["local-only", "list"])), Some(Subcommand::List));
     assert_eq!(
         parse_subcommand(&args(&["local-only", "foo"])),
