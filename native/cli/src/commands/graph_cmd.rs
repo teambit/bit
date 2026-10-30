@@ -166,6 +166,10 @@ fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<
         "-j" | "--json" | "--json=true" => options.json = true,
         "--json=false" => options.json = false,
         "-r" | "--remote" => options.remote = Some(take_optional_remote(args, idx)),
+        "-rj" | "-jr" => {
+            options.remote = Some(String::new());
+            options.json = true;
+        }
         "--layout" => options.layout = Some(take_required_layout(args, idx)?),
         _ => apply_inline_or_id(arg, options)?,
     }
@@ -193,7 +197,10 @@ fn take_required_layout(args: &[&str], idx: &mut usize) -> Option<String> {
 }
 
 fn apply_inline_or_id(arg: &str, options: &mut Options) -> Option<()> {
-    if let Some(val) = arg.strip_prefix("--remote=") {
+    if let Some(val) = arg
+        .strip_prefix("--remote=")
+        .or_else(|| arg.strip_prefix("-r="))
+    {
         options.remote = Some(val.to_owned());
     } else if let Some(val) = arg.strip_prefix("--layout=") {
         (!val.is_empty() && !val.starts_with('-')).then_some(())?;

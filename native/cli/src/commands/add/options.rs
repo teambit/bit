@@ -37,12 +37,10 @@ fn apply_arg(
             let _ = value(args)?;
             options.tracking.override_files = true;
         }
-        "--root" | "--root=true" if !options.tracking.workspace_root => {
-            options.tracking.workspace_root = true;
-        }
-        "--root=false" if !options.tracking.workspace_root => {}
-        "-j" | "--json" | "--json=true" if !options.json => options.json = true,
-        "--json=false" if !options.json => {}
+        "--root" | "--root=true" => options.tracking.workspace_root = true,
+        "--root=false" => options.tracking.workspace_root = false,
+        "-j" | "--json" | "--json=true" => options.json = true,
+        "--json=false" => options.json = false,
         path if !path.starts_with('-') => options.tracking.paths.push(path.to_owned()),
         _ => return None,
     }
@@ -68,7 +66,10 @@ fn consume_value(
 }
 
 fn consume_inline_value(options: &mut Options, arg: &str) -> Option<Option<bool>> {
-    if let Some(val) = arg.strip_prefix("--override=") {
+    if let Some(val) = arg
+        .strip_prefix("--override=")
+        .or_else(|| arg.strip_prefix("-o="))
+    {
         if options.tracking.override_files || val.is_empty() || val.starts_with('-') {
             return Some(None);
         }

@@ -44,32 +44,43 @@ pub(super) fn parse(args: &[OsString]) -> Option<Options> {
         .peekable();
     while let Some(arg) = args.next() {
         let arg = arg?;
-        if arg == "--no-color" {
-            continue;
-        }
-        match arg {
-            "--bare" | "-b" => options.bare = Some(optional(&mut args)?),
-            "--agent" => options.agent = Some(optional(&mut args)?),
-            "--name" | "-n" => options.defaults.name = Some(required(&mut args)?),
-            "--default-directory" | "-d" => {
-                options.defaults.directory = Some(required(&mut args)?);
-            }
-            "--default-scope" => options.defaults.scope = Some(required(&mut args)?),
-            "--generator" => options.defaults.generator = Some(required(&mut args)?),
-            "--shared" | "-s" => options.shared = Some(required(&mut args)?),
-            value if inline_option(value, &mut options).is_some() => {
-                inline_option(value, &mut options)??;
-            }
-            value if flag(value, &mut options) => {}
-            value
-                if !value.starts_with('-') && !value.is_empty() && options.path.is_none() =>
-            {
-                options.path = Some(value.to_owned());
-            }
-            _ => return None,
+        if arg != "--no-color" {
+            apply_arg(arg, &mut args, &mut options)?;
         }
     }
     Some(options)
+}
+
+fn apply_arg<'a>(
+    arg: &'a str,
+    args: &mut std::iter::Peekable<impl Iterator<Item = Option<&'a str>>>,
+    options: &mut Options,
+) -> Option<()> {
+    match arg {
+        "--bare" | "-b" => options.bare = Some(optional(args)?),
+        "--agent" => options.agent = Some(optional(args)?),
+        "--name" | "-n" => options.defaults.name = Some(required(args)?),
+        "--default-directory" | "-d" => options.defaults.directory = Some(required(args)?),
+        "--default-scope" => options.defaults.scope = Some(required(args)?),
+        "--generator" => options.defaults.generator = Some(required(args)?),
+        "--shared" | "-s" => options.shared = Some(required(args)?),
+        value => apply_non_space_arg(value, options)?,
+    }
+    Some(())
+}
+
+fn apply_non_space_arg(value: &str, options: &mut Options) -> Option<()> {
+    if let Some(res) = inline_option(value, options) {
+        return res;
+    }
+    if flag(value, options) {
+        return Some(());
+    }
+    if !value.starts_with('-') && !value.is_empty() && options.path.is_none() {
+        options.path = Some(value.to_owned());
+        return Some(());
+    }
+    None
 }
 
 fn required<'a>(args: &mut impl Iterator<Item = Option<&'a str>>) -> Option<String> {
@@ -80,7 +91,7 @@ fn required<'a>(args: &mut impl Iterator<Item = Option<&'a str>>) -> Option<Stri
 fn inline_option(arg: &str, options: &mut Options) -> Option<Option<()>> {
     let (key, val) = arg.split_once('=')?;
     match key {
-        "--bare" => {
+        "--bare" | "-b" => {
             options.bare = Some(val.to_owned());
             Some(Some(()))
         }
@@ -88,7 +99,14 @@ fn inline_option(arg: &str, options: &mut Options) -> Option<Option<()>> {
             options.agent = Some(val.to_owned());
             Some(Some(()))
         }
-        "--name" | "--default-directory" | "--default-scope" | "--generator" | "--shared" => {
+        "--name"
+        | "-n"
+        | "--default-directory"
+        | "-d"
+        | "--default-scope"
+        | "--generator"
+        | "--shared"
+        | "-s" => {
             if val.is_empty() || val.starts_with('-') {
                 return Some(None);
             }
@@ -101,8 +119,8 @@ fn inline_option(arg: &str, options: &mut Options) -> Option<Option<()>> {
 
 fn set_inline_string(key: &str, val: &str, options: &mut Options) {
     match key {
-        "--name" => options.defaults.name = Some(val.to_owned()),
-        "--default-directory" => options.defaults.directory = Some(val.to_owned()),
+        "--name" | "-n" => options.defaults.name = Some(val.to_owned()),
+        "--default-directory" | "-d" => options.defaults.directory = Some(val.to_owned()),
         "--default-scope" => options.defaults.scope = Some(val.to_owned()),
         "--generator" => options.defaults.generator = Some(val.to_owned()),
         _ => options.shared = Some(val.to_owned()),

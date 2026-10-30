@@ -56,33 +56,57 @@ fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
 }
 
 fn apply_log_arg<'a>(options: &mut Options<'a>, arg: &'a str) -> Option<()> {
-    let field = match arg {
-        "--no-color"
-        | "--json=false"
-        | "--parents=false"
-        | "--one-line=false"
-        | "--full-hash=false"
-        | "--full-message=false"
-        | "--show-hidden=false"
-        | "--remote=false" => return Some(()),
-        "-j" | "--json" | "--json=true" => &mut options.json,
-        "--parents" | "--parents=true" => &mut options.parents,
-        "-o" | "--one-line" | "--one-line=true" => &mut options.one_line,
-        "-f" | "--full-hash" | "--full-hash=true" => &mut options.full_hash,
-        "-m" | "--full-message" | "--full-message=true" => &mut options.full_message,
-        "--show-hidden" | "--show-hidden=true" => &mut options.show_hidden,
-        "-r" | "--remote" | "--remote=true" => &mut options.remote,
-        id if !id.starts_with('-') && options.id.is_none() => {
-            options.id = Some(id);
-            return Some(());
-        }
+    if arg == "--no-color" || apply_log_combined_short(options, arg) {
+        return Some(());
+    }
+    if !arg.starts_with('-') && options.id.is_none() {
+        options.id = Some(arg);
+        return Some(());
+    }
+    let (flag, val) = match arg.split_once('=') {
+        Some((flag, "true")) if flag.starts_with("--") => (flag, true),
+        Some((flag, "false")) if flag.starts_with("--") => (flag, false),
+        None => (arg, true),
         _ => return None,
     };
-    if *field {
-        return None;
-    }
-    *field = true;
+    let field = match flag {
+        "-j" | "--json" => &mut options.json,
+        "--parents" => &mut options.parents,
+        "-o" | "--one-line" => &mut options.one_line,
+        "-f" | "--full-hash" => &mut options.full_hash,
+        "-m" | "--full-message" => &mut options.full_message,
+        "--show-hidden" => &mut options.show_hidden,
+        "-r" | "--remote" => &mut options.remote,
+        _ => return None,
+    };
+    *field = val;
     Some(())
+}
+
+fn apply_log_combined_short(options: &mut Options<'_>, arg: &str) -> bool {
+    if !arg.starts_with('-')
+        || arg.starts_with("--")
+        || arg.len() <= 2
+        || !arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'j' | b'o' | b'f' | b'm' | b'r'))
+    {
+        return false;
+    }
+    for byte in arg[1..].bytes() {
+        *log_short_field(options, byte) = true;
+    }
+    true
+}
+
+fn log_short_field<'a>(options: &'a mut Options<'_>, byte: u8) -> &'a mut bool {
+    match byte {
+        b'j' => &mut options.json,
+        b'o' => &mut options.one_line,
+        b'f' => &mut options.full_hash,
+        b'm' => &mut options.full_message,
+        _ => &mut options.remote,
+    }
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -230,17 +254,13 @@ pub(super) fn normalize(row: &Value) -> io::Result<Value> {
         }
     }
     normalize_author(&mut normalized);
-    if let Some(tag) = row.get("tag") {
-        normalized.insert("tag".into(), tag.clone());
-    }
     for key in ["hash", "parents", "onLane", "deleted"] {
         normalized.insert(key.into(), row[key].clone());
     }
-    if let Some(deprecated) = row.get("deprecated") {
-        normalized.insert("deprecated".into(), deprecated.clone());
-    }
-    if let Some(hidden) = row.get("hidden") {
-        normalized.insert("hidden".into(), hidden.clone());
+    for key in ["tag", "deprecated", "hidden"] {
+        if let Some(val) = row.get(key) {
+            normalized.insert(key.into(), val.clone());
+        }
     }
     Ok(Value::Object(normalized))
 }

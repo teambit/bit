@@ -96,32 +96,65 @@ fn read(args: &[&str]) -> Option<Flags> {
     let mut flags = Flags::default();
     let mut index = 0;
     while index < args.len() {
-        let argument = alias(args[index]);
+        let raw = args[index];
         index += 1;
-        if argument == "--no-color" {
+        if raw == "--no-color" {
             continue;
         }
-        if !argument.starts_with('-') {
-            flags.patterns.push(pattern(argument)?.to_string());
+        if !raw.starts_with('-') {
+            flags.patterns.push(pattern(raw)?.to_string());
             continue;
         }
-        let key = if argument == "--persist=skip-build" { "--persist" } else { argument };
+        let (key, value, consume_next) = if let Some((raw_key, inline)) = raw.split_once('=') {
+            let key = alias(raw_key);
+            (key, inline_option_value(raw_key, key, inline)?, false)
+        } else {
+            let key = alias(raw);
+            let next = args
+                .get(index)
+                .copied()
+                .filter(|value| !value.starts_with('-'));
+            let (value, consume) = option_value(key, next)?;
+            (key, value, consume)
+        };
         if flags.values.contains_key(key) {
             return None;
         }
-        let next = args
-            .get(index)
-            .copied()
-            .filter(|value| !value.starts_with('-'));
-        let (value, consume_next) = option_value(argument, next)?;
         index += usize::from(consume_next);
         flags.values.insert(key.to_string(), value);
     }
     Some(flags)
 }
 
+fn inline_option_value(raw_key: &str, key: &str, inline: &str) -> Option<Value> {
+    if let Some(val) = inline_bool_value(raw_key, key, inline) {
+        return Some(val);
+    }
+    if STRINGS.contains(&key) && !inline.is_empty() && !inline.starts_with('-') {
+        return Some(json!(inline));
+    }
+    if key == "--pre-release" && !inline.starts_with('-') {
+        return Some(if inline.is_empty() { json!(true) } else { json!(inline) });
+    }
+    None
+}
+
+fn inline_bool_value(raw_key: &str, key: &str, inline: &str) -> Option<Value> {
+    if key == "--persist" && (inline == "skip-build" || inline == "true") {
+        return Some(json!(true));
+    }
+    if BOOLEANS.contains(&key) && raw_key.starts_with("--") {
+        return match inline {
+            "true" => Some(json!(true)),
+            "false" => Some(json!(false)),
+            _ => None,
+        };
+    }
+    None
+}
+
 fn option_value(argument: &str, next: Option<&str>) -> Option<(Value, bool)> {
-    if BOOLEANS.contains(&argument) || argument == "--persist=skip-build" {
+    if BOOLEANS.contains(&argument) {
         return Some((json!(true), false));
     }
     if argument == "--persist" {

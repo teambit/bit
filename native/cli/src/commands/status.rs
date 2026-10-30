@@ -100,6 +100,8 @@ fn is_mode_flag(arg: &str) -> bool {
 
 /// Strip `--log`, `--log=<level>`, or `--log <level>` from `args` and return whether logging was enabled.
 fn strip_log_flags<'a>(args: &[&'a str]) -> (Vec<&'a str>, bool) {
+    const LEVELS: [&str; 12] =
+        ["trace", "debug", "info", "warn", "error", "fatal", "10", "20", "30", "40", "50", "60"];
     let mut out = Vec::with_capacity(args.len());
     let mut logged = false;
     let mut iter = args.iter().copied().peekable();
@@ -108,33 +110,38 @@ fn strip_log_flags<'a>(args: &[&'a str]) -> (Vec<&'a str>, bool) {
             logged = true;
             if iter
                 .peek()
-                .is_some_and(|next| {
-                    matches!(
-                        *next,
-                        "trace"
-                            | "debug"
-                            | "info"
-                            | "warn"
-                            | "error"
-                            | "fatal"
-                            | "10"
-                            | "20"
-                            | "30"
-                            | "40"
-                            | "50"
-                            | "60",
-                    )
-                })
+                .is_some_and(|next| LEVELS.contains(next))
             {
                 iter.next();
             }
         } else if arg.starts_with("--log=") {
             logged = true;
         } else {
-            out.push(arg);
+            push_status_arg(&mut out, arg);
         }
     }
     (out, logged)
+}
+
+fn push_status_arg<'a>(out: &mut Vec<&'a str>, arg: &'a str) {
+    if arg.starts_with('-')
+        && !arg.starts_with("--")
+        && arg.len() > 2
+        && arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'j' | b'w' | b'l' | b'c'))
+    {
+        for byte in arg[1..].bytes() {
+            out.push(match byte {
+                b'j' => "-j",
+                b'w' => "-w",
+                b'l' => "-l",
+                _ => "-c",
+            });
+        }
+    } else {
+        out.push(arg);
+    }
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

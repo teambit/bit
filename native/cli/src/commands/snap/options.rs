@@ -18,11 +18,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     let mut seen: Vec<&str> = Vec::new();
     let mut index = 0;
     while index < args.len() {
-        let flag = match args[index] {
-            "-m" => "--message",
-            "-u" => "--unmodified",
-            other => other,
-        };
+        let flag = canonical_flag(args[index]);
         index += 1;
         if flag == "--no-color" {
             continue;
@@ -31,7 +27,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
             options.positional(flag)?;
             continue;
         }
-        let canonical = flag.split_once('=').map_or(flag, |(name, _)| name);
+        let canonical = canonical_flag(flag.split_once('=').map_or(flag, |(name, _)| name));
         if seen.contains(&canonical) {
             return None;
         }
@@ -39,6 +35,14 @@ pub fn parse(args: &[&str]) -> Option<Options> {
         index += options.flag(flag, args.get(index).copied())?;
     }
     Some(options)
+}
+
+fn canonical_flag(raw: &str) -> &str {
+    match raw {
+        "-m" => "--message",
+        "-u" => "--unmodified",
+        other => other,
+    }
 }
 
 /// A bounded workspace pattern, including state predicates.
@@ -58,7 +62,10 @@ impl Options {
 
     /// One flag; the number of values it consumed.
     fn flag(&mut self, flag: &str, next: Option<&str>) -> Option<usize> {
-        if let Some(val) = flag.strip_prefix("--message=") {
+        if let Some(val) = flag
+            .strip_prefix("--message=")
+            .or_else(|| flag.strip_prefix("-m="))
+        {
             if val.starts_with('-') {
                 return None;
             }

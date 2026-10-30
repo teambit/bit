@@ -66,10 +66,7 @@ impl Options {
     /// One flag; the number of values it consumed.
     fn flag(&mut self, raw: &str, flag: &str, next: Option<&str>) -> Option<usize> {
         if let Some((_, inline)) = raw.split_once('=') {
-            if !raw.starts_with("--") {
-                return None;
-            }
-            return self.inline_flag(flag, inline);
+            return self.inline_flag(raw, flag, inline);
         }
         match flag {
             "--ids" => self.ids = true,
@@ -87,11 +84,14 @@ impl Options {
         Some(0)
     }
 
-    fn inline_flag(&mut self, flag: &str, inline: &str) -> Option<usize> {
+    fn inline_flag(&mut self, raw: &str, flag: &str, inline: &str) -> Option<usize> {
         if matches!(flag, "--scope" | "--namespace") {
             (!inline.is_empty() && !inline.starts_with('-')).then_some(())?;
             self.set_string(flag, inline);
             return Some(0);
+        }
+        if !raw.starts_with("--") {
+            return None;
         }
         let val = match inline {
             "true" => true,

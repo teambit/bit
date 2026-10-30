@@ -96,6 +96,9 @@ fn file_list(value: &str) -> Option<Vec<String>> {
 }
 
 fn set_boolean(options: &mut Options, flag: &str) -> bool {
+    if set_combined_short(options, flag) {
+        return true;
+    }
     let (key, val) = match flag.split_once('=') {
         Some((key, "true")) if key.starts_with("--") => (key, true),
         Some((key, "false")) if key.starts_with("--") => (key, false),
@@ -113,10 +116,28 @@ fn set_boolean(options: &mut Options, flag: &str) -> bool {
         "-p" | "--parent" => &mut options.versions.parent,
         _ => return false,
     };
-    if *field {
+    *field = val;
+    true
+}
+
+fn set_combined_short(options: &mut Options, flag: &str) -> bool {
+    if !flag.starts_with('-')
+        || flag.starts_with("--")
+        || flag.len() <= 2
+        || !flag[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'j' | b'v' | b't' | b'p'))
+    {
         return false;
     }
-    *field = val;
+    for byte in flag[1..].bytes() {
+        match byte {
+            b'j' => options.output.json = true,
+            b'v' => options.output.verbose = true,
+            b't' => options.output.table = true,
+            _ => options.versions.parent = true,
+        }
+    }
     true
 }
 

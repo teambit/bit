@@ -78,6 +78,9 @@ fn valid_combination(options: &Options) -> bool {
 }
 
 fn set_boolean_flag(options: &mut Options, arg: &str) -> bool {
+    if set_combined_short(options, arg) {
+        return true;
+    }
     let (flag, val) = match arg.split_once('=') {
         Some((flag, "true")) => (flag, true),
         Some((flag, "false")) => (flag, false),
@@ -101,6 +104,30 @@ fn set_boolean_flag(options: &mut Options, arg: &str) -> bool {
         return false;
     }
     *slot = val;
+    true
+}
+
+fn set_combined_short(options: &mut Options, arg: &str) -> bool {
+    if !arg.starts_with('-')
+        || arg.starts_with("--")
+        || arg.len() <= 2
+        || !arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'e' | b'a' | b'j'))
+    {
+        return false;
+    }
+    for byte in arg[1..].bytes() {
+        let slot = match byte {
+            b'e' => &mut options.lifecycle.eject,
+            b'a' => &mut options.all,
+            _ => &mut options.json,
+        };
+        if *slot {
+            return false;
+        }
+        *slot = true;
+    }
     true
 }
 
