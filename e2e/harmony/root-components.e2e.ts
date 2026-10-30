@@ -883,6 +883,12 @@ describe('workspace component dependency with a pinned older version in rootComp
         react: '17',
       },
     });
+    // the aspect env (comp1's env) and the node aspect (which registers the `node-app` app type,
+    // without which the `.node-app.js` plugin is ignored and comp1 never becomes a root component)
+    // are no longer core aspects, so their packages have to be installed and the node aspect has to
+    // be configured in the workspace for them to load.
+    helper.workspaceJsonc.addKeyVal('teambit.harmony/node', {});
+    helper.env.installAspectEnv();
     helper.command.tagAllWithoutBuild();
     helper.command.dependenciesSet('comp2', `@${helper.scopes.remote}/comp3@0.0.1`);
     helper.fs.outputFile('comp3/index.js', `module.exports = () => 'comp3 v2';`);
