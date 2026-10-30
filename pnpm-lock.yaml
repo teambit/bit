@@ -7008,6 +7008,9 @@ importers:
       '@teambit/envs.aspect-docs.envs':
         specifier: workspace:*
         version: file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
+      '@teambit/envs.contracts':
+        specifier: workspace:*
+        version: file:scopes/envs/contracts
       '@teambit/envs.ui.env-icon':
         specifier: workspace:*
         version: file:scopes/envs/ui/env-icon(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -8052,6 +8055,9 @@ importers:
       '@teambit/envs.aspect-docs.envs':
         specifier: workspace:*
         version: file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
+      '@teambit/envs.contracts':
+        specifier: workspace:*
+        version: file:scopes/envs/contracts
       '@teambit/envs.ui.env-icon':
         specifier: workspace:*
         version: file:scopes/envs/ui/env-icon(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -9105,6 +9111,9 @@ importers:
       '@teambit/envs.aspect-docs.envs':
         specifier: workspace:*
         version: file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
+      '@teambit/envs.contracts':
+        specifier: workspace:*
+        version: file:scopes/envs/contracts
       '@teambit/envs.ui.env-icon':
         specifier: workspace:*
         version: file:scopes/envs/ui/env-icon(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -10143,6 +10152,9 @@ importers:
       '@teambit/envs.aspect-docs.envs':
         specifier: workspace:*
         version: file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
+      '@teambit/envs.contracts':
+        specifier: workspace:*
+        version: file:scopes/envs/contracts
       '@teambit/envs.ui.env-icon':
         specifier: workspace:*
         version: file:scopes/envs/ui/env-icon(@testing-library/dom@10.4.1)(react@18.3.1)
@@ -11187,6 +11199,9 @@ importers:
       '@teambit/envs.aspect-docs.envs':
         specifier: workspace:*
         version: file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
+      '@teambit/envs.contracts':
+        specifier: workspace:*
+        version: file:scopes/envs/contracts
       '@teambit/envs.ui.env-icon':
         specifier: workspace:*
         version: file:scopes/envs/ui/env-icon(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -12210,6 +12225,9 @@ importers:
       '@teambit/envs.aspect-docs.envs':
         specifier: workspace:*
         version: file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
+      '@teambit/envs.contracts':
+        specifier: workspace:*
+        version: file:scopes/envs/contracts
       '@teambit/envs.ui.env-icon':
         specifier: workspace:*
         version: file:scopes/envs/ui/env-icon(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -13233,6 +13251,9 @@ importers:
       '@teambit/envs.aspect-docs.envs':
         specifier: workspace:*
         version: file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
+      '@teambit/envs.contracts':
+        specifier: workspace:*
+        version: file:scopes/envs/contracts
       '@teambit/envs.ui.env-icon':
         specifier: workspace:*
         version: file:scopes/envs/ui/env-icon(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -18544,6 +18565,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
@@ -18646,6 +18670,49 @@ importers:
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
+
+  scopes/envs/contracts:
+    dependencies:
+      '@teambit/component-id':
+        specifier: 1.2.5
+        version: 1.2.5
+      '@teambit/lane-id':
+        specifier: ~0.0.312
+        version: 0.0.312
+      '@teambit/tests-results':
+        specifier: ^1.0.5
+        version: 1.0.5
+      '@types/node':
+        specifier: 22.10.5
+        version: 22.10.5
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.4(@types/react@19.2.18)
+      comlink:
+        specifier: 4.3.0
+        version: 4.3.0
+      react:
+        specifier: 19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: 19.2.7
+        version: 19.2.7(react@19.2.7)
+      react-router-dom:
+        specifier: ^6.30.1
+        version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    devDependencies:
+      '@teambit/node.envs.node-babel-mocha':
+        specifier: 2.1.3
+        version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@types/chai':
+        specifier: 4.2.15
+        version: 4.2.15
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
 
   scopes/envs/envs:
     dependencies:
@@ -19369,6 +19436,9 @@ importers:
       chalk:
         specifier: 4.1.2
         version: 4.1.2
+      fs-extra:
+        specifier: 10.0.0
+        version: 10.0.0
       lodash:
         specifier: 4.18.1
         version: 4.18.1
@@ -19391,6 +19461,9 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.14.2)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
+      '@types/fs-extra':
+        specifier: 9.0.7
+        version: 9.0.7
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
@@ -20226,9 +20299,6 @@ importers:
       cors:
         specifier: 2.8.5
         version: 2.8.5
-      cross-fetch:
-        specifier: 3.1.5
-        version: 3.1.5
       express:
         specifier: ^4.21.2
         version: 4.22.2(supports-color@9.4.0)
@@ -32069,6 +32139,7 @@ packages:
   '@teambit/docs@file:scopes/docs/docs':
     resolution: {directory: scopes/docs/docs, type: directory}
     peerDependencies:
+      chai: 5.2.1
       react: 19.2.7
       react-dom: 19.2.7
 
@@ -32343,6 +32414,9 @@ packages:
       '@teambit/documenter.theme.theme-compositions': ^4.1.5
       '@teambit/mdx.ui.mdx-layout': ^1.0.14
       react: 19.1.0
+
+  '@teambit/envs.contracts@file:scopes/envs/contracts':
+    resolution: {directory: scopes/envs/contracts, type: directory}
 
   '@teambit/envs.ui.env-icon@file:scopes/envs/ui/env-icon':
     resolution: {directory: scopes/envs/ui/env-icon, type: directory}
@@ -52519,6 +52593,7 @@ snapshots:
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/lane-id': 0.0.312
@@ -52528,6 +52603,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 4.3.0
       chalk: 4.1.2
+      fs-extra: 10.0.0
       lodash: 4.18.1
       open: 8.4.2
       p-map-series: 2.1.0
@@ -52539,6 +52615,7 @@ snapshots:
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/lane-id': 0.0.312
@@ -52548,6 +52625,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 4.3.0
       chalk: 4.1.2
+      fs-extra: 10.0.0
       lodash: 4.18.1
       open: 8.4.2
       p-map-series: 2.1.0
@@ -52559,6 +52637,7 @@ snapshots:
     dependencies:
       '@teambit/bit-error': 0.0.404
       '@teambit/cli-table': file:scopes/toolbox/tables/cli-table
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/lane-id': 0.0.312
@@ -52568,6 +52647,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 5.2.1
       chalk: 4.1.2
+      fs-extra: 10.0.0
       lodash: 4.18.1
       open: 8.4.2
       p-map-series: 2.1.0
@@ -54633,6 +54713,7 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
       '@teambit/component.sources': file:scopes/component/sources
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/graph.cleargraph': 0.0.11
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -54678,6 +54759,7 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
       '@teambit/component.sources': file:scopes/component/sources
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/graph.cleargraph': 0.0.11
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -54723,6 +54805,7 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
       '@teambit/component.sources': file:scopes/component/sources
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/graph.cleargraph': 0.0.11
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -54764,6 +54847,7 @@ snapshots:
   '@teambit/bundler@file:scopes/compilation/bundler(@apollo/client@3.12.11)(react@18.3.1)':
     dependencies:
       '@apollo/client': 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(subscriptions-transport-ws@0.9.19)
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/lane-id': 0.0.312
@@ -54785,6 +54869,7 @@ snapshots:
   '@teambit/bundler@file:scopes/compilation/bundler(@apollo/client@3.12.11)(react@19.2.7)':
     dependencies:
       '@apollo/client': 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(subscriptions-transport-ws@0.9.19)
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/lane-id': 0.0.312
@@ -57365,6 +57450,7 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
       '@teambit/component.sources': file:scopes/component/sources
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/legacy.constants': file:components/legacy/constants
@@ -57397,6 +57483,7 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
       '@teambit/component.sources': file:scopes/component/sources
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/legacy.constants': file:components/legacy/constants
@@ -57429,6 +57516,7 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
       '@teambit/component.sources': file:scopes/component/sources
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/legacy.constants': file:components/legacy/constants
@@ -65372,6 +65460,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.18.1
@@ -65381,7 +65470,6 @@ snapshots:
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/dom'
-      - chai
       - graphql
       - supports-color
 
@@ -65405,6 +65493,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.18.1
@@ -65414,7 +65503,6 @@ snapshots:
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/dom'
-      - chai
       - graphql
       - supports-color
 
@@ -65438,6 +65526,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 5.2.1
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.18.1
@@ -65447,7 +65536,6 @@ snapshots:
     transitivePeerDependencies:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/dom'
-      - chai
       - graphql
       - supports-color
 
@@ -66661,6 +66749,20 @@ snapshots:
       react-dom: 18.3.1(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@18.3.1)(react@19.2.7)
 
+  '@teambit/envs.contracts@file:scopes/envs/contracts':
+    dependencies:
+      '@teambit/component-id': 1.2.5
+      '@teambit/lane-id': 0.0.312
+      '@teambit/semantics.entities.semantic-schema': file:components/entities/semantic-schema
+      '@teambit/tests-results': 1.0.5
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      comlink: 4.3.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+
   '@teambit/envs.ui.env-icon@file:scopes/envs/ui/env-icon(@testing-library/dom@10.4.1)(react@18.3.1)':
     dependencies:
       '@testing-library/react': 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
@@ -66691,6 +66793,7 @@ snapshots:
       '@teambit/component-issues': file:components/component-issues
       '@teambit/component.sources': file:scopes/component/sources
       '@teambit/envs.aspect-docs.envs': file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(supports-color@9.4.0)
@@ -66776,6 +66879,7 @@ snapshots:
       '@teambit/component-issues': file:components/component-issues
       '@teambit/component.sources': file:scopes/component/sources
       '@teambit/envs.aspect-docs.envs': file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(supports-color@9.4.0)
@@ -66861,6 +66965,7 @@ snapshots:
       '@teambit/component-issues': file:components/component-issues
       '@teambit/component.sources': file:scopes/component/sources
       '@teambit/envs.aspect-docs.envs': file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(supports-color@9.4.0)
@@ -66946,6 +67051,7 @@ snapshots:
       '@teambit/component-issues': file:components/component-issues
       '@teambit/component.sources': file:scopes/component/sources
       '@teambit/envs.aspect-docs.envs': file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(supports-color@9.4.0)
@@ -67031,6 +67137,7 @@ snapshots:
       '@teambit/component-issues': file:components/component-issues
       '@teambit/component.sources': file:scopes/component/sources
       '@teambit/envs.aspect-docs.envs': file:scopes/envs/aspect-docs/envs(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(supports-color@9.4.0)
@@ -68006,6 +68113,7 @@ snapshots:
 
   '@teambit/formatter@file:scopes/defender/formatter(graphql@15.8.0)(react@18.3.1)':
     dependencies:
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/legacy.constants': file:components/legacy/constants
@@ -68026,6 +68134,7 @@ snapshots:
 
   '@teambit/formatter@file:scopes/defender/formatter(graphql@15.8.0)(react@19.2.7)':
     dependencies:
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/legacy.constants': file:components/legacy/constants
@@ -68078,6 +68187,7 @@ snapshots:
       '@bitdev/symphony.generators.symphony-templates': 5.0.4
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/generator.aspect-docs.generator': file:scopes/generator/aspect-docs/generator(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
       '@teambit/git.modules.git-ignore': 1.0.2
       '@teambit/harmony': 0.4.12
@@ -68114,6 +68224,7 @@ snapshots:
       '@bitdev/symphony.generators.symphony-templates': 5.0.4
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/generator.aspect-docs.generator': file:scopes/generator/aspect-docs/generator(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
       '@teambit/git.modules.git-ignore': 1.0.2
       '@teambit/harmony': 0.4.12
@@ -68454,7 +68565,6 @@ snapshots:
       apollo-utilities: 1.3.4(graphql@15.8.0)
       bufferutil: 4.0.3
       cors: 2.8.5
-      cross-fetch: 3.1.5
       express: 4.22.2(supports-color@9.4.0)
       express-graphql: 0.12.0(graphql@15.8.0)
       graphql: 15.8.0
@@ -68496,7 +68606,6 @@ snapshots:
       apollo-utilities: 1.3.4(graphql@15.8.0)
       bufferutil: 4.0.3
       cors: 2.8.5
-      cross-fetch: 3.1.5
       express: 4.22.2(supports-color@9.4.0)
       express-graphql: 0.12.0(graphql@15.8.0)
       graphql: 15.8.0
@@ -72370,6 +72479,7 @@ snapshots:
 
   '@teambit/linter@file:scopes/defender/linter(graphql@15.8.0)(react@18.3.1)':
     dependencies:
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/legacy.constants': file:components/legacy/constants
@@ -72390,6 +72500,7 @@ snapshots:
 
   '@teambit/linter@file:scopes/defender/linter(graphql@15.8.0)(react@19.2.7)':
     dependencies:
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/legacy.constants': file:components/legacy/constants
@@ -74138,6 +74249,7 @@ snapshots:
       '@teambit/component-package-version': file:scopes/component/component-package-version
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.in-memory-cache': file:scopes/harmony/modules/in-memory-cache
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -74180,6 +74292,7 @@ snapshots:
       '@teambit/component-package-version': file:scopes/component/component-package-version
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.in-memory-cache': file:scopes/harmony/modules/in-memory-cache
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -74222,6 +74335,7 @@ snapshots:
       '@teambit/component-package-version': file:scopes/component/component-package-version
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.in-memory-cache': file:scopes/harmony/modules/in-memory-cache
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -74826,6 +74940,7 @@ snapshots:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
       '@teambit/component.sources': file:scopes/component/sources
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/harmony.modules.harmony-root-generator': file:components/modules/harmony-root-generator
@@ -74893,6 +75008,7 @@ snapshots:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
       '@teambit/component.sources': file:scopes/component/sources
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/harmony.modules.harmony-root-generator': file:components/modules/harmony-root-generator
@@ -74960,6 +75076,7 @@ snapshots:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
       '@teambit/component.sources': file:scopes/component/sources
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/harmony.modules.harmony-root-generator': file:components/modules/harmony-root-generator
@@ -75027,6 +75144,7 @@ snapshots:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
       '@teambit/component.sources': file:scopes/component/sources
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/harmony.modules.harmony-root-generator': file:components/modules/harmony-root-generator
@@ -75089,6 +75207,7 @@ snapshots:
 
   '@teambit/pubsub@file:scopes/harmony/pubsub(react@18.3.1)':
     dependencies:
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@18.3.1)
@@ -75104,6 +75223,7 @@ snapshots:
 
   '@teambit/pubsub@file:scopes/harmony/pubsub(react@19.2.7)':
     dependencies:
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@19.2.7)
@@ -78861,6 +78981,7 @@ snapshots:
   '@teambit/schema@file:scopes/semantics/schema(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
       '@teambit/defender.prettier.config-mutator': file:scopes/defender/prettier-config-mutator
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/legacy.constants': file:components/legacy/constants
@@ -78888,6 +79009,7 @@ snapshots:
   '@teambit/schema@file:scopes/semantics/schema(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/defender.prettier.config-mutator': file:scopes/defender/prettier-config-mutator
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/legacy.constants': file:components/legacy/constants
@@ -78915,6 +79037,7 @@ snapshots:
   '@teambit/schema@file:scopes/semantics/schema(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/defender.prettier.config-mutator': file:scopes/defender/prettier-config-mutator
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/legacy.constants': file:components/legacy/constants
@@ -80619,6 +80742,7 @@ snapshots:
       '@teambit/defender.ui.test-page': file:components/ui/test-page(@apollo/client@3.12.11)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/dom@10.4.1)(@types/react-syntax-highlighter@15.5.13)(react-router-dom@6.30.4)(react@18.3.1)(typescript@6.0.3)
       '@teambit/design.ui.pill-label': 0.0.360(react@18.3.1)
       '@teambit/design.ui.tooltip': file:components/ui/tooltip(@testing-library/dom@10.4.1)(react@18.3.1)(supports-color@9.4.0)
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/evangelist.elements.icon': 1.0.5(react-dom@19.2.7)(react@18.3.1)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -80664,6 +80788,7 @@ snapshots:
       '@teambit/defender.ui.test-page': file:components/ui/test-page(@apollo/client@3.12.11)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/dom@10.4.1)(@types/react-syntax-highlighter@15.5.13)(react-router-dom@6.30.4)(react@19.2.7)(typescript@5.9.2)
       '@teambit/design.ui.pill-label': 0.0.360(react@19.2.7)
       '@teambit/design.ui.tooltip': file:components/ui/tooltip(@testing-library/dom@10.4.1)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/evangelist.elements.icon': 1.0.5(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -80709,6 +80834,7 @@ snapshots:
       '@teambit/defender.ui.test-page': file:components/ui/test-page(@apollo/client@3.12.11)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/dom@10.4.1)(@types/react-syntax-highlighter@15.5.13)(react-router-dom@6.30.4)(react@19.2.7)(typescript@5.9.2)
       '@teambit/design.ui.pill-label': 0.0.360(react@19.2.7)
       '@teambit/design.ui.tooltip': file:components/ui/tooltip(@testing-library/dom@10.4.1)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/evangelist.elements.icon': 1.0.5(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -85487,6 +85613,7 @@ snapshots:
   '@teambit/workspace-config-files@file:scopes/workspace/workspace-config-files(chai@4.3.0)(supports-color@9.4.0)':
     dependencies:
       '@teambit/bit-error': 0.0.404
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/legacy.consumer': file:components/legacy/consumer(supports-color@9.4.0)
@@ -85514,6 +85641,7 @@ snapshots:
   '@teambit/workspace-config-files@file:scopes/workspace/workspace-config-files(chai@5.2.1)(supports-color@9.4.0)':
     dependencies:
       '@teambit/bit-error': 0.0.404
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/legacy.consumer': file:components/legacy/consumer(supports-color@9.4.0)
