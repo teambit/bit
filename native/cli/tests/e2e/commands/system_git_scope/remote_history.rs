@@ -226,6 +226,119 @@ fn remote_file_invalid_unmerged_state_declines_before_mutation() {
     assert_eq!(crate::commands::move_paths::support::tree(scope), before);
 }
 
+#[test]
+fn bare_remote_history_uses_global_remotes_and_declines_local_scope_remotes() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    let root = &helper.scopes.remote_path;
+    let globals = helper.scopes.e2e_dir.join("globals");
+    fs::create_dir_all(globals.join("config")).unwrap();
+    fs::copy(
+        crate::helper::setup::shared().root.join("globals/config/config.json"),
+        globals.join("config/config.json"),
+    )
+    .unwrap();
+    let server = Server::start(2, |_| (200, json!({"fixture.scope/comp1":{"added":["a"]}})));
+    fs::write(
+        globals.join("config/global-remotes.json"),
+        serde_json::to_vec_pretty(&json!({"fixture.scope":server.url})).unwrap(),
+    )
+    .unwrap();
+    let command = "version-history build comp1 --remote fixture.scope";
+    let node = Helper::cmd_in_with(
+        root,
+        command,
+        &[("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let unavailable = helper.scopes.e2e_dir.join("unavailable-node");
+    let native = Helper::cmd_in_with(
+        root,
+        command,
+        &[("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NODE_BINARY", unavailable.as_os_str())],
+    );
+    assert!(native.native && !native.trace.contains("starting the JavaScript host"), "{native:?}");
+    assert!(node.status.success(), "{node:?}");
+    assert_eq!(native.stdout, node.stdout, "{node:?} {native:?}");
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(native.status.code(), node.status.code());
+    let requests = server.finish();
+    assert_eq!(requests[0], requests[1]);
+
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let config = root.join("scope.json");
+    let mut scope: Value = serde_json::from_slice(&fs::read(&config).unwrap()).unwrap();
+    scope["remotes"] = json!({"local.only":format!("http://{}", listener.local_addr().unwrap())});
+    fs::write(config, serde_json::to_vec_pretty(&scope).unwrap()).unwrap();
+    let declined = Helper::cmd_in_with(
+        root,
+        "version-history build comp1 --remote local.only",
+        &[("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NODE_BINARY", unavailable.as_os_str())],
+    );
+    assert!(!declined.native, "{declined:?}");
+    assert_eq!(listener.accept().unwrap_err().kind(), std::io::ErrorKind::WouldBlock);
+}
+
+#[test]
+fn bare_remote_file_history_rebuilds_the_caller_bare_scope_without_a_host() {
+    use sha1::{Digest, Sha1};
+    let helper = crate::commands::scope_fixture::fixture();
+    let (_, target_path) = helper.new_bare_scope();
+    let globals = helper.scopes.e2e_dir.join("globals");
+    fs::create_dir_all(globals.join("config")).unwrap();
+    fs::copy(
+        crate::helper::setup::shared().root.join("globals/config/config.json"),
+        globals.join("config/config.json"),
+    )
+    .unwrap();
+    fs::write(
+        globals.join("config/global-remotes.json"),
+        serde_json::to_vec_pretty(&json!({
+            "fixture.file": format!("file://{}", target_path.display()),
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let scope = &helper.scopes.remote_path;
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let history = scope
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if history.exists() {
+        fs::remove_file(&history).unwrap();
+    }
+    let baseline = helper.clone_remote_scope();
+    let target_before = crate::commands::move_paths::support::tree(&target_path);
+    let command = "version-history build comp1 --remote fixture.file";
+    let node = Helper::cmd_in_with(
+        scope,
+        command,
+        &[("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{node:?}");
+    let expected = crate::commands::move_paths::support::tree(scope);
+    assert_eq!(crate::commands::move_paths::support::tree(&target_path), target_before);
+    helper.restore_remote_scope(&baseline);
+    let unavailable = helper.scopes.e2e_dir.join("unavailable-node");
+    let native = Helper::cmd_in_with(
+        scope,
+        command,
+        &[
+            ("BIT_GLOBALS_DIR", globals.as_os_str()),
+            ("BIT_NODE_BINARY", unavailable.as_os_str()),
+            ("BIT_NODE_CLI", unavailable.as_os_str()),
+        ],
+    );
+    assert!(native.native && !native.trace.contains("starting the JavaScript host"), "{native:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(crate::commands::move_paths::support::tree(scope), expected);
+    assert_eq!(crate::commands::move_paths::support::tree(&target_path), target_before);
+}
+
 fn workspace_scope_tree(helper: &Helper) -> std::collections::BTreeMap<String, Vec<u8>> {
     let mut tree =
         crate::commands::move_paths::support::tree(&helper.scopes.local_path.join(".bit"));

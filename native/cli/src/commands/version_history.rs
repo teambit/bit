@@ -92,12 +92,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Subcommand::ShowJson(id) => run_show_json(&root, args, &id),
         Subcommand::ShowText(id, short) => text::run(&root, args, &id, short),
         Subcommand::Build(id, from, Some(remote)) => {
-            if root.bare {
-                return Ok(Outcome::Declined(
-                    "bare remote history resolution requires the global remote configuration".into(
-                    ),
-                ));
-            }
             remote::run(&root, args, &id, from.as_deref(), &remote)
         }
         Subcommand::Build(id, from, None) => build::run(&root, args, &id, from.as_deref()),

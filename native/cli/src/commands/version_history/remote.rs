@@ -21,6 +21,11 @@ pub(super) fn run(
     {
         return Ok(Outcome::Declined("invalid remote history selection".into()));
     }
+    if root.bare && !file_scope_supported(&root.path) {
+        return Ok(Outcome::Declined(
+            "bare remote history caller requires unsupported startup".into(),
+        ));
+    }
     let Ok(Some(plan)) = remote_action::prepare(&env::current_dir()?, remote, true, true) else {
         return Ok(Outcome::Declined("history rebuild requires a configured HTTP remote".into()));
     };
@@ -65,19 +70,24 @@ fn payload(args: &[OsString], pattern: &str, from: Option<&str>) -> Value {
 
 fn file_scope_supported(scope: &std::path::Path) -> bool {
     let root = ScopeRoot { path: scope.to_owned(), bare: true };
-    let index = std::fs::read(scope.join("index.json"))
-        .ok()
-        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok());
-    index.is_some_and(|index| {
-        ["components", "lanes"]
-            .iter()
-            .all(|key| {
-                index[key]
-                    .as_array()
-                    .is_some_and(|items| items.iter().all(Value::is_object))
-            })
-    }) && clean_unmerged(scope)
+    clean_index(scope)
+        && clean_unmerged(scope)
         && build::supported_startup(&root, scope) == Some(true)
+}
+
+fn clean_index(scope: &std::path::Path) -> bool {
+    let bytes = match std::fs::read(scope.join("index.json")) {
+        Ok(bytes) => bytes,
+        Err(error) => return error.kind() == io::ErrorKind::NotFound,
+    };
+    let Ok(index) = serde_json::from_slice::<Value>(&bytes) else { return false };
+    ["components", "lanes"]
+        .iter()
+        .all(|key| {
+            index[key]
+                .as_array()
+                .is_some_and(|items| items.iter().all(Value::is_object))
+        })
 }
 
 fn clean_unmerged(scope: &std::path::Path) -> bool {

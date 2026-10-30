@@ -28,6 +28,7 @@ mod remote;
 mod remove;
 mod reset;
 mod resume_export;
+mod run_action;
 mod run_cmd;
 mod scope_fixture;
 mod search;

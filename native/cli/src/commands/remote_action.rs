@@ -26,6 +26,10 @@ pub(super) struct Plan {
     pub(super) concurrency: usize,
 }
 
+pub(super) fn supports_file(name: &str) -> bool {
+    file::supports(name)
+}
+
 enum Target {
     Http { url: String, network: Network },
     File(PathBuf),
@@ -75,17 +79,7 @@ pub(super) fn prepare(
     pending_deletion: bool,
 ) -> io::Result<Option<Plan>> {
     let workspace = workspace::root(cwd);
-    let scope = workspace
-        .as_ref()
-        .map_or_else(
-            || {
-                cwd.ancestors()
-                    .find(|path| path.join("scope.json").is_file())
-                    .map(Path::to_path_buf)
-            },
-            |root| Some(workspace::scope_path(root)),
-        );
-    let Some(scope) = scope else { return Ok(None) };
+    let Some(scope) = find_scope(cwd, workspace.as_deref()) else { return Ok(None) };
     let scope_json: Value = serde_json::from_slice(&fs::read(scope.join("scope.json"))?)?;
     let config_dir = global_config_dir();
     let global: GlobalConfig = serde_json::from_value(read_global_config(&config_dir)?)?;
@@ -102,9 +96,9 @@ pub(super) fn prepare(
         &scope_json["config"],
         &Value::Object(bit_workspace_config::workspace_values(&workspace_json)),
     );
-    let remotes = Remotes::load(&scope_json, &config_dir, &global)?;
-    let Some(remote) = remotes.configured(remote)? else { return Ok(None) };
-    let Some(target) = target(remote, &global, scope_json["name"].as_str(), pending_deletion)?
+    let global_only = load_workspace && workspace.is_none();
+    let Some(target) =
+        resolve_target(remote, &scope_json, &config_dir, &global, global_only, pending_deletion)?
     else {
         return Ok(None);
     };
@@ -114,6 +108,34 @@ pub(super) fn prepare(
         target,
         concurrency: bit_client_transfer::fetch::concurrency(&global),
     }))
+}
+
+fn find_scope(cwd: &Path, workspace: Option<&Path>) -> Option<PathBuf> {
+    workspace.map_or_else(
+        || {
+            cwd.ancestors()
+                .find(|path| path.join("scope.json").is_file())
+                .map(Path::to_path_buf)
+        },
+        |root| Some(workspace::scope_path(root)),
+    )
+}
+
+fn resolve_target(
+    remote: &str,
+    scope_json: &Value,
+    config_dir: &Path,
+    global: &GlobalConfig,
+    global_only: bool,
+    pending_deletion: bool,
+) -> io::Result<Option<Target>> {
+    let source = if global_only { &Value::Null } else { scope_json };
+    let remotes = Remotes::load(source, config_dir, global)?;
+    let Some(remote) = remotes.configured(remote)? else { return Ok(None) };
+    let requester = (!global_only)
+        .then(|| scope_json["name"].as_str())
+        .flatten();
+    target(remote, global, requester, pending_deletion)
 }
 
 fn target(
