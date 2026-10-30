@@ -124,9 +124,24 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
+        if arg == "--" {
+            consume_trailing_lint_pattern(iter, &mut options.pattern)?;
+            break;
+        }
         apply_token(arg, &mut iter, &mut options)?;
     }
     Some(options)
+}
+
+fn consume_trailing_lint_pattern<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    pattern: &mut Option<String>,
+) -> Option<()> {
+    for val in iter {
+        (!val.is_empty() && !val.starts_with('-') && pattern.replace(val.to_owned()).is_none())
+            .then_some(())?;
+    }
+    Some(())
 }
 
 fn apply_token<'a>(

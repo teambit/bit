@@ -76,8 +76,13 @@ fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {
     let mut force = false;
     let mut silent = false;
     let mut remote = false;
-    for arg in args {
-        match *arg {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        match arg {
+            "--" => {
+                consume_trailing_remove_names(iter, &mut names)?;
+                break;
+            }
             "-f" | "--force" | "--force=true" => force = true,
             "--force=false" => force = false,
             "-s" | "--silent" | "--silent=true" => silent = true,
@@ -91,6 +96,18 @@ fn parse(args: &[&str]) -> Option<(Vec<String>, bool, bool)> {
         }
     }
     (silent && !names.is_empty()).then_some((names, force, remote))
+}
+
+fn consume_trailing_remove_names<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    names: &mut Vec<String>,
+) -> Option<()> {
+    for name in iter {
+        (!name.is_empty() && !name.starts_with('-') && name.len() <= 256 && names.len() < 32)
+            .then_some(())?;
+        names.push(name.to_owned());
+    }
+    Some(())
 }
 
 fn apply_remove_short_bundle(

@@ -84,7 +84,9 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut iter = args.iter().copied().peekable();
     while let Some(token) = iter.next() {
         if token == "--" {
-            positionals.extend(iter.map(str::to_owned));
+            for item in iter {
+                positionals.push(take_new_val(item)?);
+            }
             break;
         }
         apply_new_token(

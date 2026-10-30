@@ -29,8 +29,15 @@ pub(super) struct Range {
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut index = 0;
-    while let Some(arg) = args.get(index) {
+    while let Some(&arg) = args.get(index) {
         index += 1;
+        if arg == "--" {
+            for &rest in &args[index..] {
+                (!rest.is_empty() && !rest.starts_with('-')).then_some(())?;
+                push_positional(&mut options, rest)?;
+            }
+            break;
+        }
         parse_arg(&mut options, arg, args, &mut index)?;
     }
     Some(options)

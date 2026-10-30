@@ -124,13 +124,7 @@ fn select_lanes(root: &Path, values: &[&str]) -> Option<(list::LaneData, list::L
 }
 
 fn parse_values<'a>(lane_args: &[&'a str]) -> Option<Vec<&'a str>> {
-    if lane_args
-        .iter()
-        .any(|arg| arg.starts_with('-') || arg.is_empty())
-    {
-        return None;
-    }
-    Some(lane_args.to_vec())
+    crate::commands::scope_set::collect_non_flag_tokens(lane_args)
 }
 
 fn resolve_lane_names<'a>(values: &[&'a str], current_name: &'a str) -> Option<(&'a str, &'a str)> {

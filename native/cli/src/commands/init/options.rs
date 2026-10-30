@@ -158,6 +158,9 @@ fn optional<'a>(
 }
 
 fn flag(arg: &str, options: &mut Options) -> bool {
+    if apply_combined_short_init(arg, options) {
+        return true;
+    }
     let (key, bool_val) = match arg.split_once('=') {
         Some((key, "true")) if key.starts_with("--") => (key, true),
         Some((key, "false")) if key.starts_with("--") => (key, false),
@@ -178,5 +181,27 @@ fn flag(arg: &str, options: &mut Options) -> bool {
         _ => return false,
     };
     *value = bool_val;
+    true
+}
+
+fn apply_combined_short_init(arg: &str, options: &mut Options) -> bool {
+    let Some(flags) = arg.strip_prefix('-') else {
+        return false;
+    };
+    if flags.len() < 2
+        || flags.starts_with('-')
+        || !flags
+            .chars()
+            .all(|ch| matches!(ch, 'T' | 'f' | 'r'))
+    {
+        return false;
+    }
+    for ch in flags.chars() {
+        match ch {
+            'T' => options.flags.standalone = true,
+            'f' => options.flags.force = true,
+            _ => options.resets.repair = true,
+        }
+    }
     true
 }

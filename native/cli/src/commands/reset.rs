@@ -36,7 +36,8 @@ fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     while let Some(arg) = iter.next() {
         if arg == "--" {
             for rest in iter {
-                apply_reset_arg((!rest.is_empty()).then_some(rest)?, &mut options)?;
+                (!rest.is_empty() && !rest.starts_with('-')).then_some(())?;
+                apply_reset_arg(rest, &mut options)?;
             }
             break;
         }

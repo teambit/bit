@@ -83,8 +83,13 @@ pub(super) fn missing_host_error(cwd: &Path, options: &Options) -> Option<&'stat
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut id = None;
     let mut options = Options::default();
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_show_id(iter, &mut id)?;
+                break;
+            }
             "--no-color" => return None,
             "-j" | "--json" | "--json=true" => options.json = true,
             "--json=false" => options.json = false,
@@ -105,6 +110,17 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     }
     options.id = id?;
     Some(options)
+}
+
+fn consume_trailing_show_id<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    id: &mut Option<String>,
+) -> Option<()> {
+    for val in iter {
+        (!val.is_empty() && !val.starts_with('-') && id.replace(val.to_owned()).is_none())
+            .then_some(())?;
+    }
+    Some(())
 }
 
 fn apply_short_bundle(arg: &str, options: &mut Options) -> bool {

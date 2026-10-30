@@ -74,8 +74,13 @@ pub(super) fn is_missing_host(cwd: &Path) -> bool {
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_format_pattern(iter, &mut options.pattern)?;
+                break;
+            }
             "--no-color" => {}
             "-c" | "--changed" | "--changed=true" => options.changed = true,
             "--changed=false" => options.changed = false,
@@ -94,4 +99,15 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         }
     }
     Some(options)
+}
+
+fn consume_trailing_format_pattern<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    pattern: &mut Option<String>,
+) -> Option<()> {
+    for val in iter {
+        (!val.is_empty() && !val.starts_with('-') && pattern.replace(val.to_owned()).is_none())
+            .then_some(())?;
+    }
+    Some(())
 }

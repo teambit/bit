@@ -1,4 +1,4 @@
-use super::{DependencyOptions, WriteOptions, has_wildcard, valid_import_flags, valid_pattern};
+use super::{DependencyOptions, WriteOptions, has_wildcard, valid_pattern};
 
 pub(super) fn args(flags: &[&str], ids: &[String]) -> bool {
     valid_import_flags(flags)
@@ -6,6 +6,43 @@ pub(super) fn args(flags: &[&str], ids: &[String]) -> bool {
         && !ids
             .iter()
             .any(|id| has_wildcard(id) && !valid_pattern(id))
+}
+
+fn valid_import_flags(flags: &[&str]) -> bool {
+    let allowed = [
+        "--json",
+        "-j",
+        "--verbose",
+        "-v",
+        "--objects",
+        "-o",
+        "--all-history",
+        "--skip-dependency-installation",
+        "-x",
+        "--skip-write-config-files",
+        "--include-deprecated",
+        "--override",
+        "--merge",
+        "--fetch-deps",
+        "--dependencies",
+        "--dependencies-head",
+        "--lane-only",
+        "--track-only",
+        "--write-to-empty-dir",
+        "--dependents",
+        "--dependents-all",
+        "--silent",
+    ];
+    let has = |flag: &str| flags.contains(&flag);
+    let both =
+        (has("--objects") && has("-o")) || (has("--skip-dependency-installation") && has("-x"));
+    !both
+        && flags
+            .iter()
+            .all(|flag| {
+                allowed.contains(flag)
+                    || matches!(*flag, "--merge=manual" | "--merge=ours" | "--merge=theirs")
+            })
 }
 
 pub(super) fn mode(

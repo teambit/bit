@@ -13,8 +13,9 @@ use std::{
 /// `LaneCurrentCmd`: the bitmap's current lane and the local tracking alias.
 pub(super) fn current(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
     let mut json = false;
-    for &arg in lane_args {
+    for (idx, &arg) in lane_args.iter().enumerate() {
         match arg {
+            "--" if idx + 1 == lane_args.len() => break,
             "--json" | "-j" | "--json=true" => json = true,
             "--json=false" => json = false,
             _ => {

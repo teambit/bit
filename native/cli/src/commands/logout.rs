@@ -42,10 +42,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn valid_args(args: &[OsString]) -> bool {
-    for arg in args.iter().skip(1) {
+    let rest = &args[1..];
+    for (idx, arg) in rest.iter().enumerate() {
         let Some(str_arg) = arg.to_str() else {
             return false;
         };
+        if str_arg == "--" {
+            return idx + 1 == rest.len();
+        }
         if str_arg != "--no-color" {
             return false;
         }

@@ -1,7 +1,22 @@
 //! Canonical component and lane abort reports.
 use super::{
-    Chalk, Formatter, Id, Kind, Report, Value, array, checkout, decline, io, object, text,
+    Chalk, Formatter, Id, Kind, Report, Value, array, checkout, decline, installation, io, object,
+    text,
 };
+
+pub(super) fn install_ids(result: &Value, kind: Kind) -> io::Result<Vec<String>> {
+    if kind == Kind::Lane {
+        return installation::component_ids(&result["checkoutResults"]);
+    }
+    let rows = array(result.get("abortedComponents"), "aborted components")?;
+    let mut ids = rows
+        .iter()
+        .map(|row| Id::parse(text(row.get("id"))?).map(|id| id.display()))
+        .collect::<io::Result<Vec<_>>>()?;
+    ids.sort();
+    ids.dedup();
+    Ok(ids)
+}
 
 pub(super) fn format_result(result: &Value, kind: Kind, chalk: Chalk) -> io::Result<Report> {
     if kind == Kind::Lane { format_lane(result, chalk) } else { format_component(result, chalk) }

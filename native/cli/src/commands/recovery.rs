@@ -4,7 +4,7 @@ mod failure;
 mod interactive;
 mod report;
 
-use report::format_result;
+use report::{format_result, install_ids};
 
 #[cfg(test)]
 mod tests;
@@ -63,23 +63,29 @@ pub(super) fn parse_lane(args: &[&str]) -> Option<Options> {
 fn parse(args: &[&str], kind: Kind) -> Option<Options> {
     let (mut pattern, mut abort, mut silent, mut skip_install, mut verbose) =
         (None, false, false, false, false);
-    for arg in args {
-        match *arg {
-            "--no-color" | "--abort=false" => {}
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        match arg {
+            "--" => {
+                for value in iter {
+                    (kind == Kind::Component && pattern.is_none() && valid_pattern(value))
+                        .then_some(())?;
+                    pattern = Some(value.to_string());
+                }
+                break;
+            }
+            "--no-color" => {}
             "--abort" | "--abort=true" if kind == Kind::Component && !abort => abort = true,
             "-s" | "--silent" | "--silent=true" if kind == Kind::Lane && !silent => silent = true,
-            "--silent=false" if kind == Kind::Lane => silent = false,
             "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true"
                 if !skip_install =>
             {
                 skip_install = true;
             }
-            "--skip-dependency-installation=false" => skip_install = false,
             "-sx" | "-xs" if kind == Kind::Lane && !silent && !skip_install => {
                 (silent, skip_install) = (true, true);
             }
             "--verbose" | "--verbose=true" if !verbose => verbose = true,
-            "--verbose=false" => verbose = false,
             value if kind == Kind::Component && pattern.is_none() && valid_pattern(value) => {
                 pattern = Some(value.to_string());
             }
@@ -349,20 +355,6 @@ fn prepare_request(root: &Path, home: &Path, options: &Options) -> io::Result<Va
         request["options"]["pattern"] = json!(pattern);
     }
     Ok(request)
-}
-
-fn install_ids(result: &Value, kind: Kind) -> io::Result<Vec<String>> {
-    if kind == Kind::Lane {
-        return installation::component_ids(&result["checkoutResults"]);
-    }
-    let rows = array(result.get("abortedComponents"), "aborted components")?;
-    let mut ids = rows
-        .iter()
-        .map(|row| Id::parse(text(row.get("id"))?).map(|id| id.display()))
-        .collect::<io::Result<Vec<_>>>()?;
-    ids.sort();
-    ids.dedup();
-    Ok(ids)
 }
 
 fn execute(

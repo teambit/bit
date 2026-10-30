@@ -15,7 +15,10 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let mut args = args.iter();
     while let Some(arg) = args.next() {
         if *arg == "--" {
-            options.tracking.paths.extend(args.map(|item| (*item).to_owned()));
+            for item in args {
+                (!item.is_empty() && !item.starts_with('-')).then_some(())?;
+                options.tracking.paths.push((*item).to_owned());
+            }
             break;
         }
         apply_arg(&mut options, arg, &mut args)?;

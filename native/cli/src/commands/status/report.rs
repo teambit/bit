@@ -66,7 +66,10 @@ pub(super) struct Flags {
 pub(super) fn parse(args: &[&str]) -> Option<Flags> {
     let mut flags = Flags::default();
     let mut seen: Vec<&str> = Vec::new();
-    for &arg in args {
+    for (idx, &arg) in args.iter().enumerate() {
+        if arg == "--" {
+            return (idx + 1 == args.len()).then_some(flags);
+        }
         if arg != "--no-color" {
             apply_report_flag(&mut flags, &mut seen, arg)?;
         }

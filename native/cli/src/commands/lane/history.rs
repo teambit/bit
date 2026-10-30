@@ -27,6 +27,13 @@ fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     let mut options = Options { lane: None, id: None, json: false };
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
+        if arg == "--" {
+            for val in iter {
+                (!val.is_empty() && !val.starts_with('-') && options.lane.replace(val).is_none())
+                    .then_some(())?;
+            }
+            break;
+        }
         apply_history_arg(&mut options, arg, &mut iter)?;
     }
     Some(options)

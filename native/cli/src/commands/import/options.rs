@@ -81,6 +81,10 @@ fn take_depth<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, Option<String>)> {
     let mut depth = None;
     let mut position = 0;
     while position < args.len() {
+        if args[position] == "--" {
+            remaining.extend_from_slice(&args[position..]);
+            break;
+        }
         if let Some(value) = args[position].strip_prefix("--dependencies-depth=") {
             set_bounded_option(&mut depth, value)?;
             position += 1;
@@ -101,6 +105,10 @@ fn take_path<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, Option<String>)> {
     let mut path = None;
     let mut position = 0;
     while position < args.len() {
+        if args[position] == "--" {
+            remaining.extend_from_slice(&args[position..]);
+            break;
+        }
         if let Some(value) = args[position]
             .strip_prefix("--path=")
             .or_else(|| args[position].strip_prefix("-p="))
@@ -131,20 +139,41 @@ fn set_bounded_option(slot: &mut Option<String>, value: &str) -> Option<()> {
 fn split<'a>(args: &[&'a str]) -> Option<(Vec<String>, Vec<&'a str>)> {
     let mut ids = Vec::new();
     let mut flags: Vec<&str> = Vec::new();
-    for arg in args {
-        if *arg == "--no-color" {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        if arg == "--" {
+            consume_trailing_import_ids(iter, &mut ids)?;
+            break;
+        }
+        if arg == "--no-color" {
             continue;
         }
-        let duplicate = flags.contains(arg);
+        let duplicate = flags.contains(&arg);
         let invalid_id =
             arg.is_empty() || arg.len() > 4096 || arg.contains('\0') || ids.len() >= 4096;
         match (arg.starts_with('-'), duplicate, invalid_id) {
             (true, false, _) => flags.push(arg),
-            (false, _, false) => ids.push((*arg).to_string()),
+            (false, _, false) => ids.push(arg.to_string()),
             _ => return None,
         }
     }
     Some((ids, flags))
+}
+
+fn consume_trailing_import_ids<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    ids: &mut Vec<String>,
+) -> Option<()> {
+    for arg in iter {
+        (!arg.is_empty()
+            && !arg.starts_with('-')
+            && arg.len() <= 4096
+            && !arg.contains('\0')
+            && ids.len() < 4096)
+            .then_some(())?;
+        ids.push(arg.to_string());
+    }
+    Some(())
 }
 
 /// `bit fetch --components [ids...]`.
@@ -256,43 +285,6 @@ fn import_write(
         adoption,
     };
     validation::mode(&write, ids, objects_only, explicit_objects).then_some(write)
-}
-
-fn valid_import_flags(flags: &[&str]) -> bool {
-    let allowed = [
-        "--json",
-        "-j",
-        "--verbose",
-        "-v",
-        "--objects",
-        "-o",
-        "--all-history",
-        "--skip-dependency-installation",
-        "-x",
-        "--skip-write-config-files",
-        "--include-deprecated",
-        "--override",
-        "--merge",
-        "--fetch-deps",
-        "--dependencies",
-        "--dependencies-head",
-        "--lane-only",
-        "--track-only",
-        "--write-to-empty-dir",
-        "--dependents",
-        "--dependents-all",
-        "--silent",
-    ];
-    let has = |flag: &str| flags.contains(&flag);
-    let both =
-        (has("--objects") && has("-o")) || (has("--skip-dependency-installation") && has("-x"));
-    !both
-        && flags
-            .iter()
-            .all(|flag| {
-                allowed.contains(flag)
-                    || matches!(*flag, "--merge=manual" | "--merge=ours" | "--merge=theirs")
-            })
 }
 
 fn merge_strategy(flags: &[&str]) -> Option<Option<String>> {

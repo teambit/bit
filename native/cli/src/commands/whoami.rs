@@ -47,7 +47,11 @@ fn parse_args(args: &[OsString]) -> Option<Option<String>> {
     let mut token = None;
     let mut iter = args.iter().skip(1);
     while let Some(arg) = iter.next() {
-        apply_whoami_arg(arg.to_str()?, &mut iter, &mut token)?;
+        let str_arg = arg.to_str()?;
+        if str_arg == "--" {
+            return iter.next().is_none().then_some(token);
+        }
+        apply_whoami_arg(str_arg, &mut iter, &mut token)?;
     }
     Some(token)
 }

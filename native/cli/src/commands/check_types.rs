@@ -99,8 +99,13 @@ pub(super) fn is_empty_workspace(root: &Path) -> io::Result<bool> {
 
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_check_types_pattern(iter, &mut options.pattern)?;
+                break;
+            }
             "--no-color" => {}
             "-a" | "--all" | "--all=true" => options.all = true,
             "--all=false" => options.all = false,
@@ -117,6 +122,17 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         }
     }
     Some(options)
+}
+
+fn consume_trailing_check_types_pattern<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    pattern: &mut Option<String>,
+) -> Option<()> {
+    for val in iter {
+        (!val.is_empty() && !val.starts_with('-') && pattern.replace(val.to_owned()).is_none())
+            .then_some(())?;
+    }
+    Some(())
 }
 
 fn apply_short_flags(arg: &str, options: &mut Options) -> Option<()> {

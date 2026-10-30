@@ -95,8 +95,18 @@ fn emit_dependents_err(
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut id = None;
     let mut json = false;
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                for val in iter {
+                    (!val.is_empty()
+                        && !val.starts_with('-')
+                        && id.replace(val.to_owned()).is_none())
+                    .then_some(())?;
+                }
+                break;
+            }
             "--no-color" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,

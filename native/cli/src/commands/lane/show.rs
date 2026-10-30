@@ -225,8 +225,13 @@ fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool, bool)> {
     let mut json = false;
     let mut remote = false;
     let mut name = None;
-    for arg in args {
-        match *arg {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        match arg {
+            "--" => {
+                consume_trailing_show_lane(iter, &mut name)?;
+                break;
+            }
             "--no-color" => {}
             "--json" | "-j" | "--json=true" => json = true,
             "--json=false" => json = false,
@@ -241,6 +246,16 @@ fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool, bool)> {
         }
     }
     Some((name, json, remote))
+}
+
+fn consume_trailing_show_lane<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    name: &mut Option<&'a str>,
+) -> Option<()> {
+    for val in iter {
+        (!val.is_empty() && !val.starts_with('-') && name.replace(val).is_none()).then_some(())?;
+    }
+    Some(())
 }
 
 pub(super) fn find<'a>(lanes: &'a [LaneData], target: &str) -> Option<&'a LaneData> {

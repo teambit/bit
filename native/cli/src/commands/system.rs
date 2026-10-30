@@ -34,14 +34,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 fn parse_args(args: &[OsString]) -> Option<Parsed> {
-    let tokens = args
+    let raw_tokens = args
         .iter()
         .skip(1)
         .map(|arg| arg.to_str())
-        .collect::<Option<Vec<_>>>()?
-        .into_iter()
-        .filter(|token| *token != "--no-color")
-        .collect::<Vec<_>>();
+        .collect::<Option<Vec<_>>>()?;
+    let tokens = super::scope_set::collect_non_flag_tokens(&raw_tokens)?;
     let [sub] = tokens.as_slice() else {
         return None;
     };

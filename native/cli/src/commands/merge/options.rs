@@ -25,6 +25,10 @@ pub fn validate_error(args: &[&str]) -> Option<&'static str> {
     while index < args.len() {
         let arg = alias(args[index]);
         index += 1;
+        if arg == "--" {
+            positionals += count_trailing_positionals(&args[index..])?;
+            break;
+        }
         if matches!(arg, "--no-color" | "--build" | "--build=true" | "--build=false") {
             continue;
         }
@@ -35,6 +39,12 @@ pub fn validate_error(args: &[&str]) -> Option<&'static str> {
         index += apply_validate_flag(&mut flags, arg, args.get(index).copied())?;
     }
     (positionals <= 1).then(|| check_merge_flags(&flags)).flatten()
+}
+
+fn count_trailing_positionals(tail: &[&str]) -> Option<usize> {
+    tail.iter()
+        .all(|rest| !rest.is_empty() && !rest.starts_with('-'))
+        .then_some(tail.len())
 }
 
 fn check_merge_flags(flags: &[(&str, Value)]) -> Option<&'static str> {
@@ -103,6 +113,10 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     while index < args.len() {
         let arg = alias(args[index]);
         index += 1;
+        if arg == "--" {
+            consume_trailing_positionals(&args[index..], &mut positionals)?;
+            break;
+        }
         if arg == "--no-color" {
             continue;
         }
@@ -113,6 +127,17 @@ pub fn parse(args: &[&str]) -> Option<Options> {
         index += apply_merge_flag(&mut flags, arg, args.get(index).copied())?;
     }
     build(&flags, &positionals)
+}
+
+fn consume_trailing_positionals<'a>(
+    tail: &[&'a str],
+    positionals: &mut Vec<&'a str>,
+) -> Option<()> {
+    for &rest in tail {
+        (!rest.is_empty() && !rest.starts_with('-')).then_some(())?;
+        positionals.push(rest);
+    }
+    Some(())
 }
 
 fn apply_merge_flag<'a>(

@@ -226,6 +226,12 @@ fn parse<'a>(args: &[&'a str]) -> Option<(bool, bool, Option<bool>, Option<&'a s
     let mut flags = ListFlags::default();
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
+        if arg == "--" {
+            return iter
+                .next()
+                .is_none()
+                .then_some((flags.json, flags.details, flags.merged, flags.remote));
+        }
         apply_list_arg(&mut flags, arg, &mut iter)?;
     }
     Some((flags.json, flags.details, flags.merged, flags.remote))

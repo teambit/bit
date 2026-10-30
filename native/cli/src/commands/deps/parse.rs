@@ -13,19 +13,20 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
         ["set", rest @ ..] => parse_set(rest),
         ["remove", rest @ ..] => parse_remove_or_unset(rest, false),
         ["unset", rest @ ..] => parse_remove_or_unset(rest, true),
-        ["reset", pattern] if is_supported_pattern(pattern) => {
-            Some(Subcommand::Reset { pattern: (*pattern).to_owned() })
+        ["reset", rest @ ..] => {
+            let pattern = single_dep_token(rest)?;
+            is_supported_pattern(pattern).then(|| Subcommand::Reset { pattern: pattern.to_owned() })
         }
-        ["eject", pattern] if is_supported_pattern(pattern) => {
-            Some(Subcommand::Eject { pattern: (*pattern).to_owned() })
+        ["eject", rest @ ..] => {
+            let pattern = single_dep_token(rest)?;
+            is_supported_pattern(pattern).then(|| Subcommand::Eject { pattern: pattern.to_owned() })
         }
         ["get", rest @ ..] => parse_get(rest),
-        ["debug", id]
-            if !id.starts_with('-')
-                && is_supported_pattern(id)
-                && !id.contains(['*', ',', '!']) =>
-        {
-            Some(Subcommand::Debug { id: (*id).to_owned() })
+        ["debug", rest @ ..] => {
+            let id = single_dep_token(rest)?;
+            (is_supported_pattern(id) && !id.contains(['*', ',', '!'])).then(|| Subcommand::Debug {
+                id: id.to_owned(),
+            })
         }
         ["usage", rest @ ..] => parse_usage(rest),
         ["blame", rest @ ..] => parse_blame(rest),
@@ -39,23 +40,46 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
     }
 }
 
+fn single_dep_token<'a>(rest: &[&'a str]) -> Option<&'a str> {
+    let tokens = crate::commands::scope_set::collect_non_flag_tokens(rest)?;
+    let [tok] = tokens.as_slice() else {
+        return None;
+    };
+    Some(*tok)
+}
+
+fn consume_trailing_deps<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    out: &mut Vec<&'a str>,
+) -> Option<()> {
+    for val in iter {
+        (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+        out.push(val);
+    }
+    Some(())
+}
+
 fn parse_get(rest: &[&str]) -> Option<Subcommand> {
-    let mut id = None;
+    let mut positional = Vec::new();
     let mut tree = false;
     let mut scope = false;
-    for &arg in rest {
+    let mut iter = rest.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_deps(iter, &mut positional)?;
+                break;
+            }
             "-t" | "--tree" | "--tree=true" => tree = true,
             "--tree=false" => tree = false,
             "--scope" | "--scope=true" => scope = true,
             "--scope=false" => scope = false,
-            value if id.is_none() && is_supported_get_id(value) => {
-                id = Some(value);
-            }
+            value if !value.starts_with('-') => positional.push(value),
             _ => return None,
         }
     }
-    Some(Subcommand::Get { id: id?.to_owned(), tree, scope })
+    let [id] = positional.as_slice() else { return None };
+    is_supported_get_id(id).then(|| Subcommand::Get { id: (*id).to_owned(), tree, scope })
 }
 
 fn is_supported_get_id(value: &str) -> bool {
@@ -74,8 +98,9 @@ fn is_supported_get_id(value: &str) -> bool {
 }
 
 fn parse_blame(rest: &[&str]) -> Option<Subcommand> {
-    let [component, dep] = rest else { return None };
-    if component.starts_with('-') || dep.starts_with('-') {
+    let tokens = crate::commands::scope_set::collect_non_flag_tokens(rest)?;
+    let [component, dep] = tokens.as_slice() else { return None };
+    if component.is_empty() || dep.is_empty() {
         return None;
     }
     Some(Subcommand::Blame { component: (*component).to_owned(), dep: (*dep).to_owned() })
@@ -87,6 +112,10 @@ fn parse_diagnose(rest: &[&str]) -> Option<Subcommand> {
     let mut idx = 0;
     while idx < rest.len() {
         match rest[idx] {
+            "--" => {
+                (idx + 1 == rest.len()).then_some(())?;
+                break;
+            }
             "-o" | "--origins" | "--origins=true" => origins = Some(true),
             "--origins=false" => origins = Some(false),
             "-p" | "--package" => {
@@ -117,8 +146,14 @@ fn valid_diagnose_pkg(val: &str) -> Option<String> {
 fn parse_circular(rest: &[&str]) -> Option<Subcommand> {
     let mut json = false;
     let mut include_deps = false;
-    for &arg in rest {
+    for (idx, &arg) in rest.iter().enumerate() {
         match arg {
+            "--" => {
+                return (idx + 1 == rest.len()).then_some(Subcommand::Circular {
+                    json,
+                    include_deps,
+                });
+            }
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             "-d" | "--include-deps" | "--include-deps=true" => include_deps = true,
@@ -156,8 +191,13 @@ fn parse_set(rest: &[&str]) -> Option<Subcommand> {
     let mut optional = false;
     let mut peer = false;
     let mut positional = Vec::new();
-    for &arg in rest {
+    let mut iter = rest.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_deps(iter, &mut positional)?;
+                break;
+            }
             "-d" | "--dev" | "--dev=true" => dev = true,
             "--dev=false" => dev = false,
             "-o" | "--optional" | "--optional=true" => optional = true,
@@ -185,8 +225,13 @@ fn parse_remove_or_unset(rest: &[&str], unset: bool) -> Option<Subcommand> {
     let mut dev = false;
     let mut peer = false;
     let mut positional = Vec::new();
-    for &arg in rest {
+    let mut iter = rest.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_deps(iter, &mut positional)?;
+                break;
+            }
             "-d" | "--dev" | "--dev=true" => dev = true,
             "--dev=false" => dev = false,
             "-p" | "--peer" | "--peer=true" => peer = true,
@@ -259,6 +304,10 @@ fn parse_usage_args(rest: &[&str]) -> Option<(String, Option<usize>)> {
     let mut idx = 0;
     while idx < rest.len() {
         let arg = rest[idx];
+        if arg == "--" {
+            consume_trailing_usage_dep(&rest[idx + 1..], &mut dep_name)?;
+            break;
+        }
         if let Some(val) = arg.strip_prefix("--depth=") {
             depth = Some(val.parse::<usize>().ok()?);
         } else if arg == "--depth" {
@@ -274,10 +323,19 @@ fn parse_usage_args(rest: &[&str]) -> Option<(String, Option<usize>)> {
     Some((dep_name?, depth))
 }
 
+fn consume_trailing_usage_dep(tail: &[&str], dep_name: &mut Option<String>) -> Option<()> {
+    let [val] = tail else { return None };
+    (!val.is_empty() && !val.starts_with('-') && dep_name.replace((*val).to_owned()).is_none())
+        .then_some(())
+}
+
 fn parse_write(rest: &[&str]) -> Option<Subcommand> {
     let mut target = WriteTarget::WorkspaceJsonc;
     let mut idx = 0;
     while idx < rest.len() {
+        if rest[idx] == "--" {
+            return (idx + 1 == rest.len()).then_some(Subcommand::Write { target });
+        }
         let raw = if matches!(rest[idx], "-t" | "--target") {
             idx += 1;
             *rest.get(idx)?

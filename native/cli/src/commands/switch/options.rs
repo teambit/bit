@@ -34,19 +34,30 @@ fn parse_mode(args: &[&str], import: bool) -> Option<Options> {
     let mut seen = HashSet::new();
     let mut values = args.iter().copied();
     while let Some(value) = values.next() {
+        if value == "--" {
+            consume_trailing_lanes(values, &mut options)?;
+            break;
+        }
         if value == "--no-color" {
             continue;
         }
         if value.starts_with('-') {
             let key = flag(&mut options, value, &mut values, import)?;
-            if !seen.insert(key) {
-                return None;
-            }
+            seen.insert(key).then_some(())?;
         } else {
             lane(&mut options, value)?;
         }
     }
     (!options.lane.is_empty()).then_some(options)
+}
+fn consume_trailing_lanes<'a>(
+    values: impl Iterator<Item = &'a str>,
+    options: &mut Options,
+) -> Option<()> {
+    for rest in values {
+        lane(options, rest)?;
+    }
+    Some(())
 }
 fn lane(options: &mut Options, value: &str) -> Option<()> {
     if !options.lane.is_empty() || !valid_lane(value) {

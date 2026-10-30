@@ -12,7 +12,10 @@ use serde_json::{Value, json};
 use std::{env, ffi::OsString, fs, io};
 
 pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
-    let [name, alias] = lane_args else {
+    let Some(tokens) = crate::commands::scope_set::collect_non_flag_tokens(lane_args) else {
+        return Ok(Outcome::Declined("outside the native lane alias grammar".into()));
+    };
+    let [name, alias] = tokens.as_slice() else {
         return Ok(Outcome::Declined("outside the native lane alias grammar".into()));
     };
     if !valid_alias_token(name) || !valid_alias_token(alias) {

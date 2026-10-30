@@ -41,6 +41,10 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     while index < args.len() {
         let raw = args[index];
         index += 1;
+        if raw == "--" {
+            consume_trailing_resolve(&args[index..], &mut options)?;
+            break;
+        }
         if raw == "--no-color" {
             continue;
         }
@@ -51,6 +55,14 @@ pub fn parse(args: &[&str]) -> Option<Options> {
         index += apply_resolve_flag(&mut options, &mut flags, raw, args.get(index).copied())?;
     }
     flags.contains(&"--resolve").then_some(options)
+}
+
+fn consume_trailing_resolve(tail: &[&str], options: &mut Options) -> Option<()> {
+    for &rest in tail {
+        (!rest.is_empty() && !rest.starts_with('-')).then_some(())?;
+        options.positional(rest)?;
+    }
+    Some(())
 }
 
 const FLAGS: [&str; 4] = ["--message", "--resolve", "--skip-dependency-installation", "--build"];

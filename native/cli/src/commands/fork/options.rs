@@ -72,11 +72,13 @@ fn parse_flag(
     options: &mut Options,
 ) -> Option<()> {
     match argument {
-        "--no-color" | "--ast=false" | "--skip-dependency-installation=false" => {}
+        "--no-color" => {}
         "--ast" | "--ast=true" => options.flags.ast = true,
+        "--ast=false" => options.flags.ast = false,
         "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
             options.flags.skip_install = true;
         }
+        "--skip-dependency-installation=false" => options.flags.skip_install = false,
         value if !options.scope_fork => parse_local_flag(value, arguments, options)?,
         _ => return None,
     }
@@ -91,18 +93,21 @@ fn parse_local_flag(
         return handled;
     }
     match argument {
-        "--refactor=false" | "--skip-config=false" | "--preserve=false" | "--no-link=false" => {}
         "-s" | "--scope" => options.scope = Some(take_fork_val(arguments)?),
         "-p" | "--path" => options.path = Some(take_fork_val(arguments)?),
         "-e" | "--env" => options.env = Some(take_fork_val(arguments)?),
         "-r" | "--refactor" | "--refactor=true" => options.flags.refactor = true,
+        "--refactor=false" => options.flags.refactor = false,
         "-rx" | "-xr" => {
             options.flags.refactor = true;
             options.flags.skip_install = true;
         }
         "--skip-config" | "--skip-config=true" => options.flags.skip_config = true,
+        "--skip-config=false" => options.flags.skip_config = false,
         "--preserve" | "--preserve=true" => options.flags.preserve = true,
+        "--preserve=false" => options.flags.preserve = false,
         "--no-link" | "--no-link=true" => options.flags.no_link = true,
+        "--no-link=false" => options.flags.no_link = false,
         _ => return None,
     }
     Some(())

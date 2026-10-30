@@ -163,6 +163,7 @@ pub(super) fn parse_serve_options(args: &[&str]) -> Option<ServeOptions> {
     while idx < args.len() {
         let arg = args[idx];
         match arg {
+            "--" => return (idx + 1 == args.len()).then_some(options),
             "--no-color" => {}
             "-p" | "--port" => {
                 if let Some(&next) = args.get(idx + 1)

@@ -57,43 +57,60 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut idx = 0;
     while idx < args.len() {
-        let arg = args[idx];
-        match arg {
-            "--no-color"
-            | "-v"
-            | "--verbose"
-            | "--verbose=true"
-            | "--verbose=false"
-            | "--show-internal-urls"
-            | "--show-internal-urls=true"
-            | "--show-internal-urls=false"
-            | "--use-root-modules"
-            | "--use-root-modules=true"
-            | "--use-root-modules=false"
-            | "--use-source"
-            | "--use-source=true"
-            | "--use-source=false" => {}
-            "-d" | "--dev" | "--dev=true" => options.dev = true,
-            "--dev=false" => options.dev = false,
-            "-r" | "--rebuild" | "--rebuild=true" => options.rebuild = true,
-            "--rebuild=false" => options.rebuild = false,
-            "-s" | "--skip-ui-build" | "--skip-ui-build=true" => options.skip_ui_build = true,
-            "--skip-ui-build=false" => options.skip_ui_build = false,
-            "-n" | "--no-browser" | "--no-browser=true" => options.no_browser = true,
-            "--no-browser=false" => options.no_browser = false,
-            "--skip-compilation" | "--skip-compilation=true" => options.skip_compilation = true,
-            "--skip-compilation=false" => options.skip_compilation = false,
-            "-p" | "--port" => {
-                options.port = Some(take_optional_arg(args, &mut idx));
-            }
-            "-u" | "--ui-root-name" => {
-                options.ui_root_name = Some(take_optional_arg(args, &mut idx));
-            }
-            _ => apply_inline_or_pattern(arg, &mut options)?,
+        if args[idx] == "--" {
+            consume_trailing_start_pattern(&args[idx + 1..], &mut options.pattern)?;
+            break;
         }
+        apply_start_token(args, &mut idx, &mut options)?;
         idx += 1;
     }
     Some(options)
+}
+
+fn consume_trailing_start_pattern(rest: &[&str], pattern: &mut Option<String>) -> Option<()> {
+    for &val in rest {
+        (!val.is_empty() && !val.starts_with('-') && pattern.replace(val.to_owned()).is_none())
+            .then_some(())?;
+    }
+    Some(())
+}
+
+fn apply_start_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<()> {
+    let arg = args[*idx];
+    match arg {
+        "--no-color"
+        | "-v"
+        | "--verbose"
+        | "--verbose=true"
+        | "--verbose=false"
+        | "--show-internal-urls"
+        | "--show-internal-urls=true"
+        | "--show-internal-urls=false"
+        | "--use-root-modules"
+        | "--use-root-modules=true"
+        | "--use-root-modules=false"
+        | "--use-source"
+        | "--use-source=true"
+        | "--use-source=false" => {}
+        "-d" | "--dev" | "--dev=true" => options.dev = true,
+        "--dev=false" => options.dev = false,
+        "-r" | "--rebuild" | "--rebuild=true" => options.rebuild = true,
+        "--rebuild=false" => options.rebuild = false,
+        "-s" | "--skip-ui-build" | "--skip-ui-build=true" => options.skip_ui_build = true,
+        "--skip-ui-build=false" => options.skip_ui_build = false,
+        "-n" | "--no-browser" | "--no-browser=true" => options.no_browser = true,
+        "--no-browser=false" => options.no_browser = false,
+        "--skip-compilation" | "--skip-compilation=true" => options.skip_compilation = true,
+        "--skip-compilation=false" => options.skip_compilation = false,
+        "-p" | "--port" => {
+            options.port = Some(take_optional_arg(args, idx));
+        }
+        "-u" | "--ui-root-name" => {
+            options.ui_root_name = Some(take_optional_arg(args, idx));
+        }
+        _ => apply_inline_or_pattern(arg, options)?,
+    }
+    Some(())
 }
 
 fn take_optional_arg(args: &[&str], idx: &mut usize) -> String {

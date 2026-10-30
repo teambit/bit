@@ -83,8 +83,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 pub(super) fn valid_options(args: &[&str]) -> bool {
-    args.iter()
-        .all(|&arg| arg == "--no-color")
+    for (idx, &arg) in args.iter().enumerate() {
+        if arg == "--" {
+            return idx + 1 == args.len();
+        }
+        if arg != "--no-color" {
+            return false;
+        }
+    }
+    true
 }
 
 pub(super) fn is_zsh_shell() -> bool {

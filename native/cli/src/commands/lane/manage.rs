@@ -91,9 +91,12 @@ fn set_unique<'a>(slot: &mut Option<&'a str>, val: &'a str) -> bool {
 }
 
 pub(super) fn remove_readme(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
-    let lane_name = match lane_args {
+    let Some(tokens) = crate::commands::scope_set::collect_non_flag_tokens(lane_args) else {
+        return Ok(Outcome::Declined("outside the native lane remove-readme grammar".into()));
+    };
+    let lane_name = match tokens.as_slice() {
         [] => None,
-        [name] if !name.is_empty() && !name.starts_with('-') => Some(*name),
+        [name] => Some(*name),
         _ => return Ok(Outcome::Declined("outside the native lane remove-readme grammar".into())),
     };
     let cwd = env::current_dir()?;
@@ -157,8 +160,10 @@ pub(super) fn remove_comp(args: &[OsString], lane_args: &[&str]) -> io::Result<O
 
 fn valid_remove_comp_args(args: &[&str]) -> bool {
     let mut pattern_count = 0usize;
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => return count_trailing_patterns(iter, &mut pattern_count) && pattern_count == 1,
             "--workspace-only"
             | "--workspace-only=true"
             | "--workspace-only=false"
@@ -170,6 +175,16 @@ fn valid_remove_comp_args(args: &[&str]) -> bool {
         }
     }
     pattern_count == 1
+}
+
+fn count_trailing_patterns<'a>(iter: impl Iterator<Item = &'a str>, count: &mut usize) -> bool {
+    for rest in iter {
+        if rest.is_empty() || rest.starts_with('-') {
+            return false;
+        }
+        *count += 1;
+    }
+    true
 }
 
 fn execute(
@@ -244,8 +259,16 @@ pub(super) fn fetch(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome
 fn parse_fetch_args<'a>(lane_args: &[&'a str]) -> Option<(bool, Option<&'a str>)> {
     let mut all = false;
     let mut lane_id = None;
-    for &arg in lane_args {
+    let mut iter = lane_args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                for val in iter {
+                    (!val.is_empty() && !val.starts_with('-') && lane_id.replace(val).is_none())
+                        .then_some(())?;
+                }
+                break;
+            }
             "-a" | "--all" | "--all=true" => all = true,
             "--all=false" => all = false,
             val if !val.starts_with('-') && !val.is_empty() && lane_id.is_none() => {
@@ -258,12 +281,12 @@ fn parse_fetch_args<'a>(lane_args: &[&'a str]) -> Option<(bool, Option<&'a str>)
 }
 
 pub(super) fn eject(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
-    let [pattern] = lane_args else {
+    let Some(tokens) = crate::commands::scope_set::collect_non_flag_tokens(lane_args) else {
         return Ok(Outcome::Declined("outside the native lane eject grammar".into()));
     };
-    if pattern.starts_with('-') || pattern.is_empty() {
+    let [pattern] = tokens.as_slice() else {
         return Ok(Outcome::Declined("outside the native lane eject grammar".into()));
-    }
+    };
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
         return outside_workspace_failure(

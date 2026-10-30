@@ -70,7 +70,8 @@ fn parse_args(args: &[OsString]) -> Option<Parsed> {
 }
 
 fn parse_merge_bitmaps(rest: &[&str]) -> Option<Parsed> {
-    let [ancestor, current, other] = rest else {
+    let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
+    let [ancestor, current, other] = tokens.as_slice() else {
         return None;
     };
     if [ancestor, current, other]
@@ -84,8 +85,9 @@ fn parse_merge_bitmaps(rest: &[&str]) -> Option<Parsed> {
 
 fn parse_set_merge_driver(rest: &[&str]) -> Option<Parsed> {
     let mut global = false;
-    for &token in rest {
+    for (idx, &token) in rest.iter().enumerate() {
         match token {
+            "--" => return (idx + 1 == rest.len()).then_some(Parsed::SetMergeDriver { global }),
             "-g" | "--global" | "--global=true" => global = true,
             "--global=false" => global = false,
             _ => return None,

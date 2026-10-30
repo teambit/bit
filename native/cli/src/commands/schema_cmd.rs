@@ -213,8 +213,13 @@ pub(super) fn parse_command(args: &[&str]) -> Option<ParsedCommand> {
 fn parse_diff_options(args: &[&str]) -> Option<DiffOptions> {
     let mut positional = Vec::new();
     let mut json = false;
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_schema_args(iter, &mut positional)?;
+                break;
+            }
             "--no-color" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
@@ -233,30 +238,40 @@ fn parse_diff_options(args: &[&str]) -> Option<DiffOptions> {
     })
 }
 
+fn consume_trailing_schema_args<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    positional: &mut Vec<&'a str>,
+) -> Option<()> {
+    for val in iter {
+        (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+        positional.push(val);
+    }
+    Some(())
+}
+
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
-    let mut pattern = None;
+    let mut positional = Vec::new();
     let mut remote = false;
     let mut json = false;
-    for &arg in args {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
         match arg {
+            "--" => {
+                consume_trailing_schema_args(iter, &mut positional)?;
+                break;
+            }
             "--no-color" => {}
             "-r" | "--remote" | "--remote=true" => remote = true,
             "--remote=false" => remote = false,
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
-            "-rj" | "-jr" => {
-                remote = true;
-                json = true;
-            }
-            val if !val.starts_with('-')
-                && !val.is_empty()
-                && val != "diff"
-                && pattern.is_none() =>
-            {
-                pattern = Some(val.to_owned());
+            "-rj" | "-jr" => (remote, json) = (true, true),
+            val if !val.starts_with('-') && !val.is_empty() && val != "diff" => {
+                positional.push(val);
             }
             _ => return None,
         }
     }
-    Some(Options { pattern: pattern?, remote, json })
+    let [pattern] = positional.as_slice() else { return None };
+    (*pattern != "diff").then(|| Options { pattern: (*pattern).to_owned(), remote, json })
 }

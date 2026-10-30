@@ -12,7 +12,14 @@ pub(super) struct Options<'a> {
 pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options::default();
     let mut index = 0;
-    while let Some(arg) = args.get(index) {
+    while let Some(&arg) = args.get(index) {
+        if arg == "--" {
+            for &rest in &args[index + 1..] {
+                (!rest.is_empty() && !rest.starts_with('-') && options.id.replace(rest).is_none())
+                    .then_some(())?;
+            }
+            break;
+        }
         index += apply_cat_arg(&mut options, arg, args.get(index + 1).copied())?;
     }
     options.id.map(|_| options)
