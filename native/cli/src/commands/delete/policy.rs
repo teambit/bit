@@ -30,6 +30,9 @@ impl Policy {
         let mut items = Vec::new();
         for pin in pins {
             let package_name = pin.package_name.trim();
+            if package_name.is_empty() {
+                return Err(io::Error::other("empty deleted component package name"));
+            }
             let version = range(&document, pin.version.trim())?;
             add_root_policy_entries(
                 &mut document,
@@ -86,8 +89,8 @@ fn resolve_save_prefix(document: &Document) -> io::Result<String> {
         });
     match prefix {
         None | Some(Value::Null) => Ok("^".to_owned()),
-        Some(Value::String(prefix)) if prefix.is_empty() => Ok("^".to_owned()),
-        Some(Value::String(prefix)) => Ok(prefix),
+        Some(Value::String(prefix)) if prefix.trim().is_empty() => Ok("^".to_owned()),
+        Some(Value::String(prefix)) => Ok(prefix.trim().to_owned()),
         _ => Err(io::Error::other("unsupported save prefix")),
     }
 }

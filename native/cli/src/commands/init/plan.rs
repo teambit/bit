@@ -100,7 +100,11 @@ fn scope_name(options: &Options, cwd: &Path) -> io::Result<String> {
 
 fn resolve_bare_scope_name(bare: &str, fallback: &str) -> String {
     let trimmed = bare.trim();
-    if trimmed.is_empty() { fallback.trim().to_owned() } else { trimmed.to_owned() }
+    if trimmed.is_empty() || trimmed.eq_ignore_ascii_case("true") {
+        fallback.trim().to_owned()
+    } else {
+        trimmed.to_owned()
+    }
 }
 
 fn locate(start: &Path) -> Option<PathBuf> {

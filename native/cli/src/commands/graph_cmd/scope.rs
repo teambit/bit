@@ -149,16 +149,26 @@ fn load_local_scope_components(
 
 fn index_row_scope_and_name(row: &Value) -> (Option<&str>, Option<&str>) {
     if let Some(id_str) = row["id"].as_str() {
-        let bare = id_str
-            .split('@')
-            .next()
-            .unwrap_or(id_str);
+        let trimmed = id_str.trim();
+        let bare = match trimmed.rsplit_once('@') {
+            Some((prefix, _)) if !prefix.trim().is_empty() => prefix.trim(),
+            _ => trimmed,
+        };
         return match bare.split_once('/') {
-            Some((sc, nm)) => (Some(sc), Some(nm)),
-            None => (None, Some(bare)),
+            Some((sc, nm)) => (Some(sc.trim()), Some(nm.trim())),
+            None => (None, Some(bare.trim())),
         };
     }
-    (row["id"]["scope"].as_str(), row["id"]["name"].as_str())
+    (
+        row["id"]["scope"]
+            .as_str()
+            .or_else(|| row["scope"].as_str())
+            .map(str::trim),
+        row["id"]["name"]
+            .as_str()
+            .or_else(|| row["name"].as_str())
+            .map(str::trim),
+    )
 }
 
 fn load_index_row_version(

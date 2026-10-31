@@ -181,9 +181,10 @@ fn parse_sync(rest: &[&str]) -> Option<SyncOptions> {
     while idx < rest.len() {
         if rest[idx] == "--" {
             for &val in &rest[idx + 1..] {
-                (!val.is_empty()
-                    && !val.starts_with('-')
-                    && opts.lane.replace(val.to_owned()).is_none())
+                let trimmed = val.trim();
+                (!trimmed.is_empty()
+                    && !trimmed.starts_with('-')
+                    && opts.lane.replace(trimmed.to_owned()).is_none())
                 .then_some(())?;
             }
             break;
@@ -213,13 +214,14 @@ fn apply_sync_arg(opts: &mut SyncOptions, arg: &str, next: Option<&str>) -> Opti
         "--init=false" => opts.init = false,
         "--branch" => {
             opts.branch = Some(
-                next.filter(|val| !val.is_empty() && !val.starts_with('-'))?
+                next.map(str::trim)
+                    .filter(|val| !val.is_empty() && !val.starts_with('-'))?
                     .into(),
             );
             return Some(2);
         }
-        val if !val.starts_with('-') && opts.lane.is_none() => {
-            opts.lane = Some(val.to_owned());
+        val if !val.starts_with('-') && !val.trim().is_empty() && opts.lane.is_none() => {
+            opts.lane = Some(val.trim().to_owned());
         }
         _ => return None,
     }

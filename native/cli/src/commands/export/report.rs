@@ -150,7 +150,8 @@ pub(super) fn published(value: &Value, token: &str) -> io::Result<Value> {
             .iter()
             .any(|lane| {
                 lane.as_str()
-                    .is_none_or(|lane| lane.is_empty() || !lane.contains('/'))
+                    .and_then(|lane| lane.trim().split_once('/'))
+                    .is_none_or(|(scope, name)| scope.trim().is_empty() || name.trim().is_empty())
             })
     {
         return Err(decline("native outbound lane receipt"));

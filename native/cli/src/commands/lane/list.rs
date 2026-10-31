@@ -82,8 +82,8 @@ impl LaneData {
             .map(|_| {
                 format!(
                     "{}/{}",
-                    self.id["scope"].as_str().unwrap_or_default(),
-                    self.id["name"].as_str().unwrap_or_default(),
+                    self.id["scope"].as_str().map_or("", str::trim),
+                    self.id["name"].as_str().map_or("", str::trim),
                 )
             });
         data.insert("remote".into(), json!(remote));
@@ -102,7 +102,7 @@ impl LaneData {
             data.insert("log".into(), log.clone());
         }
         data.insert("isMerged".into(), json!(self.is_merged));
-        let hash = self.lane.as_ref().map_or("", |(_, hash)| hash.as_str());
+        let hash = self.lane.as_ref().map_or("", |(_, hash)| hash.trim());
         data.insert("hash".into(), json!(hash));
         Value::Object(data)
     }

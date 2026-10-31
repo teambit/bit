@@ -298,8 +298,8 @@ fn parse_get(rest: &[&str]) -> Option<Subcommand> {
             arg if let Some(val) = arg.strip_prefix("--services=") => {
                 services = Some(parse_services_val(val)?);
             }
-            val if !val.starts_with('-') && !val.is_empty() && component.is_none() => {
-                component = Some(val.to_owned());
+            val if !val.starts_with('-') && !val.trim().is_empty() && component.is_none() => {
+                component = Some(val.trim().to_owned());
             }
             _ => return None,
         }

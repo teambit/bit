@@ -9,7 +9,7 @@ fn render(
     check: bool,
 ) -> io::Result<String> {
     let formatter = Formatter::new(chalk);
-    let name = &progress.name;
+    let name = progress.name.trim();
     let rows = value["results"].as_array().ok_or_else(|| invalid("formatter result rows"))?;
     let mut sections = vec![formatter.title(&format!(
         "formatting total of {} component(s) in workspace '{name}'",
@@ -18,10 +18,14 @@ fn render(
     for row in rows {
         sections.push(component(row, &formatter, check)?);
     }
+    let elapsed = if seconds.is_finite() && seconds > 0.0 {
+        (seconds * 1000.0).round() / 1000.0
+    } else {
+        0.0
+    };
     sections.push(formatter.hint(&format!(
-        "formatted {} components in {}s.",
+        "formatted {} components in {elapsed}s.",
         progress.identities.len(),
-        (seconds * 1000.0).round() / 1000.0,
     )));
     Ok(Formatter::join(&sections))
 }
@@ -76,6 +80,7 @@ fn component_scope_and_name(id: &Value) -> io::Result<(&str, &str)> {
         .ok_or_else(|| invalid("formatter scope"))?;
     let name = id["_legacy"]["name"]
         .as_str()
+        .or_else(|| id["_name"].as_str())
         .or_else(|| id["name"].as_str())
         .map(str::trim)
         .filter(|name| !name.is_empty())

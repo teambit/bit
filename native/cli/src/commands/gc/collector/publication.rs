@@ -55,7 +55,11 @@ fn remove_file(path: &Path) -> io::Result<()> {
 }
 fn remove_object(scope: &Path, hash: &str) -> io::Result<()> {
     let trimmed = hash.trim();
-    if trimmed.len() < 3 {
+    if trimmed.len() != 40
+        || !trimmed
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+    {
         return Err(io::Error::other("gc invalid object hash"));
     }
     let path = scope
@@ -63,10 +67,16 @@ fn remove_object(scope: &Path, hash: &str) -> io::Result<()> {
         .join(&trimmed[..2])
         .join(&trimmed[2..]);
     match fs::remove_file(&path) {
+        Ok(()) => {}
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
-        result => result.map_err(|error| failure(error, "unlink", &path))?,
+        Err(error) => return Err(failure(error, "unlink", &path)),
     }
-    let Some(parent) = path.parent() else { return Ok(()) };
+    if let Some(parent) = path.parent() {
+        remove_empty_bucket(parent)?;
+    }
+    Ok(())
+}
+fn remove_empty_bucket(parent: &Path) -> io::Result<()> {
     let entries = match fs::read_dir(parent) {
         Ok(entries) => entries,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
@@ -78,7 +88,11 @@ fn remove_object(scope: &Path, hash: &str) -> io::Result<()> {
         .is_empty()
     {
         match fs::remove_dir(parent) {
-            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error)
+                if matches!(
+                    error.kind(),
+                    io::ErrorKind::NotFound | io::ErrorKind::DirectoryNotEmpty,
+                ) => {}
             result => result.map_err(|error| failure(error, "rmdir", parent))?,
         }
     }

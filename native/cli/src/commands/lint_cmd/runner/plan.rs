@@ -138,6 +138,13 @@ fn request(component: &Component, config: &Config, options: &Options) -> io::Res
         .map(str::trim)
         .filter(|fix| !fix.is_empty())
         .collect();
+    if fixes.is_empty()
+        || !fixes
+            .iter()
+            .all(|fix| matches!(*fix, "directive" | "problem" | "suggestion" | "layout"))
+    {
+        return Err(invalid("linter invalid fix type"));
+    }
     Ok(json!({"files":files,"options":{"overrideConfig":defaults,"extensions":extensions,
         "useEslintrc":false,"fix":options.fix,"fixTypes":fixes}}))
 }
@@ -146,8 +153,12 @@ fn write(tool: &Value) -> io::Result<Option<Value>> {
     let files = tool["results"].as_array().ok_or_else(|| invalid("linter write results"))?;
     for file in files {
         if let Some(content) = file["output"].as_str() {
-            let path =
-                Path::new(file["filePath"].as_str().ok_or_else(|| invalid("linter write path"))?);
+            let path = file["filePath"]
+                .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
+                .map(Path::new)
+                .ok_or_else(|| invalid("linter write path"))?;
             if let Err(error) = fs::write(path, content) {
                 return filesystem::error(error, path, "open").map(Some);
             }

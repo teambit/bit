@@ -9,6 +9,7 @@ use serde_json::Value;
 use std::{fs, io};
 
 pub(super) fn components(context: &Context, pattern: &str) -> io::Result<Vec<String>> {
+    let pattern = pattern.trim();
     if !pattern.contains('*') {
         return literal(pattern);
     }
@@ -17,7 +18,13 @@ pub(super) fn components(context: &Context, pattern: &str) -> io::Result<Vec<Str
         .ok_or_else(|| {
             invalid("import with wildcards expects full scope-name before the wildcards")
         })?;
-    if scope.is_empty() || scope.contains('*') {
+    let (scope, name) = (scope.trim(), name.trim());
+    if scope.is_empty()
+        || name.is_empty()
+        || scope.contains('*')
+        || scope.contains("..")
+        || name.contains("..")
+    {
         return Err(invalid("remote wildcard scope"));
     }
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;

@@ -91,12 +91,13 @@ fn component_writes_supported(inputs: &[Value], outputs: &[Value]) -> bool {
             input["absolutePath"]
                 .as_str()
                 .map(str::trim)
-                .filter(|path| !path.is_empty())
+                .filter(|path| !path.is_empty() && Path::new(path).is_absolute())
                 .is_some_and(|path| {
-                    std::fs::OpenOptions::new()
-                        .write(true)
-                        .open(path)
-                        .is_ok()
+                    std::fs::symlink_metadata(path).is_ok_and(|meta| meta.is_file())
+                        && std::fs::OpenOptions::new()
+                            .write(true)
+                            .open(path)
+                            .is_ok()
                 })
         })
 }

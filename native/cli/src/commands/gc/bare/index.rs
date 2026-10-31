@@ -30,11 +30,7 @@ pub(super) fn prepare(
 fn component(value: &Value, hash: &str) -> io::Result<Value> {
     let name_value = if value["name"].is_string() { &value["name"] } else { &value["id"]["name"] };
     let name = text(name_value)?;
-    let scope = value
-        .get("scope")
-        .or_else(|| value["id"].get("scope"))
-        .cloned()
-        .unwrap_or(Value::Null);
+    let scope = normalized_scope(value).unwrap_or(Value::Null);
     let is_symlink = value["isSymlink"].as_bool().unwrap_or(false);
     Ok(json!({"id":{"scope":scope,"name":name},"isSymlink":is_symlink,"hash":hash}))
 }
@@ -42,19 +38,24 @@ fn component(value: &Value, hash: &str) -> io::Result<Value> {
 fn lane(value: &Value, hash: &str) -> io::Result<Value> {
     let name_value = if value["name"].is_string() { &value["name"] } else { &value["id"]["name"] };
     let mut id = json!({"name":text(name_value)?});
-    if let Some(scope) = value
-        .get("scope")
-        .or_else(|| value["id"].get("scope"))
-        .filter(|scope| {
-            !scope.is_null()
-                && !scope
-                    .as_str()
-                    .is_some_and(|text| text.trim().is_empty())
-        })
-    {
-        id["scope"] = scope.clone();
+    if let Some(scope) = normalized_scope(value) {
+        id["scope"] = scope;
     }
     Ok(json!({"id":id,"hash":hash}))
+}
+
+fn normalized_scope(value: &Value) -> Option<Value> {
+    let raw = value
+        .get("scope")
+        .or_else(|| value["id"].get("scope"))?;
+    if raw.is_null() {
+        return None;
+    }
+    if let Some(scope) = raw.as_str() {
+        let trimmed = scope.trim();
+        return (!trimmed.is_empty()).then(|| Value::String(trimmed.to_owned()));
+    }
+    Some(raw.clone())
 }
 
 pub(super) fn write(scope: &Path, bytes: Option<&[u8]>) -> io::Result<()> {

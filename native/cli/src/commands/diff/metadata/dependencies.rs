@@ -51,21 +51,22 @@ pub(super) fn package_dependencies(
             continue;
         }
         check_change(ours.as_deref(), theirs.as_deref())?;
-        changes.push(Change { name: name.clone(), left: ours, right: theirs });
+        changes.push(Change { name: name.trim().to_owned(), left: ours, right: theirs });
     }
     for name in right.keys() {
         if pkg_version(left, name)?.is_none()
             && let Some(theirs) = pkg_version(right, name)?
         {
             check_change(None, Some(theirs.as_str()))?;
-            changes.push(Change { name: name.clone(), left: None, right: Some(theirs) });
+            changes.push(Change { name: name.trim().to_owned(), left: None, right: Some(theirs) });
         }
     }
     Ok(plain_text(&changes, field, labels, chalk))
 }
 
 fn pkg_version(map: &Map<String, Value>, name: &str) -> io::Result<Option<String>> {
-    map.get(name.trim())
+    map.get(name)
+        .or_else(|| map.get(name.trim()))
         .map(|value| text(Some(value)).map(|ver| ver.trim().to_string()))
         .transpose()
         .map(|opt| opt.filter(|ver| !ver.is_empty()))

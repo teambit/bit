@@ -65,10 +65,15 @@ fn selected_identities(
     rows(&result, false)?
         .iter()
         .map(|row| {
-            let identity = text(row.get("identity"))?;
+            let identity = text(row.get("identity"))?.trim();
             selected
                 .iter()
-                .find(|target| target["identity"] == identity)
+                .find(|target| {
+                    target["identity"]
+                        .as_str()
+                        .or_else(|| target["id"].as_str())
+                        .is_some_and(|cand| cand.trim() == identity)
+                })
                 .cloned()
                 .ok_or_else(|| decline("parent diff target absent"))
         })

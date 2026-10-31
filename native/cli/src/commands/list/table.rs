@@ -49,7 +49,12 @@ fn style(enabled: bool, (open, close): (&str, &str), text: &str) -> String {
 fn strlen(text: &str) -> usize {
     strip_sgr(text)
         .split('\n')
-        .map(|line| line.encode_utf16().count())
+        .map(|line| {
+            line.strip_suffix('\r')
+                .unwrap_or(line)
+                .encode_utf16()
+                .count()
+        })
         .max()
         .unwrap_or(0)
 }

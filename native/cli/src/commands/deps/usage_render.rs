@@ -103,8 +103,10 @@ pub(super) fn name_ver_from_dep_path(
     let version = lockfile.packages
         .as_ref()
         .and_then(|packages| packages.get(&dep_path.without_peer()))
-        .and_then(|metadata| metadata.version.clone())
-        .unwrap_or_else(|| dep_path.suffix.version().to_string());
+        .and_then(|metadata| metadata.version.as_deref())
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .map_or_else(|| dep_path.suffix.version().to_string(), str::to_owned);
     (dep_path.name.to_string(), version)
 }
 

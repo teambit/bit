@@ -20,6 +20,9 @@ use std::{
 /// `--- ` line, with both file headers relabelled.
 pub fn format(diff: &str, label_a: &str, label_b: &str, name: &str) -> String {
     let (name, label_a, label_b) = (name.trim(), label_a.trim(), label_b.trim());
+    if name.is_empty() {
+        return String::new();
+    }
     let Some(start) = diff
         .find("--- ")
         .filter(|start| *start >= 1)

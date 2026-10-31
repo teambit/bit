@@ -307,7 +307,7 @@ fn merge_strategy(flags: &[&str]) -> Option<Option<String>> {
             if strategy.is_some() || flags.contains(&"--merge") {
                 return None;
             }
-            strategy = Some(value.to_owned());
+            strategy = Some(value.trim().to_owned());
         }
     }
     Some(strategy)

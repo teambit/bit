@@ -48,7 +48,9 @@ pub(super) fn prepare(
     let prepared = crate::commands::import::prepare_diff_refresh(engine, root, &ids)?;
     let token = prepared
         .get("token")
-        .filter(|token| token.is_string())
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|token| !token.is_empty())
         .ok_or_else(|| decline("diff import token"))?;
-    Ok(Some(token.clone()))
+    Ok(Some(Value::String(token.to_owned())))
 }

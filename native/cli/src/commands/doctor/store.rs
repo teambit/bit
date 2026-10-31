@@ -22,7 +22,7 @@ fn path(scope: &Path, hash: &str) -> PathBuf {
 }
 pub(super) fn heads(diagnosis: &Diagnosis, scope: Option<&Path>) -> io::Result<Value> {
     let Some(scope) = scope else {
-        return Ok(diagnosis.result(json!({"valid":true}), String::new(), ""));
+        return Ok(diagnosis.result(json!({"valid":true}), "", ""));
     };
     let config: Value = bit_object_import::parse_jsonc(&fs::read(scope.join("scope.json"))?)?;
     let scope_name = config["name"].as_str().map_or("", str::trim);
@@ -52,7 +52,7 @@ pub(super) fn heads(diagnosis: &Diagnosis, scope: Option<&Path>) -> io::Result<V
         }
     }
     let symptoms = missing_head_symptoms(&missing);
-    Ok(diagnosis.result(json!({"valid":missing.is_empty(),"data":{"componentsWithMissingHeads":missing,"totalComponents":total}}),symptoms,"The missing objects need to be restored from backups or re-exported from workspaces that have these components."))
+    Ok(diagnosis.result(json!({"valid":missing.is_empty(),"data":{"componentsWithMissingHeads":missing,"totalComponents":total}}),&symptoms,"The missing objects need to be restored from backups or re-exported from workspaces that have these components."))
 }
 fn missing_head_symptoms(missing: &[Value]) -> String {
     format!(
@@ -138,7 +138,7 @@ pub(super) fn orphans(diagnosis: &Diagnosis, scope: &Path) -> io::Result<Value> 
             .collect::<Vec<_>>()
             .join("\n"),
     );
-    Ok(diagnosis.result(json!({"valid":orphans.is_empty(),"data":{"orphanSymlinks":orphans,"objectsToDelete":paths}}),format!(r#"the following refs points to non-existing components "{ids}""#),&treatment))
+    Ok(diagnosis.result(json!({"valid":orphans.is_empty(),"data":{"orphanSymlinks":orphans,"objectsToDelete":paths}}),&format!(r#"the following refs points to non-existing components "{ids}""#),&treatment))
 }
 
 fn symlink_target_exists(scope: &Path, index: &Value, id: &Value) -> io::Result<bool> {
@@ -205,7 +205,11 @@ fn references(scope: &Path) -> io::Result<Vec<String>> {
 
 /// Scope index repair and malformed objects are left to the canonical loader before output.
 pub(super) fn preflight(context: &super::context::Context, name: Option<&str>) -> io::Result<()> {
-    if name.is_some_and(|name| name != "validate scope objects" && name != "check orphan refs") {
+    if name
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .is_some_and(|name| name != "validate scope objects" && name != "check orphan refs")
+    {
         return Ok(());
     }
     let Some(scope) = context.scope.as_deref() else {
@@ -228,7 +232,11 @@ pub(super) fn preflight(context: &super::context::Context, name: Option<&str>) -
         if kind != "Component" {
             return Err(io::Error::other("indexed object is not a component"));
         }
-        if let Some(head) = model["head"].as_str() {
+        if let Some(head) = model["head"]
+            .as_str()
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
+        {
             let _head = object(scope, head)?;
         }
     }

@@ -303,6 +303,7 @@ fn consume_trailing_lint_pattern<'a>(
     pattern: &mut Option<String>,
 ) -> Option<()> {
     for val in iter {
+        let val = val.trim();
         (!val.is_empty() && !val.starts_with('-') && pattern.replace(val.to_owned()).is_none())
             .then_some(())?;
     }
@@ -324,7 +325,7 @@ fn apply_token<'a>(
         "-j" | "--json" | "--json=true" => options.json = true,
         "--json=false" => options.json = false,
         "--fix-type" => {
-            let val = iter.next()?;
+            let val = iter.next()?.trim();
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             options.fix_type = Some(val.to_owned());
         }
@@ -338,10 +339,14 @@ fn apply_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
         return Some(());
     }
     if let Some(val) = arg.strip_prefix("--fix-type=") {
+        let val = val.trim();
         (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.fix_type = Some(val.to_owned());
-    } else if !arg.starts_with('-') && !arg.is_empty() && options.pattern.is_none() {
-        options.pattern = Some(arg.to_owned());
+    } else if !arg.trim().starts_with('-')
+        && !arg.trim().is_empty()
+        && options.pattern.is_none()
+    {
+        options.pattern = Some(arg.trim().to_owned());
     } else {
         return None;
     }

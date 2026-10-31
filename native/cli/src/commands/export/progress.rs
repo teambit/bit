@@ -19,14 +19,15 @@ impl Exported {
         self.output.observed = true;
         match event {
             Event::Transfer { scope, objects } => output.status(&format!(
-                r#"transferring {objects} objects to the remote "{scope}"..."#,
+                r#"transferring {objects} objects to the remote "{}"..."#,
+                scope.trim(),
             )),
             Event::Verify => {
                 output.restart("verifying that objects can be merged on the remotes...");
             }
             Event::Verified => self.fork_progress(output),
             Event::Persist { scope } => {
-                output.restart(&format!(r#"persisting data on the remote "{scope}"..."#));
+                output.restart(&format!(r#"persisting data on the remote "{}"..."#, scope.trim()));
             }
             Event::HubMessage(message) => self.hub_message(&message, output),
         }

@@ -20,11 +20,12 @@ pub(super) struct DepGraph {
 }
 
 impl DepGraph {
-    pub(super) fn add_node(&mut self, id: String) {
-        self.nodes.insert(id);
+    pub(super) fn add_node(&mut self, id: &str) {
+        self.nodes.insert(id.trim().to_owned());
     }
 
-    pub(super) fn add_edge(&mut self, src: String, dst: String, dep_type: &'static str) {
+    pub(super) fn add_edge(&mut self, src: &str, dst: &str, dep_type: &'static str) {
+        let (src, dst) = (src.trim().to_owned(), dst.trim().to_owned());
         self.nodes.insert(src.clone());
         self.nodes.insert(dst.clone());
         if let Some(existing) = self.edges
@@ -94,9 +95,10 @@ fn render_dependents_table(dependents: &[DependentInfo], target_id: &str, chalk:
         chalk.cyan("Immediate Dependency"),
         chalk.cyan("Dependent type"),
     ]);
+    let target_id = target_id.trim();
     for dep in dependents {
         let immediate =
-            if dep.parent == target_id { "<self>".to_owned() } else { dep.parent.clone() };
+            if dep.parent.trim() == target_id { "<self>".to_owned() } else { dep.parent.clone() };
         rows.push(vec![
             dep.id.clone(),
             dep.depth.to_string(),

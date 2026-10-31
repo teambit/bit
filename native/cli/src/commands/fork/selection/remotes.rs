@@ -44,21 +44,32 @@ fn pattern(options: &Options, scope: &str) -> Option<String> {
     if !options.scope_fork {
         return Some(options.source.clone());
     }
+    let scope = scope.trim();
     options.pattern
         .as_ref()
         .map(|pattern| {
             patterns::split(pattern)
                 .iter()
-                .map(|part| {
-                    if part.starts_with(&format!("{scope}/")) {
-                        part.clone()
-                    } else {
-                        format!("{scope}/{part}")
-                    }
-                })
+                .filter_map(|part| qualify_scope_part(part, scope))
                 .collect::<Vec<_>>()
                 .join(",")
         })
+        .filter(|joined| !joined.is_empty())
+}
+fn qualify_scope_part(part: &str, scope: &str) -> Option<String> {
+    let trimmed = part.trim();
+    let (prefix, body) = trimmed
+        .strip_prefix('!')
+        .map_or(("", trimmed), |rest| ("!", rest.trim()));
+    if body.is_empty() {
+        return None;
+    }
+    let qualified = if body.starts_with(&format!("{scope}/")) {
+        body.to_owned()
+    } else {
+        format!("{scope}/{body}")
+    };
+    Some(format!("{prefix}{qualified}"))
 }
 fn list(root: &Path, scope: &str) -> io::Result<Vec<String>> {
     let cli = NodeCli::find()?;

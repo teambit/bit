@@ -18,7 +18,8 @@ pub(super) fn format(row: &mut Value) -> io::Result<()> {
             field
                 .get("fieldName")
                 .or_else(|| field.get("name")),
-        )?;
+        )?
+        .trim();
         if ![
             "packageDependencies",
             "devPackageDependencies",

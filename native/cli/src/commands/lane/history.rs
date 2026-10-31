@@ -29,6 +29,7 @@ fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     while let Some(arg) = iter.next() {
         if arg == "--" {
             for val in iter {
+                let val = val.trim();
                 (!val.is_empty() && !val.starts_with('-') && options.lane.replace(val).is_none())
                     .then_some(())?;
             }
@@ -45,6 +46,7 @@ fn apply_history_arg<'a>(
     iter: &mut impl Iterator<Item = &'a str>,
 ) -> Option<()> {
     if let Some(val) = arg.strip_prefix("--id=") {
+        let val = val.trim();
         if options.id.is_some() || val.is_empty() || val.starts_with('-') {
             return None;
         }
@@ -59,11 +61,16 @@ fn apply_history_arg<'a>(
         "--id" if options.id.is_none() => {
             options.id = Some(
                 iter.next()
+                    .map(str::trim)
                     .filter(|val| !val.is_empty() && !val.starts_with('-'))?,
             );
         }
-        value if !value.starts_with('-') && !value.is_empty() && options.lane.is_none() => {
-            options.lane = Some(value);
+        value
+            if !value.trim().starts_with('-')
+                && !value.trim().is_empty()
+                && options.lane.is_none() =>
+        {
+            options.lane = Some(value.trim());
         }
         _ => return None,
     }

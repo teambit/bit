@@ -49,8 +49,14 @@ pub(super) fn is_hub_component_modified(
 
 fn are_version_files_modified(scope_dir: &Path, comp_dir: &Path, ver_val: &Value) -> Option<bool> {
     for file_item in ver_val["files"].as_array()? {
-        let rel = file_item["relativePath"].as_str()?;
-        let blob_hash = file_item["file"].as_str()?;
+        let rel = file_item["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())?;
+        let blob_hash = file_item["file"]
+            .as_str()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())?;
         let disk_bytes = fs::read(comp_dir.join(rel)).ok()?;
         let (headers, body) = bit_object_import::read_raw_scope_object(scope_dir, blob_hash).ok()??;
         if headers.first()?.as_str() != "Source" || body != disk_bytes {

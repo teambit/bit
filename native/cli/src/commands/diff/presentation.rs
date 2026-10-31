@@ -62,7 +62,14 @@ pub(super) fn one(
         .get("version")
         .and_then(Value::as_str)
         .map(str::trim)
-        .filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"));
+        .filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"))
+        .or_else(|| {
+            target
+                .get("head")
+                .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|value| !value.is_empty() && !matches!(*value, "latest" | "head"))
+        });
     let versions = resolve_versions(version, from_version, to_version);
     let files_diff = result_files::files_diff(row, versions.left, versions.right)?;
     let fields_diff = if target["_removed"] == true && !versions.historical {

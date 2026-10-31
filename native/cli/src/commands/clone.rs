@@ -144,8 +144,10 @@ pub(super) fn validate_outside_workspace(
         return Ok(Some(dir_err));
     }
     if let Some(lane) = &options.lane
-        && !lane.contains('/')
         && options.remote.is_none()
+        && lane
+            .split_once('/')
+            .is_none_or(|(scope, name)| scope.trim().is_empty() || name.trim().is_empty())
     {
         return Ok(Some(format!(
             r#"unable to clone from lane "{lane}", the lane must be given with its scope, e.g. "my-org.my-scope/{lane}""#,
@@ -155,10 +157,12 @@ pub(super) fn validate_outside_workspace(
 }
 
 fn validate_component_id(id: &str) -> Result<String, String> {
+    let id = id.trim();
     let Some((scope, full_name)) = id
         .split('@')
         .next()
-        .and_then(|without_ver| without_ver.split_once('/'))
+        .and_then(|without_ver| without_ver.trim().split_once('/'))
+        .map(|(scope, full_name)| (scope.trim(), full_name.trim()))
         .filter(|(scope, full_name)| !scope.is_empty() && !full_name.is_empty())
     else {
         return Err(format!(
@@ -179,12 +183,13 @@ fn validate_component_id(id: &str) -> Result<String, String> {
 }
 
 pub(super) fn parse_component_name(id_str: &str) -> Option<String> {
-    let without_ver = id_str.split('@').next()?;
+    let without_ver = id_str.trim().split('@').next()?.trim();
     let (scope, full_name) = without_ver.split_once('/')?;
+    let (scope, full_name) = (scope.trim(), full_name.trim());
     if scope.is_empty() || full_name.is_empty() || full_name.ends_with('/') {
         return None;
     }
-    let name = full_name.rsplit('/').next()?;
+    let name = full_name.rsplit('/').next()?.trim();
     (!name.is_empty()).then(|| name.to_owned())
 }
 

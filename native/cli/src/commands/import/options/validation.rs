@@ -41,7 +41,9 @@ fn valid_import_flags(flags: &[&str]) -> bool {
             .iter()
             .all(|flag| {
                 allowed.contains(flag)
-                    || matches!(*flag, "--merge=manual" | "--merge=ours" | "--merge=theirs")
+                    || flag
+                        .strip_prefix("--merge=")
+                        .is_some_and(|val| matches!(val.trim(), "manual" | "ours" | "theirs"))
             })
 }
 

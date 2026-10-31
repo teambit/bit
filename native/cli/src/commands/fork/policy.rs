@@ -37,20 +37,7 @@ fn build_policy(
         }
     }
     for entry in dependencies(facts, old_packages, multiple)? {
-        let id = entry["dependencyId"]
-            .as_str()
-            .map(str::trim)
-            .filter(|id| !id.is_empty())
-            .ok_or_else(|| io::Error::other("fork dependency identity"))?;
-        let is_peer = entry["lifecycleType"]
-            .as_str()
-            .is_some_and(|kind| kind.trim() == "peer");
-        let field = if is_peer { "peerDependencies" } else { "dependencies" };
-        policy
-            .get_mut(field)
-            .and_then(Value::as_object_mut)
-            .ok_or_else(|| io::Error::other("fork root policy"))?
-            .insert(id.into(), entry["value"]["version"].clone());
+        insert_policy_entry(&mut policy, &entry)?;
     }
     for value in policy.values_mut() {
         if let Some(entries) = value.as_object_mut() {
@@ -58,6 +45,33 @@ fn build_policy(
         }
     }
     Ok(Value::Object(policy))
+}
+fn insert_policy_entry(
+    policy: &mut serde_json::Map<String, Value>,
+    entry: &Value,
+) -> io::Result<()> {
+    let id = entry["dependencyId"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| io::Error::other("fork dependency identity"))?;
+    let Some(version) = entry["value"]["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+    else {
+        return Ok(());
+    };
+    let is_peer = entry["lifecycleType"]
+        .as_str()
+        .is_some_and(|kind| kind.trim().eq_ignore_ascii_case("peer"));
+    let field = if is_peer { "peerDependencies" } else { "dependencies" };
+    policy
+        .get_mut(field)
+        .and_then(Value::as_object_mut)
+        .ok_or_else(|| io::Error::other("fork root policy"))?
+        .insert(id.into(), Value::String(version.to_owned()));
+    Ok(())
 }
 fn dependencies(
     facts: &[Value],

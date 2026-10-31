@@ -111,12 +111,19 @@ impl Inventory {
         if finish_kind.is_empty() {
             return Err(io::Error::other("inventory scan finish kind is empty"));
         }
-        begin["rootPolicy"] = self.root_policy();
+        let Some(begin_obj) = begin.as_object_mut() else {
+            return Err(io::Error::other("inventory scan begin request must be a JSON object"));
+        };
+        begin_obj.insert("rootPolicy".into(), self.root_policy());
         let scan: Scan = engine.request(&begin)?;
         let nested: Vec<String> = scan.nested
             .iter()
             .flat_map(|row| {
-                row.patterns.iter().map(|pattern| rebase::pattern(pattern, &row.directory))
+                row.patterns
+                    .iter()
+                    .map(|pattern| pattern.trim())
+                    .filter(|pattern| !pattern.is_empty() && !pattern.starts_with('#'))
+                    .map(|pattern| rebase::pattern(pattern, &row.directory))
             })
             .collect();
         // Compiled in this order: the regex cache is shared.

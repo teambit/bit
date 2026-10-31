@@ -117,12 +117,13 @@ fn file_list(value: &str) -> Option<Vec<String>> {
 }
 
 fn set_boolean(options: &mut Options, flag: &str) -> bool {
+    let flag = flag.trim();
     if set_combined_short(options, flag) {
         return true;
     }
     let (key, val) = match flag.split_once('=') {
-        Some((key, "true")) if key.starts_with("--") => (key, true),
-        Some((key, "false")) if key.starts_with("--") => (key, false),
+        Some((key, raw)) if key.starts_with("--") && raw.trim() == "true" => (key.trim(), true),
+        Some((key, raw)) if key.starts_with("--") && raw.trim() == "false" => (key.trim(), false),
         None => (flag, true),
         _ => return false,
     };

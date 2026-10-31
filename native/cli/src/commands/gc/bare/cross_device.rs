@@ -7,6 +7,14 @@ pub(super) fn copy_remove(source: &Path, target: &Path) -> io::Result<()> {
         return Err(io::Error::from(io::ErrorKind::InvalidInput));
     }
     let metadata = fs::symlink_metadata(source).map_err(|error| failure(error, "lstat", source))?;
+    if metadata.is_dir() {
+        return Err(paired_failure(
+            io::Error::from(io::ErrorKind::InvalidInput),
+            "copyfile",
+            source,
+            target,
+        ));
+    }
     if metadata.is_symlink() {
         copy_link(source, target)?;
     } else {

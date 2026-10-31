@@ -27,10 +27,16 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = Options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native doctor grammar".into()));
     };
-    if options.validate().is_err() && env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    let in_ci = env::var("CI")
+        .ok()
+        .is_some_and(|val| {
+            let trimmed = val.trim();
+            !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
+        });
+    if options.validate().is_err() && in_ci {
         return Ok(Outcome::Declined("CI doctor option validation error stack".into()));
     }
-    if colored_unknown(&options, Chalk::detect(args)) {
+    if in_ci && colored_unknown(&options, Chalk::detect(args)) {
         return Ok(Outcome::Declined("published colored diagnosis error stack".into()));
     }
     let context = match prepare_context(&options) {

@@ -25,10 +25,12 @@ pub(super) fn report(lanes: &[LaneData], merged: bool, chalk: Chalk) -> String {
 fn lane_name(id: &serde_json::Value) -> &str {
     id["name"]
         .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
         .or_else(|| {
             id.as_str()
                 .map(str::trim)
-                .map(|raw| raw.rsplit_once('/').map_or(raw, |(_, name)| name))
+                .map(|raw| raw.rsplit_once('/').map_or(raw, |(_, name)| name.trim()))
         })
-        .map_or("", str::trim)
+        .unwrap_or("")
 }

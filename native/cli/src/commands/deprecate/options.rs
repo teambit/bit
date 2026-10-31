@@ -47,8 +47,10 @@ fn apply_arg<'a>(
             Some(index + 2)
         }
         arg if !undo && apply_inline_flag(arg, replacement, range) => Some(index + 1),
-        arg if !arg.starts_with('-') && !arg.is_empty() && pattern.is_none() => {
-            *pattern = Some(arg);
+        arg if pattern.is_none()
+            && let Some(val) = valid_val(arg) =>
+        {
+            *pattern = Some(val);
             Some(index + 1)
         }
         _ => None,

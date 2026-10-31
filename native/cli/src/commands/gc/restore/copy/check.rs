@@ -32,7 +32,7 @@ pub(super) fn parents(source: &Path, target: &Path, metadata: &fs::Metadata) -> 
                 return Err(subdirectory(source, target));
             }
             Ok(_) => {}
-            Err(error) if error.kind() == io::ErrorKind::NotFound => break,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => continue,
             Err(error) => return Err(failure(error, "stat", parent)),
         }
     }

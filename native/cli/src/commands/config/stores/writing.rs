@@ -7,7 +7,12 @@ use std::{
 };
 
 pub(super) fn write(store: &Store) -> io::Result<()> {
-    if store.path.as_os_str().is_empty() {
+    if store.path.as_os_str().is_empty()
+        || store.path
+            .to_string_lossy()
+            .trim()
+            .is_empty()
+    {
         return Err(io::Error::other("config store path is empty"));
     }
     if store.origin == "workspace" {
@@ -21,7 +26,10 @@ pub(super) fn write(store: &Store) -> io::Result<()> {
     } else {
         serde_json::to_vec_pretty(&value)?
     };
-    if let Some(parent) = store.path.parent() {
+    if let Some(parent) = store.path
+        .parent()
+        .filter(|dir| !dir.as_os_str().is_empty())
+    {
         fs::create_dir_all(parent)?;
     }
     if store.origin == "global" {
@@ -57,7 +65,10 @@ fn scope(store: &Store) -> io::Result<Value> {
 }
 
 fn workspace(store: &Store) -> io::Result<()> {
-    let root = store.root.as_deref().ok_or_else(|| io::Error::other("workspace config root"))?;
+    let root = store.root
+        .as_deref()
+        .filter(|path| !path.as_os_str().is_empty() && !path.to_string_lossy().trim().is_empty())
+        .ok_or_else(|| io::Error::other("workspace config root"))?;
     let identity = aspect(&store.source).to_owned();
     let Some((key, value)) = &store.change else { return Ok(()) };
     let mut document = Document::parse(&fs::read_to_string(&store.path)?)?;

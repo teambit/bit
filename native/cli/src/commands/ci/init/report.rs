@@ -99,7 +99,7 @@ fn header_warnings(
         } else {
             "no remote names the default branch"
         };
-        lines.push(warning(&format!("{why}, so the workflows and AGENTS.md use \"{}\". If that's wrong,\n  edit the branch filters in both workflow files and the branch in the AGENTS.md sync section.", report.target.branch), chalk));
+        lines.push(warning(&format!("{why}, so the workflows and AGENTS.md use \"{}\". If that's wrong,\n  edit the branch filters in both workflow files and the branch in the AGENTS.md sync section.", report.target.branch.trim()), chalk));
     }
     if let Some(origin) = redacted.filter(|origin| {
         Some(*origin) == inert && !remote::local(origin) && remote::host(origin).is_some()
@@ -199,7 +199,10 @@ fn staging(report: &Report, chalk: Chalk) -> Vec<String> {
         } else {
             format!(" {}", shell_word(&report.target.repo_root))
         };
-        lines.push(chalk.cyan(&format!("git init -b {}{root}", shell_word(&report.target.branch))));
+        lines.push(chalk.cyan(&format!(
+            "git init -b {}{root}",
+            shell_word(report.target.branch.trim()),
+        )));
     }
     if !report.changes.commits {
         lines.push(chalk.cyan(if report.target.repo_root == "." {
@@ -227,8 +230,10 @@ pub(super) fn commit(report: &Report, chalk: Chalk) -> Vec<String> {
     if report.changes.commits && targets.is_empty() {
         lines.push(chalk.dim("nothing to commit: these files are already committed"));
     } else {
-        let message =
-            format!("git commit -m {}", shell_word(&format!("Mirror {}", report.target.scope)));
+        let message = format!(
+            "git commit -m {}",
+            shell_word(&format!("Mirror {}", report.target.scope.trim())),
+        );
         if report.changes.commits {
             lines.push(chalk.cyan(&format!(r"{message} -- \")));
             lines.push(chalk.cyan(&format!("  {}", paths(&targets))));

@@ -16,9 +16,10 @@ impl Plan {
         }
         let batch_size = validated_batch_size(root)?;
         let selection = selection(options);
+        let exact_count = selection.exact.as_ref().map_or(0, Vec::len);
         let mut loaded = Loaded::prepare(root, &selection)?;
-        if !options.components.is_empty() {
-            loaded.progress.loads = vec![options.components.len()];
+        if exact_count > 0 {
+            loaded.progress.loads = vec![exact_count];
         }
         let components = loaded.components()?;
         let links = Links::prepare(root, &loaded)?;
@@ -40,13 +41,17 @@ impl Plan {
             output.status("compiling components...");
         }
         self.loaded.commit(root)?;
+        let exact_count = options.components
+            .iter()
+            .filter(|component| !component.trim().is_empty())
+            .count();
         for count in self.loaded.progress.loads
             .iter()
             .copied()
-            .chain(std::iter::once(if options.components.is_empty() {
+            .chain(std::iter::once(if exact_count == 0 {
                 self.compiled.len()
             } else {
-                options.components.len()
+                exact_count
             }))
         {
             if count > 0 {

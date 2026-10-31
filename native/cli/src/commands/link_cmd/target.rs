@@ -123,7 +123,7 @@ fn add_policy_peers(policy: &Value, peers: &mut Vec<String>) {
 
 fn add_object_peers(map: &serde_json::Map<String, Value>, peers: &mut Vec<String>) {
     for (name, val) in map {
-        if val.as_str() != Some("-") {
+        if val.as_str().map(str::trim) != Some("-") {
             push_unique(peers, name);
         }
     }
@@ -132,7 +132,11 @@ fn add_object_peers(map: &serde_json::Map<String, Value>, peers: &mut Vec<String
 fn add_array_peers(items: &[Value], peers: &mut Vec<String>) {
     for item in items {
         if let Some(name) = item.get("name").and_then(Value::as_str)
-            && item.get("version").and_then(Value::as_str) != Some("-")
+            && item
+                .get("version")
+                .and_then(Value::as_str)
+                .map(str::trim)
+                != Some("-")
         {
             push_unique(peers, name);
         }
@@ -140,7 +144,7 @@ fn add_array_peers(items: &[Value], peers: &mut Vec<String>) {
 }
 
 fn add_env_peers(env_id: &str, peers: &mut Vec<String>) {
-    let base_env = aspect_id_without_version(env_id);
+    let base_env = aspect_id_without_version(env_id.trim()).trim();
     if matches!(
         base_env,
         "teambit.react/react"

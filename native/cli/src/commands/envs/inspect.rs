@@ -239,9 +239,10 @@ pub(super) fn run_bare_scope_get(
     let Some(rows) = load_bare_scope_index(scope_dir) else {
         return Ok(Outcome::Declined("bare-scope index missing".into()));
     };
+    let component = component.trim();
     let (bare, req_ver) = component
         .split_once('@')
-        .map_or((component, None), |(bare, ver)| (bare, Some(ver)));
+        .map_or((component, None), |(bare, ver)| (bare.trim(), Some(ver.trim())));
     let matched = rows
         .iter()
         .find(|row| {

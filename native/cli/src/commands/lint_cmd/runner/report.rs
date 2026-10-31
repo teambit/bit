@@ -96,9 +96,8 @@ fn summary(result: &Value, count: usize, elapsed: u64) -> String {
         .iter()
         .filter_map(|(_, total, components, label)| {
             let count = result[total].as_u64().unwrap_or(0);
-            (count > 0).then(|| {
-                format!("total of {count} {label} (from {} components)", result[components])
-            })
+            let comps = result[components].as_u64().unwrap_or(0);
+            (count > 0).then(|| format!("total of {count} {label} (from {comps} components)"))
         })
         .collect();
     format!("linted {count} components in {seconds} seconds\n{}", totals.join("\n"))

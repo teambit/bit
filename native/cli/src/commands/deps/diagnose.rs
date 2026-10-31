@@ -35,7 +35,7 @@ pub(super) fn run_package(
     let report = match inspect(root, package) {
         Ok(report) => report,
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
                 return Ok(Outcome::Declined("CI deps diagnose error stack".into()));
             }
             return workspace_command::execute_then(root, args, "diagnose", |_| {
@@ -171,10 +171,14 @@ fn render(report: &PackageReport<'_>, chalk: Chalk) -> String {
 }
 
 pub(super) fn table(rows: &[Vec<String>]) -> String {
-    let widths = (0..rows[0].len())
+    let Some(first) = rows.first() else {
+        return String::new();
+    };
+    let widths = (0..first.len())
         .map(|column| {
             rows.iter()
-                .map(|row| row[column].chars().count())
+                .filter_map(|row| row.get(column))
+                .map(|cell| cell.chars().count())
                 .max()
                 .unwrap_or_default()
         })

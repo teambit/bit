@@ -108,7 +108,18 @@ fn source_facts(
     print!("{}", linker.take_stdout());
     source["sourceConfigs"] = facts["configs"].clone();
     source["sourceId"] = facts["sourceId"].clone();
-    source["version"] = facts["sourceId"]["version"].clone();
+    if let Some(version) = facts["sourceId"]["version"]
+        .as_str()
+        .or_else(|| {
+            facts["sourceId"]
+                .as_str()
+                .and_then(|raw| raw.rsplit_once('@').map(|(_, ver)| ver))
+        })
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+    {
+        source["version"] = Value::String(version.to_owned());
+    }
     Ok(facts)
 }
 fn bitmap(root: &Path) -> io::Result<Value> {

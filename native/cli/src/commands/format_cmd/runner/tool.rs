@@ -28,7 +28,11 @@ pub(super) fn format(files: &[Value]) -> io::Result<Vec<Value>> {
     if !output.status.success() || !output.stderr.is_empty() {
         return Err(invalid("formatter tool rejected source"));
     }
-    serde_json::from_slice(&output.stdout).map_err(io::Error::other)
+    let formatted: Vec<Value> = serde_json::from_slice(&output.stdout).map_err(io::Error::other)?;
+    if formatted.len() != files.len() {
+        return Err(invalid("formatter tool output count mismatch"));
+    }
+    Ok(formatted)
 }
 
 fn write_formatter_input(child: &mut std::process::Child, bytes: &[u8]) -> io::Result<()> {

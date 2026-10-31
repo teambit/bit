@@ -46,6 +46,7 @@ fn prepare(
     source["refactorVariables"] = json!(!options.multiple());
     source["refactorIdentity"] = json!(!options.scope_fork);
     source["incrementPathIfConflicted"] = json!(options.scope_fork);
+    let scope = scope.trim();
     let kernel = component_fork::Options {
         source: source["identity"]
             .as_str()
@@ -53,15 +54,21 @@ fn prepare(
             .map(str::trim)
             .unwrap_or_default()
             .to_owned(),
-        target: options.target.clone(),
-        scope: Some(scope.trim().into()),
-        path: if remote_multiple { None } else { options.path.clone() },
+        target: clean_opt(options.target.as_deref()),
+        scope: (!scope.is_empty()).then(|| scope.to_owned()),
+        path: if remote_multiple { None } else { clean_opt(options.path.as_deref()) },
         remote,
         preserve: options.flags.preserve && !options.multiple(),
         ast: options.flags.ast,
         no_link: options.flags.no_link && !remote_multiple,
     };
     (source, kernel)
+}
+fn clean_opt(value: Option<&str>) -> Option<String> {
+    value
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .map(str::to_owned)
 }
 fn environment(
     root: &Path,

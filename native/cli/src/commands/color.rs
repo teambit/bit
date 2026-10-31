@@ -141,10 +141,11 @@ fn encase_line_breaks(text: &str, close: &str, open: &str) -> String {
 /// `has-flag`: `--<flag>` among the arguments, before any `--`.
 fn has_flag(args: &[OsString], flag: &str) -> bool {
     let wanted = format!("--{flag}");
-    let position = args
+    let tail = args.get(1..).unwrap_or(&[]);
+    let position = tail
         .iter()
         .position(|arg| *arg == *wanted);
-    let terminator = args.iter().position(|arg| arg == "--");
+    let terminator = tail.iter().position(|arg| arg == "--");
     position.is_some_and(|position| terminator.is_none_or(|terminator| position < terminator))
 }
 

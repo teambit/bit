@@ -51,10 +51,10 @@ impl Diagnosis {
     pub fn listing(&self) -> Value {
         json!({"name":self.name,"description":self.description,"category":self.category})
     }
-    pub fn result(&self, bare: Value, symptoms: String, treatment: &str) -> Value {
+    pub fn result(&self, bare: Value, symptoms: &str, treatment: &str) -> Value {
         let valid = is_valid(&bare);
         let mut result = json!({"diagnosisMetaData":{"category":self.category,"name":self.name,"description":self.description},
-            "bareResult":null,"formattedSymptoms":if valid {String::new()} else {symptoms},
+            "bareResult":null,"formattedSymptoms":if valid {""} else {symptoms.trim()},
             "formattedManualTreat":if valid {""} else {treatment.trim()}});
         result["bareResult"] = bare;
         result

@@ -11,7 +11,7 @@ impl Repository {
     pub(super) fn display(&self) -> String {
         let repo = format!("{}/{}", self.owner.trim(), self.name.trim());
         let host = self.host.trim();
-        if host == "github.com" { repo } else { format!("{host}/{repo}") }
+        if host.eq_ignore_ascii_case("github.com") { repo } else { format!("{host}/{repo}") }
     }
 }
 fn server() -> Option<Url> {
@@ -30,7 +30,11 @@ pub(super) fn host(remote: &str) -> Option<String> {
 pub(super) fn repository(remote: &str) -> Option<Repository> {
     let remote = super::trim(remote);
     let host = host(remote)?;
-    if host != "github.com" && server().as_ref().and_then(Url::host_str) != Some(host.as_str()) {
+    let matches_server = server()
+        .as_ref()
+        .and_then(Url::host_str)
+        .is_some_and(|srv| srv.eq_ignore_ascii_case(&host));
+    if !host.eq_ignore_ascii_case("github.com") && !matches_server {
         return None;
     }
     let escaped = host
@@ -51,6 +55,9 @@ pub(super) fn repository(remote: &str) -> Option<Repository> {
         format!(r"(?:^|@){escaped}[:/]([^/]+/[^/]+?)(?:\.git)?$")
     };
     let repo = capture(remote, &pattern, 1)?;
+    parse_repository(&repo, host)
+}
+fn parse_repository(repo: &str, host: String) -> Option<Repository> {
     let (owner, name) = repo
         .split_once('/')
         .map(|(owner, name)| (owner.trim(), name.trim()))
@@ -148,7 +155,10 @@ fn api_override(server: &Url, raw: &str) -> Result<String, String> {
         .ok()
         .filter(|api| {
             api.host_str()
-                .is_some_and(|host| host == server_host || host == format!("api.{server_host}"))
+                .is_some_and(|host| {
+                    host.eq_ignore_ascii_case(server_host)
+                        || host.eq_ignore_ascii_case(&format!("api.{server_host}"))
+                })
         })
     else {
         return Err(refuse(&format!(

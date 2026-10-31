@@ -44,7 +44,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
             return Ok(Outcome::Declined("CI compile delegated".into()));
         }
 
@@ -52,7 +52,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Err(io::Error::other(OUTSIDE_WORKSPACE_ERR))
         });
     };
-    if env::var_os("CI").is_none_or(|val| val.is_empty())
+    if env::var_os("CI").is_none_or(|val| val.to_string_lossy().trim().is_empty())
         && let Some(err) = validate_compile_selectors(&root, &options)
     {
         return emit_compile_error(&root, args, options.json, err);
@@ -163,8 +163,9 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         match arg {
             "--" => {
                 for item in iter {
-                    (!item.is_empty() && !item.starts_with('-')).then_some(())?;
-                    options.components.push(item.to_owned());
+                    let trimmed = item.trim();
+                    (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;
+                    options.components.push(trimmed.to_owned());
                 }
                 break;
             }

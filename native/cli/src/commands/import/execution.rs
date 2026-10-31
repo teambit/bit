@@ -156,9 +156,15 @@ fn remove_imported_packages_from_root_policy(root: &Path, ids: &[String]) -> io:
 
 fn imported_package_name(id: &str) -> Option<String> {
     let id = id.trim();
-    let without_ver = id.rsplit_once('@').map_or(id, |(base, _)| base.trim());
+    let without_ver = match id.rsplit_once('@') {
+        Some((base, _)) if !base.trim().is_empty() => base.trim(),
+        _ => id,
+    };
     let (scope, name) = without_ver.split_once('/')?;
-    let scope = scope.trim();
+    let scope = scope
+        .trim()
+        .trim_start_matches('@')
+        .trim();
     let name = name.trim().trim_matches('/');
     if scope.is_empty() || name.is_empty() {
         return None;

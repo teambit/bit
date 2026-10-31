@@ -76,7 +76,9 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--include-deps=false" => opts.include_deps = false,
             "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
             | "--color=false" | "--color=always" | "--color=never" => {}
-            val if !val.starts_with('-') && !val.is_empty() => opts.names.push(val.to_owned()),
+            val if !val.trim().starts_with('-') && !val.trim().is_empty() => {
+                opts.names.push(val.trim().to_owned());
+            }
             _ => return None,
         }
     }

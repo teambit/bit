@@ -36,12 +36,14 @@ fn write(root: &Path, file: Option<(PathBuf, Vec<u8>)>) -> Option<String> {
     Some(relative)
 }
 fn agent(plan: &Plan, options: &Options) -> io::Result<Option<(PathBuf, Vec<u8>)>> {
-    let name = match options.agent.as_deref().map(str::trim) {
+    let raw_agent = options.agent.as_deref().map(str::trim);
+    let name = match raw_agent.map(str::to_ascii_lowercase).as_deref() {
         None | Some("") => "AGENTS.md",
         Some("claude") => "CLAUDE.md",
         Some("cursor") => ".cursor/rules/bit.mdc",
         Some("copilot") => ".github/copilot-instructions.md",
-        Some(value) => {
+        Some(_) => {
+            let value = raw_agent.unwrap_or_default();
             return Err(io::Error::other(format!(
                 r#"unknown --agent value "{value}". supported values: claude, cursor, copilot"#,
             )));
@@ -56,7 +58,7 @@ fn agent(plan: &Plan, options: &Options) -> io::Result<Option<(PathBuf, Vec<u8>)
             ".github/copilot-instructions.md",
         ]
         .iter()
-        .any(|path| plan.root.join(path).exists())
+        .any(|path| fs::symlink_metadata(plan.root.join(path)).is_ok())
     {
         return Ok(None);
     }

@@ -50,7 +50,7 @@ pub(super) fn preflight(scope: &Path) -> io::Result<()> {
         return Ok(());
     }
     let mut candidates = find_restoring_leftovers(scope);
-    if scope.join("deleted-objects").exists() {
+    if fs::symlink_metadata(scope.join("deleted-objects")).is_ok() {
         candidates.push("deleted-objects".into());
     }
     if candidates.is_empty() {
@@ -109,7 +109,7 @@ fn find_restoring_leftovers(scope_dir: &Path) -> Vec<String> {
 }
 
 fn rollback(source: &Path, target: &Path) -> io::Result<()> {
-    if !target.exists() {
+    if fs::symlink_metadata(target).is_err() {
         fs::rename(source, target)
             .map_err(|error| paired_failure(error, "rename", source, target))?;
     }

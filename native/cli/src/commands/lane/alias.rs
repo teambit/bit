@@ -18,6 +18,7 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
     let [name, alias] = tokens.as_slice() else {
         return Ok(Outcome::Declined("outside the native lane alias grammar".into()));
     };
+    let (name, alias) = (name.trim(), alias.trim());
     if !valid_alias_token(name) || !valid_alias_token(alias) {
         return Ok(Outcome::Declined("unsupported lane alias".into()));
     }

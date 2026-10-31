@@ -133,8 +133,11 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--list=false" => options.list = false,
             "-j" | "--json" | "--json=true" => options.json = true,
             "--json=false" => options.json = false,
-            val if !val.starts_with('-') && options.pattern.is_none() => {
-                options.pattern = Some(val.to_owned());
+            val if !val.trim().starts_with('-')
+                && !val.trim().is_empty()
+                && options.pattern.is_none() =>
+            {
+                options.pattern = Some(val.trim().to_owned());
             }
             val => apply_short_internalize_flags(val, &mut options)?,
         }

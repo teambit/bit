@@ -161,7 +161,11 @@ fn summary(row: &Value, title: &str, stat: bool) -> io::Result<String> {
     let width = if stat {
         files
             .iter()
-            .filter_map(|file| file["filePath"].as_str().map(str::len))
+            .filter_map(|file| {
+                file["filePath"]
+                    .as_str()
+                    .map(|path| path.trim().len())
+            })
             .max()
             .unwrap_or(0)
     } else {
@@ -169,13 +173,13 @@ fn summary(row: &Value, title: &str, stat: bool) -> io::Result<String> {
     };
     let mut lines = Vec::new();
     for file in files {
-        let status = match text(file.get("status"))? {
+        let status = match text(file.get("status"))?.trim() {
             "MODIFIED" => "M",
             "NEW" => "A",
             "DELETED" => "D",
             _ => return Err(decline("diff status")),
         };
-        let path = text(file.get("filePath"))?;
+        let path = text(file.get("filePath"))?.trim();
         if stat {
             let added = file["additions"].as_u64().ok_or_else(|| decline("diff additions"))?;
             let deleted = file["deletions"].as_u64().ok_or_else(|| decline("diff deletions"))?;
@@ -185,7 +189,7 @@ fn summary(row: &Value, title: &str, stat: bool) -> io::Result<String> {
         }
     }
     for field in fields {
-        lines.push(format!("F {}", text(field.get("fieldName"))?));
+        lines.push(format!("F {}", text(field.get("fieldName"))?.trim()));
     }
     if lines.is_empty() {
         return Ok(format!("{title}\n(no matching changes)"));

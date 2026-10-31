@@ -66,7 +66,8 @@ fn hashes(objects: &Path) -> io::Result<Vec<String>> {
                 "{}{}",
                 directory.file_name().to_string_lossy(),
                 entry.file_name().to_string_lossy(),
-            );
+            )
+            .to_ascii_lowercase();
             if !entry.file_type()?.is_file()
                 || hash.len() != 40
                 || !hash.bytes().all(|byte| byte.is_ascii_hexdigit())

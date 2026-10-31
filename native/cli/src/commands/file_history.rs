@@ -69,11 +69,15 @@ pub(super) fn classify_target(root: &Path, input: &str) -> io::Result<Target> {
     else {
         return Ok(Target::Unowned);
     };
-    if entry.version.is_none() {
+    if entry.version
+        .as_deref()
+        .map(str::trim)
+        .is_none_or(str::is_empty)
+    {
         return Ok(Target::Unversioned);
     }
     Ok(Target::Versioned {
-        identity: entry.identity.clone(),
+        identity: entry.identity.trim().to_string(),
         file: relative.to_string(),
         lane: bitmap.lane,
     })

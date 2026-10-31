@@ -149,8 +149,11 @@ fn root_aspects(context: &Value) -> io::Result<bool> {
         .as_object()
         .is_some_and(|config| {
             config
-                .keys()
-                .any(|id| {
+                .iter()
+                .filter(|(_, val)| {
+                    *val != &Value::Bool(false) && val.as_str().map(str::trim) != Some("-")
+                })
+                .any(|(id, _)| {
                     let bare = bit_install::config::aspect_id_without_version(id.trim());
                     bare.contains('/')
                         && !core.iter().any(|item| item == bare)

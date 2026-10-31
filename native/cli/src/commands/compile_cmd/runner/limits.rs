@@ -47,7 +47,13 @@ pub(super) fn outputs(compiled: &[Compiled]) -> io::Result<()> {
         }
         let mut paths = HashSet::new();
         for file in &row.files {
-            if file.path.as_os_str().is_empty() || !paths.insert(&file.path) {
+            if file.path.as_os_str().is_empty()
+                || file.path
+                    .to_string_lossy()
+                    .trim()
+                    .is_empty()
+                || !paths.insert(&file.path)
+            {
                 return Err(io::Error::other("compiler colliding outputs"));
             }
         }

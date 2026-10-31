@@ -191,15 +191,25 @@ fn configure_package(
     existing: bool,
     warning: &mut String,
 ) -> io::Result<()> {
+    let package_obj =
+        value.as_object_mut().ok_or_else(|| io::Error::other("init package object"))?;
     if options.resets.repair || options.resets.hard {
-        value
-            .as_object_mut()
-            .ok_or_else(|| io::Error::other("init package object"))?
-            .shift_remove("bit");
+        package_obj.shift_remove("bit");
     }
     if options.flags.external_pm && !options.flags.no_package_json {
-        value["scripts"]["postinstall"] = json!("bit link && bit compile && bit ws-config write");
-    } else if existing && value["type"] != "module" && !options.flags.no_package_json {
+        if !package_obj.get("scripts").is_some_and(Value::is_object) {
+            package_obj.insert("scripts".into(), json!({}));
+        }
+        package_obj["scripts"]["postinstall"] =
+            json!("bit link && bit compile && bit ws-config write");
+    } else if existing
+        && package_obj
+            .get("type")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            != Some("module")
+        && !options.flags.no_package_json
+    {
         "\nEnable ESM by adding \"type\":\"module\" to the package.json file (https://nodejs.org/api/esm.html#enabling). If you are looking to use CJS. Use the Bit CJS environments.".clone_into(warning);
     }
     Ok(())

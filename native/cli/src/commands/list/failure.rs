@@ -99,14 +99,16 @@ fn bare(
     session: &Session,
     error: &io::Error,
 ) -> io::Result<Outcome> {
-    let output = workspace_command::loader_output(Chalk::detect(args), options.json);
+    let chalk = Chalk::detect(args);
+    let output = workspace_command::loader_output(chalk, options.json);
     if !options.json {
         output.restart(r#"running command "list"..."#);
         output.status("listing remote components");
     }
     write_session(args, session, &output)?;
     output.stop();
-    eprintln!("{}", Chalk::detect(args).red(&error.to_string()));
+    let message = error.to_string();
+    eprintln!("{}", chalk.red(message.trim_end_matches(['\r', '\n'])));
     Ok(Outcome::Exit(ExitCode::FAILURE))
 }
 

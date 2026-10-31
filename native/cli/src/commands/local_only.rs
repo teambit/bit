@@ -45,7 +45,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;
     let label = subcommand.loader_label();
     let Some(root) = workspace::root(&cwd) else {
-        if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+        if ci_enabled() {
             return Ok(Outcome::Declined("CI local-only error stack".to_owned()));
         }
         return workspace_command::execute_failure_scope(
@@ -63,7 +63,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             workspace_command::execute_then(&root, args, label, |_output| prepared.commit(chalk))
         }
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            if ci_enabled() {
                 return Ok(Outcome::Declined("CI local-only error stack".to_owned()));
             }
             workspace_command::execute_then(&root, args, label, |_output| {
@@ -72,6 +72,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         }
         Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("local-only: {reason}"))),
     }
+}
+
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
 }
 
 impl Subcommand {

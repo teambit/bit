@@ -241,6 +241,8 @@ fn ensure_bit_roots_dirs(
 ) -> io::Result<Option<PathBuf>> {
     let bit_roots = ws_config.workspace.root_components_directory
         .as_deref()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
         .map_or_else(
             || root.join("node_modules/.bit_roots"),
             |dir| root.join(dir).join(".bit_roots"),

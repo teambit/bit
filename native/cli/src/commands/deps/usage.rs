@@ -284,13 +284,14 @@ fn package_matches_query(
     dep_name: &str,
 ) -> bool {
     let (query_name, query_ver) = split_pkg_to_name_and_ver(dep_name);
-    let name_ok = pkg.0 == query_name
+    let query_name = query_name.trim();
+    let name_ok = pkg.0.trim() == query_name
         || reverse_map
             .get(node_id)
             .is_some_and(|edges| {
                 edges
                     .iter()
-                    .any(|(_, alias)| alias == query_name)
+                    .any(|(_, alias)| alias.trim() == query_name)
             });
     name_ok && version_matches_query(pkg.1, query_ver)
 }

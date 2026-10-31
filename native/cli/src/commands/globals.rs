@@ -114,8 +114,11 @@ fn read_scope_layer(cwd: &Path, ws_root: Option<&Path>) -> io::Result<Value> {
         .map(scope_path)
         .or_else(|| {
             cwd.ancestors()
-                .find(|path| path.join("scope.json").is_file())
-                .map(Path::to_owned)
+                .find_map(|path| {
+                    [path.to_path_buf(), path.join(".bit"), path.join(".git/bit")]
+                        .into_iter()
+                        .find(|candidate| candidate.join("scope.json").is_file())
+                })
         });
     let Some(dir) = scope_dir.filter(|path| path.join("scope.json").is_file()) else {
         return Ok(Value::Null);

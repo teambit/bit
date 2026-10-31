@@ -6,13 +6,13 @@ pub(super) fn requires_node(root: &Path, history: &str) -> bool {
     if !is_ci_enabled() {
         return false;
     }
+    let history = history.trim();
+    if history.is_empty() {
+        return true;
+    }
     let remotes = cache_root().join("config/global-remotes.json");
-    bit_object_import::lane_history::ci_requires_published_diagnostic(
-        root,
-        &remotes,
-        history.trim(),
-    )
-    .unwrap_or(true)
+    bit_object_import::lane_history::ci_requires_published_diagnostic(root, &remotes, history)
+        .unwrap_or(true)
 }
 
 fn is_ci_enabled() -> bool {
@@ -20,6 +20,9 @@ fn is_ci_enabled() -> bool {
         .is_some_and(|value| {
             let text = value.to_string_lossy();
             let trimmed = text.trim();
-            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+            !trimmed.is_empty()
+                && trimmed != "0"
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
         })
 }

@@ -22,7 +22,7 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
         if is_ci_active() {
             return Ok(Outcome::Declined("not inside a workspace".into()));
         }
-        let msg = format!(r#"unable to checkout history "{}" while on main"#, options.id);
+        let msg = format!(r#"unable to checkout history "{}" while on main"#, options.id.trim());
         return workspace_command::execute_failure_scope(
             &cwd,
             args,

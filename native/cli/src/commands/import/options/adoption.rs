@@ -54,10 +54,11 @@ fn inline_value(values: &mut Values<'_>, argument: &str) -> Option<Option<()>> {
         .map(|val| set_adoption_slot(&mut values.dependents_via, val))
 }
 fn set_adoption_slot(field: &mut Option<String>, value: &str) -> Option<()> {
-    if field.is_some() || value.trim().is_empty() || value.starts_with('-') || value.len() > 4096 {
+    let trimmed = value.trim();
+    if field.is_some() || trimmed.is_empty() || trimmed.starts_with('-') || trimmed.len() > 4096 {
         return None;
     }
-    *field = Some(value.to_owned());
+    *field = Some(trimmed.to_owned());
     Some(())
 }
 impl AdoptionOptions {

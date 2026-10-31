@@ -14,7 +14,10 @@ impl Progress {
                 output.status(&format!("loading {count} component(s)"));
             }
         }
-        if self.identities.is_empty() {
+        if !self.identities
+            .iter()
+            .any(|id| !id.trim().is_empty())
+        {
             return;
         }
         output.status(&format!("formatting components (total: {})", self.identities.len()));

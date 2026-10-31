@@ -210,6 +210,7 @@ fn merge_bitmap_contents(current: &str, other: &str, strategy: &str) -> io::Resu
     }
     if let Some(schema) = cur_obj
         .get("$schema-version")
+        .or_else(|| other_obj.get("$schema-version"))
         .filter(|val| !val.is_null())
     {
         sorted.insert("$schema-version".to_owned(), schema.clone());
@@ -307,6 +308,12 @@ fn apply_git_merge_driver(cwd: &Path, global: bool) -> io::Result<()> {
         let mut file = OpenOptions::new().append(true).open(&attr_path)?;
         write!(file, "\n{GIT_ATTRIBUTES_LINE}")
     } else {
+        if let Some(parent) = attr_path
+            .parent()
+            .filter(|parent| !parent.as_os_str().is_empty())
+        {
+            fs::create_dir_all(parent)?;
+        }
         fs::write(&attr_path, GIT_ATTRIBUTES_LINE)
     }
 }

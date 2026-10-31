@@ -70,7 +70,7 @@ fn eligible(options: &Options, retained: bool) -> bool {
 fn bare(raw: &str) -> &str {
     let trimmed = raw.trim();
     match trimmed.rsplit_once('@') {
-        Some((prefix, _)) if !prefix.is_empty() => prefix.trim(),
+        Some((prefix, _)) if !prefix.trim().is_empty() => prefix.trim(),
         _ => trimmed,
     }
 }

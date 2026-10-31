@@ -141,6 +141,8 @@ fn valid_fork_val(val: &str) -> Option<String> {
 impl Options {
     pub fn multiple(&self) -> bool {
         let trimmed = self.source.trim();
-        self.scope_fork || trimmed.contains(['*', '?', ',', '!']) || trimmed.starts_with('$')
+        self.scope_fork
+            || trimmed.contains(['*', '?', ',', '!', '{', '}'])
+            || trimmed.starts_with('$')
     }
 }

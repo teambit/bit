@@ -292,10 +292,13 @@ fn report(plan: &Plan, options: &Options<'_>, chalk: Chalk) -> Report {
 fn default_scope(root: &Path) -> io::Result<String> {
     let bitmap: Value = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
     if let Some((scope, _)) = crate::commands::snap_distance::bitmap_lane_scope_and_name(&bitmap)
+        .map(|(scope, name)| (scope.trim(), name.trim()))
         .filter(|(scope, _)| !scope.is_empty())
     {
         return Ok(scope.to_owned());
     }
     let config: Value = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    Ok(crate::commands::aspect::workspace_default_scope(&config).unwrap_or_default())
+    Ok(crate::commands::aspect::workspace_default_scope(&config)
+        .map(|scope| scope.trim().to_owned())
+        .unwrap_or_default())
 }

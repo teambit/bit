@@ -59,15 +59,11 @@ fn copy_sources(
         &json!({"objects":captured.objects(),"ids":loaded_ids}),
     )?;
     for id in ids {
-        let identity = id
-            .split('@')
-            .next()
-            .unwrap_or(id)
-            .trim();
+        let identity = bare_id(id);
         let row = captured
             .sources()
             .iter()
-            .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
+            .find(|row| row_bare_id(row) == Some(identity))
             .ok_or_else(|| io::Error::other("fork captured selection missing"))?;
         let mut source = row.clone();
         let facts = source_facts(root, linker, &mut source, true)?;
@@ -87,14 +83,34 @@ fn copy_sources(
     Ok(())
 }
 
+fn bare_id(id: &str) -> &str {
+    let trimmed = id.trim();
+    match trimmed.rsplit_once('@') {
+        Some((prefix, _)) if !prefix.trim().is_empty() => prefix.trim(),
+        _ => trimmed,
+    }
+}
+
+fn row_bare_id(row: &serde_json::Value) -> Option<&str> {
+    row["identity"]
+        .as_str()
+        .or_else(|| row["id"].as_str())
+        .map(bare_id)
+        .filter(|id| !id.is_empty())
+}
+
 fn loaded_source_ids(captured: &RemoteCapture) -> Vec<String> {
     captured
         .sources()
         .iter()
-        .map(|row| {
-            let identity = row["identity"].as_str().map_or("", str::trim);
+        .filter_map(|row| {
+            let identity = row_bare_id(row)?;
             let version = row["version"].as_str().map_or("", str::trim);
-            if version.is_empty() { identity.to_owned() } else { format!("{identity}@{version}") }
+            Some(if version.is_empty() {
+                identity.to_owned()
+            } else {
+                format!("{identity}@{version}")
+            })
         })
         .collect()
 }

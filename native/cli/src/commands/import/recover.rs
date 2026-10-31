@@ -17,7 +17,7 @@ pub(in crate::commands) fn recover_import(
     installer: Option<installation::Installer>,
 ) -> io::Result<Value> {
     let options = import_options(ids, options.skip_write_config_files, installer.is_none());
-    let mut planned = Planned::plan_with(root, &options, ids, chalk, true)?;
+    let mut planned = Planned::plan_with(root, &options, &options.ids, chalk, true)?;
     let started = Instant::now();
     planned.apply()?;
     render(&mut planned, &options, output, started, installer, root)?;

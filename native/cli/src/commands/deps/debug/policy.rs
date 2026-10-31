@@ -82,15 +82,20 @@ fn append_manual_field(
         .as_object()
         .into_iter()
         .flat_map(|entries| entries.iter())
-        .filter(|(_, value)| value.as_str() == Some("-"))
-        .map(|(name, _)| name.clone())
+        .filter(|(_, value)| value.as_str().map(str::trim) == Some("-"))
+        .map(|(name, _)| name.trim().to_owned())
         .collect::<Vec<_>>();
     manual.ignored_names.extend(ignored);
     manual.ignored_env_dependencies.extend(
         NODE_DEV
             .iter()
             .filter(|(name, _)| {
-                field == "devDependencies" && values.get(*name).and_then(Value::as_str) == Some("-")
+                field == "devDependencies"
+                    && values
+                        .get(*name)
+                        .and_then(Value::as_str)
+                        .map(str::trim)
+                        == Some("-")
             })
             .map(|(name, _)| (*name).to_owned()),
     );
@@ -160,8 +165,8 @@ fn unresolved_plus(values: &Value) -> Vec<String> {
         .as_object()
         .into_iter()
         .flat_map(|entries| entries.iter())
-        .filter(|(_, value)| value.as_str() == Some("+"))
-        .map(|(name, _)| name.clone())
+        .filter(|(_, value)| value.as_str().map(str::trim) == Some("+"))
+        .map(|(name, _)| name.trim().to_owned())
         .collect()
 }
 
@@ -225,8 +230,9 @@ fn supported_entries(policy: &Map<String, Value>) -> bool {
 }
 
 fn valid_entry<'a>(field: &str, name: &'a str, value: &Value, seen: &mut HashSet<&'a str>) -> bool {
-    let Some(version) = manual_version(value) else { return false };
-    if name.trim().is_empty() || !seen.insert(name) || version.trim().is_empty() {
+    let Some(version) = manual_version(value).map(str::trim) else { return false };
+    let name = name.trim();
+    if name.is_empty() || !seen.insert(name) || version.is_empty() {
         return false;
     }
     if NODE_DEV

@@ -173,14 +173,18 @@ impl Read {
             return None;
         }
         if flag == "--resolve-unrelated" {
-            let value = next.filter(|value| !value.starts_with('-'));
+            let value = next
+                .map(str::trim)
+                .filter(|value| !value.is_empty() && !value.starts_with('-'));
             self.values.insert(flag.to_owned(), json!(value.unwrap_or("ours")));
             return Some(usize::from(value.is_some()));
         }
         if !VALUED.contains(&flag) {
             return None;
         }
-        let value = next.filter(|value| !value.is_empty() && !value.starts_with('-'))?;
+        let value = next
+            .map(str::trim)
+            .filter(|value| !value.is_empty() && !value.starts_with('-'))?;
         self.values.insert(flag.to_string(), json!(value));
         Some(1)
     }

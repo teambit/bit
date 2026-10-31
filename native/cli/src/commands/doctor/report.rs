@@ -39,7 +39,10 @@ pub(super) fn results(
                     text(&metadata["category"]).into(),
                     text(&metadata["name"]).into(),
                     text(&metadata["description"]).into(),
-                    if row["bareResult"]["valid"] == true {
+                    if row["bareResult"]["valid"] == true
+                        || row["bareResult"]["pass"] == true
+                        || row["bareResult"]["passed"] == true
+                    {
                         chalk.green("passed")
                     } else {
                         chalk.red("failed")

@@ -44,10 +44,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     let argv: Vec<&str> = raw_argv
         .into_iter()
-        .filter(|arg| !is_color_flag(arg))
+        .filter(|arg| !is_color_flag(arg.trim()))
         .collect();
-    match argv.get(1).copied() {
-        None => list::run_default(args, &argv[1..]),
+    match argv.get(1).map(|sub| sub.trim()) {
+        None | Some("") => list::run_default(args, &argv[1..]),
         Some(flag) if flag.starts_with('-') => list::run_default(args, &argv[1..]),
         Some("list") => list::run(args, &argv[2..]),
         Some("current") => current::current(args, &argv[2..]),

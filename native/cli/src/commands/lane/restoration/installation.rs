@@ -35,8 +35,10 @@ pub(super) fn run(
         .install(root, false, &ids);
     let succeeded = installed.is_ok();
     if let Err(error) = installed {
-        output.failure(&format!("installation failed with the following error: {error}"));
-        result["installationError"] = json!(error.to_string());
+        let message = error.to_string();
+        let trimmed = message.trim();
+        output.failure(&format!("installation failed with the following error: {trimmed}"));
+        result["installationError"] = json!(trimmed);
     }
     compile(&host, succeeded, result, output)?;
     let host =

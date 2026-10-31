@@ -148,11 +148,15 @@ pub(super) fn run_merge(
 }
 
 fn execute_merge(root: &Path, opts: &MergeOptions) -> io::Result<Report> {
-    if let Some(branch) = &opts.branch {
+    let explicit_branch = opts.branch
+        .as_deref()
+        .map(str::trim)
+        .filter(|branch| !branch.is_empty());
+    if let Some(branch) = explicit_branch {
         let _ = run_git(root, &["checkout", "-B", branch]);
     }
-    let target_branch = opts.branch
-        .clone()
+    let target_branch = explicit_branch
+        .map(str::to_owned)
         .or_else(|| git_current_branch(root))
         .unwrap_or_else(|| "main".into());
     let switched = ensure_on_main_lane(root)?;
@@ -201,7 +205,10 @@ fn ensure_on_main_lane(root: &Path) -> io::Result<bool> {
 
 fn build_tag_args(root: &Path, opts: &MergeOptions) -> Vec<String> {
     let msg = opts.message
-        .clone()
+        .as_deref()
+        .map(str::trim)
+        .filter(|msg| !msg.is_empty())
+        .map(str::to_owned)
         .or_else(|| git_last_commit_message(root))
         .unwrap_or_else(|| "ci merge tag".into());
     let mut args = vec!["tag".to_owned(), "--skip-tests".to_owned(), "--message".to_owned(), msg];

@@ -74,6 +74,8 @@ pub(in crate::commands) fn diagnose_component_lookup_error(
     bare_id: &str,
     chalk: Chalk,
 ) -> Option<String> {
+    let raw_id = raw_id.trim();
+    let bare_id = bare_id.trim();
     if raw_id.starts_with('@') || bare_id.is_empty() {
         return None;
     }

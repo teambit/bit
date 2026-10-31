@@ -47,14 +47,16 @@ fn missing_directory(directory: &str, chalk: Chalk) -> io::Error {
 }
 
 fn missing_main(fallback_id: &str, row: &Value, main: &str, chalk: Chalk) -> io::Error {
+    let fallback_id = fallback_id.trim();
     let (fallback_scope, fallback_name) = fallback_id
         .split_once('/')
-        .map_or(("", fallback_id), |(scope, name)| (scope, name));
+        .map_or(("", fallback_id), |(scope, name)| (scope.trim(), name.trim()));
     let name = row["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .unwrap_or(fallback_name);
-    let version = row["version"].as_str().unwrap_or_default();
+    let version = row["version"].as_str().map_or("", str::trim);
     let scope = row_scope_or_default(row, fallback_scope);
     let id = format!(
         "{}{}{name}{}",
@@ -72,10 +74,12 @@ fn missing_main(fallback_id: &str, row: &Value, main: &str, chalk: Chalk) -> io:
 fn row_scope_or_default<'a>(row: &'a Value, fallback_scope: &'a str) -> &'a str {
     row["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty())
         .or_else(|| {
             row["defaultScope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty())
         })
         .unwrap_or(fallback_scope)

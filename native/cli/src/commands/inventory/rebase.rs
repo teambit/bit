@@ -5,9 +5,12 @@
 pub fn pattern(pattern: &str, dir: &str) -> String {
     let pattern = pattern.trim();
     let (negated, body) = match pattern.strip_prefix('!') {
-        Some(body) => (true, body),
+        Some(body) => (true, body.trim()),
         None => (false, pattern),
     };
+    if body.is_empty() {
+        return String::new();
+    }
     let anchored = body
         .char_indices()
         .any(|(index, character)| character == '/' && index + 1 < body.len());

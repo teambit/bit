@@ -64,11 +64,7 @@ pub(super) fn existing(path: &Path) -> io::Result<Option<Vec<u8>>> {
 }
 
 pub(super) fn workspace_files(bytes: Vec<u8>, options: &Options) -> io::Result<Vec<u8>> {
-    if !options.flags.external_pm
-        && !options.defaults.directory
-            .as_deref()
-            .is_some_and(|value| value.starts_with("bit-components"))
-    {
+    if !uses_workspace_config_files(options) {
         return Ok(bytes);
     }
     let mut document = Document::parse(std::str::from_utf8(&bytes).map_err(io::Error::other)?)?;
@@ -103,14 +99,18 @@ fn configure(document: &mut Document, options: &Options) {
         document.set(&[RESOLVER, "rootComponent"], &Value::Bool(false));
         document.set(&[WORKSPACE, "defaultDirectory"], &json!("bit-components/{scope}/{name}"));
     }
-    if options.flags.external_pm
-        || options.defaults.directory
-            .as_deref()
-            .is_some_and(|value| value.starts_with("bit-components"))
-    {
+    if uses_workspace_config_files(options) {
         document.set(
             &["teambit.workspace/workspace-config-files"],
             &json!({"enableWorkspaceConfigWrite":true,"useDefaultDirectory":true}),
         );
     }
+}
+
+fn uses_workspace_config_files(options: &Options) -> bool {
+    options.flags.external_pm
+        || options.defaults.directory
+            .as_deref()
+            .map(|value| value.trim().trim_start_matches("./"))
+            .is_some_and(|value| value.starts_with("bit-components"))
 }

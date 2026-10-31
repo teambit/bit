@@ -20,6 +20,7 @@ pub(super) fn remember(root: &Path, receipt: &Value, metadata: &Value) -> io::Re
     }
     last["exportedComponents"] = metadata["lastExport"]
         .get("exportedComponents")
+        .filter(|comps| !comps.is_null())
         .unwrap_or_else(|| &receipt["componentsIds"])
         .clone();
     fs::write(

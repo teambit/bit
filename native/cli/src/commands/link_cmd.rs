@@ -55,6 +55,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     while let Some(arg) = iter.next() {
         if arg == "--" {
             for item in iter {
+                let item = item.trim();
                 (!item.is_empty() && !item.starts_with('-')).then_some(())?;
                 options.ids.push(item.to_owned());
             }

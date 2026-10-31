@@ -10,7 +10,7 @@ pub(super) fn render(plan: &Plan, options: &Options<'_>, undo: bool, format: &Fo
     if changed.len() == 1 && unchanged.is_empty() {
         return format.success_summary(&format!(
             r#"the component "{}" has been {verb} successfully"#,
-            changed[0],
+            changed[0].trim(),
         ));
     }
     if changed.is_empty() {
@@ -39,7 +39,7 @@ fn sections(
             "",
             &changed
                 .iter()
-                .map(|id| format.item(id))
+                .map(|id| format.item(id.trim()))
                 .collect::<Vec<_>>(),
         ),
         format.section(
@@ -47,7 +47,7 @@ fn sections(
             "no changes were made to these",
             &unchanged
                 .iter()
-                .map(|id| format.item(id))
+                .map(|id| format.item(id.trim()))
                 .collect::<Vec<_>>(),
         ),
     ])
@@ -77,13 +77,13 @@ fn format_range_summary(
     if changed.len() == 1 && unchanged.is_empty() {
         return Some(format.success_summary(&format!(
             r#"versions of "{}" matching the range "{range}" have been {verb} successfully"#,
-            changed[0],
+            changed[0].trim(),
         )));
     }
     if changed.is_empty() && unchanged.len() == 1 {
         return Some(format.hint(&format!(
             r#"the range "{range}" of "{}" is {unchanged_state}. no changes have been made"#,
-            unchanged[0],
+            unchanged[0].trim(),
         )));
     }
     None

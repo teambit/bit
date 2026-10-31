@@ -254,6 +254,7 @@ pub(super) fn component_order(receipt: &Value) -> io::Result<Vec<String>> {
         .map(|identity| {
             let identity = identity
                 .as_str()
+                .map(str::trim)
                 .filter(|id| !id.is_empty())
                 .ok_or_else(|| io::Error::other("import workspace order identity"))?;
             if !seen.insert(identity) {
@@ -269,7 +270,10 @@ fn ordered_ids(ids: &[String], order: &[String]) -> io::Result<Vec<String>> {
     }
     let ordered = order
         .iter()
-        .filter(|id| ids.contains(id))
+        .filter(|id| {
+            ids.iter()
+                .any(|candidate| candidate.trim() == id.trim())
+        })
         .cloned()
         .collect::<Vec<_>>();
     if ordered.len() != ids.len() {

@@ -94,6 +94,7 @@ impl Session {
                             phase["phase"]
                                 .as_str()
                                 .is_some_and(|name| !name.trim().is_empty())
+                                && phase["revert"].is_boolean()
                         })
             })
             .ok_or_else(|| io::Error::other("lane history phases"))?;

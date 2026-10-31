@@ -96,13 +96,7 @@ fn inventory_report(
             .filter(|object| object.kind == kind)
             .count()
     };
-    let local = objects
-        .values()
-        .filter(|object| {
-            object.kind == "Component"
-                && object.value["scope"].as_str().map(str::trim) == Some(name.trim())
-        })
-        .count();
+    let local = count_local_components(objects, name);
     let components = count("Component");
     let lanes = count("Lane");
     let trashed_lanes = trash
@@ -113,7 +107,7 @@ fn inventory_report(
         format!("scope {name} has {} refs", objects.len()),
         format!(
             "total {} refs of ModelComponent, Lane and ScopeMeta",
-            components + lanes + count("ScopeMeta")
+            components + lanes + count("ScopeMeta"),
         ),
         format!("[*] total {local} refs of ModelComponent of this scope"),
         format!(
@@ -123,9 +117,22 @@ fn inventory_report(
         format!("[*] total {lanes} refs of Lane"),
         format!(
             "[*] total {} refs in the trash, total {trashed_lanes} lanes in the trash",
-            trash.len()
+            trash.len(),
         ),
     ]
+}
+fn count_local_components(objects: &BTreeMap<String, Object>, name: &str) -> usize {
+    objects
+        .values()
+        .filter(|object| {
+            object.kind == "Component"
+                && object.value["scope"]
+                    .as_str()
+                    .or_else(|| object.value["id"]["scope"].as_str())
+                    .map(str::trim)
+                    == Some(name)
+        })
+        .count()
 }
 impl Plan {
     fn execute(

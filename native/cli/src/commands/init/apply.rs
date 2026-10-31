@@ -5,7 +5,8 @@ use std::{fs, io, path::Path};
 pub(super) fn apply(plan: Plan) -> io::Result<()> {
     for action in plan.actions {
         match action {
-            Action::Directory(path) => fs::create_dir_all(path)?,
+            Action::Directory(path) if !path.as_os_str().is_empty() => fs::create_dir_all(path)?,
+            Action::Directory(_) => {}
             Action::Remove(path) => remove(&path)?,
             Action::Empty(path) => empty(&path)?,
             Action::File(path, bytes) => {

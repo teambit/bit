@@ -130,8 +130,15 @@ fn component_id(component: &Value) -> io::Result<String> {
             None => name.to_owned(),
         }
     };
-    if base.contains('@') {
-        return Ok(base);
+    if let Some((prefix, ver)) = base.rsplit_once('@') {
+        let (prefix, ver) = (prefix.trim(), ver.trim());
+        if !prefix.is_empty() && !ver.is_empty() {
+            return Ok(format!("{prefix}@{ver}"));
+        }
+    }
+    let base = base.trim_end_matches('@').trim();
+    if base.is_empty() {
+        return Err(decline("remote list id"));
     }
     let version = component
         .get("version")

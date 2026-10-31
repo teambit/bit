@@ -24,9 +24,11 @@ impl Models {
                     if let (Some(real_scope), Some(name)) = (
                         object.value["realScope"]
                             .as_str()
+                            .map(str::trim)
                             .filter(|val| !val.is_empty()),
                         object.value["name"]
                             .as_str()
+                            .map(str::trim)
                             .filter(|val| !val.is_empty()),
                     ) {
                         aliases.insert(
@@ -196,6 +198,7 @@ pub(in crate::commands::gc) fn load_unmerged_roots(
 fn collect_unmerged_item(item: &Value, roots: &mut Vec<String>) {
     if let Some(head) = item["head"]
         .as_str()
+        .map(str::trim)
         .filter(|str_val| !str_val.is_empty())
     {
         roots.push(head.to_owned());
@@ -204,7 +207,12 @@ fn collect_unmerged_item(item: &Value, roots: &mut Vec<String>) {
         return;
     };
     for key in ["headOnCurrentLane", "unrelatedHead"] {
-        if let Some(hash) = unrel.get(key).and_then(Value::as_str) {
+        if let Some(hash) = unrel
+            .get(key)
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|str_val| !str_val.is_empty())
+        {
             roots.push(hash.to_owned());
         }
     }

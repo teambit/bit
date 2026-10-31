@@ -75,7 +75,7 @@ fn preflight_hard_guard(
     if let Some(err) = preflight_workspace_hard_err(root, options.update_main) {
         return emit_hard_error(cwd, root, args, &err.to_string()).map(Some);
     }
-    let non_ci = env::var_os("CI").is_none_or(|val| val.is_empty());
+    let non_ci = env::var_os("CI").is_none_or(|val| val.to_string_lossy().trim().is_empty());
     if !feature_enabled(global) {
         if !super::preparation::can_prompt_user() && non_ci {
             return emit_hard_error(cwd, root, args, HARD_DELETE_GUARD_ERR).map(Some);
@@ -99,7 +99,7 @@ fn preflight_hard_guard(
 
 fn preflight_workspace_hard_err(root: Option<&Path>, update_main: bool) -> Option<io::Error> {
     let ws_root = root?;
-    if env::var_os("CI").is_some_and(|val| !val.is_empty())
+    if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty())
         || super::super::installation::Installer::needs_canonical(ws_root)
     {
         return None;
@@ -113,7 +113,7 @@ fn emit_hard_error(
     args: &[OsString],
     msg: &str,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
         return Ok(Outcome::Declined("CI delete --hard validation".into()));
     }
     let err = io::Error::other(msg.to_owned());
@@ -252,17 +252,22 @@ fn apply_hard_arg<'a>(
         "--update-main" | "--update-main=true" => state.update_main = true,
         "--update-main=false" => state.update_main = false,
         "--range" => {
-            let val = iter.next()?;
+            let val = iter.next()?.trim();
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             state.has_range = true;
         }
         _ if let Some(val) = arg.strip_prefix("--range=") => {
+            let val = val.trim();
             (!val.is_empty() && !val.starts_with('-')).then_some(())?;
             state.has_range = true;
         }
         flag if apply_combined_hard_short(flag, state) => {}
-        value if !value.starts_with('-') && !value.is_empty() && state.pattern.is_none() => {
-            state.pattern = Some(value);
+        value
+            if !value.starts_with('-')
+                && !value.trim().is_empty()
+                && state.pattern.is_none() =>
+        {
+            state.pattern = Some(value.trim());
         }
         _ => return None,
     }

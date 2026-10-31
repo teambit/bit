@@ -85,11 +85,11 @@ fn target_links_json(items: &[LinkToDirResult]) -> Vec<Value> {
         .iter()
         .map(|item| {
             json!({
-                "componentId": item.component_id,
+                "componentId": item.component_id.trim(),
                 "linksDetail": {
-                    "packageName": item.links_detail.package_name,
-                    "from": item.links_detail.from,
-                    "to": item.links_detail.to,
+                    "packageName": item.links_detail.package_name.trim(),
+                    "from": item.links_detail.from.trim(),
+                    "to": item.links_detail.to.trim(),
                 },
             })
         })

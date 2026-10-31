@@ -149,9 +149,8 @@ fn execute(
     linker.validate_captures()?;
     prepared.plan.commit(&file_id)?;
     let format = Formatter::new(Chalk::detect(args));
-    if let Some(policy) = &prepared.policy
-        && policy.commit(root, &file_id).is_ok()
-    {
+    if let Some(policy) = &prepared.policy {
+        policy.commit(root, &file_id)?;
         output.console(&policy.report(&format));
     }
     Ok(report(&prepared, &format))

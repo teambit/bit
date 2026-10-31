@@ -34,7 +34,7 @@ pub(super) fn run(
     let rows = match inspect(root, component, dependency) {
         Ok(rows) => rows,
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
                 return Ok(Outcome::Declined("CI deps blame error stack".into()));
             }
             return workspace_command::execute_then(root, args, "blame", |_| {
@@ -113,7 +113,12 @@ fn find_component<'a>(
     ctx: &'a WorkspaceDepsContext,
     query: &str,
 ) -> Result<Option<(&'a ComponentId, &'a WorkspaceComponent)>, Failure> {
-    let bare = query.split('@').next().unwrap_or(query);
+    let query = query.trim();
+    let bare = query
+        .split('@')
+        .next()
+        .unwrap_or(query)
+        .trim();
     let normalized = bare.trim_start_matches("./").trim_end_matches('/');
     let matches = ctx.ws.entries
         .iter()
@@ -122,7 +127,8 @@ fn find_component<'a>(
             entry.owns_its_dir()
                 && (component.id.name == bare
                     || component.id.to_string_without_version() == bare
-                    || (!entry.root_dir.is_empty() && entry.root_dir == normalized))
+                    || (!entry.root_dir.is_empty()
+                        && entry.root_dir.trim_end_matches('/') == normalized))
         })
         .map(|(_, component)| component)
         .collect::<Vec<_>>();
@@ -217,6 +223,7 @@ fn blame_row(row: &Value, version: &str) -> Result<BlameRow, Failure> {
             .to_owned(),
         author: row["log"]["username"]
             .as_str()
+            .map(str::trim)
             .filter(|name| !name.is_empty())
             .unwrap_or("<N/A>")
             .to_owned(),

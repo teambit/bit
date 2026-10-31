@@ -80,6 +80,7 @@ fn prepare(
     merged: Option<bool>,
     session: &mut Session,
 ) -> io::Result<Prepared> {
+    let scope = scope.trim();
     session.resolve(&[scope.to_owned()])?;
     let host = session
         .overrides()

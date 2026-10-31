@@ -54,14 +54,15 @@ pub(super) fn current(args: &[OsString], lane_args: &[&str]) -> io::Result<Outco
 }
 
 fn write_current(stdout: &mut impl Write, id: &Value, alias: &str, json: bool) -> io::Result<()> {
-    let name = text(id.get("name"))?;
+    let name = text(id.get("name"))?.trim();
+    let alias = alias.trim();
     let is_main = name == "main";
-    let full =
-        if is_main { "main".to_string() } else { format!("{}/{name}", text(id.get("scope"))?) };
+    let scope = if is_main { "" } else { text(id.get("scope"))?.trim() };
+    let full = if is_main { "main".to_string() } else { format!("{scope}/{name}") };
     let data = if is_main {
         json!({"name":"main","scope":null,"id":"main","isDefault":true,"alias":null})
     } else {
-        json!({"name":name,"scope":id["scope"],"id":full,"isDefault":false,
+        json!({"name":name,"scope":scope,"id":full,"isDefault":false,
             "alias":(alias != name).then_some(alias)})
     };
     if json {

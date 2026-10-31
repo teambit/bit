@@ -17,8 +17,13 @@ pub(in crate::commands) fn captured(
         .iter()
         .cloned()
         .partition(|file| {
-            overlays.is_none_or(|overlays| overlays.get(file).is_none())
-                || root.join(file).is_file()
+            let trimmed = file.trim();
+            overlays.is_none_or(|overlays| {
+                overlays
+                    .get(file)
+                    .or_else(|| overlays.get(trimmed))
+                    .is_none()
+            }) || root.join(trimmed).is_file()
         });
     if cfg!(windows) {
         physical = filesystem(root, &physical)?;

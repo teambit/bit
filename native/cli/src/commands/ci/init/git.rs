@@ -25,7 +25,7 @@ pub(super) fn default_branch(root: &Path) -> (String, bool) {
         return (branch, false);
     }
     let current = run(root, &["branch", "--show-current"]).unwrap_or_default();
-    let trimmed = current.trim();
+    let trimmed = super::trim(&current);
     (if matches!(trimmed, "main" | "master") { trimmed.to_owned() } else { "main".into() }, true)
 }
 fn detected_branch(root: &Path) -> Option<String> {
@@ -64,7 +64,7 @@ fn detected_branch(root: &Path) -> Option<String> {
         .map(str::to_owned)
 }
 fn valid_branch(value: &str) -> bool {
-    let value = value.trim();
+    let value = super::trim(value);
     !value.is_empty()
         && value != "@"
         && !value.starts_with(['-', '/'])

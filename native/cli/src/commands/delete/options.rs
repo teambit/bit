@@ -29,7 +29,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
             "--update-main" | "--update-main=true" => update_main = true,
             "--update-main=false" => update_main = false,
             "--range" | "--snaps" if modifier.is_none_or(|(flag, _)| flag == arg) => {
-                let val = iter.next()?;
+                let val = iter.next()?.trim();
                 (!val.is_empty() && !val.starts_with('-')).then_some(())?;
                 modifier = Some((arg, val));
             }
@@ -37,7 +37,9 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
         }
     }
     Some(Options {
-        pattern: pattern.filter(|pat| !pat.is_empty())?,
+        pattern: pattern
+            .map(str::trim)
+            .filter(|pat| !pat.is_empty())?,
         silent,
         lane,
         update_main,
@@ -49,6 +51,7 @@ pub(in crate::commands) fn consume_trailing_delete_pattern<'a>(
     pattern: &mut Option<&'a str>,
 ) -> Option<()> {
     for val in iter {
+        let val = val.trim();
         (!val.is_empty() && !val.starts_with('-') && pattern.replace(val).is_none()).then_some(())?;
     }
     Some(())
@@ -58,20 +61,20 @@ fn apply_inline_or_pattern<'a>(
     modifier: &mut Option<(&'a str, &'a str)>,
     pattern: &mut Option<&'a str>,
 ) -> Option<()> {
-    if let Some(val) = arg.strip_prefix("--range=") {
+    if let Some(val) = arg.strip_prefix("--range=").map(str::trim) {
         (!val.is_empty()
             && !val.starts_with('-')
             && modifier.is_none_or(|(flag, _)| flag == "--range"))
         .then_some(())?;
         *modifier = Some(("--range", val));
-    } else if let Some(val) = arg.strip_prefix("--snaps=") {
+    } else if let Some(val) = arg.strip_prefix("--snaps=").map(str::trim) {
         (!val.is_empty()
             && !val.starts_with('-')
             && modifier.is_none_or(|(flag, _)| flag == "--snaps"))
         .then_some(())?;
         *modifier = Some(("--snaps", val));
-    } else if !arg.starts_with('-') && !arg.is_empty() && pattern.is_none() {
-        *pattern = Some(arg);
+    } else if !arg.starts_with('-') && !arg.trim().is_empty() && pattern.is_none() {
+        *pattern = Some(arg.trim());
     } else {
         return None;
     }

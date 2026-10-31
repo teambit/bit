@@ -263,6 +263,7 @@ impl bit_install::Host for JsHost {
     async fn initial_installation_components(&self, aspect_ids: &[String]) -> io::Result<bool> {
         let arguments = std::env::args()
             .skip(1)
+            .filter(|arg| !arg.starts_with('-'))
             .take(2)
             .collect::<Vec<_>>();
         if arguments
@@ -289,7 +290,7 @@ impl bit_install::Host for JsHost {
         match &receipt?["error"] {
             Value::Null => Ok(true),
             Value::String(message) if !message.trim().is_empty() => {
-                Err(io::Error::other(message.clone()))
+                Err(io::Error::other(message.trim().to_owned()))
             }
             _ => Err(io::Error::other("history installation class receipt")),
         }

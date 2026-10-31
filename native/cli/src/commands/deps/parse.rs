@@ -316,12 +316,17 @@ fn parse_usage_args(rest: &[&str]) -> Option<(String, Option<usize>)> {
             break;
         }
         if let Some(val) = arg.strip_prefix("--depth=") {
-            depth = Some(val.parse::<usize>().ok()?);
+            depth = Some(val.trim().parse::<usize>().ok()?);
         } else if arg == "--depth" {
             idx += 1;
-            depth = Some(rest.get(idx)?.parse::<usize>().ok()?);
-        } else if !arg.starts_with('-') && !arg.is_empty() && dep_name.is_none() {
-            dep_name = Some(arg.to_owned());
+            depth = Some(
+                rest.get(idx)?
+                    .trim()
+                    .parse::<usize>()
+                    .ok()?,
+            );
+        } else if !arg.starts_with('-') && !arg.trim().is_empty() && dep_name.is_none() {
+            dep_name = Some(arg.trim().to_owned());
         } else {
             return None;
         }
@@ -349,7 +354,7 @@ fn parse_write(rest: &[&str]) -> Option<Subcommand> {
                 .strip_prefix("--target=")
                 .or_else(|| rest[idx].strip_prefix("-t="))?
         };
-        target = match raw {
+        target = match raw.trim() {
             "workspace.jsonc" => WriteTarget::WorkspaceJsonc,
             "package.json" => WriteTarget::PackageJson,
             _ => return None,

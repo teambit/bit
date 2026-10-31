@@ -111,13 +111,12 @@ fn current_lane_id(current: &Value) -> String {
     current
         .as_str()
         .map(str::trim)
+        .filter(|text| !text.is_empty())
         .map_or_else(
             || {
-                format!(
-                    "{}/{}",
-                    current["scope"].as_str().map_or("", str::trim),
-                    current["name"].as_str().map_or("", str::trim),
-                )
+                let scope = current["scope"].as_str().map_or("", str::trim);
+                let name = current["name"].as_str().map_or("", str::trim);
+                if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
             },
             str::to_owned,
         )

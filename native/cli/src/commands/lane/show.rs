@@ -250,8 +250,10 @@ fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool, bool)> {
                 json = true;
                 remote = true;
             }
-            value if !value.starts_with('-') && !value.is_empty() && name.is_none() => {
-                name = Some(value);
+            value
+                if !value.trim().starts_with('-') && !value.trim().is_empty() && name.is_none() =>
+            {
+                name = Some(value.trim());
             }
             _ => return None,
         }
@@ -264,6 +266,7 @@ fn consume_trailing_show_lane<'a>(
     name: &mut Option<&'a str>,
 ) -> Option<()> {
     for val in iter {
+        let val = val.trim();
         (!val.is_empty() && !val.starts_with('-') && name.replace(val).is_none()).then_some(())?;
     }
     Some(())
@@ -274,9 +277,12 @@ pub(super) fn find<'a>(lanes: &'a [LaneData], target: &str) -> Option<&'a LaneDa
     let matches: Vec<_> = lanes
         .iter()
         .filter(|lane| {
-            lane.id["name"] == target
+            let scope = lane.id["scope"].as_str().map_or("", str::trim);
+            let lane_name = lane.id["name"].as_str().map_or("", str::trim);
+            lane_name == target
+                || format!("{scope}/{lane_name}") == target
                 || lane.label() == target
-                || (!lane.is_main() && lane.alias.as_deref() == Some(target))
+                || (!lane.is_main() && lane.alias.as_deref().map(str::trim) == Some(target))
         })
         .collect();
     (matches.len() == 1).then(|| matches[0])

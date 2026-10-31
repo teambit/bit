@@ -75,7 +75,7 @@ fn check_parents(source: &Path, target: &Path) -> io::Result<()> {
             break;
         }
         if metadata_if_present(parent, true)?.is_none() {
-            break;
+            continue;
         }
     }
     Ok(())

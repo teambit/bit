@@ -33,7 +33,9 @@ pub(super) fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
             "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-m" | "--include-message" | "--include-message=true" => include_message = true,
             "--include-message=false" => include_message = false,
-            val if !val.starts_with('-') && !val.is_empty() && path.is_none() => path = Some(val),
+            val if !val.starts_with('-') && !val.trim().is_empty() && path.is_none() => {
+                path = Some(val.trim());
+            }
             _ => return None,
         }
     }
@@ -45,10 +47,11 @@ fn consume_trailing_path<'a>(
     path: &mut Option<&'a str>,
 ) -> Option<()> {
     for rest in iter {
-        if rest.is_empty() || rest.starts_with('-') || path.is_some() {
+        let trimmed = rest.trim();
+        if trimmed.is_empty() || trimmed.starts_with('-') || path.is_some() {
             return None;
         }
-        *path = Some(rest);
+        *path = Some(trimmed);
     }
     Some(())
 }

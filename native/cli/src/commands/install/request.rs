@@ -17,7 +17,7 @@ fn configured_root_aspects(root: &Path) -> io::Result<bool> {
         "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
     ))?;
     let custom = |id: &str| {
-        let base = bit_install::config::aspect_id_without_version(id);
+        let base = bit_install::config::aspect_id_without_version(id.trim()).trim();
         !core.iter().any(|core| core == base) && !bit_install::policy::is_core_env(base)
     };
     if config.aspects.keys().any(|id| custom(id)) || scope_custom_aspects(root, &custom)? {
@@ -26,7 +26,7 @@ fn configured_root_aspects(root: &Path) -> io::Result<bool> {
     let global = load_global_config(&cache_root().join("config"))?;
     if global
         .keys()
-        .any(|id| id.contains('/') && custom(id))
+        .any(|id| id.trim().contains('/') && custom(id))
     {
         return Ok(true);
     }

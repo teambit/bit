@@ -376,7 +376,13 @@ fn fetch_item(chalk: Chalk, id: &Id, details: &Details) -> String {
 
 fn unique_components(ids: &[String]) -> usize {
     ids.iter()
-        .map(|id| id.rsplit_once('@').map_or(id.as_str(), |(identity, _)| identity))
+        .map(|id| {
+            let trimmed = id.trim();
+            match trimmed.rsplit_once('@') {
+                Some((identity, _)) if !identity.trim().is_empty() => identity.trim(),
+                _ => trimmed,
+            }
+        })
         .collect::<HashSet<_>>()
         .len()
 }

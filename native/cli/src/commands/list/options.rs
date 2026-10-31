@@ -108,7 +108,11 @@ impl Options {
     }
 
     fn inline_flag(&mut self, raw: &str, flag: &str, inline: &str) -> Option<usize> {
-        let trimmed = inline.trim();
+        let trimmed = inline
+            .trim()
+            .trim_matches('"')
+            .trim_matches('\'')
+            .trim();
         if matches!(flag, "--scope" | "--namespace") {
             (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;
             self.set_string(flag, trimmed);
@@ -117,11 +121,7 @@ impl Options {
         if !raw.starts_with("--") {
             return None;
         }
-        let val = match trimmed
-            .trim_matches('"')
-            .trim_matches('\'')
-            .trim()
-        {
+        let val = match trimmed {
             "true" => true,
             "false" => false,
             _ => return None,

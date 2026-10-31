@@ -350,9 +350,10 @@ fn canonical_prepare_error(error: io::Error) -> io::Error {
 fn persist_failure(error: &str, scopes: &[String]) -> Option<(usize, String)> {
     let (_, rest) = error.split_once("outbound persist failed: ")?;
     let (scope, message) = rest.split_once(": ")?;
+    let (scope, message) = (scope.trim(), message.trim());
     let index = scopes
         .iter()
-        .position(|known| known == scope)?;
+        .position(|known| known.trim() == scope)?;
     Some((
         index,
         format!(

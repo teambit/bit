@@ -8,6 +8,7 @@ pub(super) fn components(receipts: &[Value], chalk: Chalk) -> String {
     receipts
         .iter()
         .map(|receipt| component(receipt, &format))
+        .filter(|text| !text.is_empty())
         .collect::<Vec<_>>()
         .join(",")
 }
@@ -37,11 +38,11 @@ fn dependents(receipt: &Value, format: &Formatter) -> String {
 }
 
 fn dependent_row(id: &str, dependencies: &Value, format: &Formatter) -> String {
-    let id = id.trim();
+    let id = strip_latest_or_head(id);
     let symbol = format.error_symbol();
     let body = list(dependencies)
         .iter()
-        .map(|dependency| Formatter::item_with(dependency, &symbol))
+        .map(|dependency| Formatter::item_with(strip_latest_or_head(dependency), &symbol))
         .collect::<Vec<_>>()
         .join("\n");
     format!(

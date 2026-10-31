@@ -27,10 +27,7 @@ pub(super) const COUNTS: [(&str, &str, &str, &str); 5] = [
 
 pub(super) fn component(id: &Value, tool: &Value) -> io::Result<Value> {
     let files = tool["results"].as_array().ok_or_else(|| invalid("linter results"))?;
-    let output = tool
-        .get("output")
-        .cloned()
-        .unwrap_or_else(|| Value::String(String::new()));
+    let output = tool["output"].as_str().unwrap_or_default();
     let mut result = json!({"componentId":id,"output":output});
     for (field, total, _, _) in COUNTS {
         result[total] = json!(

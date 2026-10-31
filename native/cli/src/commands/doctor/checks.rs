@@ -26,7 +26,7 @@ fn workspace(diagnosis: &Diagnosis, context: &Context) -> io::Result<Value> {
     workspace_scope(context)?;
     let valid = super::context::optional_json(&context.root.join("workspace.jsonc")).is_ok();
     let bare = if valid { json!({"valid":true}) } else { json!({"valid":false,"data":{}}) };
-    Ok(diagnosis.result(bare,"invalid workspace.jsonc: undefined is not a valid JSON file.".into(),"manually fix the workspace.jsonc or consider running bit init --reset to recreate the file"))
+    Ok(diagnosis.result(bare,"invalid workspace.jsonc: undefined is not a valid JSON file.","manually fix the workspace.jsonc or consider running bit init --reset to recreate the file"))
 }
 fn latest(diagnosis: &Diagnosis, context: &Context) -> io::Result<Value> {
     let latest = latest_fact(context)?;
@@ -35,28 +35,32 @@ fn latest(diagnosis: &Diagnosis, context: &Context) -> io::Result<Value> {
     let package: Value = bit_object_import::parse_jsonc(&fs::read(package.join("package.json"))?)
         .map_err(io::Error::other)?;
     let current = package["version"].as_str().map_or("", str::trim);
-    let newer = latest.as_str().is_some_and(|latest| compare(current, latest));
-    let bare = if latest.is_null() {
-        json!({"valid":false,"data":{"latestVersion":null}})
-    } else if newer {
-        json!({"valid":false,"data":{"latestVersion":latest,"currentVersion":current}})
-    } else {
-        json!({"valid":true})
-    };
-    let symptoms = latest
+    let latest_str = latest
         .as_str()
-        .map_or_else(
-            || "could not fetch bit latest version".into(),
-            |latest| {
-                format!(
-                    "bit is not up to date.\n  your version: {current}\n  latest version: {latest}",
-                )
-            },
-        );
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty());
+    let newer = latest_str.is_some_and(|latest| compare(current, latest));
+    let bare = if let Some(latest_ver) = latest_str {
+        if newer {
+            json!({"valid":false,"data":{"latestVersion":latest_ver,"currentVersion":current}})
+        } else {
+            json!({"valid":true})
+        }
+    } else {
+        json!({"valid":false,"data":{"latestVersion":null}})
+    };
+    let symptoms = latest_str.map_or_else(
+        || "could not fetch bit latest version".into(),
+        |latest_ver| {
+            format!(
+                "bit is not up to date.\n  your version: {current}\n  latest version: {latest_ver}",
+            )
+        },
+    );
     Ok(diagnosis.result(
         bare,
-        symptoms,
-        if latest.is_null() {
+        &symptoms,
+        if latest_str.is_none() {
             "please make sure you have an internet connection"
         } else {
             "please upgrade your bit version (bvm upgrade)"
@@ -120,7 +124,7 @@ fn environments(diagnosis: &Diagnosis, scope: &Path) -> io::Result<Value> {
     );
     Ok(diagnosis.result(
         json!({"valid":broken.is_empty(),"data":{"brokenSymlinks":broken}}),
-        symptoms,
+        &symptoms,
         &treatment,
     ))
 }

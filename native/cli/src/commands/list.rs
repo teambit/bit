@@ -228,6 +228,8 @@ fn models(root: &Path, lane: Option<&Value>) -> io::Result<(Vec<Model>, Vec<Stri
         .iter()
         .map(|id| {
             id.as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
                 .map(str::to_string)
                 .ok_or_else(|| decline("scope list lane"))
         })

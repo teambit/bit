@@ -106,10 +106,14 @@ fn report(
         (files.0, "instructions for AI agents working in this workspace"),
         (files.1, "Bit Cloud MCP for AI agents (picked up by Claude Code, Visual Studio)"),
     ] {
-        if let Some(file) = file {
+        if let Some(file) = file
+            .as_deref()
+            .map(str::trim)
+            .filter(|file| !file.is_empty())
+        {
             message.push_str(&format.hint(&format!(
                 "\n  Created {} — {description}",
-                chalk.cyan(&file),
+                chalk.cyan(file),
             )));
         }
     }

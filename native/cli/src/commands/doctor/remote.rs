@@ -127,7 +127,12 @@ pub(super) fn examine(
                 return Err(io::Error::other(format!("error: diagnosis {name} not found")));
             }
             let results = std::mem::take(results);
-            Ok((results, response["metaData"].take()))
+            let meta = if response["metaData"].is_null() {
+                response["metadata"].take()
+            } else {
+                response["metaData"].take()
+            };
+            Ok((results, meta))
         }
         Remote::File(path) => file(context, options, path),
     }

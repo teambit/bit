@@ -133,7 +133,9 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
             .ok_or_else(|| unsupported("metadata string"))?;
         return Ok(format!("{scope}/{name}"));
     }
-    Ok(format!("{}/{}", text(&value["scope"])?, text(&value["name"])?))
+    let scope = text(&value["scope"]).or_else(|_| text(&value["id"]["scope"]))?;
+    let name = text(&value["name"]).or_else(|_| text(&value["id"]["name"]))?;
+    Ok(format!("{scope}/{name}"))
 }
 pub(super) fn text(value: &Value) -> io::Result<&str> {
     value

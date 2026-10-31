@@ -129,10 +129,13 @@ fn matched(ids: &[String], pattern: &str) -> io::Result<Vec<String>> {
         let name = full.split_once('/').map_or(full, |(_, name)| name);
         let mut selected = false;
         for pattern in &patterns {
-            let (negated, glob) = pattern
+            let trimmed = pattern.trim();
+            let (negated, glob) = trimmed
                 .strip_prefix('!')
-                .map_or((false, pattern.as_str()), |glob| (true, glob));
-            if !patterns::matching(&[full, name], &[glob.to_owned()])?.is_empty() {
+                .map_or((false, trimmed), |glob| (true, glob.trim()));
+            if !glob.is_empty()
+                && !patterns::matching(&[full, name], &[glob.to_owned()])?.is_empty()
+            {
                 selected = !negated;
             }
         }

@@ -249,6 +249,13 @@ fn extract_style_specifiers(source: &str) -> Vec<String> {
         let mut rest = source;
         while let Some(index) = rest.find(keyword) {
             rest = &rest[index + keyword.len()..];
+            if rest
+                .chars()
+                .next()
+                .is_some_and(|ch| ch.is_alphanumeric() || ch == '-' || ch == '_')
+            {
+                continue;
+            }
             found.extend(parse_style_target(rest));
         }
     }
@@ -256,7 +263,9 @@ fn extract_style_specifiers(source: &str) -> Vec<String> {
 }
 
 fn parse_style_target(after_keyword: &str) -> Option<String> {
-    let target = parse_quoted(after_keyword.trim_start())?;
+    let trimmed = after_keyword.trim_start();
+    let inner = trimmed.strip_prefix("url(").map_or(trimmed, str::trim_start);
+    let target = parse_quoted(inner)?;
     if ["~", "http:", "https:", "sass:"]
         .iter()
         .any(|prefix| target.starts_with(prefix))

@@ -162,13 +162,23 @@ fn seed_one_component(
         comp_heads.push((key.clone(), head.to_owned()));
     }
     if let Some(heads) = comp_val["detachedHeads"]["heads"].as_array() {
-        for head in heads.iter().filter_map(Value::as_str) {
+        for head in heads
+            .iter()
+            .filter_map(Value::as_str)
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+        {
             graph.add_root(head);
             detached_heads.push((key.clone(), head.to_owned()));
         }
     }
     if let Some(orphans) = comp_val["orphanedVersions"].as_object() {
-        for hash in orphans.values().filter_map(Value::as_str) {
+        for hash in orphans
+            .values()
+            .filter_map(Value::as_str)
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+        {
             graph.add_root(hash);
         }
     }
@@ -336,19 +346,25 @@ fn lane_component_refs(lane_val: &Value) -> CompHeadList {
 }
 
 fn collect_lane_comp_heads(comps_val: &Value) -> CompHeadList {
-    let Some(comps) = comps_val.as_array() else { return Vec::new() };
-    let mut out = Vec::new();
-    for item in comps {
-        let Some(head) = item["head"]
-            .as_str()
-            .filter(|val| !val.is_empty())
-        else {
-            continue;
-        };
-        let key = comp_value_key(&item["id"]);
-        out.push((key, head.to_owned()));
+    comps_val
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(parse_lane_comp_head)
+        .collect()
+}
+
+fn parse_lane_comp_head(item: &Value) -> Option<(String, String)> {
+    if let Some(raw) = item.as_str() {
+        let (id, head) = raw.trim().rsplit_once('@')?;
+        let (id, head) = (id.trim(), head.trim());
+        return (!id.is_empty() && !head.is_empty()).then(|| (id.to_owned(), head.to_owned()));
     }
-    out
+    let head = item["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())?;
+    Some((comp_value_key(&item["id"]), head.to_owned()))
 }
 
 fn collect_lane_update_deps(deps_val: &Value) -> CompHeadList {

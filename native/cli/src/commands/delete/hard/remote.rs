@@ -80,13 +80,14 @@ fn group(ids: &[String]) -> io::Result<Vec<(String, Vec<String>)>> {
         if scope.is_empty() || name.is_empty() || scope.contains("..") || name.contains("..") {
             return Err(io::Error::other("remote identity"));
         }
+        let canonical = format!("{scope}/{name}");
         if let Some((_, members)) = grouped
             .iter_mut()
             .find(|(existing_scope, _)| existing_scope == scope)
         {
-            members.push(trimmed.to_owned());
+            members.push(canonical);
         } else {
-            grouped.push((scope.to_owned(), vec![trimmed.to_owned()]));
+            grouped.push((scope.to_owned(), vec![canonical]));
         }
     }
     Ok(grouped)

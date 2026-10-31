@@ -87,7 +87,14 @@ pub(super) fn errors(row: &Compiled, output: &bit_install::output::Output) {
     }
     let errors = row.errors
         .iter()
-        .map(|error| format!("{}\nError: {}", error.path.display(), error.message.trim()))
+        .map(|error| {
+            let msg = error.message.trim();
+            if msg.is_empty() {
+                format!("{}\nError", error.path.display())
+            } else {
+                format!("{}\nError: {msg}", error.path.display())
+            }
+        })
         .collect::<Vec<_>>()
         .join("\n");
     output.console(&format!(

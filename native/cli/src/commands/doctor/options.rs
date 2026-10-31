@@ -39,10 +39,11 @@ impl Options {
 
     fn consume_trailing_name(&mut self, rest: &[&str]) -> Option<()> {
         for &arg in rest {
-            if arg.is_empty() || arg.starts_with('-') || self.name.is_some() {
+            let trimmed = arg.trim();
+            if trimmed.is_empty() || trimmed.starts_with('-') || self.name.is_some() {
                 return None;
             }
-            self.name = Some(arg.into());
+            self.name = Some(trimmed.into());
         }
         Some(())
     }

@@ -22,7 +22,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("cli arguments are not UTF-8".into()));
     };
     if let Some(skill) = parse_unknown_skill(&argv[1..]) {
-        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
             return Ok(Outcome::Declined("CI cli generate skill error delegated".into()));
         }
         return emit_unknown_skill(args, skill);
@@ -95,8 +95,8 @@ fn docs_enabled(rest: &[&str]) -> bool {
     let mut enabled = false;
     for &arg in rest {
         match arg {
-            "-d" | "-dm" | "-md" | "--docs" | "--docs=true" => enabled = true,
-            "--docs=false" => enabled = false,
+            "-d" | "-d=true" | "-dm" | "-md" | "--docs" | "--docs=true" => enabled = true,
+            "-d=false" | "--docs=false" => enabled = false,
             _ => {}
         }
     }
@@ -121,9 +121,9 @@ fn docs_option_len(rest: &[&str]) -> Option<usize> {
             Some(2)
         }
         [
-            "-d" | "-dm" | "-md" | "--docs" | "--docs=true" | "--docs=false" | "-m" | "--metadata"
-            | "--metadata=true" | "--metadata=false" | "--no-color" | "--no-color=true"
-            | "--no-color=false",
+            "-d" | "-d=true" | "-d=false" | "-dm" | "-md" | "--docs" | "--docs=true"
+            | "--docs=false" | "-m" | "-m=true" | "-m=false" | "--metadata" | "--metadata=true"
+            | "--metadata=false" | "--no-color" | "--no-color=true" | "--no-color=false",
             ..,
         ] => Some(1),
         [arg, ..]

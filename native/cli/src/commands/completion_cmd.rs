@@ -88,7 +88,17 @@ pub(super) fn valid_options(args: &[&str]) -> bool {
         if arg == "--" {
             return idx + 1 == args.len();
         }
-        if !matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false") {
+        if !matches!(
+            arg,
+            "--no-color"
+                | "--no-color=true"
+                | "--no-color=false"
+                | "--color"
+                | "--color=true"
+                | "--color=false"
+                | "--color=always"
+                | "--color=never",
+        ) {
             return false;
         }
     }
@@ -98,10 +108,18 @@ pub(super) fn valid_options(args: &[&str]) -> bool {
 pub(super) fn is_zsh_shell() -> bool {
     env::var("SHELL")
         .ok()
-        .is_some_and(|val| val.trim().contains("zsh"))
+        .is_some_and(|val| {
+            val.trim()
+                .to_ascii_lowercase()
+                .contains("zsh")
+        })
         || env::var("ZSH_NAME")
             .ok()
-            .is_some_and(|val| val.trim().contains("zsh"))
+            .is_some_and(|val| {
+                val.trim()
+                    .to_ascii_lowercase()
+                    .contains("zsh")
+            })
 }
 
 pub(super) const fn render_completion_script(zsh: bool) -> &'static str {

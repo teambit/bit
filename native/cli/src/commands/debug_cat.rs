@@ -64,8 +64,8 @@ fn parse_object_options(args: &[&str]) -> Option<ObjectOptions> {
             "--headers" | "--headers=true" => opts.headers = true,
             "--headers=false" => opts.headers = false,
             "--no-color" | "--no-color=true" | "--no-color=false" => {}
-            val if !val.starts_with('-') && !val.is_empty() && opts.hash.is_empty() => {
-                val.clone_into(&mut opts.hash);
+            val if !val.starts_with('-') && !val.trim().is_empty() && opts.hash.is_empty() => {
+                val.trim().clone_into(&mut opts.hash);
             }
             _ => return None,
         }
@@ -93,8 +93,8 @@ fn parse_id_json_options(args: &[&str]) -> Option<IdJsonOptions> {
             "-j" | "--json" | "--json=true" => opts.json = true,
             "--json=false" => opts.json = false,
             "--no-color" | "--no-color=true" | "--no-color=false" => {}
-            val if !val.starts_with('-') && !val.is_empty() && opts.id.is_empty() => {
-                val.clone_into(&mut opts.id);
+            val if !val.starts_with('-') && !val.trim().is_empty() && opts.id.is_empty() => {
+                val.trim().clone_into(&mut opts.id);
             }
             _ => return None,
         }
@@ -112,8 +112,8 @@ fn parse_single_id(args: &[&str]) -> Option<String> {
                 break;
             }
             "--no-color" | "--no-color=true" | "--no-color=false" => {}
-            val if !val.starts_with('-') && !val.is_empty() && id.is_empty() => {
-                val.clone_into(&mut id);
+            val if !val.starts_with('-') && !val.trim().is_empty() && id.is_empty() => {
+                val.trim().clone_into(&mut id);
             }
             _ => return None,
         }

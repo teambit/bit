@@ -156,7 +156,11 @@ impl Store {
         {
             return Err(io::Error::other("configuration store has an unsupported shape"));
         }
-        if projected.is_some_and(|value| value.get("__proto__").is_some()) {
+        if projected.is_some_and(|value| {
+            value.get("__proto__").is_some()
+                || value.get("constructor").is_some()
+                || value.get("prototype").is_some()
+        }) {
             return Err(io::Error::other(
                 "configuration prototype entries require the canonical command",
             ));

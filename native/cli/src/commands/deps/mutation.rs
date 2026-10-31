@@ -258,15 +258,16 @@ fn set_policy_field(spec: &SetSpec<'_>) -> &'static str {
 fn build_added_packages(spec: &SetSpec<'_>) -> Result<Value, Failure> {
     let mut pkg_map = Map::new();
     for (name, ver) in spec.packages {
-        if name.trim().is_empty() || ver.trim().is_empty() {
+        let (name, ver) = (name.trim(), ver.trim());
+        if name.is_empty() || ver.is_empty() {
             return Err(Failure::Declined("deps set package name or version is empty".into()));
         }
         let entry_val = if spec.optional {
             json!({ "optional": true, "version": ver })
         } else {
-            Value::String(ver.clone())
+            Value::String(ver.to_owned())
         };
-        pkg_map.insert(name.clone(), entry_val);
+        pkg_map.insert(name.to_owned(), entry_val);
     }
     Ok(Value::Object(pkg_map))
 }

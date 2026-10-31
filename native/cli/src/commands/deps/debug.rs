@@ -105,7 +105,7 @@ fn validate_simple_component(
         || component.config
             .iter()
             .any(|(key, value)| {
-                let bare = bit_install::config::aspect_id_without_version(key);
+                let bare = bit_install::config::aspect_id_without_version(key.trim());
                 bare != "teambit.envs/envs"
                     && (bare != "teambit.react/react"
                         || value
@@ -137,14 +137,12 @@ fn validate_simple_component(
 fn manual_policy(entry: &BitmapEntry) -> Result<ManualPolicy, Failure> {
     let Some(config) = entry.config
         .as_ref()
-        .and_then(|config| {
-            config
-                .get(DEPENDENCY_RESOLVER_ASPECT)
+        .and_then(|cfg| {
+            cfg.get(DEPENDENCY_RESOLVER_ASPECT)
                 .or_else(|| {
-                    config
-                        .iter()
+                    cfg.iter()
                         .find_map(|(key, val)| {
-                            (bit_install::config::aspect_id_without_version(key)
+                            (bit_install::config::aspect_id_without_version(key.trim())
                                 == DEPENDENCY_RESOLVER_ASPECT)
                                 .then_some(val)
                         })
@@ -185,15 +183,16 @@ fn validate_manual_component(
     entry: &BitmapEntry,
     component: &bit_install::model::WorkspaceComponent,
 ) -> Result<(), Failure> {
-    let unsupported_context = bit_install::config::aspect_id_without_version(&component.env_id)
-        != "teambit.harmony/node"
-        || !ctx.ws_config.variants.is_empty()
-        || !empty_policy(&ctx.ws_config.dependency_resolver.policy)
-        || component.has_package_json;
+    let unsupported_context =
+        bit_install::config::aspect_id_without_version(component.env_id.trim())
+            != "teambit.harmony/node"
+            || !ctx.ws_config.variants.is_empty()
+            || !empty_policy(&ctx.ws_config.dependency_resolver.policy)
+            || component.has_package_json;
     let extra_config = component.config
         .keys()
         .any(|key| {
-            let bare = bit_install::config::aspect_id_without_version(key);
+            let bare = bit_install::config::aspect_id_without_version(key.trim());
             bare != "teambit.envs/envs" && bare != DEPENDENCY_RESOLVER_ASPECT
         });
     let has_imports = component.files

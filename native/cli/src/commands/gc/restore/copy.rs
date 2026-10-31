@@ -12,9 +12,10 @@ pub(super) fn preflight(source: &Path, target: &Path) -> io::Result<()> {
     check::target(source, target, &metadata, destination.as_ref())?;
     check::parents(source, target, &metadata)?;
     if metadata.is_dir() {
-        for entry in fs::read_dir(source)? {
-            let entry = entry?;
-            preflight(&entry.path(), &target.join(entry.file_name()))?;
+        let mut entries = fs::read_dir(source)?.collect::<io::Result<Vec<_>>>()?;
+        entries.sort_by_key(fs::DirEntry::file_name);
+        for item in entries.into_iter().rev() {
+            preflight(&item.path(), &target.join(item.file_name()))?;
         }
     }
     #[cfg(unix)]

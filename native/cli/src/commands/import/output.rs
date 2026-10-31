@@ -26,7 +26,7 @@ pub(super) fn json_report(
 ) -> io::Result<String> {
     let details = prepared
         .get("importDetails")
-        .filter(|value| !value.is_null())
+        .filter(|value| value.is_array())
         .cloned()
         .unwrap_or_else(|| json!([]));
     let mut report = json!({"importDetails":details,"missingIds":[]});

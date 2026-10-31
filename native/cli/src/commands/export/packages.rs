@@ -56,12 +56,17 @@ pub(super) fn link(root: &Path, staged: &Value) -> io::Result<()> {
 
 /// Check all captured configuration and manifest inputs before communication starts.
 pub(super) fn validate(prepared: &Value) -> io::Result<()> {
+    let cloud_domain = prepared["cloudDomain"]
+        .as_str()
+        .map(str::trim)
+        .filter(|domain| !domain.is_empty())
+        .unwrap_or("bit.cloud");
     for plan in plans(prepared)? {
         let _ = prepared_package_manifest(
             &plan.component,
             &plan.dependencies,
             &plan.props,
-            prepared["cloudDomain"].as_str().unwrap_or("bit.cloud"),
+            cloud_domain,
             plan.is_aspect,
         );
     }
@@ -92,6 +97,8 @@ fn has_custom_pkg_name(config: &serde_json::Map<String, Value>) -> bool {
         .iter()
         .any(|(key, val)| {
             bit_install::config::aspect_id_without_version(key) == "teambit.pkg/pkg"
-                && val["packageJson"]["name"].is_string()
+                && val["packageJson"]["name"]
+                    .as_str()
+                    .is_some_and(|name| !name.trim().is_empty())
         })
 }

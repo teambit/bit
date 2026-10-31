@@ -76,10 +76,13 @@ impl EnvUpdatePlan {
                 self.already_up_to_date,
             )));
         }
-        let label = self.raw_env_id.as_deref().unwrap_or("undefined");
+        let label = self.raw_env_id
+            .as_deref()
+            .map(str::trim)
+            .filter(|id| !id.is_empty());
         Ok(formatter.hint(&format!(
             "unable to find any components using env {}",
-            chalk.bold(label),
+            chalk.bold(label.unwrap_or("undefined")),
         )))
     }
 }

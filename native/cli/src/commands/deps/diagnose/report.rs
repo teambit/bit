@@ -48,7 +48,7 @@ pub(in crate::commands::deps) fn run(
     let diagnosis = match inspect(root, origins) {
         Ok(diagnosis) => diagnosis,
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+            if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
                 return Ok(Outcome::Declined("CI deps diagnose error stack".into()));
             }
             return workspace_command::execute_then(root, args, "diagnose", |_| {
@@ -95,14 +95,15 @@ fn inspect(root: &Path, origins: bool) -> Result<Diagnosis, Failure> {
             "peer version origins require component policy provenance".into(),
         ));
     }
+    let duplicated = copies
+        .values()
+        .filter(|&&count| count > 1)
+        .count();
     Ok(Diagnosis {
         components: ctx.ws.components.len(),
         store_entries: entries.len(),
         unique: copies.len(),
-        duplicated: copies
-            .values()
-            .filter(|&&count| count > 1)
-            .count(),
+        duplicated,
         packages,
     })
 }
@@ -124,14 +125,17 @@ fn count_copies(entries: &[String]) -> HashMap<String, usize> {
 }
 
 fn package_name(entry: &str) -> Option<String> {
+    let entry = entry.trim();
     if let Some((scope, rest)) = entry.split_once('+')
         && scope.starts_with('@')
         && scope.len() > 1
     {
         let (name, _) = rest.split_once('@')?;
+        let (scope, name) = (scope.trim(), name.trim());
         return (!name.is_empty()).then(|| format!("{scope}/{name}"));
     }
     let (name, _) = entry.split_once('@')?;
+    let name = name.trim();
     (!name.is_empty()).then(|| name.to_owned())
 }
 

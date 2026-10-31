@@ -19,9 +19,10 @@ impl Options {
         values.retain(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"));
         let command = if values
             .first()
-            .is_some_and(|arg| !arg.starts_with('-') && *arg != "--")
-        {
-            values.remove(0).to_owned()
+            .is_some_and(|arg| {
+                !arg.trim().is_empty() && !arg.trim().starts_with('-') && arg.trim() != "--"
+            }) {
+            values.remove(0).trim().to_owned()
         } else {
             "config".to_owned()
         };
@@ -64,19 +65,19 @@ impl Options {
         match self.command.as_str() {
             "set" => self.set_flag(arg),
             "config" | "list" => match arg {
-                "-j" | "--json" | "--json=true" => {
+                "-j" | "-j=true" | "--json" | "--json=true" => {
                     self.json = true;
                     Some(())
                 }
-                "--json=false" => {
+                "-j=false" | "--json=false" => {
                     self.json = false;
                     Some(())
                 }
-                "-d" | "--detailed" | "--detailed=true" => {
+                "-d" | "-d=true" | "--detailed" | "--detailed=true" => {
                     self.detailed = true;
                     Some(())
                 }
-                "--detailed=false" => {
+                "-d=false" | "--detailed=false" => {
                     self.detailed = false;
                     Some(())
                 }
@@ -94,11 +95,11 @@ impl Options {
 
     fn set_flag(&mut self, arg: &str) -> Option<()> {
         match arg {
-            "-l" | "--local" | "--local=true" | "-lt" | "-tl" => {
+            "-l" | "-l=true" | "--local" | "--local=true" | "-lt" | "-tl" => {
                 self.origin = Some("scope".to_owned());
             }
-            "--local=false" | "--local-track=false" => {}
-            "-t" | "--local-track" | "--local-track=true" => {
+            "-l=false" | "--local=false" | "-t=false" | "--local-track=false" => {}
+            "-t" | "-t=true" | "--local-track" | "--local-track=true" => {
                 if self.origin.as_deref() != Some("scope") {
                     self.origin = Some("workspace".to_owned());
                 }

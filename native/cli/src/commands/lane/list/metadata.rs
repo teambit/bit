@@ -77,13 +77,14 @@ pub(super) fn updates(value: &Value) -> io::Result<Option<Vec<Value>>> {
             array(Some(value), "lane update-dependents")?
                 .iter()
                 .map(|id| {
-                    let id = text(Some(id))?;
+                    let id = text(Some(id))?.trim();
                     let (identity, head) =
                         id.rsplit_once('@').ok_or_else(|| decline("lane update-dependent id"))?;
+                    let (identity, head) = (identity.trim(), head.trim());
                     let (scope, name) = identity
                         .split_once('/')
                         .ok_or_else(|| decline("lane update-dependent identity"))?;
-                    if scope.is_empty() || name.is_empty() || head.is_empty() {
+                    if scope.trim().is_empty() || name.trim().is_empty() || head.is_empty() {
                         return Err(decline("lane update-dependent identity"));
                     }
                     Ok(json!({"id": identity, "head": head}))
@@ -107,7 +108,12 @@ fn scoped_id(id: &Value) -> io::Result<String> {
             .ok_or_else(|| decline("lane component identity"))?;
         return Ok(format!("{scope}/{name}"));
     }
-    Ok(format!("{}/{}", text(id.get("scope"))?.trim(), text(id.get("name"))?.trim()))
+    let scope = text(id.get("scope"))?.trim();
+    let name = text(id.get("name"))?.trim();
+    if scope.is_empty() || name.is_empty() {
+        return Err(decline("lane component identity"));
+    }
+    Ok(format!("{scope}/{name}"))
 }
 
 pub(super) fn readme(value: &Value) -> io::Result<Option<Value>> {

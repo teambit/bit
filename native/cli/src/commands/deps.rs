@@ -131,7 +131,7 @@ fn run_without_workspace(
     {
         return get::run_bare_scope(&scope, args, id, *tree, chalk);
     }
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
         return Ok(Outcome::Declined("CI deps outside workspace delegated".into()));
     }
     let Some((json, msg)) = outside_workspace_failure(subcommand) else {
@@ -195,7 +195,14 @@ fn run_prepared(
             workspace_command::execute_then(root, args, label, |_output| prepared.commit(chalk))
         }
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            if env::var_os("CI")
+                .is_some_and(|value| {
+                    !value
+                        .to_string_lossy()
+                        .trim()
+                        .is_empty()
+                })
+            {
                 return Ok(Outcome::Declined("CI deps error stack".into()));
             }
             workspace_command::execute_then(root, args, label, |_output| {

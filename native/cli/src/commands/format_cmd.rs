@@ -32,8 +32,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native format grammar".into()));
     };
+    let ci_active = is_ci_active();
     if let Some(root) = workspace::root(&env::current_dir()?) {
-        if env::var_os("CI").is_none_or(|val| val.is_empty())
+        if !ci_active
             && let Some(err) =
                 validate_lint_pattern(&root, options.pattern.as_deref(), Chalk::detect(args))
         {
@@ -41,7 +42,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         }
         return runner::run(&root, args, &options);
     }
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if ci_active {
         return Ok(Outcome::Declined("CI format delegated".into()));
     }
     let cwd = env::current_dir()?;
@@ -107,6 +108,15 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         }
     }
     Some(options)
+}
+
+fn is_ci_active() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
 }
 
 fn consume_trailing_format_pattern<'a>(

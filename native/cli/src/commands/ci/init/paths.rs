@@ -8,7 +8,7 @@ use std::{
 };
 
 pub(super) fn real(path: &Path) -> io::Result<PathBuf> {
-    if path.as_os_str().is_empty() || !path.exists() {
+    if path.as_os_str().is_empty() || path.to_string_lossy().trim().is_empty() || !path.exists() {
         return Ok(path.to_owned());
     }
     let mut resolved = normalize(&std::path::absolute(path)?);

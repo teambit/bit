@@ -192,17 +192,28 @@ impl State<'_> {
     }
 
     fn comparison(&self, id: &str, field: &str) -> bool {
+        let id = id.trim();
         self.compared["comparisons"]
             .as_array()
             .into_iter()
             .flatten()
-            .any(|row| row["identity"] == id && row[field] == true)
+            .any(|row| {
+                row["identity"]
+                    .as_str()
+                    .is_some_and(|cand| cand.trim() == id)
+                    && row[field] == true
+            })
     }
 
     fn current(&self, id: &str, aspect: &str) -> Value {
+        let id = id.trim();
         self.captured
             .iter()
-            .find(|row| row["identity"] == id)
+            .find(|row| {
+                row["identity"]
+                    .as_str()
+                    .is_some_and(|cand| cand.trim() == id)
+            })
             .and_then(|row| row["current"]["extensions"].as_array())
             .and_then(|rows| {
                 rows.iter().find(|row| crate::commands::update_cmd::matches_aspect(row, aspect))

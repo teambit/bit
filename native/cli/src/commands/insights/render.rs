@@ -78,12 +78,14 @@ fn parse_id(id: &str) -> ParsedId<'_> {
     let (bare, version) = id
         .rsplit_once('@')
         .map_or((id, None), |(bare, ver)| {
+            let bare = bare.trim();
             let ver = ver.trim();
             if bare.is_empty() { (id, None) } else { (bare, (!ver.is_empty()).then_some(ver)) }
         });
     let (scope, name) = bare
         .rsplit_once('/')
         .map_or((None, bare), |(scope, name)| {
+            let (scope, name) = (scope.trim(), name.trim());
             if scope.is_empty() || name.is_empty() { (None, bare) } else { (Some(scope), name) }
         });
     ParsedId { scope, name, version }

@@ -74,7 +74,13 @@ fn foreign_tagged_target(root: &Path, result: &Value) -> bool {
     let Some(scope) = fs::read(bit_object_import::scope_path(root).join("scope.json"))
         .ok()
         .and_then(|body| bit_object_import::parse_jsonc(&body).ok())
-        .and_then(|value| value["name"].as_str().map(str::to_string))
+        .and_then(|value| {
+            value["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+                .map(str::to_string)
+        })
     else {
         return false;
     };
@@ -83,11 +89,14 @@ fn foreign_tagged_target(root: &Path, result: &Value) -> bool {
         .is_some_and(|rows| {
             rows.iter()
                 .any(|row| {
-                    let identity = row["id"].as_str().unwrap_or_default();
+                    let identity = row["id"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .trim();
                     let version = row["_fullId"]
                         .as_str()
                         .and_then(|id| id.rsplit_once('@'))
-                        .map(|(_, version)| version)
+                        .map(|(_, version)| version.trim())
                         .unwrap_or_default();
                     !(identity.starts_with(&format!("{scope}/"))
                         || version.len() == 40

@@ -70,7 +70,15 @@ fn lane_id(lane: &Value) -> io::Result<Value> {
             .split_once('/')
             .unwrap_or_default()
     } else {
-        (id["scope"].as_str().unwrap_or_default(), id["name"].as_str().unwrap_or_default())
+        let scope = id["scope"]
+            .as_str()
+            .or_else(|| id["_legacy"]["scope"].as_str())
+            .unwrap_or_default();
+        let name = id["name"]
+            .as_str()
+            .or_else(|| id["_legacy"]["name"].as_str())
+            .unwrap_or_default();
+        (scope, name)
     };
     let scope = scope.trim();
     let name = name.trim();

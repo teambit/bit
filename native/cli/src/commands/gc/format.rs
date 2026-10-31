@@ -139,9 +139,9 @@ fn build_summary_lines(
         )));
     }
     for (kind, stats) in &result.deleted.by_type {
-        let kind = kind.trim();
-        let size_dim = chalk.dim(&format!("({})", format_bytes(stats.size)));
-        lines.push(formatter.item(&format!("{kind}: {} objects {size_dim}", stats.count)));
+        if let Some(line) = format_type_stat_line(formatter, chalk, kind, stats) {
+            lines.push(line);
+        }
     }
     lines.push(formatter.item(&format!(
         "keeping {} versions and everything they point at",
@@ -156,6 +156,20 @@ fn build_summary_lines(
         )));
     }
     lines
+}
+
+fn format_type_stat_line(
+    formatter: &Formatter,
+    chalk: Chalk,
+    kind: &str,
+    stats: &DeletedTypeStats,
+) -> Option<String> {
+    let kind = kind.trim();
+    if kind.is_empty() || stats.count == 0 {
+        return None;
+    }
+    let size_dim = chalk.dim(&format!("({})", format_bytes(stats.size)));
+    Some(formatter.item(&format!("{kind}: {} objects {size_dim}", stats.count)))
 }
 
 fn format_size_line(

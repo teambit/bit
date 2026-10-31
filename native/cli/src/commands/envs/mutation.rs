@@ -265,6 +265,7 @@ fn remove_env_from_map_with_fallback(
 fn find_model_env(root: &Path, entry: &BitmapEntry) -> Result<Option<String>, Failure> {
     let Some(ver) = entry.id.version
         .as_deref()
+        .map(str::trim)
         .filter(|ver| !ver.is_empty())
     else {
         return Ok(None);
@@ -287,7 +288,8 @@ fn find_model_env(root: &Path, entry: &BitmapEntry) -> Result<Option<String>, Fa
                 .as_str()
                 .or_else(|| ext["data"]["id"].as_str())
         })
-        .filter(|env| !env.trim().is_empty() && *env != "-")
+        .map(str::trim)
+        .filter(|env| !env.is_empty() && *env != "-")
         .map(str::to_owned))
 }
 

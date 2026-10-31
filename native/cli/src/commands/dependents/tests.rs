@@ -30,8 +30,8 @@ fn parses_dependents_options_and_checks_bitmap_scope() {
 #[test]
 fn computes_transitive_dependents_and_formats_report() {
     let mut graph = DepGraph::default();
-    graph.add_edge("my-scope/comp1@0.0.1".into(), "my-scope/comp2@0.0.1".into(), "prod");
-    graph.add_edge("my-scope/comp2@0.0.1".into(), "my-scope/comp3@0.0.1".into(), "prod");
+    graph.add_edge("my-scope/comp1@0.0.1", "my-scope/comp2@0.0.1", "prod");
+    graph.add_edge("my-scope/comp2@0.0.1", "my-scope/comp3@0.0.1", "prod");
 
     let deps = graph.dependents_of("my-scope/comp3@0.0.1");
     assert_eq!(

@@ -163,13 +163,17 @@ fn extension_configs(
     );
     let mut output = Vec::new();
     for name in names {
+        let trimmed = name.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
         let (ours, theirs) = (left.configs.get(name), right.configs.get(name));
         if let (Some(ours), Some(theirs)) = (ours, theirs)
             && stringify(ours, false)? == stringify(theirs, false)?
         {
             continue;
         }
-        let field = format!("{name} configuration");
+        let field = format!("{trimmed} configuration");
         let as_text = |config: Option<&Value>| {
             config.map_or(Ok(String::new()), |config| stringify(config, true))
         };

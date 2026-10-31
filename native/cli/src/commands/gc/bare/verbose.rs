@@ -36,7 +36,13 @@ fn description(hash: &str, object: &Object) -> io::Result<String> {
     let value = &object.value;
     let id = match kind {
         "Source" | "Version" => String::new(),
-        "Component" | "Lane" => identity(value)?,
+        "Component" => identity(value)?,
+        "Lane" => identity(value)
+            .or_else(|_| {
+                text(&value["name"])
+                    .or_else(|_| text(&value["id"]["name"]))
+                    .map(str::to_owned)
+            })?,
         "ScopeMeta" | "Symlink" => text(&value["name"])?.into(),
         "VersionHistory" => format!("{}:VersionHistory", identity(value)?),
         "LaneHistory" => format!("{}:LaneHistory", text(&value["laneHash"])?),

@@ -36,7 +36,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native dependents grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
         return Ok(Outcome::Declined("CI dependents delegated".into()));
     }
     let cwd = env::current_dir()?;
@@ -100,18 +100,19 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         match arg {
             "--" => {
                 for val in iter {
-                    (!val.is_empty()
-                        && !val.starts_with('-')
-                        && id.replace(val.to_owned()).is_none())
+                    let trimmed = val.trim();
+                    (!trimmed.is_empty()
+                        && !trimmed.starts_with('-')
+                        && id.replace(trimmed.to_owned()).is_none())
                     .then_some(())?;
                 }
                 break;
             }
             "--no-color" | "--no-color=true" | "--no-color=false" => {}
-            "-j" | "--json" | "--json=true" => json = true,
-            "--json=false" => json = false,
-            val if !val.starts_with('-') && !val.is_empty() && id.is_none() => {
-                id = Some(val.to_owned());
+            "-j" | "-j=true" | "--json" | "--json=true" => json = true,
+            "-j=false" | "--json=false" => json = false,
+            val if !val.starts_with('-') && !val.trim().is_empty() && id.is_none() => {
+                id = Some(val.trim().to_owned());
             }
             _ => return None,
         }
@@ -143,11 +144,13 @@ pub(super) fn find_existing_bitmap_entry<'a>(
     bitmap: &'a Bitmap,
     raw_id: &str,
 ) -> Option<&'a BitmapEntry> {
+    let raw_id = raw_id.trim();
     let has_version = raw_id.contains('@');
     let without_version = raw_id
         .split('@')
         .next()
-        .unwrap_or(raw_id);
+        .unwrap_or(raw_id)
+        .trim();
     if let Some(entry) = bitmap.entries
         .iter()
         .find(|entry| {

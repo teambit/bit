@@ -18,18 +18,9 @@ impl Id {
     /// `ComponentID.fromString(text)` (`BitId.parse(text, true)`).
     pub fn parse(id: &str) -> io::Result<Self> {
         let id = id.trim();
-        let (id, version) = match id.rfind('@') {
-            Some(index) if index > 0 => {
-                let mut parts = id.split('@');
-                let name = parts.next().unwrap_or_default().trim();
-                (
-                    name,
-                    parts
-                        .next()
-                        .unwrap_or_default()
-                        .trim()
-                        .to_string(),
-                )
+        let (id, version) = match id.rsplit_once('@') {
+            Some((prefix, ver)) if !prefix.trim().is_empty() => {
+                (prefix.trim(), ver.trim().to_string())
             }
             _ => (id, "latest".to_string()),
         };
@@ -80,7 +71,9 @@ impl Id {
             .as_deref()
             .map(str::trim)
             .filter(|version| !version.is_empty())
-            .is_some_and(|version| !matches!(version, "latest" | "head"))
+            .is_some_and(|version| {
+                !version.eq_ignore_ascii_case("latest") && !version.eq_ignore_ascii_case("head")
+            })
     }
 
     pub fn without_version(&self) -> String {

@@ -277,19 +277,21 @@ fn load_existing_comp_json(
     let existing: Value = bit_object_import::parse_jsonc(&fs::read(abs_path)?)
         .map_err(|err| Failure::Declined(err.to_string()))?;
     let valid_id = if let Some(raw) = existing["componentId"].as_str() {
-        raw.rsplit_once('@')
-            .map_or(raw, |(bare, _)| bare)
+        let trimmed_raw = raw.trim();
+        trimmed_raw
+            .rsplit_once('@')
+            .map_or(trimmed_raw, |(bare, _)| bare.trim())
             .split_once('/')
-            .is_some_and(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .is_some_and(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
     } else if let Some(comp_id) = existing["componentId"].as_object() {
         comp_id
             .get("scope")
             .and_then(Value::as_str)
-            .is_some_and(|scope| !scope.is_empty())
+            .is_some_and(|scope| !scope.trim().is_empty())
             && comp_id
                 .get("name")
                 .and_then(Value::as_str)
-                .is_some_and(|name| !name.is_empty())
+                .is_some_and(|name| !name.trim().is_empty())
     } else {
         return Err(Failure::Declined("missing componentId in component.json".into()));
     };

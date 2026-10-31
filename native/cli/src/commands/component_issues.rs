@@ -213,10 +213,11 @@ fn parse(args: &[&str]) -> Option<bool> {
     while let Some(arg) = iter.next() {
         match arg.trim() {
             "--" => return iter.next().is_none().then_some(json),
-            "-j" | "--json" | "--json=true" => json = true,
-            "--json=false" => json = false,
-            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
-            | "--color=false" | "--color=always" | "--color=never" => {}
+            "-j" | "-j=true" | "--json" | "--json=true" => json = true,
+            "-j=false" | "--json=false" => json = false,
+            "--no-color" | "--no-colors" | "--no-color=true" | "--no-color=false" | "--color"
+            | "--colors" | "--color=true" | "--color=false" | "--color=always"
+            | "--color=never" => {}
             _ => return None,
         }
     }

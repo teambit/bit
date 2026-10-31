@@ -23,8 +23,13 @@ pub(in crate::commands) fn executable(root: &Path) -> io::Result<String> {
 
 fn normalize_git_executable(configured: Option<String>) -> String {
     configured
-        .or_else(|| std::env::var("BIT_CONFIG_GIT_PATH").ok())
         .map(|path| path.trim().to_string())
         .filter(|path| !path.is_empty())
+        .or_else(|| {
+            std::env::var("BIT_CONFIG_GIT_PATH")
+                .ok()
+                .map(|path| path.trim().to_string())
+                .filter(|path| !path.is_empty())
+        })
         .unwrap_or_else(|| "git".to_string())
 }

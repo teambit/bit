@@ -134,6 +134,9 @@ fn resolve_seeder_id(ws: &Workspace, raw_id: &str) -> Result<String, Failure> {
     let (bare, explicit_ver) = raw_id
         .rsplit_once('@')
         .map_or((raw_id, None), |(id, ver)| (id.trim(), Some(ver.trim())));
+    if bare.is_empty() || explicit_ver == Some("") {
+        return Err(Failure::Declined("invalid graph target id".into()));
+    }
     let normalized = bare.trim_start_matches("./").trim_end_matches('/');
     let Some((entry, _)) = ws
         .active()
@@ -146,7 +149,9 @@ fn resolve_seeder_id(ws: &Workspace, raw_id: &str) -> Result<String, Failure> {
     else {
         return Err(Failure::Declined("graph target id not found in workspace".into()));
     };
-    if let Some(ver) = explicit_ver.filter(|ver| !matches!(*ver, "" | "latest" | "head")) {
+    if let Some(ver) = explicit_ver.filter(|ver| {
+        !ver.is_empty() && !ver.eq_ignore_ascii_case("latest") && !ver.eq_ignore_ascii_case("head")
+    }) {
         return Ok(format!("{}@{ver}", entry.id.to_string_without_version()));
     }
     Ok(selection::entry_full_id(entry))
@@ -331,13 +336,20 @@ fn match_ws_dep(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<Strin
 }
 
 pub(crate) fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
-    if matches!(ver, "" | "latest" | "head") {
-        return comp_val["head"].as_str().map(str::to_owned);
+    let ver = ver.trim();
+    if ver.is_empty() || ver.eq_ignore_ascii_case("latest") || ver.eq_ignore_ascii_case("head") {
+        return comp_val["head"]
+            .as_str()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
+            .map(str::to_owned);
     }
     comp_val["versions"]
         .get(ver)
         .and_then(Value::as_str)
         .or_else(|| comp_val["orphanedVersions"].get(ver).and_then(Value::as_str))
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
         .map(str::to_owned)
         .or_else(|| {
             (ver.len() == 40 && ver.bytes().all(|byte| byte.is_ascii_hexdigit())).then(|| {

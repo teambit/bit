@@ -21,8 +21,19 @@ pub(super) fn ids(engine: &mut Engine, root: &Path, options: &Options) -> io::Re
     let patterns = options.ids
         .iter()
         .map(|pattern| {
-            regress::Regex::new(&format!("^{}$", pattern.trim().replace('*', ".*")))
-                .map_err(|error| io::Error::other(error.to_string()))
+            let mut expr = String::from("^");
+            for ch in pattern.trim().chars() {
+                if ch == '*' {
+                    expr.push_str(".*");
+                } else if r".+?()[]{}^$|\".contains(ch) {
+                    expr.push('\\');
+                    expr.push(ch);
+                } else {
+                    expr.push(ch);
+                }
+            }
+            expr.push('$');
+            regress::Regex::new(&expr).map_err(|error| io::Error::other(error.to_string()))
         })
         .collect::<io::Result<Vec<_>>>()?;
     Ok(ids

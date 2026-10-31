@@ -80,7 +80,23 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             continue;
         }
         match args[idx] {
-            "--no-color"
+            arg if is_ignored_debug_load_flag(arg) => {}
+            "-j" | "-j=true" | "-rj" | "-jr" | "--json" | "--json=true" => json = true,
+            "-j=false" | "--json=false" => json = false,
+            val if !val.trim().starts_with('-') && !val.trim().is_empty() && id.is_none() => {
+                id = Some(val.trim().to_owned());
+            }
+            _ => return None,
+        }
+        idx += 1;
+    }
+    Some(Options { id: id?, json })
+}
+
+fn is_ignored_debug_load_flag(arg: &str) -> bool {
+    matches!(
+        arg,
+        "--no-color"
             | "--no-color=true"
             | "--no-color=false"
             | "--all-aspects"
@@ -90,19 +106,12 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             | "--skip-deps=true"
             | "--skip-deps=false"
             | "-r"
+            | "-r=true"
+            | "-r=false"
             | "--re-load"
             | "--re-load=true"
-            | "--re-load=false" => {}
-            "-j" | "-rj" | "-jr" | "--json" | "--json=true" => json = true,
-            "--json=false" => json = false,
-            val if !val.trim().starts_with('-') && !val.trim().is_empty() && id.is_none() => {
-                id = Some(val.trim().to_owned());
-            }
-            _ => return None,
-        }
-        idx += 1;
-    }
-    Some(Options { id: id?, json })
+            | "--re-load=false",
+    )
 }
 
 fn ci_enabled() -> bool {
@@ -147,11 +156,15 @@ pub(super) fn check_missing_workspace_component(
     let bitmap = Bitmap::load(root, Some(&default_scope)).map_err(|err| err.to_string())?;
 
     let normalized = inventory::normalize(raw_id);
-    let directory = normalized.strip_prefix("./").unwrap_or(&normalized);
+    let directory = normalized
+        .strip_prefix("./")
+        .unwrap_or(&normalized)
+        .trim_end_matches('/');
     if bitmap.entries
         .iter()
         .any(|entry| {
-            entry.owns_its_dir() && !entry.root_dir.is_empty() && entry.root_dir == directory
+            let root_dir = entry.root_dir.trim().trim_end_matches('/');
+            !root_dir.is_empty() && root_dir == directory && entry.owns_its_dir()
         })
         || find_existing_bitmap_entry(&bitmap, raw_id).is_some()
     {

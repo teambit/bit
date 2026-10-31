@@ -259,16 +259,18 @@ pub(in crate::commands) fn resolve_component_entry(
 fn index_row_scope_and_name(row: &Value) -> (&str, &str) {
     if let Some(id_str) = row["id"].as_str() {
         let bare = id_str
+            .trim()
             .split('@')
             .next()
-            .unwrap_or(id_str);
+            .unwrap_or(id_str)
+            .trim();
         return bare
             .split_once('/')
-            .unwrap_or(("", bare));
+            .map_or(("", bare), |(scope, name)| (scope.trim(), name.trim()));
     }
     (
-        row["id"]["scope"].as_str().unwrap_or_default(),
-        row["id"]["name"].as_str().unwrap_or_default(),
+        row["id"]["scope"].as_str().map_or("", str::trim),
+        row["id"]["name"].as_str().map_or("", str::trim),
     )
 }
 
@@ -344,15 +346,10 @@ pub(in crate::commands) fn diagnose_cat_component_error(
     raw_id: &str,
     chalk: Chalk,
 ) -> Option<String> {
-    let (bare_id, version_opt) = raw_id
-        .rsplit_once('@')
-        .map_or((raw_id, None), |(id, ver)| (id, Some(ver)));
-    if bare_id.is_empty() || version_opt == Some("") {
-        return None;
-    }
+    let (bare_id, version_opt) = split_cat_id(raw_id)?;
     let Some((comp_scope, comp_name, comp_hash)) = resolve_component_entry(scope_dir, bare_id)
     else {
-        return diagnose_component_lookup_error(scope_dir, raw_id, bare_id, chalk);
+        return diagnose_component_lookup_error(scope_dir, raw_id.trim(), bare_id, chalk);
     };
     let (kind, comp_val) = bit_object_import::read_scope_object(scope_dir, &comp_hash).ok()??;
     let ver = (kind == "Component").then_some(version_opt).flatten()?;

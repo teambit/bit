@@ -8,12 +8,16 @@ pub(super) fn render(options: &Options, ids: &[String], chalk: Chalk) -> Report 
     let summary = summary(options, ids, chalk);
     let mut sections = vec![formatter.success_summary(&summary)];
     if options.multiple() {
-        sections.push(
-            ids.iter()
-                .map(|id| formatter.item(id.trim()))
-                .collect::<Vec<_>>()
-                .join("\n"),
-        );
+        let items = ids
+            .iter()
+            .map(|id| id.trim())
+            .filter(|id| !id.is_empty())
+            .map(|id| formatter.item(id))
+            .collect::<Vec<_>>()
+            .join("\n");
+        if !items.is_empty() {
+            sections.push(items);
+        }
     }
     Report { data: sections.join("\n\n"), code: 0, details: None }
 }

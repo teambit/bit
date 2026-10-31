@@ -15,7 +15,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("deprecation arguments are not UTF-8".into()));
     };
-    let undo = argv[0] == "undeprecate";
+    let undo = argv[0].trim() == "undeprecate";
     let Some(options) = options::parse(&argv[1..], undo) else {
         return Ok(Outcome::Declined("outside native deprecation grammar".into()));
     };
@@ -63,6 +63,7 @@ fn run_workspace(
             linker.capture(root, &bitmap, std::slice::from_ref(id))?;
             print!("{}", linker.take_stdout());
         }
+        linker.validate_captures()?;
         plan.commit(&workspace_command::file_id())?;
         Ok(report)
     })

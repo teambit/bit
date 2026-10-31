@@ -154,32 +154,34 @@ fn apply_remove_short_bundle(
 }
 
 fn select(names: &[String], lanes: &[list::LaneData], force: bool) -> io::Result<Vec<String>> {
-    names
-        .iter()
-        .map(|name| {
-            let matched = lanes
-                .iter()
-                .filter(|lane| matches_lane(lane, name.trim()))
-                .collect::<Vec<_>>();
-            let [lane] = matched.as_slice() else {
-                return Err(io::Error::other("lane name is missing or ambiguous"));
-            };
-            if !force && lane.is_merged != Some(true) {
-                return Err(io::Error::other("lane is not fully merged"));
-            }
-            Ok(format!(
-                "{}/{}",
-                lane.id["scope"]
-                    .as_str()
-                    .map(str::trim)
-                    .unwrap_or_default(),
-                lane.id["name"]
-                    .as_str()
-                    .map(str::trim)
-                    .unwrap_or_default(),
-            ))
-        })
-        .collect()
+    let mut ids = Vec::with_capacity(names.len());
+    for name in names {
+        let matched = lanes
+            .iter()
+            .filter(|lane| matches_lane(lane, name.trim()))
+            .collect::<Vec<_>>();
+        let [lane] = matched.as_slice() else {
+            return Err(io::Error::other("lane name is missing or ambiguous"));
+        };
+        if !force && lane.is_merged != Some(true) {
+            return Err(io::Error::other("lane is not fully merged"));
+        }
+        let id = format!(
+            "{}/{}",
+            lane.id["scope"]
+                .as_str()
+                .map(str::trim)
+                .unwrap_or_default(),
+            lane.id["name"]
+                .as_str()
+                .map(str::trim)
+                .unwrap_or_default(),
+        );
+        if !ids.contains(&id) {
+            ids.push(id);
+        }
+    }
+    Ok(ids)
 }
 
 fn matches_lane(lane: &list::LaneData, target: &str) -> bool {

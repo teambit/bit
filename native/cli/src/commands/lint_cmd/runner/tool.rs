@@ -38,6 +38,9 @@ impl Session {
         };
         let package =
             cli.bit_dir.ok_or_else(|| invalid("linter package root"))?.join("package.json");
+        if !package.is_file() {
+            return Err(invalid("linter package root"));
+        }
         let errors = tempfile::tempfile()?;
         let mut child = Command::new(cli.node)
             .arg("-e")

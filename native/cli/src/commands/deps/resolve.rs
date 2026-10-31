@@ -218,6 +218,7 @@ impl WorkspaceDepsContext {
     }
 
     pub(super) fn find_comp_by_pkg(&self, pkg_name: &str) -> Option<&WorkspaceComponent> {
+        let pkg_name = pkg_name.trim();
         self.ws.components
             .iter()
             .find(|comp| {
@@ -234,6 +235,7 @@ impl WorkspaceDepsContext {
         lifecycle: &'static str,
         override_ver: Option<&str>,
     ) -> Option<ResolvedDep> {
+        let pkg_name = pkg_name.trim();
         let pkg_json = self.root
             .join("node_modules")
             .join(pkg_name)
@@ -243,7 +245,9 @@ impl WorkspaceDepsContext {
         let (scope, name, id_ver) = parse_manifest_comp_id(comp_id)?;
         let ver = override_ver
             .or(id_ver)
-            .or_else(|| parsed["version"].as_str())?;
+            .or_else(|| parsed["version"].as_str())
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())?;
         let bare = format!("{scope}/{name}");
         Some(ResolvedDep {
             id: format!("{bare}@{ver}"),
@@ -258,10 +262,13 @@ impl WorkspaceDepsContext {
     }
 
     fn lookup_package_version(&self, pkg_name: &str) -> Option<String> {
+        let pkg_name = pkg_name.trim();
         let ws_policy = &self.ws_config.dependency_resolver.policy["dependencies"][pkg_name];
         if let Some(ver) = ws_policy
             .as_str()
             .or_else(|| ws_policy["version"].as_str())
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty() && *ver != "-")
         {
             return Some(ver.to_owned());
         }
@@ -270,7 +277,11 @@ impl WorkspaceDepsContext {
             .join(pkg_name)
             .join("package.json");
         let parsed: Value = bit_object_import::parse_jsonc(&fs::read(pkg_json).ok()?).ok()?;
-        parsed["version"].as_str().map(str::to_owned)
+        parsed["version"]
+            .as_str()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
+            .map(str::to_owned)
     }
 }
 

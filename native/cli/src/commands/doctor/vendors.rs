@@ -24,7 +24,9 @@ fn strip_final_newline(mut bytes: &[u8]) -> &[u8] {
     bytes
 }
 pub(super) fn examine(diagnosis: &Diagnosis, git: &str) -> Value {
-    let git = git.trim();
+    let git = Some(git.trim())
+        .filter(|path| !path.is_empty())
+        .unwrap_or("git");
     let (valid, symptoms, treatment) = match diagnosis.name {
         "validate git exec" => (
             Command::new(executable(git))
@@ -52,7 +54,7 @@ pub(super) fn examine(diagnosis: &Diagnosis, git: &str) -> Value {
     } else {
         json!({"valid":false,"data":{}})
     };
-    diagnosis.result(bare, symptoms, treatment)
+    diagnosis.result(bare, &symptoms, treatment)
 }
 
 #[cfg(not(windows))]

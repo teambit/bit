@@ -20,7 +20,10 @@ fn directories(options: &Options) -> Option<&'static str> {
         .map(|_| "--path and --write-to-empty-dir cannot be used together")
 }
 fn missing_ids(options: &Options) -> Option<&'static str> {
-    if !options.ids.is_empty() {
+    if options.ids
+        .iter()
+        .any(|id| !id.trim().is_empty())
+    {
         return None;
     }
     if options.write.dependencies.import_dependencies {
@@ -33,7 +36,10 @@ fn missing_ids(options: &Options) -> Option<&'static str> {
     if dependents.enabled {
         return Some(r#"you have to specify ids to use "--dependents" flag"#);
     }
-    if dependents.via.is_some() {
+    if dependents.via
+        .as_deref()
+        .is_some_and(|via| !via.trim().is_empty())
+    {
         return Some(r#"you have to specify ids to use "--dependents-via" flag"#);
     }
     options.write.adoption.track_only.then_some(

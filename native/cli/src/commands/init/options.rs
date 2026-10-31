@@ -70,7 +70,7 @@ fn consume_trailing_init_path<'a>(
     options: &mut Options,
 ) -> Option<()> {
     for rest in args {
-        let val = rest?;
+        let val = rest?.trim();
         if val.is_empty() || val.starts_with('-') || options.path.is_some() {
             return None;
         }
@@ -104,8 +104,9 @@ fn apply_non_space_arg(value: &str, options: &mut Options) -> Option<()> {
     if flag(value, options) {
         return Some(());
     }
-    if !value.starts_with('-') && !value.is_empty() && options.path.is_none() {
-        options.path = Some(value.to_owned());
+    let trimmed = value.trim();
+    if !trimmed.starts_with('-') && !trimmed.is_empty() && options.path.is_none() {
+        options.path = Some(trimmed.to_owned());
         return Some(());
     }
     None
@@ -118,6 +119,7 @@ fn required<'a>(args: &mut impl Iterator<Item = Option<&'a str>>) -> Option<Stri
 
 fn inline_option(arg: &str, options: &mut Options) -> Option<Option<()>> {
     let (key, val) = arg.split_once('=')?;
+    let val = val.trim();
     match key {
         "--bare" | "-b" => {
             options.bare = Some(val.to_owned());

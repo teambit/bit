@@ -97,6 +97,7 @@ fn unsupported(
     if let Some((bare, version)) = trimmed.rsplit_once('@')
         && !bare.trim().is_empty()
         && !version.trim().is_empty()
+        && inventory::selected(state, trimmed).is_none()
         && inventory::selected(state, bare.trim()).is_some()
     {
         return Some("forking a requested historical workspace version".into());

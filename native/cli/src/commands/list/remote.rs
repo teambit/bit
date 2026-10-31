@@ -57,14 +57,17 @@ fn parse_row_id(value: &Value) -> io::Result<(String, Option<String>)> {
     let (identity, version) = id
         .rsplit_once('@')
         .map_or((id, None), |(id, version)| (id.trim(), Some(version.trim().to_string())));
-    if !identity
+    let Some((scope, name)) = identity
         .split_once('/')
-        .is_some_and(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
-        || version.as_ref().is_some_and(String::is_empty)
-    {
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+    else {
+        return Err(decline("remote list identity"));
+    };
+    if version.as_ref().is_some_and(String::is_empty) {
         return Err(decline("remote list identity"));
     }
-    Ok((identity.to_string(), version))
+    Ok((format!("{scope}/{name}"), version))
 }
 
 fn row(value: &Value) -> io::Result<Row> {

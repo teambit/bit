@@ -17,7 +17,7 @@ pub(super) fn json_report(rows: &[Row], ids: bool) -> Value {
         rows.iter()
             .map(|row| {
                 let mut data = Map::new();
-                data.insert("id".into(), json!(row.identity));
+                data.insert("id".into(), json!(row.identity.trim()));
                 data.insert("localVersion".into(), json!(local_version(row)));
                 if let Some(deprecated) = row.deprecated {
                     data.insert("deprecated".into(), json!(deprecated));

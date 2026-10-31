@@ -21,18 +21,7 @@ pub(in crate::commands) fn parse(
         .map(str::trim)
         .filter(|dir| !dir.is_empty())
         .ok_or_else(|| io::Error::other("compiler parser directory"))?;
-    let mut inputs = Vec::new();
-    for file in files {
-        let path = root.join(directory).join(file);
-        let source = fs::read_to_string(&path)?;
-        let scanned = bit_dependency_scanner::scan_source(
-            path.to_string_lossy().into_owned(),
-            source.clone(),
-        )?;
-        if scanned["status"] == "parse_error" {
-            inputs.push(json!({"path":path,"source":source}));
-        }
-    }
+    let inputs = collect_parse_error_inputs(root, directory, files)?;
     if inputs.is_empty() {
         return Err(io::Error::other("compiler dependency syntax requires another detector"));
     }
@@ -56,6 +45,29 @@ pub(in crate::commands) fn parse(
     }
     Ok(Value::Object(result))
 }
+fn collect_parse_error_inputs(
+    root: &Path,
+    directory: &str,
+    files: &[String],
+) -> io::Result<Vec<Value>> {
+    let mut inputs = Vec::new();
+    for file in files
+        .iter()
+        .map(|file| file.trim())
+        .filter(|file| !file.is_empty())
+    {
+        let path = root.join(directory).join(file);
+        let source = fs::read_to_string(&path)?;
+        let scanned = bit_dependency_scanner::scan_source(
+            path.to_string_lossy().into_owned(),
+            source.clone(),
+        )?;
+        if scanned["status"] == "parse_error" {
+            inputs.push(json!({"path":path,"source":source}));
+        }
+    }
+    Ok(inputs)
+}
 fn errors(inputs: &[Value]) -> io::Result<Vec<Value>> {
     let Target::Entry(cli) = discovery::find()? else {
         return Err(io::Error::other("compiler parser installation"));
@@ -63,6 +75,9 @@ fn errors(inputs: &[Value]) -> io::Result<Vec<Value>> {
     let package = cli.bit_dir
         .ok_or_else(|| io::Error::other("compiler parser package"))?
         .join("package.json");
+    if !package.is_file() {
+        return Err(io::Error::other("compiler parser package manifest"));
+    }
     let mut child = Command::new(cli.node)
         .arg("-e")
         .arg(include_str!("syntax.cjs"))

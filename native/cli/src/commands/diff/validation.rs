@@ -145,7 +145,7 @@ fn has_model_version(component_model: &Value, version: &str) -> bool {
     let has_head = component_model["head"]
         .as_str()
         .is_some_and(|head| !head.trim().is_empty());
-    (version == "latest" && has_head)
+    (matches!(version, "latest" | "head") && has_head)
         || (version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit()))
         || component_model["versions"].get(version).is_some()
         || component_model["orphanedVersions"].get(version).is_some()

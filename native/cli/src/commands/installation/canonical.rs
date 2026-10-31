@@ -111,9 +111,8 @@ pub(super) fn canonical_workspace(root: &Path, react_service: bool) -> io::Resul
         "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
     ))?;
     let custom = |id: &str| {
-        !core
-            .iter()
-            .any(|core| core == bit_install::config::aspect_id_without_version(id))
+        let base = bit_install::config::aspect_id_without_version(id.trim()).trim();
+        !core.iter().any(|core| core == base)
     };
     if config.aspects.keys().any(|id| custom(id)) || scope_has_custom_aspects(root, &custom)? {
         return Ok(true);
@@ -121,7 +120,7 @@ pub(super) fn canonical_workspace(root: &Path, react_service: bool) -> io::Resul
     let global = load_global_config(&cache_root().join("config"))?;
     if global
         .keys()
-        .any(|id| id.contains('/') && custom(id))
+        .any(|id| id.trim().contains('/') && custom(id))
     {
         return Ok(true);
     }
@@ -129,6 +128,7 @@ pub(super) fn canonical_workspace(root: &Path, react_service: bool) -> io::Resul
     if !raw["require"].is_null()
         && raw["require"] != false
         && raw["require"] != json!([])
+        && raw["require"] != json!({})
         && !raw["require"]
             .as_str()
             .is_some_and(|req| req.trim().is_empty())
@@ -139,7 +139,8 @@ pub(super) fn canonical_workspace(root: &Path, react_service: bool) -> io::Resul
     Ok(workspace.components
         .iter()
         .any(|component| {
-            let bare_env = bit_install::config::aspect_id_without_version(&component.env_id);
+            let bare_env =
+                bit_install::config::aspect_id_without_version(component.env_id.trim()).trim();
             (bare_env != "teambit.harmony/node"
                 && !(react_service && bare_env == "teambit.react/react"))
                 || component.config.keys().any(|id| custom(id))

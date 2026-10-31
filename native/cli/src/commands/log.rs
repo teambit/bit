@@ -49,7 +49,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;
     let root = workspace::root(&cwd);
     if root.is_none() && !options.remote {
-        if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        let ci = env::var_os("CI")
+            .is_some_and(|val| {
+                let text = val.to_string_lossy();
+                let trimmed = text.trim();
+                !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+            });
+        if ci {
             return Ok(Outcome::Declined("not inside a workspace".into()));
         }
         return workspace_command::execute_failure_scope(

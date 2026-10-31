@@ -234,22 +234,29 @@ impl GcGraph {
 pub(super) fn comp_value_key(comp: &Value) -> String {
     if let Some(id_str) = comp.as_str() {
         let trimmed = id_str.trim();
-        return trimmed
-            .split('@')
-            .next()
-            .unwrap_or(trimmed)
-            .trim()
-            .to_owned();
+        let bare = match trimmed.rsplit_once('@') {
+            Some((prefix, _)) if !prefix.trim().is_empty() => prefix.trim(),
+            _ => trimmed,
+        };
+        return bare.to_owned();
     }
-    let scope = comp["scope"].as_str().map_or("", str::trim);
-    let name = comp["name"].as_str().map_or("", str::trim);
+    let scope = comp["scope"]
+        .as_str()
+        .or_else(|| comp["id"]["scope"].as_str())
+        .map_or("", str::trim);
+    let name = comp["name"]
+        .as_str()
+        .or_else(|| comp["id"]["name"].as_str())
+        .map_or("", str::trim);
     if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
 }
 
 pub(super) fn resolve_comp_version_ref(comp: &Value, ver: &str) -> Option<String> {
-    if matches!(ver, "latest" | "head") {
+    let ver = ver.trim();
+    if ver.eq_ignore_ascii_case("latest") || ver.eq_ignore_ascii_case("head") {
         return comp["head"]
             .as_str()
+            .map(str::trim)
             .filter(|val| !val.is_empty())
             .map(str::to_owned);
     }
@@ -257,6 +264,8 @@ pub(super) fn resolve_comp_version_ref(comp: &Value, ver: &str) -> Option<String
         .get(ver)
         .and_then(Value::as_str)
         .or_else(|| comp["orphanedVersions"].get(ver).and_then(Value::as_str))
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
         .map(str::to_owned)
         .or_else(|| {
             (ver.len() == 40 && ver.bytes().all(|byte| byte.is_ascii_hexdigit())).then(|| {

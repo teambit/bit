@@ -38,14 +38,21 @@ pub(super) fn selected<'a>(inventory: &'a Value, source: &str) -> Option<&'a Val
 
 fn matches_source_row(row: &Value, bare: &str, explicit_ver: Option<&str>) -> bool {
     let bare = bare.trim();
+    if bare.is_empty() {
+        return false;
+    }
     let row_id = row["identity"]
         .as_str()
+        .or_else(|| row["id"].as_str())
         .map(str::trim)
         .unwrap_or_default();
     let id_matches =
         row_id == bare || row_id.split_once('/').map(|(_, name)| name.trim()) == Some(bare);
     let ver_matches = explicit_ver.is_none_or(|ver| {
-        matches!(ver, "latest" | "head") || row["version"].as_str().map(str::trim) == Some(ver)
+        !ver.is_empty()
+            && (ver.eq_ignore_ascii_case("latest")
+                || ver.eq_ignore_ascii_case("head")
+                || row["version"].as_str().map(str::trim) == Some(ver))
     });
     id_matches && ver_matches
 }

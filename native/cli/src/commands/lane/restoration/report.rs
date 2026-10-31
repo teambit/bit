@@ -26,7 +26,7 @@ pub(super) fn render(result: &Value, options: &Options, chalk: Chalk) -> io::Res
     let title = format!(
         "successfully {} according to history-id: {}",
         if options.revert { "reverted" } else { "checked out" },
-        options.id,
+        options.id.trim(),
     );
     let mut report = checkout::report::format_title(
         result,

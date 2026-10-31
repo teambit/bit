@@ -160,10 +160,11 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
 
 fn consume_trailing_graph_id(rest: &[&str], options: &mut Options) -> Option<()> {
     for &arg in rest {
-        if arg.starts_with('-') || arg.is_empty() || options.id.is_some() {
+        let trimmed = arg.trim();
+        if trimmed.starts_with('-') || trimmed.is_empty() || options.id.is_some() {
             return None;
         }
-        options.id = Some(arg.to_owned());
+        options.id = Some(trimmed.to_owned());
     }
     Some(())
 }
@@ -212,7 +213,7 @@ fn take_optional_remote(args: &[&str], idx: &mut usize) -> String {
 }
 
 fn take_required_layout(args: &[&str], idx: &mut usize) -> Option<String> {
-    let next = *args.get(*idx + 1)?;
+    let next = args.get(*idx + 1)?.trim();
     if next.is_empty() || next.starts_with('-') {
         return None;
     }
@@ -225,12 +226,15 @@ fn apply_inline_or_id(arg: &str, options: &mut Options) -> Option<()> {
         .strip_prefix("--remote=")
         .or_else(|| arg.strip_prefix("-r="))
     {
-        options.remote = Some(val.to_owned());
-    } else if let Some(val) = arg.strip_prefix("--layout=") {
+        options.remote = Some(val.trim().to_owned());
+    } else if let Some(val) = arg.strip_prefix("--layout=").map(str::trim) {
         (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.layout = Some(val.to_owned());
-    } else if !arg.starts_with('-') && !arg.is_empty() && options.id.is_none() {
-        options.id = Some(arg.to_owned());
+    } else if !arg.trim().starts_with('-')
+        && !arg.trim().is_empty()
+        && options.id.is_none()
+    {
+        options.id = Some(arg.trim().to_owned());
     } else {
         return None;
     }

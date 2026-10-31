@@ -32,5 +32,6 @@ fn elapsed_millis(started: &Instant) -> io::Result<u64> {
 }
 
 fn invalid(message: &str) -> io::Error {
-    io::Error::other(message.trim())
+    let trimmed = message.trim();
+    io::Error::other(if trimmed.is_empty() { "linter failure" } else { trimmed })
 }

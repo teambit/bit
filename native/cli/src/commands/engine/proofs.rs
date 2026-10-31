@@ -38,7 +38,10 @@ impl Engine {
                     .as_str()
                     .is_some_and(|text| text.trim().eq_ignore_ascii_case("true"));
             if !is_fresh {
-                return Err(io::Error::other(stale.trim().to_owned()));
+                let msg = Some(stale.trim())
+                    .filter(|text| !text.is_empty())
+                    .unwrap_or("stale dependency proof");
+                return Err(io::Error::other(msg.to_owned()));
             }
         }
         Ok(())

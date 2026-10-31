@@ -49,7 +49,8 @@ fn render_details(dir: &Path, chalk: Chalk) -> io::Result<String> {
             r#"no details available. run a command like "bit tag" or "bit snap" first."#,
         ));
     }
-    let content = fs::read_to_string(&content_path)?;
+    let raw_content = fs::read_to_string(&content_path)?;
+    let content = raw_content.trim_end_matches(['\r', '\n']);
     let meta = fs::read(dir.join("meta.json"))
         .ok()
         .and_then(|meta_raw| bit_object_import::parse_jsonc(&meta_raw).ok())

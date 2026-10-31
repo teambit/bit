@@ -25,6 +25,9 @@ pub(super) fn prepare(
         })
         .collect();
     let results = if files.is_empty() { Vec::new() } else { tool::compile(&files)? };
+    if results.len() != files.len() {
+        return Err(io::Error::other("compiler result count mismatch"));
+    }
     let mut offset = 0;
     let mut compiled = Vec::new();
     for ((component, identity), directories) in components
@@ -102,9 +105,11 @@ fn append(
                 .map(str::trim)
                 .filter(|value| !value.is_empty())
                 .ok_or_else(|| io::Error::other("compiler output path"))?;
-            if Path::new(relative)
-                .components()
-                .any(|part| !matches!(part, std::path::Component::Normal(_)))
+            if relative.contains('\\')
+                || relative.chars().any(char::is_control)
+                || Path::new(relative)
+                    .components()
+                    .any(|part| !matches!(part, std::path::Component::Normal(_)))
             {
                 return Err(io::Error::other("compiler output relative path"));
             }

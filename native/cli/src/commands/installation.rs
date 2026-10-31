@@ -90,7 +90,12 @@ impl Installer {
     /// Reject unsupported package managers before parent-operation providers start.
     pub(in crate::commands) fn validate_workspace(root: &Path) -> io::Result<()> {
         let package_manager = WorkspaceConfig::load(root)?.dependency_resolver.package_manager;
-        if package_manager.as_deref() == Some(YARN) {
+        if package_manager
+            .as_deref()
+            .is_some_and(|pm| {
+                bit_install::config::aspect_id_without_version(pm.trim()).trim() == YARN
+            })
+        {
             return Err(io::Error::other("the yarn package manager"));
         }
         Ok(())

@@ -33,7 +33,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native create grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
         return Ok(Outcome::Declined("CI create error stack".into()));
     }
     let cwd = env::current_dir()?;
@@ -64,7 +64,7 @@ fn parse_scope_from_component_id_str(raw: &str) -> (Option<&str>, &str) {
 }
 
 pub(super) fn validate_options(_root: &Path, options: &Options) -> Result<(), String> {
-    if let Some(scope) = options.scope.as_deref()
+    if let Some(scope) = options.scope.as_deref().map(str::trim)
         && !scope_set::selection::valid_scope_str(scope)
     {
         return Err(format!(
@@ -73,9 +73,10 @@ pub(super) fn validate_options(_root: &Path, options: &Options) -> Result<(), St
     }
     for raw_name in &options.component_names {
         let (_parsed_scope, parsed_name) = parse_scope_from_component_id_str(raw_name.trim());
+        let parsed_name = parsed_name.trim().trim_matches('/');
         let full_name = match options.namespace
             .as_deref()
-            .map(str::trim)
+            .map(|ns| ns.trim().trim_matches('/'))
             .filter(|ns| !ns.is_empty())
         {
             Some(ns) => format!("{ns}/{parsed_name}"),

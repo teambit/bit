@@ -83,11 +83,22 @@ fn copy_current(scope: &mut Value, current: &Value) {
     for key in
         ["name", "remotes", "resolverPath", "license", "groupName", "version", "lanes", "config"]
     {
-        if let Some(value) = current
+        let Some(value) = current
             .get(key)
             .filter(|value| !value.is_null())
+        else {
+            continue;
+        };
+        if key == "name"
+            && value
+                .as_str()
+                .is_none_or(|text| text.trim().is_empty())
         {
-            scope[key] = value.clone();
+            continue;
         }
+        if key == "remotes" && !value.is_object() {
+            continue;
+        }
+        scope[key] = value.clone();
     }
 }

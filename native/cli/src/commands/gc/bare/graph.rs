@@ -78,7 +78,11 @@ impl<'a> Collector<'a> {
                     self.retained.insert(digest(text(&object.value["name"])?));
                 }
                 "Component"
-                    if object.value["scope"].as_str().map(str::trim) == Some(self.name.trim()) =>
+                    if object.value["scope"]
+                        .as_str()
+                        .or_else(|| object.value["id"]["scope"].as_str())
+                        .map(str::trim)
+                        == Some(self.name.trim()) =>
                 {
                     let component = &object.value;
                     self.component(component, component["head"].as_str(), true)?;
@@ -191,13 +195,19 @@ impl<'a> Collector<'a> {
         Ok(foreign)
     }
     fn dependency(&mut self, id: &str) -> io::Result<()> {
-        let (id, version) =
-            id.rsplit_once('@').ok_or_else(|| unsupported("unversioned flattened dependency"))?;
+        let (id, version) = id
+            .trim()
+            .rsplit_once('@')
+            .ok_or_else(|| unsupported("unversioned flattened dependency"))?;
+        let (id, version) = (id.trim(), version.trim());
         let Some(model) = repository::model(self.objects, id)? else {
             return Ok(());
         };
         self.retained.insert(digest(&identity(&model.value)?));
-        let target = if matches!(version, "" | "latest" | "head") {
+        let target = if version.is_empty()
+            || version.eq_ignore_ascii_case("latest")
+            || version.eq_ignore_ascii_case("head")
+        {
             model.value["head"].as_str()
         } else if repository::hash(version) {
             Some(version)
@@ -207,6 +217,8 @@ impl<'a> Collector<'a> {
                 .or_else(|| model.value["orphanedVersions"][version].as_str())
         };
         if let Some(target) = target
+            .map(str::trim)
+            .filter(|target| !target.is_empty())
             && let Some(object) = self.objects.get(target)
         {
             if object.kind != "Version" {

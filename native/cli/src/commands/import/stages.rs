@@ -20,7 +20,11 @@ impl Planned {
     ) -> io::Result<Self> {
         let mut engine = Engine::new()?;
         let mut prepared = prepare_into(&mut engine, root, options, ids)?;
-        if prepared["requiresDependentsGraph"] != true {
+        if prepared["requiresDependentsGraph"] != true
+            || prepared["token"]
+                .as_str()
+                .is_none_or(|tok| tok.trim().is_empty())
+        {
             return Err(io::Error::other("native dependents graph phase missing"));
         }
         let lane = has_active_lane(&prepared["currentLane"]);

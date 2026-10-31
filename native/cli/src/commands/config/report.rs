@@ -18,6 +18,7 @@ fn get(stores: &Stores, key: &str) -> String {
     let key = key.trim();
     let combined = stores.combined();
     let value = environment_value(key)
+        .filter(|val| !val.is_empty())
         .map(Value::String)
         .or_else(|| combined.get(key).cloned());
     if value.is_none() && inherited(key) {

@@ -245,7 +245,7 @@ pub(super) fn fetch(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome
         Ok(current) => current,
         Err(error) => return Ok(Outcome::Declined(format!("lane fetch: {error}"))),
     };
-    if current["name"] == "main" {
+    if current["name"].as_str().map(str::trim) == Some("main") {
         return workspace_command::execute_then(&root, args, "fetch", |_| {
             Err(io::Error::other(
                 "you are not checked out to any lane. please specify a lane-id to fetch or use --all flag",
@@ -254,8 +254,8 @@ pub(super) fn fetch(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome
     }
     let current_id = format!(
         "{}/{}",
-        current["scope"].as_str().unwrap_or_default(),
-        current["name"].as_str().unwrap_or_default(),
+        current["scope"].as_str().map_or("", str::trim),
+        current["name"].as_str().map_or("", str::trim),
     );
     crate::commands::import::lane_fetch(&root, args, &["fetch", "-l", &current_id])
 }
@@ -268,6 +268,7 @@ fn parse_fetch_args<'a>(lane_args: &[&'a str]) -> Option<(bool, Option<&'a str>)
         match arg {
             "--" => {
                 for val in iter {
+                    let val = val.trim();
                     (!val.is_empty() && !val.starts_with('-') && lane_id.replace(val).is_none())
                         .then_some(())?;
                 }
@@ -276,8 +277,8 @@ fn parse_fetch_args<'a>(lane_args: &[&'a str]) -> Option<(bool, Option<&'a str>)
             "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-a" | "--all" | "--all=true" => all = true,
             "--all=false" => all = false,
-            val if !val.starts_with('-') && !val.is_empty() && lane_id.is_none() => {
-                lane_id = Some(val);
+            val if !val.trim().starts_with('-') && !val.trim().is_empty() && lane_id.is_none() => {
+                lane_id = Some(val.trim());
             }
             _ => return None,
         }

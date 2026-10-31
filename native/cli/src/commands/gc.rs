@@ -181,7 +181,9 @@ fn apply_gc_arg(opts: &mut Options, arg: &str, next: Option<&str>) -> Option<usi
         "-j" | "--json" | "--json=true" => opts.json = true,
         "--json=false" => opts.json = false,
         "--keep-versions" => {
-            let val = next.filter(|val| !val.is_empty() && !val.starts_with('-'))?;
+            let val = next
+                .map(str::trim)
+                .filter(|val| !val.is_empty() && !val.starts_with('-'))?;
             opts.keep_versions = Some(val.to_owned());
             return Some(2);
         }
@@ -243,8 +245,13 @@ fn dir_has_any_file(dir: &Path) -> bool {
         return false;
     };
     for entry in entries.filter_map(Result::ok) {
-        let path = entry.path();
-        if path.is_file() || (path.is_dir() && dir_has_any_file(&path)) {
+        let Ok(file_type) = entry.file_type() else {
+            continue;
+        };
+        if file_type.is_file()
+            || file_type.is_symlink()
+            || (file_type.is_dir() && dir_has_any_file(&entry.path()))
+        {
             return true;
         }
     }

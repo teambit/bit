@@ -40,6 +40,7 @@ impl CompGraph {
     }
 
     pub(crate) fn add_edge(&mut self, source_id: String, target_id: String, attr: &str) {
+        let attr = attr.trim();
         let source_id = if source_id.len() == source_id.trim().len() {
             source_id
         } else {
@@ -178,8 +179,9 @@ pub(super) fn write_svg_file(graph: &CompGraph) -> Result<PathBuf, Failure> {
         let _ = write!(rand_hex, "{byte:02x}");
     }
     let svg_path = env::temp_dir().join(format!("{rand_hex}.svg"));
-    let mut body = String::from(
-        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"600\" height=\"400\">\n",
+    let height = (40 + graph.nodes.len() * 24).max(400);
+    let mut body = format!(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"600\" height=\"{height}\">\n",
     );
     for (idx, node) in graph.nodes.iter().enumerate() {
         let y_pos = 30 + idx * 24;

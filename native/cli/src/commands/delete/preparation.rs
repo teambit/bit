@@ -19,7 +19,7 @@ impl Prepared {
     pub(super) fn selected(root: &Path, options: &Options<'_>, ids: &[String]) -> io::Result<Self> {
         let bitmap = selection::bitmap(root)?;
         validate(&bitmap, ids, options)?;
-        let lane = !bitmap["_bit_lane"].is_null();
+        let lane = bit_workspace_config::truthy(&bitmap["_bit_lane"]);
         let facts = None;
         let plan = Batch::prepare(root, ids, &options.scope, lane, options.update_main, facts)
             .map_err(|error| io::Error::other(error.to_string()))?;
@@ -38,7 +38,7 @@ impl Prepared {
         rows: &[serde_json::Value],
     ) -> io::Result<Self> {
         let bitmap = selection::bitmap(root)?;
-        let lane = !bitmap["_bit_lane"].is_null();
+        let lane = bit_workspace_config::truthy(&bitmap["_bit_lane"]);
         let facts = dependency_facts(rows)?;
         let mut plan =
             Batch::prepare(root, ids, &options.scope, lane, options.update_main, Some(&facts))
@@ -60,7 +60,7 @@ impl Prepared {
     }
 }
 fn validate(bitmap: &serde_json::Value, ids: &[String], options: &Options<'_>) -> io::Result<()> {
-    let lane = !bitmap["_bit_lane"].is_null();
+    let lane = bit_workspace_config::truthy(&bitmap["_bit_lane"]);
     if lane && !options.lane && !options.update_main {
         return Err(invalid(
             "error: to delete components when on a lane, use either --lane or --update-main flag.\n--lane: delete the component from this lane only\n--update-main: delete the component from main after this lane is merged",
@@ -132,7 +132,7 @@ pub(in crate::commands::delete) fn validate_pre_prompt(
     hard: bool,
 ) -> io::Result<()> {
     let bitmap = selection::bitmap(root)?;
-    let lane = !bitmap["_bit_lane"].is_null();
+    let lane = bit_workspace_config::truthy(&bitmap["_bit_lane"]);
     if lane && !hard && !lane_flag && !update_main {
         return Err(invalid(
             "error: to delete components when on a lane, use either --lane or --update-main flag.\n--lane: delete the component from this lane only\n--update-main: delete the component from main after this lane is merged",

@@ -98,15 +98,18 @@ impl Engine {
             .as_ref()
             .is_some_and(|skipped| !skipped.is_empty());
         if response.version != 1 || response.id != self.next_id || failed || skipped {
-            return Err(response_error(input, response));
+            return Err(response_error(input, &response));
         }
         serde_json::from_value(response.data).map_err(io::Error::other)
     }
 }
 
-fn response_error(input: &Value, response: Response) -> io::Error {
+fn response_error(input: &Value, response: &Response) -> io::Error {
     if response.canonical_error == Some(true)
         && let Some(message) = response.error
+            .as_deref()
+            .filter(|msg| !msg.trim().is_empty())
+            .map(str::to_owned)
     {
         return io::Error::other(CanonicalError {
             message,

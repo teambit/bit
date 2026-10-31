@@ -58,7 +58,7 @@ fn prepare(root: &Path) -> io::Result<Option<Plan>> {
             entries
                 .iter()
                 .find(|(name, _)| {
-                    bit_install::config::aspect_id_without_version(name)
+                    bit_install::config::aspect_id_without_version(trim(name))
                         == "teambit.workspace/workspace"
                 })
         })
@@ -121,7 +121,8 @@ impl Plan {
         let workspace_dir = git::relative(&paths::real(scaffold)?, &paths::real(&self.root)?)
             .to_string_lossy()
             .replace('\\', "/");
-        let workspace_dir = if workspace_dir.starts_with("..") { "" } else { &workspace_dir };
+        let workspace_dir =
+            if workspace_dir.starts_with("..") { "" } else { workspace_dir.trim_matches('/') };
         files::workflows(scaffold, &self.cwd, branch, workspace_dir)
     }
     fn write_agents(&self, target: &report::Target) -> io::Result<report::File> {

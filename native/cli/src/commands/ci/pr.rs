@@ -37,7 +37,7 @@ impl WorkspaceSnapshot {
     }
 
     fn restore(&self, root: &Path) {
-        if root.as_os_str().is_empty() {
+        if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() {
             return;
         }
         let scope_dir = bit_object_import::scope_path(root);
@@ -196,26 +196,33 @@ fn resolve_lane_name(
     opts: &PrOptions,
     current_lane: Option<&str>,
 ) -> io::Result<String> {
-    if let Some(explicit) = &opts.lane {
+    if let Some(explicit) = opts.lane
+        .as_deref()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    {
         let name = explicit
             .rsplit('/')
             .next()
-            .unwrap_or(explicit);
+            .unwrap_or(explicit)
+            .trim();
         return Ok(sanitize_lane_name(name));
     }
     let branch = std::env::var("GITHUB_HEAD_REF")
         .ok()
-        .filter(|val| !val.trim().is_empty())
+        .map(|val| val.trim().to_owned())
+        .filter(|val| !val.is_empty())
         .or_else(|| git_current_branch(root))
         .unwrap_or_default();
-    if branch.is_empty() || matches!(branch.as_str(), "main" | "master" | "HEAD") {
-        return current_lane.map( sanitize_lane_name).ok_or_else(|| {
+    let branch = branch.trim();
+    if branch.is_empty() || matches!(branch, "main" | "master" | "HEAD") {
+        return current_lane.map(sanitize_lane_name).ok_or_else(|| {
             io::Error::other(
                 "Failed to resolve lane name: cannot run 'bit ci pr' on main branch without --lane",
             )
         });
     }
-    Ok(sanitize_lane_name(&branch))
+    Ok(sanitize_lane_name(branch))
 }
 
 fn sanitize_lane_name(raw: &str) -> String {
@@ -250,7 +257,10 @@ fn snap_and_export_pr(
         )?;
     }
     let msg = opts.message
-        .clone()
+        .as_deref()
+        .map(str::trim)
+        .filter(|msg| !msg.is_empty())
+        .map(str::to_owned)
         .or_else(|| git_last_commit_message(root))
         .unwrap_or_else(|| "ci pr snap".into());
     let snap_out = run_child_bit(root, &["snap", "--skip-tests", "--message", &msg])?;

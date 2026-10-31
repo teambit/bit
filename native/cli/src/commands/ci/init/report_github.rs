@@ -9,7 +9,7 @@ use crate::commands::color::Chalk;
 pub(super) fn steps(input: &Report, repository: &Repository, chalk: Chalk) -> Vec<String> {
     let mut commit = report::commit(input, chalk);
     commit.push(chalk.cyan("git push -u origin HEAD"));
-    let webhook = if repository.host == "github.com" {
+    let webhook = if repository.host.trim().eq_ignore_ascii_case("github.com") {
         public_webhook(input, repository, chalk)
     } else {
         enterprise_webhook(input, repository, chalk)
@@ -29,7 +29,7 @@ pub(super) fn steps(input: &Report, repository: &Repository, chalk: Chalk) -> Ve
 fn permissions(input: &Report, repository: &Repository, chalk: Chalk) -> Vec<String> {
     let repo = shell_word(&repository.display());
     let host = repository.host.trim();
-    let api = if host == "github.com" {
+    let api = if host.eq_ignore_ascii_case("github.com") {
         "gh api".into()
     } else {
         format!("gh api --hostname {}", shell_word(host))
@@ -41,7 +41,7 @@ fn permissions(input: &Report, repository: &Repository, chalk: Chalk) -> Vec<Str
     ));
     vec![
         chalk.cyan(&format!("gh secret set BIT_CONFIG_ACCESS_TOKEN -R {repo}")),
-        chalk.dim(&format!("a bit.cloud access token with Write permission on {}. If your organization", input.target.scope)),
+        chalk.dim(&format!("a bit.cloud access token with Write permission on {}. If your organization", input.target.scope.trim())),
         chalk.dim("requires change requests, exempt the token's account: it is the one that merges lanes."),
         chalk.cyan(&format!(r"{api} -X PUT {permissions} \")),
         chalk.cyan("  -f default_workflow_permissions=write -F can_approve_pull_request_reviews=true"),
@@ -60,8 +60,8 @@ fn public_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> Stri
             format!(
                 "Install {} on {}/{}.",
                 chalk.cyan("https://github.com/apps/bit-git-sync"),
-                repository.owner,
-                repository.name
+                repository.owner.trim(),
+                repository.name.trim()
             ),
             format!(
                 "Copy the repository's webhook URL from {}",
@@ -69,23 +69,27 @@ fn public_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> Stri
             ),
             format!(
                 r#"and add it to {} on bit.cloud as an "Export succeeded" webhook."#,
-                input.target.scope
+                input.target.scope.trim()
             ),
         ],
         chalk,
     )
 }
 fn enterprise_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> String {
-    let api = remote::api(&repository.host);
+    let api = remote::api(repository.host.trim());
     let base = api
         .as_deref()
         .ok()
         .map(str::trim)
         .filter(|url| !url.is_empty())
         .unwrap_or("<GitHub API URL>");
-    let url = format!("{base}/repos/{}/{}/dispatches", repository.owner, repository.name);
+    let url =
+        format!("{base}/repos/{}/{}/dispatches", repository.owner.trim(), repository.name.trim());
     let mut lines = vec![
-        format!(r#"On bit.cloud, add an "Export succeeded" webhook to {}:"#, input.target.scope),
+        format!(
+            r#"On bit.cloud, add an "Export succeeded" webhook to {}:"#,
+            input.target.scope.trim()
+        ),
         format!("  URL      {}", chalk.cyan(&url)),
     ];
     if let Err(error) = api {

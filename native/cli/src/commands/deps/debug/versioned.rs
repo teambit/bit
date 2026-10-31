@@ -231,7 +231,12 @@ fn model_env(model: &ModelData) -> Option<&'static str> {
         .pointer("/data/id")?
         .as_str()
         .map(str::trim)
-        .filter(|id| !id.is_empty())?;
+        .filter(|id| {
+            !id.is_empty()
+                && !id
+                    .split_once('@')
+                    .is_some_and(|(_, ver)| ver.trim().is_empty())
+        })?;
     if envs.next().is_some() {
         return None;
     }
@@ -284,7 +289,9 @@ fn allowed_config(extension: &Value, env_id: &str, manual: Option<&ManualPolicy>
     if env_id == "teambit.react/react"
         && crate::commands::update_cmd::matches_aspect(extension, "teambit.envs/envs")
     {
-        let env = config["env"].as_str().map(bit_install::config::aspect_id_without_version);
+        let env = config["env"]
+            .as_str()
+            .map(|raw| bit_install::config::aspect_id_without_version(raw.trim()));
         return config
             .as_object()
             .is_some_and(|map| map.len() == 2)

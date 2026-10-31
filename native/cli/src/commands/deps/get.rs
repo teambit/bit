@@ -73,14 +73,15 @@ pub(super) fn prepare_get(
     scope: bool,
     chalk: Chalk,
 ) -> Result<String, Failure> {
+    let id = id.trim();
     let (bare_input, explicit_ver) = id
         .rsplit_once('@')
-        .map_or((id, None), |(bare, ver)| (bare, Some(ver)));
+        .map_or((id, None), |(bare, ver)| {
+            (bare.trim(), Some(ver.trim()).filter(|val| !val.is_empty()))
+        });
     let matched = match selection::resolve_pattern_entries(root, bitmap, bare_input, chalk) {
         Ok(entries) => entries,
-        Err(err) => {
-            return try_prepare_scope_only_get(root, id, tree, chalk)?.ok_or(err);
-        }
+        Err(err) => return try_prepare_scope_only_get(root, id, tree, chalk)?.ok_or(err),
     };
     let [entry] = matched.as_slice() else {
         return Err(Failure::Declined("multiple entries for deps get".into()));
@@ -105,21 +106,12 @@ fn prepare_workspace_entry_get(
         .find_workspace_component(entry)
         .ok_or_else(|| Failure::Declined("missing workspace component".into()))?;
     let current_cfg = load_dep_resolver_config(root, bitmap_val, entry)?;
-    let (deps, _) = ctx.collect_component_deps(
-        entry,
-        component,
-        current_cfg
-            .as_ref()
-            .and_then(|cfg| cfg.get("policy")),
-    );
-    let rows = collect_dep_info_rows(
-        root,
-        ctx,
-        bitmap_val,
-        &id_with_ver,
-        &deps,
-        if tree { 64 } else { 8 },
-    );
+    let policy = current_cfg
+        .as_ref()
+        .and_then(|cfg| cfg.get("policy"));
+    let (deps, _) = ctx.collect_component_deps(entry, component, policy);
+    let max_depth = if tree { 64 } else { 8 };
+    let rows = collect_dep_info_rows(root, ctx, bitmap_val, &id_with_ver, &deps, max_depth);
     render_get_result(&id_with_ver, &entry.id.to_string_without_version(), rows, tree, chalk)
 }
 

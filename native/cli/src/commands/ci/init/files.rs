@@ -41,8 +41,8 @@ fn write_workflow(path: &Path, content: &str) -> io::Result<()> {
     fs::write(path, content).map_err(|error| failure(error, "open", path))
 }
 fn render(raw: &str, marker: &str, branch: &str, workspace_dir: &str) -> String {
-    let branch = branch.trim();
-    let workspace_dir = workspace_dir.trim();
+    let branch = super::trim(branch);
+    let workspace_dir = super::trim(workspace_dir);
     let quoted = |value: &str| format!("'{}'", value.replace('\'', "''"));
     let replacement = marker.replacen("main", &quoted(branch), 1);
     // JavaScript template literals normalize source CRLF, including Windows checkouts.
@@ -65,7 +65,7 @@ pub(super) fn supported(document: &Document) -> bool {
     entries
         .iter()
         .all(|(name, config)| {
-            let trimmed = name.trim();
+            let trimmed = super::trim(name);
             bit_install::config::aspect_id_without_version(trimmed) != ASPECT
                 || (trimmed == ASPECT
                     && (config.is_object() || !bit_workspace_config::truthy(config)))

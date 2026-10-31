@@ -78,7 +78,7 @@ fn matching(targets: &[Value], keep: impl Fn(&Value) -> bool) -> Vec<Value> {
 fn glob(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
     let identities = targets
         .iter()
-        .map(|target| text(target.get("identity")))
+        .map(|target| text(target.get("identity")).map(str::trim))
         .collect::<io::Result<Vec<_>>>()?;
     let matches = patterns::extended::matching(&identities, &patterns::split(pattern))?;
     if matches.is_empty() {
@@ -89,6 +89,7 @@ fn glob(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
         .filter(|target| {
             target["identity"]
                 .as_str()
+                .map(str::trim)
                 .is_some_and(|id| matches.contains(&id))
         })
         .cloned()

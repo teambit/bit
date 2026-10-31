@@ -10,7 +10,11 @@ pub(super) struct Options {
 
 impl Options {
     pub fn parse(args: &[&str]) -> Option<Self> {
-        let revert = *args.get(1)? == "revert";
+        let sub = args.get(1)?.trim();
+        if !matches!(sub, "checkout" | "revert") {
+            return None;
+        }
+        let revert = sub == "revert";
         let mut options = Self {
             id: String::new(),
             revert,

@@ -72,9 +72,12 @@ fn resolve_target_id(
     let (bare, explicit_ver) = raw_id
         .rsplit_once('@')
         .map_or((raw_id, None), |(id, ver)| (id.trim(), Some(ver.trim())));
+    if bare.is_empty() || explicit_ver == Some("") {
+        return Err(Failure::Declined("component not found in workspace or scope".into()));
+    }
     if let Some(entry) = find_existing_bitmap_entry(bitmap, bare) {
         let identity = entry.id.to_string_without_version();
-        let ver = explicit_ver.or(entry.id.version.as_deref());
+        let ver = explicit_ver.or_else(|| entry.id.version.as_deref().map(str::trim));
         let full = match ver {
             Some(ver_str) if !ver_str.is_empty() && !matches!(ver_str, "latest" | "head") => {
                 format!("{identity}@{ver_str}")
@@ -205,7 +208,7 @@ fn build_workspace_graph(scope_dir: &Path, ws: &Workspace) -> DepGraph {
     }
     for (entry, comp) in ws.active() {
         let node_id = selection::entry_full_id(entry);
-        graph.add_node(node_id.clone());
+        graph.add_node(&node_id);
         add_workspace_comp_edges(scope_dir, ws, comp, &node_id, &mut graph);
     }
     graph
@@ -281,7 +284,7 @@ fn add_scanned_ws_edges(
         let Some(specifiers) = scanned["dependencies"].as_object() else { continue };
         for raw_spec in specifiers.keys() {
             if let Some(target_full_id) = match_ws_target(ws, &comp.id.name, raw_spec) {
-                graph.add_edge(node_id.to_owned(), target_full_id, "prod");
+                graph.add_edge(node_id, &target_full_id, "prod");
             }
         }
     }
@@ -308,39 +311,35 @@ fn match_ws_target(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<St
     None
 }
 
+fn non_empty(val: &Value) -> Option<&str> {
+    val.as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
 fn component_identity(comp_val: &Value, row: &Value) -> Option<String> {
-    let row_raw = row["id"]
-        .as_str()
-        .map(|raw| raw.split('@').next().unwrap_or(raw));
-    let name = comp_val["name"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-        .or_else(|| {
-            row["id"]["name"]
-                .as_str()
-                .filter(|val| !val.is_empty())
-        })
+    let row_raw = non_empty(&row["id"])
+        .map(|raw| {
+            raw.split('@')
+                .next()
+                .unwrap_or(raw)
+                .trim()
+        });
+    let name = non_empty(&comp_val["name"])
+        .or_else(|| non_empty(&row["id"]["name"]))
         .or_else(|| {
             row_raw
-                .map(|raw| raw.split_once('/').map_or(raw, |(_, name)| name))
+                .map(|raw| raw.split_once('/').map_or(raw, |(_, name)| name.trim()))
                 .filter(|val| !val.is_empty())
         })?;
-    match comp_val["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
-        .or_else(|| {
-            row["id"]["scope"]
-                .as_str()
-                .filter(|scope| !scope.is_empty())
-        })
+    let scope = non_empty(&comp_val["scope"])
+        .or_else(|| non_empty(&row["id"]["scope"]))
         .or_else(|| {
             row_raw
-                .and_then(|raw| raw.split_once('/').map(|(scope, _)| scope))
+                .and_then(|raw| raw.split_once('/').map(|(scope, _)| scope.trim()))
                 .filter(|scope| !scope.is_empty())
-        }) {
-        Some(scope) => Some(format!("{scope}/{name}")),
-        None => Some(name.to_owned()),
-    }
+        });
+    Some(scope.map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}")))
 }
 
 fn collect_all_versions(comp_val: &Value) -> Vec<(String, String)> {
@@ -361,7 +360,7 @@ fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
 }
 
 pub(super) fn add_version_edges(graph: &mut DepGraph, node_id: &str, ver_val: &Value) {
-    graph.add_node(node_id.to_owned());
+    graph.add_node(node_id);
     let groups = [
         ("dependencies", "prod"),
         ("devDependencies", "dev"),
@@ -372,7 +371,7 @@ pub(super) fn add_version_edges(graph: &mut DepGraph, node_id: &str, ver_val: &V
         let Some(arr) = ver_val[field].as_array() else { continue };
         for item in arr {
             if let Some(dep_id) = crate::commands::graph_cmd::builder::format_dep_id(item) {
-                graph.add_edge(node_id.to_owned(), dep_id, dep_type);
+                graph.add_edge(node_id, &dep_id, dep_type);
             }
         }
     }
@@ -388,7 +387,7 @@ fn add_extension_edges(graph: &mut DepGraph, node_id: &str, ver_val: &Value) {
         if let Some(ext_id) = ext.get("extensionId")
             && let Some(dep_id) = crate::commands::graph_cmd::builder::format_dep_id(ext_id)
         {
-            graph.add_edge(node_id.to_owned(), dep_id, "dev");
+            graph.add_edge(node_id, &dep_id, "dev");
         }
     }
 }

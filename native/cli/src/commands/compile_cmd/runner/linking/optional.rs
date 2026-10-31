@@ -37,7 +37,7 @@ fn optional(entries: &[PolicyEntry], name: &str) -> bool {
     !name.is_empty()
         && entries
             .iter()
-            .find(|entry| entry.name == name)
+            .find(|entry| entry.name.trim() == name)
             .is_some_and(|entry| entry.optional)
 }
 fn append(
@@ -76,6 +76,8 @@ fn component(
     let raw = entry["identity"]
         .as_str()
         .or_else(|| entry["id"].as_str())
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
         .ok_or_else(|| io::Error::other("compiler dependency identity"))?;
     let (identity, version) = match raw.rsplit_once('@') {
         Some((base, ver)) => (base, ver),

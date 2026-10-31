@@ -51,7 +51,9 @@ fn execute(
 ) -> io::Result<ExitCode> {
     let output = super::workspace_command::loader_output(chalk, options.json);
     if !options.json {
-        output.restart(&format!(r#"running command "{}"..."#, options.command.trim()));
+        let cmd = options.command.trim();
+        let cmd = if cmd.is_empty() { "config" } else { cmd };
+        output.restart(&format!(r#"running command "{cmd}"..."#));
     }
     let written = stores.write();
     output.stop();

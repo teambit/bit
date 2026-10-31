@@ -96,8 +96,11 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--json=false" => options.json = false,
             "--keep-files" | "--keep-files=true" => options.keep_files = true,
             "--keep-files=false" => options.keep_files = false,
-            val if !val.starts_with('-') && !val.is_empty() && options.pattern.is_empty() => {
-                val.clone_into(&mut options.pattern);
+            val if !val.starts_with('-')
+                && !val.trim().is_empty()
+                && options.pattern.is_empty() =>
+            {
+                val.trim().clone_into(&mut options.pattern);
             }
             val => apply_short_eject_flags(val, &mut options)?,
         }
@@ -110,8 +113,9 @@ pub(super) fn consume_trailing_eject<'a>(
     pattern: &mut String,
 ) -> Option<()> {
     for val in iter {
-        (!val.is_empty() && !val.starts_with('-') && pattern.is_empty()).then_some(())?;
-        val.clone_into(pattern);
+        let trimmed = val.trim();
+        (!trimmed.is_empty() && !trimmed.starts_with('-') && pattern.is_empty()).then_some(())?;
+        trimmed.clone_into(pattern);
     }
     Some(())
 }

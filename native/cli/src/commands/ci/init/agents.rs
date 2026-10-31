@@ -5,7 +5,7 @@ const END: &str = "<!-- bit-ci-sync:end -->";
 pub(super) const UNKNOWN: &str = "<org>/<this-repo>";
 
 pub(super) fn render(scope: &str, repo: &str, branch: &str) -> String {
-    let (scope, repo, branch) = (scope.trim(), repo.trim(), branch.trim());
+    let (scope, repo, branch) = (super::trim(scope), super::trim(repo), super::trim(branch));
     let raw = include_str!("agents-section.md").replace("\r\n", "\n");
     let quoted = super::shell_word(branch);
     let values =
@@ -54,7 +54,7 @@ pub(super) fn write(
 }
 
 fn fill_repo(content: &str, repo: &str) -> String {
-    let trimmed_repo = repo.trim();
+    let trimmed_repo = super::trim(repo);
     if trimmed_repo.is_empty() || trimmed_repo == UNKNOWN {
         return content.to_owned();
     }

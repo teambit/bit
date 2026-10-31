@@ -131,6 +131,7 @@ fn set_boolean_flag(options: &mut Options, arg: &str) -> bool {
 }
 
 fn set_combined_short(options: &mut Options, arg: &str) -> bool {
+    let arg = arg.trim();
     if !arg.starts_with('-')
         || arg.starts_with("--")
         || arg.len() <= 2

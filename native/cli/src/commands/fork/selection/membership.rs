@@ -30,17 +30,28 @@ fn equal(left: &str, right: &str, pool: &[Value]) -> bool {
 }
 fn version<'a>(id: &'a str, pool: &'a [Value]) -> Option<&'a str> {
     let bare_id = bare(id);
-    let explicit = id.rsplit_once('@').map(|(_, version)| version.trim());
-    explicit
-        .or_else(|| {
-            pool.iter()
-                .find(|row| row["identity"].as_str().map(str::trim) == Some(bare_id))
-                .and_then(|row| row["version"].as_str())
-                .map(str::trim)
-        })
-        .filter(|candidate| is_concrete_version(candidate))
+    let explicit = id
+        .trim()
+        .rsplit_once('@')
+        .map(|(_, version)| version.trim())
+        .filter(|candidate| is_concrete_version(candidate));
+    explicit.or_else(|| {
+        pool.iter()
+            .find(|row| {
+                row["identity"]
+                    .as_str()
+                    .or_else(|| row["id"].as_str())
+                    .map(bare)
+                    == Some(bare_id)
+            })
+            .and_then(|row| row["version"].as_str())
+            .map(str::trim)
+            .filter(|candidate| is_concrete_version(candidate))
+    })
 }
 
 fn is_concrete_version(version: &str) -> bool {
-    !version.is_empty() && !matches!(version, "latest" | "head")
+    !version.is_empty()
+        && !version.eq_ignore_ascii_case("latest")
+        && !version.eq_ignore_ascii_case("head")
 }

@@ -182,8 +182,9 @@ pub(super) fn resolve_verified_env(
     bitmap_val: &Value,
     raw_env: &str,
 ) -> Result<(String, String), Failure> {
-    let bare_env = raw_env.rsplit_once('@').map_or(raw_env, |(bare, _)| bare);
-    if bare_env.trim().is_empty() {
+    let raw_env = raw_env.trim();
+    let bare_env = raw_env.rsplit_once('@').map_or(raw_env, |(bare, _)| bare.trim());
+    if bare_env.is_empty() {
         return Err(Failure::Declined("empty env identifier".into()));
     }
     if CORE_ENVS.contains(&bare_env) {

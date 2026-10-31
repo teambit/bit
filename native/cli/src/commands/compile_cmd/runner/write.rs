@@ -33,6 +33,14 @@ pub(super) fn validate_sources(files: &[Value]) -> io::Result<()> {
 }
 pub(super) fn remove(directories: &[PathBuf]) -> io::Result<()> {
     for directory in directories {
+        if directory.as_os_str().is_empty()
+            || directory
+                .to_string_lossy()
+                .trim()
+                .is_empty()
+        {
+            continue;
+        }
         match fs::symlink_metadata(directory) {
             Ok(metadata) if metadata.is_dir() && !metadata.is_symlink() => {
                 fs::remove_dir_all(directory)?;
@@ -74,6 +82,8 @@ fn open_batch(files: &[Emitted]) -> io::Result<Vec<fs::File>> {
 }
 fn open_file(file: &Emitted) -> io::Result<fs::File> {
     let parent = file.path.parent().ok_or_else(|| io::Error::other("compiler output directory"))?;
-    fs::create_dir_all(parent).map_err(|error| failure(error, "mkdir", parent))?;
+    if !parent.as_os_str().is_empty() {
+        fs::create_dir_all(parent).map_err(|error| failure(error, "mkdir", parent))?;
+    }
     fs::File::create(&file.path).map_err(|error| failure(error, "open", &file.path))
 }

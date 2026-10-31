@@ -85,8 +85,8 @@ fn parse_updates_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>, boo
             "--" => {
                 match (iter.next(), iter.next()) {
                     (None, None) => {}
-                    (Some(val), None) if !val.is_empty() && lane_name.is_none() => {
-                        lane_name = Some(val);
+                    (Some(val), None) if lane_name.is_none() => {
+                        lane_name = Some(non_flag(val)?);
                     }
                     _ => return None,
                 }
@@ -96,8 +96,8 @@ fn parse_updates_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>, boo
             | "--no-color=false" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
-            val if !val.starts_with('-') && !val.is_empty() && lane_name.is_none() => {
-                lane_name = Some(val);
+            val if !val.starts_with('-') && lane_name.is_none() => {
+                lane_name = Some(non_flag(val)?);
             }
             _ => return None,
         }

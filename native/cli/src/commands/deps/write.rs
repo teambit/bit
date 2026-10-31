@@ -49,9 +49,10 @@ pub(super) fn prepare_write(
     );
     let mut root_names = HashSet::new();
     for entry in root_policy {
-        if entry.version != "-" {
-            root_names.insert(entry.name.clone());
-            rows.push(CandidateRow { name: entry.name, range: entry.version, root: true });
+        let (name, range) = (entry.name.trim(), entry.version.trim());
+        if !name.is_empty() && !range.is_empty() && range != "-" {
+            root_names.insert(name.to_owned());
+            rows.push(CandidateRow { name: name.to_owned(), range: range.to_owned(), root: true });
         }
     }
     collect_variant_and_comp_policies(root, &ctx, bitmap_val, &mut rows)?;

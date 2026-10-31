@@ -23,6 +23,12 @@ pub(super) fn save(
     } else {
         std::env::current_dir()?.join(&filename)
     };
+    if let Some(parent) = output
+        .parent()
+        .filter(|dir| !dir.as_os_str().is_empty())
+    {
+        fs::create_dir_all(parent)?;
+    }
     let file = fs::File::create(&output)?;
     let mut builder = tar::Builder::new(file);
     builder.follow_symlinks(false);

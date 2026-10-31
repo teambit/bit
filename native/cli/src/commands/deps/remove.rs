@@ -135,26 +135,29 @@ fn apply_pkg_removal(
     dep_name: &str,
     remove_only_if_exists: bool,
 ) -> Result<bool, Failure> {
+    let dep_name = dep_name.trim();
     let cfg_obj = new_cfg
         .as_object_mut()
         .ok_or_else(|| Failure::Declined("dep-resolver config object".into()))?;
-    let policy_val = cfg_obj
+    let policy_obj = cfg_obj
         .entry("policy")
-        .or_insert_with(|| json!({}));
-    let policy_obj = policy_val
+        .or_insert_with(|| json!({}))
         .as_object_mut()
         .ok_or_else(|| Failure::Declined("dep-resolver policy object".into()))?;
-    let field_val = policy_obj
+    let field_obj = policy_obj
         .entry(dep_field)
-        .or_insert_with(|| json!({}));
-    let field_obj = field_val
+        .or_insert_with(|| json!({}))
         .as_object_mut()
         .ok_or_else(|| Failure::Declined("dep-resolver policy field object".into()))?;
-    if let Some(existing) = field_obj.get(dep_name) {
-        if existing.as_str() == Some("-") {
+    if let Some(key) = field_obj
+        .keys()
+        .find(|key| key.trim() == dep_name)
+        .cloned()
+    {
+        if field_obj[&key].as_str().map(str::trim) == Some("-") {
             return Ok(false);
         }
-        field_obj.remove(dep_name);
+        field_obj.remove(&key);
         return Ok(true);
     }
     if remove_only_if_exists {

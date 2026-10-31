@@ -119,9 +119,13 @@ impl Component<'_> {
                 crate::commands::update_cmd::matches_aspect(extension, "teambit.pkg/pkg")
             })
             .and_then(|extension| extension.get("config"));
-        let identity = text(self.target.get("identity"))?;
+        let identity = text(self.target.get("identity"))?.trim();
         let (scope, name) =
             identity.split_once('/').ok_or_else(|| decline("diff package identity"))?;
+        let (scope, name) = (scope.trim(), name.trim());
+        if scope.is_empty() || name.is_empty() {
+            return Err(decline("diff package identity"));
+        }
         let id = bit_install::model::ComponentId {
             scope: Some(scope.to_string()),
             default_scope: None,
@@ -158,17 +162,19 @@ impl Component<'_> {
         if let Some(prefix) = self.stored("bindingPrefix") {
             return Ok(prefix.clone());
         }
-        let identity = text(self.target.get("identity"))?;
+        let identity = text(self.target.get("identity"))?.trim();
         let scope = identity
             .split('/')
             .next()
-            .unwrap_or_default();
+            .unwrap_or_default()
+            .trim();
         Ok(json!(format!(
             "@{}",
             scope
                 .split('.')
                 .next()
                 .unwrap_or_default()
+                .trim()
         )))
     }
 }
