@@ -83,14 +83,22 @@ fn apply_inline_or_pattern<'a>(
 fn scope(modifier: Option<(&str, &str)>) -> Scope {
     match modifier {
         Some(("--range", value)) if !value.trim().is_empty() => Scope::Range(value.trim().into()),
-        Some(("--snaps", value)) => Scope::Snaps(
-            value
+        Some(("--snaps", value)) => {
+            let mut snaps = Vec::new();
+            for snap in value
                 .split(',')
                 .map(str::trim)
-                .filter(|value| !value.is_empty())
-                .map(str::to_owned)
-                .collect(),
-        ),
+                .filter(|val| !val.is_empty())
+            {
+                if !snaps
+                    .iter()
+                    .any(|existing| existing == snap)
+                {
+                    snaps.push(snap.to_owned());
+                }
+            }
+            Scope::Snaps(snaps)
+        }
         _ => Scope::Entire,
     }
 }

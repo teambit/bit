@@ -55,8 +55,8 @@ fn apply_merge_arg(rest: &[&str], idx: usize, opts: &mut MergeOptions) -> Option
         return Some(next_idx);
     }
     match arg {
-        "-p" | "--patch" | "--patch=true" => opts.bump.patch = true,
-        "--patch=false" => opts.bump.patch = false,
+        "-p" | "-p=true" | "--patch" | "--patch=true" => opts.bump.patch = true,
+        "-p=false" | "--patch=false" => opts.bump.patch = false,
         "--minor" | "--minor=true" => opts.bump.minor = true,
         "--minor=false" => opts.bump.minor = false,
         "--major" | "--major=true" => opts.bump.major = true,

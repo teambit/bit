@@ -25,6 +25,10 @@ pub(super) fn validate_sources(files: &[Value]) -> io::Result<()> {
         {
             return Err(io::Error::other("compiler binary source"));
         }
+        let metadata = fs::symlink_metadata(path)?;
+        if !metadata.is_file() || metadata.is_symlink() {
+            return Err(io::Error::other("compiler source is not a regular file"));
+        }
         if fs::read_to_string(path)? != source {
             return Err(io::Error::other("compiler source changed during preparation"));
         }

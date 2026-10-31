@@ -73,21 +73,7 @@ fn component(
     package: &str,
     lifecycle: Lifecycle,
 ) -> io::Result<ComponentDependency> {
-    let raw = entry["identity"]
-        .as_str()
-        .or_else(|| entry["id"].as_str())
-        .map(str::trim)
-        .filter(|val| !val.is_empty())
-        .ok_or_else(|| io::Error::other("compiler dependency identity"))?;
-    let (identity, version) = match raw.rsplit_once('@') {
-        Some((base, ver)) => (base, ver),
-        None => (
-            raw,
-            entry["version"]
-                .as_str()
-                .ok_or_else(|| io::Error::other("compiler dependency version"))?,
-        ),
-    };
+    let (identity, version) = split_component_identity(entry)?;
     let (scope, name) =
         identity.split_once('/').ok_or_else(|| io::Error::other("compiler dependency scope"))?;
     let (scope, name, version, package) =
@@ -108,4 +94,25 @@ fn component(
         optional: true,
         hidden: false,
     })
+}
+
+fn split_component_identity(entry: &Value) -> io::Result<(&str, &str)> {
+    let raw = entry["identity"]
+        .as_str()
+        .or_else(|| entry["id"].as_str())
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| io::Error::other("compiler dependency identity"))?;
+    match raw
+        .rsplit_once('@')
+        .filter(|(base, ver)| !base.trim().is_empty() && !ver.trim().is_empty())
+    {
+        Some((base, ver)) => Ok((base, ver)),
+        None => Ok((
+            raw.trim_end_matches('@'),
+            entry["version"]
+                .as_str()
+                .ok_or_else(|| io::Error::other("compiler dependency version"))?,
+        )),
+    }
 }

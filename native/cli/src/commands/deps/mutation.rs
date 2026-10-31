@@ -147,7 +147,8 @@ fn update_comp_json(
 ) -> Result<Option<CompJsonEdit>, Failure> {
     if path
         .parent()
-        .is_some_and(|dir| workspace::scope_path(dir).join("unmerged.json").exists())
+        .and_then(workspace::root)
+        .is_some_and(|root| workspace::scope_path(&root).join("unmerged.json").exists())
     {
         return Err(Failure::Declined("merge state active".into()));
     }

@@ -39,7 +39,9 @@ fn sections(
             "",
             &changed
                 .iter()
-                .map(|id| format.item(id.trim()))
+                .map(|id| id.trim())
+                .filter(|id| !id.is_empty())
+                .map(|id| format.item(id))
                 .collect::<Vec<_>>(),
         ),
         format.section(
@@ -47,7 +49,9 @@ fn sections(
             "no changes were made to these",
             &unchanged
                 .iter()
-                .map(|id| format.item(id.trim()))
+                .map(|id| id.trim())
+                .filter(|id| !id.is_empty())
+                .map(|id| format.item(id))
                 .collect::<Vec<_>>(),
         ),
     ])

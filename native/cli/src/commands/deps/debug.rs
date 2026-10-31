@@ -158,6 +158,9 @@ fn parse_manual_config(config: &Value) -> Result<ManualPolicy, Failure> {
     let Some(map) = config.as_object() else {
         return Err(Failure::Declined("unsupported component deps debug policy".into()));
     };
+    if map.is_empty() {
+        return Ok(ManualPolicy::default());
+    }
     if map.len() != 1 || !map.contains_key("policy") {
         return Err(Failure::Declined("unsupported component deps debug policy".into()));
     }

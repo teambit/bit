@@ -39,8 +39,11 @@ impl Stores {
             .map(scope_path)
             .or_else(|| {
                 cwd.ancestors()
-                    .find(|path| path.join("scope.json").is_file())
-                    .map(Path::to_owned)
+                    .find_map(|path| {
+                        [path.to_path_buf(), path.join(".bit"), path.join(".git/bit")]
+                            .into_iter()
+                            .find(|candidate| candidate.join("scope.json").is_file())
+                    })
             });
         if let Some(scope) = scope.filter(|path| path.join("scope.json").is_file()) {
             entries.push(Store::load("scope", scope.join("scope.json"), None)?);

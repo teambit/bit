@@ -43,9 +43,13 @@ fn run_workspace(
 ) -> io::Result<Outcome> {
     if let Err(error) =
         Plan::prepare(root, options.pattern, options.replacement, options.range, undo)
-        && (error.kind() != io::ErrorKind::InvalidInput || is_ci_active())
     {
-        return Ok(Outcome::Declined(format!("deprecation: {error}")));
+        if error.kind() != io::ErrorKind::InvalidInput || is_ci_active() {
+            return Ok(Outcome::Declined(format!("deprecation: {error}")));
+        }
+        return workspace_command::execute_then(root, args, command_name(undo), |_output| {
+            Err(error)
+        });
     }
     let mut linker = add::ProjectedLinker::prepare(root)?;
     print!("{}", linker.take_stdout());

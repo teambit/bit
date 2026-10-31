@@ -56,10 +56,8 @@ fn resolve_compiler_tool() -> io::Result<(std::path::PathBuf, std::path::PathBuf
 }
 
 fn write_compiler_request(child: &mut std::process::Child, request: &[u8]) -> io::Result<()> {
-    let input = child.stdin
-        .take()
-        .ok_or_else(|| io::Error::other("compiler tool stdin"))?
-        .write_all(request);
+    let mut stdin = child.stdin.take().ok_or_else(|| io::Error::other("compiler tool stdin"))?;
+    let input = stdin.write_all(request).and_then(|()| stdin.flush());
     if let Err(error) = input {
         let _ = child.kill();
         let _ = child.wait();

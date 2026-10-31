@@ -377,7 +377,11 @@ fn split_pkg_name_and_explicit_ver(raw: &str) -> Option<(String, String)> {
 
 fn is_valid_pkg_name(name: &str) -> bool {
     if let Some(scoped) = name.strip_prefix('@') {
-        !scoped.is_empty() && scoped.contains('/') && !scoped.contains('@')
+        scoped
+            .split_once('/')
+            .is_some_and(|(scope, pkg)| {
+                !scope.is_empty() && !pkg.is_empty() && !scoped.contains('@')
+            })
     } else {
         !name.is_empty() && !name.contains('@')
     }

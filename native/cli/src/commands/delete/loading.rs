@@ -48,9 +48,13 @@ fn missing_directory(directory: &str, chalk: Chalk) -> io::Error {
 
 fn missing_main(fallback_id: &str, row: &Value, main: &str, chalk: Chalk) -> io::Error {
     let fallback_id = fallback_id.trim();
-    let (fallback_scope, fallback_name) = fallback_id
+    let fallback_bare = fallback_id
+        .rsplit_once('@')
+        .filter(|(base, _)| !base.trim().is_empty())
+        .map_or(fallback_id, |(base, _)| base.trim());
+    let (fallback_scope, fallback_name) = fallback_bare
         .split_once('/')
-        .map_or(("", fallback_id), |(scope, name)| (scope.trim(), name.trim()));
+        .map_or(("", fallback_bare), |(scope, name)| (scope.trim(), name.trim()));
     let name = row["name"]
         .as_str()
         .map(str::trim)

@@ -188,11 +188,16 @@ fn model_item_pkg_and_ver<'a>(
 ) -> Option<(&'a str, &'a str)> {
     let pkg_name = item["packageName"]
         .as_str()
+        .map(str::trim)
+        .filter(|pkg| !pkg.is_empty())
         .or(obj_id)
-        .filter(|pkg| !identity.is_self(pkg))?;
+        .map(str::trim)
+        .filter(|pkg| !pkg.is_empty() && !identity.is_self(pkg))?;
     let ver = item["version"]
         .as_str()
         .or_else(|| item["componentId"]["version"].as_str())
-        .or_else(|| item["id"]["version"].as_str())?;
+        .or_else(|| item["id"]["version"].as_str())
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())?;
     Some((pkg_name, ver))
 }

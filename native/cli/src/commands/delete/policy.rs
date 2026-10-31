@@ -70,6 +70,10 @@ impl Policy {
     }
 }
 fn range(document: &Document, tag: &str) -> io::Result<String> {
+    let tag = tag.trim();
+    if tag.len() == 40 && tag.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Ok(tag.to_owned());
+    }
     let version = Version::parse(tag).map_err(io::Error::other)?;
     if version.is_prerelease() {
         return Ok(tag.to_owned());

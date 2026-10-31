@@ -269,8 +269,14 @@ fn index_row_scope_and_name(row: &Value) -> (&str, &str) {
             .map_or(("", bare), |(scope, name)| (scope.trim(), name.trim()));
     }
     (
-        row["id"]["scope"].as_str().map_or("", str::trim),
-        row["id"]["name"].as_str().map_or("", str::trim),
+        row["id"]["scope"]
+            .as_str()
+            .or_else(|| row["scope"].as_str())
+            .map_or("", str::trim),
+        row["id"]["name"]
+            .as_str()
+            .or_else(|| row["name"].as_str())
+            .map_or("", str::trim),
     )
 }
 

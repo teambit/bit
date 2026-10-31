@@ -48,7 +48,17 @@ pub(in crate::commands::deps) fn run(
     let diagnosis = match inspect(root, origins) {
         Ok(diagnosis) => diagnosis,
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
+            if env::var_os("CI")
+                .is_some_and(|val| {
+                    !matches!(
+                        val.to_string_lossy()
+                            .trim()
+                            .to_ascii_lowercase()
+                            .as_str(),
+                        "" | "0" | "false",
+                    )
+                })
+            {
                 return Ok(Outcome::Declined("CI deps diagnose error stack".into()));
             }
             return workspace_command::execute_then(root, args, "diagnose", |_| {

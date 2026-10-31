@@ -127,7 +127,9 @@ pub(super) fn api(host: &str) -> Result<String, String> {
         return Ok("https://api.github.com".into());
     };
     let server_host = server.host_str().unwrap_or("github.com");
-    if server_host == "github.com" || !host.trim().eq_ignore_ascii_case(server_host) {
+    if server_host.eq_ignore_ascii_case("github.com")
+        || !host.trim().eq_ignore_ascii_case(server_host)
+    {
         return Ok("https://api.github.com".into());
     }
     if !matches!(server.scheme(), "http" | "https") {

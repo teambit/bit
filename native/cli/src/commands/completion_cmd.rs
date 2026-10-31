@@ -91,9 +91,11 @@ pub(super) fn valid_options(args: &[&str]) -> bool {
         if !matches!(
             arg,
             "--no-color"
+                | "--no-colors"
                 | "--no-color=true"
                 | "--no-color=false"
                 | "--color"
+                | "--colors"
                 | "--color=true"
                 | "--color=false"
                 | "--color=always"

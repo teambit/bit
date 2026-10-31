@@ -115,7 +115,11 @@ fn dependency_facts(rows: &[serde_json::Value]) -> io::Result<Vec<DependencyComp
                     .filter(|package| !package.is_empty())
                     .ok_or_else(|| invalid("deletion graph package"))?
                     .into(),
-                dependencies: serde_json::from_value(row["componentDependencies"].clone())?,
+                dependencies: if row["componentDependencies"].is_null() {
+                    Vec::new()
+                } else {
+                    serde_json::from_value(row["componentDependencies"].clone())?
+                },
             })
         })
         .collect()

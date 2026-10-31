@@ -45,6 +45,8 @@ fn normalize(path: &Path) -> PathBuf {
             Component::ParentDir => {
                 if matches!(result.components().next_back(), Some(Component::Normal(_))) {
                     result.pop();
+                } else if !result.has_root() {
+                    result.push(part.as_os_str());
                 }
             }
             Component::CurDir => {}

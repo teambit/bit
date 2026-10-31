@@ -80,7 +80,7 @@ fn enterprise_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> 
     let base = api
         .as_deref()
         .ok()
-        .map(str::trim)
+        .map(|url| url.trim().trim_end_matches('/'))
         .filter(|url| !url.is_empty())
         .unwrap_or("<GitHub API URL>");
     let url =

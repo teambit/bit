@@ -171,10 +171,15 @@ fn render(report: &PackageReport<'_>, chalk: Chalk) -> String {
 }
 
 pub(super) fn table(rows: &[Vec<String>]) -> String {
-    let Some(first) = rows.first() else {
+    let col_count = rows
+        .iter()
+        .map(Vec::len)
+        .max()
+        .unwrap_or(0);
+    if col_count == 0 {
         return String::new();
-    };
-    let widths = (0..first.len())
+    }
+    let widths = (0..col_count)
         .map(|column| {
             rows.iter()
                 .filter_map(|row| row.get(column))

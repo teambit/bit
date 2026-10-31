@@ -94,11 +94,32 @@ fn list(value: &Value) -> Vec<String> {
         .as_array()
         .into_iter()
         .flatten()
-        .filter_map(Value::as_str)
-        .map(str::trim)
-        .filter(|val| !val.is_empty())
-        .map(str::to_owned)
+        .filter_map(receipt_entry_id)
         .collect()
+}
+
+fn receipt_entry_id(entry: &Value) -> Option<String> {
+    if let Some(raw) = entry
+        .as_str()
+        .or_else(|| entry["id"].as_str())
+    {
+        let trimmed = raw.trim();
+        return (!trimmed.is_empty()).then(|| trimmed.to_owned());
+    }
+    let name = entry["name"]
+        .as_str()
+        .or_else(|| entry["id"]["name"].as_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())?;
+    let scope = entry["scope"]
+        .as_str()
+        .or_else(|| entry["id"]["scope"].as_str())
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty());
+    Some(match scope {
+        Some(scope) => format!("{scope}/{name}"),
+        None => name.to_owned(),
+    })
 }
 
 pub(super) fn lanes(receipts: &[Value], chalk: Chalk) -> String {

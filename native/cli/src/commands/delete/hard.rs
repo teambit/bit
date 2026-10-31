@@ -75,7 +75,7 @@ fn preflight_hard_guard(
     if let Some(err) = preflight_workspace_hard_err(root, options.update_main) {
         return emit_hard_error(cwd, root, args, &err.to_string()).map(Some);
     }
-    let non_ci = env::var_os("CI").is_none_or(|val| val.to_string_lossy().trim().is_empty());
+    let non_ci = !super::ci_enabled();
     if !feature_enabled(global) {
         if !super::preparation::can_prompt_user() && non_ci {
             return emit_hard_error(cwd, root, args, HARD_DELETE_GUARD_ERR).map(Some);
@@ -99,9 +99,7 @@ fn preflight_hard_guard(
 
 fn preflight_workspace_hard_err(root: Option<&Path>, update_main: bool) -> Option<io::Error> {
     let ws_root = root?;
-    if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty())
-        || super::super::installation::Installer::needs_canonical(ws_root)
-    {
+    if super::ci_enabled() || super::super::installation::Installer::needs_canonical(ws_root) {
         return None;
     }
     super::preparation::validate_pre_prompt(ws_root, false, update_main, true).err()
@@ -113,7 +111,7 @@ fn emit_hard_error(
     args: &[OsString],
     msg: &str,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
+    if super::ci_enabled() {
         return Ok(Outcome::Declined("CI delete --hard validation".into()));
     }
     let err = io::Error::other(msg.to_owned());

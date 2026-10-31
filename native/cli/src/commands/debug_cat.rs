@@ -134,7 +134,7 @@ fn run_object(args: &[OsString]) -> io::Result<Outcome> {
     let scope_dir = scope_dir_for(&root);
     let Some(data) = render_cat_object(&scope_dir, &opts) else {
         if !opts.headers
-            && env::var_os("CI").is_none_or(|val| val.is_empty())
+            && !ci_enabled()
             && matches!(bit_object_import::read_raw_scope_object(&scope_dir, &opts.hash), Ok(None))
         {
             return emit_failure(
@@ -149,6 +149,19 @@ fn run_object(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("cat-object delegated".into()));
     };
     emit_text(&root, args, "cat-object", false, data)
+}
+
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            !matches!(
+                val.to_string_lossy()
+                    .trim()
+                    .to_ascii_lowercase()
+                    .as_str(),
+                "" | "0" | "false",
+            )
+        })
 }
 
 fn render_cat_object(scope_dir: &Path, opts: &ObjectOptions) -> Option<String> {
@@ -190,7 +203,7 @@ fn run_lane(args: &[OsString]) -> io::Result<Outcome> {
     };
     let scope_dir = scope_dir_for(&root);
     let Some((_, _, hash)) = resolve_lane_entry(&scope_dir, &id) else {
-        if env::var_os("CI").is_none_or(|val| val.is_empty())
+        if !ci_enabled()
             && let Some(err) = diagnose_lane_lookup_error(&scope_dir, &id, false)
         {
             return emit_failure(&root, args, "cat-lane", false, false, err);
@@ -222,7 +235,7 @@ fn run_lane_history(args: &[OsString]) -> io::Result<Outcome> {
     };
     let scope_dir = scope_dir_for(&root);
     let Some((scope, name, lane_hash)) = resolve_lane_entry(&scope_dir, &id) else {
-        if env::var_os("CI").is_none_or(|val| val.is_empty())
+        if !ci_enabled()
             && let Some(err) = diagnose_lane_lookup_error(&scope_dir, &id, true)
         {
             return emit_failure(&root, args, "cat-lane-history", true, false, err);
@@ -256,7 +269,7 @@ fn run_version_history(args: &[OsString]) -> io::Result<Outcome> {
         .rsplit_once('@')
         .unwrap_or((&opts.id, ""));
     let Some((Some(scope), name, _)) = resolve_component_entry(&scope_dir, bare_id) else {
-        if env::var_os("CI").is_none_or(|val| val.is_empty())
+        if !ci_enabled()
             && let Some(err) =
                 diagnose_component_lookup_error(&scope_dir, &opts.id, bare_id, Chalk::detect(args))
         {
@@ -294,7 +307,7 @@ fn run_component(args: &[OsString]) -> io::Result<Outcome> {
     };
     let scope_dir = scope_dir_for(&root);
     let Some(val) = load_cat_component(&root, &scope_dir, &opts.id) else {
-        if env::var_os("CI").is_none_or(|val| val.is_empty())
+        if !ci_enabled()
             && let Some(err) =
                 diagnose_cat_component_error(&root, &scope_dir, &opts.id, Chalk::detect(args))
         {
@@ -310,7 +323,7 @@ pub(in crate::commands) fn emit_scope_not_found(
     command: &str,
     quiet: bool,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_none_or(|val| val.is_empty())
+    if !ci_enabled()
         && let Ok(cwd) = env::current_dir()
         && cwd
             .ancestors()

@@ -88,14 +88,13 @@ impl Links {
 
 fn matches_component_identity(identity: &str, component: &WorkspaceComponent) -> bool {
     let target = component.id.to_string_without_version();
-    let Some(bare) = identity
-        .trim()
-        .split('@')
-        .next()
-        .map(str::trim)
-        .filter(|bare| !bare.is_empty())
-    else {
+    let trimmed = identity.trim();
+    let bare = trimmed
+        .rsplit_once('@')
+        .filter(|(base, _)| !base.trim().is_empty())
+        .map_or(trimmed, |(base, _)| base.trim());
+    if bare.is_empty() {
         return false;
-    };
+    }
     bare == target.trim() || (!bare.contains('/') && bare == component.id.name.trim())
 }

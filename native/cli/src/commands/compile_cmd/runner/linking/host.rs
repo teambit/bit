@@ -43,9 +43,9 @@ fn is_supported_builtin_env(env_id: &str) -> bool {
     !trimmed.is_empty()
         && !trimmed
             .split_once('@')
-            .is_some_and(|(_, ver)| ver.trim().is_empty())
+            .is_some_and(|(_, ver)| ver.trim().is_empty() || ver.contains('@'))
         && matches!(
-            bit_install::config::aspect_id_without_version(trimmed).trim(),
+            bit_install::config::aspect_id_without_version(trimmed).trim().trim_end_matches('/'),
             "teambit.harmony/node" | "teambit.react/react",
         )
 }

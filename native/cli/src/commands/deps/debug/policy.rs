@@ -92,10 +92,14 @@ fn append_manual_field(
             .filter(|(name, _)| {
                 field == "devDependencies"
                     && values
-                        .get(*name)
-                        .and_then(Value::as_str)
-                        .map(str::trim)
-                        == Some("-")
+                        .as_object()
+                        .is_some_and(|entries| {
+                            entries
+                                .iter()
+                                .any(|(key, val)| {
+                                    key.trim() == *name && val.as_str().map(str::trim) == Some("-")
+                                })
+                        })
             })
             .map(|(name, _)| (*name).to_owned()),
     );

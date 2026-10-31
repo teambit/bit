@@ -191,25 +191,23 @@ fn paths(values: &[String]) -> String {
         .collect::<Vec<_>>()
         .join(" ")
 }
+fn is_dot_repo_root(repo_root: &str) -> bool {
+    let trimmed = repo_root.trim();
+    trimmed.is_empty() || trimmed == "."
+}
 fn staging(report: &Report, chalk: Chalk) -> Vec<String> {
     let mut lines = Vec::new();
+    let repo_root = report.target.repo_root.trim();
+    let is_dot = is_dot_repo_root(repo_root);
     if !report.changes.git {
-        let root = if report.target.repo_root == "." {
-            String::new()
-        } else {
-            format!(" {}", shell_word(&report.target.repo_root))
-        };
+        let root = if is_dot { String::new() } else { format!(" {}", shell_word(repo_root)) };
         lines.push(chalk.cyan(&format!(
             "git init -b {}{root}",
             shell_word(report.target.branch.trim()),
         )));
     }
     if !report.changes.commits {
-        lines.push(chalk.cyan(if report.target.repo_root == "." {
-            "git add -A"
-        } else {
-            "git add -A :/"
-        }));
+        lines.push(chalk.cyan(if is_dot { "git add -A" } else { "git add -A :/" }));
     }
     if !report.changes.stage.is_empty() {
         lines.push(chalk.cyan(&format!("git add -- {}", paths(&report.changes.stage))));
@@ -249,9 +247,11 @@ fn unknown_steps(report: &Report, chalk: Chalk) -> Vec<String> {
         commands.push(chalk.cyan("git push -u origin HEAD"));
         "Push it"
     } else {
+        let repo_root = report.target.repo_root.trim();
+        let source = if repo_root.is_empty() { "." } else { repo_root };
         commands.push(chalk.cyan(&format!(
             "gh repo create --private --source {} --remote origin --push",
-            shell_word(&report.target.repo_root),
+            shell_word(source),
         )));
         commands.push(chalk.dim(
             r#"names the repository after its root folder; add OWNER/NAME after "create" to choose"#,

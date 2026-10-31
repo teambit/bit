@@ -349,7 +349,7 @@ fn workspace_child_deps(
     let (entry, component) = ctx.ws.entries
         .iter()
         .zip(&ctx.ws.components)
-        .find(|(entry, _)| entry.id.to_string_without_version() == bare)?;
+        .find(|(entry, _)| entry.owns_its_dir() && entry.id.to_string_without_version() == bare)?;
     let cfg = load_dep_resolver_config(root, bitmap_val, entry).ok().flatten();
     let (deps, _) = ctx.collect_component_deps(
         entry,

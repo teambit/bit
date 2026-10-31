@@ -211,17 +211,45 @@ fn parse(args: &[&str]) -> Option<bool> {
     let mut json = false;
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
-        match arg.trim() {
-            "--" => return iter.next().is_none().then_some(json),
-            "-j" | "-j=true" | "--json" | "--json=true" => json = true,
-            "-j=false" | "--json=false" => json = false,
-            "--no-color" | "--no-colors" | "--no-color=true" | "--no-color=false" | "--color"
-            | "--colors" | "--color=true" | "--color=false" | "--color=always"
-            | "--color=never" => {}
-            _ => return None,
+        let trimmed = arg.trim();
+        if trimmed == "--" {
+            return iter.next().is_none().then_some(json);
+        }
+        if let Some(flag) = parse_json_flag(trimmed) {
+            json = flag;
+            continue;
+        }
+        if !matches!(
+            trimmed,
+            "--no-color"
+                | "--no-colors"
+                | "--no-color=true"
+                | "--no-color=false"
+                | "--color"
+                | "--colors"
+                | "--color=true"
+                | "--color=false"
+                | "--color=always"
+                | "--color=never",
+        ) {
+            return None;
         }
     }
     Some(json)
+}
+
+fn parse_json_flag(arg: &str) -> Option<bool> {
+    match arg {
+        "-j" | "--json" => Some(true),
+        _ => arg
+            .strip_prefix("--json=")
+            .or_else(|| arg.strip_prefix("-j="))
+            .and_then(|val| match val.trim() {
+                raw if raw.eq_ignore_ascii_case("true") || raw == "1" => Some(true),
+                raw if raw.eq_ignore_ascii_case("false") || raw == "0" => Some(false),
+                _ => None,
+            }),
+    }
 }
 
 fn issues_json() -> Value {

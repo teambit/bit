@@ -48,6 +48,9 @@ fn git(key: &str) -> String {
     else {
         return String::new();
     };
+    if !output.status.success() {
+        return String::new();
+    }
     let text = String::from_utf8_lossy(&output.stdout);
     parse_git_config(&text, key)
 }

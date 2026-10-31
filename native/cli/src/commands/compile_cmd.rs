@@ -44,7 +44,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
+        if ci_enabled() {
             return Ok(Outcome::Declined("CI compile delegated".into()));
         }
 
@@ -52,7 +52,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Err(io::Error::other(OUTSIDE_WORKSPACE_ERR))
         });
     };
-    if env::var_os("CI").is_none_or(|val| val.to_string_lossy().trim().is_empty())
+    if !ci_enabled()
         && let Some(err) = validate_compile_selectors(&root, &options)
     {
         return emit_compile_error(&root, args, options.json, err);
@@ -61,6 +61,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(outcome);
     }
     Ok(Outcome::Declined("compile execution delegated".into()))
+}
+
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
 }
 
 fn emit_compile_error(

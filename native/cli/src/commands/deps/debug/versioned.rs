@@ -313,7 +313,7 @@ fn plain_dependencies(deps: &[Value], env_id: &str, manual: Option<&ManualPolicy
         .iter()
         .map(|(_, group)| group.len())
         .sum::<usize>()
-        - ignored.len()
+        .saturating_sub(ignored.len())
         + manual.map_or(0, |manual| {
             manual.runtime.len() + manual.dev.len() + manual.peer.len()
         });

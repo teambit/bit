@@ -16,7 +16,21 @@ impl Options {
             .skip(1)
             .map(|arg| arg.to_str())
             .collect::<Option<Vec<_>>>()?;
-        values.retain(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"));
+        values.retain(|arg| {
+            !matches!(
+                arg.trim(),
+                "--no-color"
+                    | "--no-colors"
+                    | "--no-color=true"
+                    | "--no-color=false"
+                    | "--color"
+                    | "--colors"
+                    | "--color=true"
+                    | "--color=false"
+                    | "--color=always"
+                    | "--color=never",
+            )
+        });
         let command = if values
             .first()
             .is_some_and(|arg| {

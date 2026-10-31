@@ -102,7 +102,9 @@ fn global(path: &Path, bytes: &[u8]) -> io::Result<()> {
         use std::os::unix::fs::OpenOptionsExt;
         options.mode(0o600);
     }
-    options.open(path)?.write_all(bytes)?;
+    let mut file = options.open(path)?;
+    file.write_all(bytes)?;
+    file.flush()?;
     private(path)
 }
 

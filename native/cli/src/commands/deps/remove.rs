@@ -71,10 +71,18 @@ fn remove_for_entry(
         _ => "runtime",
     };
     let mut removed_for_comp = Vec::new();
+    let mut seen_names = Vec::new();
     for raw_pkg in spec.packages {
         let Some((dep_name, dep_ver)) = match_pkg(raw_pkg, &deps, &missing, lifecycle)? else {
             continue;
         };
+        if seen_names
+            .iter()
+            .any(|seen| seen == &dep_name)
+        {
+            continue;
+        }
+        seen_names.push(dep_name.clone());
         if apply_pkg_removal(&mut new_cfg, dep_field, &dep_name, spec.remove_only_if_exists)? {
             removed_for_comp.push(format!("{dep_name}@{dep_ver}"));
         }

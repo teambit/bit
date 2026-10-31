@@ -58,7 +58,7 @@ fn execute(
     let written = stores.write();
     output.stop();
     if let Err(error) = written {
-        writeln!(io::stderr(), "{error}")?;
+        writeln!(io::stderr(), "{}", chalk.red(&error.to_string()))?;
         io::stderr().flush()?;
         return Ok(ExitCode::FAILURE);
     }

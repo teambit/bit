@@ -100,11 +100,19 @@ fn validated_batch_size(root: &Path) -> io::Result<usize> {
 }
 
 fn selection(options: &Options) -> Selection {
-    let exact = options.components
+    let mut exact = Vec::new();
+    for component in options.components
         .iter()
-        .map(|component| component.trim().to_owned())
+        .map(|component| component.trim())
         .filter(|component| !component.is_empty())
-        .collect::<Vec<_>>();
+    {
+        if !exact
+            .iter()
+            .any(|existing| existing == component)
+        {
+            exact.push(component.to_owned());
+        }
+    }
     Selection {
         pattern: None,
         compiler: true,

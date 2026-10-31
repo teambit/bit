@@ -68,17 +68,28 @@ fn collect_parse_error_inputs(
     }
     Ok(inputs)
 }
-fn errors(inputs: &[Value]) -> io::Result<Vec<Value>> {
+fn find_parser_entry() -> io::Result<(std::path::PathBuf, std::path::PathBuf)> {
     let Target::Entry(cli) = discovery::find()? else {
         return Err(io::Error::other("compiler parser installation"));
     };
+    if cli.node
+        .to_string_lossy()
+        .trim()
+        .is_empty()
+    {
+        return Err(io::Error::other("compiler parser node binary"));
+    }
     let package = cli.bit_dir
         .ok_or_else(|| io::Error::other("compiler parser package"))?
         .join("package.json");
     if !package.is_file() {
         return Err(io::Error::other("compiler parser package manifest"));
     }
-    let mut child = Command::new(cli.node)
+    Ok((cli.node, package))
+}
+fn errors(inputs: &[Value]) -> io::Result<Vec<Value>> {
+    let (node, package) = find_parser_entry()?;
+    let mut child = Command::new(node)
         .arg("-e")
         .arg(include_str!("syntax.cjs"))
         .arg(package)
@@ -97,7 +108,7 @@ fn errors(inputs: &[Value]) -> io::Result<Vec<Value>> {
         return Err(error);
     }
     let output = child.wait_with_output()?;
-    if !output.status.success() || !output.stderr.is_empty() {
+    if !output.status.success() || !String::from_utf8_lossy(&output.stderr).trim().is_empty() {
         return Err(io::Error::other("compiler parser diagnostic tool"));
     }
     let errors: Vec<Value> = serde_json::from_slice(&output.stdout)?;

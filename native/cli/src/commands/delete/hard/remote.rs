@@ -85,7 +85,9 @@ fn group(ids: &[String]) -> io::Result<Vec<(String, Vec<String>)>> {
             .iter_mut()
             .find(|(existing_scope, _)| existing_scope == scope)
         {
-            members.push(canonical);
+            if !members.contains(&canonical) {
+                members.push(canonical);
+            }
         } else {
             grouped.push((scope.to_owned(), vec![canonical]));
         }

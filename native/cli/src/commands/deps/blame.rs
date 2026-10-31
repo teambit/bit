@@ -207,7 +207,10 @@ fn read_logs(root: &Path, id: &ComponentId) -> Result<Vec<Value>, Failure> {
 
 fn matches_dependency(dep: &ResolvedDep, query: &str) -> bool {
     let query = query.trim();
-    dep.package_name == query || dep.id == query || dep.comp_bare_id.as_deref() == Some(query)
+    dep.package_name == query
+        || dep.id == query
+        || dep.comp_name.as_deref() == Some(query)
+        || dep.comp_bare_id.as_deref() == Some(query)
 }
 
 fn blame_row(row: &Value, version: &str) -> Result<BlameRow, Failure> {

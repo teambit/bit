@@ -102,7 +102,7 @@ fn append(
                 .as_str()
                 .or_else(|| file["relativePath"].as_str())
                 .or_else(|| file["path"].as_str())
-                .map(str::trim)
+                .map(|val| val.trim().trim_start_matches("./"))
                 .filter(|value| !value.is_empty())
                 .ok_or_else(|| io::Error::other("compiler output path"))?;
             if relative.contains('\\')

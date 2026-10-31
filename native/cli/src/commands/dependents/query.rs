@@ -290,6 +290,10 @@ fn add_scanned_ws_edges(
     }
 }
 
+fn matches_pkg_spec(raw_spec: &str, pkg: &str) -> bool {
+    !pkg.is_empty() && (raw_spec == pkg || raw_spec.starts_with(&format!("{pkg}/")))
+}
+
 fn match_ws_target(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<String> {
     for (entry, other) in ws.active() {
         if other.id.name == self_name {
@@ -298,12 +302,10 @@ fn match_ws_target(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<St
         let scope = other.id.effective_scope().unwrap_or_default();
         let pkg_slash = format!("@{scope}/{}", other.id.name);
         let pkg_dot = format!("@{scope}/{}", other.id.name.replace('/', "."));
-        if raw_spec == other.package_name
-            || raw_spec == pkg_slash
-            || raw_spec == pkg_dot
-            || raw_spec.starts_with(&format!("{}/", other.package_name))
-            || raw_spec.starts_with(&format!("{pkg_slash}/"))
-            || raw_spec.starts_with(&format!("{pkg_dot}/"))
+        let pkg_name = other.package_name.trim();
+        if matches_pkg_spec(raw_spec, pkg_name)
+            || matches_pkg_spec(raw_spec, &pkg_slash)
+            || matches_pkg_spec(raw_spec, &pkg_dot)
         {
             return Some(selection::entry_full_id(entry));
         }

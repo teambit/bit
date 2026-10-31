@@ -37,12 +37,12 @@ pub(super) fn try_run(
     if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() || !root.is_dir() {
         return Ok(None);
     }
-    let started = Instant::now();
     let mut plan = match plan::Plan::prepare(root, options) {
         Ok(plan) => plan,
         Err(error) => return Ok(Some(Outcome::Declined(format!("compiler preparation: {error}")))),
     };
     let work = |output: &bit_install::output::Output| {
+        let started = Instant::now();
         plan.run(root, options, output).map_err(|error| format_compile_error(&error, args))?;
         report::create(&plan.compiled, options, args, started.elapsed())
     };

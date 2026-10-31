@@ -39,11 +39,11 @@ fn apply_arg<'a>(
     match args[index] {
         "--no-color" | "--no-color=true" | "--no-color=false" => Some(index + 1),
         "--new-id" if !undo => {
-            *replacement = Some(valid_val(args.get(index + 1)?)?);
+            set_non_conflicting(replacement, valid_val(args.get(index + 1)?)?)?;
             Some(index + 2)
         }
         "--range" if !undo => {
-            *range = Some(valid_val(args.get(index + 1)?)?);
+            set_non_conflicting(range, valid_val(args.get(index + 1)?)?)?;
             Some(index + 2)
         }
         arg if !undo && apply_inline_flag(arg, replacement, range) => Some(index + 1),
@@ -57,18 +57,24 @@ fn apply_arg<'a>(
     }
 }
 
+fn set_non_conflicting<'a>(slot: &mut Option<&'a str>, val: &'a str) -> Option<()> {
+    if slot.is_some_and(|prev| prev != val) {
+        return None;
+    }
+    *slot = Some(val);
+    Some(())
+}
+
 fn apply_inline_flag<'a>(
     arg: &'a str,
     replacement: &mut Option<&'a str>,
     range: &mut Option<&'a str>,
 ) -> bool {
     if let Some(val) = arg.strip_prefix("--new-id=").and_then(valid_val) {
-        *replacement = Some(val);
-        return true;
+        return set_non_conflicting(replacement, val).is_some();
     }
     if let Some(val) = arg.strip_prefix("--range=").and_then(valid_val) {
-        *range = Some(val);
-        return true;
+        return set_non_conflicting(range, val).is_some();
     }
     false
 }

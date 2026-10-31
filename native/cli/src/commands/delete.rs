@@ -16,14 +16,29 @@ use std::{env, ffi::OsString, io, path::Path};
 pub const COMMAND: Command = Command { name: "delete", aliases: &[], run };
 pub(super) const NON_INTERACTIVE_PROMPT_ERR: &str = "this command requires a confirmation, but this session is non-interactive (no TTY, CI, or an AI agent) so the confirmation prompt cannot be shown.\nre-run with --silent to skip the confirmation, or run the command in an interactive terminal";
 
+fn parse_hard_flag(trimmed: &str) -> Option<bool> {
+    if trimmed == "--hard" {
+        return Some(true);
+    }
+    let val = trimmed.strip_prefix("--hard=")?.trim();
+    if val.eq_ignore_ascii_case("true") || val == "1" {
+        Some(true)
+    } else if val.eq_ignore_ascii_case("false") || val == "0" {
+        Some(false)
+    } else {
+        None
+    }
+}
+
 fn is_hard_delete(args: &[&str]) -> bool {
     let mut hard = false;
     for &arg in args {
-        match arg.trim() {
-            "--" => break,
-            "--hard" | "--hard=true" => hard = true,
-            "--hard=false" => hard = false,
-            _ => {}
+        let trimmed = arg.trim();
+        if trimmed == "--" {
+            break;
+        }
+        if let Some(flag) = parse_hard_flag(trimmed) {
+            hard = flag;
         }
     }
     hard

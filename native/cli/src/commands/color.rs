@@ -152,9 +152,15 @@ fn has_flag(args: &[OsString], flag: &str) -> bool {
 /// The forced level from flags and `FORCE_COLOR`.
 fn forced(args: &[OsString]) -> Option<u32> {
     let mut forced = None;
-    if ["no-color", "no-colors", "color=false", "color=never"].iter().any(|f| has_flag(args, f)) {
+    if ["no-color", "no-color=true", "no-colors", "color=false", "color=never"]
+        .iter()
+        .any(|flag| has_flag(args, flag))
+    {
         forced = Some(0);
-    } else if ["color", "colors", "color=true", "color=always"].iter().any(|f| has_flag(args, f)) {
+    } else if ["color", "colors", "color=true", "color=always", "no-color=false"]
+        .iter()
+        .any(|flag| has_flag(args, flag))
+    {
         forced = Some(1);
     }
     if let Some(value) = env::var_os("FORCE_COLOR") {

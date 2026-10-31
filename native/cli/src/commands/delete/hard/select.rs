@@ -29,15 +29,22 @@ pub(super) fn components(context: &Context, pattern: &str) -> io::Result<Vec<Str
     }
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     let remote = runtime.block_on(context.remotes.resolve(scope, &context.network))?;
-    let mut ids = inventory(context, &runtime, remote, name)?;
-    ids.retain(|id| {
-        id.split_once('/')
-            .is_some_and(|(found_scope, found_name)| {
-                let found_name = found_name.split_once('@').map_or(found_name, |(name, _)| name);
-                found_scope == scope && wildcard(name, found_name)
+    let mut ids: Vec<String> = inventory(context, &runtime, remote, name)?
+        .into_iter()
+        .filter_map(|id| {
+            let (found_scope, found_name) = id.trim().split_once('/')?;
+            let found_scope = found_scope.trim();
+            let found_name = found_name
+                .split_once('@')
+                .map_or(found_name, |(base, _)| base)
+                .trim();
+            (found_scope == scope && wildcard(name, found_name)).then(|| {
+                format!("{found_scope}/{found_name}")
             })
-    });
+        })
+        .collect();
     ids.sort();
+    ids.dedup();
     if ids.is_empty() {
         return Err(invalid("no matching components for wildcard"));
     }

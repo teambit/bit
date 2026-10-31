@@ -22,7 +22,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("cli arguments are not UTF-8".into()));
     };
     if let Some(skill) = parse_unknown_skill(&argv[1..]) {
-        if env::var_os("CI").is_some_and(|val| !val.to_string_lossy().trim().is_empty()) {
+        if env::var_os("CI")
+            .is_some_and(|val| {
+                let text = val.to_string_lossy();
+                let trimmed = text.trim();
+                !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+            })
+        {
             return Ok(Outcome::Declined("CI cli generate skill error delegated".into()));
         }
         return emit_unknown_skill(args, skill);

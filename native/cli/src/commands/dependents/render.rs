@@ -32,7 +32,9 @@ impl DepGraph {
             .iter_mut()
             .find(|(edge_src, edge_dst, _)| *edge_src == src && *edge_dst == dst)
         {
-            existing.2 = dep_type;
+            if existing.2 != "prod" {
+                existing.2 = dep_type;
+            }
         } else {
             self.edges.push((src, dst, dep_type));
         }
