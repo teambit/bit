@@ -130,13 +130,11 @@ pub(super) fn validate_lint_pattern(
 ) -> Option<String> {
     let pat = pattern?;
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
-    if !startup::service_supported(root, &ws_config).ok()?
-        || ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true
-    {
+    if !startup::service_supported(root, &ws_config).ok()? {
         return None;
     }
-    let default_scope = ws_config["teambit.workspace/workspace"]["defaultScope"].as_str();
-    let bitmap = Bitmap::load(root, default_scope).ok()?;
+    let default_scope = super::aspect::workspace_default_scope(&ws_config).ok()?;
+    let bitmap = Bitmap::load(root, Some(&default_scope)).ok()?;
     match selection::resolve_pattern_entries(root, &bitmap, pat, chalk) {
         Err(Failure::User(msg)) => Some(msg),
         _ => None,

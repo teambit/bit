@@ -110,11 +110,8 @@ fn run_in_workspace(
 fn validate_build_pattern(root: &Path, options: &Options, chalk: Chalk) -> Option<String> {
     let pat = options.pattern.as_deref()?;
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
-    if ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
-        return None;
-    }
-    let default_scope = ws_config["teambit.workspace/workspace"]["defaultScope"].as_str();
-    let bitmap = Bitmap::load(root, default_scope).ok()?;
+    let default_scope = super::aspect::workspace_default_scope(&ws_config).ok()?;
+    let bitmap = Bitmap::load(root, Some(&default_scope)).ok()?;
     match selection::resolve_pattern_entries(root, &bitmap, pat, chalk) {
         Err(Failure::User(msg)) => Some(msg),
         _ => None,
@@ -136,7 +133,7 @@ pub(super) fn is_empty_build_workspace(root: &Path, options: &Options) -> io::Re
         return Ok(false);
     }
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    if ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
+    if super::aspect::workspace_default_scope(&ws_config).is_err() {
         return Ok(false);
     }
     let bitmap = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
@@ -239,7 +236,7 @@ fn apply_inline_or_positional(arg: &str, options: &mut Options) -> Option<()> {
     if let Some(val) = arg.strip_prefix("--tasks=") {
         options.pipeline.tasks = Some(take_val(val)?);
     } else if let Some(val) = arg.strip_prefix("--list-tasks=") {
-        options.list_tasks = Some(take_val(val)?);
+        options.list_tasks = Some(val.to_owned());
     } else if let Some(val) = arg.strip_prefix("--skip-tasks=") {
         options.pipeline.skip_tasks = Some(take_val(val)?);
     } else if let Some(val) = arg

@@ -317,11 +317,17 @@ fn is_valid_scoped_package_name(name: &str) -> bool {
         && !name.contains("..")
 }
 
+fn load_scope_index_components(scope_dir: &Path) -> Option<Vec<Value>> {
+    let bytes = fs::read(scope_dir.join("index.json")).ok()?;
+    let index = serde_json::from_slice::<Value>(&bytes).ok()?;
+    index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .cloned()
+}
+
 fn scope_has_components(scope_dir: &Path) -> bool {
-    fs::read(scope_dir.join("index.json"))
-        .ok()
-        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
-        .and_then(|index| index["components"].as_array().cloned())
+    load_scope_index_components(scope_dir)
         .is_some_and(|comps| {
             comps
                 .iter()
@@ -331,19 +337,17 @@ fn scope_has_components(scope_dir: &Path) -> bool {
 
 fn exists_in_scope_index(scope_dir: &Path, id: &str) -> bool {
     let without_version = id.split('@').next().unwrap_or(id);
-    fs::read(scope_dir.join("index.json"))
-        .ok()
-        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
-        .and_then(|index| index["components"].as_array().cloned())
-        .is_some_and(|components| {
-            components
-                .iter()
-                .any(|item| {
-                    let name = item["id"]["name"].as_str().unwrap_or_default();
-                    let scope = item["id"]["scope"].as_str().unwrap_or_default();
-                    name == without_version || format!("{scope}/{name}") == without_version
-                })
-        })
+    resolve_component_entry(scope_dir, without_version).is_some()
+        || load_scope_index_components(scope_dir)
+            .is_some_and(|components| {
+                components
+                    .iter()
+                    .any(|item| {
+                        let name = item["id"]["name"].as_str().unwrap_or_default();
+                        let scope = item["id"]["scope"].as_str().unwrap_or_default();
+                        name == without_version || format!("{scope}/{name}") == without_version
+                    })
+            })
 }
 
 fn refactor_component(

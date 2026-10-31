@@ -18,6 +18,7 @@ pub const COMMAND: Command = Command { name: "unuse", aliases: &[], run };
 
 enum Failure {
     Declined(String),
+    User(String),
 }
 
 impl From<io::Error> for Failure {
@@ -36,6 +37,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let chalk = Chalk::detect(args);
     match prepare(&root, &target, chalk) {
         Ok(report) => workspace_command::execute_then(&root, args, "unuse", |_output| Ok(report)),
+        Err(Failure::User(message)) => {
+            if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+                return Ok(Outcome::Declined("CI unuse error stack".to_owned()));
+            }
+            workspace_command::execute_then(&root, args, "unuse", |_output| {
+                Err(io::Error::other(message))
+            })
+        }
         Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("unuse: {reason}"))),
     }
 }
@@ -56,15 +65,15 @@ fn parse_target(args: &[OsString]) -> Option<String> {
 fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {
     let content = fs::read_to_string(root.join("workspace.jsonc"))?;
     let doc = Document::parse(&content)?;
+    let doc_val = doc.value();
     let formatter = Formatter::new(chalk);
-    let Some((key_to_remove, resolved_id)) =
-        resolve_configured_aspect_key(root, &doc.value(), target)
+    let Some((key_to_remove, resolved_id)) = resolve_configured_aspect_key(root, &doc_val, target)?
     else {
         let hint =
             formatter.hint(&format!(r#""{target}" was not found in the workspace.jsonc file."#));
         return Ok(Report { data: hint, code: 0, details: None });
     };
-    apply_unuse(root, target, &key_to_remove, &resolved_id)?;
+    apply_unuse(root, target, key_to_remove.as_deref(), &resolved_id)?;
     let summary = formatter.success_summary(&format!(
         r#"workspace.jsonc updated! the aspect "{target}" has been removed."#,
     ));
@@ -74,19 +83,21 @@ fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {
 fn apply_unuse(
     root: &Path,
     target: &str,
-    key_to_remove: &str,
+    key_to_remove: Option<&str>,
     resolved_id: &str,
 ) -> io::Result<()> {
     let clean_target = target.to_owned();
     let id = resolved_id.to_owned();
-    let key = key_to_remove.to_owned();
+    let key = key_to_remove.map(str::to_owned);
     bit_install::command::edit_workspace_config(
         root,
         &workspace::scope_path(root),
         &workspace_command::file_id(),
         "remove components",
         move |document| {
-            document.remove(&[&key]);
+            if let Some(key) = &key {
+                document.remove(&[key]);
+            }
             clean_generator_envs(document, &clean_target, &id);
         },
     )
@@ -106,7 +117,7 @@ fn resolve_configured_aspect_key(
     root: &Path,
     doc_val: &Value,
     target: &str,
-) -> Option<(String, String)> {
+) -> Result<Option<(Option<String>, String)>, Failure> {
     let bare = target
         .split('@')
         .next()
@@ -114,29 +125,54 @@ fn resolve_configured_aspect_key(
     if let Some(key) =
         find_extension_key(doc_val, target).or_else(|| find_extension_key(doc_val, bare))
     {
-        return Some((key, bare.to_owned()));
+        return Ok(Some((Some(key), bare.to_owned())));
     }
-    let default_scope = doc_val["teambit.workspace/workspace"]["defaultScope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty());
-    if let Ok(bitmap) = Bitmap::load(root, default_scope) {
-        let normalized = bare.trim_start_matches("./").trim_end_matches('/');
-        let entry = bitmap.entries
-            .iter()
-            .find(|entry| {
-                entry.owns_its_dir()
-                    && (entry.id.to_string_without_version() == bare
-                        || entry.id.name == bare
-                        || (!entry.root_dir.is_empty() && entry.root_dir == normalized))
-            });
-        if let Some(entry) = entry {
-            let id = entry.id.to_string_without_version();
-            if let Some(key) = find_extension_key(doc_val, &id) {
-                return Some((key, id));
-            }
-        }
+    let bitmap_id = lookup_bitmap_aspect_id(root, doc_val, bare);
+    if let Some(id) = &bitmap_id
+        && let Some(key) = find_extension_key(doc_val, id)
+    {
+        return Ok(Some((Some(key), id.clone())));
     }
-    None
+    let candidate_id = bitmap_id.as_deref().unwrap_or(bare);
+    if is_in_generator_envs(doc_val, target, candidate_id) {
+        return Ok(Some((None, candidate_id.to_owned())));
+    }
+    if bitmap_id.is_none() && is_unscoped_unknown(root, bare) {
+        return Err(Failure::User(format!(
+            r#"Failed parsing the string "{target}": scope is missing. Maybe try to add the scope name prior to the component name, such as "scopeName/componentName""#,
+        )));
+    }
+    Ok(None)
+}
+
+fn lookup_bitmap_aspect_id(root: &Path, doc_val: &Value, bare: &str) -> Option<String> {
+    let default_scope = super::aspect::workspace_default_scope(doc_val).ok();
+    let bitmap = Bitmap::load(root, default_scope.as_deref()).ok()?;
+    let normalized = bare.trim_start_matches("./").trim_end_matches('/');
+    bitmap.entries
+        .iter()
+        .find(|entry| {
+            entry.owns_its_dir()
+                && (entry.id.to_string_without_version() == bare
+                    || entry.id.name == bare
+                    || (!entry.root_dir.is_empty() && entry.root_dir == normalized))
+        })
+        .map(|entry| entry.id.to_string_without_version())
+}
+
+fn is_in_generator_envs(doc_val: &Value, target: &str, resolved_id: &str) -> bool {
+    doc_val["teambit.generator/generator"]["envs"]
+        .as_array()
+        .is_some_and(|envs| {
+            envs.iter()
+                .any(|env| env.as_str() == Some(target) || env.as_str() == Some(resolved_id))
+        })
+}
+
+pub(super) fn is_unscoped_unknown(root: &Path, bare: &str) -> bool {
+    !bare.contains('/')
+        && super::debug_cat::lookup::resolve_component_entry(&workspace::scope_path(root), bare)
+            .is_none()
 }
 
 fn find_extension_key(value: &Value, id: &str) -> Option<String> {

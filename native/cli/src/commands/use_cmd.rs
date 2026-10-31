@@ -92,10 +92,8 @@ fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {
 }
 
 fn resolve_aspect_id(root: &Path, doc_val: &Value, target: &str) -> Result<String, Failure> {
-    let default_scope = doc_val["teambit.workspace/workspace"]["defaultScope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty());
-    let bitmap = Bitmap::load(root, default_scope)?;
+    let default_scope = super::aspect::workspace_default_scope(doc_val).ok();
+    let bitmap = Bitmap::load(root, default_scope.as_deref())?;
     let bare = target
         .split('@')
         .next()
@@ -110,6 +108,11 @@ fn resolve_aspect_id(root: &Path, doc_val: &Value, target: &str) -> Result<Strin
                     || (!entry.root_dir.is_empty() && entry.root_dir == normalized))
         });
     let Some(entry) = entry else {
+        if super::unuse_cmd::is_unscoped_unknown(root, bare) {
+            return Err(Failure::User(format!(
+                r#"Failed parsing the string "{target}": scope is missing. Maybe try to add the scope name prior to the component name, such as "scopeName/componentName""#,
+            )));
+        }
         return Err(Failure::Declined("non-workspace aspect requires canonical import".to_owned()));
     };
     Ok(entry.id.to_string_without_version())
