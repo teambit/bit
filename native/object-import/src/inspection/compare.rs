@@ -66,12 +66,16 @@ fn assignments(rows: Vec<(usize, Js)>, mutations: &Value) -> io::Result<Value> {
     let order = mutations["extensionOrder"]
         .as_array()
         .ok_or_else(|| invalid("inspection extension permutation"))?;
+    if rows.len() > order.len() {
+        return Err(invalid("inspection extension permutation"));
+    }
     let output = rows
         .into_iter()
         .map(|(index, config)| {
             let original = order
                 .get(index)
                 .and_then(Value::as_u64)
+                .filter(|&orig| (orig as usize) < order.len())
                 .ok_or_else(|| invalid("inspection extension permutation"))?;
             Ok((original, config))
         })

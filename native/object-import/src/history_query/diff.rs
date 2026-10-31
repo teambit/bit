@@ -19,7 +19,7 @@ pub(super) struct Request {
     color: bool,
     snapshot_directory: Option<PathBuf>,
 }
-pub(super) fn diff(request: Request, cache: &mut Cache) -> io::Result<Value> {
+pub(super) fn diff(mut request: Request, cache: &mut Cache) -> io::Result<Value> {
     crate::merge_history::path(&request.objects_directory)?;
     let trimmed_path = request.relative_path.trim();
     if trimmed_path.is_empty()
@@ -27,10 +27,18 @@ pub(super) fn diff(request: Request, cache: &mut Cache) -> io::Result<Value> {
         || request.relative_path.contains('\0')
         || std::path::Path::new(trimmed_path)
             .components()
-            .any(|part| matches!(part, std::path::Component::ParentDir))
+            .any(|part| {
+                matches!(
+                    part,
+                    std::path::Component::ParentDir
+                        | std::path::Component::RootDir
+                        | std::path::Component::Prefix(_),
+                )
+            })
     {
         return Err(invalid("history diff path"));
     }
+    request.relative_path = trimmed_path.into();
     let mut sources =
         Sources::new(request.objects_directory.clone(), request.snapshot_directory.clone(), cache)?;
     let left = request.left

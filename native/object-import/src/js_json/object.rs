@@ -1,6 +1,5 @@
-use std::{collections::HashSet, io};
-
 use super::{Value, invalid};
+use std::{collections::HashSet, io};
 
 pub(super) fn entries(fields: &[(Vec<u16>, Value)]) -> io::Result<Vec<(&[u16], &Value)>> {
     if fields.is_empty() {
@@ -9,9 +8,10 @@ pub(super) fn entries(fields: &[(Vec<u16>, Value)]) -> io::Result<Vec<(&[u16], &
     if fields.len() > 262_144 {
         return Err(invalid("JavaScript object key limit"));
     }
-    let mut seen = HashSet::with_capacity(fields.len().min(4096));
+    let capacity = fields.len().min(4096);
+    let mut seen = HashSet::with_capacity(capacity);
     let mut indices = Vec::new();
-    let mut names = Vec::new();
+    let mut names = Vec::with_capacity(capacity);
     for (key, value) in fields {
         validate_key(key.as_slice(), &mut seen)?;
         if matches!(value, Value::Undefined) {

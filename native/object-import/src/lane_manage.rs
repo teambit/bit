@@ -302,10 +302,9 @@ impl Documents {
         let mut index = serde_json::to_vec_pretty(&self.index)?;
         index.push(b'\n');
         store.write_index(&index)?;
-        fs::write(
-            bit_workspace_config::scope_path(root).join("scope.json"),
-            serde_json::to_string_pretty(&self.scope_json)?.as_bytes(),
-        )?;
+        let mut scope_json = serde_json::to_vec_pretty(&self.scope_json)?;
+        scope_json.push(b'\n');
+        fs::write(bit_workspace_config::scope_path(root).join("scope.json"), scope_json)?;
         fs::write(root.join(".bitmap"), inspection::render_bitmap(&self.bitmap)?)
     }
 }
@@ -347,7 +346,9 @@ impl Objects {
         if items.contains_key(key) {
             return Err(invalid());
         }
-        log["message"] = json!(message);
+        log.as_object_mut()
+            .ok_or_else(invalid)?
+            .insert("message".into(), json!(message));
         items.insert(
             key.into(),
             json!({"log":log,"components":components,"updateDependents":dependents}),

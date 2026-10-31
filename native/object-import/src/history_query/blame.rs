@@ -30,6 +30,9 @@ pub(super) fn blame(request: Request, cache: &mut Cache) -> io::Result<Value> {
     };
     let mut sources = Sources::new(request.objects_directory, request.snapshot_directory, cache)?;
     let mut rows = initial_rows(&sources.text(reference(current, "fileHash")?)?);
+    if rows.len() > 65536 {
+        return Err(invalid("history line count limit"));
+    }
     let mut pending: HashSet<usize> = (0..rows.len()).collect();
     for (log_index, log) in request.logs.iter().enumerate() {
         if pending.is_empty() {

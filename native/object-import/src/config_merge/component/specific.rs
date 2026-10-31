@@ -50,11 +50,12 @@ fn is_envs_aspect_id(id: &str) -> bool {
 }
 
 fn preserve(merged: &mut Value, entry: &Value) {
-    if entry["isSpecific"] != true {
+    if !super::super::truthy(&entry["isSpecific"]) {
         return;
     }
     let mut config = merged
         .get("value")
+        .filter(|val| !val.is_null())
         .unwrap_or_else(|| &entry["config"])
         .clone();
     if let Some(fields) = config.as_object_mut() {

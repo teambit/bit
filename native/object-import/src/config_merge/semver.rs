@@ -74,7 +74,9 @@ fn matches_set(candidate: &Value, comparators: &[Value]) -> io::Result<bool> {
         return Ok(true);
     }
     for comparator in comparators {
-        if let Some(version) = comparator.get("version")
+        if let Some(version) = comparator
+            .get("version")
+            .filter(|val| !val.is_null())
             && !array(version, "prerelease")?.is_empty()
             && ["major", "minor", "patch"]
                 .iter()
@@ -86,7 +88,10 @@ fn matches_set(candidate: &Value, comparators: &[Value]) -> io::Result<bool> {
     Ok(false)
 }
 fn matches_comparator(candidate: &Value, comparator: &Value) -> io::Result<bool> {
-    let Some(version) = comparator.get("version") else {
+    let Some(version) = comparator
+        .get("version")
+        .filter(|val| !val.is_null())
+    else {
         return Ok(true);
     };
     let ordering = compare(candidate, version)?;
@@ -101,6 +106,9 @@ fn matches_comparator(candidate: &Value, comparator: &Value) -> io::Result<bool>
 }
 pub(super) fn greater(input: &Value, left: &str, right: &str) -> io::Result<bool> {
     let (left, right) = (left.trim(), right.trim());
+    if left == right {
+        return Ok(false);
+    }
     Ok(compare(&input[left]["version"], &input[right]["version"])? == Ordering::Greater)
 }
 

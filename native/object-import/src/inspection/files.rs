@@ -44,8 +44,11 @@ pub(super) fn validated_models(
     if files.len() > super::MAX_FILES {
         return Err(invalid("inspection model file budget"));
     }
-    let mut models = HashMap::new();
+    let mut models = HashMap::with_capacity(files.len());
     for model in files {
+        if model.relative_path.trim() != model.relative_path {
+            return Err(invalid("inspection unsafe relative path"));
+        }
         read::relative(&model.relative_path)?;
         crate::merge_history::hash(model.normalized_hash())?;
         if models.insert(&model.relative_path, model).is_some() {

@@ -80,6 +80,8 @@ impl State {
     }
     fn verify_directory(&self, token: &str, directory: &std::path::Path) -> io::Result<()> {
         let plan = self.plans.get(token.trim()).ok_or_else(|| invalid("stale history query"))?;
+        let directory =
+            directory.to_str().map_or(directory, |text| std::path::Path::new(text.trim()));
         if plan.directory != directory {
             return Err(invalid("history query directory mismatch"));
         }

@@ -21,7 +21,12 @@ fn convert(value: &serde_json::Value) -> io::Result<Value> {
                 .ok_or_else(|| io::Error::other("JSON number"))?;
             Value::Number(format!("{:016x}", number.to_bits()))
         }
-        serde_json::Value::String(value) => Value::text(value),
+        serde_json::Value::String(value) => {
+            if value.len() > 32 * 1024 * 1024 {
+                return Err(io::Error::other("JSON string limit"));
+            }
+            Value::text(value)
+        }
         serde_json::Value::Array(values) => {
             if values.len() > 262_144 {
                 return Err(io::Error::other("JSON array limit"));
@@ -33,16 +38,23 @@ fn convert(value: &serde_json::Value) -> io::Result<Value> {
                     .collect::<io::Result<_>>()?,
             )
         }
-        serde_json::Value::Object(values) => {
-            if values.len() > 262_144 {
-                return Err(io::Error::other("JSON object limit"));
-            }
-            Value::Object(
-                values
-                    .iter()
-                    .map(|(key, value)| Ok((key.encode_utf16().collect(), convert(value)?)))
-                    .collect::<io::Result<_>>()?,
-            )
-        }
+        serde_json::Value::Object(values) => convert_object(values)?,
     })
+}
+
+fn convert_object(values: &serde_json::Map<String, serde_json::Value>) -> io::Result<Value> {
+    if values.len() > 262_144 {
+        return Err(io::Error::other("JSON object limit"));
+    }
+    Ok(Value::Object(
+        values
+            .iter()
+            .map(|(key, value)| {
+                if key.len() > 32768 {
+                    return Err(io::Error::other("JSON object key limit"));
+                }
+                Ok((key.encode_utf16().collect(), convert(value)?))
+            })
+            .collect::<io::Result<_>>()?,
+    ))
 }

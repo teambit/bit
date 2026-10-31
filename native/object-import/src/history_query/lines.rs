@@ -22,6 +22,9 @@ fn tokens(text: &str) -> Vec<&str> {
         .collect()
 }
 pub(super) fn diff(old: &str, new: &str) -> io::Result<Vec<Part>> {
+    if old.len() > 32 * 1024 * 1024 || new.len() > 32 * 1024 * 1024 {
+        return Err(invalid("history line byte limit"));
+    }
     let old = tokens(old);
     let new = tokens(new);
     let total = old.len().saturating_add(new.len());

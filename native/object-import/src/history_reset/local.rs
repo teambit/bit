@@ -132,16 +132,22 @@ pub(super) fn read(input: Value) -> io::Result<Value> {
 }
 fn eligible(request: &Select, hash: &str) -> io::Result<bool> {
     let hash = hash.trim();
-    if !request.lane || request.lane_head.as_deref().map(str::trim) == Some(hash) {
+    if !request.lane
+        || request.lane_head
+            .as_deref()
+            .map(str::trim)
+            .is_some_and(|head| head.eq_ignore_ascii_case(hash))
+    {
         return Ok(true);
     }
     let row = request.metadata
         .iter()
-        .find(|row| row.hash.trim() == hash)
+        .find(|row| row.hash.trim().eq_ignore_ascii_case(hash))
         .ok_or_else(|| invalid("history reset lane metadata missing"))?;
     Ok(!row.missing && (row.origin_lane || row.squashed || row.unrelated))
 }
 fn label(index: &crate::tag_index::TagIndex, hash: &str, cached: &mut Option<String>) -> String {
+    let hash = hash.trim();
     let Some((label, normal)) = index.get(hash) else {
         return hash.to_owned();
     };
@@ -166,13 +172,14 @@ fn validate(request: &Select) -> io::Result<()> {
     bound(request.metadata.len())?;
     let mut seen = HashSet::new();
     for row in &request.metadata {
-        crate::merge_history::hash(&row.hash)?;
-        if !seen.insert(&row.hash) {
+        let trimmed = row.hash.trim();
+        crate::merge_history::hash(trimmed)?;
+        if !seen.insert(trimmed.to_ascii_lowercase()) {
             return Err(invalid("duplicate lane metadata"));
         }
     }
     if let Some(hash) = &request.lane_head {
-        crate::merge_history::hash(hash)?;
+        crate::merge_history::hash(hash.trim())?;
     }
     tags(&request.tags)?;
     tags(&request.orphaned)?;

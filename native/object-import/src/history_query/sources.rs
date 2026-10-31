@@ -118,8 +118,10 @@ impl Sources<'_> {
         let mut descriptor = json!({"hash":hash,"compressedSize":record.compressed.len(),"inflatedSize":record.inflated_size});
         if let Some(directory) = &self.snapshot_directory {
             let (path, mut file) = create_snapshot_file(directory, hash)?;
-            file.write_all(&record.compressed)?;
-            file.flush()?;
+            if let Err(error) = file.write_all(&record.compressed).and_then(|()| file.flush()) {
+                let _ = fs::remove_file(&path);
+                return Err(error);
+            }
             descriptor["privatePath"] = json!(path);
         }
         Ok(descriptor)

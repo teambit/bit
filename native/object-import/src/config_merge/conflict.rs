@@ -134,7 +134,9 @@ fn replace(contents: &mut String, entry: &Value) -> io::Result<()> {
     let name = text(entry, "name")?.trim();
     let version = text(entry, "version")?.trim();
     let mut parts = version.split("::");
-    parts.next();
+    if parts.next().map(str::trim) != Some("CONFLICT") {
+        return Err(invalid("config conflict prefix"));
+    }
     let current = parts
         .next()
         .map(str::trim)

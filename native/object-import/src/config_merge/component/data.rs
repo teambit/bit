@@ -47,6 +47,13 @@ fn non_empty_str<'a>(value: &'a serde_json::Value, message: &str) -> io::Result<
         .filter(|text| !text.is_empty())
         .ok_or_else(|| invalid(message))
 }
+fn entry_version(entry: Option<&serde_json::Value>) -> &str {
+    entry
+        .and_then(|entry| entry["componentId"]["version"].as_str())
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .unwrap_or("undefined")
+}
 fn reason(
     engine: &mut Engine<'_>,
     index: usize,
@@ -59,24 +66,14 @@ fn reason(
     };
     let other = &engine.input["other"][other_index];
     let base = base.map(|index| &engine.input["base"][index]);
-    if current["componentId"]["version"] != other["componentId"]["version"] {
-        if base.map_or(&serde_json::Value::Null, |base| &base["componentId"]["version"])
-            == &other["componentId"]["version"]
-        {
+    if entry_version(Some(current)) != entry_version(Some(other)) {
+        if entry_version(base) == entry_version(Some(other)) {
             return Ok(None);
         }
-        let version = |entry: Option<&serde_json::Value>| {
-            entry
-                .and_then(|entry| entry["componentId"]["version"].as_str())
-                .map(str::trim)
-                .filter(|ver| !ver.is_empty())
-                .unwrap_or("undefined")
-                .to_owned()
-        };
         return Ok(Some(format!(
             "version changed. base: {}, other: {}",
-            version(base),
-            version(Some(other)),
+            entry_version(base),
+            entry_version(Some(other)),
         )));
     }
     if equal(current, other) {
@@ -102,6 +99,8 @@ fn equal(left: &serde_json::Value, right: &serde_json::Value) -> bool {
             .into_iter()
             .flatten()
             .filter_map(serde_json::Value::as_str)
+            .map(str::trim)
+            .filter(|key| !key.is_empty())
             .map(str::to_owned)
             .collect::<std::collections::BTreeSet<_>>()
     };

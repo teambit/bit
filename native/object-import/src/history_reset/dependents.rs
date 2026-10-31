@@ -81,12 +81,17 @@ fn incoming(rows: &[Row]) -> io::Result<HashMap<&str, Vec<&str>>> {
     let mut edges = 0;
     for row in rows {
         text(&row.id)?;
+        bound(row.dependencies.len())?;
         let row_id = row.id.trim();
         for dependency in &row.dependencies {
             text(dependency)?;
             edges += 1;
             bound(edges)?;
-            let entries = incoming.entry(dependency.trim()).or_default();
+            let dep_id = dependency.trim();
+            if dep_id == row_id {
+                continue;
+            }
+            let entries = incoming.entry(dep_id).or_default();
             if !entries.contains(&row_id) {
                 entries.push(row_id);
             }

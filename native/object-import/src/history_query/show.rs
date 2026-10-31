@@ -54,6 +54,13 @@ fn hashes(versions: &[Version]) -> io::Result<Vec<String>> {
     let mut hashes = Vec::new();
     let mut seen = HashSet::new();
     for version in versions {
+        if version.parents.len() > 4096
+            || version.squashed
+                .as_ref()
+                .is_some_and(|rows| rows.len() > 4096)
+        {
+            return Err(invalid("history graph node limit"));
+        }
         for hash in std::iter::once(&version.hash)
             .chain(&version.parents)
             .chain(version.squashed.iter().flatten())
@@ -61,8 +68,8 @@ fn hashes(versions: &[Version]) -> io::Result<Vec<String>> {
         {
             let hash = hash.trim();
             crate::merge_history::hash(hash)?;
-            if seen.insert(hash) {
-                hashes.push(hash.to_owned());
+            if seen.insert(hash.to_ascii_lowercase()) {
+                hashes.push(hash.to_ascii_lowercase());
             }
         }
     }
@@ -72,8 +79,14 @@ fn hashes(versions: &[Version]) -> io::Result<Vec<String>> {
     Ok(hashes)
 }
 fn identifier(hash: &str, short: bool) -> String {
-    let hash = hash.trim();
-    if short { hash.get(..9).unwrap_or(hash).to_owned() } else { hash.to_owned() }
+    let hash = hash.trim().to_ascii_lowercase();
+    if short {
+        hash.get(..9)
+            .unwrap_or(&hash)
+            .to_owned()
+    } else {
+        hash
+    }
 }
 fn edges(request: &Request) -> io::Result<Vec<Edge>> {
     let mut edges: Vec<Edge> = Vec::new();

@@ -31,6 +31,9 @@ pub(super) fn validate_mode(request: &wire::Begin, state: &State) -> io::Result<
     if request.owned_memory && !state.memory_snapshots {
         return Err(invalid("inspection memory ownership requires an embedded session"));
     }
+    if request.memory_only && request.owned_memory {
+        return Err(invalid("inspection memory-only capture conflicts with owned memory"));
+    }
     if request.memory_only
         && !request.owned_memory
         && request.files

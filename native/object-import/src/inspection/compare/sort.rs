@@ -66,6 +66,12 @@ fn keys(value: &mut Js) -> io::Result<Vec<Vec<u16>>> {
     }
     if entries
         .iter()
+        .any(|(key, _)| key.is_empty() || key.len() > 32768)
+    {
+        return Err(invalid("inspection sortable map key budget"));
+    }
+    if entries
+        .iter()
         .any(|(key, _)| {
             key.iter()
                 .copied()

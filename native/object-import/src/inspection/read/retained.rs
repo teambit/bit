@@ -41,6 +41,9 @@ fn observed<'a>(
     maximum: usize,
     snapshots: Option<&'a State>,
 ) -> io::Result<&'a Observation> {
+    if !file.path.is_absolute() {
+        return Err(invalid("inspection unsupported path"));
+    }
     let token = file.read_token.ok_or_else(|| invalid("inspection retained token"))?;
     let expected = file.raw_hash
         .as_deref()
@@ -57,13 +60,8 @@ fn observed<'a>(
     snapshots
         .and_then(|state| state.get(token, &file.path, expected))
         .filter(|snapshot| {
-            file.path.is_absolute()
-                && snapshot.raw_bytes.max(snapshot.contents.len()) <= maximum
-                && file.snapshot_hash
-                    .as_deref()
-                    .is_some_and(|hash| {
-                        hash.trim().eq_ignore_ascii_case(snapshot.snapshot_hash.trim())
-                    })
+            snapshot.raw_bytes.max(snapshot.contents.len()) <= maximum
+                && snapshot_hash.eq_ignore_ascii_case(snapshot.snapshot_hash.trim())
         })
         .ok_or_else(|| invalid("inspection retained workspace observation"))
 }

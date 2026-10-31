@@ -26,11 +26,15 @@ impl File {
         json!({"relativePath":self.relative_path,"rawHash":self.raw_hash,"linuxHash":self.linux_hash,"snapshotHash":self.snapshot_hash,"snapshotPath":self.snapshot_path,"bytes":self.contents.len()})
     }
     pub(super) fn spool(&self) -> io::Result<()> {
-        OpenOptions::new()
+        let mut file = OpenOptions::new()
             .write(true)
             .create_new(true)
-            .open(&self.snapshot_path)?
-            .write_all(&self.contents)
+            .open(&self.snapshot_path)?;
+        if let Err(error) = file.write_all(&self.contents).and_then(|()| file.flush()) {
+            let _ = fs::remove_file(&self.snapshot_path);
+            return Err(error);
+        }
+        Ok(())
     }
 }
 pub(super) fn capture(
@@ -38,13 +42,8 @@ pub(super) fn capture(
     maximum: usize,
     snapshots: Option<&crate::workspace::snapshots::State>,
 ) -> io::Result<Vec<File>> {
-    let directory = &request.snapshot_directory;
-    if !request.owned_memory
-        && (!directory.is_absolute()
-            || !fs::symlink_metadata(directory)?.is_dir()
-            || fs::read_dir(directory)?.next().is_some())
-    {
-        return Err(invalid("inspection snapshot directory must be ordinary empty"));
+    if !request.owned_memory {
+        validate_snapshot_directory(&request.snapshot_directory)?;
     }
     let mut paths = HashSet::new();
     for file in &request.files {
@@ -66,6 +65,18 @@ pub(super) fn capture(
             Ok(captured)
         })
         .collect()
+}
+
+fn validate_snapshot_directory(directory: &PathBuf) -> io::Result<()> {
+    if !directory.is_absolute() {
+        return Err(invalid("inspection snapshot directory must be ordinary empty"));
+    }
+    let meta = fs::symlink_metadata(directory)?;
+    if meta.file_type().is_symlink() || !meta.is_dir() || fs::read_dir(directory)?.next().is_some()
+    {
+        return Err(invalid("inspection snapshot directory must be ordinary empty"));
+    }
+    Ok(())
 }
 
 fn capture_file(

@@ -81,8 +81,12 @@ fn ranges(
     workspace: &str,
     component: &str,
 ) -> io::Result<()> {
-    let component_minimum = semver[component].get("minimum");
-    let workspace_minimum = semver[workspace].get("minimum");
+    let component_minimum = semver[component]
+        .get("minimum")
+        .filter(|val| !val.is_null());
+    let workspace_minimum = semver[workspace]
+        .get("minimum")
+        .filter(|val| !val.is_null());
     if let (Some(component_minimum), Some(workspace_minimum)) =
         (component_minimum, workspace_minimum)
         && semver::compare(component_minimum, workspace_minimum)? == Ordering::Greater
@@ -105,7 +109,10 @@ fn component_version_range(
     peer: bool,
 ) -> io::Result<()> {
     let semver = &input["semver"];
-    let Some(minimum) = semver[workspace].get("minimum") else {
+    let Some(minimum) = semver[workspace]
+        .get("minimum")
+        .filter(|val| !val.is_null())
+    else {
         plan.warnings.push(format!("unable to calculate the min version of {workspace}"));
         plan.skip(
             name,
@@ -138,7 +145,10 @@ fn component_range_version(
         plan.update(name, workspace, component);
         return Ok(());
     }
-    let Some(minimum) = semver[component].get("minimum") else {
+    let Some(minimum) = semver[component]
+        .get("minimum")
+        .filter(|val| !val.is_null())
+    else {
         plan.warnings.push("unable to calculate the min version of null".into());
         plan.skip(name, "unable to calculate the min version of null from comp");
         return Ok(());

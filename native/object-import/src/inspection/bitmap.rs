@@ -175,8 +175,17 @@ fn clean_value(key: &str, value: &Value) -> io::Result<Value> {
 
 /// Reproduce the component ordering and row serialization of `BitMap.write`.
 pub(crate) fn render_workspace(value: &Value) -> io::Result<Vec<u8>> {
-    let rows = value.as_object().ok_or_else(|| invalid("workspace bitmap object"))?;
-    let schema = rows.get("$schema-version").ok_or_else(|| invalid("workspace bitmap schema"))?;
+    let rows = value
+        .as_object()
+        .filter(|rows| rows.len() <= super::MAX_FILES)
+        .ok_or_else(|| invalid("workspace bitmap object"))?;
+    let schema = rows
+        .get("$schema-version")
+        .filter(|val| {
+            val.as_str()
+                .is_some_and(|ver| !ver.trim().is_empty())
+        })
+        .ok_or_else(|| invalid("workspace bitmap schema"))?;
     let mut keys = rows
         .keys()
         .filter(|key| {

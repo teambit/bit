@@ -240,8 +240,9 @@ fn bitmap_snap_head<'a>(bitmap: &'a Value, id: &Value) -> Option<&'a str> {
             }
             row["version"]
                 .as_str()
+                .map(str::trim)
                 .filter(|ver| !ver.is_empty())
-                .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver))
+                .or_else(|| key.rsplit_once('@').map(|(_, ver)| ver.trim()))
                 .filter(|ver| valid_hash(ver))
         })
 }

@@ -130,6 +130,7 @@ fn conflict_package(
     for field in ["dependencies", "peerDependencies"] {
         let Some(workspace) = policy[field][name]
             .as_str()
+            .map(str::trim)
             .filter(|value| !value.is_empty())
         else {
             continue;
@@ -153,7 +154,10 @@ fn conflict_package(
     Ok(())
 }
 fn parse_conflict_versions(raw: &str) -> io::Result<(&str, String)> {
-    let mut parts = raw.split("::").skip(1);
+    let mut parts = raw.split("::");
+    if parts.next().map(str::trim) != Some("CONFLICT") {
+        return Err(invalid("config conflict version"));
+    }
     let current = parts
         .next()
         .map(str::trim)

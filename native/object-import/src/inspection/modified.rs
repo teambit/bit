@@ -16,12 +16,16 @@ pub(crate) fn modified(
     let request = wire::Begin {
         files: paths
             .iter()
-            .map(|relative_path| wire::Input {
-                relative_path: relative_path.clone(),
-                path: root.join(relative_path),
-                raw_hash: None,
-                read_token: None,
-                snapshot_hash: None,
+            .map(|relative_path| {
+                let relative_path = relative_path.trim().to_string();
+                let path = root.join(&relative_path);
+                wire::Input {
+                    relative_path,
+                    path,
+                    raw_hash: None,
+                    read_token: None,
+                    snapshot_hash: None,
+                }
             })
             .collect(),
         workspace_root,

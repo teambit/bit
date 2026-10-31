@@ -204,6 +204,8 @@ fn resolve_workspace_hash<'a>(model: &'a Value, workspace: &'a str, head: &'a st
         model["versions"][workspace]
             .as_str()
             .or_else(|| model["orphanedVersions"][workspace].as_str())
+            .map(str::trim)
+            .filter(|resolved| !resolved.is_empty())
             .unwrap_or(workspace)
     }
 }
@@ -216,7 +218,13 @@ fn component(
     workspace: &str,
     lane: &Value,
 ) -> io::Result<()> {
-    let Some(head) = model["head"].as_str() else { return Ok(()) };
+    let Some(head) = model["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    else {
+        return Ok(());
+    };
     let remote = remote(moved, scope_path, model)?;
     let workspace_hash = resolve_workspace_hash(model, workspace, head);
     let source = if remote.as_deref() == Some(head) { workspace_hash } else { head };

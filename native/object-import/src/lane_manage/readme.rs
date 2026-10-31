@@ -104,7 +104,9 @@ fn record_readme_removal(
     if items.contains_key(history_key) {
         return Err(invalid());
     }
-    log["message"] = json!("remove readme");
+    log.as_object_mut()
+        .ok_or_else(invalid)?
+        .insert("message".into(), json!("remove readme"));
     items.insert(
         history_key.into(),
         json!({"log":log,"components":components,"updateDependents":dependents}),
@@ -119,11 +121,15 @@ fn remove_readme_from_bitmap(
     readme: &Value,
 ) -> io::Result<()> {
     let entry = find_readme_bitmap_entry(bitmap, readme)?;
-    if let Some(root_dir) = entry["rootDir"].as_str()
-        && root
-            .join(root_dir)
-            .join("component.json")
-            .exists()
+    if let Some(root_dir) = entry["rootDir"]
+        .as_str()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        && (!valid_root_dir(root_dir)
+            || root
+                .join(root_dir)
+                .join("component.json")
+                .exists())
     {
         return Err(invalid());
     }
@@ -270,4 +276,12 @@ fn history_component_entry(component: &Value, default_scope: &str) -> io::Result
         .filter(|val| !val.is_empty())
         .ok_or_else(invalid)?;
     Ok(format!("{scope}/{name}@{head}"))
+}
+
+fn valid_root_dir(root_dir: &str) -> bool {
+    !root_dir.contains('\0')
+        && !Path::new(root_dir).is_absolute()
+        && Path::new(root_dir)
+            .components()
+            .all(|part| matches!(part, std::path::Component::Normal(_)))
 }

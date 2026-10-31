@@ -235,7 +235,8 @@ fn normalize_dependency(entry: &Value, policies: &Value) -> io::Result<Value> {
         .map(str::trim)
         .filter(|val| !val.is_empty())
         .ok_or_else(|| invalid("dependency id"))?;
-    let id = if dep["__type"] == "package" {
+    let is_package = dep["__type"].as_str().map(str::trim) == Some("package");
+    let id = if is_package {
         raw_id
     } else {
         raw_id
@@ -246,18 +247,17 @@ fn normalize_dependency(entry: &Value, policies: &Value) -> io::Result<Value> {
             .ok_or_else(|| invalid("dependency id"))?
     };
     dep["id"] = json!(id);
-    if dep["__type"] == "package" {
+    if is_package {
         dep.as_object_mut()
             .ok_or_else(|| invalid("dependency object"))?
             .shift_remove("policy");
-    }
-    if dep["__type"] != "package" {
+    } else {
         let existing = policies
             .as_array()
             .and_then(|policies| {
                 policies
                     .iter()
-                    .find(|policy| policy["dependencyId"] == id)
+                    .find(|policy| policy["dependencyId"].as_str().map(str::trim) == Some(id))
             });
         dep["policy"] = existing.map_or_else(
             || dep["version"].clone(),
@@ -277,10 +277,16 @@ fn policy(input: &Value) -> io::Result<Vec<Value>> {
         }
         let entries = policy_entries(&input[field])?;
         for entry in entries {
-            let name = entry["name"].as_str().ok_or_else(|| invalid("policy name"))?;
+            let name = entry["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .ok_or_else(|| invalid("policy name"))?;
             let version = entry["version"]
                 .as_str()
                 .or_else(|| entry["version"]["version"].as_str())
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
                 .ok_or_else(|| invalid("policy version"))?;
             if result
                 .iter()

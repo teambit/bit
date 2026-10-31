@@ -14,6 +14,12 @@ pub(super) fn merge(
     other: usize,
     base: Option<usize>,
 ) -> io::Result<()> {
+    if engine.input["current"].get(current).is_none()
+        || engine.input["other"].get(other).is_none()
+        || base.is_some_and(|idx| engine.input["base"].get(idx).is_none())
+    {
+        return Err(super::super::invalid("dependency resolver index"));
+    }
     engine.log(
         "trace",
         format!(

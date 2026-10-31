@@ -29,7 +29,14 @@ fn history_entries(fields: &js_json::Value) -> io::Result<Vec<(Vec<u16>, js_json
     bound(entries.len())?;
     if entries
         .iter()
-        .any(|(key, _)| key.is_empty() || key.len() > 32768)
+        .any(|(key, _)| {
+            key.is_empty()
+                || key.len() > 32768
+                || key.iter().all(|&unit| unit <= 0x20)
+                || key
+                    .iter()
+                    .any(|&unit| unit <= 0x1f || unit == 0x7f)
+        })
     {
         return Err(invalid("lane history key"));
     }

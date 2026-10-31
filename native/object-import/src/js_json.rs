@@ -50,12 +50,22 @@ impl Value {
 
     pub fn empty(&self) -> io::Result<bool> {
         Ok(match self {
-            Self::Array(value) => value.is_empty(),
+            Self::Array(value) => {
+                if value.len() > 262_144 {
+                    return Err(invalid("JavaScript array length limit"));
+                }
+                value.is_empty()
+            }
             Self::Object(value) => {
                 object::entries(value)?;
                 value.is_empty()
             }
-            Self::String(value) => value.is_empty(),
+            Self::String(value) => {
+                if value.len() > 32 * 1024 * 1024 {
+                    return Err(invalid("JavaScript string length limit"));
+                }
+                value.is_empty()
+            }
             Self::Number(bits) => {
                 number(bits)?;
                 true

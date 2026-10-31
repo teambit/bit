@@ -89,8 +89,9 @@ fn added_record(moved: &mut Moved, directory: &Path, row: &Value) -> io::Result<
         .map(str::trim)
         .filter(|val| !val.is_empty())
         .ok_or_else(invalid)?;
+    let parents = row["parents"].as_array().ok_or_else(invalid)?;
     moved.object(directory, reference, "Version")?;
-    let mut record = json!({"hash":reference,"parents":row["parents"]});
+    let mut record = json!({"hash":reference,"parents":parents});
     for key in ["unrelated", "squashed"] {
         if let Some(value) = row.get(key) {
             record[key] = value.clone();

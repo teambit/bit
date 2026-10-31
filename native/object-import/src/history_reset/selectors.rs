@@ -72,7 +72,7 @@ pub(super) fn soft(input: Value) -> io::Result<Value> {
             aliases.len() != request.versions.len()
                 || aliases
                     .iter()
-                    .any(|index| *index >= 4096)
+                    .any(|index| *index >= request.versions.len())
         })
     {
         return Err(invalid("soft reset aliases"));

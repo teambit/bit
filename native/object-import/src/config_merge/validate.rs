@@ -38,7 +38,10 @@ fn semver_entry(input: &Value) -> io::Result<()> {
             semver_version(version)?;
         }
     }
-    if let Some(sets) = input.get("range") {
+    if let Some(sets) = input
+        .get("range")
+        .filter(|value| !value.is_null())
+    {
         let sets = sets
             .as_array()
             .filter(|sets| sets.len() <= 4096)

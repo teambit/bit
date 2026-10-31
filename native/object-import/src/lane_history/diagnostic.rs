@@ -18,7 +18,7 @@ pub fn ci_requires_published_diagnostic(
     history_id: &str,
 ) -> io::Result<bool> {
     let history_id = history_id.trim();
-    if history_id.is_empty() {
+    if history_id.is_empty() || history_id.len() > 256 || history_id.contains('\0') {
         return Ok(true);
     }
     let bitmap = document(&root.join(".bitmap"))?;
@@ -71,7 +71,8 @@ fn file_remote(root: &Path, global: &Path, scope: &str) -> io::Result<bool> {
         .unwrap_or_else(|| &global[scope]);
     Ok(host
         .as_str()
-        .is_some_and(|host| host.trim().starts_with("file://")))
+        .and_then(|host| host.trim().strip_prefix("file://"))
+        .is_some_and(|path| !path.trim().is_empty()))
 }
 
 fn document(path: &Path) -> io::Result<Value> {

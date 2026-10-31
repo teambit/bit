@@ -58,6 +58,9 @@ impl Writer {
     }
 
     fn array(&mut self, values: &[Value], depth: usize) -> io::Result<()> {
+        if values.len() > MAX_NODES {
+            return Err(invalid("JSON nesting or node limit"));
+        }
         self.bytes(b"[")?;
         let next_depth = depth.saturating_add(1);
         for (index, value) in values.iter().enumerate() {
@@ -98,7 +101,14 @@ impl Writer {
     }
 
     fn indent(&mut self, depth: usize) -> io::Result<()> {
+        const SPACES: [u8; 64] = [b' '; 64];
         self.bytes(b"\n")?;
-        self.bytes(&vec![b' '; depth.saturating_mul(self.spaces.min(10))])
+        let mut remaining = depth.saturating_mul(self.spaces.min(10));
+        while remaining > 0 {
+            let chunk = remaining.min(SPACES.len());
+            self.bytes(&SPACES[..chunk])?;
+            remaining -= chunk;
+        }
+        Ok(())
     }
 }

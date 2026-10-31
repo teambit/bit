@@ -116,6 +116,9 @@ fn validate(request: &Request) -> io::Result<()> {
     {
         return Err(invalid("history query metadata limit"));
     }
+    if let Some(last) = &request.labels.last_found_tag {
+        validate_tag_label(last)?;
+    }
     for hash in request.fields.start
         .iter()
         .chain(&request.fields.main_head)
@@ -125,13 +128,17 @@ fn validate(request: &Request) -> io::Result<()> {
     }
     for tag in request.labels.tags.iter().chain(&request.labels.orphaned) {
         crate::merge_history::hash(tag.hash.trim())?;
-        let label = tag.label.trim();
-        if label.is_empty() || label.len() > 32768 || tag.label.contains('\0') {
-            return Err(invalid("history query tag"));
-        }
+        validate_tag_label(&tag.label)?;
     }
     for overlay in &request.fields.overlays {
         validate_overlay(overlay)?;
+    }
+    Ok(())
+}
+fn validate_tag_label(raw: &str) -> io::Result<()> {
+    let label = raw.trim();
+    if label.is_empty() || label.len() > 32768 || raw.contains('\0') {
+        return Err(invalid("history query tag"));
     }
     Ok(())
 }

@@ -76,16 +76,17 @@ fn one(merged: &Value, scope: Option<&Value>) -> io::Result<Value> {
         .unwrap_or(&[]);
     let mut append = Vec::new();
     for entry in entries {
-        let entry_name = entry["name"].as_str().map(str::trim);
+        let entry_name = entry["name"].as_str().map_or("", str::trim);
+        let entry_version = entry["version"].as_str().map_or("", str::trim);
         if originals
             .iter()
             .chain(append.iter())
-            .any(|existing| existing["name"].as_str().map(str::trim) == entry_name)
+            .any(|existing| existing["name"].as_str().map(str::trim) == Some(entry_name))
         {
             continue;
         }
         let force = entry["force"].as_bool().unwrap_or(true);
-        append.push(json!({"name":entry["name"],"version":entry["version"],"force":force}));
+        append.push(json!({"name":entry_name,"version":entry_version,"force":force}));
     }
     let mut retain = Vec::new();
     for (index, entry) in originals.iter().enumerate() {

@@ -14,7 +14,13 @@ pub(super) fn capture(
         .par_iter()
         .map(|file| capture_shared(file, request, &budget, snapshots))
         .collect::<io::Result<Vec<_>>>();
-    result.or_else(|_| smaller(&request.files, request, maximum, snapshots))
+    result.or_else(|error| {
+        if error.kind() == io::ErrorKind::InvalidData {
+            smaller(&request.files, request, maximum, snapshots)
+        } else {
+            Err(error)
+        }
+    })
 }
 
 // Skewed file sizes retry serially before any spool or public plan is published.

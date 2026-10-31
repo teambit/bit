@@ -106,8 +106,16 @@ fn resolve(
     current: &serde_json::Value,
     other: &serde_json::Value,
 ) -> io::Result<()> {
-    let current_version = &current["value"]["version"];
-    let other_version = &other["value"]["version"];
+    let current_version = current["value"]["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .ok_or_else(|| super::super::super::invalid("policy version"))?;
+    let other_version = other["value"]["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .ok_or_else(|| super::super::super::invalid("policy version"))?;
     match state.engine.strategy() {
         "theirs" => state.add_policy(other)?,
         "ours" => {}
@@ -118,7 +126,7 @@ fn resolve(
             append(
                 &mut state.conflicted,
                 field(lifecycle)?,
-                json!({"name":name,"version":format!("CONFLICT::{}::{}::",current_version.as_str().unwrap_or(""),other_version.as_str().unwrap_or("")),"force":current["force"]}),
+                json!({"name":name,"version":format!("CONFLICT::{current_version}::{other_version}::"),"force":current["force"]}),
             );
         }
     }
@@ -129,14 +137,10 @@ fn local(state: &State<'_, '_>, name: &str, version: Option<&str>) -> io::Result
     if let Some(component) = component {
         let id = component["id"]
             .as_str()
+            .or_else(|| component["componentId"].as_str())
+            .or_else(|| component["componentId"]["base"].as_str())
             .map(str::trim)
             .filter(|val| !val.is_empty())
-            .or_else(|| {
-                component["componentId"]
-                    .as_str()
-                    .map(str::trim)
-                    .filter(|val| !val.is_empty())
-            })
             .ok_or_else(|| super::super::super::invalid("component id"))?;
         return state.engine.local(id, version.map(str::trim));
     }

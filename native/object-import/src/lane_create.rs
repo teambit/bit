@@ -310,12 +310,17 @@ fn validate(
         || !valid_name(name)
         || !valid_name(options.alias)
         || !valid_scope(scope)
-        || history_key.is_empty()
+        || !valid_history_key(history_key)
         || !valid_hash(lane_hash)
     {
         return Err(invalid());
     }
     Ok(())
+}
+
+fn valid_history_key(value: &str) -> bool {
+    let value = value.trim();
+    !value.is_empty() && value.len() <= 256 && !value.contains('\0')
 }
 
 fn invalid() -> io::Error {
@@ -337,6 +342,7 @@ fn valid_name(value: &str) -> bool {
 }
 fn valid_scope(value: &str) -> bool {
     !value.is_empty()
+        && value.len() <= 800
         && value
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.'))

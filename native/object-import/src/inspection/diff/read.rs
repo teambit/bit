@@ -14,13 +14,23 @@ pub(super) fn load(
     models: &[wire::Model],
     maximum: usize,
 ) -> io::Result<Vec<Vec<u8>>> {
+    if models.is_empty() {
+        return Ok(Vec::new());
+    }
     let budget = (maximum, super::super::MAX_BYTES);
     let mut output = Vec::with_capacity(models.len());
     let records = if models.len() >= 8
         && rayon::current_thread_index().is_some()
         && rayon::current_num_threads() > 1
     {
-        parallel(directory, models, budget).or_else(|_| serial(directory, models, budget))?
+        parallel(directory, models, budget)
+            .or_else(|error| {
+                if error.kind() == io::ErrorKind::InvalidData {
+                    serial(directory, models, budget)
+                } else {
+                    Err(error)
+                }
+            })?
     } else {
         serial(directory, models, budget)?
     };

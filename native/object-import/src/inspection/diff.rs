@@ -55,11 +55,16 @@ fn validate_request(request: &Request, seen: &mut HashSet<String>) -> io::Result
     if !request.objects_directory.is_absolute()
         || request.model_files.len() > super::MAX_FILES
         || git_executable.is_empty()
+        || git_executable.len() > 4096
         || git_executable.contains('\0')
     {
         return Err(invalid("inspection diff path/budget"));
     }
+    crate::merge_history::path(&request.objects_directory)?;
     for model in &request.model_files {
+        if model.relative_path.trim() != model.relative_path {
+            return Err(invalid("inspection unsafe relative path"));
+        }
         super::read::relative(&model.relative_path)?;
         crate::merge_history::hash(model.normalized_hash())?;
         if !seen.insert(model.relative_path.clone()) {

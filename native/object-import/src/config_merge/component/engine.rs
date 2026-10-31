@@ -83,10 +83,14 @@ impl<'a> Engine<'a> {
     fn equal(&self, left: &Value, right: &Value) -> io::Result<bool> {
         let serialized = |selector: &Value| -> io::Result<String> {
             if let Some(source) = selector.get("source") {
-                let side = text(source, "side")?;
+                let side = text(source, "side")?.trim();
                 let index =
                     source["index"].as_u64().ok_or_else(|| invalid("config selector"))? as usize;
-                Ok(text(&self.input[side][index], "configJson")?.into())
+                let entry = self.input
+                    .get(side)
+                    .and_then(|rows| rows.get(index))
+                    .ok_or_else(|| invalid("config selector"))?;
+                Ok(text(entry, "configJson")?.into())
             } else {
                 serde_json::to_string(&selector["value"]).map_err(io::Error::other)
             }

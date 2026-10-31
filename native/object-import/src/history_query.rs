@@ -54,6 +54,11 @@ fn overlay_indices(overlays: &[Value]) -> std::collections::HashMap<String, usiz
         {
             indices.entry(hash.to_owned()).or_insert(index);
             indices.entry(hash.to_ascii_lowercase()).or_insert(index);
+            if let Ok(digest) = crate::merge_history::hash(hash) {
+                indices
+                    .entry(crate::validate::hexadecimal(&digest))
+                    .or_insert(index);
+            }
         }
     }
     indices

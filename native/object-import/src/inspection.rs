@@ -51,10 +51,11 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
         "inspectionFinish" => {
             let request: wire::Token = serde_json::from_value(input).map_err(io::Error::other)?;
             let token = request.token.trim();
-            if token.is_empty() {
+            if token.is_empty() || token.len() > 256 || token.chars().any(char::is_control) {
                 return Err(invalid("stale inspection token"));
             }
             state.plans.remove(token).ok_or_else(|| invalid("stale inspection token"))?;
+            state.retained.retain(|weak| weak.strong_count() > 0);
             Ok(json!({"finished":true}))
         }
         _ => Err(invalid("unsupported inspection operation")),

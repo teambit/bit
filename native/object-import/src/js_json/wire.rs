@@ -41,6 +41,9 @@ impl<'de> Visitor<'de> for ValueVisitor {
         Ok(Value::Boolean(value))
     }
     fn visit_str<Error: serde::de::Error>(self, value: &str) -> Result<Value, Error> {
+        if value.len() > 32 * 1024 * 1024 {
+            return Err(serde::de::Error::custom("JavaScript string length limit"));
+        }
         Ok(Value::String(value.encode_utf16().collect()))
     }
     fn visit_seq<Sequence: SeqAccess<'de>>(

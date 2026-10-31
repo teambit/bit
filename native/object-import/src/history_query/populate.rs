@@ -173,6 +173,7 @@ fn traverse(
 ) -> io::Result<()> {
     let hash = head["hash"]
         .as_str()
+        .map(str::trim)
         .ok_or_else(|| invalid("history population hash"))?
         .to_owned();
     let mut trace = Trace {
@@ -183,7 +184,7 @@ fn traverse(
         missing,
         existing: request.existing
             .iter()
-            .map(|entry| entry.trim().to_owned())
+            .map(|entry| entry.trim().to_ascii_lowercase())
             .collect(),
         overlays: overlay_indices(&request.overlays),
     };
@@ -213,7 +214,8 @@ impl Trace<'_> {
         reader: &mut crate::read_version::Reader<'_>,
     ) -> io::Result<Option<Value>> {
         let Some(parent) = row.get("parentOf") else { return Ok(Some(row.clone())) };
-        if exit && (self.existing.contains(hash) || self.added.contains_key(hash)) {
+        let lower = hash.trim().to_ascii_lowercase();
+        if exit && (self.existing.contains(&lower) || self.added.contains_key(hash)) {
             return Ok(None);
         }
         self.count += 1;

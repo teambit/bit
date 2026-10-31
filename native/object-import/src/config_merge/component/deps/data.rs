@@ -10,7 +10,7 @@ pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
     for dep in state.data[0]
         .iter()
         .chain(state.data[1].iter())
-        .filter(|dep| dep["source"] == "auto")
+        .filter(|dep| dep["source"].as_str().map(str::trim) == Some("auto"))
     {
         let id = dep_id(dep).ok_or_else(|| super::super::super::invalid("data id"))?;
         if !ids
@@ -42,17 +42,22 @@ fn dep_id(dep: &Value) -> Option<&str> {
 fn log_side_data(state: &mut State<'_, '_>, index: usize, side: &str) {
     let entries = state.data[index]
         .iter()
-        .filter(|dep| index == 0 || dep["source"] == "auto")
+        .filter(|dep| index == 0 || dep["source"].as_str().map(str::trim) == Some("auto"))
         .collect::<Vec<_>>();
     let lines = entries
         .iter()
         .map(|dep| {
-            format!(
-                "{} {} {}",
-                dep["__type"].as_str().unwrap_or("undefined"),
-                dep_id(dep).unwrap_or("undefined"),
-                dep["version"].as_str().unwrap_or("undefined"),
-            )
+            let kind = dep["__type"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .unwrap_or("undefined");
+            let ver = dep["version"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .unwrap_or("undefined");
+            format!("{} {} {}", kind, dep_id(dep).unwrap_or("undefined"), ver)
         })
         .collect::<Vec<_>>()
         .join("\n");

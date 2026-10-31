@@ -38,8 +38,8 @@ pub(crate) fn read_at(directory: &Path, lane_hash: &str) -> io::Result<Value> {
     Ok(value)
 }
 
-fn valid_history_entry(id: &str, entry: &Value) -> bool {
-    let valid_components = entry["components"]
+fn is_non_empty_string_array(value: &Value) -> bool {
+    value
         .as_array()
         .is_some_and(|rows| {
             rows.iter()
@@ -47,18 +47,25 @@ fn valid_history_entry(id: &str, entry: &Value) -> bool {
                     row.as_str()
                         .is_some_and(|text| !text.trim().is_empty())
                 })
-        });
-    let invalid_dependents = entry
+        })
+}
+
+fn valid_history_entry(id: &str, entry: &Value) -> bool {
+    let id = id.trim();
+    let valid_components = is_non_empty_string_array(&entry["components"]);
+    let valid_dependents = entry
         .get("updateDependents")
-        .is_some_and(|dependents| !dependents.is_null() && !dependents.is_array());
-    !id.trim().is_empty()
+        .is_none_or(|dependents| dependents.is_null() || is_non_empty_string_array(dependents));
+    !id.is_empty()
+        && id.len() <= 256
+        && !id.contains('\0')
         && entry["log"].is_object()
         && entry["log"]["date"]
             .as_str()
             .and_then(|date| date.trim().parse::<i64>().ok())
             .is_some()
         && valid_components
-        && !invalid_dependents
+        && valid_dependents
 }
 
 pub(crate) fn hash(lane_hash: &str) -> String {

@@ -1,6 +1,5 @@
-use std::io;
-
 use super::writer::Writer;
+use std::io;
 
 pub(super) fn write(writer: &mut Writer, units: &[u16]) -> io::Result<()> {
     if units.is_empty() {
@@ -25,6 +24,7 @@ pub(super) fn write(writer: &mut Writer, units: &[u16]) -> io::Result<()> {
 }
 
 fn single(writer: &mut Writer, unit: u16) -> io::Result<()> {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
     let escaped = match unit {
         8 => Some(b"\\b".as_slice()),
         9 => Some(b"\\t".as_slice()),
@@ -39,7 +39,15 @@ fn single(writer: &mut Writer, unit: u16) -> io::Result<()> {
         return writer.bytes(escaped);
     }
     if unit < 32 || (0xd800..=0xdfff).contains(&unit) {
-        return writer.bytes(format!(r"\u{unit:04x}").as_bytes());
+        let hex = [
+            b'\\',
+            b'u',
+            HEX[usize::from((unit >> 12) & 0x0f)],
+            HEX[usize::from((unit >> 8) & 0x0f)],
+            HEX[usize::from((unit >> 4) & 0x0f)],
+            HEX[usize::from(unit & 0x0f)],
+        ];
+        return writer.bytes(&hex);
     }
     unicode(writer, u32::from(unit))
 }

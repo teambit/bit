@@ -65,7 +65,7 @@ pub(super) fn merge(engine: &mut Engine<'_>) -> io::Result<()> {
     let current = &engine.envs[0];
     let other = &engine.envs[1];
     let base = &engine.envs[2];
-    if current["id"] == other["id"] && current["version"] == other["version"] {
+    if env_string(current) == env_string(other) {
         return Ok(());
     }
     let current_id = current["id"]
@@ -73,13 +73,17 @@ pub(super) fn merge(engine: &mut Engine<'_>) -> io::Result<()> {
         .map(str::trim)
         .filter(|id| !id.is_empty())
         .ok_or_else(|| invalid("env id"))?;
+    let current_ver = current["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty());
+    let base_ver = base["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty());
     let changed = current["id"] != base["id"]
-        || (current["version"].is_string()
-            && base["version"].is_string()
-            && current["version"] != base["version"]);
-    if (changed || current["id"] == other["id"])
-        && engine.local(current_id, current["version"].as_str().map(str::trim))?
-    {
+        || (current_ver.is_some() && base_ver.is_some() && current_ver != base_ver);
+    if (changed || current["id"] == other["id"]) && engine.local(current_id, current_ver)? {
         return Ok(());
     }
     let current_selector = selector(current);

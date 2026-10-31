@@ -80,11 +80,18 @@ fn version<'a>(rows: &'a [Value], hash: &str) -> io::Result<&'a Value> {
         .ok_or_else(|| invalid("history file missing Version"))
 }
 fn file_hash(version: &Value, relative: &str) -> io::Result<Option<String>> {
-    let normalized = relative.trim().replace('\\', "/");
-    let normalized = normalized.trim_start_matches("./");
+    let clean = |path: &str| {
+        let mut out = path.trim().replace('\\', "/");
+        while let Some(rest) = out.strip_prefix("./") {
+            out = rest.to_owned();
+        }
+        out
+    };
+    let normalized = clean(relative);
     let files = version
         .get("files")
         .and_then(Value::as_array)
+        .filter(|files| files.len() <= 16_384)
         .ok_or_else(|| invalid("history file missing manifest"))?;
     let Some(file) = files
         .iter()
@@ -92,12 +99,7 @@ fn file_hash(version: &Value, relative: &str) -> io::Result<Option<String>> {
             file.get("relativePath")
                 .or_else(|| file.get("path"))
                 .and_then(Value::as_str)
-                .is_some_and(|cand| {
-                    cand.trim()
-                        .replace('\\', "/")
-                        .trim_start_matches("./")
-                        == normalized
-                })
+                .is_some_and(|cand| clean(cand) == normalized)
         })
     else {
         return Ok(None);

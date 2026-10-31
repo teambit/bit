@@ -18,12 +18,12 @@ impl Handler {
         Self(Arc::new(callback))
     }
     pub(crate) fn call(&self, path: &Path, name: &str, options: &Value) -> io::Result<Value> {
+        let path = path.to_str().map_or(path, |text| Path::new(text.trim()));
         let name = name.trim();
         let path_bytes = path.as_os_str().as_encoded_bytes();
-        if path_bytes.is_empty()
-            || path_bytes.contains(&0)
-            || name.is_empty()
-            || name.chars().any(char::is_control)
+        let valid_path =
+            !path_bytes.is_empty() && path_bytes.len() <= 32768 && !path_bytes.contains(&0);
+        if !valid_path || name.is_empty() || name.len() > 256 || name.chars().any(char::is_control)
         {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,

@@ -57,7 +57,14 @@ fn validate_file(file: &Value) -> io::Result<()> {
         || path.contains('\0')
         || std::path::Path::new(trimmed)
             .components()
-            .any(|part| matches!(part, std::path::Component::ParentDir))
+            .any(|part| {
+                matches!(
+                    part,
+                    std::path::Component::ParentDir
+                        | std::path::Component::RootDir
+                        | std::path::Component::Prefix(_),
+                )
+            })
         || file
             .get("url")
             .is_some_and(|value| {

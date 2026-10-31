@@ -192,8 +192,17 @@ impl State {
     }
     pub(super) fn finish(&mut self, input: Value) -> io::Result<Value> {
         let request: Token = serde_json::from_value(input).map_err(io::Error::other)?;
+        super::text(&request.token)?;
         let token = request.token.trim();
-        self.records.remove(token).ok_or_else(|| invalid("stale reset finish"))?;
+        if self.records
+            .get(token)
+            .ok_or_else(|| invalid("stale reset finish"))?
+            .parent
+            .is_some()
+        {
+            return Err(invalid("reset child cannot finish parent journal"));
+        }
+        self.records.remove(token);
         self.records.retain(|_, record| record.parent.as_deref() != Some(token));
         Ok(json!({"finished":true}))
     }

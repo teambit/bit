@@ -42,6 +42,9 @@ pub(super) fn set(value: &mut Js, key: &str, new: Js) -> io::Result<()> {
 }
 pub(super) fn text(value: &Js) -> io::Result<Vec<u16>> {
     if let Js::String(text) = value {
+        if text.len() > 32768 {
+            return Err(invalid("inspection string budget"));
+        }
         Ok(text.clone())
     } else {
         Err(invalid("inspection expected string"))
@@ -52,6 +55,9 @@ pub(super) fn array(value: &Js) -> io::Result<&[Js]> {
 }
 pub(super) fn id(value: &Js, version: bool) -> io::Result<Vec<u16>> {
     let name = text(get(value, "name"))?;
+    if name.is_empty() {
+        return Err(invalid("inspection empty component name"));
+    }
     let mut out = Vec::new();
     if let Js::String(scope) = get(value, "scope")
         && !scope.is_empty()
