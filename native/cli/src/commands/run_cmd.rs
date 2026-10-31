@@ -161,7 +161,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
 }
 
 fn apply_run_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<()> {
-    let arg = args[*idx];
+    let arg = args[*idx].trim();
     if arg == "--no-color" {
         return None;
     }
@@ -171,9 +171,9 @@ fn apply_run_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Opt
     match arg {
         "-p" | "--port" => {
             if let Some(&next) = args.get(*idx + 1)
-                && !next.starts_with('-')
+                && !next.trim().starts_with('-')
             {
-                options.port = Some(next.to_owned());
+                options.port = Some(next.trim().to_owned());
                 *idx += 1;
             } else {
                 options.port = Some(String::new());

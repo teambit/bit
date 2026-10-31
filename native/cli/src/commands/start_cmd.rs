@@ -127,15 +127,15 @@ fn apply_start_token(args: &[&str], idx: &mut usize, options: &mut Options) -> O
     }
     match arg {
         "-d" | "--dev" | "--dev=true" => options.dev = true,
-        "--dev=false" => options.dev = false,
+        "--dev=false" | "--no-dev" => options.dev = false,
         "-r" | "--rebuild" | "--rebuild=true" => options.rebuild = true,
-        "--rebuild=false" => options.rebuild = false,
+        "--rebuild=false" | "--no-rebuild" => options.rebuild = false,
         "-s" | "--skip-ui-build" | "--skip-ui-build=true" => options.skip_ui_build = true,
-        "--skip-ui-build=false" => options.skip_ui_build = false,
+        "--skip-ui-build=false" | "--no-skip-ui-build" => options.skip_ui_build = false,
         "-n" | "--no-browser" | "--no-browser=true" => options.no_browser = true,
         "--no-browser=false" => options.no_browser = false,
         "--skip-compilation" | "--skip-compilation=true" => options.skip_compilation = true,
-        "--skip-compilation=false" => options.skip_compilation = false,
+        "--skip-compilation=false" | "--no-skip-compilation" => options.skip_compilation = false,
         "-p" | "--port" => {
             options.port = Some(take_optional_arg(args, idx));
         }
@@ -159,6 +159,7 @@ fn take_optional_arg(args: &[&str], idx: &mut usize) -> String {
 }
 
 fn apply_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
+    let trimmed = arg.trim();
     if let Some(val) = arg
         .strip_prefix("--port=")
         .or_else(|| arg.strip_prefix("-p="))
@@ -170,11 +171,13 @@ fn apply_inline_or_pattern(arg: &str, options: &mut Options) -> Option<()> {
     {
         options.ui_root_name = Some(val.trim().to_owned());
     } else if apply_combined_short(arg, options) {
-    } else if !arg.trim().starts_with('-')
-        && !arg.trim().is_empty()
+    } else if !trimmed.starts_with('-')
+        && !trimmed.is_empty()
+        && trimmed.len() <= 4096
+        && !trimmed.contains('\0')
         && options.pattern.is_none()
     {
-        options.pattern = Some(arg.trim().to_owned());
+        options.pattern = Some(trimmed.to_owned());
     } else {
         return None;
     }

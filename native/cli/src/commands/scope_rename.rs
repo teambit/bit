@@ -152,12 +152,24 @@ fn run_rename(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+fn ci_active() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty()
+                && !trimmed.eq_ignore_ascii_case("0")
+                && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
+        })
+}
+
 fn handle_outside_workspace(
     cwd: &std::path::Path,
     args: &[OsString],
     owner: bool,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if ci_active() {
         return Ok(Outcome::Declined("scope rename requires a workspace".into()));
     }
     let err = io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR);
@@ -173,5 +185,5 @@ fn handle_outside_workspace(
 fn decline_preflight(error: &io::Error) -> bool {
     error.kind() != io::ErrorKind::InvalidInput
         || error.to_string().trim().is_empty()
-        || env::var_os("CI").is_some_and(|value| !value.is_empty())
+        || ci_active()
 }

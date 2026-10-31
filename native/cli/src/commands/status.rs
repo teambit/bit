@@ -58,22 +58,22 @@ fn mode(args: &[OsString]) -> Option<Mode> {
     let json = filtered
         .iter()
         .fold(false, |acc, &arg| match arg {
-            "--json" | "-j" | "--json=true" => true,
-            "--json=false" => false,
+            "--json" | "-j" | "--json=true" | "-j=true" => true,
+            "--json=false" | "--no-json" | "-j=false" => false,
             _ => acc,
         });
     let quick = filtered
         .iter()
         .fold(false, |acc, &arg| match arg {
             "--quick" | "--quick=true" => true,
-            "--quick=false" => false,
+            "--quick=false" | "--no-quick" => false,
             _ => acc,
         });
-    let report_args = filtered
+    let report_args: Vec<_> = filtered
         .iter()
         .copied()
         .filter(|arg| !is_mode_flag(arg))
-        .collect::<Vec<_>>();
+        .collect();
     let flags = report::parse(&report_args)?;
     Some(if quick {
         Mode::Quick(json)
@@ -91,9 +91,13 @@ fn is_mode_flag(arg: &str) -> bool {
             | "-j"
             | "--json=true"
             | "--json=false"
+            | "--no-json"
+            | "-j=true"
+            | "-j=false"
             | "--quick"
             | "--quick=true"
             | "--quick=false"
+            | "--no-quick"
             | "--no-color"
             | "--no-color=true"
             | "--no-color=false"

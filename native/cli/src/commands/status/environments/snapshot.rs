@@ -53,10 +53,17 @@ fn source_callbacks(
     target: &Value,
     inventory: &Inventory,
 ) -> io::Result<bool> {
-    let directory = text(target.get("directory"))?.trim();
-    if directory.is_empty() {
+    let raw_dir = text(
+        target
+            .get("directory")
+            .or_else(|| target.get("rootDir")),
+    )?
+    .trim();
+    if raw_dir.is_empty() {
         return Ok(false);
     }
+    let trimmed = raw_dir.trim_start_matches("./").trim_end_matches('/');
+    let directory = if trimmed.is_empty() { "." } else { trimmed };
     let location = root.join(directory);
     if !location.try_exists()? {
         return Ok(false);
@@ -64,8 +71,16 @@ fn source_callbacks(
     let excludes = if directory == "." {
         array(context.get("targets"), "snapshot inventory targets")?
             .iter()
-            .filter_map(|target| target["directory"].as_str())
-            .map(str::trim)
+            .filter_map(|row| {
+                row["directory"]
+                    .as_str()
+                    .or_else(|| row["rootDir"].as_str())
+            })
+            .map(|dir| {
+                dir.trim()
+                    .trim_start_matches("./")
+                    .trim_end_matches('/')
+            })
             .filter(|dir| !dir.is_empty() && *dir != ".")
             .map(|dir| root.join(dir))
             .collect::<Vec<_>>()

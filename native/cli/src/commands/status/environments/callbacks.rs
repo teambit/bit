@@ -33,11 +33,13 @@ pub(in crate::commands::status) fn load(
     }
     capture.cache.retain_callback_directory(directory);
     capture.cache.retain_callback_stdout(rows["stdout"].as_str().unwrap_or_default());
+    let values = array(rows.get("value"), "callback components")?;
     if snapshot {
-        capture.environment_facts["snapshotLoadOutput"] =
-            rows["value"][0]["snapshotLoadOutput"].clone();
+        capture.environment_facts["snapshotLoadOutput"] = values
+            .first()
+            .map_or(Value::Null, |first| first["snapshotLoadOutput"].clone());
     }
-    for row in array(rows.get("value"), "callback components")? {
+    for row in values {
         apply(capture, row)?;
     }
     Ok(info["issues"] == true)

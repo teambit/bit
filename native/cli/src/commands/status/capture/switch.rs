@@ -174,21 +174,22 @@ fn restore_target_order(targets: &[Value], capture: &mut Capture) -> io::Result<
     let order = targets
         .iter()
         .enumerate()
-        .map(|(index, target)| Ok((row_identity(target)?, index)))
+        .map(|(index, target)| Ok((super::base_identity(row_identity(target)?), index)))
         .collect::<io::Result<HashMap<_, _>>>()?;
-    let known = |identity: &str| order.contains_key(identity);
+    let known = |identity: &str| order.contains_key(super::base_identity(identity));
     if capture.captured
         .iter()
         .chain(&capture.comparisons)
-        .any(|row| row_identity(row).is_err_and(|_| true) || !row_identity(row).is_ok_and(known))
+        .any(|row| !row_identity(row).is_ok_and(known))
         || capture.components
             .iter()
-            .any(|row| !known(super::base_identity(&row.identity)))
+            .any(|row| !known(&row.identity))
     {
         return Err(decline("switch captured target identity changed"));
     }
-    capture.captured.sort_by_key(|row| order[row_identity(row).unwrap_or_default()]);
-    capture.comparisons.sort_by_key(|row| order[row_identity(row).unwrap_or_default()]);
+    let key_of = |row: &Value| order[super::base_identity(row_identity(row).unwrap_or_default())];
+    capture.captured.sort_by_key(key_of);
+    capture.comparisons.sort_by_key(key_of);
     capture.components.sort_by_key(|row| order[super::base_identity(&row.identity)]);
     Ok(())
 }

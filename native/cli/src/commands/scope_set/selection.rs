@@ -51,19 +51,31 @@ pub(in crate::commands) fn resolve_pattern_entries<'a>(
         .collect())
 }
 
+fn parse_bare_literal(pattern: &str) -> Result<&str, Failure> {
+    let pattern = pattern.trim();
+    if pattern.starts_with('@') {
+        return Err(Failure::Declined("package name selector".to_owned()));
+    }
+    let bare = match pattern.rsplit_once('@') {
+        Some((_, ver)) if ver.trim().is_empty() => {
+            return Err(Failure::Declined("empty component version".to_owned()));
+        }
+        Some((id, _)) => id.trim(),
+        None => pattern,
+    };
+    if bare.is_empty() {
+        return Err(Failure::Declined("empty component id".to_owned()));
+    }
+    Ok(bare)
+}
+
 fn resolve_literal_entry<'a>(
     root: &Path,
     bitmap: &'a Bitmap,
     pattern: &str,
     chalk: Chalk,
 ) -> Result<Vec<&'a BitmapEntry>, Failure> {
-    if pattern.starts_with('@') {
-        return Err(Failure::Declined("package name selector".to_owned()));
-    }
-    let bare = pattern.rsplit_once('@').map_or(pattern, |(id, _)| id);
-    if bare.is_empty() {
-        return Err(Failure::Declined("empty component id".to_owned()));
-    }
+    let bare = parse_bare_literal(pattern)?;
     let normalized = inventory::normalize(bare);
     let directory = normalized
         .strip_prefix("./")

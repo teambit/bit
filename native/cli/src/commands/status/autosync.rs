@@ -193,5 +193,27 @@ fn progress(startup: &mut Startup, ids: usize, prepared: &Value, synced: u64) ->
 }
 
 fn presentation() -> bool {
-    !std::env::args().any(|argument| matches!(argument.as_str(), "--json" | "--json=true" | "-j"))
+    let mut json = false;
+    for arg in std::env::args().skip(1) {
+        if arg == "--" {
+            break;
+        }
+        match arg.as_str() {
+            "--json" | "--json=true" | "-j" | "-j=true" => json = true,
+            "--json=false" | "--no-json" | "-j=false" => json = false,
+            short
+                if short.starts_with('-')
+                    && !short.starts_with("--")
+                    && short.len() > 2
+                    && short[1..]
+                        .bytes()
+                        .all(|b| matches!(b, b'j' | b'w' | b'l' | b'c'))
+                    && short.as_bytes().contains(&b'j') =>
+            {
+                json = true;
+            }
+            _ => {}
+        }
+    }
+    !json
 }

@@ -169,7 +169,13 @@ impl Detection<'_> {
         policy: &Policy,
         custom: Value,
     ) -> io::Result<(Value, Pending)> {
-        let component_root = self.root.join(text(target.get("directory"))?);
+        let dir = text(
+            target
+                .get("directory")
+                .or_else(|| target.get("rootDir")),
+        )?
+        .trim();
+        let component_root = self.root.join(dir);
         let mut detection = self.detection(files, policy)?;
         detection["graph"]["custom"] = custom;
         detection["devFiles"] =

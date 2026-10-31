@@ -81,7 +81,9 @@ pub(super) fn publish_import_dependencies(
     engine.validate_read_set(&capture.dependency_read_set(), "import dependency facts changed")?;
     if !capture.cache.is_empty() {
         let entries = capture.cache.entries();
-        fresh::commit(engine, root, &entries, capture.cache.reset, !capture.cache.no_fs_cache)?;
+        if !entries.is_empty() || capture.cache.reset {
+            fresh::commit(engine, root, &entries, capture.cache.reset, !capture.cache.no_fs_cache)?;
+        }
     }
     // Keep every retained read proof and immutable pending entry, without publishing twice.
     capture.environment_facts["importDependencyCachePublished"] = json!(true);

@@ -109,15 +109,15 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             }
             "--no-color" => return None,
             "-j" | "--json" | "--json=true" => options.json = true,
-            "--json=false" => options.json = false,
+            "--json=false" | "--no-json" => options.json = false,
             "-l" | "--legacy" | "--legacy=true" => options.legacy = true,
-            "--legacy=false" => options.legacy = false,
+            "--legacy=false" | "--no-legacy" => options.legacy = false,
             "-r" | "--remote" | "--remote=true" => options.remote = true,
-            "--remote=false" => options.remote = false,
+            "--remote=false" | "--no-remote" => options.remote = false,
             "-b" | "--browser" | "--browser=true" => options.browser = true,
-            "--browser=false" => options.browser = false,
+            "--browser=false" | "--no-browser" => options.browser = false,
             "-c" | "--compare" | "--compare=true" => options.compare = true,
-            "--compare=false" => options.compare = false,
+            "--compare=false" | "--no-compare" => options.compare = false,
             short if apply_short_bundle(short, &mut options) => {}
             val if !val.starts_with('-') && !val.trim().is_empty() && id.is_none() => {
                 id = Some(val.trim().to_owned());

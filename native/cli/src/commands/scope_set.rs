@@ -114,7 +114,7 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
 
 pub(super) fn collect_non_flag_tokens<'a>(rest: &[&'a str]) -> Option<Vec<&'a str>> {
     let mut positional = Vec::new();
-    let mut iter = rest.iter().copied();
+    let mut iter = rest.iter().map(|token| token.trim());
     while let Some(token) = iter.next() {
         if token == "--" {
             return collect_trailing(&mut positional, iter).then_some(positional);
@@ -145,6 +145,7 @@ fn collect_trailing<'a>(
     iter: impl Iterator<Item = &'a str>,
 ) -> bool {
     for trailing in iter {
+        let trailing = trailing.trim();
         if trailing.starts_with('-') || trailing.is_empty() {
             return false;
         }

@@ -73,8 +73,8 @@ fn apply_save_arg<'a>(
         return Some(());
     }
     match arg {
-        "-i" | "--include-new" | "--include-new=true" => *include_new = true,
-        "--include-new=false" => *include_new = false,
+        "-i" | "--include-new" | "--include-new=true" | "-i=true" => *include_new = true,
+        "--include-new=false" | "--no-include-new" | "-i=false" => *include_new = false,
         "-m" | "--message" => {
             let value = iter
                 .next()
@@ -153,11 +153,11 @@ impl<'a> LoadFlags<'a> {
     fn boolean(&mut self, arg: &str) -> bool {
         let (flag, val) = match arg {
             "--force-ours" | "--force-ours=true" => (&mut self.ours, true),
-            "--force-ours=false" => (&mut self.ours, false),
+            "--force-ours=false" | "--no-force-ours" => (&mut self.ours, false),
             "--force-theirs" | "--force-theirs=true" => (&mut self.theirs, true),
-            "--force-theirs=false" => (&mut self.theirs, false),
+            "--force-theirs=false" | "--no-force-theirs" => (&mut self.theirs, false),
             "--manual" | "--manual=true" => (&mut self.manual, true),
-            "--manual=false" => (&mut self.manual, false),
+            "--manual=false" | "--no-manual" => (&mut self.manual, false),
             _ => return false,
         };
         *flag = val;

@@ -222,6 +222,9 @@ fn find_model_ext_data(model_exts: &[Value], bare_id: &str) -> Option<Value> {
 
 fn append_unlisted_model_extensions(loaded: &LoadedComponent, legacy: bool, out: &mut Vec<Value>) {
     for ext in &loaded.model_extensions {
+        if ext["config"].as_str() == Some("-") {
+            continue;
+        }
         let Some(name) = ext_id_str(ext) else {
             continue;
         };

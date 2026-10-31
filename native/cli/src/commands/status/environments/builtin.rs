@@ -50,9 +50,13 @@ pub(super) fn facts(component: &WorkspaceComponent, issues: bool) -> Value {
         Vec::new()
     } else {
         component.config
-            .keys()
-            .filter(|id| bit_install::policy::is_core_env(id))
-            .cloned()
+            .iter()
+            .filter(|(id, val)| {
+                val.as_str() != Some("-")
+                    && **val != Value::Bool(false)
+                    && bit_install::policy::is_core_env(id)
+            })
+            .map(|(id, _)| id.clone())
             .collect()
     };
     json!({"envId":"teambit.react/react","envPolicy":{

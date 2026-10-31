@@ -90,8 +90,14 @@ pub fn issue_callbacks(
 pub fn workspace_issues(capture: &Capture) -> io::Result<Vec<String>> {
     match &capture.cache.callbacks.host {
         Some(host) => {
-            serde_json::from_value(host.call("statusWorkspaceIssues", &serde_json::json!({}))?)
-                .map_err(io::Error::other)
+            let result = host.call("statusWorkspaceIssues", &serde_json::json!({}));
+            capture.cache.retain_callback_stdout(&host.take_stdout());
+            let raw: Vec<String> = serde_json::from_value(result?).map_err(io::Error::other)?;
+            Ok(raw
+                .into_iter()
+                .map(|issue| issue.trim().to_owned())
+                .filter(|issue| !issue.is_empty())
+                .collect())
         }
         None => Ok(Vec::new()),
     }

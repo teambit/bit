@@ -16,7 +16,9 @@ const NO_FS_CACHE: &str = "no-fs-cache";
 pub fn no_fs_cache(root: &Path) -> bool {
     let from_env = ["BIT_FEATURES", "BIT_CONFIG_FEATURES"]
         .iter()
-        .any(|name| env::var(name).is_ok_and(|value| mentions_no_fs_cache(&value)));
+        .any(|name| {
+            env::var_os(name).is_some_and(|value| mentions_no_fs_cache(&value.to_string_lossy()))
+        });
     let files = [
         root.join("workspace.jsonc"),
         crate::workspace::scope_path(root).join("scope.json"),

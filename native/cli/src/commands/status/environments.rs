@@ -253,6 +253,7 @@ fn component(root: &Path, context: &Value, target: &Value) -> io::Result<Workspa
     let (scope, name) =
         identity.split_once('/').ok_or_else(|| decline("environment component identity"))?;
     let directory = text(target.get("directory"))?;
+    let dir = root.join(directory);
     Ok(WorkspaceComponent {
         id: ComponentId {
             scope: Some(scope.to_owned()),
@@ -261,7 +262,6 @@ fn component(root: &Path, context: &Value, target: &Value) -> io::Result<Workspa
             version: target["version"].as_str().map(str::to_owned),
         },
         root_dir: directory.to_owned(),
-        dir: root.join(directory),
         files: Vec::new(),
         main_file: target["mainFile"]
             .as_str()
@@ -269,11 +269,9 @@ fn component(root: &Path, context: &Value, target: &Value) -> io::Result<Workspa
             .to_owned(),
         package_name: String::new(),
         env_id,
-        is_env: root
-            .join(directory)
-            .join("env.jsonc")
-            .exists(),
+        is_env: dir.join("env.jsonc").exists() || dir.join("env.json").exists(),
         has_package_json: false,
+        dir,
         config,
     })
 }

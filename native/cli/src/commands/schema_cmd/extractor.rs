@@ -222,14 +222,20 @@ fn load_unmodified_entry_schema(
 
 fn resolve_version_hash(comp_val: &Value, req_ver: &str) -> Option<String> {
     let req_ver = req_ver.trim();
+    let non_empty = |val: Option<&str>| {
+        val.map(str::trim)
+            .filter(|hash| !hash.is_empty())
+            .map(str::to_owned)
+    };
     if matches!(req_ver, "" | "latest" | "head") {
-        return comp_val["head"].as_str().map(str::to_owned);
+        return non_empty(comp_val["head"].as_str());
     }
-    if let Some(hash) = comp_val["versions"].get(req_ver).and_then(Value::as_str) {
-        return Some(hash.to_owned());
+    if let Some(hash) = non_empty(comp_val["versions"].get(req_ver).and_then(Value::as_str)) {
+        return Some(hash);
     }
-    if let Some(hash) = comp_val["orphanedVersions"].get(req_ver).and_then(Value::as_str) {
-        return Some(hash.to_owned());
+    if let Some(hash) = non_empty(comp_val["orphanedVersions"].get(req_ver).and_then(Value::as_str))
+    {
+        return Some(hash);
     }
     (req_ver.len() == 40 && req_ver.bytes().all(|byte| byte.is_ascii_hexdigit())).then(|| {
         req_ver.to_owned()

@@ -157,13 +157,21 @@ pub(super) fn apply_model_dependencies(
 }
 
 fn apply_model_policy_item(item: &Value, identity: &Identity<'_>, deps: &mut Vec<DepEntry>) {
-    let Some(dep_id) = item["dependencyId"].as_str() else {
+    let Some(dep_id) = item["dependencyId"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+    else {
         return;
     };
     if identity.is_self(dep_id) {
         return;
     }
-    let Some(ver) = item["value"]["version"].as_str() else {
+    let Some(ver) = item["value"]["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+    else {
         return;
     };
     if ver == "-" {

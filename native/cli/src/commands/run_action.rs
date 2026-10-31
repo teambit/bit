@@ -108,12 +108,11 @@ fn report(value: &Value) -> io::Result<Report> {
             Ok(Report { data: "undefined".into(), code: 0, details: None })
         }
         Value::Object(map) => {
-            if map
-                .get("details")
-                .is_some_and(|details| !details.is_null())
-            {
-                return Err(io::Error::other("unsupported run-action report details"));
-            }
+            let details = match map.get("details") {
+                None | Some(Value::Null | Value::Bool(false)) => None,
+                Some(Value::String(text)) => (!text.is_empty()).then(|| text.clone()),
+                Some(_) => return Err(io::Error::other("unsupported run-action report details")),
+            };
             let data = match map.get("data") {
                 None => "undefined".to_owned(),
                 Some(Value::Null) => "null".to_owned(),
@@ -132,7 +131,7 @@ fn report(value: &Value) -> io::Result<Report> {
                     .ok_or_else(|| io::Error::other("unsupported run-action exit code"))?,
                 Some(_) => return Err(io::Error::other("unsupported run-action exit code")),
             };
-            Ok(Report { data, code, details: None })
+            Ok(Report { data, code, details })
         }
     }
 }

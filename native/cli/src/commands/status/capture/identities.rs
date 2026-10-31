@@ -78,7 +78,11 @@ fn entry_identity_at(entries: &[Value], index: &Value) -> io::Result<String> {
         .as_u64()
         .and_then(|offset| entries.get(offset as usize))
         .ok_or_else(|| decline("status dependency entry"))?;
-    text(entry.get("identity")).map(str::to_string)
+    let identity = text(entry.get("identity"))?.trim();
+    if identity.is_empty() {
+        return Err(decline("status dependency entry identity"));
+    }
+    Ok(identity.to_string())
 }
 
 /// The identity without its `@version`.

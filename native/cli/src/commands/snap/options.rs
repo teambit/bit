@@ -53,7 +53,9 @@ pub fn parse(args: &[&str]) -> Option<Options> {
 fn canonical_flag(raw: &str) -> &str {
     match raw {
         "-m" => "--message",
-        "-u" => "--unmodified",
+        "-u" | "--no-unmodified" => "--unmodified",
+        "--no-unmerged" => "--unmerged",
+        "--no-skip-auto-snap" => "--skip-auto-snap",
         other => other,
     }
 }
@@ -99,12 +101,12 @@ impl Options {
                 self.message = Some(message.to_string());
                 return Some(1);
             }
-            "--unmodified" | "--unmodified=true" => self.unmodified = true,
-            "--unmodified=false" => self.unmodified = false,
+            "--unmodified" | "--unmodified=true" | "-u=true" => self.unmodified = true,
+            "--unmodified=false" | "--no-unmodified" | "-u=false" => self.unmodified = false,
             "--unmerged" | "--unmerged=true" => self.unmerged = true,
-            "--unmerged=false" => self.unmerged = false,
+            "--unmerged=false" | "--no-unmerged" => self.unmerged = false,
             "--skip-auto-snap" | "--skip-auto-snap=true" => self.skip_auto_snap = true,
-            "--skip-auto-snap=false" => self.skip_auto_snap = false,
+            "--skip-auto-snap=false" | "--no-skip-auto-snap" => self.skip_auto_snap = false,
             _ => return None,
         }
         Some(0)

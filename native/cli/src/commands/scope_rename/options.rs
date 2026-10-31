@@ -2,7 +2,7 @@ use bit_object_import::component_scope_rename::Options;
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let filtered: Vec<&str> = args
         .iter()
-        .copied()
+        .map(|arg| arg.trim())
         .filter(|arg| {
             !matches!(
                 *arg,

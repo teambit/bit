@@ -28,8 +28,8 @@ pub(in crate::commands) fn run(
         return Ok(());
     }
     let mut environments = Environments::new();
-    startup.committed = true;
     let host = environments.host(root)?;
+    startup.committed = true;
     let result = host.call("dependencyPolicies", &json!({"extensionIds":aspects}));
     let stdout = host.take_stdout();
     if !stdout.is_empty() {

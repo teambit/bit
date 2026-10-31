@@ -316,6 +316,9 @@ fn normalize_scope_dep_resolver_policy(cleaned: &mut Map<String, Value>) {
             policy.insert(field.into(), Value::Object(forced));
         }
     }
+    if policy.is_empty() {
+        cleaned.remove("policy");
+    }
 }
 
 fn collect_forced_policy_entries(arr: &[Value]) -> Map<String, Value> {

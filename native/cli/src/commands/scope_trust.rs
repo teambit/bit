@@ -62,7 +62,13 @@ pub(super) fn run(args: &[OsString]) -> io::Result<Outcome> {
     match prepare_and_execute(&root, &tokens, chalk) {
         Ok(report) => workspace_command::execute_then(&root, args, "trust", |_output| Ok(report)),
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            if env::var_os("CI")
+                .is_some_and(|value| {
+                    let text = value.to_string_lossy();
+                    let trimmed = text.trim();
+                    !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+                })
+            {
                 return Ok(Outcome::Declined("CI scope trust error stack".to_owned()));
             }
             workspace_command::execute_then(&root, args, "trust", |_output| {

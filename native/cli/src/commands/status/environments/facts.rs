@@ -163,12 +163,14 @@ fn non_loaded_workspace_env<'a>(
 
 fn registered(component: &WorkspaceComponent, registrations: &Value) -> Vec<Value> {
     component.config
-        .keys()
-        .filter_map(|id| {
+        .iter()
+        .filter(|(_, val)| val.as_str() != Some("-") && **val != Value::Bool(false))
+        .filter_map(|(id, _)| {
             let id = id.trim();
             if id.is_empty() {
                 return None;
             }
+            let bare_id = bit_install::policy::split_version(id).0;
             registrations
                 .as_array()?
                 .iter()
@@ -176,7 +178,11 @@ fn registered(component: &WorkspaceComponent, registrations: &Value) -> Vec<Valu
                     entry[0]
                         .as_str()
                         .map(str::trim)
-                        .is_some_and(|registrar| registrar == id || registrar.contains(id))
+                        .is_some_and(|registrar| {
+                            registrar == id
+                                || registrar.contains(id)
+                                || bit_install::policy::split_version(registrar).0 == bare_id
+                        })
                 })
                 .map(|entry| entry[1].clone())
         })

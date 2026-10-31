@@ -109,11 +109,20 @@ fn resolve_remote_scope_dir(cwd: &Path, scope_name: &str) -> Option<PathBuf> {
 }
 
 fn lookup_local_scope_remote(cwd: &Path, scope_name: &str) -> Option<String> {
-    let scope_json_path = if let Some(ws_root) = workspace::root(cwd) {
-        workspace::scope_path(&ws_root).join("scope.json")
-    } else {
-        cwd.join("scope.json")
-    };
+    let scope_json_path = workspace::root(cwd)
+        .map(|ws_root| workspace::scope_path(&ws_root).join("scope.json"))
+        .or_else(|| {
+            cwd.ancestors()
+                .find_map(|dir| {
+                    [
+                        dir.join("scope.json"),
+                        dir.join(".bit/scope.json"),
+                        dir.join(".git/bit/scope.json"),
+                    ]
+                    .into_iter()
+                    .find(|path| path.is_file())
+                })
+        })?;
     let parsed = bit_object_import::parse_jsonc(&fs::read(scope_json_path).ok()?).ok()?;
     parsed["remotes"][scope_name].as_str().map(str::to_owned)
 }

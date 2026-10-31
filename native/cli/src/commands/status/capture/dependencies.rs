@@ -129,7 +129,13 @@ impl Scan<'_> {
         let is_root_dir = target["directory"]
             .as_str()
             .or_else(|| target["rootDir"].as_str())
-            .is_some_and(|dir| dir.trim() == ".");
+            .is_some_and(|dir| {
+                let normalized = dir
+                    .trim()
+                    .trim_start_matches("./")
+                    .trim_end_matches('/');
+                normalized.is_empty() || normalized == "."
+            });
         let custom = if is_root_dir {
             Value::Null
         } else {

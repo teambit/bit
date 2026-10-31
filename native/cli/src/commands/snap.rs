@@ -55,7 +55,7 @@ fn outside_workspace_snap(
             let text = val.to_string_lossy();
             let trimmed = text.trim();
             !trimmed.is_empty()
-                && trimmed != "0"
+                && !trimmed.eq_ignore_ascii_case("0")
                 && !trimmed.eq_ignore_ascii_case("false")
                 && !trimmed.eq_ignore_ascii_case("no")
         })
@@ -95,7 +95,11 @@ fn run_workspace(
         Err(error) if startup.committed => return failure(root, args, warn, &startup, error),
         Err(error) => return Ok(Outcome::Declined(format!("snap: {error}"))),
     };
-    io::stdout().write_all(startup.stdout.as_bytes())?;
+    if !startup.stdout.is_empty() {
+        let mut stdout = io::stdout();
+        stdout.write_all(startup.stdout.as_bytes())?;
+        stdout.flush()?;
+    }
     workspace_command::execute_then(root, args, "snap", |output| {
         if warn {
             output.warning(MESSAGE_WARNING);

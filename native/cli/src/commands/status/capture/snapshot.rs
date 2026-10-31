@@ -225,11 +225,14 @@ pub fn snapshot_workspace_issues(
 /// Adopt control proofs returned by the native retained publication owner.
 pub fn snapshot_control_reads(capture: &mut Capture, reads: &Value) -> io::Result<()> {
     for after in array(Some(reads), "published control reads")? {
-        let path = text(after.get("path"))?;
+        let path = text(after.get("path"))?.trim();
+        if path.is_empty() {
+            return Err(decline("published control read path"));
+        }
         let before = capture
             .dependency_read_set()
             .into_iter()
-            .filter(|proof| proof["path"] == path)
+            .filter(|proof| proof["path"].as_str().map(str::trim) == Some(path))
             .collect::<Vec<_>>();
         for before in before {
             replace_source_proofs(

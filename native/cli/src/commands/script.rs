@@ -144,7 +144,15 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
             | "--color=false" | "--color=always" | "--color=never" => {}
             "-l" | "--list" | "--list=true" => list = true,
-            "--list=false" => list = false,
+            "--list=false" | "--no-list" => list = false,
+            val if let Some(name) = val
+                .strip_prefix("--script-name=")
+                .or_else(|| val.strip_prefix("--scriptName="))
+                .map(str::trim)
+                .filter(|name| !name.is_empty()) =>
+            {
+                script_name = Some(name.to_owned());
+            }
             val if !val.starts_with('-') && !val.trim().is_empty() && script_name.is_none() => {
                 script_name = Some(val.trim().to_owned());
             }

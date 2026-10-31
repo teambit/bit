@@ -229,8 +229,8 @@ fn missing_local_version_outcome(
     if ver_val.is_some() {
         return None;
     }
-    let Some(scope) = entry.id.scope
-        .as_deref()
+    let Some(scope) = entry.id
+        .effective_scope()
         .filter(|scope| !scope.is_empty())
     else {
         return Some(TargetOutcome::Declined);

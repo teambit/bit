@@ -211,6 +211,7 @@ fn run_without_workspace(cwd: &Path, args: &[OsString], options: &Options) -> io
             !trimmed.is_empty()
                 && !trimmed.eq_ignore_ascii_case("0")
                 && !trimmed.eq_ignore_ascii_case("false")
+                && !trimmed.eq_ignore_ascii_case("no")
         })
     {
         return Ok(Outcome::Declined("not inside a workspace".to_owned()));

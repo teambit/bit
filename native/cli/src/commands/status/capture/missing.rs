@@ -152,12 +152,12 @@ pub(super) fn main_file(
     let main = target
         .get("mainFile")
         .and_then(Value::as_str)
-        .map(str::trim)
+        .map(|main| main.trim().trim_start_matches("./"))
         .filter(|main| !main.is_empty());
     if main.is_some_and(|main| {
         files
             .iter()
-            .any(|file| file.trim() == main)
+            .any(|file| file.trim().trim_start_matches("./") == main)
     }) {
         return Ok(false);
     }

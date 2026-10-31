@@ -16,9 +16,13 @@ pub(super) fn render(
     let mut affected = Vec::new();
     for index in 0..batch.len() {
         let plan = batch.plan(index)?;
+        let source = plan.identity.source
+            .trim()
+            .rsplit_once('@')
+            .filter(|(base, _)| !base.trim().is_empty())
+            .map_or_else(|| plan.identity.source.trim(), |(base, _)| base.trim());
         affected.push(format.item(&format!(
-            "{} {}-> {}",
-            plan.identity.source.trim(),
+            "{source} {}-> {}",
             if plan.identity.exported { "(deprecated) " } else { "" },
             plan.identity.target.trim(),
         )));
@@ -26,7 +30,7 @@ pub(super) fn render(
     let mut seen = Vec::new();
     for id in refactored
         .iter()
-        .map(|id| id.trim())
+        .map(|id| id.trim().trim_matches('/'))
         .filter(|id| !id.is_empty())
     {
         if !seen.contains(&id) {

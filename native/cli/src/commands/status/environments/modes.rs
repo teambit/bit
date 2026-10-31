@@ -84,7 +84,12 @@ pub(in crate::commands::status) fn dev_files(
     use bit_install::dependencies::{DevPatternConfig, EnvDevPatterns, dev_files, dev_patterns};
     let mut comp = component(root, context, target)?;
     comp.files = files.to_vec();
-    let identity = text(target.get("identity"))?.trim();
+    let identity = text(
+        target
+            .get("identity")
+            .or_else(|| target.get("id")),
+    )?
+    .trim();
     let facts = &context["environmentFacts"][identity];
     comp.env_id = facts["envId"]
         .as_str()
@@ -96,18 +101,14 @@ pub(in crate::commands::status) fn dev_files(
     let list = |key: &str| {
         hooks
             .get(key)
-            .filter(|value| !value.is_null())
+            .filter(|val| !val.is_null())
             .map(strings)
     };
     let env = EnvDevPatterns {
         patterns: facts
             .get("manifestPatterns")
-            .filter(|value| !value.is_null())
-            .or_else(|| {
-                hooks
-                    .get("devPatterns")
-                    .filter(|value| !value.is_null())
-            })
+            .or_else(|| hooks.get("devPatterns"))
+            .filter(|val| !val.is_null())
             .cloned(),
         tests: list("tests"),
         docs: list("docs"),

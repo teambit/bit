@@ -28,11 +28,16 @@ pub(super) fn try_run(args: &[OsString], argv: &[&str]) -> io::Result<Option<Out
     Ok(Some(Outcome::Exit(code)))
 }
 
-fn presentation(argv: &[&str]) -> Option<(ExitCode, Option<&'static str>)> {
-    let (id, flags) = match argv {
+fn split_id_from_argv<'a>(argv: &'a [&'a str]) -> (bool, &'a [&'a str]) {
+    match argv {
         [id, rest @ ..] if !id.trim().is_empty() && !id.trim().starts_with('-') => (true, rest),
+        [rest @ .., id] if !id.trim().is_empty() && !id.trim().starts_with('-') => (true, rest),
         rest => (false, rest),
-    };
+    }
+}
+
+fn presentation(argv: &[&str]) -> Option<(ExitCode, Option<&'static str>)> {
+    let (id, flags) = split_id_from_argv(argv);
     let (help, flags) = match flags {
         [rest @ .., "--help" | "-h"] | ["--help" | "-h", rest @ ..] => (true, rest),
         rest => (false, rest),

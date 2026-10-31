@@ -149,13 +149,28 @@ fn bfs_first<'a>(
     None
 }
 
+fn extract_vh_versions(val: &Value) -> Option<Vec<Value>> {
+    if let Some(arr) = val["versions"].as_array() {
+        return Some(arr.clone());
+    }
+    Some(
+        val["versions"]
+            .as_object()?
+            .iter()
+            .map(|(hash, item)| {
+                json!({ "hash": hash, "parents": item.get("parents").unwrap_or(item) })
+            })
+            .collect(),
+    )
+}
+
 pub(super) fn load_version_history_with_local_versions(
     scope_dir: &Path,
     vh_hash: &str,
     heads: &[&str],
 ) -> Option<Value> {
     let mut versions = match bit_object_import::read_scope_object(scope_dir, vh_hash) {
-        Ok(Some((kind, val))) if kind == "VersionHistory" => val["versions"].as_array()?.clone(),
+        Ok(Some((kind, val))) if kind == "VersionHistory" => extract_vh_versions(&val)?,
         Ok(None) => Vec::new(),
         _ => return None,
     };

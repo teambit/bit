@@ -216,9 +216,9 @@ fn used_extensions(components: &[WorkspaceComponent]) -> Vec<Value> {
         .iter()
         .map(|component| {
             let mut used = component.config
-                .keys()
-                .map(String::as_str)
-                .map(str::trim)
+                .iter()
+                .filter(|(_, val)| val.as_str() != Some("-") && **val != Value::Bool(false))
+                .map(|(key, _)| key.trim())
                 .filter(|key| !key.is_empty())
                 .map(str::to_owned)
                 .collect::<Vec<_>>();

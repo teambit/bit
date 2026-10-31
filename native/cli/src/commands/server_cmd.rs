@@ -61,7 +61,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
             | "--color=false" | "--color=always" | "--color=never" => {}
             "-c" | "--compile" | "--compile=true" => options.compile = true,
-            "--compile=false" => options.compile = false,
+            "--compile=false" | "--no-compile" => options.compile = false,
             "-p" | "--port" => {
                 if let Some(&next) = args.get(idx + 1)
                     && !next.starts_with('-')

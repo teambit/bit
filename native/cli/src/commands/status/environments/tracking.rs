@@ -62,6 +62,9 @@ impl Environments {
         components: &[Value],
         native_cache_only: bool,
     ) -> io::Result<Value> {
+        if components.is_empty() {
+            return Ok(json!([]));
+        }
         self.host(root)?
             .call(
                 "trackingDocs",

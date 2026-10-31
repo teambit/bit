@@ -108,8 +108,9 @@ pub(super) fn refactor(
 ) -> io::Result<Vec<String>> {
     let bitmap = published_bitmap(root)?;
     let all = bitmap_ids(&bitmap)?;
-    let order: Vec<String> =
-        serde_json::from_value(linker.call(root, "identityListOrder", &json!({"ids":all}))?)?;
+    let raw_order = linker.call(root, "identityListOrder", &json!({"ids":all}));
+    print!("{}", linker.take_stdout());
+    let order: Vec<String> = serde_json::from_value(raw_order?)?;
     output.status(&format!("loading {} component(s)", all.len()));
     let rows = linker.capture_cached(root, entries.batch.bitmap(), &all)?;
     print!("{}", linker.take_stdout());

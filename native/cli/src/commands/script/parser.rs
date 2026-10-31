@@ -38,7 +38,7 @@ pub(in crate::commands) fn parse_env_scripts_in_dir(dir: &Path) -> EnvScripts {
     EnvScripts::default()
 }
 
-fn file_sort_key(path: &Path) -> (u8, String) {
+fn file_sort_key(path: &Path) -> (u8, String, String) {
     let name = path
         .file_name()
         .and_then(|val| val.to_str())
@@ -50,7 +50,7 @@ fn file_sort_key(path: &Path) -> (u8, String) {
     } else {
         2
     };
-    (priority, name.to_owned())
+    (priority, name.to_owned(), path.to_string_lossy().into_owned())
 }
 
 fn collect_source_files(dir: &Path) -> Vec<PathBuf> {

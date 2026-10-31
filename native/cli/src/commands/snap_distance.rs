@@ -274,16 +274,22 @@ fn read_remote_ref_head(
     };
     let entries: Value = bit_object_import::parse_jsonc(&bytes).ok()?;
     let full = format!("{comp_scope}/{comp_name}");
-    for item in entries.as_array()? {
-        let item_scope = item["id"]["scope"].as_str().unwrap_or_default();
-        if (item["id"]["name"].as_str() == Some(comp_name)
+    let items = entries
+        .as_array()
+        .or_else(|| entries["components"].as_array())?;
+    for item in items {
+        let item_scope = item["id"]["scope"]
+            .as_str()
+            .unwrap_or_default()
+            .trim();
+        let matches = (item["id"]["name"].as_str().map(str::trim) == Some(comp_name)
             && (item_scope.is_empty() || item_scope == comp_scope))
-            || item["id"].as_str() == Some(full.as_str())
-            || item["id"].as_str() == Some(comp_name)
-        {
+            || matches!(item["id"].as_str().map(str::trim), Some(id) if id == full || id == comp_name);
+        if matches {
             return Some(
                 item["head"]
                     .as_str()
+                    .map(str::trim)
                     .filter(|head| !head.is_empty())
                     .map(str::to_owned),
             );
@@ -297,25 +303,20 @@ fn read_remote_ref_bytes(
     ref_scope: &str,
     ref_name: &str,
 ) -> Option<Option<Vec<u8>>> {
-    let primary = scope_dir
-        .join("refs")
-        .join("remote")
-        .join(ref_scope)
-        .join(ref_name);
-    let fallback = scope_dir
-        .join("refs")
-        .join("remotes")
-        .join(ref_scope)
-        .join(ref_name);
-    match fs::read(primary) {
-        Ok(bytes) => Some(Some(bytes)),
-        Err(err) if err.kind() == io::ErrorKind::NotFound => match fs::read(fallback) {
-            Ok(bytes) => Some(Some(bytes)),
-            Err(err) if err.kind() == io::ErrorKind::NotFound => Some(None),
-            Err(_) => None,
-        },
-        Err(_) => None,
+    for dir in ["remote", "remotes"] {
+        match fs::read(
+            scope_dir
+                .join("refs")
+                .join(dir)
+                .join(ref_scope)
+                .join(ref_name),
+        ) {
+            Ok(bytes) => return Some(Some(bytes)),
+            Err(err) if err.kind() == io::ErrorKind::NotFound => {}
+            Err(_) => return None,
+        }
     }
+    Some(None)
 }
 
 fn distance_from_heads(

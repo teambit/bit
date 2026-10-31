@@ -39,6 +39,7 @@ pub(in crate::commands::status) fn issues(
 fn load_failures(context: &Value, identity: &str, dependencies: &mut Value) -> io::Result<()> {
     let Some(failures) = context["environmentFacts"]["loadFailures"]
         .as_array()
+        .filter(|arr| !arr.is_empty())
         .or_else(|| context["environmentFacts"][identity]["loadFailures"].as_array())
     else {
         return Ok(());

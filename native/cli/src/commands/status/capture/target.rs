@@ -51,7 +51,7 @@ impl Scan<'_> {
         let files = files
             .iter()
             .map(String::as_str)
-            .map(str::trim)
+            .map(|file| file.trim().trim_start_matches("./"))
             .filter(|file| !file.is_empty())
             .map(str::to_owned)
             .collect::<Vec<_>>();

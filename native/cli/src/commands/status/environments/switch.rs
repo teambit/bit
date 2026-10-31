@@ -10,7 +10,7 @@ impl Environments {
         capture: &Capture,
         order: &[String],
     ) -> io::Result<Option<callbacks::SwitchStage>> {
-        if !self.checkout || self.host.is_none() {
+        if !self.checkout || self.host.is_none() || order.is_empty() {
             return Ok(None);
         }
         let host = self.host.as_ref().ok_or_else(|| decline("switch callback host"))?;

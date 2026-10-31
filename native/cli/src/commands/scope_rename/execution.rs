@@ -77,9 +77,16 @@ fn install(root: &Path, linker: &mut ProjectedLinker) -> io::Result<()> {
         } else {
             trimmed
         };
-        linker.call(root, "renameTooling", &json!({"action":"installFailure","message":message}))?;
+        let res = linker.call(
+            root,
+            "renameTooling",
+            &json!({"action":"installFailure","message":message}),
+        );
+        print!("{}", linker.take_stdout());
+        res?;
+    } else {
+        print!("{}", linker.take_stdout());
     }
-    print!("{}", linker.take_stdout());
     Ok(())
 }
 
@@ -91,16 +98,18 @@ fn finish_linked_tooling(
     linker: &mut ProjectedLinker,
     chalk: Chalk,
 ) -> io::Result<()> {
-    linker.link_retained(root, batch.bitmap(), ids, false, chalk)?;
+    let linked = linker.link_retained(root, batch.bitmap(), ids, false, chalk);
     print!("{}", linker.take_stdout());
+    linked?;
     if !options.owner && !options.skip_install {
         install(root, linker)?;
     }
-    linker.call(
+    let compiled = linker.call(
         root,
         "renameTooling",
         &json!({"action":"compile","ids":ids,"progress":!options.owner}),
-    )?;
+    );
     print!("{}", linker.take_stdout());
+    compiled?;
     Ok(())
 }

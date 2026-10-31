@@ -16,7 +16,13 @@ impl Environments {
         if self.builtin_services != super::builtin::Services::Disabled {
             return Err(decline("component service dependency parser"));
         }
-        let directory = root.join(text(target.get("directory"))?.trim());
+        let dir = text(
+            target
+                .get("directory")
+                .or_else(|| target.get("rootDir")),
+        )?
+        .trim();
+        let directory = root.join(dir);
         let file_paths = target_file_paths(&directory, files);
         let mut parsed = self.host(root)?.call("parseDependencies",&json!({"files":file_paths,"exclude":custom.as_object().map(|custom|custom.keys().collect::<Vec<_>>()).unwrap_or_default()}))?;
         if let Some(custom) = custom.as_object() {
@@ -52,7 +58,13 @@ impl Environments {
         {
             return Ok(Value::Null);
         }
-        let directory = root.join(text(target.get("directory"))?.trim());
+        let dir = text(
+            target
+                .get("directory")
+                .or_else(|| target.get("rootDir")),
+        )?
+        .trim();
+        let directory = root.join(dir);
         let file_paths = target_file_paths(&directory, files);
         self.host(root)?.call("detectDependencies", &json!({"envId":env,"files":file_paths,"componentDir":directory,"aspectIds":context["environmentFacts"][identity]["aspectIds"]}))
     }
@@ -62,7 +74,7 @@ fn target_file_paths(directory: &Path, files: &[String]) -> Vec<std::path::PathB
     files
         .iter()
         .map(String::as_str)
-        .map(str::trim)
+        .map(|file| file.trim().trim_start_matches("./"))
         .filter(|file| !file.is_empty())
         .map(|file| directory.join(file))
         .collect()

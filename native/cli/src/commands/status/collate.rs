@@ -19,10 +19,10 @@ pub fn root_locale() -> bool {
     let locale = ["LC_ALL", "LC_MESSAGES", "LANG"]
         .iter()
         .find_map(|name| {
-            env::var(name)
-                .ok()
-                .map(|value| value.trim().to_owned())
-                .filter(|value| !value.is_empty())
+            let raw = env::var_os(name)?;
+            let text = raw.to_string_lossy();
+            let trimmed = text.trim();
+            (!trimmed.is_empty()).then(|| trimmed.to_owned())
         })
         .unwrap_or_default();
     let language = locale

@@ -48,6 +48,15 @@ pub(super) enum ParsedCommand {
     Diff(DiffOptions),
 }
 
+fn ci_active() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+}
+
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("schema arguments are not UTF-8".into()));
@@ -55,7 +64,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(parsed) = parse_command(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native schema grammar".into()));
     };
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if ci_active() {
         return Ok(Outcome::Declined("CI schema delegated".into()));
     }
     let cwd = env::current_dir()?;

@@ -147,6 +147,8 @@ fn workspace_default_scope(root: &Path) -> Option<String> {
                 .and_then(|(_, ws)| ws.get("defaultScope"))
         })
         .and_then(|scope| scope.as_str())
+        .map(|scope| scope.trim().trim_matches('/'))
+        .filter(|scope| !scope.is_empty())
         .map(ToOwned::to_owned)
 }
 

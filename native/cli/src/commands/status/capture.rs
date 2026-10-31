@@ -330,7 +330,10 @@ struct ScanBehavior {
 impl Scan<'_> {
     /// The component's files, relative to its directory.
     fn files(&mut self, directory: &str) -> io::Result<Vec<String>> {
-        let trimmed = directory.trim().trim_start_matches("./");
+        let trimmed = directory
+            .trim()
+            .trim_start_matches("./")
+            .trim_end_matches('/');
         let directory = if trimmed.is_empty() { "." } else { trimmed };
         let others: Vec<_> = if directory == "." {
             array(self.context.get("targets"), "targets")?
@@ -340,7 +343,11 @@ impl Scan<'_> {
                         .or_else(|| row.get("rootDir"))
                         .and_then(Value::as_str)
                 })
-                .map(|dir| dir.trim().trim_start_matches("./"))
+                .map(|dir| {
+                    dir.trim()
+                        .trim_start_matches("./")
+                        .trim_end_matches('/')
+                })
                 .filter(|dir| !dir.is_empty() && *dir != ".")
                 .map(|dir| self.root.join(dir))
                 .collect()

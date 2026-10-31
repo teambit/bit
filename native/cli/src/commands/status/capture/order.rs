@@ -9,12 +9,14 @@ pub(super) fn snapshot(root: &Path, capture: &mut Capture) -> io::Result<()> {
             .iter()
             .map(snapshot_file_path)
             .collect::<io::Result<Vec<_>>>()?;
-        let directory = target["directory"]
+        let raw_dir = target["directory"]
             .as_str()
             .or_else(|| target["rootDir"].as_str())
             .map(str::trim)
             .filter(|dir| !dir.is_empty())
             .ok_or_else(|| decline("snapshot directory"))?;
+        let trimmed = raw_dir.trim_start_matches("./").trim_end_matches('/');
+        let directory = if trimmed.is_empty() { "." } else { trimmed };
         target["files"] = json!(crate::commands::diff::order::captured(
             &root.join(directory),
             &files,

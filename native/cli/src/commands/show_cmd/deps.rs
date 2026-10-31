@@ -41,13 +41,14 @@ impl Identity<'_> {
         };
         let scoped_pkg = format!("@{}/{}", self.scope, self.name);
         let scoped_dot_pkg = format!("@{}/{}", self.scope, self.name.replace('/', "."));
-        let stripped = strip_pkg_version(candidate);
+        let stripped = strip_pkg_version(candidate.trim());
         stripped == self.package_name
             || stripped == scoped_pkg
             || stripped == scoped_dot_pkg
             || stripped == base_id
             || stripped == self.name
             || stripped.starts_with(&format!("{}/", self.package_name))
+            || stripped.starts_with(&format!("{base_id}/"))
             || stripped.starts_with(&format!("{scoped_pkg}/"))
             || stripped.starts_with(&format!("{scoped_dot_pkg}/"))
     }

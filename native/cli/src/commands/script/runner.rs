@@ -70,9 +70,11 @@ fn assign_plugin_env_to_comp(
         return;
     }
     let Some(matched_key) = comp.config
-        .keys()
-        .find(|key| is_matching_plugin_env(key, plugin_envs, core_ids))
-        .cloned()
+        .iter()
+        .find(|(key, val)| {
+            val.as_str() != Some("-") && is_matching_plugin_env(key, plugin_envs, core_ids)
+        })
+        .map(|(key, _)| key.clone())
     else {
         return;
     };
