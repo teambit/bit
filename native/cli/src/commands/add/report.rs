@@ -25,8 +25,7 @@ pub(super) fn text(components: &[Value], warnings: &Value, chalk: Chalk) -> io::
         .join("\n\n"))
 }
 fn component_text(component: &Value, formatter: &Formatter) -> io::Result<String> {
-    let id =
-        component["id"].as_str().ok_or_else(|| io::Error::other("tracking component identity"))?;
+    let id = component_id(component)?;
     let files = component["files"]
         .as_array()
         .ok_or_else(|| io::Error::other("tracking component files"))?;
@@ -34,16 +33,38 @@ fn component_text(component: &Value, formatter: &Formatter) -> io::Result<String
         return Ok(format!(
             "{} could not track component {}: no files to track",
             formatter.error_symbol(),
-            formatter.chalk.bold(id),
+            formatter.chalk.bold(&id),
         ));
     }
     let mut lines =
-        vec![formatter.title(&format!("tracking component {}", formatter.chalk.bold(id)))];
+        vec![formatter.title(&format!("tracking component {}", formatter.chalk.bold(&id)))];
     for file in files {
-        let file = file.as_str().ok_or_else(|| io::Error::other("tracking file path"))?;
+        let file = file
+            .as_str()
+            .or_else(|| file["relativePath"].as_str())
+            .or_else(|| file["path"].as_str())
+            .ok_or_else(|| io::Error::other("tracking file path"))?;
         lines.push(formatter.item(&format!("added {file}")));
     }
     Ok(lines.join("\n"))
+}
+
+fn component_id(component: &Value) -> io::Result<String> {
+    if let Some(id) = component["id"]
+        .as_str()
+        .or_else(|| component["identity"].as_str())
+        .filter(|id| !id.is_empty())
+    {
+        return Ok(id.to_owned());
+    }
+    let name = component["id"]["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| io::Error::other("tracking component identity"))?;
+    Ok(component["id"]["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())
+        .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}")))
 }
 fn warning(value: &Value, format: &Formatter) -> io::Result<String> {
     let mut warning = already_used(value, format)?;

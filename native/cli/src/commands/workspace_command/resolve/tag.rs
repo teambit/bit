@@ -2,6 +2,9 @@
 //! select, and with which entered version; and the versions the plan gives
 //! the tagged components.
 
+#[cfg(test)]
+mod tag_tests;
+
 use crate::commands::{
     patterns as component_patterns,
     status::js::{array, decline, text},
@@ -173,6 +176,3 @@ pub fn planned_versions(result: &Value, identities: &[String]) -> io::Result<Vec
         })
         .collect()
 }
-
-#[cfg(test)]
-mod tag_tests;

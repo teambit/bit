@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use flate2::{Decompress, FlushDecompress, Status};
 
 pub(crate) const MAX_BYTES: usize = 256 * 1024;
@@ -30,6 +33,3 @@ pub(crate) fn inflate(compressed: &[u8]) -> Option<String> {
     }
     String::from_utf8(output).ok()
 }
-
-#[cfg(test)]
-mod tests;

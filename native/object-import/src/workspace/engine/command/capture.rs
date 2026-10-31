@@ -3,6 +3,8 @@ pub(super) use hidden::from_model;
 mod addition;
 mod hidden;
 mod normalized;
+#[cfg(test)]
+mod tests;
 use super::super::{invalid, read, status_models::comparison};
 use crate::workspace::snapshots;
 use serde_json::{Value, json};
@@ -113,6 +115,3 @@ fn targets(inputs: Vec<Value>, allow_root: bool) -> io::Result<Vec<comparison::T
         })
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

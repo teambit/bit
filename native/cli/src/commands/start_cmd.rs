@@ -80,6 +80,8 @@ fn apply_start_token(args: &[&str], idx: &mut usize, options: &mut Options) -> O
     let arg = args[*idx];
     match arg {
         "--no-color"
+        | "--no-color=true"
+        | "--no-color=false"
         | "-v"
         | "--verbose"
         | "--verbose=true"

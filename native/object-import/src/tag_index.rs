@@ -1,4 +1,7 @@
 //! Index snapshot hashes by their newest normal or orphaned tag.
+#[cfg(test)]
+mod tests;
+
 use std::collections::HashMap;
 
 #[derive(Default)]
@@ -27,5 +30,3 @@ impl TagIndex {
             .map(|(label, normal)| (label.as_str(), *normal))
     }
 }
-#[cfg(test)]
-mod tests;

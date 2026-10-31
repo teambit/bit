@@ -23,10 +23,7 @@ pub(super) fn json_report(rows: &[Row], ids: bool) -> Value {
                     data.insert("deprecated".into(), json!(deprecated));
                 }
                 data.insert("currentVersion".into(), json!(current_version(&row.workspace)));
-                data.insert(
-                    "remoteVersion".into(),
-                    json!(row.remote_version.as_deref().unwrap_or("N/A")),
-                );
+                data.insert("remoteVersion".into(), json!(remote_version(row)));
                 if let Some(removed) = row.removed {
                     data.insert("removed".into(), json!(removed));
                 }
@@ -40,11 +37,27 @@ pub(super) fn json_report(rows: &[Row], ids: bool) -> Value {
 }
 
 fn local_version(row: &Row) -> &str {
-    row.version.as_deref().unwrap_or("<new>")
+    row.version
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("<new>")
 }
 
 fn current_version(row: &WorkspaceRow) -> &str {
-    row.used.as_deref().unwrap_or("N/A")
+    row.used
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("N/A")
+}
+
+fn remote_version(row: &Row) -> &str {
+    row.remote_version
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("N/A")
 }
 
 /// `ListCmd.report`: the count, then the ids or the table.
@@ -124,10 +137,12 @@ fn formatted_id(row: &Row, chalk: Chalk) -> String {
 
 fn colored_version(row: &Row, outdated: bool, remote: bool, chalk: Chalk) -> String {
     let local = local_version(row);
-    let latest = row.remote_version.as_deref().unwrap_or("N/A");
+    let latest = remote_version(row);
     let text = if remote { latest } else { local };
     let comparison = row.remote_version
         .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
         .and_then(|latest| node_semver::npm::compare(local, latest, false));
     let color = if remote { std::cmp::Ordering::Greater } else { std::cmp::Ordering::Less };
     if outdated && comparison == Some(color) { chalk.red(text) } else { text.to_string() }

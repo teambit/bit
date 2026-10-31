@@ -34,7 +34,8 @@ fn apply_rename_arg<'a>(
     positions: &mut Vec<String>,
 ) -> Option<()> {
     match argument {
-        "--no-color" | "--delete" | "--delete=true" | "--delete=false" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--delete" | "--delete=true"
+        | "--delete=false" => {}
         "-s" | "--scope" => options.scope = Some(take_val(arguments.next()?)?),
         "-p" | "--path" => options.path = Some(take_val(arguments.next()?)?),
         "-r" | "--refactor" | "--refactor=true" => options.refactor = true,

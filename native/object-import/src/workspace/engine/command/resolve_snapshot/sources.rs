@@ -18,15 +18,15 @@ pub(super) fn sources(
         objects.push(source);
     }
     if !preserve_order {
-        files.sort_by(|a, b| {
-            a["relativePath"]
+        files.sort_by(|left, right| {
+            left["relativePath"]
                 .as_str()
-                .unwrap()
+                .unwrap_or_default()
                 .encode_utf16()
                 .cmp(
-                    b["relativePath"]
+                    right["relativePath"]
                         .as_str()
-                        .unwrap()
+                        .unwrap_or_default()
                         .encode_utf16(),
                 )
         });

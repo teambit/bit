@@ -31,7 +31,7 @@ impl Options {
 
     fn apply_arg(&mut self, value: &str) -> Option<()> {
         match value {
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
                 self.skip_install = true;
             }

@@ -91,7 +91,7 @@ impl Capture {
     }
     pub(super) fn json(&mut self, path: &Path) -> io::Result<Option<Value>> {
         self.read(path)?
-            .map(|bytes| serde_json::from_slice(&bytes).map_err(io::Error::other))
+            .map(|bytes| crate::parse_jsonc(&bytes).map_err(io::Error::other))
             .transpose()
     }
     pub(super) fn object(
@@ -130,7 +130,7 @@ impl Capture {
             }
             None
         } else {
-            Some(serde_json::from_slice(body).map_err(io::Error::other)?)
+            Some(crate::parse_jsonc(body).map_err(io::Error::other)?)
         };
         Ok(Some(Object {
             kind: kind.to_owned(),

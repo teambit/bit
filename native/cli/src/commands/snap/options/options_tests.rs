@@ -14,7 +14,7 @@ fn ordinary_snaps() {
         parse(&["-u", "--unmerged"]).is_some_and(|options| options.unmodified && options.unmerged),
     );
     assert!(
-        parse(&["--message=inline", "--unmodified=true", "--no-color"])
+        parse(&["--message=inline", "--unmodified=true", "--no-color", "--no-color=false"])
             .is_some_and(|options| {
                 options.message.as_deref() == Some("inline") && options.unmodified
             }),

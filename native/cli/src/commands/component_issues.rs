@@ -1,5 +1,8 @@
 //! Native `bit component-issues [--json|-j]` (`ComponentIssuesCmd`).
 
+#[cfg(test)]
+mod tests;
+
 use super::{color::Chalk, workspace_command};
 use crate::{commands::Command, history::History, native::Outcome, workspace};
 use serde_json::{Value, json};
@@ -212,7 +215,7 @@ fn parse(args: &[&str]) -> Option<bool> {
             "--" => return iter.next().is_none().then_some(json),
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             _ => return None,
         }
     }
@@ -268,6 +271,3 @@ fn report(chalk: Chalk) -> String {
     );
     format!("{issues_list}\n{bypass_instructions}")
 }
-
-#[cfg(test)]
-mod tests;

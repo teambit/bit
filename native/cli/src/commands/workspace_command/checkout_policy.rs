@@ -29,12 +29,24 @@ pub(crate) fn semver(receipt: &Value) -> io::Result<Value> {
 }
 
 fn prefixed_ranges(entry: &Value, dependencies: &[Value]) -> io::Result<Vec<Value>> {
-    let version = text(entry["value"].get("version"))?;
+    let version = entry["value"]["version"]
+        .as_str()
+        .or_else(|| entry["value"].as_str())
+        .or_else(|| entry["version"].as_str())
+        .ok_or_else(|| decline("checkout policy entry version"))?;
     let Some(prefix) = version.chars().next() else { return Ok(Vec::new()) };
+    let target_name = entry
+        .get("dependencyId")
+        .or_else(|| entry.get("name"))
+        .unwrap_or(&Value::Null);
     let mut inputs = Vec::new();
     for dependency in dependencies
         .iter()
-        .filter(|dependency| dependency["name"] == entry["dependencyId"])
+        .filter(|dependency| {
+            dependency["name"] == *target_name
+                || dependency["id"] == *target_name
+                || dependency["packageName"] == *target_name
+        })
     {
         for value in array(dependency.get("versions"), "checkout policy versions")? {
             inputs.push(json!(format!("{prefix}{}", text(Some(value))?)));

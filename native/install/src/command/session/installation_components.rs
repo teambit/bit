@@ -68,14 +68,52 @@ fn ordered(
         .map(|row| (identity(&row), row))
         .collect::<HashMap<_, _>>();
     rows.iter()
-        .map(|row| {
-            let id = row["id"].as_str().ok_or_else(invalid)?;
-            let component = remaining.remove(id).ok_or_else(invalid)?;
-            let directory = row["directory"].as_str().ok_or_else(invalid)?;
-            if Path::new(directory) != root.join(&component.root_dir) {
-                return Err(invalid());
-            }
-            Ok(component)
-        })
+        .map(|row| ordered_row(root, row, &mut remaining))
         .collect()
+}
+
+fn ordered_row(
+    root: &Path,
+    row: &serde_json::Value,
+    remaining: &mut HashMap<String, WorkspaceComponent>,
+) -> io::Result<WorkspaceComponent> {
+    let invalid = || io::Error::other("installation class directory inventory changed");
+    let id = row["id"]
+        .as_str()
+        .or_else(|| row["identity"].as_str())
+        .filter(|value| !value.is_empty())
+        .ok_or_else(invalid)?;
+    let component = remove_matching(remaining, id).ok_or_else(invalid)?;
+    let directory = row["directory"]
+        .as_str()
+        .or_else(|| row["rootDir"].as_str())
+        .filter(|value| !value.is_empty())
+        .ok_or_else(invalid)?;
+    let actual = if Path::new(directory).is_absolute() {
+        Path::new(directory).to_path_buf()
+    } else {
+        root.join(directory)
+    };
+    if actual != root.join(&component.root_dir) {
+        return Err(invalid());
+    }
+    Ok(component)
+}
+
+fn remove_matching(
+    remaining: &mut HashMap<String, WorkspaceComponent>,
+    id: &str,
+) -> Option<WorkspaceComponent> {
+    if let Some(component) = remaining.remove(id) {
+        return Some(component);
+    }
+    if id.contains('@') {
+        let bare = id.split('@').next().unwrap_or(id);
+        return remaining.remove(bare);
+    }
+    let key = remaining
+        .keys()
+        .find(|candidate| candidate.split('@').next() == Some(id))?
+        .clone();
+    remaining.remove(&key)
 }

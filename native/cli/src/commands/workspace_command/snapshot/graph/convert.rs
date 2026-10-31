@@ -3,6 +3,9 @@
 //! the way `DependenciesGraph.serialize()` writes it, with workspace
 //! components named by their versions.
 
+#[cfg(test)]
+mod convert_tests;
+
 use super::replacer::Replacer;
 use crate::commands::status::js::decline;
 use serde_json::{Map, Value, json};
@@ -365,6 +368,3 @@ pub fn ref_to_relative(reference: &str, name: &str) -> Option<String> {
 fn text(value: &Value) -> io::Result<&str> {
     value.as_str().ok_or_else(|| decline("lockfile reference"))
 }
-
-#[cfg(test)]
-mod convert_tests;

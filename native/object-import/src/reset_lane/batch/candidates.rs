@@ -35,7 +35,7 @@ pub(super) fn prepare(root: &Path) -> io::Result<Discovery> {
     let mut retained = vec![(root.join(".bitmap"), Some(bitmap.before.clone()))];
     let index_bytes = proofs::read(&crate::scope_path(root).join("index.json"), &mut retained)?
         .ok_or_else(|| invalid("lane candidate index absent"))?;
-    let index: Value = serde_json::from_slice(&index_bytes)?;
+    let index: Value = crate::parse_jsonc(&index_bytes)?;
     let hash = indexed_hash(&index, "lanes", &bitmap.lane_scope, &bitmap.lane_name)?;
     let objects = crate::scope_path(root).join("objects");
     let lane = proofs::object(&objects, &hash, "Lane", &mut retained)?;
@@ -111,7 +111,7 @@ fn ordered(index: &Value, membership: &HashSet<String>) -> io::Result<Vec<String
         if row["isSymlink"] == true {
             continue;
         }
-        if let Some(id) = matching_member_id(&row["id"], membership)?
+        if let Some(id) = matching_member_id(row, membership)?
             && !ids.contains(&id)
         {
             ids.push(id);
@@ -125,12 +125,11 @@ fn ordered(index: &Value, membership: &HashSet<String>) -> io::Result<Vec<String
     Ok(ids)
 }
 
-fn matching_member_id(id: &Value, membership: &HashSet<String>) -> io::Result<Option<String>> {
-    let name = id["name"].as_str().ok_or_else(|| invalid("lane candidate name"))?;
-    if let Some(scope) = id["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())
-    {
+fn matching_member_id(row: &Value, membership: &HashSet<String>) -> io::Result<Option<String>> {
+    let (scope_opt, name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
+            .ok_or_else(|| invalid("lane candidate name"))?;
+    if let Some(scope) = scope_opt.filter(|val| !val.is_empty()) {
         let candidate = format!("{scope}/{name}");
         return Ok(membership.contains(&candidate).then_some(candidate));
     }
@@ -142,6 +141,14 @@ fn matching_member_id(id: &Value, membership: &HashSet<String>) -> io::Result<Op
 }
 
 fn identity(id: &Value) -> io::Result<String> {
+    if let Some((scope, name)) = id
+        .as_str()
+        .map(|raw| raw.split('@').next().unwrap_or(raw))
+        .and_then(|bare| bare.split_once('/'))
+        .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
+    {
+        return Ok(format!("{scope}/{name}"));
+    }
     Ok(format!(
         "{}/{}",
         id["scope"].as_str().ok_or_else(|| invalid("lane candidate scope"))?,
@@ -153,14 +160,14 @@ fn context(root: &Path) -> io::Result<BitmapState> {
     let before = fs::read(root.join(".bitmap"))?;
     let document = crate::recovery::jsonc::parse(&before)?;
     let lane = &document["_bit_lane"];
-    let lane_scope = lane["id"]["scope"]
-        .as_str()
+    let (scope_opt, name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(lane)
+            .ok_or_else(|| invalid("lane candidate name"))?;
+    let lane_scope = scope_opt
+        .filter(|val| !val.is_empty())
         .ok_or_else(|| invalid("lane candidate scope"))?
         .to_owned();
-    let lane_name = lane["id"]["name"]
-        .as_str()
-        .ok_or_else(|| invalid("lane candidate name"))?
-        .to_owned();
+    let lane_name = name.to_owned();
     let exported = lane["exported"].as_bool().ok_or_else(|| invalid("lane candidate exported"))?;
     Ok(BitmapState {
         before,

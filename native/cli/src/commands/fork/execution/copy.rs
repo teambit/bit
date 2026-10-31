@@ -49,7 +49,8 @@ fn prepare(
     let kernel = component_fork::Options {
         source: source["identity"]
             .as_str()
-            .unwrap()
+            .or_else(|| source["id"].as_str())
+            .unwrap_or_default()
             .to_owned(),
         target: options.target.clone(),
         scope: Some(scope.into()),

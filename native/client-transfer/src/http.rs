@@ -7,13 +7,26 @@ pub use hub::HubReply;
 pub use inventory::old_server_fallback;
 
 mod action_errors;
+#[cfg(test)]
+mod action_tests;
 mod configuration;
 mod delete;
 mod doctor;
+#[cfg(test)]
+mod fetch_tests;
 mod hub;
 mod inventory;
 mod lane;
+#[cfg(test)]
+mod list_tests;
+mod log;
+#[cfg(test)]
+mod push_tests;
+#[cfg(test)]
+mod status_tests;
 mod stream;
+#[cfg(test)]
+mod tls_tests;
 
 use action_errors::{
     network_error, remote_error, throw_for_action_status, throw_for_status, unexpected,
@@ -313,20 +326,6 @@ impl Network {
         }
     }
 }
-
-#[cfg(test)]
-mod action_tests;
-#[cfg(test)]
-mod fetch_tests;
-#[cfg(test)]
-mod list_tests;
-mod log;
-#[cfg(test)]
-mod push_tests;
-#[cfg(test)]
-mod status_tests;
-#[cfg(test)]
-mod tls_tests;
 
 fn request_id() -> io::Result<String> {
     let mut bytes = [0; 16];

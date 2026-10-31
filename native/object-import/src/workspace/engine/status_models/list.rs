@@ -2,6 +2,9 @@
 //! scope index, `isDeprecated` and `isLaneReadmeOf` from its head Version.
 
 pub(in crate::workspace::engine) mod http_lanes;
+#[cfg(test)]
+mod tests;
+
 use super::{Reader, index, invalid};
 use crate::read_budget::Budget;
 use bit_client_transfer::remotes::Remote;
@@ -181,6 +184,22 @@ fn remote_repository(request: &Lanes, scope: &str) -> io::Result<PathBuf> {
     Ok(path)
 }
 
+fn find_indexed_component<'a>(indexed: &'a [Value], component: &Value) -> Option<&'a Value> {
+    let (comp_scope, comp_name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(component)
+            .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default(), nm));
+    indexed
+        .iter()
+        .find(|row| {
+            let (row_scope, row_name) =
+                crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
+                    .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default(), nm));
+            row["isSymlink"] != true
+                && row_name == comp_name
+                && (row_scope == comp_scope || row_scope.is_empty())
+        })
+}
+
 /// `Lane.isFullyMerged`: every visible lane head is in its component's
 /// main-head ancestry. Hidden update-dependents do not participate.
 fn fully_merged(reader: &Reader<'_>, index: &Value, lane: &Value) -> io::Result<bool> {
@@ -194,16 +213,7 @@ fn fully_merged(reader: &Reader<'_>, index: &Value, lane: &Value) -> io::Result<
         if component["isHidden"] == true {
             continue;
         }
-        let id = &component["id"];
-        let Some(model_row) = indexed
-            .iter()
-            .find(|row| {
-                row["isSymlink"] != true
-                    && row["id"]["name"] == id["name"]
-                    && (row["id"]["scope"] == id["scope"]
-                        || row["id"]["scope"].as_str().is_none_or(str::is_empty))
-            })
-        else {
+        let Some(model_row) = find_indexed_component(indexed, component) else {
             return Ok(false);
         };
         let hash = model_row["hash"].as_str().ok_or_else(|| invalid("list component hash"))?;
@@ -249,7 +259,7 @@ fn read_index(root: &Path) -> io::Result<Value> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(json!({})),
         Err(error) => return Err(error),
     };
-    serde_json::from_slice(&Budget::new(4 * 1024 * 1024).read(file)?).map_err(io::Error::other)
+    crate::parse_jsonc(&Budget::new(4 * 1024 * 1024).read(file)?).map_err(io::Error::other)
 }
 
 fn lane_heads(
@@ -265,12 +275,22 @@ fn lane_heads(
         .flatten()
         .find(|row| {
             row["isSymlink"] != true
-                && row["id"]["scope"] == lane.scope.as_str()
-                && row["id"]["name"] == lane.name.as_str()
+                && crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                    row,
+                    lane.scope.as_str(),
+                    lane.name.as_str(),
+                )
         })
         .ok_or_else(|| invalid("list current lane absent"))?;
     let hash = row["hash"].as_str().ok_or_else(|| invalid("list lane hash"))?;
     let value = reader.read(hash, "Lane")?;
+    parse_lane_heads(&value, &lane.scope)
+}
+
+pub(super) fn parse_lane_heads(
+    value: &Value,
+    lane_scope: &str,
+) -> io::Result<HashMap<String, String>> {
     let mut heads = HashMap::new();
     for component in
         value["components"].as_array().ok_or_else(|| invalid("list lane components"))?
@@ -278,14 +298,13 @@ fn lane_heads(
         if component["isHidden"] == true {
             continue;
         }
-        let id = &component["id"];
-        let scope = id["scope"]
-            .as_str()
-            .filter(|val| !val.is_empty())
-            .unwrap_or(&lane.scope);
-        let (Some(name), Some(head)) = (id["name"].as_str(), component["head"].as_str()) else {
+        let Some((scope, name)) =
+            crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(component)
+        else {
             return Err(invalid("list lane component"));
         };
+        let scope = scope.unwrap_or(lane_scope);
+        let head = component["head"].as_str().ok_or_else(|| invalid("list lane component"))?;
         crate::merge_history::hash(head)?;
         heads.insert(format!("{scope}/{name}"), head.to_owned());
     }
@@ -373,6 +392,3 @@ fn truthy(value: &Value) -> bool {
         Value::Array(_) | Value::Object(_) => true,
     }
 }
-
-#[cfg(test)]
-mod tests;

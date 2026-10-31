@@ -276,7 +276,7 @@ fn validate_virtual_object(hash: &str, compressed: &[u8]) -> io::Result<usize> {
             return Err(invalid("virtual import Source identity"));
         }
     } else {
-        let _: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
+        let _: Value = crate::parse_jsonc(body)?;
     }
     Ok(raw.len())
 }

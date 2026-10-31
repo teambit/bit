@@ -97,8 +97,12 @@ fn pending_history(
     row: &Value,
     selected: &HashSet<String>,
 ) -> io::Result<Option<ObjectChange>> {
-    let scope = row["id"]["scope"].as_str().ok_or_else(|| invalid("lane pending scope"))?;
-    let name = row["id"]["name"].as_str().ok_or_else(|| invalid("lane pending name"))?;
+    let (scope_opt, name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
+            .ok_or_else(|| invalid("lane pending name"))?;
+    let scope = scope_opt
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("lane pending scope"))?;
     let identity = format!("{scope}/{name}");
     if selected.contains(&identity) {
         return Ok(None);

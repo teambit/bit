@@ -43,10 +43,10 @@ fn save_single_artifact_file(
     comp_path: &Path,
     file: &ArtifactFile,
 ) -> Result<(), Failure> {
-    if file.hash.is_empty() || file.relative_path.contains("..") {
+    if file.hash.trim().is_empty() || !is_safe_artifact_path(&file.relative_path) {
         return Err(Failure::Declined("missing hash or unsafe artifact path".into()));
     }
-    let (_, bytes) = bit_object_import::read_raw_scope_object(scope_dir, &file.hash)
+    let (_, bytes) = bit_object_import::read_raw_scope_object(scope_dir, file.hash.trim())
         .ok()
         .flatten()
         .ok_or_else(|| Failure::Declined("missing Source object for artifact".into()))?;
@@ -55,6 +55,14 @@ fn save_single_artifact_file(
         fs::create_dir_all(parent).map_err(|err| Failure::Declined(err.to_string()))?;
     }
     fs::write(&target_path, &bytes).map_err(|err| Failure::Declined(err.to_string()))
+}
+
+fn is_safe_artifact_path(relative_path: &str) -> bool {
+    !relative_path.trim().is_empty()
+        && !relative_path.contains('\\')
+        && Path::new(relative_path)
+            .components()
+            .all(|part| matches!(part, std::path::Component::Normal(_)))
 }
 
 fn sanitize_component_dir(identity: &str) -> String {

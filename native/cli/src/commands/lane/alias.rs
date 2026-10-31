@@ -99,7 +99,7 @@ fn prepare(root: &std::path::Path, name: &str, alias: &str) -> io::Result<(Value
     else {
         return Err(invalid());
     };
-    let mut config: Value = serde_json::from_slice(&fs::read(
+    let mut config: Value = bit_object_import::parse_jsonc(&fs::read(
         bit_workspace_config::scope_path(root).join("scope.json"),
     )?)?;
     let Some(tracking) = config["lanes"]["tracking"].as_array_mut() else {

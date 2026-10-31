@@ -2,6 +2,9 @@
 //! (`components/legacy/loader/loader.ts`, ora 5 with the `dots` spinner on
 //! stdout), `chalk` colors and `pretty-time` durations.
 
+#[cfg(test)]
+mod tests;
+
 use std::{
     sync::{
         Arc, LazyLock, Mutex,
@@ -351,6 +354,3 @@ fn encase_line_breaks(text: &str, close: &str, open: &str) -> String {
     }
     output
 }
-
-#[cfg(test)]
-mod tests;

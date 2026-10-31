@@ -5,6 +5,8 @@
 pub use side::{Component, Side};
 
 mod dependencies;
+#[cfg(test)]
+mod metadata_tests;
 mod side;
 
 use super::{super::color::Chalk, files};
@@ -179,6 +181,3 @@ fn extension_configs(
 fn stringify(value: &Value, pretty: bool) -> io::Result<String> {
     bit_object_import::stringify_json(value, pretty)
 }
-
-#[cfg(test)]
-mod metadata_tests;

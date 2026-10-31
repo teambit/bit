@@ -1,6 +1,9 @@
 //! The package names of external envs: envs that are neither core envs nor
 //! workspace components, as `getPackageName` names the env component.
 
+#[cfg(test)]
+mod tests;
+
 use super::{aspects::CORE_ENVS, scope_model::ScopeObjects};
 use crate::{
     config::aspect_id_without_version,
@@ -46,6 +49,3 @@ fn bare_id(id: &str) -> ComponentId {
         version: None,
     }
 }
-
-#[cfg(test)]
-mod tests;

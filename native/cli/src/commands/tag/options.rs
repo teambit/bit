@@ -2,6 +2,9 @@
 //! ordinary and soft tags. Editor, build and publish flags stay
 //! with the Node.js CLI.
 
+#[cfg(test)]
+mod options_tests;
+
 use serde_json::{Map, Value, json};
 
 const RELEASE_TYPES: [&str; 7] =
@@ -354,6 +357,3 @@ fn levels(flags: &Flags) -> Option<(String, Option<String>, Option<String>)> {
         pre_release_id.map(str::to_string),
     ))
 }
-
-#[cfg(test)]
-mod options_tests;

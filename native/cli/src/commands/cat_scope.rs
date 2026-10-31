@@ -90,7 +90,8 @@ fn apply_cat_scope_arg(opts: &mut Options, arg: &str) -> Option<()> {
             opts.json = true;
             opts.json_extra = true;
         }
-        "--no-color" | "--color" | "--color=true" | "--color=false" | "--color=always" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" => {}
         val if !val.starts_with('-') && !val.is_empty() && opts.scope_path.is_none() => {
             opts.scope_path = Some(val.to_owned());
         }
@@ -187,7 +188,7 @@ fn resolve_scope_dir(target: &Path) -> Option<PathBuf> {
         return None;
     }
     let bytes = fs::read(scope_dir.join("scope.json")).ok()?;
-    let scope_json: Value = serde_json::from_slice(&bytes).ok()?;
+    let scope_json: Value = bit_object_import::parse_jsonc(&bytes).ok()?;
     scope_json["name"]
         .as_str()
         .filter(|name| !name.is_empty() && !name.contains('/'))?;
@@ -230,19 +231,19 @@ fn read_index_entry(scope_dir: &Path, hash: &str, opts: &Options) -> Option<Opti
     let (headers, body) = bit_object_import::read_raw_scope_object(scope_dir, hash).ok()??;
     match headers.first()?.as_str() {
         "Component" => {
-            let raw: Value = serde_json::from_slice(&body).ok()?;
+            let raw: Value = bit_object_import::parse_jsonc(&body).ok()?;
             Some(Some(build_component_entry(&raw, opts)?))
         }
         "Symlink" => {
-            let raw: Value = serde_json::from_slice(&body).ok()?;
+            let raw: Value = bit_object_import::parse_jsonc(&body).ok()?;
             Some(Some(build_symlink_entry(&raw, opts)?))
         }
         "Lane" => {
-            let raw: Value = serde_json::from_slice(&body).ok()?;
+            let raw: Value = bit_object_import::parse_jsonc(&body).ok()?;
             Some(Some(build_lane_entry(&raw, hash, opts)?))
         }
         "ScopeMeta" if opts.full => {
-            let raw: Value = serde_json::from_slice(&body).ok()?;
+            let raw: Value = bit_object_import::parse_jsonc(&body).ok()?;
             Some(Some(build_scope_meta_entry(&raw, hash, opts)?))
         }
         "Version" if opts.full && !opts.json => Some(Some(ScopeEntry {

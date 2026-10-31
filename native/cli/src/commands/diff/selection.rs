@@ -3,14 +3,14 @@
 pub(super) use states::after_capture;
 pub(in crate::commands) use states::{criterion, select_capture};
 
+mod states;
+
 use crate::commands::{
     inventory, patterns,
     status::js::{decline, text},
 };
 use serde_json::Value;
 use std::io;
-
-mod states;
 
 /// The pattern's target: by directory first, then by id or name.
 pub(in crate::commands) fn select(

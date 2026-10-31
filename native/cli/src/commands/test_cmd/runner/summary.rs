@@ -43,11 +43,24 @@ fn component(component: &Value) -> Option<Value> {
     if files.is_empty() && !errors {
         return None;
     }
-    let identity = component["componentId"].as_str()?;
-    let identity = identity
-        .split('@')
-        .next()
-        .unwrap_or(identity);
+    let id = &component["componentId"];
+    let identity = if let Some(raw) = id.as_str() {
+        raw.split('@')
+            .next()
+            .unwrap_or(raw)
+            .to_owned()
+    } else {
+        let scope = id["_legacy"]["scope"]
+            .as_str()
+            .or_else(|| id["_scope"].as_str())
+            .or_else(|| id["scope"].as_str())
+            .filter(|scope| !scope.is_empty())?;
+        let name = id["_legacy"]["name"]
+            .as_str()
+            .or_else(|| id["name"].as_str())
+            .filter(|name| !name.is_empty())?;
+        format!("{scope}/{name}")
+    };
     Some(json!({"id":identity,"passed":sum(files,"pass"),"failed":sum(files,"failed"),
         "pending":sum(files,"pending"),"hasError":errors||files.iter().any(|file|file.get("error").is_some())}))
 }

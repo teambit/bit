@@ -7,17 +7,26 @@ use std::collections::{HashMap, HashSet};
 /// Components in a dependency cycle, self-dependencies included: the
 /// members of strongly connected components larger than one node.
 pub fn cyclic(components: &[Component]) -> HashSet<&str> {
-    let index: HashMap<&str, usize> = components
-        .iter()
-        .enumerate()
-        .map(|(position, component)| (component.identity.as_str(), position))
-        .collect();
+    let mut index: HashMap<&str, usize> = HashMap::with_capacity(components.len() * 2);
+    for (position, component) in components.iter().enumerate() {
+        let raw = component.identity.as_str().trim();
+        index.insert(raw, position);
+        index
+            .entry(strip_version(raw))
+            .or_insert(position);
+    }
     let edges: Vec<Vec<usize>> = components
         .iter()
         .map(|component| {
             component.dependencies
                 .iter()
-                .filter_map(|id| index.get(id.as_str()).copied())
+                .filter_map(|id| {
+                    let trimmed = id.as_str().trim();
+                    index
+                        .get(trimmed)
+                        .or_else(|| index.get(strip_version(trimmed)))
+                        .copied()
+                })
                 .collect()
         })
         .collect();
@@ -29,6 +38,13 @@ pub fn cyclic(components: &[Component]) -> HashSet<&str> {
         .flatten()
         .map(|&node| components[node].identity.as_str())
         .collect()
+}
+
+fn strip_version(id: &str) -> &str {
+    match id.rfind('@') {
+        Some(index) if index > 0 && !id[index + 1..].contains('/') => &id[..index],
+        _ => id,
+    }
 }
 
 struct Tarjan<'e> {

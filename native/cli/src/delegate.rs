@@ -4,6 +4,9 @@
 //! On Windows the CLI runs as a child; Ctrl-C is left to it and its exit code
 //! is returned.
 
+#[cfg(test)]
+mod delegate_tests;
+
 use crate::{
     discovery::{NodeCli, Target},
     trace,
@@ -96,6 +99,3 @@ fn exec(mut command: Command) -> io::Result<ExitCode> {
     #[expect(clippy::exit, reason = "the child's full exit code must be preserved")]
     std::process::exit(status.code().unwrap_or(1));
 }
-
-#[cfg(test)]
-mod delegate_tests;

@@ -64,6 +64,11 @@ fn dependency_snap_selection_dedupes_hash_and_preserves_missing_duplicates() {
         super::dependencies::candidates(&input).expect("candidates"),
         json!({"selected":[0],"checked":[hash]}),
     );
+    let string_input = json!({"owner":"scope/owner@0.0.1","checked":[other],"dependencies":[format!("scope/first@{hash}"),{"id":format!("scope/second@{hash}")},format!("else/third@{other}"),"scope/tag@1.0.0"]});
+    assert_eq!(
+        super::dependencies::candidates(&string_input).expect("string candidates"),
+        json!({"selected":[0],"checked":[hash]}),
+    );
     assert_eq!(
         super::dependencies::missing(&json!({"candidates":[hash,hash,other],"existing":[other]}))
             .expect("missing"),

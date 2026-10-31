@@ -32,17 +32,32 @@ fn head_policy(
     }
     Ok(())
 }
-fn parse_strategy(value: Option<&Value>) -> io::Result<Option<&str>> {
+fn parse_strategy(value: Option<&Value>) -> io::Result<Option<&'static str>> {
     match value {
         None | Some(Value::Null) => Ok(None),
-        Some(Value::String(value)) if ["ours", "theirs", "manual"].contains(&value.as_str()) => {
-            Ok(Some(value))
-        }
+        Some(Value::String(raw)) => match raw.trim().to_ascii_lowercase().as_str() {
+            "" => Ok(None),
+            "ours" => Ok(Some("ours")),
+            "theirs" => Ok(Some("theirs")),
+            "manual" => Ok(Some("manual")),
+            _ => Err(invalid("unsupported merge strategy")),
+        },
         _ => Err(invalid("unsupported merge strategy")),
     }
 }
 pub(super) fn boolean(input: &Value, key: &str) -> io::Result<bool> {
-    input[key].as_bool().ok_or_else(|| invalid("merge flag"))
+    if let Some(flag) = input[key].as_bool() {
+        return Ok(flag);
+    }
+    if let Some(raw) = input[key].as_str() {
+        if raw.trim().eq_ignore_ascii_case("true") {
+            return Ok(true);
+        }
+        if raw.trim().eq_ignore_ascii_case("false") {
+            return Ok(false);
+        }
+    }
+    Err(invalid("merge flag"))
 }
 
 pub(super) fn bucket(input: &Value) -> io::Result<Value> {

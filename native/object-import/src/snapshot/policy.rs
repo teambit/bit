@@ -49,9 +49,11 @@ fn validate(plan: &Plan) -> io::Result<()> {
     Ok(())
 }
 fn detached(plan: &Plan) -> io::Result<bool> {
-    if plan.parent.is_none()
-        || plan.head.is_none()
-        || plan.parent == plan.head
+    let (Some(parent_hash), Some(head_hash)) = (plan.parent.as_deref(), plan.head.as_deref())
+    else {
+        return Ok(false);
+    };
+    if parent_hash.trim().eq_ignore_ascii_case(head_hash.trim())
         || plan.head_policy.override_head
     {
         return Ok(false);
@@ -62,12 +64,12 @@ fn detached(plan: &Plan) -> io::Result<bool> {
     Ok(true)
 }
 fn parent(plan: &Plan) -> Option<&str> {
-    let head = plan.head.as_deref()?;
-    if plan.is_legacy || head == plan.version || plan.has_tag {
+    let head = plan.head.as_deref()?.trim();
+    if plan.is_legacy || head.eq_ignore_ascii_case(plan.version.trim()) || plan.has_tag {
         return None;
     }
     if plan.head_policy.set_head_as_parent {
         return Some(head);
     }
-    plan.parent.as_deref().or(Some(head))
+    Some(plan.parent.as_deref().map_or(head, str::trim))
 }

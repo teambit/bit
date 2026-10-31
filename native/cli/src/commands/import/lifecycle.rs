@@ -96,6 +96,7 @@ impl Lifecycle {
             .map(|row| {
                 row["identity"]
                     .as_str()
+                    .or_else(|| row["id"].as_str())
                     .map(str::to_owned)
                     .ok_or_else(|| io::Error::other("import graph identity"))
             })
@@ -191,9 +192,17 @@ fn graph_dependencies(
         return Err(io::Error::other("import graph class count changed"));
     }
     for row in rows {
+        let row_id = row["identity"]
+            .as_str()
+            .or_else(|| row["id"].as_str());
         let matches = facts
             .iter()
-            .filter(|fact| fact["identity"] == row["identity"])
+            .filter(|fact| {
+                fact["identity"]
+                    .as_str()
+                    .or_else(|| fact["id"].as_str())
+                    == row_id
+            })
             .collect::<Vec<_>>();
         if matches.len() != 1 || !matches[0]["resolvedDependencies"].is_array() {
             return Err(io::Error::other("import graph class identity changed"));

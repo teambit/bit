@@ -13,25 +13,33 @@ pub fn matches(pattern: &str, name: &str) -> bool {
         })
 }
 
-/// `{a,b}` alternatives, expanded left to right.
+/// `{a,b}` alternatives, expanded innermost/left-to-right.
 fn expand_braces(pattern: &str) -> Vec<String> {
-    let Some(open) = pattern.find('{') else { return vec![pattern.to_owned()] };
-    let Some(close) = pattern[open..]
-        .find('}')
-        .map(|offset| open + offset)
-    else {
+    let Some((open, close)) = find_comma_brace_pair(pattern) else {
         return vec![pattern.to_owned()];
     };
     let inner = &pattern[open + 1..close];
-    if !inner.contains(',') {
-        return vec![pattern.to_owned()];
-    }
     inner
         .split(',')
         .flat_map(|choice| {
             expand_braces(&format!("{}{choice}{}", &pattern[..open], &pattern[close + 1..]))
         })
         .collect()
+}
+
+fn find_comma_brace_pair(pattern: &str) -> Option<(usize, usize)> {
+    let mut opens = Vec::new();
+    for (index, character) in pattern.char_indices() {
+        if character == '{' {
+            opens.push(index);
+        } else if character == '}'
+            && let Some(open) = opens.pop()
+            && pattern[open + 1..index].contains(',')
+        {
+            return Some((open, index));
+        }
+    }
+    None
 }
 
 fn segments(pattern: &[&str], name: &[&str]) -> bool {

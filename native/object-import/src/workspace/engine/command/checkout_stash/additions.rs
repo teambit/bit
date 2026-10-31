@@ -106,13 +106,23 @@ fn addition(
     else {
         return Ok(None);
     };
-    let name = entry["id"]["name"].as_str().ok_or_else(|| invalid("stash new component name"))?;
-    let original_scope = entry["id"]["scope"].as_str().unwrap_or(scope);
+    let (scope_opt, name) = super::super::inbound::remote::file_list::row_id_parts(entry)
+        .ok_or_else(|| invalid("stash new component name"))?;
+    let original_scope = scope_opt
+        .filter(|val| !val.is_empty())
+        .unwrap_or(scope);
     if existing.contains(&format!("{original_scope}/{name}")) {
         return Ok(None);
     }
     let identity = format!("{scope}/{name}");
-    let version = entry["id"]["version"].as_str().ok_or_else(|| invalid("stash new version"))?;
+    let version = entry["id"]["version"]
+        .as_str()
+        .or_else(|| {
+            entry["id"]
+                .as_str()
+                .and_then(|raw| raw.rsplit_once('@').map(|(_, ver)| ver))
+        })
+        .ok_or_else(|| invalid("stash new version"))?;
     crate::merge_history::hash(version)?;
     let mut row = json!({"name":name,"scope":"","version":"","defaultScope":scope,"mainFile":entry["mainFile"],"rootDir":entry["rootDir"]});
     if let Some(config) = entry.get("config") {

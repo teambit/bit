@@ -65,14 +65,20 @@ fn adjust(
     row["ids"] = json!(
         roots
             .iter()
-            .map(|root| format!(
-                "{}/{}@{}",
-                root.scope.as_deref().unwrap_or_default(),
-                root.name,
-                root.version
-            ))
+            .map(format_target_id)
             .collect::<Vec<_>>()
     );
     row["components"] = json!(if object_phase { 0 } else { roots.len() });
     row["objects"] = json!(if object_phase { scopes } else { 0 });
+}
+
+fn format_target_id(root: &Target) -> String {
+    match root.scope
+        .as_deref()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+    {
+        Some(scope) => format!("{scope}/{}@{}", root.name, root.version),
+        None => format!("{}@{}", root.name, root.version),
+    }
 }

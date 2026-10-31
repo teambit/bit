@@ -72,3 +72,14 @@ fn public_alias_lookup_matches_the_authoritative_owner_and_retains_scope_preimag
     std::fs::write(directory.join("scope.json"), changed.to_string()).unwrap();
     assert!(plan.validate().is_err());
 }
+
+#[test]
+fn lane_id_helpers_accept_object_and_versioned_string_ids() {
+    let obj_row = json!({"id": {"scope": "my.scope", "name": "dev/lane"}});
+    let str_row = json!({"id": "my.scope/dev/lane@0.0.1"});
+    let expected = Id { scope: "my.scope".into(), name: "dev/lane".into() };
+    assert_eq!(super::lane_index_id(&obj_row).unwrap(), expected);
+    assert_eq!(super::lane_index_id(&str_row).unwrap(), expected);
+    let index = json!({"lanes": [str_row]});
+    assert_eq!(resolve_local("dev/lane", &json!({}), &index).unwrap(), expected);
+}

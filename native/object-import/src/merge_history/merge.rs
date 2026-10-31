@@ -1,10 +1,12 @@
 pub(crate) mod git;
+
 pub(crate) use verified::verified;
+
 mod verified;
+mod workers;
+
 use super::{MAX_RAW, count, hash, invalid, path};
 use git::{MergeBytes, git};
-use workers::classify_all;
-mod workers;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
@@ -15,6 +17,7 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicUsize, Ordering},
 };
+use workers::classify_all;
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {

@@ -103,9 +103,13 @@ fn refreshed(
     components: &[bit_install::model::WorkspaceComponent],
 ) -> io::Result<Vec<Value>> {
     for row in &mut rows {
+        let identity = row["identity"]
+            .as_str()
+            .or_else(|| row["id"].as_str())
+            .map(|id| id.split('@').next().unwrap_or(id));
         let component = components
             .iter()
-            .find(|component| row["identity"] == component.id.to_string_without_version())
+            .find(|component| Some(component.id.to_string_without_version().as_str()) == identity)
             .ok_or_else(|| io::Error::other("retained identity projection missing"))?;
         row["directory"] = json!(component.root_dir);
         row["files"] = json!(component.files);

@@ -1,10 +1,12 @@
 //! Read-only `multimatch` selection with the shared native minimatch grammar.
 //! Bit splits commas and `@` versions before matching, even inside globs.
 
+mod ranges;
+#[cfg(test)]
+mod tests;
+
 use bit_install::dependencies::glob;
 use std::io;
-
-mod ranges;
 
 /// `multimatch` visits ids before patterns, preserving input order. The last
 /// matching include/exclude decides whether each id remains in the result.
@@ -48,6 +50,3 @@ fn matches(identity: &str, pattern: &str) -> bool {
     let matched = glob::matches(positive, identity);
     matched != negated
 }
-
-#[cfg(test)]
-mod tests;

@@ -273,13 +273,25 @@ fn load_existing_comp_json(
     }
     let existing: Value = bit_object_import::parse_jsonc(&fs::read(abs_path)?)
         .map_err(|err| Failure::Declined(err.to_string()))?;
-    let comp_id = existing["componentId"]
-        .as_object()
-        .ok_or_else(|| Failure::Declined("missing componentId in component.json".into()))?;
-    let invalid = comp_id["scope"].as_str().is_none_or(str::is_empty)
-        || comp_id["name"].as_str().is_none_or(str::is_empty)
-        || existing.get("defaultScope").is_some()
-        || !existing["extensions"].is_object();
+    let valid_id = if let Some(raw) = existing["componentId"].as_str() {
+        raw.rsplit_once('@')
+            .map_or(raw, |(bare, _)| bare)
+            .split_once('/')
+            .is_some_and(|(scope, name)| !scope.is_empty() && !name.is_empty())
+    } else if let Some(comp_id) = existing["componentId"].as_object() {
+        comp_id
+            .get("scope")
+            .and_then(Value::as_str)
+            .is_some_and(|scope| !scope.is_empty())
+            && comp_id
+                .get("name")
+                .and_then(Value::as_str)
+                .is_some_and(|name| !name.is_empty())
+    } else {
+        return Err(Failure::Declined("missing componentId in component.json".into()));
+    };
+    let invalid =
+        !valid_id || existing.get("defaultScope").is_some() || !existing["extensions"].is_object();
     (!invalid)
         .then_some(Some(existing))
         .ok_or_else(|| Failure::Declined("invalid existing component.json".into()))

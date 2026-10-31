@@ -3,6 +3,8 @@
 //! `Install` on a dedicated thread.
 
 mod engine_call;
+#[cfg(test)]
+mod tests;
 
 use super::{
     EngineInstallOptions, EngineResult, EngineSettings, lockfile_attrs, restore,
@@ -59,6 +61,3 @@ pub async fn install(
         store_dir: outcome.store_dir,
     })
 }
-
-#[cfg(test)]
-mod tests;

@@ -24,7 +24,14 @@ fn write_workspace(root: &Path, default_scope: &str) {
 fn parses_tokens_and_actions() {
     assert_eq!(parse_tokens(&os_args(&["scope", "trust"])), Some(Vec::new()));
     assert_eq!(
-        parse_tokens(&os_args(&["scope", "trust", "add", "acme.*", "--no-color"])),
+        parse_tokens(&os_args(&[
+            "scope",
+            "trust",
+            "add",
+            "acme.*",
+            "--no-color",
+            "--no-color=false",
+        ])),
         Some(vec!["add".to_owned(), "acme.*".to_owned()]),
     );
     assert_eq!(parse_tokens(&os_args(&["scope", "trust", "--help"])), None);

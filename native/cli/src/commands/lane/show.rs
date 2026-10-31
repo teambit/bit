@@ -194,15 +194,22 @@ fn select_lane(
     }
     let name = target.rsplit_once('/').map_or(target, |(_, name)| name);
     let rows = http_at(root, bare, &scope, Some(name), host)?;
-    let lane = rows
-        .into_iter()
-        .find(|row| {
-            row["id"]["name"] == target
-                || format!("{scope}/{}", row["id"]["name"].as_str().unwrap_or_default()) == target
-        });
+    let lane = rows.into_iter().find(|row| matches_http_lane(row, &scope, target));
     lane.map(Selected::Http)
         .map(Some)
         .ok_or_else(|| missing(target))
+}
+
+fn matches_http_lane(row: &Value, scope: &str, target: &str) -> bool {
+    let row_name = row["id"]["name"]
+        .as_str()
+        .or_else(|| {
+            row["id"]
+                .as_str()
+                .map(|raw| raw.split_once('/').map_or(raw, |(_, nm)| nm))
+        })
+        .unwrap_or_default();
+    row_name == target || format!("{scope}/{row_name}") == target
 }
 
 fn remote_scope(local: &[LaneData], target: &str) -> io::Result<String> {
@@ -232,7 +239,7 @@ fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool, bool)> {
                 consume_trailing_show_lane(iter, &mut name)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "--json" | "-j" | "--json=true" => json = true,
             "--json=false" => json = false,
             "--remote" | "-r" | "--remote=true" => remote = true,

@@ -97,10 +97,10 @@ fn collect_peers(
 }
 
 fn add_package_json_peers(path: &Path, peers: &mut Vec<String>) {
-    let Ok(text) = fs::read_to_string(path) else {
+    let Ok(bytes) = fs::read(path) else {
         return;
     };
-    let Ok(json) = serde_json::from_str::<Value>(&text) else {
+    let Ok(json) = bit_object_import::parse_jsonc(&bytes) else {
         return;
     };
     if let Some(Value::Object(peer_map)) = json.get("peerDependencies") {

@@ -15,19 +15,18 @@ pub(crate) fn verified(input: Value, prepared: &Prepared<'_>) -> io::Result<Valu
     let mut seen = HashSet::new();
     for file in &request.current {
         text(&file.path)?;
-        if !seen.insert(&file.path) {
+        if !seen.insert(normalize_path(&file.path)) {
             return Err(invalid("merge duplicate current path"));
         }
     }
-    if prepared.base
+    let total_bytes = prepared.base
         .iter()
         .flatten()
         .chain(&prepared.other)
         .chain(&prepared.current)
         .map(|bytes| bytes.len())
-        .sum::<usize>()
-        > MAX_RAW
-    {
+        .fold(0_usize, usize::saturating_add);
+    if total_bytes > MAX_RAW {
         return Err(invalid("merge verified byte limit"));
     }
     execute(&request, prepared, false)
@@ -45,10 +44,18 @@ fn validate_models(request: &Request, prepared: &Prepared<'_>) -> io::Result<()>
         for model in models {
             text(&model.path)?;
             hash(&model.hash)?;
-            if !seen.insert(&model.path) {
+            if !seen.insert(normalize_path(&model.path)) {
                 return Err(invalid("merge duplicate model path"));
             }
         }
     }
     Ok(())
+}
+
+fn normalize_path(path: &str) -> String {
+    let replaced = path.trim().replace('\\', "/");
+    replaced
+        .strip_prefix("./")
+        .unwrap_or(&replaced)
+        .to_owned()
 }

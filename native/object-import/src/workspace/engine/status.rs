@@ -15,7 +15,10 @@ pub(super) fn compare(target: &[File], current: &[File]) -> io::Result<(usize, V
     super::count(target.len())?;
     super::count(current.len())?;
     for file in target.iter().chain(current) {
-        if file.relative_path.len() > 32768 || file.relative_path.contains('\0') {
+        if file.relative_path.trim().is_empty()
+            || file.relative_path.len() > 32768
+            || file.relative_path.contains('\0')
+        {
             return Err(super::invalid("workspace status path limit"));
         }
         super::expected_hash(&file.hash)?;
@@ -29,7 +32,7 @@ pub(super) fn compare(target: &[File], current: &[File]) -> io::Result<(usize, V
         .map(|file| {
             paths
                 .get(&file.relative_path)
-                .is_some_and(|hash| **hash == file.hash)
+                .is_some_and(|hash| hash.trim().eq_ignore_ascii_case(file.hash.trim()))
         })
         .collect();
     Ok((target.len(), json!({"unchanged":unchanged})))

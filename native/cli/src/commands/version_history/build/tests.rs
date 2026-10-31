@@ -20,3 +20,15 @@ fn handles_cycles_without_recursion_and_rejects_ambiguous_rows() {
     let duplicates = json!({"versions":[{"hash":"first","parents":[]},{"hash":"first","parents":[]}],"graphCompleteRefs":[]});
     assert_eq!(complete(&duplicates, "first"), None);
 }
+
+#[test]
+fn row_scope_and_name_parses_object_and_string_ids() {
+    let obj_row = json!({"id": {"scope": "my.scope", "name": "ui/button"}});
+    let str_row = json!({"id": "my.scope/ui/button@0.0.1"});
+    let unscoped = json!({"id": {"name": "ui/button"}});
+    let unscoped_str = json!({"id": "button"});
+    assert_eq!(super::row_scope_and_name(&obj_row), Some(("my.scope", "ui/button")));
+    assert_eq!(super::row_scope_and_name(&str_row), Some(("my.scope", "ui/button")));
+    assert_eq!(super::row_scope_and_name(&unscoped), None);
+    assert_eq!(super::row_scope_and_name(&unscoped_str), None);
+}

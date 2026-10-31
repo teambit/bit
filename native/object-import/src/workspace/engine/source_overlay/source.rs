@@ -17,14 +17,15 @@ impl Spool {
     pub(super) fn parse(value: &Value) -> io::Result<Self> {
         let path = value["spoolPath"].as_str().ok_or_else(|| invalid("overlay spool path"))?;
         let size = value["bytes"].as_u64().ok_or_else(|| invalid("overlay spool size"))?;
-        let hash = value["spoolHash"].as_str().ok_or_else(|| invalid("overlay spool hash"))?;
+        let raw_hash = value["spoolHash"].as_str().ok_or_else(|| invalid("overlay spool hash"))?;
+        let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash.trim())?);
         crate::workspace::engine::path(std::path::Path::new(path))?;
         if size > 1024 * 1024 {
             return Err(invalid("overlay source size"));
         }
         let offset = value["spoolOffset"].as_u64().unwrap_or(0);
         offset.checked_add(size).ok_or_else(|| invalid("overlay spool overflow"))?;
-        Ok(Self { path: PathBuf::from(path), offset, size, hash: hash.to_owned() })
+        Ok(Self { path: PathBuf::from(path), offset, size, hash })
     }
     pub(super) fn read(&self) -> io::Result<Vec<u8>> {
         let mut file = fs::File::open(&self.path)?;

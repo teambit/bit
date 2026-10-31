@@ -1,12 +1,14 @@
 //! `package-name-utils.ts`: `extractPackageName` and `isValidPackageName`
 //! (`validate-npm-package-name`'s `validForOldPackages`).
 
-const ALLOWED_PREFIXES: [&str; 4] = ["https://", "git:", "git+ssh://", "git+https://"];
+const ALLOWED_PREFIXES: [&str; 8] =
+    ["https://", "http://", "git:", "git+ssh://", "git+https://", "file:", "link:", "workspace:"];
 const BLOCKLIST: [&str; 2] = ["node_modules", "favicon.ico"];
 
 /// The package name of an install argument, without its version or tag.
 #[must_use]
 pub fn extract_package_name(argument: &str) -> String {
+    let argument = argument.trim();
     if ALLOWED_PREFIXES
         .iter()
         .any(|prefix| argument.starts_with(prefix))

@@ -23,6 +23,7 @@ impl Planned {
         if prepared["requiresDependentsGraph"] != true {
             return Err(io::Error::other("native dependents graph phase missing"));
         }
+        let lane = has_active_lane(&prepared["currentLane"]);
         let rows = json!({"bitmapCount":0,"imports":prepared["progress"],"loads":[]});
         if let Some(progress) = Progress::parse(Some(&rows))? {
             progress.render_inbound(
@@ -31,7 +32,7 @@ impl Planned {
                 options.wildcards().is_empty() && !options.ids.is_empty(),
                 !options.wildcards().is_empty(),
                 None,
-                prepared["currentLane"].is_string(),
+                lane,
             );
         }
         output.status("finding dependents");
@@ -40,7 +41,7 @@ impl Planned {
         lifecycle.acknowledge(root, &prepared)?;
         let rows = json!({"bitmapCount":0,"imports":prepared["graphProgress"],"loads":[]});
         if let Some(progress) = Progress::parse(Some(&rows))? {
-            progress.render_inbound_continuation(output, prepared["currentLane"].is_string());
+            progress.render_inbound_continuation(output, has_active_lane(&prepared["currentLane"]));
         }
         Self::from_prepared(engine, prepared, options, ids, chalk, true)
     }
@@ -52,7 +53,10 @@ impl Planned {
     ) -> io::Result<()> {
         let captured = lifecycle.dependency_facts(root)?;
         let mut completed: Value = self.engine.request(&json!({"kind":"commandInboundWriteDependencies","token":self.prepared["token"],"facts":captured["facts"],"readSet":captured["readSet"]}))?;
-        if let Some(receipt) = completed.get("checkoutPolicyPreparation") {
+        if let Some(receipt) = completed
+            .get("checkoutPolicyPreparation")
+            .filter(|value| !value.is_null())
+        {
             let semver = workspace_command::checkout_policy::semver(receipt)?;
             completed = self.engine.request(&json!({"kind":"commandInboundPolicyComplete","token":self.prepared["token"],"semver":semver}))?;
         }
@@ -74,4 +78,13 @@ impl Planned {
         self.receipt = receipt;
         Ok(())
     }
+}
+
+fn has_active_lane(value: &Value) -> bool {
+    value
+        .as_str()
+        .or_else(|| value.get("name").and_then(Value::as_str))
+        .or_else(|| value.get("id").and_then(Value::as_str))
+        .map(str::trim)
+        .is_some_and(|name| !name.is_empty() && name != "main")
 }

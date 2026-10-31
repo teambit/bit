@@ -2,6 +2,9 @@
 //! the model's `bindingPrefix`. Objects are zlib-deflated files at
 //! `<scope>/objects/<2 hex>/<38 hex>` holding `<type> <hash> <size>\0<json>`.
 
+#[cfg(test)]
+mod tests;
+
 use super::{ENV_OF_ENVS, component_package_name};
 use crate::{config::aspect_id_without_version, model::ComponentId};
 use flate2::read::ZlibDecoder;
@@ -316,6 +319,3 @@ pub fn sha1_hex(text: &str) -> String {
 fn corrupt(path: &Path) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, format!("corrupted scope object {}", path.display()))
 }
-
-#[cfg(test)]
-mod tests;

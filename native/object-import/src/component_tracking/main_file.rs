@@ -34,27 +34,34 @@ pub(super) fn choose(
 }
 
 fn inferred(directory: &str, files: &[String]) -> Option<String> {
-    for name in [
-        "index",
-        directory
-            .rsplit('/')
-            .next()
-            .unwrap_or_default(),
-    ] {
-        for extension in EXTENSIONS {
-            if let Some(found) = find(&format!("{name}.{extension}"), directory, files) {
-                return Some(found);
-            }
-        }
-    }
-    for name in ["public-api.ts", "public_api.ts"] {
-        if let Some(found) = find(name, directory, files) {
-            return Some(found);
-        }
-    }
-    None
+    let clean_dir = directory
+        .trim()
+        .trim_end_matches(['/', '\\']);
+    let leaf = clean_dir
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or_default();
+    ["index", leaf]
+        .into_iter()
+        .filter(|name| !name.is_empty())
+        .flat_map(|name| {
+            EXTENSIONS
+                .iter()
+                .map(move |extension| format!("{name}.{extension}"))
+        })
+        .find_map(|candidate| find(&candidate, clean_dir, files))
+        .or_else(|| {
+            ["public-api.ts", "public_api.ts"]
+                .into_iter()
+                .find_map(|name| find(name, clean_dir, files))
+        })
 }
 fn find(name: &str, directory: &str, files: &[String]) -> Option<String> {
+    let normalized = name.trim().replace('\\', "/");
+    let name = normalized.strip_prefix("./").unwrap_or(&normalized);
+    let clean_dir = directory
+        .trim()
+        .trim_end_matches(['/', '\\']);
     if let Some(found) = files
         .iter()
         .find(|file| file.as_str() == name)
@@ -63,13 +70,13 @@ fn find(name: &str, directory: &str, files: &[String]) -> Option<String> {
     }
     if let Some(found) = files
         .iter()
-        .find(|file| format!("{directory}/{file}") == name)
+        .find(|file| format!("{clean_dir}/{file}") == name)
     {
         return Some(found.clone());
     }
     files
         .iter()
-        .filter(|file| Path::new(file).file_name().and_then(|name| name.to_str()) == Some(name))
+        .filter(|file| Path::new(file).file_name().and_then(|part| part.to_str()) == Some(name))
         .min_by_key(|file| file.matches('/').count())
         .cloned()
 }

@@ -175,7 +175,11 @@ fn reachable(root: &Value, by_id: &HashMap<String, Value>) -> (HashSet<String>, 
         );
         let Some(edge) = by_id.get(&node) else { continue };
         edges.insert(node.clone());
-        if let Some(package) = edge["attr"]["pkgId"].as_str() {
+        if let Some(package) = edge["attr"]["pkgId"]
+            .as_str()
+            .or_else(|| edge["pkgId"].as_str())
+            .filter(|value| !value.is_empty())
+        {
             packages.insert(package.to_owned());
         }
         stack.extend(neighbour_ids(edge));
@@ -212,7 +216,11 @@ fn root_mut(graph: &mut Value) -> Option<&mut Value> {
 }
 
 pub fn id(value: &Value) -> &str {
-    value["id"].as_str().unwrap_or_default()
+    value
+        .as_str()
+        .or_else(|| value["id"].as_str())
+        .or_else(|| value["nodeId"].as_str())
+        .unwrap_or_default()
 }
 
 pub fn packages(graph: &Value) -> &Map<String, Value> {

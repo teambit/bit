@@ -4,6 +4,8 @@
 pub use labels::{Labels, PERSIST_TAG, SNAP, SOFT_TAG, TAG};
 
 mod labels;
+#[cfg(test)]
+mod versions_tests;
 
 use super::{format::Formatter, results::Report};
 use crate::commands::{
@@ -90,7 +92,8 @@ fn pinned_dependents(value: Option<&Value>) -> io::Result<Vec<(Id, Vec<String>)>
         .iter()
         .map(|row| {
             let map = object(row)?;
-            let id = Id::parse(text(map.get("id"))?)?;
+            let raw_id = map.get("id").ok_or_else(|| decline("native snap identity"))?;
+            let id = Id::from_object(raw_id)?;
             let deps = array(map.get("pinnedDependencies"), "pinned dependencies")?
                 .iter()
                 .map(|dep| text(Some(dep)).map(str::to_string))
@@ -157,7 +160,8 @@ fn automatic_row(
     {
         return Err(decline("native snap automatic component"));
     }
-    let id = versions(vec![Id::parse(text(map.get("id"))?)?], labels)?.remove(0);
+    let raw_id = map.get("id").ok_or_else(|| decline("native snap identity"))?;
+    let id = versions(vec![Id::from_object(raw_id)?], labels)?.remove(0);
     let triggered = ids(map.get("triggeredBy"))?;
     if triggered.is_empty()
         || triggered
@@ -178,7 +182,7 @@ fn ids(value: Option<&Value>) -> io::Result<Vec<Id>> {
     let mut seen = HashSet::new();
     rows.iter()
         .map(|row| {
-            let id = Id::parse(text(Some(row))?)?;
+            let id = Id::from_object(row)?;
             if !seen.insert(id.without_version()) {
                 return Err(decline("native snap duplicate identity"));
             }
@@ -390,6 +394,3 @@ fn in_bold(chalk: Chalk, id: &Id) -> String {
         .map_or_else(String::new, |version| format!("@{version}"));
     format!("{}{version}", chalk.bold(&id.without_version()))
 }
-
-#[cfg(test)]
-mod versions_tests;

@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{Material, invalid, snapshot};
 use crate::workspace::engine::{command::repository::Repository, status_history};
 use serde_json::Value;
@@ -44,6 +47,3 @@ fn tag_history(
     }
     Ok(Some(history))
 }
-
-#[cfg(test)]
-mod tests;

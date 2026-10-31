@@ -109,7 +109,12 @@ fn required_base(
             continue;
         };
         let current_hash = crate::validate::hexadecimal(&Sha1::digest(&loaded.normalized));
-        needed[index] = current_hash != base.files[index].hash && current_hash != other_hash;
+        needed[index] = !same_hash(&current_hash, &base.files[index].hash)
+            && !same_hash(&current_hash, other_hash);
     }
     needed
+}
+
+fn same_hash(left: &str, right: &str) -> bool {
+    left.trim().eq_ignore_ascii_case(right.trim())
 }

@@ -84,9 +84,17 @@ fn default_message(version: &mut Value, pending: &Value) {
         return;
     }
     let id = &pending["laneId"];
-    version["log"]["message"] = json!(format!(
-        "merge {}/{}",
-        id["scope"].as_str().unwrap_or_default(),
-        id["name"].as_str().unwrap_or_default()
-    ));
+    let lane_id = id
+        .as_str()
+        .map_or_else(
+            || {
+                format!(
+                    "{}/{}",
+                    id["scope"].as_str().unwrap_or_default(),
+                    id["name"].as_str().unwrap_or_default(),
+                )
+            },
+            str::to_owned,
+        );
+    version["log"]["message"] = json!(format!("merge {lane_id}"));
 }

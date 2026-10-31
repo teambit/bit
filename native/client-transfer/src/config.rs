@@ -1,4 +1,7 @@
 //! Published config-getter precedence for transport, authentication and remote resolution.
+#[cfg(test)]
+mod tests;
+
 use crate::GlobalConfig;
 use serde_json::Value;
 
@@ -52,6 +55,3 @@ fn layers(
     .into_iter()
     .collect()
 }
-
-#[cfg(test)]
-mod tests;

@@ -14,7 +14,11 @@ fn parses_git_subcommands_and_flags() {
         Some(Parsed::MergeBitmaps { current: "cur".to_owned(), other: "oth".to_owned() }),
     );
     assert_eq!(
-        parse_args(&[OsString::from("git"), OsString::from("set-merge-driver")]),
+        parse_args(&[
+            OsString::from("git"),
+            OsString::from("set-merge-driver"),
+            OsString::from("--no-color=false"),
+        ]),
         Some(Parsed::SetMergeDriver { global: false }),
     );
     assert_eq!(

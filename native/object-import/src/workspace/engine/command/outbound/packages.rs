@@ -119,10 +119,7 @@ fn component(
     let Some(row) = rows
         .iter()
         .filter(|row| row["isSymlink"] != true)
-        .find(|row| {
-            row["id"].as_str() == Some(identity)
-                || (row["id"]["scope"] == scope && row["id"]["name"] == name)
-        })
+        .find(|row| super::super::inbound::remote::file_list::row_lane_matches(row, scope, name))
     else {
         return Ok(None);
     };

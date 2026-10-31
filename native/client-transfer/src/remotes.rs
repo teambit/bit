@@ -160,8 +160,10 @@ pub fn not_found_or_denied(scope: &str) -> io::Error {
 
 pub fn global_remotes(dir: &Path) -> io::Result<IndexMap<String, String>> {
     match fs::read(dir.join(GLOBAL_REMOTES)) {
-        Ok(bytes) => Ok(serde_json::from_slice::<IndexMap<String, Value>>(&bytes)
-            .map_err(|_| invalid("invalid global-remotes.json"))?
+        Ok(bytes) => Ok(bit_workspace_config::parse_jsonc(&bytes)
+            .ok()
+            .and_then(|value| serde_json::from_value::<IndexMap<String, Value>>(value).ok())
+            .ok_or_else(|| invalid("invalid global-remotes.json"))?
             .into_iter()
             .filter_map(|(name, host)| Some((name, host.as_str()?.to_string())))
             .collect()),

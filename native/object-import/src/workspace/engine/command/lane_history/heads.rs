@@ -18,7 +18,8 @@ pub(in crate::workspace::engine::command) fn remote(
         .join(scope)
         .join(name);
     let Some(bytes) = proof::read(&path, &mut record.proofs)? else { return Ok(None) };
-    let rows: Vec<Value> = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+    let rows: Vec<Value> = crate::parse_jsonc(&bytes)
+        .and_then(|val| serde_json::from_value(val).map_err(io::Error::other))?;
     if rows.len() > 4096 {
         return Err(invalid("history remote lane component budget"));
     }

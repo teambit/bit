@@ -9,6 +9,8 @@ pub(super) mod remote;
 pub(super) use super::current::read_current;
 pub(super) use metadata::{Tracking, components_report};
 pub(super) use remote::project as project_http;
+#[cfg(test)]
+mod list_tests;
 mod merged;
 mod metadata;
 
@@ -254,7 +256,7 @@ fn apply_list_arg<'a>(
         return Some(());
     }
     match arg {
-        "--no-color" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" => {}
         "--json" | "-j" | "--json=true" => flags.json = true,
         "--json=false" => flags.json = false,
         "--details" | "-d" | "--details=true" => flags.details = true,
@@ -387,6 +389,3 @@ fn main_components(
     }
     Ok(components)
 }
-
-#[cfg(test)]
-mod list_tests;

@@ -1,4 +1,7 @@
 //! Keep tool control separate from inherited user stdout and stderr.
+#[cfg(test)]
+mod tests;
+
 use super::{Assets, LIMIT, Target, Value, discovery, invalid, json};
 use std::{
     ffi::OsString,
@@ -204,6 +207,3 @@ fn write_output(stderr: bool, bytes: &[u8]) -> io::Result<()> {
 fn join(handle: JoinHandle<io::Result<()>>) -> io::Result<()> {
     handle.join().map_err(|_| invalid("tester output thread"))?
 }
-
-#[cfg(test)]
-mod tests;

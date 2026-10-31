@@ -39,12 +39,7 @@ pub(super) struct Identity {
 }
 impl Identity {
     fn matches(&self, entry: &Value) -> bool {
-        entry
-            .get("id")
-            .is_some_and(|id| {
-                id.get("name").and_then(Value::as_str) == Some(self.name.as_str())
-                    && id.get("scope").and_then(Value::as_str) == self.scope.as_deref()
-            })
+        identity(entry).is_ok_and(|other| other.name == self.name && other.scope == self.scope)
     }
 }
 impl State {
@@ -85,8 +80,8 @@ impl State {
         Ok(output)
     }
     pub(super) fn contents(&self, contents: &str) -> io::Result<()> {
-        let entries: Vec<Value> = serde_json::from_str(contents).map_err(io::Error::other)?;
-        if entries != self.entries {
+        let entries = crate::parse_jsonc(contents.as_bytes())?;
+        if entries.as_array() != Some(&self.entries) {
             return Err(invalid("merge commit does not match native state"));
         }
         Ok(())
@@ -130,7 +125,15 @@ impl State {
 }
 fn identity(entry: &Value) -> io::Result<Identity> {
     let id = entry.get("id").ok_or_else(|| invalid("missing unmerged identity"))?;
-    let identity: Identity = serde_json::from_value(id.clone()).map_err(io::Error::other)?;
+    let identity = if let Some(raw) = id.as_str() {
+        let raw = raw.split('@').next().unwrap_or(raw);
+        let (scope, name) = raw
+            .split_once('/')
+            .map_or((None, raw), |(scope, name)| (Some(scope.to_owned()), name));
+        Identity { scope, name: name.to_owned() }
+    } else {
+        serde_json::from_value(id.clone()).map_err(io::Error::other)?
+    };
     if identity.name.is_empty() || identity.name.contains('\0') {
         return Err(invalid("invalid unmerged name"));
     }
@@ -149,7 +152,10 @@ fn validate(entries: &[Value]) -> io::Result<()> {
             .and_then(Value::as_str)
             .ok_or_else(|| invalid("missing unmerged head"))?;
         hash(head)?;
-        if !entry.get("laneId").is_some_and(Value::is_object) {
+        if entry
+            .get("laneId")
+            .is_none_or(|lane| crate::command_import::lane::parse_lane_id(lane).is_err())
+        {
             return Err(invalid("invalid unmerged lane"));
         }
     }

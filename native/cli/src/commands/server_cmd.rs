@@ -49,7 +49,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         let arg = args[idx];
         match arg {
             "--" => return (idx + 1 == args.len()).then_some(options),
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-c" | "--compile" | "--compile=true" => options.compile = true,
             "--compile=false" => options.compile = false,
             "-p" | "--port" => {

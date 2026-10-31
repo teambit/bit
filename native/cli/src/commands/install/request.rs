@@ -45,7 +45,7 @@ fn scope_custom_aspects(root: &Path, custom: &impl Fn(&str) -> bool) -> io::Resu
     let raw = bit_install::jsonc::parse(&std::fs::read_to_string(path)?)?;
     Ok(raw
         .as_object()
-        .is_none_or(|entries| {
+        .is_some_and(|entries| {
             entries
                 .keys()
                 .any(|id| id != "$schema" && id.contains('/') && custom(id))
@@ -119,12 +119,17 @@ pub(in crate::commands) fn confirm(question: &str) -> io::Result<bool> {
 /// chalk's decision: `FORCE_COLOR`, then `NO_COLOR`, then a non-dumb terminal.
 pub(super) fn color_enabled(tty: bool) -> bool {
     if let Ok(force) = std::env::var("FORCE_COLOR") {
-        return force != "0" && force != "false";
+        return parse_force_color(&force);
     }
-    if std::env::var_os("NO_COLOR").is_some() {
+    if std::env::var_os("NO_COLOR").is_some_and(|val| !val.is_empty()) {
         return false;
     }
-    tty && std::env::var("TERM").is_ok_and(|term| term != "dumb")
+    tty && std::env::var("TERM").is_ok_and(|term| !term.trim().eq_ignore_ascii_case("dumb"))
+}
+
+fn parse_force_color(force: &str) -> bool {
+    let trimmed = force.trim();
+    !trimmed.eq_ignore_ascii_case("0") && !trimmed.eq_ignore_ascii_case("false")
 }
 
 /// The `yn` package: true for `true`, `1`, `yes`, `y`, `on`.

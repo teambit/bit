@@ -2,6 +2,9 @@
 //! `@teambit/legacy.component-diff`, and `diffFiles`, which runs
 //! `git diff --no-index --color` on two files.
 
+#[cfg(test)]
+mod files_tests;
+
 use regress::Regex;
 use std::{
     fs, io,
@@ -111,6 +114,3 @@ impl Drop for TempDir {
         let _ = fs::remove_dir_all(&self.0);
     }
 }
-
-#[cfg(test)]
-mod files_tests;

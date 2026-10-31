@@ -21,15 +21,14 @@ pub(in crate::workspace::engine::command) fn select_targets(
     }
     let mut selected = Vec::new();
     for target in targets {
-        let identity =
-            target["identity"].as_str().ok_or_else(|| invalid("command merge identity"))?;
-        let Some(model) = model(context, identity)? else {
+        let identity = target_identity(&target).ok_or_else(|| invalid("command merge identity"))?;
+        let Some(model) = model(context, &identity)? else {
             continue;
         };
-        let remote = repository.remote_head(identity)?;
+        let remote = repository.remote_head(&identity)?;
         let distance = history.distance(
             &request.root,
-            identity,
+            &identity,
             &model,
             [model["head"].as_str(), remote.as_deref()],
             repository,
@@ -41,4 +40,33 @@ pub(in crate::workspace::engine::command) fn select_targets(
         }
     }
     Ok(selected)
+}
+
+fn target_identity(target: &Value) -> Option<String> {
+    if let Some(identity) = target["identity"]
+        .as_str()
+        .or_else(|| target["id"].as_str())
+        .filter(|value| !value.is_empty())
+    {
+        return Some(
+            identity
+                .split('@')
+                .next()
+                .unwrap_or(identity)
+                .to_owned(),
+        );
+    }
+    let object = target["id"].as_object()?;
+    let name = object
+        .get("name")?
+        .as_str()
+        .filter(|value| !value.is_empty())?;
+    match object
+        .get("scope")
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty())
+    {
+        Some(scope) => Some(format!("{scope}/{name}")),
+        None => Some(name.to_owned()),
+    }
 }

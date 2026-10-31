@@ -1,6 +1,9 @@
 //! Resolve a package spec to a concrete version for `bit install <pkg>`
 //! (`resolveRemoteVersion` in `lynx.ts`).
 
+#[cfg(test)]
+mod tests;
+
 use super::{
     EngineSettings,
     config_overlay::{Query, http_client, query_config},
@@ -158,6 +161,3 @@ pub(super) fn parse_package_name(input: &str) -> Option<(String, String)> {
     };
     Some((group(1).to_string(), group(3).to_string()))
 }
-
-#[cfg(test)]
-mod tests;

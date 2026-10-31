@@ -13,7 +13,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
                 consume_trailing_pattern(iter, &mut options.pattern)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
                 options.skip_installation = true;
             }

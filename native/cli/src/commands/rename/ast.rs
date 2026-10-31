@@ -35,7 +35,15 @@ pub(super) fn transform(
         fs::write(&stored, bytes)?;
         rows.push(json!({"spool":stored,"filename":path}));
     }
-    linker.call(root,"renameAst",&json!({"files":rows,"sourceName":plan.identity.source_name.rsplit('/').next(),"targetName":plan.identity.target_name.rsplit('/').next()}))?;
+    linker.call(
+        root,
+        "renameAst",
+        &json!({
+            "files": rows,
+            "sourceName": short_component_name(&plan.identity.source_name),
+            "targetName": short_component_name(&plan.identity.target_name),
+        }),
+    )?;
     print!("{}", linker.take_stdout());
     for (index, (path, _)) in inputs.iter().enumerate() {
         let source = spool.0.join(index.to_string());
@@ -46,4 +54,13 @@ pub(super) fn transform(
         plan.transformed(path, fs::read(source)?)?;
     }
     Ok(())
+}
+
+fn short_component_name(name: &str) -> Option<&str> {
+    let normalized = name.trim().trim_end_matches('/');
+    normalized
+        .rsplit('/')
+        .next()
+        .map(str::trim)
+        .filter(|segment| !segment.is_empty())
 }

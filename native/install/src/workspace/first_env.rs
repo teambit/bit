@@ -4,6 +4,9 @@
 //! component's env. An aspect that is not in the workspace is read from the
 //! scope at its configured version, or at its head without one.
 
+#[cfg(test)]
+mod tests;
+
 use super::{DEFAULT_ENV, aspects::CORE_ENVS, scope_model::ScopeObjects};
 use crate::{
     config::{ENVS_ASPECT, aspect_id_without_version},
@@ -80,6 +83,3 @@ fn is_env_component(id: &str, envs: &[(String, bool)], objects: &ScopeObjects) -
     let Some(model) = objects.aspect(id)? else { return Ok(false) };
     Ok(model.has_env_manifest() || model.uses_env_of_envs())
 }
-
-#[cfg(test)]
-mod tests;

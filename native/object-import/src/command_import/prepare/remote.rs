@@ -20,14 +20,23 @@ pub(in crate::command_import) fn settings_for_lane(
         || value
             .get("config")
             .is_some_and(|config| !config.is_object())
-        || (!allow_lane
-            && value["lanes"]["current"]
-                .as_str()
-                .is_some_and(|lane| lane != "main"))
+        || (!allow_lane && is_non_main_lane(&value["lanes"]["current"]))
     {
         return Err(invalid("import scope needs canonical configuration"));
     }
     Ok(())
+}
+
+fn is_non_main_lane(current: &Value) -> bool {
+    let lane = current
+        .as_str()
+        .or_else(|| current["name"].as_str())
+        .or_else(|| current["id"].as_str())
+        .or_else(|| current["id"]["name"].as_str());
+    lane.is_some_and(|name| {
+        let short = name.rsplit('/').next().unwrap_or(name);
+        !short.is_empty() && short != "main"
+    })
 }
 pub(super) fn remote(
     plan: &mut PreparedImport,

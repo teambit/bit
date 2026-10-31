@@ -20,9 +20,10 @@ pub(crate) struct State {
 
 impl State {
     pub(super) fn cancel(&mut self, input: &Value) -> io::Result<Value> {
-        if input
-            .as_object()
-            .is_none_or(|input| !input.is_empty())
+        if !input.is_null()
+            && input
+                .as_object()
+                .is_none_or(|object| !object.is_empty())
         {
             return Err(invalid("unsupported transfer cancellation"));
         }

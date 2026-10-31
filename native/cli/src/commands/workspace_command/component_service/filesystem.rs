@@ -10,9 +10,11 @@ pub(in crate::commands) fn error(
     let (code, unix_errno, windows_errno) = match error.kind() {
         io::ErrorKind::PermissionDenied => ("EACCES", -13, -4092),
         io::ErrorKind::NotFound => ("ENOENT", -2, -4058),
+        io::ErrorKind::AlreadyExists => ("EEXIST", -17, -4075),
         io::ErrorKind::NotADirectory => ("ENOTDIR", -20, -4052),
         io::ErrorKind::IsADirectory => ("EISDIR", -21, -4068),
         io::ErrorKind::ReadOnlyFilesystem => ("EROFS", -30, -4034),
+        io::ErrorKind::DirectoryNotEmpty => ("ENOTEMPTY", -39, -4051),
         _ => return Err(error),
     };
     let errno = if cfg!(windows) { windows_errno } else { unix_errno };
@@ -28,13 +30,22 @@ pub(in crate::commands) fn message(
     let description = match code {
         "EACCES" => "permission denied",
         "ENOENT" => "no such file or directory",
+        "EEXIST" => "file already exists",
         "ENOTDIR" => "not a directory",
         "EISDIR" => "illegal operation on a directory",
         "EROFS" => "read-only file system",
+        "ENOTEMPTY" => "directory not empty",
         _ => return Err(invalid("service filesystem error")),
     };
-    let path = error["path"].as_str().ok_or_else(|| invalid("service error path"))?;
-    let syscall = error["syscall"].as_str().ok_or_else(|| invalid("service error syscall"))?;
+    let path = error["path"]
+        .as_str()
+        .or_else(|| error["filePath"].as_str())
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| invalid("service error path"))?;
+    let syscall = error["syscall"]
+        .as_str()
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| invalid("service error syscall"))?;
     Ok(format!(
         r#"service "{service}" of env "{environment}" has failed. error: {code}: {description}, {syscall} '{path}'"#,
     ))

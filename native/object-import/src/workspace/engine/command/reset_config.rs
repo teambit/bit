@@ -1,4 +1,12 @@
 //! Reset's existing component.json writer. Bitmap overrides are cleared separately.
+#[cfg(target_os = "linux")]
+mod attributes;
+mod checkout;
+mod configurations;
+mod paths;
+#[cfg(test)]
+mod tests;
+
 use super::{Record, invalid, planning, proof};
 use serde_json::{Map, Value, json};
 use std::{collections::HashSet, io, path::PathBuf};
@@ -59,7 +67,7 @@ fn prepare_with(record: &Record, plan: &planning::Planned, checkout: bool) -> io
             }
             continue;
         };
-        let original: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+        let original: Value = crate::parse_jsonc(&bytes).map_err(io::Error::other)?;
         if original != target["config"] {
             return Err(invalid("reset configuration changed"));
         }
@@ -80,7 +88,7 @@ pub(super) fn merge(record: &Record, rows: &[super::policy::Row]) -> io::Result<
         let target = configuration_target(record, &row.identity)?;
         let path = record.request.root.join(&row.baseline.directory).join("component.json");
         let Some(bytes) = proof::read(&path, &mut prepared.proofs)? else { continue };
-        let original: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+        let original: Value = crate::parse_jsonc(&bytes).map_err(io::Error::other)?;
         if original != target["config"] {
             return Err(invalid("merge configuration changed"));
         }
@@ -199,10 +207,3 @@ impl Prepared {
         Ok(())
     }
 }
-#[cfg(target_os = "linux")]
-mod attributes;
-mod checkout;
-mod configurations;
-mod paths;
-#[cfg(test)]
-mod tests;

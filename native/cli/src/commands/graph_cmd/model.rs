@@ -159,9 +159,18 @@ pub(super) fn write_svg_file(graph: &CompGraph) -> Result<PathBuf, Failure> {
     );
     for (idx, node) in graph.nodes.iter().enumerate() {
         let y_pos = 30 + idx * 24;
-        let _ = writeln!(body, r#"  <text x="20" y="{y_pos}">{node}</text>"#);
+        let escaped = escape_xml(node);
+        let _ = writeln!(body, r#"  <text x="20" y="{y_pos}">{escaped}</text>"#);
     }
     body.push_str("</svg>\n");
     fs::write(&svg_path, body).map_err(|err| Failure::Declined(err.to_string()))?;
     Ok(svg_path)
+}
+
+fn escape_xml(text: &str) -> String {
+    text.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&apos;")
 }

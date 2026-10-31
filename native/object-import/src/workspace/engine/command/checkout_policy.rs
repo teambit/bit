@@ -1,11 +1,11 @@
 //! Inputs for `ConfigMergerMain.updateDepsInWorkspaceConfig` after checkout.
 
+mod publication;
+
 use super::{State, invalid, materialization};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{io, path::Path};
-
-mod publication;
 
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 

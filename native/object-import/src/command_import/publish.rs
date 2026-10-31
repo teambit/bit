@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{PreparedImport, capture::Object, invalid};
 use crate::{mutable_store, store::Store};
 use flate2::{Compression, write::ZlibEncoder};
@@ -147,6 +150,3 @@ pub(super) fn write_file(path: &Path, bytes: &[u8]) -> io::Result<()> {
         .open(path)?;
     file.write_all(bytes)
 }
-
-#[cfg(test)]
-mod tests;

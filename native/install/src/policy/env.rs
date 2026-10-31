@@ -83,9 +83,12 @@ fn from_key(config: &Value, key: &str, options: &KeyOptions) -> io::Result<Vec<P
 }
 
 fn key_entry(item: &Value, key: &str, options: &KeyOptions) -> io::Result<PolicyEntry> {
+    let fallback_key =
+        if options.version_key == "supportedRange" { "version" } else { "supportedRange" };
     let version = item
         .get(options.version_key)
         .filter(|value| truthy(value))
+        .or_else(|| item.get(fallback_key).filter(|value| truthy(value)))
         .and_then(Value::as_str)
         .ok_or_else(|| {
             io::Error::new(
@@ -98,6 +101,7 @@ fn key_entry(item: &Value, key: &str, options: &KeyOptions) -> io::Result<Policy
         })?;
     let name = item
         .get("name")
+        .or_else(|| item.get("packageName"))
         .and_then(Value::as_str)
         .unwrap_or_default();
     let flag = |field: &str| item.get(field).is_some_and(truthy);
@@ -130,7 +134,10 @@ pub fn merge_manifests(parent: &Value, child: &Value) -> Value {
             })
             .collect();
         merged.extend(children);
-        merged.retain(|entry| entry.get("version").and_then(Value::as_str) != Some("-"));
+        merged.retain(|entry| {
+            entry.get("version").and_then(Value::as_str) != Some("-")
+                && entry.get("supportedRange").and_then(Value::as_str) != Some("-")
+        });
         policy.insert(key.to_owned(), Value::Array(merged));
     }
     let mut result = json!({ "policy": policy, "patterns": merge_patterns(parent, child) });

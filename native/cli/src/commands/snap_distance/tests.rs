@@ -40,3 +40,21 @@ fn computes_distance_and_common_ancestor() {
     assert_eq!(dist["snapsOnTargetOnly"], json!([{ "hash": tgt }]));
     assert_eq!(dist["commonSnapBeforeDiverge"], json!({ "hash": base }));
 }
+
+#[test]
+fn bitmap_lane_helpers_accept_object_and_string_lane_ids() {
+    let obj_bitmap = json!({
+        "_bit_lane": {
+            "id": {"scope": "my.scope", "name": "dev"},
+            "exported": true
+        }
+    });
+    let str_bitmap = json!({
+        "_bit_lane": {
+            "id": "my.scope/dev",
+            "exported": true
+        }
+    });
+    assert_eq!(super::bitmap_lane_scope_and_name(&obj_bitmap), Some(("my.scope", "dev")));
+    assert_eq!(super::bitmap_lane_scope_and_name(&str_bitmap), Some(("my.scope", "dev")));
+}

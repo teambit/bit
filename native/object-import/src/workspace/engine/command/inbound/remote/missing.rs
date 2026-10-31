@@ -2,6 +2,9 @@
 //! without dependencies returned: the requested components to fetch again with their
 //! dependencies, as `importMany` does after `importWithoutDeps`.
 
+#[cfg(test)]
+mod tests;
+
 use crate::{checkout::repository, merge_history, validate::hexadecimal};
 use bit_client_transfer::tar::ObjectItem;
 use serde_json::Value;
@@ -157,6 +160,3 @@ fn dependency_id(value: &Value) -> Option<String> {
         .or(inline_ver)?;
     Some(format!("{scope}/{name}@{ver}"))
 }
-
-#[cfg(test)]
-mod tests;

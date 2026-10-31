@@ -54,14 +54,13 @@ fn file(raw: &Value) -> Value {
 }
 
 pub(super) fn aggregate(rows: Vec<Value>, errors: Vec<Value>) -> Value {
-    let mut result = json!({"results":[]});
-    result["results"] = Value::Array(rows);
+    let mut result = json!({"results": Value::Array(rows)});
     for (_, total, _, _) in COUNTS {
         result[total] = json!(
             result["results"]
                 .as_array()
-                .unwrap()
-                .iter()
+                .into_iter()
+                .flatten()
                 .map(|row| row[total].as_u64().unwrap_or(0))
                 .sum::<u64>()
         );
@@ -70,8 +69,8 @@ pub(super) fn aggregate(rows: Vec<Value>, errors: Vec<Value>) -> Value {
         result[components] = json!(
             result["results"]
                 .as_array()
-                .unwrap()
-                .iter()
+                .into_iter()
+                .flatten()
                 .filter(|row| row[total].as_u64().unwrap_or(0) > 0)
                 .count()
         );

@@ -41,7 +41,11 @@ impl EngineError {
 impl fmt::Display for EngineError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str(&self.message)?;
-        match &self.hint {
+        match self.hint
+            .as_deref()
+            .map(str::trim)
+            .filter(|hint| !hint.is_empty())
+        {
             Some(hint) => write!(formatter, "\n\n{hint}"),
             None => Ok(()),
         }

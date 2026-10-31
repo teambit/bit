@@ -1,7 +1,10 @@
 //! Bounded scope acquisition and listing across HTTP and file remotes.
-pub(in crate::workspace::engine) mod file_list;
+pub(crate) mod file_list;
 pub(in crate::workspace::engine) mod inventory;
+
 pub(in crate::workspace::engine::command) use history::{history_remote, history_remote_at};
+pub(in crate::workspace::engine::command) use lane_list::lane_entries;
+
 mod connection;
 mod history;
 mod lane_list;
@@ -22,9 +25,10 @@ use bit_client_transfer::{
 };
 use connection::{connect, global_config};
 use futures_util::{StreamExt, TryStreamExt, stream};
+use lane_list::{lane_targets, remote_lane};
 use serde_json::{Value, json};
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::{BTreeMap, HashMap, HashSet, hash_map::Entry},
     io,
     path::Path,
 };
@@ -149,7 +153,7 @@ async fn list_pattern(
         let mut seen = listed
             .iter()
             .map(|entry| format!("{}/{}", entry.scope, entry.name))
-            .collect::<std::collections::HashSet<_>>();
+            .collect::<HashSet<_>>();
         listed.extend(
             main.into_iter()
                 .filter(|entry| seen.insert(format!("{}/{}", entry.scope, entry.name))),
@@ -166,20 +170,22 @@ pub(super) fn active_lane(root: &Path) -> io::Result<Option<lane::Id>> {
     else {
         return Ok(None);
     };
-    let (scope, name) = if let Some(raw) = row["id"].as_str() {
-        let (scope, name) = raw.split_once('/').unwrap_or(("", raw));
-        (scope.to_owned(), name.to_owned())
-    } else {
-        let scope = row["id"]["scope"]
-            .as_str()
-            .or_else(|| row["scope"].as_str())
-            .unwrap_or_default();
-        let name = row["id"]["name"]
-            .as_str()
-            .or_else(|| row["name"].as_str())
-            .unwrap_or_default();
-        (scope.to_owned(), name.to_owned())
-    };
+    let (scope, name) = file_list::row_id_parts(row)
+        .map_or_else(
+            || {
+                (
+                    row["scope"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .to_owned(),
+                    row["name"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .to_owned(),
+                )
+            },
+            |(scope, name)| (scope.unwrap_or_default().to_owned(), name.to_owned()),
+        );
     if name.is_empty() || name == "main" {
         return Ok(None);
     }
@@ -245,55 +251,6 @@ async fn fetch_lane(
         items.extend(network.fetch_bounded(url, &components, &options, MAX_INBOUND_BYTES).await?);
     }
     Ok((items, hash))
-}
-
-fn lane_targets(id: &lane::Id, items: &[ObjectItem]) -> io::Result<(String, Vec<String>)> {
-    let (hash, entries) = remote_lane(id, items)?;
-    let targets = entries
-        .into_iter()
-        .map(|entry| format!("{}@{}", entry.identity, entry.head))
-        .collect();
-    Ok((hash, targets))
-}
-
-fn remote_lane(id: &lane::Id, items: &[ObjectItem]) -> io::Result<(String, Vec<lane::Entry>)> {
-    let mut selected = None;
-    for item in items {
-        let raw = crate::checkout::repository::inflate(&item.compressed, 32 * 1024 * 1024)?;
-        if !raw.starts_with(b"Lane ") {
-            continue;
-        }
-        let (_, body) = crate::checkout::repository::split(
-            &raw,
-            crate::merge_history::hash(&item.hash)?,
-            "Lane",
-        )?;
-        let value: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
-        if value["scope"] != id.scope || value["name"] != id.name || selected.is_some() {
-            return Err(invalid("inbound HTTP Lane identity"));
-        }
-        lane::validate_value(id, &value)?;
-        let entries = lane::entries(&value)?;
-        if entries.len() > 4096 {
-            return Err(invalid("inbound HTTP Lane component limit"));
-        }
-        selected = Some((item.hash.clone(), entries));
-    }
-    selected.ok_or_else(|| invalid("inbound HTTP Lane missing"))
-}
-
-pub(super) fn lane_entries(
-    remote: &VirtualRemote,
-    hash: &str,
-    id: &lane::Id,
-) -> io::Result<Vec<lane::Entry>> {
-    let compressed = remote.objects
-        .iter()
-        .find(|(item_hash, _)| item_hash == hash)
-        .map(|(_, bytes)| bytes.clone())
-        .ok_or_else(|| invalid("inbound HTTP Lane capture"))?;
-    let item = ObjectItem { hash: hash.to_owned(), compressed, scope: None };
-    remote_lane(id, &[item]).map(|(_, entries)| entries)
 }
 
 pub(super) fn objects(input: &Prepare, targets: &[Target]) -> io::Result<Vec<VirtualRemote>> {
@@ -401,14 +358,11 @@ fn collect(
             return Err(invalid("inbound remote object bounds"));
         }
         match objects.entry(item.hash) {
-            std::collections::hash_map::Entry::Vacant(entry) => {
+            Entry::Vacant(entry) => {
                 entry.insert(item.compressed);
             }
-            std::collections::hash_map::Entry::Occupied(entry)
-                if entry.get() == &item.compressed => {}
-            std::collections::hash_map::Entry::Occupied(_) => {
-                return Err(invalid("inbound duplicate object differs"));
-            }
+            Entry::Occupied(entry) if entry.get() == &item.compressed => {}
+            Entry::Occupied(_) => return Err(invalid("inbound duplicate object differs")),
         }
     }
     retained.push(VirtualRemote {

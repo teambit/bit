@@ -10,10 +10,9 @@ pub(super) fn links(root: &Path, projection: &Projection) -> io::Result<()> {
         return Ok(());
     }
     for component in &projection.workspace.components {
+        let comp_identity = component.id.to_string_without_version();
         if component.root_dir == "."
-            || !projection.selected
-                .iter()
-                .any(|target| target["identity"] == component.id.to_string_without_version())
+            || !projection.selected.iter().any(|target| matches_target(target, &comp_identity))
         {
             continue;
         }
@@ -28,6 +27,13 @@ pub(super) fn links(root: &Path, projection: &Projection) -> io::Result<()> {
         }
     }
     Ok(())
+}
+
+fn matches_target(target: &serde_json::Value, identity: &str) -> bool {
+    target["identity"]
+        .as_str()
+        .or_else(|| target["id"].as_str())
+        .is_some_and(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base) == identity)
 }
 fn blocked_package(package: &Path) -> io::Result<bool> {
     if metadata(package)?.is_some_and(|metadata| metadata.is_file()) {

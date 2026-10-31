@@ -1,5 +1,8 @@
-use super::{MAX_OUTPUT, MAX_RAW, count, expected_hash, hash, invalid, path, read};
+#[cfg(test)]
+mod tests;
 mod workers;
+
+use super::{MAX_OUTPUT, MAX_RAW, count, expected_hash, hash, invalid, path, read};
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
@@ -260,6 +263,3 @@ fn git_diff(git: &str, left: &Path, right: &Path, color: bool) -> io::Result<Str
     }
     Ok(String::from_utf8_lossy(&bytes).into_owned())
 }
-
-#[cfg(test)]
-mod tests;

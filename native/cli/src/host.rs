@@ -6,6 +6,11 @@
 
 pub(crate) mod callback_error;
 
+#[cfg(test)]
+mod path_tests;
+#[cfg(all(test, unix))]
+mod tests;
+
 use crate::{delegate, discovery::NodeCli, trace};
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -288,9 +293,3 @@ fn progress_mode() -> &'static str {
         && env::var_os("CI").is_none();
     if progress { "1" } else { "0" }
 }
-
-#[cfg(test)]
-mod path_tests;
-
-#[cfg(all(test, unix))]
-mod tests;

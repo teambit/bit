@@ -75,7 +75,10 @@ pub(super) fn resolve(request: &mut input::Prepare, state: &State) -> io::Result
     }
     proof::verify(&retained.proofs)?;
     validate_lane(request, retained)?;
-    request.options.scope.lane_history.as_mut().unwrap().resolved = Some(phase.clone());
+    request.options.scope.lane_history
+        .as_mut()
+        .ok_or_else(|| invalid("lane history options"))?
+        .resolved = Some(phase.clone());
     Ok(())
 }
 fn validate_lane(request: &input::Prepare, retained: &Retained) -> io::Result<()> {

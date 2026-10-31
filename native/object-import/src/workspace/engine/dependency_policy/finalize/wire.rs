@@ -65,5 +65,11 @@ impl Output {
     }
 }
 pub(super) fn unversioned(value: &str) -> &str {
-    value.rsplit_once('@').map_or(value, |(identity, _)| identity)
+    let trimmed = value.trim();
+    match trimmed.rfind('@') {
+        Some(index) if index > 0 && !trimmed[index + 1..].contains('/') => {
+            trimmed[..index].trim_end()
+        }
+        _ => trimmed,
+    }
 }

@@ -18,6 +18,8 @@ mod load_order;
 mod root_components;
 #[cfg(test)]
 mod subscriber_tests;
+#[cfg(test)]
+mod tests;
 mod versions;
 
 use crate::{
@@ -340,6 +342,3 @@ pub fn package_json_dependencies(input: &ManifestInput<'_>) -> io::Result<Packag
         messages: env_root.messages,
     })
 }
-
-#[cfg(test)]
-mod tests;

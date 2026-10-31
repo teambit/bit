@@ -55,7 +55,10 @@ pub(super) fn selection(
 }
 
 pub(super) fn validate_lane_groups(prepared: &Value, options: &Options) -> io::Result<()> {
-    let Some(groups) = prepared.get("laneGroups") else {
+    let Some(groups) = prepared
+        .get("laneGroups")
+        .filter(|value| !value.is_null())
+    else {
         if options.lanes && options.ids.len() > 1 {
             return Err(io::Error::other("native inbound lane groups"));
         }

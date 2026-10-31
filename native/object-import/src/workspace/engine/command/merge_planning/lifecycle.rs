@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{super::bitmap, Finalized, Prepared, Record, invalid, merge, proof};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
@@ -348,9 +351,6 @@ impl Prepared {
         Ok(())
     }
 }
-
-#[cfg(test)]
-mod tests;
 
 fn policy_material(
     pending: &[super::Pending],

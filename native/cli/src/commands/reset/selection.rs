@@ -141,12 +141,8 @@ pub(super) fn states(root: &Path, pattern: &str, startup: &mut Startup) -> io::R
             .cloned(),
     );
     startup.stdout.push_str(&capture::callback_startup_stdout(&capture));
-    let identities = result.0
-        .iter()
-        .filter_map(|target| target["identity"].as_str().map(str::to_owned))
-        .collect();
     let selected = Selected {
-        identities,
+        identities: target_identities(&result.0),
         loads: result.1,
         stdout: capture::callback_load_stdout(&capture),
         proofs,
@@ -156,16 +152,37 @@ pub(super) fn states(root: &Path, pattern: &str, startup: &mut Startup) -> io::R
     Ok(selected)
 }
 
+fn target_identities(targets: &[Value]) -> Vec<String> {
+    targets
+        .iter()
+        .filter_map(|target| {
+            target["identity"]
+                .as_str()
+                .or_else(|| target["id"].as_str())
+                .map(str::to_owned)
+        })
+        .collect()
+}
+
 fn source_proofs(root: &Path, capture: &capture::Capture) -> io::Result<Vec<Value>> {
     capture.captured
         .iter()
         .flat_map(|component| {
-            let directory = root.join(component["directory"].as_str().unwrap_or_default());
+            let directory = root.join(
+                component["directory"]
+                    .as_str()
+                    .or_else(|| component["rootDir"].as_str())
+                    .unwrap_or_default(),
+            );
             component["files"]
                 .as_array()
                 .into_iter()
                 .flatten()
-                .filter_map(Value::as_str)
+                .filter_map(|file| {
+                    file.as_str()
+                        .or_else(|| file["relativePath"].as_str())
+                        .or_else(|| file["path"].as_str())
+                })
                 .map(move |file| directory.join(file))
         })
         .map(|path| read_proof(&path))

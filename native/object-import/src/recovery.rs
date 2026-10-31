@@ -1,4 +1,5 @@
 pub(crate) mod jsonc;
+
 pub(crate) use copy::{file as copy_file, validate as validate_copy};
 pub(crate) use operations::{Operation, State};
 
@@ -6,6 +7,8 @@ mod bitmap;
 mod copy;
 mod operations;
 mod reset;
+#[cfg(test)]
+mod tests;
 
 use serde_json::Value;
 use std::{io, path::Path};
@@ -30,5 +33,3 @@ pub(crate) fn path(path: &Path) -> io::Result<()> {
     }
     Ok(())
 }
-#[cfg(test)]
-mod tests;

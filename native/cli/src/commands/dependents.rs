@@ -107,7 +107,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 }
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             val if !val.starts_with('-') && !val.is_empty() && id.is_none() => {

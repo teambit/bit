@@ -129,12 +129,17 @@ fn append(scope: &mut Value, id: &Id, alias: &str) -> io::Result<bool> {
     Ok(true)
 }
 
-pub(super) fn lane_index_id(row: &Value) -> io::Result<Id> {
-    if let Some(raw) = row["id"].as_str() {
+pub(crate) fn parse_lane_id(value: &Value) -> io::Result<Id> {
+    if let Some(raw) = value.as_str() {
+        let raw = raw.split('@').next().unwrap_or(raw);
         let (scope, name) = raw.split_once('/').ok_or_else(|| invalid("command lane identity"))?;
         return Ok(Id { scope: scope.into(), name: name.into() });
     }
-    Ok(Id { scope: text(&row["id"], "scope")?.into(), name: text(&row["id"], "name")?.into() })
+    Ok(Id { scope: text(value, "scope")?.into(), name: text(value, "name")?.into() })
+}
+
+pub(crate) fn lane_index_id(row: &Value) -> io::Result<Id> {
+    parse_lane_id(&row["id"])
 }
 
 pub(super) fn hidden_entry(row: &Value, default_scope: Option<&str>) -> io::Result<Entry> {

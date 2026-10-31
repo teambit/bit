@@ -7,7 +7,11 @@ impl fmt::Display for Failure {
         formatter.write_str("checkout invalid compressed object")
     }
 }
-impl std::error::Error for Failure {}
+impl std::error::Error for Failure {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&self.0)
+    }
+}
 pub(super) fn retain(error: flate2::DecompressError) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, Failure(error))
 }

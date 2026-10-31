@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "operations_tests.rs"]
+mod tests;
+
 use super::{copy, invalid, path};
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -81,6 +85,3 @@ impl Operation {
         }
     }
 }
-#[cfg(test)]
-#[path = "operations_tests.rs"]
-mod tests;

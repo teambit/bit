@@ -63,14 +63,19 @@ fn identities(request: &Request) -> io::Result<()> {
     Ok(())
 }
 fn identity(value: &str) -> bool {
-    !value.is_empty()
-        && value.len() <= 4096
-        && !value.contains('\0')
-        && !value.starts_with('@')
-        && !value.ends_with('@')
-        && value
-            .bytes()
-            .filter(|byte| *byte == b'@')
-            .count()
-            <= 1
+    let trimmed = value.trim();
+    if trimmed.is_empty()
+        || value.len() > 4096
+        || value.contains('\0')
+        || trimmed.starts_with('@')
+        || trimmed.ends_with('@')
+    {
+        return false;
+    }
+    match trimmed.split_once('@') {
+        None => true,
+        Some((base, version)) => {
+            !base.trim().is_empty() && !version.trim().is_empty() && !version.contains('@')
+        }
+    }
 }

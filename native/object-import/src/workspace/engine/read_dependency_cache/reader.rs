@@ -42,7 +42,7 @@ fn content(cache: &Path, integrity: &str) -> io::Result<Option<String>> {
         .iter()
         .fold(String::with_capacity(128), |mut text, byte| {
             use std::fmt::Write;
-            write!(text, "{byte:02x}").expect("String write");
+            let _ = write!(text, "{byte:02x}");
             text
         });
     let Some(body) = bounded(&segmented(&cache.join("content-v2/sha512"), &hex))? else {

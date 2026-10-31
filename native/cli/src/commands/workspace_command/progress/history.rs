@@ -9,7 +9,7 @@ impl Progress {
         output: &Output,
         value: Option<&Value>,
     ) -> io::Result<()> {
-        let Some(value) = value else { return Ok(()) };
+        let Some(value) = value.filter(|value| !value.is_null()) else { return Ok(()) };
         let performed = value["performed"].as_bool();
         let completed = value["completed"].as_bool();
         let requested = value["requested"].as_u64();

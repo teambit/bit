@@ -109,7 +109,7 @@ fn parse(entry: &Value) -> CustomDetection {
     let specifiers = match &entry["dependencies"] {
         Value::Array(items) => items
             .iter()
-            .filter_map(Value::as_str)
+            .filter_map(specifier_str)
             .filter(|specifier| !specifier.is_empty())
             .map(str::to_owned)
             .collect(),
@@ -128,9 +128,21 @@ fn parse(entry: &Value) -> CustomDetection {
             (specifier.clone(), path)
         })
         .collect();
-    CustomDetection {
-        specifiers: scan::dedupe(specifiers),
-        typescript: entry["typescript"].as_bool().unwrap_or(false),
-        lookups,
-    }
+    let typescript = entry["typescript"]
+        .as_bool()
+        .unwrap_or_else(|| {
+            entry["typescript"]
+                .as_str()
+                .is_some_and(|text| text.trim().eq_ignore_ascii_case("true"))
+        });
+    CustomDetection { specifiers: scan::dedupe(specifiers), typescript, lookups }
+}
+
+fn specifier_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .or_else(|| value.get("specifier").and_then(Value::as_str))
+        .or_else(|| value.get("packageName").and_then(Value::as_str))
+        .or_else(|| value.get("id").and_then(Value::as_str))
+        .or_else(|| value.get("name").and_then(Value::as_str))
 }

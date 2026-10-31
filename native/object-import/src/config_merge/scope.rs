@@ -45,9 +45,14 @@ fn fields(input: &[Value]) -> io::Result<()> {
         }
         names.push(name);
         for entry in array(field, "entries")? {
-            validate::fields(entry, &["name", "version"])?;
+            validate::fields(entry, &["name", "version", "force"])?;
             text(entry, "name")?;
             text(entry, "version")?;
+            if let Some(force) = entry.get("force")
+                && !force.is_boolean()
+            {
+                return Err(invalid("scope policy force"));
+            }
         }
     }
     Ok(())
@@ -67,7 +72,8 @@ fn one(merged: &Value, scope: Option<&Value>) -> io::Result<Value> {
         {
             continue;
         }
-        append.push(json!({"name":entry["name"],"version":entry["version"],"force":true}));
+        let force = entry["force"].as_bool().unwrap_or(true);
+        append.push(json!({"name":entry["name"],"version":entry["version"],"force":force}));
     }
     let mut retain = Vec::new();
     for (index, entry) in originals.iter().enumerate() {

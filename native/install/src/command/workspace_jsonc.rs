@@ -2,6 +2,9 @@
 //! comment-preserving document is rewritten whole, after a backup into
 //! `<scope>/workspace-config-history`.
 
+#[cfg(test)]
+mod tests;
+
 use crate::jsonc::Document;
 use std::{
     fs::{self, OpenOptions},
@@ -38,9 +41,6 @@ fn backup(path: &Path, scope_path: &Path, file_id: &str, reason: &str) -> io::Re
         .open(directory.join("metadata.txt"))?;
     writeln!(metadata, "{file_id} {reason}")
 }
-
-#[cfg(test)]
-mod tests;
 
 // JsonVinyl persists through AbstractVinyl's eol.auto, after backing up the original bytes.
 fn platform_eol(text: &str) -> String {

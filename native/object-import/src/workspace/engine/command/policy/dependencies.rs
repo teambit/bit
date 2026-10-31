@@ -1,5 +1,7 @@
 mod issues;
 mod overlay;
+#[cfg(test)]
+mod tests;
 
 use super::{
     super::{Record, State, invalid, planning},
@@ -368,6 +370,3 @@ fn overrides(manual: &Value) -> io::Result<Value> {
     }
     Ok(Value::Object(output))
 }
-
-#[cfg(test)]
-mod tests;

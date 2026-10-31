@@ -1,6 +1,9 @@
 //! Filesystem primitives with the semantics of Bit's TypeScript helpers:
 //! `createLinkOrSymlink`, `symlink-dir` and `hardLinkDirectory`.
 
+#[cfg(test)]
+mod tests;
+
 use std::{
     fs, io,
     path::{Path, PathBuf},
@@ -339,6 +342,3 @@ fn link_file(src: &Path, dest: &Path) -> io::Result<()> {
         other => other,
     }
 }
-
-#[cfg(test)]
-mod tests;

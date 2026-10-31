@@ -62,22 +62,27 @@ fn records(
     })
 }
 fn serial_records(request: &Request, state: &cache::State) -> io::Result<Vec<Option<Record>>> {
-    let mut raw = 0;
-    let mut compressed = 0;
+    let mut raw = 0_usize;
+    let mut compressed = 0_usize;
     request.files
         .iter()
         .map(|input| {
-            let record = read(request, input, state, (MAX_BYTES - raw, MAX_BYTES - compressed))?;
+            let record = read(
+                request,
+                input,
+                state,
+                (MAX_BYTES.saturating_sub(raw), MAX_BYTES.saturating_sub(compressed)),
+            )?;
             if let Some(source) = &record {
-                raw += source.body.len();
-                compressed += source.compressed;
+                raw = raw.saturating_add(source.body.len());
+                compressed = compressed.saturating_add(source.compressed);
             }
             Ok(record)
         })
         .collect()
 }
 fn response(request: &Request, records: &[Option<Record>]) -> Output {
-    let mut binary_bytes = 0;
+    let mut binary_bytes = 0_usize;
     let data = records
         .iter()
         .map(|record| {
@@ -85,7 +90,7 @@ fn response(request: &Request, records: &[Option<Record>]) -> Output {
                 .as_ref()
                 .map(|record| {
                     let offset = binary_bytes;
-                    binary_bytes += record.body.len();
+                    binary_bytes = binary_bytes.saturating_add(record.body.len());
                     [offset, record.body.len(), record.compressed, record.inflated]
                 })
         })

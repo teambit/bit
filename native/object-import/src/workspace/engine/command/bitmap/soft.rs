@@ -23,20 +23,25 @@ fn normalized_row(key: &str, entry: &Value) -> io::Result<Value> {
     {
         return Err(invalid("command bitmap component name"));
     }
-    let (_, name) = crate::reset_lane::bitmap::row_identity(key, entry);
+    let (scope, name) = crate::reset_lane::bitmap::row_identity(key, entry);
     if name.is_empty() {
         return Err(invalid("command bitmap component name"));
     }
     let mut cloned = entry.clone();
-    if cloned["name"]
-        .as_str()
+    let map = cloned.as_object_mut().ok_or_else(|| invalid("command bitmap entry"))?;
+    if map
+        .get("name")
+        .and_then(Value::as_str)
         .unwrap_or_default()
         .is_empty()
     {
-        cloned
-            .as_object_mut()
-            .ok_or_else(|| invalid("command bitmap entry"))?
-            .insert("name".into(), Value::String(name.to_owned()));
+        map.insert("name".into(), Value::String(name.to_owned()));
+    }
+    if map.get("scope").is_none()
+        && map.get("defaultScope").is_none()
+        && let Some(scope) = scope.filter(|scope| !scope.is_empty())
+    {
+        map.insert("scope".into(), Value::String(scope.to_owned()));
     }
     Ok(cloned)
 }

@@ -84,11 +84,11 @@ impl Fetcher<'_> {
 fn failed_scopes(failed: &[(&String, io::Error)]) -> io::Error {
     let names: Vec<&str> = failed
         .iter()
-        .map(|(scope, _)| scope.as_str())
+        .map(|(scope, _)| scope.trim())
         .collect();
     let messages: Vec<String> = failed
         .iter()
-        .map(|(scope, error)| format!("{scope} - {error}"))
+        .map(|(scope, error)| format!("{} - {}", scope.trim(), error.to_string().trim()))
         .collect();
     io::Error::other(format!(
         "unexpected network error has occurred during fetching scopes: {}\nserver responded with the following error messages:\n{}",

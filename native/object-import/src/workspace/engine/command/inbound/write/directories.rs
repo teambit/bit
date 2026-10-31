@@ -1,5 +1,7 @@
 //! Where imported components are written: the workspace's `defaultDirectory`,
 //! with the fixes `ComponentWriter` applies when directories collide.
+#[cfg(test)]
+mod tests;
 use super::super::{Target, invalid};
 use serde_json::{Map, Value};
 use std::{io, path::Path};
@@ -175,6 +177,3 @@ pub(super) fn default_directory(root: &Path) -> io::Result<String> {
         format!("{template}/{{name}}")
     })
 }
-
-#[cfg(test)]
-mod tests;

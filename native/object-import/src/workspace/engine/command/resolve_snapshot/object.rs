@@ -22,7 +22,7 @@ pub(super) fn prepare(
     let hash = context.hashes[material.identity.as_str()];
     let allocation = context.receipt["versions"]
         .as_array()
-        .unwrap()
+        .ok_or_else(|| invalid("resolve versions array"))?
         .iter()
         .find(|row| row["identity"] == material.identity)
         .ok_or_else(|| invalid("resolve allocation absent"))?;
@@ -118,8 +118,16 @@ fn origin(version: &mut Value, material: &Material, lane: Option<&Value>) -> io:
         material.identity.split_once('/').ok_or_else(|| invalid("resolve identity"))?;
     version["origin"] = json!({"id":{"scope":scope,"name":name}});
     if let Some(lane) = lane {
-        version["origin"]["lane"] = lane["id"].clone();
-        version["origin"]["lane"]["hash"] = lane["hash"].clone();
+        if let Some((lane_scope, lane_name)) = lane["id"]
+            .as_str()
+            .and_then(|raw| raw.split_once('/'))
+        {
+            version["origin"]["lane"] =
+                json!({"scope": lane_scope, "name": lane_name, "hash": lane["hash"]});
+        } else {
+            version["origin"]["lane"] = lane["id"].clone();
+            version["origin"]["lane"]["hash"] = lane["hash"].clone();
+        }
     }
     Ok(())
 }

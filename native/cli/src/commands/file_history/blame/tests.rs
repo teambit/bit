@@ -24,7 +24,10 @@ fn published_prefix_removal_preserves_repeated_prefix_in_nested_file() {
 
 #[test]
 fn parses_blame_args_with_no_color_and_classifies_targets() {
-    assert_eq!(parse_args(&["comp1/index.ts", "-m", "--no-color"]), Some(("comp1/index.ts", true)));
+    assert_eq!(
+        parse_args(&["comp1/index.ts", "-m", "--no-color", "--no-color=false"]),
+        Some(("comp1/index.ts", true)),
+    );
     assert_eq!(
         parse_args(&["comp1/index.ts", "--include-message=true"]),
         Some(("comp1/index.ts", true)),

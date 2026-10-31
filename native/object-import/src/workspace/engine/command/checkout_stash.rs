@@ -61,6 +61,8 @@ pub(super) fn selected(options: &Options, targets: &[Value]) -> io::Result<Optio
         .filter(|row| {
             row["identity"]
                 .as_str()
+                .or_else(|| row["id"].as_str())
+                .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base))
                 .is_some_and(|id| ids.contains(id))
         })
         .cloned()

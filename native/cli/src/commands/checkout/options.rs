@@ -3,6 +3,8 @@
 //! Anything else is `None`, and the Node.js CLI runs the command.
 
 mod numeric_target;
+#[cfg(test)]
+mod options_tests;
 
 use serde_json::{Map, Value, json};
 
@@ -102,7 +104,7 @@ fn read_checkout<'a>(
             extend_non_flag_positionals(&mut positionals, &args[index..])?;
             break;
         }
-        if raw == "--no-color" {
+        if matches!(raw, "--no-color" | "--no-color=true" | "--no-color=false") {
             continue;
         }
         if !raw.starts_with('-') {
@@ -277,7 +279,7 @@ fn revert_arguments<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, bool, bool)> 
                 extend_non_flag_positionals(&mut positionals, &args[index..])?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-v" | "--verbose" | "--verbose=true" => verbose = true,
             "--verbose=false" => verbose = false,
             "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
@@ -343,6 +345,3 @@ impl Options {
         self.all || (self.pattern.is_none() && matches!(self.to.as_str(), "head" | "latest"))
     }
 }
-
-#[cfg(test)]
-mod options_tests;

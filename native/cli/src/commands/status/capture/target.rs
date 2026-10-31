@@ -13,7 +13,11 @@ impl Scan<'_> {
             return Ok(());
         }
         let policy = policy::status_policy(self.context, target)?;
-        let directory = text(target.get("directory"))?;
+        let directory = text(
+            target
+                .get("directory")
+                .or_else(|| target.get("rootDir")),
+        )?;
         if self.behavior.missing_status_invalid
             && missing::status_invalid(self.root, target, directory, captured)?
         {

@@ -22,12 +22,9 @@ pub(crate) fn scan(file: &File, unsupported_options: bool) -> Outcome {
             "options or source size require legacy fallback".into(),
         );
     }
-    let kind = file.kind
-        .as_deref()
-        .or_else(|| file.path.rsplit('.').next())
-        .unwrap_or("");
-    let ts = matches!(kind, "ts" | "tsx" | "mts" | "cts");
-    let Some(source_type) = source_type(kind) else {
+    let kind = normalized_kind(file);
+    let ts = matches!(kind.as_str(), "ts" | "tsx" | "mts" | "cts");
+    let Some(source_type) = source_type(&kind) else {
         return outcome(file, "unsupported", "unsupported file kind".into());
     };
     let source = match limits::source(file.source.as_deref(), std::path::Path::new(&file.path)) {
@@ -39,7 +36,8 @@ pub(crate) fn scan(file: &File, unsupported_options: bool) -> Outcome {
         }
         Err(error) => return outcome(file, "read_error", error.to_string()),
     };
-    if source.starts_with("// @bit-no-check") || source.starts_with("/* @bit-no-check") {
+    let header = source.strip_prefix('\u{feff}').unwrap_or(&source);
+    if header.starts_with("// @bit-no-check") || header.starts_with("/* @bit-no-check") {
         return Outcome {
             path: file.path.clone(),
             status: "ok",
@@ -125,6 +123,16 @@ fn scanner_for_source(
         deps: IndexMap::new(),
         unsupported: false,
     }
+}
+fn normalized_kind(file: &File) -> String {
+    file.kind
+        .as_deref()
+        .map(str::trim)
+        .filter(|kind| !kind.is_empty())
+        .or_else(|| file.path.rsplit('.').next())
+        .unwrap_or("")
+        .trim_start_matches('.')
+        .to_ascii_lowercase()
 }
 fn source_type(kind: &str) -> Option<SourceType> {
     match kind {

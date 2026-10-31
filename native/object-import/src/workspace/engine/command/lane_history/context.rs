@@ -34,9 +34,13 @@ pub(in crate::workspace::engine::command) fn prepare(
 fn attach_versions(request: &super::super::input::Prepare, context: &mut Value) -> io::Result<()> {
     let phase = phase(&request.options).ok_or_else(|| invalid("history phase"))?;
     for row in context["targets"].as_array_mut().ok_or_else(|| invalid("history targets"))? {
+        let row_id = row["identity"]
+            .as_str()
+            .or_else(|| row["id"].as_str())
+            .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base));
         let (_, version) = phase.versions
             .iter()
-            .find(|(id, _)| row["identity"] == *id)
+            .find(|(id, _)| row_id == Some(id.as_str()))
             .ok_or_else(|| invalid("history target membership"))?;
         row["historicalVersion"] = json!(version);
     }

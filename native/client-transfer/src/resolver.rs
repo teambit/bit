@@ -8,6 +8,9 @@
 //! so a relative path or a package name resolves from that module, not from the
 //! current directory.
 
+#[cfg(test)]
+mod tests;
+
 use crate::{GlobalConfig, invalid};
 use serde_json::Value;
 use std::{
@@ -103,6 +106,3 @@ impl Resolver {
             .map_err(|_| invalid("the remote resolver returned a non UTF-8 URL"))
     }
 }
-
-#[cfg(test)]
-mod tests;

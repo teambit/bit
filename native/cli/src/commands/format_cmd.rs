@@ -85,7 +85,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 consume_trailing_format_pattern(iter, &mut options.pattern)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-c" | "--changed" | "--changed=true" => options.changed = true,
             "--changed=false" => options.changed = false,
             "--check" | "--check=true" => options.check = true,

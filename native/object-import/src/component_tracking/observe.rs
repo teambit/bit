@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::unsupported;
 use sha2::{Digest, Sha256};
 use std::{
@@ -126,6 +129,3 @@ fn ancestor(path: &Path) -> io::Result<PathBuf> {
     }
     fs::canonicalize(path)
 }
-
-#[cfg(test)]
-mod tests;

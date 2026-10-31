@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::super::invalid;
 use serde_json::Value;
 use std::{collections::HashMap, io};
@@ -69,15 +72,15 @@ fn validate(config: &Value) -> io::Result<()> {
                 | "teambit.docs/docs"
                 | "teambit.pipelines/builder"
                 | "teambit.component/deprecation",
-        ) || !value.is_object()
-        {
+        ) {
             return Err(invalid("recovery bitmap custom configuration"));
         }
+        let Some(object) = value.as_object() else {
+            return Err(invalid("recovery bitmap custom configuration"));
+        };
         // Effective policy is consumed by the recovery status adapter. Nonempty
         // custom provider configuration remains outside this command boundary.
-        if value
-            .as_object()
-            .unwrap()
+        if object
             .keys()
             .any(|key| bare != "teambit.dependencies/dependency-resolver" || key != "policy")
         {
@@ -86,5 +89,3 @@ fn validate(config: &Value) -> io::Result<()> {
     }
     Ok(())
 }
-#[cfg(test)]
-mod tests;

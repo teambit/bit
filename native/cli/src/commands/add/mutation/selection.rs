@@ -61,10 +61,27 @@ pub(super) fn seed_environments(
         &json!({"components":captured,"ids":components.iter().map(|component| &component.env_id).collect::<Vec<_>>()}),
     )?;
     for component in components {
-        component.env_id = facts[&component.env_id]
-            .as_str()
-            .ok_or_else(|| io::Error::other("identity registered environment receipt"))?
-            .to_owned();
+        component.env_id = extract_registered_env(&facts, &component.env_id)
+            .ok_or_else(|| io::Error::other("identity registered environment receipt"))?;
     }
     Ok(())
+}
+
+fn extract_registered_env(facts: &Value, env_id: &str) -> Option<String> {
+    let entry = facts.get(env_id)?;
+    entry
+        .as_str()
+        .or_else(|| {
+            entry
+                .as_object()
+                .and_then(|object| {
+                    object
+                        .get("id")
+                        .or_else(|| object.get("resolvedId"))
+                })
+                .and_then(Value::as_str)
+        })
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_owned)
 }

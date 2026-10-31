@@ -7,6 +7,8 @@ pub(crate) use source_read::serve as read_sources;
 
 mod preflight;
 mod source_read;
+#[cfg(test)]
+mod tests;
 
 use std::{
     collections::HashSet,
@@ -187,6 +189,3 @@ fn materialize(
 pub(crate) fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
-
-#[cfg(test)]
-mod tests;

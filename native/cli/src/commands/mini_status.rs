@@ -47,7 +47,7 @@ fn parse_json_flag(args: &[OsString]) -> Option<bool> {
             "--" => return (idx + 1 == rest.len()).then_some(json),
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             _ => return None,
         }
     }

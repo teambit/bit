@@ -1,5 +1,7 @@
 mod metadata;
 mod sources;
+#[cfg(test)]
+mod tests;
 use super::{Prepared, invalid};
 use crate::workspace::engine::dependency_graph::proof;
 use serde_json::{Value, json};
@@ -148,9 +150,6 @@ impl Snapshot {
         Ok(())
     }
 }
-
-#[cfg(test)]
-mod tests;
 
 /// Reject unsupported graph/object projections before the caller allocates canonical UUIDs.
 pub(in crate::workspace::engine::command) fn preflight(

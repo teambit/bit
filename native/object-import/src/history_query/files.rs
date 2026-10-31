@@ -132,11 +132,8 @@ fn hidden_parents(results: &mut [Value]) {
         let value = parent.get("parentFileHash").cloned();
         if let Some(value) = value {
             results[index]["parentFileHash"] = value;
-        } else {
-            results[index]
-                .as_object_mut()
-                .expect("validated row")
-                .remove("parentFileHash");
+        } else if let Some(object) = results[index].as_object_mut() {
+            object.remove("parentFileHash");
         }
     }
 }

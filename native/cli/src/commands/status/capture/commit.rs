@@ -1,5 +1,9 @@
 //! Validate all read receipts before publishing capture caches and history.
 
+#[cfg(test)]
+#[path = "commit_tests.rs"]
+mod tests;
+
 use super::{Capture, Engine, Path, Value, array, decline, fresh, io, json};
 
 /// `capture.commit()`: staged histories validated, dependency caches written,
@@ -76,7 +80,3 @@ pub(super) fn publish_import_dependencies(
 fn checkout_reset(capture: &Capture) -> bool {
     capture.cache.reset && capture.environment_facts["checkoutLoaderCacheChecked"] != true
 }
-
-#[cfg(test)]
-#[path = "commit_tests.rs"]
-mod tests;

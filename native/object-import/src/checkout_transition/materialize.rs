@@ -37,7 +37,7 @@ fn prepare(request: &wire::Materialize, plan: &plan::Plan) -> io::Result<Vec<Vec
         return Err(invalid("checkout materialize file limit"));
     }
     let mut contents = Vec::new();
-    let mut total = 0;
+    let mut total = 0_usize;
     let mut paths = HashSet::new();
     for file in &request.files {
         if !file.path.is_absolute()
@@ -45,7 +45,7 @@ fn prepare(request: &wire::Materialize, plan: &plan::Plan) -> io::Result<Vec<Vec
                 .to_str()
                 .is_none_or(|path| path.len() > 32768 || path.contains('\0'))
             || !paths.insert(&file.path)
-            || file.eol != "auto"
+            || !file.eol.trim().eq_ignore_ascii_case("auto")
         {
             return Err(invalid("checkout materialize unsupported destination"));
         }
@@ -53,7 +53,7 @@ fn prepare(request: &wire::Materialize, plan: &plan::Plan) -> io::Result<Vec<Vec
             .get(file.plan_index)
             .ok_or_else(|| invalid("checkout materialize body index"))?;
         let body = crate::checkout::eol::auto(body.contents.clone());
-        total += body.len();
+        total = total.saturating_add(body.len());
         if total > 32 * 1024 * 1024 {
             return Err(invalid("checkout materialize byte limit"));
         }

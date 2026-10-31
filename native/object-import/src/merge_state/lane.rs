@@ -44,11 +44,12 @@ pub(super) fn plan(input: &Plan) -> io::Result<Value> {
         "updateReadme":input.lane.readme_same_name
     });
     if !input.is_legacy
-        && input.parent
-            .as_ref()
-            .is_some_and(|parent| parent != &input.version)
+        && let Some(parent) = input.parent
+            .as_deref()
+            .map(str::trim)
+            .filter(|parent| !parent.eq_ignore_ascii_case(input.version.trim()))
     {
-        output["parent"] = json!(input.parent);
+        output["parent"] = json!(parent);
     }
     Ok(output)
 }

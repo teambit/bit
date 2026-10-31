@@ -18,15 +18,7 @@ pub(super) fn prepare(input: &Prepare, lane: LaneSelected) -> io::Result<Plan> {
         .map(|_| {
             lane.components.expected_ids
                 .iter()
-                .map(|id| {
-                    let (identity, version) = id
-                        .rsplit_once('@')
-                        .ok_or_else(|| invalid("outbound lane resume version"))?;
-                    let (scope, name) = identity
-                        .split_once('/')
-                        .ok_or_else(|| invalid("outbound lane resume identity"))?;
-                    Ok((scope.to_owned(), name.to_owned(), version.to_owned()))
-                })
+                .map(|id| parse_resume_id(id))
                 .collect::<io::Result<Vec<_>>>()
                 .map(|selected| ResumeContext { selected })
         })
@@ -40,4 +32,19 @@ pub(super) fn prepare(input: &Prepare, lane: LaneSelected) -> io::Result<Plan> {
         fork_history,
         selection_history: super::model::prefilter::Prepared::default(),
     })
+}
+
+fn parse_resume_id(id: &str) -> io::Result<(String, String, String)> {
+    let (identity, version) = id
+        .trim()
+        .rsplit_once('@')
+        .map(|(identity, version)| (identity.trim(), version.trim()))
+        .filter(|(_, version)| !version.is_empty())
+        .ok_or_else(|| invalid("outbound lane resume version"))?;
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("outbound lane resume identity"))?;
+    Ok((scope.to_owned(), name.to_owned(), version.to_owned()))
 }

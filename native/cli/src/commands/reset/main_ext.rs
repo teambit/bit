@@ -98,9 +98,12 @@ fn model_scope_and_name(model: &Value, row: &Value) -> (String, String) {
     let (id_scope, id_name) = row["id"]
         .as_str()
         .map_or(("", ""), |id_str| {
-            id_str
-                .split_once('/')
-                .unwrap_or(("", id_str))
+            let base = id_str
+                .split('@')
+                .next()
+                .unwrap_or(id_str);
+            base.split_once('/')
+                .unwrap_or(("", base))
         });
     let scope = model["scope"]
         .as_str()

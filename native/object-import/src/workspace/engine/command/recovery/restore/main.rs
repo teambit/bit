@@ -80,7 +80,7 @@ fn decode(bytes: &[u8]) -> io::Result<(String, Vec<u8>)> {
     if !raw[..nul].starts_with(b"Component ") {
         return Err(invalid("main recovery non-component backup"));
     }
-    let value: Value = serde_json::from_slice(&raw[nul + 1..]).map_err(io::Error::other)?;
+    let value: Value = crate::parse_jsonc(&raw[nul + 1..]).map_err(io::Error::other)?;
     super::super::super::lane_publication::encode_model(&value)
 }
 fn validate_index(
@@ -90,7 +90,7 @@ fn validate_index(
 ) -> io::Result<()> {
     let bytes = proof::read(&crate::scope_path(root).join("index.json"), proofs)?
         .ok_or_else(|| invalid("main recovery index absent"))?;
-    let index: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+    let index: Value = crate::parse_jsonc(&bytes).map_err(io::Error::other)?;
     let entries = index["components"]
         .as_array()
         .or_else(|| index.as_array())

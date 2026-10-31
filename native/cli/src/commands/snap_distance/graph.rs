@@ -45,15 +45,29 @@ pub(super) fn build_parents_map(vh_val: &Value) -> Option<HashMap<&str, Vec<&str
     let versions = vh_val["versions"].as_array()?;
     let mut parents_map = HashMap::with_capacity(versions.len());
     for entry in versions {
-        let hash = entry["hash"].as_str()?;
-        let parents = entry["parents"]
-            .as_array()?
-            .iter()
-            .map(Value::as_str)
-            .collect::<Option<Vec<_>>>()?;
+        let hash = entry["hash"]
+            .as_str()
+            .map(str::trim)
+            .filter(|text| !text.is_empty())?;
+        let parents = match entry.get("parents") {
+            None | Some(Value::Null) => Vec::new(),
+            Some(Value::Array(arr)) => arr
+                .iter()
+                .map(parent_hash)
+                .collect::<Option<Vec<_>>>()?,
+            _ => return None,
+        };
         parents_map.insert(hash, parents);
     }
     Some(parents_map)
+}
+
+fn parent_hash(parent: &Value) -> Option<&str> {
+    parent
+        .as_str()
+        .or_else(|| parent.get("hash").and_then(Value::as_str))
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }
 
 fn find_closest_common<'a>(
@@ -169,14 +183,16 @@ pub(super) fn load_version_history_with_local_versions(
 
 fn read_version_parents(scope_dir: &Path, hash: &str) -> Option<Vec<String>> {
     let (kind, ver) = bit_object_import::read_scope_object(scope_dir, hash).ok()??;
-    (kind == "Version").then(|| {
+    if kind != "Version" {
+        return None;
+    }
+    Some(
         ver["parents"]
             .as_array()
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|parent| parent.as_str().map(str::to_owned))
-                    .collect()
-            })
-            .unwrap_or_default()
-    })
+            .into_iter()
+            .flatten()
+            .filter_map(parent_hash)
+            .map(str::to_owned)
+            .collect(),
+    )
 }

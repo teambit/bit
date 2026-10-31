@@ -1,4 +1,6 @@
 //! Component status populates existing history before deciding what to stash.
+#[cfg(test)]
+mod tests;
 use super::{Retained, invalid};
 use crate::workspace::engine::{dependency_graph::proof, status_history, status_models};
 use serde_json::{Value, json};
@@ -112,6 +114,3 @@ fn verify_published(
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

@@ -55,12 +55,7 @@ fn compile(
     for (source, row) in ordered {
         if let Some(error) = row["error"].as_str() {
             compiled.errors.push(Diagnostic {
-                path: Path::new(
-                    source["absolutePath"]
-                        .as_str()
-                        .ok_or_else(|| io::Error::other("compiler source path"))?,
-                )
-                .to_path_buf(),
+                path: source_path(source)?,
                 message: error.to_owned(),
             });
         }
@@ -68,6 +63,26 @@ fn compile(
     }
     Ok(compiled)
 }
+
+fn source_path(source: &Value) -> io::Result<PathBuf> {
+    if let Some(path) = source["absolutePath"]
+        .as_str()
+        .or_else(|| source["path"].as_str())
+        .filter(|value| !value.is_empty())
+    {
+        return Ok(PathBuf::from(path));
+    }
+    let directory = source["directory"]
+        .as_str()
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| io::Error::other("compiler source path"))?;
+    let relative = source["relativePath"]
+        .as_str()
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| io::Error::other("compiler source path"))?;
+    Ok(Path::new(directory).join(relative))
+}
+
 fn append(
     compiled: &mut Compiled,
     row: &Value,
@@ -79,6 +94,9 @@ fn append(
         for file in files {
             let relative = file["outputPath"]
                 .as_str()
+                .or_else(|| file["relativePath"].as_str())
+                .or_else(|| file["path"].as_str())
+                .filter(|value| !value.is_empty())
                 .ok_or_else(|| io::Error::other("compiler output path"))?;
             if Path::new(relative)
                 .components()
@@ -88,6 +106,8 @@ fn append(
             }
             let content = file["outputText"]
                 .as_str()
+                .or_else(|| file["content"].as_str())
+                .or_else(|| file["contents"].as_str())
                 .ok_or_else(|| io::Error::other("compiler emitted content"))?;
             compiled.files.push(Emitted {
                 path: directory

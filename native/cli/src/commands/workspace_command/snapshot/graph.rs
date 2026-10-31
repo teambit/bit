@@ -9,6 +9,8 @@
 pub use replacer::WorkspaceComponent;
 
 mod convert;
+#[cfg(test)]
+mod graph_tests;
 mod reachable;
 mod replacer;
 
@@ -46,7 +48,7 @@ pub fn graphs(
     let workspace = Replacer::new(components)?;
     let version = super::receipt::NodeCli::find()?.version;
     let modern = node_semver::Version::parse(version).map_err(io::Error::other)?
-        >= node_semver::Version::parse("2.2.147").unwrap();
+        >= node_semver::Version::parse("2.2.147").map_err(io::Error::other)?;
     snapped
         .iter()
         .map(|component| {
@@ -266,9 +268,6 @@ fn snapshot_siblings(
         .filter(|id| visited.insert(id.clone()) && snapshots.get(id).is_some())
         .collect()
 }
-
-#[cfg(test)]
-mod graph_tests;
 
 fn environment_importer(root: &Path, roots: &Path, env_id: &str) -> io::Result<String> {
     let unversioned =

@@ -138,7 +138,8 @@ fn apply_create_token<'a>(
     positionals: &mut Vec<String>,
 ) -> Option<()> {
     match token {
-        "--no-color" | "--force" | "--force=true" | "--force=false" | "-f" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--force" | "--force=true"
+        | "--force=false" | "-f" => {}
         "--scope" | "-s" => *scope = Some(take_value(iter.next()?)?),
         "--namespace" | "-n" => *namespace = Some(take_value(iter.next()?)?),
         "--aspect" | "-a" | "--template" | "-t" | "--path" | "-p" | "--env" | "-e" => {

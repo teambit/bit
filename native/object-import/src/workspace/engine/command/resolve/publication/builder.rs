@@ -89,12 +89,21 @@ fn build_receipt(original: &Value, input: &BuildFinalize) -> io::Result<Value> {
         return Err(invalid("snapshot builder version count"));
     }
     for (allocation, version) in allocations.iter_mut().zip(&input.versions) {
-        if allocation["identity"] != version["identity"] {
+        let alloc_id = version_identity(allocation);
+        let ver_id = version_identity(version);
+        if alloc_id.is_none() || alloc_id != ver_id {
             return Err(invalid("snapshot builder version identity"));
         }
         allocation["buildData"] = version.clone();
     }
     Ok(receipt)
+}
+
+fn version_identity(entry: &Value) -> Option<&str> {
+    entry["identity"]
+        .as_str()
+        .or_else(|| entry["id"].as_str())
+        .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base))
 }
 
 pub(super) fn stage_prepared(retained: &mut super::Retained) -> io::Result<()> {

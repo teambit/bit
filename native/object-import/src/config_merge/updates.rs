@@ -170,12 +170,13 @@ impl Plan {
             return;
         }
         let field = if peer { "peerDependencies" } else { "dependencies" };
-        self.conflicts
+        if let Some(rows) = self.conflicts
             .entry(field)
             .or_insert_with(|| json!([]))
             .as_array_mut()
-            .expect("created array")
-            .push(json!({"name":name,"version":format!("CONFLICT::{workspace}::{component}")}));
+        {
+            rows.push(json!({"name":name,"version":format!("CONFLICT::{workspace}::{component}")}));
+        }
         self.logs.push(format!("{name} - conflict. ours: {workspace}, theirs: {component}"));
     }
     fn update_range(

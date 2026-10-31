@@ -19,14 +19,7 @@ pub(super) fn prepare(
         .ok_or_else(|| invalid("checkout lane additions"))?
         .clone();
     for destination in additions {
-        let scope =
-            destination["scope"].as_str().ok_or_else(|| invalid("checkout lane addition scope"))?;
-        let name =
-            destination["name"].as_str().ok_or_else(|| invalid("checkout lane addition name"))?;
-        let head = destination["version"]
-            .as_str()
-            .ok_or_else(|| invalid("checkout lane addition head"))?;
-        let identity = format!("{scope}/{name}");
+        let (identity, head) = addition_target(&destination)?;
         plan.captured.push(capture::addition(&identity, &destination)?);
         let selected = json!({"kind":"target","version":head,"merge":false});
         let index = plan.captured.len() - 1;
@@ -39,13 +32,42 @@ pub(super) fn prepare(
     Ok(())
 }
 
+fn addition_target(destination: &Value) -> io::Result<(String, &str)> {
+    let head = destination["version"]
+        .as_str()
+        .or_else(|| destination["head"].as_str())
+        .ok_or_else(|| invalid("checkout lane addition head"))?;
+    if let Some(identity) = destination["identity"]
+        .as_str()
+        .or_else(|| destination["id"].as_str())
+        .filter(|id| !id.is_empty())
+    {
+        let base = identity.rsplit_once('@').map_or(identity, |(base, _)| base);
+        return Ok((base.to_owned(), head));
+    }
+    let scope = destination["scope"]
+        .as_str()
+        .or_else(|| destination["id"]["scope"].as_str())
+        .ok_or_else(|| invalid("checkout lane addition scope"))?;
+    let name = destination["name"]
+        .as_str()
+        .or_else(|| destination["id"]["name"].as_str())
+        .ok_or_else(|| invalid("checkout lane addition name"))?;
+    Ok((format!("{scope}/{name}"), head))
+}
+
 fn filter_tracked_results(context: &Value, result: &mut Value) -> io::Result<()> {
     let tracked = context["lane"]["trackedTargets"]
         .as_array()
         .ok_or_else(|| invalid("checkout lane tracked targets"))?;
     let identities = tracked
         .iter()
-        .filter_map(|row| row["identity"].as_str())
+        .filter_map(|row| {
+            row["identity"]
+                .as_str()
+                .or_else(|| row["id"].as_str())
+        })
+        .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base))
         .collect::<std::collections::HashSet<_>>();
     result["components"]
         .as_array_mut()
@@ -53,8 +75,9 @@ fn filter_tracked_results(context: &Value, result: &mut Value) -> io::Result<()>
         .retain(|row| {
             row["id"]
                 .as_str()
-                .and_then(|id| id.rsplit_once('@'))
-                .is_none_or(|(identity, _)| !identities.contains(identity))
+                .or_else(|| row["identity"].as_str())
+                .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base))
+                .is_none_or(|identity| !identities.contains(identity))
         });
     Ok(())
 }

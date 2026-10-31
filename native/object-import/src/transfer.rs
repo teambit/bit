@@ -1,25 +1,24 @@
 //! Owned compressed transfer collection, tar framing and remote acknowledgement policy.
 pub(crate) mod collection;
 pub(crate) mod object;
+
 pub(crate) use session::State;
 
+mod header;
+mod owned;
+mod pending;
+mod session;
+#[cfg(test)]
+mod tests;
+mod transaction;
+
+use sha1::{Digest, Sha1};
 use std::{
     collections::HashSet,
     fs::{self, OpenOptions},
     io::{self, Write},
     path::{Path, PathBuf},
 };
-
-use sha1::{Digest, Sha1};
-
-mod owned;
-mod pending;
-mod session;
-mod transaction;
-
-mod header;
-#[cfg(test)]
-mod tests;
 
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 const MAX_OBJECTS: usize = 4096;

@@ -19,7 +19,7 @@ fn parses_the_report_flags() {
     );
     assert_eq!(parse(&["--lanes"]), Some(Flags { lanes: true, ..Flags::default() }));
     assert_eq!(
-        parse(&["--lanes=true", "--warnings=false", "--no-color"]),
+        parse(&["--lanes=true", "--warnings=false", "--no-color", "--no-color=false"]),
         Some(Flags { lanes: true, ..Flags::default() }),
     );
     assert_eq!(parse(&["-c"]), Some(Flags { ignore_circular: true, ..Flags::default() }));

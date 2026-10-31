@@ -1,4 +1,7 @@
 //! Native rendering of Doctor's `table` tables and detailed result sections.
+#[cfg(test)]
+mod tests;
+
 use super::catalog::DIAGNOSES;
 use crate::commands::color::Chalk;
 use serde_json::Value;
@@ -135,8 +138,6 @@ fn line(row: &[String], widths: &[usize]) -> String {
             .join("│"),
     )
 }
-#[cfg(test)]
-mod tests;
 
 pub(super) fn strip(text: &str) -> String {
     let mut output = String::new();

@@ -2,6 +2,8 @@ pub(super) mod configuration;
 pub(super) mod tracking;
 
 mod metadata;
+#[cfg(test)]
+mod tests;
 
 use super::{client_status::config, dependency_graph::proof, invalid, status_models};
 use crate::read_budget::Budget;
@@ -187,11 +189,7 @@ fn unmerged(root: &std::path::Path) -> io::Result<Value> {
     Ok(value)
 }
 
-fn lane_id(bitmap: &Value, scope: &Value) -> io::Result<Value> {
-    let Some(header) = bitmap.get("_bit_lane") else {
-        let name = scope["name"].as_str().ok_or_else(|| invalid("status scope name"))?;
-        return Ok(json!(format!("{name}/main")));
-    };
+fn validate_lane_header(header: &Value) -> io::Result<()> {
     let fields = header.as_object().ok_or_else(|| invalid("status lane header"))?;
     if fields
         .keys()
@@ -202,18 +200,28 @@ fn lane_id(bitmap: &Value, scope: &Value) -> io::Result<Value> {
     {
         return Err(invalid("status lane header"));
     }
-    let id = header["id"].as_object().ok_or_else(|| invalid("status lane identity"))?;
-    if id.len() != 2 || !id.contains_key("scope") || !id.contains_key("name") {
+    if let Some(id) = header["id"].as_object()
+        && (id.len() != 2 || !id.contains_key("scope") || !id.contains_key("name"))
+    {
         return Err(invalid("status lane identity"));
     }
-    let lane_scope = header["id"]["scope"]
-        .as_str()
+    Ok(())
+}
+
+fn lane_id(bitmap: &Value, scope: &Value) -> io::Result<Value> {
+    let Some(header) = bitmap.get("_bit_lane") else {
+        let name = scope["name"].as_str().ok_or_else(|| invalid("status scope name"))?;
+        return Ok(json!(format!("{name}/main")));
+    };
+    validate_lane_header(header)?;
+    let (scope_opt, name) = super::command::inbound::remote::file_list::row_id_parts(header)
+        .ok_or_else(|| invalid("status lane identity"))?;
+    let lane_scope = scope_opt
         .filter(|text| !text.is_empty())
         .ok_or_else(|| invalid("status lane scope"))?;
-    let name = header["id"]["name"]
-        .as_str()
-        .filter(|text| !text.is_empty() && *text != "main")
-        .ok_or_else(|| invalid("status lane name"))?;
+    if name.is_empty() || name == "main" {
+        return Err(invalid("status lane name"));
+    }
     if [lane_scope, name]
         .iter()
         .any(|part| {
@@ -228,9 +236,6 @@ fn lane_id(bitmap: &Value, scope: &Value) -> io::Result<Value> {
     }
     Ok(json!(format!("{lane_scope}/{name}")))
 }
-
-#[cfg(test)]
-mod tests;
 
 fn default_history() -> bool {
     true

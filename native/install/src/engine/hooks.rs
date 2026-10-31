@@ -6,6 +6,9 @@
 //! JavaScript hook in `@pnpm/napi`'s `ChecksummedHooks`), so both produce and
 //! reuse the same lockfiles.
 
+#[cfg(test)]
+mod tests;
+
 use super::READ_PACKAGE_HOOKS_CHECKSUM;
 use async_trait::async_trait;
 use indexmap::IndexMap;
@@ -193,6 +196,3 @@ impl PnpmfileHooks for BitHooks {
         Some(READ_PACKAGE_HOOKS_CHECKSUM.to_string())
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -27,15 +27,18 @@ pub(super) fn workflows(
         let status = if path.exists() {
             "skipped"
         } else {
-            let content = render(raw, marker, branch, workspace_dir);
-            let parent = path.parent().unwrap();
-            fs::create_dir_all(parent).map_err(|error| failure(error, "mkdir", parent))?;
-            fs::write(&path, content).map_err(|error| failure(error, "open", &path))?;
+            write_workflow(&path, &render(raw, marker, branch, workspace_dir))?;
             "written"
         };
         files.push(File { relative, display: git::display(cwd, &path), status, note: None });
     }
     Ok(files)
+}
+fn write_workflow(path: &Path, content: &str) -> io::Result<()> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|error| failure(error, "mkdir", parent))?;
+    }
+    fs::write(path, content).map_err(|error| failure(error, "open", path))
 }
 fn render(raw: &str, marker: &str, branch: &str, workspace_dir: &str) -> String {
     let quoted = |value: &str| format!("'{}'", value.replace('\'', "''"));

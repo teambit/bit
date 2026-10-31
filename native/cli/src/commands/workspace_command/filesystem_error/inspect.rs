@@ -1,9 +1,10 @@
 //! Node's inspection of a filesystem callback error, which has no JavaScript stack frames.
+#[cfg(test)]
+mod tests;
+
 use super::Failure;
 use crate::commands::color::Chalk;
 use std::fmt::Write;
-#[cfg(test)]
-mod tests;
 
 pub(super) fn render(error: &Failure, chalk: Chalk) -> String {
     let mut fields = Vec::new();
@@ -43,7 +44,7 @@ fn quote(value: &str) -> String {
                 result.push(character);
             }
             character if character.is_control() => {
-                write!(result, r"\x{:02X}", u32::from(character)).unwrap();
+                let _ = write!(result, r"\x{:02X}", u32::from(character));
             }
             _ => result.push(character),
         }

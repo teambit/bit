@@ -207,7 +207,12 @@ fn ordinary_merge_state(root: &Path) -> io::Result<()> {
             rows.len() <= 4096
                 && rows
                     .iter()
-                    .all(|row| row["id"]["scope"].is_string() && row["id"]["name"].is_string())
+                    .all(|row| {
+                        crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(
+                            row,
+                        )
+                        .is_some()
+                    })
         })
     {
         return Err(invalid("status unresolved merge state requires canonical history"));

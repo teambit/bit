@@ -1,10 +1,11 @@
 //! Native e2e coverage for `details`, `globals`, `system`, `version`, `git`, and `scope trust`.
 
+mod remote_history;
+mod upstream_history;
+
 use crate::helper::{Helper, config, parse};
 use serde_json::json;
 use std::fs;
-mod remote_history;
-mod upstream_history;
 
 #[test]
 fn version_history_rejects_no_color_before_changing_history() {

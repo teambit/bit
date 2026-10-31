@@ -131,7 +131,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 super::internalize::consume_trailing_internalize(iter, &mut script_name)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-l" | "--list" | "--list=true" => list = true,
             "--list=false" => list = false,
             val if !val.starts_with('-') && !val.is_empty() && script_name.is_none() => {

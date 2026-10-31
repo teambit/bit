@@ -217,9 +217,13 @@ pub(super) fn gap_targets(
     selected: &[Selected],
 ) -> io::Result<Vec<crate::command_import::Target>> {
     let include_history = lane.is_some_and(|lane| {
+        let other_scope = lane["otherId"]
+            .as_str()
+            .and_then(|raw| raw.split_once('/').map(|(scope, _)| scope))
+            .or_else(|| lane["otherId"]["scope"].as_str());
         lane["shouldSquash"] != true
             && !lane["other"].is_null()
-            && lane["otherId"]["scope"] != lane["current"]["value"]["scope"]
+            && other_scope != lane["current"]["value"]["scope"].as_str()
     });
     let mut targets = Vec::new();
     for row in selected

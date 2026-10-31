@@ -19,11 +19,15 @@ struct Change {
 
 /// `getDepDiffType`: only its failure matters to the plain-text output.
 fn check_change(left: Option<&str>, right: Option<&str>) -> io::Result<()> {
-    let present = |value: Option<&str>| value.is_some_and(|value| !value.is_empty());
+    let present = |value: Option<&str>| {
+        value
+            .map(str::trim)
+            .is_some_and(|value| !value.is_empty())
+    };
     if !present(left) && !present(right) {
         return Err(decline("diff.getType expect at least one of the component to have value"));
     }
-    if let (Some(left), Some(right)) = (left, right) {
+    if let (Some(left), Some(right)) = (left.map(str::trim), right.map(str::trim)) {
         let _ = npm::compare(left, right, true);
     }
     Ok(())
@@ -114,6 +118,7 @@ fn plain_text(changes: &[Change], field: &str, labels: &Labels, chalk: Chalk) ->
     }
     let side = |sign: &str, name: &str, version: &Option<String>| match version
         .as_deref()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         Some(version) => format!("{sign} {name}@{version}\n"),

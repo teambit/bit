@@ -1,6 +1,8 @@
 pub(crate) mod actions;
 pub(crate) mod engine;
 pub(crate) mod snapshots;
+#[cfg(test)]
+mod tests;
 
 use std::{
     collections::HashSet,
@@ -124,6 +126,3 @@ fn materialize(file: &File, directories: &mut HashSet<PathBuf>) -> io::Result<bo
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
-
-#[cfg(test)]
-mod tests;

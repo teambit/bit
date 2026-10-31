@@ -56,11 +56,19 @@ impl<'a> Engine<'a> {
         let core = array(self.input, "coreNames")?
             .iter()
             .any(|name| name == id);
+        let base_id = id.rsplit_once('@').map_or(id, |(base, _)| base);
         Ok(array(self.input, side)?
             .iter()
-            .position(
-                |entry| if core { entry["name"] == id } else { entry["componentId"]["base"] == id },
-            ))
+            .position(|entry| {
+                if core {
+                    entry["name"] == id
+                } else {
+                    entry["componentId"]["base"] == id
+                        || entry["componentId"]["base"] == base_id
+                        || entry["componentId"] == id
+                        || entry["componentId"] == base_id
+                }
+            }))
     }
     pub(super) fn source(side: &str, index: usize) -> Value {
         json!({"source":{"side":side,"index":index}})

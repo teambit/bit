@@ -8,10 +8,15 @@ fn accepts_the_native_subset() {
     assert_eq!(parse(&["**", "-x", "--manual"]).unwrap().pattern.as_deref(), Some("**"));
     assert_eq!(parse(&["-x", "-m", "msg"]).unwrap().message.as_deref(), Some("msg"));
     assert_eq!(
-        parse(&["--auto-merge-resolve=theirs", "--message=hello", "--no-color"])
-            .unwrap()
-            .message
-            .as_deref(),
+        parse(&[
+            "--auto-merge-resolve=theirs",
+            "--message=hello",
+            "--no-color",
+            "--no-color=false",
+        ])
+        .unwrap()
+        .message
+        .as_deref(),
         Some("hello"),
     );
     assert!(!parse(&["--no-snap"]).unwrap().skip_install);

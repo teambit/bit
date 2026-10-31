@@ -12,16 +12,21 @@ pub(crate) fn distance(
     let versions: Vec<graph::Version> =
         serde_json::from_value(records.clone()).map_err(io::Error::other)?;
     graph::validate(&versions)?;
-    for head in [source, target].into_iter().flatten() {
-        hash(head)?;
+    let source = source
+        .map(|head| hash(head.trim()).map(|digest| crate::validate::hexadecimal(&digest)))
+        .transpose()?;
+    let target = target
+        .map(|head| hash(head.trim()).map(|digest| crate::validate::hexadecimal(&digest)))
+        .transpose()?;
+    for head in [&source, &target].into_iter().flatten() {
         if !versions
             .iter()
-            .any(|row| row.hash == head)
+            .any(|row| row.hash.trim().eq_ignore_ascii_case(head))
         {
             return Err(invalid("status history requires population"));
         }
     }
-    match (source, target) {
+    match (source.as_deref(), target.as_deref()) {
         (Some(source), Some(target)) if source != target => {
             graph::diverge(&versions, source, target, false)
         }

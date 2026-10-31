@@ -34,7 +34,7 @@ pub fn link_prepared_component(
     manifest: Option<&Manifest>,
     root_components_dir: Option<&Path>,
 ) -> io::Result<ComponentLinks> {
-    if component.root_dir == "." {
+    if is_workspace_root_dir(&component.root_dir) {
         return Ok(ComponentLinks::default());
     }
     let package = root.join("node_modules").join(&component.package_name);
@@ -76,4 +76,11 @@ fn source_links(
         )?;
     }
     Ok(())
+}
+
+fn is_workspace_root_dir(root_dir: &str) -> bool {
+    let trimmed = root_dir
+        .trim()
+        .trim_end_matches(['/', '\\']);
+    trimmed.is_empty() || trimmed == "."
 }

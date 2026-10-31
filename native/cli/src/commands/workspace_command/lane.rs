@@ -3,6 +3,9 @@
 //! cannot know about the lane objects it writes: history keys, logs and
 //! squash dates (`commandLaneReceipt`).
 
+#[cfg(test)]
+mod lane_tests;
+
 use super::{Steps, snapshot::receipt};
 use crate::commands::{
     patterns,
@@ -196,6 +199,13 @@ fn squash_hashes(preparation: &Value) -> io::Result<Vec<String>> {
 /// `commandOtherLane(context)`: the merged lane's `scope/name`.
 fn other_lane(context: &Value) -> io::Result<String> {
     let other = &context["lane"]["otherId"];
+    if let Some((scope, name)) = other
+        .as_str()
+        .and_then(|value| value.split_once('/'))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+    {
+        return Ok(format!("{scope}/{name}"));
+    }
     let name = other["name"]
         .as_str()
         .filter(|name| !name.is_empty());
@@ -207,6 +217,3 @@ fn other_lane(context: &Value) -> io::Result<String> {
         _ => Err(decline("command lane identity receipt")),
     }
 }
-
-#[cfg(test)]
-mod lane_tests;

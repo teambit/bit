@@ -1,5 +1,8 @@
 //! Source-file line attribution from validated local Version history.
 
+#[cfg(test)]
+mod tests;
+
 use super::{Target, classify_target, read};
 use crate::{
     commands::{
@@ -27,7 +30,7 @@ pub(super) fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
                 consume_trailing_path(iter, &mut path)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-m" | "--include-message" | "--include-message=true" => include_message = true,
             "--include-message=false" => include_message = false,
             val if !val.starts_with('-') && !val.is_empty() && path.is_none() => path = Some(val),
@@ -128,9 +131,6 @@ fn published_file_matches(root: &Path, input: &str, file: &str) -> io::Result<bo
 fn published_source_key(raw_dir: &str, normalized_absolute: &str) -> String {
     normalized_absolute.replacen(&format!("{raw_dir}/"), "", 1)
 }
-
-#[cfg(test)]
-mod tests;
 
 fn report(rows: &[Value], include_message: bool, chalk: Chalk) -> io::Result<String> {
     let selected = selected(rows);

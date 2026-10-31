@@ -1,5 +1,8 @@
 //! Proves that every object used for a delete decision still has its source bytes.
 
+#[cfg(test)]
+mod tests;
+
 use super::{invalid, object_path};
 use crate::workspace::engine::command::outbound;
 use serde_json::Value;
@@ -7,9 +10,6 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-
-#[cfg(test)]
-mod tests;
 
 const MAX_READSET_BYTES: usize = 128 * 1024 * 1024;
 

@@ -5,9 +5,13 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 pub(super) fn package(root: &Path, scope: &str, name: &str) -> io::Result<PathBuf> {
+    let (scope, name) = (scope.trim(), name.trim());
     let (owner, rest) = scope
         .split_once('.')
         .map_or((scope, ""), |(owner, rest)| (owner, rest));
+    if owner.is_empty() || name.is_empty() {
+        return Err(invalid("component package path"));
+    }
     let filename = if rest.is_empty() {
         name.replace('/', ".")
     } else {
@@ -73,6 +77,7 @@ pub(crate) fn remove_path(path: &Path) -> io::Result<()> {
 }
 
 pub(crate) fn validate_file_id(value: &str) -> io::Result<()> {
+    let value = value.trim();
     if value.len() > 32
         || value.split('-').count() != 6
         || value

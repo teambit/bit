@@ -1,3 +1,5 @@
+#[cfg(test)]
+mod tests;
 use super::{
     super::{Record, State, history, input, invalid, proof, recovery, repository},
     Prepare, Retained, selection,
@@ -260,8 +262,7 @@ fn load_lane(
 ) -> io::Result<command_import::PreparedImport> {
     let mut imported = command_import::prepare_lane(&request.root, &request.global_remotes_file)?;
     if let Some(header) = bitmap.get("_bit_lane") {
-        let id = serde_json::from_value::<command_import::lane::Id>(header["id"].clone())
-            .map_err(io::Error::other)?;
+        let id = command_import::lane::lane_index_id(header)?;
         let lane =
             imported.load_lane(&id)?.ok_or_else(|| invalid("resolve current Lane absent"))?;
         let entries = command_import::lane::entries(&lane.value)?;
@@ -411,6 +412,3 @@ fn bind_models(context: &Value, repository: &mut repository::Repository) -> io::
     }
     repository.validate()
 }
-
-#[cfg(test)]
-mod tests;

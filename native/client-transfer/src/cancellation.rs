@@ -1,4 +1,7 @@
 //! Cooperative cancellation closes transport futures without rolling back acknowledged writes.
+#[cfg(test)]
+mod tests;
+
 use futures_util::future::{Either, select};
 use std::{
     cell::RefCell,
@@ -79,6 +82,3 @@ impl Cancellation {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

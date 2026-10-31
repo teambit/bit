@@ -24,6 +24,8 @@ pub(super) fn render(
     }
     let changed = refactored
         .iter()
+        .map(|id| id.trim())
+        .filter(|id| !id.is_empty())
         .map(|id| format.item(id))
         .collect::<Vec<_>>();
     Ok(Formatter::join(&[

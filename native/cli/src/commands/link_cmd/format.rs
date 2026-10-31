@@ -142,8 +142,9 @@ fn format_component_links(
                 format_regular_component_link(chalk, item)
             }
         })
+        .filter(|row| !row.is_empty())
         .collect();
-    format!("{header}\n{}", rows.join("\n"))
+    if rows.is_empty() { header } else { format!("{header}\n{}", rows.join("\n")) }
 }
 
 fn format_regular_component_link(chalk: Chalk, item: &ComponentLinkItem) -> String {

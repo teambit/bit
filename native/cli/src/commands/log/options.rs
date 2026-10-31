@@ -39,7 +39,9 @@ fn consume_trailing_id<'a>(
 }
 
 fn apply_log_arg<'a>(options: &mut Options<'a>, arg: &'a str) -> Option<()> {
-    if arg == "--no-color" || apply_log_combined_short(options, arg) {
+    if matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false")
+        || apply_log_combined_short(options, arg)
+    {
         return Some(());
     }
     if !arg.starts_with('-') && !arg.is_empty() && options.id.is_none() {

@@ -44,16 +44,29 @@ impl Network {
     }
 }
 
+fn parse_lane_id(id: &Value) -> io::Result<(&str, &str)> {
+    if let Some(raw) = id.as_str() {
+        raw.split('@')
+            .next()
+            .unwrap_or(raw)
+            .split_once('/')
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid("remote lane scope"))
+    } else {
+        let name = id["name"]
+            .as_str()
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("remote lane name"))?;
+        let scope = id["scope"]
+            .as_str()
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| invalid("remote lane scope"))?;
+        Ok((scope, name))
+    }
+}
+
 fn lane_projection(lane: &Value) -> io::Result<Value> {
-    let id = &lane["id"];
-    let name = id["name"]
-        .as_str()
-        .filter(|name| !name.is_empty())
-        .ok_or_else(|| invalid("remote lane name"))?;
-    let scope = id["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
-        .ok_or_else(|| invalid("remote lane scope"))?;
+    let (scope, name) = parse_lane_id(&lane["id"])?;
     let rows = lane["components"].as_array().ok_or_else(|| invalid("remote lane components"))?;
     if rows.len() > 4096 {
         return Err(invalid("remote lane component count"));

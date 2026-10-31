@@ -1,6 +1,9 @@
 //! Dependency policies aspects register through `registerDependenciesPolicies`
 //! (the "slots" layer of `mergeVariantPolicies`).
 
+#[cfg(test)]
+mod tests;
+
 use super::entries::{self, VariantOptions, merge};
 use crate::{
     host::{CoreAspect, Host},
@@ -148,6 +151,3 @@ pub fn component_slots(
     }
     slots
 }
-
-#[cfg(test)]
-mod tests;

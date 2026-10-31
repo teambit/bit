@@ -104,6 +104,7 @@ impl DepsObject {
 /// `map[name]` is set and not an empty string.
 pub(super) fn truthy(map: &DependencyMap, name: &str) -> bool {
     map.get(name)
+        .map(|version| version.trim())
         .is_some_and(|version| !version.is_empty())
 }
 
@@ -134,7 +135,13 @@ pub(super) fn manifest_field(manifest: &Manifest, key: &str) -> DependencyMap {
         .map(|object| {
             object
                 .iter()
-                .filter_map(|(name, version)| Some((name.clone(), version.as_str()?.to_string())))
+                .filter_map(|(name, version)| {
+                    let trimmed_name = name.trim();
+                    let trimmed_version = version.as_str()?.trim();
+                    (!trimmed_name.is_empty() && !trimmed_version.is_empty()).then(|| {
+                        (trimmed_name.to_string(), trimmed_version.to_string())
+                    })
+                })
                 .collect()
         })
         .unwrap_or_default()

@@ -13,6 +13,8 @@ pub use scope::render_scope_json;
 mod global;
 mod paths;
 mod scope;
+#[cfg(test)]
+mod tests;
 
 use serde_json::{Map, Value};
 use std::io;
@@ -121,9 +123,6 @@ pub fn workspace_root(cwd: &std::path::Path) -> Option<std::path::PathBuf> {
         .find(|path| path.join("workspace.jsonc").is_file())
         .map(std::path::Path::to_owned)
 }
-
-#[cfg(test)]
-mod tests;
 
 /// Workspace.getConfigStore lists the first matching version-insensitive config-store aspect.
 #[must_use]

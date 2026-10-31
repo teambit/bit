@@ -1,5 +1,7 @@
 pub(crate) mod config;
 mod models;
+#[cfg(test)]
+mod tests;
 
 use super::{invalid, inventory};
 use serde::Deserialize;
@@ -87,10 +89,9 @@ pub(super) fn scan(
     let (count, mut output) = inventory::begin(input, &mut plan.inventory, pool)?;
     plan.pending = output["token"].as_u64();
     // This cache is private to the cold command, unlike the public inventory API.
-    output
-        .as_object_mut()
-        .expect("inventory output")
-        .remove("cache");
+    if let Some(object) = output.as_object_mut() {
+        object.remove("cache");
+    }
     Ok((count, output))
 }
 pub(super) fn finish(
@@ -142,6 +143,3 @@ pub(super) fn complete(state: &mut State) -> io::Result<(usize, Value)> {
     }
     Ok((plan.cursor, json!({"modified":plan.modified,"newComps":plan.new,"compWithIssues":[]})))
 }
-
-#[cfg(test)]
-mod tests;

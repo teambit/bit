@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{Reader, Target, invalid};
 use rayon::prelude::*;
 use serde_json::Value;
@@ -135,6 +138,3 @@ pub(super) fn include_lane_heads(
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

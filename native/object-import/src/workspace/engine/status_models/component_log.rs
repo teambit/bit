@@ -1,5 +1,7 @@
 //! Local `bit log` history: validated model and Version reads, following parents from main's head.
 mod control;
+#[cfg(test)]
+mod tests;
 
 use super::{Reader, Request as ModelsRequest, invalid, lane, load};
 use crate::{merge_history, read_budget::Budget, read_version};
@@ -176,7 +178,7 @@ pub(in crate::workspace::engine) fn read_file_remote(
         return Err(invalid("file remote log scope path"));
     }
     let scope_file = fs::File::open(path.join("scope.json"))?;
-    let config: Value = serde_json::from_slice(&Budget::new(1024 * 1024).read(scope_file)?)?;
+    let config: Value = crate::parse_jsonc(&Budget::new(1024 * 1024).read(scope_file)?)?;
     if config["name"] != scope {
         return Err(invalid("file remote log scope name"));
     }
@@ -289,6 +291,3 @@ fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
     }
     Ok(tags)
 }
-
-#[cfg(test)]
-mod tests;

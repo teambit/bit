@@ -42,7 +42,7 @@ pub(super) fn loads(criterion: &str) -> bool {
 pub(super) fn identities(targets: &[Value]) -> Vec<String> {
     targets
         .iter()
-        .filter_map(|row| row["identity"].as_str().map(str::to_owned))
+        .filter_map(|row| row_identity(row).map(str::to_owned))
         .collect()
 }
 pub(super) fn ordinary(targets: &[Value], parts: &[String]) -> io::Result<Vec<Value>> {
@@ -62,20 +62,27 @@ pub(super) fn ordinary(targets: &[Value], parts: &[String]) -> io::Result<Vec<Va
         .filter_map(|id| {
             targets
                 .iter()
-                .find(|row| row["identity"] == *id)
+                .find(|row| row_identity(row) == Some(*id))
         })
         .cloned()
         .collect())
 }
 pub(super) fn union(selected: &mut Vec<Value>, targets: Vec<Value>) {
     for row in targets {
+        let row_id = row_identity(&row);
         if !selected
             .iter()
-            .any(|known| known["identity"] == row["identity"])
+            .any(|known| row_identity(known) == row_id)
         {
             selected.push(row);
         }
     }
+}
+
+fn row_identity(row: &Value) -> Option<&str> {
+    row["identity"]
+        .as_str()
+        .or_else(|| row["id"].as_str())
 }
 pub(super) fn no_matches(pattern: &str) -> io::Error {
     io::Error::new(

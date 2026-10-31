@@ -1,15 +1,5 @@
 pub(super) mod options;
-use super::{Capture, Overlay, PreparedImport, Target, history, invalid, merge, object_hash};
-use dependencies::{closure, only_unbuilt_requests};
-use refresh_selection::refresh_all;
-use remote::remote;
-use serde_json::{Value, json};
-use std::{
-    collections::{HashMap, HashSet},
-    io,
-    path::Path,
-};
-use transfer::receive;
+
 mod ancestors;
 mod checkout;
 mod dependencies;
@@ -22,6 +12,18 @@ mod refresh_selection;
 mod remote;
 mod selected;
 mod transfer;
+
+use super::{Capture, Overlay, PreparedImport, Target, history, invalid, merge, object_hash};
+use dependencies::{closure, only_unbuilt_requests};
+use refresh_selection::refresh_all;
+use remote::remote;
+use serde_json::{Value, json};
+use std::{
+    collections::{HashMap, HashSet},
+    io,
+    path::Path,
+};
+use transfer::receive;
 pub(crate) fn prepare(
     root: &Path,
     global_remotes_file: &Path,

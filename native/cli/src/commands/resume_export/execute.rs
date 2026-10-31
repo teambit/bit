@@ -110,17 +110,31 @@ fn append_ids(ids: &mut Vec<String>, value: Value) -> io::Result<()> {
     match value {
         Value::Null => {}
         Value::Array(values) => {
-            for value in values {
-                if let Some(value) = value
-                    .as_str()
-                    .filter(|value| !value.is_empty())
-                {
-                    ids.push(value.to_owned());
-                }
-            }
+            ids.extend(values.iter().filter_map(extract_export_id));
         }
-        Value::String(value) if !value.is_empty() => ids.push(value),
+        Value::String(_) | Value::Object(_) => {
+            if let Some(nested) = value
+                .get("exportedIds")
+                .or_else(|| value.get("ids"))
+                .cloned()
+            {
+                return append_ids(ids, nested);
+            }
+            let id = extract_export_id(&value)
+                .ok_or_else(|| io::Error::other("invalid remote export result"))?;
+            ids.push(id);
+        }
         _ => return Err(io::Error::other("invalid remote export result")),
     }
     Ok(())
+}
+
+fn extract_export_id(value: &Value) -> Option<String> {
+    value
+        .as_str()
+        .or_else(|| value.get("id").and_then(Value::as_str))
+        .or_else(|| value.get("name").and_then(Value::as_str))
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .map(str::to_owned)
 }

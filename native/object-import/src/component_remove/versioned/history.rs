@@ -1,5 +1,8 @@
 //! Validate linear lane ancestry and Node's status-populated `VersionHistory`.
 
+#[cfg(all(test, unix))]
+mod tests;
+
 use super::{super::validate_ancestors, HistoryState, invalid, outbound};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
@@ -150,6 +153,3 @@ fn read_history(root: &Path, path: &Path) -> io::Result<Option<Vec<u8>>> {
         Err(error) => Err(error),
     }
 }
-
-#[cfg(all(test, unix))]
-mod tests;

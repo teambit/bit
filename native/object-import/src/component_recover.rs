@@ -254,29 +254,30 @@ fn read_repository(root: &Path, selected: &Selection) -> io::Result<(Repository,
     }
     Ok((Repository { index, objects, sources: Vec::new() }, manifest))
 }
+fn matches_index_row(row: &Value, scope: &str, name: &str) -> bool {
+    let (row_scope, row_name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
+            .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default(), nm));
+    row["isSymlink"] != true && row_name == name && (row_scope == scope || row_scope.is_empty())
+}
 fn read_model(root: &Path, scope: &str, name: &str) -> io::Result<(Vec<u8>, Object, Value)> {
-    let scope_dir = crate::scope_path(root);
-    let index = fs::read(scope_dir.join("index.json"))?;
-    let value: Value = serde_json::from_slice(&index)?;
+    let index = fs::read(crate::scope_path(root).join("index.json"))?;
+    let value: Value = crate::parse_jsonc(&index)?;
     let rows = value["components"]
         .as_array()
         .or_else(|| value.as_array())
         .ok_or_else(|| invalid("scope index"))?;
     let matches: Vec<_> = rows
         .iter()
-        .filter(|row| {
-            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
-            row["isSymlink"] != true
-                && row["id"]["name"] == name
-                && (row_scope == scope || row_scope.is_empty())
-        })
+        .filter(|row| matches_index_row(row, scope, name))
         .collect();
     if matches.len() != 1 {
         return Err(invalid("component is not uniquely indexed"));
     }
     let model_hash = matches[0]["hash"].as_str().ok_or_else(|| invalid("Component hash"))?;
     let model = frozen(root, model_hash)?;
-    let model_value = outbound::read_object(&scope_dir.join("objects"), model_hash, "Component")?;
+    let model_value =
+        outbound::read_object(&crate::scope_path(root).join("objects"), model_hash, "Component")?;
     let model_scope = model_value["scope"].as_str().unwrap_or_default();
     if (!model_scope.is_empty() && model_scope != scope) || model_value["name"] != name {
         return Err(invalid("Component model identity"));

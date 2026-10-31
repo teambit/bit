@@ -56,7 +56,11 @@ fn copy_sources(
         .sources()
         .iter()
         .map(|row| {
-            format!("{}@{}", row["identity"].as_str().unwrap(), row["version"].as_str().unwrap())
+            format!(
+                "{}@{}",
+                row["identity"].as_str().unwrap_or_default(),
+                row["version"].as_str().unwrap_or_default(),
+            )
         })
         .collect::<Vec<_>>();
     linker.call(

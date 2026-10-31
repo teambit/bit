@@ -30,9 +30,8 @@ impl Refreshes {
             None
         };
         let forked = if lanes {
-            context["forkedFrom"]
-                .as_str()
-                .map(|id| prepare_forked(root, context, result, current, id))
+            forked_lane_id(context)
+                .map(|id| prepare_forked(root, context, result, current, &id))
                 .transpose()?
         } else {
             None
@@ -41,8 +40,8 @@ impl Refreshes {
     }
 
     pub(super) fn attach(&self, result: &mut Value, context: &Value) {
-        if context["forkedFrom"].is_string() {
-            result["forkedLaneId"] = context["forkedFrom"].clone();
+        if let Some(forked) = forked_lane_id(context) {
+            result["forkedLaneId"] = Value::String(forked);
         }
         if let Some((_, updates, _, _)) = &self.main {
             result["pendingUpdatesFromMain"] = updates["pendingUpdatesFromMain"].clone();
@@ -57,7 +56,7 @@ impl Refreshes {
             main_count: self.main.as_ref().map_or(0, |(_, _, count, _)| *count),
             main_objects: self.main.as_ref().map_or(0, |(_, _, _, objects)| *objects),
             forked_count: self.forked.as_ref().map_or(0, |(_, _, _, count)| *count),
-            forked_id: context["forkedFrom"].as_str().map(str::to_owned),
+            forked_id: forked_lane_id(context),
             ..Default::default()
         }
     }
@@ -160,4 +159,20 @@ pub(super) fn prepare_forked(
         .and_then(|count| usize::try_from(count).ok())
         .ok_or_else(|| decline("status forked refresh count"))?;
     Ok((engine, token.clone(), updates, count))
+}
+
+fn forked_lane_id(context: &Value) -> Option<String> {
+    if let Some(id) = context["forkedFrom"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+    {
+        return Some(id.to_owned());
+    }
+    let scope = context["forkedFrom"]["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())?;
+    let name = context["forkedFrom"]["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())?;
+    Some(format!("{scope}/{name}"))
 }

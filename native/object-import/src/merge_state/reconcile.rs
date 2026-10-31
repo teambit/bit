@@ -42,11 +42,11 @@ struct Lane {
 impl Lane {
     fn value(&self) -> io::Result<Value> {
         for value in [&self.name, &self.scope] {
-            if value.is_empty() || value.len() > 32768 || value.contains('\0') {
+            if value.trim().is_empty() || value.len() > 32768 || value.contains('\0') {
                 return Err(invalid("invalid reconciliation lane"));
             }
         }
-        Ok(json!({"name":self.name,"scope":self.scope}))
+        Ok(json!({"name":self.name.trim(),"scope":self.scope.trim()}))
     }
 }
 
@@ -69,6 +69,7 @@ pub(super) fn plan(input: &Plan) -> io::Result<Value> {
 fn previous(input: &Plan) -> io::Result<&str> {
     let previous = input.previously_used_version
         .as_deref()
+        .map(str::trim)
         .ok_or_else(|| invalid("unrelated snapshot requires previous version"))?;
     if previous.is_empty() || previous.len() > 256 || previous.contains('\0') {
         return Err(invalid("invalid previous version"));
@@ -104,9 +105,15 @@ fn squashed(input: &Plan, lane: &Value) -> io::Result<Value> {
 }
 fn merged(input: &Plan) -> Value {
     let mut parents = input.current_parents.clone();
-    if !input.is_legacy && !parents.contains(&input.entry.head) {
-        parents.push(input.entry.head.clone());
+    if !input.is_legacy
+        && !parents
+            .iter()
+            .any(|parent| parent.trim().eq_ignore_ascii_case(input.entry.head.trim()))
+    {
+        parents.push(input.entry.head.trim().to_owned());
     }
-    let set_message = input.current_message.as_ref().is_none_or(String::is_empty);
+    let set_message = input.current_message
+        .as_ref()
+        .is_none_or(|msg| msg.trim().is_empty());
     json!({"mode":"merge","parents":parents,"setMergeMessage":set_message})
 }

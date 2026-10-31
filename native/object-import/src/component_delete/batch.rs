@@ -60,7 +60,12 @@ impl Batch {
                 .unwrap_or(&plan.full_id);
             let Some(name) = components
                 .iter()
-                .find(|row| row["identity"] == identity)
+                .find(|row| {
+                    row["identity"]
+                        .as_str()
+                        .or_else(|| row["id"].as_str())
+                        == Some(identity)
+                })
                 .and_then(|row| row["packageName"].as_str())
             else {
                 continue;

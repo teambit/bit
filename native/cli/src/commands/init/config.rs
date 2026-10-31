@@ -27,11 +27,19 @@ pub(super) fn create(root: &Path, modules: &Path, options: &Options) -> io::Resu
     if let Some(value) = &options.defaults.generator {
         document.set(
             &["teambit.generator/generator"],
-            &json!({"envs":value.split(',').map(str::trim).collect::<Vec<_>>()}),
+            &json!({"envs": parse_generator_envs(value)}),
         );
     }
     configure(&mut document, options);
     Ok(render(&document))
+}
+
+fn parse_generator_envs(value: &str) -> Vec<&str> {
+    value
+        .split(',')
+        .map(str::trim)
+        .filter(|env| !env.is_empty())
+        .collect()
 }
 
 pub(super) fn existing(path: &Path) -> io::Result<Option<Vec<u8>>> {

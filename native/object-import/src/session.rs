@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use std::{
     io::{self, Cursor, Read},
     sync::{Arc, OnceLock},
@@ -87,6 +90,3 @@ pub(crate) fn shared_pool(threads: usize) -> io::Result<Arc<rayon::ThreadPool>> 
     );
     Ok(Arc::clone(entry.get_or_init(|| pool)))
 }
-
-#[cfg(test)]
-mod tests;

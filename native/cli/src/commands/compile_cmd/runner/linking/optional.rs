@@ -71,11 +71,19 @@ fn component(
     package: &str,
     lifecycle: Lifecycle,
 ) -> io::Result<ComponentDependency> {
-    let identity = entry["identity"]
+    let raw = entry["identity"]
         .as_str()
+        .or_else(|| entry["id"].as_str())
         .ok_or_else(|| io::Error::other("compiler dependency identity"))?;
-    let (identity, version) =
-        identity.rsplit_once('@').ok_or_else(|| io::Error::other("compiler dependency version"))?;
+    let (identity, version) = match raw.rsplit_once('@') {
+        Some((base, ver)) => (base, ver),
+        None => (
+            raw,
+            entry["version"]
+                .as_str()
+                .ok_or_else(|| io::Error::other("compiler dependency version"))?,
+        ),
+    };
     let (scope, name) =
         identity.split_once('/').ok_or_else(|| io::Error::other("compiler dependency scope"))?;
     Ok(ComponentDependency {

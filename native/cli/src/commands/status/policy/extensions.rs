@@ -2,6 +2,9 @@
 //! stored version, with bitmap configuration applied, for components that
 //! only use the built-in Node environment.
 
+#[cfg(test)]
+mod tests;
+
 use super::super::js::{array, decline, nullish, object};
 use serde_json::{Map, Value, json};
 use std::io;
@@ -126,6 +129,3 @@ fn core_aspect(name: &str) -> bool {
         .split('"')
         .any(|id| id == name)
 }
-
-#[cfg(test)]
-mod tests;

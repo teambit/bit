@@ -9,7 +9,6 @@ use super::{
 };
 use crate::{native::Outcome, workspace};
 use bit_install::workspace::Bitmap;
-use serde_json::Value;
 use std::{env, ffi::OsString, fs, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "debug-load", aliases: &[], run };
@@ -82,6 +81,8 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
         }
         match args[idx] {
             "--no-color"
+            | "--no-color=true"
+            | "--no-color=false"
             | "--all-aspects"
             | "--all-aspects=true"
             | "--all-aspects=false"
@@ -169,19 +170,5 @@ pub(super) fn check_missing_workspace_component(
 }
 
 fn exists_in_scope_index(root: &Path, name: &str) -> bool {
-    let index_path = workspace::scope_path(root).join("index.json");
-    let Ok(bytes) = fs::read(index_path) else {
-        return false;
-    };
-    let Ok(index) = serde_json::from_slice::<Value>(&bytes) else {
-        return false;
-    };
-    index["components"]
-        .as_array()
-        .or_else(|| index.as_array())
-        .is_some_and(|components| {
-            components
-                .iter()
-                .any(|item| item["id"]["name"].as_str() == Some(name))
-        })
+    crate::commands::scope_set::selection::exists_in_scope_index(root, name)
 }

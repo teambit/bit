@@ -29,12 +29,24 @@ pub(super) fn results(input: &Value) -> io::Result<Value> {
     Ok(json!({"failed":failed,"remove":removed,"succeeded":succeeded,"visible":visible}))
 }
 fn identity(value: &Value) -> io::Result<(Option<&str>, &str)> {
-    let scope = match value.get("scope") {
+    let target = value.get("id").unwrap_or(value);
+    if let Some(raw) = target.as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+        let (scope, name) = match bare.split_once('/') {
+            Some((scope, name)) => (Some(scope).filter(|scope| !scope.is_empty()), name),
+            None => (None, bare),
+        };
+        if name.is_empty() || name.len() > 4096 {
+            return Err(invalid("merge identity name"));
+        }
+        return Ok((scope, name));
+    }
+    let scope = match target.get("scope") {
         None | Some(Value::Null) => None,
         Some(Value::String(scope)) => Some(scope.as_str()),
         _ => return Err(invalid("merge identity scope")),
     };
-    let name = value["name"]
+    let name = target["name"]
         .as_str()
         .filter(|name| !name.is_empty() && name.len() <= 4096)
         .ok_or_else(|| invalid("merge identity name"))?;

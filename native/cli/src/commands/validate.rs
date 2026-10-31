@@ -150,7 +150,7 @@ fn apply_validate_token<'a>(
         return Some(());
     }
     match arg {
-        "--no-color" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" => {}
         "-a" | "--all" | "--all=true" => options.all = true,
         "--all=false" => options.all = false,
         "-u" | "--unmodified" | "--unmodified=true" => options.unmodified = true,

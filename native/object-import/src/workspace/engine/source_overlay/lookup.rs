@@ -56,7 +56,8 @@ impl SourceOverlay {
                 return Ok(None);
             }
             proofs.push(proof::metadata(ancestor, Some(&metadata))?);
-            let mapped = physical.join(path.strip_prefix(ancestor).unwrap());
+            let suffix = path.strip_prefix(ancestor).map_err(io::Error::other)?;
+            let mapped = physical.join(suffix);
             let mapped = match mapped.strip_prefix(&self.data.physical_root) {
                 Ok(relative) => self.data.root.join(relative),
                 Err(_) => return Ok(None),

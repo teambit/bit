@@ -28,10 +28,11 @@ pub(super) fn apply(request: &Request, output: &mut Output) -> io::Result<()> {
 fn resolve(request: &Request, name: &str) -> io::Result<Value> {
     if let Some(value) = request.resolved
         .get(name)
-        .and_then(|package| package.concrete_version.as_ref())
+        .and_then(|package| package.concrete_version.as_deref())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
-        return Ok(Value::String(value.clone()));
+        return Ok(Value::String(value.to_owned()));
     }
     if let Some(value) = version(&request.environment.workspace.dependencies, name)
         .or_else(|| version(&request.environment.workspace.peer_dependencies, name))
@@ -42,14 +43,20 @@ fn resolve(request: &Request, name: &str) -> io::Result<Value> {
         .iter()
         .find(|entry| entry.package_name.as_deref() == Some(name))
     {
-        let (_, value) = entry.identity
-            .rsplit_once('@')
+        let value = extract_model_component_version(&entry.identity)
             .ok_or_else(|| invalid("dependency policy model version unavailable"))?;
         return Ok(Value::String(value.to_owned()));
     }
     Ok(Value::String(
         version(&request.environment.model_packages, name).unwrap_or_else(|| "*".to_owned()),
     ))
+}
+
+fn extract_model_component_version(identity: &str) -> Option<&str> {
+    let trimmed = identity.trim();
+    let (base, ver) = trimmed.rsplit_once('@')?;
+    let ver = ver.trim();
+    (!base.trim().is_empty() && !ver.is_empty() && !ver.contains('/')).then_some(ver)
 }
 
 /// Resolve automatic package placeholders before the environment's own policy replaces them.

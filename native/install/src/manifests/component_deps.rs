@@ -2,6 +2,8 @@
 //! object per component package name.
 
 mod env_peers;
+#[cfg(test)]
+mod tests;
 
 use super::{
     ManifestInput,
@@ -288,6 +290,3 @@ pub(super) fn build(
         .map(|component| (component.package_name.clone(), component_deps(component, input, root)))
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

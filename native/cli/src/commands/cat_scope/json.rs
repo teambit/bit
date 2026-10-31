@@ -111,10 +111,15 @@ pub(super) fn build_lane_json_obj(
         .get("forkedFrom")
         .filter(|val| !val.is_null())
     {
-        map.insert(
-            "forkedFrom".into(),
-            json!({ "name": ff["name"].as_str()?, "scope": ff["scope"].as_str()? }),
-        );
+        let (ff_scope, ff_name) = if let Some(raw_ff) = ff.as_str() {
+            raw_ff
+                .rsplit_once('@')
+                .map_or(raw_ff, |(bare, _)| bare)
+                .split_once('/')?
+        } else {
+            (ff["scope"].as_str()?, ff["name"].as_str()?)
+        };
+        map.insert("forkedFrom".into(), json!({ "name": ff_name, "scope": ff_scope }));
     }
     map.insert("_hash".into(), Value::String(hash.to_owned()));
     let schema = raw["schema"].as_str().unwrap_or("0.0.0");
@@ -130,13 +135,20 @@ fn build_lane_components_json(val: Option<&Value>) -> Option<Vec<Value>> {
     let Some(arr) = val.and_then(Value::as_array) else { return Some(Vec::new()) };
     let mut out = Vec::with_capacity(arr.len());
     for item in arr {
+        let (scope, name) = if let Some(raw) = item["id"].as_str() {
+            raw.rsplit_once('@')
+                .map_or(raw, |(bare, _)| bare)
+                .split_once('/')?
+        } else {
+            (item["id"]["scope"].as_str()?, item["id"]["name"].as_str()?)
+        };
         let mut comp = Map::new();
         comp.insert(
             "id".into(),
             json!({
                 "_legacy": {
-                    "scope": item["id"]["scope"].as_str()?,
-                    "name": item["id"]["name"].as_str()?,
+                    "scope": scope,
+                    "name": name,
                     "version": "latest",
                 }
             }),

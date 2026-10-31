@@ -1,6 +1,8 @@
 //! Native export retains transfer ownership through remote persistence and local callbacks.
 
 mod cloud;
+#[cfg(test)]
+mod export_tests;
 mod interrupt;
 mod lifecycle;
 mod options;
@@ -378,6 +380,3 @@ fn client_id() -> io::Result<String> {
 fn now_ms() -> u128 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_millis())
 }
-
-#[cfg(test)]
-mod export_tests;

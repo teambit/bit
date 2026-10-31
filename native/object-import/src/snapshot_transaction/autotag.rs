@@ -88,6 +88,13 @@ fn qualifies(changed: &Value, dependency: &Value, semver: &Value) -> io::Result<
     Ok(true)
 }
 pub(super) fn identity(id: &Value) -> io::Result<String> {
+    if let Some(raw) = id.as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+        if bare.is_empty() {
+            return Err(invalid("autotag identity"));
+        }
+        return Ok(bare.to_owned());
+    }
     let name = id["name"]
         .as_str()
         .filter(|value| !value.is_empty())

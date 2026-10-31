@@ -25,14 +25,17 @@ pub(super) fn warn(
     else {
         return;
     };
-    let Some(example) = ids[0].as_str() else {
+    let rendered = ids
+        .iter()
+        .filter_map(remote_id_str)
+        .collect::<Vec<_>>();
+    let Some(example) = rendered.first() else {
         return;
     };
-    let name = example.split_once('/').map_or(example, |(_, name)| name);
+    let name = example.split_once('/').map_or(example.as_str(), |(_, name)| name);
     let formatter = Formatter::new(chalk);
-    let rows = ids
+    let rows = rendered
         .iter()
-        .filter_map(Value::as_str)
         .map(|id| formatter.item(id))
         .collect::<Vec<_>>()
         .join("\n");
@@ -42,17 +45,43 @@ pub(super) fn warn(
     output.warning(&text);
 }
 
+fn remote_id_str(value: &Value) -> Option<String> {
+    if let Some(id) = value
+        .as_str()
+        .or_else(|| value["id"].as_str())
+        .or_else(|| value["identity"].as_str())
+        .filter(|id| !id.is_empty())
+    {
+        return Some(id.to_owned());
+    }
+    let name = value["name"]
+        .as_str()
+        .or_else(|| value["id"]["name"].as_str())
+        .filter(|name| !name.is_empty())?;
+    Some(
+        value["scope"]
+            .as_str()
+            .or_else(|| value["id"]["scope"].as_str())
+            .filter(|scope| !scope.is_empty())
+            .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}")),
+    )
+}
+
 fn candidates(added: &[Value], projection: &Projection) -> Vec<Value> {
     added
         .iter()
-        .filter(|row| {
+        .filter_map(|row| {
+            let identity = row["identity"]
+                .as_str()
+                .or_else(|| row["id"].as_str())
+                .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base))?;
             projection.workspace.components
                 .iter()
                 .any(|component| {
                     component.id.scope.is_none()
-                        && row["identity"] == component.id.to_string_without_version()
+                        && identity == component.id.to_string_without_version()
                 })
+                .then(|| Value::String(identity.to_owned()))
         })
-        .map(|row| row["identity"].clone())
         .collect()
 }

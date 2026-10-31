@@ -1,6 +1,7 @@
 //! Move unexported main snaps into a newly created lane before publishing workspace references.
-use super::{Documents, invalid, outbound};
 mod history;
+
+use super::{Documents, invalid, outbound};
 use crate::store::Store;
 use serde_json::{Value, json};
 use std::{

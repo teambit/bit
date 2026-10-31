@@ -142,12 +142,15 @@ fn conflict_package(
         if semver::satisfies(semver, &other_valid, workspace)? {
             continue;
         }
-        plan.conflicts
+        if let Some(rows) = plan.conflicts
             .entry(field)
             .or_insert_with(|| json!([]))
             .as_array_mut()
-            .expect("created array")
-            .push(json!({"name":name,"version":raw.replacen(current,workspace,1),"force":false}));
+        {
+            rows.push(
+                json!({"name":name,"version":raw.replacen(current,workspace,1),"force":false}),
+            );
+        }
         plan.remove_packages.push(name.into());
         plan.debug.push(format!("conflict workspace.jsonc: {name} current: {workspace}, other: {other_valid}. Triggered by: {}", components(uses)));
     }

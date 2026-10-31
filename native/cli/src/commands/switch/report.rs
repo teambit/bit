@@ -1,5 +1,8 @@
 //! `SwitchCmd.report` for local lane switches.
 
+#[cfg(test)]
+mod report_tests;
+
 use super::options::Options;
 use crate::commands::{
     color::Chalk,
@@ -61,6 +64,3 @@ fn build(results: &Results, options: &Options, formatter: &Formatter, minimal: b
     };
     Formatter::join(&[failure, success])
 }
-
-#[cfg(test)]
-mod report_tests;

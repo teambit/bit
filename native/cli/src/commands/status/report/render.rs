@@ -14,7 +14,12 @@ impl Status<'_> {
                 let history = self
                     .models.histories
                     .iter()
-                    .find(|row| row["identity"] == *identity)
+                    .find(|row| {
+                        row["identity"]
+                            .as_str()
+                            .or_else(|| row["id"].as_str())
+                            == Some(*identity)
+                    })
                     .ok_or_else(|| decline("status report history"))?;
                 let count = |side: &str| array(history["merge"].get(side), "merge distance").map(<[Value]>::len);
                 let text = format!(

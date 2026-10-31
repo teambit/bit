@@ -3,6 +3,9 @@
 //! generated `package.json`. A component that was never tagged has no descriptor
 //! yet, so the core aspect envs stay a fallback.
 
+#[cfg(test)]
+mod tests;
+
 use super::scope_model::ScopeObjects;
 use crate::model::WorkspaceComponent;
 use std::io;
@@ -30,6 +33,3 @@ pub fn aspect_env_ids(
     }
     Ok(ids)
 }
-
-#[cfg(test)]
-mod tests;

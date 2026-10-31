@@ -49,7 +49,10 @@ pub(super) fn prepare(
 
 fn hub_ids(ids: &[String], lanes: bool) -> Vec<String> {
     if lanes {
-        return ids.to_vec();
+        return ids
+            .iter()
+            .map(|id| id.trim().to_owned())
+            .collect();
     }
     ids.iter()
         .map(|id| format!("{}@latest", unversioned(id)))
@@ -57,24 +60,33 @@ fn hub_ids(ids: &[String], lanes: bool) -> Vec<String> {
 }
 
 fn unversioned(id: &str) -> &str {
-    id.split_once('@').map_or(id, |(name, _)| name)
+    let trimmed = id.trim();
+    match trimmed.rfind('@') {
+        Some(index) if index > 0 && !trimmed[index + 1..].contains('/') => {
+            trimmed[..index].trim_end()
+        }
+        _ => trimmed,
+    }
 }
 
 fn group(ids: &[String]) -> io::Result<Vec<(String, Vec<String>)>> {
     let mut grouped: Vec<(String, Vec<String>)> = Vec::new();
     for id in ids {
+        let trimmed = id.trim();
         let (scope, name) =
-            id.split_once('/').ok_or_else(|| io::Error::other("remote identity"))?;
+            trimmed.split_once('/').ok_or_else(|| io::Error::other("remote identity"))?;
+        let scope = scope.trim();
+        let name = name.trim();
         if scope.is_empty() || name.is_empty() || scope.contains("..") || name.contains("..") {
             return Err(io::Error::other("remote identity"));
         }
         if let Some((_, members)) = grouped
             .iter_mut()
-            .find(|(name, _)| name == scope)
+            .find(|(existing_scope, _)| existing_scope == scope)
         {
-            members.push(id.clone());
+            members.push(trimmed.to_owned());
         } else {
-            grouped.push((scope.to_owned(), vec![id.clone()]));
+            grouped.push((scope.to_owned(), vec![trimmed.to_owned()]));
         }
     }
     Ok(grouped)

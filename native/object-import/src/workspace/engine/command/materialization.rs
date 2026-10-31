@@ -1,9 +1,10 @@
+mod license;
+mod root;
+
 use super::{super::invalid, capture::Captured, input::Options, repository::Repository};
 use crate::{checkout_transition, workspace::snapshots};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
-mod license;
-mod root;
 
 pub(super) struct Prepared {
     pub(super) output: Value,

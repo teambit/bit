@@ -1,14 +1,14 @@
+mod input;
+#[cfg(test)]
+mod tests;
+
 use input::{
     Begin, Component, CurrentObservation, ModifiedObservation, Options, Receipt,
     RemovedObservation, validate,
 };
 use serde_json::{Value, json};
-mod input;
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, io};
-
-#[cfg(test)]
-mod tests;
 
 #[derive(Default)]
 pub(super) struct State {

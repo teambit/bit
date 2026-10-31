@@ -141,10 +141,7 @@ pub(super) fn validate_workspace(root: &Path, pattern: &str) -> io::Result<Optio
         Err(err) => return Err(err),
     }
     let bitmap = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
-    if bitmap["_bit_lane"]["id"]["name"]
-        .as_str()
-        .is_some_and(|name| !name.is_empty() && name != "main")
-    {
+    if super::snap_distance::is_on_non_main_lane(&bitmap) {
         return Ok(Some(
             r#"unable to eject when the workspace is on a lane, please use "bit lane eject" to delete the component from the lane and install the main version"#
                 .into(),

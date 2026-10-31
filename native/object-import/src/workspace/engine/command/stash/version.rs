@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{Allocation, Component, invalid};
 use crate::workspace::{
     engine::command::{merge::snapshot, resolve_snapshot::sources},
@@ -106,6 +109,3 @@ fn validate_log(log: &Value) -> io::Result<()> {
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

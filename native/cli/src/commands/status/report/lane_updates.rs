@@ -12,8 +12,15 @@ impl Status<'_> {
     }
 
     pub(super) fn updates_from_forked(&self) -> io::Result<Vec<String>> {
-        let id = text(self.result.get("forkedLaneId"))?;
-        let (_, name) = id.split_once('/').ok_or_else(|| io::Error::other("forked lane id"))?;
+        let name = if let Some(name) = self.result["forkedLaneId"]["name"]
+            .as_str()
+            .filter(|name| !name.is_empty())
+        {
+            name
+        } else {
+            let id = text(self.result.get("forkedLaneId"))?;
+            id.split_once('/').map_or(id, |(_, name)| name)
+        };
         self.updates("updatesFromForked", name)
     }
 
@@ -21,7 +28,7 @@ impl Status<'_> {
         array(self.result.get(field), field)?
             .iter()
             .map(|row| {
-                let id = text(row.get("id"))?;
+                let id = row_id(row)?;
                 let target = array(row["divergeData"].get("snapsOnTargetOnly"), "target snaps")?;
                 let mut message = format!("{from} is ahead by {} snaps", target.len());
                 if self.flags.verbose
@@ -30,15 +37,18 @@ impl Status<'_> {
                     let common = text(
                         row["divergeData"]
                             .get("commonSnapBeforeDiverge")
-                            .and_then(|value| value.get("hash")),
+                            .and_then(|value| value.get("hash").or(Some(value))),
                     )?;
                     message.push_str(" (diverged since ");
                     message.push_str(&common[..common.len().min(9)]);
                     message.push(')');
                 }
                 let forked = array(self.result.get("updatesFromForked"), "forked updates")?;
-                let warn = field == "updatesFromForked" || forked.iter().any(|row| row["id"] == id);
-                self.item_with_message(id, &message, warn)
+                let warn = field == "updatesFromForked"
+                    || forked
+                        .iter()
+                        .any(|entry| row_id(entry).ok().as_deref() == Some(id.as_str()));
+                self.item_with_message(&id, &message, warn)
             })
             .collect()
     }
@@ -49,4 +59,29 @@ impl Status<'_> {
             .map(|identity| self.item((identity, None), false, None, true))
             .collect())
     }
+}
+
+fn row_id(row: &serde_json::Value) -> io::Result<String> {
+    if let Some(id) = row["id"]
+        .as_str()
+        .or_else(|| row["identity"].as_str())
+        .filter(|id| !id.is_empty())
+    {
+        return Ok(id.to_owned());
+    }
+    if let Some(name) = row["id"]["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())
+    {
+        return Ok(
+            match row["id"]["scope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+            {
+                Some(scope) => format!("{scope}/{name}"),
+                None => name.to_owned(),
+            },
+        );
+    }
+    text(row.get("id")).map(str::to_owned)
 }

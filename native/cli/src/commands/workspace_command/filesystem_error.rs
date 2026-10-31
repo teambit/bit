@@ -21,7 +21,7 @@ impl Failure {
         let mut message =
             format!("{}: {}, {} '{}'", self.code, self.message, self.operation, self.path);
         if let Some(destination) = &self.destination {
-            write!(message, " -> '{destination}'").unwrap();
+            let _ = write!(message, " -> '{destination}'");
         }
         message
     }

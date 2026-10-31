@@ -241,7 +241,8 @@ fn apply_hard_arg<'a>(
     state: &mut ParseState<'a>,
 ) -> Option<()> {
     match arg {
-        "--no-color" | "--lane" | "--lane=true" | "--lane=false" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--lane" | "--lane=true"
+        | "--lane=false" => {}
         "--hard" | "--hard=true" => state.hard = true,
         "--hard=false" => state.hard = false,
         "-s" | "--silent" | "--silent=true" => state.silent = true,

@@ -1,4 +1,9 @@
 //! Reconcile hidden lane heads with the current remote before exporting.
+#[cfg(test)]
+mod http_tests;
+#[cfg(test)]
+mod tests;
+
 use super::{Loaded, Prepare, Selection, invalid, model, read_compressed, remote};
 use bit_client_transfer::{fetch::FetchOptions, http::Network, remotes::Remote, tar::ObjectItem};
 use serde_json::{Value, json};
@@ -317,8 +322,3 @@ fn validate_lane(lane: Value, scope: &str, name: &str) -> io::Result<Value> {
         .try_for_each(|value| identity(value).map(|_| ()))?;
     Ok(lane)
 }
-
-#[cfg(test)]
-mod http_tests;
-#[cfg(test)]
-mod tests;

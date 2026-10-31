@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "recovery_tests.rs"]
+mod tests;
+
 use super::super::{invalid, merge::snapshot, proof};
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::Value;
@@ -55,7 +59,17 @@ impl Recovery {
         let config = if current.is_null() {
             "main".to_owned()
         } else {
-            format!("{}/{}", text(&lane["currentId"]["scope"])?, text(&lane["currentId"]["name"])?)
+            let (scope, name) = lane["currentId"]
+                .as_str()
+                .and_then(|raw| raw.split_once('/'))
+                .or_else(|| {
+                    Some((
+                        lane["currentId"]["scope"].as_str()?,
+                        lane["currentId"]["name"].as_str()?,
+                    ))
+                })
+                .ok_or_else(|| invalid("lane recovery identity"))?;
+            format!("{scope}/{name}")
         };
         crate::checkout::plan::relative_path(&config)?;
         let config_path = crate::scope_path(root).join(format!("staged-config/{config}.json"));
@@ -109,7 +123,9 @@ impl Recovery {
         fs::create_dir_all(&self.directory)?;
         for (name, bytes) in &self.files {
             let path = self.directory.join(name);
-            fs::create_dir_all(path.parent().unwrap())?;
+            if let Some(parent) = path.parent() {
+                fs::create_dir_all(parent)?;
+            }
             fs::write(path, bytes)?;
         }
         for (_, name, permissions) in &self.permissions {
@@ -118,9 +134,6 @@ impl Recovery {
         Ok(())
     }
 }
-#[cfg(test)]
-#[path = "recovery_tests.rs"]
-mod tests;
 fn text(value: &Value) -> io::Result<&str> {
     value.as_str().ok_or_else(|| invalid("lane recovery identity"))
 }

@@ -40,11 +40,15 @@ fn authored(value: &Value) -> io::Result<()> {
         return Err(invalid("relative authored issue budget"));
     }
     for record in records {
-        if !record["importSource"].is_string()
-            || !record["componentId"]
+        let valid_id = record["componentId"]
+            .as_str()
+            .is_some_and(|raw| !raw.is_empty())
+            || record["componentId"]
                 .get("_legacy")
                 .unwrap_or_else(|| &record["componentId"])["name"]
-                .is_string()
+                .is_string();
+        if !record["importSource"].is_string()
+            || !valid_id
             || !record["relativePath"]["sourceRelativePath"].is_string()
             || !record["relativePath"]["destinationRelativePath"].is_string()
         {

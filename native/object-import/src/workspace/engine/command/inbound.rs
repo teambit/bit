@@ -5,8 +5,20 @@ pub(in crate::workspace::engine) mod autosync;
 pub(in crate::workspace::engine) mod dependents;
 pub(crate) mod details;
 pub(in crate::workspace::engine) mod policy;
-pub(in crate::workspace::engine) mod remote;
+pub(crate) mod remote;
 pub(in crate::workspace::engine) mod write_dependencies;
+
+mod dependencies;
+mod lane_workspace;
+mod lanes;
+mod owned_writes;
+mod preparation;
+mod progress;
+#[cfg(test)]
+mod protocol_tests;
+mod selection;
+mod validation;
+mod write;
 
 use super::{
     super::{client_status::config, invalid},
@@ -21,15 +33,6 @@ use std::{
     io,
     path::{Path, PathBuf},
 };
-mod dependencies;
-mod lane_workspace;
-mod lanes;
-mod owned_writes;
-mod preparation;
-mod progress;
-mod selection;
-mod validation;
-mod write;
 
 /// Reuse inbound configuration and authentication without persisting recovery probes.
 pub fn recovery_remote_connection(
@@ -40,9 +43,6 @@ pub fn recovery_remote_connection(
     let transport = serde_json::from_value(transport.clone()).map_err(io::Error::other)?;
     remote::recovery_connection(root, home, &transport)
 }
-
-#[cfg(test)]
-mod protocol_tests;
 
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -64,8 +64,6 @@ pub(in crate::workspace::engine) struct Prepare {
 pub(in crate::workspace::engine) struct Transport {
     global_config_dir: PathBuf,
     node_executable: PathBuf,
-    /// The `@teambit/bit` package dir: a `resolverPath` resolves from its
-    /// `@teambit/scope.remotes`, as in Bit.
     #[serde(default)]
     bit_dir: PathBuf,
     bit_version: String,
@@ -239,10 +237,9 @@ fn receipt(
         !selection.prefetched.is_empty(),
         selection.head_dependencies,
     );
-    Ok(json!({
-        "token":token,"owner":"rust","importedIds":imported_ids,
-        "importDetails":details,"progress":progress,
-    }))
+    Ok(
+        json!({"token":token,"owner":"rust","importedIds":imported_ids,"importDetails":details,"progress":progress}),
+    )
 }
 
 /// Each pattern with the components its remote lists, in the remote's order.
@@ -260,10 +257,10 @@ pub(in crate::workspace::engine) fn list(input: &List) -> io::Result<(usize, Val
     let lists = remote::list(input)?
         .into_iter()
         .map(|(pattern, listed)| {
-            let components = listed
-                .iter()
-                .map(|component| json!({"id":component.id(),"deprecated":component.deprecated}))
-                .collect::<Vec<_>>();
+            let map_item = |item: &bit_client_transfer::http::Listed| {
+                json!({"id":item.id(),"deprecated":item.deprecated})
+            };
+            let components: Vec<_> = listed.iter().map(map_item).collect();
             json!({"pattern":pattern,"components":components})
         })
         .collect::<Vec<_>>();
@@ -348,9 +345,10 @@ fn targets(input: &Prepare) -> io::Result<Vec<Target>> {
     if input.ids.is_empty() {
         return bitmap_targets(&input.root);
     }
+    let parse_target = |id: &String| requested_target(id);
     input.ids
         .iter()
-        .map(|id| requested_target(id))
+        .map(parse_target)
         .collect()
 }
 
@@ -366,16 +364,15 @@ fn imported_identity(
 ) -> io::Result<String> {
     let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound target scope"))?;
     let model = details::model(root, imported, scope, &target.name)?;
-    let version =
-        if target.version.is_empty() || matches!(target.version.as_str(), "latest" | "head") {
-            details::head_as_tag_or_hash(model.as_ref())?
-        } else {
-            target.version.clone()
-        };
+    let is_head = target.version.is_empty() || matches!(target.version.as_str(), "latest" | "head");
+    let version = if is_head {
+        details::head_as_tag_or_hash(model.as_ref())?
+    } else {
+        target.version.clone()
+    };
     Ok(format!("{scope}/{}@{version}", target.name))
 }
 
-/// The validated, unpublished object view retained by an inbound command.
 pub(in crate::workspace::engine) fn overlay<'a>(
     state: &'a State,
     token: Option<&str>,
@@ -393,11 +390,12 @@ fn prepare_recovery(
     input: &Prepare,
     targets: &[Target],
 ) -> io::Result<command_import::PreparedImport> {
+    let fetch = |requested: &[Target]| remote::objects(input, requested);
     command_import::prepare_recovery_with_virtual(
         &input.root,
         &input.global_remotes_file,
         targets,
-        |requested| remote::objects(input, requested),
+        fetch,
     )
 }
 
@@ -406,13 +404,13 @@ pub(in crate::workspace::engine) fn local_preflight(input: &Prepare) -> io::Resu
     if input.options.objects_only || input.options.lanes {
         return Ok((0, json!({"eligible":true})));
     }
+    let parse_literal = |id: &String| (!id.contains('*')).then(|| requested_target(id));
     let targets = if input.ids.is_empty() {
         bitmap_targets(&input.root)?
     } else {
         input.ids
             .iter()
-            .filter(|id| !id.contains('*'))
-            .map(|id| requested_target(id))
+            .filter_map(parse_literal)
             .collect::<io::Result<Vec<_>>>()?
     };
     write::preflight(&input.root, &targets, preparation::write_options(input, false))?;

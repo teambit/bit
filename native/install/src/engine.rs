@@ -39,6 +39,8 @@ mod run;
 mod scripts;
 mod session;
 mod settings;
+#[cfg(test)]
+mod tests;
 mod virtual_store_guard;
 
 use crate::model::DependencyMap;
@@ -175,6 +177,3 @@ pub struct EngineResult {
 /// The `{ name: range }` map of the missing peer dependencies of the root
 /// importer (`getMissingPeerDependencies`).
 pub type MissingPeers = DependencyMap;
-
-#[cfg(test)]
-mod tests;

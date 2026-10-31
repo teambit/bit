@@ -8,8 +8,10 @@ pub(super) fn prepare(record: &mut Record, plan: &planning::Planned) -> io::Resu
     if lane["shouldSquash"] != true || lane["other"].is_null() {
         return Ok(());
     }
-    let scope = lane["otherId"]["scope"]
+    let scope = lane["otherId"]
         .as_str()
+        .and_then(|raw| raw.split_once('/').map(|(scope, _)| scope))
+        .or_else(|| lane["otherId"]["scope"].as_str())
         .ok_or_else(|| invalid("lane referenced scope"))?
         .to_owned();
     let merge = plan.merge.as_ref().ok_or_else(|| invalid("lane referenced merge"))?;

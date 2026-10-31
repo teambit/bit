@@ -1,6 +1,9 @@
 //! `EnvPolicy.fromConfigObject`, `VariantPolicy.mergePolices`, and their
 //! legacy forced/auto-detected projections. Later policies win per lifecycle.
 
+#[cfg(test)]
+mod tests;
+
 use super::{FIELDS, NODE_DEV_DEPENDENCIES, NODE_PEERS, RESOLVER};
 use crate::commands::status::js::{array, decline, nullish, object, text, truthy};
 use serde_json::{Map, Value, json};
@@ -200,6 +203,3 @@ fn manifest(entries: &[Entry]) -> Map<String, Value> {
         .map(|entry| (entry.name.clone(), json!(entry.version)))
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

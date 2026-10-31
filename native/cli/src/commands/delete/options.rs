@@ -20,8 +20,8 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
                 consume_trailing_delete_pattern(iter, &mut pattern)?;
                 break;
             }
-            "--no-color" | "--hard=false" | "--force=false" | "-f" | "--force" | "--force=true" => {
-            }
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--hard=false"
+            | "--force=false" | "-f" | "--force" | "--force=true" => {}
             "-s" | "--silent" | "--silent=true" | "-sf" | "-fs" => silent = true,
             "--silent=false" => silent = false,
             "--lane" | "--lane=true" => lane = true,

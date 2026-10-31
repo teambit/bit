@@ -34,12 +34,22 @@ fn refs(value: &Value) -> Option<Vec<&str>> {
         return None;
     }
     refs.iter()
-        .map(|value| valid_hash(value.as_str()?))
+        .map(|entry| {
+            let text = entry
+                .as_str()
+                .or_else(|| entry.get("hash").and_then(Value::as_str))
+                .or_else(|| entry.get("id").and_then(Value::as_str))?;
+            valid_hash(text)
+        })
         .collect()
 }
 
 fn valid_hash(hash: &str) -> Option<&str> {
-    (hash.len() == 40 && hash.bytes().all(|byte| byte.is_ascii_hexdigit())).then_some(hash)
+    (hash.len() == 40
+        && hash
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f')))
+    .then_some(hash)
 }
 
 pub(super) fn complete_refs(value: &Value) -> Option<bool> {

@@ -38,6 +38,7 @@ impl Comparator {
     }
 
     pub(crate) fn new(operator: &str, semver: Option<SemVer>) -> Self {
+        let operator = if semver.is_some() { operator } else { "" };
         let value = semver
             .as_ref()
             .map_or_else(String::new, |semver| format!("{operator}{}", semver.format()));
@@ -75,7 +76,10 @@ impl Comparator {
             if self.value.is_empty() {
                 return Ok(true);
             }
-            return Ok(Range::parse(&other.value, Flavor::V6)?.test_str(&self.value));
+            let range = Range::parse(&other.value, Flavor::V6)?;
+            return Ok(self.semver
+                .as_ref()
+                .is_some_and(|semver| range.test(semver)));
         }
         if other.operator.is_empty() {
             if other.value.is_empty() {

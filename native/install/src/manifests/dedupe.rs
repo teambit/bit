@@ -1,6 +1,8 @@
 //! `dedupeDependencies`: hoist what the components agree on into the root.
 
 mod hoist;
+#[cfg(test)]
+mod tests;
 
 use super::deps::{DepsObject, Field, truthy};
 use crate::model::{DependencyMap, PolicyEntry};
@@ -104,6 +106,3 @@ pub(super) fn exclude_workspace(map: &DependencyMap) -> DependencyMap {
         .map(|(name, spec)| (name.clone(), spec.clone()))
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

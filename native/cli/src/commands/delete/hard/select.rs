@@ -1,5 +1,8 @@
 //! `getRemoteBitIdsToRemove`: literal IDs or a remote wildcard inventory.
 
+#[cfg(test)]
+mod tests;
+
 use super::Context;
 use bit_client_transfer::remotes::Remote;
 use serde_json::Value;
@@ -51,18 +54,16 @@ fn inventory(
 ) -> io::Result<Vec<String>> {
     match remote {
         Remote::File(path) => {
-            let index: Value = serde_json::from_slice(&fs::read(path.join("index.json"))?)?;
+            let index: Value = bit_object_import::parse_jsonc(&fs::read(path.join("index.json"))?)?;
             Ok(index["components"]
                 .as_array()
                 .or_else(|| index.as_array())
                 .ok_or_else(|| invalid("remote component index"))?
                 .iter()
                 .filter_map(|row| {
-                    Some(format!(
-                        "{}/{}",
-                        row["id"]["scope"].as_str()?,
-                        row["id"]["name"].as_str()?,
-                    ))
+                    let (scope, name) =
+                        crate::commands::version_history::build::row_scope_and_name(row)?;
+                    Some(format!("{scope}/{name}"))
                 })
                 .collect())
         }
@@ -102,6 +103,3 @@ fn wildcard(pattern: &str, text: &str) -> bool {
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)
 }
-
-#[cfg(test)]
-mod tests;

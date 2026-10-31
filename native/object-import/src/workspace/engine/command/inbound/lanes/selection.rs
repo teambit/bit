@@ -1,4 +1,6 @@
 //! `ImporterMain.fetch` resolves tracked aliases and implicit remote lane refs.
+#[cfg(test)]
+mod tests;
 use super::super::{Prepare, config, invalid};
 use std::{fs, io, path::Path};
 
@@ -79,6 +81,3 @@ fn scope_lanes(directory: &Path, scope: &str) -> io::Result<Vec<String>> {
     }
     Ok(ids)
 }
-
-#[cfg(test)]
-mod tests;

@@ -24,10 +24,9 @@ pub(in crate::workspace::engine) fn complete(
     if let Some(report) = workspace.complete_policy(input.semver)? {
         retained.receipt["workspaceConfigUpdateResult"] = report;
     }
-    retained.receipt
-        .as_object_mut()
-        .unwrap()
-        .remove("checkoutPolicyPreparation");
+    if let Some(object) = retained.receipt.as_object_mut() {
+        object.remove("checkoutPolicyPreparation");
+    }
     if retained.applied {
         workspace.commit_policy()?;
         retained.receipt["completed"] = serde_json::json!(true);

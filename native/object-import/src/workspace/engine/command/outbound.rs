@@ -179,16 +179,11 @@ pub(in crate::workspace::engine) fn prepare(
     let mut receipt =
         receipt::prepare(&token, plan.count, &plan.pending, lane, plan.fork_history.as_ref());
     receipt["centralHub"] = json!(hub.is_some());
-    receipt
-        .as_object_mut()
-        .unwrap()
-        .extend(
-            packages
-                .receipt(None)
-                .as_object()
-                .unwrap()
-                .clone(),
-        );
+    if let (Some(target), Some(source)) =
+        (receipt.as_object_mut(), packages.receipt(None).as_object())
+    {
+        target.extend(source.clone());
+    }
     if input.resolution.preflight() {
         receipt["preflight"] = json!(true);
         return Ok((plan.count, receipt));

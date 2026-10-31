@@ -88,7 +88,8 @@ fn pattern_target(root: &Path, pattern: &str) -> Option<Target> {
 }
 
 fn pattern_candidates(root: &Path) -> Option<(Vec<Candidate>, Proofs)> {
-    let index: Value = serde_json::from_slice(&fs::read(root.join("index.json")).ok()?).ok()?;
+    let index: Value =
+        bit_object_import::parse_jsonc(&fs::read(root.join("index.json")).ok()?).ok()?;
     let rows = index["components"].as_array().or_else(|| index.as_array())?;
     if rows.len() > 128 {
         return None;
@@ -112,8 +113,9 @@ fn candidate_from_row(root: &Path, row: &Value, proofs: &mut Proofs) -> Option<O
     let Some(head) = model["head"].as_str() else {
         return Some(None);
     };
-    let scope = row["id"]["scope"].as_str()?.to_owned();
-    let name = row["id"]["name"].as_str()?.to_owned();
+    let (scope_str, name_str) = super::super::row_scope_and_name(row)?;
+    let scope = scope_str.to_owned();
+    let name = name_str.to_owned();
     let identity = format!("{scope}/{name}");
     let version = text::tags(&model, head).unwrap_or(head);
     let display = format!("{identity}@{version}");

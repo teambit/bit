@@ -66,7 +66,7 @@ fn updated_range(
     {
         return selected;
     }
-    if version != "latest"
+    if !matches!(version, "latest" | "head")
         && !wire::snap(version)
         && let Some(prefix @ ("^" | "~")) = request.policy.prefix.as_deref()
     {

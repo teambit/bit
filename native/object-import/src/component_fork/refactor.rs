@@ -93,12 +93,15 @@ fn group(
     let directory = row["directory"]
         .as_str()
         .or_else(|| row["rootDir"].as_str())
+        .filter(|value| !value.is_empty())
         .ok_or_else(|| unsupported("fork refactor component root"))?;
     let mut group = Group { files: Vec::new(), initial: Vec::new() };
     for file in row["files"].as_array().ok_or_else(|| unsupported("fork refactor files"))? {
         let relative = file
             .as_str()
             .or_else(|| file["relativePath"].as_str())
+            .or_else(|| file["path"].as_str())
+            .filter(|value| !value.is_empty())
             .ok_or_else(|| unsupported("fork refactor file path"))?;
         files::relative_path(relative)?;
         let destination = root.join(directory).join(relative);

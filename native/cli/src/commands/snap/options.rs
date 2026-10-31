@@ -25,7 +25,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
             break;
         }
         let flag = canonical_flag(raw);
-        if flag == "--no-color" {
+        if matches!(flag, "--no-color" | "--no-color=true" | "--no-color=false") {
             continue;
         }
         if !flag.starts_with('-') {

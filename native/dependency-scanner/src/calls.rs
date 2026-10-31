@@ -9,10 +9,11 @@ pub(crate) fn in_optional_chain(node: &CallExpression<'_>) -> bool {
     let mut current = &node.callee;
     loop {
         current = match current {
-            Expression::StaticMemberExpression(m) if !m.optional => &m.object,
-            Expression::ComputedMemberExpression(m) if !m.optional => &m.object,
-            Expression::PrivateFieldExpression(m) if !m.optional => &m.object,
-            Expression::CallExpression(c) if !c.optional => &c.callee,
+            Expression::ParenthesizedExpression(paren) => &paren.expression,
+            Expression::StaticMemberExpression(member) if !member.optional => &member.object,
+            Expression::ComputedMemberExpression(member) if !member.optional => &member.object,
+            Expression::PrivateFieldExpression(member) if !member.optional => &member.object,
+            Expression::CallExpression(call) if !call.optional => &call.callee,
             Expression::StaticMemberExpression(_)
             | Expression::ComputedMemberExpression(_)
             | Expression::PrivateFieldExpression(_)
@@ -37,18 +38,18 @@ pub(crate) fn accepted(node: &CallExpression<'_>, ts: bool) -> bool {
     (ts || !in_optional_chain(node))
         && match &node.callee {
             Expression::Identifier(id) => id.name == "require",
-            Expression::StaticMemberExpression(m) => {
-                m.property.name == "resolve"
-                    && match &m.object {
+            Expression::StaticMemberExpression(member) => {
+                member.property.name == "resolve"
+                    && match &member.object {
                         Expression::Identifier(id) => id.name == "require",
                         Expression::ImportMeta(_) => true,
                         _ => false,
                     }
             }
-            Expression::ComputedMemberExpression(m) => {
-                matches!(&m.expression,Expression::Identifier(id) if id.name=="resolve")
-                    && (matches!(&m.object,Expression::Identifier(id) if id.name=="require")
-                        || matches!(&m.object, Expression::ImportMeta(_)))
+            Expression::ComputedMemberExpression(member) => {
+                matches!(&member.expression, Expression::Identifier(id) if id.name == "resolve")
+                    && (matches!(&member.object, Expression::Identifier(id) if id.name == "require")
+                        || matches!(&member.object, Expression::ImportMeta(_)))
             }
             _ => false,
         }

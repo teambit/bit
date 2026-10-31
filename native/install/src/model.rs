@@ -26,15 +26,25 @@ impl ComponentId {
     /// The scope the component is or will be exported to.
     #[must_use]
     pub fn effective_scope(&self) -> Option<&str> {
-        self.scope.as_deref().or(self.default_scope.as_deref())
+        self.scope
+            .as_deref()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
+            .or_else(|| {
+                self.default_scope
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|scope| !scope.is_empty())
+            })
     }
 
     /// `scope/name`, without the version.
     #[must_use]
     pub fn to_string_without_version(&self) -> String {
+        let name = self.name.trim();
         match self.effective_scope() {
-            Some(scope) => format!("{scope}/{}", self.name),
-            None => self.name.clone(),
+            Some(scope) => format!("{scope}/{name}"),
+            None => name.to_owned(),
         }
     }
 }

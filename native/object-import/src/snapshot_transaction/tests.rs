@@ -146,3 +146,34 @@ fn stale_workspace_descriptor_declines_before_any_private_object_write() {
     assert!(apply("snapshotSerialize", request, &mut State::default()).is_err());
     assert_eq!(fs::read_dir(staging).unwrap().count(), 0);
 }
+
+#[test]
+fn snapshot_dependencies_accepts_string_and_object_component_ids() {
+    let mut state = State::default();
+    let input = json!({
+        "components": [
+            {
+                "id": "scope/a@1.0.0",
+                "removed": false,
+                "rangePrefix": "^",
+                "dependencies": [{"id": "scope/b@0.1.0"}],
+                "extensions": [],
+                "resolver": [
+                    {
+                        "type": "component",
+                        "componentId": "scope/b@0.1.0"
+                    }
+                ]
+            },
+            {
+                "id": "scope/b@2.0.0",
+                "removed": false,
+                "dependencies": [],
+                "extensions": []
+            }
+        ]
+    });
+    let out = apply("snapshotDependencyUpdates", input, &mut state).unwrap();
+    assert_eq!(out["components"][0]["dependencies"][0]["versionRange"], "^2.0.0");
+    assert_eq!(out["components"][0]["resolver"][0]["id"]["version"], "2.0.0");
+}

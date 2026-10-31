@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::super::wire;
 use crate::{
     checkout::repository::{SourceRecord, read_source_record},
@@ -70,6 +73,3 @@ fn one(directory: &Path, model: &wire::Model, budget: (usize, usize)) -> io::Res
         &mut compressed,
     )
 }
-
-#[cfg(test)]
-mod tests;

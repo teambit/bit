@@ -77,12 +77,12 @@ pub(super) fn soft(input: Value) -> io::Result<Value> {
         let alias = request.aliases
             .as_ref()
             .map_or(index, |aliases| aliases[index]);
-        if version
+        if let Some(version) = version
             .as_ref()
-            .is_some_and(|version| !version.is_empty())
+            .filter(|version| !version.is_empty())
             && !cleared.contains(&alias)
         {
-            text(version.as_ref().expect("checked version"))?;
+            text(version)?;
             selected.push(index);
             cleared.insert(alias);
         }

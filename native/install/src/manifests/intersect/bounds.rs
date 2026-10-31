@@ -26,14 +26,14 @@ fn strip_prerelease(comparator: &Comparator) -> String {
 
 /// `isSameVersionEqualsLikeComparator`.
 pub(super) fn same_version_equals_like(left: &Comparator, right: &Comparator) -> bool {
-    let (left_version, right_version) = (version_text(left), version_text(right));
     let equals_like = |comparator: &Comparator| {
         comparator.operator.is_empty() || comparator.operator.contains('=')
     };
-    !left_version.is_empty()
-        && left_version == right_version
-        && equals_like(left)
-        && equals_like(right)
+    if !equals_like(left) || !equals_like(right) {
+        return false;
+    }
+    let (left_version, right_version) = (version_text(left), version_text(right));
+    !left_version.is_empty() && left_version == right_version
 }
 
 /// `isEqualsComparator`.

@@ -19,10 +19,10 @@ pub(crate) struct SemVer {
 impl SemVer {
     /// `new SemVer(version)`: throws (`Err`) on an invalid version.
     pub(crate) fn parse(version: &str) -> io::Result<Self> {
-        if version.len() > MAX_LENGTH {
+        let trimmed = version.trim();
+        if trimmed.len() > MAX_LENGTH {
             return Err(invalid_version(version));
         }
-        let trimmed = version.trim();
         let found = re(Token::Full).find(trimmed).ok_or_else(|| invalid_version(version))?;
         let parts = groups(&found, trimmed);
         let number = |index: usize| -> io::Result<u64> {
@@ -66,8 +66,8 @@ impl SemVer {
             (true, true) => return Ordering::Equal,
             (false, false) => {}
         }
-        for (a, b) in self.prerelease.iter().zip(&other.prerelease) {
-            let order = compare_identifiers(a, b);
+        for (left, right) in self.prerelease.iter().zip(&other.prerelease) {
+            let order = compare_identifiers(left, right);
             if order != Ordering::Equal {
                 return order;
             }

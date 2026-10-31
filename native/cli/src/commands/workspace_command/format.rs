@@ -42,9 +42,9 @@ impl Formatter {
             return String::new();
         }
         let mut lines = vec![self.title(&format!("{title} ({})", items.len()))];
-        if !description.is_empty() {
+        if !description.trim().is_empty() {
             let indented: Vec<String> = description
-                .split('\n')
+                .lines()
                 .map(|line| format!("  {line}"))
                 .collect();
             lines.push(self.chalk.dim(&indented.join("\n")));
@@ -77,7 +77,7 @@ impl Formatter {
     pub fn join(sections: &[String]) -> String {
         sections
             .iter()
-            .filter(|section| !section.is_empty())
+            .filter(|section| !section.trim().is_empty())
             .cloned()
             .collect::<Vec<_>>()
             .join("\n\n")

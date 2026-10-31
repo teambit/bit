@@ -10,13 +10,15 @@ pub(super) fn validate(lane: &Value, name: &str) -> io::Result<()> {
     else {
         return Ok(());
     };
+    let readme_id = id_pair(&readme["id"]);
     let present = lane["components"]
         .as_array()
         .is_some_and(|components| {
             components
                 .iter()
                 .any(|component| {
-                    component["id"] == readme["id"]
+                    (component["id"] == readme["id"]
+                        || readme_id.is_some() && id_pair(&component["id"]) == readme_id)
                         && readme["head"]
                             .as_str()
                             .is_some_and(|head| !head.is_empty())
@@ -27,4 +29,14 @@ pub(super) fn validate(lane: &Value, name: &str) -> io::Result<()> {
         return Ok(());
     }
     Err(invalid(&format!("outbound lane {name} unsnapped readme requires canonical stack")))
+}
+
+fn id_pair(value: &Value) -> Option<(&str, &str)> {
+    if let Some(raw) = value.as_str() {
+        return raw
+            .rsplit_once('@')
+            .map_or(raw, |(base, _)| base)
+            .split_once('/');
+    }
+    Some((value["scope"].as_str()?, value["name"].as_str()?))
 }

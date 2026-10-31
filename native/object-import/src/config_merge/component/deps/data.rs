@@ -28,7 +28,10 @@ pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
         .chain(state.data[1].iter())
         .filter(|dep| dep["source"] == "auto")
     {
-        let id = dep["id"].as_str().ok_or_else(|| super::super::super::invalid("data id"))?;
+        let id = dep["id"]
+            .as_str()
+            .or_else(|| dep["componentId"].as_str())
+            .ok_or_else(|| super::super::super::invalid("data id"))?;
         if !ids
             .iter()
             .any(|existing| existing == id)

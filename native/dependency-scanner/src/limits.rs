@@ -27,6 +27,10 @@ pub(crate) fn source<'source>(
     path: &Path,
 ) -> io::Result<std::borrow::Cow<'source, str>> {
     match inline {
+        Some(source) if source.len() > SOURCE_BYTES => Err(io::Error::new(
+            io::ErrorKind::FileTooLarge,
+            "source exceeds 1 MiB limit; use legacy fallback",
+        )),
         Some(source) => Ok(std::borrow::Cow::Borrowed(source)),
         None => read_source(path).map(std::borrow::Cow::Owned),
     }

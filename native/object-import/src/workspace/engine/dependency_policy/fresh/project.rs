@@ -309,6 +309,13 @@ impl Projection<'_> {
 }
 
 fn identity(id: &Value) -> io::Result<String> {
+    if let Some(raw) = id.as_str() {
+        let (scope, name) = unversioned(raw)
+            .split_once('/')
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid("fresh component id"))?;
+        return Ok(format!("{scope}/{name}"));
+    }
     let scope = id["scope"]
         .as_str()
         .filter(|value| !value.is_empty())

@@ -17,7 +17,7 @@ pub(in crate::commands::workspace_command) fn hidden_target(
         .is_some_and(|targets| {
             targets
                 .iter()
-                .any(|target| target["identity"] == identity)
+                .any(|target| target_identity(target) == Some(identity))
         });
     !visible
         && context["lane"]["targets"]
@@ -25,8 +25,17 @@ pub(in crate::commands::workspace_command) fn hidden_target(
             .is_some_and(|targets| {
                 targets
                     .iter()
-                    .any(|target| target["identity"] == identity && target["hidden"] == true)
+                    .any(|target| {
+                        target_identity(target) == Some(identity) && target["hidden"] == true
+                    })
             })
+}
+
+fn target_identity(target: &Value) -> Option<&str> {
+    target["identity"]
+        .as_str()
+        .or_else(|| target["id"].as_str())
+        .map(without_version)
 }
 
 /// Lockfile graphs are produced only for workspace components, like `VersionMaker`.
@@ -73,21 +82,26 @@ fn visible_graphs(
         .map(|identity| {
             let target = targets
                 .iter()
-                .find(|target| target.get("identity").and_then(Value::as_str) == Some(identity))
+                .find(|target| target_identity(target) == Some(identity))
                 .ok_or_else(|| decline("command snapshot target"))?;
             let directory = text(target.get("directory"))?;
             Ok(graph::Snapped {
                 directory,
                 package_name: package_name(capture, identity)?,
-                env_id: capture.environment_facts[identity]["envId"]
-                    .as_str()
-                    .or_else(|| context["environmentFacts"][identity]["envId"].as_str())
+                env_id: env_id_str(&capture.environment_facts[identity]["envId"])
+                    .or_else(|| env_id_str(&context["environmentFacts"][identity]["envId"]))
                     .unwrap_or("teambit.harmony/node"),
             })
         })
         .collect::<io::Result<Vec<_>>>()?;
     let components = workspace_components(targets, needs_snap, hashes, capture)?;
     graph::graphs(root, &snapped, &components)
+}
+
+fn env_id_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .or_else(|| value["id"].as_str())
 }
 
 /// `componentIdByPkgName`: the snapped components under their new hashes,
@@ -107,7 +121,7 @@ fn workspace_components<'c>(
         })
         .collect::<io::Result<Vec<_>>>()?;
     for target in targets {
-        let identity = text(target.get("identity"))?;
+        let identity = target_identity(target).ok_or_else(|| decline("command snapshot target"))?;
         if needs_snap
             .iter()
             .any(|snapped| snapped == identity)
@@ -116,6 +130,7 @@ fn workspace_components<'c>(
         }
         let version = target
             .get("version")
+            .or_else(|| target.get("head"))
             .and_then(Value::as_str)
             .filter(|version| !version.is_empty());
         components.push(graph::WorkspaceComponent {

@@ -1,12 +1,15 @@
 //! Native `bit pattern <pattern>` (`PatternCommand` in `scopes/workspace/workspace/pattern.cmd.ts`).
 
+#[cfg(test)]
+mod tests;
+
 use super::{
     Command,
     color::Chalk,
     engine::Engine,
     inventory, patterns,
     remote_resolution::Session,
-    scope_set::selection::{entry_full_id, valid_id_chunk, valid_scope_str},
+    scope_set::selection::{entry_full_id, exists_in_scope_index, valid_id_chunk, valid_scope_str},
     status::cache::cache_root,
     workspace_command::{self, NodeCli, format::Formatter, results::Report},
 };
@@ -95,7 +98,7 @@ fn parse_options(args: &[OsString]) -> Option<Options> {
                 super::internalize::consume_trailing_internalize(iter, &mut pattern)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             "-r" | "--remote" | "--remote=true" => remote = true,
@@ -196,24 +199,6 @@ fn is_known_empty_literal(root: &Path, pattern: &str) -> Result<bool, Failure> {
         return Err(Failure::Declined("invalid scoped literal component id".to_owned()));
     }
     Ok(!pattern.contains('.') && exists_in_scope_index(root, pattern))
-}
-
-fn exists_in_scope_index(root: &Path, name: &str) -> bool {
-    let index_path = workspace::scope_path(root).join("index.json");
-    let Ok(bytes) = fs::read(index_path) else {
-        return false;
-    };
-    let Ok(index) = serde_json::from_slice::<Value>(&bytes) else {
-        return false;
-    };
-    index["components"]
-        .as_array()
-        .or_else(|| index.as_array())
-        .is_some_and(|components| {
-            components
-                .iter()
-                .any(|item| item["id"]["name"].as_str() == Some(name))
-        })
 }
 
 fn remote_ids(root: &Path, pattern: &str, session: &mut Session) -> Result<Vec<String>, Failure> {
@@ -385,6 +370,3 @@ fn present_error(
         workspace_command::execute_then(root, args, "pattern", callback)
     }
 }
-
-#[cfg(test)]
-mod tests;

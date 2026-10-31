@@ -15,7 +15,7 @@ pub(super) fn prepare(
     for (hash, object) in objects {
         let value = &object.value;
         match object.kind.as_str() {
-            "Component" => components.push(json!({"id":{"scope":value["scope"],"name":text(&value["name"])?},"isSymlink":false,"hash":hash})),
+            "Component" => components.push(component(value, hash)?),
             "Lane" => lanes.push(lane(value, hash)?),
             _ => {}
         }
@@ -26,13 +26,32 @@ pub(super) fn prepare(
     let value: Value = json!({"components":components,"lanes":lanes});
     Ok(Some(format!("{}\n", serde_json::to_string_pretty(&value)?).into_bytes()))
 }
+
+fn component(value: &Value, hash: &str) -> io::Result<Value> {
+    let name_value = if value["name"].is_string() { &value["name"] } else { &value["id"]["name"] };
+    let name = text(name_value)?;
+    let scope = value
+        .get("scope")
+        .or_else(|| value["id"].get("scope"))
+        .cloned()
+        .unwrap_or(Value::Null);
+    let is_symlink = value["isSymlink"].as_bool().unwrap_or(false);
+    Ok(json!({"id":{"scope":scope,"name":name},"isSymlink":is_symlink,"hash":hash}))
+}
+
 fn lane(value: &Value, hash: &str) -> io::Result<Value> {
-    let mut id = json!({"name":text(&value["name"])?});
-    if let Some(scope) = value.get("scope") {
+    let name_value = if value["name"].is_string() { &value["name"] } else { &value["id"]["name"] };
+    let mut id = json!({"name":text(name_value)?});
+    if let Some(scope) = value
+        .get("scope")
+        .or_else(|| value["id"].get("scope"))
+        .filter(|scope| !scope.is_null() && scope.as_str() != Some(""))
+    {
         id["scope"] = scope.clone();
     }
     Ok(json!({"id":id,"hash":hash}))
 }
+
 pub(super) fn write(scope: &Path, bytes: Option<&[u8]>) -> io::Result<()> {
     if let Some(bytes) = bytes {
         let path = scope.join("index.json");

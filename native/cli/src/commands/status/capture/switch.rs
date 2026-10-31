@@ -63,11 +63,11 @@ impl Session<'_> {
         };
         let order = order
             .iter()
-            .map(|row| text(Some(row)).map(str::to_owned))
+            .map(|row| row_identity(row).map(str::to_owned))
             .collect::<io::Result<Vec<_>>>()?;
         let target_ids = targets
             .iter()
-            .map(|row| text(row.get("identity")))
+            .map(row_identity)
             .collect::<io::Result<HashSet<_>>>()?;
         if order.len() != targets.len()
             || target_ids.len() != targets.len()
@@ -100,7 +100,7 @@ impl Session<'_> {
     ) -> io::Result<()> {
         let by_id = targets
             .iter()
-            .map(|row| Ok((text(row.get("identity"))?, row)))
+            .map(|row| Ok((row_identity(row)?, row)))
             .collect::<io::Result<HashMap<_, _>>>()?;
         let mut scanned = HashSet::new();
         for identity in order {
@@ -170,25 +170,31 @@ fn restore_target_order(targets: &[Value], capture: &mut Capture) -> io::Result<
     let order = targets
         .iter()
         .enumerate()
-        .map(|(index, target)| Ok((text(target.get("identity"))?, index)))
+        .map(|(index, target)| Ok((row_identity(target)?, index)))
         .collect::<io::Result<HashMap<_, _>>>()?;
     let known = |identity: &str| order.contains_key(identity);
     if capture.captured
         .iter()
         .chain(&capture.comparisons)
-        .any(|row| {
-            row["identity"]
-                .as_str()
-                .is_none_or(|id| !known(id))
-        })
+        .any(|row| row_identity(row).is_err_and(|_| true) || !row_identity(row).is_ok_and(known))
         || capture.components
             .iter()
             .any(|row| !known(super::base_identity(&row.identity)))
     {
         return Err(decline("switch captured target identity changed"));
     }
-    capture.captured.sort_by_key(|row| order[row["identity"].as_str().unwrap_or_default()]);
-    capture.comparisons.sort_by_key(|row| order[row["identity"].as_str().unwrap_or_default()]);
+    capture.captured.sort_by_key(|row| order[row_identity(row).unwrap_or_default()]);
+    capture.comparisons.sort_by_key(|row| order[row_identity(row).unwrap_or_default()]);
     capture.components.sort_by_key(|row| order[super::base_identity(&row.identity)]);
     Ok(())
+}
+
+fn row_identity(row: &Value) -> io::Result<&str> {
+    if let Some(value) = row.as_str() {
+        return Ok(value);
+    }
+    text(
+        row.get("identity")
+            .or_else(|| row.get("id")),
+    )
 }

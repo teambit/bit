@@ -61,7 +61,7 @@ fn apply_whoami_arg<'a>(
     iter: &mut impl Iterator<Item = &'a OsString>,
     token: &mut Option<String>,
 ) -> Option<()> {
-    if str_arg == "--no-color" {
+    if matches!(str_arg, "--no-color" | "--no-color=true" | "--no-color=false") {
         return Some(());
     }
     if str_arg == "--token" {

@@ -56,12 +56,21 @@ pub(super) fn version(
     component: &WorkspaceComponent,
     package_context: &super::PackageJsonContext<'_>,
 ) {
-    if component.id.version.as_deref() == Some("latest")
-        && let Some(id) = manifest.get_mut("componentId").and_then(Value::as_object_mut)
-    {
-        id.shift_remove("version");
+    if matches!(component.id.version.as_deref(), Some("latest" | "head")) {
+        strip_component_id_version(manifest);
     }
     if component.id.version.is_none() && package_context.props.get("version").is_none() {
         manifest.shift_remove("version");
+    }
+}
+
+fn strip_component_id_version(manifest: &mut Manifest) {
+    let Some(component_id) = manifest.get_mut("componentId") else { return };
+    if let Some(id) = component_id.as_object_mut() {
+        id.shift_remove("version");
+    } else if let Some(text) = component_id.as_str()
+        && let Some((base, "latest" | "head")) = text.rsplit_once('@')
+    {
+        *component_id = Value::String(base.to_owned());
     }
 }

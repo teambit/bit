@@ -88,12 +88,22 @@ fn replace_source_proofs(capture: &mut Capture, output: &Value) -> io::Result<()
 
 /// Whether lifecycle callbacks require the published aspect host.
 pub fn snapshot_required(capture: &Capture, _context: &Value, params: &Value) -> bool {
-    capture.cache.callbacks.host.is_some()
-        || params["editor"].as_bool() == Some(true)
+    capture.cache.callbacks.host.is_some() || snapshot_params_require_host(params)
+}
+
+fn snapshot_params_require_host(params: &Value) -> bool {
+    let editor_enabled = params["editor"].as_bool() == Some(true)
         || params["editor"]
             .as_str()
-            .is_some_and(|editor| !editor.is_empty())
-        || params["build"] == true
+            .is_some_and(|editor| {
+                let trimmed = editor.trim();
+                !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false")
+            });
+    let build_enabled = params["build"].as_bool() == Some(true)
+        || params["build"]
+            .as_str()
+            .is_some_and(|build| build.trim().eq_ignore_ascii_case("true"));
+    editor_enabled || build_enabled
 }
 
 /// Run the published message editor without loading or serializing a component graph.

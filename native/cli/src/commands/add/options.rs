@@ -35,7 +35,7 @@ fn apply_arg(
         return Some(());
     }
     match arg {
-        "--no-color" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" => {}
         "-o" | "--override" if !options.tracking.override_files => {
             let _ = value(args)?;
             options.tracking.override_files = true;

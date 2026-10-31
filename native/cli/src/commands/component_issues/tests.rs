@@ -5,8 +5,8 @@ fn parses_component_issues_flags() {
     assert_eq!(parse(&[]), Some(false));
     assert_eq!(parse(&["-j"]), Some(true));
     assert_eq!(parse(&["--json"]), Some(true));
-    assert_eq!(parse(&["--no-color"]), Some(false));
-    assert_eq!(parse(&["--json", "--no-color"]), Some(true));
+    assert_eq!(parse(&["--no-color", "--no-color=false"]), Some(false));
+    assert_eq!(parse(&["--json", "--no-color", "--no-color=true"]), Some(true));
     assert_eq!(parse(&["--help"]), None);
     assert_eq!(parse(&["extra"]), None);
 }

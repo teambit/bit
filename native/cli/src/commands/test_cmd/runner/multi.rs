@@ -196,26 +196,16 @@ fn combine(target: &mut Value, source: &Value) {
         "testsPending",
     ] {
         target["totals"][field] = json!(
-            target["totals"][field].as_u64().unwrap() + source["totals"][field].as_u64().unwrap()
+            target["totals"][field].as_u64().unwrap_or(0)
+                + source["totals"][field].as_u64().unwrap_or(0)
         );
     }
     for field in ["componentsWithTests", "componentsWithoutTests", "componentsAffectedByEnvError"] {
-        target[field]
-            .as_array_mut()
-            .unwrap()
-            .extend(
-                source[field]
-                    .as_array()
-                    .unwrap()
-                    .iter()
-                    .cloned(),
-            );
+        if let (Some(dst), Some(src)) = (target[field].as_array_mut(), source[field].as_array()) {
+            dst.extend(src.iter().cloned());
+        }
     }
-    if target["envErrors"]
-        .as_array()
-        .unwrap()
-        .is_empty()
-    {
+    if target["envErrors"].as_array().is_none_or(Vec::is_empty) {
         target["envErrors"] = source["envErrors"].clone();
     }
 }

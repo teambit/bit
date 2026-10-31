@@ -1,4 +1,7 @@
 //! Reuse native links with the final component-load metadata and canonical IO errors.
+#[cfg(test)]
+mod tests;
+
 use bit_install::model::WorkspaceComponent;
 use serde_json::Value;
 use std::{fs, io, path::Path};
@@ -63,6 +66,3 @@ fn mkdir_not_directory(error: &io::Error) -> bool {
     error.kind() == io::ErrorKind::NotADirectory
         || cfg!(windows) && error.raw_os_error() == Some(183)
 }
-
-#[cfg(test)]
-mod tests;

@@ -48,8 +48,8 @@ fn finish(request: Request, left: Option<Vec<u8>>, right: Option<Vec<u8>>) -> io
     let left_hash = left.as_deref().map(linux_hash);
     let right_hash = right.as_deref().map(linux_hash);
     let needs_diff = left.is_some() && right.is_some() && left_hash != right_hash;
-    let mut response =
-        json!({"files":[],"needsDiff":needs_diff && request.git_executable.is_none()});
+    let git_executable = normalized_git_executable(request.git_executable.as_deref());
+    let mut response = json!({"files":[],"needsDiff":needs_diff && git_executable.is_none()});
     if let Some(hash) = left_hash {
         response["leftLinuxHash"] = json!(hash);
     }
@@ -59,7 +59,7 @@ fn finish(request: Request, left: Option<Vec<u8>>, right: Option<Vec<u8>>) -> io
     if !needs_diff {
         return Ok(response);
     }
-    let Some(git) = request.git_executable else { return Ok(response) };
+    let Some(git) = git_executable else { return Ok(response) };
     let files = crate::workspace::engine::diff::frozen(
         vec![(request.relative_path, left, right)],
         &git,
@@ -72,4 +72,10 @@ fn finish(request: Request, left: Option<Vec<u8>>, right: Option<Vec<u8>>) -> io
             .collect::<Vec<_>>()
     );
     Ok(response)
+}
+
+fn normalized_git_executable(git: Option<&str>) -> Option<String> {
+    git.map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_owned)
 }

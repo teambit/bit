@@ -31,7 +31,7 @@ fn valid_args(args: &[OsString]) -> bool {
     let mut iter = args.iter().skip(1);
     while let Some(arg) = iter.next() {
         match arg.to_str() {
-            Some("--no-color") => {}
+            Some("--no-color" | "--no-color=true" | "--no-color=false") => {}
             Some("--") => return iter.next().is_none(),
             _ => return false,
         }
@@ -47,9 +47,10 @@ fn render_details(dir: &Path, chalk: Chalk) -> io::Result<String> {
         ));
     }
     let content = fs::read_to_string(&content_path)?;
-    let meta_raw = fs::read_to_string(dir.join("meta.json")).unwrap_or_else(|_| "{}".to_owned());
-    let meta: Value =
-        serde_json::from_str(&meta_raw).unwrap_or_else(|_| Value::Object(Map::default()));
+    let meta = fs::read(dir.join("meta.json"))
+        .ok()
+        .and_then(|meta_raw| bit_object_import::parse_jsonc(&meta_raw).ok())
+        .unwrap_or_else(|| Value::Object(Map::default()));
     let formatter = Formatter::new(chalk);
     let header = format_header(&meta, &formatter, chalk);
     let hint = formatter.hint("(these are details from the last command that provided them)");

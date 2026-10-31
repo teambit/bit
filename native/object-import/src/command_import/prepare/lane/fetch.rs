@@ -124,7 +124,9 @@ fn locally_at_remote_head(
     let unchanged = rows
         .iter()
         .any(|row| {
-            row["id"]["scope"] == scope && row["id"]["name"] == name && row["head"] == entry.head
+            crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                row, scope, name,
+            ) && row["head"] == entry.head
         });
     Ok(unchanged && super::super::read_version(plan, &entry.head)?.is_some())
 }

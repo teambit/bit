@@ -40,8 +40,9 @@ impl Context {
     pub fn metadata(&self) -> io::Result<Value> {
         let bit_dir =
             self.cli.bit_dir.as_ref().ok_or_else(|| io::Error::other("missing Bit package"))?;
-        let package: Value = serde_json::from_slice(&fs::read(bit_dir.join("package.json"))?)
-            .map_err(io::Error::other)?;
+        let package: Value =
+            bit_object_import::parse_jsonc(&fs::read(bit_dir.join("package.json"))?)
+                .map_err(io::Error::other)?;
         let node = std::process::Command::new(&self.cli.node).arg("--version").output()?;
         let platform = match env::consts::OS {
             "windows" => "win32",

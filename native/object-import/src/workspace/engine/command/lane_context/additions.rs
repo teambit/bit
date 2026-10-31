@@ -1,10 +1,10 @@
+#[cfg(test)]
+mod tests;
+
 use super::{invalid, visibility::effective_scope};
 use crate::command_import::PreparedImport;
 use serde_json::{Value, json};
 use std::{io, path::Path};
-
-#[cfg(test)]
-mod tests;
 
 pub(in crate::workspace::engine::command) fn prepare(
     imported: &mut PreparedImport,

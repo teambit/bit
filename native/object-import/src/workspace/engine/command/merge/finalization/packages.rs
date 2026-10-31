@@ -90,6 +90,13 @@ pub(super) fn package_name(version: &Value) -> io::Result<&str> {
     }
     Ok(name)
 }
+fn package_id_matches(component_id: &Value, identity: &str, scope: &str, component: &str) -> bool {
+    if let Some(raw) = component_id.as_str() {
+        raw.rsplit_once('@').map_or(raw, |(bare, _)| bare) == identity
+    } else {
+        component_id["scope"] == scope && component_id["name"] == component
+    }
+}
 fn validate_package(
     input: &Input<'_>,
     package: &Value,
@@ -100,8 +107,7 @@ fn validate_package(
         input.identity.split_once('/').ok_or_else(|| invalid("merge package identity"))?;
     if package["name"] != name
         || package["_bit_local"] != true
-        || package["componentId"]["scope"] != scope
-        || package["componentId"]["name"] != component
+        || !package_id_matches(&package["componentId"], input.identity, scope, component)
     {
         return Err(invalid("merge generated package identity"));
     }
@@ -362,8 +368,9 @@ fn update_manifest_versions(
         input.semantic_version.map_or_else(|| format!("0.0.0-{}", input.hash), str::to_owned);
     package["version"] = value!(version);
     if package["componentId"].get("version").is_none() {
-        let component = &package["componentId"];
-        package["componentId"] = value!({"name":component["name"],"version":component_version,"scope":component["scope"]});
+        let (scope, name) =
+            input.identity.split_once('/').ok_or_else(|| invalid("merge package identity"))?;
+        package["componentId"] = value!({"name":name,"version":component_version,"scope":scope});
     } else {
         package["componentId"]["version"] = value!(component_version);
     }

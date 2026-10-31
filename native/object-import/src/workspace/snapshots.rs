@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use std::{
     collections::{HashMap, VecDeque},
     path::{Path, PathBuf},
@@ -52,6 +55,3 @@ impl State {
             .filter(|snapshot| snapshot.path == path && snapshot.raw_hash == raw_hash)
     }
 }
-
-#[cfg(test)]
-mod tests;

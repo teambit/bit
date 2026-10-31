@@ -119,10 +119,11 @@ fn resolve(
 fn local(state: &State<'_, '_>, name: &str, version: Option<&str>) -> io::Result<bool> {
     let component = state.component_for_package(name);
     if let Some(component) = component {
-        return state.engine.local(
-            component["id"].as_str().ok_or_else(|| super::super::super::invalid("component id"))?,
-            version,
-        );
+        let id = component["id"]
+            .as_str()
+            .or_else(|| component["componentId"].as_str())
+            .ok_or_else(|| super::super::super::invalid("component id"))?;
+        return state.engine.local(id, version);
     }
     Ok(false)
 }

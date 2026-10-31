@@ -114,7 +114,7 @@ fn refresh_other_main(
 }
 pub(super) fn current_id(bitmap: &Value, scope: &Value) -> io::Result<Id> {
     let id = if let Some(lane) = bitmap.get("_bit_lane") {
-        serde_json::from_value(lane["id"].clone()).map_err(io::Error::other)?
+        command_import::lane::lane_index_id(lane)?
     } else {
         Id {
             scope: scope["name"]

@@ -69,27 +69,35 @@ fn update_scoped_id(
     }
 }
 
+fn resolve_string_target<'a>(
+    fields: &Map<String, Value>,
+    key: &str,
+    hashes: &HashMap<&str, &'a str>,
+    pinned: &HashSet<String>,
+) -> Option<(String, &'a str)> {
+    let (identity, ver) = fields
+        .get(key)?
+        .as_str()?
+        .rsplit_once('@')?;
+    if !ver.starts_with("__bit_pending_snapshot__:") && pinned.contains(identity) {
+        return None;
+    }
+    hashes
+        .get(identity)
+        .map(|hash| (identity.to_owned(), *hash))
+}
+
 fn update_string_id(
     fields: &mut Map<String, Value>,
     hashes: &HashMap<&str, &str>,
     pinned: &HashSet<String>,
 ) {
-    let target = fields
-        .get("id")
-        .and_then(Value::as_str)
-        .and_then(|text| text.rsplit_once('@'))
-        .and_then(|(identity, ver)| {
-            if !ver.starts_with("__bit_pending_snapshot__:") && pinned.contains(identity) {
-                return None;
+    for key in ["id", "componentId", "identity"] {
+        if let Some((identity, hash)) = resolve_string_target(fields, key, hashes, pinned) {
+            fields.insert(key.into(), json!(format!("{identity}@{hash}")));
+            if key == "id" && fields.contains_key("version") {
+                fields.insert("version".into(), json!(hash));
             }
-            hashes
-                .get(identity)
-                .map(|hash| (identity.to_owned(), *hash))
-        });
-    if let Some((identity, hash)) = target {
-        fields.insert("id".into(), json!(format!("{identity}@{hash}")));
-        if fields.contains_key("version") {
-            fields.insert("version".into(), json!(hash));
         }
     }
 }

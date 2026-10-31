@@ -1,5 +1,7 @@
 //! Render the released tester `JUnit` report without loading Bit's JavaScript runtime.
 mod cases;
+#[cfg(test)]
+mod tests;
 mod xml;
 
 use serde_json::Value;
@@ -87,6 +89,3 @@ fn write_failure(error: io::Error, path: &std::path::Path, windows: bool) -> io:
     }
     filesystem_error::failure(error, "open", path)
 }
-
-#[cfg(test)]
-mod tests;

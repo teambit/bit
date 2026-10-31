@@ -40,7 +40,14 @@ fn detected_branch(root: &Path) -> Option<String> {
         let branch = remote
             .lines()
             .find_map(|line| line.strip_prefix("ref: refs/heads/"))
-            .map(|value| super::trim(value.split('\t').next().unwrap()));
+            .map(|value| {
+                super::trim(
+                    value
+                        .split('\t')
+                        .next()
+                        .unwrap_or(value),
+                )
+            });
         if let Some(branch) = branch.filter(|value| valid_branch(value)) {
             return Some(branch.into());
         }

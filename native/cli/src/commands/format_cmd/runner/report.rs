@@ -26,12 +26,7 @@ fn render(
     Ok(Formatter::join(&sections))
 }
 fn component(row: &Value, formatter: &Formatter, check: bool) -> io::Result<String> {
-    let id = &row["componentId"];
-    let scope = id["_legacy"]["scope"]
-        .as_str()
-        .or_else(|| id["_scope"].as_str())
-        .ok_or_else(|| invalid("formatter scope"))?;
-    let name = id["_legacy"]["name"].as_str().ok_or_else(|| invalid("formatter name"))?;
+    let (scope, name) = component_scope_and_name(&row["componentId"])?;
     let mut lines = vec![formatter.title(&format!("{scope}/{name}"))];
     let files = row["results"].as_array().ok_or_else(|| invalid("formatter file results"))?;
     let issues: Vec<_> = files
@@ -53,6 +48,29 @@ fn component(row: &Value, formatter: &Formatter, check: bool) -> io::Result<Stri
         }
     }
     Ok(lines.join("\n"))
+}
+
+fn component_scope_and_name(id: &Value) -> io::Result<(&str, &str)> {
+    if let Some(raw) = id.as_str() {
+        return raw
+            .rsplit_once('@')
+            .map_or(raw, |(bare, _)| bare)
+            .split_once('/')
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid("formatter scope"));
+    }
+    let scope = id["_legacy"]["scope"]
+        .as_str()
+        .or_else(|| id["_scope"].as_str())
+        .or_else(|| id["scope"].as_str())
+        .filter(|scope| !scope.is_empty())
+        .ok_or_else(|| invalid("formatter scope"))?;
+    let name = id["_legacy"]["name"]
+        .as_str()
+        .or_else(|| id["name"].as_str())
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("formatter name"))?;
+    Ok((scope, name))
 }
 
 pub(super) fn create(

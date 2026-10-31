@@ -37,9 +37,11 @@ fn update_dependencies(
     for field in ["dependencies", "devDependencies", "peerDependencies"] {
         let Some(rows) = version.get_mut(field) else { continue };
         for row in rows.as_array_mut().ok_or_else(|| invalid("tag dependency rows"))? {
-            let id = &row["id"];
-            let scope = id["scope"].as_str().ok_or_else(|| invalid("tag dependency scope"))?;
-            let name = id["name"].as_str().ok_or_else(|| invalid("tag dependency name"))?;
+            let (scope, name) =
+                crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(
+                    row,
+                )
+                .ok_or_else(|| invalid("tag dependency id"))?;
             let identity = format!("{scope}/{name}");
             if pinned.contains(&identity) {
                 continue;

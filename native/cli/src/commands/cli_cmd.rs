@@ -115,7 +115,8 @@ fn docs_option_len(rest: &[&str]) -> Option<usize> {
         ["--skill" | "-s", value, ..] if !value.starts_with('-') => Some(2),
         [
             "-d" | "-dm" | "-md" | "--docs" | "--docs=true" | "--docs=false" | "-m" | "--metadata"
-            | "--metadata=true" | "--metadata=false" | "--no-color",
+            | "--metadata=true" | "--metadata=false" | "--no-color" | "--no-color=true"
+            | "--no-color=false",
             ..,
         ] => Some(1),
         [arg, ..] if arg.starts_with("--metadata.") && arg.contains('=') => Some(1),

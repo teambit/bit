@@ -13,6 +13,8 @@ pub use workspace_config::{
 mod global;
 mod merge_config;
 mod scope_json;
+#[cfg(test)]
+mod tests;
 mod workspace_config;
 
 use indexmap::IndexMap;
@@ -122,6 +124,3 @@ impl DependencyResolverConfig {
         self.resolve_env_peers_from_root.unwrap_or(true)
     }
 }
-
-#[cfg(test)]
-mod tests;

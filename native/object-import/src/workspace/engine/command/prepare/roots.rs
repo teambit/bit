@@ -6,7 +6,12 @@ use std::io;
 pub(super) fn validate(targets: &[Value]) -> io::Result<()> {
     let mut roots = targets
         .iter()
-        .map(|target| target["directory"].as_str().ok_or_else(|| invalid("command component root")))
+        .map(|target| {
+            target["directory"]
+                .as_str()
+                .or_else(|| target["rootDir"].as_str())
+                .ok_or_else(|| invalid("command component root"))
+        })
         .collect::<io::Result<Vec<_>>>()?;
     roots.sort_unstable_by(|left, right| {
         std::path::Path::new(left).cmp(std::path::Path::new(right))
@@ -30,22 +35,32 @@ pub(super) fn validate(targets: &[Value]) -> io::Result<()> {
 }
 
 pub(super) fn select_pattern(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
-    let directory = pattern.strip_prefix("./").unwrap_or(pattern);
-    if directory
-        .split('/')
-        .any(|part| matches!(part, "" | "." | ".."))
+    let normalized = pattern.replace('\\', "/");
+    let directory = normalized
+        .strip_prefix("./")
+        .unwrap_or(&normalized)
+        .trim_end_matches('/');
+    if directory.is_empty()
+        || directory
+            .split('/')
+            .any(|part| matches!(part, "" | "." | ".."))
     {
         return Err(invalid("command complex component pattern"));
     }
     if let Some(target) = targets
         .iter()
-        .find(|target| target["directory"] == directory)
+        .find(|target| {
+            target["directory"]
+                .as_str()
+                .or_else(|| target["rootDir"].as_str())
+                .is_some_and(|dir| dir.trim_end_matches('/') == directory)
+        })
     {
         return Ok(vec![target.clone()]);
     }
     let selected = targets
         .iter()
-        .filter(|target| matches_identity(target, pattern))
+        .filter(|target| matches_identity(target, &normalized))
         .cloned()
         .collect::<Vec<_>>();
     if selected.len() != 1 {
@@ -58,9 +73,12 @@ fn matches_identity(target: &Value, pattern: &str) -> bool {
     let bare = pattern
         .split('@')
         .next()
-        .unwrap_or(pattern);
+        .unwrap_or(pattern)
+        .trim_end_matches('/');
     target["identity"]
         .as_str()
+        .or_else(|| target["id"].as_str())
+        .map(|raw| raw.split('@').next().unwrap_or(raw))
         .is_some_and(|identity| {
             identity == bare
                 || identity

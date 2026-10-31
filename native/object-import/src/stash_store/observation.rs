@@ -32,7 +32,7 @@ impl Observation {
         &self.files
     }
     pub(super) fn file(&self, name: &str) -> Option<&[u8]> {
-        self.files.get(name).map(Vec::as_slice)
+        self.files.get(name.trim()).map(Vec::as_slice)
     }
     pub(super) fn latest(&self) -> Option<&str> {
         self.files.last_key_value().map(|(name, _)| name.as_str())

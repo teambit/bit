@@ -107,6 +107,20 @@ fn removal_and_recovery_configuration_remain_passive_merge_inputs() {
 }
 
 #[test]
+fn callback_extensions_accepts_string_and_object_extension_ids_and_rejects_duplicates() {
+    let valid = json!([
+        {"extensionId": "team.scope/env@1.0.0", "config": {}, "data": {}},
+        {"extensionId": {"scope": "team.scope", "name": "other"}, "config": "-", "data": {}}
+    ]);
+    assert_eq!(super::callbacks::extensions(&valid).unwrap(), valid);
+    let duplicate = json!([
+        {"extensionId": "team.scope/env@1.0.0", "config": {}, "data": {}},
+        {"extensionId": {"scope": "team.scope", "name": "env", "version": "2.0.0"}, "config": {}, "data": {}}
+    ]);
+    assert!(super::callbacks::extensions(&duplicate).is_err());
+}
+
+#[test]
 fn stored_builder_artifacts_are_passive_metadata_not_a_load_callback() {
     let stored = json!([{"name":"teambit.pipelines/builder","config":{},"data":{"artifacts":[{"files":[{"relativePath":"dist/index.js","file":"a".repeat(40)}]}]}}]);
     let state = json!({"entries":[],"components":[[],[],[]],"packages":[{},{},{}]});

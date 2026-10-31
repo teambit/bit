@@ -3,6 +3,9 @@
 //! loader of the TypeScript CLI runs it before loading components
 //! (`ComponentLoader.invalidateDependenciesCache`); native status and install do too.
 
+#[cfg(test)]
+mod tests;
+
 use super::hex;
 use serde_json::Value;
 use sha1::{Digest, Sha1};
@@ -158,6 +161,3 @@ fn truthy(value: Option<&Value>) -> bool {
         Some(_) => true,
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -186,7 +186,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     let filtered = args
         .iter()
         .copied()
-        .filter(|arg| *arg != "--no-color")
+        .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect::<Vec<_>>();
     match filtered.as_slice() {
         ["list", rest @ ..] => parse_list(rest, false),

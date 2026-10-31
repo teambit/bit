@@ -357,9 +357,7 @@ pub(super) fn squash_logs(receipt: &mut Value, rows: &[Value]) -> io::Result<()>
     let mut seen = HashSet::new();
     for row in rows {
         let identity = text(row.get("identity"))?;
-        let lane = &row["laneId"];
-        let scope = text(lane.get("scope"))?;
-        let name = text(lane.get("name"))?;
+        let (scope, name) = squash_lane_id(&row["laneId"])?;
         let versions = array(receipt.get("versions"), "resolve receipt versions")?;
         if !seen.insert(identity)
             || identity.is_empty()
@@ -373,11 +371,25 @@ pub(super) fn squash_logs(receipt: &mut Value, rows: &[Value]) -> io::Result<()>
         }
         let mut log = receipt["log"].clone();
         log["message"] = json!(format!("squashed during merge from {scope}/{name}"));
-        for version in receipt["versions"].as_array_mut().unwrap() {
+        for version in
+            receipt["versions"].as_array_mut().ok_or_else(|| decline("resolve receipt versions"))?
+        {
             if version["identity"] == identity {
                 version["squashLog"] = log.clone();
             }
         }
     }
     Ok(())
+}
+
+fn squash_lane_id(lane: &Value) -> io::Result<(&str, &str)> {
+    if let Some(raw) = lane.as_str() {
+        return raw
+            .split('@')
+            .next()
+            .unwrap_or(raw)
+            .split_once('/')
+            .ok_or_else(|| decline("resolve snapshot squash receipt"));
+    }
+    Ok((text(lane.get("scope"))?, text(lane.get("name"))?))
 }

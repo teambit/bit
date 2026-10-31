@@ -1,5 +1,8 @@
 //! A workspace-root Version must not overwrite the live map or a nested component's files.
 
+#[cfg(test)]
+mod tests;
+
 use super::super::super::{client_status::config, invalid};
 use serde_json::Value;
 use std::{io, path::Path};
@@ -58,6 +61,3 @@ pub(super) fn filter(manifest: &mut Value, nested: &[String]) -> io::Result<()> 
     });
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

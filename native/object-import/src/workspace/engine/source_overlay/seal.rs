@@ -13,7 +13,7 @@ pub(super) fn capture(data: &Data) -> io::Result<Vec<proof::Proof>> {
             Entry::Source(source) => source.len(),
             Entry::Removed => 0,
         })
-        .sum();
+        .fold(0_u64, u64::saturating_add);
     if declared > 64 * 1024 * 1024 {
         return Err(invalid("overlay byte budget"));
     }
@@ -50,7 +50,7 @@ fn capture_one(
     Ok(proofs)
 }
 fn reserve(size: usize, bytes: &AtomicUsize) -> io::Result<()> {
-    if bytes.fetch_add(size, Ordering::Relaxed) + size > 96 * 1024 * 1024 {
+    if bytes.fetch_add(size, Ordering::Relaxed).saturating_add(size) > 96 * 1024 * 1024 {
         return Err(invalid("overlay captured byte budget"));
     }
     Ok(())

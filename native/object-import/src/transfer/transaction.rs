@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
@@ -110,6 +113,3 @@ impl Transaction {
 fn cleanup(indices: Vec<usize>, reason: &'static str) -> Phase {
     if indices.is_empty() { Phase::Failed(reason) } else { Phase::Cleanup(indices, reason) }
 }
-
-#[cfg(test)]
-mod tests;

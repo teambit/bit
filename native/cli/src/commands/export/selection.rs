@@ -10,19 +10,14 @@ pub(super) fn ids(engine: &mut Engine, root: &Path, options: &Options) -> io::Re
     }
     let bitmap =
         bit_install::jsonc::Document::parse(&std::fs::read_to_string(root.join(".bitmap"))?)?;
-    if bitmap.get(&["_bit_lane"]).is_some() {
+    if is_non_main_lane(bitmap.get(&["_bit_lane"]).as_ref()) {
         return Ok(options.ids.clone());
     }
     let candidates: Value = engine.request(&json!({
         "kind":"commandOutboundCandidates", "root":root,
         "all":options.all || options.all_versions,
     }))?;
-    let ids =
-        candidates["ids"].as_array().ok_or_else(|| io::Error::other("outbound candidate IDs"))?;
-    let ids = ids
-        .iter()
-        .map(|id| id.as_str().ok_or_else(|| io::Error::other("outbound candidate ID")))
-        .collect::<io::Result<Vec<_>>>()?;
+    let ids = candidate_ids(&candidates)?;
     let patterns = options.ids
         .iter()
         .map(|pattern| {
@@ -37,6 +32,34 @@ pub(super) fn ids(engine: &mut Engine, root: &Path, options: &Options) -> io::Re
                 .iter()
                 .any(|pattern| pattern.find(id).is_some())
         })
-        .map(str::to_owned)
         .collect())
+}
+
+fn is_non_main_lane(lane: Option<&Value>) -> bool {
+    let Some(lane) = lane else { return false };
+    let name = lane
+        .as_str()
+        .or_else(|| lane["name"].as_str())
+        .or_else(|| lane["id"].as_str())
+        .or_else(|| lane["id"]["name"].as_str())
+        .unwrap_or_default()
+        .trim();
+    !name.is_empty() && name.rsplit('/').next() != Some("main")
+}
+
+fn candidate_ids(candidates: &Value) -> io::Result<Vec<String>> {
+    let rows = candidates["ids"]
+        .as_array()
+        .or_else(|| candidates["components"].as_array())
+        .ok_or_else(|| io::Error::other("outbound candidate IDs"))?;
+    rows.iter()
+        .map(|row| {
+            row.as_str()
+                .or_else(|| row["id"].as_str())
+                .or_else(|| row["identity"].as_str())
+                .filter(|value| !value.is_empty())
+                .map(str::to_owned)
+                .ok_or_else(|| io::Error::other("outbound candidate ID"))
+        })
+        .collect()
 }

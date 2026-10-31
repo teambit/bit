@@ -1,5 +1,7 @@
 pub(crate) use inflate_error::message as inflate_message;
 mod inflate_error;
+#[cfg(test)]
+mod tests;
 use std::{
     cell::RefCell,
     fs::File,
@@ -232,6 +234,3 @@ pub(crate) fn split<'a>(
     }
     Ok((size, &object[end + 1..]))
 }
-
-#[cfg(test)]
-mod tests;

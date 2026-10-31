@@ -73,9 +73,8 @@ fn fill_repo(content: &str, repo: &str) -> String {
 
 fn starts_block(line: &str) -> bool {
     regress::Regex::new(r"^\s*(#{1,6}(\s|$)|---|```|~~~|<!--|\||>|[-*+](\s|$)|\d+[.)](\s|$))")
-        .unwrap()
-        .find(line)
-        .is_some()
+        .ok()
+        .is_some_and(|regex| regex.find(line).is_some())
 }
 
 fn insertion_point(lines: &[&str]) -> usize {
@@ -94,7 +93,9 @@ fn insertion_point(lines: &[&str]) -> usize {
 fn title_end(lines: &[&str], at: usize) -> usize {
     let mut next = at;
     skip_empty(lines, &mut next);
-    let title = regress::Regex::new(r"^ {0,3}#(\s|$)").unwrap();
+    let Some(title) = regress::Regex::new(r"^ {0,3}#(\s|$)").ok() else {
+        return at;
+    };
     if lines
         .get(next)
         .is_none_or(|line| title.find(line).is_none())

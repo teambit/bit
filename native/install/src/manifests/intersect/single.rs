@@ -173,7 +173,17 @@ pub(super) fn create_single(comparators: &[Comparator]) -> io::Result<Option<Sin
             }
             Ok(new_range(lower, upper).ok())
         }
-        [only] => Ok(Some(Single::Ver((*only).clone()))),
+        [only] => {
+            let stripped = strip_operator(only)?;
+            let satisfies = stripped.semver
+                .as_ref()
+                .is_none_or(|ver| {
+                    comparators
+                        .iter()
+                        .all(|comp| comp.test(ver))
+                });
+            Ok(satisfies.then_some(Single::Ver(stripped)))
+        }
         _ => Ok(None),
     }
 }

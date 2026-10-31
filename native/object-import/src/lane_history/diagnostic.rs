@@ -19,7 +19,7 @@ pub fn ci_requires_published_diagnostic(
 ) -> io::Result<bool> {
     let bitmap = document(&root.join(".bitmap"))?;
     let Some(current) = bitmap.get("_bit_lane") else { return Ok(true) };
-    let id: Id = serde_json::from_value(current["id"].clone()).map_err(io::Error::other)?;
+    let id: Id = command_import::lane::lane_index_id(current)?;
     id.validate()?;
     if id.is_main() {
         return Ok(true);

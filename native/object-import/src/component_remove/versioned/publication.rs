@@ -30,8 +30,8 @@ pub(in crate::component_remove) fn publish(
 fn changes(plans: &[VersionedPlan]) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
     let mut grouped: Vec<(&Change, Value)> = Vec::new();
     for change in plans.iter().map(|plan| &plan.index) {
-        let after: Value =
-            serde_json::from_slice(change.after.as_ref().ok_or_else(|| invalid("scope update"))?)?;
+        let after =
+            crate::parse_jsonc(change.after.as_ref().ok_or_else(|| invalid("scope update"))?)?;
         if let Some((original, merged)) = grouped
             .iter_mut()
             .find(|(entry, _)| entry.path == change.path)

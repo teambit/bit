@@ -14,6 +14,8 @@ mod lexer;
 mod node;
 mod parser;
 mod stringify;
+#[cfg(test)]
+mod tests;
 
 use indexmap::IndexMap;
 use serde_json::Value;
@@ -134,6 +136,3 @@ impl fmt::Display for Document {
         formatter.write_str(&stringify::document(&self.root, &self.before_all, &self.after_all))
     }
 }
-
-#[cfg(test)]
-mod tests;

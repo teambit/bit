@@ -28,15 +28,23 @@ fn summary(options: &Options, ids: &[String], chalk: Chalk) -> String {
             chalk.bold(&options.source),
         )
     } else {
-        format!("forked {} from {}", chalk.bold(&ids[0]), chalk.bold(&options.source))
+        let first_id = ids.first().map_or("", String::as_str);
+        format!("forked {} from {}", chalk.bold(first_id), chalk.bold(&options.source))
     }
 }
 fn target_scope<'a>(options: &'a Options, ids: &'a [String]) -> &'a str {
     options.scope
         .as_deref()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
         .or_else(|| {
             ids.first()
-                .and_then(|id| id.split_once('/').map(|(scope, _)| scope))
+                .and_then(|id| {
+                    id.trim()
+                        .split_once('/')
+                        .map(|(scope, _)| scope.trim())
+                })
+                .filter(|scope| !scope.is_empty())
         })
         .unwrap_or_default()
 }

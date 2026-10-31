@@ -2,6 +2,8 @@
 
 mod options;
 mod stores;
+#[cfg(test)]
+mod tests;
 
 use crate::{
     commands::{Command, color::Chalk, workspace_command},
@@ -101,6 +103,3 @@ fn execute_error(
     writeln!(io::stderr().lock(), "{}", chalk.red(message))?;
     Ok(Outcome::Exit(ExitCode::FAILURE))
 }
-
-#[cfg(test)]
-mod tests;

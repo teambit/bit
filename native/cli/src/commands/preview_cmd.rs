@@ -122,7 +122,7 @@ pub(super) fn parse_generate_options(args: &[&str]) -> Option<GenerateOptions> {
                 consume_trailing_preview_pattern(iter, &mut options.pattern)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-n" | "--name" => {
                 let val = iter.next()?;
                 (!val.is_empty() && !val.starts_with('-')).then_some(())?;
@@ -164,7 +164,7 @@ pub(super) fn parse_serve_options(args: &[&str]) -> Option<ServeOptions> {
         let arg = args[idx];
         match arg {
             "--" => return (idx + 1 == args.len()).then_some(options),
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-p" | "--port" => {
                 if let Some(&next) = args.get(idx + 1)
                     && !next.starts_with('-')

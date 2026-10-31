@@ -32,13 +32,13 @@ fn qualify_shared_heads(lanes: &[(String, String)]) -> Option<()> {
 }
 
 fn lane_head(path: &Path, scope: &str, component: &str) -> Option<Option<String>> {
-    let rows: Value = serde_json::from_slice(&fs::read(path).ok()?).ok()?;
+    let rows: Value = bit_object_import::parse_jsonc(&fs::read(path).ok()?).ok()?;
     let row = rows
         .as_array()?
         .iter()
         .find(|row| {
-            row["id"]["scope"].as_str() == Some(scope)
-                && row["id"]["name"].as_str() == Some(component)
+            crate::commands::version_history::build::row_scope_and_name(row)
+                == Some((scope, component))
         });
     match row {
         Some(row) => Some(Some(row["head"].as_str()?.to_owned())),

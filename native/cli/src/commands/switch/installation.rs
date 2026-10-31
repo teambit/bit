@@ -46,13 +46,30 @@ pub(super) fn run(
         host.call("switchCompile", &json!({"installationSucceeded":installation_succeeded}));
     print!("{}", host.take_stdout());
     let compiled = compiled?;
-    if let Some(error) = compiled["error"].as_str() {
+    if let Some(error) = compiler_error(&compiled["error"])? {
         output.failure(&format!("compilation failed with the following error: {error}"));
-        reports.push(compilation_error(chalk, error));
-    } else if !compiled["error"].is_null() {
-        return Err(io::Error::other("switch compiler receipt"));
+        reports.push(compilation_error(chalk, &error));
     }
     Ok(reports)
+}
+
+fn compiler_error(value: &serde_json::Value) -> io::Result<Option<String>> {
+    if value.is_null() {
+        return Ok(None);
+    }
+    if let Some(text) = value.as_str() {
+        let trimmed = text.trim();
+        return Ok((!trimmed.is_empty()).then(|| trimmed.to_owned()));
+    }
+    if let Some(message) = value
+        .as_object()
+        .and_then(|object| object.get("message"))
+        .and_then(serde_json::Value::as_str)
+    {
+        let trimmed = message.trim();
+        return Ok((!trimmed.is_empty()).then(|| trimmed.to_owned()));
+    }
+    Err(io::Error::other("switch compiler receipt"))
 }
 
 fn compilation_error(chalk: Chalk, message: &str) -> String {

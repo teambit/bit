@@ -115,7 +115,7 @@ impl<'r> Status<'r> {
         let mut items = array(self.result.get("invalidComponents"), "invalid")?
             .iter()
             .map(|row| {
-                let identity = text(row.get("id"))?;
+                let identity = text(row.get("id").or_else(|| row.get("identity")))?;
                 let label = match row["error"]["name"].as_str() {
                     Some("ComponentNotFoundInPath") => r#"component files were deleted (use "bit remove [component_id]") or moved (use "bit move <old-dir> <new-dir>"). to restore use "bit checkout reset [component_id]""#,
                     Some("MainFileRemoved") => r#"main-file was removed (use "bit add" with "--main" and "--id" flags to add a main file)"#,
@@ -161,12 +161,11 @@ impl<'r> Status<'r> {
         let mut rows = array(self.result.get("outdatedComponents"), "outdated")?
             .iter()
             .map(|row| {
-                Ok((
-                    text(row.get("id"))?,
-                    self.version(text(row.get("id"))?)?
-                        .unwrap_or_default(),
-                    row,
-                ))
+                let id = text(
+                    row.get("id")
+                        .or_else(|| row.get("identity")),
+                )?;
+                Ok((id, self.version(id)?.unwrap_or_default(), row))
             })
             .collect::<io::Result<Vec<_>>>()?;
         rows.sort_by(|left, right| {
@@ -193,7 +192,10 @@ impl<'r> Status<'r> {
         array(self.result.get("stagedComponents"), "staged")?
             .iter()
             .map(|row| {
-                let identity = text(row.get("id"))?;
+                let identity = text(
+                    row.get("id")
+                        .or_else(|| row.get("identity")),
+                )?;
                 let versions = array(row.get("versions"), "staged versions")?
                     .iter()
                     .map(|version| text(Some(version)).map(str::to_string))

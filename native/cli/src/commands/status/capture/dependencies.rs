@@ -47,18 +47,22 @@ impl Scan<'_> {
         policy: &policy::Policy,
         captured: &mut Capture,
     ) -> io::Result<Value> {
+        let identity = text(
+            target
+                .get("identity")
+                .or_else(|| target.get("id")),
+        )?;
         let mut dependencies = if directory == "."
             || captured.cache.no_fs_cache
             || captured.cache.reset
             || (!self.environments.is_checkout()
-                && !self.context["environmentFacts"][text(target.get("identity"))?].is_null())
+                && !self.context["environmentFacts"][identity].is_null())
         {
             json!({ "needsDetection": true })
         } else {
             self.cached(target, directory, files, policy)?
         };
         if self.environments.is_checkout() {
-            let identity = text(target.get("identity"))?;
             captured.environment_facts["checkoutCacheMisses"][identity] =
                 json!(dependencies["needsDetection"] == true);
             if !self.context["environmentFacts"][identity].is_null() {
@@ -120,7 +124,7 @@ impl Scan<'_> {
         }
         let facts = self.facts.as_ref().ok_or_else(|| decline("status facts"))?;
         let detection = fresh::Detection { root: self.root, context: self.context, facts };
-        let custom = if target["directory"] == "." {
+        let custom = if target["directory"] == "." || target["rootDir"] == "." {
             Value::Null
         } else {
             self.environments.detectors(self.root, self.context, target, files)?

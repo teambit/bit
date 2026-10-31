@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{BodyInput, invalid};
 use serde_json::{Value, json};
 use std::{
@@ -42,6 +45,3 @@ fn retain(
     }
     Ok(files)
 }
-
-#[cfg(test)]
-mod tests;

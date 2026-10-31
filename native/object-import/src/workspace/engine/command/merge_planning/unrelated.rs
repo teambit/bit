@@ -77,15 +77,13 @@ fn one(
     let mut pending =
         super::pending::entry(&selected.model, &selected.remote, Some(lane), &material);
     pending["unrelated"] = relation.clone();
-    prepared.unmerged
-        .as_array_mut()
-        .unwrap()
-        .push(pending);
+    if let Some(rows) = prepared.unmerged.as_array_mut() {
+        rows.push(pending);
+    }
     super::retain_snapshot(record, prepared, selected, &planned.captured[index], &material)?;
-    planned.result["components"]
-        .as_array_mut()
-        .unwrap()
-        .push(material.output.clone());
+    if let Some(rows) = planned.result["components"].as_array_mut() {
+        rows.push(material.output.clone());
+    }
     if let Some(lane) = &mut prepared.publication.lane {
         lane.update(
             &planned.captured[index].target.identity,
@@ -109,7 +107,16 @@ fn relation(selected: &Selected, lane: &Value, choice: &Value) -> io::Result<Val
         Some("current") => {
             json!({"name":lane["current"]["value"]["name"],"scope":lane["current"]["value"]["scope"]})
         }
-        Some("other") => lane["otherId"].clone(),
+        Some("other") => {
+            if let Some((scope, name)) = lane["otherId"]
+                .as_str()
+                .and_then(|raw| raw.split_once('/'))
+            {
+                json!({"scope": scope, "name": name})
+            } else {
+                lane["otherId"].clone()
+            }
+        }
         _ => return Err(invalid("unrelated lane selector")),
     };
     Ok(

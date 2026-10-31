@@ -36,7 +36,10 @@ impl PreparedSave {
     }
 }
 fn next_index(latest: Option<&str>) -> io::Result<u64> {
-    let Some(latest) = latest else {
+    let Some(latest) = latest
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+    else {
         return Ok(1);
     };
     let digits: String = latest

@@ -51,7 +51,7 @@ fn prepare(scope: &Path, options: &Options) -> io::Result<Plan> {
     if !startup::supported(None, scope, &Value::Null, false)? {
         return Err(unsupported("configured startup callbacks"));
     }
-    let config: Value = serde_json::from_slice(&fs::read(scope.join("scope.json"))?)?;
+    let config: Value = bit_object_import::parse_jsonc(&fs::read(scope.join("scope.json"))?)?;
     let name = text(&config["name"])?;
     let objects = repository::read(&scope.join("objects"))?;
     let trash = repository::read(&scope.join("trash"))?;

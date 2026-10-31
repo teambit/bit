@@ -98,11 +98,14 @@ fn render_group(rows: &[Import], output: &Output, main: bool, started: Instant) 
 }
 
 fn lane_name(row: &Import) -> Option<&str> {
-    row.reason
+    let raw = row.reason
         .as_deref()?
         .strip_prefix("of their latest on lane ")?
-        .split_once('/')
-        .map(|(_, name)| name)
+        .trim();
+    raw.rsplit('/')
+        .next()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
 }
 
 fn latest_request(row: &Import) -> bool {

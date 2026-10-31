@@ -29,12 +29,7 @@ pub(super) fn blame(request: Request, cache: &mut Cache) -> io::Result<Value> {
         );
     };
     let mut sources = Sources::new(request.objects_directory, request.snapshot_directory, cache)?;
-    let mut rows: Vec<Value> = sources
-        .text(reference(current, "fileHash")?)?
-        .split('\n')
-        .enumerate()
-        .map(|(index, line)| json!({"lineNumber":index+1,"lineContent":line}))
-        .collect();
+    let mut rows = initial_rows(&sources.text(reference(current, "fileHash")?)?);
     let mut pending: HashSet<usize> = (0..rows.len()).collect();
     for (log_index, log) in request.logs.iter().enumerate() {
         if pending.is_empty() {
@@ -47,13 +42,29 @@ pub(super) fn blame(request: Request, cache: &mut Cache) -> io::Result<Value> {
         let old = sources.text(parent)?;
         assign(&lines::diff(&old, &new)?, log, log_index, &mut rows, &mut pending)?;
     }
-    for index in pending {
-        metadata(&mut rows[index], request.logs.last().expect("nonempty logs"));
-        rows[index]["logIndex"] = json!(request.logs.len() - 1);
+    if let Some(last_log) = request.logs.last() {
+        assign_remaining(&mut rows, pending, last_log, request.logs.len() - 1);
     }
     let mut response = json!({"lines":rows});
     sources.response(&mut response);
     Ok(response)
+}
+fn initial_rows(text: &str) -> Vec<Value> {
+    text.split('\n')
+        .enumerate()
+        .map(|(index, line)| json!({"lineNumber":index+1,"lineContent":line}))
+        .collect()
+}
+fn assign_remaining(
+    rows: &mut [Value],
+    pending: HashSet<usize>,
+    last_log: &Value,
+    last_idx: usize,
+) {
+    for index in pending {
+        metadata(&mut rows[index], last_log);
+        rows[index]["logIndex"] = json!(last_idx);
+    }
 }
 fn reference<'a>(log: &'a Value, field: &str) -> io::Result<&'a str> {
     log.get(field)
@@ -64,10 +75,8 @@ fn metadata(row: &mut Value, log: &Value) {
     for field in ["username", "email", "date", "message", "hash", "tag"] {
         if let Some(value) = log.get(field) {
             row[field] = value.clone();
-        } else {
-            row.as_object_mut()
-                .expect("line row")
-                .remove(field);
+        } else if let Some(object) = row.as_object_mut() {
+            object.remove(field);
         }
     }
 }

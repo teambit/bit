@@ -73,7 +73,11 @@ fn tag(params: &mut Value, options: &Value) {
     for field in ["skipAutoTag", "soft", "persist"] {
         params[field] = json!(options[field] == true);
     }
-    if let Some(path) = options["versionsFile"]["path"].as_str() {
+    if let Some(path) = options["versionsFile"]
+        .as_str()
+        .or_else(|| options["versionsFile"]["path"].as_str())
+        .filter(|path| !path.is_empty())
+    {
         params["versionsFile"] = json!(path);
     }
     if options["soft"] == true {

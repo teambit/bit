@@ -261,11 +261,8 @@ impl State<'_> {
             .into_iter()
             .flatten()
             .any(|row| {
-                format!(
-                    "{}/{}",
-                    row["id"]["scope"].as_str().unwrap_or_default(),
-                    row["id"]["name"].as_str().unwrap_or_default(),
-                ) == id
+                crate::commands::version_history::build::row_scope_and_name(row)
+                    .is_some_and(|(scope, name)| format!("{scope}/{name}") == id)
             });
         !merging
             && model["head"].is_string()

@@ -1,11 +1,14 @@
 //! Render the bounded linear history without loading the JavaScript runtime.
+mod graph;
+mod refs;
+#[cfg(test)]
+mod tests;
+
 use super::{
     Chalk, Outcome, ScopeRoot, Value, diagnose_component_lookup_error, emit_failure, emit_text,
     resolve_component_entry, scope_dir_for, sha1_hex,
 };
 use std::{env, ffi::OsString, io};
-mod graph;
-mod refs;
 
 pub(super) fn run(
     root: &ScopeRoot,
@@ -124,6 +127,3 @@ pub(in crate::commands) fn tags<'a>(model: &'a Value, hash: &str) -> Option<&'a 
     }
     None
 }
-
-#[cfg(test)]
-mod tests;

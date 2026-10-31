@@ -48,13 +48,9 @@ impl CatDocs {
     }
 
     pub(in crate::commands) fn absorb(&mut self, receipt: &Value) -> io::Result<Option<String>> {
-        if receipt["published"] != true
-            || (!receipt["error"].is_null() && !receipt["error"].is_string())
-        {
-            return Err(io::Error::other("cat documentation parser receipt"));
-        }
+        let error = parse_doc_receipt(receipt)?;
         self.host_published = true;
-        Ok(receipt["error"].as_str().map(str::to_owned))
+        Ok(error)
     }
 
     pub(in crate::commands) fn publish(self) -> io::Result<()> {
@@ -82,4 +78,22 @@ impl CatDocs {
         }
         Ok(())
     }
+}
+
+fn parse_doc_receipt(receipt: &Value) -> io::Result<Option<String>> {
+    if receipt["published"] != true && receipt["published"].as_str() != Some("true") {
+        return Err(io::Error::other("cat documentation parser receipt"));
+    }
+    let error = &receipt["error"];
+    if error.is_null() {
+        return Ok(None);
+    }
+    if let Some(message) = error
+        .as_str()
+        .or_else(|| error.get("message").and_then(Value::as_str))
+    {
+        let trimmed = message.trim();
+        return Ok((!trimmed.is_empty()).then(|| trimmed.to_owned()));
+    }
+    Err(io::Error::other("cat documentation parser receipt"))
 }

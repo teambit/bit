@@ -91,13 +91,46 @@ fn list(root: &Path, patterns: &[&String], lane_only: bool) -> io::Result<Vec<Va
 fn matched(list: &Value, include_deprecated: bool) -> io::Result<Vec<String>> {
     let mut ids = Vec::new();
     for component in array(list.get("components"), "remote list components")? {
-        let id = text(component.get("id"))?;
-        if !collate::supported(id) || !id.contains('@') {
+        let id = component_id(component)?;
+        if !collate::supported(&id) || !id.contains('@') {
             return Err(decline("remote list id"));
         }
         if include_deprecated || component.get("deprecated") != Some(&Value::Bool(true)) {
-            ids.push(id.to_string());
+            ids.push(id);
         }
     }
     Ok(ids)
+}
+
+fn component_id(component: &Value) -> io::Result<String> {
+    let base = if let Some(id) = component
+        .get("id")
+        .or_else(|| component.get("identity"))
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty())
+    {
+        id.to_owned()
+    } else {
+        let object = component["id"].as_object().ok_or_else(|| decline("remote list id"))?;
+        let name = text(object.get("name"))?;
+        match object
+            .get("scope")
+            .and_then(Value::as_str)
+            .filter(|scope| !scope.is_empty())
+        {
+            Some(scope) => format!("{scope}/{name}"),
+            None => name.to_owned(),
+        }
+    };
+    if base.contains('@') {
+        return Ok(base);
+    }
+    let version = component
+        .get("version")
+        .or_else(|| component.get("head"))
+        .or_else(|| component["id"].get("version"))
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| decline("remote list id"))?;
+    Ok(format!("{base}@{version}"))
 }

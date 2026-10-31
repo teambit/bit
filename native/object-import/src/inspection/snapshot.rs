@@ -9,18 +9,19 @@ impl State {
 pub(super) fn remaining(state: &mut State, incoming: usize) -> io::Result<usize> {
     state.retained.retain(|files| files.strong_count() != 0);
     let mut count = incoming;
-    let mut bytes = 0;
+    let mut bytes = 0_usize;
     for files in state.retained.iter().filter_map(std::sync::Weak::upgrade) {
-        count += files.len();
-        bytes += files
+        count = count.saturating_add(files.len());
+        let file_bytes = files
             .iter()
             .map(|file| file.contents.len())
-            .sum::<usize>();
+            .fold(0_usize, usize::saturating_add);
+        bytes = bytes.saturating_add(file_bytes);
     }
     if state.retained.len() >= MAX_FILES || count > MAX_FILES || bytes > MAX_BYTES {
         return Err(invalid("inspection retained file/byte limit"));
     }
-    Ok(MAX_BYTES - bytes)
+    Ok(MAX_BYTES.saturating_sub(bytes))
 }
 
 pub(super) fn validate_mode(request: &wire::Begin, state: &State) -> io::Result<()> {

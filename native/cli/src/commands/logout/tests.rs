@@ -13,6 +13,8 @@ fn os_args(args: &[&str]) -> Vec<OsString> {
 fn parses_valid_args() {
     assert!(valid_args(&os_args(&["logout"])));
     assert!(valid_args(&os_args(&["logout", "--no-color"])));
+    assert!(valid_args(&os_args(&["logout", "--no-color=true"])));
+    assert!(valid_args(&os_args(&["logout", "--no-color=false"])));
 }
 
 #[test]

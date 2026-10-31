@@ -188,23 +188,9 @@ fn in_class(body: &[char], character: char) -> Option<bool> {
 
 /// `{a,b}` brace expansion, applied before matching.
 fn expand_braces(pattern: &str) -> Vec<String> {
-    let Some(open) = pattern.find('{') else { return vec![pattern.to_owned()] };
-    let mut depth = 0;
-    let mut close = None;
-    let mut commas = Vec::new();
-    for (index, character) in pattern[open..].char_indices() {
-        match character {
-            '{' => depth += 1,
-            '}' if depth == 1 => {
-                close = Some(open + index);
-                break;
-            }
-            '}' => depth -= 1,
-            ',' if depth == 1 => commas.push(open + index),
-            _ => {}
-        }
-    }
-    let Some(close) = close.filter(|_| !commas.is_empty()) else { return vec![pattern.to_owned()] };
+    let Some((open, close, commas)) = find_brace_group(pattern) else {
+        return vec![pattern.to_owned()];
+    };
     let bounds: Vec<usize> = std::iter::once(open)
         .chain(commas)
         .chain(std::iter::once(close))
@@ -221,4 +207,24 @@ fn expand_braces(pattern: &str) -> Vec<String> {
             expand_braces(&expanded)
         })
         .collect()
+}
+
+fn find_brace_group(pattern: &str) -> Option<(usize, usize, Vec<usize>)> {
+    for (open, _) in pattern.match_indices('{') {
+        let mut depth = 0;
+        let mut commas = Vec::new();
+        for (index, character) in pattern[open..].char_indices() {
+            match character {
+                '{' => depth += 1,
+                '}' if depth == 1 && !commas.is_empty() => {
+                    return Some((open, open + index, commas));
+                }
+                '}' if depth == 1 => break,
+                '}' => depth -= 1,
+                ',' if depth == 1 => commas.push(open + index),
+                _ => {}
+            }
+        }
+    }
+    None
 }

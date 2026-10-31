@@ -29,7 +29,15 @@ pub fn validate_error(args: &[&str]) -> Option<&'static str> {
             positionals += count_trailing_positionals(&args[index..])?;
             break;
         }
-        if matches!(arg, "--no-color" | "--build" | "--build=true" | "--build=false") {
+        if matches!(
+            arg,
+            "--no-color"
+                | "--no-color=true"
+                | "--no-color=false"
+                | "--build"
+                | "--build=true"
+                | "--build=false",
+        ) {
             continue;
         }
         if !arg.starts_with('-') {
@@ -117,7 +125,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
             consume_trailing_positionals(&args[index..], &mut positionals)?;
             break;
         }
-        if arg == "--no-color" {
+        if matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false") {
             continue;
         }
         if !arg.starts_with('-') {

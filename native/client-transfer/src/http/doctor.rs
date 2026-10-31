@@ -45,7 +45,11 @@ impl Network {
 }
 
 fn projection(value: &Value, scope: &str) -> io::Result<Value> {
-    if let Some(message) = value["errors"][0]["message"].as_str() {
+    if let Some(message) = value["errors"][0]["message"]
+        .as_str()
+        .or_else(|| value["error"].as_str())
+        .or_else(|| value["message"].as_str())
+    {
         if message.contains(r#"Cannot query field "doctor""#) {
             return Err(io::Error::other(format!(
                 r#"Remote scope "{scope}" does not support doctor checks. Please upgrade the remote scope to a newer version."#,
@@ -54,12 +58,21 @@ fn projection(value: &Value, scope: &str) -> io::Result<Value> {
         return Err(io::Error::other(message.to_owned()));
     }
     let result = &value["data"]["scope"]["doctor"];
+    let meta = result
+        .get("metaData")
+        .or_else(|| result.get("metadata"));
     if result["examineResults"]
         .as_array()
         .is_none_or(|rows| rows.len() > 4096)
-        || !result["metaData"].is_object()
+        || !meta.is_some_and(Value::is_object)
     {
         return Err(invalid("remote doctor result"));
     }
-    Ok(result.clone())
+    let mut normalized = result.clone();
+    if normalized.get("metaData").is_none()
+        && let Some(meta_val) = meta
+    {
+        normalized["metaData"] = meta_val.clone();
+    }
+    Ok(normalized)
 }

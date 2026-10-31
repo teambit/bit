@@ -1,8 +1,8 @@
-use crate::helper::Helper;
-use serde_json::Value;
-
 #[path = "add_harmony/extra.rs"]
 mod extra;
+
+use crate::helper::Helper;
+use serde_json::Value;
 
 #[test]
 fn workspace_root_component_bitmap_convergence_and_removing() {

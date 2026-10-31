@@ -311,7 +311,7 @@ fn project_index(root: &Path, items: &[Plan]) -> io::Result<Option<BytesChange>>
         return Ok(None);
     }
     let before = fs::read(crate::scope_path(root).join("index.json"))?;
-    let mut index: Value = serde_json::from_slice(&before)?;
+    let mut index: Value = crate::parse_jsonc(&before)?;
     let rows =
         if index.is_array() { index.as_array_mut() } else { index["components"].as_array_mut() }
             .ok_or_else(|| invalid("lane batch index components"))?;

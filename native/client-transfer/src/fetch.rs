@@ -119,9 +119,10 @@ const DEFAULT_CONCURRENCY: usize = 15;
 pub fn concurrency(global: &GlobalConfig) -> usize {
     global
         .get("concurrency.fetch")
+        .or_else(|| global.get("concurrency_fetch"))
         .and_then(|value| match value {
             Value::Number(number) => number.as_u64(),
-            Value::String(text) => text.parse().ok(),
+            Value::String(text) => text.trim().parse().ok(),
             _ => None,
         })
         .and_then(|limit| usize::try_from(limit).ok())

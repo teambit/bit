@@ -1,4 +1,6 @@
 mod effects;
+#[cfg(test)]
+mod tests;
 
 use super::{invalid, plan, wire};
 use serde_json::{Value, json};
@@ -100,5 +102,3 @@ pub(super) fn error_path(path: &str) -> String {
 fn error_path_for_platform(path: &str, windows: bool) -> String {
     if windows { path.replace('/', r"\") } else { path.to_owned() }
 }
-#[cfg(test)]
-mod tests;

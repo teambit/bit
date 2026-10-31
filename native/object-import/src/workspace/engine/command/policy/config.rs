@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{super::invalid, projection};
 use serde_json::{Value, json};
 use std::io;
@@ -73,7 +76,7 @@ fn scope_policy(merged: &mut Value, current: &Value) -> io::Result<()> {
     let scope = scope_fields(current)?;
     let plan =
         crate::config_merge::apply("configScopePolicy", &json!({"merged":fields,"scope":scope}))?;
-    let object = policy.as_object_mut().unwrap();
+    let object = policy.as_object_mut().ok_or_else(|| invalid("command merged policy"))?;
     for field in projection::array(&plan["fields"])? {
         let name = field["field"].as_str().ok_or_else(|| invalid("command policy field"))?;
         if field["delete"] == true {
@@ -165,7 +168,10 @@ pub(super) fn normalized(merged: &Value) -> io::Result<Value> {
             continue;
         };
         let forced = selected_policy(value, true)?;
-        let forced = forced.as_object().unwrap().clone();
+        let forced = forced
+            .as_object()
+            .ok_or_else(|| invalid("command forced policy"))?
+            .clone();
         if forced.is_empty() {
             policy.remove(field);
         } else {
@@ -174,6 +180,3 @@ pub(super) fn normalized(merged: &Value) -> io::Result<Value> {
     }
     Ok(output)
 }
-
-#[cfg(test)]
-mod tests;

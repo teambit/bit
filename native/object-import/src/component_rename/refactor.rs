@@ -183,7 +183,7 @@ fn camel(name: &str, pascal: bool) -> String {
     let mut result = String::new();
     for character in name.chars() {
         if matches!(character, '-' | '_' | '/' | '.') {
-            upper = true;
+            upper = pascal || !result.is_empty();
             continue;
         }
         result.push(if upper { character.to_ascii_uppercase() } else { character });

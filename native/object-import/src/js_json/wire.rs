@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "wire/tests.rs"]
+mod tests;
+
 use super::Value;
 use serde::{
     Deserialize, Deserializer,
@@ -96,7 +100,3 @@ pub(super) fn entries<'de, Input: Deserializer<'de>>(
         .map(|(key, value)| (key.0, value))
         .collect())
 }
-
-#[cfg(test)]
-#[path = "wire/tests.rs"]
-mod tests;

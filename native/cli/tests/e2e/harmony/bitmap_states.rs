@@ -1,9 +1,9 @@
 //! Status sections derived from durable bitmap state.
 
+mod pending_import;
+
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;
-
-mod pending_import;
 
 fn parity(helper: &Helper) -> serde_json::Value {
     let copy = helper.clone_workspace();

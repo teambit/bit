@@ -4,6 +4,12 @@
 
 pub(super) use table::{table, table_with_separator};
 
+#[cfg(test)]
+mod log_tests;
+mod options;
+mod table;
+mod topology;
+
 use super::{
     color::Chalk,
     engine::Engine,
@@ -28,10 +34,6 @@ use std::{
 };
 use table::one_line;
 use topology::{LocalTarget, ordered_parents, resolve_local_target};
-
-mod options;
-mod table;
-mod topology;
 
 pub const COMMAND: Command = Command { name: "log", aliases: &[], run };
 
@@ -341,6 +343,3 @@ fn parents_report(logs: &[Value], chalk: Chalk) -> io::Result<Vec<String>> {
         })
         .collect()
 }
-
-#[cfg(test)]
-mod log_tests;

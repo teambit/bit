@@ -1,6 +1,8 @@
 //! Read-only public remote list and latest-version inventory. The request
 //! carries identities only; model and Version object bodies remain in Rust.
 mod latest;
+#[cfg(test)]
+mod tests;
 
 use super::{connection, file_list, invalid};
 use crate::{read_budget::Budget, workspace::engine::response};
@@ -362,6 +364,3 @@ fn file_latest(path: &Path, scope: &str, ids: &[String]) -> io::Result<Vec<Strin
         })
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

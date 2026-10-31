@@ -17,6 +17,7 @@ pub(in crate::commands) fn parse(
 ) -> io::Result<Value> {
     let directory = target["directory"]
         .as_str()
+        .or_else(|| target["rootDir"].as_str())
         .ok_or_else(|| io::Error::other("compiler parser directory"))?;
     let mut inputs = Vec::new();
     for file in files {

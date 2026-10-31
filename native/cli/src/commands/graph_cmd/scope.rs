@@ -148,9 +148,13 @@ fn load_local_scope_components(
 
 fn index_row_scope_and_name(row: &Value) -> (Option<&str>, Option<&str>) {
     if let Some(id_str) = row["id"].as_str() {
-        return match id_str.split_once('/') {
+        let bare = id_str
+            .split('@')
+            .next()
+            .unwrap_or(id_str);
+        return match bare.split_once('/') {
             Some((sc, nm)) => (Some(sc), Some(nm)),
-            None => (None, Some(id_str)),
+            None => (None, Some(bare)),
         };
     }
     (row["id"]["scope"].as_str(), row["id"]["name"].as_str())

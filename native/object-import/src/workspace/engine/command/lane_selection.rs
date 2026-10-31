@@ -1,11 +1,11 @@
 //! Canonical post-status lane filtering. Glob matching is a bounded grammar
 //! receipt; dependency ancestry, import decisions and excluded rows stay native.
+#[cfg(test)]
+mod tests;
+
 use super::{history, input::Prepare, invalid, repository::Repository};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
-
-#[cfg(test)]
-mod tests;
 
 struct Inputs<'a> {
     request: &'a Prepare,

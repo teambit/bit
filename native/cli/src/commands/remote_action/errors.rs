@@ -70,6 +70,7 @@ fn update_report(updates: &[Value], chalk: Chalk, output: &mut Vec<String>) {
         .map(|value| {
             let lane = value["lane"]
                 .as_str()
+                .or_else(|| value["lane"]["name"].as_str())
                 .filter(|lane| !lane.is_empty())
                 .map_or_else(String::new, |lane| format!(" (lane: {lane})"));
             format!("{}{lane}", id(value, chalk))
@@ -89,5 +90,24 @@ fn deleted_flag(value: &Value) -> bool {
     value["isDeleted"].as_bool() == Some(true)
 }
 fn id(value: &Value, chalk: Chalk) -> String {
-    chalk.bold(value["id"].as_str().unwrap_or("undefined"))
+    if let Some(raw) = value["id"]
+        .as_str()
+        .filter(|raw| !raw.is_empty())
+    {
+        return chalk.bold(raw);
+    }
+    if let Some(name) = value["id"]["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())
+    {
+        let formatted = match value["id"]["scope"]
+            .as_str()
+            .filter(|scope| !scope.is_empty())
+        {
+            Some(scope) => format!("{scope}/{name}"),
+            None => name.to_owned(),
+        };
+        return chalk.bold(&formatted);
+    }
+    chalk.bold("undefined")
 }

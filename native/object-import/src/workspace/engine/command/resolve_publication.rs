@@ -36,19 +36,18 @@ pub(super) fn preflight(
     imported_index: Option<&Value>,
     snapshot: bool,
 ) -> io::Result<()> {
-    let heads = materials
+    let heads: HashMap<_, _> = materials
         .iter()
         .map(|material| {
-            (
-                material.identity.as_str(),
-                if material.version_state.current_head.is_empty() {
-                    "0000000000000000000000000000000000000000"
-                } else {
-                    material.version_state.current_head.as_str()
-                },
-            )
+            let current = material.version_state.current_head.as_str();
+            let head = if current.is_empty() {
+                "0000000000000000000000000000000000000000"
+            } else {
+                current
+            };
+            (material.identity.as_str(), head)
         })
-        .collect::<HashMap<_, _>>();
+        .collect();
     let versions = materials
         .iter()
         .map(|material| {
@@ -61,16 +60,8 @@ pub(super) fn preflight(
         })
         .collect::<io::Result<Vec<_>>>()?;
     let receipt = json!({"log":{"message":""}});
-    prepare(
-        root,
-        context,
-        materials,
-        &versions,
-        pending,
-        &receipt,
-        Options { imported_index, snapshot },
-    )?
-    .validate()
+    let opts = Options { imported_index, snapshot };
+    prepare(root, context, materials, &versions, pending, &receipt, opts)?.validate()
 }
 
 fn resolve_markers(value: &mut Value, heads: &HashMap<&str, &str>) -> io::Result<()> {
@@ -185,13 +176,14 @@ fn bitmap_update(
     version: &Value,
     hash: &str,
 ) -> bitmap::Update {
+    let main_file = version["version"]["mainFile"]
+        .as_str()
+        .unwrap_or_default()
+        .to_owned();
     bitmap::Update {
         identity: material.identity.clone(),
         version: hash.to_owned(),
-        main_file: version["version"]["mainFile"]
-            .as_str()
-            .unwrap_or_default()
-            .to_owned(),
+        main_file,
         keep_ours: true,
     }
 }
@@ -200,29 +192,25 @@ fn directory<'a>(context: &'a Value, material: &resolve_snapshot::Material) -> i
     if material.hidden {
         return Ok("");
     }
-    context["targets"]
-        .as_array()
-        .and_then(|rows| {
-            rows.iter()
-                .find(|row| row["identity"] == material.identity)
-        })
-        .and_then(|row| row["directory"].as_str())
-        .ok_or_else(|| invalid("resolve publication directory"))
+    let rows = context["targets"].as_array();
+    rows.and_then(|list| {
+        list.iter()
+            .find(|row| row["identity"] == material.identity)
+    })
+    .and_then(|row| row["directory"].as_str())
+    .ok_or_else(|| invalid("resolve publication directory"))
 }
 
 fn reason(receipt: &Value, tag: bool) -> String {
     let message = receipt["log"]["message"].as_str().unwrap_or_default();
-    format!(
-        "{} (message: {})",
-        if tag { "tag" } else { "snap" },
-        if message.is_empty() { "N/A" } else { message },
-    )
+    let label = if tag { "tag" } else { "snap" };
+    let msg = if message.is_empty() { "N/A" } else { message };
+    format!("{label} (message: {msg})")
 }
 
 fn lane_new_ids(context: &Value, materials: &[resolve_snapshot::Material]) -> Vec<String> {
-    if context["lane"]["currentId"]["name"]
-        .as_str()
-        .is_none_or(|name| name == "main")
+    if crate::command_import::lane::parse_lane_id(&context["lane"]["currentId"])
+        .map_or(true, |lane_id| lane_id.is_main())
     {
         return Vec::new();
     }

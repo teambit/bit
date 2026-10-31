@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "fields/tests.rs"]
+mod tests;
+
 use super::super::invalid;
 use crate::js_json::Value as Js;
 use serde_json::{Value, json};
@@ -125,7 +129,3 @@ fn align_dependency(row: &mut Js, model: &[Js]) -> io::Result<Option<usize>> {
     }
     Ok(None)
 }
-
-#[cfg(test)]
-#[path = "fields/tests.rs"]
-mod tests;

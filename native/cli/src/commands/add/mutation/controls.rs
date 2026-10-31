@@ -28,9 +28,8 @@ pub(super) fn retain(context: &Value, capture: &mut Capture) -> io::Result<()> {
         .into_iter()
         .flatten()
         .map(|proof| {
-            let path = proof["path"]
-                .as_str()
-                .ok_or_else(|| io::Error::other("identity control proof path"))?;
+            let path =
+                proof_path(proof).ok_or_else(|| io::Error::other("identity control proof path"))?;
             refresh(Path::new(path))
         })
         .collect::<io::Result<Vec<_>>>()?;
@@ -38,6 +37,14 @@ pub(super) fn retain(context: &Value, capture: &mut Capture) -> io::Result<()> {
     // subsequent captures re-read the authoritative context rather than old facts.
     capture.environment_facts[KEY] = json!(current);
     Ok(())
+}
+
+fn proof_path(proof: &Value) -> Option<&str> {
+    proof
+        .as_str()
+        .or_else(|| proof["path"].as_str())
+        .or_else(|| proof["filePath"].as_str())
+        .filter(|path| !path.is_empty())
 }
 
 pub(super) fn reads(facts: &Value) -> &[Value] {

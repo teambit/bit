@@ -106,8 +106,12 @@ impl WorkspaceConfig {
         config.enable_workspace_config_write = config
             .aspect(WORKSPACE_CONFIG_FILES_ASPECT)
             .and_then(|files| files.get("enableWorkspaceConfigWrite"))
-            .and_then(Value::as_bool)
-            .unwrap_or(false);
+            .is_some_and(|value| {
+                value.as_bool().unwrap_or(false)
+                    || value
+                        .as_str()
+                        .is_some_and(|text| text.trim().eq_ignore_ascii_case("true"))
+            });
         config.config_store = config.config_store();
         Ok(config)
     }
@@ -139,17 +143,28 @@ impl WorkspaceConfig {
     }
 
     fn strings(&self, id: &str, field: &str) -> Vec<String> {
-        self.aspect(id)
+        let Some(value) = self
+            .aspect(id)
             .and_then(|config| config.get(field))
-            .and_then(Value::as_array)
-            .map(|items| {
-                items
-                    .iter()
-                    .filter_map(Value::as_str)
-                    .map(str::to_owned)
-                    .collect()
-            })
-            .unwrap_or_default()
+        else {
+            return Vec::new();
+        };
+        match value {
+            Value::Array(items) => items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(str::trim)
+                .filter(|item| !item.is_empty())
+                .map(str::to_owned)
+                .collect(),
+            Value::String(text) => text
+                .split(',')
+                .map(str::trim)
+                .filter(|item| !item.is_empty())
+                .map(str::to_owned)
+                .collect(),
+            _ => Vec::new(),
+        }
     }
 
     fn config_store(&self) -> IndexMap<String, String> {

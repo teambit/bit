@@ -5,6 +5,11 @@
 
 pub mod extended;
 
+#[cfg(test)]
+mod oracle_tests;
+#[cfg(test)]
+mod patterns_tests;
+
 use super::status::js::decline;
 use std::io;
 
@@ -116,9 +121,3 @@ fn wildcard(text: &[char], glob: &[char]) -> bool {
         Some((literal, rest)) => text.first() == Some(literal) && wildcard(&text[1..], rest),
     }
 }
-
-#[cfg(test)]
-mod patterns_tests;
-
-#[cfg(test)]
-mod oracle_tests;

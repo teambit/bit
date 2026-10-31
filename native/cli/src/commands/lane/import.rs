@@ -36,7 +36,7 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
         Ok(current) => current,
         Err(error) => return Ok(Outcome::Declined(format!("lane import: {error}"))),
     };
-    if current["name"] == "main" {
+    if current["name"] == "main" || current.as_str() == Some("main") {
         return super::super::switch::lane_import(args, argv);
     }
     let providers = bootstrap(&root)?;
@@ -75,11 +75,7 @@ fn active(
 ) -> io::Result<Outcome> {
     let owned = providers.is_some();
     let _providers = providers;
-    let current_id = format!(
-        "{}/{}",
-        current["scope"].as_str().unwrap_or_default(),
-        current["name"].as_str().unwrap_or_default(),
-    );
+    let current_id = current_lane_id(current);
     let mut engine = Engine::new()?;
     let prepared = match super::super::import::prepare_lane_import(&mut engine, root, lane) {
         Ok(prepared) => prepared,
@@ -109,6 +105,21 @@ fn active(
         }
         Ok(Report { data: report, code: 0, details: None })
     })
+}
+
+fn current_lane_id(current: &Value) -> String {
+    current
+        .as_str()
+        .map_or_else(
+            || {
+                format!(
+                    "{}/{}",
+                    current["scope"].as_str().unwrap_or_default(),
+                    current["name"].as_str().unwrap_or_default(),
+                )
+            },
+            str::to_owned,
+        )
 }
 
 fn decline_or_fail(

@@ -103,24 +103,29 @@ fn style(source: &str) -> Vec<String> {
         let mut rest = source;
         while let Some(index) = rest.find(keyword) {
             rest = &rest[index + keyword.len()..];
-            found.extend(quoted(rest.trim_start()).and_then(style_specifier));
+            found.extend(quoted(rest.trim_start()).and_then(|target| style_specifier(&target)));
         }
     }
     found
 }
 
 /// A style import target as a specifier: `~pkg` is a package, anything else a relative file.
-fn style_specifier(target: String) -> Option<String> {
-    if ["http:", "https:", "sass:"]
+fn style_specifier(target: &str) -> Option<String> {
+    let trimmed = target.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    let lowered = trimmed.to_ascii_lowercase();
+    if ["http:", "https:", "sass:", "data:"]
         .iter()
-        .any(|prefix| target.starts_with(prefix))
+        .any(|prefix| lowered.starts_with(prefix))
     {
         return None;
     }
-    Some(match target.strip_prefix('~') {
-        Some(package) => package.to_owned(),
-        None if target.starts_with('.') || target.starts_with('/') => target,
-        None => format!("./{target}"),
+    Some(match trimmed.strip_prefix('~') {
+        Some(package) => package.trim().to_owned(),
+        None if trimmed.starts_with('.') || trimmed.starts_with('/') => trimmed.to_owned(),
+        None => format!("./{trimmed}"),
     })
 }
 

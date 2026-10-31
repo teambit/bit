@@ -8,11 +8,14 @@ use serde_json::Value;
 use std::io;
 
 pub(super) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<String> {
-    let Some(value) = value else { return Ok(String::new()) };
+    let Some(value) = value.filter(|value| !value.is_null()) else { return Ok(String::new()) };
     let formatter = Formatter::new(chalk);
     let unchanged = section(value.get("workspaceDepsUnchanged"), &formatter, false)?;
     let updates = section(value.get("workspaceDepsUpdates"), &formatter, true)?;
-    let conflicts = if value.get("workspaceDepsConflicts").is_some() {
+    let conflicts = if value
+        .get("workspaceDepsConflicts")
+        .is_some_and(|conflicts| !conflicts.is_null())
+    {
         chalk.yellow("workspace.jsonc has conflicts, please edit the file and fix them")
     } else {
         String::new()
@@ -21,16 +24,11 @@ pub(super) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<String> 
 }
 
 fn section(value: Option<&Value>, formatter: &Formatter, updates: bool) -> io::Result<String> {
-    let Some(value) = value else { return Ok(String::new()) };
+    let Some(value) = value.filter(|value| !value.is_null()) else { return Ok(String::new()) };
     let rows = object(value)?
         .iter()
         .map(|(name, value)| {
-            let value = if updates {
-                let pair = array(Some(value), "merge workspace dependency update")?;
-                format!("{} => {}", text(pair.first())?, text(pair.get(1))?)
-            } else {
-                text(Some(value))?.to_owned()
-            };
+            let value = if updates { update_pair(value)? } else { text(Some(value))?.to_owned() };
             Ok(format!("  {name}: {value}"))
         })
         .collect::<io::Result<Vec<_>>>()?;
@@ -42,6 +40,20 @@ fn section(value: Option<&Value>, formatter: &Formatter, updates: bool) -> io::R
     Ok(format!("{}\n{}", formatter.title(title), rows.join("\n")))
 }
 
+fn update_pair(value: &Value) -> io::Result<String> {
+    if let Some(from) = value
+        .get("from")
+        .or_else(|| value.get("oldVersion"))
+    {
+        let to = value
+            .get("to")
+            .or_else(|| value.get("newVersion"));
+        return Ok(format!("{} => {}", text(Some(from))?, text(to)?));
+    }
+    let pair = array(Some(value), "merge workspace dependency update")?;
+    Ok(format!("{} => {}", text(pair.first())?, text(pair.get(1))?))
+}
+
 pub(super) fn conflicted(result: &Value, lane: bool) -> io::Result<Vec<String>> {
     if !lane {
         return Ok(Vec::new());
@@ -51,7 +63,14 @@ pub(super) fn conflicted(result: &Value, lane: bool) -> io::Result<Vec<String>> 
         .into_iter()
         .flatten()
         .filter(|row| row["hasConflicts"] == true)
-        .map(|row| text(row.get("compIdStr")).map(str::to_owned))
+        .map(|row| {
+            text(
+                row.get("compIdStr")
+                    .or_else(|| row.get("id"))
+                    .or_else(|| row.get("componentId")),
+            )
+            .map(str::to_owned)
+        })
         .collect()
 }
 

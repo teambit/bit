@@ -1,11 +1,11 @@
 pub(in crate::workspace::engine::command) use callbacks::extensions as callback_extensions;
 
+mod callbacks;
+
 use super::super::invalid;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
-
-mod callbacks;
 
 pub(super) const DEPRECATION: &str = "teambit.component/deprecation";
 pub(super) const REMOVAL: &str = "teambit.component/remove";

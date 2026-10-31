@@ -32,15 +32,13 @@ impl State {
     }
     fn insert(&mut self, mut plan: Value, directory: PathBuf) -> io::Result<Value> {
         let bytes = serde_json::to_vec(&plan).map_err(io::Error::other)?.len();
+        let source_bytes = self.plans
+            .values()
+            .map(|plan| plan.sources.bytes)
+            .fold(0_usize, usize::saturating_add);
         if self.plans.len() >= 4096
             || bytes > 4 * 1024 * 1024 - 256
-            || self.bytes
-                + bytes
-                + self.plans
-                    .values()
-                    .map(|plan| plan.sources.bytes)
-                    .sum::<usize>()
-                > 32 * 1024 * 1024
+            || self.bytes.saturating_add(bytes).saturating_add(source_bytes) > 32 * 1024 * 1024
         {
             return Err(invalid("history query owner limit"));
         }
@@ -49,7 +47,7 @@ impl State {
         let token = crate::validate::hexadecimal(&Sha1::digest(sequence.to_be_bytes()));
         plan["token"] = json!(token);
         self.sequence = sequence;
-        self.bytes += bytes;
+        self.bytes = self.bytes.saturating_add(bytes);
         self.plans.insert(
             token,
             Plan { value: plan.clone(), directory, bytes, sources: Cache::default() },
@@ -73,9 +71,10 @@ impl State {
             .iter()
             .filter(|(key, _)| key.as_str() != token)
             .map(|(_, plan)| plan.sources.bytes)
-            .sum();
+            .fold(0_usize, usize::saturating_add);
         let plan = self.plans.get_mut(token).ok_or_else(|| invalid("stale history query"))?;
-        plan.sources.limit = 32 * 1024 * 1024 - self.bytes - used;
+        plan.sources.limit =
+            (32_usize * 1024 * 1024).saturating_sub(self.bytes).saturating_sub(used);
         Ok(&mut plan.sources)
     }
     fn verify_directory(&self, token: &str, directory: &std::path::Path) -> io::Result<()> {
@@ -94,7 +93,7 @@ impl State {
         let request: Token = serde_json::from_value(input).map_err(io::Error::other)?;
         let plan =
             self.plans.remove(&request.token).ok_or_else(|| invalid("stale history query"))?;
-        self.bytes -= plan.bytes;
+        self.bytes = self.bytes.saturating_sub(plan.bytes);
         Ok(json!({"finished":true}))
     }
 }

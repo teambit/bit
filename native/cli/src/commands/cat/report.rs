@@ -36,8 +36,9 @@ fn json_report(
 ) -> io::Result<String> {
     let mut output = Map::new();
     output.insert("id".into(), value["id"].clone());
-    if !value["version"].is_null() {
-        output.insert("version".into(), value["version"].clone());
+    let version = if value["version"].is_null() { &value["head"] } else { &value["version"] };
+    if !version.is_null() {
+        output.insert("version".into(), version.clone());
     }
     if show_files {
         output.insert(
@@ -55,7 +56,7 @@ pub(super) fn select(files: &[Value], requested: &str) -> io::Result<Value> {
     let normalized = requested.replace('\\', "/");
     files
         .iter()
-        .find(|file| file["path"].as_str() == Some(normalized.as_str()))
+        .find(|file| file_path(file) == Some(normalized.as_str()))
         .cloned()
         .ok_or_else(|| decline("cat requested file absent"))
 }
@@ -64,12 +65,19 @@ fn text_files(files: &[Value], single: bool) -> io::Result<String> {
     files
         .iter()
         .map(|file| {
-            let path = file["path"].as_str().ok_or_else(|| decline("cat file path"))?;
+            let path = file_path(file).ok_or_else(|| decline("cat file path"))?;
             let content = file["content"].as_str().ok_or_else(|| decline("cat file content"))?;
             Ok(if single { content.to_owned() } else { format!("--- {path} ---\n{content}") })
         })
         .collect::<io::Result<Vec<_>>>()
         .map(|files| files.join("\n\n"))
+}
+
+fn file_path(file: &Value) -> Option<&str> {
+    file["path"]
+        .as_str()
+        .or_else(|| file["relativePath"].as_str())
+        .filter(|path| !path.is_empty())
 }
 
 fn text_config(config: &Value) -> io::Result<String> {

@@ -133,3 +133,30 @@ fn unsnapped_readme_has_the_node_warning_and_snap_hint() {
         report(&[lane], &json!({"name":"dev","scope":"s"}), Chalk::new(false), false, false);
     assert!(output.contains(r#"⚠ readme: s/docs/readme - (unsnapped) - use "bit snap docs/readme" to snap before exporting"#));
 }
+
+#[test]
+fn merged_report_accepts_string_or_object_lane_ids() {
+    let lanes = [
+        LaneData {
+            id: json!("scope/feature-a"),
+            alias: None,
+            components: Vec::new(),
+            update_dependents: None,
+            readme_component: None,
+            is_merged: Some(true),
+            lane: None,
+        },
+        LaneData {
+            id: json!({"scope": "scope", "name": "feature-b"}),
+            alias: None,
+            components: Vec::new(),
+            update_dependents: None,
+            readme_component: None,
+            is_merged: Some(false),
+            lane: None,
+        },
+    ];
+    let merged = super::merged::report(&lanes, true, Chalk::new(false));
+    assert!(merged.contains("feature-a"));
+    assert!(!merged.contains("feature-b"));
+}

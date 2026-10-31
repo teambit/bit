@@ -92,7 +92,7 @@ fn apply(id: u32, request: Request) -> io::Result<Response> {
         }
         Request::IndexWrite { objects_directory, owner, contents } => {
             path(&objects_directory)?;
-            if !serde_json::from_str::<Value>(&contents).is_ok_and(|value| value.is_object()) {
+            if !crate::parse_jsonc(contents.as_bytes()).is_ok_and(|value| value.is_object()) {
                 return Err(invalid("snapshot invalid index JSON"));
             }
             let store = Store::new(objects_directory, Owner::pair(owner))?;

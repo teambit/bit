@@ -48,9 +48,7 @@ fn validate_identity(material: &Material) -> io::Result<()> {
     if let Some(pending) = &material.pending {
         let head = pending["head"].as_str().ok_or_else(|| invalid("resolve pending head"))?;
         crate::merge_history::hash(head)?;
-        if pending["laneId"]["scope"].as_str().is_none()
-            || pending["laneId"]["name"].as_str().is_none()
-        {
+        if crate::command_import::lane::parse_lane_id(&pending["laneId"]).is_err() {
             return Err(invalid("resolve pending lane"));
         }
     }

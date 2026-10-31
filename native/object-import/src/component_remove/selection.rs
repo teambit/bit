@@ -38,7 +38,11 @@ pub fn select_ids(root: &Path, pattern: &str) -> io::Result<Vec<String>> {
 fn matching(bitmap: &serde_json::Value, parts: &[&str]) -> io::Result<Vec<String>> {
     let mut result = Vec::new();
     for (key, row) in bitmap.as_object().ok_or_else(|| invalid("component bitmap"))? {
-        if row["isAvailableOnCurrentLane"] == false {
+        if row["isAvailableOnCurrentLane"] == false
+            || row["isAvailableOnCurrentLane"]
+                .as_str()
+                .is_some_and(|val| val.trim().eq_ignore_ascii_case("false"))
+        {
             continue;
         }
         if let Some(id) = crate::component_deprecation::selection::identity(key, row)
@@ -50,22 +54,25 @@ fn matching(bitmap: &serde_json::Value, parts: &[&str]) -> io::Result<Vec<String
     Ok(result)
 }
 fn matches(id: &str, parts: &[&str]) -> bool {
-    let id = id.split('@').next().unwrap_or(id);
-    let matched = |pattern: &str| {
-        bit_workspace_config::glob::matches(
-            pattern
-                .split('@')
-                .next()
-                .unwrap_or(pattern),
-            id,
-        )
-    };
+    let id = strip_version(id);
+    let matched = |pattern: &str| bit_workspace_config::glob::matches(strip_version(pattern), id);
     parts
         .iter()
-        .filter(|part| !part.starts_with('!'))
+        .filter(|part| !part.trim().starts_with('!'))
         .any(|part| matched(part))
         && !parts
             .iter()
-            .filter_map(|part| part.strip_prefix('!'))
+            .filter_map(|part| {
+                part.trim()
+                    .strip_prefix('!')
+                    .map(str::trim)
+            })
             .any(matched)
+}
+fn strip_version(value: &str) -> &str {
+    let trimmed = value.trim();
+    match trimmed.rsplit_once('@') {
+        Some((base, _)) if !base.is_empty() => base,
+        _ => trimmed,
+    }
 }

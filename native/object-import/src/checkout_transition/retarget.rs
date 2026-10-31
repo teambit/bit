@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{invalid, plan, prepare, wire};
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -168,6 +171,3 @@ fn statuses(plan: &plan::Plan, target: &[wire::Manifest]) -> Vec<Value> {
         })
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

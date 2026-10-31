@@ -79,19 +79,30 @@ fn replace_entry(value: &mut Value, incoming: &Value, entry: &Entry) -> io::Resu
     let (scope, name) =
         entry.identity.split_once('/').ok_or_else(|| invalid("lane component scope"))?;
     if entry.hidden {
-        visible.retain(|row| !(row["id"]["scope"] == scope && row["id"]["name"] == name));
+        visible.retain(|row| {
+            !crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                row, scope, name,
+            )
+        });
     } else {
         let replacement = incoming["components"]
             .as_array()
             .and_then(|rows| {
-                rows.iter()
-                    .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+                rows.iter().find(|row| {
+                    crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                        row, scope, name,
+                    )
+                })
             })
             .ok_or_else(|| invalid("lane incoming component"))?
             .clone();
         if let Some(row) = visible
             .iter_mut()
-            .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+            .find(|row| {
+                crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                    row, scope, name,
+                )
+            })
         {
             *row = replacement;
         } else {
@@ -180,16 +191,16 @@ fn normalized_entries(value: &Value) -> io::Result<Vec<(String, String, bool, bo
     Ok(rows)
 }
 fn deleted(value: &Value, identity: &str) -> bool {
+    let Some((scope, name)) = identity.split_once('/') else { return false };
     value["components"]
         .as_array()
         .is_some_and(|rows| {
             rows.iter()
                 .any(|row| {
                     row["isDeleted"] == true
-                        && row["id"]["scope"]
-                            .as_str()
-                            .zip(row["id"]["name"].as_str())
-                            .is_some_and(|(scope, name)| format!("{scope}/{name}") == identity)
+                        && crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                            row, scope, name,
+                        )
                 })
         })
 }
@@ -239,7 +250,11 @@ pub(in crate::command_import) fn remote_refs(
             entry.identity.split_once('/').ok_or_else(|| invalid("lane remote component"))?;
         if let Some(row) = rows_mut
             .iter_mut()
-            .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+            .find(|row| {
+                crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                    row, scope, name,
+                )
+            })
         {
             row["head"] = json!(entry.head);
         } else {

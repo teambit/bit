@@ -2,22 +2,25 @@ use super::{BitmapState, bitmap, bitmap_key, invalid};
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+fn parse_lane_header(rows: &serde_json::Map<String, Value>) -> io::Result<(String, String, bool)> {
+    let lane = &rows["_bit_lane"];
+    let (scope_opt, name_str) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(lane)
+            .ok_or_else(|| invalid("lane reset name"))?;
+    let lane_scope = scope_opt
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("lane reset scope"))?
+        .to_owned();
+    let exported = lane["exported"].as_bool().ok_or_else(|| invalid("lane reset export state"))?;
+    Ok((lane_scope, name_str.to_owned(), exported))
+}
+
 impl BitmapState {
     pub(super) fn load(root: &Path, scope: &str, name: &str) -> io::Result<Self> {
         let before = fs::read(root.join(".bitmap"))?;
         let mut document = crate::recovery::jsonc::parse(&before)?;
         let rows = document.as_object().ok_or_else(|| invalid("lane reset bitmap"))?;
-        let lane = &rows["_bit_lane"];
-        let lane_scope = lane["id"]["scope"]
-            .as_str()
-            .ok_or_else(|| invalid("lane reset scope"))?
-            .to_owned();
-        let lane_name = lane["id"]["name"]
-            .as_str()
-            .ok_or_else(|| invalid("lane reset name"))?
-            .to_owned();
-        let exported =
-            lane["exported"].as_bool().ok_or_else(|| invalid("lane reset export state"))?;
+        let (lane_scope, lane_name, exported) = parse_lane_header(rows)?;
         let Some((key, restored)) =
             restore_row(root, &mut document, (&lane_scope, &lane_name), scope, name)?
         else {

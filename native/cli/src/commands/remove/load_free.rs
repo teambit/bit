@@ -180,7 +180,10 @@ fn pending(context: &Value, identity: &str) -> bool {
         .into_iter()
         .flatten()
         .any(|entry| {
-            entry["id"].as_str() == Some(identity)
+            entry["id"]
+                .as_str()
+                .map(|raw| raw.split('@').next().unwrap_or(raw))
+                == Some(identity)
                 || format!(
                     "{}/{}",
                     entry["id"]["scope"].as_str().unwrap_or_default(),

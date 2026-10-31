@@ -58,7 +58,7 @@ fn apply_create_flag<'a>(
         return applied;
     }
     match flag {
-        "--no-color" => true,
+        "--no-color" | "--no-color=true" | "--no-color=false" => true,
         "--fork-lane-new-scope=false" => {
             options.fork_lane_new_scope = false;
             true
@@ -203,7 +203,7 @@ fn resolve_workspace_or_fail(
 
 fn validate_merge_move_state(root: &Path) -> io::Result<Option<String>> {
     let bitmap: Value = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
-    if bitmap["_bit_lane"].is_null() || bitmap["_bit_lane"]["id"]["name"] == "main" {
+    if !crate::commands::snap_distance::is_on_non_main_lane(&bitmap) {
         return Ok(Some(
             "this command makes sense only when checked out to a lane. otherwise, there is no lane to revert to.\nin order to move all local merge changes to a new lane, you can simply create a new lane (bit lane create)".to_owned(),
         ));
@@ -289,7 +289,9 @@ fn report(plan: &Plan, options: &Options<'_>, chalk: Chalk) -> Report {
 
 fn default_scope(root: &Path) -> io::Result<String> {
     let bitmap: Value = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
-    if let Some(scope) = bitmap["_bit_lane"]["id"]["scope"].as_str() {
+    if let Some((scope, _)) = crate::commands::snap_distance::bitmap_lane_scope_and_name(&bitmap)
+        .filter(|(scope, _)| !scope.is_empty())
+    {
         return Ok(scope.to_owned());
     }
     let config: Value = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;

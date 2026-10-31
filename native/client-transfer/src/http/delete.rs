@@ -2,6 +2,9 @@
 //! Calling either method crosses the remote mutation boundary. Any transport,
 //! cancellation, status or parse error after invocation may hide a committed
 //! delete; callers must never replay it through another implementation.
+#[cfg(test)]
+mod tests;
+
 use super::{Network, network_error, remote_error, unexpected};
 use crate::{invalid, tar};
 use futures_util::StreamExt;
@@ -186,6 +189,3 @@ fn status_error(bytes: &[u8], url: &str, status: reqwest::StatusCode) -> io::Err
         .map_or_else(|| fallback.clone(), str::to_owned);
     remote_error(error["code"].as_u64(), error, url, message)
 }
-
-#[cfg(test)]
-mod tests;

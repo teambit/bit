@@ -39,7 +39,7 @@ fn parses_show_json_and_unrecognized_subcommands() {
         Some(Subcommand::Build("comp1".into(), Some("abc".into()), Some("my-scope".into()))),
     );
     assert_eq!(
-        parse_subcommand(&["show", "comp1", "-js", "--no-color"]),
+        parse_subcommand(&["show", "comp1", "-js", "--no-color", "--no-color=false"]),
         Some(Subcommand::ShowJson("comp1".into())),
     );
 }

@@ -2,6 +2,9 @@
 //! directory dependency (`<package>@file:<dir>`); the graph names it by the
 //! component's version instead, as `snapToSemver` writes it.
 
+#[cfg(test)]
+mod replacer_tests;
+
 use crate::commands::status::js::decline;
 use regress::Regex;
 use std::{collections::HashMap, io};
@@ -110,6 +113,3 @@ fn escape(name: &str) -> String {
     }
     escaped
 }
-
-#[cfg(test)]
-mod replacer_tests;

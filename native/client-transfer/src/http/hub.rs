@@ -1,4 +1,7 @@
 //! `Http.pushToCentralHub`: scoped tar bytes and the exporter's NDJSON progress stream.
+#[cfg(test)]
+mod tests;
+
 use super::{Network, network_error, unexpected};
 use crate::invalid;
 use futures_util::StreamExt;
@@ -166,6 +169,3 @@ fn finish(
     }
     Ok(HubReply { data: end["data"].clone(), messages })
 }
-
-#[cfg(test)]
-mod tests;

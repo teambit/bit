@@ -85,7 +85,7 @@ fn metadata_proofs(root: &Path, scope: &str, all_lanes: bool) -> Option<Vec<(Pat
     }
     let index_path = root.join("index.json");
     let index_bytes = fs::read(&index_path).ok()?;
-    let index: Value = serde_json::from_slice(&index_bytes).ok()?;
+    let index: Value = bit_object_import::parse_jsonc(&index_bytes).ok()?;
     if all_lanes
         && !index.is_array()
         && index["lanes"]

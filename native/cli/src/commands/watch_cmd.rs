@@ -89,7 +89,7 @@ fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<
         return Some(());
     }
     match arg {
-        "--no-color" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" => {}
         "-v" | "--verbose" | "--verbose=true" => options.verbose = true,
         "--verbose=false" => options.verbose = false,
         "-Y" | "--skip-pre-compilation" | "--skip-pre-compilation=true" => {

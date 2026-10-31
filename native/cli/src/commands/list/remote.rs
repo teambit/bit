@@ -94,7 +94,7 @@ pub(super) fn versions(root: &Path, rows: &mut [Row], session: &mut Session) -> 
     if bytes.len() > 1024 * 1024 {
         return Err(decline("local scope configuration budget"));
     }
-    let config: Value = serde_json::from_slice(&bytes)?;
+    let config: Value = bit_object_import::parse_jsonc(&bytes)?;
     let local = config["name"].as_str().ok_or_else(|| decline("local scope name"))?;
     let ids = rows
         .iter()

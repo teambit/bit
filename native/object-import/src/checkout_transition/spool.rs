@@ -6,11 +6,11 @@ use std::{
 };
 pub(super) fn assign(bodies: &mut [Body], directory: &Path, token: &str, first: usize) {
     let path = directory.join(format!("{token}-{first}.checkout-pack"));
-    let mut offset = 0;
+    let mut offset = 0_usize;
     for body in bodies {
         body.path.clone_from(&path);
         body.offset = Some(offset);
-        offset += body.contents.len();
+        offset = offset.saturating_add(body.contents.len());
     }
 }
 pub(super) fn write(bodies: &[Body]) -> io::Result<()> {

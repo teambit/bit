@@ -1,4 +1,7 @@
 //! Published package-json indentation, newline detection and serialization.
+#[cfg(test)]
+mod tests;
+
 use serde::Serialize;
 use serde_json::{Value, ser::PrettyFormatter};
 use std::io;
@@ -142,6 +145,3 @@ impl IndentSteps {
         usize::try_from(amount).unwrap_or(0)
     }
 }
-
-#[cfg(test)]
-mod tests;

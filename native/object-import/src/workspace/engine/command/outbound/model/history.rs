@@ -51,7 +51,7 @@ fn version_row(dir: &Path, hash: &str) -> io::Result<Value> {
         .get("unrelated")
         .filter(|value| !value.is_null())
     {
-        let head = unrelated["head"].as_str().ok_or_else(|| invalid("outbound unrelated head"))?;
+        let head = ref_str(&unrelated["head"]).ok_or_else(|| invalid("outbound unrelated head"))?;
         crate::merge_history::hash(head)?;
         row["unrelated"] = json!(head);
     }
@@ -65,12 +65,20 @@ fn version_row(dir: &Path, hash: &str) -> io::Result<Value> {
 }
 
 fn refs(value: &Value) -> io::Result<Value> {
+    let mut list = Vec::new();
     for parent in value.as_array().ok_or_else(|| invalid("outbound Version parent list"))? {
-        crate::merge_history::hash(
-            parent.as_str().ok_or_else(|| invalid("outbound Version parent"))?,
-        )?;
+        let hash = ref_str(parent).ok_or_else(|| invalid("outbound Version parent"))?;
+        crate::merge_history::hash(hash)?;
+        list.push(Value::String(hash.to_owned()));
     }
-    Ok(value.clone())
+    Ok(Value::Array(list))
+}
+
+fn ref_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .or_else(|| value["ref"].as_str())
+        .or_else(|| value["hash"].as_str())
 }
 
 pub(super) fn parents(dir: &Path, hash: &str) -> io::Result<Value> {

@@ -33,12 +33,19 @@ fn accepts_the_native_subset() {
     assert!(parse(&["head~2", "-x"]).is_some());
     assert!(parse(&["head", "-e", "-x"]).unwrap().workspace_only);
     assert_eq!(
-        parse(&["head", "--workspace-only=true", "--auto-merge-resolve=theirs", "--no-color"])
-            .unwrap()
-            .strategy
-            .as_deref(),
+        parse(&[
+            "head",
+            "--workspace-only=true",
+            "--auto-merge-resolve=theirs",
+            "--no-color",
+            "--no-color=false",
+        ])
+        .unwrap()
+        .strategy
+        .as_deref(),
         Some("theirs"),
     );
+    assert!(parse_revert(&["scope/one", "main", "--no-color=true"]).is_some());
     assert_eq!(
         parse(&["head", "--workspace-only", "-x"]).unwrap().request()["workspaceOnly"],
         true,

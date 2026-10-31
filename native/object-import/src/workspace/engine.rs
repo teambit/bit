@@ -13,7 +13,6 @@ mod command_request;
 mod dependency_graph;
 mod owned;
 mod read;
-use owned::owned_command;
 mod read_raw;
 #[cfg(test)]
 mod request_tests;
@@ -32,6 +31,7 @@ mod status_result;
 mod validation;
 
 use crate::protocol;
+use owned::owned_command;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};

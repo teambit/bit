@@ -19,15 +19,7 @@ pub(super) fn prepare(
         .ok_or_else(|| invalid("checkout scope addition destinations"))?
         .clone();
     for destination in additions {
-        let scope = destination["scope"]
-            .as_str()
-            .ok_or_else(|| invalid("checkout scope addition scope"))?;
-        let name =
-            destination["name"].as_str().ok_or_else(|| invalid("checkout scope addition name"))?;
-        let version = destination["version"]
-            .as_str()
-            .ok_or_else(|| invalid("checkout scope addition version"))?;
-        let identity = format!("{scope}/{name}");
+        let (identity, version) = addition_target(&destination)?;
         plan.captured.push(capture::addition(&identity, &destination)?);
         let selected = json!({"kind":"target","version":version,"merge":false});
         let index = plan.captured.len() - 1;
@@ -38,6 +30,30 @@ pub(super) fn prepare(
             .pop();
     }
     Ok(())
+}
+
+fn addition_target(destination: &Value) -> io::Result<(String, &str)> {
+    let version = destination["version"]
+        .as_str()
+        .or_else(|| destination["head"].as_str())
+        .ok_or_else(|| invalid("checkout scope addition version"))?;
+    if let Some(identity) = destination["identity"]
+        .as_str()
+        .or_else(|| destination["id"].as_str())
+        .filter(|id| !id.is_empty())
+    {
+        let base = identity.rsplit_once('@').map_or(identity, |(base, _)| base);
+        return Ok((base.to_owned(), version));
+    }
+    let scope = destination["scope"]
+        .as_str()
+        .or_else(|| destination["id"]["scope"].as_str())
+        .ok_or_else(|| invalid("checkout scope addition scope"))?;
+    let name = destination["name"]
+        .as_str()
+        .or_else(|| destination["id"]["name"].as_str())
+        .ok_or_else(|| invalid("checkout scope addition name"))?;
+    Ok((format!("{scope}/{name}"), version))
 }
 
 pub(super) fn prepare_if_enabled(

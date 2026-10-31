@@ -89,13 +89,13 @@ impl State {
         let retained: usize = self.plans
             .values()
             .map(Plan::bytes)
-            .sum();
+            .fold(0_usize, usize::saturating_add);
         let count: usize = self.plans
             .values()
             .map(|plan| plan.bodies.len())
-            .sum();
-        if retained + plan.bytes() > 32 * 1024 * 1024
-            || count + plan.bodies.len() > 4096
+            .fold(0_usize, usize::saturating_add);
+        if retained.saturating_add(plan.bytes()) > 32 * 1024 * 1024
+            || count.saturating_add(plan.bodies.len()) > 4096
             || self.plans.len() >= 4096
         {
             return Err(invalid("checkout retained plan budget"));

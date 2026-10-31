@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{Loaded, read, read_shared, wire};
 use crate::read_budget::Budget;
 use rayon::prelude::*;
@@ -31,6 +34,3 @@ fn serial(files: &[wire::Current], mut total: usize) -> io::Result<Vec<(Loaded, 
         })
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

@@ -160,7 +160,9 @@ fn apply_selection(
     result: &mut Value,
 ) -> io::Result<()> {
     if outcome["action"] == "unchanged" {
-        result["failedComponents"].as_array_mut().unwrap().push(json!({"id":format!("{identity}@{}",selected.remote),"unchangedMessage":outcome["message"],"unchangedLegitimately":outcome["legitimate"]}));
+        if let Some(rows) = result["failedComponents"].as_array_mut() {
+            rows.push(json!({"id":format!("{identity}@{}",selected.remote),"unchangedMessage":outcome["message"],"unchangedLegitimately":outcome["legitimate"]}));
+        }
         return Ok(());
     }
     selected.distance["shouldBeRemoved"] = outcome["shouldBeRemoved"].clone();
@@ -346,22 +348,20 @@ fn add_material(
         &body(record, selected, current, directory, index).labels()?,
     )?;
     retain_snapshot(record, prepared, selected, current, &material)?;
-    planned.result["components"]
-        .as_array_mut()
-        .unwrap()
-        .push(material.output.clone());
+    if let Some(rows) = planned.result["components"].as_array_mut() {
+        rows.push(material.output.clone());
+    }
     if material.has_conflicts() {
         planned.result["leftUnresolvedConflicts"] = json!(true);
     }
-    prepared.unmerged
-        .as_array_mut()
-        .unwrap()
-        .push(pending::entry(
+    if let Some(rows) = prepared.unmerged.as_array_mut() {
+        rows.push(pending::entry(
             &selected.model,
             &selected.remote,
             record.context.get("lane"),
             &material,
         ));
+    }
     prepared.materials.push(material);
     Ok(())
 }

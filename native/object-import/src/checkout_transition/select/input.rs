@@ -74,15 +74,15 @@ pub(super) struct RemovedObservation {
     pub(super) has_bitmap: bool,
 }
 pub(super) fn validate(request: &Begin) -> io::Result<()> {
-    if request.component.id.len() > 32768
-        || request.component.id_without_version.len() > 32768
+    if invalid_id(&request.component.id)
+        || invalid_id(&request.component.id_without_version)
         || request.options.ancestor.is_some_and(|count| count > 4096)
         || request.component.version
             .as_ref()
-            .is_some_and(|value| value.len() > 32768)
+            .is_some_and(|value| value.len() > 32768 || value.contains('\0'))
         || request.options.version
             .as_ref()
-            .is_some_and(|value| value.len() > 32768)
+            .is_some_and(|value| value.len() > 32768 || value.contains('\0'))
         || request.options.version_per_id
             .as_ref()
             .is_some_and(|value| {
@@ -101,4 +101,8 @@ pub(super) fn validate(request: &Begin) -> io::Result<()> {
         request.component.is_removed,
     );
     Ok(())
+}
+
+fn invalid_id(value: &str) -> bool {
+    value.trim().is_empty() || value.len() > 32768 || value.contains('\0')
 }

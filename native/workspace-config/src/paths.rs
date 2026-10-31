@@ -22,7 +22,9 @@ pub fn cache_root() -> PathBuf {
             .join("Library")
             .join("Caches")
             .join("Bit")
-    } else if let Some(local) = env::var_os("LOCALAPPDATA").filter(|_| cfg!(windows)) {
+    } else if let Some(local) =
+        env::var_os("LOCALAPPDATA").filter(|local| cfg!(windows) && !local.is_empty())
+    {
         PathBuf::from(local).join("Bit")
     } else {
         home().join(".bit")

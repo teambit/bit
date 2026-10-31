@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{Prepared, Selected, capture, invalid, merge, planning};
 use serde_json::{Value, json};
 use std::io;
@@ -132,16 +135,8 @@ pub(super) fn divergent(
 fn sorted_files(files: &[Value]) -> Vec<String> {
     let mut paths = files
         .iter()
-        .map(|file| {
-            file["relativePath"]
-                .as_str()
-                .unwrap()
-                .to_owned()
-        })
+        .filter_map(|file| file["relativePath"].as_str().map(str::to_owned))
         .collect::<Vec<_>>();
     paths.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
     paths
 }
-
-#[cfg(test)]
-mod tests;

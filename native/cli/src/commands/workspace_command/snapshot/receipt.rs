@@ -216,8 +216,9 @@ impl NodeCli {
             return Err(decline("the Node.js CLI's version"));
         };
         let bit_dir = cli.bit_dir.ok_or_else(|| decline("the Node.js CLI's version"))?;
-        let manifest: Value = serde_json::from_slice(&fs::read(bit_dir.join("package.json"))?)
-            .map_err(io::Error::other)?;
+        let manifest: Value =
+            bit_object_import::parse_jsonc(&fs::read(bit_dir.join("package.json"))?)
+                .map_err(io::Error::other)?;
         let version = manifest
             .get("version")
             .and_then(Value::as_str)

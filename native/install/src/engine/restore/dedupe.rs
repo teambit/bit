@@ -1,4 +1,7 @@
 //! `dedupeSnapshotDepsToRootManifest`: let pnpm resolve conflicting root-provided versions.
+#[cfg(test)]
+mod tests;
+
 use super::dep_path;
 use serde_json::{Map, Value};
 use std::{collections::HashSet, io};
@@ -63,6 +66,3 @@ fn wins(name: &str, reference: &Value, root: Option<&Value>, peer: bool) -> bool
     };
     node_semver::Version::parse(root).map_or(peer, |version| locked != version.to_string())
 }
-
-#[cfg(test)]
-mod tests;

@@ -35,10 +35,25 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
         return Err(invalid("status normalized source budget"));
     }
     let mut captured = captured.into_iter();
-    Ok(request.targets.iter().map(|target| Value::Array(target.files.iter().map(|file| {
-        let metadata = captured.next().expect("one captured file per path");
-        json!({"relativePath":file,"name":file.rsplit('/').next(),"test":false,"file":metadata.linux_hash})
-    }).collect())).collect())
+    Ok(request.targets
+        .iter()
+        .map(|target| build_target_files(target, &mut captured))
+        .collect())
+}
+fn build_target_files(
+    target: &Target,
+    captured: &mut impl Iterator<Item = read::Metadata>,
+) -> Value {
+    Value::Array(
+        target
+            .files
+            .iter()
+            .filter_map(|file| {
+                let metadata = captured.next()?;
+                Some(json!({"relativePath":file,"name":file.rsplit('/').next(),"test":false,"file":metadata.linux_hash}))
+            })
+            .collect(),
+    )
 }
 fn capture(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<read::Metadata> {
     let original = bytes.len();

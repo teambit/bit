@@ -3,6 +3,9 @@
 //! ECMAScript-compatible `regress` engine), so matching agrees with Bit,
 //! including where node-ignore differs from git.
 
+#[cfg(test)]
+mod tests;
+
 use regress::{Match, Regex};
 use std::{collections::HashMap, io, sync::OnceLock};
 
@@ -244,6 +247,3 @@ fn source(pattern: &str, negative: bool) -> String {
     }
     source
 }
-
-#[cfg(test)]
-mod tests;

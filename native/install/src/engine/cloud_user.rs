@@ -4,6 +4,9 @@
 //! not answer. `fetchFromSymphonyViaGQL` uses a plain `fetch`, so no proxy or
 //! TLS setting applies here either.
 
+#[cfg(test)]
+mod tests;
+
 use super::{EngineSettings, registries::global_string};
 use crate::{import::remotes::symphony_url, model::GlobalConfig};
 use serde_json::{Value, json};
@@ -45,6 +48,3 @@ pub fn apply_cloud_username(settings: &mut EngineSettings, username: &str) {
         settings.registry.network.user_agent = Some(format!("bit user/{username}"));
     }
 }
-
-#[cfg(test)]
-mod tests;

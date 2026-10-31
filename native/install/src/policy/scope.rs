@@ -109,7 +109,7 @@ impl Scope {
     /// The JSON body of an object of the given type.
     pub fn json(&self, hash: &str, kind: &str) -> io::Result<Option<Value>> {
         self.object(hash, kind)?
-            .map(|body| serde_json::from_slice(&body).map_err(io::Error::other))
+            .map(|body| bit_object_import::parse_jsonc(&body))
             .transpose()
     }
 

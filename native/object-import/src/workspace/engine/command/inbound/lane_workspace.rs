@@ -1,9 +1,9 @@
 //! Import visible current-lane heads and main-only selections in one retained transfer.
+mod objects;
+
 use super::{Prepare, Target, config, identity, invalid, lanes, remote};
 use crate::command_import::{self, PreparedImport, Progress, VirtualRemote, lane};
 use std::{collections::HashMap, io};
-
-mod objects;
 
 pub(super) fn prepare(
     input: &Prepare,

@@ -8,9 +8,14 @@ mod candidates;
 mod history;
 mod repeat;
 mod selection;
+#[cfg(test)]
+mod tests;
 use selection::{Staged, has_staged, select_versions};
 
-use super::{Prepare, invalid};
+use super::{
+    super::inbound::remote::file_list::{row_id_parts, row_scoped_id_parts},
+    Prepare, invalid,
+};
 use crate::transfer::{self, Body, collection};
 use bit_client_transfer::tar::ObjectItem;
 use flate2::{Compression, write::ZlibEncoder};
@@ -62,8 +67,7 @@ pub(super) fn selection_history(input: &Prepare) -> io::Result<prefilter::Prepar
 }
 
 pub(super) fn select(input: &Prepare) -> io::Result<Vec<Selected>> {
-    let scope: Value =
-        serde_json::from_slice(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
+    let scope = crate::parse_jsonc(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
     if scope["lanes"]["current"] != "main" {
         return Err(invalid("outbound lane export"));
     }
@@ -90,7 +94,7 @@ fn read_index_rows(root: &Path) -> io::Result<Option<Vec<Value>>> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error),
     };
-    let index: Value = serde_json::from_slice(&index_bytes)?;
+    let index = crate::parse_jsonc(&index_bytes)?;
     let rows = index["components"]
         .as_array()
         .or_else(|| index.as_array())
@@ -116,8 +120,8 @@ fn ensure_explicit_ids_in_bitmap(input: &Prepare, selected: &[(Value, Value)]) -
     }
     let bitmap = crate::recovery::jsonc::parse(&fs::read(input.root.join(".bitmap"))?)?;
     for (row, _) in selected {
-        let scope = row["id"]["scope"].as_str().unwrap_or_default();
-        let name = row["id"]["name"].as_str().unwrap_or_default();
+        let (scope, name) =
+            row_id_parts(row).map_or(("", ""), |(scope, name)| (scope.unwrap_or_default(), name));
         if !super::publication::reconcile_present(&bitmap, scope, name) {
             return Err(invalid("outbound explicit id absent from bitmap"));
         }
@@ -180,7 +184,10 @@ fn add_scope(
 ) {
     for component in candidates
         .iter()
-        .filter(|(row, model)| row["id"]["scope"] == scope && (all_versions || has_staged(model)))
+        .filter(|(row, model)| {
+            row_scoped_id_parts(row).is_some_and(|(row_scope, _)| row_scope == scope)
+                && (all_versions || has_staged(model))
+        })
     {
         if !chosen
             .iter()
@@ -198,7 +205,7 @@ fn scope_pattern<'a>(id: &'a str, candidates: &[(Value, Value)]) -> Option<&'a s
     }
     candidates
         .iter()
-        .any(|(row, _)| row["id"]["scope"] == scope)
+        .any(|(row, _)| row_scoped_id_parts(row).is_some_and(|(row_scope, _)| row_scope == scope))
         .then_some(scope)
 }
 
@@ -222,9 +229,7 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
     let scoped = staged
         .iter()
         .find(|(row, model)| {
-            row["id"]["scope"]
-                .as_str()
-                .zip(row["id"]["name"].as_str())
+            row_scoped_id_parts(row)
                 .is_some_and(|(scope, name)| format!("{scope}/{name}") == identity)
                 && matching_version(model)
         });
@@ -233,7 +238,9 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
     }
     let unscoped: Vec<&(Value, Value)> = staged
         .iter()
-        .filter(|(row, model)| row["id"]["name"] == identity && matching_version(model))
+        .filter(|(row, model)| {
+            row_id_parts(row).is_some_and(|(_, name)| name == identity) && matching_version(model)
+        })
         .collect();
     match unscoped.as_slice() {
         [component] => Ok(component),
@@ -279,14 +286,8 @@ fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Sele
 }
 
 fn identity(row: &Value, model: &Value) -> io::Result<Identity> {
-    let scope = row["id"]["scope"]
-        .as_str()
-        .ok_or_else(|| invalid("outbound scope"))?
-        .to_owned();
-    let name = row["id"]["name"]
-        .as_str()
-        .ok_or_else(|| invalid("outbound name"))?
-        .to_owned();
+    let (scope, name) = row_scoped_id_parts(row).ok_or_else(|| invalid("outbound scope"))?;
+    let (scope, name) = (scope.to_owned(), name.to_owned());
     if model["scope"] != scope || model["name"] != name {
         return Err(invalid("outbound model identity"));
     }
@@ -306,7 +307,7 @@ pub(crate) fn read_object(dir: &Path, hash: &str, kind: &str) -> io::Result<Valu
     let compressed = transfer::object::repository(dir, parsed, MAX_BYTES)?;
     let raw = crate::checkout::repository::inflate(&compressed, MAX_BYTES)?;
     let (_, body) = crate::checkout::repository::split(&raw, parsed, kind)?;
-    serde_json::from_slice(body).map_err(io::Error::other)
+    crate::parse_jsonc(body)
 }
 pub(super) fn prepare_history(
     dir: &Path,
@@ -393,9 +394,6 @@ pub(super) fn collect(
     }
     Ok(objects)
 }
-
-#[cfg(test)]
-mod tests;
 
 pub(super) fn candidates(root: &Path, all: bool) -> io::Result<Value> {
     candidates::read(root, all)

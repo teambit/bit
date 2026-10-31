@@ -1,18 +1,18 @@
 //! Lane identity and object reads share the command import capture. None of
 //! these operations publishes an object or changes the workspace's active lane.
 pub(in crate::command_import) mod merge;
-pub(crate) use tracking::SwitchTracking;
+pub(crate) use tracking::{SwitchTracking, lane_index_id, parse_lane_id};
+
+mod artifacts;
+#[cfg(test)]
+mod tests;
+mod tracking;
 
 use super::{PreparedImport, invalid};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::io;
-use tracking::{component_identity_with_scope, hidden_entry, lane_index_id};
-mod artifacts;
-mod tracking;
-
-#[cfg(test)]
-mod tests;
+use tracking::{component_identity_with_scope, hidden_entry};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

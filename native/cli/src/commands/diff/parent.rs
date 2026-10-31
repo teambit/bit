@@ -30,9 +30,14 @@ pub(super) fn read(request: Request<'_>) -> io::Result<Vec<Value>> {
     identities
         .iter()
         .map(|target| {
-            let identity = text(target.get("identity"))?;
+            let identity = text(
+                target
+                    .get("identity")
+                    .or_else(|| target.get("id")),
+            )?;
             let target_version = requested_version
                 .or_else(|| target["version"].as_str())
+                .or_else(|| target["head"].as_str())
                 .ok_or_else(|| decline("parent diff target has no version"))?;
             one_parent(engine, root, context, capture, identity, target_version, chalk)
         })

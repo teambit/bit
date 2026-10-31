@@ -70,7 +70,7 @@ fn apply_lane_target_arg<'a>(
     target: &mut Option<&'a str>,
     lane_name: &mut Option<&'a str>,
 ) -> Option<()> {
-    if arg == "--no-color" {
+    if matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false") {
         return Some(());
     }
     if matches!(arg, "-l" | "--lane-name") {
@@ -165,6 +165,8 @@ fn valid_remove_comp_args(args: &[&str]) -> bool {
         match arg {
             "--" => return count_trailing_patterns(iter, &mut pattern_count) && pattern_count == 1,
             "--no-color"
+            | "--no-color=true"
+            | "--no-color=false"
             | "--workspace-only"
             | "--workspace-only=true"
             | "--workspace-only=false"
@@ -270,7 +272,7 @@ fn parse_fetch_args<'a>(lane_args: &[&'a str]) -> Option<(bool, Option<&'a str>)
                 }
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-a" | "--all" | "--all=true" => all = true,
             "--all=false" => all = false,
             val if !val.starts_with('-') && !val.is_empty() && lane_id.is_none() => {

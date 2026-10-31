@@ -155,12 +155,17 @@ fn directory(resolved: &str) -> io::Result<PathBuf> {
 }
 fn concrete(package: &Value, component: Option<&Value>) -> io::Result<Option<String>> {
     let mut version = optional(package.get("version"))?;
+    let id_version = match component {
+        Some(Value::String(raw)) => raw.rsplit_once('@').map(|(_, ver)| ver.to_owned()),
+        Some(component) => optional(component.get("version"))?,
+        None => None,
+    };
     if version
         .as_ref()
         .is_some_and(|version| !version.is_empty())
-        && let Some(component) = component
-        && let Some(id_version) = optional(component.get("version"))?
-            .filter(|version| !version.is_empty() && !matches!(version.as_str(), "latest" | "head"))
+        && let Some(id_version) = id_version.filter(|version| {
+            !version.is_empty() && !matches!(version.as_str(), "latest" | "head")
+        })
     {
         version = Some(id_version);
     }

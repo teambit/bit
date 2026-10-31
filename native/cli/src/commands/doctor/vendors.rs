@@ -14,9 +14,14 @@ pub(super) fn version(command: &str, argument: &str, clean_stderr: bool) -> Opti
     let text = String::from_utf8_lossy(strip_final_newline(&output.stdout)).into_owned();
     (!text.is_empty()).then_some(text)
 }
-fn strip_final_newline(bytes: &[u8]) -> &[u8] {
-    let bytes = bytes.strip_suffix(b"\n").unwrap_or(bytes);
-    bytes.strip_suffix(b"\r").unwrap_or(bytes)
+fn strip_final_newline(mut bytes: &[u8]) -> &[u8] {
+    while let Some(stripped) = bytes
+        .strip_suffix(b"\n")
+        .or_else(|| bytes.strip_suffix(b"\r"))
+    {
+        bytes = stripped;
+    }
+    bytes
 }
 pub(super) fn examine(diagnosis: &Diagnosis, git: &str) -> Value {
     let (valid, symptoms, treatment) = match diagnosis.name {

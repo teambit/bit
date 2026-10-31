@@ -16,14 +16,23 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     let mut removals = Vec::new();
     if request.tracked {
         for current in &plan.current {
+            let current_norm = normalize_rel(&current.relative_path);
             let targeted = plan.target
                 .iter()
-                .any(|target| target.relative_path == current.relative_path);
-            if !(targeted || request.workspace_root && current.relative_path == ".bitmap") {
+                .any(|target| normalize_rel(&target.relative_path) == current_norm);
+            if !(targeted || request.workspace_root && current_norm == ".bitmap") {
                 statuses.push(json!({"relativePath":current.relative_path,"status":"removed"}));
                 removals.push(current.path.clone());
             }
         }
     }
     Ok(json!({"statuses":statuses,"removals":removals}))
+}
+
+fn normalize_rel(path: &str) -> String {
+    let replaced = path.trim().replace('\\', "/");
+    replaced
+        .strip_prefix("./")
+        .unwrap_or(&replaced)
+        .to_owned()
 }

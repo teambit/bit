@@ -1,9 +1,10 @@
-use crate::workspace::engine::source_overlay::SourceOverlay;
 mod detected;
 mod issues;
 
 use super::{invalid, pipeline};
-use crate::workspace::engine::{path, read_dependency_cache, resolve_dependencies::normalize};
+use crate::workspace::engine::{
+    path, read_dependency_cache, resolve_dependencies::normalize, source_overlay::SourceOverlay,
+};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{io, path::PathBuf};

@@ -5,6 +5,9 @@
 //! does not define round-trip through [`Lockfile::extra`], so the block is read
 //! before the install and re-asserted after it.
 
+#[cfg(test)]
+mod tests;
+
 use super::error::diagnostic;
 use pnpm_lockfile::{Lockfile, SymlinkedLockfile};
 use serde_json::{Map, Value};
@@ -79,6 +82,3 @@ pub(super) fn restore_after_failure(root: &Path, contents: Option<Vec<u8>>) -> i
         None => Ok(()),
     }
 }
-
-#[cfg(test)]
-mod tests;

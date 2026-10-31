@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "squash_tests.rs"]
+mod tests;
+
 use super::super::{invalid, merge::snapshot, repository::Repository};
 use serde_json::{Value, json};
 use std::io;
@@ -89,8 +93,11 @@ fn replacement_message(
                 .ok_or_else(|| invalid("squash message hash"))
         })
         .collect::<io::Result<Vec<_>>>()?;
-    let scope =
-        lane["otherId"]["scope"].as_str().ok_or_else(|| invalid("squash message remote"))?;
+    let scope = lane["otherId"]
+        .as_str()
+        .and_then(|raw| raw.split_once('/').map(|(scope, _)| scope))
+        .or_else(|| lane["otherId"]["scope"].as_str())
+        .ok_or_else(|| invalid("squash message remote"))?;
     repository.prepare_lane_squash_messages(scope, &references)?;
     let mut messages = Vec::new();
     for hash in references {
@@ -142,7 +149,3 @@ fn replace_message(
         .insert("message".into(), json!(message));
     Ok(())
 }
-
-#[cfg(test)]
-#[path = "squash_tests.rs"]
-mod tests;

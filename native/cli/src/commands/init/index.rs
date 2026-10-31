@@ -25,14 +25,8 @@ pub(super) fn prepare(plan: &mut Plan, scope: &Path, options: &Options) -> io::R
         return Ok(());
     }
     let index = build(scope)?;
-    if index["components"]
-        .as_array()
-        .unwrap()
-        .is_empty()
-        && index["lanes"]
-            .as_array()
-            .unwrap()
-            .is_empty()
+    if index["components"].as_array().is_none_or(Vec::is_empty)
+        && index["lanes"].as_array().is_none_or(Vec::is_empty)
     {
         return Ok(());
     }
@@ -44,24 +38,19 @@ pub(super) fn prepare(plan: &mut Plan, scope: &Path, options: &Options) -> io::R
 }
 
 fn build(scope: &Path) -> io::Result<Value> {
-    let mut index = json!({"components":[],"lanes":[]});
+    let mut components = Vec::new();
+    let mut lanes = Vec::new();
     for hash in hashes(&scope.join("objects"))? {
         let Some((kind, value)) = bit_object_import::read_scope_object(scope, &hash)? else {
             continue;
         };
         match kind.as_str() {
-            "Component" => index["components"]
-                .as_array_mut()
-                .unwrap()
-                .push(component(&value, &hash)?),
-            "Lane" => index["lanes"]
-                .as_array_mut()
-                .unwrap()
-                .push(lane(&value, &hash)?),
+            "Component" => components.push(component(&value, &hash)?),
+            "Lane" => lanes.push(lane(&value, &hash)?),
             _ => {}
         }
     }
-    Ok(index)
+    Ok(json!({"components":components,"lanes":lanes}))
 }
 
 fn hashes(objects: &Path) -> io::Result<Vec<String>> {

@@ -121,6 +121,15 @@ pub(super) fn digest(value: &str) -> String {
     format!("{:x}", Sha1::digest(value.as_bytes()))
 }
 pub(super) fn identity(value: &Value) -> io::Result<String> {
+    if let Some(raw) = value.as_str() {
+        let (scope, name) = raw
+            .rsplit_once('@')
+            .map_or(raw, |(bare, _)| bare)
+            .split_once('/')
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| unsupported("metadata string"))?;
+        return Ok(format!("{scope}/{name}"));
+    }
     Ok(format!("{}/{}", text(&value["scope"])?, text(&value["name"])?))
 }
 pub(super) fn text(value: &Value) -> io::Result<&str> {

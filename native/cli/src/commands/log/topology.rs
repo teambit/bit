@@ -91,9 +91,12 @@ fn resolve_from_scope_index(root: &Path, id: &str) -> io::Result<Option<String>>
 
 fn row_identity_matching(row: &Value, target: &str) -> Option<String> {
     let (scope, name) = if let Some(id_str) = row["id"].as_str() {
-        id_str
-            .split_once('/')
-            .unwrap_or(("", id_str))
+        let bare = id_str
+            .split('@')
+            .next()
+            .unwrap_or(id_str);
+        bare.split_once('/')
+            .unwrap_or(("", bare))
     } else {
         (row["id"]["scope"].as_str().unwrap_or_default(), row["id"]["name"].as_str()?)
     };

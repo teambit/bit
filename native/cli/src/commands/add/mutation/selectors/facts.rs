@@ -11,22 +11,23 @@ pub(in crate::commands::add::mutation) struct Facts {
 impl Facts {
     pub(in crate::commands::add::mutation) fn keep(&mut self, capture: &Capture) {
         for row in &capture.comparisons {
-            if let Some(id) = row["identity"].as_str() {
-                let mut row = row.clone();
-                if let Some(fields) = row.as_object_mut() {
-                    fields.remove("trackingVersion");
-                }
-                self.comparisons.insert(id.into(), row);
+            let Some(id) = row["identity"].as_str() else {
+                continue;
+            };
+            let mut row = row.clone();
+            if let Some(fields) = row.as_object_mut() {
+                fields.remove("trackingVersion");
             }
+            self.comparisons.insert(id.into(), row);
         }
-        if let Some(facts) = capture.environment_facts.as_object() {
-            if self.environments.is_null() {
-                self.environments = json!({});
-            }
-            self.environments
-                .as_object_mut()
-                .expect("object initialized")
-                .extend(facts.clone());
+        let Some(facts) = capture.environment_facts.as_object() else {
+            return;
+        };
+        if self.environments.is_null() {
+            self.environments = json!({});
+        }
+        if let Some(map) = self.environments.as_object_mut() {
+            map.extend(facts.clone());
         }
     }
     pub(super) fn compare(

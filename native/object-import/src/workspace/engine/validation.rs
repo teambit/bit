@@ -21,11 +21,8 @@ pub(super) fn hash(bytes: &[u8]) -> String {
     crate::validate::hexadecimal(&Sha1::digest(bytes))
 }
 pub(super) fn expected_hash(hash: &str) -> io::Result<[u8; 20]> {
-    if hash.len() != 40
-        || !hash
-            .bytes()
-            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-    {
+    let hash = hash.trim();
+    if hash.len() != 40 || !hash.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return Err(invalid("workspace invalid hash"));
     }
     let mut output = [0; 20];

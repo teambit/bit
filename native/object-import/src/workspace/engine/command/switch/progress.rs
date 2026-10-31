@@ -30,19 +30,42 @@ pub(in crate::workspace::engine::command) fn additions(
         .as_array()
         .ok_or_else(|| invalid("switch addition count"))?;
     for target in added {
-        let identity =
-            target["identity"].as_str().ok_or_else(|| invalid("switch addition identity"))?;
-        let (scope, name) =
-            identity.split_once('/').ok_or_else(|| invalid("switch addition scope"))?;
-        let version =
-            target["version"].as_str().ok_or_else(|| invalid("switch addition version"))?;
-        targets.push(crate::command_import::Target {
+        targets.push(addition_target(target)?);
+    }
+    Ok(())
+}
+
+fn addition_target(target: &Value) -> io::Result<crate::command_import::Target> {
+    let version = target["version"]
+        .as_str()
+        .or_else(|| target["head"].as_str())
+        .ok_or_else(|| invalid("switch addition version"))?;
+    if let Some(identity) = target["identity"]
+        .as_str()
+        .or_else(|| target["id"].as_str())
+        .filter(|id| !id.is_empty())
+    {
+        let base = identity.rsplit_once('@').map_or(identity, |(base, _)| base);
+        let (scope, name) = base.split_once('/').ok_or_else(|| invalid("switch addition scope"))?;
+        return Ok(crate::command_import::Target {
             scope: Some(scope.into()),
             name: name.into(),
             version: version.into(),
         });
     }
-    Ok(())
+    let scope = target["scope"]
+        .as_str()
+        .or_else(|| target["id"]["scope"].as_str())
+        .ok_or_else(|| invalid("switch addition scope"))?;
+    let name = target["name"]
+        .as_str()
+        .or_else(|| target["id"]["name"].as_str())
+        .ok_or_else(|| invalid("switch addition identity"))?;
+    Ok(crate::command_import::Target {
+        scope: Some(scope.into()),
+        name: name.into(),
+        version: version.into(),
+    })
 }
 
 pub(in crate::workspace::engine::command) fn failure(

@@ -21,7 +21,7 @@ impl Repository {
     pub(super) fn load(root: &Path, scope: &str, name: &str) -> io::Result<Self> {
         let scope_dir = crate::scope_path(root);
         let index_before = fs::read(scope_dir.join("index.json"))?;
-        let index: Value = serde_json::from_slice(&index_before)?;
+        let index: Value = crate::parse_jsonc(&index_before)?;
         let rows = index["components"]
             .as_array()
             .or_else(|| index.as_array())
@@ -93,10 +93,12 @@ fn position(rows: &[Value], scope: &str, name: &str) -> io::Result<usize> {
         .iter()
         .enumerate()
         .filter_map(|(position, row)| {
-            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            let (row_scope, row_name) =
+                crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
+                    .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default(), nm));
             (row["isSymlink"] != true
                 && (row_scope == scope || row_scope.is_empty())
-                && row["id"]["name"] == name)
+                && row_name == name)
                 .then_some(position)
         });
     let found = matches.next().ok_or_else(|| invalid("reset indexed Component absent"))?;

@@ -58,7 +58,9 @@ fn apply_export_arg<'a>(
     arg: &str,
     args: &mut impl Iterator<Item = &'a str>,
 ) -> Option<()> {
-    if arg == "--no-color" || set_boolean_flag(options, arg) {
+    if matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false")
+        || set_boolean_flag(options, arg)
+    {
         return Some(());
     }
     if let Some(val) = arg.strip_prefix("--resume=") {

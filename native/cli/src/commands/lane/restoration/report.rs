@@ -1,4 +1,8 @@
 //! The released lane revert JSON projection and alternative checkout title.
+#[cfg(test)]
+#[path = "report_tests.rs"]
+mod tests;
+
 use super::options::Options;
 use crate::commands::{
     checkout,
@@ -126,7 +130,3 @@ pub(super) fn merge(first: &mut Value, second: &Value) -> io::Result<()> {
     }
     Ok(())
 }
-
-#[cfg(test)]
-#[path = "report_tests.rs"]
-mod tests;

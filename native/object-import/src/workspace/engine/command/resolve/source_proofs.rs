@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::super::{capture::Captured, invalid, proof};
 use crate::workspace::snapshots;
 use serde_json::Value;
@@ -34,8 +37,6 @@ fn retain(file: &Value, snapshots: &snapshots::State) -> io::Result<proof::Proof
     }
     Ok(proof::content(path, &bytes))
 }
-#[cfg(test)]
-mod tests;
 
 pub(super) fn owned_paths(
     root: &Path,

@@ -1,4 +1,9 @@
 //! Preserve only the resolution settings shared by the graphs contributing packages.
+#[cfg(test)]
+mod oracle;
+#[cfg(test)]
+mod tests;
+
 use serde_json::{Map, Value, json};
 
 const KEYS: [&str; 3] = ["pnpmfileChecksum", "settings", "overrides"];
@@ -64,9 +69,3 @@ fn has_resolutions(lockfile: &Map<String, Value>) -> bool {
                 .is_some_and(|rows| !rows.is_empty())
         })
 }
-
-#[cfg(test)]
-mod tests;
-
-#[cfg(test)]
-mod oracle;

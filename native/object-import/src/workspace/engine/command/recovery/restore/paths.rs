@@ -15,7 +15,7 @@ pub(super) fn removals(
         .as_object()
         .ok_or_else(|| invalid("recovery bitmap"))?
         .values()
-        .filter_map(|row| row["rootDir"].as_str())
+        .filter_map(row_directory)
         .filter(|root| *root != ".")
         .map(str::to_owned)
         .collect::<Vec<_>>();
@@ -26,13 +26,21 @@ pub(super) fn removals(
         .ok_or_else(|| invalid("recovery removal roots"))?
         .iter()
         .map(|row| {
-            let directory = row.as_str().ok_or_else(|| invalid("recovery removal directory"))?;
+            let directory = row
+                .as_str()
+                .or_else(|| row_directory(row))
+                .ok_or_else(|| invalid("recovery removal directory"))?;
             validate(root, directory, &previous)?;
             let path = root.join(directory);
             ancestors(root, &path, proofs)?;
             Ok(path)
         })
         .collect()
+}
+fn row_directory(row: &Value) -> Option<&str> {
+    row["rootDir"]
+        .as_str()
+        .or_else(|| row["directory"].as_str())
 }
 fn validate(root: &Path, directory: &str, previous: &Value) -> io::Result<()> {
     if Path::new(directory)
@@ -54,7 +62,7 @@ fn validate(root: &Path, directory: &str, previous: &Value) -> io::Result<()> {
         .as_object()
         .ok_or_else(|| invalid("recovery restored roots"))?
         .values()
-        .filter_map(|row| row["rootDir"].as_str())
+        .filter_map(row_directory)
         .any(|retained| {
             Path::new(retained).starts_with(directory) || Path::new(directory).starts_with(retained)
         })

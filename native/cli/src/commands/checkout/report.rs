@@ -1,5 +1,7 @@
 //! The checkout report: `checkoutOutput` of `@teambit/checkout`.
 pub(crate) mod policy;
+#[cfg(test)]
+mod report_tests;
 
 use super::options::Options;
 use crate::commands::{
@@ -247,6 +249,3 @@ impl Checkout<'_> {
         )
     }
 }
-
-#[cfg(test)]
-mod report_tests;

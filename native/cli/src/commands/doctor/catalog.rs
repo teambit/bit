@@ -52,11 +52,23 @@ impl Diagnosis {
         json!({"name":self.name,"description":self.description,"category":self.category})
     }
     pub fn result(&self, bare: Value, symptoms: String, treatment: &str) -> Value {
-        let valid = bare["valid"] == true;
+        let valid = is_valid(&bare);
         let mut result = json!({"diagnosisMetaData":{"category":self.category,"name":self.name,"description":self.description},
             "bareResult":null,"formattedSymptoms":if valid {String::new()} else {symptoms},
             "formattedManualTreat":if valid {""} else {treatment}});
         result["bareResult"] = bare;
         result
     }
+}
+
+fn is_valid(bare: &Value) -> bool {
+    ["valid", "pass", "passed"]
+        .into_iter()
+        .find_map(|key| bare.get(key))
+        .is_some_and(|value| {
+            value.as_bool().unwrap_or(false)
+                || value
+                    .as_str()
+                    .is_some_and(|text| text.trim().eq_ignore_ascii_case("true"))
+        })
 }

@@ -1,6 +1,8 @@
 //! Installed-package drill-down for `bit deps diagnose --package`.
 
 pub(super) mod report;
+#[cfg(test)]
+mod tests;
 
 use super::usage_render::compare_versions;
 use crate::{
@@ -199,6 +201,3 @@ pub(super) fn locale_number(value: usize) -> String {
     }
     result
 }
-
-#[cfg(test)]
-mod tests;

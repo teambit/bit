@@ -2,14 +2,15 @@
 const EXTENSIONS: &str = include_str!("binary_extensions.txt");
 
 pub(super) fn note(file: &str) -> &'static str {
-    let extension = std::path::Path::new(file)
+    let extension = std::path::Path::new(file.trim())
         .extension()
         .and_then(std::ffi::OsStr::to_str)
         .unwrap_or_default()
-        .to_lowercase();
-    if EXTENSIONS
-        .lines()
-        .any(|candidate| candidate == extension)
+        .to_ascii_lowercase();
+    if !extension.is_empty()
+        && EXTENSIONS
+            .lines()
+            .any(|candidate| candidate.trim() == extension)
     {
         "binary files cannot be merged. please pick the version to keep manually"
     } else {

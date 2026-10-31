@@ -28,11 +28,12 @@ struct Parts<'a> {
 
 impl<'a> Parts<'a> {
     fn new(groups: &[Option<&'a str>], offset: usize) -> Self {
+        let group = |index: usize| groups.get(index).copied().flatten();
         Parts {
-            major: groups[offset].unwrap_or_default(),
-            minor: groups[offset + 1],
-            patch: groups[offset + 2],
-            pre: groups[offset + 3].filter(|pre| !pre.is_empty()),
+            major: group(offset).unwrap_or_default(),
+            minor: group(offset + 1),
+            patch: group(offset + 2),
+            pre: group(offset + 3).filter(|pre| !pre.is_empty()),
         }
     }
 

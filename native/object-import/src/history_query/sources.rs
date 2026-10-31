@@ -22,7 +22,9 @@ impl Cache {
         hash: &str,
         compressed: &mut usize,
     ) -> io::Result<(crate::checkout::repository::SourceRecord, bool)> {
-        if let Some(record) = self.records.get(hash) {
+        let digest = crate::merge_history::hash(hash.trim())?;
+        let canonical = crate::validate::hexadecimal(&digest);
+        if let Some(record) = self.records.get(&canonical) {
             return Ok((record.clone(), false));
         }
         if self.records.len() >= 4096 {
@@ -30,16 +32,16 @@ impl Cache {
         }
         let record = crate::checkout::repository::source_record(
             directory,
-            crate::merge_history::hash(hash)?,
+            digest,
             32 * 1024 * 1024,
             compressed,
         )?;
-        let size = record.body.len() + record.compressed.len();
-        if self.bytes + size > self.limit {
+        let size = record.body.len().saturating_add(record.compressed.len());
+        if self.bytes.saturating_add(size) > self.limit {
             return Err(invalid("history Source owner limit"));
         }
-        self.bytes += size;
-        self.records.insert(hash.to_owned(), record.clone());
+        self.bytes = self.bytes.saturating_add(size);
+        self.records.insert(canonical, record.clone());
         Ok((record, true))
     }
 }
@@ -83,18 +85,19 @@ impl Sources<'_> {
         })
     }
     pub(super) fn read(&mut self, hash: &str) -> io::Result<Vec<u8>> {
-        if let Some(value) = self.values.get(hash) {
+        let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
+        if let Some(value) = self.values.get(&canonical) {
             self.loads.push(value.index);
             return Ok(value.body.clone());
         }
-        let (record, fresh) = self.cache.read(&self.directory, hash, &mut self.compressed)?;
+        let (record, fresh) = self.cache.read(&self.directory, &canonical, &mut self.compressed)?;
         if fresh {
-            self.raw += record.body.len();
+            self.raw = self.raw.saturating_add(record.body.len());
         }
         let index = self.descriptors.len();
-        self.descriptors.push(self.snapshot(hash, &record)?);
+        self.descriptors.push(self.snapshot(&canonical, &record)?);
         self.loads.push(index);
-        self.values.insert(hash.to_owned(), Stored { body: record.body.clone(), index, fresh });
+        self.values.insert(canonical, Stored { body: record.body.clone(), index, fresh });
         Ok(record.body)
     }
     fn snapshot(

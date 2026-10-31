@@ -4,6 +4,8 @@ mod component;
 mod conflict;
 mod scope;
 mod semver;
+#[cfg(test)]
+mod tests;
 mod updates;
 mod validate;
 mod workspace;
@@ -84,8 +86,6 @@ fn array<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {
         .map(Vec::as_slice)
         .ok_or_else(|| invalid("config array"))
 }
-#[cfg(test)]
-mod tests;
 
 pub(crate) fn compare_versions(left: &Value, right: &Value) -> io::Result<std::cmp::Ordering> {
     semver::compare(left, right)

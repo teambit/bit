@@ -28,7 +28,9 @@ impl Options {
             .as_object()
             .is_some_and(|rows| {
                 rows.values()
-                    .any(|row| row["rootDir"] == "." && super::active(row))
+                    .any(|row| {
+                        (row["rootDir"] == "." || row["directory"] == ".") && super::active(row)
+                    })
             });
         if tracks_root && !self.workspace_root && !existing_root {
             return Err(error(

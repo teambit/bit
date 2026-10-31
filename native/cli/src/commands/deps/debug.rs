@@ -1,11 +1,12 @@
 //! Dependency debug output for fresh components using a built-in environment.
 
+mod policy;
+mod versioned;
+
 use super::{
     mutation::format_json_indent_4,
     resolve::{WorkspaceDepsContext, scanned_specifiers},
 };
-mod policy;
-mod versioned;
 use crate::commands::{
     color::Chalk,
     scope_set::{Failure, selection},

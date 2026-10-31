@@ -142,9 +142,22 @@ impl Bitmap {
 
 fn lane_info(lane: &Value) -> Option<LaneInfo> {
     let id = lane.get("id")?;
+    let (scope, name) = if let Some(raw) = id.as_str() {
+        let (scope, name) = raw
+            .split('@')
+            .next()
+            .unwrap_or(raw)
+            .split_once('/')?;
+        (scope.trim().to_owned(), name.trim().to_owned())
+    } else {
+        (id.get("scope")?.as_str()?.to_owned(), id.get("name")?.as_str()?.to_owned())
+    };
+    if scope.is_empty() || name.is_empty() {
+        return None;
+    }
     Some(LaneInfo {
-        scope: id.get("scope")?.as_str()?.to_owned(),
-        name: id.get("name")?.as_str()?.to_owned(),
+        scope,
+        name,
         exported: lane.get("exported").is_some_and(crate::config::truthy),
     })
 }

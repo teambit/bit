@@ -19,7 +19,9 @@ pub(super) fn apply(workspace: &mut Workspace, order: &[String]) -> io::Result<(
     let ordered = order
         .iter()
         .map(|identity| {
-            rows.remove(identity)
+            let key = normalize_order_identity(identity);
+            rows.remove(key)
+                .or_else(|| rows.remove(identity.trim()))
                 .ok_or_else(|| io::Error::other("installation component order identity"))
         })
         .collect::<io::Result<Vec<_>>>()?;
@@ -28,4 +30,12 @@ pub(super) fn apply(workspace: &mut Workspace, order: &[String]) -> io::Result<(
     }
     (workspace.entries, workspace.components) = ordered.into_iter().unzip();
     Ok(())
+}
+
+fn normalize_order_identity(identity: &str) -> &str {
+    let trimmed = identity.trim();
+    match trimmed.rfind('@') {
+        Some(index) if index > 0 && !trimmed[index + 1..].contains('/') => &trimmed[..index],
+        _ => trimmed,
+    }
 }

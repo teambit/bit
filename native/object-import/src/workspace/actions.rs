@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use std::{
     fs,
     io::{self, Read, Write},
@@ -77,7 +80,9 @@ fn apply(action: &Action) -> io::Result<()> {
         1 => remove_empty(&action.source),
         _ => link(
             &action.source,
-            action.destination.as_deref().expect("validated destination"),
+            action.destination
+                .as_deref()
+                .ok_or_else(|| invalid("missing workspace action destination"))?,
             action.kind == 3,
         ),
     }
@@ -243,6 +248,3 @@ fn linked_correctly(source: &Path, destination: &Path) -> bool {
     }
     fs::read_link(destination).is_ok_and(|target| target == source)
 }
-
-#[cfg(test)]
-mod tests;

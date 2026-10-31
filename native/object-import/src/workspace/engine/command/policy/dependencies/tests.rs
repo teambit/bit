@@ -61,8 +61,11 @@ fn snap_issue_receipt_preserves_visible_identity_and_serialized_packages() {
 
 #[test]
 fn issue_projection_uses_final_native_state_in_lifecycle_order() {
-    let state = json!({"components":[[1],[0],[]],"entries":[{"identity":"scope/dev@2.0.0"},{"identity":"scope/runtime@1.0.0"}]});
-    let issues = json!([{"type":"MissingManuallyConfiguredPackages","data":r#"["@types/node"]"#}]);
+    let state = json!({"components":[[1],[0],[]],"entries":[{"identity":"scope/dev@2.0.0"},{"id":"scope/runtime@1.0.0"}]});
+    let issues = json!([{"type":"MissingManuallyConfiguredPackages","data":["@types/node"]}]);
+    let mut captured = Vec::new();
+    capture_issues(&row(false), &issues, &[], &mut captured).unwrap();
+    assert_eq!(captured.len(), 1);
     assert_eq!(
         super::issues::target(&row(false), &state, &issues).unwrap(),
         json!({

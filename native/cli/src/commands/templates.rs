@@ -182,7 +182,7 @@ fn apply_templates_token<'a>(
     options: &mut Options,
 ) -> Option<()> {
     match token {
-        "--no-color" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" => {}
         "--show-all" | "--show-all=true" | "-s" => options.show_all = true,
         "--show-all=false" => options.show_all = false,
         "--json" | "--json=true" | "-j" => options.json = true,

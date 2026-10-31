@@ -45,9 +45,12 @@ fn supported_workspace(
         return Ok(false);
     }
     let bitmap = bit_install::workspace::Bitmap::load(root, workspace["defaultScope"].as_str())?;
-    Ok(bitmap.lane
-        .as_ref()
-        .is_none_or(|lane| lane.name == "main"))
+    Ok(bitmap.lane.as_ref().is_none_or(|lane| is_main_lane(&lane.name)))
+}
+
+fn is_main_lane(name: &str) -> bool {
+    let trimmed = name.trim();
+    trimmed.is_empty() || trimmed.rsplit('/').next() == Some("main")
 }
 
 fn scope_supported(scope: &Path) -> io::Result<bool> {

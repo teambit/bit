@@ -58,6 +58,7 @@ impl Read for Chunks {
                 return Ok(count);
             }
             match self.receiver.blocking_recv() {
+                Some(chunk) if chunk.is_empty() => continue,
                 Some(chunk) => self.current = io::Cursor::new(chunk),
                 None => return Ok(0),
             }

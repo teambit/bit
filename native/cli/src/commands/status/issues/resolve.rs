@@ -1,6 +1,9 @@
 //! For snap and tag, the engine proves
 //! the models' heads and the dependencies outside the workspace.
 
+#[cfg(test)]
+mod resolve_tests;
+
 use super::{super::js::truthy, Component};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -231,6 +234,3 @@ fn versioned(value: &str) -> bool {
     let Some((scope, name)) = id.split_once('/') else { return false };
     plain(scope) && plain(name) && plain(version)
 }
-
-#[cfg(test)]
-mod resolve_tests;

@@ -1,5 +1,8 @@
 //! Multiple named lanes share one retained inbound publication.
 
+mod aggregate;
+mod selection;
+
 use super::{Prepare, Retained, State, Target, identity, invalid, receipt, remote};
 use crate::command_import::{self, VirtualRemote, lane};
 use serde_json::{Value, json};
@@ -8,9 +11,6 @@ use std::{
     io,
     path::Path,
 };
-
-mod aggregate;
-mod selection;
 
 struct Selection {
     lanes: Vec<(lane::Id, Option<String>)>,

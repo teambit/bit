@@ -15,6 +15,10 @@ fn explicit_all_merge_preserves_bitmap_order_and_scoped_nested_names() {
         {"identity":"scope/nested/alpha", "directory":"alpha"},
     ]});
     assert_eq!(json!(selected(&request("**"), &context).unwrap()), context["targets"]);
+    assert_eq!(
+        json!(selected(&request("./zeta/"), &context).unwrap()),
+        json!([context["targets"][0].clone()]),
+    );
     assert!(selected(&request("*"), &context).is_err());
     assert!(selected(&request("scope/*"), &context).is_err());
     assert!(selected(&request("**"), &json!({"targets":[]})).is_err());

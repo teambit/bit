@@ -63,11 +63,7 @@ fn restore_models(
         .as_array_mut()
         .ok_or_else(|| invalid("recovery context models"))?;
     for model in models {
-        let name = model["name"].as_str().ok_or_else(|| invalid("recovery model name"))?;
-        let identity = model["scope"]
-            .as_str()
-            .filter(|scope| !scope.is_empty())
-            .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
+        let identity = model_identity(model)?;
         let hash = super::super::super::hash(identity.as_bytes());
         if objects
             .iter()
@@ -77,6 +73,27 @@ fn restore_models(
         }
     }
     Ok(())
+}
+
+fn model_identity(model: &Value) -> io::Result<String> {
+    if let Some(identity) = model["identity"]
+        .as_str()
+        .or_else(|| model["id"].as_str())
+        .filter(|id| !id.is_empty())
+    {
+        let base = identity.rsplit_once('@').map_or(identity, |(base, _)| base);
+        return Ok(base.to_owned());
+    }
+    let name = model["name"]
+        .as_str()
+        .or_else(|| model["id"]["name"].as_str())
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("recovery model name"))?;
+    let scope = model["scope"]
+        .as_str()
+        .or_else(|| model["id"]["scope"].as_str())
+        .filter(|scope| !scope.is_empty());
+    Ok(scope.map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}")))
 }
 
 pub(super) fn validate_apply(

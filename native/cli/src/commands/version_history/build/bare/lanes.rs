@@ -8,7 +8,7 @@ pub(super) fn lane_heads(
     name: &str,
     proofs: &mut Vec<(PathBuf, Vec<u8>)>,
 ) -> Option<Vec<String>> {
-    let index: Value = serde_json::from_slice(&proofs[1].1).ok()?;
+    let index: Value = bit_object_import::parse_jsonc(&proofs[1].1).ok()?;
     if index.is_array() {
         return Some(Vec::new());
     }
@@ -34,13 +34,11 @@ pub(super) fn lane_head(lane: &Value, scope: &str, name: &str) -> Option<Option<
     }
     let mut visible = None;
     for component in lane["components"].as_array()? {
-        let id = &component["id"];
         let head = component["head"].as_str()?;
         if head.len() != 40 || !head.bytes().all(|byte| byte.is_ascii_hexdigit()) {
             return None;
         }
-        let component_scope = identifier(id["scope"].as_str()?)?;
-        let component_name = identifier(id["name"].as_str()?)?;
+        let (component_scope, component_name) = lane_component_id(&component["id"])?;
         if component_scope == scope
             && component_name == name
             && visible.replace(head.to_owned()).is_some()
@@ -50,6 +48,17 @@ pub(super) fn lane_head(lane: &Value, scope: &str, name: &str) -> Option<Option<
     }
     let hidden = hidden_head(&lane["updateDependents"], scope, name)?;
     Some(visible.or(hidden))
+}
+
+fn lane_component_id(id: &Value) -> Option<(&str, &str)> {
+    let (raw_scope, raw_name) = if let Some(raw) = id.as_str() {
+        raw.rsplit_once('@')
+            .map_or(raw, |(bare, _)| bare)
+            .split_once('/')?
+    } else {
+        (id["scope"].as_str()?, id["name"].as_str()?)
+    };
+    Some((identifier(raw_scope)?, identifier(raw_name)?))
 }
 
 fn hidden_head(hidden: &Value, scope: &str, name: &str) -> Option<Option<String>> {

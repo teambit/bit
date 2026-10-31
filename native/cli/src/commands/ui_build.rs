@@ -56,7 +56,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 consume_trailing_ui_type(iter, &mut ui_root_name)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             val if !val.starts_with('-') && !val.is_empty() && ui_root_name.is_none() => {
                 ui_root_name = Some(val.to_owned());
             }

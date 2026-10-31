@@ -1,7 +1,7 @@
 //! Remove local Lane objects to the scope trash and unindex them.
 
 use crate::{recovery, store::Store, workspace::engine::command::outbound};
-use serde_json::{Value, json};
+use serde_json::Value;
 use std::{
     collections::HashSet,
     fs, io,
@@ -24,10 +24,10 @@ impl Plan {
         }
         let scope_dir = crate::scope_path(root);
         let before = fs::read(scope_dir.join("index.json"))?;
-        let mut index: Value = serde_json::from_slice(&before)?;
+        let mut index: Value = crate::parse_jsonc(&before)?;
         let before_bitmap = fs::read(root.join(".bitmap"))?;
         let bitmap = recovery::jsonc::parse(&before_bitmap)?;
-        let current = &bitmap["_bit_lane"]["id"];
+        let current = &bitmap["_bit_lane"];
         let rows = index["lanes"].as_array_mut().ok_or_else(|| invalid("lane index"))?;
         let mut hashes = Vec::with_capacity(ids.len());
         let mut seen = HashSet::new();
@@ -64,22 +64,27 @@ impl Plan {
     }
 }
 
+fn lane_matches(row: &Value, scope: &str, name: &str) -> bool {
+    crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+        row, scope, name,
+    )
+}
+
 fn select_one(root: &Path, rows: &mut Vec<Value>, current: &Value, id: &str) -> io::Result<String> {
     let (scope, name) = id.split_once('/').ok_or_else(|| invalid("lane ID"))?;
     if !valid_part(scope) || !valid_part(name) || name == "main" {
         return Err(invalid("lane removal ID"));
     }
-    let identity = json!({"scope":scope,"name":name});
-    if current == &identity {
+    if lane_matches(current, scope, name) {
         return Err(invalid("currently used lane"));
     }
     let position = rows
         .iter()
-        .position(|row| row["id"] == identity)
+        .position(|row| lane_matches(row, scope, name))
         .ok_or_else(|| invalid("lane is not indexed"))?;
     if rows
         .iter()
-        .filter(|row| row["id"] == identity)
+        .filter(|row| lane_matches(row, scope, name))
         .count()
         != 1
     {

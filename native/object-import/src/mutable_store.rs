@@ -32,7 +32,9 @@ fn check_header(hash: &str, serialized: &[u8], models: bool) -> io::Result<()> {
     let kind = parts.next();
     if !(matches!(kind, Some("Version" | "VersionHistory" | "LaneHistory"))
         || models && matches!(kind, Some("Component" | "Lane" | "Symlink" | "ScopeMeta")))
-        || parts.next() != Some(hash)
+        || parts
+            .next()
+            .is_none_or(|actual| !actual.eq_ignore_ascii_case(hash.trim()))
         || parts
             .next()
             .and_then(|size| size.parse::<usize>().ok())

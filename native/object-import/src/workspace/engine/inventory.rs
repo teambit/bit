@@ -1,5 +1,7 @@
 pub(super) mod patterns;
 mod rules;
+#[cfg(test)]
+mod tests;
 
 use super::{invalid, scan};
 use rayon::ThreadPool;
@@ -199,9 +201,6 @@ fn relative(root: &Path, file: &Path) -> io::Result<String> {
         .collect::<io::Result<Vec<_>>>()?
         .join("/"))
 }
-
-#[cfg(test)]
-mod tests;
 
 /// Share the bounded inventory scanner with component tracking.
 pub(crate) fn tracking_scan(

@@ -78,6 +78,14 @@ impl Prepared {
     }
 }
 fn identity(manifest: &Value) -> io::Result<String> {
+    if let Some(raw) = manifest["componentId"].as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+        let (scope, name) = bare
+            .split_once('/')
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid("snapshot package scope"))?;
+        return Ok(format!("{scope}/{name}"));
+    }
     let scope = manifest["componentId"]["scope"]
         .as_str()
         .ok_or_else(|| invalid("snapshot package scope"))?;
@@ -90,7 +98,7 @@ fn normalize(mut manifest: Value, original: &Value) -> io::Result<Value> {
     if !manifest.is_object() {
         return Err(invalid("snapshot package manifest shape"));
     }
-    if manifest["version"] == "latest" {
+    if matches!(manifest["version"].as_str(), Some("latest" | "head")) {
         manifest["version"] = value!("0.0.1-new");
     } else if let Some(hash) = manifest["version"]
         .as_str()

@@ -4,6 +4,8 @@
 pub use adoption::{AdoptionOptions, DependentsOptions};
 
 mod adoption;
+#[cfg(test)]
+mod options_tests;
 mod semantic;
 mod validation;
 
@@ -360,9 +362,6 @@ impl Options {
         })
     }
 }
-
-#[cfg(test)]
-mod options_tests;
 
 fn import_output(flags: &[&str]) -> OutputOptions {
     OutputOptions {

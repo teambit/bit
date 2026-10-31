@@ -153,8 +153,12 @@ fn add_serialized(dependency: &Value, package_name: String, list: &mut Component
         });
         return;
     }
-    let Some(mut id) = id_from_object(&dependency["componentId"]) else { return };
-    id.version = Some(version).filter(|version| !version.is_empty());
+    let Some(mut id) = id_from_object(&dependency["componentId"]) else {
+        return;
+    };
+    if !version.is_empty() {
+        id.version = Some(version);
+    }
     let is_extension = dependency["isExtension"].as_bool().unwrap_or(false);
     list.components.push(component(id, package_name, lifecycle, is_extension));
 }

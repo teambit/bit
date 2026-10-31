@@ -43,13 +43,18 @@ pub(super) fn report(raw: &Value, identity: &str) -> io::Result<Report> {
     })
 }
 fn file(row: &Value) -> io::Result<Value> {
-    let path = row["testFilePath"].as_str().ok_or_else(|| invalid("test file path"))?;
+    let path = row["testFilePath"]
+        .as_str()
+        .or_else(|| row["name"].as_str())
+        .or_else(|| row["file"].as_str())
+        .ok_or_else(|| invalid("test file path"))?;
     let name = Path::new(path)
         .file_name()
         .and_then(|name| name.to_str())
         .ok_or_else(|| invalid("test file name"))?;
     let tests = row["testResults"]
         .as_array()
+        .or_else(|| row["assertionResults"].as_array())
         .ok_or_else(|| invalid("test assertions"))?
         .iter()
         .map(test)
@@ -62,10 +67,19 @@ fn file(row: &Value) -> io::Result<Value> {
 }
 fn test(row: &Value) -> Value {
     let mut value = json!({"ancestor":row["ancestorTitles"],"name":row["title"],"status":row["status"],"duration":row["duration"]});
-    if let Some(message) = row["formattedError"]
+    let message = row["formattedError"]
         .as_str()
         .filter(|message| !message.is_empty())
-    {
+        .map(str::to_owned)
+        .or_else(|| {
+            row["failureMessages"]
+                .as_array()?
+                .iter()
+                .find_map(Value::as_str)
+                .filter(|message| !message.is_empty())
+                .map(str::to_owned)
+        });
+    if let Some(message) = message {
         value[if row["status"] == "failed" { "failureErrOrStr" } else { "error" }] = json!(message);
     }
     value

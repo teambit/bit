@@ -1,5 +1,8 @@
 //! Resolve [`EngineSettings`] once per command.
 
+#[cfg(test)]
+mod tests;
+
 use super::{
     EngineSettings, LayoutSettings, PolicySettings, RegistrySettings, ResolutionSettings,
     StoreSettings, error::diagnostic, network, registries, registries::global_string,
@@ -240,6 +243,3 @@ fn peer_dependency_rules(from_config: Option<&Value>) -> Value {
     }
     rules
 }
-
-#[cfg(test)]
-mod tests;

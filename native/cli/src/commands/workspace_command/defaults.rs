@@ -2,6 +2,9 @@
 //! the engine can build its metadata. Every value is a constant of the
 //! environment, apart from the dev files.
 
+#[cfg(test)]
+mod defaults_tests;
+
 use super::{Engine, Request, checkout_scope, checkout_selection};
 use crate::commands::status::{
     cache,
@@ -208,6 +211,3 @@ pub fn file_id() -> String {
         now.second(),
     )
 }
-
-#[cfg(test)]
-mod defaults_tests;

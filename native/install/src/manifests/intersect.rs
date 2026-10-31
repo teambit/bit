@@ -3,6 +3,8 @@
 
 mod bounds;
 mod single;
+#[cfg(test)]
+mod tests;
 
 use super::semver::{Flavor, Range};
 use single::{Single, create_single, normalize};
@@ -100,6 +102,3 @@ pub(crate) fn intersect(ranges: &[&str]) -> io::Result<Option<String>> {
     let text = result.format();
     Ok(Some(if text.is_empty() { "*".to_string() } else { text }))
 }
-
-#[cfg(test)]
-mod tests;

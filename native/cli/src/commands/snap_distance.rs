@@ -166,7 +166,7 @@ fn compute_local_remote_distance(
     } else {
         let bytes = fs::read(root.path.join(".bitmap")).ok()?;
         let bitmap = bit_object_import::parse_jsonc(&bytes).ok()?;
-        if !bitmap["_bit_lane"].is_null() && bitmap["_bit_lane"]["id"]["name"] != "main" {
+        if is_on_non_main_lane(&bitmap) {
             return None;
         }
         find_bitmap_version(&bitmap, scope, name)
@@ -225,10 +225,10 @@ pub(super) fn is_component_staged_on_lane(
     if v_kind != "Version" {
         return None;
     }
-    let lane_scope = bitmap_val["_bit_lane"]["id"]["scope"].as_str()?;
-    let lane_name = bitmap_val["_bit_lane"]["id"]["name"].as_str()?;
+    let (lane_scope, lane_name) =
+        bitmap_lane_scope_and_name(bitmap_val).filter(|(sc, _)| !sc.is_empty())?;
     if let Some(remote_lane_head) =
-        read_remote_lane_head(&scope_dir, lane_scope, lane_name, scope, name)?
+        read_remote_ref_head(&scope_dir, lane_scope, lane_name, scope, name)?
     {
         return Some(remote_lane_head != local_head);
     }
@@ -236,14 +236,23 @@ pub(super) fn is_component_staged_on_lane(
     Some(remote_main.as_deref() != Some(local_head.as_str()))
 }
 
-fn read_remote_lane_head(
-    scope_dir: &Path,
-    lane_scope: &str,
-    lane_name: &str,
-    comp_scope: &str,
-    comp_name: &str,
-) -> Option<Option<String>> {
-    read_remote_ref_head(scope_dir, lane_scope, lane_name, comp_scope, comp_name)
+pub(in crate::commands) fn bitmap_lane_scope_and_name(bitmap: &Value) -> Option<(&str, &str)> {
+    let id = bitmap.get("_bit_lane")?.get("id")?;
+    if let Some(raw) = id.as_str() {
+        let bare = raw.split('@').next().unwrap_or(raw);
+        let (scope, name) = bare
+            .split_once('/')
+            .unwrap_or(("", bare));
+        return (!name.is_empty()).then_some((scope, name));
+    }
+    let name = id["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())?;
+    Some((id["scope"].as_str().unwrap_or_default(), name))
+}
+
+pub(in crate::commands) fn is_on_non_main_lane(bitmap: &Value) -> bool {
+    bitmap_lane_scope_and_name(bitmap).is_some_and(|(_, name)| name != "main")
 }
 
 fn read_remote_ref_head(
@@ -256,7 +265,7 @@ fn read_remote_ref_head(
     let Some(bytes) = read_remote_ref_bytes(scope_dir, ref_scope, ref_name)? else {
         return Some(None);
     };
-    let entries: Value = serde_json::from_slice(&bytes).ok()?;
+    let entries: Value = bit_object_import::parse_jsonc(&bytes).ok()?;
     let full = format!("{comp_scope}/{comp_name}");
     for item in entries.as_array()? {
         let item_scope = item["id"]["scope"].as_str().unwrap_or_default();

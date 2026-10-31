@@ -47,7 +47,7 @@ fn read(
         4 * 1024 * 1024,
         &mut compressed,
     )?;
-    serde_json::from_slice(&body).map_err(io::Error::other)
+    crate::parse_jsonc(&body).map_err(io::Error::other)
 }
 
 fn rekey(rows: &mut Value, identity: &str, hash: &str) -> io::Result<()> {

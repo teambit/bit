@@ -87,7 +87,7 @@ impl Retained {
                 .as_array()
                 .and_then(|rows| {
                     rows.iter()
-                        .find(|row| row["identity"] == *id)
+                        .find(|row| row_id(row) == Some(id.as_str()))
                 })
                 .map_or(Value::Bool(false), |row| row["modified"].clone());
         }
@@ -117,6 +117,7 @@ impl Retained {
         for row in &rows {
             let identity = row["identity"]
                 .as_str()
+                .or_else(|| row["id"].as_str())
                 .ok_or_else(|| io::Error::other("retained component identity"))?;
             self.rows.insert(identity.into(), row.clone());
         }
@@ -130,6 +131,12 @@ impl Retained {
         }
         Ok(rows)
     }
+}
+
+fn row_id(row: &Value) -> Option<&str> {
+    row["identity"]
+        .as_str()
+        .or_else(|| row["id"].as_str())
 }
 
 fn overlay_bytes(capture: &Capture) -> io::Result<u64> {

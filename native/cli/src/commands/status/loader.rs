@@ -47,10 +47,19 @@ pub(super) fn render(
         }
     }
     if progress.forked_count > 0 {
-        let id = progress.forked_id.as_deref().unwrap_or_default();
-        let reason = format!("for fetching lane {id}");
+        let reason = forked_lane_reason(progress.forked_id.as_deref());
         output.status(&format!("importing {} components {reason}", progress.forked_count));
         output.status(&format!("successfully imported {} objects {reason}", progress.forked_count));
     }
     Ok(())
+}
+
+fn forked_lane_reason(forked_id: Option<&str>) -> String {
+    match forked_id
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+    {
+        Some(id) => format!("for fetching lane {id}"),
+        None => "for fetching lane".to_owned(),
+    }
 }

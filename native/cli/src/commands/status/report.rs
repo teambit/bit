@@ -47,7 +47,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Flags> {
         if arg == "--" {
             return (idx + 1 == args.len()).then_some(flags);
         }
-        if arg != "--no-color" {
+        if !matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false") {
             apply_report_flag(&mut flags, &mut seen, arg)?;
         }
     }

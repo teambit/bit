@@ -35,16 +35,10 @@ fn overlay_files<'a>(
     row: &super::super::Row,
     planned: &'a planning::Planned,
 ) -> io::Result<&'a Vec<Value>> {
-    let matches = |output: &Value| {
-        output["id"]
-            .as_str()
-            .and_then(|id| id.rsplit_once('@'))
-            .is_some_and(|(id, _)| id == row.identity)
-    };
     if row.fast_forward {
         return planned.materials
             .iter()
-            .find(|material| matches(&material.output))
+            .find(|material| matches_material_identity(&material.output, &row.identity))
             .map(|material| &material.files)
             .ok_or_else(|| invalid("command FF overlay"));
     }
@@ -53,7 +47,26 @@ fn overlay_files<'a>(
         .ok_or_else(|| invalid("command merge overlay"))?
         .materials
         .iter()
-        .find(|material| matches(&material.output))
+        .find(|material| matches_material_identity(&material.output, &row.identity))
         .map(|material| &material.files)
         .ok_or_else(|| invalid("command merge overlay"))
+}
+
+fn matches_material_identity(output: &Value, identity: &str) -> bool {
+    if let Some(id) = output["id"]
+        .as_str()
+        .or_else(|| output["identity"].as_str())
+    {
+        let base = id.rsplit_once('@').map_or(id, |(base, _)| base);
+        return base == identity;
+    }
+    output["id"]["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())
+        .is_some_and(|name| {
+            output["id"]["scope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+                .map_or_else(|| name == identity, |scope| format!("{scope}/{name}") == identity)
+        })
 }

@@ -1,5 +1,8 @@
 //! Plan workspace.jsonc bytes before the checkout writes component sources.
 
+#[cfg(test)]
+mod tests;
+
 use super::{RESOLVER, invalid};
 use serde_json::{Map, Value, json};
 use std::{fs, io, path::PathBuf};
@@ -186,6 +189,3 @@ fn update_one(
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

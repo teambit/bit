@@ -58,6 +58,9 @@ fn keys(value: &mut Js) -> io::Result<Vec<Vec<u16>>> {
     let Js::Object(entries) = value else {
         return Err(invalid("inspection sortable map required"));
     };
+    if entries.len() > 4096 {
+        return Err(invalid("inspection compare row budget"));
+    }
     if entries
         .iter()
         .any(|(key, _)| {

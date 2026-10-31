@@ -2,6 +2,11 @@
 
 pub(super) use ranges::update as update_ranges;
 
+mod file;
+mod ranges;
+#[cfg(test)]
+mod tests;
+
 use super::super::{invalid, resolve_snapshot::Material};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};
@@ -76,9 +81,3 @@ fn components(
         })
         .collect::<io::Result<Vec<_>>>()
 }
-
-mod file;
-mod ranges;
-
-#[cfg(test)]
-mod tests;

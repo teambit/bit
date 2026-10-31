@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::invalid;
 use serde_json::{Value, json};
 use std::io;
@@ -13,7 +16,7 @@ pub(in crate::workspace::engine) fn validate(value: &Value) -> io::Result<()> {
             continue;
         };
         for row in rows.as_array().ok_or_else(|| invalid("Harmony dependencies"))? {
-            identity(&row["id"])?;
+            flattened_identity(&row["id"])?;
             if !row["relativePaths"].as_array().is_some_and(Vec::is_empty) {
                 return Err(invalid("Harmony relative dependency paths"));
             }
@@ -115,6 +118,3 @@ fn flattened_identity(value: &Value) -> io::Result<Value> {
     }
     identity(&value)
 }
-
-#[cfg(test)]
-mod tests;

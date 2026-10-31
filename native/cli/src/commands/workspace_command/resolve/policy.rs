@@ -1,5 +1,8 @@
 //! Snapshot policy switches, separated from selection and version grammar.
 
+#[cfg(test)]
+mod tests;
+
 use serde_json::{Value, json};
 use std::collections::HashSet;
 
@@ -129,6 +132,3 @@ impl Policy {
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

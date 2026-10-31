@@ -35,7 +35,7 @@ pub(super) fn move_object(scope: &Path, hash: &str) -> io::Result<()> {
     let existing = metadata_if_present(&target, false)?;
     check_target(&source, &target, &metadata, existing.as_ref())?;
     check_parents(&source, &target)?;
-    let parent = target.parent().unwrap();
+    let parent = target.parent().ok_or_else(|| io::Error::other("gc deleted-objects parent"))?;
     fs::create_dir_all(parent).map_err(|error| failure(error, "mkdir", parent))?;
     if existing.is_some() {
         fs::remove_file(&target).map_err(|error| failure(error, "unlink", &target))?;

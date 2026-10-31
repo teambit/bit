@@ -99,11 +99,11 @@ fn is_known_scope_or_valid_scoped_id(root: &Path, pattern: &str) -> Result<bool,
     Ok(!pattern.contains('.') && exists_in_scope_index(root, pattern))
 }
 
-fn exists_in_scope_index(root: &Path, name: &str) -> bool {
+pub(in crate::commands) fn exists_in_scope_index(root: &Path, name: &str) -> bool {
     let Ok(bytes) = fs::read(workspace::scope_path(root).join("index.json")) else {
         return false;
     };
-    let Ok(index) = serde_json::from_slice::<Value>(&bytes) else {
+    let Ok(index) = bit_object_import::parse_jsonc(&bytes) else {
         return false;
     };
     index["components"]
@@ -112,15 +112,21 @@ fn exists_in_scope_index(root: &Path, name: &str) -> bool {
         .is_some_and(|components| {
             components
                 .iter()
-                .any(|item| {
-                    item["isSymlink"] != true
-                        && (item["id"]["name"].as_str() == Some(name)
-                            || item["id"]
-                                .as_str()
-                                .and_then(|id| id.split_once('/'))
-                                .is_some_and(|(_, item_name)| item_name == name))
-                })
+                .any(|item| item["isSymlink"] != true && row_has_name(item, name))
         })
+}
+
+pub(in crate::commands) fn row_has_name(row: &Value, name: &str) -> bool {
+    row["id"]["name"].as_str() == Some(name)
+        || row["id"]
+            .as_str()
+            .map(|raw| raw.split('@').next().unwrap_or(raw))
+            .is_some_and(|bare| {
+                bare == name
+                    || bare
+                        .split_once('/')
+                        .is_some_and(|(_, nm)| nm == name)
+            })
 }
 
 pub(in crate::commands) fn valid_id_chunk(chunk: &str) -> bool {

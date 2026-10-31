@@ -1,4 +1,6 @@
 //! Resolver policy precedence and npm `minVersion` range deduplication.
+#[cfg(test)]
+mod tests;
 use super::invalid;
 use node_semver::npm;
 use serde_json::{Map, Value, json};
@@ -116,9 +118,6 @@ fn array(value: &Value) -> io::Result<&[Value]> {
         .map(Vec::as_slice)
         .ok_or_else(|| invalid("inbound dependency metadata array"))
 }
-
-#[cfg(test)]
-mod tests;
 
 fn push(rows: &mut Vec<Value>, row: Value) -> io::Result<()> {
     if rows.len() >= 65536 {

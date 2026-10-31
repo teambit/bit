@@ -1,4 +1,7 @@
 mod previous;
+#[cfg(test)]
+mod tests;
+
 use super::{
     super::{invalid, repository::Repository},
     projection,
@@ -117,9 +120,6 @@ fn key(id: &Value) -> io::Result<String> {
         .ok_or_else(|| invalid("command graph version"))?;
     Ok(format!("{scope}/{name}@{version}"))
 }
-
-#[cfg(test)]
-mod tests;
 
 pub(super) fn validate_previous(
     rows: &[super::Row],

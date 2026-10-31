@@ -1,5 +1,8 @@
 //! Links from the workspace to the running bit installation (`dependency-linker.ts`).
 
+#[cfg(test)]
+mod tests;
+
 use super::link_fs::{LinkKind, create_link_or_symlink, is_symlink, may_link_target, remove_path};
 use crate::{
     host::{CoreAspect, HostInfo},
@@ -311,6 +314,3 @@ fn link_source(link: &str) -> io::Result<PathBuf> {
             io::Error::new(io::ErrorKind::InvalidInput, format!("not a link: specifier: {link}"))
         })
 }
-
-#[cfg(test)]
-mod tests;

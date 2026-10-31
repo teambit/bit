@@ -65,11 +65,11 @@ pub(super) fn prepare(policy: &mut Prepared, root: &Path) -> io::Result<Vec<Valu
 }
 
 fn aspect_text(input: &Value, row: &Value) -> io::Result<String> {
-    let id = row["id"].as_str().ok_or_else(|| invalid("command config conflict identity"))?;
+    let id = aspect_identity(row)?;
     let body = if row["conflict"]["kind"] == "deps" {
-        dependency(input, id, &row["conflict"]["value"])?
+        dependency(input, &id, &row["conflict"]["value"])?
     } else {
-        basic(input, id, &row["conflict"])?
+        basic(input, &id, &row["conflict"])?
     };
     Ok(body
         .lines()
@@ -85,6 +85,31 @@ fn aspect_text(input: &Value, row: &Value) -> io::Result<String> {
         })
         .collect::<Vec<_>>()
         .join("\n"))
+}
+
+fn aspect_identity(row: &Value) -> io::Result<String> {
+    for field in ["id", "extensionId", "name"] {
+        if let Some(id) = row[field]
+            .as_str()
+            .filter(|id| !id.is_empty())
+        {
+            return Ok(id.to_owned());
+        }
+        if let Some(name) = row[field]["name"]
+            .as_str()
+            .filter(|name| !name.is_empty())
+        {
+            let base = row[field]["scope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+                .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
+            return Ok(row[field]["version"]
+                .as_str()
+                .filter(|version| !version.is_empty())
+                .map_or_else(|| base.clone(), |version| format!("{base}@{version}")));
+        }
+    }
+    Err(invalid("command config conflict identity"))
 }
 
 fn dependency(input: &Value, id: &str, conflict: &Value) -> io::Result<String> {

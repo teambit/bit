@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{error, observe::Observed, unsupported};
 use std::{
     collections::HashSet,
@@ -167,6 +170,3 @@ fn outside_path(root: &Path, path: &Path) -> String {
     }
     relative.to_string_lossy().into_owned()
 }
-
-#[cfg(test)]
-mod tests;

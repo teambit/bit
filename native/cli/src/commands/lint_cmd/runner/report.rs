@@ -54,11 +54,26 @@ fn text(result: &Value, progress: &Progress, chalk: Chalk, elapsed: u64) -> io::
 
 fn component(row: &Value, formatter: &Formatter) -> io::Result<String> {
     let id = &row["componentId"];
-    let scope = id["_legacy"]["scope"]
-        .as_str()
-        .or_else(|| id["_scope"].as_str())
-        .ok_or_else(|| invalid("linter report scope"))?;
-    let name = id["_legacy"]["name"].as_str().ok_or_else(|| invalid("linter report name"))?;
+    let (scope, name) = if let Some(raw) = id.as_str() {
+        raw.rsplit_once('@')
+            .map_or(raw, |(bare, _)| bare)
+            .split_once('/')
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid("linter report scope"))?
+    } else {
+        let scope = id["_legacy"]["scope"]
+            .as_str()
+            .or_else(|| id["_scope"].as_str())
+            .or_else(|| id["scope"].as_str())
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| invalid("linter report scope"))?;
+        let name = id["_legacy"]["name"]
+            .as_str()
+            .or_else(|| id["name"].as_str())
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("linter report name"))?;
+        (scope, name)
+    };
     let output = row["output"].as_str().ok_or_else(|| invalid("linter report output"))?;
     Ok(format!(
         "{}\n{output}",

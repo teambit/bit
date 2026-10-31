@@ -1,4 +1,6 @@
 //! Native destination paths and Bit's slash-separated file identities use different separators.
+#[cfg(test)]
+mod tests;
 use super::invalid;
 use std::{
     fs, io,
@@ -42,6 +44,3 @@ fn canonical_relative(path: &Path) -> io::Result<()> {
         .collect::<io::Result<Vec<_>>>()?;
     crate::checkout::plan::relative_path(&segments.join("/"))
 }
-
-#[cfg(test)]
-mod tests;

@@ -97,6 +97,6 @@ impl Writer {
 
     fn indent(&mut self, depth: usize) -> io::Result<()> {
         self.bytes(b"\n")?;
-        self.bytes(&vec![b' '; depth * self.spaces])
+        self.bytes(&vec![b' '; depth.saturating_mul(self.spaces.min(10))])
     }
 }

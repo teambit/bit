@@ -30,7 +30,7 @@ impl Scope {
     pub(super) fn finish(mut self) -> Trace {
         let trace = ACTIVE
             .with(|active| active.replace(self.previous.take()))
-            .expect("merge read scope");
+            .unwrap_or_default();
         self.finished = true;
         trace
     }

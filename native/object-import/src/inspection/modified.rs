@@ -40,6 +40,10 @@ pub(crate) fn modified(
                 .any(|file| {
                     models
                         .get(&file.relative_path)
-                        .is_none_or(|model| model.hash != file.linux_hash)
+                        .is_none_or(|model| !same_hash(&model.hash, &file.linux_hash))
                 })))
+}
+
+fn same_hash(left: &str, right: &str) -> bool {
+    left.trim().eq_ignore_ascii_case(right.trim())
 }

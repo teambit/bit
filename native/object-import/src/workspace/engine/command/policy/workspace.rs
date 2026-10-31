@@ -97,11 +97,10 @@ fn remove_rows(rows: &mut [Value], removed: &[Value]) {
                 .as_array()
                 .is_some_and(|entries| !entries.is_empty())
         });
-        if policy.is_empty() {
-            entry
-                .as_object_mut()
-                .unwrap()
-                .remove("conflict");
+        if policy.is_empty()
+            && let Some(object) = entry.as_object_mut()
+        {
+            object.remove("conflict");
         }
     }
 }

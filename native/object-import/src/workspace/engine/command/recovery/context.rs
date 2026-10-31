@@ -1,3 +1,7 @@
+mod guards;
+#[cfg(test)]
+mod tests;
+
 use super::{
     super::{
         Record, State, history, input, invalid, prepare as command_prepare, proof, repository,
@@ -142,10 +146,13 @@ fn attach(
     bitmap_configs: &std::collections::HashMap<String, Value>,
 ) -> io::Result<()> {
     if let Some(header) = bitmap.get("_bit_lane") {
-        if !header["id"]["scope"].is_string() || !header["id"]["name"].is_string() {
+        let Some((scope, name)) =
+            super::super::inbound::remote::file_list::row_scoped_id_parts(header)
+        else {
             return Err(invalid("recovery lane header"));
-        }
-        context["lane"] = json!({"currentId":header["id"],"targets":[],"additions":[]});
+        };
+        context["lane"] =
+            json!({"currentId":{"scope":scope,"name":name},"targets":[],"additions":[]});
     }
     for target in
         context["targets"].as_array_mut().ok_or_else(|| invalid("recovery context targets"))?
@@ -291,7 +298,3 @@ fn pending_id(row: &Value) -> Option<String> {
     }
     Some(format!("{}/{}", row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?))
 }
-#[cfg(test)]
-mod tests;
-
-mod guards;

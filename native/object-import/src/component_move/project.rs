@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{Observed, Value, invalid, paths, unsupported};
 use serde_json::json;
 use std::{io, path::Path};
@@ -95,6 +98,3 @@ fn id(key: &str, identity: &str, row: &Value) -> String {
 fn matches_from(file: &str, from: &str, windows: bool) -> bool {
     if windows { file.replace('/', r"\").starts_with(from) } else { file.starts_with(from) }
 }
-
-#[cfg(test)]
-mod tests;

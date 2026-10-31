@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "journal_tests.rs"]
+mod tests;
+
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};
@@ -177,7 +181,3 @@ fn bound(count: usize) -> io::Result<()> {
     }
     Ok(())
 }
-
-#[cfg(test)]
-#[path = "journal_tests.rs"]
-mod tests;

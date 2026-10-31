@@ -30,19 +30,27 @@ fn env_dependencies(
     env_id: &str,
     workspace_deps: &DependencyMap,
 ) -> DependencyMap {
-    let Some(policy) = input.policies.envs.get(env_id).filter(|policy| !policy.default_env) else {
+    let trimmed = env_id.trim();
+    let policy = input.policies.envs
+        .get(trimmed)
+        .or_else(|| input.policies.envs.get(without_version(trimmed)))
+        .filter(|policy| !policy.default_env);
+    let Some(policy) = policy else {
         return DependencyMap::new();
     };
     policy.self_policy
         .iter()
-        .filter(|entry| entry.force && entry.version != "-")
+        .filter(|entry| {
+            let version = entry.version.trim();
+            entry.force && !version.is_empty() && version != "-"
+        })
         .map(|entry| {
             let version = bit_object_import::plus_version::resolve(
-                &entry.version,
-                workspace_deps.get(&entry.name).map(String::as_str),
+                entry.version.trim(),
+                workspace_deps.get(entry.name.trim()).map(String::as_str),
                 "*",
             );
-            (entry.name.clone(), version)
+            (entry.name.trim().to_owned(), version)
         })
         .collect()
 }

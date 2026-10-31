@@ -45,10 +45,11 @@ impl Queue {
     }
     // Completed eligible paths remain charged while retained in the result.
     pub(super) fn release(&mut self, path: &[String]) {
-        self.nodes -= path.len();
-        self.bytes -= path
+        self.nodes = self.nodes.saturating_sub(path.len());
+        let path_bytes = path
             .iter()
             .map(String::len)
-            .sum::<usize>();
+            .fold(0_usize, usize::saturating_add);
+        self.bytes = self.bytes.saturating_sub(path_bytes);
     }
 }

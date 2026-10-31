@@ -143,11 +143,11 @@ fn active_lane_object(root: &ScopeRoot, scope_dir: &Path) -> Option<Value> {
     }
     let bitmap =
         bit_install::jsonc::parse(&fs::read_to_string(root.path.join(".bitmap")).ok()?).ok()?;
-    let lane_id = &bitmap["_bit_lane"]["id"];
-    let name = lane_id["name"]
-        .as_str()
-        .filter(|val| !val.is_empty() && *val != "main")?;
-    let lane_key = format!("{}/{name}", lane_id["scope"].as_str()?);
+    let (scope, name) = index_row_scope_and_name(&bitmap["_bit_lane"]);
+    if scope.is_empty() || name.is_empty() || name == "main" {
+        return None;
+    }
+    let lane_key = format!("{scope}/{name}");
     let (_, _, lane_hash) = resolve_lane_entry(scope_dir, &lane_key)?;
     let (kind, lane_val) = bit_object_import::read_scope_object(scope_dir, &lane_hash).ok()??;
     (kind == "Lane").then_some(lane_val)
@@ -196,12 +196,14 @@ pub(in crate::commands) fn resolve_lane_entry(
     }
     let matches = lanes
         .iter()
-        .filter(|row| row["id"]["name"].as_str() == Some(id))
+        .filter(|row| index_row_scope_and_name(row).1 == id)
         .collect::<Vec<_>>();
     let [row] = matches.as_slice() else {
         return None;
     };
-    Some((row["id"]["scope"].as_str()?.to_owned(), id.to_owned(), row["hash"].as_str()?.to_owned()))
+    let (scope, _) = index_row_scope_and_name(row);
+    (!scope.is_empty()).then_some(())?;
+    Some((scope.to_owned(), id.to_owned(), row["hash"].as_str()?.to_owned()))
 }
 
 fn find_lane_in_index(
@@ -211,9 +213,7 @@ fn find_lane_in_index(
 ) -> Option<(String, String, String)> {
     let row = lanes
         .iter()
-        .find(|row| {
-            row["id"]["scope"].as_str() == Some(scope) && row["id"]["name"].as_str() == Some(name)
-        })?;
+        .find(|row| index_row_scope_and_name(row) == (scope, name))?;
     Some((scope.to_owned(), name.to_owned(), row["hash"].as_str()?.to_owned()))
 }
 
@@ -327,7 +327,7 @@ pub(in crate::commands) fn diagnose_unscoped_lane_error(
 ) -> Option<String> {
     match lanes
         .iter()
-        .filter(|row| row["id"]["name"].as_str() == Some(id))
+        .filter(|row| index_row_scope_and_name(row).1 == id)
         .count()
     {
         0 => Some(format!(

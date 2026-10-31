@@ -1,5 +1,8 @@
 //! Detection issue classes from `@teambit/component-issues` 2.2.94.
 
+#[cfg(test)]
+mod tests;
+
 use super::{SPACE, array, decline, format::list_or_text, text};
 use serde_json::{Value, json};
 use std::io;
@@ -237,9 +240,6 @@ fn load_failures(data: &Value) -> io::Result<String> {
         .collect::<io::Result<Vec<_>>>()
         .map(|rows| rows.join("\n"))
 }
-
-#[cfg(test)]
-mod tests;
 
 fn component_id(original: &Value) -> io::Result<Value> {
     let mut id = json!({"_legacy":legacy(original)?});

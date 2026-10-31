@@ -31,7 +31,7 @@ fn current(path: &Path, fresh: bool) -> io::Result<Value> {
         return Ok(Value::Null);
     }
     match fs::read(path.join("scope.json")) {
-        Ok(bytes) => Ok(serde_json::from_slice(&bytes)?),
+        Ok(bytes) => Ok(bit_object_import::parse_jsonc(&bytes)?),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Value::Null),
         Err(error) => Err(error),
     }

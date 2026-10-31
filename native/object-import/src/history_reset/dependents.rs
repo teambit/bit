@@ -31,13 +31,13 @@ pub(super) fn index(input: Value) -> io::Result<Value> {
     }
     let excluded: HashSet<_> = request.exclude
         .iter()
-        .map(String::as_str)
+        .map(|id| id.trim())
         .collect();
     let dependents: Vec<_> = request.queries
         .iter()
         .map(|id| {
             incoming
-                .get(id.as_str())
+                .get(id.trim())
                 .cloned()
                 .unwrap_or_default()
         })
@@ -76,13 +76,14 @@ fn incoming(rows: &[Row]) -> io::Result<HashMap<&str, Vec<&str>>> {
     let mut edges = 0;
     for row in rows {
         text(&row.id)?;
+        let row_id = row.id.trim();
         for dependency in &row.dependencies {
             text(dependency)?;
             edges += 1;
             bound(edges)?;
-            let entries = incoming.entry(dependency).or_default();
-            if !entries.contains(&row.id.as_str()) {
-                entries.push(&row.id);
+            let entries = incoming.entry(dependency.trim()).or_default();
+            if !entries.contains(&row_id) {
+                entries.push(row_id);
             }
         }
     }

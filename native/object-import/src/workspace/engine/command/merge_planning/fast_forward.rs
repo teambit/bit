@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{
     Action, Prepared, Record, Selected, invalid,
     merge::{self, snapshot::local_model as model},
@@ -85,6 +88,3 @@ fn add_material(
     planned.directories.push(directory);
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

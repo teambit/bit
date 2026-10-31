@@ -1,11 +1,11 @@
 //! Import finalization after bitmap publication and actual workspace class loads.
+mod aggregate;
+mod publication;
+
 use super::{State, invalid, requested_target};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
-
-mod aggregate;
-mod publication;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

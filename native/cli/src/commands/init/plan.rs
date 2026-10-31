@@ -88,19 +88,19 @@ fn plan_scope(
 }
 
 fn scope_name(options: &Options, cwd: &Path) -> io::Result<String> {
-    let name = options.bare
-        .as_deref()
-        .filter(|name| !name.is_empty())
-        .map(str::to_owned)
-        .unwrap_or(if options.bare.is_some() {
-            cwd.file_name()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .into_owned()
-        } else {
-            scope::local_name(cwd)?
-        });
-    Ok(name)
+    if let Some(bare) = options.bare.as_deref() {
+        let fallback = cwd
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy();
+        return Ok(resolve_bare_scope_name(bare, &fallback));
+    }
+    scope::local_name(cwd)
+}
+
+fn resolve_bare_scope_name(bare: &str, fallback: &str) -> String {
+    let trimmed = bare.trim();
+    if trimmed.is_empty() { fallback.trim().to_owned() } else { trimmed.to_owned() }
 }
 
 fn locate(start: &Path) -> Option<PathBuf> {

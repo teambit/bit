@@ -60,6 +60,21 @@ pub struct HostInfo {
     pub token: Option<String>,
 }
 
+impl HostInfo {
+    #[must_use]
+    pub fn should_write_to_console(&self) -> bool {
+        self.write_to_console.unwrap_or(self.loader)
+    }
+
+    #[must_use]
+    pub fn bearer_token(&self) -> Option<&str> {
+        self.token
+            .as_deref()
+            .map(str::trim)
+            .filter(|token| !token.is_empty())
+    }
+}
+
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CoreAspect {

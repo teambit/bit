@@ -85,7 +85,7 @@ fn resolve_model_version<'a>(model: &'a Value, id: &'a str) -> Option<&'a str> {
 fn model_hash(plan: &mut Plan, id: &str) -> io::Result<Option<String>> {
     let index_path = crate::scope_path(&plan.root).join("index.json");
     let bytes = plan.proofs.read(&index_path)?.ok_or_else(|| invalid("scope index missing"))?;
-    let index: Value = serde_json::from_slice(&bytes)?;
+    let index: Value = crate::parse_jsonc(&bytes)?;
     let bare = id.rsplit_once('@').map_or(id, |(bare_id, _)| bare_id);
     let found = index["components"]
         .as_array()
@@ -98,8 +98,9 @@ fn matches_indexed_component(row: &Value, bare: &str) -> bool {
     let (scope_part, name_part) = bare
         .split_once('/')
         .unwrap_or(("", bare));
-    let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
-    let row_name = row["id"]["name"].as_str().unwrap_or_default();
+    let (row_scope, row_name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
+            .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default(), nm));
     row["isSymlink"] != true
         && ((row_name == name_part
             && (row_scope.is_empty() || scope_part.is_empty() || row_scope == scope_part))

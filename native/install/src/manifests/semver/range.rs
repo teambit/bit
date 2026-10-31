@@ -70,10 +70,16 @@ fn simplify_v7(set: Vec<Vec<Comparator>>) -> Vec<Vec<Comparator>> {
     if set.len() <= 1 {
         return set;
     }
-    let first = set[0].clone();
+    let Some(first) = set.first().cloned() else {
+        return set;
+    };
     let set: Vec<_> = set
         .into_iter()
-        .filter(|comps| comps[0].value != NULL_SET)
+        .filter(|comps| {
+            comps
+                .first()
+                .is_none_or(|comp| comp.value != NULL_SET)
+        })
         .collect();
     if set.is_empty() {
         return vec![first];
@@ -157,9 +163,9 @@ impl Range {
 }
 
 fn all_intersect(this: &[Comparator], that: &[Comparator]) -> io::Result<bool> {
-    for a in this {
-        for b in that {
-            if !a.intersects(b)? {
+    for left in this {
+        for right in that {
+            if !left.intersects(right)? {
                 return Ok(false);
             }
         }

@@ -1,6 +1,9 @@
 //! chalk 4.1.2 as the Node.js CLI's process sets it up: whether stdout gets
 //! colors (`supports-color` 7.2.0), and how `chalk.red`/`green`/`bold` wrap text.
 
+#[cfg(test)]
+mod color_tests;
+
 use std::{
     env,
     ffi::OsString,
@@ -264,6 +267,3 @@ fn teamcity_supports_color(version: &str) -> bool {
             .next()
             .is_some_and(|character| character != '0')
 }
-
-#[cfg(test)]
-mod color_tests;

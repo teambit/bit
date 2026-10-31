@@ -2,6 +2,9 @@
 //! `disableExternalPackageManagerMode` and `writeDependenciesToPackageJson` of
 //! `install.main.runtime.ts`.
 
+#[cfg(test)]
+mod tests;
+
 use super::{
     calculate,
     session::{Loaded, Session},
@@ -50,7 +53,7 @@ fn write_package_json_dependencies(root: &Path, dependencies: &DependencyMap) ->
     let mut manifest = if text.is_empty() {
         Value::Object(Map::new())
     } else {
-        serde_json::from_str(&text)
+        crate::jsonc::parse(&text)
             .map_err(|error| {
                 io::Error::other(format!(
                     "failed parsing package.json file at . original error: {error}",
@@ -139,7 +142,7 @@ fn disable_in_config(document: &mut Document) {
 fn remove_postinstall_script(root: &Path) -> io::Result<()> {
     let path = root.join("package.json");
     let Ok(text) = fs::read_to_string(&path) else { return Ok(()) };
-    let mut manifest: Value = serde_json::from_str(&text).map_err(io::Error::other)?;
+    let mut manifest: Value = crate::jsonc::parse(&text).map_err(io::Error::other)?;
     let Some(scripts) = manifest.get_mut("scripts").and_then(Value::as_object_mut) else {
         return Ok(());
     };
@@ -156,6 +159,3 @@ fn remove_postinstall_script(root: &Path) -> io::Result<()> {
     written.push('\n');
     fs::write(&path, written)
 }
-
-#[cfg(test)]
-mod tests;

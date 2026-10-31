@@ -3,7 +3,8 @@ pub(super) fn render(plan: &Plan, options: &Options<'_>, undo: bool, format: &Fo
     let changed = plan.changed();
     let unchanged = plan.unchanged();
     let verb = if undo { "undeprecated" } else { "deprecated" };
-    if let Some(report) = range_report(plan, options, format) {
+    let unchanged_state = if undo { "not currently deprecated" } else { "already deprecated" };
+    if let Some(report) = range_report(plan, options, verb, unchanged_state, format) {
         return report;
     }
     if changed.len() == 1 && unchanged.is_empty() {
@@ -12,7 +13,6 @@ pub(super) fn render(plan: &Plan, options: &Options<'_>, undo: bool, format: &Fo
             changed[0],
         ));
     }
-    let unchanged_state = if undo { "not currently deprecated" } else { "already deprecated" };
     if changed.is_empty() {
         return format.hint(&format!(
             r#"all {} component(s) matching "{}" are {unchanged_state}. no changes have been made"#,
@@ -53,19 +53,36 @@ fn sections(
     ])
 }
 
-fn range_report(plan: &Plan, options: &Options<'_>, format: &Formatter) -> Option<String> {
-    let range = options.range.filter(|value| !value.is_empty())?;
-    let changed = plan.changed();
-    let unchanged = plan.unchanged();
+fn range_report(
+    plan: &Plan,
+    options: &Options<'_>,
+    verb: &str,
+    unchanged_state: &str,
+    format: &Formatter,
+) -> Option<String> {
+    let range = options.range
+        .map(str::trim)
+        .filter(|value| !value.is_empty())?;
+    format_range_summary(plan.changed(), plan.unchanged(), range, verb, unchanged_state, format)
+}
+
+fn format_range_summary(
+    changed: &[String],
+    unchanged: &[String],
+    range: &str,
+    verb: &str,
+    unchanged_state: &str,
+    format: &Formatter,
+) -> Option<String> {
     if changed.len() == 1 && unchanged.is_empty() {
         return Some(format.success_summary(&format!(
-            r#"versions of "{}" matching the range "{range}" have been deprecated successfully"#,
+            r#"versions of "{}" matching the range "{range}" have been {verb} successfully"#,
             changed[0],
         )));
     }
     if changed.is_empty() && unchanged.len() == 1 {
         return Some(format.hint(&format!(
-            r#"the range "{range}" of "{}" is already deprecated. no changes have been made"#,
+            r#"the range "{range}" of "{}" is {unchanged_state}. no changes have been made"#,
             unchanged[0],
         )));
     }

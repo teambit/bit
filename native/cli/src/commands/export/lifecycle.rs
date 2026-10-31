@@ -163,7 +163,7 @@ fn root_aspects(context: &Value) -> io::Result<bool> {
 }
 
 fn external_resolver(root: &Path) -> io::Result<bool> {
-    let config: Value = serde_json::from_slice(&std::fs::read(
+    let config: Value = bit_object_import::parse_jsonc(&std::fs::read(
         bit_object_import::scope_path(root).join("scope.json"),
     )?)?;
     Ok(config["resolverPath"]

@@ -1,5 +1,8 @@
 //! `addToRootPolicy` + `updateConfigPolicy` + `persistConfig('install')`.
 
+#[cfg(test)]
+mod tests;
+
 use super::super::{
     session::{Loaded, Session},
     workspace_jsonc,
@@ -193,6 +196,3 @@ fn update_config_policy(document: &mut Document, fields: &[IndexMap<String, Valu
         document.set(&[&key, "linkCoreAspects"], &json!(true));
     }
 }
-
-#[cfg(test)]
-mod tests;

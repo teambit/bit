@@ -44,6 +44,18 @@ fn row(index: usize, component: &Value, components: &[Value]) -> io::Result<Valu
         json!({"index":index,"dependencies":dependencies,"extensions":extensions,"resolver":resolver}),
     )
 }
+fn normalize_component_id(id: &Value, version: String) -> io::Result<Value> {
+    let mut normalized = id.clone();
+    if normalized.is_object() {
+        normalized["version"] = Value::String(version);
+        return Ok(normalized);
+    }
+    let key = autotag::identity(&normalized)?;
+    if let Some((scope, name)) = key.split_once('/') {
+        normalized = json!({"scope": scope, "name": name, "version": version});
+    }
+    Ok(normalized)
+}
 fn resolver_rows(component: &Value, components: &[Value]) -> io::Result<Vec<Value>> {
     let mut output = Vec::new();
     for (index, dependency) in array(component, "resolver")?.iter().enumerate() {
@@ -53,11 +65,11 @@ fn resolver_rows(component: &Value, components: &[Value]) -> io::Result<Vec<Valu
         let id = dependency
             .get("componentId")
             .ok_or_else(|| invalid("snapshot resolver component ID missing"))?;
-        let mut normalized = id.clone();
         let target = target(id, components)?;
-        if let Some(target) = target {
-            normalized["version"] = components[target]["id"]["version"].clone();
-        }
+        let normalized = match target {
+            Some(idx) => normalize_component_id(id, target_version(&components[idx]["id"])?)?,
+            None => id.clone(),
+        };
         let mut patch = json!({"index":index,"id":normalized});
         if let Some(target) = target {
             patch["target"] = json!(target);
@@ -65,6 +77,18 @@ fn resolver_rows(component: &Value, components: &[Value]) -> io::Result<Vec<Valu
         output.push(patch);
     }
     Ok(output)
+}
+fn target_version(id: &Value) -> io::Result<String> {
+    id["version"]
+        .as_str()
+        .or_else(|| id["head"].as_str())
+        .or_else(|| {
+            id.as_str()
+                .and_then(|raw| raw.rsplit_once('@').map(|(_, ver)| ver))
+        })
+        .filter(|version| !version.is_empty())
+        .map(str::to_owned)
+        .ok_or_else(|| invalid("snapshot target version missing"))
 }
 fn target(id: &Value, components: &[Value]) -> io::Result<Option<usize>> {
     let key = autotag::identity(id)?;
@@ -93,13 +117,11 @@ fn dependency_rows(component: &Value, components: &[Value]) -> io::Result<Vec<Va
     for (index, dependency) in array(component, "dependencies")?.iter().enumerate() {
         if let Some(target) = target(&dependency["id"], components)? {
             let mut patch = json!({"index":index,"target":target});
-            let version = components[target]["id"]["version"]
-                .as_str()
-                .ok_or_else(|| invalid("snapshot target version missing"))?;
+            let version = target_version(&components[target]["id"])?;
             if let Some(prefix) = component["rangePrefix"]
                 .as_str()
                 .filter(|prefix| matches!(*prefix, "^" | "~"))
-                && !is_snap(version)
+                && !is_snap(&version)
             {
                 patch["versionRange"] = json!(format!("{prefix}{version}"));
             }

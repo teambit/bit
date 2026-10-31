@@ -1,6 +1,16 @@
 use super::{decision::boolean, invalid};
 use serde_json::{Value, json};
 use std::io;
+fn relative_path(file: &Value) -> io::Result<&str> {
+    file.as_str()
+        .or_else(|| file["relativePath"].as_str())
+        .or_else(|| file["path"].as_str())
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| invalid("merge current relative path"))
+}
+fn removed_entry(file: &Value, path: &str) -> Value {
+    if file["path"].is_null() { Value::String(path.to_owned()) } else { file["path"].clone() }
+}
 pub(super) fn apply(input: &Value, current: &[Value]) -> io::Result<Value> {
     let mut statuses = input["filesStatus"]
         .as_array()
@@ -13,14 +23,9 @@ pub(super) fn apply(input: &Value, current: &[Value]) -> io::Result<Value> {
     }
     let root = boolean(input, "workspaceRoot")?;
     for file in current {
-        let path =
-            file["relativePath"].as_str().ok_or_else(|| invalid("merge current relative path"))?;
-        if root && path == ".bitmap" {
-            continue;
-        }
-        let status = status(&mut statuses, path)?;
-        if status == "removed" {
-            removed.push(file["path"].clone());
+        let path = relative_path(file)?;
+        if !(root && path == ".bitmap") && status(&mut statuses, path)? == "removed" {
+            removed.push(removed_entry(file, path));
         }
     }
     Ok(json!({"filesStatus":statuses,"removals":removed}))
@@ -29,7 +34,7 @@ pub(super) fn apply(input: &Value, current: &[Value]) -> io::Result<Value> {
 fn status<'a>(statuses: &'a mut Vec<Value>, path: &str) -> io::Result<&'a str> {
     let found = statuses
         .iter()
-        .position(|row| row["relativePath"] == path);
+        .position(|row| row["relativePath"] == path || row["path"] == path);
     let status = if let Some(index) = found {
         statuses[index]["status"].as_str().ok_or_else(|| invalid("merge file status"))?
     } else {

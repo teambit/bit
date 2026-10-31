@@ -43,15 +43,17 @@ fn git(key: &str) -> String {
         return String::new();
     };
     let text = String::from_utf8_lossy(&output.stdout);
+    parse_git_config(&text, key)
+}
+
+fn parse_git_config(text: &str, key: &str) -> String {
     text.lines()
         .filter_map(|line| {
-            let mut parts = line.split('=');
-            (parts.next()? == key).then(|| {
-                parts
-                    .next()
-                    .unwrap_or_default()
-                    .to_owned()
-            })
+            let (entry_key, entry_val) = line.split_once('=')?;
+            entry_key
+                .trim()
+                .eq_ignore_ascii_case(key.trim())
+                .then(|| entry_val.to_owned())
         })
         .next_back()
         .unwrap_or_default()

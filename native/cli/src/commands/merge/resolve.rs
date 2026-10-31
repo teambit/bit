@@ -45,7 +45,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
             consume_trailing_resolve(&args[index..], &mut options)?;
             break;
         }
-        if raw == "--no-color" {
+        if matches!(raw, "--no-color" | "--no-color=true" | "--no-color=false") {
             continue;
         }
         if !raw.starts_with('-') {

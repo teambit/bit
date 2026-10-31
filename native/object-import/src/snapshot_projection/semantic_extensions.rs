@@ -68,12 +68,10 @@ pub(super) fn dependencies(value: &Value) -> io::Result<Value> {
 
 fn id(row: &Value) -> io::Result<String> {
     object(row)?;
-    if get(row, "extensionId").truthy()? {
-        return component_id(get(row, "extensionId"));
-    }
-    for name in ["name", "legacyId"] {
-        if get(row, name).truthy()? {
-            return text(get(row, name));
+    for key in ["extensionId", "name", "legacyId"] {
+        let field = get(row, key);
+        if field.truthy()? {
+            return component_id(field).or_else(|_| text(field));
         }
     }
     Ok(String::new())

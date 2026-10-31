@@ -179,14 +179,17 @@ fn finish_capture(
         .map_err(|_| io::Error::other("identity capture host still borrowed"))?;
     *environment = Some(Environments::from_host(host).for_checkout());
     for row in &mut loaded.capture.captured {
+        let row_id = row_identity(row);
         if let Some(component) = loaded.capture.components
             .iter()
             .find(|component| {
-                row["identity"]
-                    == component.identity
-                        .split('@')
-                        .next()
-                        .unwrap_or(&component.identity)
+                row_id
+                    == Some(
+                        component.identity
+                            .split('@')
+                            .next()
+                            .unwrap_or(&component.identity),
+                    )
             })
         {
             row["packageName"] = json!(component.package_name);
@@ -207,7 +210,7 @@ pub(super) fn capture_consumer(
     let mut loaded = prepare_with(root, bitmap, identities, environment, stdout, false)?;
     let histories: Value = loaded.engine.request(&json!({"kind":"statusModels","root":root,"history":true,"stageHistory":true,"historyTargetsOnly":true,"includeHeads":true,
         "currentLaneId":loaded.projection.context["currentLaneId"],
-        "targets":loaded.projection.selected.iter().map(|row|json!({"identity":row["identity"],"version":row["version"]})).collect::<Vec<_>>()}))?;
+        "targets":loaded.projection.selected.iter().map(|row|json!({"identity":row_identity(row),"version":row["version"]})).collect::<Vec<_>>()}))?;
     loaded.projection.context["pendingHistory"] = histories
         .get("pendingHistory")
         .cloned()
@@ -226,11 +229,12 @@ pub(super) fn capture_consumer(
     let compared: Value =
         loaded.engine.request(&json!({"kind":"statusCompare","root":root,"targets":targets}))?;
     for row in &mut loaded.capture.captured {
+        let row_id = row_identity(row);
         row["modified"] = compared["comparisons"]
             .as_array()
             .and_then(|rows| {
                 rows.iter()
-                    .find(|other| other["identity"] == row["identity"])
+                    .find(|other| row_identity(other) == row_id)
             })
             .map_or(Value::Bool(false), |row| row["modified"].clone());
     }
@@ -243,9 +247,10 @@ pub(super) fn enrich(loaded: &mut Loaded) -> io::Result<()> {
         &loaded.projection.context,
     )?;
     for row in rows {
+        let row_id = row_identity(&row);
         let current = loaded.capture.captured
             .iter_mut()
-            .find(|current| current["identity"] == row["identity"])
+            .find(|current| row_identity(current) == row_id)
             .ok_or_else(|| io::Error::other("cached hydration identity"))?;
         current
             .as_object_mut()
@@ -257,6 +262,13 @@ pub(super) fn enrich(loaded: &mut Loaded) -> io::Result<()> {
             );
     }
     Ok(())
+}
+
+fn row_identity(row: &Value) -> Option<&str> {
+    row["identity"]
+        .as_str()
+        .or_else(|| row["id"].as_str())
+        .map(|id| id.split('@').next().unwrap_or(id))
 }
 
 /// `NodeModuleLinker` clears loaded classes when generated package metadata changes.

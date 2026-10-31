@@ -135,20 +135,25 @@ fn in_fields(fields: &FieldMaps, name: &str) -> bool {
 /// coerced version of a range.
 #[must_use]
 pub fn valid_component_version(version: &str) -> Option<String> {
-    if let Some(hash) = version.strip_prefix("0.0.0-")
+    let trimmed = version.trim();
+    if let Some(hash) = trimmed.strip_prefix("0.0.0-")
         && is_snap(hash)
     {
         return Some(hash.to_owned());
     }
-    if node_semver::Version::parse(version).is_ok() {
-        return Some(version.to_owned());
+    let normalized = trimmed
+        .strip_prefix('v')
+        .or_else(|| trimmed.strip_prefix('V'))
+        .unwrap_or(trimmed);
+    if node_semver::Version::parse(normalized).is_ok() {
+        return Some(normalized.to_owned());
     }
-    if node_semver::Range::parse(version).is_ok()
-        && let Some(coerced) = coerce(version)
+    if node_semver::Range::parse(trimmed).is_ok()
+        && let Some(coerced) = coerce(trimmed)
     {
         return Some(coerced);
     }
-    is_snap(version).then(|| version.to_owned())
+    is_snap(trimmed).then(|| trimmed.to_owned())
 }
 
 fn is_snap(version: &str) -> bool {

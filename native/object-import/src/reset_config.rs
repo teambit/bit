@@ -18,16 +18,16 @@ pub(crate) fn read(
     if bytes.len() > 4 * 1024 * 1024 {
         return Err(invalid("reset staged config oversized"));
     }
-    let value: Value = serde_json::from_slice(&bytes)?;
+    let value: Value = crate::parse_jsonc(&bytes)?;
     let rows = value
         .as_array()
         .filter(|rows| rows.len() <= 4096)
         .ok_or_else(|| invalid("reset staged config rows"))?;
     let mut selected = None;
     for row in rows {
-        if row["id"]["scope"] == scope
-            && row["id"]["name"] == name
-            && selected.replace(row).is_some()
+        if crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+            row, scope, name,
+        ) && selected.replace(row).is_some()
         {
             return Err(invalid("reset duplicate staged config"));
         }
@@ -48,11 +48,15 @@ pub(crate) fn removed_lane_row(
 ) -> io::Result<Option<Value>> {
     let path = file(root, Some((lane_scope, lane_name)))?;
     let bytes = fs::read(path)?;
-    let rows: Value = serde_json::from_slice(&bytes)?;
+    let rows: Value = crate::parse_jsonc(&bytes)?;
     let rows = rows.as_array().ok_or_else(|| invalid("reset removed staged rows"))?;
     let staged = rows
         .iter()
-        .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name);
+        .find(|row| {
+            crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                row, scope, name,
+            )
+        });
     let Some(staged) = staged.filter(|row| {
         crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
     }) else {

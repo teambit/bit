@@ -31,7 +31,9 @@ fn publish_files(batch: &Batch) -> io::Result<()> {
     for item in &batch.items {
         for file in &item.files {
             destination(&batch.root, &file.path)?;
-            fs::create_dir_all(file.path.parent().unwrap())?;
+            if let Some(parent) = file.path.parent() {
+                fs::create_dir_all(parent)?;
+            }
             fs::write(&file.path, &file.bytes)?;
         }
         if let Some(config) = &item.configuration {

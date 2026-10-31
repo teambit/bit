@@ -65,18 +65,32 @@ pub(super) fn select(
             capture: None,
         }
     };
-    let identities = selected
-        .iter()
-        .map(|target| target["identity"].clone())
-        .collect::<Vec<_>>();
+    let identities = selected_identities(&selected);
     let result: Value = engine.request(&json!({"kind":"commandCheckoutSelect","token":prepared.token,"identities":identities,"readSet":proofs}))?;
     if result["token"] != prepared.token {
         return Err(decline("checkout selected owner token"));
     }
     if let Some(captured) = &mut captured {
-        captured.captured.retain(|row| identities.contains(&row["identity"]));
+        captured.captured.retain(|row| {
+            row.get("identity")
+                .or_else(|| row.get("id"))
+                .is_some_and(|identity| identities.contains(identity))
+        });
     }
     Ok((array(result.get("targets"), "checkout selected targets")?.to_vec(), loads, captured))
+}
+
+fn selected_identities(selected: &[Value]) -> Vec<Value> {
+    selected
+        .iter()
+        .map(|target| {
+            target
+                .get("identity")
+                .or_else(|| target.get("id"))
+                .cloned()
+                .unwrap_or(Value::Null)
+        })
+        .collect()
 }
 
 fn pool(targets: &[Value], to: Option<&str>, operation: &str) -> Vec<Value> {
@@ -94,7 +108,13 @@ fn pool(targets: &[Value], to: Option<&str>, operation: &str) -> Vec<Value> {
 fn glob(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
     let identities = targets
         .iter()
-        .map(|target| text(target.get("identity")))
+        .map(|target| {
+            text(
+                target
+                    .get("identity")
+                    .or_else(|| target.get("id")),
+            )
+        })
         .collect::<io::Result<Vec<_>>>()?;
     let selected = patterns::extended::matching(&identities, &patterns::split(pattern))?;
     if selected.is_empty() {
@@ -105,6 +125,7 @@ fn glob(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
         .filter(|target| {
             target["identity"]
                 .as_str()
+                .or_else(|| target["id"].as_str())
                 .is_some_and(|id| selected.contains(&id))
         })
         .cloned()
@@ -163,12 +184,21 @@ fn source_proofs(root: &Path, capture: &Capture) -> io::Result<Vec<Value>> {
     capture.captured
         .iter()
         .flat_map(|component| {
-            let directory = root.join(component["directory"].as_str().unwrap_or_default());
+            let directory = root.join(
+                component["directory"]
+                    .as_str()
+                    .or_else(|| component["rootDir"].as_str())
+                    .unwrap_or_default(),
+            );
             component["files"]
                 .as_array()
                 .into_iter()
                 .flatten()
-                .filter_map(Value::as_str)
+                .filter_map(|file| {
+                    file.as_str()
+                        .or_else(|| file["relativePath"].as_str())
+                        .or_else(|| file["path"].as_str())
+                })
                 .map(move |file| directory.join(file))
         })
         .map(|path| read_proof(&path))

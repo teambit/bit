@@ -219,7 +219,13 @@ pub(super) fn record_remote_head(
         .ok_or_else(|| invalid("import remote refs"))?;
     if let Some(row) = rows
         .iter_mut()
-        .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == target.name)
+        .find(|row| {
+            crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                row,
+                scope,
+                &target.name,
+            )
+        })
     {
         row["head"] = json!(head);
     } else {

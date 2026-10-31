@@ -34,8 +34,10 @@ fn validate_row(
     if row["isSymlink"] == true {
         return Ok(());
     }
-    let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
-    let same = (row_scope == scope || row_scope.is_empty()) && row["id"]["name"] == name;
+    let (row_scope, row_name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
+            .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default(), nm));
+    let same = (row_scope == scope || row_scope.is_empty()) && row_name == name;
     let component = component_model(objects, row, same, selected_model)?;
     for reference in references(&component)? {
         if same && removed.contains(reference.as_str()) {

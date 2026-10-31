@@ -1,4 +1,6 @@
 //! Generated package `JsonVinyl` uses write-file-atomic, breaking hardlink aliases.
+#[cfg(test)]
+mod tests;
 use std::{
     fs::{self, File, OpenOptions},
     io::{self, Write},
@@ -62,6 +64,3 @@ impl Drop for Temporary {
         let _cleanup = fs::remove_file(&self.0);
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -1,4 +1,6 @@
 //! Materialize a remote Version over an imported workspace component.
+#[cfg(test)]
+mod tests;
 use super::{
     super::details, Replacement, Target, WorkspaceFiles, invalid, safe_destination, version,
 };
@@ -120,8 +122,11 @@ fn has_diverged_local_versions(input: &Input<'_>, model: &Value) -> io::Result<b
         .and_then(|rows| {
             rows.iter()
                 .find(|row| {
-                    row["id"]["scope"] == scope
-                        && row["id"]["name"] == input.target.name
+                    super::super::remote::file_list::row_lane_matches(
+                        row,
+                        scope,
+                        &input.target.name,
+                    )
                 })
         })
         .and_then(|row| row["head"].as_str())
@@ -352,17 +357,7 @@ fn plan_new(
 }
 
 fn new_source(input: &Input<'_>, hash: &str) -> io::Result<Vec<u8>> {
-    if let Some(source) = input.imported.overlay.source(hash) {
-        return Ok(checkout::eol::auto(source.to_vec()));
-    }
-    let mut compressed = 0;
-    let source = checkout::repository::source(
-        &crate::scope_path(input.root).join("objects"),
-        crate::merge_history::hash(hash)?,
-        32 * 1024 * 1024,
-        &mut compressed,
-    )?;
-    Ok(checkout::eol::auto(source))
+    old_source(input, hash, &mut 0)
 }
 
 pub(super) fn current_body(root: &Path, path: &Path) -> io::Result<Vec<u8>> {
@@ -410,6 +405,3 @@ pub(super) fn check(root: &Path, path: &Path, before: &[u8]) -> io::Result<()> {
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

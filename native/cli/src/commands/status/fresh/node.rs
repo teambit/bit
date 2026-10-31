@@ -97,7 +97,7 @@ impl Node {
         let lookup = fs::canonicalize(lookup)?;
         let Some(typescript) = resolve_package(&lookup, "typescript") else { return Ok(None) };
         let manifest: serde_json::Value =
-            serde_json::from_slice(&fs::read(typescript.join("package.json"))?)
+            bit_object_import::parse_jsonc(&fs::read(typescript.join("package.json"))?)
                 .map_err(io::Error::other)?;
         Ok(manifest
             .get("version")

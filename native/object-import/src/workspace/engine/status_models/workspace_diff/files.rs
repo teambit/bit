@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{Budgets, Request, capture::File, invalid};
 use crate::{checkout::repository, read_budget::Budget, workspace::engine::diff};
 use rayon::prelude::*;
@@ -100,6 +103,3 @@ fn retain(file: Value, output: &Budget) -> io::Result<Value> {
     output.reserve(patch.len())?;
     Ok(file)
 }
-
-#[cfg(test)]
-mod tests;

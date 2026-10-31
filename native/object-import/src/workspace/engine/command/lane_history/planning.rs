@@ -22,7 +22,9 @@ pub(in crate::workspace::engine::command) fn attach(
                     .is_some_and(|row| row.target.identity == *identity)
             })
         {
-            plan.captured.push(captured[index].take().unwrap());
+            if let Some(entry) = captured[index].take() {
+                plan.captured.push(entry);
+            }
             targets.push(
                 record.targets
                     .iter()

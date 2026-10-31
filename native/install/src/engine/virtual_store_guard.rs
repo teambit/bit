@@ -6,6 +6,9 @@
 //! bit running from those directories would lose its own compiled code
 //! mid-install.
 
+#[cfg(test)]
+mod tests;
+
 use std::{
     fs, io,
     path::{Path, PathBuf},
@@ -86,6 +89,3 @@ Run this one install with a bit installation that lives outside the workspace (e
         workspace.display(),
     )
 }
-
-#[cfg(test)]
-mod tests;

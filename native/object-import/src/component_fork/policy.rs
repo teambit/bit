@@ -19,6 +19,8 @@ pub fn dependency_policy(source: &Value) -> io::Result<Vec<Value>> {
         let id = dependency["packageName"]
             .as_str()
             .or_else(|| dependency["id"].as_str())
+            .map(str::to_owned)
+            .or_else(|| component_identity(&dependency["id"]))
             .ok_or_else(|| unsupported("fork dependency package identity"))?;
         let version =
             dependency["version"].as_str().ok_or_else(|| unsupported("fork dependency version"))?;
@@ -31,7 +33,10 @@ pub fn dependency_policy(source: &Value) -> io::Result<Vec<Value>> {
 fn excluded_dependency(row: &Value, excluded: Option<&Vec<Value>>) -> bool {
     let Some(component) = row.get("componentId") else { return row["id"] == "@teambit/legacy" };
     let Some(identity) = component_identity(component) else { return false };
-    excluded.is_some_and(|rows| rows.iter().any(|row| row == &identity))
+    excluded.is_some_and(|rows| {
+        rows.iter()
+            .any(|row| row == &identity || component_identity(row).as_deref() == Some(&identity))
+    })
 }
 fn component_identity(component: &Value) -> Option<String> {
     component

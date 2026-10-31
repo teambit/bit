@@ -21,14 +21,15 @@ pub(super) fn attach_missing(
         &selected,
     )?;
     for row in &mut additions {
-        let id = format!("{}/{}", row["scope"].as_str().unwrap(), row["name"].as_str().unwrap());
-        row["version"] = json!(
-            phase.versions
-                .iter()
-                .find(|(identity, _)| identity == &id)
-                .unwrap()
-                .1
-        );
+        let scope = row["scope"].as_str().ok_or_else(|| invalid("lane addition scope"))?;
+        let name = row["name"].as_str().ok_or_else(|| invalid("lane addition name"))?;
+        let id = format!("{scope}/{name}");
+        let version = &phase.versions
+            .iter()
+            .find(|(identity, _)| identity == &id)
+            .ok_or_else(|| invalid("lane addition version entry"))?
+            .1;
+        row["version"] = json!(version);
     }
     context["scopeAddedTargets"] = json!(
         crate::workspace::engine::command::lane_context::additions::targets(&additions, &selected)

@@ -54,8 +54,11 @@ impl Drop for Fixture {
 fn current_component_policy_is_reread_without_harmony() {
     let fixture = Fixture::new();
     let file = fixture.0.join("alpha/component.json");
-    for version in ["^1.0.0", "^2.0.0"] {
-        fs::write(&file, serde_json::to_vec(&json!({"componentId":{"scope":"test.scope","name":"alpha"},"extensions":{
+    for (component_id, version) in [
+        (json!({"scope":"test.scope","name":"alpha"}), "^1.0.0"),
+        (json!("test.scope/alpha@0.0.1"), "^2.0.0"),
+    ] {
+        fs::write(&file, serde_json::to_vec(&json!({"componentId":component_id,"extensions":{
             "teambit.dependencies/dependency-resolver":{"policy":{"dependencies":{"example":version}}}
         }})).unwrap()).unwrap();
         let value = fixture.context().unwrap();

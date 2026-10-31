@@ -194,7 +194,8 @@ pub(in crate::commands::lane) fn read_at(
 
 pub(in crate::commands::lane) fn current(root: &Path, bare: bool) -> io::Result<(Value, String)> {
     if bare {
-        let scope: Value = serde_json::from_slice(&std::fs::read(root.join("scope.json"))?)?;
+        let scope: Value =
+            bit_object_import::parse_jsonc(&std::fs::read(root.join("scope.json"))?)?;
         Ok((json!({"name":"main","scope":scope["name"]}), "main".to_owned()))
     } else {
         read_current(root)

@@ -2,6 +2,9 @@
 //! `<scope>/command-history`, one line when a command starts and one when it
 //! ends, `<ISO time> <pid> <arguments>, started|succeeded|failed`.
 
+#[cfg(test)]
+mod history_tests;
+
 use crate::workspace;
 use std::{
     ffi::OsString,
@@ -92,6 +95,3 @@ fn civil(days: i64) -> (i64, i64, i64) {
     let year = year_of_era + era * 400 + i64::from(month <= 2);
     (year, month, day)
 }
-
-#[cfg(test)]
-mod history_tests;

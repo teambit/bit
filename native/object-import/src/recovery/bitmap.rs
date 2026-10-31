@@ -145,11 +145,15 @@ fn directory(value: &str) -> bool {
         )
 }
 fn lane(value: &Value) -> io::Result<()> {
-    if let Some(lane) = value.get("_bit_lane").filter(|value| truthy(value))
-        && (!lane["id"]["name"].as_str().is_some_and(|name| identifier(name, true))
-            || !lane["id"]["scope"].as_str().is_some_and(scope_text))
-    {
-        return Err(invalid("bitmap lane"));
+    if let Some(lane) = value.get("_bit_lane").filter(|value| truthy(value)) {
+        let valid =
+            crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(
+                lane,
+            )
+            .is_some_and(|(scope, name)| scope_text(scope) && identifier(name, true));
+        if !valid {
+            return Err(invalid("bitmap lane"));
+        }
     }
     Ok(())
 }

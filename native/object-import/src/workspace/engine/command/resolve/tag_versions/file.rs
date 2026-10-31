@@ -1,5 +1,8 @@
 //! `VersionFileParser` applies explicit lines before DEFAULT to the complete tag batch.
 
+#[cfg(test)]
+mod tests;
+
 use super::invalid;
 use serde_json::{Value, json};
 use std::io;
@@ -28,9 +31,6 @@ pub(super) fn semver(file: Option<&Value>, base: &Value) -> io::Result<Value> {
     }
     Ok(Value::Object(output))
 }
-
-#[cfg(test)]
-mod tests;
 
 pub(super) fn for_component(
     file: Option<&Value>,

@@ -2,6 +2,9 @@
 pub(in crate::workspace::engine) use published::{Overrides, apply as override_versions};
 pub(super) use report::report;
 
+mod published;
+mod report;
+
 use super::{
     super::{capture, invalid, repository, resolve_snapshot::Material},
     Plan, Retained, Selection,
@@ -9,9 +12,6 @@ use super::{
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
-
-mod published;
-mod report;
 
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

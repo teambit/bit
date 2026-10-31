@@ -24,9 +24,9 @@ fn merge_entry(
     value: &Value,
 ) -> io::Result<()> {
     if let Some(previous) = previous.filter(|previous| previous.is_object() && value.is_object())
-        && target.get(key).is_some_and(Value::is_object)
+        && let Some(existing) = target.get_mut(key).filter(|val| val.is_object())
     {
-        return merge(target.get_mut(key).expect("existing object"), previous, value);
+        return merge(existing, previous, value);
     }
     target.insert(key.to_owned(), value.clone());
     Ok(())

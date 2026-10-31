@@ -250,6 +250,8 @@ fn apply_test_token<'a>(
 ) -> Option<()> {
     match token {
         "--no-color"
+        | "--no-color=true"
+        | "--no-color=false"
         | "--watch"
         | "--watch=true"
         | "--watch=false"

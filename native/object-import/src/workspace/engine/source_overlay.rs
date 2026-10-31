@@ -2,6 +2,8 @@
 mod lookup;
 mod seal;
 mod source;
+#[cfg(test)]
+mod tests;
 
 use super::{dependency_graph::proof, invalid, path, resolve_dependencies::normalize};
 use serde_json::Value;
@@ -119,6 +121,3 @@ impl SourceOverlay {
         Ok(self.data.proofs.clone())
     }
 }
-
-#[cfg(test)]
-mod tests;

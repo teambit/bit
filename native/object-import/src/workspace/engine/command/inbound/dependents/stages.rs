@@ -1,4 +1,7 @@
 //! Retain dependency prefetch before the canonical workspace graph class loads.
+#[cfg(test)]
+mod tests;
+
 use super::{Prepare, Target, invalid};
 use crate::{
     command_import::PreparedImport,
@@ -88,7 +91,8 @@ pub(in crate::workspace::engine) fn complete(
         state,
         request.token,
     )?;
-    let retained = state.inbound.as_mut().unwrap();
+    let retained =
+        state.inbound.as_mut().ok_or_else(|| invalid("inbound graph retained absent"))?;
     retained.proofs = request.graph.read_set;
     result.1["graphProgress"] = json!(graph_progress);
     result.1["ownedWorkspaceWrites"] = json!(super::super::owned_writes::combine(writes)?);
@@ -217,6 +221,3 @@ fn current_dependencies(row: &Value) -> io::Result<Vec<Target>> {
     }
     Ok(dependencies)
 }
-
-#[cfg(test)]
-mod tests;

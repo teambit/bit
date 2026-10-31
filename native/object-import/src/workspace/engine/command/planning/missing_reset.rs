@@ -18,8 +18,11 @@ pub(super) fn report_if_applicable(
         return Ok(());
     }
     for target in &record.targets {
-        let identity =
-            target["identity"].as_str().ok_or_else(|| invalid("reset missing identity"))?;
+        let identity = target["identity"]
+            .as_str()
+            .or_else(|| target["id"].as_str())
+            .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base))
+            .ok_or_else(|| invalid("reset missing identity"))?;
         let directory =
             target["directory"].as_str().ok_or_else(|| invalid("reset missing directory"))?;
         let main = target["mainFile"].as_str().ok_or_else(|| invalid("reset missing main file"))?;
@@ -33,7 +36,10 @@ pub(super) fn report_if_applicable(
 }
 
 fn report_one(plan: &mut Planned, identity: &str, target: &Value) -> io::Result<()> {
-    let version = target["version"].as_str().ok_or_else(|| invalid("reset missing version"))?;
+    let version = target["version"]
+        .as_str()
+        .or_else(|| target["head"].as_str())
+        .ok_or_else(|| invalid("reset missing version"))?;
     let id = format!("{identity}@{version}");
     if !plan.materials
         .iter()

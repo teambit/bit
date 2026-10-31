@@ -1,4 +1,7 @@
 //! yargs-parser's positional number coercion followed by `CheckoutCmd`'s `String(to)`.
+#[cfg(test)]
+mod tests;
+
 use std::sync::OnceLock;
 
 pub(super) fn normalize(raw: &str) -> String {
@@ -113,6 +116,3 @@ fn valid_tag(to: &str) -> bool {
             .iter()
             .all(|part| !part.is_empty() && part.bytes().all(|b| b.is_ascii_digit()))
 }
-
-#[cfg(test)]
-mod tests;

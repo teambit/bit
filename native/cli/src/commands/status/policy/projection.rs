@@ -1,6 +1,9 @@
 //! `AspectsMerger.merge` over captured model/configuration facts. The shared
 //! installer merger owns origin precedence, removals, env filtering and ids.
 
+#[cfg(test)]
+mod tests;
+
 use super::super::js::{array, decline, nullish, object, text, truthy};
 use bit_install::{
     model::ComponentId,
@@ -164,6 +167,3 @@ pub(super) fn extension_id(id: &str) -> io::Result<Value> {
     }
     Ok(value)
 }
-
-#[cfg(test)]
-mod tests;

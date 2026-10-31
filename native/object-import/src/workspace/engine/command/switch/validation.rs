@@ -71,10 +71,17 @@ fn reject_removed_target(
     imported: &command_import::PreparedImport,
     target: &Value,
 ) -> io::Result<()> {
-    let identity = target["identity"].as_str().ok_or_else(|| invalid("switch identity"))?;
+    let identity = target["identity"]
+        .as_str()
+        .or_else(|| target["id"].as_str())
+        .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base))
+        .ok_or_else(|| invalid("switch identity"))?;
     let Some(model) = repository::model(context, identity)? else { return Ok(()) };
-    let version =
-        target["switchVersion"].as_str().ok_or_else(|| invalid("switch target version"))?;
+    let version = target["switchVersion"]
+        .as_str()
+        .or_else(|| target["version"].as_str())
+        .or_else(|| target["head"].as_str())
+        .ok_or_else(|| invalid("switch target version"))?;
     let Ok(hash) = super::super::selection::versions::reference(&model, version) else {
         return Ok(());
     };
@@ -90,7 +97,9 @@ fn reject_removed_lane_targets(
     rows: &[Value],
 ) -> io::Result<()> {
     for row in rows {
-        if let Some(hash) = row["head"].as_str()
+        if let Some(hash) = row["head"]
+            .as_str()
+            .or_else(|| row["version"].as_str())
             && is_version_removed(scope, imported, hash)?
         {
             return Err(invalid("switch target version removed"));

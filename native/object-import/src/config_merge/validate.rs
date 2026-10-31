@@ -25,7 +25,10 @@ pub(super) fn semver(input: &Value) -> io::Result<()> {
 fn semver_entry(input: &Value) -> io::Result<()> {
     fields(input, &["version", "range", "minimum", "minimumText"])?;
     for field in ["version", "minimum"] {
-        if let Some(version) = input.get(field) {
+        if let Some(version) = input
+            .get(field)
+            .filter(|value| !value.is_null())
+        {
             semver_version(version)?;
         }
     }
@@ -52,7 +55,10 @@ fn semver_comparator(input: &Value) -> io::Result<()> {
     if !["", "=", ">", ">=", "<", "<="].contains(&operator) {
         return Err(invalid("semver operator"));
     }
-    if let Some(version) = input.get("version") {
+    if let Some(version) = input
+        .get("version")
+        .filter(|value| !value.is_null())
+    {
         semver_version(version)?;
     } else if !operator.is_empty() {
         return Err(invalid("semver any operator"));

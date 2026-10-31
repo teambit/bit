@@ -18,14 +18,13 @@ pub(super) fn populate(
     model: &Value,
     head: &str,
 ) -> io::Result<(String, Value, bool)> {
-    let component = format!(
-        "{}/{}",
-        model["scope"].as_str().ok_or_else(|| invalid("history scope"))?,
-        model["name"].as_str().ok_or_else(|| invalid("history name"))?,
-    );
+    let (scope, name) = model_scope_and_name(model)?;
+    let component = format!("{scope}/{name}");
     let hash = identity(&component);
     let old = capture.object(directory, &hash, "VersionHistory")?;
-    let mut history = old.and_then(|record| record.value).unwrap_or_else(|| json!({"name":model["name"],"scope":model["scope"],"versions":[],"graphCompleteRefs":[]}));
+    let mut history = old
+        .and_then(|record| record.value)
+        .unwrap_or_else(|| json!({"name":name,"scope":scope,"versions":[],"graphCompleteRefs":[]}));
     let existing = history["versions"].as_array().ok_or_else(|| invalid("import history rows"))?;
     if existing
         .iter()
@@ -46,6 +45,26 @@ pub(super) fn populate(
     }
     append(capture, directory, &mut history, &result)?;
     Ok((hash, history, true))
+}
+
+fn model_scope_and_name(model: &Value) -> io::Result<(&str, &str)> {
+    if let Some((scope, name)) = model["id"]
+        .as_str()
+        .or_else(|| model["identity"].as_str())
+        .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base))
+        .and_then(|base| base.split_once('/'))
+    {
+        return Ok((scope, name));
+    }
+    let scope = model["scope"]
+        .as_str()
+        .or_else(|| model["id"]["scope"].as_str())
+        .ok_or_else(|| invalid("history scope"))?;
+    let name = model["name"]
+        .as_str()
+        .or_else(|| model["id"]["name"].as_str())
+        .ok_or_else(|| invalid("history name"))?;
+    Ok((scope, name))
 }
 fn append(
     capture: &mut Capture,
@@ -77,7 +96,7 @@ fn verify_ancestor(
         .object(directory, hash, "Version")?
         .ok_or_else(|| invalid("import history ancestor missing"))?;
     if let Some(body) = row["versionJSON"].as_str() {
-        let expected: Value = serde_json::from_str(body).map_err(io::Error::other)?;
+        let expected = crate::parse_jsonc(body.as_bytes())?;
         if record.value.as_ref() != Some(&expected) {
             return Err(invalid("import ancestor changed"));
         }

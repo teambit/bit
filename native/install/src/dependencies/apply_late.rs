@@ -154,22 +154,31 @@ fn env_peer_version(
 ) -> io::Result<String> {
     if let Some(version) = resolver
         .find_manifest(&subject.component.dir, name)?
-        .and_then(|manifest| manifest["version"].as_str().map(str::to_owned))
+        .and_then(|manifest| {
+            manifest["version"]
+                .as_str()
+                .map(str::trim)
+                .filter(|version| !version.is_empty())
+                .map(str::to_owned)
+        })
     {
         return Ok(version);
     }
     if let Some(version) = workspace.manifest
         .iter()
         .find_map(|field| field.get(name))
+        .map(|version| version.trim())
+        .filter(|version| !version.is_empty())
     {
-        return Ok(version.clone());
+        return Ok(version.to_owned());
     }
     let from_model = subject.model
         .components()
         .into_iter()
         .find(|dependency| dependency.package_name.as_deref() == Some(name))
         .and_then(|dependency| dependency.id.version)
-        .or_else(|| subject.model.packages()[RUNTIME].get(name).cloned());
+        .or_else(|| subject.model.packages()[RUNTIME].get(name).cloned())
+        .filter(|version| !version.trim().is_empty());
     Ok(from_model.unwrap_or_else(|| "*".to_owned()))
 }
 
@@ -265,6 +274,8 @@ fn manual_version(workspace: &Workspace<'_>, name: &str, value: &str) -> Option<
                 .get(*field)?
                 .get(name)?
                 .as_str()
+                .map(str::trim)
+                .filter(|version| !version.is_empty())
                 .map(str::to_owned)
         })
 }

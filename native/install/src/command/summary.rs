@@ -1,5 +1,8 @@
 //! `formatOutput` and `getAnotherInstallRequiredOutput` of `install.cmd.tsx`.
 
+#[cfg(test)]
+mod tests;
+
 use crate::output::{Output, Style};
 use std::time::Duration;
 
@@ -60,6 +63,3 @@ fn seconds(elapsed: Duration) -> String {
     }
     format!("{}.{fraction:03}", millis / 1000).trim_end_matches('0').to_string()
 }
-
-#[cfg(test)]
-mod tests;

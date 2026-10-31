@@ -1,5 +1,7 @@
 mod parallel;
 mod retained;
+#[cfg(test)]
+mod tests;
 
 use super::{hash, invalid, wire};
 use crate::read_budget::Budget;
@@ -185,6 +187,3 @@ fn verify_expected(expected: Option<&str>, actual: &str) -> io::Result<()> {
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

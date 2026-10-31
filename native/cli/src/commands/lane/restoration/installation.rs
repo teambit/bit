@@ -53,13 +53,26 @@ fn compile(
     let compiled = host.call("switchCompile", &json!({"installationSucceeded":succeeded}));
     print!("{}", host.take_stdout());
     let compiled = compiled?;
-    match &compiled["error"] {
-        Value::Null => Ok(()),
+    if let Some(error) = compiler_error(&compiled["error"])? {
+        output.failure(&format!("compilation failed with the following error: {error}"));
+        result["compilationError"] = json!(error);
+    }
+    Ok(())
+}
+
+fn compiler_error(value: &Value) -> io::Result<Option<String>> {
+    match value {
+        Value::Null => Ok(None),
         Value::String(error) => {
-            output.failure(&format!("compilation failed with the following error: {error}"));
-            result["compilationError"] = json!(error);
-            Ok(())
+            let trimmed = error.trim();
+            Ok((!trimmed.is_empty()).then(|| trimmed.to_owned()))
         }
+        Value::Object(map) => Ok(map
+            .get("message")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|msg| !msg.is_empty())
+            .map(str::to_owned)),
         _ => Err(io::Error::other("lane history compiler receipt")),
     }
 }

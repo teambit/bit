@@ -262,7 +262,7 @@ fn validate_scope(_root: &Path, scope: &Scope) -> io::Result<()> {
 fn model_state(root: &Path, identity: &str, version: &str) -> io::Result<RepositorySnapshot> {
     let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("component identity"))?;
     let index_before = fs::read(crate::scope_path(root).join("index.json"))?;
-    let index: Value = serde_json::from_slice(&index_before)?;
+    let index: Value = crate::parse_jsonc(&index_before)?;
     let rows = index["components"]
         .as_array()
         .or_else(|| index.as_array())
@@ -292,9 +292,11 @@ fn find_indexed_model_hash<'a>(rows: &'a [Value], scope: &str, name: &str) -> io
     let matches: Vec<_> = rows
         .iter()
         .filter(|row| {
-            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            let (row_scope, row_name) =
+                crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
+                    .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default(), nm));
             row["isSymlink"] != true
-                && row["id"]["name"] == name
+                && row_name == name
                 && (row_scope.is_empty() || row_scope == scope)
         })
         .collect();

@@ -5,9 +5,13 @@ mod calls;
 mod classification;
 mod documentation;
 mod embedded;
+#[cfg(test)]
+mod embedded_tests;
 mod exports;
 mod limits;
 mod scanning;
+#[cfg(test)]
+mod tests;
 
 use crate::scanning::scan;
 use indexmap::IndexMap;
@@ -260,10 +264,6 @@ fn outcome(file: &File, status: &'static str, message: String) -> Outcome {
         diagnostics: vec![message],
     }
 }
-#[cfg(test)]
-mod embedded_tests;
-#[cfg(test)]
-mod tests;
 
 /// Scan an owned request on the caller's bounded worker pool.
 pub fn scan_request(input: &str, pool: &rayon::ThreadPool) -> Result<Value, serde_json::Error> {

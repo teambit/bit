@@ -86,9 +86,10 @@ impl Settings {
 
     fn apply_bool_flag(&mut self, token: &str) -> bool {
         match token {
-            "--no-color" | "--json" | "--json=true" | "--json=false" | "-j" | "--verbose"
-            | "--verbose=true" | "--verbose=false" | "--all" | "--all=true" | "--all=false"
-            | "-a" | "--watch=false" | "--debug=false" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--json" | "--json=true"
+            | "--json=false" | "-j" | "--verbose" | "--verbose=true" | "--verbose=false"
+            | "--all" | "--all=true" | "--all=false" | "-a" | "--watch=false" | "--debug=false" => {
+            }
             "--unmodified" | "--unmodified=true" | "-u" => self.selection.changed = false,
             "--unmodified=false" => self.selection.changed = true,
             "--summary" | "--summary=true" => self.summary = true,

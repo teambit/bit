@@ -80,7 +80,7 @@ fn parse_tokens(args: &[OsString]) -> Option<Vec<String>> {
         .map(|arg| arg.to_str())
         .collect::<Option<Vec<_>>>()?
         .into_iter()
-        .filter(|token| *token != "--no-color")
+        .filter(|token| !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect::<Vec<_>>();
     let (&"trust", rest) = tokens.split_first()? else {
         return None;

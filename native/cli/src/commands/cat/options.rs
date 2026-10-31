@@ -36,7 +36,9 @@ fn apply_cat_arg<'a>(
     {
         return set_cat_file(options, val, 1);
     }
-    if apply_cat_combined_short(options, arg) || apply_cat_bool(options, arg) || arg == "--no-color"
+    if apply_cat_combined_short(options, arg)
+        || apply_cat_bool(options, arg)
+        || matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false")
     {
         return Some(1);
     }

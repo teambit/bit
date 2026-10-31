@@ -102,18 +102,30 @@ pub(in crate::commands::aspect) fn missing_scope_error(raw: &str) -> String {
 
 pub(in crate::commands::aspect) fn scope_index_lookup(root: &Path, bare: &str) -> Option<String> {
     let scope_dir = crate::workspace::scope_path(root);
-    let index =
-        serde_json::from_slice::<Value>(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
+    let index = bit_object_import::parse_jsonc(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
     let rows = index["components"].as_array().or_else(|| index.as_array())?;
     let matches = rows
         .iter()
-        .filter(|row| row["isSymlink"] != true && row["id"]["name"].as_str() == Some(bare))
+        .filter(|row| {
+            row["isSymlink"] != true
+                && crate::commands::scope_set::selection::row_has_name(row, bare)
+        })
         .collect::<Vec<_>>();
     let [row] = matches.as_slice() else {
         return None;
     };
     let scope = row["id"]["scope"]
         .as_str()
+        .or_else(|| {
+            row["id"]
+                .as_str()
+                .and_then(|raw| {
+                    raw.split('@')
+                        .next()?
+                        .split_once('/')
+                        .map(|(sc, _)| sc)
+                })
+        })
         .filter(|val| !val.is_empty())
         .map(str::to_owned)
         .or_else(|| {

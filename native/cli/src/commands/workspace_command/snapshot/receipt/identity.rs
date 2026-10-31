@@ -1,5 +1,8 @@
 //! Published `getIdentity` caches its in-flight identity promise for the process.
 //! Store only resolved names or the initialization error; each log still gets a fresh date.
+#[cfg(test)]
+mod tests;
+
 use super::User;
 use std::{io, sync::OnceLock};
 
@@ -34,6 +37,3 @@ impl Cache {
             .map_err(|failure| io::Error::new(failure.kind, failure.message.clone()))
     }
 }
-
-#[cfg(test)]
-mod tests;

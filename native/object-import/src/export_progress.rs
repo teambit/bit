@@ -1,4 +1,7 @@
 //! Caller-owned export phase events contain only operation metadata.
+#[cfg(test)]
+mod tests;
+
 use std::{cell::RefCell, sync::mpsc::SyncSender};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -42,6 +45,3 @@ pub(crate) fn with_sender<Output>(
 pub fn emit(event: Event) -> bool {
     current().is_some_and(|sender| sender.send(event).is_ok())
 }
-
-#[cfg(test)]
-mod tests;

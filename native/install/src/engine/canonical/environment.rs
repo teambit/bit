@@ -24,12 +24,19 @@ pub(super) struct Captured {
 
 impl Captured {
     pub(super) fn parse(payload: &Value) -> Option<Self> {
-        let vars = payload
-            .get("environment")?
-            .as_object()?
-            .iter()
-            .map(|(key, value)| Some((key.clone(), value.as_str()?.to_owned())))
-            .collect::<Option<_>>()?;
+        let mut vars = BTreeMap::new();
+        for (key, value) in payload.get("environment")?.as_object()? {
+            if value.is_null() {
+                continue;
+            }
+            let text = match value {
+                Value::String(text) => text.clone(),
+                Value::Bool(flag) => flag.to_string(),
+                Value::Number(number) => number.to_string(),
+                _ => return None,
+            };
+            vars.insert(key.clone(), text);
+        }
         let cwd = PathBuf::from(payload.get("cwd")?.as_str()?);
         cwd.is_absolute()
             .then_some(Self { vars, cwd })

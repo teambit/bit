@@ -33,6 +33,7 @@ pub(super) fn prepare(
         let relative = file
             .as_str()
             .or_else(|| file["relativePath"].as_str())
+            .or_else(|| file["path"].as_str())
             .ok_or_else(|| unsupported("fork source relative path"))?;
         relative_path(relative)?;
         let path = source_path(root, source, relative, observed)?;
@@ -96,7 +97,17 @@ pub(super) fn source_path(
     }
     let directory = source["sourceDirectory"]
         .as_str()
-        .map_or_else(|| root.join(source["rootDir"].as_str().unwrap_or_default()), PathBuf::from);
+        .map_or_else(
+            || {
+                root.join(
+                    source["rootDir"]
+                        .as_str()
+                        .or_else(|| source["directory"].as_str())
+                        .unwrap_or_default(),
+                )
+            },
+            PathBuf::from,
+        );
     if !directory.starts_with(root) {
         private_root(&directory, &directory.join(relative), "bit-native-fork-")?;
     }

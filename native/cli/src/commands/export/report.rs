@@ -3,6 +3,8 @@
 //! without ejecting or ripple jobs.
 
 mod extra;
+#[cfg(test)]
+mod report_tests;
 
 use crate::commands::{
     color::Chalk,
@@ -313,6 +315,3 @@ fn render_item(
     let versions = if versions.is_empty() { "n/a".to_owned() } else { versions.join(", ") };
     format.item(&format!("{} - {versions}", chalk.bold(id)))
 }
-
-#[cfg(test)]
-mod report_tests;

@@ -1,5 +1,8 @@
 //! Callback source spools are private regular files within a Rust-owned temporary root.
 
+#[cfg(test)]
+mod tests;
+
 use super::{Target, invalid};
 use std::{
     fs, io,
@@ -51,6 +54,3 @@ pub(super) fn source_path(root: &Path, target: &Target, file: &str) -> io::Resul
     }
     Ok(path.clone())
 }
-
-#[cfg(test)]
-mod tests;

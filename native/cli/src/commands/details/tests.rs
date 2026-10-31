@@ -4,6 +4,9 @@ use std::{ffi::OsString, fs};
 #[test]
 fn validates_empty_details_arguments() {
     assert!(valid_args(&[OsString::from("details")]));
+    assert!(valid_args(&[OsString::from("details"), OsString::from("--no-color")]));
+    assert!(valid_args(&[OsString::from("details"), OsString::from("--no-color=true")]));
+    assert!(valid_args(&[OsString::from("details"), OsString::from("--no-color=false")]));
     assert!(!valid_args(&[OsString::from("details"), OsString::from("--help")]));
     assert!(!valid_args(&[OsString::from("details"), OsString::from("extra")]));
 }
@@ -21,7 +24,7 @@ fn renders_missing_and_persisted_command_details() {
     fs::write(temp.path().join("content"), "comp1@0.0.1\ncomp2@0.0.1").unwrap();
     fs::write(
         temp.path().join("meta.json"),
-        r#"{"command":"tag","timestamp":"2026-10-20T12:00:00.000Z"}"#,
+        "// persisted meta\n{\"command\":\"tag\",\"timestamp\":\"2026-10-20T12:00:00.000Z\",}",
     )
     .unwrap();
     let rendered = render_details(temp.path(), chalk).unwrap();

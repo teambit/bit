@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{Directory, Request};
 use crate::merge_history::{MAX_RAW, invalid};
 use serde_json::{Value, json};
@@ -155,6 +158,3 @@ pub(crate) fn config_conflict(paths: [PathBuf; 3]) -> io::Result<String> {
         .filter(|text| !text.is_empty())
         .ok_or_else(|| invalid("config Git merge has no conflict"))
 }
-
-#[cfg(test)]
-mod tests;

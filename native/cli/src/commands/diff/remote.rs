@@ -20,13 +20,18 @@ pub(super) fn prepare(
     let exported = progress::exported_ids(root);
     let mut ids = Vec::new();
     for target in selected {
-        let identity = text(target.get("identity"))?;
+        let identity = text(
+            target
+                .get("identity")
+                .or_else(|| target.get("id")),
+        )?;
         if !exported.iter().any(|id| id == identity) {
             continue;
         }
         let from = options.versions.from
             .as_deref()
-            .or_else(|| target["version"].as_str());
+            .or_else(|| target["version"].as_str())
+            .or_else(|| target["head"].as_str());
         for version in [from, options.versions.to.as_deref()].into_iter().flatten() {
             ids.push(format!("{identity}@{version}"));
         }

@@ -85,14 +85,12 @@ fn component(root: &Path, mut target: Value, budget: &Budget) -> io::Result<Valu
     Ok(target)
 }
 
-fn normalize(value: &Value, target: &Value) -> io::Result<Value> {
-    let identity = target["identity"].as_str().ok_or_else(|| invalid("tracking identity"))?;
-    let (scope, name) =
-        identity.split_once('/').ok_or_else(|| invalid("tracking scoped identity"))?;
-    if let Some(id) = value
-        .get("componentId")
-        .filter(|val| !val.is_null())
-    {
+fn parse_component_id<'a>(id: &'a Value, default_scope: &'a str) -> (&'a str, &'a str) {
+    if let Some(raw) = id.as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+        bare.split_once('/')
+            .unwrap_or((default_scope, bare))
+    } else {
         let id_scope = id["scope"]
             .as_str()
             .filter(|val| !val.is_empty())
@@ -101,8 +99,21 @@ fn normalize(value: &Value, target: &Value) -> io::Result<Value> {
                     .as_str()
                     .filter(|val| !val.is_empty())
             })
-            .unwrap_or(scope);
-        if id_scope != scope || id["name"] != name {
+            .unwrap_or(default_scope);
+        (id_scope, id["name"].as_str().unwrap_or_default())
+    }
+}
+
+fn normalize(value: &Value, target: &Value) -> io::Result<Value> {
+    let identity = target["identity"].as_str().ok_or_else(|| invalid("tracking identity"))?;
+    let (scope, name) =
+        identity.split_once('/').ok_or_else(|| invalid("tracking scoped identity"))?;
+    if let Some(id) = value
+        .get("componentId")
+        .filter(|val| !val.is_null())
+    {
+        let (id_scope, id_name) = parse_component_id(id, scope);
+        if id_scope != scope || id_name != name {
             return Err(invalid("tracking component config identity"));
         }
     }

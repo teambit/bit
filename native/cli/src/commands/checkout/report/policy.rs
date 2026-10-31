@@ -37,20 +37,43 @@ pub(crate) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<(String,
 }
 
 fn updates(value: Option<&Value>, formatter: &Formatter) -> io::Result<String> {
-    let Some(value) = value else { return Ok(String::new()) };
+    let Some(value) = value.filter(|value| !value.is_null()) else {
+        return Ok(String::new());
+    };
     let rows = object(value)?
         .iter()
-        .map(|(name, value)| {
-            let row = array(Some(value), "checkout workspace dependency update")?;
-            if row.len() != 2 {
-                return Err(decline("checkout workspace dependency versions"));
-            }
-            Ok(format!("  {name}: {} => {}", text(Some(&row[0]))?, text(Some(&row[1]))?))
+        .map(|(name, entry)| {
+            let (before, after) = update_pair(entry)?;
+            Ok(format!("  {name}: {before} => {after}"))
         })
         .collect::<io::Result<Vec<_>>>()?;
+    if rows.is_empty() {
+        return Ok(String::new());
+    }
     Ok(format!(
         "{}\n{}",
         formatter.title("workspace.jsonc has been updated with the following dependencies"),
         rows.join("\n"),
     ))
+}
+
+fn update_pair(value: &Value) -> io::Result<(&str, &str)> {
+    if let Some(object) = value.as_object() {
+        let before = text(
+            object
+                .get("from")
+                .or_else(|| object.get("oldVersion")),
+        )?;
+        let after = text(
+            object
+                .get("to")
+                .or_else(|| object.get("newVersion")),
+        )?;
+        return Ok((before, after));
+    }
+    let row = array(Some(value), "checkout workspace dependency update")?;
+    if row.len() != 2 {
+        return Err(decline("checkout workspace dependency versions"));
+    }
+    Ok((text(Some(&row[0]))?, text(Some(&row[1]))?))
 }

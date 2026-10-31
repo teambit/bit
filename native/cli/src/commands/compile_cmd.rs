@@ -93,7 +93,7 @@ pub(super) fn validate_compile_selectors(root: &Path, options: &Options) -> Opti
     let bitmap = Bitmap::load(root, default_scope.as_deref()).ok()?;
     let index_val = fs::read(workspace::scope_path(root).join("index.json"))
         .ok()
-        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
+        .and_then(|bytes| parse_jsonc(&bytes).ok())
         .unwrap_or_default();
     let index_rows = index_val["components"]
         .as_array()
@@ -140,7 +140,11 @@ fn exists_in_bitmap_or_index(bare: &str, bitmap: &Bitmap, index_rows: &[Value]) 
         .iter()
         .any(|row| {
             row["isSymlink"] != true
-                && (row["id"]["name"].as_str() == Some(bare)
+                && (super::scope_set::selection::row_has_name(row, bare)
+                    || row["id"]
+                        .as_str()
+                        .map(|raw| raw.split('@').next().unwrap_or(raw))
+                        == Some(bare)
                     || match (row["id"]["scope"].as_str(), row["id"]["name"].as_str()) {
                         (Some(scope), Some(name)) if !scope.is_empty() => {
                             format!("{scope}/{name}") == bare
@@ -163,7 +167,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 }
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-c" | "--changed" | "--changed=true" => options.changed = true,
             "--changed=false" => options.changed = false,
             "-v" | "--verbose" | "--verbose=true" => options.verbose = true,

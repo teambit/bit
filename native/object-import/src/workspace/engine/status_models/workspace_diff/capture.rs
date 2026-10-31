@@ -36,11 +36,11 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
         .map(|target| {
             target.files
                 .iter()
-                .map(|file| {
-                    let mut captured = captured.next().expect("one source per path");
+                .filter_map(|file| {
+                    let mut captured = captured.next()?;
                     captured.metadata["relativePath"] = json!(file);
                     captured.metadata["name"] = json!(file.rsplit('/').next());
-                    captured
+                    Some(captured)
                 })
                 .collect()
         })

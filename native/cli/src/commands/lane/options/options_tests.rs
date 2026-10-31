@@ -19,10 +19,16 @@ fn lane_merges_with_their_options() {
         Some("remote/*"),
     );
     assert_eq!(
-        parse(&["remote/dev", "--pattern=remote/*", "--auto-merge-resolve=ours", "--no-color"])
-            .unwrap()
-            .strategy
-            .as_deref(),
+        parse(&[
+            "remote/dev",
+            "--pattern=remote/*",
+            "--auto-merge-resolve=ours",
+            "--no-color",
+            "--no-color=false",
+        ])
+        .unwrap()
+        .strategy
+        .as_deref(),
         Some("ours"),
     );
 }

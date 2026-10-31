@@ -78,7 +78,7 @@ impl Repository {
         proof::read(&file, &mut self.proofs)?;
         let bytes = repository::read_shared(&self.directory, hash, &self.raw, &self.packed)?;
         let (_, body) = repository::split(&bytes, hash, kind)?;
-        let value: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
+        let value: Value = crate::parse_jsonc(body).map_err(io::Error::other)?;
         proof::verify(&self.proofs[self.proofs.len() - 1..])?;
         self.values.insert(key, value.clone());
         Ok(value)
@@ -165,7 +165,7 @@ impl Repository {
             if source.len() > 4 * 1024 * 1024 {
                 return Err(super::super::invalid("command graph source byte budget"));
             }
-            return serde_json::from_slice(source).map_err(io::Error::other);
+            return crate::parse_jsonc(source).map_err(io::Error::other);
         }
         self.read(reference, "Source")
     }
@@ -212,7 +212,7 @@ impl Repository {
             let head =
                 row["head"].as_str().ok_or_else(|| super::super::invalid("command remote head"))?;
             crate::merge_history::hash(head)?;
-            if row["id"]["scope"] == scope && row["id"]["name"] == name {
+            if super::inbound::remote::file_list::row_lane_matches(&row, scope, name) {
                 return Ok(Some(head.to_owned()));
             }
         }
@@ -233,9 +233,8 @@ impl Repository {
                 .join("main");
             let bytes = proof::read(&file, &mut self.proofs)?;
             Ok(match bytes {
-                Some(bytes) => {
-                    serde_json::from_slice::<Vec<Value>>(&bytes).map_err(io::Error::other)?
-                }
+                Some(bytes) => crate::parse_jsonc(&bytes)
+                    .and_then(|val| serde_json::from_value(val).map_err(io::Error::other))?,
                 None => Vec::new(),
             })
         }

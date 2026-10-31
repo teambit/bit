@@ -2,14 +2,14 @@
 pub(in crate::workspace::engine) use stages::{Complete, complete};
 pub(super) use stages::{Pending, begin, needed};
 
+mod stages;
+mod traversal;
+
 use super::{Prepare, Target, dependencies, invalid};
 use std::{
     collections::{HashMap, HashSet},
     io,
 };
-
-mod stages;
-mod traversal;
 
 fn select(
     adjacency: &HashMap<String, Vec<Target>>,

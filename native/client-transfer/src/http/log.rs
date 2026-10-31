@@ -58,17 +58,25 @@ fn parse(bytes: &[u8], endpoint: &str) -> io::Result<Vec<Value>> {
 
 fn validate_row(row: &Value) -> io::Result<Value> {
     let Some(object) = row.as_object() else { return Err(invalid("remote log row")) };
-    if object.len() != 6
-        || !["message", "username", "email", "date", "hash", "tag"]
-            .iter()
-            .all(|key| object.contains_key(*key))
+    let expected = ["message", "username", "email", "date", "hash", "tag"];
+    if !expected
+        .iter()
+        .all(|key| object.contains_key(*key))
+        || object
+            .keys()
+            .any(|key| key != "__typename" && !expected.contains(&key.as_str()))
         || !row["hash"].is_string()
         || !row["message"].is_string()
-        || ["username", "email", "date", "tag"]
+        || !matches!(row["date"], Value::Null | Value::String(_) | Value::Number(_))
+        || ["username", "email", "tag"]
             .iter()
             .any(|key| !row[*key].is_null() && !row[*key].is_string())
     {
         return Err(invalid("remote log row"));
     }
-    Ok(row.clone())
+    let mut normalized = row.clone();
+    if let Some(number) = normalized["date"].as_i64() {
+        normalized["date"] = Value::String(number.to_string());
+    }
+    Ok(normalized)
 }

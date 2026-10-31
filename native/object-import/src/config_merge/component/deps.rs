@@ -37,10 +37,9 @@ fn append(policy: &mut Value, field: &str, row: Value) {
     if policy.get(field).is_none() {
         policy[field] = json!([]);
     }
-    policy[field]
-        .as_array_mut()
-        .expect("policy array")
-        .push(row);
+    if let Some(rows) = policy[field].as_array_mut() {
+        rows.push(row);
+    }
 }
 fn field(lifecycle: &str) -> io::Result<&'static str> {
     match lifecycle {

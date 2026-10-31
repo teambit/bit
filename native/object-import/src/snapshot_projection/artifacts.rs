@@ -10,6 +10,9 @@ pub(super) fn convert(data: &Value) -> io::Result<Value> {
     let Value::Array(artifacts) = artifacts else {
         return Err(invalid("snapshot builder artifacts array"));
     };
+    if artifacts.len() > 4096 {
+        return Err(invalid("snapshot builder artifacts budget"));
+    }
     let artifacts = artifacts
         .iter()
         .map(artifact)
@@ -24,6 +27,9 @@ fn artifact(artifact: &Value) -> io::Result<Value> {
     let Value::Array(refs) = get(files, "refs") else {
         return Err(invalid("snapshot artifact refs array"));
     };
+    if refs.len() > 4096 {
+        return Err(invalid("snapshot artifact refs budget"));
+    }
     let refs = refs
         .iter()
         .map(reference)

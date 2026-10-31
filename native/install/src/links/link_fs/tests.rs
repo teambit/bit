@@ -1,11 +1,11 @@
-use super::{LinkKind, create_link_or_symlink, linked_correctly, may_link_target, remove_path};
-use std::fs;
-
 #[cfg(unix)]
 mod unix;
 
 #[cfg(windows)]
 mod windows;
+
+use super::{LinkKind, create_link_or_symlink, linked_correctly, may_link_target, remove_path};
+use std::fs;
 
 #[test]
 fn hard_link_kind_links_a_file_that_shares_writes_with_its_source() {

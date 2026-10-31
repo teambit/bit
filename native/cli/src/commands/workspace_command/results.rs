@@ -173,7 +173,7 @@ pub(super) fn rows(value: Option<&Value>) -> io::Result<&[Value]> {
 fn ids(value: Option<&Value>) -> io::Result<Vec<Id>> {
     rows(value)?
         .iter()
-        .map(|id| Id::parse(text(Some(id))?))
+        .map(Id::from_object)
         .collect()
 }
 
@@ -190,7 +190,8 @@ fn changed(row: &Value) -> io::Result<Changed> {
             .iter()
             .map(|(file, status)| Ok((file.clone(), Status::parse(text(Some(status))?)?)))
             .collect::<io::Result<_>>()?;
-    Ok(Changed { id: Id::parse(text(map.get("id"))?)?, files })
+    let raw_id = map.get("id").ok_or_else(|| decline("native command report id"))?;
+    Ok(Changed { id: Id::from_object(raw_id)?, files })
 }
 
 fn component_lists(map: &serde_json::Map<String, Value>, added: bool) -> io::Result<Lists> {
@@ -213,7 +214,8 @@ fn skipped(row: &Value) -> io::Result<(Id, String)> {
     {
         return Err(decline("native command report failure"));
     }
-    Ok((Id::parse(text(map.get("id"))?)?, text(map.get("unchangedMessage"))?.to_string()))
+    let raw_id = map.get("id").ok_or_else(|| decline("native command report id"))?;
+    Ok((Id::from_object(raw_id)?, text(map.get("unchangedMessage"))?.to_string()))
 }
 
 impl Results {

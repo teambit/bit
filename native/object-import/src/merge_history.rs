@@ -3,6 +3,8 @@ pub(crate) mod metadata;
 pub(crate) mod status;
 
 mod graph;
+#[cfg(test)]
+mod tests;
 use crate::protocol;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -147,5 +149,3 @@ pub(crate) fn hash(hash: &str) -> io::Result<[u8; 20]> {
     }
     Ok(bytes)
 }
-#[cfg(test)]
-mod tests;

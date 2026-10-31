@@ -21,16 +21,24 @@ fn matches(row: &Value, selector: &str) -> bool {
     let (name, version) = selector
         .rsplit_once('@')
         .map_or((selector, None), |(name, version)| (name, Some(version)));
-    if version.is_some_and(|version| row["version"].as_str() != Some(version)) {
+    let row_version = row["version"]
+        .as_str()
+        .or_else(|| row["head"].as_str());
+    if version.is_some_and(|version| row_version != Some(version)) {
         return false;
     }
-    let Some(identity) = row["identity"].as_str() else {
+    let Some(raw_identity) = row["identity"]
+        .as_str()
+        .or_else(|| row["id"].as_str())
+    else {
         return false;
     };
+    let identity = raw_identity.rsplit_once('@').map_or(raw_identity, |(base, _)| base);
     let component_name = identity.split_once('/').map_or(identity, |(_, name)| name);
-    let directory = name
+    let normalized = name.replace('\\', "/");
+    let directory = normalized
         .strip_prefix("./")
-        .unwrap_or(name)
+        .unwrap_or(&normalized)
         .trim_end_matches('/');
     identity == name || component_name == name || row["directory"].as_str() == Some(directory)
 }

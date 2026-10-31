@@ -45,11 +45,14 @@ fn record<'v>(value: &'v Value, keys: &[&str]) -> io::Result<&'v serde_json::Map
 }
 
 fn id(value: Option<&Value>) -> io::Result<Id> {
-    let value = text(value)?;
-    if value.len() > 4096 {
+    let value = value.ok_or_else(|| decline("native command report identity"))?;
+    if value
+        .as_str()
+        .is_some_and(|raw| raw.len() > 4096)
+    {
         return Err(decline("native command report identity"));
     }
-    Id::parse(value)
+    Id::from_object(value)
 }
 
 pub fn snaps(value: Option<&Value>) -> io::Result<Option<Snaps>> {

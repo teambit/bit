@@ -33,6 +33,8 @@ mod glob;
 mod ignore;
 mod package_name;
 mod scope_model;
+#[cfg(test)]
+mod tests;
 mod variants;
 
 use crate::{
@@ -308,6 +310,3 @@ impl Loader<'_> {
         Ok(merger.finish())
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -261,7 +261,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 super::internalize::consume_trailing_internalize(iter, &mut pattern)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-d" | "--dry-run" | "--dry-run=true" => dry_run = true,
             "--dry-run=false" => dry_run = false,
             "--allow-staged" | "--allow-staged=true" => allow_staged = true,

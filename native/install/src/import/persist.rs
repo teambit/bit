@@ -140,14 +140,8 @@ fn write_components(
     for (hash, per_remote) in received {
         let existing = repo.read_json(hash)?;
         let (merged, remote_head) = merge_received(existing.as_ref(), per_remote)?;
-        let scope = merged["scope"]
-            .as_str()
-            .unwrap_or_default()
-            .to_string();
-        let name = merged["name"]
-            .as_str()
-            .unwrap_or_default()
-            .to_string();
+        let scope = component_field(&merged, "scope").to_string();
+        let name = component_field(&merged, "name").to_string();
         if existing.as_ref() != Some(&merged) {
             repo.write_raw(hash, &compress_json("Component", hash, &merged)?)?;
         }
@@ -173,17 +167,29 @@ fn merge_received(
     per_remote: &[(String, Value)],
 ) -> io::Result<(Value, Option<String>)> {
     let first = &per_remote[0].1;
-    let scope = first["scope"].as_str().unwrap_or_default();
+    let scope = component_field(first, "scope");
     if let Some((_, origin)) = per_remote
         .iter()
         .find(|(remote, _)| remote == scope)
     {
         let merged = merge_component(existing, origin, true)?;
-        return Ok((merged, origin["head"].as_str().map(str::to_string)));
+        let head = origin["head"]
+            .as_str()
+            .or_else(|| origin["head"]["hash"].as_str())
+            .filter(|value| !value.is_empty())
+            .map(str::to_string);
+        return Ok((merged, head));
     }
     let mut merged = existing.cloned();
     for (_, incoming) in per_remote {
         merged = Some(merge_component(merged.as_ref(), incoming, false)?);
     }
     Ok((merged.unwrap_or_else(|| first.clone()), None))
+}
+
+fn component_field<'a>(value: &'a Value, field: &str) -> &'a str {
+    value[field]
+        .as_str()
+        .or_else(|| value["id"][field].as_str())
+        .unwrap_or_default()
 }

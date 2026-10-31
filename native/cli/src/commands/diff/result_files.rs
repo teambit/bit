@@ -29,7 +29,11 @@ fn one_file_diff(file: &Value, labels: &(String, String)) -> io::Result<Option<V
     if truthy(file.get("same")) {
         return Ok(None);
     }
-    let path = text(file.get("relativePath"))?;
+    let path = text(
+        file.get("relativePath")
+            .or_else(|| file.get("path"))
+            .or_else(|| file.get("filePath")),
+    )?;
     let path = if cfg!(windows) { path.replace('/', r"\") } else { path.to_owned() };
     let raw = text(file.get("rawDiff"))?;
     let raw = raw

@@ -4,6 +4,8 @@
 
 mod graph;
 mod peers;
+#[cfg(test)]
+mod tests;
 
 use super::{calculate::Calculated, session::Session};
 use crate::{engine::RestoreInput, options::InstallOptions, output::Style, policy::scope::Scope};
@@ -101,12 +103,10 @@ fn stored_graph(scope: &Scope, id: &str, version: Option<&str>) -> io::Result<Op
         return Ok(None);
     };
     let Some(bytes) = scope.object(reference, "Source")? else { return Ok(None) };
-    let Ok(graph) = serde_json::from_slice::<Value>(&bytes) else { return Ok(None) };
+    let Ok(text) = std::str::from_utf8(&bytes) else { return Ok(None) };
+    let Ok(graph) = crate::jsonc::parse(text) else { return Ok(None) };
     if graph["schemaVersion"] != SCHEMA_VERSION || graph::is_empty(&graph) {
         return Ok(None);
     }
     Ok(Some(graph))
 }
-
-#[cfg(test)]
-mod tests;

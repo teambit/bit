@@ -60,3 +60,18 @@ fn flattened_id_representation_is_uniform_within_each_historical_field() {
         assert!(project(&json!({"schema":"1.0.0","flattenedDevDependencies":rows})).is_err());
     }
 }
+
+#[test]
+fn validate_accepts_scoped_string_dependency_ids_and_rejects_unscoped() {
+    let valid = json!({
+        "schema": "2.0.0",
+        "dependencies": [{"id": "scope/dep@1.0.0", "relativePaths": []}],
+        "devDependencies": [{"id": {"scope": "scope", "name": "dev", "version": "2.0.0"}, "relativePaths": []}],
+    });
+    assert!(validate(&valid).is_ok());
+    let unscoped = json!({
+        "schema": "2.0.0",
+        "dependencies": [{"id": "dep@1.0.0", "relativePaths": []}],
+    });
+    assert!(validate(&unscoped).is_err());
+}

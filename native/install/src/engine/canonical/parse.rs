@@ -57,22 +57,30 @@ impl<'a> Request<'a> {
 }
 
 fn absolute(value: &Value) -> Option<PathBuf> {
-    let path = PathBuf::from(value.as_str()?);
+    parse_absolute_str(value.as_str()?)
+}
+
+fn parse_absolute_str(text: &str) -> Option<PathBuf> {
+    let trimmed = text.trim();
+    if trimmed.is_empty() || trimmed.contains('\0') {
+        return None;
+    }
+    let path = PathBuf::from(trimmed);
     path.is_absolute().then_some(path)
 }
 
 fn projects(manifests: &Map<String, Value>, root: &Path) -> Option<Vec<Project>> {
-    if !manifests.contains_key(root.to_str()?) {
+    let root_str = root.to_str()?;
+    if !manifests
+        .keys()
+        .any(|key| key.trim() == root_str)
+    {
         return None;
     }
     manifests
         .iter()
         .map(|(dir, manifest)| {
-            let dir = PathBuf::from(dir);
-            Some(Project {
-                dir: dir.is_absolute().then_some(dir)?,
-                manifest: manifest.as_object()?.clone(),
-            })
+            Some(Project { dir: parse_absolute_str(dir)?, manifest: manifest.as_object()?.clone() })
         })
         .collect()
 }

@@ -2,7 +2,7 @@ use super::{MAX_RAW, Response, count, hash, invalid, path};
 use crate::store::Store;
 use flate2::{Compression, write::ZlibEncoder};
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
+use serde_json::json;
 use sha1::{Digest, Sha1};
 use std::{
     collections::HashSet,
@@ -138,7 +138,7 @@ fn validate_body(object: &Object, body: &[u8]) -> io::Result<()> {
         if crate::validate::hexadecimal(&Sha1::digest(body)) != object.hash {
             return Err(invalid("snapshot Source identity changed"));
         }
-    } else if !serde_json::from_slice::<Value>(body).is_ok_and(|value| value.is_object()) {
+    } else if !crate::parse_jsonc(body).is_ok_and(|value| value.is_object()) {
         return Err(invalid("snapshot metadata must be a JSON object"));
     }
     Ok(())

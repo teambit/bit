@@ -45,7 +45,7 @@ pub(super) fn version(value: &str) -> &str {
     value.rsplit_once('@').map_or("latest", |(_, version)| version)
 }
 pub(super) fn identity(base: &str, version: &str) -> String {
-    if version == "latest" {
+    if matches!(version, "latest" | "head") {
         unversioned(base).to_owned()
     } else {
         format!("{}@{version}", unversioned(base))

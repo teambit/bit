@@ -31,7 +31,7 @@ impl Projection<'_> {
         let already = |entries: &[Value]| {
             entries
                 .iter()
-                .any(|dependency| identity(&dependency["id"]).is_ok_and(|id| id == base))
+                .any(|dependency| matches_component_or_package(dependency, &base, &package.name))
         };
         if already(&self.dependencies[0]) || (field == 1 && already(&self.dependencies[1])) {
             return Ok(());
@@ -63,4 +63,9 @@ impl Projection<'_> {
         self.dependencies[field].push(dependency);
         Ok(())
     }
+}
+
+fn matches_component_or_package(dependency: &Value, base: &str, package_name: &str) -> bool {
+    identity(&dependency["id"]).is_ok_and(|id| id == base)
+        || (!package_name.is_empty() && dependency["packageName"].as_str() == Some(package_name))
 }

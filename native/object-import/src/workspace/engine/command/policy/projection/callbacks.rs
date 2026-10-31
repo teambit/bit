@@ -30,6 +30,15 @@ fn identity(row: &Value) -> io::Result<String> {
         }
         return Ok(name.to_owned());
     }
+    if let Some(raw) = row["extensionId"].as_str() {
+        let base = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
+        let (scope, name) =
+            base.split_once('/').ok_or_else(|| invalid("snapshot callback extension identity"))?;
+        if scope.is_empty() || name.is_empty() {
+            return Err(invalid("snapshot callback extension identity"));
+        }
+        return Ok(format!("{scope}/{name}"));
+    }
     let id = row["extensionId"]
         .as_object()
         .ok_or_else(|| invalid("snapshot callback extension identity"))?;

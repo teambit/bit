@@ -140,8 +140,14 @@ fn array_entry(
     lifecycle: Lifecycle,
     options: &VariantOptions,
 ) -> Option<PolicyEntry> {
-    let name = item.get("name")?.as_str()?;
-    let version = string(item.get("version"))?;
+    let name = item
+        .get("name")
+        .or_else(|| item.get("packageName"))?
+        .as_str()?;
+    let version = string(
+        item.get("version")
+            .or_else(|| item.get("supportedRange")),
+    )?;
     let flag = |key: &str| item.get(key).is_some_and(truthy);
     Some(PolicyEntry {
         force: options.force.unwrap_or_else(|| flag("force")),
@@ -159,7 +165,11 @@ pub fn value_entry(name: &str, value: &Value, lifecycle: Lifecycle) -> Option<Po
     match value {
         Value::String(version) => Some(entry(name, version, lifecycle)),
         Value::Object(object) => {
-            let version = string(object.get("version"))?;
+            let version = string(
+                object
+                    .get("version")
+                    .or_else(|| object.get("supportedRange")),
+            )?;
             let flag = |key: &str| object.get(key).is_some_and(truthy);
             Some(PolicyEntry {
                 optional: flag("optional"),
@@ -183,7 +193,16 @@ fn field_values(field: Option<&Value>) -> Vec<(String, Value)> {
         Some(Value::Array(items)) => items
             .iter()
             .filter_map(|item| {
-                Some((item.get("name")?.as_str()?.to_owned(), item.get("version")?.clone()))
+                let name = item
+                    .get("name")
+                    .or_else(|| item.get("packageName"))?
+                    .as_str()?
+                    .to_owned();
+                let version = item
+                    .get("version")
+                    .or_else(|| item.get("supportedRange"))?
+                    .clone();
+                Some((name, version))
             })
             .collect(),
         _ => Vec::new(),

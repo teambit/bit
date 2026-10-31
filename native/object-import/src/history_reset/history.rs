@@ -9,15 +9,13 @@ struct Request {
     fields: js_json::Value,
     keys: Vec<String>,
 }
-pub(super) fn prune(input: Value) -> io::Result<Value> {
-    let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
-    bound(request.keys.len())?;
-    let projected = crate::snapshot_projection::project("LaneHistory", &request.fields)?;
+fn history_entries(fields: &js_json::Value) -> io::Result<Vec<(Vec<u16>, js_json::Value)>> {
+    let projected = crate::snapshot_projection::project("LaneHistory", fields)?;
     let js_json::Value::Object(fields) = projected else {
         return Err(invalid("lane history fields"));
     };
     let history = fields
-        .iter()
+        .into_iter()
         .find(|(key, _)| {
             key.iter()
                 .copied()
@@ -29,9 +27,16 @@ pub(super) fn prune(input: Value) -> io::Result<Value> {
         return Err(invalid("lane history map"));
     };
     bound(entries.len())?;
+    Ok(entries)
+}
+pub(super) fn prune(input: Value) -> io::Result<Value> {
+    let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
+    bound(request.keys.len())?;
+    let entries = history_entries(&request.fields)?;
     let mut removed = HashSet::new();
     let mut remove = Vec::new();
     for key in &request.keys {
+        let key = key.trim();
         text(key)?;
         if let Some(index) = entries
             .iter()

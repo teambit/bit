@@ -1,5 +1,7 @@
 mod fields;
 mod sort;
+#[cfg(test)]
+mod tests;
 
 use super::invalid;
 use crate::js_json::{Value as Js, stringify};
@@ -71,6 +73,3 @@ fn assignments(rows: Vec<(usize, Js)>, mutations: &Value) -> io::Result<Value> {
         .collect::<io::Result<Vec<_>>>()?;
     serde_json::to_value(output).map_err(io::Error::other)
 }
-
-#[cfg(test)]
-mod tests;

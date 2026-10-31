@@ -227,8 +227,8 @@ fn sanitize_lane_name(raw: &str) -> String {
 fn current_bitmap_lane(root: &Path) -> Option<String> {
     let bytes = fs::read(root.join(".bitmap")).ok()?;
     let bitmap = parse_jsonc(&bytes).ok()?;
-    let name = bitmap["_bit_lane"]["id"]["name"].as_str()?;
-    (!name.is_empty() && name != "main").then(|| name.to_owned())
+    let (_, name) = crate::commands::snap_distance::bitmap_lane_scope_and_name(&bitmap)?;
+    (name != "main").then(|| name.to_owned())
 }
 
 fn snap_and_export_pr(

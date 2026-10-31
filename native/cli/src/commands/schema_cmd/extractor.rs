@@ -178,6 +178,7 @@ fn scope_pattern_candidates(scope_dir: &Path) -> Option<Vec<(String, String)>> {
         }
         let identity = if let Some(id_str) = row["id"]
             .as_str()
+            .map(|raw| raw.split('@').next().unwrap_or(raw))
             .filter(|id| id.contains('/'))
         {
             id_str.to_owned()

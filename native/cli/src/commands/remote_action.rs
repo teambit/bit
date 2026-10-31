@@ -80,7 +80,7 @@ pub(super) fn prepare(
 ) -> io::Result<Option<Plan>> {
     let workspace = workspace::root(cwd);
     let Some(scope) = find_scope(cwd, workspace.as_deref()) else { return Ok(None) };
-    let scope_json: Value = serde_json::from_slice(&fs::read(scope.join("scope.json"))?)?;
+    let scope_json: Value = parse_jsonc(&fs::read(scope.join("scope.json"))?)?;
     let config_dir = global_config_dir();
     let global: GlobalConfig = serde_json::from_value(read_global_config(&config_dir)?)?;
     let workspace_json = workspace

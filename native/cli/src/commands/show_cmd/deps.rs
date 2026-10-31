@@ -305,8 +305,8 @@ fn lookup_package_version(
             .join("node_modules")
             .join(pkg_name)
             .join("package.json");
-        if let Ok(text) = fs::read_to_string(pkg_json_path)
-            && let Ok(parsed) = serde_json::from_str::<Value>(&text)
+        if let Ok(bytes) = fs::read(pkg_json_path)
+            && let Ok(parsed) = bit_object_import::parse_jsonc(&bytes)
             && let Some(ver) = parsed["version"].as_str()
         {
             return Some(ver.to_owned());

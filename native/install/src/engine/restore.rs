@@ -7,6 +7,8 @@ mod convert;
 mod dedupe;
 mod dep_path;
 mod merge;
+#[cfg(test)]
+mod tests;
 
 use super::{
     EngineSettings,
@@ -274,6 +276,3 @@ fn save(settings: &EngineSettings, mut lockfile: Map<String, Value>) -> io::Resu
         .save_to_path(&settings.root.join(Lockfile::FILE_NAME), SymlinkedLockfile::Refuse)
         .map_err(|error| diagnostic(&error))
 }
-
-#[cfg(test)]
-mod tests;

@@ -2,6 +2,9 @@
 //! [`commands`] table implements runs in process unless it
 //! declines its input or `BIT_NATIVE=off` is set.
 
+#[cfg(test)]
+mod native_tests;
+
 use crate::{commands, trace};
 use std::{
     env,
@@ -71,6 +74,3 @@ fn warn_fallback(name: &str, reason: &str, args: &[OsString]) {
 fn fallback_message(name: &str, reason: &str) -> String {
     format!("\u{26A0} bit-native: `{name}` runs on the Node.js CLI: {reason}")
 }
-
-#[cfg(test)]
-mod native_tests;

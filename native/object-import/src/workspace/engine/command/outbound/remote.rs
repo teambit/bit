@@ -1,11 +1,12 @@
 //! Direct client-side pending transfer and canonical remote server actions.
-use super::{Pending, Prepare, Retained, invalid};
-use bit_client_transfer::{http::Network, remotes::Remote, tar};
-use serde_json::{Value, json};
-use std::{fs, io, path::Path};
 mod file_bridge;
 mod group;
+
+use super::{Pending, Prepare, Retained, invalid};
+use bit_client_transfer::{http::Network, remotes::Remote, tar};
 use file_bridge::FileBridge;
+use serde_json::{Value, json};
+use std::{fs, io, path::Path};
 
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 

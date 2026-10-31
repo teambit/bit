@@ -58,21 +58,32 @@ fn apply_create_arg<'a>(
 }
 
 fn apply_create_bool(arg: &str, create: &mut CreateArgs) -> bool {
-    let (flag, val) = match arg.split_once('=') {
-        Some((flag, "true")) => (flag, true),
-        Some((flag, "false")) => (flag, false),
-        None => (arg, true),
-        _ => return false,
+    let Some((flag, val)) = parse_bool_flag(arg) else {
+        return false;
     };
+    let allow_false = val || arg.starts_with("--");
     match flag {
         "--install-packages" if !val => return true,
-        "-j" | "--json" if val || arg.starts_with("--") => create.json = val,
-        "-s" | "--seeders-only" if val || arg.starts_with("--") => create.seeders_only = val,
-        "-a" | "--always-new" if val || arg.starts_with("--") => create.always_new = val,
+        "-j" | "--json" if allow_false => create.json = val,
+        "-s" | "--seeders-only" if allow_false => create.seeders_only = val,
+        "-a" | "--always-new" if allow_false => create.always_new = val,
         "--use-hash" => create.use_hash = val,
         _ => return false,
     }
     true
+}
+
+fn parse_bool_flag(arg: &str) -> Option<(&str, bool)> {
+    match arg.split_once('=') {
+        Some((flag, raw)) if raw.trim().eq_ignore_ascii_case("true") || raw.trim() == "1" => {
+            Some((flag, true))
+        }
+        Some((flag, raw)) if raw.trim().eq_ignore_ascii_case("false") || raw.trim() == "0" => {
+            Some((flag, false))
+        }
+        None => Some((arg, true)),
+        _ => None,
+    }
 }
 
 fn apply_create_inline_or_id(arg: &str, create: &mut CreateArgs) -> Option<()> {

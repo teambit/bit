@@ -46,11 +46,10 @@ fn validate_issue(issue: &Value) -> io::Result<()> {
         return Err(invalid("fresh detection issue boundary"));
     }
     let data = issue["data"].as_str().ok_or_else(|| invalid("fresh detection issue data"))?;
-    if matches!(
-        issue["type"].as_str(),
-        Some("UntrackedDependencies" | "RelativeComponentsAuthored"),
-    ) {
-        relative::validate(issue["type"].as_str().expect("matched type"), data)?;
+    if let Some(kind @ ("UntrackedDependencies" | "RelativeComponentsAuthored")) =
+        issue["type"].as_str()
+    {
+        relative::validate(kind, data)?;
     } else if issue["type"] == "MissingPackagesDependenciesOnFs" {
         validate_missing_packages(data)?;
     } else if matches!(issue["type"].as_str(), Some("ParseErrors" | "SelfReference")) {

@@ -1,14 +1,6 @@
 //! The issues status adds to what dependency detection found, formatted as
 //! `IssuesList.toObjectIncludeDataAsString()` formats them.
 
-use super::js::{array, decline, nullish, text, truthy, without_version};
-use serde_json::{Value, json};
-use std::{
-    collections::HashSet,
-    io,
-    path::{Path, PathBuf},
-};
-
 mod callbacks;
 mod cycles;
 mod deprecated;
@@ -17,9 +9,16 @@ mod format;
 mod kinds;
 mod removed;
 mod resolve;
-
 #[cfg(test)]
 mod tests;
+
+use super::js::{array, decline, nullish, text, truthy, without_version};
+use serde_json::{Value, json};
+use std::{
+    collections::HashSet,
+    io,
+    path::{Path, PathBuf},
+};
 
 use cycles::cyclic;
 use kinds::Issue;

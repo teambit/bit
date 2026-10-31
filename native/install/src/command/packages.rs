@@ -7,6 +7,8 @@ pub(super) mod policy_edit;
 pub use names::{extract_package_name, is_valid_package_name};
 
 mod names;
+#[cfg(test)]
+mod tests;
 
 use super::session::{Loaded, Session};
 use crate::{engine, manifests::semver};
@@ -108,6 +110,3 @@ pub fn version_with_save_prefix(
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)
 }
-
-#[cfg(test)]
-mod tests;

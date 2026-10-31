@@ -10,7 +10,7 @@ pub(super) fn report(lanes: &[LaneData], merged: bool, chalk: Chalk) -> String {
             lane.is_merged == Some(merged) || !merged && lane.is_merged.is_none()
         });
     let items = selected
-        .map(|lane| format.item(lane.id["name"].as_str().unwrap_or_default()))
+        .map(|lane| format.item(lane_name(&lane.id)))
         .collect::<Vec<_>>();
     if items.is_empty() {
         return format.hint(if merged {
@@ -20,4 +20,14 @@ pub(super) fn report(lanes: &[LaneData], merged: bool, chalk: Chalk) -> String {
         });
     }
     format.section(if merged { "merged lanes" } else { "unmerged lanes" }, "", &items)
+}
+
+fn lane_name(id: &serde_json::Value) -> &str {
+    id["name"]
+        .as_str()
+        .or_else(|| {
+            id.as_str()
+                .map(|raw| raw.rsplit_once('/').map_or(raw, |(_, name)| name))
+        })
+        .unwrap_or_default()
 }

@@ -1,4 +1,6 @@
 //! Repository short refs match every stored object, as Repository.getFullRefFromShortHash does.
+#[cfg(test)]
+mod tests;
 use crate::workspace::engine::invalid;
 use std::{collections::BTreeSet, fs, io, path::Path};
 
@@ -65,6 +67,3 @@ pub(super) fn unique(prefix: &str, refs: &[String]) -> io::Result<String> {
         ))),
     }
 }
-
-#[cfg(test)]
-mod tests;

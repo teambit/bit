@@ -2,6 +2,9 @@
 //! manifests keep it (`componentsManifestsMap`), and the env peers resolve their
 //! conflicts in it: the version an env lists last wins.
 
+#[cfg(test)]
+mod tests;
+
 use crate::{
     model::WorkspaceComponent,
     policy::{is_core_env, split_version},
@@ -115,6 +118,3 @@ fn full_id(component: &WorkspaceComponent) -> String {
         _ => id,
     }
 }
-
-#[cfg(test)]
-mod tests;

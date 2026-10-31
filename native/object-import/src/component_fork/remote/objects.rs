@@ -9,7 +9,7 @@ use std::{
 type Captured = (Value, Vec<(String, Vec<u8>)>, String, Vec<(String, Vec<u8>)>);
 
 pub(super) fn file(scope: &Path, id: &str, observed: &mut Observed) -> io::Result<Captured> {
-    let index: Value = serde_json::from_slice(&required(observed, &scope.join("index.json"))?)?;
+    let index: Value = crate::parse_jsonc(&required(observed, &scope.join("index.json"))?)?;
     let row = model_row(&index, id)?;
     let hash = row["hash"].as_str().ok_or_else(|| unsupported("fork remote model hash"))?;
     let mut compressed = vec![(hash.to_owned(), retain(scope, hash, observed)?)];
@@ -68,7 +68,7 @@ pub(super) fn http(items: &[ObjectItem], id: &str) -> io::Result<Captured> {
     if kind != "Version" {
         return Err(unsupported("fork remote version type"));
     }
-    let version: Value = serde_json::from_slice(bytes)?;
+    let version: Value = crate::parse_jsonc(bytes)?;
     let mut files = Vec::new();
     for row in source_rows(&version)? {
         let (path, hash) = source(row)?;

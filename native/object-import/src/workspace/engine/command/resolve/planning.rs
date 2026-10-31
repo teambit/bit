@@ -124,23 +124,18 @@ fn materials(
     let order = material_order(selected, &automatic);
     let mut components = input.components.clone();
     bind_new(retained, selected, captured, &mut components)?;
-    let automatic_ids = automatic
+    let automatic_ids: HashSet<String> = automatic
         .iter()
-        .filter_map(|row| row["id"].as_str())
-        .collect::<HashSet<_>>();
+        .filter_map(|row| selection::identity(&row["id"]).ok())
+        .collect();
     let mut materials = order
         .iter()
         .map(|identity| {
-            material(
-                retained,
-                identity,
-                Participation {
-                    selected: selected.contains(identity),
-                    automatic: automatic_ids.contains(identity.as_str()),
-                },
-                captured,
-                &components,
-            )
+            let participation = Participation {
+                selected: selected.contains(identity),
+                automatic: automatic_ids.contains(identity.as_str()),
+            };
+            material(retained, identity, participation, captured, &components)
         })
         .collect::<io::Result<Vec<_>>>()?;
     if !retained.snap.as_ref().is_some_and(|options| options.skip_auto_snap) {
@@ -154,12 +149,10 @@ fn materials(
 
 fn material_order(selected: &[String], automatic: &[Value]) -> Vec<String> {
     let mut order = selected.to_vec();
-    order.extend(
-        automatic
-            .iter()
-            .map(|row| row["id"].as_str().unwrap().to_owned())
-            .filter(|identity| !selected.contains(identity)),
-    );
+    let extra = automatic
+        .iter()
+        .filter_map(|row| selection::identity(&row["id"]).ok());
+    order.extend(extra.filter(|identity| !selected.contains(identity)));
     order
 }
 
@@ -174,12 +167,10 @@ fn auto_seeds(
     selected
         .iter()
         .filter(|identity| {
-            captured
-                .iter()
-                .any(|current| {
-                    current.target.identity == **identity
-                        && !current.target.version.is_empty()
-                })
+            let is_existing = |row: &capture::Captured| {
+                row.target.identity == **identity && !row.target.version.is_empty()
+            };
+            captured.iter().any(is_existing)
         })
         .cloned()
         .collect()
@@ -319,8 +310,8 @@ fn ensure_attached_or_unrelated(
     reference: &str,
     model: &Value,
 ) -> io::Result<Option<Value>> {
-    let head = retained.record.context["lane"]["targets"]
-        .as_array()
+    let lane_targets = retained.record.context["lane"]["targets"].as_array();
+    let head = lane_targets
         .and_then(|rows| {
             rows.iter()
                 .find(|row| row["identity"] == *identity)
@@ -332,8 +323,7 @@ fn ensure_attached_or_unrelated(
                 .into_iter()
                 .filter_map(|field| model[field].as_object())
                 .flat_map(serde_json::Map::values)
-                .filter_map(Value::as_str)
-                .any(|hash| hash == reference)
+                .any(|hash| hash.as_str() == Some(reference))
                 .then_some(reference)
         })
         .ok_or_else(|| invalid("resolve current head"))?;

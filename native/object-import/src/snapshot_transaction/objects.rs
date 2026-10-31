@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "header_tests.rs"]
+mod tests;
+
 use flate2::{Compression, write::ZlibEncoder};
 use rayon::prelude::*;
 use serde_json::{Value, json};
@@ -141,7 +145,3 @@ impl Prepared {
             .write_all(&self.compressed)
     }
 }
-
-#[cfg(test)]
-#[path = "header_tests.rs"]
-mod tests;

@@ -48,10 +48,16 @@ fn predicted(component: &Value, id: &str, errors: &[Value]) -> io::Result<bool> 
     let expected = errors
         .iter()
         .find(|entry| {
-            entry
-                .get("id")
-                .and_then(Value::as_str)
-                .is_some_and(|entry| without_version(entry) == id)
+            let Some(entry_id) = entry.get("id") else {
+                return false;
+            };
+            if let Some(raw) = entry_id.as_str() {
+                without_version(raw) == id
+            } else {
+                let scope = entry_id["scope"].as_str().unwrap_or_default();
+                let name = entry_id["name"].as_str().unwrap_or_default();
+                format!("{scope}/{name}") == id
+            }
         })
         .and_then(|entry| entry.get("issues").cloned())
         .unwrap_or_else(|| json!([]));

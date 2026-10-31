@@ -182,9 +182,7 @@ fn execute_merge(root: &Path, opts: &MergeOptions) -> io::Result<Report> {
 
 fn ensure_on_main_lane(root: &Path) -> io::Result<bool> {
     let bitmap = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
-    let on_lane = bitmap["_bit_lane"]["id"]["name"]
-        .as_str()
-        .is_some_and(|name| !name.is_empty() && name != "main");
+    let on_lane = crate::commands::snap_distance::is_on_non_main_lane(&bitmap);
     if on_lane {
         run_child_bit(
             root,

@@ -38,7 +38,7 @@ fn parse_mode(args: &[&str], import: bool) -> Option<Options> {
             consume_trailing_lanes(values, &mut options)?;
             break;
         }
-        if value == "--no-color" {
+        if matches!(value, "--no-color" | "--no-color=true" | "--no-color=false") {
             continue;
         }
         if value.starts_with('-') {

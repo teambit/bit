@@ -80,7 +80,7 @@ fn clean_index(scope: &std::path::Path) -> bool {
         Ok(bytes) => bytes,
         Err(error) => return error.kind() == io::ErrorKind::NotFound,
     };
-    let Ok(index) = serde_json::from_slice::<Value>(&bytes) else { return false };
+    let Ok(index) = bit_object_import::parse_jsonc(&bytes) else { return false };
     index
         .as_array()
         .is_some_and(|items| items.iter().all(Value::is_object))
@@ -95,7 +95,7 @@ fn clean_index(scope: &std::path::Path) -> bool {
 
 fn clean_unmerged(scope: &std::path::Path) -> bool {
     match std::fs::read(scope.join("unmerged.json")) {
-        Ok(bytes) => serde_json::from_slice::<Value>(&bytes)
+        Ok(bytes) => bit_object_import::parse_jsonc(&bytes)
             .is_ok_and(|value| value.as_array().is_some_and(Vec::is_empty)),
         Err(error) => error.kind() == io::ErrorKind::NotFound,
     }

@@ -2,13 +2,12 @@
 //! remain local, while caller metadata can guard the live cache's reference view.
 pub(crate) mod shape;
 
-use std::{collections::HashSet, io, path::Path};
-
-use super::{Body, Descriptor, MAX_BYTES, MAX_OBJECTS, invalid, object};
-
 #[cfg(test)]
 mod tests;
 mod version;
+
+use super::{Body, Descriptor, MAX_BYTES, MAX_OBJECTS, invalid, object};
+use std::{collections::HashSet, io, path::Path};
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct References {

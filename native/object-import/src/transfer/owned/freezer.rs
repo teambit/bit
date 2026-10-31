@@ -13,10 +13,10 @@ pub(super) fn freeze(
     skip_missing: bool,
 ) -> io::Result<Frozen> {
     let mut frozen = Frozen { entries: Vec::new(), missing: HashSet::new() };
-    let mut compressed = 0;
-    let mut raw = 0;
+    let mut compressed = 0_usize;
+    let mut raw = 0_usize;
     for descriptor in descriptors {
-        let entry = match entry(directory, descriptor, MAX_BYTES - compressed) {
+        let entry = match entry(directory, descriptor, MAX_BYTES.saturating_sub(compressed)) {
             Ok(entry) => entry,
             Err((hash, error)) if skip_missing && error.kind() == io::ErrorKind::NotFound => {
                 frozen.missing.insert(hash);
@@ -24,8 +24,8 @@ pub(super) fn freeze(
             }
             Err((_, error)) => return Err(error),
         };
-        compressed += entry.compressed.len();
-        raw += entry.raw;
+        compressed = compressed.saturating_add(entry.compressed.len());
+        raw = raw.saturating_add(entry.raw);
         if raw > MAX_BYTES {
             return Err(invalid("collection raw byte budget"));
         }

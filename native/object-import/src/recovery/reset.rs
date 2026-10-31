@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "reset_tests.rs"]
+mod tests;
+
 use super::invalid;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
@@ -293,6 +297,3 @@ fn array<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {
         .map(Vec::as_slice)
         .ok_or_else(|| invalid("reset array budget"))
 }
-#[cfg(test)]
-#[path = "reset_tests.rs"]
-mod tests;

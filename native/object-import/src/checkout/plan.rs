@@ -247,8 +247,8 @@ fn metadata(
     if size.parse::<usize>().is_err() || body.len() > MAX_JSON {
         return Err(invalid("checkout plan invalid metadata size"));
     }
-    let value: Value =
-        serde_json::from_slice(body).map_err(|_| invalid("checkout plan invalid metadata JSON"))?;
+    let value =
+        crate::parse_jsonc(body).map_err(|_| invalid("checkout plan invalid metadata JSON"))?;
     if !value.is_object() {
         return Err(invalid("checkout plan metadata must be an object"));
     }

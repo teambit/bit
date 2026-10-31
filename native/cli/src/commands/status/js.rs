@@ -82,14 +82,40 @@ pub fn text(value: Option<&Value>) -> io::Result<&str> {
 
 /// `target.identity + (target.version ? '@' + target.version : '')`.
 pub fn full_identity(target: &Value) -> io::Result<String> {
-    let identity = text(target.get("identity"))?;
+    let identity = base_target_identity(target)?;
+    if identity.contains('@') {
+        return Ok(identity);
+    }
     match target
         .get("version")
+        .or_else(|| target.get("head"))
+        .or_else(|| target["id"].get("version"))
         .and_then(Value::as_str)
         .filter(|version| !version.is_empty())
     {
         Some(version) => Ok(format!("{identity}@{version}")),
-        None => Ok(identity.to_string()),
+        None => Ok(identity),
+    }
+}
+
+fn base_target_identity(target: &Value) -> io::Result<String> {
+    if let Some(identity) = target
+        .get("identity")
+        .or_else(|| target.get("id"))
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty())
+    {
+        return Ok(identity.to_owned());
+    }
+    let object = target["id"].as_object().ok_or_else(|| decline("status expected a string"))?;
+    let name = text(object.get("name"))?;
+    match object
+        .get("scope")
+        .and_then(Value::as_str)
+        .filter(|scope| !scope.is_empty())
+    {
+        Some(scope) => Ok(format!("{scope}/{name}")),
+        None => Ok(name.to_owned()),
     }
 }
 

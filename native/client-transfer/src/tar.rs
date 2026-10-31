@@ -2,6 +2,9 @@
 //! entry per compressed object named `[scope/]hash`, between `.BIT.START` and
 //! `.BIT.END` metadata entries. A `.BIT.ERROR` entry carries a server error.
 
+#[cfg(test)]
+mod tests;
+
 use crate::{invalid, is_hash};
 use serde_json::Value;
 use std::io::{self, Read};
@@ -168,6 +171,3 @@ pub(crate) fn truthy(value: &Value) -> bool {
         Value::Array(_) | Value::Object(_) => true,
     }
 }
-
-#[cfg(test)]
-mod tests;

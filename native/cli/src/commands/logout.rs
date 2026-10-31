@@ -10,7 +10,6 @@ use super::{
 };
 use crate::{history::History, native::Outcome, workspace};
 use bit_workspace_config::global_config_dir;
-use serde_json::Value;
 use std::{
     env,
     ffi::OsString,
@@ -50,7 +49,7 @@ fn valid_args(args: &[OsString]) -> bool {
         if str_arg == "--" {
             return idx + 1 == rest.len();
         }
-        if str_arg != "--no-color" {
+        if !matches!(str_arg, "--no-color" | "--no-color=true" | "--no-color=false") {
             return false;
         }
     }
@@ -62,10 +61,10 @@ fn clear_auth_config(global_dir: &Path) -> io::Result<()> {
     if !path.is_file() {
         return Ok(());
     }
-    let Ok(content) = fs::read_to_string(&path) else {
+    let Ok(content) = fs::read(&path) else {
         return Ok(());
     };
-    let Ok(mut val) = serde_json::from_str::<Value>(&content) else {
+    let Ok(mut val) = bit_object_import::parse_jsonc(&content) else {
         return Ok(());
     };
     let Some(obj) = val.as_object_mut() else {

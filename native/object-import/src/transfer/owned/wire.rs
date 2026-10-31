@@ -149,6 +149,7 @@ pub(super) struct Archive {
 }
 
 pub(super) fn hexadecimal(text: &str) -> std::io::Result<Vec<u8>> {
+    let text = text.trim();
     if !text.len().is_multiple_of(2)
         || text.len() > super::super::MAX_BYTES * 2
         || !text.bytes().all(|byte| byte.is_ascii_hexdigit())

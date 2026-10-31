@@ -53,7 +53,7 @@ fn read_backup(root: &Path, proofs: &mut Vec<proof::Proof>) -> io::Result<(Strin
         return Err(invalid("recovery Lane type"));
     }
     crate::merge_history::hash(fields[1])?;
-    let value: Value = serde_json::from_slice(&raw[nul + 1..]).map_err(io::Error::other)?;
+    let value: Value = crate::parse_jsonc(&raw[nul + 1..]).map_err(io::Error::other)?;
     Ok((fields[1].to_owned(), value))
 }
 fn validate_index(
@@ -63,7 +63,7 @@ fn validate_index(
     name: &str,
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<()> {
-    let index: Value = serde_json::from_slice(
+    let index: Value = crate::parse_jsonc(
         &proof::read(&crate::scope_path(root).join("index.json"), proofs)?
             .ok_or_else(|| invalid("recovery index"))?,
     )
@@ -73,7 +73,10 @@ fn validate_index(
         .is_some_and(|rows| {
             rows.iter()
                 .any(|row| {
-                    row["hash"] == hash && row["id"]["scope"] == scope && row["id"]["name"] == name
+                    row["hash"] == hash
+                        && super::super::inbound::remote::file_list::row_lane_matches(
+                            row, scope, name,
+                        )
                 })
         })
     {

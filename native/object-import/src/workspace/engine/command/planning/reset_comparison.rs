@@ -1,6 +1,8 @@
 //! A reset can discard unparseable working files only when their retained hashes
 //! prove a change independently of dependency metadata. Equal files still need
 //! the full semantic comparison; this is never a substitute dependency graph.
+#[cfg(test)]
+mod tests;
 use super::super::invalid;
 use serde_json::Value;
 use std::{collections::BTreeMap, io};
@@ -35,6 +37,3 @@ fn files(value: &Value, model: bool) -> io::Result<BTreeMap<&str, &str>> {
     }
     Ok(files)
 }
-
-#[cfg(test)]
-mod tests;

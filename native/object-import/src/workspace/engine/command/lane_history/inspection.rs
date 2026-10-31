@@ -160,12 +160,12 @@ pub(in crate::workspace::engine) fn apply(
     request: &Apply,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
-    let retained =
-        state.histories.inspection.as_ref().ok_or_else(|| invalid("lane history owner absent"))?;
+    let mut retained =
+        state.histories.inspection.take().ok_or_else(|| invalid("lane history owner absent"))?;
     if retained.token != request.token {
+        state.histories.inspection = Some(retained);
         return Err(invalid("lane history owner changed"));
     }
-    let mut retained = state.histories.inspection.take().unwrap();
     retained.import.commit_retained()?;
     Ok((1, json!({"applied":true})))
 }

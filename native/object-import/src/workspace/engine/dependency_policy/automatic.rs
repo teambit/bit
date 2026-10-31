@@ -49,7 +49,7 @@ fn update(request: &Request, plan: &mut Plan, field: usize, name: &str, value: &
 fn assign(plan: &mut Plan, field: usize, name: &str, value: &Value, existing: &[Option<usize>; 3]) {
     let range = value
         .as_str()
-        .expect("validated policy string")
+        .unwrap_or_default()
         .to_owned();
     if field == 2
         && let Some(index) = existing[0].or(existing[1])

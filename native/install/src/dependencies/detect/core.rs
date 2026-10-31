@@ -30,8 +30,13 @@ pub(super) fn ordered(imports: &mut [Import]) -> Vec<String> {
     });
     let mut ids = Vec::new();
     for import in imports {
-        if !ids.contains(&import.id) {
-            ids.push(import.id.clone());
+        let trimmed = import.id.trim();
+        if !trimmed.is_empty()
+            && !ids
+                .iter()
+                .any(|existing| existing == trimmed)
+        {
+            ids.push(trimmed.to_owned());
         }
     }
     ids

@@ -56,7 +56,7 @@ impl Plan {
     pub fn identities(&self) -> Vec<String> {
         self.changes
             .iter()
-            .filter_map(|row| row["identity"].as_str().map(str::to_owned))
+            .filter_map(change_identity)
             .collect()
     }
     pub fn validate(&self) -> io::Result<()> {
@@ -81,6 +81,28 @@ impl Plan {
             file_id,
             "move",
         )
+    }
+}
+fn change_identity(row: &Value) -> Option<String> {
+    if let Some(identity) = row["identity"]
+        .as_str()
+        .or_else(|| row["id"].as_str())
+        .filter(|value| !value.is_empty())
+    {
+        return Some(identity.to_owned());
+    }
+    let object = row["id"].as_object()?;
+    let name = object
+        .get("name")?
+        .as_str()
+        .filter(|value| !value.is_empty())?;
+    match object
+        .get("scope")
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty())
+    {
+        Some(scope) => Some(format!("{scope}/{name}")),
+        None => Some(name.to_owned()),
     }
 }
 fn invalid(message: impl Into<String>) -> io::Error {

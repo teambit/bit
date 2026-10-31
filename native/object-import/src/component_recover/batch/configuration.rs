@@ -23,9 +23,17 @@ pub(super) fn prepare(batch: &mut Batch, item: &Item) -> io::Result<Option<Confi
     Ok(Some(Configuration { path, bytes }))
 }
 fn projection(parsed: &Value) -> io::Result<Value> {
-    let has_scope = parsed["componentId"]["scope"]
+    let has_scope = parsed["componentId"]
         .as_str()
-        .is_some_and(|val| !val.is_empty())
+        .and_then(|raw| {
+            raw.rsplit_once('@')
+                .map_or(raw, |(bare, _)| bare)
+                .split_once('/')
+        })
+        .is_some_and(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        || parsed["componentId"]["scope"]
+            .as_str()
+            .is_some_and(|val| !val.is_empty())
         || parsed["defaultScope"]
             .as_str()
             .is_some_and(|val| !val.is_empty());

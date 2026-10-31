@@ -39,10 +39,15 @@ fn scope(store: &Store) -> io::Result<Value> {
         ["name", "remotes", "resolverPath", "license", "groupName", "version", "lanes", "config"]
     {
         if let Some(value) = source
-            .get(key)
+            .shift_remove(key)
             .filter(|value| !value.is_null())
         {
-            result.insert(key.to_owned(), value.clone());
+            result.insert(key.to_owned(), value);
+        }
+    }
+    for (key, value) in source {
+        if !value.is_null() {
+            result.insert(key, value);
         }
     }
     Ok(Value::Object(result))

@@ -1,8 +1,9 @@
+#[cfg(test)]
+mod tests;
+
 use super::{MAX_BYTES, invalid, wire};
 use crate::command_import::Overlay;
 use std::{io, path::Path};
-#[cfg(test)]
-mod tests;
 
 pub(super) fn verify(
     directory: &Path,

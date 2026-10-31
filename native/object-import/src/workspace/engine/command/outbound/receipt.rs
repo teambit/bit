@@ -12,7 +12,7 @@ pub(super) fn prepare(
     let object_count = pending
         .iter()
         .map(|batch| batch.objects.len())
-        .sum::<usize>();
+        .fold(0_usize, usize::saturating_add);
     json!({"token":token,"owner":"rust","nothingToExport":count == 0 && lane.is_none(),
         "lane":lane,
         "componentCount":count,

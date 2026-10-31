@@ -207,7 +207,7 @@ fn is_entry_staged_for_local_only(
     if entry.root_dir.is_empty() || !root.join(&entry.root_dir).is_dir() {
         return Err(Failure::Declined("exported component directory missing".to_owned()));
     }
-    if !bitmap_val["_bit_lane"].is_null() && bitmap_val["_bit_lane"]["id"]["name"] != "main" {
+    if super::snap_distance::is_on_non_main_lane(bitmap_val) {
         return super::snap_distance::is_component_staged_on_lane(
             root,
             bitmap_val,

@@ -161,13 +161,15 @@ fn read_workspace_lane_state(root_opt: Option<&Path>) -> Option<(Option<String>,
     if lane_obj.is_null() {
         return Some((None, false));
     }
-    let name = lane_obj["id"]["name"].as_str().unwrap_or("main");
-    if name == "main" || name.is_empty() {
+    let Some((scope, name)) = super::snap_distance::bitmap_lane_scope_and_name(&bitmap) else {
+        return Some((None, false));
+    };
+    if name == "main" {
         return Some((None, false));
     }
-    let scope = lane_obj["id"]["scope"]
-        .as_str()
-        .filter(|val| !val.is_empty())?;
+    if scope.is_empty() {
+        return None;
+    }
     let exported = lane_obj["exported"].as_bool().unwrap_or(false);
     Some((Some(format!("{scope}/{name}")), exported))
 }
@@ -247,7 +249,7 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     let filtered = args
         .iter()
         .copied()
-        .filter(|arg| *arg != "--no-color")
+        .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect::<Vec<_>>();
     match filtered.as_slice() {
         [] | ["--"] => Some(Subcommand::Bare),

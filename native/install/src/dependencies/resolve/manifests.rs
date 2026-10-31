@@ -40,7 +40,9 @@ impl Resolver<'_> {
         for directory in from.ancestors() {
             let package = directory.join("node_modules").join(name);
             if let Some(manifest) = self.read(&package.join("package.json"))? {
-                return Ok((manifest["componentId"].is_object(), package));
+                let is_component =
+                    manifest["componentId"].is_object() || manifest["componentId"].is_string();
+                return Ok((is_component, package));
             }
         }
         Ok((false, from.join("node_modules").join(name)))
@@ -87,7 +89,7 @@ pub(super) fn from_manifest(manifest: &Value, name: &str) -> Resolved {
         return Resolved::Missing(name.to_owned());
     };
     let concrete = manifest["version"].as_str().map(str::to_owned);
-    if manifest["componentId"].is_object() {
+    if manifest["componentId"].is_object() || manifest["componentId"].is_string() {
         return Resolved::Component(component_package(manifest, package_name, concrete));
     }
     match concrete {
@@ -102,10 +104,6 @@ fn component_package(
     concrete: Option<String>,
 ) -> ResolvedComponent {
     let mut object = manifest["componentId"].clone();
-    let scope = object["scope"].as_str().map(str::to_owned);
-    if manifest["exported"] == Value::Bool(false) {
-        object["scope"] = Value::Null;
-    }
     let mut id = id_from_object(&object)
         .unwrap_or_else(|| ComponentId {
             scope: None,
@@ -113,6 +111,13 @@ fn component_package(
             name: package_name.to_owned(),
             version: None,
         });
+    let scope = id.scope
+        .clone()
+        .or_else(|| object["scope"].as_str().map(str::to_owned));
+    if manifest["exported"] == Value::Bool(false) {
+        id.scope = None;
+        object["scope"] = Value::Null;
+    }
     if id.scope.is_none() {
         id.default_scope = scope;
     }

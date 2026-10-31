@@ -5,8 +5,8 @@ use super::{Plan, wire};
 use crate::transfer::{Archive, Body, Descriptor, header, invalid, object, prepare};
 
 pub(super) fn write(plan: &Plan, request: &wire::Archive) -> io::Result<Value> {
-    let fetch = match request.mode.as_deref() {
-        None | Some("export") => false,
+    let fetch = match request.mode.as_deref().map(str::trim) {
+        None | Some("" | "export") => false,
         Some("fetch") => true,
         _ => return Err(invalid("unsupported archive mode")),
     };
@@ -80,8 +80,11 @@ fn preflight(plan: &Plan, request: &wire::Archive, fetch: bool) -> io::Result<()
 }
 
 fn wrappers(plan: &Plan, request: &wire::Archive) -> io::Result<(Vec<u8>, Vec<u8>)> {
-    let scope = request.scope_name.as_deref().ok_or_else(|| invalid("missing fetch scope name"))?;
-    if scope.is_empty() || scope.len() > 4096 {
+    let scope = request.scope_name
+        .as_deref()
+        .map(str::trim)
+        .ok_or_else(|| invalid("missing fetch scope name"))?;
+    if scope.is_empty() || scope.len() > 4096 || scope.contains('\0') {
         return Err(invalid("unsupported fetch scope name"));
     }
     let start =

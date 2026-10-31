@@ -6,10 +6,10 @@ use std::{env, ffi::OsString, io::IsTerminal};
 /// `colors.supportsColor` of `colors` 1.0.3.
 pub(crate) fn colors(args: &[OsString]) -> bool {
     let has = |flag: &str| args.iter().any(|arg| arg == flag);
-    if has("--no-color") || has("--color=false") {
+    if has("--no-color") || has("--no-color=true") || has("--color=false") {
         return false;
     }
-    if has("--color") || has("--color=true") || has("--color=always") {
+    if has("--color") || has("--color=true") || has("--color=always") || has("--no-color=false") {
         return true;
     }
     if !std::io::stdout().is_terminal() {

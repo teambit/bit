@@ -176,7 +176,7 @@ pub(super) fn has_edges(plan: &mut PreparedImport, version: &Value) -> io::Resul
                 .and_then(|record| record.source)
                 .ok_or_else(|| invalid("import dependency edges missing"))?
         };
-        let edges: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+        let edges: Value = crate::parse_jsonc(&bytes).map_err(io::Error::other)?;
         if edges.as_array().is_none() {
             return Err(invalid("import dependency edges shape"));
         }
@@ -206,7 +206,7 @@ pub(super) fn flattened_dependencies(
                 .and_then(|record| record.source)
                 .ok_or_else(|| invalid("import flattened dependencies missing"))?
         };
-        let parsed: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+        let parsed: Value = crate::parse_jsonc(&bytes).map_err(io::Error::other)?;
         parsed
             .as_array()
             .ok_or_else(|| invalid("import flattened dependencies"))?

@@ -17,9 +17,12 @@ pub(super) struct DependencyPath {
 impl DependencyPath {
     /// `version` + patch hash + peers hash (`depPathToRef`).
     pub(super) fn to_ref(&self) -> String {
+        let base_version = self.version
+            .as_deref()
+            .or(self.non_semver_version.as_deref())
+            .unwrap_or_default();
         format!(
-            "{}{}{}",
-            self.version.as_deref().unwrap_or_default(),
+            "{base_version}{}{}",
             self.patch_hash.as_deref().unwrap_or_default(),
             self.peer_dep_graph_hash.as_deref().unwrap_or_default(),
         )
@@ -27,6 +30,7 @@ impl DependencyPath {
 }
 
 pub(super) fn parse(dep_path: &str) -> DependencyPath {
+    let dep_path = dep_path.trim();
     let Some(separator) = dep_path
         .get(1..)
         .and_then(|rest| rest.find('@'))

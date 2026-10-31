@@ -26,30 +26,62 @@ pub(in crate::component_rename) fn batch_dependents(
     let mut output = Vec::new();
     let mut identities = Vec::new();
     for row in rows {
-        let id =
-            row["identity"].as_str().ok_or_else(|| unsupported("scope rename loaded identity"))?;
+        let id = row_identity(row).ok_or_else(|| unsupported("scope rename loaded identity"))?;
         if targets
             .iter()
-            .any(|target| target == id)
+            .any(|target| target == &id || target.split('@').next() == Some(id.as_str()))
         {
             continue;
         }
         let changes = batch_component(plan, row, &mut matchers, &mut initial)?;
         if !changes.is_empty() {
-            identities.push(id.to_owned());
+            identities.push(id);
             output.extend(changes);
         }
     }
     Ok((output, identities))
 }
+
+fn row_identity(row: &Value) -> Option<String> {
+    if let Some(identity) = row["identity"]
+        .as_str()
+        .or_else(|| row["id"].as_str())
+        .filter(|value| !value.is_empty())
+    {
+        return Some(
+            identity
+                .split('@')
+                .next()
+                .unwrap_or(identity)
+                .to_owned(),
+        );
+    }
+    let object = row["id"].as_object()?;
+    let name = object
+        .get("name")?
+        .as_str()
+        .filter(|value| !value.is_empty())?;
+    match object
+        .get("scope")
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty())
+    {
+        Some(scope) => Some(format!("{scope}/{name}")),
+        None => Some(name.to_owned()),
+    }
+}
+
 fn batch_component(
     plan: &mut Plan,
     row: &Value,
     matchers: &mut refactor::PackageMatchers,
     initial: &mut refactor::PackageMatcher,
 ) -> io::Result<Vec<Change>> {
-    let directory =
-        row["directory"].as_str().ok_or_else(|| unsupported("scope rename loaded directory"))?;
+    let directory = row["directory"]
+        .as_str()
+        .or_else(|| row["rootDir"].as_str())
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| unsupported("scope rename loaded directory"))?;
     let mut component = row.clone();
     component["rootDir"] = Value::String(directory.into());
     let files = row["files"].as_array().ok_or_else(|| unsupported("scope rename loaded files"))?;
@@ -59,6 +91,8 @@ fn batch_component(
         let relative = file
             .as_str()
             .or_else(|| file["relativePath"].as_str())
+            .or_else(|| file["path"].as_str())
+            .filter(|value| !value.is_empty())
             .ok_or_else(|| unsupported("scope rename loaded path"))?;
         let (mut change, _) = dependent_file(plan, &component, directory, relative, initial)?;
         let before = change.bytes.clone();

@@ -1,5 +1,8 @@
 //! Fully formatted issue objects supplied by installed Harmony callbacks.
 
+#[cfg(test)]
+mod tests;
+
 use super::{decline, text};
 use serde_json::Value;
 use std::{collections::HashSet, io};
@@ -42,6 +45,3 @@ pub(super) fn merge(
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

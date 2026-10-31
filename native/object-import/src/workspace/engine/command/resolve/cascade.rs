@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::super::invalid;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
@@ -128,9 +131,6 @@ fn id(row: &Value) -> io::Result<Value> {
     })
 }
 
-#[cfg(test)]
-mod tests;
-
 fn trigger(locator: &Value, rows: &[Value]) -> io::Result<String> {
     let index =
         locator["component"].as_u64().ok_or_else(|| invalid("snap trigger component"))? as usize;
@@ -146,13 +146,15 @@ fn trigger(locator: &Value, rows: &[Value]) -> io::Result<String> {
             .ok_or_else(|| invalid("snap trigger dependency index"))?
     };
     let identity = super::selection::identity(id)?;
-    Ok(
-        match id["version"]
-            .as_str()
-            .filter(|version| !version.is_empty())
-        {
-            Some(version) => format!("{identity}@{version}"),
-            None => identity,
-        },
-    )
+    let version = id["version"]
+        .as_str()
+        .or_else(|| {
+            id.as_str()
+                .and_then(|raw| raw.rsplit_once('@').map(|(_, ver)| ver))
+        })
+        .filter(|version| !version.is_empty());
+    Ok(match version {
+        Some(version) => format!("{identity}@{version}"),
+        None => identity,
+    })
 }

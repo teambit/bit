@@ -155,7 +155,13 @@ fn make_legacy_peer(detected: &mut Detected) {
     let runtime = detected.packages[RUNTIME].shift_remove(LEGACY);
     let dev = detected.packages[DEV].shift_remove(LEGACY);
     if let Some(version) = runtime.or(dev) {
-        detected.packages[PEER].insert(LEGACY.to_owned(), format!("^{version}"));
+        let trimmed = version.trim();
+        let peer_range = if trimmed.starts_with(['^', '~', '>', '<', '=', '*']) {
+            trimmed.to_owned()
+        } else {
+            format!("^{trimmed}")
+        };
+        detected.packages[PEER].insert(LEGACY.to_owned(), peer_range);
     }
 }
 

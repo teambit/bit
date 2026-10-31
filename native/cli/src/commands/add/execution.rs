@@ -72,15 +72,22 @@ fn components(plan: &Plan, projection: &Projection) -> Vec<WorkspaceComponent> {
     plan.components()
         .iter()
         .filter(|row| {
-            row["rootDir"].is_string()
+            (row["rootDir"].is_string() || row["directory"].is_string())
                 && row["files"]
                     .as_array()
                     .is_some_and(|files| !files.is_empty())
         })
         .filter_map(|row| {
+            let identity = row["identity"]
+                .as_str()
+                .or_else(|| row["id"].as_str())?;
+            let bare = identity
+                .split('@')
+                .next()
+                .unwrap_or(identity);
             projection.workspace.components
                 .iter()
-                .find(|component| row["identity"] == component.id.to_string_without_version())
+                .find(|component| component.id.to_string_without_version() == bare)
                 .cloned()
         })
         .collect()

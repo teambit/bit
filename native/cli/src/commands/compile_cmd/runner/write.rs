@@ -10,8 +10,14 @@ pub(super) fn validate_sources(files: &[Value]) -> io::Result<()> {
     for file in files {
         let path = file["absolutePath"]
             .as_str()
+            .or_else(|| file["path"].as_str())
+            .filter(|value| !value.is_empty())
             .ok_or_else(|| io::Error::other("compiler source path"))?;
-        let source = file["source"].as_str().unwrap_or_default();
+        let source = file["source"]
+            .as_str()
+            .or_else(|| file["content"].as_str())
+            .or_else(|| file["contents"].as_str())
+            .unwrap_or_default();
         if source
             .chars()
             .any(|character| character.is_control() && !matches!(character, '\t' | '\r' | '\n'))

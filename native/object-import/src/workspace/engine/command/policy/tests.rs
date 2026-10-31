@@ -80,3 +80,27 @@ fn workspace_aspect_identity_keeps_version_for_added_other_lane_config() {
     let unversioned = workspace_id(&json!({"identity":"scope/env/install-compat"})).unwrap();
     assert_eq!(unversioned["legacy"], "scope/env/install-compat");
 }
+
+#[test]
+fn conflict_aspect_text_accepts_object_extension_id() {
+    let mut policy = Prepared::new();
+    let mut row = row("scope/comp", false);
+    row.receipts.configuration = json!({
+        "input": {"currentLabel": "HEAD", "otherLabel": "incoming"},
+        "result": {
+            "configRows": [{
+                "extensionId": {"scope": "scope", "name": "env/custom", "version": "0.1.0"},
+                "conflict": {
+                    "kind": "basic",
+                    "current": {"value": {"enabled": true}},
+                    "other": {"value": {"enabled": false}}
+                }
+            }]
+        }
+    });
+    policy.rows = vec![row];
+    let dir = tempfile::tempdir().unwrap();
+    let results = super::conflicts::prepare(&mut policy, dir.path()).unwrap();
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0]["compIdStr"], "scope/comp");
+}

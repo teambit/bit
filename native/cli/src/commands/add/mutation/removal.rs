@@ -35,7 +35,16 @@ impl ProjectedLinker {
             .rows(ids)?
             .iter()
             .filter(|row| !row["modified"].is_boolean())
-            .filter_map(|row| row["identity"].as_str().map(str::to_owned))
+            .filter_map(|row| {
+                row["identity"]
+                    .as_str()
+                    .or_else(|| row["id"].as_str())
+                    .map(|id| {
+                        id.rsplit_once('@')
+                            .map_or(id, |(base, _)| base)
+                            .to_owned()
+                    })
+            })
             .collect::<Vec<_>>();
         if !unchecked.is_empty() {
             let mut engine = Engine::new()?;

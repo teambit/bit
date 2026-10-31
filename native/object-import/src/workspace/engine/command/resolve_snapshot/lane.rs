@@ -49,7 +49,9 @@ fn update(
         lane["components"].as_array().ok_or_else(|| invalid("resolve lane components"))?;
     let index = visible
         .iter()
-        .position(|row| row["id"]["scope"] == scope && row["id"]["name"] == name);
+        .position(|row| {
+            super::super::inbound::remote::file_list::row_lane_matches(row, scope, name)
+        });
     let already_hidden = lane["updateDependents"]
         .as_array()
         .is_some_and(|rows| {
@@ -182,9 +184,8 @@ fn history_log(receipt: &Value) -> io::Result<Value> {
 }
 
 fn component_id(row: &Value) -> io::Result<String> {
-    let scope =
-        row["id"]["scope"].as_str().ok_or_else(|| invalid("resolve lane component scope"))?;
-    let name = row["id"]["name"].as_str().ok_or_else(|| invalid("resolve lane component name"))?;
+    let (scope, name) = super::super::inbound::remote::file_list::row_scoped_id_parts(row)
+        .ok_or_else(|| invalid("resolve lane component scope"))?;
     let head = row["head"].as_str().ok_or_else(|| invalid("resolve lane component head"))?;
     Ok(format!("{scope}/{name}@{head}"))
 }

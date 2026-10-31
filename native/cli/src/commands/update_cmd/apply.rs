@@ -108,7 +108,8 @@ fn apply_comp_json_updates(updates: &[ResolvedUpdate]) -> io::Result<()> {
 
 fn update_single_comp_json(path: &Path, group: &[&ResolvedUpdate]) -> io::Result<()> {
     let content = fs::read_to_string(path)?;
-    let mut parsed: Value = serde_json::from_str(&content).map_err(io::Error::other)?;
+    let mut parsed: Value =
+        bit_object_import::parse_jsonc(content.as_bytes()).map_err(io::Error::other)?;
     let key = super::aspect_entry(&parsed["extensions"], DEP_RESOLVER_ID)
         .map_or_else(|| DEP_RESOLVER_ID.to_owned(), |(aspect_key, _)| aspect_key.to_owned());
     for upd in group {

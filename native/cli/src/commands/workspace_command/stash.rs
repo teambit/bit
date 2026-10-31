@@ -145,14 +145,25 @@ impl Captured {
 
     fn plan(&mut self, include_new: bool) -> io::Result<(Value, Vec<Value>)> {
         let components = resolve::component_receipts(&self.context, &self.capture)?;
-        let removal=self.capture.captured.iter().map(|row|{
-            let component=components.iter().find(|component|component["identity"]==row["identity"]);
-            json!({"identity":row["identity"],"extensions":row["current"]["extensions"],"packageName":component.map(|component|&component["packageName"])})
-        }).collect();
+        let removal = self.capture.captured
+            .iter()
+            .map(|row| {
+                let row_id = row["identity"].as_str().or_else(|| row["id"].as_str());
+                let component = components.iter().find(|component| {
+                    component["identity"]
+                        .as_str()
+                        .or_else(|| component["id"].as_str())
+                        == row_id
+                });
+                json!({"identity":row_id,"extensions":row["current"]["extensions"],"packageName":component.map(|component|&component["packageName"])})
+            })
+            .collect();
         let metadata = self.capture.captured
             .iter()
             .filter_map(|row| {
-                let id = row["identity"].as_str()?;
+                let id = row["identity"]
+                    .as_str()
+                    .or_else(|| row["id"].as_str())?;
                 let data = capture::snapshot_data(&self.capture, id)?;
                 Some((id.to_owned(), data["consumerMetadata"].clone()))
             })

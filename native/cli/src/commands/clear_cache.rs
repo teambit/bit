@@ -94,7 +94,7 @@ fn parse_args(args: &[OsString]) -> Option<Option<String>> {
 
 fn apply_token(tokens: &[&str], index: &mut usize, remote: &mut Option<String>) -> Option<()> {
     match tokens[*index] {
-        "--no-color" => Some(()),
+        "--no-color" | "--no-color=true" | "--no-color=false" => Some(()),
         "-r" | "--remote" => {
             *index += 1;
             let value = *tokens.get(*index)?;

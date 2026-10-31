@@ -1,6 +1,8 @@
 //! `filterDiffResults` and `outputDiffResultsFormatted` of component-diff.
 
 mod tables;
+#[cfg(test)]
+mod tests;
 
 use super::options::Options;
 use crate::commands::{
@@ -186,6 +188,3 @@ fn summary(row: &Value, title: &str, stat: bool) -> io::Result<String> {
     }
     Ok(format!("{title}\n{}", lines.join("\n")))
 }
-
-#[cfg(test)]
-mod tests;

@@ -1,3 +1,7 @@
+mod parallel;
+#[cfg(test)]
+mod tests;
+
 use super::super::{invalid, wire};
 use crate::read_budget::Budget;
 use sha1::{Digest, Sha1};
@@ -6,9 +10,6 @@ use std::{
     fs,
     io::{self, Read},
 };
-mod parallel;
-#[cfg(test)]
-mod tests;
 pub(super) struct Loaded {
     pub(super) raw: Vec<u8>,
     pub(super) normalized: Vec<u8>,

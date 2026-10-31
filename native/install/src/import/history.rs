@@ -3,6 +3,9 @@
 //! version is fetched again, and histories found complete record that fact in
 //! `graphCompleteRefs`.
 
+#[cfg(test)]
+mod tests;
+
 use super::{
     bitmap::Id,
     fs_remote::resolve_version,
@@ -158,6 +161,3 @@ fn strings(value: &Value) -> Vec<String> {
         .filter_map(|item| item.as_str().map(str::to_string))
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

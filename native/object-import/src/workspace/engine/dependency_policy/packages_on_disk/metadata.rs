@@ -19,7 +19,10 @@ pub(super) fn resolved(
     let mut concrete = optional_string(package.get("version"))?;
     let identity = if let Some(id) = package.get("componentId").filter(|value| truthy(value)) {
         let identity = identity(id)?;
-        let version = optional_string(id.get("version"))?;
+        let version = match id.as_str() {
+            Some(raw) => raw.rsplit_once('@').map(|(_, ver)| ver),
+            None => optional_string(id.get("version"))?,
+        };
         if concrete.is_some_and(|version| !version.is_empty())
             && version.is_some_and(|version| {
                 !version.is_empty() && !matches!(version, "latest" | "head")
@@ -34,6 +37,21 @@ pub(super) fn resolved(
     Ok(Some(json!({"name":name,"componentIdentity":identity,"concreteVersion":concrete})))
 }
 fn identity(value: &Value) -> io::Result<String> {
+    if let Some(raw) = value.as_str() {
+        let (bare, version) = raw
+            .rsplit_once('@')
+            .map_or((raw, None), |(bare, ver)| (bare, Some(ver)));
+        let (scope, name) = bare
+            .split_once('/')
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid("package component scope"))?;
+        return Ok(
+            match version.filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head")) {
+                Some(ver) => format!("{scope}/{name}@{ver}"),
+                None => format!("{scope}/{name}"),
+            },
+        );
+    }
     let name = value["name"]
         .as_str()
         .filter(|value| !value.is_empty())

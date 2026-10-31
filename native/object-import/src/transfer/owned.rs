@@ -1,18 +1,16 @@
+mod archive;
+mod freezer;
+mod spool;
+mod wire;
+
+use super::{Body, Descriptor, MAX_BYTES, MAX_OBJECTS, State, collection, invalid, object};
+use serde_json::{Value, json};
+use sha1::{Digest, Sha1};
 use std::{
     collections::HashSet,
     fs, io,
     path::{Path, PathBuf},
 };
-
-use serde_json::{Value, json};
-use sha1::{Digest, Sha1};
-
-use super::{Body, Descriptor, MAX_BYTES, MAX_OBJECTS, State, collection, invalid, object};
-
-mod archive;
-mod freezer;
-mod spool;
-mod wire;
 
 #[derive(Clone)]
 pub(super) struct Entry {

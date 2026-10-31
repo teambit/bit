@@ -88,10 +88,12 @@ fn classify(
         plan.hits.push(json!({"path":path,"docs":docs}));
         return Ok(true);
     }
-    if !bit_dependency_scanner::proves_empty_docs(
-        source.bytes(),
-        file["relativePath"].as_str().unwrap_or_default(),
-    ) {
+    let relative = file
+        .as_str()
+        .or_else(|| file["relativePath"].as_str())
+        .or_else(|| file["path"].as_str())
+        .unwrap_or_default();
+    if !bit_dependency_scanner::proves_empty_docs(source.bytes(), relative) {
         return Ok(false);
     }
     *bytes += 2;
@@ -123,12 +125,24 @@ fn hit(cache: &Path, path: &Path, mtime: f64, enabled: bool) -> io::Result<Optio
     if mtime > timestamp {
         return Ok(None);
     }
-    let data = entry["data"].as_str().ok_or_else(|| invalid("docs cache data"))?;
-    Ok(Some(serde_json::from_str(data)?))
+    if let Some(data) = entry["data"].as_str() {
+        return Ok(Some(bit_workspace_config::parse_jsonc(data.as_bytes())?));
+    }
+    if entry["data"].is_object() || entry["data"].is_array() {
+        return Ok(Some(entry["data"].clone()));
+    }
+    Err(invalid("docs cache data"))
 }
 pub(super) fn source_path(root: &Path, component: &Value, file: &Value) -> io::Result<PathBuf> {
-    let directory = component["directory"].as_str().ok_or_else(|| invalid("docs directory"))?;
-    let relative = file["relativePath"].as_str().ok_or_else(|| invalid("docs relative path"))?;
+    let directory = component["directory"]
+        .as_str()
+        .or_else(|| component["rootDir"].as_str())
+        .ok_or_else(|| invalid("docs directory"))?;
+    let relative = file
+        .as_str()
+        .or_else(|| file["relativePath"].as_str())
+        .or_else(|| file["path"].as_str())
+        .ok_or_else(|| invalid("docs relative path"))?;
     // Node path.join normalizes both separator spellings on Windows and drops
     // a workspace-root "." segment. Cache keys use that exact absolute spelling.
     Ok(root

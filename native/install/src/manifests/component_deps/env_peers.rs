@@ -88,13 +88,34 @@ fn explicit_packages(component: &WorkspaceComponent) -> Vec<String> {
     };
     ["dependencies", "devDependencies", "peerDependencies"]
         .into_iter()
-        .filter_map(|field| policy.get(field)?.as_object())
-        .flat_map(|section| section.iter())
-        .filter(|(_, spec)| !is_removal(spec))
-        .map(|(name, _)| name.clone())
+        .flat_map(|field| section_packages(policy.get(field)))
         .collect()
 }
 
+fn section_packages(section: Option<&Value>) -> Vec<String> {
+    match section {
+        Some(Value::Object(entries)) => entries
+            .iter()
+            .filter(|(_, spec)| !is_removal(spec))
+            .map(|(name, _)| name.clone())
+            .collect(),
+        Some(Value::Array(items)) => items
+            .iter()
+            .filter(|item| !is_removal(item))
+            .filter_map(|item| {
+                item.get("name")
+                    .or_else(|| item.get("packageName"))
+                    .and_then(Value::as_str)
+                    .filter(|name| !name.is_empty())
+                    .map(str::to_owned)
+            })
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
 fn is_removal(spec: &Value) -> bool {
-    spec.as_str() == Some("-") || spec.get("version").and_then(Value::as_str) == Some("-")
+    spec.as_str() == Some("-")
+        || spec.get("version").and_then(Value::as_str) == Some("-")
+        || spec.get("supportedRange").and_then(Value::as_str) == Some("-")
 }

@@ -182,18 +182,7 @@ impl Issue {
             Self::Duplicate | Self::NonLoadedEnv | Self::RemovedEnv => {
                 Ok(format!("{SPACE}{}", text(Some(data))?))
             }
-            Self::MissingPackages => {
-                let rows = array(Some(data), "missing packages")?
-                    .iter()
-                    .map(|row| {
-                        let file = text(row.get("filePath"))?;
-                        let packages = row
-                            .get("missingPackages")
-                            .ok_or_else(|| decline("missing packages"))?;
-                        Ok(format!("{SPACE}{file} -> {}", list_or_text(packages)?))
-                    });
-                Ok(rows.collect::<io::Result<Vec<_>>>()?.join("\n"))
-            }
+            Self::MissingPackages => missing_packages_to_string(data),
             Self::MissingDependencies | Self::ImportFromDirectory => {
                 let files = data.as_object().ok_or_else(|| decline("status issue file data"))?;
                 files
@@ -205,8 +194,28 @@ impl Issue {
             // `Object.keys(true)` is empty.
             Self::MissingLinks | Self::MissingDists | Self::Circular => match data {
                 Value::Bool(_) => Ok(String::new()),
+                Value::Array(items) if items.is_empty() => Ok(String::new()),
+                Value::Object(map) if map.is_empty() => Ok(String::new()),
                 _ => Err(decline("status issue data")),
             },
         }
     }
+}
+
+fn missing_packages_to_string(data: &Value) -> io::Result<String> {
+    let rows = array(Some(data), "missing packages")?
+        .iter()
+        .map(|row| {
+            let file = text(
+                row.get("filePath")
+                    .or_else(|| row.get("file"))
+                    .or_else(|| row.get("path")),
+            )?;
+            let packages = row
+                .get("missingPackages")
+                .or_else(|| row.get("packages"))
+                .ok_or_else(|| decline("missing packages"))?;
+            Ok(format!("{SPACE}{file} -> {}", list_or_text(packages)?))
+        });
+    Ok(rows.collect::<io::Result<Vec<_>>>()?.join("\n"))
 }

@@ -67,12 +67,27 @@ fn list(root: &Path, scope: &str) -> io::Result<Vec<String>> {
         .as_array()
         .ok_or_else(|| invalid("fork remote list"))?
         .iter()
-        .map(|row| {
-            row["id"]
-                .as_str()
-                .map(str::to_owned)
-                .ok_or_else(|| invalid("fork remote identity"))
-        })
+        .map(row_identity)
         .collect::<io::Result<Vec<_>>>()?;
     Ok(ids)
+}
+
+fn row_identity(row: &Value) -> io::Result<String> {
+    if let Some(id) = row["id"]
+        .as_str()
+        .or_else(|| row["identity"].as_str())
+        .filter(|id| !id.is_empty())
+    {
+        return Ok(id.to_owned());
+    }
+    let name = row["id"]["name"]
+        .as_str()
+        .or_else(|| row["name"].as_str())
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("fork remote identity"))?;
+    Ok(row["id"]["scope"]
+        .as_str()
+        .or_else(|| row["scope"].as_str())
+        .filter(|scope| !scope.is_empty())
+        .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}")))
 }

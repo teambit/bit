@@ -19,6 +19,9 @@
 //! Packages linked from outside the workspace (`link:`/`file:` dependencies) can change
 //! without any of these changing, so a workspace with such a dependency is never skipped.
 
+#[cfg(test)]
+mod tests;
+
 use crate::{
     dependencies::cache::hex,
     model::{Project, WorkspaceComponent},
@@ -206,7 +209,13 @@ pub(super) fn remove(stamp: &Path) {
 }
 
 fn read(stamp: &Path) -> Option<Stamp> {
-    serde_json::from_slice(&fs::read(stamp).ok()?).ok()
+    let bytes = fs::read(stamp).ok()?;
+    serde_json::from_slice(&bytes)
+        .ok()
+        .or_else(|| {
+            let value = crate::jsonc::parse(std::str::from_utf8(&bytes).ok()?).ok()?;
+            serde_json::from_value(value).ok()
+        })
 }
 
 /// A `link:` or `file:` dependency of any project that resolves outside the workspace's
@@ -391,6 +400,3 @@ fn hash_bytes(hasher: &mut Sha256, value: &[u8]) {
     hasher.update((value.len() as u64).to_le_bytes());
     hasher.update(value);
 }
-
-#[cfg(test)]
-mod tests;

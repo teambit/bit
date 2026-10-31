@@ -1,4 +1,7 @@
 //! Preserve bitmap schema and current-lane metadata across inbound writes.
+#[cfg(test)]
+mod tests;
+
 use super::invalid;
 use serde_json::{Map, Value};
 use std::io;
@@ -11,18 +14,7 @@ pub(super) fn bitmap_metadata(rows: &mut Map<String, Value>) -> io::Result<(Valu
         rows.shift_remove("$schema-version").ok_or_else(|| invalid("inbound bitmap schema"))?;
     let lane = rows.shift_remove("_bit_lane");
     if let Some(lane) = &lane {
-        let id = &lane["id"];
-        crate::command_import::lane::Id {
-            scope: id["scope"]
-                .as_str()
-                .unwrap_or_default()
-                .to_owned(),
-            name: id["name"]
-                .as_str()
-                .unwrap_or_default()
-                .to_owned(),
-        }
-        .validate()?;
+        crate::command_import::lane::parse_lane_id(&lane["id"])?.validate()?;
         if !lane["exported"].is_boolean() {
             return Err(invalid("inbound workspace bitmap lane"));
         }
@@ -50,6 +42,3 @@ fn ordered_ids(rows: &Map<String, Value>, default_scope: &str) -> io::Result<Vec
         })
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

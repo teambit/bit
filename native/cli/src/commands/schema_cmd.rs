@@ -224,7 +224,7 @@ fn parse_diff_options(args: &[&str]) -> Option<DiffOptions> {
                 consume_trailing_schema_args(iter, &mut positional)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             val if !val.starts_with('-') && !val.is_empty() => positional.push(val),
@@ -264,7 +264,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 consume_trailing_schema_args(iter, &mut positional)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-r" | "--remote" | "--remote=true" => remote = true,
             "--remote=false" => remote = false,
             "-j" | "--json" | "--json=true" => json = true,

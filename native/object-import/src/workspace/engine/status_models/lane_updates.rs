@@ -91,9 +91,11 @@ fn forked_updates(
     let heads = refs
         .iter()
         .map(|row| {
-            let scope =
-                row["id"]["scope"].as_str().ok_or_else(|| invalid("status forked scope"))?;
-            let name = row["id"]["name"].as_str().ok_or_else(|| invalid("status forked name"))?;
+            let (scope, name) =
+                crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(
+                    row,
+                )
+                .ok_or_else(|| invalid("status forked scope"))?;
             let head = row["head"].as_str().ok_or_else(|| invalid("status forked head"))?;
             Ok((format!("{scope}/{name}"), head))
         })

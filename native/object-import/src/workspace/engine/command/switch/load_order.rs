@@ -22,10 +22,7 @@ pub(super) fn status_load_order(
     let tracked = targets
         .iter()
         .map(|target| {
-            target["identity"]
-                .as_str()
-                .map(str::to_owned)
-                .ok_or_else(|| invalid("switch identity"))
+            target_identity(target).map(str::to_owned).ok_or_else(|| invalid("switch identity"))
         })
         .collect::<io::Result<Vec<_>>>()?;
     let lane_ids = lane
@@ -57,8 +54,8 @@ pub(super) fn order_targets(context: &mut Value, order: &[String]) -> io::Result
     let mut by_id = targets
         .drain(..)
         .map(|target| {
-            let id = target["identity"].as_str().ok_or_else(|| invalid("switch identity"))?;
-            Ok((id.to_owned(), target))
+            let id = target_identity(&target).ok_or_else(|| invalid("switch identity"))?.to_owned();
+            Ok((id, target))
         })
         .collect::<io::Result<HashMap<_, _>>>()?;
     let ordered = order
@@ -70,4 +67,11 @@ pub(super) fn order_targets(context: &mut Value, order: &[String]) -> io::Result
     }
     *targets = ordered;
     Ok(())
+}
+
+fn target_identity(target: &Value) -> Option<&str> {
+    target["identity"]
+        .as_str()
+        .or_else(|| target["id"].as_str())
+        .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base))
 }

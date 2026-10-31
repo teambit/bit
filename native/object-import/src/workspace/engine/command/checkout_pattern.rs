@@ -27,11 +27,11 @@ pub(in crate::workspace::engine) fn select(
     }
     let known = record.targets
         .iter()
-        .filter_map(|target| target["identity"].as_str())
+        .filter_map(target_identity)
         .collect::<HashSet<_>>();
     let selected = input.identities
         .iter()
-        .map(String::as_str)
+        .map(|id| id.rsplit_once('@').map_or(id.as_str(), |(base, _)| base))
         .collect::<HashSet<_>>();
     if selected.is_empty()
         || selected.len() != input.identities.len()
@@ -43,11 +43,14 @@ pub(in crate::workspace::engine) fn select(
     proof::verify(&input.read_set)?;
     record.repository.validate()?;
     record.proofs.extend(input.read_set);
-    record.targets.retain(|target| {
-        target["identity"]
-            .as_str()
-            .is_some_and(|id| selected.contains(id))
-    });
+    record.targets.retain(|target| target_identity(target).is_some_and(|id| selected.contains(id)));
     record.request.defer_checkout_pattern = false;
     Ok((record.targets.len(), json!({"token":record.token,"targets":record.targets})))
+}
+
+fn target_identity(target: &Value) -> Option<&str> {
+    target["identity"]
+        .as_str()
+        .or_else(|| target["id"].as_str())
+        .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base))
 }

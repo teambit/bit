@@ -1,6 +1,5 @@
 //! Package manifest serialization and command-owned atomic publication errors.
 use super::{Manifest, is_symlink};
-use serde_json::Value;
 use std::{fs, io, path::Path};
 pub(super) fn package(path: &Path, manifest: &Manifest) -> io::Result<bool> {
     write(path, manifest, false)
@@ -62,6 +61,6 @@ fn rename_error(from: &Path, to: &Path, error: io::Error) -> io::Error {
     }
 }
 fn compact_json(text: &str) -> Option<String> {
-    let value: Value = serde_json::from_str(text).ok()?;
+    let value = crate::jsonc::parse(text).ok()?;
     serde_json::to_string(&value).ok()
 }

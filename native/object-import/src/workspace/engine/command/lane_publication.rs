@@ -2,6 +2,8 @@ pub(super) use recovery::encode_model;
 mod objects;
 mod recovery;
 mod squash;
+#[cfg(test)]
+mod tests;
 use super::{Record, invalid, merge::snapshot, repository::Repository};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
@@ -66,7 +68,9 @@ impl Prepared {
             .ok_or_else(|| invalid("command lane target"))?;
         let source =
             target["currentSource"].as_str().ok_or_else(|| invalid("command lane source"))?;
-        if self.context["otherId"]["name"] == "main" && !matches!(source, "visible" | "hidden") {
+        if (self.context["otherId"] == "main" || self.context["otherId"]["name"] == "main")
+            && !matches!(source, "visible" | "hidden")
+        {
             return Ok(());
         }
         objects::update(&mut self.current, identity, head, source == "hidden", removed)
@@ -89,15 +93,22 @@ impl Prepared {
             let hash = self.context["current"]["hash"]
                 .as_str()
                 .ok_or_else(|| invalid("command lane hash"))?;
-            let message = format!(
-                r#"merge from "{}/{}""#,
-                self.context["otherId"]["scope"]
-                    .as_str()
-                    .ok_or_else(|| invalid("command other scope"))?,
-                self.context["otherId"]["name"]
-                    .as_str()
-                    .ok_or_else(|| invalid("command other name"))?,
-            );
+            let (other_scope, other_name) = if let Some((scope, name)) = self.context["otherId"]
+                .as_str()
+                .and_then(|raw| raw.split_once('/'))
+            {
+                (scope, name)
+            } else {
+                (
+                    self.context["otherId"]["scope"]
+                        .as_str()
+                        .ok_or_else(|| invalid("command other scope"))?,
+                    self.context["otherId"]["name"]
+                        .as_str()
+                        .ok_or_else(|| invalid("command other name"))?,
+                )
+            };
+            let message = format!(r#"merge from "{other_scope}/{other_name}""#);
             self.history =
                 objects::history(&self.current, hash, self.history.clone(), receipt, &message)?;
             rewritten.extend(objects::serializable(hash, &self.current, &self.history)?);
@@ -267,6 +278,3 @@ fn load_history(context: &Value, repository: &mut Repository) -> io::Result<Valu
         Err(error) => Err(error),
     }
 }
-
-#[cfg(test)]
-mod tests;

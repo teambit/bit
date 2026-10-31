@@ -5,6 +5,8 @@
 //! core aspect packages.
 
 pub mod dev_files;
+#[cfg(test)]
+mod fresh_tests;
 mod node;
 
 use super::{
@@ -265,6 +267,3 @@ pub fn commit(
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod fresh_tests;

@@ -33,11 +33,11 @@ pub(super) fn select(root: &Path, options: &Options, state: &Value) -> io::Resul
 }
 fn single(options: &Options, state: &Value, scope: String) -> Selected {
     let local = inventory::selected(state, &options.source)
-        .map(|row| {
+        .and_then(|row| {
             row["identity"]
                 .as_str()
-                .unwrap()
-                .to_owned()
+                .or_else(|| row["id"].as_str())
+                .map(str::to_owned)
         });
     Selected {
         local: local.iter().cloned().collect(),
@@ -51,11 +51,11 @@ fn local_matches(options: &Options, pool: &[Value]) -> io::Result<Vec<String>> {
     }
     let ids = pool
         .iter()
-        .map(|row| {
+        .filter_map(|row| {
             row["identity"]
                 .as_str()
-                .unwrap()
-                .to_owned()
+                .or_else(|| row["id"].as_str())
+                .map(str::to_owned)
         })
         .collect::<Vec<_>>();
     matched(&ids, &options.source)

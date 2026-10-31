@@ -1,4 +1,7 @@
 //! Published doctor grammar and archive flag validation.
+#[cfg(test)]
+mod tests;
+
 use std::path::PathBuf;
 
 #[derive(Debug, Default)]
@@ -198,5 +201,3 @@ fn optional_path(args: &[&str], cursor: &mut usize) -> PathBuf {
         PathBuf::from(".")
     }
 }
-#[cfg(test)]
-mod tests;

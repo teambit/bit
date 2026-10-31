@@ -41,9 +41,8 @@ pub(in crate::commands::lane::list) fn lane(
         .iter()
         .filter(|component| component["isDeleted"] != true)
         .map(|component| {
-            let id = &component["id"];
             Ok(json!({
-                "id": format!("{}/{}", text(id.get("scope"))?, text(id.get("name"))?),
+                "id": scoped_id(&component["id"])?,
                 "head": text(component.get("head"))?,
             }))
         })
@@ -89,15 +88,25 @@ pub(super) fn updates(value: &Value) -> io::Result<Option<Vec<Value>>> {
     Ok(update_dependents)
 }
 
+fn scoped_id(id: &Value) -> io::Result<String> {
+    if let Some(raw) = id.as_str() {
+        let (scope, name) = raw
+            .rsplit_once('@')
+            .map_or(raw, |(bare, _)| bare)
+            .split_once('/')
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| decline("lane component identity"))?;
+        return Ok(format!("{scope}/{name}"));
+    }
+    Ok(format!("{}/{}", text(id.get("scope"))?, text(id.get("name"))?))
+}
+
 pub(super) fn readme(value: &Value) -> io::Result<Option<Value>> {
     value
         .get("readmeComponent")
         .filter(|value| !value.is_null())
         .map(|readme| {
-            let id = &readme["id"];
-            let scope = text(id.get("scope"))?;
-            let name = text(id.get("name"))?;
-            let mut output = json!({"id": format!("{scope}/{name}")});
+            let mut output = json!({"id": scoped_id(&readme["id"])?});
             if let Some(head) = readme
                 .get("head")
                 .filter(|head| !head.is_null())
@@ -175,6 +184,9 @@ fn report_current(
     // A current lane missing from the index: `laneIdStr` without an alias.
     let current_label = current_lane.map_or_else(
         || {
+            if let Some(raw) = current.as_str() {
+                return raw.to_owned();
+            }
             let name = current["name"].as_str().unwrap_or_default();
             format!("{}/{name}", current["scope"].as_str().unwrap_or_default())
         },

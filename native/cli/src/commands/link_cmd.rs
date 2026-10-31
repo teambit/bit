@@ -71,7 +71,7 @@ fn apply_token<'a>(
     options: &mut Options,
 ) -> Option<()> {
     match arg {
-        "--no-color" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" => {}
         "-j" | "--json" | "--json=true" => options.json = true,
         "--json=false" => options.json = false,
         "-v" | "--verbose" | "--verbose=true" => options.verbose = true,

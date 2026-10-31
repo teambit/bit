@@ -27,9 +27,10 @@ pub(super) fn plan(existing: &[String], incoming: &[Version]) -> io::Result<Valu
         }
     }
     for (incoming_index, version) in incoming.iter().enumerate() {
+        let target = version.hash.trim();
         if let Some(existing_index) = existing
             .iter()
-            .position(|hash| hash == &version.hash)
+            .position(|existing_hash| existing_hash.trim().eq_ignore_ascii_case(target))
         {
             return Ok(json!({"incomingIndex":incoming_index,"existingIndex":existing_index}));
         }

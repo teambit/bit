@@ -45,7 +45,7 @@ fn indices(value: &Value, loads: bool) -> io::Result<Vec<usize>> {
             let value = if loads { &row["row"] } else { row };
             value
                 .as_u64()
-                .map(|index| index as usize)
+                .and_then(|index| usize::try_from(index).ok())
                 .ok_or_else(|| invalid("merge order index"))
         })
         .collect()

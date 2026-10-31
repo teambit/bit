@@ -8,4 +8,12 @@ fn default_pending_lane_uses_component_scope_while_named_lane_retains_its_scope(
     assert_eq!(lane_id(&model, Some(&lane)), json!({"scope":"component.scope","name":"main"}));
     lane["otherId"]["name"] = json!("feature");
     assert_eq!(lane_id(&model, Some(&lane)), lane["otherId"]);
+    assert_eq!(
+        lane_id(&model, Some(&json!({"otherId": "main"}))),
+        json!({"scope": "component.scope", "name": "main"}),
+    );
+    assert_eq!(
+        lane_id(&model, Some(&json!({"otherId": "workspace.scope/feature"}))),
+        json!({"scope": "workspace.scope", "name": "feature"}),
+    );
 }

@@ -36,11 +36,8 @@ impl Publication {
 pub(super) fn components(retained: &super::Retained, exported_ids: &[String]) -> Vec<String> {
     let identities = exported_ids
         .iter()
-        .map(|id| {
-            id.rsplit_once('@')
-                .map_or(id.as_str(), |(identity, _)| identity)
-                .to_owned()
-        });
+        .map(|id| strip_exported_version(id))
+        .filter(|id| !id.is_empty());
     if matches!(retained.publication, Some(Publication::Lane { .. })) {
         let mut ids = identities.collect::<Vec<_>>();
         ids.sort();
@@ -54,7 +51,7 @@ pub(super) fn components(retained: &super::Retained, exported_ids: &[String]) ->
             .iter()
             .filter(|id| {
                 id.split_once('/')
-                    .is_some_and(|(scope, _)| scope == pending.scope)
+                    .is_some_and(|(scope, _)| scope == pending.scope.trim())
             })
             .cloned()
             .collect::<Vec<_>>();
@@ -63,4 +60,12 @@ pub(super) fn components(retained: &super::Retained, exported_ids: &[String]) ->
         result.extend(group);
     }
     result
+}
+
+fn strip_exported_version(id: &str) -> String {
+    let trimmed = id.trim();
+    match trimmed.rsplit_once('@') {
+        Some((identity, _)) if !identity.is_empty() => identity.trim().to_owned(),
+        _ => trimmed.to_owned(),
+    }
 }

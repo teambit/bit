@@ -113,8 +113,7 @@ impl Batch {
 }
 
 fn candidates(root: &Path) -> io::Result<Vec<String>> {
-    let index: Value =
-        serde_json::from_slice(&fs::read(crate::scope_path(root).join("index.json"))?)?;
+    let index: Value = crate::parse_jsonc(&fs::read(crate::scope_path(root).join("index.json"))?)?;
     let rows = index["components"]
         .as_array()
         .or_else(|| index.as_array())
@@ -142,8 +141,12 @@ fn candidates(root: &Path) -> io::Result<Vec<String>> {
 }
 
 fn identity(row: &Value) -> io::Result<String> {
-    let scope = row["id"]["scope"].as_str().ok_or_else(|| invalid("reset batch scope"))?;
-    let name = row["id"]["name"].as_str().ok_or_else(|| invalid("reset batch name"))?;
+    let (scope_opt, name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
+            .ok_or_else(|| invalid("reset batch name"))?;
+    let scope = scope_opt
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("reset batch scope"))?;
     Ok(format!("{scope}/{name}"))
 }
 
@@ -176,7 +179,7 @@ fn project_index(root: &Path, items: &[Plan]) -> io::Result<Option<BytesChange>>
         return Ok(None);
     }
     let before = fs::read(crate::scope_path(root).join("index.json"))?;
-    let mut index: Value = serde_json::from_slice(&before)?;
+    let mut index: Value = crate::parse_jsonc(&before)?;
     let rows =
         if index.is_array() { index.as_array_mut() } else { index["components"].as_array_mut() }
             .ok_or_else(|| invalid("reset batch index"))?;

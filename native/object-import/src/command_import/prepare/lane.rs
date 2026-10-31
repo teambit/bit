@@ -320,7 +320,11 @@ pub(super) fn remote_lane_hash(
     };
     let matches = rows
         .iter()
-        .filter(|row| row["id"]["scope"] == id.scope && row["id"]["name"] == id.name)
+        .filter(|row| {
+            crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                row, &id.scope, &id.name,
+            )
+        })
         .collect::<Vec<_>>();
     if matches.is_empty() {
         return Err(io::Error::new(

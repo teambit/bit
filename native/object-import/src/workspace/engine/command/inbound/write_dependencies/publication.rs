@@ -1,4 +1,6 @@
 //! Write dependencies with the published package and JSONC serializers.
+#[cfg(test)]
+mod tests;
 use super::invalid;
 use bit_workspace_config::{jsonc::Document, package_json};
 use serde_json::{Map, Value, json};
@@ -106,6 +108,3 @@ fn backup(root: &Path, path: &Path, before: &[u8], file_id: &str) -> io::Result<
         .open(directory.join("metadata.txt"))?;
     writeln!(metadata, "{file_id} Write dependencies")
 }
-
-#[cfg(test)]
-mod tests;

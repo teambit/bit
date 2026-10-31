@@ -258,8 +258,9 @@ impl Cursor {
             return Ok(());
         }
         self.success("unrelated");
-        self.result.as_mut().expect("status result")["unrelated"] =
-            unrelated_result(strategy, local, main);
+        if let Some(result) = self.result.as_mut() {
+            result["unrelated"] = unrelated_result(strategy, local, main);
+        }
         Ok(())
     }
 }

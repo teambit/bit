@@ -102,7 +102,7 @@ fn lane_hash(path: &Path, id: &lane::Id) -> io::Result<String> {
         .ok_or_else(|| invalid("inbound file lane hash"))
 }
 
-pub(in crate::workspace::engine) fn row_lane_matches(row: &Value, scope: &str, name: &str) -> bool {
+pub(crate) fn row_lane_matches(row: &Value, scope: &str, name: &str) -> bool {
     if row["id"]["scope"] == scope && row["id"]["name"] == name {
         return true;
     }
@@ -136,7 +136,7 @@ pub(super) fn indexed(
     Ok((name.to_owned(), hash.to_owned()))
 }
 
-pub(in crate::workspace::engine) fn row_id_parts(row: &Value) -> Option<(Option<&str>, &str)> {
+pub(crate) fn row_id_parts(row: &Value) -> Option<(Option<&str>, &str)> {
     if let Some(name) = row["id"]["name"]
         .as_str()
         .filter(|val| !val.is_empty())
@@ -150,7 +150,7 @@ pub(in crate::workspace::engine) fn row_id_parts(row: &Value) -> Option<(Option<
     (!name.is_empty()).then_some((scope, name))
 }
 
-pub(in crate::workspace::engine) fn row_scoped_id_parts(row: &Value) -> Option<(&str, &str)> {
+pub(crate) fn row_scoped_id_parts(row: &Value) -> Option<(&str, &str)> {
     let (scope, name) = row_id_parts(row)?;
     let scope = scope.filter(|val| !val.is_empty())?;
     (!name.is_empty()).then_some((scope, name))

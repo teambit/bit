@@ -62,14 +62,18 @@ pub(super) fn format_bytes(bytes: u64) -> String {
         (1024_u64.pow(3), "GB"),
         (1024_u64.pow(4), "TB"),
     ];
-    let mut chosen = units[0];
-    for entry in units {
+    let mut chosen_index = 0;
+    for (index, entry) in units.iter().enumerate() {
         if bytes >= entry.0 {
-            chosen = entry;
+            chosen_index = index;
         }
     }
-    let (divisor, unit) = chosen;
-    let tenths = (bytes.saturating_mul(10) + divisor / 2) / divisor;
+    let (mut divisor, mut unit) = units[chosen_index];
+    let mut tenths = (bytes.saturating_mul(10) + divisor / 2) / divisor;
+    if tenths >= 1024 * 10 && chosen_index + 1 < units.len() {
+        (divisor, unit) = units[chosen_index + 1];
+        tenths = (bytes.saturating_mul(10) + divisor / 2) / divisor;
+    }
     format!("{}.{} {unit}", tenths / 10, tenths % 10)
 }
 
@@ -78,7 +82,7 @@ pub(super) fn format_gc_report(result: &GcResult, chalk: Chalk) -> String {
     let freed_size = if result.flags.backup {
         result.dirs.stray_files_size
     } else {
-        result.deleted.size + result.dirs.stray_files_size
+        result.deleted.size.saturating_add(result.dirs.stray_files_size)
     };
     let size_after = result.total_size.saturating_sub(freed_size);
     let header = format_header(&formatter, result, freed_size);
@@ -161,8 +165,12 @@ fn format_size_line(
 ) -> String {
     let (freed_size, size_after) = sizes;
     if result.flags.backup {
-        let in_backup = result.dirs.backup_dir_size
-            + if result.flags.dry_run { 0 } else { result.deleted.size };
+        let in_backup =
+            result.dirs.backup_dir_size.saturating_add(if result.flags.dry_run {
+                0
+            } else {
+                result.deleted.size
+            });
         let note = if result.flags.dry_run {
             let size_str = format_bytes(result.deleted.size);
             format!("({size_str} of it would move to the backup directory)")

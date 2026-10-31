@@ -142,13 +142,8 @@ fn replace(contents: &mut String, entry: &Value) -> io::Result<()> {
     Ok(())
 }
 fn absolute(path: &Path) -> io::Result<()> {
-    if !path.is_absolute()
-        || path
-            .as_os_str()
-            .as_encoded_bytes()
-            .len()
-            > 32768
-    {
+    let bytes = path.as_os_str().as_encoded_bytes();
+    if !path.is_absolute() || bytes.len() > 32768 || bytes.contains(&0) {
         return Err(invalid("config path"));
     }
     Ok(())

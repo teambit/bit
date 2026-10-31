@@ -6,12 +6,22 @@ pub(crate) use compare::modified as compare_owned;
 pub(crate) use modified::modified;
 
 mod bitmap;
+#[cfg(test)]
+mod bitmap_tests;
 mod compare;
 mod diff;
+#[cfg(test)]
+mod diff_tests;
 mod files;
 mod modified;
 mod read;
+#[cfg(test)]
+mod retained_tests;
 mod snapshot;
+#[cfg(test)]
+mod snapshot_tests;
+#[cfg(test)]
+mod tests;
 mod wire;
 
 use serde_json::{Value, json};
@@ -84,11 +94,10 @@ fn manifest(token: &str, files: &[read::File], request: &wire::Begin) -> Value {
         .iter()
         .map(|file| {
             let mut summary = file.summary();
-            if request.memory_only || request.owned_memory {
-                summary
-                    .as_object_mut()
-                    .expect("inspection summary object")
-                    .remove("snapshotPath");
+            if (request.memory_only || request.owned_memory)
+                && let Some(object) = summary.as_object_mut()
+            {
+                object.remove("snapshotPath");
             }
             summary
         })
@@ -107,18 +116,3 @@ fn invalid(message: &str) -> io::Error {
 fn hash(bytes: &[u8]) -> String {
     crate::validate::hexadecimal(&Sha1::digest(bytes))
 }
-
-#[cfg(test)]
-mod tests;
-
-#[cfg(test)]
-mod diff_tests;
-
-#[cfg(test)]
-mod bitmap_tests;
-
-#[cfg(test)]
-mod retained_tests;
-
-#[cfg(test)]
-mod snapshot_tests;

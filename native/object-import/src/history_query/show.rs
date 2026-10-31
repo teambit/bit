@@ -71,7 +71,7 @@ fn hashes(versions: &[Version]) -> io::Result<Vec<String>> {
     Ok(hashes)
 }
 fn identifier(hash: &str, short: bool) -> String {
-    if short { hash[..9].to_owned() } else { hash.to_owned() }
+    if short { hash.get(..9).unwrap_or(hash).to_owned() } else { hash.to_owned() }
 }
 fn edges(request: &Request) -> io::Result<Vec<Edge>> {
     let mut edges: Vec<Edge> = Vec::new();

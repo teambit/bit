@@ -51,13 +51,11 @@ pub(super) async fn run(
     }
     let clear_plans: Vec<_> = to_clear
         .iter()
-        .map(|name| {
-            Arc::clone(
-                &plans[names
-                    .iter()
-                    .position(|candidate| candidate == name)
-                    .expect("probe answers belong to the configured remotes")],
-            )
+        .filter_map(|name| {
+            names
+                .iter()
+                .position(|candidate| candidate == name)
+                .map(|index| Arc::clone(&plans[index]))
         })
         .collect();
     let result = ask(&clear_plans, &to_clear, &options.export_id, true).await?;

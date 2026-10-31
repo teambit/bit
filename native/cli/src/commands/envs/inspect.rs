@@ -177,7 +177,8 @@ fn is_in_scope_index(root: &Path, bare: &str) -> bool {
             let target_name = bare.split_once('/').map_or(bare, |(_, name)| name);
             rows.iter()
                 .any(|row| {
-                    row["isSymlink"] != true && row["id"]["name"].as_str() == Some(target_name)
+                    row["isSymlink"] != true
+                        && crate::commands::scope_set::selection::row_has_name(row, target_name)
                 })
         })
 }
@@ -244,7 +245,7 @@ pub(super) fn run_bare_scope_get(
         .iter()
         .find(|row| {
             row["isSymlink"] != true
-                && (row["id"]["name"].as_str() == Some(bare)
+                && (crate::commands::scope_set::selection::row_has_name(row, bare)
                     || bare_row_full_id(scope_dir, row).as_deref() == Some(bare))
         });
     let Some(row) = matched else {
@@ -291,8 +292,7 @@ fn collect_bare_scope_envs(scope_dir: &Path) -> Option<Vec<(String, String)>> {
 }
 
 fn load_bare_scope_index(scope_dir: &Path) -> Option<Vec<Value>> {
-    let index =
-        serde_json::from_slice::<Value>(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
+    let index = bit_object_import::parse_jsonc(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
     index["components"]
         .as_array()
         .or_else(|| index.as_array())
@@ -302,11 +302,18 @@ fn load_bare_scope_index(scope_dir: &Path) -> Option<Vec<Value>> {
 fn bare_row_full_id(scope_dir: &Path, row: &Value) -> Option<String> {
     if let Some(id_str) = row["id"]
         .as_str()
+        .map(|raw| raw.split('@').next().unwrap_or(raw))
         .filter(|val| val.contains('/'))
     {
         return Some(id_str.to_owned());
     }
-    let name = row["id"]["name"].as_str()?;
+    let name = row["id"]["name"]
+        .as_str()
+        .or_else(|| {
+            row["id"]
+                .as_str()
+                .map(|raw| raw.split('@').next().unwrap_or(raw))
+        })?;
     let scope = row["id"]["scope"]
         .as_str()
         .filter(|val| !val.is_empty())

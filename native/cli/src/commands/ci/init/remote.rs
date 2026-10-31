@@ -19,7 +19,7 @@ fn server() -> Option<Url> {
         .and_then(|value| Url::parse(&value).ok())
 }
 fn capture(value: &str, pattern: &str, group: usize) -> Option<String> {
-    let found = regress::Regex::with_flags(pattern, "i").unwrap().find(value)?;
+    let found = regress::Regex::with_flags(pattern, "i").ok()?.find(value)?;
     Some(value[found.group(group)?].to_owned())
 }
 pub(super) fn host(remote: &str) -> Option<String> {
@@ -42,9 +42,8 @@ pub(super) fn repository(remote: &str) -> Option<Repository> {
             out
         });
     let scheme = regress::Regex::with_flags(r"^[a-z+]+://", "i")
-        .unwrap()
-        .find(remote)
-        .is_some();
+        .ok()
+        .is_some_and(|regex| regex.find(remote).is_some());
     let pattern = if scheme {
         format!(r"(?://|@){escaped}(?::\d+)?/([^/]+/[^/]+?)(?:\.git)?$")
     } else {
@@ -58,9 +57,8 @@ pub(super) fn local(remote: &str) -> bool {
     let value = super::trim(remote);
     let matches = |expression| {
         regress::Regex::with_flags(expression, "i")
-            .unwrap()
-            .find(value)
-            .is_some()
+            .ok()
+            .is_some_and(|regex| regex.find(value).is_some())
     };
     if matches(r"^file://") {
         return true;
@@ -76,15 +74,20 @@ pub(super) fn local(remote: &str) -> bool {
 pub(super) fn redacted(remote: &str) -> String {
     let value = super::trim(remote);
     let https = regress::Regex::with_flags(r"^https?://", "i")
-        .unwrap()
-        .find(value)
-        .is_some();
+        .ok()
+        .is_some_and(|regex| regex.find(value).is_some());
     let pattern =
         if https { r"^(https?://)[^@/]*@" } else { r"^([a-z][a-z0-9+.-]*://[^:@/]*):[^@/]*@" };
-    let Some(found) = regress::Regex::with_flags(pattern, "i").unwrap().find(value) else {
+    let Some(found) = regress::Regex::with_flags(pattern, "i")
+        .ok()
+        .and_then(|regex| regex.find(value))
+    else {
         return value.into();
     };
-    let prefix = &value[found.group(1).unwrap()];
+    let Some(group) = found.group(1) else {
+        return value.into();
+    };
+    let prefix = &value[group];
     format!("{prefix}{}{}", if https { "" } else { "@" }, &value[found.range.end..])
 }
 pub(super) fn inert(value: &str) -> String {
@@ -93,7 +96,7 @@ pub(super) fn inert(value: &str) -> String {
         .fold(String::new(), |mut out, ch| {
             if ch <= '\u{1f}' || ('\u{7f}'..='\u{9f}').contains(&ch) {
                 use std::fmt::Write;
-                write!(out, r"\x{:02x}", u32::from(ch)).unwrap();
+                let _ = write!(out, r"\x{:02x}", u32::from(ch));
             } else {
                 out.push(ch);
             }
@@ -135,17 +138,17 @@ fn refuse(why: &str) -> String {
 }
 fn api_override(server: &Url, raw: &str) -> Result<String, String> {
     let server_host = server.host_str().unwrap_or("github.com");
-    let api = Url::parse(raw).ok();
-    if !api
-        .as_ref()
-        .and_then(Url::host_str)
-        .is_some_and(|host| host == server_host || host == format!("api.{server_host}"))
-    {
+    let Some(api) = Url::parse(raw)
+        .ok()
+        .filter(|api| {
+            api.host_str()
+                .is_some_and(|host| host == server_host || host == format!("api.{server_host}"))
+        })
+    else {
         return Err(refuse(&format!(
             r#"GITHUB_API_URL "{raw}" is not on {server_host} or api.{server_host}"#,
         )));
-    }
-    let api = api.unwrap();
+    };
     let secure = server.scheme() == "https";
     if api.scheme() != "https" && (secure || api.scheme() != "http") {
         return Err(refuse(&format!(

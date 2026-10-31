@@ -216,3 +216,44 @@ fn occupied_directory_error_precedes_duplicate_component_identity() {
         r#"unable to create component at "components/target", this directory is not empty"#,
     );
 }
+
+#[test]
+fn dependency_policy_accepts_object_ids_and_versioned_or_object_exclusions() {
+    let source = json!({
+        "dependencies": [
+            {
+                "source": "auto",
+                "id": {"scope": "team.scope", "name": "ui/button"},
+                "version": "1.2.3",
+                "lifecycle": "runtime"
+            },
+            {
+                "source": "auto",
+                "componentId": "team.scope/excluded@1.0.0",
+                "packageName": "@team/scope.excluded",
+                "version": "1.0.0",
+                "lifecycle": "runtime"
+            },
+            {
+                "source": "auto",
+                "componentId": {"scope": "team.scope", "name": "obj-excluded"},
+                "packageName": "@team/scope.obj-excluded",
+                "version": "2.0.0",
+                "lifecycle": "dev"
+            }
+        ],
+        "excludedComponents": [
+            "team.scope/excluded@0.9.0",
+            {"scope": "team.scope", "name": "obj-excluded"}
+        ]
+    });
+    let policy = super::policy::dependency_policy(&source).unwrap();
+    assert_eq!(
+        policy,
+        vec![json!({
+            "dependencyId": "team.scope/ui/button",
+            "lifecycleType": "runtime",
+            "value": {"version": "^1.2.3"},
+        })],
+    );
+}

@@ -11,6 +11,8 @@ pub(in crate::commands) mod bitmap;
 pub(super) mod table;
 
 mod failure;
+#[cfg(test)]
+mod list_tests;
 mod options;
 mod remote;
 mod report;
@@ -374,6 +376,3 @@ const fn line_terminator(character: char) -> bool {
 fn decline(reason: &str) -> io::Error {
     io::Error::other(reason.to_string())
 }
-
-#[cfg(test)]
-mod list_tests;

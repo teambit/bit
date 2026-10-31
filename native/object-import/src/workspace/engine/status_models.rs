@@ -300,6 +300,6 @@ impl Reader<'_> {
             })?;
         let (size, body) = repository::split(&bytes, hash, kind)?;
         size.parse::<usize>().map_err(|_| invalid("status model header size"))?;
-        serde_json::from_slice(body).map_err(io::Error::other)
+        crate::parse_jsonc(body).map_err(io::Error::other)
     }
 }

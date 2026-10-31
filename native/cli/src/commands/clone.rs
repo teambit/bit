@@ -95,7 +95,7 @@ fn apply_clone_arg<'a>(
     options: &mut Options,
 ) -> Option<()> {
     match arg {
-        "--no-color" => {}
+        "--no-color" | "--no-color=true" | "--no-color=false" => {}
         "-x" | "--skip-dependency-installation" | "--skip-dependency-installation=true" => {
             options.skip_dependency_installation = true;
         }

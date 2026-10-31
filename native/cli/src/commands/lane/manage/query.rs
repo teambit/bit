@@ -92,7 +92,8 @@ fn parse_updates_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>, boo
                 }
                 break;
             }
-            "--undo" | "--undo=true" | "--undo=false" | "--no-color" => {}
+            "--undo" | "--undo=true" | "--undo=false" | "--no-color" | "--no-color=true"
+            | "--no-color=false" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             val if !val.starts_with('-') && !val.is_empty() && lane_name.is_none() => {
@@ -163,7 +164,7 @@ fn parse_history_diff_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>
     while let Some(arg) = iter.next() {
         match arg {
             "--" => break,
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             "-l" | "--lane" => lane_name = Some(non_flag(iter.next()?)?),

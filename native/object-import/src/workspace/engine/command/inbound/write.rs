@@ -3,10 +3,22 @@
 //! the object transaction succeeds.
 pub(super) use preflight::check as preflight;
 
-use super::{Target, invalid};
-use identity::{bitmap_key, matches_target};
+mod directories;
+mod existing;
+mod history;
 mod identity;
+mod metadata;
+mod new_files;
+mod policy;
+mod preflight;
+mod publication;
+mod relocation;
+#[cfg(test)]
+mod tests;
+
+use super::{Target, invalid};
 use crate::command_import::PreparedImport;
+use identity::{bitmap_key, matches_target};
 use serde_json::{Map, Value, json};
 use std::{
     collections::{HashMap, HashSet},
@@ -130,15 +142,15 @@ fn prepare_targets(
     for target in targets {
         plan_target(&context, target, &mut directories, rows, &mut changes, &mut written)?;
     }
-    let bytes = changes.additions
+    let added: usize = changes.additions
         .iter()
         .map(|(_, bytes)| bytes.len())
-        .sum::<usize>()
-        + changes.replacements
-            .iter()
-            .map(|replacement| replacement.after.len())
-            .sum::<usize>();
-    if bytes > MAX_WRITTEN_BYTES {
+        .sum();
+    let replaced: usize = changes.replacements
+        .iter()
+        .map(|item| item.after.len())
+        .sum();
+    if added + replaced > MAX_WRITTEN_BYTES {
         return Err(invalid("inbound workspace materialization bytes"));
     }
     changes.component_order = metadata::component_order(root, rows)?;
@@ -297,7 +309,7 @@ pub(super) fn requires_canonical_history_check(
         && target.version.len() == 40
         && target.version.bytes().all(|byte| byte.is_ascii_hexdigit())
         && (model["head"].as_str().is_none()
-            || (Some(hash) != model["head"].as_str() && version["origin"]["lane"].is_object()))
+            || (Some(hash) != model["head"].as_str() && !version["origin"]["lane"].is_null()))
 }
 
 fn new_directory(
@@ -395,16 +407,3 @@ pub(super) fn version(model: &Value, requested: &str) -> io::Result<(String, Str
         .map_or_else(|| hash.to_owned(), |(tag, _)| tag.clone());
     Ok((name, hash.to_owned()))
 }
-
-mod directories;
-mod existing;
-mod history;
-mod metadata;
-mod new_files;
-mod policy;
-mod preflight;
-mod publication;
-mod relocation;
-
-#[cfg(test)]
-mod tests;

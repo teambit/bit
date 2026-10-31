@@ -69,15 +69,7 @@ impl State {
                 .iter_mut()
                 .find(|row| row["hash"] == *hash)
             {
-                row["parents"] = version["parents"].clone();
-                row["squashed"] = version["squashed"]["previousParents"].clone();
-                if version["unrelated"].is_null() {
-                    row.as_object_mut()
-                        .unwrap()
-                        .remove("unrelated");
-                } else {
-                    row["unrelated"] = version["unrelated"]["head"].clone();
-                }
+                apply_rebased_version(row, version);
                 self.changed.insert(identity.clone());
             }
         }
@@ -172,4 +164,16 @@ fn ancestors(
         output.push(version);
     }
     Ok(output)
+}
+
+fn apply_rebased_version(row: &mut Value, version: &Value) {
+    row["parents"] = version["parents"].clone();
+    row["squashed"] = version["squashed"]["previousParents"].clone();
+    if version["unrelated"].is_null() {
+        if let Some(object) = row.as_object_mut() {
+            object.remove("unrelated");
+        }
+    } else {
+        row["unrelated"] = version["unrelated"]["head"].clone();
+    }
 }

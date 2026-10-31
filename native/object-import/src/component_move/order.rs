@@ -31,7 +31,11 @@ pub(super) fn files(root: &Path, directory: &str, files: &[String]) -> io::Resul
     Ok(ordered)
 }
 fn contains_files(files: &HashSet<String>, directory: &str) -> bool {
-    let prefix = format!("{directory}/");
+    let trimmed = directory.trim().trim_end_matches('/');
+    if trimmed.is_empty() || trimmed == "." {
+        return !files.is_empty();
+    }
+    let prefix = format!("{trimmed}/");
     files
         .iter()
         .any(|file| file.starts_with(&prefix))

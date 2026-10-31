@@ -2,6 +2,9 @@
 //! `PnpmPackageManager.getRegistries`) with Bit's cloud registry layered on
 //! top (`DependencyResolverMain.getRegistries`).
 
+#[cfg(test)]
+mod tests;
+
 use crate::{config::DependencyResolverConfig, model::GlobalConfig};
 use indexmap::IndexMap;
 use pnpm_network::{AuthHeadersByScope, DEFAULT_REGISTRY_SCOPE, nerf_dart};
@@ -171,6 +174,3 @@ pub(super) fn global_string<'a>(global: &'a GlobalConfig, key: &str) -> Option<&
         .and_then(serde_json::Value::as_str)
         .filter(|value| !value.is_empty())
 }
-
-#[cfg(test)]
-mod tests;

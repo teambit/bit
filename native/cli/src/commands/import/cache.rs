@@ -80,6 +80,7 @@ fn selected_targets(context: &Value, ids: &[String]) -> io::Result<Vec<Value>> {
         .filter(|row| {
             row["identity"]
                 .as_str()
+                .or_else(|| row["id"].as_str())
                 .is_some_and(|id| requested.contains(id))
         })
         .cloned()
@@ -123,6 +124,7 @@ fn documentation(
         .map(|target| {
             target["identity"]
                 .as_str()
+                .or_else(|| target["id"].as_str())
                 .map(str::to_owned)
                 .ok_or_else(|| io::Error::other("import documentation identity"))
         })

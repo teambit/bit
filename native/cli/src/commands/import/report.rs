@@ -2,6 +2,9 @@
 //! `ImportCmd.report` and `FetchCmd.report` of `@teambit/importer` over the
 //! engine's receipt.
 
+#[cfg(test)]
+mod report_tests;
+
 use crate::commands::{
     color::Chalk,
     ids::Id,
@@ -369,9 +372,6 @@ fn fetch_item(chalk: Chalk, id: &Id, details: &Details) -> String {
         chalk.cyan(&id.without_version()),
     )
 }
-
-#[cfg(test)]
-mod report_tests;
 
 fn unique_components(ids: &[String]) -> usize {
     ids.iter()

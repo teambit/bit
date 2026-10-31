@@ -77,6 +77,13 @@ fn clean_resolver_dependency(dependency: &mut Value) {
 }
 
 fn remove_empty_version(value: &mut Value) {
+    if let Some(stripped) = value
+        .as_str()
+        .and_then(|raw| raw.strip_suffix('@'))
+    {
+        *value = Value::String(stripped.to_owned());
+        return;
+    }
     if value["version"] == ""
         && let Some(value) = value.as_object_mut()
     {

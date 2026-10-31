@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::invalid;
 use crate::read_budget::Budget;
 use serde_json::Value;
@@ -50,6 +53,13 @@ pub(super) fn component(
 
 fn component_id_matches(component: &Value, target_identity: &str) -> bool {
     let id = &component["componentId"];
+    if let Some(id_str) = id.as_str() {
+        let bare = id_str
+            .split('@')
+            .next()
+            .unwrap_or(id_str);
+        return bare == target_identity;
+    }
     let name = id["name"].as_str().unwrap_or_default();
     let scope = id["scope"]
         .as_str()
@@ -162,5 +172,3 @@ pub(super) fn scope(scope: &Value) -> io::Result<()> {
     }
     Ok(())
 }
-#[cfg(test)]
-mod tests;

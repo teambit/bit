@@ -1,5 +1,8 @@
 //! Validated per-file Version and Source history shared by `log-file` and `blame`.
 
+#[cfg(test)]
+mod tests;
+
 use super::{component_log, invalid};
 use crate::{
     checkout::repository, merge_history, merge_transaction, read_budget::Budget, read_version,
@@ -160,6 +163,3 @@ fn source(
     cache.insert(hash.to_string(), contents.clone());
     Ok(contents)
 }
-
-#[cfg(test)]
-mod tests;

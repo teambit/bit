@@ -14,7 +14,11 @@ pub(super) fn format(row: &mut Value) -> io::Result<()> {
         return Ok(());
     };
     for field in fields {
-        let name = text(field.get("fieldName"))?;
+        let name = text(
+            field
+                .get("fieldName")
+                .or_else(|| field.get("name")),
+        )?;
         if ![
             "packageDependencies",
             "devPackageDependencies",
@@ -76,10 +80,11 @@ fn changes(lines: &[&str]) -> io::Result<Vec<Vec<String>>> {
 }
 
 fn version<'a>(line: Option<&'a str>, prefix: &str, name: &str) -> Option<&'a str> {
-    line?
-        .strip_prefix(prefix)?
-        .strip_prefix(name)?
-        .strip_prefix('@')
+    let rest = line?.strip_prefix(prefix)?.strip_prefix(name)?;
+    rest.strip_prefix('@')
+        .or_else(|| rest.strip_prefix(' '))
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
 }
 
 fn change_type(left: Option<&str>, right: Option<&str>) -> io::Result<&'static str> {

@@ -1,3 +1,7 @@
+mod main;
+mod paths;
+mod projection;
+
 use super::{
     super::{invalid, proof},
     Operation,
@@ -30,9 +34,6 @@ struct Mutations {
     permissions: Vec<(PathBuf, std::fs::Permissions)>,
     staged_bytes: Vec<Option<Vec<u8>>>,
 }
-mod main;
-mod paths;
-mod projection;
 pub(super) fn prepare(
     root: &Path,
     operation: Operation,

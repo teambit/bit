@@ -161,13 +161,17 @@ fn display_ids(rows: &mut [Value], context: &Value) {
             .as_array()
             .into_iter()
             .flatten()
-            .find(|target| target["identity"] == row["id"]);
+            .find(|target| target["identity"] == row["id"] || target["id"] == row["id"]);
         if let Some(version) = target
-            .and_then(|target| target["version"].as_str())
+            .and_then(|target| {
+                target["version"]
+                    .as_str()
+                    .or_else(|| target["head"].as_str())
+            })
             .filter(|version| !version.is_empty())
+            && let Some(id) = row["id"].as_str()
         {
-            row["displayId"] =
-                serde_json::json!(format!("{}@{version}", row["id"].as_str().unwrap()));
+            row["displayId"] = serde_json::json!(format!("{id}@{version}"));
         }
     }
 }

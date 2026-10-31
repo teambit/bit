@@ -129,14 +129,23 @@ fn solution(issue: &Value) -> String {
     if issue["type"] == "ExternalEnvWithoutVersion" {
         return format!(
             r#"(run "bit env set {} {}")"#,
-            issue["data"]["componentId"].as_str().unwrap_or_default(),
-            issue["data"]["envId"].as_str().unwrap_or_default(),
+            display_id(&issue["data"]["componentId"]),
+            display_id(&issue["data"]["envId"]),
         );
     }
     issue["solution"]
         .as_str()
         .filter(|solution| !solution.is_empty())
         .map_or_else(String::new, |solution| format!(" ({solution})"))
+}
+
+fn display_id(value: &Value) -> String {
+    if let Some(raw) = value.as_str() {
+        return raw.to_owned();
+    }
+    let scope = value["scope"].as_str().unwrap_or_default();
+    let name = value["name"].as_str().unwrap_or_default();
+    if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
 }
 
 pub(super) fn issue_data(issue: &Value, chalk: Chalk) -> String {

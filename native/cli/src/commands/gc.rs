@@ -5,7 +5,6 @@ mod collector;
 mod format;
 mod graph;
 mod inventory;
-use crate::commands::workspace_command::filesystem_error as io_error;
 mod restore;
 #[cfg(test)]
 mod tests;
@@ -20,7 +19,10 @@ use super::{
     lane::scope_root::{self, ScopeRoot},
     workspace_command::{self, results::Report},
 };
-use crate::{history::History, native::Outcome, workspace};
+use crate::{
+    commands::workspace_command::filesystem_error as io_error, history::History, native::Outcome,
+    workspace,
+};
 use serde_json::Value;
 use std::{
     env,

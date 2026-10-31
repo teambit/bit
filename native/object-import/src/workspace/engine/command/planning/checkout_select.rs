@@ -60,17 +60,13 @@ fn lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
         .as_array()?
         .iter()
         .find(|row| {
-            row["id"]
-                .as_str()
-                .is_some_and(|id| {
-                    let base = id.rsplit_once('@').map_or(id, |(base, _)| base);
-                    base == identity || base == name
+            super::super::inbound::remote::file_list::row_id_parts(row)
+                .is_some_and(|(row_scope, row_name)| {
+                    row_name == name
+                        && row_scope
+                            .filter(|val| !val.is_empty())
+                            .is_none_or(|val| val == scope)
                 })
-                || row["id"]["name"] == name
-                    && row["id"]["scope"]
-                        .as_str()
-                        .filter(|val| !val.is_empty())
-                        .is_none_or(|val| val == scope)
         })
         .and_then(|row| row["head"].as_str())
 }

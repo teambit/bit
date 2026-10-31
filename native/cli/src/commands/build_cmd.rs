@@ -213,6 +213,8 @@ where
 fn apply_switch(arg: &str, options: &mut Options) -> bool {
     match arg {
         "--no-color"
+        | "--no-color=true"
+        | "--no-color=false"
         | "--install"
         | "--install=true"
         | "--install=false"

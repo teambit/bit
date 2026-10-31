@@ -1,8 +1,8 @@
 //! Native `bit version-history <sub-command>` (`vh`) (`scopes/scope/version-history/version-history-cmd.ts`).
 
+pub(super) mod build;
 pub(super) mod text;
 
-mod build;
 mod remote;
 #[cfg(test)]
 mod tests;
@@ -36,7 +36,7 @@ fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     let filtered = args
         .iter()
         .copied()
-        .filter(|arg| *arg != "--no-color")
+        .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect::<Vec<_>>();
     match filtered.as_slice() {
         ["show", rest @ ..] => parse_show(rest),

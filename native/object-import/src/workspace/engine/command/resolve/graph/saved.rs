@@ -51,7 +51,7 @@ pub(super) fn append(graph: &mut Graph, edges: &Value) -> io::Result<()> {
     if graph
         .values()
         .map(Vec::len)
-        .sum::<usize>()
+        .fold(0_usize, usize::saturating_add)
         > 16384
     {
         return Err(invalid("resolve saved graph total edge budget"));

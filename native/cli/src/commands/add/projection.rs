@@ -114,25 +114,30 @@ fn controls(root: &Path, targets: &mut [Value], added: &[Value]) -> io::Result<O
     Ok(error)
 }
 fn malformed_selected(config: &Value, target: &Value, added: &[Value]) -> bool {
+    let target_id = row_identity(target);
     !config.is_null()
         && config.get("componentId").is_none()
         && added
             .iter()
-            .any(|row| row["identity"] == target["identity"] && row["rootDir"].is_string())
+            .any(|row| {
+                row_identity(row) == target_id
+                    && (row["rootDir"].is_string() || row["directory"].is_string())
+            })
 }
 fn select(added: &[Value], targets: &[Value]) -> Vec<Value> {
     added
         .iter()
         .filter(|row| {
-            row["rootDir"].is_string()
+            (row["rootDir"].is_string() || row["directory"].is_string())
                 && row["files"]
                     .as_array()
                     .is_some_and(|files| !files.is_empty())
         })
         .filter_map(|row| {
+            let row_id = row_identity(row)?;
             targets
                 .iter()
-                .find(|target| target["identity"] == row["identity"])
+                .find(|target| row_identity(target) == Some(row_id))
                 .cloned()
         })
         .collect()
@@ -145,12 +150,19 @@ fn components(workspace: &Workspace, added: &[Value]) -> Vec<Value> {
     }).collect()
 }
 fn tracking_version(row: &mut Value, added: &[Value]) {
+    let row_id = row_identity(row).map(str::to_owned);
     if let Some(added) = added
         .iter()
-        .find(|added| added["identity"] == row["identity"])
+        .find(|added| row_identity(added) == row_id.as_deref())
     {
         row["trackingVersion"] = added["loadVersion"].clone();
     }
+}
+fn row_identity(row: &Value) -> Option<&str> {
+    row["identity"]
+        .as_str()
+        .or_else(|| row["id"].as_str())
+        .map(|id| id.split('@').next().unwrap_or(id))
 }
 fn optional_json(path: &Path) -> io::Result<Value> {
     match std::fs::read(path) {

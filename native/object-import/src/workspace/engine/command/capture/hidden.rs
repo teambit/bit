@@ -1,10 +1,10 @@
+#[cfg(test)]
+mod tests;
+
 use super::{Captured, comparison, invalid, snapshots};
 use crate::workspace::engine::{command::repository::Repository, status_models::harmony};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
-
-#[cfg(test)]
-mod tests;
 
 /// Hidden lane dependents are `ConsumerComponents` loaded from object storage.
 /// Paths are private token keys only; they must never enter workspace inventory

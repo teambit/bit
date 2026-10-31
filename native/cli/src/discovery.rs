@@ -14,7 +14,9 @@
 //! The entry runs with `BIT_NODE_BINARY`, else the newest Node bvm installed
 //! beside the entry, else `node` from `PATH`.
 
-use serde::Deserialize;
+#[cfg(test)]
+mod discovery_tests;
+
 use std::{
     env,
     ffi::OsString,
@@ -154,15 +156,10 @@ fn bvm_link(environment: &Environment) -> Option<NodeCli> {
 
 /// bvm's `config/config.json` names the link `bvm install` maintains.
 fn default_link(bvm: &Path) -> String {
-    #[derive(Deserialize)]
-    struct Config {
-        #[serde(rename = "DEFAULT_LINK")]
-        default_link: Option<String>,
-    }
     fs::read(bvm.join("config").join("config.json"))
         .ok()
-        .and_then(|bytes| serde_json::from_slice::<Config>(&bytes).ok())
-        .and_then(|config| config.default_link)
+        .and_then(|bytes| bit_workspace_config::parse_jsonc(&bytes).ok())
+        .and_then(|config| config["DEFAULT_LINK"].as_str().map(str::to_owned))
         .unwrap_or_else(|| "bit".to_string())
 }
 
@@ -253,14 +250,10 @@ fn bit_dir(entry: &Path) -> Option<PathBuf> {
 }
 
 fn is_bit_package(dir: &Path) -> bool {
-    #[derive(Deserialize)]
-    struct Manifest {
-        name: Option<String>,
-    }
     fs::read(dir.join("package.json"))
         .ok()
-        .and_then(|bytes| serde_json::from_slice::<Manifest>(&bytes).ok())
-        .is_some_and(|manifest| manifest.name.as_deref() == Some("@teambit/bit"))
+        .and_then(|bytes| bit_workspace_config::parse_jsonc(&bytes).ok())
+        .is_some_and(|manifest| manifest["name"].as_str() == Some("@teambit/bit"))
 }
 
 /// `findBvmDir` of `@teambit/bvm.path`: the ancestor whose parent is `links`
@@ -280,6 +273,3 @@ fn bvm_link_of(entry: &Path) -> Option<PathBuf> {
         })
         .map(Path::to_path_buf)
 }
-
-#[cfg(test)]
-mod discovery_tests;

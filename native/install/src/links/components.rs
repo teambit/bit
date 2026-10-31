@@ -5,6 +5,8 @@ pub use prepared::{link_prepared_component, prepared_package_manifest};
 
 mod copies;
 mod prepared;
+#[cfg(test)]
+mod tests;
 mod tracking;
 mod write;
 
@@ -357,6 +359,3 @@ fn root_component_modules_dirs(root_components_dir: &Path) -> io::Result<Vec<Pat
     }
     Ok(dirs)
 }
-
-#[cfg(test)]
-mod tests;

@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{
     super::{
         capture, invalid, repository,
@@ -159,6 +162,12 @@ fn enrich_package(dependency: &mut Value, entries: &[Value]) -> io::Result<()> {
     let identity = selection::identity(&dependency["id"])?;
     let version = dependency["id"]["version"]
         .as_str()
+        .or_else(|| {
+            dependency["id"]
+                .as_str()
+                .and_then(|raw| raw.rsplit_once('@').map(|(_, ver)| ver))
+        })
+        .filter(|version| !version.is_empty())
         .ok_or_else(|| invalid("resolve hidden dependency version"))?;
     let id = format!("{identity}@{version}");
     if let Some(name) = entries
@@ -170,6 +179,3 @@ fn enrich_package(dependency: &mut Value, entries: &[Value]) -> io::Result<()> {
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;

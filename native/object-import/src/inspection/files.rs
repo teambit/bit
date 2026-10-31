@@ -14,7 +14,9 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
         current.insert(&file.relative_path);
         let status = match models.get(&file.relative_path) {
             None => "new",
-            Some(model) if model.hash == file.linux_hash => "unchanged",
+            Some(model) if model.hash.trim().eq_ignore_ascii_case(file.linux_hash.trim()) => {
+                "unchanged"
+            }
             Some(_) => "modified",
         };
         statuses.push(json!({"relativePath":file.relative_path,"status":status}));

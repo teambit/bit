@@ -1,5 +1,8 @@
 //! `VersionFileParser`: exact component lines, comments and the last DEFAULT.
 
+#[cfg(test)]
+mod tests;
+
 use crate::commands::status::js::decline;
 use bit_install::policy::scope::read_proof;
 use serde_json::{Value, json};
@@ -67,6 +70,3 @@ pub(super) fn entered_versions(data: &Value) -> Vec<String> {
         .map(str::to_owned)
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

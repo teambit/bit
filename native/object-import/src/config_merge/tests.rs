@@ -52,3 +52,48 @@ fn structural_data_equality_ignores_object_order_with_preserved_serialization() 
     assert_eq!(left, right);
     assert_ne!(serde_json::to_string(&left).unwrap(), serde_json::to_string(&right).unwrap());
 }
+
+fn sample_aspect_entries() -> Value {
+    let env_ext = json!({
+        "name": "teambit.envs/envs",
+        "stringId": "teambit.envs/envs",
+        "idWithoutVersion": "teambit.envs/envs",
+        "config": {"env": "teambit.harmony/node"},
+        "configJson": r#"{"env":"teambit.harmony/node"}"#,
+        "configPretty": r#"{"env":"teambit.harmony/node"}"#,
+        "data": {"id": "teambit.harmony/node"},
+        "specific": false,
+    });
+    let dep_ext = json!({
+        "name": "teambit.dependencies/dependency-resolver",
+        "stringId": "teambit.dependencies/dependency-resolver",
+        "idWithoutVersion": "teambit.dependencies/dependency-resolver",
+        "config": {"policy": {"dependencies": {"@scope/pkg": "1.0.0"}}},
+        "configJson": r#"{"policy":{"dependencies":{"@scope/pkg":"1.0.0"}}}"#,
+        "configPretty": r#"{"policy":{"dependencies":{"@scope/pkg":"1.0.0"}}}"#,
+        "data": {"dependencies": [{"__type": "component", "componentId": "scope/pkg@1.0.0", "id": "scope/pkg@1.0.0", "packageName": "@scope/pkg", "version": "1.0.0", "lifecycle": "runtime", "source": "auto"}]},
+        "specific": false,
+    });
+    json!([env_ext, dep_ext])
+}
+
+#[test]
+fn config_component_matches_aspect_entries_with_string_or_scoped_component_id() {
+    let entries = sample_aspect_entries();
+    let input = json!({
+        "compIdStr": "scope/ui/button",
+        "current": entries,
+        "base": entries,
+        "other": entries,
+        "coreNames": ["teambit.envs/envs", "teambit.dependencies/dependency-resolver"],
+        "workspaceIds": [{"base": "scope/pkg", "legacy": "scope/pkg@1.0.0"}],
+        "otherLaneIds": [],
+        "strategy": null,
+        "currentLabel": "1.0.0",
+        "otherLabel": "2.0.0",
+        "semver": {},
+        "shouldMergeAspectsData": false,
+    });
+    let result = super::apply("configComponent", &input).unwrap();
+    assert!(result["configRows"].is_array());
+}

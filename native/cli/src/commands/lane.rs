@@ -30,7 +30,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     let argv: Vec<&str> = raw_argv
         .into_iter()
-        .filter(|arg| *arg != "--no-color")
+        .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect();
     match argv.get(1).copied() {
         None => list::run_default(args, &argv[1..]),

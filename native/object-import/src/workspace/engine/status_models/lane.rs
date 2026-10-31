@@ -122,7 +122,7 @@ fn parse_id(id: &str) -> io::Result<(&str, &str)> {
 }
 
 fn local_object(root: &Path, reader: &Reader<'_>, scope: &str, name: &str) -> io::Result<Value> {
-    let index: Value = serde_json::from_slice(
+    let index: Value = crate::parse_jsonc(
         &Budget::new(4 * 1024 * 1024)
             .read(File::open(crate::scope_path(root).join("index.json"))?)?,
     )
@@ -135,7 +135,10 @@ fn local_object(root: &Path, reader: &Reader<'_>, scope: &str, name: &str) -> io
     let row = rows
         .iter()
         .find(|row| {
-            row["isSymlink"] != true && row["id"]["scope"] == scope && row["id"]["name"] == name
+            row["isSymlink"] != true
+                && crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
+                    row, scope, name,
+                )
         })
         .ok_or_else(|| invalid("status current lane missing"))?;
     let hash = row["hash"].as_str().ok_or_else(|| invalid("status lane hash"))?;
@@ -155,14 +158,12 @@ fn component_heads(lane: &Value, default_scope: &str) -> io::Result<HashMap<Stri
     }
     let mut heads = HashMap::new();
     for row in components {
-        let component_scope = row["id"]["scope"]
-            .as_str()
+        let (scope_opt, component_name) =
+            crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
+                .ok_or_else(|| invalid("status lane component name"))?;
+        let component_scope = scope_opt
             .filter(|scope| !scope.is_empty())
             .unwrap_or(default_scope);
-        let component_name = row["id"]["name"]
-            .as_str()
-            .filter(|name| !name.is_empty())
-            .ok_or_else(|| invalid("status lane component name"))?;
         let head = row["head"].as_str().ok_or_else(|| invalid("status lane component head"))?;
         crate::merge_history::hash(head)?;
         let identity = format!("{component_scope}/{component_name}");
@@ -186,8 +187,8 @@ fn remote(root: &Path, scope: &str, name: &str) -> io::Result<HashMap<String, St
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(HashMap::new()),
         Err(error) => return Err(error),
     };
-    let rows: Value = serde_json::from_slice(&Budget::new(4 * 1024 * 1024).read(file)?)
-        .map_err(io::Error::other)?;
+    let rows: Value =
+        crate::parse_jsonc(&Budget::new(4 * 1024 * 1024).read(file)?).map_err(io::Error::other)?;
     let rows = rows
         .as_array()
         .filter(|rows| rows.len() <= 4096)
@@ -195,10 +196,9 @@ fn remote(root: &Path, scope: &str, name: &str) -> io::Result<HashMap<String, St
     let mut seen = HashSet::new();
     let mut remotes = HashMap::new();
     for row in rows {
-        let component_scope =
-            row["id"]["scope"].as_str().ok_or_else(|| invalid("status lane remote scope"))?;
-        let component_name =
-            row["id"]["name"].as_str().ok_or_else(|| invalid("status lane remote name"))?;
+        let (component_scope, component_name) =
+            crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(row)
+                .ok_or_else(|| invalid("status lane remote scope"))?;
         let head = row["head"].as_str().ok_or_else(|| invalid("status lane remote head"))?;
         crate::merge_history::hash(head)?;
         let id = format!("{component_scope}/{component_name}");

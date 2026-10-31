@@ -49,12 +49,13 @@ const BUILTINS: [&str; 42] = [
 /// Whether `specifier` names a built-in module or one of its subpaths (`fs/promises`).
 #[must_use]
 pub fn is_builtin(specifier: &str) -> bool {
-    if specifier.starts_with("node:") {
-        return true;
+    let trimmed = specifier.trim();
+    if let Some(rest) = trimmed.strip_prefix("node:") {
+        return !rest.trim().is_empty();
     }
-    let root = specifier
+    let root = trimmed
         .split('/')
         .next()
-        .unwrap_or(specifier);
+        .unwrap_or(trimmed);
     BUILTINS.contains(&root)
 }

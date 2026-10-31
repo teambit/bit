@@ -118,7 +118,7 @@ fn parse_arguments(args: &[OsString]) -> Option<Vec<String>> {
             consume_trailing_packages(iter, &mut packages)?;
             break;
         }
-        if string != "--no-color" {
+        if !matches!(string, "--no-color" | "--no-color=true" | "--no-color=false") {
             packages.push(string.to_owned());
         }
     }

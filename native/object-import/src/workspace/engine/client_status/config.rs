@@ -3,6 +3,8 @@ pub(in crate::workspace::engine) use bitmap::{
 };
 pub(crate) use bitmap::{is_config_removed, is_extension_aspect};
 
+mod bitmap;
+
 use super::invalid;
 use crate::recovery::jsonc;
 use bitmap::identifier;
@@ -12,8 +14,6 @@ use std::{
     io::{self, Read},
     path::Path,
 };
-
-mod bitmap;
 
 const PREVIEW: &str = "teambit.preview/preview";
 const ISSUES: &str = "teambit.component/issues";

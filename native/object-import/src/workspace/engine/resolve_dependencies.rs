@@ -349,7 +349,8 @@ fn load_directory(file: &Path, budget: &Budget, depth: usize) -> io::Result<Opti
 }
 fn local_source(package: Option<&Value>) -> io::Result<Option<&str>> {
     let Some(package) = package.filter(|package| {
-        package["_bit_local"] == true && package["componentId"].is_object()
+        package["_bit_local"] == true
+            && (package["componentId"].is_object() || package["componentId"].is_string())
     }) else {
         return Ok(None);
     };

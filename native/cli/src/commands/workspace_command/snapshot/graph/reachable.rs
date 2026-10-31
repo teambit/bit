@@ -1,4 +1,7 @@
 //! Released 2.2.147 graph filtering copies only reachable packages and snapshots.
+#[cfg(test)]
+mod tests;
+
 use super::{Snapped, convert, remove_workspace_package, replacer::Replacer};
 use serde_json::{Map, Value};
 use std::{collections::HashSet, io};
@@ -158,15 +161,11 @@ fn scrub_back_edges(snapshot: &mut Value, package: &str) {
             .is_some_and(|version| version.starts_with("file:"))
         {
             dependencies.shift_remove(package);
-            if dependencies.is_empty() {
-                snapshot
-                    .as_object_mut()
-                    .unwrap()
-                    .shift_remove(field);
+            if dependencies.is_empty()
+                && let Some(snapshot) = snapshot.as_object_mut()
+            {
+                snapshot.shift_remove(field);
             }
         }
     }
 }
-
-#[cfg(test)]
-mod tests;

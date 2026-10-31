@@ -1,5 +1,8 @@
 //! Which dependency build scripts may run (`resolveScriptPolicies` in `lynx.ts`).
 
+#[cfg(test)]
+mod tests;
+
 use crate::config::DependencyResolverConfig;
 use indexmap::IndexMap;
 use serde_json::Value;
@@ -117,6 +120,3 @@ fn configured_builds(allow_scripts: Option<&IndexMap<String, Value>>) -> BTreeMa
         })
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

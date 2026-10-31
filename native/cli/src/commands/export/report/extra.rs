@@ -7,8 +7,17 @@ pub(super) fn ids<'a>(receipt: &'a Value, field: &str) -> Vec<&'a str> {
         .as_array()
         .into_iter()
         .flatten()
-        .filter_map(Value::as_str)
+        .filter_map(entry_text)
         .collect()
+}
+
+fn entry_text(entry: &Value) -> Option<&str> {
+    entry
+        .as_str()
+        .or_else(|| entry["id"].as_str())
+        .or_else(|| entry["identity"].as_str())
+        .or_else(|| entry["url"].as_str())
+        .filter(|text| !text.is_empty())
 }
 
 pub(super) fn missing(receipt: &Value, format: &Formatter) -> String {

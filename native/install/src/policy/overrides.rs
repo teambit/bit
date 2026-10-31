@@ -28,7 +28,11 @@ pub const fn field_index(lifecycle: Lifecycle) -> usize {
 pub fn auto_detect(policy: &[PolicyEntry]) -> FieldMaps {
     let mut result = FieldMaps::default();
     for entry in policy.iter().filter(|entry| !entry.force) {
-        result[field_index(entry.lifecycle)].insert(entry.name.clone(), entry.version.clone());
+        let name = entry.name.trim();
+        let version = entry.version.trim();
+        if !name.is_empty() && !version.is_empty() {
+            result[field_index(entry.lifecycle)].insert(name.to_owned(), version.to_owned());
+        }
     }
     result
 }
@@ -40,12 +44,17 @@ pub fn deps(policy: &[PolicyEntry]) -> FieldMaps {
     let mut result = FieldMaps::default();
     let mut used: Vec<&str> = Vec::new();
     for entry in policy.iter().filter(|entry| entry.force) {
-        if used.contains(&entry.name.as_str()) && entry.version != REMOVE {
+        let name = entry.name.trim();
+        let version = entry.version.trim();
+        if name.is_empty() || version.is_empty() {
             continue;
         }
-        result[field_index(entry.lifecycle)].insert(entry.name.clone(), entry.version.clone());
-        if entry.version != REMOVE {
-            used.push(&entry.name);
+        if used.contains(&name) && version != REMOVE {
+            continue;
+        }
+        result[field_index(entry.lifecycle)].insert(name.to_owned(), version.to_owned());
+        if version != REMOVE {
+            used.push(name);
         }
     }
     result
@@ -56,7 +65,7 @@ pub fn deps(policy: &[PolicyEntry]) -> FieldMaps {
 pub fn ignored(overrides: &FieldMaps, lifecycle: Lifecycle) -> Vec<String> {
     overrides[field_index(lifecycle)]
         .iter()
-        .filter(|(_, version)| version.as_str() == REMOVE)
+        .filter(|(_, version)| version.trim() == REMOVE)
         .map(|(name, _)| name.clone())
         .collect()
 }

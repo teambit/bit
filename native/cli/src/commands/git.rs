@@ -55,7 +55,7 @@ fn parse_args(args: &[OsString]) -> Option<Parsed> {
         .map(|arg| arg.to_str())
         .collect::<Option<Vec<_>>>()?
         .into_iter()
-        .filter(|token| *token != "--no-color")
+        .filter(|token| !matches!(*token, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect::<Vec<_>>();
     let (&sub, rest) = tokens.split_first()?;
     if sub.is_empty() || sub.starts_with('-') {

@@ -177,13 +177,12 @@ fn result_sections(value: &Value, chalk: Chalk, sections: &mut Vec<String>) {
         let symbol = chalk.red("✖");
         let mut section = format!("{symbol} {}", chalk.bold_white("tester errors"));
         for error in errors {
-            write!(
+            let _ = write!(
                 section,
                 "\n   {symbol} {}: {}",
                 error["envId"].as_str().unwrap_or("unknown env"),
                 error["message"].as_str().unwrap_or("undefined"),
-            )
-            .unwrap();
+            );
         }
         sections.push(section);
     }
@@ -206,7 +205,7 @@ fn no_tests_section(value: &Value, chalk: Chalk, verbose: bool, sections: &mut V
         let mut section = chalk.dim(&hint);
         if verbose {
             for name in names {
-                write!(section, "\n   {} {name}", chalk.dim("›")).unwrap();
+                let _ = write!(section, "\n   {} {name}", chalk.dim("›"));
             }
         }
         sections.push(section);

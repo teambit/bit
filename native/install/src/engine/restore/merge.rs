@@ -26,10 +26,13 @@ fn entries(value: Option<&Value>) -> impl Iterator<Item = (&String, &Value)> {
 fn importer_version(dep: &Value) -> Option<&str> {
     dep.as_str()
         .or_else(|| dep.get("version").and_then(Value::as_str))
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
 }
 
 fn is_local(version: &str) -> bool {
-    version.starts_with("link:") || version.starts_with("file:")
+    let trimmed = version.trim();
+    trimmed.starts_with("link:") || trimmed.starts_with("file:")
 }
 
 /// `name@version` of every non-local dependency in `deps`.
@@ -261,7 +264,8 @@ fn merge_bit(existing: Option<&Value>, graph: Option<&Value>) -> Option<Value> {
 
 /// Everything before the first `(` (`removePeerSuffix` in `pnpm.package-manager.ts`).
 fn remove_peer_suffix(dep_path: &str) -> &str {
-    dep_path
+    let trimmed = dep_path.trim();
+    trimmed
         .find('(')
-        .map_or(dep_path, |index| &dep_path[..index])
+        .map_or(trimmed, |index| &trimmed[..index])
 }

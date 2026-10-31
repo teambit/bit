@@ -32,7 +32,11 @@ impl Component {
 
     pub(in crate::workspace::engine::command) fn pinned_from_config(&self) -> HashSet<String> {
         self.config_pinned_entries()
-            .filter_map(|entry| entry["identity"].as_str())
+            .filter_map(|entry| {
+                entry["identity"]
+                    .as_str()
+                    .or_else(|| entry["id"].as_str())
+            })
             .map(|identity| {
                 identity
                     .rsplit_once('@')
@@ -48,10 +52,17 @@ impl Component {
     ) -> Vec<String> {
         self.config_pinned_entries()
             .filter_map(|entry| {
-                let identity = entry["identity"].as_str()?;
-                let (base, version) = identity
+                let identity = entry["identity"]
+                    .as_str()
+                    .or_else(|| entry["id"].as_str())?;
+                let (base, inline_ver) = identity
                     .rsplit_once('@')
                     .unwrap_or((identity, ""));
+                let version = if inline_ver.is_empty() {
+                    entry["version"].as_str().unwrap_or_default()
+                } else {
+                    inline_ver
+                };
                 if !filter_ids.contains(base) {
                     return None;
                 }
@@ -101,7 +112,10 @@ fn pinned_dependent_row(
     ids_to_tag: &HashSet<&str>,
     ids_with_new_version: &HashSet<&str>,
 ) -> Option<Value> {
-    let identity = target["identity"].as_str()?;
+    let raw = target["identity"]
+        .as_str()
+        .or_else(|| target["id"].as_str())?;
+    let identity = raw.rsplit_once('@').map_or(raw, |(base, _)| base);
     if ids_to_tag.contains(identity) {
         return None;
     }
@@ -112,7 +126,10 @@ fn pinned_dependent_row(
     if pinned.is_empty() {
         return None;
     }
-    let version = target["version"].as_str().unwrap_or_default();
+    let version = target["version"]
+        .as_str()
+        .or_else(|| target["head"].as_str())
+        .unwrap_or_default();
     let id = if version.is_empty() { identity.to_owned() } else { format!("{identity}@{version}") };
     Some(json!({"id": id, "pinnedDependencies": pinned}))
 }
@@ -247,10 +264,18 @@ fn bind_new_extensions(extensions: &mut Value, identities: &HashSet<String>) {
 fn bind_extension_id(extension: &mut Value, identities: &HashSet<String>) {
     if let Some(id) = extension.get_mut("extensionId")
         && id.get("version").is_none()
+        && id
+            .as_str()
+            .is_none_or(|raw| !raw.contains('@'))
         && let Ok(identity) = super::selection::identity(id)
         && identities.contains(&identity)
     {
-        id["version"] = json!(format!("__bit_pending_snapshot__:{identity}"));
+        let marker = format!("__bit_pending_snapshot__:{identity}");
+        if id.is_string() {
+            *id = json!(format!("{identity}@{marker}"));
+        } else {
+            id["version"] = json!(marker);
+        }
     }
 }
 
@@ -261,7 +286,11 @@ fn bind_resolver_dependency(dep: &mut Value, identities: &HashSet<String>) {
     let Some(cid) = dep.get_mut("componentId") else {
         return;
     };
-    if cid.get("version").is_some() {
+    if cid.get("version").is_some()
+        || cid
+            .as_str()
+            .is_some_and(|raw| raw.contains('@'))
+    {
         return;
     }
     let Ok(identity) = super::selection::identity(cid) else {
@@ -271,7 +300,11 @@ fn bind_resolver_dependency(dep: &mut Value, identities: &HashSet<String>) {
         return;
     }
     let marker = format!("__bit_pending_snapshot__:{identity}");
-    cid["version"] = json!(marker);
+    if cid.is_string() {
+        *cid = json!(format!("{identity}@{marker}"));
+    } else {
+        cid["version"] = json!(marker);
+    }
     dep["id"] = json!(format!("{identity}@{marker}"));
     dep["version"] = json!(marker);
 }

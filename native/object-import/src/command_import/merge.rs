@@ -164,11 +164,11 @@ fn canonical(value: &Value) -> io::Result<Value> {
 fn parsed_model(value: &Value) -> io::Result<Value> {
     let mut result = value.clone();
     if (result["schema"].is_null() || result["schema"] == "")
-        && result["head"]
+        && let Some(head) = result["head"]
             .as_str()
-            .is_some_and(|head| !head.is_empty())
+            .filter(|head| !head.is_empty())
     {
-        crate::merge_history::hash(result["head"].as_str().unwrap())?;
+        crate::merge_history::hash(head)?;
         result["schema"] = json!("1.0.0");
     }
     validate_model(&result)?;

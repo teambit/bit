@@ -86,13 +86,14 @@ impl Exported {
 
     fn hub_message(&mut self, message: &str, output: &Output) {
         let previous = self.output.last_hub_message.take().unwrap_or_else(|| self.hub_initial());
-        let message = if message.is_empty() { previous } else { message.to_owned() };
-        output.restart(&message);
-        self.output.last_hub_message = Some(message);
+        let trimmed = message.trim();
+        let resolved = if trimmed.is_empty() { previous } else { trimmed.to_owned() };
+        output.restart(&resolved);
+        self.output.last_hub_message = Some(resolved);
     }
 
     fn hub_initial(&self) -> String {
-        if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+        if is_ci_enabled(env::var_os("CI").as_deref()) {
             r#"running command "export"..."#.to_owned()
         } else if self.selected_ids {
             format!("loading {} component(s)", self.count)
@@ -106,4 +107,12 @@ impl Exported {
             self.fork_history.as_ref().map_or(self.count, |history| history.candidate_count);
         if count > 1 { "exporting components".to_owned() } else { "exporting component".to_owned() }
     }
+}
+
+fn is_ci_enabled(value: Option<&std::ffi::OsStr>) -> bool {
+    let Some(text) = value.and_then(std::ffi::OsStr::to_str) else {
+        return false;
+    };
+    let trimmed = text.trim();
+    !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
 }

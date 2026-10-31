@@ -36,7 +36,7 @@ fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
                 consume_trailing_path(iter, &mut path)?;
                 break;
             }
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-o" | "--one-line" | "--one-line=true" => one_line = true,
             "--one-line=false" => one_line = false,
             val if !val.starts_with('-') && !val.is_empty() && path.is_none() => path = Some(val),

@@ -21,7 +21,7 @@ fn collect_target(
     let model = read_model(plan, directory, target)?
         .ok_or_else(|| invalid("import history component absent"))?;
     let head = requested
-        .or_else(|| model["head"].as_str())
+        .or_else(|| ref_str(&model["head"]))
         .ok_or_else(|| invalid("import history head absent"))?;
     let mut pending = vec![head.to_owned()];
     let mut seen = HashSet::new();
@@ -48,11 +48,18 @@ fn append_parents(version: &Value, pending: &mut Vec<String>) -> io::Result<()> 
         .into_iter()
         .flatten()
     {
-        let hash = parent.as_str().ok_or_else(|| invalid("import history parent"))?;
+        let hash = ref_str(parent).ok_or_else(|| invalid("import history parent"))?;
         crate::merge_history::hash(hash)?;
         pending.push(hash.to_owned());
     }
     Ok(())
+}
+
+fn ref_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .or_else(|| value["ref"].as_str())
+        .or_else(|| value["hash"].as_str())
 }
 
 impl PreparedImport {

@@ -58,8 +58,15 @@ impl Object {
 }
 
 fn array_index(key: &str) -> Option<u32> {
-    let index: u32 = key.parse().ok()?;
-    (index != u32::MAX && index.to_string() == key).then_some(index)
+    if key.is_empty()
+        || (key.len() > 1 && key.starts_with('0'))
+        || !key.bytes().all(|byte| byte.is_ascii_digit())
+    {
+        return None;
+    }
+    key.parse::<u32>()
+        .ok()
+        .filter(|&index| index != u32::MAX)
 }
 
 impl Node {

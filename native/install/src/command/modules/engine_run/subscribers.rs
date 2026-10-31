@@ -13,7 +13,11 @@ pub(super) async fn run(
         .map(|component| json!({"id":component_id(&component.id),"directory":session.root.join(&component.root_dir)}))
         .collect::<Vec<_>>();
     let mut options = json!({"linkedDependencies":{session.root.to_string_lossy().as_ref():calculated.subscriber_links},"installTeambitBit":false});
-    if let Some(version) = &calculated.outcome.plan.forced_harmony_version {
+    if let Some(version) = calculated.outcome.plan.forced_harmony_version
+        .as_deref()
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
+    {
         options["forcedHarmonyVersion"] = json!(version);
     }
     session.host.install_subscribers(&json!({
@@ -26,7 +30,7 @@ pub(super) async fn run(
 
 fn component_id(id: &crate::model::ComponentId) -> String {
     let identity = id.to_string_without_version();
-    match id.version.as_deref() {
+    match id.version.as_deref().map(str::trim) {
         Some(version) if !version.is_empty() => format!("{identity}@{version}"),
         _ => identity,
     }

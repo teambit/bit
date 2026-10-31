@@ -2,15 +2,19 @@ use super::{serialize, set_version};
 use serde_json::json;
 #[test]
 fn scoped_and_default_scope_serialization_match_actual_constructor_order() {
-    let raw = json!({"name":"comp00","scope":"fork-benchmark","version":"0.0.1-new"});
-    assert_eq!(
-        serialize(&raw, true).unwrap().to_string(),
-        r#"{"name":"comp00","version":"0.0.1-new","scope":"fork-benchmark"}"#,
-    );
-    assert_eq!(
-        serialize(&raw, false).unwrap().to_string(),
-        r#"{"scope":"fork-benchmark","name":"comp00","version":"0.0.1-new"}"#,
-    );
+    for raw in [
+        json!({"name":"comp00","scope":"fork-benchmark","version":"0.0.1-new"}),
+        json!("fork-benchmark/comp00@0.0.1-new"),
+    ] {
+        assert_eq!(
+            serialize(&raw, true).unwrap().to_string(),
+            r#"{"name":"comp00","version":"0.0.1-new","scope":"fork-benchmark"}"#,
+        );
+        assert_eq!(
+            serialize(&raw, false).unwrap().to_string(),
+            r#"{"scope":"fork-benchmark","name":"comp00","version":"0.0.1-new"}"#,
+        );
+    }
 }
 #[test]
 fn resolved_versions_precede_appended_default_scope_without_changing_scoped_order() {

@@ -13,7 +13,7 @@ pub(super) fn read(
     for target in targets {
         for file in &target.files {
             let path = comparison::capture::source_path(root, target, file)?;
-            if target.directory == "." && file == ".bitmap" {
+            if is_root_bitmap(&target.directory, file) {
                 bitmaps.insert(path.clone());
             }
             paths.push(path);
@@ -35,4 +35,15 @@ fn one(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<(read::Metadata,
     let (canonical, _) = read::canonical(path, normalized);
     metadata.linux_hash = canonical.linux_hash;
     Ok((metadata, contents))
+}
+
+fn is_root_bitmap(directory: &str, file: &str) -> bool {
+    let clean_dir = directory
+        .trim()
+        .trim_end_matches(['/', '\\']);
+    let clean_file = file
+        .trim()
+        .strip_prefix("./")
+        .unwrap_or_else(|| file.trim());
+    (clean_dir.is_empty() || clean_dir == ".") && clean_file == ".bitmap"
 }

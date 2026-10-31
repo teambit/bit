@@ -8,12 +8,24 @@ fn rows<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {
         .ok_or_else(|| invalid("merge dependency count"))?)
 }
 fn identity(value: &Value) -> io::Result<(Option<&str>, &str)> {
-    let scope = match value.get("scope") {
+    let target = value.get("id").unwrap_or(value);
+    if let Some(raw) = target.as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+        let (scope, name) = match bare.split_once('/') {
+            Some((scope, name)) => (Some(scope).filter(|scope| !scope.is_empty()), name),
+            None => (None, bare),
+        };
+        if name.is_empty() || name.len() > 4096 {
+            return Err(invalid("merge dependency name"));
+        }
+        return Ok((scope, name));
+    }
+    let scope = match target.get("scope") {
         None | Some(Value::Null) => None,
         Some(Value::String(scope)) => Some(scope.as_str()),
         _ => return Err(invalid("merge dependency scope")),
     };
-    let name = value["name"]
+    let name = target["name"]
         .as_str()
         .filter(|name| !name.is_empty() && name.len() <= 4096)
         .ok_or_else(|| invalid("merge dependency name"))?;
@@ -29,6 +41,16 @@ fn hashes(input: &Value, field: &str) -> io::Result<HashSet<String>> {
         })
         .collect()
 }
+fn dependency_version(dependency: &Value) -> Option<&str> {
+    if let Some(ver) = dependency.get("version").and_then(Value::as_str) {
+        return Some(ver);
+    }
+    let raw = dependency
+        .get("id")
+        .unwrap_or(dependency)
+        .as_str()?;
+    raw.rsplit_once('@').map(|(_, ver)| ver)
+}
 pub(super) fn candidates(input: &Value) -> io::Result<Value> {
     let scope = identity(&input["owner"])?.0;
     let mut checked = hashes(input, "checked")?;
@@ -36,7 +58,7 @@ pub(super) fn candidates(input: &Value) -> io::Result<Value> {
     let mut selected = Vec::new();
     for (index, dependency) in rows(input, "dependencies")?.iter().enumerate() {
         let dep_scope = identity(dependency)?.0;
-        let version = dependency.get("version").and_then(Value::as_str);
+        let version = dependency_version(dependency);
         if dep_scope != scope {
             continue;
         }

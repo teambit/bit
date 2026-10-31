@@ -1,6 +1,8 @@
 mod autotag;
 mod dependencies;
 mod future;
+#[cfg(test)]
+mod future_tests;
 mod increment;
 mod journal;
 mod objects;
@@ -164,9 +166,6 @@ fn version_identity(input: Value) -> io::Result<Value> {
         json!({"hash":semantic.hash,"bytes":semantic.bytes.len(),"configAssignments":semantic.config_assignments}),
     )
 }
-
-#[cfg(test)]
-mod future_tests;
 
 /// The next npm version after a published tag, preserving its prerelease identifier.
 pub fn next_published_version(parts: &Value) -> io::Result<String> {

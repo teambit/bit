@@ -3,7 +3,7 @@ use super::{is_generate_docs, parse_unknown_skill, render_docs_frontmatter};
 #[test]
 fn parses_cli_generate_docs_and_renders_frontmatter() {
     assert!(is_generate_docs(&["generate", "--docs"]));
-    assert!(is_generate_docs(&["generate", "--docs", "--no-color"]));
+    assert!(is_generate_docs(&["generate", "--docs", "--no-color", "--no-color=false"]));
     assert!(is_generate_docs(&["generate", "--docs", "--metadata.id=cli"]));
     assert!(is_generate_docs(&["generate", "--metadata", "--docs"]));
     assert!(is_generate_docs(&["generate", "-dm"]));

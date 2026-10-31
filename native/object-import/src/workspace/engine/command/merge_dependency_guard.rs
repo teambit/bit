@@ -1,4 +1,6 @@
 //! Prove that merged bodies preserve the captured dependency graph before autosnap.
+#[cfg(test)]
+mod tests;
 use super::{
     super::{
         dependency_graph::proof,
@@ -316,6 +318,3 @@ fn strings(value: &Value) -> io::Result<HashSet<&str>> {
         })
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

@@ -1,4 +1,7 @@
 //! Public remote list and latest-version GraphQL, with bounded JSON responses.
+#[cfg(test)]
+mod tests;
+
 use super::{LIST_QUERY, Listed, Network, network_error, throw_for_status};
 use crate::invalid;
 use serde_json::{Map, Value, json};
@@ -169,6 +172,3 @@ fn inventory_rows(response: &Value, include_deleted: bool) -> io::Result<Vec<Val
         })
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

@@ -1,4 +1,7 @@
 //! Reuse a caller's published file-scope server adapter without moving component bodies.
+#[cfg(test)]
+mod tests;
+
 use serde_json::Value;
 use std::{cell::RefCell, io, path::Path, sync::Arc};
 
@@ -46,6 +49,3 @@ pub fn scope<Output>(handler: Option<Handler>, work: impl FnOnce() -> Output) ->
 pub fn bind(handler: Option<Handler>) -> Binding {
     Binding(CURRENT.with(|current| current.replace(handler)))
 }
-
-#[cfg(test)]
-mod tests;

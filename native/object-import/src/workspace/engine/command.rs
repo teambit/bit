@@ -1,6 +1,6 @@
 pub(super) mod checkout_pattern;
 pub(super) mod checkout_policy;
-pub(super) mod inbound;
+pub(crate) mod inbound;
 pub(super) mod input;
 pub(super) mod lane_history;
 pub(super) mod merge_defer;

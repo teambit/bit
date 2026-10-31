@@ -211,7 +211,8 @@ fn data_peers(extensions: &[Value]) -> io::Result<Vec<Id>> {
         .filter(|dep| dep.get("__type").and_then(Value::as_str) == Some("component"))
         .filter(|dep| dep.get("lifecycle").and_then(Value::as_str) == Some("peer"))
         .map(|dep| {
-            let id = Id::parse(text(dep.get("id"))?)?;
+            let raw_id = dep.get("id").ok_or_else(|| decline("dependency id"))?;
+            let id = Id::from_object(raw_id)?;
             Ok(
                 match dep
                     .get("version")

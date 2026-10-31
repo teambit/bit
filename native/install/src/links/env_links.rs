@@ -1,6 +1,9 @@
 //! `linkDepsResolvedFromEnv` (`dependency-linker.ts`): a dependency a component
 //! policy marks `resolveFromEnv` is linked at the root from where its env resolves it.
 
+#[cfg(test)]
+mod tests;
+
 use super::root::{bvm_or, link_value};
 use crate::{
     dependencies::default_package_name,
@@ -110,6 +113,3 @@ fn resolve_module_dir(from_dir: &Path, name: &str) -> Option<PathBuf> {
 fn is_resolvable(dir: &Path) -> bool {
     dir.join("package.json").is_file() || dir.join("index.js").is_file()
 }
-
-#[cfg(test)]
-mod tests;

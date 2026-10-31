@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "source_tests.rs"]
+mod tests;
+
 use sha1::{Digest, Sha1};
 use std::{
     fs::File,
@@ -74,7 +78,3 @@ fn hex(text: &str, maximum: usize) -> io::Result<Vec<u8>> {
         })
         .collect()
 }
-
-#[cfg(test)]
-#[path = "source_tests.rs"]
-mod tests;

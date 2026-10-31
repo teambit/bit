@@ -138,10 +138,14 @@ impl Graph {
 
 fn refs<'a>(row: &'a Value, key: &str) -> Option<Vec<&'a str>> {
     match row.get(key) {
-        None | Some(Value::Null) if key == "squashed" => Some(Vec::new()),
+        None | Some(Value::Null) if matches!(key, "parents" | "squashed") => Some(Vec::new()),
         Some(Value::Array(values)) => values
             .iter()
-            .map(Value::as_str)
+            .map(|entry| {
+                entry
+                    .as_str()
+                    .or_else(|| entry.get("hash").and_then(Value::as_str))
+            })
             .collect(),
         _ => None,
     }

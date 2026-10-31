@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
@@ -42,5 +45,3 @@ impl State {
         self.key_bytes += key_weight;
     }
 }
-#[cfg(test)]
-mod tests;

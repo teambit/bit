@@ -144,7 +144,7 @@ fn files(report: &Report, chalk: Chalk) -> String {
         .map(|file| file.display.encode_utf16().count())
         .chain([report.changes.config.encode_utf16().count()])
         .max()
-        .unwrap()
+        .unwrap_or(0)
         + 2;
     let item = |path: &str, note: &str| {
         format!(

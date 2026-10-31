@@ -1,6 +1,9 @@
 //! Remove `node_modules/.pnpm` directories the current lockfile no longer
 //! lists (`pnpm-prune-modules.ts`).
 
+#[cfg(test)]
+mod tests;
+
 use super::{VIRTUAL_STORE_DIR_MAX_LENGTH, error::diagnostic};
 use pnpm_lockfile::Lockfile;
 use std::{collections::HashSet, fs, io, path::Path};
@@ -62,6 +65,3 @@ fn read_package_dirs(virtual_store_dir: &Path) -> io::Result<Vec<String>> {
     }
     Ok(dirs)
 }
-
-#[cfg(test)]
-mod tests;

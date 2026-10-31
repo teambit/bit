@@ -73,7 +73,9 @@ impl PreparedImport {
         } else {
             super::prepare_dependencies(self, root, &targets.iter().collect::<Vec<_>>(), &remotes)?;
         }
-        self.progress.last_mut().unwrap().requested = Some(targets.len());
+        if let Some(last) = self.progress.last_mut() {
+            last.requested = Some(targets.len());
+        }
         self.validate()?;
         Ok(targets)
     }

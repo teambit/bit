@@ -9,7 +9,7 @@ pub(super) fn join(data: &Value) -> io::Result<String> {
     let items = array(Some(data), "issue data")?;
     let items = items
         .iter()
-        .map(|item| text(Some(item)))
+        .map(item_text)
         .collect::<io::Result<Vec<_>>>()?;
     Ok(items.join(", "))
 }
@@ -17,7 +17,20 @@ pub(super) fn join(data: &Value) -> io::Result<String> {
 /// `componentIssueToString`: arrays joined, strings as they are.
 pub(super) fn list_or_text(value: &Value) -> io::Result<String> {
     match value {
-        Value::String(text) => Ok(text.clone()),
-        _ => join(value),
+        Value::Array(_) => join(value),
+        _ => item_text(value).map(str::to_owned),
     }
+}
+
+fn item_text(value: &Value) -> io::Result<&str> {
+    if let Some(object) = value.as_object()
+        && let Some(found) = object
+            .get("message")
+            .or_else(|| object.get("id"))
+            .or_else(|| object.get("name"))
+            .and_then(Value::as_str)
+    {
+        return Ok(found);
+    }
+    text(Some(value))
 }

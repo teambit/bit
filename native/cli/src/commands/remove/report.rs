@@ -14,7 +14,13 @@ pub(super) fn render(
     ])
 }
 fn removed_section(format: &Formatter, ids: &[String], location: &str) -> String {
-    if ids.is_empty() {
+    let items: Vec<String> = ids
+        .iter()
+        .map(|id| id.trim())
+        .filter(|id| !id.is_empty())
+        .map(|id| format.item(id))
+        .collect();
+    if items.is_empty() {
         return String::new();
     }
     format!(
@@ -22,23 +28,23 @@ fn removed_section(format: &Formatter, ids: &[String], location: &str) -> String
         format.success_summary(&format!(
             "successfully removed components from the local {location}"
         )),
-        ids.iter()
-            .map(|id| format.item(id))
-            .collect::<Vec<_>>()
-            .join("\n"),
+        items.join("\n"),
     )
 }
 fn modified_section(format: &Formatter, ids: &[String]) -> String {
-    if ids.is_empty() {
+    let items: Vec<String> = ids
+        .iter()
+        .map(|id| id.trim())
+        .filter(|id| !id.is_empty())
+        .map(|id| Formatter::item_with(id, &format.error_symbol()))
+        .collect();
+    if items.is_empty() {
         return String::new();
     }
     format!(
         "{} {}\n{}",
         format.error_symbol(),
         format.title("unable to remove modified components (use --force to remove)"),
-        ids.iter()
-            .map(|id| Formatter::item_with(id, &format.error_symbol()))
-            .collect::<Vec<_>>()
-            .join("\n"),
+        items.join("\n"),
     )
 }

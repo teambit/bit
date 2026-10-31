@@ -179,7 +179,7 @@ fn resolve_bare_remote(
     session: &mut Session,
 ) -> io::Result<Option<String>> {
     let Some(lane) = lane else { return Ok(None) };
-    let scope: Value = serde_json::from_slice(&std::fs::read(root.join("scope.json"))?)?;
+    let scope: Value = bit_object_import::parse_jsonc(&std::fs::read(root.join("scope.json"))?)?;
     let local = scope["name"].as_str().ok_or_else(invalid)?;
     let (remote, name) = lane
         .split_once('/')

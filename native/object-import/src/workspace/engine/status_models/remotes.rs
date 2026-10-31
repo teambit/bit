@@ -46,7 +46,8 @@ fn rows(root: &Path, scope: &str, budget: &Budget) -> io::Result<Vec<Value>> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
         Err(error) => return Err(error),
     };
-    let rows: Vec<Value> = serde_json::from_slice(&budget.read(file)?).map_err(io::Error::other)?;
+    let rows: Vec<Value> = crate::parse_jsonc(&budget.read(file)?)
+        .and_then(|val| serde_json::from_value(val).map_err(io::Error::other))?;
     if rows.len() > 4096 {
         return Err(invalid("status remote row limit"));
     }
@@ -54,9 +55,9 @@ fn rows(root: &Path, scope: &str, budget: &Budget) -> io::Result<Vec<Value>> {
 }
 
 fn insert(refs: &mut HashMap<String, String>, row: &Value, file_scope: &str) -> io::Result<()> {
-    let scope =
-        row["id"]["scope"].as_str().ok_or_else(|| invalid("status remote component scope"))?;
-    let name = row["id"]["name"].as_str().ok_or_else(|| invalid("status remote component name"))?;
+    let (scope, name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(row)
+            .ok_or_else(|| invalid("status remote component scope"))?;
     let head = row["head"].as_str().ok_or_else(|| invalid("status remote head"))?;
     crate::merge_history::hash(head)?;
     if scope != file_scope {

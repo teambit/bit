@@ -1,5 +1,8 @@
 //! The lane merge grammar native planning accepts.
 
+#[cfg(test)]
+mod options_tests;
+
 use serde_json::{Map, Value, json};
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -242,7 +245,7 @@ fn read(args: &[&str], allow_extra: bool) -> Option<Read> {
             read.trailing_positionals(&args[index..])?;
             break;
         }
-        if arg == "--no-color" {
+        if matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false") {
             continue;
         }
         if let Some((flag, value)) = arg.split_once('=') {
@@ -322,6 +325,3 @@ impl Options {
         options
     }
 }
-
-#[cfg(test)]
-mod options_tests;

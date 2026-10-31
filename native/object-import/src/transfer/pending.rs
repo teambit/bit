@@ -23,8 +23,9 @@ struct Owner {
 pub(super) fn write(state: &State, input: &Value) -> io::Result<Value> {
     let request: Request = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
     crate::transfer::paths(&request.pending_dir, &request.pending_dir.join(".native-path-check"))?;
-    let plan =
-        state.plans.get(&request.token).ok_or_else(|| invalid("unknown pending transfer token"))?;
+    let plan = state.plans
+        .get(request.token.trim())
+        .ok_or_else(|| invalid("unknown pending transfer token"))?;
     let mut hashes = HashMap::new();
     for entry in &plan.entries {
         if hashes

@@ -125,13 +125,15 @@ fn indexed_model_hash(root: &std::path::Path, name: &str) -> Option<String> {
         .split_once('/')
         .unwrap_or(("", name));
     let bytes = std::fs::read(crate::scope_path(root).join("index.json")).ok()?;
-    let index: Value = serde_json::from_slice(&bytes).ok()?;
+    let index: Value = crate::parse_jsonc(&bytes).ok()?;
     let rows = index["components"].as_array().or_else(|| index.as_array())?;
     rows.iter()
         .find(|row| {
-            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            let (row_scope, row_name) =
+                super::command::inbound::remote::file_list::row_id_parts(row)
+                    .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default(), nm));
             row["isSymlink"] != true
-                && row["id"]["name"].as_str() == Some(expected_name)
+                && row_name == expected_name
                 && (row_scope == expected_scope || row_scope.is_empty())
         })
         .and_then(|row| row["hash"].as_str())

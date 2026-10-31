@@ -11,11 +11,16 @@ pub(super) fn range(package: &Package) -> Option<Value> {
     if !truthy(range) {
         return Some(json!("*"));
     }
-    let Some(prefix @ ("~" | "^" | ">=")) = range.as_str() else {
+    let Some(prefix @ ("~" | "^" | ">=")) = range.as_str().map(str::trim) else {
         return Some(range.clone());
     };
-    let concrete = package.concrete.as_deref().unwrap_or("undefined");
-    let version = if node_semver::Version::parse(concrete).is_ok() {
+    let concrete = package.concrete
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("undefined");
+    let version = if node_semver::Version::parse(concrete).is_ok() || concrete.starts_with("0.0.0-")
+    {
         concrete.to_owned()
     } else {
         format!("0.0.0-{concrete}")
@@ -30,7 +35,7 @@ fn truthy(value: &Value) -> bool {
         Value::Number(value) => value
             .as_f64()
             .is_some_and(|number| number != 0.0),
-        Value::String(value) => !value.is_empty(),
+        Value::String(value) => !value.trim().is_empty(),
         _ => true,
     }
 }

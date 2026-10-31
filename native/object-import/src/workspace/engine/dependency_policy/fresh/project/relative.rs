@@ -30,8 +30,8 @@ impl State {
             self.owners = Some(owners(request)?);
         }
         Ok(self.owners
-            .as_ref()
-            .expect("loaded owners")
+            .as_deref()
+            .unwrap_or_default()
             .iter()
             .filter(|owner| Path::new(file).starts_with(&owner.directory))
             .max_by_key(|owner| owner.directory.components().count())

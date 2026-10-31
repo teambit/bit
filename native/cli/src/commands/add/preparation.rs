@@ -68,12 +68,25 @@ fn environment_options(
     if let Some(env) = &options.env {
         startup.committed = true;
         let facts = environments.tracking_env_config(root, env)?;
-        let configured = facts["configuredId"]
-            .as_str()
-            .ok_or_else(|| io::Error::other("tracking environment identity"))?;
-        tracking.config = json!({(configured):{},"teambit.envs/envs":{"env":facts["resolvedId"]}});
+        tracking.config = build_env_tracking_config(&facts)?;
     }
     Ok(tracking)
+}
+
+fn build_env_tracking_config(facts: &Value) -> io::Result<Value> {
+    let configured = extract_env_id(facts, "configuredId")
+        .ok_or_else(|| io::Error::other("tracking environment identity"))?;
+    let resolved = extract_env_id(facts, "resolvedId").unwrap_or(configured);
+    Ok(json!({(configured):{},"teambit.envs/envs":{"env":resolved}}))
+}
+
+fn extract_env_id<'a>(facts: &'a Value, key: &str) -> Option<&'a str> {
+    let value = facts.get(key)?;
+    value
+        .as_str()
+        .or_else(|| value.get("id").and_then(Value::as_str))
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
 }
 
 fn load(

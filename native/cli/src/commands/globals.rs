@@ -59,7 +59,7 @@ fn parse_json_flag(args: &[OsString]) -> Option<bool> {
         let token = raw.to_str()?;
         match token {
             "--" => return (idx + 1 == rest.len()).then_some(json),
-            "--no-color" => {}
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
             _ => return None,
@@ -106,8 +106,8 @@ fn read_scope_layer(cwd: &Path, ws_root: Option<&Path>) -> io::Result<Value> {
     let Some(dir) = scope_dir.filter(|path| path.join("scope.json").is_file()) else {
         return Ok(Value::Null);
     };
-    let parsed: Value =
-        serde_json::from_slice(&fs::read(dir.join("scope.json"))?).map_err(io::Error::other)?;
+    let parsed: Value = bit_object_import::parse_jsonc(&fs::read(dir.join("scope.json"))?)
+        .map_err(io::Error::other)?;
     Ok(parsed
         .get("config")
         .cloned()

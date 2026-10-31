@@ -31,6 +31,8 @@ mod resolver {
 mod tar {
     pub use bit_client_transfer::tar::*;
 }
+#[cfg(test)]
+mod tests;
 
 use crate::{host::HostInfo, model::GlobalConfig, output::Output};
 use fetch::Fetcher;
@@ -154,6 +156,3 @@ fn read_scope_json(scope_dir: &Path) -> io::Result<Value> {
         Err(error) => Err(error),
     }
 }
-
-#[cfg(test)]
-mod tests;

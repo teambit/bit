@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "data_tests.rs"]
+mod tests;
+
 use super::{
     super::{array, invalid},
     Engine,
@@ -90,7 +94,3 @@ fn equal(left: &serde_json::Value, right: &serde_json::Value) -> bool {
     };
     left["data"] == right["data"] && keys(left) == keys(right)
 }
-
-#[cfg(test)]
-#[path = "data_tests.rs"]
-mod tests;

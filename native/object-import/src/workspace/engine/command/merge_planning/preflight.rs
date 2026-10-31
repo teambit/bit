@@ -1,3 +1,5 @@
+mod cache_guard;
+
 use super::{Prepared, Record, invalid, merge};
 use serde_json::Value;
 use std::{collections::HashSet, io};
@@ -47,8 +49,6 @@ pub(super) fn validate(
     let versions = merge::snapshot::preflight(&record.request.root, &snapshots)?;
     validate_finalization(record, prepared, &versions)
 }
-
-mod cache_guard;
 
 fn validate_dependents(record: &Record, identities: &HashSet<&str>) -> io::Result<()> {
     if record.request.internal_snapshot_preview {

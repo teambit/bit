@@ -44,12 +44,12 @@ pub(super) fn select(
     Ok(index.model
         .get(base)
         .copied()
-        .or_else(|| (version(identity) != "latest").then(|| version(identity)))
+        .or_else(|| (!matches!(version(identity), "latest" | "head")).then(|| version(identity)))
         .map(|value| (value.to_owned(), None, false)))
 }
 fn package_policy(request: &Request, identity: &str, name: &str) -> io::Result<Choice> {
     if let version = version(identity)
-        && version != "latest"
+        && !matches!(version, "latest" | "head")
         && let Some(spec) = request.policy.workspace
             .get(name)
             .filter(|spec| !spec.is_empty())

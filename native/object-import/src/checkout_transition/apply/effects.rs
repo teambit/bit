@@ -106,7 +106,7 @@ fn add(
     files: &mut Vec<File>,
     status: &mut Map<String, Value>,
 ) -> io::Result<()> {
-    if row["kind"] == "deletedConflictFiles" && row.get("bodyPlanIndex").is_none() {
+    if row["kind"] == "deletedConflictFiles" && row["bodyPlanIndex"].as_u64().is_none() {
         return Ok(());
     }
     if files

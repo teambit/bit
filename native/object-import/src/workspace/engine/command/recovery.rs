@@ -3,6 +3,8 @@ mod context;
 mod lane;
 mod publication;
 mod restore;
+#[cfg(test)]
+mod tests;
 
 use super::{Record, State, invalid, proof, reset};
 use crate::workspace::snapshots;
@@ -175,6 +177,3 @@ pub(in crate::workspace::engine) fn restore(
 ) -> io::Result<(usize, Value)> {
     publication::restore(input, state)
 }
-
-#[cfg(test)]
-mod tests;

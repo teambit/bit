@@ -93,27 +93,49 @@ fn load_options(rows: &[Value]) -> io::Result<Value> {
     let mut versions = Vec::new();
     let mut entries = Vec::new();
     for row in rows {
-        let id = &row["id"];
-        let name = text(id.get("name"))?;
-        let scope = id["scope"]
-            .as_str()
-            .filter(|value| !value.is_empty());
-        let identity = scope.map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
+        let (scope, name) = stash_id_parts(&row["id"])?;
+        if name.is_empty() {
+            return Err(decline("stash id name"));
+        }
         let hash = text(row.get("hash"))?;
         if row["isNew"] == true {
-            let mut entry = row["bitmapEntry"].clone();
-            if !entry.is_object() {
-                return Err(decline("stash bitmap entry"));
-            }
-            let mut id = id.clone();
-            id["version"] = json!(hash);
-            entry["id"] = id;
-            entries.push(entry);
+            entries.push(stash_new_entry(row, scope, name, hash)?);
         } else {
+            let identity = scope.map_or_else(|| name.to_owned(), |sc| format!("{sc}/{name}"));
             versions.push(json!({"identity":identity,"version":hash}));
         }
     }
     Ok(json!({"versions":versions,"bitmapEntries":entries}))
+}
+
+fn stash_id_parts(id: &Value) -> io::Result<(Option<&str>, &str)> {
+    if let Some(raw) = id.as_str() {
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix);
+        return Ok(match bare.split_once('/') {
+            Some((scope, name)) => (Some(scope).filter(|val| !val.is_empty()), name),
+            None => (None, bare),
+        });
+    }
+    Ok((
+        id["scope"]
+            .as_str()
+            .filter(|value| !value.is_empty()),
+        text(id.get("name"))?,
+    ))
+}
+
+fn stash_new_entry(row: &Value, scope: Option<&str>, name: &str, hash: &str) -> io::Result<Value> {
+    let mut entry = row["bitmapEntry"].clone();
+    if !entry.is_object() {
+        return Err(decline("stash bitmap entry"));
+    }
+    let mut id_obj = match scope {
+        Some(scope) => json!({"scope": scope, "name": name}),
+        None => json!({"name": name}),
+    };
+    id_obj["version"] = json!(hash);
+    entry["id"] = id_obj;
+    Ok(entry)
 }
 
 fn preflight_tracked(root: &Path, versions: &Value) -> io::Result<()> {

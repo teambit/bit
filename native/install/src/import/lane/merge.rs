@@ -2,6 +2,9 @@
 //! (`ImportComponents.mergeAndSaveLaneObject`): fold the fetched lane into the
 //! local lane object of the same id, keeping local entries that diverged.
 
+#[cfg(test)]
+mod tests;
+
 use super::{
     RemoteLane,
     history::{self, Identity},
@@ -283,6 +286,3 @@ fn hashes(value: &Value) -> Vec<String> {
         .filter_map(|hash| hash.as_str().map(str::to_string))
         .collect()
 }
-
-#[cfg(test)]
-mod tests;

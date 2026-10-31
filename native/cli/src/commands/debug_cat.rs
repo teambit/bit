@@ -2,6 +2,8 @@
 //! `cat-version-history` (`cvh`), and `cat-lane-history` (`clh`).
 
 pub(in crate::commands) mod lookup;
+#[cfg(test)]
+mod tests;
 
 use self::lookup::{
     diagnose_cat_component_error, diagnose_component_lookup_error, diagnose_lane_lookup_error,
@@ -392,6 +394,3 @@ pub(in crate::commands) fn emit_failure(
         execute_then(&root.path, args, command, |_| Err(err))
     }
 }
-
-#[cfg(test)]
-mod tests;

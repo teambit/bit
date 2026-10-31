@@ -1,4 +1,8 @@
 //! Prove an existing history is complete before owning its no-change rebuild.
+mod bare;
+#[cfg(test)]
+mod tests;
+
 use super::{
     Chalk, Outcome, ScopeRoot, Value, emit_text, resolve_component_entry, scope_dir_for, sha1_hex,
 };
@@ -8,10 +12,6 @@ use std::{
     ffi::OsString,
     fs, io,
 };
-
-mod bare;
-#[cfg(test)]
-mod tests;
 
 pub(super) fn run(
     root: &ScopeRoot,
@@ -97,7 +97,8 @@ fn by_pattern(root: &ScopeRoot, pattern: &str, from: Option<&str>) -> Option<Vec
 }
 
 fn index_candidates(scope: &std::path::Path) -> Option<Vec<(String, String)>> {
-    let index: Value = serde_json::from_slice(&fs::read(scope.join("index.json")).ok()?).ok()?;
+    let index: Value =
+        bit_object_import::parse_jsonc(&fs::read(scope.join("index.json")).ok()?).ok()?;
     let rows = index["components"].as_array().or_else(|| index.as_array())?;
     if rows.len() > 128 {
         return None;
@@ -121,9 +122,26 @@ fn candidate_row(scope: &std::path::Path, row: &Value) -> Option<Option<(String,
         return None;
     }
     let Some(head) = model["head"].as_str() else { return Some(None) };
-    let identity = format!("{}/{}", row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?);
+    let (row_scope, row_name) = row_scope_and_name(row)?;
+    let identity = format!("{row_scope}/{row_name}");
     let version = super::text::tags(&model, head).unwrap_or(head);
     Some(Some((identity.clone(), format!("{identity}@{version}"))))
+}
+
+pub(in crate::commands) fn row_scope_and_name(row: &Value) -> Option<(&str, &str)> {
+    if let Some(raw) = row["id"].as_str() {
+        let bare = raw.split('@').next().unwrap_or(raw);
+        let (scope, name) = bare.split_once('/')?;
+        return (!scope.is_empty() && !name.is_empty()).then_some((scope, name));
+    }
+    Some((
+        row["id"]["scope"]
+            .as_str()
+            .filter(|val| !val.is_empty())?,
+        row["id"]["name"]
+            .as_str()
+            .filter(|val| !val.is_empty())?,
+    ))
 }
 
 fn prepare(root: &ScopeRoot, id: &str, from: Option<&str>) -> Option<String> {

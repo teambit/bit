@@ -26,10 +26,7 @@ pub(super) fn capture(
         if issue["type"] != "MissingManuallyConfiguredPackages" {
             return Err(invalid("command unsupported merged dependency issue"));
         }
-        let data: Vec<String> = serde_json::from_str(
-            issue["data"].as_str().ok_or_else(|| invalid("command dependency issue data"))?,
-        )
-        .map_err(io::Error::other)?;
+        let data = parse_issue_packages(&issue["data"])?;
         if data.is_empty() || data.iter().any(String::is_empty) {
             return Err(invalid("command dependency issue packages"));
         }
@@ -42,14 +39,34 @@ pub(super) fn capture(
     Ok(())
 }
 
+fn parse_issue_packages(data: &Value) -> io::Result<Vec<String>> {
+    if let Some(items) = data.as_array() {
+        return items
+            .iter()
+            .map(|item| {
+                item.as_str()
+                    .map(str::to_owned)
+                    .ok_or_else(|| invalid("command dependency issue data"))
+            })
+            .collect();
+    }
+    serde_json::from_str(data.as_str().ok_or_else(|| invalid("command dependency issue data"))?)
+        .map_err(io::Error::other)
+}
+
 pub(super) fn target(row: &Row, state: &Value, issues: &Value) -> io::Result<Value> {
     let mut dependencies = Vec::new();
+    let entries =
+        state["entries"].as_array().ok_or_else(|| invalid("command issue dependency entries"))?;
     for field in projection::array(&state["components"])? {
         for index in projection::array(field)? {
             let index =
                 index.as_u64().ok_or_else(|| invalid("command issue dependency index"))? as usize;
-            let identity = state["entries"][index]["identity"]
+            let entry =
+                entries.get(index).ok_or_else(|| invalid("command issue dependency index"))?;
+            let identity = entry["identity"]
                 .as_str()
+                .or_else(|| entry["id"].as_str())
                 .ok_or_else(|| invalid("command issue dependency identity"))?;
             dependencies.push(identity);
         }

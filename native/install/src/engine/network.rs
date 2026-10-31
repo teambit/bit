@@ -3,6 +3,9 @@
 //! config cascade and Bit's global config (`Http.getProxyConfig` /
 //! `Http.getNetworkConfig`).
 
+#[cfg(test)]
+mod tests;
+
 use super::registries::global_string;
 use crate::{config::DependencyResolverConfig, model::GlobalConfig};
 use pnpm_network::NoProxySetting;
@@ -335,6 +338,3 @@ fn parse_no_proxy(value: &Value) -> Option<NoProxySetting> {
         _ => None,
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -49,7 +49,7 @@ fn components(request: &Request, plan: &mut Plan) {
     for field in 0..2 {
         let mut retained = Vec::new();
         for index in &std::mem::take(&mut plan.components[field]) {
-            let name = request.entries[*index].package_name.as_deref().unwrap_or("undefined");
+            let name = effective_package_name(request.entries[*index].package_name.as_deref());
             if let Some(value) = version(&request.policies.workspace_policy.peer_dependencies, name)
             {
                 plan.ranges[*index] = Some(value);
@@ -63,6 +63,12 @@ fn components(request: &Request, plan: &mut Plan) {
         }
         plan.components[field] = retained;
     }
+}
+
+fn effective_package_name(name: Option<&str>) -> &str {
+    name.map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("undefined")
 }
 fn legacy(plan: &mut Plan) {
     let name = "@teambit/legacy";

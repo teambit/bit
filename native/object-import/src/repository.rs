@@ -38,7 +38,7 @@ pub fn read_object_directory(
             | "VersionHistory"
             | "LaneHistory",
     ) {
-        serde_json::from_slice(body).map_err(io::Error::other)?
+        crate::parse_jsonc(body)?
     } else {
         Value::Null
     };

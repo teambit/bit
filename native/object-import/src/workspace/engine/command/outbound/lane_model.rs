@@ -5,6 +5,8 @@ mod exhaustive;
 mod hidden;
 mod readme;
 mod staged;
+#[cfg(test)]
+mod tests;
 use super::{Prepare, invalid, model, remote};
 use crate::transfer;
 use bit_client_transfer::tar::ObjectItem;
@@ -292,7 +294,10 @@ struct ComponentId<'a> {
 impl<'a> ComponentId<'a> {
     fn parse(entry: &'a Value) -> io::Result<Self> {
         let (scope, name) = if let Some(raw) = entry["id"].as_str() {
-            raw.split_once('/').ok_or_else(|| invalid("outbound lane component scope"))?
+            raw.rsplit_once('@')
+                .map_or(raw, |(bare, _)| bare)
+                .split_once('/')
+                .ok_or_else(|| invalid("outbound lane component scope"))?
         } else {
             let scope = entry["id"]["scope"]
                 .as_str()
@@ -396,6 +401,3 @@ fn remote_heads(root: &Path, scope: &str, name: &str) -> io::Result<Vec<Value>> 
 fn read_compressed(dir: &Path, hash: &str) -> io::Result<Vec<u8>> {
     transfer::object::repository(dir, crate::merge_history::hash(hash)?, MAX_BYTES)
 }
-
-#[cfg(test)]
-mod tests;

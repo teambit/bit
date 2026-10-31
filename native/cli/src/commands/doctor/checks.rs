@@ -32,8 +32,8 @@ fn latest(diagnosis: &Diagnosis, context: &Context) -> io::Result<Value> {
     let latest = latest_fact(context)?;
     let package =
         context.cli.bit_dir.as_ref().ok_or_else(|| io::Error::other("missing Bit package"))?;
-    let package: Value =
-        serde_json::from_slice(&fs::read(package.join("package.json"))?).map_err(io::Error::other)?;
+    let package: Value = bit_object_import::parse_jsonc(&fs::read(package.join("package.json"))?)
+        .map_err(io::Error::other)?;
     let current = package["version"].as_str().unwrap_or_default();
     let newer = latest.as_str().is_some_and(|latest| compare(current, latest));
     let bare = if latest.is_null() {

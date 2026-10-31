@@ -1,16 +1,18 @@
 //! Snapshot consumers follow the published loader's breadth-first source traversal.
 use super::{Capture, array, decline, text};
-use serde_json::json;
+use serde_json::{Value, json};
 use std::{io, path::Path};
 
 pub(super) fn snapshot(root: &Path, capture: &mut Capture) -> io::Result<()> {
     for target in capture.captured.iter_mut().chain(&mut capture.comparisons) {
         let files = array(target.get("files"), "snapshot source manifest")?
             .iter()
-            .map(|file| text(Some(file)).map(str::to_owned))
+            .map(snapshot_file_path)
             .collect::<io::Result<Vec<_>>>()?;
-        let directory =
-            target["directory"].as_str().ok_or_else(|| decline("snapshot directory"))?;
+        let directory = target["directory"]
+            .as_str()
+            .or_else(|| target["rootDir"].as_str())
+            .ok_or_else(|| decline("snapshot directory"))?;
         target["files"] = json!(crate::commands::diff::order::captured(
             &root.join(directory),
             &files,
@@ -18,4 +20,14 @@ pub(super) fn snapshot(root: &Path, capture: &mut Capture) -> io::Result<()> {
         )?);
     }
     Ok(())
+}
+
+fn snapshot_file_path(file: &Value) -> io::Result<String> {
+    let value = if file.is_string() {
+        Some(file)
+    } else {
+        file.get("relativePath")
+            .or_else(|| file.get("path"))
+    };
+    text(value).map(str::to_owned)
 }

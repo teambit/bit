@@ -43,7 +43,7 @@ fn parses_insights_list_and_named_flags() {
     assert_eq!(parse_options(&["--no-json"]), None);
     assert_eq!(parse_options(&["--no-include-deps"]), None);
     assert_eq!(
-        parse_options(&["circular", "--no-color"]),
+        parse_options(&["circular", "--no-color", "--no-color=false"]),
         Some(Options {
             list: false,
             json: false,

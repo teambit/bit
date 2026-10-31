@@ -1,5 +1,7 @@
 //! `e2e/commands/list.e2e.ts`.
 
+mod parity;
+
 use crate::helper::{FOO_FIXTURE, Helper};
 
 /// when a component is created but not tagged › should display "found 0 components"
@@ -24,8 +26,6 @@ fn a_tagged_component_is_listed() {
     let output = helper.native("list --local-scope");
     assert!(output.contains("found 1 components"), "{output}");
 }
-
-mod parity;
 
 mod outdated {
     use super::{FOO_FIXTURE, Helper, parity};

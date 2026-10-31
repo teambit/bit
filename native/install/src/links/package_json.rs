@@ -1,6 +1,9 @@
 //! The `node_modules/<pkg>/package.json` of a workspace component: `PackageJsonFile.createFromComponent`,
 //! the dependency-resolver and pkg transformers, and `NodeModuleLinker.createPackageJson`.
 
+#[cfg(test)]
+mod tests;
+
 use crate::model::{ComponentDependencies, Lifecycle, Manifest, WorkspaceComponent};
 use serde_json::{Map, Value, json};
 use std::path::Path;
@@ -347,6 +350,3 @@ fn main_without_extension(main_file: &str) -> String {
         _ => main_file.to_owned(),
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -36,3 +36,17 @@ fn live_order_resolves_authored_and_row_specific_default_scopes() {
         ["workspace.scope/authored", "specific.scope/specific"],
     );
 }
+
+#[test]
+fn bitmap_metadata_accepts_both_string_and_object_lane_ids() {
+    let mut string_lane = json!({
+        "$schema-version": "17.0.0",
+        "_bit_lane": {"id": "workspace.scope/feature-a", "exported": true}
+    });
+    super::bitmap_metadata(string_lane.as_object_mut().unwrap()).unwrap();
+    let mut object_lane = json!({
+        "$schema-version": "17.0.0",
+        "_bit_lane": {"id": {"scope": "workspace.scope", "name": "feature-a"}, "exported": false}
+    });
+    super::bitmap_metadata(object_lane.as_object_mut().unwrap()).unwrap();
+}

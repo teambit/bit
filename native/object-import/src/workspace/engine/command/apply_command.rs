@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{
     Apply, PreparedPlan, Record, State, bitmap, input, invalid, materialization, planning, proof,
 };
@@ -141,6 +144,3 @@ pub(super) fn notify(root: &std::path::Path) -> usize {
         .and_then(|()| std::fs::write(directory.join("onPostObjectsPersist"), b""));
     1
 }
-
-#[cfg(test)]
-mod tests;

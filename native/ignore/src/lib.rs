@@ -15,6 +15,9 @@
 pub use compile::{Compiler, UnsupportedPattern};
 
 mod compile;
+#[cfg(test)]
+mod tests;
+
 use serde::Serialize;
 use std::sync::{Mutex, OnceLock, PoisonError};
 
@@ -78,6 +81,3 @@ fn process_compiler() -> &'static Mutex<Compiler> {
     static COMPILER: OnceLock<Mutex<Compiler>> = OnceLock::new();
     COMPILER.get_or_init(|| Mutex::new(Compiler::new()))
 }
-
-#[cfg(test)]
-mod tests;

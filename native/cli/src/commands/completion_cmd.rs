@@ -87,7 +87,7 @@ pub(super) fn valid_options(args: &[&str]) -> bool {
         if arg == "--" {
             return idx + 1 == args.len();
         }
-        if arg != "--no-color" {
+        if !matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false") {
             return false;
         }
     }

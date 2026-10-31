@@ -1,4 +1,7 @@
 //! Native diagnostic TAR writing; `.tar.gz` is intentionally not compressed.
+#[cfg(test)]
+mod tests;
+
 use super::{context::Context, options::Options};
 use serde_json::Value;
 use std::{
@@ -133,8 +136,6 @@ pub(super) fn filename(path: &Path, timestamp: i64) -> PathBuf {
     }
     path.with_extension("tar")
 }
-#[cfg(test)]
-mod tests;
 
 fn debug_log(builder: &mut tar::Builder<fs::File>) -> io::Result<()> {
     let path = crate::commands::status::cache::cache_root().join("logs/debug.log");

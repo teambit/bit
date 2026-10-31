@@ -98,22 +98,24 @@ pub(super) fn message_text(
     lane: Option<&Value>,
     message: &str,
 ) -> io::Result<String> {
-    Ok(if message.is_empty() {
-        if let Some(lane) = lane.filter(|lane| lane["otherId"]["name"] != "main") {
-            format!(
-                "merge {}/{}",
-                lane["otherId"]["scope"].as_str().ok_or_else(|| invalid("merge lane scope"))?,
-                lane["otherId"]["name"].as_str().ok_or_else(|| invalid("merge lane name"))?,
-            )
-        } else {
-            format!(
-                "merge {}/main",
-                model["scope"].as_str().ok_or_else(|| invalid("merge model scope"))?,
-            )
-        }
-    } else {
-        message.to_owned()
-    })
+    if !message.is_empty() {
+        return Ok(message.to_owned());
+    }
+    if let Some(other) = lane.map(|lane| &lane["otherId"])
+        && other != "main"
+        && other["name"] != "main"
+    {
+        let (scope, name) = other
+            .as_str()
+            .and_then(|raw| raw.split_once('/'))
+            .or_else(|| Some((other["scope"].as_str()?, other["name"].as_str()?)))
+            .ok_or_else(|| invalid("merge lane scope"))?;
+        return Ok(format!("merge {scope}/{name}"));
+    }
+    Ok(format!(
+        "merge {}/main",
+        model["scope"].as_str().ok_or_else(|| invalid("merge model scope"))?,
+    ))
 }
 
 fn apply_origin(input: &Input<'_>, version: &mut Value) -> io::Result<()> {
@@ -121,8 +123,19 @@ fn apply_origin(input: &Input<'_>, version: &mut Value) -> io::Result<()> {
         input.identity.split_once('/').ok_or_else(|| invalid("merge snap identity"))?;
     version["origin"] = json!({"id":{"scope":scope,"name":name}});
     if let Some(lane) = input.lane.filter(|lane| !lane["current"].is_null()) {
-        version["origin"]["lane"] = lane["currentId"].clone();
-        version["origin"]["lane"]["hash"] = lane["current"]["hash"].clone();
+        let current = &lane["currentId"];
+        let mut lane_obj = if let Some((lane_scope, lane_name)) = current
+            .as_str()
+            .and_then(|raw| raw.split_once('/'))
+        {
+            json!({"scope":lane_scope,"name":lane_name})
+        } else {
+            current.clone()
+        };
+        if lane_obj.is_object() {
+            lane_obj["hash"] = lane["current"]["hash"].clone();
+        }
+        version["origin"]["lane"] = lane_obj;
     }
     Ok(())
 }
@@ -154,11 +167,18 @@ fn apply_squash(input: &Input<'_>, receipt: &Value, version: &mut Value) -> io::
 }
 
 pub(super) fn squash_lane(model: &Value, lane: &Value) -> io::Result<Value> {
-    let mut id = lane["otherId"].clone();
-    if id["name"] == "main" {
-        id["scope"] = json!(model["scope"].as_str().ok_or_else(|| invalid("merge model scope"))?);
+    let other = &lane["otherId"];
+    if other == "main" || other["name"] == "main" {
+        let scope = model["scope"].as_str().ok_or_else(|| invalid("merge model scope"))?;
+        return Ok(json!({"scope":scope,"name":"main"}));
     }
-    Ok(id)
+    if let Some((scope, name)) = other
+        .as_str()
+        .and_then(|raw| raw.split_once('/'))
+    {
+        return Ok(json!({"scope":scope,"name":name}));
+    }
+    Ok(other.clone())
 }
 
 pub(super) fn current_schema(value: &Value) -> io::Result<Value> {

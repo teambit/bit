@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use crate::workspace::engine::{
     command::{Record, capture::Captured, materialization, merge_dependency_guard},
     dependency_graph::proof::Proof,
@@ -6,9 +9,6 @@ use crate::workspace::engine::{
 };
 use serde_json::{Value, json};
 use std::{collections::BTreeSet, io};
-
-#[cfg(test)]
-mod tests;
 
 pub(super) fn verify(
     record: &Record,

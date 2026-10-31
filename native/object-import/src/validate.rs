@@ -56,7 +56,10 @@ fn header(bytes: &[u8], expected: &str) -> Result<usize, &'static str> {
     if parts.next() != Some("Source") {
         return Err("mutable-or-unknown-type");
     }
-    if parts.next() != Some(expected) {
+    if parts
+        .next()
+        .is_none_or(|actual| !actual.eq_ignore_ascii_case(expected))
+    {
         return Err("header-identity");
     }
     if parts

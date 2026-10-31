@@ -1,13 +1,20 @@
 pub(crate) mod write;
+
 pub(crate) use state::State;
 
+#[cfg(test)]
+mod config_tests;
 mod execution;
 mod lane;
 mod messages;
 mod rebase;
 mod reconcile;
 mod squash;
+#[cfg(test)]
+mod squash_tests;
 mod state;
+#[cfg(test)]
+mod tests;
 
 use crate::protocol;
 use serde::Deserialize;
@@ -382,12 +389,6 @@ fn hash(hash: &str) -> io::Result<()> {
     }
     Ok(())
 }
-#[cfg(test)]
-mod config_tests;
-#[cfg(test)]
-mod squash_tests;
-#[cfg(test)]
-mod tests;
 
 /// Reuse the canonical squash decision for retained command-owned Versions.
 pub(crate) fn squash_policy(value: Value) -> io::Result<Value> {

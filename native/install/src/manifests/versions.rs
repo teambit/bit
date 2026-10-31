@@ -69,16 +69,21 @@ pub(super) fn policy_version<'a>(
 
 /// `id@version` → `id`.
 pub(super) fn without_version(id: &str) -> &str {
-    match id.rfind('@') {
-        Some(index) if index > 0 => &id[..index],
-        _ => id,
+    let trimmed = id.trim();
+    match trimmed.rfind('@') {
+        Some(index) if index > 0 && !trimmed[index + 1..].contains('/') => &trimmed[..index],
+        _ => trimmed,
     }
 }
 
 /// `id@version` → `version`.
 pub(super) fn version_of(id: &str) -> Option<&str> {
-    match id.rfind('@') {
-        Some(index) if index > 0 => Some(&id[index + 1..]),
+    let trimmed = id.trim();
+    match trimmed.rfind('@') {
+        Some(index) if index > 0 && !trimmed[index + 1..].contains('/') => {
+            let version = trimmed[index + 1..].trim();
+            (!version.is_empty()).then_some(version)
+        }
         _ => None,
     }
 }

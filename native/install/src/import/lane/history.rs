@@ -29,14 +29,24 @@ pub struct Identity {
 impl Identity {
     #[must_use]
     pub fn from_config(global: &GlobalConfig) -> Self {
-        let text = |key: &str| {
+        let text = |dotted: &str, underscored: &str, nested: &str| {
             global
-                .get(key)
+                .get(dotted)
+                .or_else(|| global.get(underscored))
+                .or_else(|| {
+                    global
+                        .get("user")
+                        .and_then(|user| user.get(nested))
+                })
                 .and_then(Value::as_str)
+                .map(str::trim)
                 .filter(|value| !value.is_empty())
                 .map(str::to_string)
         };
-        Self { username: text("user.name"), email: text("user.email") }
+        Self {
+            username: text("user.name", "user_name", "name"),
+            email: text("user.email", "user_email", "email"),
+        }
     }
 }
 

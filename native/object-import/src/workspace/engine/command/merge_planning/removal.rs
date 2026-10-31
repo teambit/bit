@@ -57,10 +57,9 @@ pub(super) fn prepare(
             identity: current.target.identity.clone(),
             directory: current.target.directory.clone(),
         });
-        planned.result["removedComponents"]
-            .as_array_mut()
-            .unwrap()
-            .push(json!(current.target.identity));
+        if let Some(rows) = planned.result["removedComponents"].as_array_mut() {
+            rows.push(json!(current.target.identity));
+        }
     }
     Ok(())
 }

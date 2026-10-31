@@ -1,4 +1,6 @@
 //! `ComponentWriterMain.relocateOccupiedDirs`: filesystem-aware numbered targets.
+#[cfg(test)]
+mod tests;
 use crate::component_tracking::observe::Observed;
 use serde_json::{Map, Value};
 use std::{collections::HashSet, fs, io, path::Path};
@@ -159,6 +161,3 @@ impl super::Prepared {
         &self.changes.relocation.warnings
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -6,6 +6,9 @@
 //! long-lived process that installs repeatedly leaks one config per distinct
 //! configuration rather than one per call.
 
+#[cfg(test)]
+mod tests;
+
 use super::{EngineSettings, VIRTUAL_STORE_DIR_MAX_LENGTH, error::diagnostic};
 use crate::model::DependencyMap;
 use pnpm_config::{Config, LinkWorkspacePackages, NodeLinker, PackageImportMethod};
@@ -326,6 +329,3 @@ fn intern(config: Config) -> &'static Config {
         .entry(key)
         .or_insert_with(|| &*config.leak())
 }
-
-#[cfg(test)]
-mod tests;

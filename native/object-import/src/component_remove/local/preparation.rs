@@ -53,7 +53,11 @@ fn packages(
             && !components
                 .iter()
                 .any(|component| {
-                    component["identity"] == row.identity && component["packageName"].is_string()
+                    component["identity"]
+                        .as_str()
+                        .or_else(|| component["id"].as_str())
+                        == Some(row.identity.as_str())
+                        && component["packageName"].is_string()
                 })
         {
             row.package.clear();

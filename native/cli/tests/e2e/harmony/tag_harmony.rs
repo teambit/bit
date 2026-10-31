@@ -1,8 +1,8 @@
-use crate::helper::{Helper, parse};
-use serde_json::Value;
-
 #[path = "tag_harmony/extra.rs"]
 mod extra;
+
+use crate::helper::{Helper, parse};
+use serde_json::Value;
 
 #[test]
 fn workspace_with_standard_components_and_tag_on_harmony() {

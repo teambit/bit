@@ -2,10 +2,14 @@
 pub(super) use export::prepare_export_scopes;
 mod export;
 mod lane;
+#[cfg(test)]
+mod lane_tests;
 mod soft;
 mod stash;
 #[cfg(test)]
 mod switch_tests;
+#[cfg(test)]
+mod tests;
 use crate::workspace::engine::invalid;
 use serde_json::{Map, Value};
 use soft::{identity, rows};
@@ -59,8 +63,17 @@ impl Prepared {
     /// Re-render the post-checkout bytes for Consumer.onDestroy after installation.
     pub(super) fn switch_lane(&mut self, context: &Value) -> io::Result<()> {
         let id = &context["lane"]["switchId"];
-        let name = id["name"].as_str().ok_or_else(|| invalid("switch lane name"))?;
-        let scope = id["scope"].as_str().ok_or_else(|| invalid("switch lane scope"))?;
+        let (scope, name) = if let Some(raw) = id.as_str() {
+            raw.split_once('/').unwrap_or(("", raw))
+        } else {
+            (
+                id["scope"].as_str().ok_or_else(|| invalid("switch lane scope"))?,
+                id["name"].as_str().ok_or_else(|| invalid("switch lane name"))?,
+            )
+        };
+        if name.is_empty() || (name != "main" && scope.is_empty()) {
+            return Err(invalid("switch lane identity"));
+        }
         let bitmap = crate::recovery::jsonc::parse(&self.output)?;
         let mut entries = rows(&bitmap)?;
         lane::switch_visibility(&mut entries, context, name)?;
@@ -373,8 +386,3 @@ impl Prepared {
             .map(|error| error.to_string()))
     }
 }
-
-#[cfg(test)]
-mod lane_tests;
-#[cfg(test)]
-mod tests;

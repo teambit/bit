@@ -12,7 +12,10 @@ pub(super) fn install_ids(result: &Value, kind: Kind) -> io::Result<Vec<String>>
     let rows = array(result.get("abortedComponents"), "aborted components")?;
     let mut ids = rows
         .iter()
-        .map(|row| Id::parse(text(row.get("id"))?).map(|id| id.display()))
+        .map(|row| {
+            let raw_id = row.get("id").ok_or_else(|| decline("aborted component id"))?;
+            Id::from_object(raw_id).map(|id| id.display())
+        })
         .collect::<io::Result<Vec<_>>>()?;
     ids.sort();
     ids.dedup();
@@ -36,7 +39,10 @@ pub(super) fn format_component(result: &Value, chalk: Chalk) -> io::Result<Repor
     let format = Formatter::new(chalk);
     let items = rows
         .iter()
-        .map(|row| Id::parse(text(row.get("id"))?).map(|id| format.item(&id.without_version())))
+        .map(|row| {
+            let raw_id = row.get("id").ok_or_else(|| decline("aborted component id"))?;
+            Id::from_object(raw_id).map(|id| format.item(&id.without_version()))
+        })
         .collect::<io::Result<Vec<_>>>()?;
     Ok(Report { data: format.section("merge aborted", "", &items), code: 0, details: None })
 }

@@ -120,8 +120,8 @@ fn allocate_snap_report(result: &mut Value, versions: &[Value]) -> io::Result<()
             .filter(|row| row["selected"] == true)
             .map(|row| format!(
                 "{}@{}",
-                row["identity"].as_str().unwrap(),
-                row["hash"].as_str().unwrap()
+                row["identity"].as_str().unwrap_or_default(),
+                row["hash"].as_str().unwrap_or_default()
             ))
             .collect::<Vec<_>>()
     );
@@ -135,8 +135,8 @@ fn allocate_snap_report(result: &mut Value, versions: &[Value]) -> io::Result<()
             .ok_or_else(|| invalid("snap automatic allocation"))?;
         row["id"] = json!(format!(
             "{}@{}",
-            version["identity"].as_str().unwrap(),
-            version["hash"].as_str().unwrap()
+            version["identity"].as_str().unwrap_or_default(),
+            version["hash"].as_str().unwrap_or_default()
         ));
     }
     Ok(())

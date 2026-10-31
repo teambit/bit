@@ -31,7 +31,8 @@ pub(super) fn prepare(context: &Context, options: &Options) -> io::Result<Option
     let global = global(context);
     let package_dir =
         context.cli.bit_dir.as_ref().ok_or_else(|| io::Error::other("missing Bit package"))?;
-    let package: Value = serde_json::from_slice(&fs::read(package_dir.join("package.json"))?)?;
+    let package: Value =
+        bit_object_import::parse_jsonc(&fs::read(package_dir.join("package.json"))?)?;
     let network = Network::new(
         &global,
         package["version"].as_str().unwrap_or_default(),

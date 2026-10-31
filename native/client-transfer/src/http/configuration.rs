@@ -11,14 +11,19 @@ pub(super) fn sockets(
     builder: reqwest::ClientBuilder,
     global: &GlobalConfig,
 ) -> io::Result<reqwest::ClientBuilder> {
-    let number = |key: &str| config_str(global, key).and_then(|value| value.parse::<u64>().ok());
-    let timeout = number("network.fetch_timeout").unwrap_or(60_000);
-    let max_sockets = usize::try_from(number("network.max_sockets").unwrap_or(15)).unwrap_or(15);
+    let timeout =
+        config_u64(global, &["network.fetch_timeout", "network.fetch-timeout"]).unwrap_or(60_000);
+    let max_sockets = usize::try_from(
+        config_u64(global, &["network.max_sockets", "network.max-sockets"]).unwrap_or(15),
+    )
+    .unwrap_or(15);
     let mut builder = builder
         .connect_timeout(Duration::from_mins(1))
         .timeout(Duration::from_millis(timeout))
         .pool_max_idle_per_host(max_sockets.max(1));
-    if let Some(address) = config_str(global, "network.local_address") {
+    if let Some(address) = config_str(global, "network.local_address")
+        .or_else(|| config_str(global, "network.local-address"))
+    {
         let address: std::net::IpAddr = address
             .parse()
             .map_err(|_| invalid(&format!("invalid network.local_address: {address}")))?;
@@ -79,7 +84,18 @@ pub(super) fn config_str<'a>(global: &'a GlobalConfig, key: &str) -> Option<&'a 
     global
         .get(key)
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
+}
+
+fn config_u64(global: &GlobalConfig, keys: &[&str]) -> Option<u64> {
+    keys.iter()
+        .find_map(|key| global.get(*key))
+        .and_then(|value| match value {
+            Value::Number(number) => number.as_u64(),
+            Value::String(text) => text.trim().parse().ok(),
+            _ => None,
+        })
 }
 
 fn identity(

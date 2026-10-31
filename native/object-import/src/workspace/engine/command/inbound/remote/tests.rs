@@ -114,3 +114,22 @@ fn fork_file_listing_orders_model_names_before_versions_and_prefix_children() {
     super::list_order::file_order(&mut rows);
     assert_eq!(rows.map(|row| row.name), ["comp1", "comp1/ui", "comp2"]);
 }
+
+#[test]
+fn file_list_id_helpers_accept_both_object_and_string_id_shapes() {
+    let obj_row = json!({"id": {"scope": "my.scope", "name": "ui/button"}});
+    let str_row = json!({"id": "my.scope/ui/button@0.0.1"});
+    let unscoped_row = json!({"id": {"name": "ui/button"}});
+    let unscoped_str_row = json!({"id": "button"});
+    assert_eq!(super::file_list::row_id_parts(&obj_row), Some((Some("my.scope"), "ui/button")));
+    assert_eq!(super::file_list::row_id_parts(&str_row), Some((Some("my.scope"), "ui/button")));
+    assert_eq!(super::file_list::row_id_parts(&unscoped_row), Some((None, "ui/button")));
+    assert_eq!(super::file_list::row_id_parts(&unscoped_str_row), Some((None, "button")));
+    assert_eq!(super::file_list::row_scoped_id_parts(&str_row), Some(("my.scope", "ui/button")));
+    assert_eq!(super::file_list::row_scoped_id_parts(&unscoped_row), None);
+    let lane_obj = json!({"id": {"scope": "my.scope", "name": "dev"}});
+    let lane_str = json!({"id": "my.scope/dev"});
+    assert!(super::file_list::row_lane_matches(&lane_obj, "my.scope", "dev"));
+    assert!(super::file_list::row_lane_matches(&lane_str, "my.scope", "dev"));
+    assert!(!super::file_list::row_lane_matches(&lane_str, "my.scope", "other"));
+}

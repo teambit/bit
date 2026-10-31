@@ -96,8 +96,23 @@ pub(super) fn collect(component: &Value, raw: &Value) -> io::Result<Vec<Case>> {
     Ok(cases)
 }
 fn source_rows<'a>(component: &Value, raw: &'a Value) -> &'a Value {
-    component["componentId"]
-        .as_str()
+    let id = &component["componentId"];
+    let owned = if id.is_string() {
+        None
+    } else {
+        let scope = id["_legacy"]["scope"]
+            .as_str()
+            .or_else(|| id["_scope"].as_str())
+            .or_else(|| id["scope"].as_str());
+        let name = id["_legacy"]["name"]
+            .as_str()
+            .or_else(|| id["name"].as_str());
+        scope
+            .zip(name)
+            .map(|(scope, name)| format!("{scope}/{name}"))
+    };
+    id.as_str()
+        .or(owned.as_deref())
         .and_then(|identity| raw["componentRows"].get(identity))
         .unwrap_or_else(|| &raw["results"]["testResults"])
 }

@@ -3,6 +3,9 @@
 //! these characters (Danish puts uppercase first, Estonian moves `z`, Turkish
 //! splits `i`, Czech contracts `ch`) and any other character decline.
 
+#[cfg(test)]
+mod collate_tests;
+
 use std::{cmp::Ordering, env};
 
 /// Languages whose collation equals the root collation for `[A-Za-z0-9._/@+-]`.
@@ -68,6 +71,3 @@ pub fn compare(left: &str, right: &str) -> Ordering {
         .cmp(&weights(right))
         .then_with(|| cases(left).cmp(&cases(right)))
 }
-
-#[cfg(test)]
-mod collate_tests;

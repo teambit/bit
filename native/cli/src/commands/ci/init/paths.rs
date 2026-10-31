@@ -28,10 +28,8 @@ fn resolve_link(path: &Path) -> io::Result<Option<PathBuf>> {
         if fs::symlink_metadata(&current)?.file_type().is_symlink() {
             // Node checks the target before reading the link, including broken links and cycles.
             fs::metadata(&current)?;
-            let target = current
-                .parent()
-                .unwrap()
-                .join(fs::read_link(&current)?);
+            let parent = current.parent().unwrap_or_else(|| Path::new(""));
+            let target = parent.join(fs::read_link(&current)?);
             return Ok(Some(normalize(&target.join(parts.as_path()))));
         }
     }

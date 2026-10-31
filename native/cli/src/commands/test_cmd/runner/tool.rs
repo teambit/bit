@@ -1,4 +1,6 @@
 //! Keep the external Jest process alive across native cache publication.
+mod stream;
+
 use super::{Value, assets::Assets, invalid, json};
 use crate::discovery::{self, Target};
 use std::{
@@ -7,8 +9,6 @@ use std::{
     io::{self, BufRead, BufReader, Read, Seek, SeekFrom, Write},
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
-
-mod stream;
 
 pub(super) struct Session {
     inner: Inner,

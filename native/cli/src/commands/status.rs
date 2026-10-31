@@ -1,12 +1,6 @@
-//! Native `bit status --json` (`s -j`): the workspace engine of
-//! `bit-object-import` reads the workspace, models and dependency caches;
-//! this module computes the policy, ignore and semver inputs Node computed.
-//! Without `--json`, `report` formats the same result like `StatusCmd.report`.
-//!
-//! It reuses valid dependency cache entries or detects dependencies afresh.
-//! With `no-fs-cache` it always detects afresh and writes no cache entries.
-//! Harmony callbacks supply extension facts while Rust owns repository state,
-//! inventory, dependency projection and comparison.
+//! Native `bit status` (`s`): the workspace engine of `bit-object-import`
+//! reads the workspace, models and dependency caches; this module computes
+//! policy, ignore and semver inputs, and formats the result or `--json`.
 
 pub(super) mod autosync;
 pub(super) mod cache;
@@ -100,7 +94,9 @@ fn is_mode_flag(arg: &str) -> bool {
             | "--quick"
             | "--quick=true"
             | "--quick=false"
-            | "--no-color",
+            | "--no-color"
+            | "--no-color=true"
+            | "--no-color=false",
     )
 }
 

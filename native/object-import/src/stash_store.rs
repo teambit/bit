@@ -34,7 +34,7 @@ impl PreparedLoad {
             .ok_or_else(|| {
                 io::Error::new(io::ErrorKind::NotFound, format!("stash file {filename} not found"))
             })?;
-        let data = serde_json::from_slice(bytes).map_err(io::Error::other)?;
+        let data = crate::parse_jsonc(bytes)?;
         Ok(Self { observation, filename, data })
     }
     /// The complete detached-Version and bitmap metadata, without Source bodies.
@@ -64,7 +64,7 @@ pub fn list(scope: &Path) -> io::Result<Vec<Value>> {
         .files()
         .iter()
         .map(|(name, bytes)| {
-            let data: Value = serde_json::from_slice(bytes).map_err(io::Error::other)?;
+            let data = crate::parse_jsonc(bytes)?;
             let components = data["stashCompsData"]
                 .as_array()
                 .ok_or_else(|| invalid("stash component entries"))?
@@ -82,6 +82,12 @@ pub fn list(scope: &Path) -> io::Result<Vec<Value>> {
     Ok(result)
 }
 fn component_id(id: &Value) -> io::Result<String> {
+    if let Some(raw) = id
+        .as_str()
+        .filter(|raw| !raw.is_empty())
+    {
+        return Ok(raw.to_owned());
+    }
     let name = id["name"].as_str().ok_or_else(|| invalid("stash component identity"))?;
     let name = id["scope"]
         .as_str()

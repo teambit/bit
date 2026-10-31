@@ -93,7 +93,7 @@ pub(super) fn observe_parents(
     for path in [source, destination] {
         let parent = path
             .ancestors()
-            .find(|p| p.exists())
+            .find(|ancestor| ancestor.exists())
             .ok_or_else(|| unsupported("move parent"))?;
         observed.ancestors(root, parent)?;
         observed.directory(parent)?;

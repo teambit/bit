@@ -1,5 +1,8 @@
 //! Validated bitmap targets and status-facing bitmap state.
 
+#[cfg(test)]
+mod rename_tests;
+
 use super::{super::Target, document, invalid};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
@@ -388,6 +391,3 @@ pub(in crate::workspace::engine) fn context_bitmap_targets(
         })
         .collect())
 }
-
-#[cfg(test)]
-mod rename_tests;

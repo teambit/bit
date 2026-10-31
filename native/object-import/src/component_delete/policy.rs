@@ -1,5 +1,8 @@
 //! `RemoveMain.getDeletedDepsToPinToMain` for a captured workspace-only graph.
 
+#[cfg(test)]
+mod tests;
+
 use super::{FrozenObject, component_remove::Selected, freeze, invalid, outbound};
 use node_semver::Version;
 use serde_json::Value;
@@ -153,22 +156,23 @@ fn bitmap_row_identity(key: &str, row: &Value) -> io::Result<String> {
     })
 }
 
+fn matches_index_row(row: &Value, scope: &str, name: &str) -> bool {
+    let (row_scope, row_name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
+            .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default(), nm));
+    row["isSymlink"] != true && row_name == name && (row_scope.is_empty() || row_scope == scope)
+}
+
 fn read_model(root: &Path, identity: &str, objects: &mut Vec<FrozenObject>) -> io::Result<Value> {
     let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("component identity"))?;
-    let index: Value =
-        serde_json::from_slice(&fs::read(crate::scope_path(root).join("index.json"))?)?;
+    let index: Value = crate::parse_jsonc(&fs::read(crate::scope_path(root).join("index.json"))?)?;
     let rows = index["components"]
         .as_array()
         .or_else(|| index.as_array())
         .ok_or_else(|| invalid("scope components"))?;
     let matches = rows
         .iter()
-        .filter(|row| {
-            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
-            row["isSymlink"] != true
-                && row["id"]["name"] == name
-                && (row_scope.is_empty() || row_scope == scope)
-        })
+        .filter(|row| matches_index_row(row, scope, name))
         .collect::<Vec<_>>();
     if matches.len() != 1 {
         return Err(invalid("component is not uniquely indexed"));
@@ -201,6 +205,3 @@ fn latest(model: &Value) -> io::Result<Option<String>> {
                 .map(|(_, tag)| tag)
         })
 }
-
-#[cfg(test)]
-mod tests;

@@ -1,5 +1,8 @@
 //! JavaScript tooling options around Rust's snapshot transaction.
 
+#[cfg(test)]
+mod tests;
+
 use super::Kind;
 use bit_install::config::{
     EffectiveConfig, ScopeJson, WorkspaceConfig, load_global_config, scope_path,
@@ -190,11 +193,10 @@ impl Workflow {
             "exitOnFirstFailedTask": self.pipeline.fail_fast,
             "loose": self.pipeline.loose,
         });
-        if kind == Kind::Resolve {
-            params
-                .as_object_mut()
-                .unwrap()
-                .remove("editor");
+        if kind == Kind::Resolve
+            && let Some(object) = params.as_object_mut()
+        {
+            object.remove("editor");
         }
         if let Some(tasks) = &self.pipeline.skip_tasks {
             params["skipTasks"] = json!(tasks);
@@ -205,6 +207,3 @@ impl Workflow {
         params
     }
 }
-
-#[cfg(test)]
-mod tests;

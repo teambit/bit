@@ -16,10 +16,11 @@ impl<'a> Index<'a> {
     pub(super) fn new(request: &'a Request) -> Self {
         let mut bitmap = HashMap::new();
         for id in &request.sources.bitmap {
+            let ver = version(id).trim();
             bitmap
                 .entry(unversioned(id))
                 .and_modify(|value| *value = None)
-                .or_insert_with(|| Some(version(id)));
+                .or_insert_with(|| (!ver.is_empty()).then_some(ver));
         }
         Self {
             request,
@@ -28,7 +29,8 @@ impl<'a> Index<'a> {
             model: first(&request.sources.model),
             env: request.policy.env_own
                 .iter()
-                .map(String::as_str)
+                .map(|name| name.trim())
+                .filter(|name| !name.is_empty())
                 .collect(),
         }
     }
@@ -36,9 +38,12 @@ impl<'a> Index<'a> {
 fn first(ids: &[String]) -> HashMap<&str, &str> {
     let mut index = HashMap::new();
     for id in ids {
-        index
-            .entry(unversioned(id))
-            .or_insert_with(|| version(id));
+        let ver = version(id).trim();
+        if !ver.is_empty() {
+            index
+                .entry(unversioned(id))
+                .or_insert(ver);
+        }
     }
     index
 }

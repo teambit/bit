@@ -4,6 +4,9 @@
 //! A `dry_run` fresh resolve that writes nothing and collects the peer issues,
 //! like `@pnpm/napi`'s `getPeerDependencyIssues`.
 
+#[cfg(test)]
+mod tests;
+
 use super::{
     EngineSettings, MissingPeers,
     config_overlay::{Query, query_config},
@@ -142,6 +145,3 @@ pub(super) fn safe_intersect<'a>(mut ranges: impl Iterator<Item = &'a str>) -> O
     }
     Some(acc.to_string())
 }
-
-#[cfg(test)]
-mod tests;

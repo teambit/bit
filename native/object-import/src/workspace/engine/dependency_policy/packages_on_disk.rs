@@ -1,10 +1,10 @@
-use crate::workspace::engine::source_overlay::SourceOverlay;
 mod metadata;
 
 use super::invalid;
 use crate::workspace::engine::{
     path,
     resolve_dependencies::{Budget, normalize},
+    source_overlay::SourceOverlay,
 };
 use rayon::prelude::*;
 use serde::Deserialize;

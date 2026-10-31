@@ -8,6 +8,8 @@ pub(super) fn increment(
     release: &str,
     identifier: Option<&str>,
 ) -> io::Result<Value> {
+    let release = release.trim();
+    let identifier = identifier.map(str::trim);
     let mut next = version.clone();
     match release {
         "major" | "minor" | "patch" => stable(&mut next, release)?,

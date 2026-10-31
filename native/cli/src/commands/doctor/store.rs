@@ -1,4 +1,7 @@
 //! Read-only native diagnoses of indexed models and legacy symlinks.
+#[cfg(test)]
+mod tests;
+
 use super::catalog::Diagnosis;
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
@@ -191,9 +194,6 @@ fn references(scope: &Path) -> io::Result<Vec<String>> {
     references.sort_by(|left, right| right.cmp(left));
     Ok(references)
 }
-
-#[cfg(test)]
-mod tests;
 
 /// Scope index repair and malformed objects are left to the canonical loader before output.
 pub(super) fn preflight(context: &super::context::Context, name: Option<&str>) -> io::Result<()> {

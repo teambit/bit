@@ -9,7 +9,7 @@ use serde_json::json;
 fn parses_dependents_options_and_checks_bitmap_scope() {
     assert_eq!(parse_options(&["comp1"]), Some(Options { id: "comp1".into(), json: false }));
     assert_eq!(
-        parse_options(&["my-scope/comp1", "-j", "--no-color"]),
+        parse_options(&["my-scope/comp1", "-j", "--no-color", "--no-color=false"]),
         Some(Options { id: "my-scope/comp1".into(), json: true }),
     );
     assert_eq!(

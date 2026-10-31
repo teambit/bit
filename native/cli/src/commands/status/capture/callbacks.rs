@@ -20,7 +20,7 @@ impl CacheWrites {
         identity: &str,
         data: Value,
     ) {
-        self.callbacks.snapshot_data.insert(identity.to_owned(), data);
+        self.callbacks.snapshot_data.insert(identity.trim().to_owned(), data);
     }
 
     pub(in crate::commands::status) fn retain_callback_directory(

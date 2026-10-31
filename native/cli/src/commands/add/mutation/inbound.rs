@@ -106,12 +106,7 @@ impl ProjectedLinker {
     ) -> io::Result<()> {
         let identities = ids
             .iter()
-            .map(|id| {
-                id.split('@')
-                    .next()
-                    .unwrap_or(id)
-                    .to_owned()
-            })
+            .map(|id| strip_version(id))
             .collect::<Vec<_>>();
         let (_, projection) = super::load::projected(
             root,
@@ -139,5 +134,13 @@ impl ProjectedLinker {
     pub(in crate::commands) fn import_acknowledge(&mut self, writes: &[Value]) -> io::Result<()> {
         self.retained.acknowledge_import(writes)?;
         self.retained.validate()
+    }
+}
+
+fn strip_version(id: &str) -> String {
+    let trimmed = id.trim();
+    match trimmed.rsplit_once('@') {
+        Some((base, _)) if !base.is_empty() => base.to_owned(),
+        _ => trimmed.to_owned(),
     }
 }

@@ -22,7 +22,7 @@ fn read_many(root: &Path, components: &[Coverage]) -> io::Result<Vec<Value>> {
     }
     let raw = fs::read(&path)
         .ok()
-        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok());
+        .and_then(|bytes| bit_object_import::parse_jsonc(&bytes).ok());
     let reports = components
         .iter()
         .map(|component| {
@@ -85,7 +85,7 @@ fn totals(files: &[Value]) -> Option<Value> {
 }
 
 pub(super) fn empty() -> Value {
-    json!({"files":[],"total":totals(&[]).expect("empty totals")})
+    json!({"files":[],"total":totals(&[]).unwrap_or_default()})
 }
 
 fn relative(from: &Path, to: &Path) -> PathBuf {
@@ -133,10 +133,9 @@ impl Coverage {
                 );
                 result["error"] =
                     crate::commands::workspace_command::filesystem_error::json(&error);
-                result
-                    .as_object_mut()
-                    .expect("tester result")
-                    .remove("results");
+                if let Some(map) = result.as_object_mut() {
+                    map.remove("results");
+                }
             }
         }
     }
@@ -152,10 +151,9 @@ impl Coverage {
                 );
                 result["error"] =
                     crate::commands::workspace_command::filesystem_error::json(&error);
-                result
-                    .as_object_mut()
-                    .expect("tester result")
-                    .remove("results");
+                if let Some(map) = result.as_object_mut() {
+                    map.remove("results");
+                }
             }
         }
     }

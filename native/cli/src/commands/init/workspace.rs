@@ -145,7 +145,7 @@ fn package(plan: &mut Plan, options: &Options) -> io::Result<()> {
     let original = fs::read(&path).ok();
     let existing = original
         .as_deref()
-        .map(serde_json::from_slice::<Value>)
+        .map(bit_object_import::parse_jsonc)
         .transpose()?;
     if options.flags.no_package_json
         && existing.is_none()

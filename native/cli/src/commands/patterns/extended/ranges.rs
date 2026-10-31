@@ -24,7 +24,7 @@ fn sequence(pattern: &str) -> io::Result<Option<(usize, usize, Sequence)>> {
     for (open, _) in pattern
         .char_indices()
         .rev()
-        .filter(|(_, c)| *c == '{')
+        .filter(|(_, character)| *character == '{')
     {
         if pattern[..open]
             .chars()
@@ -91,8 +91,8 @@ impl Sequence {
         let padded = parts[..2]
             .iter()
             .any(|part| {
-                part.trim_start_matches('-').starts_with('0')
-                    && part.trim_start_matches('-').len() > 1
+                let unsigned = part.trim_start_matches(['-', '+']);
+                unsigned.starts_with('0') && unsigned.len() > 1
             });
         let width =
             if numbers.is_some() && padded { parts[0].len().max(parts[1].len()) } else { 0 };
@@ -138,6 +138,9 @@ fn letter(value: &str) -> Option<i64> {
 }
 
 fn numeric_endpoint(value: &str) -> bool {
-    let digits = value.strip_prefix('-').unwrap_or(value);
+    let digits = value
+        .strip_prefix('-')
+        .or_else(|| value.strip_prefix('+'))
+        .unwrap_or(value);
     !digits.is_empty() && digits.bytes().all(|byte| byte.is_ascii_digit())
 }

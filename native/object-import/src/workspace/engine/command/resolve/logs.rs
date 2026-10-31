@@ -16,7 +16,7 @@ pub(super) fn apply(retained: &Retained, receipt: &mut Value) -> io::Result<()> 
         if retained.tag.as_ref().is_some_and(|options| options.persist) {
             let pending = retained.record.targets
                 .iter()
-                .find(|target| target["identity"] == material.identity)
+                .find(|target| row_identity(target) == Some(material.identity.as_str()))
                 .map_or(&Value::Null, |target| &target["nextVersion"]);
             merge(&mut log, pending)?;
         }
@@ -32,8 +32,7 @@ pub(super) fn apply(retained: &Retained, receipt: &mut Value) -> io::Result<()> 
     }
     if let Some(versions) = receipt["versions"].as_array_mut() {
         for version in versions {
-            let identity =
-                version["identity"].as_str().ok_or_else(|| invalid("snapshot log identity"))?;
+            let identity = row_identity(version).ok_or_else(|| invalid("snapshot log identity"))?;
             version["log"] = logs
                 .get(identity)
                 .cloned()
@@ -45,18 +44,25 @@ pub(super) fn apply(retained: &Retained, receipt: &mut Value) -> io::Result<()> 
     Ok(())
 }
 
+fn row_identity(row: &Value) -> Option<&str> {
+    row["identity"]
+        .as_str()
+        .or_else(|| row["id"].as_str())
+        .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base))
+}
+
 fn editor<'a>(receipt: &'a Value, identity: &str) -> &'a Value {
     receipt["messages"]
         .as_array()
         .into_iter()
         .flatten()
-        .find(|row| row["identity"] == identity)
+        .find(|row| row_identity(row) == Some(identity))
         .or_else(|| {
             receipt["versions"]
                 .as_array()
                 .into_iter()
                 .flatten()
-                .find(|row| row["identity"] == identity)
+                .find(|row| row_identity(row) == Some(identity))
                 .and_then(|row| row.get("log"))
         })
         .unwrap_or(&Value::Null)

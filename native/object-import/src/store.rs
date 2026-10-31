@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use std::{
     collections::HashMap,
     fs::{self, OpenOptions},
@@ -244,9 +247,6 @@ fn apply_metadata(
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;
 
 /// An index written in place: a regular file with one link and no set-id
 /// bits, as `open_index` requires on Linux, or none yet.

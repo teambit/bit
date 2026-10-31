@@ -124,3 +124,34 @@ fn package_name_falls_back_to_the_pkg_config_and_binding_prefix() {
         .unwrap();
     assert_eq!(model.package_name(&id(None)), "@org/remote.envs.my-env");
 }
+
+#[test]
+fn index_lookup_supports_jsonc_and_string_component_ids() {
+    let dir = scope(&json!([]), &json!([{ "relativePath": "env.jsonc", "file": "abc" }]));
+    let custom_hash = sha1_hex("custom-indexed-model");
+    let version_hash = sha1_hex("version");
+    write_object(
+        dir.path(),
+        &custom_hash,
+        "Component",
+        &json!({
+            "name": "envs/my-env",
+            "scope": "org.remote",
+            "bindingPrefix": "@custom",
+            "head": version_hash,
+            "versions": { "1.0.0": version_hash }
+        }),
+    );
+    fs::write(
+        dir.path().join("index.json"),
+        format!(
+            "// comment in index.json\n{{\"components\":[{{\"id\":\"org.remote/envs/my-env\",\"isSymlink\":false,\"hash\":\"{custom_hash}\",}},],}}",
+        ),
+    )
+    .unwrap();
+    let model = ScopeObjects::new(dir.path())
+        .component_or_head(&id(None))
+        .unwrap()
+        .unwrap();
+    assert_eq!(model.binding_prefix.as_deref(), Some("@custom"));
+}

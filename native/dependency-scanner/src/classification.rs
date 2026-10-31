@@ -44,7 +44,10 @@ impl<'ast> Visit<'ast> for Classifier {
         };
     }
 }
-fn classify_call(callee: &Expression<'_>, arguments: &[Argument<'_>]) -> Classification {
+fn classify_call(mut callee: &Expression<'_>, arguments: &[Argument<'_>]) -> Classification {
+    while let Expression::ParenthesizedExpression(paren) = callee {
+        callee = &paren.expression;
+    }
     match callee {
         Expression::Identifier(identifier) if identifier.name == "define" => {
             Classification::Fallback
@@ -57,6 +60,9 @@ fn classify_call(callee: &Expression<'_>, arguments: &[Argument<'_>]) -> Classif
             }
         }
         Expression::StaticMemberExpression(member) if member.property.name == "require" => {
+            Classification::Fallback
+        }
+        Expression::ComputedMemberExpression(member) if matches!(&member.expression, Expression::Identifier(id) if id.name == "require") => {
             Classification::Fallback
         }
         _ => Classification::None,

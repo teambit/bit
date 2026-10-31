@@ -64,15 +64,18 @@ pub(in crate::commands) fn read(root: &Path) -> io::Result<Bitmap> {
 /// `{ scope, name }` of `_bit_lane.id`.
 fn lane_id(lane: &Value) -> io::Result<Value> {
     let id = &lane["id"];
-    let valid = |field: &str| {
-        id[field]
-            .as_str()
-            .is_some_and(|text| !text.is_empty())
+    let (scope, name) = if let Some(raw) = id.as_str() {
+        raw.rsplit_once('@')
+            .map_or(raw, |(bare, _)| bare)
+            .split_once('/')
+            .unwrap_or_default()
+    } else {
+        (id["scope"].as_str().unwrap_or_default(), id["name"].as_str().unwrap_or_default())
     };
-    if !valid("scope") || !valid("name") {
+    if scope.is_empty() || name.is_empty() {
         return Err(decline("bitmap lane id"));
     }
-    Ok(serde_json::json!({ "scope": id["scope"], "name": id["name"] }))
+    Ok(serde_json::json!({ "scope": scope, "name": name }))
 }
 
 fn text<'a>(value: &'a Value, field: &str) -> Option<&'a str> {

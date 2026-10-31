@@ -2,6 +2,9 @@
 //! (`cli-parser.ts`: `boolean-negation: false`, camel-case expansion) for the
 //! flags `install.cmd.tsx` declares.
 
+#[cfg(test)]
+mod tests;
+
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -322,6 +325,3 @@ fn is_truthy(value: &str) -> bool {
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)
 }
-
-#[cfg(test)]
-mod tests;

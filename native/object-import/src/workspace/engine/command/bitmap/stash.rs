@@ -21,12 +21,20 @@ pub(super) fn append(prepared: &mut Prepared, context: &Value) -> io::Result<()>
         {
             continue;
         }
-        let root = entry["rootDir"].as_str().ok_or_else(|| invalid("stash bitmap root"))?;
-        crate::checkout::plan::relative_path(root)?;
+        let root = entry["rootDir"]
+            .as_str()
+            .or_else(|| entry["directory"].as_str())
+            .filter(|value| !value.is_empty())
+            .ok_or_else(|| invalid("stash bitmap root"))?
+            .to_owned();
+        crate::checkout::plan::relative_path(&root)?;
         if root == "." {
             return Err(invalid("stash new workspace root"));
         }
-        lane::validate_roots(root, &rows)?;
+        lane::validate_roots(&root, &rows)?;
+        if entry["rootDir"].is_null() {
+            entry["rootDir"] = Value::String(root);
+        }
         rows.push(entry);
         prepared.changed = true;
     }

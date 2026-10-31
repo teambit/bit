@@ -13,7 +13,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let filtered: Vec<&str> = args
         .iter()
         .copied()
-        .filter(|arg| *arg != "--no-color")
+        .filter(|arg| !matches!(*arg, "--no-color" | "--no-color=true" | "--no-color=false"))
         .collect();
     let (command, rest) = filtered.split_first()?;
     match *command {
