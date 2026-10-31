@@ -252,13 +252,16 @@ export class DependenciesGraph {
 
   /**
    * Record `pkgId` as a dependency of the node `dependentPkgId`, when this
-   * graph holds that node's edge.
+   * graph holds that node's edge. The edge is replaced, not changed: a merge
+   * or an attachment shares edge objects with the graphs it took them from,
+   * which the scope caches on their Version objects.
    */
   addDependencyOf(dependentPkgId: string, pkgId: string): void {
-    const edge = this.edges.find(({ id }) => id === dependentPkgId);
-    if (edge && !edge.neighbours.some(({ id }) => id === pkgId)) {
-      edge.neighbours.push({ id: pkgId });
-    }
+    const index = this.edges.findIndex(({ id }) => id === dependentPkgId);
+    if (index === -1) return;
+    const edge = this.edges[index];
+    if (edge.neighbours.some(({ id }) => id === pkgId)) return;
+    this.edges[index] = { ...edge, neighbours: [...edge.neighbours, { id: pkgId }] };
   }
 
   isEmpty(): boolean {

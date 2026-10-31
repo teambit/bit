@@ -1048,7 +1048,7 @@ function linkWorkspaceComponents(
   const replace = createWorkspaceComponentReplacer(dirs);
   const replaceRef = (name: string, ref: string) =>
     ref.startsWith('link:') ? ref : replace(`${name}@${ref}`).slice(name.length + 1);
-  const packages: BitLockfileFile['packages'] = {};
+  const packages: NonNullable<BitLockfileFile['packages']> = {};
   for (const [pkgId, pkg] of Object.entries(lockfile.packages)) {
     const directory = dirs.get(pkgId);
     if (directory == null) {
@@ -1064,7 +1064,7 @@ function linkWorkspaceComponents(
     };
   }
   lockfile.packages = packages;
-  const snapshots: BitLockfileFile['snapshots'] = {};
+  const snapshots: NonNullable<BitLockfileFile['snapshots']> = {};
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
     for (const depType of ['dependencies', 'optionalDependencies'] as const) {
       const deps = snapshot[depType];

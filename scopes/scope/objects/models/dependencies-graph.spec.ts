@@ -404,6 +404,21 @@ describe('DependenciesGraph.attachDependencyGraph', () => {
     expect(graph.edges.find(({ id }) => id === nestedPkgId)?.neighbours).to.eql([{ id: 'foo@1.0.0' }]);
   });
 
+  it('leaves the edges of the graphs it took them from unchanged when linking a nested extension', () => {
+    const graph = createGraph([rootEdge([])], []);
+    const shared = envGraph();
+    graph.attachDependencyGraph(envPkgId, shared);
+    const sharedWebpackEdge = shared.edges.find(({ id }) => id === 'webpack@5.0.0(esbuild@0.20.0)')!;
+
+    graph.addDependencyOf('webpack@5.0.0(esbuild@0.20.0)', '@org/my-aspect@1.0.0');
+
+    expect(sharedWebpackEdge.neighbours).to.eql([{ id: 'esbuild@0.20.0' }]);
+    expect(graph.edges.find(({ id }) => id === 'webpack@5.0.0(esbuild@0.20.0)')?.neighbours).to.eql([
+      { id: 'esbuild@0.20.0' },
+      { id: '@org/my-aspect@1.0.0' },
+    ]);
+  });
+
   it('leaves a graph that already holds the node alone', () => {
     const graph = createGraph([rootEdge([]), edge(envPkgId, [{ id: 'foo@1.0.0' }])], ['foo@1.0.0', envPkgId]);
 
