@@ -76,8 +76,11 @@ fn snapshot(import: &command_import::PreparedImport) -> HashMap<String, Vec<Stri
             );
             let versions = model["versions"]
                 .as_object()
-                .map(|versions| versions.keys().cloned().collect())
-                .unwrap_or_default();
+                .into_iter()
+                .chain(model["orphanedVersions"].as_object())
+                .flat_map(serde_json::Map::keys)
+                .cloned()
+                .collect();
             (id, versions)
         })
         .collect()

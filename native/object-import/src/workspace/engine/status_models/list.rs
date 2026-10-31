@@ -1,13 +1,13 @@
 //! `scopeList`: what `ComponentsList.listAll` reads of each model in the
 //! scope index, `isDeprecated` and `isLaneReadmeOf` from its head Version.
-//! A head Version missing locally is reported as unknown, as Node does.
-//! On a lane, a component's head is its head on the lane, when the lane has
-//! it (`getHeadRegardlessOfLane` after `populateLocalAndRemoteHeads`).
 
 pub(in crate::workspace::engine) mod http_lanes;
 use super::{Reader, index, invalid};
 use crate::read_budget::Budget;
 use bit_client_transfer::remotes::Remote;
+use http_lanes::{
+    read_json_file, read_local_bare_index, remote_for_lane, scope_directory, validate_bare_scope,
+};
 use rayon::prelude::*;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -24,7 +24,6 @@ pub(in crate::workspace::engine) struct Request {
     root: PathBuf,
     #[serde(default)]
     bare_scope: bool,
-    /// The current lane, when it is not main.
     #[serde(default)]
     lane: Option<LaneId>,
 }
@@ -65,18 +64,33 @@ pub(in crate::workspace::engine) fn read(
             .par_iter()
             .map(|item| {
                 let model = index::model(&reader, item)?;
-                let identity = format!(
-                    "{}/{}",
-                    model["scope"].as_str().unwrap_or_default(),
-                    model["name"].as_str().unwrap_or_default(),
-                );
-                row(&reader, &model, lane_heads.get(&identity).map(String::as_str))
+                let head = lookup_lane_head(&lane_heads, &model);
+                row(&reader, &model, head)
             })
             .collect::<io::Result<Vec<_>>>()
     })?;
     let mut lane_components: Vec<&String> = lane_heads.keys().collect();
     lane_components.sort();
     Ok((rows.len(), json!({ "components": rows, "laneComponents": lane_components })))
+}
+
+fn lookup_lane_head<'a>(lane_heads: &'a HashMap<String, String>, model: &Value) -> Option<&'a str> {
+    let scope = model["scope"].as_str().unwrap_or_default();
+    let name = model["name"].as_str().unwrap_or_default();
+    if !scope.is_empty() {
+        return lane_heads
+            .get(&format!("{scope}/{name}"))
+            .map(String::as_str);
+    }
+    lane_heads
+        .get(name)
+        .or_else(|| {
+            let suffix = format!("/{name}");
+            lane_heads
+                .iter()
+                .find_map(|(key, val)| key.ends_with(&suffix).then_some(val))
+        })
+        .map(String::as_str)
 }
 
 #[derive(Deserialize)]
@@ -135,6 +149,7 @@ fn lane_entries(reader: &Reader<'_>, index: &Value, merge_data: bool) -> io::Res
         return Err(invalid("list lane count"));
     }
     rows.iter()
+        .filter(|row| row["isSymlink"] != true)
         .map(|row| {
             let hash = row["hash"].as_str().ok_or_else(|| invalid("list lane hash"))?;
             let lane = reader.read(hash, "Lane")?;
@@ -166,90 +181,6 @@ fn remote_repository(request: &Lanes, scope: &str) -> io::Result<PathBuf> {
     Ok(path)
 }
 
-pub(super) fn configured_remote(
-    root: &Path,
-    scope: &str,
-    global_remotes_file: Option<&Path>,
-) -> io::Result<Remote> {
-    if scope.is_empty() || scope.contains('/') || scope == "." || scope == ".." {
-        return Err(invalid("list remote scope"));
-    }
-    let local = read_json_file(&crate::scope_path(root).join("scope.json"))?;
-    let host = local["remotes"][scope]
-        .as_str()
-        .map(str::to_owned)
-        .or_else(|| {
-            let path = global_remotes_file?;
-            let global = read_json_file(path).ok()?;
-            global[scope].as_str().map(str::to_owned)
-        })
-        .ok_or_else(|| invalid("list unconfigured remote"))?;
-    Remote::from_host(&host)
-}
-
-pub(super) fn scope_directory(root: &Path, bare: bool) -> PathBuf {
-    if bare { root.to_owned() } else { crate::scope_path(root) }
-}
-
-pub(super) fn validate_bare_scope(root: &Path) -> io::Result<String> {
-    let scope = read_json_file(&root.join("scope.json"))?;
-    let name = scope["name"]
-        .as_str()
-        .filter(|name| !name.is_empty() && !name.contains('/'))
-        .ok_or_else(|| invalid("bare lane scope name"))?;
-    if !root.join("objects").is_dir() {
-        return Err(invalid("bare lane scope objects"));
-    }
-    read_local_bare_index(root)?;
-    Ok(name.to_owned())
-}
-
-fn read_local_bare_index(root: &Path) -> io::Result<Value> {
-    match read_bare_index(root) {
-        Ok(index) => Ok(index),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => {
-            Ok(json!({"components":[],"lanes":[]}))
-        }
-        Err(error) => Err(error),
-    }
-}
-
-pub(super) fn remote_for_lane(
-    root: &Path,
-    bare: bool,
-    scope: &str,
-    global_remotes_file: Option<&Path>,
-    remote_host: Option<&str>,
-) -> io::Result<Remote> {
-    if scope.is_empty() || scope.contains('/') || scope == "." || scope == ".." {
-        return Err(invalid("bare lane remote scope"));
-    }
-    if let Some(host) = remote_host {
-        return Remote::from_host(host);
-    }
-    if !bare {
-        return configured_remote(root, scope, global_remotes_file);
-    }
-    let host = global_remotes_file
-        .and_then(|path| read_json_file(path).ok())
-        .and_then(|global| global[scope].as_str().map(str::to_owned))
-        .ok_or_else(|| invalid("bare lane unconfigured remote"))?;
-    Remote::from_host(&host)
-}
-
-fn read_bare_index(root: &Path) -> io::Result<Value> {
-    let index = read_json_file(&root.join("index.json"))?;
-    if !index.is_array() && (!index["lanes"].is_array() || !index["components"].is_array()) {
-        return Err(invalid("list remote index"));
-    }
-    Ok(index)
-}
-
-pub(super) fn read_json_file(path: &Path) -> io::Result<Value> {
-    serde_json::from_slice(&Budget::new(4 * 1024 * 1024).read(File::open(path)?)?)
-        .map_err(io::Error::other)
-}
-
 /// `Lane.isFullyMerged`: every visible lane head is in its component's
 /// main-head ancestry. Hidden update-dependents do not participate.
 fn fully_merged(reader: &Reader<'_>, index: &Value, lane: &Value) -> io::Result<bool> {
@@ -260,10 +191,18 @@ fn fully_merged(reader: &Reader<'_>, index: &Value, lane: &Value) -> io::Result<
         .or_else(|| index.as_array())
         .ok_or_else(|| invalid("list component index"))?;
     for component in components {
+        if component["isHidden"] == true {
+            continue;
+        }
         let id = &component["id"];
         let Some(model_row) = indexed
             .iter()
-            .find(|row| row["id"] == *id)
+            .find(|row| {
+                row["isSymlink"] != true
+                    && row["id"]["name"] == id["name"]
+                    && (row["id"]["scope"] == id["scope"]
+                        || row["id"]["scope"].as_str().is_none_or(str::is_empty))
+            })
         else {
             return Ok(false);
         };
@@ -304,7 +243,6 @@ fn head_contains(reader: &Reader<'_>, main_head: &str, lane_head: &str) -> io::R
     Ok(false)
 }
 
-/// `.bit/index.json`, empty when the scope has none.
 fn read_index(root: &Path) -> io::Result<Value> {
     let file = match File::open(crate::scope_path(root).join("index.json")) {
         Ok(file) => file,
@@ -314,8 +252,6 @@ fn read_index(root: &Path) -> io::Result<Value> {
     serde_json::from_slice(&Budget::new(4 * 1024 * 1024).read(file)?).map_err(io::Error::other)
 }
 
-/// The visible components of the current lane and their heads
-/// (`lane.getComponentHead`). The lane must be in the index.
 fn lane_heads(
     root: &Path,
     bare: bool,
@@ -328,7 +264,8 @@ fn lane_heads(
         .into_iter()
         .flatten()
         .find(|row| {
-            row["id"]["scope"] == lane.scope.as_str()
+            row["isSymlink"] != true
+                && row["id"]["scope"] == lane.scope.as_str()
                 && row["id"]["name"] == lane.name.as_str()
         })
         .ok_or_else(|| invalid("list current lane absent"))?;
@@ -338,10 +275,15 @@ fn lane_heads(
     for component in
         value["components"].as_array().ok_or_else(|| invalid("list lane components"))?
     {
+        if component["isHidden"] == true {
+            continue;
+        }
         let id = &component["id"];
-        let (Some(scope), Some(name), Some(head)) =
-            (id["scope"].as_str(), id["name"].as_str(), component["head"].as_str())
-        else {
+        let scope = id["scope"]
+            .as_str()
+            .filter(|val| !val.is_empty())
+            .unwrap_or(&lane.scope);
+        let (Some(name), Some(head)) = (id["name"].as_str(), component["head"].as_str()) else {
             return Err(invalid("list lane component"));
         };
         crate::merge_history::hash(head)?;
@@ -350,8 +292,6 @@ fn lane_heads(
     Ok(heads)
 }
 
-/// The model's id, head and tags, and what its head Version says. `lane`
-/// is its head on the current lane.
 fn row(reader: &Reader<'_>, model: &Value, lane: Option<&str>) -> io::Result<Value> {
     let head = match lane {
         Some(head) => Some(head),
@@ -361,11 +301,12 @@ fn row(reader: &Reader<'_>, model: &Value, lane: Option<&str>) -> io::Result<Val
             .map(|head| head.as_str().ok_or_else(|| invalid("list model head")))
             .transpose()?,
     };
+    let is_legacy_dep = model["deprecated"] == true;
     let version = match head {
-        Some(head) if !legacy_deprecated(model) => head_version(reader, head)?,
+        Some(head) if !is_legacy_dep => head_version(reader, head)?,
         _ => None,
     };
-    let deprecated = if legacy_deprecated(model) {
+    let deprecated = if is_legacy_dep {
         json!(true)
     } else if head.is_none() {
         json!(false)
@@ -375,21 +316,14 @@ fn row(reader: &Reader<'_>, model: &Value, lane: Option<&str>) -> io::Result<Val
             .map_or(Value::Null, |version| json!(deprecated(version)))
     };
     Ok(json!({
-        "scope": model["scope"],
-        "name": model["name"],
-        "head": head,
+        "scope": model["scope"], "name": model["name"], "head": head,
         "versions": model.get("versions").cloned().unwrap_or_else(|| json!({})),
+        "orphanedVersions": model.get("orphanedVersions").cloned().unwrap_or_else(|| json!({})),
         "deprecated": deprecated,
         "laneReadmeOf": version.as_ref().map_or_else(|| Ok(Vec::new()), lane_readme_of)?,
     }))
 }
 
-/// The backward-compatible `deprecated` prop of the model.
-fn legacy_deprecated(model: &Value) -> bool {
-    model["deprecated"] == true
-}
-
-/// The head Version, `None` when it is not stored locally.
 fn head_version(reader: &Reader<'_>, head: &str) -> io::Result<Option<Value>> {
     crate::merge_history::hash(head)?;
     if !reader.directory
@@ -402,7 +336,6 @@ fn head_version(reader: &Reader<'_>, head: &str) -> io::Result<Option<Value>> {
     reader.read(head, "Version").map(Some)
 }
 
-/// `findCoreExtension(id)`: the config of the extension named `id`.
 fn core_config<'v>(version: &'v Value, id: &str) -> Option<&'v Value> {
     version["extensions"]
         .as_array()?
@@ -413,13 +346,11 @@ fn core_config<'v>(version: &'v Value, id: &str) -> Option<&'v Value> {
         .map(|extension| &extension["config"])
 }
 
-/// `isDeprecated` without a specific version: `config.deprecate`.
 fn deprecated(version: &Value) -> bool {
     core_config(version, "teambit.component/deprecation")
         .is_some_and(|config| truthy(&config["deprecate"]))
 }
 
-/// `isLaneReadmeOf`: the lanes in `config.readme`.
 fn lane_readme_of(version: &Value) -> io::Result<Vec<String>> {
     let Some(readme) = core_config(version, "teambit.lanes/lanes")
         .map(|config| &config["readme"])
@@ -431,7 +362,6 @@ fn lane_readme_of(version: &Value) -> io::Result<Vec<String>> {
     Ok(readme.keys().cloned().collect())
 }
 
-/// JavaScript truthiness.
 fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,

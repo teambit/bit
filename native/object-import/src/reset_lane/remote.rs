@@ -18,8 +18,8 @@ pub(super) fn remote_head(
     {
         return Err(invalid("lane reset remote ref path"));
     }
-    let path = root
-        .join(".bit/refs/remotes")
+    let path = crate::scope_path(root)
+        .join("refs/remotes")
         .join(lane_scope)
         .join(lane_name);
     let Some(bytes) = proofs::read(&path, reads)? else { return Ok(None) };

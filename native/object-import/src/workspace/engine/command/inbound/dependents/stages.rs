@@ -145,12 +145,39 @@ fn selected_targets(
     Ok((targets, graph_progress, writes))
 }
 
-fn current_target(id: &Value) -> io::Result<Target> {
-    let scope = id["scope"].as_str().ok_or_else(|| invalid("inbound graph dependency scope"))?;
-    let name = id["name"].as_str().ok_or_else(|| invalid("inbound graph dependency name"))?;
+fn current_target(value: &Value) -> io::Result<Target> {
+    if let Some(raw) = value
+        .as_str()
+        .or_else(|| value["id"].as_str())
+    {
+        let mut target = super::super::requested_target(raw)?;
+        if !raw.contains('@') {
+            target.version.clear();
+        }
+        return Ok(target);
+    }
+    let id = value
+        .get("id")
+        .filter(|sub| sub.is_object())
+        .unwrap_or(value);
+    let scope = id["scope"]
+        .as_str()
+        .or_else(|| value["scope"].as_str())
+        .ok_or_else(|| invalid("inbound graph dependency scope"))?;
+    let raw_name = id["name"]
+        .as_str()
+        .or_else(|| value["name"].as_str())
+        .ok_or_else(|| invalid("inbound graph dependency name"))?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
     let mut target = super::super::requested_target(&format!("{scope}/{name}"))?;
     id["version"]
         .as_str()
+        .or_else(|| value["version"].as_str())
+        .or_else(|| value["head"].as_str())
+        .filter(|ver| !ver.is_empty())
+        .or(inline_ver)
         .unwrap_or_default()
         .clone_into(&mut target.version);
     Ok(target)
@@ -173,7 +200,7 @@ fn current_dependencies(row: &Value) -> io::Result<Vec<Target>> {
             .into_iter()
             .flatten()
         {
-            dependencies.push(current_target(&dependency["id"])?);
+            dependencies.push(current_target(dependency)?);
         }
     }
     for id in row["peerDependencies"]

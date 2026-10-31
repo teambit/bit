@@ -161,12 +161,14 @@ impl Collector {
         self.push_raw(&selected.hash)
     }
 
-    /// `flattenedDependencies` of a version without a dependency graph.
+    /// `flattenedDependencies` and `flattenedDevDependencies` of a version without a dependency graph.
     fn push_dependencies(&mut self, version: &Value) -> io::Result<()> {
-        let dependencies = version["flattenedDependencies"]
-            .as_array()
+        let dependencies: Vec<Value> = ["flattenedDependencies", "flattenedDevDependencies"]
+            .into_iter()
+            .filter_map(|field| version[field].as_array())
+            .flatten()
             .cloned()
-            .unwrap_or_default();
+            .collect();
         for dependency in &dependencies {
             let Some(id) = dependency_id(dependency) else { continue };
             let Some(selected) = self.select(&id, false)? else { continue };
@@ -213,15 +215,21 @@ fn latest(component: &Value) -> Option<String> {
         return Some(head.to_string());
     }
     let versions = component["versions"].as_object()?;
-    let latest = versions
+    let orphaned = component["orphanedVersions"].as_object();
+    let (_, tag) = versions
         .keys()
+        .chain(orphaned.into_iter().flat_map(serde_json::Map::keys))
         .filter_map(|tag| {
             node_semver::Version::parse(tag)
                 .ok()
                 .map(|parsed| (parsed, tag))
         })
         .max_by(|(left, _), (right, _)| left.cmp(right))?;
-    versions[latest.1.as_str()].as_str().map(str::to_string)
+    versions
+        .get(tag.as_str())
+        .or_else(|| orphaned.and_then(|map| map.get(tag.as_str())))
+        .and_then(Value::as_str)
+        .map(str::to_string)
 }
 
 /// `Version.refsWithOptions(false, false)`.
@@ -231,7 +239,7 @@ fn version_refs(version: &Value) -> Vec<String> {
         .into_iter()
         .flatten()
         .filter_map(|file| file["file"].as_str());
-    let graphs = ["flattenedEdgesRef", "dependenciesGraphRef"]
+    let graphs = ["flattenedEdgesRef", "dependenciesGraphRef", "flattenedDependenciesRef"]
         .into_iter()
         .filter_map(|key| version[key].as_str());
     files
@@ -244,23 +252,40 @@ fn is_built(version: &Value) -> bool {
     matches!(version["buildStatus"].as_str(), Some("succeed" | "skipped"))
 }
 
-fn dependency_id(value: &Value) -> Option<Id> {
-    if let Some(raw) = value.as_str() {
+pub(super) fn dependency_id(value: &Value) -> Option<Id> {
+    if let Some(raw) = value
+        .as_str()
+        .or_else(|| value["id"].as_str())
+    {
         return Id::parse(raw).ok();
     }
+    let target = value
+        .get("id")
+        .filter(|id| id.is_object())
+        .unwrap_or(value);
+    let raw_name = target["name"]
+        .as_str()
+        .or_else(|| value["name"].as_str())
+        .filter(|val| !val.is_empty())?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(base, ver)| (base, Some(ver)));
+    let version = target["version"]
+        .as_str()
+        .or_else(|| value["version"].as_str())
+        .or_else(|| target["head"].as_str())
+        .or_else(|| value["head"].as_str())
+        .or(inline_ver)
+        .filter(|val| !val.is_empty() && *val != "latest")
+        .map(str::to_string);
     Some(Id {
-        scope: value["scope"]
+        scope: target["scope"]
             .as_str()
+            .or_else(|| value["scope"].as_str())
             .filter(|val| !val.is_empty())?
             .to_string(),
-        name: value["name"]
-            .as_str()
-            .filter(|val| !val.is_empty())?
-            .to_string(),
-        version: value["version"]
-            .as_str()
-            .filter(|val| !val.is_empty())
-            .map(str::to_string),
+        name: name.to_string(),
+        version,
     })
 }
 

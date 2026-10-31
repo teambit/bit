@@ -322,14 +322,8 @@ fn bare_row_full_id_with_ver(scope_dir: &Path, row: &Value) -> Option<String> {
         return None;
     }
     let head = comp_obj["head"].as_str()?;
-    let ver = comp_obj["versions"]
-        .as_object()
-        .and_then(|vers| {
-            vers.iter()
-                .find(|(_, ver_hash)| ver_hash.as_str() == Some(head))
-                .map(|(tag, _)| tag.as_str())
-        })
-        .unwrap_or(head);
+    let ver = crate::commands::show_cmd::remote_show::find_tag_for_hash(&comp_obj, head)
+        .unwrap_or_else(|| head.to_owned());
     Some(format!("{base}@{ver}"))
 }
 
@@ -339,8 +333,11 @@ fn bare_row_core_env(scope_dir: &Path, row: &Value, req_ver: Option<&str>) -> Op
     if kind != "Component" {
         return None;
     }
-    let ver_hash = match req_ver {
-        Some(ver) => comp_obj["versions"][ver].as_str().unwrap_or(ver),
+    let ver_hash = match req_ver.filter(|ver| !ver.is_empty() && *ver != "latest") {
+        Some(ver) => comp_obj["versions"][ver]
+            .as_str()
+            .or_else(|| comp_obj["orphanedVersions"][ver].as_str())
+            .unwrap_or(ver),
         None => comp_obj["head"].as_str()?,
     };
     let (ver_kind, ver_obj) = bit_object_import::read_scope_object(scope_dir, ver_hash).ok()??;

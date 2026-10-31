@@ -176,7 +176,7 @@ fn model_package_json(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<
     if id.scope.is_none() {
         id.scope = id.effective_scope().map(str::to_owned);
     }
-    let model = ScopeObjects::new(&ws_root.join(".bit"))
+    let model = ScopeObjects::new(&crate::workspace::scope_path(ws_root))
         .component_or_head(&id)?
         .ok_or_else(|| io::Error::other("versioned capsule component model is missing"))?;
     Ok(model.extensions
@@ -288,7 +288,7 @@ fn effective_env(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Strin
     if id.scope.is_none() {
         id.scope = id.effective_scope().map(str::to_owned);
     }
-    let model = ScopeObjects::new(&ws_root.join(".bit"))
+    let model = ScopeObjects::new(&crate::workspace::scope_path(ws_root))
         .component_or_head(&id)?
         .ok_or_else(|| io::Error::other("versioned capsule component model is missing"))?;
     let model_env = model.extensions

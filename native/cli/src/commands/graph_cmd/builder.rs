@@ -14,9 +14,7 @@ use crate::{
     workspace,
 };
 use bit_install::{
-    config::{DEPENDENCY_RESOLVER_ASPECT, aspect_id_without_version},
-    model::WorkspaceComponent,
-    workspace::Workspace,
+    config::DEPENDENCY_RESOLVER_ASPECT, model::WorkspaceComponent, workspace::Workspace,
 };
 use serde_json::{Value, json};
 use std::{fs, path::Path};
@@ -221,15 +219,40 @@ fn add_version_graph_edges(
     if try_add_saved_graph_edges(ver_val, graph) {
         return;
     }
-    let groups =
-        [("dependencies", "prod"), ("devDependencies", "dev"), ("peerDependencies", "peer")];
+    let groups = [
+        ("dependencies", "prod"),
+        ("devDependencies", "dev"),
+        ("peerDependencies", "peer"),
+        ("extensionDependencies", "ext"),
+    ];
     for (field, attr) in groups {
         let Some(arr) = ver_val[field].as_array() else { continue };
         for item in arr {
-            if let Some(dep_id) = format_dep_id(&item["id"]) {
+            if let Some(dep_id) = format_dep_id(item) {
                 graph.add_edge(node_id.to_owned(), dep_id.clone(), attr);
                 load_transitive_dep_edges(scope_dir, &dep_id, graph);
             }
+        }
+    }
+    add_extension_graph_edges(scope_dir, node_id, ver_val, graph);
+}
+
+fn add_extension_graph_edges(
+    scope_dir: &Path,
+    node_id: &str,
+    ver_val: &Value,
+    graph: &mut CompGraph,
+) {
+    for ext in ver_val["extensions"]
+        .as_array()
+        .into_iter()
+        .flatten()
+    {
+        if let Some(ext_id) = ext.get("extensionId")
+            && let Some(dep_id) = format_dep_id(ext_id)
+        {
+            graph.add_edge(node_id.to_owned(), dep_id.clone(), "ext");
+            load_transitive_dep_edges(scope_dir, &dep_id, graph);
         }
     }
 }
@@ -238,11 +261,7 @@ fn try_add_saved_graph_edges(ver_val: &Value, graph: &mut CompGraph) -> bool {
     let Some(exts) = ver_val["extensions"].as_array() else { return false };
     let Some(dep_ext) = exts
         .iter()
-        .find(|ext| {
-            ext["name"]
-                .as_str()
-                .is_some_and(|name| aspect_id_without_version(name) == DEPENDENCY_RESOLVER_ASPECT)
-        })
+        .find(|ext| crate::commands::update_cmd::matches_aspect(ext, DEPENDENCY_RESOLVER_ASPECT))
     else {
         return false;
     };
@@ -264,10 +283,12 @@ fn try_add_saved_graph_edges(ver_val: &Value, graph: &mut CompGraph) -> bool {
 
 fn load_transitive_dep_edges(scope_dir: &Path, dep_id: &str, graph: &mut CompGraph) {
     let Some(ver_val) = read_version_by_dep_id(scope_dir, dep_id) else { return };
-    for (field, attr) in [("dependencies", "prod"), ("devDependencies", "dev")] {
+    for (field, attr) in
+        [("dependencies", "prod"), ("devDependencies", "dev"), ("extensionDependencies", "ext")]
+    {
         let Some(arr) = ver_val[field].as_array() else { continue };
         for item in arr {
-            if let Some(child_id) = format_dep_id(&item["id"]) {
+            if let Some(child_id) = format_dep_id(item) {
                 graph.add_edge(dep_id.to_owned(), child_id, attr);
             }
         }
@@ -275,8 +296,14 @@ fn load_transitive_dep_edges(scope_dir: &Path, dep_id: &str, graph: &mut CompGra
 }
 
 fn read_version_by_dep_id(scope_dir: &Path, dep_id: &str) -> Option<Value> {
-    let (bare, ver) = dep_id.rsplit_once('@')?;
-    let (_, _, comp_hash) = resolve_component_entry(scope_dir, bare)?;
+    let (bare, ver) = dep_id
+        .rsplit_once('@')
+        .map_or((dep_id, "latest"), |(id, ver)| (id, ver));
+    let (_, _, comp_hash) = resolve_component_entry(scope_dir, bare)
+        .or_else(|| {
+            let (_, name) = bare.split_once('/')?;
+            resolve_component_entry(scope_dir, name)
+        })?;
     read_comp_version_by_hash(scope_dir, &comp_hash, ver)
 }
 
@@ -302,7 +329,7 @@ fn match_ws_dep(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<Strin
 }
 
 pub(crate) fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
-    if ver == "latest" {
+    if ver.is_empty() || ver == "latest" {
         return comp_val["head"].as_str().map(str::to_owned);
     }
     comp_val["versions"]
@@ -317,10 +344,31 @@ pub(crate) fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
         })
 }
 
-pub(super) fn format_dep_id(id_val: &Value) -> Option<String> {
-    let name = id_val["name"].as_str()?;
-    let ver = id_val["version"].as_str().unwrap_or_default();
-    let base = match id_val["scope"]
+pub(crate) fn format_dep_id(id_val: &Value) -> Option<String> {
+    if let Some(raw) = id_val
+        .as_str()
+        .filter(|raw| !raw.is_empty())
+    {
+        return Some(raw.to_owned());
+    }
+    let inner = id_val
+        .get("id")
+        .filter(|val| val.is_object())
+        .unwrap_or(id_val);
+    let raw_name = inner["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, ""), |(nm, ver)| (nm, ver));
+    let ver = inner["version"]
+        .as_str()
+        .or_else(|| id_val["version"].as_str())
+        .or_else(|| inner["head"].as_str())
+        .or_else(|| id_val["head"].as_str())
+        .filter(|ver| !ver.is_empty())
+        .unwrap_or(inline_ver);
+    let base = match inner["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())
     {

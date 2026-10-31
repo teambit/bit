@@ -3,12 +3,11 @@
 pub(super) mod callbacks;
 pub(super) mod diagnostics;
 
+pub(in crate::commands) use callbacks::component_rows as hydration_rows;
 pub(in crate::commands) use context::{
     read_context, read_inherited_context, read_snapshot_context,
 };
 pub(in crate::commands) use quick::run as quick;
-
-pub(in crate::commands) use callbacks::component_rows as hydration_rows;
 
 mod builtin;
 mod context;
@@ -42,6 +41,7 @@ pub(in crate::commands) struct Environments {
     import: Option<bool>,
     builtin_services: builtin::Services,
 }
+
 impl Environments {
     pub(super) fn new() -> Self {
         Self {
@@ -88,7 +88,6 @@ impl Environments {
         self.host.as_ref().ok_or_else(|| decline("environment host"))
     }
 
-    /// Match `MergingMain`'s post-write application load in the retained session.
     pub(in crate::commands) fn merge_load_apps(
         &mut self,
         root: &Path,
@@ -285,19 +284,18 @@ fn stored_env(context: &Value, target: &Value) -> String {
 
 fn stored_extensions<'a>(context: &'a Value, target: &Value) -> Option<&'a Vec<Value>> {
     let identity = target["identity"].as_str().unwrap_or_default();
-    let model = context["models"]
-        .as_array()?
-        .iter()
-        .find(|model| {
-            format!(
-                "{}/{}",
-                model["scope"].as_str().unwrap_or_default(),
-                model["name"].as_str().unwrap_or_default(),
-            ) == identity
-        });
+    let model = super::policy::model_of(context, identity);
     let version = target["version"].as_str().unwrap_or_default();
     let hash = model
-        .and_then(|model| model["versions"][version].as_str())
+        .and_then(|model| {
+            if version.is_empty() || version == "latest" {
+                model["head"].as_str()
+            } else {
+                model["versions"][version]
+                    .as_str()
+                    .or_else(|| model["orphanedVersions"][version].as_str())
+            }
+        })
         .unwrap_or(version);
     context["versions"]
         .as_array()?
@@ -306,7 +304,6 @@ fn stored_extensions<'a>(context: &'a Value, target: &Value) -> Option<&'a Vec<V
         .and_then(|row| row[1]["extensions"].as_array())
 }
 
-/// `DevFilesMain.computeDevPatterns` applied to the Rust inventory.
 pub(super) fn dev_files(
     root: &Path,
     context: &Value,
@@ -342,7 +339,10 @@ pub(super) fn dev_files(
         docs: list("docs"),
         compositions: list("compositions"),
     };
-    let config = DevPatternConfig::from_aspects(&|id| context["workspace"].get(id).cloned());
+    let config = DevPatternConfig::from_aspects(&|id| {
+        crate::commands::update_cmd::aspect_entry(&context["workspace"], id)
+            .map(|(_, val)| val.clone())
+    });
     Ok(dev_files(&component, &dev_patterns(&component, &config, &env)))
 }
 
@@ -370,11 +370,16 @@ fn root_aspects(context: &Value, core: &[String]) -> Vec<String> {
     context["workspace"]
         .as_object()
         .into_iter()
-        .flat_map(|workspace| workspace.keys())
-        .filter(|id| {
-            id.contains('/') && !core.contains(id) && !bit_install::policy::is_core_env(id)
+        .flat_map(|workspace| workspace.iter())
+        .filter(|(id, val)| {
+            let bare = bit_install::policy::split_version(id).0;
+            id.contains('/')
+                && **val != Value::Bool(false)
+                && val.as_str() != Some("-")
+                && !(core.contains(id) || core.iter().any(|item| item == bare))
+                && !bit_install::policy::is_core_env(id)
         })
-        .cloned()
+        .map(|(id, _)| id.clone())
         .collect()
 }
 

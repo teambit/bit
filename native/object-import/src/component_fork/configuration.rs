@@ -69,24 +69,34 @@ fn copy(output: &mut Value, source: &Value) -> io::Result<()> {
     }
     Ok(())
 }
-fn extension_key(entry: &Value) -> Option<String> {
+pub(super) fn extension_key(entry: &Value) -> Option<String> {
     if let Some(key) = entry["id"]
         .as_str()
         .or_else(|| entry["name"].as_str())
+        .or_else(|| entry["legacyId"].as_str())
         .or_else(|| entry["extensionId"].as_str())
     {
-        return Some(key.to_owned());
+        return Some(
+            key.strip_suffix("@latest")
+                .unwrap_or(key)
+                .to_owned(),
+        );
     }
     let ext = &entry["extensionId"];
     let scope = ext["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())?;
-    let name = ext["name"]
+    let raw_name = ext["name"]
         .as_str()
         .filter(|name| !name.is_empty())?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(base, ver)| (base, Some(ver)));
     let version = ext["version"]
         .as_str()
-        .filter(|version| !version.is_empty());
+        .filter(|version| !version.is_empty())
+        .or(inline_ver)
+        .filter(|version| !version.is_empty() && *version != "latest");
     Some(version.map_or_else(
         || format!("{scope}/{name}"),
         |version| format!("{scope}/{name}@{version}"),

@@ -28,7 +28,7 @@ pub(super) fn commit(plan: &Plan, file_id: &str) -> io::Result<()> {
         write_object(&plan.input.root, history)?;
     }
     if let Some(index) = &plan.index {
-        fs::write(plan.input.root.join(".bit/index.json"), &index.after)?;
+        fs::write(crate::scope_path(&plan.input.root).join("index.json"), &index.after)?;
     }
     crate::reset_lane::controls::publish(&plan.controls)?;
     backup_bitmap(&plan.input.root, file_id)?;
@@ -45,14 +45,15 @@ pub(super) fn write_object(root: &Path, object: &ObjectChange) -> io::Result<()>
     }
 }
 
-pub(crate) fn backup_bitmap(root: &Path, file_id: &str) -> io::Result<()> {
-    let directory = root.join(".bit/bitmap-history");
+pub fn backup_bitmap(root: &Path, file_id: &str) -> io::Result<()> {
+    let scope_dir = crate::scope_path(root);
+    let directory = scope_dir.join("bitmap-history");
     fs::create_dir_all(&directory)?;
     fs::copy(root.join(".bitmap"), directory.join(format!(".bitmap-{file_id}")))?;
     let mut metadata = fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open(root.join(".bit/bitmap-history-metadata.txt"))?;
+        .open(scope_dir.join("bitmap-history-metadata.txt"))?;
     writeln!(metadata, "{file_id} reset")
 }
 

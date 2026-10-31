@@ -195,7 +195,9 @@ impl<'a> Collector<'a> {
             return Ok(());
         };
         self.retained.insert(digest(&identity(&model.value)?));
-        let target = if repository::hash(version) {
+        let target = if version.is_empty() || version == "latest" {
+            model.value["head"].as_str()
+        } else if repository::hash(version) {
             Some(version)
         } else {
             model.value["versions"][version]
@@ -244,11 +246,45 @@ fn flattened_values(value: &Value) -> io::Result<Vec<String>> {
         .as_array()
         .ok_or_else(|| unsupported("flattened dependency array"))?
         .iter()
-        .map(|value| {
-            if let Some(value) = value.as_str() {
-                return Ok(value.to_owned());
-            }
-            Ok(format!("{}@{}", identity(value)?, text(&value["version"])?))
-        })
+        .map(flattened_entry)
         .collect()
+}
+
+fn flattened_entry(value: &Value) -> io::Result<String> {
+    if let Some(raw) = value
+        .as_str()
+        .or_else(|| value["id"].as_str())
+    {
+        return Ok(raw.to_owned());
+    }
+    let inner = value
+        .get("id")
+        .filter(|val| val.is_object())
+        .unwrap_or(value);
+    let scope = inner
+        .get("scope")
+        .or_else(|| value.get("scope"))
+        .unwrap_or(&Value::Null);
+    let raw_name = text(
+        inner
+            .get("name")
+            .or_else(|| value.get("name"))
+            .unwrap_or(&Value::Null),
+    )?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
+    if name.is_empty() {
+        return Err(unsupported("empty flattened dependency name"));
+    }
+    let ver = inner
+        .get("version")
+        .or_else(|| value.get("version"))
+        .or_else(|| inner.get("head"))
+        .or_else(|| value.get("head"))
+        .and_then(Value::as_str)
+        .filter(|ver| !ver.is_empty())
+        .or(inline_ver)
+        .ok_or_else(|| unsupported("missing flattened dependency version"))?;
+    Ok(format!("{}/{name}@{ver}", text(scope)?))
 }

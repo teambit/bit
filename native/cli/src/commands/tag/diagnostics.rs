@@ -163,7 +163,8 @@ fn existing_version_error(context: &Value, options: &Options) -> Option<io::Erro
                     model["name"].as_str().unwrap_or_default(),
                 ) == identity
             })?;
-        if model["versions"].get(exact).is_some() {
+        if model["versions"].get(exact).is_some() || model["orphanedVersions"].get(exact).is_some()
+        {
             return Some(io::Error::other(format!(
                 "error: version {exact} already exists for {identity}",
             )));

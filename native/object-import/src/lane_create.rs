@@ -156,13 +156,19 @@ impl Documents {
             bit_workspace_config::scope_path(root).join("scope.json"),
         )?)?;
         let bitmap = recovery::jsonc::parse(&fs::read(root.join(".bitmap"))?)?;
-        if scope_json["lanes"]["current"] != "main" {
+        if scope_json["lanes"]["current"]
+            .as_str()
+            .is_some_and(|current| current != "main")
+        {
             return Err(invalid());
         }
         Ok(Self { index, scope_json, bitmap })
     }
 
     fn add(&mut self, name: &str, scope: &str, alias: &str, lane_hash: &str) -> io::Result<()> {
+        if self.index.get("lanes").is_none_or(Value::is_null) {
+            self.index["lanes"] = json!([]);
+        }
         let lanes = self.index["lanes"].as_array_mut().ok_or_else(invalid)?;
         if lanes
             .iter()
@@ -170,6 +176,7 @@ impl Documents {
         {
             return Err(invalid());
         }
+        ensure_scope_lanes(&mut self.scope_json)?;
         let tracking = self.scope_json["lanes"]["tracking"].as_array_mut().ok_or_else(invalid)?;
         if tracking
             .iter()
@@ -198,6 +205,20 @@ impl Documents {
         fs::write(root.join(".bitmap"), inspection::render_bitmap(&self.bitmap)?)?;
         Ok(())
     }
+}
+
+fn ensure_scope_lanes(scope_json: &mut Value) -> io::Result<()> {
+    if scope_json.get("lanes").is_none_or(Value::is_null) {
+        scope_json["lanes"] = json!({"current":"main","tracking":[],"new":[]});
+    }
+    let lanes_obj = scope_json["lanes"].as_object_mut().ok_or_else(invalid)?;
+    if lanes_obj.get("tracking").is_none_or(Value::is_null) {
+        lanes_obj.insert("tracking".into(), json!([]));
+    }
+    if lanes_obj.get("new").is_none_or(Value::is_null) {
+        lanes_obj.insert("new".into(), json!([]));
+    }
+    Ok(())
 }
 
 impl Objects {

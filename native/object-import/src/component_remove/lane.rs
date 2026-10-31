@@ -84,7 +84,10 @@ fn validate_component(
     let components = lane["components"].as_array().ok_or_else(|| invalid("lane components"))?;
     let matching: Vec<_> = components
         .iter()
-        .filter(|entry| entry["id"]["scope"] == scope && entry["id"]["name"] == name)
+        .filter(|entry| {
+            let entry_scope = entry["id"]["scope"].as_str().unwrap_or_default();
+            (entry_scope == scope || entry_scope.is_empty()) && entry["id"]["name"] == name
+        })
         .collect();
     if kind == RowKind::New && !matching.is_empty() {
         return Err(invalid("new component is already on lane"));

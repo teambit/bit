@@ -11,8 +11,12 @@ use std::{
 pub(super) fn read(root: &Path, models: &[Value]) -> io::Result<HashMap<String, String>> {
     let scopes = models
         .iter()
-        .map(|model| model["scope"].as_str().ok_or_else(|| invalid("status unscoped model")))
-        .collect::<io::Result<HashSet<_>>>()?;
+        .filter_map(|model| {
+            model["scope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())
+        })
+        .collect::<HashSet<_>>();
     let budget = Budget::new(4 * 1024 * 1024);
     let mut refs = HashMap::new();
     for scope in scopes {

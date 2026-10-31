@@ -7,30 +7,8 @@ use serde_json::Value;
 use std::{collections::HashMap, io, path::Path};
 
 pub(super) fn file(scope: &Path, id: &str) -> io::Result<bool> {
-    let index: Value = serde_json::from_slice(
-        &crate::read_budget::Budget::new(32 * 1024 * 1024)
-            .read(std::fs::File::open(scope.join("index.json"))?)?,
-    )?;
     let bare = id.split('@').next().unwrap_or(id);
-    let rows = index["components"]
-        .as_array()
-        .or_else(|| index.as_array())
-        .ok_or_else(|| invalid("recovery remote scope index"))?;
-    let row = rows
-        .iter()
-        .find(|row| {
-            format!(
-                "{}/{}",
-                row["id"]["scope"].as_str().unwrap_or_default(),
-                row["id"]["name"].as_str().unwrap_or_default(),
-            ) == bare
-        })
-        .ok_or_else(|| missing(id))?;
-    let (_, model) = crate::read_scope_object(
-        scope,
-        row["hash"].as_str().ok_or_else(|| invalid("recovery remote Component hash"))?,
-    )?
-    .ok_or_else(|| missing(id))?;
+    let model = read_remote_model(scope, bare, id)?;
     let hash = version_hash(&model, id)?;
     let (kind, version) = crate::read_scope_object(scope, &hash)?.ok_or_else(|| missing(id))?;
     if kind != "Version" {
@@ -38,6 +16,45 @@ pub(super) fn file(scope: &Path, id: &str) -> io::Result<bool> {
     }
     validate_file_sources(scope, &version)?;
     Ok(removed(&model, &version, &hash))
+}
+
+fn read_remote_model(scope: &Path, bare: &str, id: &str) -> io::Result<Value> {
+    use sha1::{Digest, Sha1};
+    let (target_scope, target_name) = bare
+        .split_once('/')
+        .unwrap_or(("", bare));
+    if let Ok(file) = std::fs::File::open(scope.join("index.json")) {
+        let index: Value =
+            serde_json::from_slice(&crate::read_budget::Budget::new(32 * 1024 * 1024).read(file)?)?;
+        let rows = index["components"]
+            .as_array()
+            .or_else(|| index.as_array())
+            .ok_or_else(|| invalid("recovery remote scope index"))?;
+        if let Some(row) = rows
+            .iter()
+            .find(|row| {
+                let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+                row["isSymlink"] != true
+                    && row["id"]["name"].as_str() == Some(target_name)
+                    && (row_scope == target_scope || row_scope.is_empty())
+            })
+        {
+            let comp_hash =
+                row["hash"].as_str().ok_or_else(|| invalid("recovery remote Component hash"))?;
+            let (_, model) =
+                crate::read_scope_object(scope, comp_hash)?.ok_or_else(|| missing(id))?;
+            return Ok(model);
+        }
+    }
+    for candidate in [bare, target_name] {
+        let comp_hash = crate::validate::hexadecimal(&Sha1::digest(candidate.as_bytes()));
+        if let Some((kind, model)) = crate::read_scope_object(scope, &comp_hash)?
+            && kind == "Component"
+        {
+            return Ok(model);
+        }
+    }
+    Err(missing(id))
 }
 fn validate_file_sources(scope: &Path, version: &Value) -> io::Result<()> {
     let mut total = 0;
@@ -111,20 +128,27 @@ pub(crate) fn decode(items: &[ObjectItem], id: &str) -> io::Result<(Objects, Opt
 }
 fn matching_model(body: &[u8], id: &str) -> io::Result<Option<Value>> {
     let value: Value = serde_json::from_slice(body)?;
-    let identity = format!(
-        "{}/{}",
-        value["scope"].as_str().unwrap_or_default(),
-        value["name"].as_str().unwrap_or_default(),
-    );
-    Ok((identity == id.split('@').next().unwrap_or(id)).then_some(value))
+    let bare = id.split('@').next().unwrap_or(id);
+    let (target_scope, target_name) = bare
+        .split_once('/')
+        .unwrap_or(("", bare));
+    let model_scope = value["scope"].as_str().unwrap_or_default();
+    let matches = value["name"].as_str() == Some(target_name)
+        && (model_scope == target_scope || model_scope.is_empty());
+    Ok(matches.then_some(value))
 }
 pub(crate) fn version_hash(model: &Value, id: &str) -> io::Result<String> {
     let version = id
         .rsplit_once('@')
         .map(|(_, version)| version)
-        .filter(|version| *version != "latest");
+        .filter(|version| !version.is_empty() && *version != "latest");
     let hash = version
-        .map(|version| model["versions"][version].as_str().unwrap_or(version))
+        .map(|version| {
+            model["versions"][version]
+                .as_str()
+                .or_else(|| model["orphanedVersions"][version].as_str())
+                .unwrap_or(version)
+        })
         .or_else(|| model["head"].as_str());
     let hash = hash.ok_or_else(|| {
         invalid(format!("unable to find the component {id} in the current lane or main"))
@@ -145,11 +169,10 @@ fn removed(model: &Value, version: &Value, hash: &str) -> bool {
     }
     let tag = model["versions"]
         .as_object()
-        .and_then(|versions| {
-            versions
-                .iter()
-                .find(|(_, reference)| reference.as_str() == Some(hash))
-        })
+        .into_iter()
+        .chain(model["orphanedVersions"].as_object())
+        .flat_map(|versions| versions.iter())
+        .find(|(_, reference)| reference.as_str() == Some(hash))
         .map(|(tag, _)| tag);
     let range = config["range"]
         .as_str()

@@ -130,10 +130,19 @@ fn receive_prefer_graph(
     if super::dependencies::has_edges(plan, &version)? {
         return Ok(());
     }
-    for dependency in version["flattenedDependencies"]
+    let flattened = version["flattenedDependencies"]
         .as_array()
         .ok_or_else(|| invalid("lane flattened dependencies"))?
-    {
+        .iter()
+        .chain(
+            version["flattenedDevDependencies"]
+                .as_array()
+                .into_iter()
+                .flatten(),
+        )
+        .cloned()
+        .collect::<Vec<_>>();
+    for dependency in &flattened {
         receive_closure(
             plan,
             directory,
@@ -163,10 +172,19 @@ pub(super) fn receive_closure(
     let hash = receive_counted(plan, directory, source, target, key)?;
     let version =
         super::read_version(plan, &hash)?.ok_or_else(|| invalid("lane fetched Version absent"))?;
-    for dependency in version["flattenedDependencies"]
+    let flattened = version["flattenedDependencies"]
         .as_array()
         .ok_or_else(|| invalid("lane flattened dependencies"))?
-    {
+        .iter()
+        .chain(
+            version["flattenedDevDependencies"]
+                .as_array()
+                .into_iter()
+                .flatten(),
+        )
+        .cloned()
+        .collect::<Vec<_>>();
+    for dependency in &flattened {
         let target = super::dependencies::dependency_target(dependency)?;
         if !local_version(plan, &target)? {
             receive_closure(plan, directory, source, &target, visited)?;
@@ -268,7 +286,7 @@ fn referenced_sources(version: &serde_json::Value) -> io::Result<Vec<String>> {
             );
         }
     }
-    for field in ["flattenedEdgesRef", "dependenciesGraphRef"] {
+    for field in ["flattenedEdgesRef", "dependenciesGraphRef", "flattenedDependenciesRef"] {
         if let Some(reference) = version
             .get(field)
             .filter(|reference| !reference.is_null())
@@ -362,9 +380,13 @@ fn extend_candidates(
 ) -> io::Result<()> {
     let component_scope =
         identity.split_once('/').ok_or_else(|| invalid("lane referenced identity"))?.0;
-    for value in version["flattenedDependencies"]
+    let flattened = version["flattenedDependencies"]
         .as_array()
-        .ok_or_else(|| invalid("lane referenced dependencies"))?
+        .ok_or_else(|| invalid("lane referenced dependencies"))?;
+    let dev_flattened = version["flattenedDevDependencies"].as_array();
+    for value in flattened
+        .iter()
+        .chain(dev_flattened.into_iter().flatten())
     {
         let dependency = super::dependencies::dependency_target(value)?;
         if dependency.scope.as_deref() != Some(component_scope)

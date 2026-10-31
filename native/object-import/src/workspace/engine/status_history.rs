@@ -71,8 +71,14 @@ pub(super) fn serialized_plan(value: &Value) -> io::Result<(String, Vec<u8>)> {
 fn serialize(plan: &Plan) -> io::Result<(String, Vec<u8>)> {
     let history = &plan.history;
     let name = history["name"].as_str().ok_or_else(|| invalid("status history name"))?;
-    let scope = history["scope"].as_str().ok_or_else(|| invalid("status history scope"))?;
-    if plan.identity != format!("{scope}/{name}") {
+    let (id_scope, id_name) = plan.identity
+        .split_once('/')
+        .unwrap_or(("", &plan.identity));
+    let scope = history["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .unwrap_or(id_scope);
+    if name != id_name || (!scope.is_empty() && !id_scope.is_empty() && scope != id_scope) {
         return Err(invalid("status history identity"));
     }
     let versions =

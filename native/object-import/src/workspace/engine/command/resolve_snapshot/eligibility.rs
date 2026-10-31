@@ -34,7 +34,10 @@ pub(in crate::workspace::engine::command) fn preflight(
 
 fn validate_identity(material: &Material) -> io::Result<()> {
     if let Some(tag) = &material.version_state.tagged_version
-        && (material.hidden || tag.is_empty() || material.model["versions"].get(tag).is_some())
+        && (material.hidden
+            || tag.is_empty()
+            || material.model["versions"].get(tag).is_some()
+            || material.model["orphanedVersions"].get(tag).is_some())
     {
         return Err(invalid("tag invalid semantic allocation"));
     }

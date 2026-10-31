@@ -26,12 +26,21 @@ pub(super) fn closure(
     }
     let dependencies = version["flattenedDependencies"]
         .as_array()
-        .ok_or_else(|| invalid("import flattened dependencies"))?;
+        .ok_or_else(|| invalid("import flattened dependencies"))?
+        .iter()
+        .chain(
+            version["flattenedDevDependencies"]
+                .as_array()
+                .into_iter()
+                .flatten(),
+        )
+        .cloned()
+        .collect::<Vec<_>>();
     let source = model
         .as_ref()
         .and_then(|model| model["scope"].as_str())
         .map(str::to_owned);
-    for dependency in dependencies {
+    for dependency in &dependencies {
         let dependency = dependency_target(dependency)?;
         if dependency.scope.as_deref() == Some(scope) || dependency.scope == source {
             closure(plan, &dependency, scope, staged, remotes, visited)?;
@@ -192,7 +201,10 @@ pub(super) fn has_edges(plan: &mut PreparedImport, version: &Value) -> io::Resul
     Ok(false)
 }
 pub(super) fn dependency_target(value: &Value) -> io::Result<Target> {
-    if let Some(text) = value.as_str() {
+    if let Some(text) = value
+        .as_str()
+        .or_else(|| value["id"].as_str())
+    {
         let (identity, version) =
             text.rsplit_once('@').ok_or_else(|| invalid("import dependency version"))?;
         let (scope, name) =
@@ -203,22 +215,30 @@ pub(super) fn dependency_target(value: &Value) -> io::Result<Target> {
             version: version.to_owned(),
         });
     }
-    Ok(Target {
-        scope: Some(
-            value["scope"]
-                .as_str()
-                .ok_or_else(|| invalid("import dependency scope"))?
-                .to_owned(),
-        ),
-        name: value["name"]
-            .as_str()
-            .ok_or_else(|| invalid("import dependency name"))?
-            .to_owned(),
-        version: value["version"]
-            .as_str()
-            .ok_or_else(|| invalid("import dependency version"))?
-            .to_owned(),
-    })
+    let id_obj = value
+        .get("id")
+        .filter(|sub| sub.is_object())
+        .unwrap_or(value);
+    let scope = id_obj["scope"]
+        .as_str()
+        .or_else(|| value["scope"].as_str())
+        .ok_or_else(|| invalid("import dependency scope"))?;
+    let raw_name = id_obj["name"]
+        .as_str()
+        .or_else(|| value["name"].as_str())
+        .ok_or_else(|| invalid("import dependency name"))?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
+    let version = value["version"]
+        .as_str()
+        .or_else(|| id_obj["version"].as_str())
+        .or_else(|| id_obj["head"].as_str())
+        .or_else(|| value["head"].as_str())
+        .filter(|ver| !ver.is_empty())
+        .or(inline_ver)
+        .ok_or_else(|| invalid("import dependency version"))?;
+    Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: version.to_owned() })
 }
 pub(super) fn only_unbuilt_requests(
     plan: &mut PreparedImport,
@@ -261,10 +281,19 @@ fn request_available(
     {
         return Ok(true);
     }
-    for value in version["flattenedDependencies"]
+    let flattened = version["flattenedDependencies"]
         .as_array()
         .ok_or_else(|| invalid("import dependency preflight"))?
-    {
+        .iter()
+        .chain(
+            version["flattenedDevDependencies"]
+                .as_array()
+                .into_iter()
+                .flatten(),
+        )
+        .cloned()
+        .collect::<Vec<_>>();
+    for value in &flattened {
         let dependency = dependency_target(value)?;
         let Some((hash, version)) = loaded(plan, &dependency)? else {
             return Ok(false);

@@ -3,6 +3,7 @@
 //! the dependency resolver. Pending-configuration projections decline.
 
 pub use metadata::{current_metadata, peer_metadata};
+pub(super) use model::model_of;
 pub(super) use pending::context as pending_context;
 
 mod component;
@@ -11,6 +12,8 @@ mod metadata;
 mod model;
 mod names;
 mod pending;
+#[cfg(test)]
+mod policy_tests;
 mod projection;
 mod workspace;
 
@@ -18,8 +21,8 @@ use super::{
     grammar,
     js::{array, assign, decline, full_identity, nullish, string_map, text},
 };
-use model::{dependencies, model_of, stored_version, validate_harmony_version};
-use names::{default_prefix, package_name};
+use model::{dependencies, stored_version, validate_harmony_version};
+use names::{default_prefix, extension_identity, package_name};
 use serde_json::{Map, Value, json};
 use std::io;
 use workspace::{Workspace, read as workspace};
@@ -29,17 +32,14 @@ const FIELDS: [&str; 3] = ["dependencies", "devDependencies", "peerDependencies"
 const PACKAGE_FIELDS: [&str; 3] =
     ["packageDependencies", "devPackageDependencies", "peerPackageDependencies"];
 
-/// `getNodeDependencyPolicy()` of `@teambit/node`.
 const NODE_DEV_DEPENDENCIES: [(&str, &str); 2] =
     [("@types/jest", "26.0.20"), ("@types/node", "22.10.5")];
 const NODE_PEERS: [(&str, &str); 2] =
     [("react", "^17.0.0 || ^18.0.0 || ^19.0.0"), ("react-dom", "^17.0.0 || ^18.0.0 || ^19.0.0")];
 
 pub struct Policy {
-    /// `policy.input`: spread into the engine's dependency requests.
     pub input: Value,
     pub extensions: Vec<Value>,
-    /// The stored version's package dependencies per lifecycle.
     pub model_packages: [Map<String, Value>; 3],
     pub overrides: Value,
     pub binding_prefix: String,
@@ -119,14 +119,10 @@ impl Policy {
     }
 }
 
-/// `statusPolicy(context, target)`.
 pub fn status_policy(context: &Value, target: &Value) -> io::Result<Policy> {
     projected_policy(context, target, None)
 }
 
-/// `statusPolicy(context, target, projectedVersion)`: with a projected
-/// version (a merge's incoming or fast-forwarded version) in place of the
-/// stored one.
 pub fn projected_policy(
     context: &Value,
     target: &Value,
@@ -167,7 +163,6 @@ pub fn projected_policy(
     })
 }
 
-/// Effective aspects for environment callbacks, using the same native merge as status.
 pub(in crate::commands) fn environment_target(
     context: &Value,
     target: &Value,
@@ -203,25 +198,6 @@ pub(in crate::commands) fn environment_target(
     Ok(effective)
 }
 
-fn extension_identity(id: &Value) -> String {
-    if let Some(id) = id.as_str() {
-        return id
-            .strip_suffix("@latest")
-            .unwrap_or(id)
-            .to_string();
-    }
-    let version = id["version"]
-        .as_str()
-        .filter(|version| !version.is_empty() && *version != "latest")
-        .map_or_else(String::new, |version| format!("@{version}"));
-    format!(
-        "{}/{}{version}",
-        id["scope"].as_str().unwrap_or_default(),
-        id["name"].as_str().unwrap_or_default(),
-    )
-}
-
-/// `bindingPrefix` and the package name, from the stored prefix when there is one.
 fn names(identity: &str, model: Option<&Value>, extensions: &[Value]) -> (String, String) {
     let stored = model
         .and_then(|model| model.get("bindingPrefix"))
@@ -251,13 +227,11 @@ fn configured_package_name(identity: &str, prefix: Option<&str>, extensions: &[V
     bit_install::workspace::component_package_name(&id, prefix, &aspects)
 }
 
-/// The stored version's package dependencies per lifecycle.
 fn model_packages(version: Option<&Value>) -> io::Result<[Map<String, Value>; 3]> {
     let field = |name: &str| string_map(version.and_then(|stored| stored.get(name)));
     Ok([field(PACKAGE_FIELDS[0])?, field(PACKAGE_FIELDS[1])?, field(PACKAGE_FIELDS[2])?])
 }
 
-/// What `policy.input` is computed from.
 struct Sources<'s> {
     context: &'s Value,
     target: &'s Value,
@@ -268,7 +242,6 @@ struct Sources<'s> {
 }
 
 impl Sources<'_> {
-    /// `policy.input` with its `resolution.grammar`.
     fn input(&self) -> io::Result<Value> {
         let mut merge = merge_policy(self.target)?;
         let identity = text(self.target.get("identity"))?;
@@ -331,6 +304,16 @@ impl Sources<'_> {
             .find(|extension| component::matches_aspect(extension, RESOLVER))
             .and_then(|extension| extension.get("data"));
         let prefix = nullish(resolver_data.and_then(|data| data.get("componentRangePrefix")));
+        let ext_ids = self.extensions
+            .iter()
+            .filter_map(|extension| {
+                extension
+                    .get("extensionId")
+                    .or_else(|| extension.get("legacyId"))
+                    .or_else(|| extension.get("id"))
+            })
+            .map(extension_identity)
+            .collect::<Vec<_>>();
         Ok(json!({
             "sources": {
                 "bitmap": bitmap_identities(self.context)?,
@@ -338,7 +321,7 @@ impl Sources<'_> {
                 "model": model_dependencies(self.version)?,
                 "componentConfig": {},
             },
-            "extensions": self.extensions.iter().filter_map(|extension| extension.get("extensionId")).map(extension_identity).collect::<Vec<_>>(),
+            "extensions": ext_ids,
             "grammar": {},
             "prefix": prefix,
             "merge": merge,
@@ -346,13 +329,14 @@ impl Sources<'_> {
     }
 }
 
-/// `target.autoDetectMergePolicy ?? [{}, {}, {}]`.
 fn merge_policy(target: &Value) -> io::Result<[Map<String, Value>; 3]> {
     let Some(value) = nullish(target.get("autoDetectMergePolicy")) else {
         return Ok([Map::new(), Map::new(), Map::new()]);
     };
     match value.as_array().map(Vec::as_slice) {
-        Some([a, b, c]) => Ok([string_map(Some(a))?, string_map(Some(b))?, string_map(Some(c))?]),
+        Some([first, second, third]) => {
+            Ok([string_map(Some(first))?, string_map(Some(second))?, string_map(Some(third))?])
+        }
         _ => Err(decline("command automatic merge policy")),
     }
 }
@@ -363,7 +347,7 @@ fn model_components(version: Option<&Value>) -> io::Result<Vec<Value>> {
         .map(|dependency| {
             let field = |name| nullish(dependency.get(name)).cloned().unwrap_or(Value::Null);
             Ok(json!({
-                "identity": identity(dependency.get("id"))?,
+                "identity": identity(Some(dependency))?,
                 "packageName": field("packageName"),
                 "versionRange": field("versionRange"),
             }))
@@ -374,7 +358,7 @@ fn model_components(version: Option<&Value>) -> io::Result<Vec<Value>> {
 fn model_dependencies(version: Option<&Value>) -> io::Result<Vec<String>> {
     dependencies(version)?
         .into_iter()
-        .map(|dependency| identity(dependency.get("id")))
+        .map(|dependency| identity(Some(dependency)))
         .collect()
 }
 
@@ -385,27 +369,53 @@ fn bitmap_identities(context: &Value) -> io::Result<Vec<String>> {
         .collect()
 }
 
-/// `identity(value)`: `scope/name@version` of a stored component id.
 fn identity(value: Option<&Value>) -> io::Result<String> {
-    let id = value.ok_or_else(|| decline("status dependency id"))?;
+    let outer = value.ok_or_else(|| decline("status dependency id"))?;
+    let id = outer.get("id").unwrap_or(outer);
     if let Some(text) = id.as_str() {
-        return Ok(text.to_string());
+        return Ok(text
+            .strip_suffix("@latest")
+            .unwrap_or(text)
+            .to_string());
     }
-    let part = |key| text(id.get(key));
-    let version = match nullish(id.get("version")) {
-        None => "",
+    let part = |key| text(id.get(key).or_else(|| outer.get(key)));
+    let raw_name = part("name")?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(base, ver)| (base, Some(ver)));
+    let suffix = resolve_dep_version_suffix(outer, id, inline_ver)?;
+    if let Some(scope) = part("scope")
+        .ok()
+        .filter(|scope| !scope.is_empty())
+    {
+        return Ok(format!("{scope}/{name}{suffix}"));
+    }
+    if name.contains('/') {
+        return Ok(format!("{name}{suffix}"));
+    }
+    Err(decline("status dependency scope"))
+}
+
+fn resolve_dep_version_suffix(
+    outer: &Value,
+    id: &Value,
+    inline_ver: Option<&str>,
+) -> io::Result<String> {
+    let raw_version = nullish(id.get("version"))
+        .or_else(|| nullish(outer.get("version")))
+        .or_else(|| nullish(id.get("head")))
+        .or_else(|| nullish(outer.get("head")));
+    let version = match raw_version {
+        None => inline_ver
+            .filter(|ver| *ver != "latest")
+            .unwrap_or(""),
         Some(Value::String(version)) if version.is_empty() || version == "latest" => "",
         Some(Value::String(version)) => version,
         Some(_) => return Err(decline("status dependency version")),
     };
-    let suffix = if version.is_empty() { String::new() } else { format!("@{version}") };
-    Ok(format!("{}/{}{suffix}", part("scope")?, part("name")?))
+    Ok(if version.is_empty() { String::new() } else { format!("@{version}") })
 }
 
-#[cfg(test)]
-mod policy_tests;
-
-/// Merge captured configuration for native export package transformers.
 pub(in crate::commands) fn export_package_config(
     context: &Value,
     target: &Value,

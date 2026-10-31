@@ -49,7 +49,7 @@ pub(in crate::commands) fn run(
     {
         return Ok(());
     }
-    let sentinel = root.join(".bit/last-pull-sync");
+    let sentinel = crate::workspace::scope_path(root).join("last-pull-sync");
     let previous = match fs::read_to_string(&sentinel) {
         Ok(value) => Some(value),
         Err(error) if error.kind() == io::ErrorKind::NotFound => None,
@@ -74,7 +74,7 @@ fn synchronize(
 ) -> io::Result<()> {
     if ids.is_empty() {
         startup.committed = true;
-        let directory = root.join(".bit");
+        let directory = crate::workspace::scope_path(root);
         fs::create_dir_all(&directory)?;
         return fs::write(directory.join("last-pull-sync"), head);
     }

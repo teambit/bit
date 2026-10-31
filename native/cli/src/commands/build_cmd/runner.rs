@@ -99,7 +99,7 @@ pub(super) fn try_run(
 }
 
 fn has_component_peers(root: &Path, entries: &[&BitmapEntry]) -> io::Result<bool> {
-    let objects = ScopeObjects::new(&root.join(".bit"));
+    let objects = ScopeObjects::new(&crate::workspace::scope_path(root));
     for entry in entries {
         let mut id = entry.id.clone();
         if id.scope.is_none() {

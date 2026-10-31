@@ -145,20 +145,8 @@ impl Environments {
         {
             return Ok(());
         }
-        let mut ids = aspects
-            .iter()
-            .chain(components.iter().flat_map(|component| component.config.keys()))
-            .filter(|id| !core.contains(id) && !bit_install::policy::is_core_env(id))
-            .collect::<Vec<_>>();
-        let mut seen = std::collections::HashSet::new();
-        ids.retain(|id| seen.insert(*id));
-        let record = self.snapshot
-            && components
-                .iter()
-                .any(|component| {
-                    !bit_install::policy::is_core_env(&component.env_id)
-                        && !aspects.contains(&component.env_id)
-                });
+        let ids = collect_prime_ids(components, core, aspects);
+        let record = should_record_snapshot(self.snapshot, components, aspects);
         let host = self.host(root)?;
         if record {
             host.call("snapshotLoadFacts", &json!({}))?;
@@ -176,6 +164,43 @@ impl Environments {
         }
         Ok(())
     }
+}
+
+fn collect_prime_ids<'a>(
+    components: &'a [WorkspaceComponent],
+    core: &[String],
+    aspects: &'a [String],
+) -> Vec<&'a String> {
+    let mut ids = aspects
+        .iter()
+        .chain(components.iter().flat_map(|component| component.config.keys()))
+        .filter(|id| {
+            let bare = bit_install::policy::split_version(id).0;
+            !(core.contains(id)
+                || core.iter().any(|item| item == bare)
+                || bit_install::policy::is_core_env(id))
+        })
+        .collect::<Vec<_>>();
+    let mut seen = std::collections::HashSet::new();
+    ids.retain(|id| seen.insert(*id));
+    ids
+}
+
+fn should_record_snapshot(
+    snapshot: bool,
+    components: &[WorkspaceComponent],
+    aspects: &[String],
+) -> bool {
+    snapshot
+        && components
+            .iter()
+            .any(|component| {
+                let bare_env = bit_install::policy::split_version(&component.env_id).0;
+                !bit_install::policy::is_core_env(&component.env_id)
+                    && !aspects
+                        .iter()
+                        .any(|aspect| bit_install::policy::split_version(aspect).0 == bare_env)
+            })
 }
 
 fn used_extensions(components: &[WorkspaceComponent]) -> Vec<Value> {

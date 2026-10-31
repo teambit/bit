@@ -108,8 +108,12 @@ fn ordered(index: &Value, membership: &HashSet<String>) -> io::Result<Vec<String
         .or_else(|| index.as_array())
         .ok_or_else(|| invalid("lane candidate index"))?
     {
-        let id = identity(&row["id"])?;
-        if membership.contains(&id) {
+        if row["isSymlink"] == true {
+            continue;
+        }
+        if let Some(id) = matching_member_id(&row["id"], membership)?
+            && !ids.contains(&id)
+        {
             ids.push(id);
         }
     }
@@ -119,6 +123,22 @@ fn ordered(index: &Value, membership: &HashSet<String>) -> io::Result<Vec<String
     // Removed-staged visible rows are already included. reset-component.getComponentsWithOptionToUntag
     // appends only missing IDs, so these rows retain their original scope-list position.
     Ok(ids)
+}
+
+fn matching_member_id(id: &Value, membership: &HashSet<String>) -> io::Result<Option<String>> {
+    let name = id["name"].as_str().ok_or_else(|| invalid("lane candidate name"))?;
+    if let Some(scope) = id["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+    {
+        let candidate = format!("{scope}/{name}");
+        return Ok(membership.contains(&candidate).then_some(candidate));
+    }
+    let suffix = format!("/{name}");
+    Ok(membership
+        .iter()
+        .find(|member| member.ends_with(&suffix))
+        .cloned())
 }
 
 fn identity(id: &Value) -> io::Result<String> {

@@ -48,5 +48,11 @@ fn extension_id(value: &Value) -> Option<String> {
         .get("extensionId")
         .or_else(|| value.get("id"))?;
     let name = id["name"].as_str()?.split('@').next()?;
-    Some(format!("{}/{name}", id["scope"].as_str()?))
+    match id["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())
+    {
+        Some(scope) => Some(format!("{scope}/{name}")),
+        None => Some(name.to_owned()),
+    }
 }

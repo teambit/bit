@@ -33,10 +33,10 @@ fn build_reverse(readset: &mut Readset, index: &Value) -> io::Result<Reverse> {
         if row["isSymlink"] == true {
             continue;
         }
-        let Some(identity) = row_identity(row) else {
+        let model = readset.read(hash(&row["hash"])?, "Component")?;
+        let Some(identity) = row_identity(row, &model) else {
             return Err(invalid("component index identity"));
         };
-        let model = readset.read(hash(&row["hash"])?, "Component")?;
         add_component(readset, &identity, &model, &mut reverse)?;
     }
     Ok(reverse)
@@ -131,19 +131,35 @@ fn extend_dependents(
     }
 }
 
-fn row_identity(row: &Value) -> Option<String> {
-    Some(format!("{}/{}", row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?))
+fn row_identity(row: &Value, model: &Value) -> Option<String> {
+    let scope = row["id"]["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            model["scope"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })?;
+    let name = row["id"]["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            model["name"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })?;
+    Some(format!("{scope}/{name}"))
 }
 
 fn dependencies(version: &Value) -> Vec<String> {
     let mut result = Vec::new();
-    for group in ["dependencies", "devDependencies", "peerDependencies"] {
+    for group in ["dependencies", "devDependencies", "peerDependencies", "extensionDependencies"] {
         result.extend(
             version[group]
                 .as_array()
                 .into_iter()
                 .flatten()
-                .filter_map(|row| id(&row["id"])),
+                .filter_map(id),
         );
     }
     result.extend(
@@ -151,7 +167,7 @@ fn dependencies(version: &Value) -> Vec<String> {
             .as_array()
             .into_iter()
             .flatten()
-            .filter_map(|row| id(&row["extensionId"])),
+            .filter_map(|row| id(&row["extensionId"]).or_else(|| id(row))),
     );
     result
 }
@@ -159,19 +175,32 @@ fn dependencies(version: &Value) -> Vec<String> {
 fn id(value: &Value) -> Option<String> {
     if let Some(text) = value
         .as_str()
+        .or_else(|| value["id"].as_str())
         .filter(|text| !text.is_empty())
     {
         return Some(text.to_owned());
     }
-    let scope = value["scope"]
+    let id_obj = value
+        .get("id")
+        .filter(|sub| sub.is_object())
+        .unwrap_or(value);
+    let scope = id_obj["scope"]
         .as_str()
+        .or_else(|| value["scope"].as_str())
         .filter(|scope| !scope.is_empty())?;
-    let name = value["name"]
+    let raw_name = id_obj["name"]
         .as_str()
+        .or_else(|| value["name"].as_str())
         .filter(|name| !name.is_empty())?;
-    let version = value["version"]
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
+    let version = id_obj["version"]
         .as_str()
-        .filter(|version| !version.is_empty());
+        .or_else(|| value["version"].as_str())
+        .or_else(|| value["head"].as_str())
+        .filter(|version| !version.is_empty())
+        .or(inline_ver);
     Some(version.map_or_else(
         || format!("{scope}/{name}"),
         |version| format!("{scope}/{name}@{version}"),

@@ -133,7 +133,11 @@ pub(super) fn fast_graph_error(cwd: &Path, options: &Options) -> Option<&'static
     if workspace::root(cwd).is_none()
         && !cwd
             .ancestors()
-            .any(|dir| dir.join("scope.json").is_file() || dir.join(".bit").is_dir())
+            .any(|dir| {
+                dir.join("scope.json").is_file()
+                    || dir.join(".bit").is_dir()
+                    || dir.join(".git/bit").is_dir()
+            })
     {
         return Some(HOST_NOT_FOUND_ERR);
     }

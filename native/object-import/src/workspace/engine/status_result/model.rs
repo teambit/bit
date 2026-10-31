@@ -3,7 +3,7 @@ use serde_json::{Map, Value, json};
 use std::{cmp::Ordering, collections::HashSet, io};
 
 pub(super) fn append(output: &mut Value, model: &Value, request: &Request) -> io::Result<()> {
-    let identity = identity(model)?;
+    let identity = identity(model, request)?;
     let history = request.histories
         .iter()
         .find(|row| row["identity"] == identity)
@@ -85,6 +85,12 @@ fn tracked(
         && !target.bitmap_state.local_only
         && !tags(model, "versions")?
             .values()
+            .chain(
+                model["orphanedVersions"]
+                    .as_object()
+                    .into_iter()
+                    .flat_map(serde_json::Map::values),
+            )
             .any(|value| value.as_str() == Some(head))
     {
         push(output, "snappedComponents", json!(target.identity));
@@ -212,7 +218,11 @@ fn label(model: &Value, hash: &str) -> io::Result<String> {
     Ok(hash.to_owned())
 }
 fn tags<'a>(model: &'a Value, field: &str) -> io::Result<&'a Map<String, Value>> {
-    model[field].as_object().ok_or_else(|| invalid("status model tags"))
+    static EMPTY: std::sync::LazyLock<Map<String, Value>> = std::sync::LazyLock::new(Map::new);
+    match model.get(field) {
+        None | Some(Value::Null) => Ok(&EMPTY),
+        Some(value) => value.as_object().ok_or_else(|| invalid("status model tags")),
+    }
 }
 fn refs<'a>(distance: &'a Value, field: &str) -> io::Result<&'a [Value]> {
     distance[field]
@@ -230,8 +240,14 @@ fn unique_refs(versions: &Map<String, Value>) -> io::Result<()> {
     }
     Ok(())
 }
-pub(super) fn identity(model: &Value) -> io::Result<String> {
-    let scope = model["scope"].as_str().ok_or_else(|| invalid("status scope"))?;
-    let name = model["name"].as_str().ok_or_else(|| invalid("status name"))?;
-    Ok(format!("{scope}/{name}"))
+pub(super) fn identity(model: &Value, request: &Request) -> io::Result<String> {
+    model["name"].as_str().ok_or_else(|| invalid("status name"))?;
+    let resolved = super::super::status_models::comparison::resolved_model_id(
+        model,
+        request.targets.iter().map(|target| target.identity.as_str()),
+    );
+    if !resolved.contains('/') {
+        return Err(invalid("status scope"));
+    }
+    Ok(resolved)
 }

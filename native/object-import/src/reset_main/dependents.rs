@@ -31,7 +31,11 @@ fn validate_row(
     removed: &HashSet<&str>,
     selected_model: &Value,
 ) -> io::Result<()> {
-    let same = row["id"]["scope"] == scope && row["id"]["name"] == name;
+    if row["isSymlink"] == true {
+        return Ok(());
+    }
+    let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+    let same = (row_scope == scope || row_scope.is_empty()) && row["id"]["name"] == name;
     let component = component_model(objects, row, same, selected_model)?;
     for reference in references(&component)? {
         if same && removed.contains(reference.as_str()) {
@@ -58,6 +62,12 @@ fn references(component: &Value) -> io::Result<HashSet<String>> {
         component["versions"].as_object().ok_or_else(|| invalid("reset dependent versions"))?;
     let mut refs: HashSet<_> = versions
         .values()
+        .chain(
+            component["orphanedVersions"]
+                .as_object()
+                .into_iter()
+                .flat_map(serde_json::Map::values),
+        )
         .filter_map(Value::as_str)
         .map(str::to_owned)
         .collect();
@@ -81,17 +91,23 @@ fn uses_removed(version: &Value, scope: &str, name: &str, removed: &HashSet<&str
             .into_iter()
             .filter_map(|field| version[field].as_array())
             .flatten()
-            .any(|dependency| id_matches_removed(&dependency["id"], scope, name, removed));
+            .any(|dependency| id_matches_removed(dependency, scope, name, removed));
     dep_matches
         || version["extensions"]
             .as_array()
             .into_iter()
             .flatten()
-            .any(|ext| id_matches_removed(&ext["extensionId"], scope, name, removed))
+            .any(|ext| {
+                id_matches_removed(&ext["extensionId"], scope, name, removed)
+                    || id_matches_removed(ext, scope, name, removed)
+            })
 }
 
-fn id_matches_removed(id: &Value, scope: &str, name: &str, removed: &HashSet<&str>) -> bool {
-    if let Some(raw) = id.as_str() {
+fn id_matches_removed(entry: &Value, scope: &str, name: &str, removed: &HashSet<&str>) -> bool {
+    if let Some(raw) = entry
+        .as_str()
+        .or_else(|| entry["id"].as_str())
+    {
         return raw
             .strip_prefix(scope)
             .and_then(|rest| rest.strip_prefix('/'))
@@ -99,9 +115,27 @@ fn id_matches_removed(id: &Value, scope: &str, name: &str, removed: &HashSet<&st
             .and_then(|rest| rest.strip_prefix('@'))
             .is_some_and(|version| removed.contains(version));
     }
-    id["scope"] == scope
-        && id["name"] == name
-        && id["version"]
-            .as_str()
-            .is_some_and(|version| removed.contains(version))
+    let id = entry
+        .get("id")
+        .filter(|sub| sub.is_object())
+        .unwrap_or(entry);
+    let raw_name = id["name"]
+        .as_str()
+        .or_else(|| entry["name"].as_str())
+        .unwrap_or_default();
+    let (bare_name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
+    let version = id["version"]
+        .as_str()
+        .or_else(|| entry["version"].as_str())
+        .or_else(|| entry["head"].as_str())
+        .filter(|ver| !ver.is_empty())
+        .or(inline_ver);
+    id["scope"]
+        .as_str()
+        .or_else(|| entry["scope"].as_str())
+        == Some(scope)
+        && bare_name == name
+        && version.is_some_and(|ver| removed.contains(ver))
 }

@@ -86,7 +86,12 @@ fn component_merged(index: &Value, readset: &mut Readset, row: &Value) -> io::Re
         .and_then(|items| {
             items
                 .iter()
-                .find(|item| item["id"]["scope"] == component_scope && item["id"]["name"] == name)
+                .find(|item| {
+                    let item_scope = item["id"]["scope"].as_str().unwrap_or_default();
+                    item["isSymlink"] != true
+                        && (item_scope == component_scope || item_scope.is_empty())
+                        && item["id"]["name"] == name
+                })
         });
     let Some(model) = model else { return Ok(false) };
     let component = readset.read(hash(&model["hash"])?, "Component")?;

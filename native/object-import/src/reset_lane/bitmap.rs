@@ -11,7 +11,10 @@ pub(super) fn bitmap_key(rows: &Map<String, Value>, scope: &str, name: &str) -> 
             continue;
         }
         let (row_scope, row_name) = row_identity(key, row);
-        if row_scope == Some(scope) && row_name == name && found.replace(key.clone()).is_some() {
+        if (row_scope == Some(scope) || row_scope.is_none())
+            && row_name == name
+            && found.replace(key.clone()).is_some()
+        {
             return Err(invalid("lane reset ambiguous bitmap identity"));
         }
     }

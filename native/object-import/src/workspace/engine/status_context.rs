@@ -88,14 +88,16 @@ fn unavailable_on_main(
         .ok_or_else(|| invalid("status models"))?
         .iter()
         .filter(|model| model["head"].is_string())
-        .map(|model| {
-            Ok(format!(
-                "{}/{}",
-                model["scope"].as_str().ok_or_else(|| invalid("status model scope"))?,
-                model["name"].as_str().ok_or_else(|| invalid("status model name"))?,
-            ))
+        .filter_map(|model| {
+            let scope = model["scope"]
+                .as_str()
+                .filter(|val| !val.is_empty())?;
+            let name = model["name"]
+                .as_str()
+                .filter(|val| !val.is_empty())?;
+            Some(format!("{scope}/{name}"))
         })
-        .collect::<io::Result<HashSet<_>>>()?;
+        .collect::<HashSet<_>>();
     Ok(inactive
         .iter()
         .filter(|(identity, removed)| !removed && heads.contains(identity))

@@ -26,7 +26,13 @@ pub(super) fn prepare(
     let exported = source["scope"]
         .as_str()
         .is_some_and(|scope| !scope.is_empty());
-    staged(source, source_scope, source_name, exported)?;
+    let source_version = source["version"]
+        .as_str()
+        .filter(|version| !version.is_empty())
+        .or_else(|| key.rsplit_once('@').map(|(_, version)| version))
+        .filter(|version| !version.is_empty() && *version != "latest")
+        .map(str::to_owned);
+    staged(source_version.as_deref(), source_scope, source_name, exported)?;
     let source_directory =
         source["rootDir"].as_str().ok_or_else(|| unsupported("rename component root"))?;
     let target_directory = directory(workspace, target_scope, options, source_directory, exported)?;
@@ -37,10 +43,7 @@ pub(super) fn prepare(
         source: format!("{source_scope}/{source_name}"),
         target: format!("{target_scope}/{}", options.target),
         source_name: source_name.into(),
-        source_version: source["version"]
-            .as_str()
-            .filter(|version| !version.is_empty())
-            .map(str::to_owned),
+        source_version,
         target_name: options.target.clone(),
         source_directory: source_directory.into(),
         target_directory,
@@ -48,6 +51,16 @@ pub(super) fn prepare(
     })
 }
 pub(super) fn selected<'a>(bitmap: &'a Value, id: &str) -> io::Result<(&'a str, &'a Value)> {
+    select_row(bitmap, id, false)
+}
+pub(super) fn selected_any<'a>(bitmap: &'a Value, id: &str) -> io::Result<(&'a str, &'a Value)> {
+    select_row(bitmap, id, true)
+}
+fn select_row<'a>(
+    bitmap: &'a Value,
+    id: &str,
+    include_removed: bool,
+) -> io::Result<(&'a str, &'a Value)> {
     let id = id.split('@').next().unwrap_or(id);
     let mut rows = bitmap
         .as_object()
@@ -58,9 +71,10 @@ pub(super) fn selected<'a>(bitmap: &'a Value, id: &str) -> io::Result<(&'a str, 
             let row_name = row_name(key, row);
             row["rootDir"].is_string()
                 && row["isAvailableOnCurrentLane"] != false
-                && !crate::workspace::engine::client_status::config::is_config_removed(
-                    &row["config"],
-                )
+                && (include_removed
+                    || !crate::workspace::engine::client_status::config::is_config_removed(
+                        &row["config"],
+                    ))
                 && (key_id == id
                     || *key == id
                     || row_name == id
@@ -100,12 +114,8 @@ pub(crate) fn scope(row: &Value) -> Option<&str> {
                 .filter(|scope| !scope.is_empty())
         })
 }
-fn staged(row: &Value, scope: &str, name: &str, exported: bool) -> io::Result<()> {
-    if !exported
-        && let Some(version) = row["version"]
-            .as_str()
-            .filter(|version| !version.is_empty())
-    {
+fn staged(version: Option<&str>, scope: &str, name: &str, exported: bool) -> io::Result<()> {
+    if !exported && let Some(version) = version {
         return Err(invalid(format!(
             "the following components are tagged/snapped but not exported:\n{scope}/{name}@{version}\nrenaming them will result in deprecating/deleting the current ones and creating new components, which is unnecessary.\nplease reset the components first (using \"bit reset\") and then re-run the rename command",
         )));

@@ -369,13 +369,13 @@ fn model(value: &Value) -> io::Result<Model> {
         return Err(decline("model without a scope"));
     };
     let versions = value["versions"].as_object().ok_or_else(|| decline("model versions"))?;
+    let orphaned_empty =
+        value["orphanedVersions"].as_object().is_none_or(serde_json::Map::is_empty);
     let version = match value["head"].as_str() {
         // `getTagOfRefIfExists(head) || head`.
-        Some(head) => versions
-            .iter()
-            .find(|(_, hash)| hash.as_str() == Some(head))
-            .map_or_else(|| head.to_string(), |(tag, _)| tag.clone()),
-        None if versions.is_empty() => "0.0.0".to_string(),
+        Some(head) => crate::commands::show_cmd::remote_show::find_tag_for_hash(value, head)
+            .unwrap_or_else(|| head.to_string()),
+        None if versions.is_empty() && orphaned_empty => "0.0.0".to_string(),
         None => return Err(decline("model with tags but no head")),
     };
     let lane_readme_of = value["laneReadmeOf"]

@@ -114,6 +114,7 @@ fn copied_config(facts: &Value) -> io::Result<serde_json::Map<String, Value>> {
     {
         let name = extension["name"]
             .as_str()
+            .or_else(|| extension["legacyId"].as_str())
             .map(str::to_owned)
             .or_else(|| aspect_id(&extension["extensionId"]))
             .ok_or_else(|| unsupported("rename captured aspect identity"))?;
@@ -134,11 +135,18 @@ fn aspect_id(value: &Value) -> Option<String> {
         .as_str()
         .filter(|id| !id.is_empty())
     {
-        return Some(id.to_owned());
+        return Some(
+            id.strip_suffix("@latest")
+                .unwrap_or(id)
+                .to_owned(),
+        );
     }
-    let name = value["name"]
+    let raw_name = value["name"]
         .as_str()
         .filter(|name| !name.is_empty())?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(base, ver)| (base, Some(ver)));
     let mut id = value["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())
@@ -146,6 +154,8 @@ fn aspect_id(value: &Value) -> Option<String> {
     if let Some(version) = value["version"]
         .as_str()
         .filter(|version| !version.is_empty())
+        .or(inline_ver)
+        .filter(|version| !version.is_empty() && *version != "latest")
     {
         id.push('@');
         id.push_str(version);
@@ -189,9 +199,21 @@ fn rename_aspects(plan: &mut Plan) {
         false,
     );
 }
+fn matches_source_id(candidate: &str, source: &str) -> bool {
+    candidate == source
+        || candidate
+            .rsplit_once('@')
+            .is_some_and(|(bare, _)| bare == source)
+}
 pub(super) fn replace_config(config: &mut Value, source: &str, target: &str, rename_env: bool) {
     let Some(config) = config.as_object_mut() else { return };
-    if let Some(value) = config.shift_remove(source) {
+    let matched_key = config
+        .keys()
+        .find(|key| matches_source_id(key, source))
+        .cloned();
+    if let Some(old_key) = matched_key
+        && let Some(value) = config.shift_remove(&old_key)
+    {
         config.insert(target.into(), value);
     }
     if rename_env
@@ -200,7 +222,7 @@ pub(super) fn replace_config(config: &mut Value, source: &str, target: &str, ren
             .find(|(key, _)| {
                 key.as_str() == "teambit.envs/envs" || key.starts_with("teambit.envs/envs@")
             })
-        && env["env"] == source
+        && env["env"].as_str().is_some_and(|val| matches_source_id(val, source))
     {
         env["env"] = json!(target);
     }
@@ -213,7 +235,7 @@ pub(super) fn replace_config(config: &mut Value, source: &str, target: &str, ren
         && let Some(envs) = gen_cfg.get_mut("envs").and_then(Value::as_array_mut)
         && let Some(value) = envs
             .iter_mut()
-            .find(|value| **value == source)
+            .find(|value| value.as_str().is_some_and(|val| matches_source_id(val, source)))
     {
         *value = json!(target);
     }
@@ -232,7 +254,10 @@ pub(super) fn publish(plan: &mut Plan, file_id: &str) -> io::Result<()> {
     }
     let text = std::str::from_utf8(&plan.controls.workspace_before).map_err(io::Error::other)?;
     let mut document = crate::jsonc::Document::parse(text)?;
-    let source = &plan.identity.source;
+    let source = original
+        .as_object()
+        .and_then(|map| map.keys().find(|key| matches_source_id(key, &plan.identity.source)))
+        .map_or(plan.identity.source.as_str(), String::as_str);
     if let Some(value) = plan.controls.workspace.get(&plan.identity.target) {
         document.remove(&[source]);
         document.set(&[&plan.identity.target], value);

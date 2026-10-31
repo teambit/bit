@@ -324,17 +324,11 @@ enum Local {
 }
 
 fn flattened(version: &Value) -> Vec<Id> {
-    version["flattenedDependencies"]
-        .as_array()
+    ["flattenedDependencies", "flattenedDevDependencies"]
         .into_iter()
+        .filter_map(|field| version[field].as_array())
         .flatten()
-        .filter_map(|dependency| {
-            Some(Id {
-                scope: dependency["scope"].as_str()?.to_string(),
-                name: dependency["name"].as_str()?.to_string(),
-                version: dependency["version"].as_str().map(str::to_string),
-            })
-        })
+        .filter_map(super::fs_remote::dependency_id)
         .collect()
 }
 

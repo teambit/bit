@@ -196,7 +196,11 @@ fn is_outside_any_host(cwd: &Path) -> bool {
     workspace::root(cwd).is_none()
         && !cwd
             .ancestors()
-            .any(|dir| dir.join("scope.json").is_file() || dir.join(".bit").is_dir())
+            .any(|dir| {
+                dir.join("scope.json").is_file()
+                    || dir.join(".bit").is_dir()
+                    || dir.join(".git/bit").is_dir()
+            })
 }
 
 pub(super) fn parse_command(args: &[&str]) -> Option<ParsedCommand> {

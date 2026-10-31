@@ -240,7 +240,11 @@ fn unique_position(rows: &[Value], scope: &str, name: &str) -> io::Result<usize>
         .iter()
         .enumerate()
         .filter_map(|(index, row)| {
-            (row["id"]["scope"] == scope && row["id"]["name"] == name).then_some(index)
+            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            (row["isSymlink"] != true
+                && (row_scope == scope || row_scope.is_empty())
+                && row["id"]["name"] == name)
+                .then_some(index)
         });
     let position = positions.next().ok_or_else(|| invalid("lane reset indexed identity absent"))?;
     if positions.next().is_some() {
@@ -314,6 +318,7 @@ fn projected_index(
 ) -> io::Result<Option<BytesChange>> {
     let index = if selection.next.is_none()
         && repository.model["versions"].as_object().is_some_and(serde_json::Map::is_empty)
+        && repository.model["orphanedVersions"].as_object().is_none_or(serde_json::Map::is_empty)
         && !repository.model["head"].is_string()
     {
         let (removed, index) = remove_new_model(root, scope, name)?;

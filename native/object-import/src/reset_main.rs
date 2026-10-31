@@ -2,7 +2,8 @@
 //! object and bitmap changes, then publish only after a fresh validation.
 
 pub use batch::Batch;
-pub(crate) use publication::{backup_bitmap, validate_file_id};
+pub use publication::backup_bitmap;
+pub(crate) use publication::validate_file_id;
 pub use selection::Selection;
 
 mod batch;

@@ -118,7 +118,7 @@ fn lane(value: &Value, field: &str) -> io::Result<()> {
 }
 
 fn references(value: &Value) -> io::Result<()> {
-    for field in ["flattenedEdgesRef", "dependenciesGraphRef"] {
+    for field in ["flattenedDependenciesRef", "flattenedEdgesRef", "dependenciesGraphRef"] {
         if let Some(reference) = value.get(field).filter(|value| truthy(value)) {
             hash(reference.as_str().ok_or_else(|| invalid("history invalid graph ref"))?)?;
         }

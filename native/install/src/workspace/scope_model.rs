@@ -102,7 +102,7 @@ impl ModelData {
 
 /// The aspect id of a stored extension: `name` for core aspects, the
 /// serialized `extensionId` otherwise, without the version.
-fn extension_name(extension: &Value) -> Option<String> {
+pub(crate) fn extension_name(extension: &Value) -> Option<String> {
     if let Some(name) = extension
         .get("name")
         .or_else(|| extension.get("legacyId"))
@@ -143,6 +143,7 @@ fn uses_env_of_envs(extension: &Value) -> bool {
 /// Reads models and Versions from a scope's `objects` directory.
 #[derive(Debug, Clone)]
 pub struct ScopeObjects {
+    scope: PathBuf,
     objects: PathBuf,
 }
 
@@ -153,7 +154,7 @@ fn is_hash(value: &str) -> bool {
 impl ScopeObjects {
     #[must_use]
     pub fn new(scope: &Path) -> Self {
-        Self { objects: scope.join("objects") }
+        Self { scope: scope.to_path_buf(), objects: scope.join("objects") }
     }
 
     /// The JSON body of an object; `None` when it is not in the scope.
@@ -178,13 +179,13 @@ impl ScopeObjects {
         serde_json::from_slice(&inflated[header_end + 1..]).map(Some).map_err(|_| corrupt(&path))
     }
 
-    /// The model of `scope/name` (its hash is the sha1 of that id), and the
-    /// Version of `version` (a tag of the model or a snap hash).
+    /// The model of `scope/name` (its hash is from `index.json` or the sha1 of that id),
+    /// and the Version of `version` (a tag of the model or a snap hash).
     pub fn component(&self, id: &ComponentId) -> io::Result<Option<ModelData>> {
         let (Some(scope), Some(version)) = (id.scope.as_deref(), id.version.as_deref()) else {
             return Ok(None);
         };
-        let model = self.read(&sha1_hex(&format!("{scope}/{}", id.name)))?;
+        let model = self.read_model(scope, &id.name)?;
         self.model_data(model.as_ref(), Some(version))
     }
 
@@ -192,8 +193,34 @@ impl ScopeObjects {
     /// head (how `importAndGetMany` loads a configured aspect or env at `*`).
     pub fn component_or_head(&self, id: &ComponentId) -> io::Result<Option<ModelData>> {
         let Some(scope) = id.scope.as_deref() else { return Ok(None) };
-        let model = self.read(&sha1_hex(&format!("{scope}/{}", id.name)))?;
+        let model = self.read_model(scope, &id.name)?;
         self.model_data(model.as_ref(), id.version.as_deref())
+    }
+
+    fn read_model(&self, scope: &str, name: &str) -> io::Result<Option<Value>> {
+        let hash = self
+            .index_hash(scope, name)
+            .unwrap_or_else(|| sha1_hex(&format!("{scope}/{name}")));
+        if let Some(model) = self.read(&hash)? {
+            return Ok(Some(model));
+        }
+        self.read(&sha1_hex(name))
+    }
+
+    fn index_hash(&self, scope: &str, name: &str) -> Option<String> {
+        let bytes = fs::read(self.scope.join("index.json")).ok()?;
+        let index: Value = serde_json::from_slice(&bytes).ok()?;
+        let rows = index["components"].as_array().or_else(|| index.as_array())?;
+        rows.iter()
+            .find(|row| {
+                row["isSymlink"] != true
+                    && row["id"]["name"].as_str() == Some(name)
+                    && row["id"]["scope"]
+                        .as_str()
+                        .is_none_or(|row_scope| row_scope == scope)
+            })
+            .and_then(|row| row["hash"].as_str())
+            .map(str::to_owned)
     }
 
     /// [`Self::component_or_head`] of a configured id, `scope/name` with an optional
@@ -251,15 +278,17 @@ impl ScopeObjects {
 }
 
 /// The Version hash of `version`: a snap hash as is, a tag through the model's
-/// `versions`, and the model `head` when no version is given.
+/// `versions` or `orphanedVersions`, and the model `head` when no version is given.
 fn version_hash(model: Option<&Value>, version: Option<&str>) -> Option<String> {
-    match version {
+    match version.filter(|ver| !ver.is_empty() && *ver != "latest") {
         Some(version) if is_hash(version) => Some(version.to_owned()),
-        Some(version) => model?
-            .get("versions")?
-            .get(version)?
-            .as_str()
-            .map(str::to_owned),
+        Some(version) => {
+            let model = model?;
+            model["versions"][version]
+                .as_str()
+                .or_else(|| model["orphanedVersions"][version].as_str())
+                .map(str::to_owned)
+        }
         None => model?
             .get("head")?
             .as_str()

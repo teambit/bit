@@ -144,6 +144,12 @@ fn head_snaps(retained: &Retained, captured: &[capture::Captured]) -> io::Result
             .as_object()
             .ok_or_else(|| invalid("tag model versions"))?
             .values()
+            .chain(
+                model["orphanedVersions"]
+                    .as_object()
+                    .into_iter()
+                    .flat_map(serde_json::Map::values),
+            )
             .any(|value| value == head);
         if !tagged {
             output.push(current.target.identity.clone());

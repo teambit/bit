@@ -31,10 +31,9 @@ fn ordinary_model(
     row: &Value,
     referenced: Option<&HashSet<&str>>,
 ) -> bool {
-    let (Some(scope), Some(name)) = (model["scope"].as_str(), model["name"].as_str()) else {
+    let Some(identity) = model_identity(context, model) else {
         return false;
     };
-    let identity = format!("{scope}/{name}");
     let check_issues = referenced.is_none_or(|set| set.contains(identity.as_str()));
     if check_issues && truthy(model.get("deprecated")) {
         return false;
@@ -63,6 +62,35 @@ fn ordinary_model(
         .flatten()
         .zip(expected)
         .all(|(head, expected)| ordinary_head(head, expected, check_issues))
+}
+
+fn model_identity(context: &Value, model: &Value) -> Option<String> {
+    let name = model["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())?;
+    if let Some(scope) = model["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())
+    {
+        return Some(format!("{scope}/{name}"));
+    }
+    context["targets"]
+        .as_array()
+        .and_then(|targets| {
+            targets
+                .iter()
+                .filter_map(|target| target["identity"].as_str())
+                .find(|identity| {
+                    identity.split_once('/').map_or(*identity, |(_, bare)| bare) == name
+                })
+                .map(str::to_owned)
+        })
+        .or_else(|| {
+            let scope = context["workspace"]["teambit.workspace/workspace"]["defaultScope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty())?;
+            Some(format!("{scope}/{name}"))
+        })
 }
 
 fn ordinary_head(head: &Value, expected: &Value, check_issues: bool) -> bool {

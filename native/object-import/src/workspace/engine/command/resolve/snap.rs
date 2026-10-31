@@ -172,7 +172,7 @@ pub(super) fn prepare_graph_imports(
     let mut targets = Vec::new();
     for material in materials {
         let pinned = super::super::resolve_snapshot::pinned_dependencies(&material.version);
-        let source = serde_json::json!({"scope":material.model["scope"],"name":material.model["name"],"version":material.version_state.current_head});
+        let source = material_graph_source(material);
         for edge in super::graph::edges(&source, &material.version)? {
             let id = &edge["target"];
             let identity = selection::identity(id)?;
@@ -198,6 +198,21 @@ pub(super) fn prepare_graph_imports(
         }
     }
     retained.record.repository.prepare_versions(&targets)
+}
+
+fn material_graph_source(material: &super::super::resolve_snapshot::Material) -> Value {
+    let (target_scope, target_name) = material.identity
+        .split_once('/')
+        .unwrap_or(("", material.identity.as_str()));
+    let scope = material.model["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())
+        .unwrap_or(target_scope);
+    let name = material.model["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())
+        .unwrap_or(target_name);
+    serde_json::json!({"scope":scope,"name":name,"version":material.version_state.current_head})
 }
 
 fn known_previous(

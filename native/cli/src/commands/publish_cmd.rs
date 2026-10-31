@@ -183,7 +183,9 @@ fn is_entry_in_scope(scope: Option<&Scope>, entry: &BitmapEntry) -> bool {
                 .ok()
                 .flatten()
         })
-        .is_some_and(|model| model["versions"].get(ver).is_some())
+        .is_some_and(|model| {
+            model["versions"].get(ver).is_some() || model["orphanedVersions"].get(ver).is_some()
+        })
 }
 
 fn is_entry_exported(scope: Option<&Scope>, entry: &BitmapEntry) -> bool {
@@ -206,7 +208,7 @@ fn is_entry_exported(scope: Option<&Scope>, entry: &BitmapEntry) -> bool {
     model["scope"]
         .as_str()
         .is_some_and(|sc| !sc.is_empty())
-        && model["versions"].get(ver).is_some()
+        && (model["versions"].get(ver).is_some() || model["orphanedVersions"].get(ver).is_some())
         && model["remotes"]
             .as_array()
             .is_some_and(|remotes| !remotes.is_empty())

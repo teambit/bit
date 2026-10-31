@@ -20,11 +20,10 @@ pub(super) fn model<'a>(
     {
         return Ok(Cow::Borrowed(model));
     }
-    let hash =
-        crate::validate::hexadecimal(&sha1::Sha1::digest(format!("{scope}/{name}").as_bytes()));
-    let model = local_object(root, &hash, "Component")?
+    let model = local_component_model(root, scope, name)?
         .ok_or_else(|| invalid("inbound existing local model"))?;
-    if model["scope"] != scope || model["name"] != name {
+    let model_scope = model["scope"].as_str().unwrap_or_default();
+    if (!model_scope.is_empty() && model_scope != scope) || model["name"] != name {
         return Err(invalid("inbound existing local model identity"));
     }
     Ok(Cow::Owned(model))
@@ -34,12 +33,10 @@ pub(super) fn head_as_tag_or_hash(model: &Value) -> io::Result<String> {
     let head = model["head"].as_str().ok_or_else(|| invalid("inbound model head"))?;
     Ok(model["versions"]
         .as_object()
-        .and_then(|versions| {
-            versions
-                .iter()
-                .rev()
-                .find(|(_, hash)| hash.as_str() == Some(head))
-        })
+        .into_iter()
+        .chain(model["orphanedVersions"].as_object())
+        .flat_map(|versions| versions.iter().rev())
+        .find(|(_, hash)| hash.as_str() == Some(head))
         .map_or_else(|| head.to_owned(), |(tag, _)| tag.clone()))
 }
 
@@ -76,10 +73,18 @@ fn detail(
     conflicts: Option<&[String]>,
     prefetched: bool,
 ) -> io::Result<Value> {
-    let versions = model["versions"].as_object().ok_or_else(|| invalid("inbound versions"))?;
+    if model
+        .get("versions")
+        .is_some_and(|val| !val.is_null() && !val.is_object())
+    {
+        return Err(invalid("inbound versions"));
+    }
     let previous = previous_versions(root, scope, &target.name)?;
-    let added = versions
-        .keys()
+    let added = model["versions"]
+        .as_object()
+        .into_iter()
+        .chain(model["orphanedVersions"].as_object())
+        .flat_map(serde_json::Map::keys)
         .filter(|key| !prefetched && !previous.contains(*key))
         .cloned()
         .collect::<Vec<_>>();
@@ -133,10 +138,7 @@ fn removed(
         .as_array()
         .into_iter()
         .flatten()
-        .find(|ext| {
-            is_extension_aspect(ext, "teambit.component/remove")
-                || ext["extensionId"] == "teambit.component/remove"
-        });
+        .find(|ext| is_extension_aspect(ext, "teambit.component/remove"));
     let Some(config) = aspect.map(|aspect| &aspect["config"]) else { return Ok(false) };
     if config["removed"] == true {
         return Ok(true);
@@ -212,25 +214,59 @@ pub(super) fn local_object(root: &Path, hash: &str, kind: &str) -> io::Result<Op
     serde_json::from_slice(body).map(Some).map_err(io::Error::other)
 }
 
+fn local_component_model(root: &Path, scope: &str, name: &str) -> io::Result<Option<Value>> {
+    let scope_dir = crate::scope_path(root);
+    for hash in candidate_component_hashes(&scope_dir, scope, name) {
+        if let Some(model) = local_object(root, &hash, "Component")? {
+            return Ok(Some(model));
+        }
+    }
+    Ok(None)
+}
+
+pub(crate) fn candidate_component_hashes(scope_dir: &Path, scope: &str, name: &str) -> Vec<String> {
+    let mut hashes = indexed_component_hashes(scope_dir, scope, name);
+    for candidate in [format!("{scope}/{name}"), name.to_owned()] {
+        let hash = crate::validate::hexadecimal(&sha1::Sha1::digest(candidate.as_bytes()));
+        if !hashes.contains(&hash) {
+            hashes.push(hash);
+        }
+    }
+    hashes
+}
+
+fn indexed_component_hashes(scope_dir: &Path, scope: &str, name: &str) -> Vec<String> {
+    let Ok(bytes) = std::fs::read(scope_dir.join("index.json")) else { return Vec::new() };
+    let Ok(index) = serde_json::from_slice::<Value>(&bytes) else { return Vec::new() };
+    index
+        .as_array()
+        .or_else(|| index["components"].as_array())
+        .into_iter()
+        .flatten()
+        .filter(|row| {
+            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            row["isSymlink"] != true
+                && row["id"]["name"].as_str() == Some(name)
+                && (row_scope == scope || row_scope.is_empty())
+        })
+        .filter_map(|row| {
+            row["hash"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+                .map(str::to_owned)
+        })
+        .collect()
+}
+
 fn previous_versions(root: &Path, scope: &str, name: &str) -> io::Result<Vec<String>> {
-    let hash =
-        crate::validate::hexadecimal(&sha1::Sha1::digest(format!("{scope}/{name}").as_bytes()));
-    let directory = crate::scope_path(root).join("objects");
-    let mut total = 0;
-    let raw = match crate::checkout::repository::read(
-        &directory,
-        crate::merge_history::hash(&hash)?,
-        32 * 1024 * 1024,
-        &mut total,
-    ) {
-        Ok(raw) => raw,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
-        Err(error) => return Err(error),
+    let Some(model) = local_component_model(root, scope, name)? else {
+        return Ok(Vec::new());
     };
-    let (_, body) =
-        crate::checkout::repository::split(&raw, crate::merge_history::hash(&hash)?, "Component")?;
-    let model: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
     Ok(model["versions"]
         .as_object()
-        .map_or_else(Vec::new, |versions| versions.keys().cloned().collect()))
+        .into_iter()
+        .chain(model["orphanedVersions"].as_object())
+        .flat_map(serde_json::Map::keys)
+        .cloned()
+        .collect())
 }

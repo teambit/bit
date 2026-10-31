@@ -72,7 +72,14 @@ impl Reader {
         if !has_history {
             return Ok(Some(false));
         }
-        let reference = model["versions"][version].as_str().unwrap_or(version);
+        let reference = if version.is_empty() || version == "latest" {
+            model["head"].as_str().unwrap_or(version)
+        } else {
+            model["versions"][version]
+                .as_str()
+                .or_else(|| model["orphanedVersions"][version].as_str())
+                .unwrap_or(version)
+        };
         let Some(stored) = self.context["versions"]
             .as_array()
             .into_iter()
@@ -107,6 +114,9 @@ impl Reader {
         self.context["laneHeads"][identity].is_string()
             || model["head"].is_string()
             || model["versions"]
+                .as_object()
+                .is_some_and(|versions| !versions.is_empty())
+            || model["orphanedVersions"]
                 .as_object()
                 .is_some_and(|versions| !versions.is_empty())
     }

@@ -239,7 +239,10 @@ fn update_bitmap_default_scope(
         {
             continue;
         }
-        if row["defaultScope"].as_str() == Some(old_scope) {
+        let default_scope = row["defaultScope"].as_str();
+        if default_scope == Some(old_scope)
+            || (default_scope == Some("") && row["scope"].as_str().is_none_or(str::is_empty))
+        {
             row["defaultScope"] = json!(new_scope);
             changed = true;
         }
@@ -285,7 +288,7 @@ fn prepare_component_scope(
     }
     let mut changed_ids = Vec::with_capacity(new_entries.len());
     for entry in new_entries {
-        set_entry_default_scope(&mut bitmap_val, &entry.id.name, new_scope)?;
+        set_entry_default_scope(&mut bitmap_val, entry, new_scope)?;
         changed_ids.push(format!("{new_scope}/{}", entry.id.name));
     }
     Ok(Prepared::Components(ComponentPlan {
@@ -299,7 +302,7 @@ fn prepare_component_scope(
 
 fn set_entry_default_scope(
     bitmap_val: &mut Value,
-    name: &str,
+    entry: &bit_install::workspace::BitmapEntry,
     new_scope: &str,
 ) -> Result<(), Failure> {
     let rows =
@@ -310,9 +313,11 @@ fn set_entry_default_scope(
             !key.starts_with('$')
                 && !matches!(key.as_str(), "_bit_lane" | "version")
                 && row.is_object()
-                && super::update_cmd::bitmap_row_name(key, row) == name
+                && ((!entry.root_dir.is_empty()
+                    && row["rootDir"].as_str() == Some(entry.root_dir.as_str()))
+                    || super::update_cmd::bitmap_row_name(key, row) == entry.id.name)
         })
-        .ok_or_else(|| Failure::Declined(format!("bitmap entry {name}")))?;
+        .ok_or_else(|| Failure::Declined(format!("bitmap entry {}", entry.id.name)))?;
     row["defaultScope"] = json!(new_scope);
     Ok(())
 }

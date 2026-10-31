@@ -37,15 +37,18 @@ pub(super) fn read_at(scope: &Path) -> io::Result<Vec<Item>> {
         return Err(invalid("status component index count"));
     }
     let mut seen = HashSet::new();
-    rows.iter()
-        .map(|row| {
-            let item: Item = serde_json::from_value(row.clone()).map_err(io::Error::other)?;
-            if item.is_symlink || !seen.insert(item.hash.clone()) {
-                return Err(invalid("status symlink or duplicate model"));
-            }
-            Ok(item)
-        })
-        .collect()
+    let mut items = Vec::new();
+    for row in rows {
+        let item: Item = serde_json::from_value(row.clone()).map_err(io::Error::other)?;
+        if item.is_symlink {
+            continue;
+        }
+        if !seen.insert(item.hash.clone()) {
+            return Err(invalid("status symlink or duplicate model"));
+        }
+        items.push(item);
+    }
+    Ok(items)
 }
 pub(super) fn model(reader: &Reader<'_>, item: &Item) -> io::Result<Value> {
     let value = reader.read(&item.hash, "Component")?;

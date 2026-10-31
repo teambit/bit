@@ -239,11 +239,21 @@ fn select_refs(found: Vec<(String, Value, String)>) -> io::Result<(Vec<String>, 
     let mut removed = Vec::new();
     let mut refs = Vec::new();
     for (identity, component, component_hash) in found {
-        let versions =
-            component["versions"].as_object().ok_or_else(|| invalid("component versions"))?;
+        if component
+            .get("versions")
+            .is_some_and(|val| !val.is_null() && !val.is_object())
+        {
+            return Err(invalid("component versions"));
+        }
+        let versions = component["versions"].as_object();
+        let orphaned = component["orphanedVersions"].as_object();
         removed.push(format!("{identity}@latest"));
         refs.push(component_hash);
-        for version in versions.values() {
+        for version in versions
+            .into_iter()
+            .chain(orphaned)
+            .flat_map(serde_json::Map::values)
+        {
             refs.push(hash(version)?.to_owned());
         }
     }
@@ -268,11 +278,14 @@ pub(super) fn identity(id: &str) -> io::Result<&str> {
 }
 pub(super) fn component_row<'a>(index: &'a Value, id: &str) -> Option<&'a Value> {
     let (scope, name) = id.split_once('/')?;
-    index["components"]
-        .as_array()
-        .or_else(|| index.as_array())?
-        .iter()
-        .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+    let rows = index["components"].as_array().or_else(|| index.as_array())?;
+    let matches_id = |row: &&Value| {
+        let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+        (row_scope == scope || row_scope.is_empty()) && row["id"]["name"] == name
+    };
+    rows.iter()
+        .find(|row| row["isSymlink"] != true && matches_id(row))
+        .or_else(|| rows.iter().find(matches_id))
 }
 pub(super) fn hash(value: &Value) -> io::Result<&str> {
     let text = value.as_str().ok_or_else(|| invalid("object hash"))?;

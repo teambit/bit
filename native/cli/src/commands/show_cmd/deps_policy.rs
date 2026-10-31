@@ -178,20 +178,22 @@ fn apply_model_dep_item(item: &Value, identity: &Identity<'_>, deps: &mut Vec<De
 
 fn model_dep_entry(item: &Value, identity: &Identity<'_>) -> Option<DepEntry> {
     let is_comp = item["__type"].as_str() == Some("component");
-    let raw_id = if is_comp {
-        item["id"]
-            .as_str()
-            .or_else(|| item["packageName"].as_str())
+    let obj_id = crate::commands::graph_cmd::builder::format_dep_id(&item["componentId"])
+        .or_else(|| crate::commands::graph_cmd::builder::format_dep_id(&item["id"]));
+    let dep_id = if is_comp {
+        obj_id
+            .as_deref()
+            .or_else(|| item["packageName"].as_str())?
     } else {
-        item["packageName"]
-            .as_str()
-            .or_else(|| item["id"].as_str())
+        item["packageName"].as_str().or(obj_id.as_deref())?
     };
-    let dep_id = raw_id?;
     if identity.is_self(dep_id) {
         return None;
     }
-    let ver = item["version"].as_str()?;
+    let ver = item["version"]
+        .as_str()
+        .or_else(|| item["componentId"]["version"].as_str())
+        .or_else(|| item["id"]["version"].as_str())?;
     let pkg_name = item["packageName"]
         .as_str()
         .unwrap_or(dep_id)
@@ -206,15 +208,13 @@ fn model_dep_entry(item: &Value, identity: &Identity<'_>) -> Option<DepEntry> {
         Some("peer") => "peer",
         _ => "runtime",
     };
-    let dep_type = if is_comp { "component" } else { "package" };
-    let optional = item["optional"].as_bool().unwrap_or(false);
     Some(DepEntry {
         id: full_id,
         package_name: Some(pkg_name),
         version: ver.to_owned(),
         lifecycle,
-        dep_type,
-        optional,
+        dep_type: if is_comp { "component" } else { "package" },
+        optional: item["optional"].as_bool().unwrap_or(false),
         relative_paths: Vec::new(),
     })
 }

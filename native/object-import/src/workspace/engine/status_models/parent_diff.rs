@@ -84,9 +84,17 @@ fn model(
 }
 
 fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
+    if model
+        .get("versions")
+        .is_some_and(|val| !val.is_null() && !val.is_object())
+    {
+        return Err(invalid("version parent tags"));
+    }
     let mut tags = HashMap::new();
-    for (tag, reference) in
-        model["versions"].as_object().ok_or_else(|| invalid("version parent tags"))?
+    for (tag, reference) in model["versions"]
+        .as_object()
+        .into_iter()
+        .flatten()
     {
         let reference = reference.as_str().ok_or_else(|| invalid("version parent tag ref"))?;
         merge_history::hash(reference)?;

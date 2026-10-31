@@ -135,7 +135,8 @@ fn validate_target_versions(
 
 /// Check whether `version` is a 40-char hash or a known tag in `versions` / `orphanedVersions`.
 fn has_model_version(component_model: &Value, version: &str) -> bool {
-    (version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit()))
+    (version == "latest" && component_model["head"].is_string())
+        || (version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit()))
         || component_model["versions"].get(version).is_some()
         || component_model["orphanedVersions"].get(version).is_some()
 }

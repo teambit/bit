@@ -21,7 +21,14 @@ pub(super) fn references(models: &[Value], targets: &[Target]) -> io::Result<Vec
         if target.version.is_empty() {
             continue;
         }
-        let Some(model) = index.get(&target.identity) else {
+        let Some(model) = index
+            .get(&target.identity)
+            .or_else(|| {
+                target.identity
+                    .split_once('/')
+                    .and_then(|(_, name)| index.get(name))
+            })
+        else {
             continue;
         };
         let reference = reference(model, &target.version)?;
@@ -32,6 +39,12 @@ pub(super) fn references(models: &[Value], targets: &[Target]) -> io::Result<Vec
     Ok(references)
 }
 pub(in crate::workspace::engine) fn reference(model: &Value, version: &str) -> io::Result<String> {
+    if version.is_empty() || version == "latest" {
+        return model["head"]
+            .as_str()
+            .map(str::to_owned)
+            .ok_or_else(|| invalid("status model version absent"));
+    }
     if crate::merge_history::hash(version).is_ok() {
         return Ok(version.to_owned());
     }

@@ -53,9 +53,8 @@ fn root_policy(policy: &Value) -> io::Result<[Map<String, Value>; 2]> {
 
 fn configured_policy(context: &Value) -> io::Result<Value> {
     let resolver = nullish(
-        context
-            .get("workspace")
-            .and_then(|w| w.get(RESOLVER)),
+        crate::commands::update_cmd::aspect_entry(&context["workspace"], RESOLVER)
+            .map(|(_, val)| val),
     );
     let policy = nullish(resolver.and_then(|r| r.get("policy")));
     let empty = Value::Object(Map::new());

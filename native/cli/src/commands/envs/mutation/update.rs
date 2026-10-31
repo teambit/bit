@@ -259,7 +259,7 @@ fn has_versioned_specific_config(
     if !entry.root_dir.is_empty() {
         let comp_json = root.join(&entry.root_dir).join("component.json");
         if let Ok(bytes) = fs::read(comp_json)
-            && let Ok(parsed) = serde_json::from_slice::<Value>(&bytes)
+            && let Ok(parsed) = bit_object_import::parse_jsonc(&bytes)
             && let Some(ext_obj) = parsed["extensions"].as_object()
         {
             return find_matching_aspect_key(ext_obj, bare)

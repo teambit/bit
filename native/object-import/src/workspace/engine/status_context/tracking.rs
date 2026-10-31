@@ -89,10 +89,22 @@ fn normalize(value: &Value, target: &Value) -> io::Result<Value> {
     let identity = target["identity"].as_str().ok_or_else(|| invalid("tracking identity"))?;
     let (scope, name) =
         identity.split_once('/').ok_or_else(|| invalid("tracking scoped identity"))?;
-    if let Some(id) = value.get("componentId")
-        && (id["scope"] != scope || id["name"] != name)
+    if let Some(id) = value
+        .get("componentId")
+        .filter(|val| !val.is_null())
     {
-        return Err(invalid("tracking component config identity"));
+        let id_scope = id["scope"]
+            .as_str()
+            .filter(|val| !val.is_empty())
+            .or_else(|| {
+                id["defaultScope"]
+                    .as_str()
+                    .filter(|val| !val.is_empty())
+            })
+            .unwrap_or(scope);
+        if id_scope != scope || id["name"] != name {
+            return Err(invalid("tracking component config identity"));
+        }
     }
     let extensions = value
         .get("extensions")

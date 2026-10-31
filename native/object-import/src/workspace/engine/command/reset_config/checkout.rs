@@ -93,14 +93,24 @@ fn insert(
 fn identifier(row: &Value) -> io::Result<String> {
     if let Some(id) = row.get("extensionId") {
         if let Some(id) = id.as_str() {
-            return Ok(id.to_owned());
+            return Ok(id
+                .strip_suffix("@latest")
+                .unwrap_or(id)
+                .to_owned());
         }
-        let name = id["name"].as_str().ok_or_else(|| invalid("checkout aspect name"))?;
+        let raw_name = id["name"].as_str().ok_or_else(|| invalid("checkout aspect name"))?;
+        let (name, inline_ver) = raw_name
+            .rsplit_once('@')
+            .map_or((raw_name, None), |(bare, ver)| {
+                (bare, Some(ver).filter(|ver| !ver.is_empty()))
+            });
         let scope = id["scope"].as_str().unwrap_or_default();
         let base = if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") };
         return Ok(id["version"]
             .as_str()
-            .filter(|version| !version.is_empty() && *version != "latest")
+            .filter(|version| !version.is_empty())
+            .or(inline_ver)
+            .filter(|version| *version != "latest")
             .map_or_else(|| base.clone(), |version| format!("{base}@{version}")));
     }
     row.get("name")

@@ -44,11 +44,7 @@ fn compare(
     lane: Option<&Lane>,
     stage: bool,
 ) -> io::Result<(Value, Option<Value>)> {
-    let identity = format!(
-        "{}/{}",
-        model["scope"].as_str().ok_or_else(|| invalid("status model scope"))?,
-        model["name"].as_str().ok_or_else(|| invalid("status model name"))?,
-    );
+    let identity = model_identity(model, targets)?;
     let remote = remotes.get(&identity).map(String::as_str);
     let head = model
         .get("head")
@@ -67,6 +63,15 @@ fn compare(
     // a detached workspace version was passed as the source head.
     let source = if remote.is_some() { workspace.as_deref().or(head) } else { head };
     distances(reader, model, &identity, [source, head, remote], stage)
+}
+
+fn model_identity(model: &Value, targets: &HashMap<&str, &str>) -> io::Result<String> {
+    model["name"].as_str().ok_or_else(|| invalid("status model name"))?;
+    let identity = super::comparison::resolved_model_id(model, targets.keys().copied());
+    if !identity.contains('/') {
+        return Err(invalid("status model scope"));
+    }
+    Ok(identity)
 }
 
 fn compare_lane(
@@ -195,7 +200,7 @@ fn ordinary_merge_state(root: &Path) -> io::Result<()> {
         Err(error) => return Err(error),
     };
     let bytes = crate::read_budget::Budget::new(1024 * 1024).read(file)?;
-    let value: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+    let value: Value = crate::recovery::jsonc::parse(&bytes)?;
     if !value
         .as_array()
         .is_some_and(|rows| {
@@ -213,24 +218,22 @@ fn ordinary_merge_state(root: &Path) -> io::Result<()> {
 fn remote_proofs(root: &Path, models: &[Value], lane: Option<&Lane>) -> io::Result<Vec<Value>> {
     let mut proofs = Vec::new();
     let mut seen = std::collections::HashSet::new();
+    let remotes_dir = crate::scope_path(root).join("refs/remotes");
     for model in models {
-        let scope = model["scope"].as_str().ok_or_else(|| invalid("status history scope"))?;
-        if seen.insert(scope) {
+        if let Some(scope) = model["scope"]
+            .as_str()
+            .filter(|scope| !scope.is_empty())
+            && seen.insert(scope)
+        {
             super::super::dependency_graph::proof::read(
-                &crate::scope_path(root)
-                    .join("refs/remotes")
-                    .join(scope)
-                    .join("main"),
+                &remotes_dir.join(scope).join("main"),
                 &mut proofs,
             )?;
         }
     }
     if let Some(lane) = lane {
         super::super::dependency_graph::proof::read(
-            &crate::scope_path(root)
-                .join("refs/remotes")
-                .join(&lane.scope)
-                .join(&lane.name),
+            &remotes_dir.join(&lane.scope).join(&lane.name),
             &mut proofs,
         )?;
         if let Some((scope, name)) = lane.forked_from
@@ -238,10 +241,7 @@ fn remote_proofs(root: &Path, models: &[Value], lane: Option<&Lane>) -> io::Resu
             .and_then(|id| id.split_once('/'))
         {
             super::super::dependency_graph::proof::read(
-                &crate::scope_path(root)
-                    .join("refs/remotes")
-                    .join(scope)
-                    .join(name),
+                &remotes_dir.join(scope).join(name),
                 &mut proofs,
             )?;
         }

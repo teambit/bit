@@ -148,28 +148,25 @@ fn lifecycle_from_str(raw: Option<&str>) -> &'static str {
 }
 
 fn apply_model_dep_item(item: &Value, identity: &Identity<'_>, deps: &mut Vec<ResolvedDep>) {
-    let Some(pkg_name) = item["packageName"]
-        .as_str()
-        .or_else(|| item["id"].as_str())
-    else {
-        return;
-    };
+    let obj_id = crate::commands::graph_cmd::builder::format_dep_id(&item["componentId"])
+        .or_else(|| crate::commands::graph_cmd::builder::format_dep_id(&item["id"]));
+    let Some(pkg_name) = item["packageName"].as_str().or(obj_id.as_deref()) else { return };
     if identity.is_self(pkg_name) {
         return;
     }
-    let Some(ver) = item["version"].as_str() else { return };
-    let lifecycle = lifecycle_from_str(item["lifecycle"].as_str());
+    let Some(ver) = item["version"]
+        .as_str()
+        .or_else(|| item["componentId"]["version"].as_str())
+        .or_else(|| item["id"]["version"].as_str())
+    else {
+        return;
+    };
     let is_comp = item["__type"].as_str() == Some("component");
-    let raw_id = item["id"].as_str().unwrap_or(pkg_name);
+    let raw_id = obj_id.as_deref().unwrap_or(pkg_name);
     let bare = raw_id
         .split('@')
         .next()
         .unwrap_or(raw_id);
-    let comp_name = is_comp.then(|| {
-        bare.split_once('/')
-            .map_or(bare, |(_, name)| name)
-            .to_owned()
-    });
     upsert_dep(
         deps,
         ResolvedDep {
@@ -180,9 +177,13 @@ fn apply_model_dep_item(item: &Value, identity: &Identity<'_>, deps: &mut Vec<Re
             },
             package_name: pkg_name.to_owned(),
             version: ver.to_owned(),
-            lifecycle,
+            lifecycle: lifecycle_from_str(item["lifecycle"].as_str()),
             dep_type: if is_comp { "component" } else { "package" },
-            comp_name,
+            comp_name: is_comp.then(|| {
+                bare.split_once('/')
+                    .map_or(bare, |(_, name)| name)
+                    .to_owned()
+            }),
             comp_bare_id: is_comp.then(|| bare.to_owned()),
             is_extension: item["isExtension"].as_bool().unwrap_or(false),
         },

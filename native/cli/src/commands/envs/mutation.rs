@@ -114,9 +114,13 @@ pub(super) fn set_env_in_comp_json(
     env_no_ver: &str,
 ) -> Result<CompJsonEdit, Failure> {
     let content = fs::read_to_string(&path)?;
-    let mut parsed: Value =
-        serde_json::from_str(&content).map_err(|err| Failure::Declined(err.to_string()))?;
-    let ext_obj = parsed["extensions"]
+    let mut parsed: Value = bit_object_import::parse_jsonc(content.as_bytes())?;
+    let root_obj = parsed
+        .as_object_mut()
+        .ok_or_else(|| Failure::Declined("component.json root object".into()))?;
+    let ext_obj = root_obj
+        .entry("extensions")
+        .or_insert_with(|| json!({}))
         .as_object_mut()
         .ok_or_else(|| Failure::Declined("component.json extensions".into()))?;
     remove_env_from_map(ext_obj);
@@ -179,11 +183,10 @@ fn unset_env_in_comp_json(
     fallback_env: Option<&str>,
 ) -> Result<Option<CompJsonEdit>, Failure> {
     let content = fs::read_to_string(&path)?;
-    let mut parsed: Value =
-        serde_json::from_str(&content).map_err(|err| Failure::Declined(err.to_string()))?;
-    let ext_obj = parsed["extensions"]
-        .as_object_mut()
-        .ok_or_else(|| Failure::Declined("component.json extensions".into()))?;
+    let mut parsed: Value = bit_object_import::parse_jsonc(content.as_bytes())?;
+    let Some(ext_obj) = parsed.get_mut("extensions").and_then(Value::as_object_mut) else {
+        return Ok(None);
+    };
     if remove_env_from_map_with_fallback(ext_obj, fallback_env) {
         let bytes = serialize_json_preserving_newline(&content, &parsed)?;
         return Ok(Some(CompJsonEdit { path, bytes }));

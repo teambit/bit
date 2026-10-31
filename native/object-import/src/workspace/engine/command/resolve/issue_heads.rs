@@ -8,7 +8,7 @@ use std::io;
 pub(super) fn capture(context: &Value, repository: &mut Repository) -> io::Result<Value> {
     let mut output = Vec::new();
     for model in context["models"].as_array().ok_or_else(|| invalid("resolve issue models"))? {
-        let identity = super::selection::identity(model)?;
+        let identity = model_identity(context, model)?;
         let lane_head = context["lane"]["targets"]
             .as_array()
             .and_then(|rows| {
@@ -34,6 +34,39 @@ pub(super) fn capture(context: &Value, repository: &mut Repository) -> io::Resul
         output.push(json!({"identity":identity,"heads":heads}));
     }
     Ok(json!(output))
+}
+
+fn model_identity(context: &Value, model: &Value) -> io::Result<String> {
+    if model["scope"]
+        .as_str()
+        .is_some_and(|scope| !scope.is_empty())
+    {
+        return super::selection::identity(model);
+    }
+    let name = model["name"]
+        .as_str()
+        .filter(|name| !name.is_empty() && !name.contains('@'))
+        .ok_or_else(|| invalid("resolve identity name"))?;
+    if let Some(identity) = context["targets"]
+        .as_array()
+        .and_then(|targets| {
+            targets
+                .iter()
+                .filter_map(|target| target["identity"].as_str())
+                .find(|identity| {
+                    identity.split_once('/').map_or(*identity, |(_, bare)| bare) == name
+                })
+        })
+    {
+        return Ok(identity.to_owned());
+    }
+    if let Some(scope) = context["workspace"]["teambit.workspace/workspace"]["defaultScope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty() && !scope.contains('/'))
+    {
+        return Ok(format!("{scope}/{name}"));
+    }
+    super::selection::identity(model)
 }
 
 #[cfg(test)]

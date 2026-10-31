@@ -58,7 +58,8 @@ impl Plan {
                 fs::remove_file(path)?;
             }
         }
-        let directory = self.root.join(".bit/bitmap-history");
+        let scope_dir = crate::scope_path(&self.root);
+        let directory = scope_dir.join("bitmap-history");
         fs::create_dir_all(&directory)?;
         fs::copy(self.root.join(".bitmap"), directory.join(format!(".bitmap-{file_id}")))?;
         use std::io::Write;
@@ -66,7 +67,7 @@ impl Plan {
             fs::OpenOptions::new()
                 .create(true)
                 .append(true)
-                .open(self.root.join(".bit/bitmap-history-metadata.txt"))?,
+                .open(scope_dir.join("bitmap-history-metadata.txt"))?,
             "{file_id} reset (never-exported)",
         )?;
         fs::write(self.root.join(".bitmap"), &self.after)
@@ -102,8 +103,8 @@ fn select_row(root: &Path, key: &str, row: &Value) -> io::Result<Option<Selected
     let identity = format!("{scope}/{name}");
     let label = if version.is_empty() { identity } else { format!("{identity}@{version}") };
     let hash = format!("{:x}", Sha1::digest(name.as_bytes()));
-    let path = root
-        .join(".bit/objects")
+    let path = crate::scope_path(root)
+        .join("objects")
         .join(&hash[..2])
         .join(&hash[2..]);
     let data = match fs::read(&path) {

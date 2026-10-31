@@ -233,10 +233,7 @@ fn resolve_target_version(comp_val: &Value, req_ver: &str) -> Option<(String, St
 }
 
 fn find_tag_for_hash(comp_val: &Value, target_hash: &str) -> Option<String> {
-    comp_val["versions"]
-        .as_object()?
-        .iter()
-        .find_map(|(tag, hash_val)| (hash_val.as_str() == Some(target_hash)).then(|| tag.clone()))
+    crate::commands::show_cmd::remote_show::find_tag_for_hash(comp_val, target_hash)
 }
 
 fn read_version_with_remote_fallback(

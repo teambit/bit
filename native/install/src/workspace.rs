@@ -19,6 +19,7 @@ pub use files::{
 };
 pub use ignore::Ignore;
 pub use package_name::{binding_prefix_by_default_scope, component_package_name};
+pub(crate) use scope_model::extension_name;
 pub use scope_model::{ModelData, ScopeObjects, sha1_hex};
 pub use variants::{VariantConfig, by_root_dir_and_name};
 

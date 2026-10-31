@@ -238,8 +238,7 @@ fn is_comp_json_entry_internal(root: &Path, entry: &BitmapEntry) -> Result<Optio
         return Ok(None);
     }
     let bytes = fs::read(&comp_json_path)?;
-    let parsed: Value =
-        serde_json::from_slice(&bytes).map_err(|err| Failure::Declined(err.to_string()))?;
+    let parsed: Value = bit_object_import::parse_jsonc(&bytes)?;
     let Some((_, cfg)) =
         super::update_cmd::aspect_entry(&parsed["extensions"], INTERNALIZE_ASPECT_ID)
     else {

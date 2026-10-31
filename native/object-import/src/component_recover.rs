@@ -100,7 +100,8 @@ impl Plan {
     fn validate(&self, file_id: &str) -> io::Result<()> {
         validate_file_id(file_id)?;
         if fs::read(self.root.join(".bitmap"))? != self.bitmap.before
-            || fs::read(self.root.join(".bit/index.json"))? != self.repository.index
+            || fs::read(crate::scope_path(&self.root).join("index.json"))?
+                != self.repository.index
         {
             return Err(invalid("component workspace changed before recovery"));
         }
@@ -208,10 +209,14 @@ fn tracked_key(bitmap: &Value, name: &str) -> io::Result<String> {
     let matches: Vec<_> = rows
         .iter()
         .filter(|(key, row)| {
-            *key == name
-                || row["scope"]
-                    .as_str()
-                    .is_some_and(|scope| !scope.is_empty() && format!("{scope}/{key}") == name)
+            !key.starts_with('$')
+                && !matches!(key.as_str(), "_bit_lane" | "version")
+                && row.is_object()
+                && {
+                    let (scope, bare_name) = crate::reset_lane::bitmap::row_identity(key, row);
+                    bare_name == name
+                        || scope.is_some_and(|scope| format!("{scope}/{bare_name}") == name)
+                }
         })
         .collect();
     if matches.len() != 1 {
@@ -228,13 +233,15 @@ fn read_repository(root: &Path, selected: &Selection) -> io::Result<(Repository,
     } else {
         model_value["versions"][&selected.version]
             .as_str()
+            .or_else(|| model_value["orphanedVersions"][&selected.version].as_str())
             .or_else(|| {
                 (model_value["head"] == selected.version).then_some(selected.version.as_str())
             })
             .ok_or_else(|| invalid("component version is not in model"))?
     };
     let version_object = frozen(root, version_hash)?;
-    let manifest = outbound::read_object(&root.join(".bit/objects"), version_hash, "Version")?;
+    let objects_dir = crate::scope_path(root).join("objects");
+    let manifest = outbound::read_object(&objects_dir, version_hash, "Version")?;
     let mut objects = vec![model, version_object];
     if let Some(lane) = &selected.lane {
         let object = frozen(root, &lane.hash)?;
@@ -246,7 +253,8 @@ fn read_repository(root: &Path, selected: &Selection) -> io::Result<(Repository,
     Ok((Repository { index, objects, sources: Vec::new() }, manifest))
 }
 fn read_model(root: &Path, scope: &str, name: &str) -> io::Result<(Vec<u8>, Object, Value)> {
-    let index = fs::read(root.join(".bit/index.json"))?;
+    let scope_dir = crate::scope_path(root);
+    let index = fs::read(scope_dir.join("index.json"))?;
     let value: Value = serde_json::from_slice(&index)?;
     let rows = value["components"]
         .as_array()
@@ -254,15 +262,21 @@ fn read_model(root: &Path, scope: &str, name: &str) -> io::Result<(Vec<u8>, Obje
         .ok_or_else(|| invalid("scope index"))?;
     let matches: Vec<_> = rows
         .iter()
-        .filter(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+        .filter(|row| {
+            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            row["isSymlink"] == false
+                && row["id"]["name"] == name
+                && (row_scope == scope || row_scope.is_empty())
+        })
         .collect();
-    if matches.len() != 1 || matches[0]["isSymlink"] != false {
+    if matches.len() != 1 {
         return Err(invalid("component is not uniquely indexed"));
     }
     let model_hash = matches[0]["hash"].as_str().ok_or_else(|| invalid("Component hash"))?;
     let model = frozen(root, model_hash)?;
-    let model_value = outbound::read_object(&root.join(".bit/objects"), model_hash, "Component")?;
-    if model_value["scope"] != scope || model_value["name"] != name {
+    let model_value = outbound::read_object(&scope_dir.join("objects"), model_hash, "Component")?;
+    let model_scope = model_value["scope"].as_str().unwrap_or_default();
+    if (!model_scope.is_empty() && model_scope != scope) || model_value["name"] != name {
         return Err(invalid("Component model identity"));
     }
     Ok((index, model, model_value))
@@ -276,6 +290,7 @@ fn source_files(
     if manifest.is_empty() || manifest.len() > MAX_FILES {
         return Err(invalid("Version file count"));
     }
+    let objects_dir = crate::scope_path(root).join("objects");
     let mut seen = HashSet::new();
     let mut files = Vec::with_capacity(manifest.len());
     let mut sources = Vec::with_capacity(manifest.len());
@@ -290,7 +305,7 @@ fn source_files(
         sources.push(frozen(root, hash)?);
         let mut compressed = 0;
         let bytes = repository::source(
-            &root.join(".bit/objects"),
+            &objects_dir,
             merge_history::hash(hash)?,
             MAX_BYTES - total,
             &mut compressed,
@@ -302,8 +317,8 @@ fn source_files(
 }
 fn frozen(root: &Path, hash: &str) -> io::Result<Object> {
     merge_history::hash(hash)?;
-    let path = root
-        .join(".bit/objects")
+    let path = crate::scope_path(root)
+        .join("objects")
         .join(&hash[..2])
         .join(&hash[2..]);
     let kind = fs::symlink_metadata(&path)?.file_type();

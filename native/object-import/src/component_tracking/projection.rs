@@ -285,16 +285,15 @@ fn out_of_sync(
 fn latest_semantic(model: &Value) -> Option<String> {
     model["versions"]
         .as_object()
-        .and_then(|versions| {
-            versions
-                .keys()
-                .filter_map(|version| {
-                    node_semver::Version::parse(version)
-                        .ok()
-                        .map(|parsed| (parsed, version))
-                })
-                .max_by(|left, right| left.0.cmp(&right.0))
+        .into_iter()
+        .chain(model["orphanedVersions"].as_object())
+        .flat_map(serde_json::Map::keys)
+        .filter_map(|version| {
+            node_semver::Version::parse(version)
+                .ok()
+                .map(|parsed| (parsed, version))
         })
+        .max_by(|left, right| left.0.cmp(&right.0))
         .map(|(_, version)| version.clone())
 }
 

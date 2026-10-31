@@ -143,8 +143,7 @@ fn update_comp_json(
         return Err(Failure::Declined("merge state active".into()));
     }
     let content = fs::read_to_string(path)?;
-    let mut parsed: Value =
-        serde_json::from_str(&content).map_err(|err| Failure::Declined(err.to_string()))?;
+    let mut parsed: Value = bit_object_import::parse_jsonc(content.as_bytes())?;
     let current = parsed
         .get("extensions")
         .and_then(|ext| {

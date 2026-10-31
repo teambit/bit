@@ -56,11 +56,20 @@ fn components(
             let tags = material.model["versions"]
                 .as_object()
                 .ok_or_else(|| invalid("tag model versions"))?;
+            let all_tags: Vec<_> = tags
+                .keys()
+                .chain(
+                    material.model["orphanedVersions"]
+                        .as_object()
+                        .into_iter()
+                        .flat_map(serde_json::Map::keys),
+                )
+                .collect();
             let pending = next
                 .get(&material.identity)
                 .copied()
                 .unwrap_or(&Value::Null);
-            Ok(json!({"versions":tags.keys().collect::<Vec<_>>(),
+            Ok(json!({"versions":all_tags,
             "isAutoTag":material.participation.automatic && !material.participation.selected,
             "isAutoAddedRoot":params["autoAddedWorkspaceRoot"] == material.identity,"enteredVersion":entered.get(&material.identity),
             "nextVersion":pending["version"],"nextPreRelease":pending["preRelease"],"tagData":file::for_component(params.get("versionsFile"),&material.identity,params["autoAddedWorkspaceRoot"] == material.identity)?}))

@@ -32,7 +32,11 @@ pub(super) fn heads(diagnosis: &Diagnosis, scope: Option<&Path>) -> io::Result<V
     for row in models
         .into_iter()
         .flatten()
-        .filter(|row| row["isSymlink"] != true && row["id"]["scope"] == config["name"])
+        .filter(|row| {
+            row["isSymlink"] != true
+                && (row["id"]["scope"] == config["name"]
+                    || row["id"]["scope"].as_str().is_none_or(str::is_empty))
+        })
     {
         let (_, model) = object(scope, text(&row["hash"])?)?
             .ok_or_else(|| io::Error::other("scope index references a missing component object"))?;
@@ -78,6 +82,7 @@ fn identity(model: &Value) -> String {
         .map_or_else(|| name.into(), |scope| format!("{scope}/{name}"))
 }
 pub(super) fn orphans(diagnosis: &Diagnosis, scope: &Path) -> io::Result<Value> {
+    let index = read_index(scope)?;
     let mut orphans = Vec::new();
     let mut paths = Vec::new();
     for hash in references(scope)? {
@@ -88,8 +93,7 @@ pub(super) fn orphans(diagnosis: &Diagnosis, scope: &Path) -> io::Result<Value> 
             continue;
         }
         let id = json!({"scope":value["realScope"],"name":value["name"]});
-        let target = format!("{:x}", Sha1::digest(identity(&id).as_bytes()));
-        if object(scope, &target)?.is_none() {
+        if !symlink_target_exists(scope, &index, &id)? {
             orphans.push(json!({"_legacy":id}));
             paths.push(path(scope, &hash));
         }
@@ -108,6 +112,38 @@ pub(super) fn orphans(diagnosis: &Diagnosis, scope: &Path) -> io::Result<Value> 
             .join("\n"),
     );
     Ok(diagnosis.result(json!({"valid":orphans.is_empty(),"data":{"orphanSymlinks":orphans,"objectsToDelete":paths}}),format!(r#"the following refs points to non-existing components "{ids}""#),&treatment))
+}
+
+fn symlink_target_exists(scope: &Path, index: &Value, id: &Value) -> io::Result<bool> {
+    let target_scope = id["scope"].as_str().unwrap_or_default();
+    let target_name = id["name"].as_str().unwrap_or_default();
+    let rows = index
+        .as_array()
+        .or_else(|| index["components"].as_array());
+    for row in rows.into_iter().flatten() {
+        let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+        if row["isSymlink"] != true
+            && row["id"]["name"].as_str() == Some(target_name)
+            && (row_scope == target_scope || row_scope.is_empty() || target_scope.is_empty())
+            && let Some(hash) = row["hash"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+            && object(scope, hash)?.is_some()
+        {
+            return Ok(true);
+        }
+    }
+    let scoped = format!("{:x}", Sha1::digest(identity(id).as_bytes()));
+    if object(scope, &scoped)?.is_some() {
+        return Ok(true);
+    }
+    if !target_name.is_empty() {
+        let bare = format!("{:x}", Sha1::digest(target_name.as_bytes()));
+        if object(scope, &bare)?.is_some() {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 fn references(scope: &Path) -> io::Result<Vec<String>> {
     // Published Repository.listRefs uses a backslash glob on Windows and finds none.

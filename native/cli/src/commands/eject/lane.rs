@@ -101,16 +101,8 @@ fn resolve_main_version(models: &[Value], id: &str) -> io::Result<String> {
         .ok_or_else(|| {
             io::Error::other(format!(r#"unable to eject "{id}" as it has no main version"#))
         })?;
-    Ok(version_for_hash(&model["versions"], head_hash).unwrap_or_else(|| head_hash.to_owned()))
-}
-
-fn version_for_hash(versions: &Value, head_hash: &str) -> Option<String> {
-    for (ver, hash) in versions.as_object()? {
-        if hash.as_str() == Some(head_hash) {
-            return Some(ver.clone());
-        }
-    }
-    None
+    Ok(crate::commands::show_cmd::remote_show::find_tag_for_hash(model, head_hash)
+        .unwrap_or_else(|| head_hash.to_owned()))
 }
 
 fn eject_one_lane_component(

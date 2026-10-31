@@ -79,8 +79,12 @@ fn warnings(
 fn latest_tag<'a>(material: &'a Material, semver: &Value) -> io::Result<Option<&'a str>> {
     let tags =
         material.model["versions"].as_object().ok_or_else(|| invalid("tag warning versions"))?;
+    let orphaned = material.model["orphanedVersions"].as_object();
     let mut latest: Option<&str> = None;
-    for tag in tags.keys() {
+    for tag in tags
+        .keys()
+        .chain(orphaned.into_iter().flat_map(serde_json::Map::keys))
+    {
         let candidate =
             semver[tag].get("version").ok_or_else(|| invalid("tag stored semver metadata"))?;
         if latest.is_none()

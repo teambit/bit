@@ -276,9 +276,12 @@ fn resolve_scope_package_name(scope_dir: &Path, raw_id: &str) -> Option<String> 
     if kind != "Component" {
         return None;
     }
-    let ver_hash = match explicit_ver {
-        Some(ver) if ver != "latest" => comp_val["versions"][ver].as_str().unwrap_or(ver),
-        _ => comp_val["head"].as_str()?,
+    let ver_hash = match explicit_ver.filter(|ver| !ver.is_empty() && *ver != "latest") {
+        Some(ver) => comp_val["versions"][ver]
+            .as_str()
+            .or_else(|| comp_val["orphanedVersions"][ver].as_str())
+            .unwrap_or(ver),
+        None => comp_val["head"].as_str()?,
     };
     let (vkind, ver_val) = bit_object_import::read_scope_object(scope_dir, ver_hash).ok()??;
     if vkind != "Version" {

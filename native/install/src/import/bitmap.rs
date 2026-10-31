@@ -47,7 +47,7 @@ impl Id {
         Ok(Self {
             scope: scope.to_string(),
             name: name.to_string(),
-            version: version.filter(|version| !version.is_empty()),
+            version: version.filter(|version| !version.is_empty() && version != "latest"),
         })
     }
 }

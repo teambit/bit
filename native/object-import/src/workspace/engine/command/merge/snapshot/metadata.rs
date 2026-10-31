@@ -244,17 +244,17 @@ fn convert(value: &Value) -> io::Result<Js> {
 }
 
 pub(super) fn independent(input: &Input<'_>, batch: &[Input<'_>]) -> io::Result<()> {
-    for field in ["dependencies", "devDependencies", "flattenedDependencies"] {
-        let rows = input.material.version[field]
-            .as_array()
-            .ok_or_else(|| invalid("snap dependency rows"))?;
+    for field in
+        ["dependencies", "devDependencies", "flattenedDependencies", "flattenedDevDependencies"]
+    {
+        let Some(rows) = input.material.version[field].as_array() else {
+            if field == "flattenedDevDependencies" {
+                continue;
+            }
+            return Err(invalid("snap dependency rows"));
+        };
         for row in rows {
-            let id = if field == "flattenedDependencies" { row } else { &row["id"] };
-            let identity = format!(
-                "{}/{}",
-                id["scope"].as_str().unwrap_or_default(),
-                id["name"].as_str().unwrap_or_default(),
-            );
+            let identity = row_identity(row);
             if batch
                 .iter()
                 .any(|target| target.identity == identity)
@@ -264,6 +264,32 @@ pub(super) fn independent(input: &Input<'_>, batch: &[Input<'_>]) -> io::Result<
         }
     }
     Ok(())
+}
+
+fn row_identity(row: &Value) -> String {
+    if let Some(raw) = row
+        .as_str()
+        .or_else(|| row["id"].as_str())
+    {
+        return raw
+            .rsplit_once('@')
+            .map_or(raw, |(bare, _)| bare)
+            .to_owned();
+    }
+    let id = row
+        .get("id")
+        .filter(|sub| sub.is_object())
+        .unwrap_or(row);
+    let scope = id["scope"]
+        .as_str()
+        .or_else(|| row["scope"].as_str())
+        .unwrap_or_default();
+    let raw_name = id["name"]
+        .as_str()
+        .or_else(|| row["name"].as_str())
+        .unwrap_or_default();
+    let name = raw_name.rsplit_once('@').map_or(raw_name, |(bare, _)| bare);
+    format!("{scope}/{name}")
 }
 
 fn receipt_scalars(value: &Value) -> io::Result<()> {

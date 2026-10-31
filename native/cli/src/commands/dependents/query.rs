@@ -137,12 +137,7 @@ fn resolve_missing_scope_target(
 
 fn latest_version_label(comp_val: &Value) -> Option<String> {
     let head = comp_val["head"].as_str()?;
-    comp_val["versions"]
-        .as_object()
-        .and_then(|map| {
-            map.iter()
-                .find_map(|(tag, hash)| (hash.as_str() == Some(head)).then(|| tag.clone()))
-        })
+    crate::commands::show_cmd::remote_show::find_tag_for_hash(comp_val, head)
         .or_else(|| Some(head.to_owned()))
 }
 
@@ -335,41 +330,38 @@ fn collect_all_versions(comp_val: &Value) -> Vec<(String, String)> {
 }
 
 fn resolve_ver_hash(comp_val: &Value, ver: &str) -> Option<String> {
-    comp_val["versions"]
-        .get(ver)
-        .and_then(Value::as_str)
-        .or_else(|| comp_val["orphanedVersions"].get(ver).and_then(Value::as_str))
-        .map(str::to_owned)
-        .or_else(|| {
-            (ver.len() == 40 && ver.bytes().all(|byte| byte.is_ascii_hexdigit())).then(|| {
-                ver.to_owned()
-            })
-        })
+    crate::commands::graph_cmd::builder::resolve_ver_hash(comp_val, ver)
 }
 
 pub(super) fn add_version_edges(graph: &mut DepGraph, node_id: &str, ver_val: &Value) {
     graph.add_node(node_id.to_owned());
-    let groups =
-        [("dependencies", "prod"), ("devDependencies", "dev"), ("peerDependencies", "prod")];
+    let groups = [
+        ("dependencies", "prod"),
+        ("devDependencies", "dev"),
+        ("peerDependencies", "prod"),
+        ("extensionDependencies", "dev"),
+    ];
     for (field, dep_type) in groups {
         let Some(arr) = ver_val[field].as_array() else { continue };
         for item in arr {
-            if let Some(dep_id) = format_dep_id(&item["id"]) {
+            if let Some(dep_id) = crate::commands::graph_cmd::builder::format_dep_id(item) {
                 graph.add_edge(node_id.to_owned(), dep_id, dep_type);
             }
         }
     }
+    add_extension_edges(graph, node_id, ver_val);
 }
 
-fn format_dep_id(id_val: &Value) -> Option<String> {
-    let name = id_val["name"].as_str()?;
-    let ver = id_val["version"].as_str().unwrap_or_default();
-    let base = match id_val["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
+fn add_extension_edges(graph: &mut DepGraph, node_id: &str, ver_val: &Value) {
+    for ext in ver_val["extensions"]
+        .as_array()
+        .into_iter()
+        .flatten()
     {
-        Some(scope) => format!("{scope}/{name}"),
-        None => name.to_owned(),
-    };
-    Some(if ver.is_empty() { base } else { format!("{base}@{ver}") })
+        if let Some(ext_id) = ext.get("extensionId")
+            && let Some(dep_id) = crate::commands::graph_cmd::builder::format_dep_id(ext_id)
+        {
+            graph.add_edge(node_id.to_owned(), dep_id, "dev");
+        }
+    }
 }

@@ -178,7 +178,7 @@ pub(super) fn component_controls(
         for (name, key) in [("component.json", "config"), ("package.json", "packageJson")] {
             let bytes = proof::read(&request.root.join(directory).join(name), proofs)?;
             let value = bytes
-                .map(|bytes| serde_json::from_slice::<Value>(&bytes).map_err(io::Error::other))
+                .map(|bytes| crate::recovery::jsonc::parse(&bytes))
                 .transpose()?
                 .unwrap_or(Value::Null);
             if value != target[key] {

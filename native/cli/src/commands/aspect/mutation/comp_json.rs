@@ -12,11 +12,15 @@ pub(super) fn set_in_comp_json(
     merge: bool,
 ) -> Result<CompJsonEdit, Failure> {
     let content = fs::read_to_string(&path)?;
-    let mut parsed: Value =
-        serde_json::from_str(&content).map_err(|err| Failure::Declined(err.to_string()))?;
-    let Some(ext_obj) = parsed["extensions"].as_object_mut() else {
-        return Err(Failure::Declined("component.json extensions missing".into()));
-    };
+    let mut parsed: Value = bit_object_import::parse_jsonc(content.as_bytes())?;
+    let root_obj = parsed
+        .as_object_mut()
+        .ok_or_else(|| Failure::Declined("component.json root object".into()))?;
+    let ext_obj = root_obj
+        .entry("extensions")
+        .or_insert_with(|| json!({}))
+        .as_object_mut()
+        .ok_or_else(|| Failure::Declined("component.json extensions missing".into()))?;
     if let Some(found_key) = find_matching_aspect_key(ext_obj, bare_aspect) {
         let new_cfg = match (merge, ext_obj.get(&found_key)) {
             (true, Some(existing)) if existing.is_object() && config.is_object() => {
@@ -74,11 +78,15 @@ pub(super) fn unset_in_comp_json(
     exist_aspect_id: &str,
 ) -> Result<CompJsonEdit, Failure> {
     let content = fs::read_to_string(&path)?;
-    let mut parsed: Value =
-        serde_json::from_str(&content).map_err(|err| Failure::Declined(err.to_string()))?;
-    let Some(ext_obj) = parsed["extensions"].as_object_mut() else {
-        return Err(Failure::Declined("component.json extensions missing".into()));
-    };
+    let mut parsed: Value = bit_object_import::parse_jsonc(content.as_bytes())?;
+    let root_obj = parsed
+        .as_object_mut()
+        .ok_or_else(|| Failure::Declined("component.json root object".into()))?;
+    let ext_obj = root_obj
+        .entry("extensions")
+        .or_insert_with(|| json!({}))
+        .as_object_mut()
+        .ok_or_else(|| Failure::Declined("component.json extensions missing".into()))?;
     if let Some(found_key) = find_matching_aspect_key(ext_obj, bare_aspect) {
         ext_obj.remove(&found_key);
     } else {
@@ -86,6 +94,52 @@ pub(super) fn unset_in_comp_json(
     }
     let bytes = serialize_json_preserving_newline(&content, &parsed)?;
     Ok(CompJsonEdit { path, bytes })
+}
+
+pub(in crate::commands) fn update_in_comp_json(
+    path: PathBuf,
+    bare_aspect: &str,
+    target_aspect_id: &str,
+    cfg_val: &Value,
+) -> Result<CompJsonEdit, Failure> {
+    let content = fs::read_to_string(&path)?;
+    let mut parsed: Value = bit_object_import::parse_jsonc(content.as_bytes())?;
+    let root_obj = parsed
+        .as_object_mut()
+        .ok_or_else(|| Failure::Declined("component.json root object".into()))?;
+    let ext_obj = root_obj
+        .entry("extensions")
+        .or_insert_with(|| json!({}))
+        .as_object_mut()
+        .ok_or_else(|| Failure::Declined("component.json extensions missing".into()))?;
+    if let Some(old_key) = find_matching_aspect_key(ext_obj, bare_aspect) {
+        ext_obj.remove(&old_key);
+    }
+    ext_obj.insert(target_aspect_id.to_owned(), cfg_val.clone());
+    let bytes = serialize_json_preserving_newline(&content, &parsed)?;
+    Ok(CompJsonEdit { path, bytes })
+}
+
+pub(in crate::commands) fn update_in_bitmap_row(
+    bitmap_val: &mut Value,
+    entry: &BitmapEntry,
+    bare_aspect: &str,
+    target_aspect_id: &str,
+    cfg_val: &Value,
+) -> Result<(), Failure> {
+    let row = find_bitmap_row_mut(bitmap_val, entry)?;
+    let row_obj =
+        row.as_object_mut().ok_or_else(|| Failure::Declined("bitmap row object".into()))?;
+    let cfg = row_obj
+        .entry("config")
+        .or_insert_with(|| json!({}));
+    let cfg_obj =
+        cfg.as_object_mut().ok_or_else(|| Failure::Declined("bitmap config object".into()))?;
+    if let Some(old_key) = find_matching_aspect_key(cfg_obj, bare_aspect) {
+        cfg_obj.remove(&old_key);
+    }
+    cfg_obj.insert(target_aspect_id.to_owned(), cfg_val.clone());
+    Ok(())
 }
 
 pub(super) fn unset_in_bitmap_row(

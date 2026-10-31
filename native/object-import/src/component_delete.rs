@@ -275,6 +275,7 @@ fn model_state(root: &Path, identity: &str, version: &str) -> io::Result<Reposit
     }
     let hash = value["versions"][version]
         .as_str()
+        .or_else(|| value["orphanedVersions"][version].as_str())
         .or_else(|| (version.len() == 40).then_some(version))
         .ok_or_else(|| invalid("component version is not in model"))?;
     crate::merge_history::hash(hash)?;

@@ -95,7 +95,7 @@ fn sanitized(config: &Value) -> io::Result<Value> {
 }
 
 fn file(root: &Path, lane: Option<(&str, &str)>) -> io::Result<std::path::PathBuf> {
-    let base = root.join(".bit/staged-config");
+    let base = crate::scope_path(root).join("staged-config");
     let Some((scope, name)) = lane else {
         return Ok(base.join("main.json"));
     };

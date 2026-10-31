@@ -154,7 +154,7 @@ fn models(request: &Request) -> io::Result<()> {
     let mut known = HashSet::new();
     let mut histories = HashSet::new();
     for model in &request.models {
-        let identity = model::identity(model)?;
+        let identity = model::identity(model, request)?;
         if !known.insert(identity) {
             return Err(invalid("status duplicate model"));
         }

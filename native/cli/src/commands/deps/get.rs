@@ -372,23 +372,18 @@ fn scope_child_deps_in_dir(
     }
     let ver_val = load_cat_component(scope_root, scope_dir, comp_id)?;
     let mut children = Vec::new();
-    for (field, kind) in [("dependencies", "prod"), ("devDependencies", "dev")] {
+    for (field, kind) in [
+        ("dependencies", "prod"),
+        ("devDependencies", "dev"),
+        ("peerDependencies", "peer"),
+        ("extensionDependencies", "dev"),
+    ] {
         let Some(arr) = ver_val[field].as_array() else { continue };
         for item in arr {
-            if let Some(id_str) = format_scope_dep_id(&item["id"]) {
+            if let Some(id_str) = crate::commands::graph_cmd::builder::format_dep_id(item) {
                 children.push((id_str, kind));
             }
         }
     }
     Some(children)
-}
-
-fn format_scope_dep_id(id_val: &Value) -> Option<String> {
-    let name = id_val["name"].as_str()?;
-    let ver = id_val["version"].as_str().unwrap_or_default();
-    let base = match id_val["scope"].as_str() {
-        Some(scope) if !scope.is_empty() => format!("{scope}/{name}"),
-        _ => name.to_owned(),
-    };
-    Some(if ver.is_empty() { base } else { format!("{base}@{ver}") })
 }

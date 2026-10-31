@@ -168,12 +168,16 @@ pub(super) fn extend_model_targets(context: &Value, targets: &mut Vec<Value>) {
 }
 
 fn version_ref(model: &Value, version: &str) -> io::Result<String> {
-    let reference = model["orphanedVersions"]
-        .get(version)
-        .or_else(|| model["versions"].get(version))
-        .and_then(Value::as_str)
-        .or_else(|| (crate::merge_history::hash(version).is_ok()).then_some(version))
-        .ok_or_else(|| invalid("checkout scope listed version absent"))?;
+    let reference = if version.is_empty() || version == "latest" {
+        model["head"].as_str()
+    } else {
+        model["orphanedVersions"]
+            .get(version)
+            .or_else(|| model["versions"].get(version))
+            .and_then(Value::as_str)
+            .or_else(|| (crate::merge_history::hash(version).is_ok()).then_some(version))
+    }
+    .ok_or_else(|| invalid("checkout scope listed version absent"))?;
     crate::merge_history::hash(reference)?;
     Ok(reference.to_owned())
 }

@@ -27,17 +27,7 @@ pub(super) fn status_pending(
         return Ok(false);
     }
     let identity = text(target.get("identity"))?;
-    let models = context["models"].as_array().ok_or_else(|| decline("status models"))?;
-    if models
-        .iter()
-        .any(|model| {
-            let (Some(scope), Some(name)) = (model["scope"].as_str(), model["name"].as_str())
-            else {
-                return false;
-            };
-            format!("{scope}/{name}") == identity
-        })
-    {
+    if super::policy::model_of(context, identity).is_some() {
         return Ok(false);
     }
     record_status_invalid(

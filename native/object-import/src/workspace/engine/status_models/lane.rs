@@ -24,7 +24,7 @@ pub(super) fn read(root: &Path, reader: &Reader<'_>, id: &str) -> io::Result<Opt
         return Ok(None);
     }
     let lane = local_object(root, reader, scope, name)?;
-    let mut heads = component_heads(&lane)?;
+    let mut heads = component_heads(&lane, scope)?;
     let forked_from = forked_from(&lane)?;
     let update_dependents = update_dependents(&lane)?;
     for (identity, hash) in &update_dependents {
@@ -134,17 +134,20 @@ fn local_object(root: &Path, reader: &Reader<'_>, scope: &str, name: &str) -> io
     };
     let row = rows
         .iter()
-        .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+        .find(|row| {
+            row["isSymlink"] != true && row["id"]["scope"] == scope && row["id"]["name"] == name
+        })
         .ok_or_else(|| invalid("status current lane missing"))?;
     let hash = row["hash"].as_str().ok_or_else(|| invalid("status lane hash"))?;
     let lane = reader.read(hash, "Lane")?;
-    if lane["scope"] != scope || lane["name"] != name {
+    let lane_scope = lane["scope"].as_str().unwrap_or_default();
+    if (!lane_scope.is_empty() && lane_scope != scope) || lane["name"] != name {
         return Err(invalid("status complex lane requires canonical loading"));
     }
     Ok(lane)
 }
 
-fn component_heads(lane: &Value) -> io::Result<HashMap<String, String>> {
+fn component_heads(lane: &Value, default_scope: &str) -> io::Result<HashMap<String, String>> {
     let components =
         lane["components"].as_array().ok_or_else(|| invalid("status lane components"))?;
     if components.len() > 4096 {
@@ -155,7 +158,7 @@ fn component_heads(lane: &Value) -> io::Result<HashMap<String, String>> {
         let component_scope = row["id"]["scope"]
             .as_str()
             .filter(|scope| !scope.is_empty())
-            .ok_or_else(|| invalid("status lane component scope"))?;
+            .unwrap_or(default_scope);
         let component_name = row["id"]["name"]
             .as_str()
             .filter(|name| !name.is_empty())

@@ -193,13 +193,11 @@ pub(in crate::workspace::engine) fn read_file_remote(
         raw: Budget::new(32 * 1024 * 1024),
         packed: Budget::new(32 * 1024 * 1024),
     };
-    let hash = crate::validate::hexadecimal(&Sha1::digest(identity.as_bytes()));
-    let model = match reader.read(&hash, "Component") {
-        Ok(model) => model,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
-        Err(error) => return Err(error),
+    let Some(model) = read_remote_component(path, &reader, scope, name, identity)? else {
+        return Ok(Vec::new());
     };
-    if model["scope"] != scope || model["name"] != name {
+    let model_scope = model["scope"].as_str().unwrap_or_default();
+    if (!model_scope.is_empty() && model_scope != scope) || model["name"] != name {
         return Err(invalid("file remote log model identity"));
     }
     let Some(head) = model["head"].as_str() else { return Ok(Vec::new()) };
@@ -208,6 +206,28 @@ pub(in crate::workspace::engine) fn read_file_remote(
     rows.iter()
         .map(file_remote_row)
         .collect()
+}
+
+fn read_remote_component(
+    path: &Path,
+    reader: &Reader<'_>,
+    scope: &str,
+    name: &str,
+    identity: &str,
+) -> io::Result<Option<Value>> {
+    let mut hashes =
+        crate::workspace::engine::command::inbound::details::candidate_component_hashes(
+            path, scope, name,
+        );
+    hashes.push(crate::validate::hexadecimal(&Sha1::digest(identity.as_bytes())));
+    for hash in hashes {
+        match reader.read(&hash, "Component") {
+            Ok(model) => return Ok(Some(model)),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error),
+        }
+    }
+    Ok(None)
 }
 
 fn file_remote_row(row: &Value) -> io::Result<Value> {

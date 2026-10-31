@@ -4,18 +4,26 @@ use crate::commands::status::js::{array, decline, nullish, truthy};
 use serde_json::Value;
 use std::io;
 
-pub(super) fn model_of<'c>(context: &'c Value, identity: &str) -> Option<&'c Value> {
+pub(in crate::commands::status) fn model_of<'c>(
+    context: &'c Value,
+    identity: &str,
+) -> Option<&'c Value> {
     let models = context.get("models").and_then(Value::as_array)?;
+    let (_, target_name) = identity
+        .split_once('/')
+        .unwrap_or(("", identity));
     models
         .iter()
         .find(|model| {
-            let part = |key| {
-                model
-                    .get(key)
-                    .and_then(Value::as_str)
-                    .unwrap_or("undefined")
-            };
-            format!("{}/{}", part("scope"), part("name")) == identity
+            let scope = model
+                .get("scope")
+                .and_then(Value::as_str)
+                .unwrap_or_default();
+            let name = model
+                .get("name")
+                .and_then(Value::as_str)
+                .unwrap_or_default();
+            format!("{scope}/{name}") == identity || (scope.is_empty() && name == target_name)
         })
 }
 
@@ -40,14 +48,18 @@ pub(super) fn stored_version<'c>(
         return Ok(projected);
     }
     let tag = tagged.unwrap_or_default();
-    let reference = if is_hash(tag) {
+    let reference = if tag == "latest" {
+        model
+            .and_then(|model_val| nullish(model_val.get("head")))
+            .cloned()
+    } else if is_hash(tag) {
         Some(Value::String(tag.to_string()))
     } else {
         let lookup = |field: &str| {
             nullish(
                 model
-                    .and_then(|m| m.get(field))
-                    .and_then(|m| m.get(tag)),
+                    .and_then(|model_val| model_val.get(field))
+                    .and_then(|versions_val| versions_val.get(tag)),
             )
         };
         lookup("orphanedVersions").or_else(|| lookup("versions")).cloned()
@@ -69,6 +81,9 @@ fn validate_unscoped_model(target: &Value, model: &Value) -> io::Result<()> {
         && target["scoped"] != true
         && (model["head"].is_string()
             || model["versions"]
+                .as_object()
+                .is_some_and(|versions| !versions.is_empty())
+            || model["orphanedVersions"]
                 .as_object()
                 .is_some_and(|versions| !versions.is_empty()))
         && !model["state"]["versions"]
@@ -95,21 +110,34 @@ pub(super) fn validate_harmony_version(version: Option<&Value>) -> io::Result<()
         return Err(decline("status legacy component"));
     }
     for dependency in dependencies(Some(version))? {
-        let id = dependency.get("id");
-        let part = |key| {
-            id.and_then(|id| id.get(key))
-                .and_then(Value::as_str)
-                .filter(|value| !value.is_empty())
-        };
-        if !truthy(id) || part("scope").is_none() || part("name").is_none() {
+        if !is_valid_harmony_dep_id(dependency) {
             return Err(decline("status unscoped dependency"));
         }
-        let paths = dependency.get("relativePaths").and_then(Value::as_array);
-        if paths.is_none_or(|paths| !paths.is_empty()) {
+        if let Some(paths) = nullish(dependency.get("relativePaths"))
+            && paths
+                .as_array()
+                .is_none_or(|paths| !paths.is_empty())
+        {
             return Err(decline("status relative dependency paths"));
         }
     }
     Ok(())
+}
+
+fn is_valid_harmony_dep_id(dependency: &Value) -> bool {
+    let id = dependency.get("id").unwrap_or(dependency);
+    if let Some(raw) = id.as_str() {
+        return raw
+            .split_once('/')
+            .is_some_and(|(scope, rest)| !scope.is_empty() && !rest.is_empty());
+    }
+    let part = |key| {
+        id.get(key)
+            .or_else(|| dependency.get(key))
+            .and_then(Value::as_str)
+            .filter(|value| !value.is_empty())
+    };
+    truthy(Some(id)) && part("scope").is_some() && part("name").is_some()
 }
 
 /// `[...(version?.dependencies ?? []), ...(version?.devDependencies ?? [])]`.

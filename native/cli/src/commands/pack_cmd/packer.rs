@@ -72,9 +72,8 @@ fn resolve_target_scope(cwd: &Path, ws_root: Option<&Path>, options: &Options) -
     if dir.join("scope.json").is_file() || dir.join("objects").is_dir() {
         Some(dir)
     } else {
-        dir.join(".bit")
-            .is_dir()
-            .then(|| dir.join(".bit"))
+        let scope_dir = workspace::scope_path(&dir);
+        scope_dir.is_dir().then_some(scope_dir)
     }
 }
 
@@ -198,8 +197,12 @@ fn resolve_from_scope(
 }
 
 fn resolve_scope_version(comp_val: &Value, explicit_ver: Option<&str>) -> Option<(String, String)> {
-    if let Some(req) = explicit_ver {
-        if let Some(hash) = comp_val["versions"].get(req).and_then(Value::as_str) {
+    if let Some(req) = explicit_ver.filter(|ver| !ver.is_empty() && *ver != "latest") {
+        if let Some(hash) = comp_val["versions"]
+            .get(req)
+            .and_then(Value::as_str)
+            .or_else(|| comp_val["orphanedVersions"].get(req).and_then(Value::as_str))
+        {
             return Some((req.to_owned(), hash.to_owned()));
         }
         if is_hash(req) {
@@ -208,12 +211,7 @@ fn resolve_scope_version(comp_val: &Value, explicit_ver: Option<&str>) -> Option
         return None;
     }
     let head = comp_val["head"].as_str()?;
-    let tag = comp_val["versions"]
-        .as_object()
-        .and_then(|vers| {
-            vers.iter()
-                .find_map(|(tag, val)| (val.as_str() == Some(head)).then(|| tag.clone()))
-        })
+    let tag = crate::commands::show_cmd::remote_show::find_tag_for_hash(comp_val, head)
         .unwrap_or_else(|| head.to_owned());
     Some((tag, head.to_owned()))
 }

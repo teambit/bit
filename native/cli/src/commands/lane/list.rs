@@ -345,13 +345,8 @@ fn bare_main_components(engine: &mut Engine, root: &Path) -> io::Result<Vec<Valu
         .filter_map(|model| {
             let head = model["head"].as_str()?;
             let identity = format!("{}/{}", model["scope"].as_str()?, model["name"].as_str()?);
-            let label = model["versions"]
-                .as_object()
-                .and_then(|tags| {
-                    tags.iter()
-                        .find(|(_, hash)| hash.as_str() == Some(head))
-                })
-                .map_or(head, |(tag, _)| tag.as_str());
+            let label = crate::commands::show_cmd::remote_show::find_tag_for_hash(model, head)
+                .unwrap_or_else(|| head.to_owned());
             Some(json!({"id":format!("{identity}@{label}"),"head":label}))
         })
         .collect())
@@ -399,13 +394,8 @@ fn main_components(
             })
             .ok_or_else(|| decline("a component without a model"))?;
         let Some(head) = model["head"].as_str() else { continue };
-        let label = model["versions"]
-            .as_object()
-            .and_then(|tags| {
-                tags.iter()
-                    .find(|(_, hash)| hash.as_str() == Some(head))
-            })
-            .map_or(head, |(tag, _)| tag.as_str());
+        let label = crate::commands::show_cmd::remote_show::find_tag_for_hash(model, head)
+            .unwrap_or_else(|| head.to_owned());
         components.push(json!({"id": format!("{}@{label}", entry.identity), "head": label}));
     }
     Ok(components)

@@ -74,15 +74,16 @@ fn parse_options(args: &[&str]) -> Option<Options> {
                 )?;
                 break;
             }
-            "-p" | "--propagate" => opts.propagate = consume_bool_flag(args, &mut idx),
-            "--propagate=true" => opts.propagate = true,
+            "-p" | "--propagate" | "--propagate=true" => {
+                opts.propagate = consume_bool_flag(args, &mut idx);
+            }
             "--propagate=false" => opts.propagate = false,
-            "-o" | "--override" => opts.override_existing = consume_bool_flag(args, &mut idx),
-            "--override=true" => opts.override_existing = true,
+            "-o" | "--override" | "--override=true" => {
+                opts.override_existing = consume_bool_flag(args, &mut idx);
+            }
             "--override=false" => opts.override_existing = false,
             "-j" | "--json" | "--json=true" => opts.json = true,
-            "--json=false" => opts.json = false,
-            "--no-color" => {}
+            "--json=false" | "--no-color" => {}
             val if !val.starts_with('-') && !val.is_empty() && opts.pattern.is_empty() => {
                 val.clone_into(&mut opts.pattern);
             }
@@ -94,10 +95,11 @@ fn parse_options(args: &[&str]) -> Option<Options> {
 }
 
 fn apply_short_flags(arg: &str, opts: &mut Options) -> Option<()> {
-    let flags = arg
+    for ch in arg
         .strip_prefix('-')
-        .filter(|flags| !flags.is_empty() && !flags.starts_with('-'))?;
-    for ch in flags.chars() {
+        .filter(|flags| !flags.is_empty() && !flags.starts_with('-'))?
+        .chars()
+    {
         match ch {
             'p' => opts.propagate = true,
             'o' => opts.override_existing = true,
@@ -109,6 +111,9 @@ fn apply_short_flags(arg: &str, opts: &mut Options) -> Option<()> {
 }
 
 fn consume_bool_flag(args: &[&str], idx: &mut usize) -> bool {
+    if args[*idx].contains('=') {
+        return true;
+    }
     if let Some(val @ ("true" | "false")) = args.get(*idx + 1).copied() {
         *idx += 1;
         return val == "true";
@@ -162,14 +167,26 @@ fn prepare(root: &Path, opts: &Options, chalk: Chalk) -> Result<Prepared, Failur
     {
         return Err(Failure::Declined("merge state active".into()));
     }
-    let workspace_bytes = fs::read(root.join("workspace.jsonc"))?;
     let bitmap_before = fs::read(root.join(".bitmap"))?;
-    let workspace_val = bit_object_import::parse_jsonc(&workspace_bytes)?;
     let mut bitmap_val = bit_object_import::parse_jsonc(&bitmap_before)?;
-    let default_scope = workspace_default_scope(&workspace_val)?;
+    let default_scope = workspace_default_scope(&bit_object_import::parse_jsonc(&fs::read(
+        root.join("workspace.jsonc"),
+    )?)?)?;
     let bitmap = Bitmap::load(root, Some(&default_scope))?;
     let matched = selection::resolve_pattern_entries(root, &bitmap, &opts.pattern, chalk)?;
-    let ctx = build_prepare_ctx(root, &bitmap, &default_scope, opts)?;
+    let ctx = PrepareCtx {
+        root,
+        bitmap: &bitmap,
+        default_scope: &default_scope,
+        opts,
+        objects: ScopeObjects::new(&workspace::scope_path(root)),
+        core_ids: serde_json::from_str(CORE_ASPECT_IDS)
+            .map_err(|err| Failure::Declined(err.to_string()))?,
+        ws_ids: bitmap.entries
+            .iter()
+            .map(|entry| entry.id.clone())
+            .collect(),
+    };
     let (files, bitmap_changed) = prepare_selected(&ctx, &mut bitmap_val, &matched)?;
     Ok(Prepared { root: root.to_path_buf(), files, bitmap_before, bitmap_val, bitmap_changed })
 }
@@ -187,22 +204,6 @@ fn prepare_selected(
         files.push(file);
     }
     Ok((files, bitmap_changed))
-}
-
-fn build_prepare_ctx<'a>(
-    root: &'a Path,
-    bitmap: &'a Bitmap,
-    default_scope: &'a str,
-    opts: &'a Options,
-) -> Result<PrepareCtx<'a>, Failure> {
-    let core_ids =
-        serde_json::from_str(CORE_ASPECT_IDS).map_err(|err| Failure::Declined(err.to_string()))?;
-    let ws_ids = bitmap.entries
-        .iter()
-        .map(|entry| entry.id.clone())
-        .collect();
-    let objects = ScopeObjects::new(&workspace::scope_path(root));
-    Ok(PrepareCtx { root, bitmap, default_scope, opts, objects, core_ids, ws_ids })
 }
 
 fn prepare_entry(
@@ -234,24 +235,23 @@ fn render_ejected_file(
     opts: &Options,
     extensions: &Value,
 ) -> Result<EjectedFile, Failure> {
-    let comp_id = match entry.id.version
+    let mut comp_id = json!({ "scope": scope, "name": entry.id.name });
+    if let Some(ver) = entry.id.version
         .as_deref()
         .filter(|ver| !ver.is_empty())
     {
-        Some(ver) => json!({ "scope": scope, "name": entry.id.name, "version": ver }),
-        None => json!({ "scope": scope, "name": entry.id.name }),
-    };
+        comp_id["version"] = json!(ver);
+    }
     let comp_json =
         json!({ "componentId": comp_id, "propagate": opts.propagate, "extensions": extensions });
     let json_str =
         serde_json::to_string_pretty(&comp_json).map_err(|err| Failure::Declined(err.to_string()))?;
-    let rel_path = Path::new(&entry.root_dir)
-        .join("component.json")
-        .to_string_lossy()
-        .into_owned();
     Ok(EjectedFile {
         abs_path: abs_path.to_path_buf(),
-        rel_path,
+        rel_path: Path::new(&entry.root_dir)
+            .join("component.json")
+            .to_string_lossy()
+            .into_owned(),
         bytes: format!("{json_str}\n").into_bytes(),
     })
 }
@@ -274,14 +274,8 @@ fn load_existing_comp_json(
     let comp_id = existing["componentId"]
         .as_object()
         .ok_or_else(|| Failure::Declined("missing componentId in component.json".into()))?;
-    let invalid = ["scope", "name"]
-        .iter()
-        .any(|key| {
-            comp_id
-                .get(*key)
-                .and_then(Value::as_str)
-                .is_none_or(str::is_empty)
-        })
+    let invalid = comp_id["scope"].as_str().is_none_or(str::is_empty)
+        || comp_id["name"].as_str().is_none_or(str::is_empty)
         || existing.get("defaultScope").is_some()
         || !existing["extensions"].is_object();
     (!invalid)
@@ -314,8 +308,7 @@ fn build_ejected_extensions(
         }
     }
     let merged = merger.finish();
-    let cfg_map = aspects::to_config(&merged);
-    Ok(Value::Object(strip_local_env_version(ctx.bitmap, cfg_map)))
+    Ok(Value::Object(strip_local_env_version(ctx.bitmap, aspects::to_config(&merged))))
 }
 
 fn load_version_extensions(
@@ -333,9 +326,14 @@ fn load_version_extensions(
         ver.to_owned()
     } else {
         let model = super::lint_cmd::read_model_object(objects, scope, &entry.id.name)?;
-        model["versions"]
-            .get(ver)
-            .and_then(Value::as_str)
+        let resolved = if ver == "latest" {
+            model["head"].as_str()
+        } else {
+            model["versions"][ver]
+                .as_str()
+                .or_else(|| model["orphanedVersions"][ver].as_str())
+        };
+        resolved
             .map(str::to_owned)
             .ok_or_else(|| Failure::Declined("missing version in model on eject-conf".into()))?
     };
@@ -399,25 +397,23 @@ impl Prepared {
 
     fn write_and_json(self) -> io::Result<Value> {
         self.write_files()?;
-        let arr = self.files
-            .into_iter()
-            .map(|file| json!({ "configPath": file.abs_path.to_string_lossy() }))
-            .collect::<Vec<_>>();
-        Ok(Value::Array(arr))
+        Ok(Value::Array(
+            self.files
+                .into_iter()
+                .map(|file| json!({ "configPath": file.abs_path.to_string_lossy() }))
+                .collect(),
+        ))
     }
 
     fn commit(self, chalk: Chalk) -> io::Result<Report> {
         self.write_files()?;
         let formatter = Formatter::new(chalk);
-        let items = self.files
-            .iter()
-            .map(|file| formatter.item(&file.rel_path))
-            .collect::<Vec<_>>();
-        let data = format!(
-            "{}\n{}",
-            formatter.success_summary("ejected config to the following path(s)"),
-            items.join("\n"),
+        let mut lines = vec![formatter.success_summary("ejected config to the following path(s)")];
+        lines.extend(
+            self.files
+                .iter()
+                .map(|file| formatter.item(&file.rel_path)),
         );
-        Ok(Report { data, code: 0, details: None })
+        Ok(Report { data: lines.join("\n"), code: 0, details: None })
     }
 }

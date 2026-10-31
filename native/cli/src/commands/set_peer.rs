@@ -210,8 +210,7 @@ pub(in crate::commands) fn load_dep_resolver_config(
     if !entry.root_dir.is_empty() {
         let comp_json_path = root.join(&entry.root_dir).join("component.json");
         if comp_json_path.is_file() {
-            let parsed: Value = serde_json::from_slice(&fs::read(&comp_json_path)?)
-                .map_err(|err| Failure::Declined(err.to_string()))?;
+            let parsed: Value = bit_object_import::parse_jsonc(&fs::read(&comp_json_path)?)?;
             comp_json_propagate = parsed["propagate"].as_bool().unwrap_or(false);
             if let Some((_, val)) =
                 super::update_cmd::aspect_entry(&parsed["extensions"], DEP_RESOLVER_ID)

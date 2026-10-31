@@ -199,6 +199,11 @@ fn eject_one_component(
     let scope = row["scope"]
         .as_str()
         .filter(|val| !val.is_empty())
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })
         .or_else(|| key_id.split_once('/').map(|(prefix, _)| prefix))
         .unwrap_or_default();
     let version = bitmap_row_version(&key, &row);

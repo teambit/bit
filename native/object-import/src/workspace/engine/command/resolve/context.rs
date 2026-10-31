@@ -279,7 +279,9 @@ fn validate_extensions(context: &Value) -> io::Result<()> {
         {
             let identity = row
                 .get("name")
+                .or_else(|| row.get("legacyId"))
                 .or_else(|| row.get("extensionId"))
+                .or_else(|| row.get("id"))
                 .ok_or_else(|| invalid("resolve extension identity"))?;
             if !seen.insert(identity.to_string()) {
                 return Err(invalid("resolve duplicate extension identity"));

@@ -14,7 +14,12 @@ pub(super) fn validate(
     let index: Value = serde_json::from_slice(&bytes)?;
     let objects = crate::scope_path(root).join("objects");
     let references = references(&objects, &index, reads)?;
-    let model = proofs::object(&objects, &super::object_hash(identity), "Component", reads)?;
+    let (scope, name) = identity
+        .split_once('/')
+        .unwrap_or(("", identity));
+    let model_hash = super::indexed_hash(&index, "components", scope, name)
+        .unwrap_or_else(|_| super::object_hash(identity));
+    let model = proofs::object(&objects, &model_hash, "Component", reads)?;
     for hash in removed.iter().rev() {
         let label = tag(&model, hash);
         let dependents = immediate(&objects, &references, identity, &label, reads)?;
@@ -43,14 +48,12 @@ fn immediate(
             Err(error) if error.kind() == io::ErrorKind::NotFound => continue,
             Err(error) => return Err(error),
         };
-        if version["flattenedDependencies"]
-            .as_array()
-            .is_some_and(|rows| {
-                rows.iter()
-                    .any(|row| dependency_id(row).as_deref() == Some(target.as_str()))
-            })
-            && !found.contains(id)
-        {
+        let has_dep = ["flattenedDependencies", "flattenedDevDependencies"]
+            .into_iter()
+            .filter_map(|field| version[field].as_array())
+            .flatten()
+            .any(|row| dependency_id(row).as_deref() == Some(target.as_str()));
+        if has_dep && !found.contains(id) {
             found.push(id.clone());
         }
     }
@@ -68,17 +71,16 @@ fn references(
         .or_else(|| index.as_array())
         .ok_or_else(|| invalid("lane dependent components"))?
     {
+        if row["isSymlink"] == true {
+            continue;
+        }
         let hash = row["hash"].as_str().ok_or_else(|| invalid("lane dependent model hash"))?;
         let model = proofs::object(objects, hash, "Component", reads)?;
-        let identity = format!(
-            "{}/{}",
-            model["scope"].as_str().ok_or_else(|| invalid("lane dependent scope"))?,
-            model["name"].as_str().ok_or_else(|| invalid("lane dependent name"))?,
-        );
+        let identity = dependent_identity(&model, row)?;
         let mut versions = model["versions"]
             .as_object()
-            .ok_or_else(|| invalid("lane dependent versions"))?
-            .clone();
+            .cloned()
+            .unwrap_or_default();
         if let Some(orphaned) = model["orphanedVersions"].as_object() {
             versions.extend(orphaned.clone());
         }
@@ -94,14 +96,35 @@ fn references(
     Ok(refs)
 }
 
+fn dependent_identity(model: &Value, row: &Value) -> io::Result<String> {
+    let scope = model["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            row["id"]["scope"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })
+        .ok_or_else(|| invalid("lane dependent scope"))?;
+    let name = model["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            row["id"]["name"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })
+        .ok_or_else(|| invalid("lane dependent name"))?;
+    Ok(format!("{scope}/{name}"))
+}
+
 fn tag(model: &Value, hash: &str) -> String {
     model["versions"]
         .as_object()
-        .and_then(|versions| {
-            versions
-                .iter()
-                .find_map(|(tag, value)| (value.as_str() == Some(hash)).then(|| tag.clone()))
-        })
+        .into_iter()
+        .chain(model["orphanedVersions"].as_object())
+        .flat_map(|versions| versions.iter())
+        .find_map(|(tag, value)| (value.as_str() == Some(hash)).then(|| tag.clone()))
         .unwrap_or_else(|| hash.to_owned())
 }
 
@@ -112,14 +135,26 @@ fn dependency_id(value: &Value) -> Option<String> {
     {
         return Some(id.to_owned());
     }
-    let scope = value["scope"]
+    let id_obj = value
+        .get("id")
+        .filter(|sub| sub.is_object())
+        .unwrap_or(value);
+    let scope = id_obj["scope"]
         .as_str()
+        .or_else(|| value["scope"].as_str())
         .filter(|val| !val.is_empty())?;
-    let name = value["name"]
+    let raw_name = id_obj["name"]
         .as_str()
+        .or_else(|| value["name"].as_str())
         .filter(|val| !val.is_empty())?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
     let version = value["version"]
         .as_str()
-        .filter(|val| !val.is_empty())?;
+        .or_else(|| id_obj["version"].as_str())
+        .or_else(|| value["head"].as_str())
+        .filter(|val| !val.is_empty())
+        .or(inline_ver)?;
     Some(format!("{scope}/{name}@{version}"))
 }

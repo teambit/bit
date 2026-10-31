@@ -39,17 +39,28 @@ pub(super) fn component(
     let component = optional(&path.join("component.json"), budget)?;
     configuration(&component, recovery)?;
     if !component.is_null()
-        && format!(
-            "{}/{}",
-            component["componentId"]["scope"].as_str().unwrap_or_default(),
-            component["componentId"]["name"].as_str().unwrap_or_default(),
-        ) != target["identity"].as_str().unwrap_or_default()
+        && !component_id_matches(&component, target["identity"].as_str().unwrap_or_default())
     {
         return Err(invalid("status context component config identity"));
     }
     target["config"] = component;
     target["packageJson"] = optional(&path.join("package.json"), budget)?;
     Ok(target)
+}
+
+fn component_id_matches(component: &Value, target_identity: &str) -> bool {
+    let id = &component["componentId"];
+    let name = id["name"].as_str().unwrap_or_default();
+    let scope = id["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            id["defaultScope"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })
+        .unwrap_or_default();
+    format!("{scope}/{name}") == target_identity
 }
 
 fn configuration(config: &Value, recovery: bool) -> io::Result<()> {
@@ -65,8 +76,11 @@ fn configuration(config: &Value, recovery: bool) -> io::Result<()> {
     {
         return Err(invalid("status context component configuration"));
     }
-    let Some(extensions) = config.get("extensions") else {
-        return Err(invalid("status context missing extensions"));
+    let Some(extensions) = config
+        .get("extensions")
+        .filter(|val| !val.is_null())
+    else {
+        return Ok(());
     };
     let extensions = extensions.as_object().ok_or_else(|| invalid("status context extensions"))?;
     for (name, value) in extensions {

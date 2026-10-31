@@ -26,6 +26,7 @@ fn head_only(model: &Value) -> io::Result<Staged> {
     let labels = model["versions"]
         .as_object()
         .into_iter()
+        .chain(model["orphanedVersions"].as_object())
         .flat_map(|versions| versions.iter())
         .filter(|(_, hash)| hash.as_str() == Some(head))
         .map(|(tag, _)| tag.as_str())
@@ -71,7 +72,10 @@ pub(super) fn staged(model: &Value) -> io::Result<Staged> {
         .filter(|(_, row)| row["local"] == true)
     {
         // A tag names its Version through `versions`; a snap is its own hash.
-        let hash = match model["versions"][key].as_str() {
+        let hash = match model["versions"][key]
+            .as_str()
+            .or_else(|| model["orphanedVersions"][key].as_str())
+        {
             Some(hash) => hash,
             None if crate::merge_history::hash(key).is_ok() => key,
             None => return Err(invalid("outbound local Version ref")),

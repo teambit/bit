@@ -87,6 +87,9 @@ pub(super) fn prepare(
         .or_else(|| documents.index.as_array())
         .ok_or_else(invalid)?
     {
+        if row["isSymlink"] == true {
+            continue;
+        }
         let hash = row["hash"].as_str().ok_or_else(invalid)?;
         let model = moved.object(&directory, hash, "Component")?;
         if let Some(version) = workspace_version(&documents.bitmap, &model) {
@@ -99,7 +102,7 @@ pub(super) fn prepare(
 
 fn workspace_version(bitmap: &Value, model: &Value) -> Option<String> {
     let name = model["name"].as_str()?;
-    let scope = model["scope"].as_str()?;
+    let scope = model["scope"].as_str().unwrap_or_default();
     let full = format!("{scope}/{name}");
     let (key, row) = bitmap
         .as_object()?
@@ -125,7 +128,7 @@ fn bitmap_row_matches(key: &str, row: &Value, scope: &str, name: &str, _full: &s
         return false;
     }
     let (tracked_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
-    row_name == name && tracked_scope == Some(scope)
+    row_name == name && (scope.is_empty() || tracked_scope == Some(scope))
 }
 
 fn remote(moved: &mut Moved, scope_path: &Path, model: &Value) -> io::Result<Option<String>> {
@@ -164,7 +167,10 @@ fn component(
 ) -> io::Result<()> {
     let Some(head) = model["head"].as_str() else { return Ok(()) };
     let remote = remote(moved, scope_path, model)?;
-    let workspace_hash = model["versions"][workspace].as_str().unwrap_or(workspace);
+    let workspace_hash = model["versions"][workspace]
+        .as_str()
+        .or_else(|| model["orphanedVersions"][workspace].as_str())
+        .unwrap_or(workspace);
     let source = if remote.as_deref() == Some(head) { workspace_hash } else { head };
     let directory = scope_path.join("objects");
     let heads = [Some(source), remote.as_deref()]
@@ -199,11 +205,10 @@ mod tests;
 fn has_tags(model: &Value, refs: &[Value]) -> bool {
     model["versions"]
         .as_object()
-        .is_some_and(|versions| {
-            versions
-                .values()
-                .any(|hash| refs.contains(hash))
-        })
+        .into_iter()
+        .chain(model["orphanedVersions"].as_object())
+        .flat_map(serde_json::Map::values)
+        .any(|hash| refs.contains(hash))
 }
 
 fn move_objects(

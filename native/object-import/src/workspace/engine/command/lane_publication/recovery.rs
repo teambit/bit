@@ -15,7 +15,8 @@ pub(super) struct Recovery {
 }
 impl Recovery {
     pub(super) fn prepare(root: &Path, lane: &Value) -> io::Result<Self> {
-        let directory = root.join(".bit/last-merged");
+        let scope = crate::scope_path(root);
+        let directory = scope.join("last-merged");
         if directory.is_symlink() {
             return Err(invalid("last merged symbolic link"));
         }
@@ -27,8 +28,9 @@ impl Recovery {
                 .ok_or_else(|| invalid("lane recovery metadata absent"))?;
             output.copy(&root.join(source), destination, bytes)?;
         }
-        if let Some(bytes) = proof::read(&root.join(".bit/staged-snaps"), &mut output.proofs)? {
-            output.copy(&root.join(".bit/staged-snaps"), "staged-snaps", bytes)?;
+        let staged_snaps = scope.join("staged-snaps");
+        if let Some(bytes) = proof::read(&staged_snaps, &mut output.proofs)? {
+            output.copy(&staged_snaps, "staged-snaps", bytes)?;
         }
         let current = &lane["current"];
         output.staged_config(root, lane)?;
@@ -56,20 +58,15 @@ impl Recovery {
             format!("{}/{}", text(&lane["currentId"]["scope"])?, text(&lane["currentId"]["name"])?)
         };
         crate::checkout::plan::relative_path(&config)?;
-        if let Some(bytes) =
-            proof::read(&root.join(format!(".bit/staged-config/{config}.json")), &mut self.proofs)?
-        {
+        let config_path = crate::scope_path(root).join(format!("staged-config/{config}.json"));
+        if let Some(bytes) = proof::read(&config_path, &mut self.proofs)? {
             let rows: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
             if !rows
                 .as_array()
                 .ok_or_else(|| invalid("lane recovery staged config"))?
                 .is_empty()
             {
-                self.copy(
-                    &root.join(format!(".bit/staged-config/{config}.json")),
-                    "staged-config.json",
-                    bytes,
-                )?;
+                self.copy(&config_path, "staged-config.json", bytes)?;
             }
         }
         Ok(())

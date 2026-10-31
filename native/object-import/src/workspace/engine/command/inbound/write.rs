@@ -256,11 +256,12 @@ fn prepare_target(
     if rows
         .iter()
         .any(|(key, row)| {
+            let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
             !key.starts_with('$')
                 && !matches!(key.as_str(), "_bit_lane" | "version")
                 && row.is_object()
-                && crate::reset_lane::bitmap::row_identity(key, row).1 == target.name
-                && row["scope"].as_str().is_none_or(str::is_empty)
+                && row_name == target.name
+                && row_scope.is_none()
         })
     {
         return Err(invalid("inbound unscoped workspace identity"));
@@ -375,7 +376,7 @@ fn safe_destination(root: &Path, path: &Path) -> io::Result<()> {
 }
 
 pub(super) fn version(model: &Value, requested: &str) -> io::Result<(String, String)> {
-    let hash = if requested == "latest" {
+    let hash = if requested.is_empty() || requested == "latest" {
         model["head"].as_str()
     } else if crate::merge_history::hash(requested).is_ok() {
         Some(requested)
@@ -388,12 +389,10 @@ pub(super) fn version(model: &Value, requested: &str) -> io::Result<(String, Str
     crate::merge_history::hash(hash)?;
     let name = model["versions"]
         .as_object()
-        .and_then(|versions| {
-            versions
-                .iter()
-                .rev()
-                .find(|(_, value)| value.as_str() == Some(hash))
-        })
+        .into_iter()
+        .chain(model["orphanedVersions"].as_object())
+        .flat_map(|versions| versions.iter().rev())
+        .find(|(_, value)| value.as_str() == Some(hash))
         .map_or_else(|| hash.to_owned(), |(tag, _)| tag.clone());
     Ok((name, hash.to_owned()))
 }

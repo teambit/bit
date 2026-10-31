@@ -1,9 +1,10 @@
 //! Native `bit show <component-name>` (`scopes/component/component/show/show.cmd.ts`).
 
+pub(crate) mod remote_show;
+
 mod deps;
 mod deps_policy;
 mod help;
-mod remote_show;
 mod render;
 #[cfg(test)]
 mod tests;
@@ -73,7 +74,11 @@ pub(super) fn missing_host_error(cwd: &Path, options: &Options) -> Option<&'stat
         || workspace::root(cwd).is_some()
         || cwd
             .ancestors()
-            .any(|dir| dir.join("scope.json").is_file() || dir.join(".bit").is_dir())
+            .any(|dir| {
+                dir.join("scope.json").is_file()
+                    || dir.join(".bit").is_dir()
+                    || dir.join(".git/bit").is_dir()
+            })
     {
         return None;
     }

@@ -29,12 +29,9 @@ pub(in super::super) fn check(
     )?;
     let mut directories = directories.iter();
     for target in targets {
-        let row = rows
-            .iter()
-            .find(|(key, row)| super::matches_target(key, row, target))
-            .map(|(_, row)| row);
-        if let Some(row) = row {
-            existing_target(root, target, row, options)?;
+        let matched = rows.iter().find(|(key, row)| super::matches_target(key, row, target));
+        if let Some((key, row)) = matched {
+            existing_target(root, target, key, row, options)?;
         } else if !options.track_only && !options.write_to_empty_dir {
             let directory =
                 directories.next().ok_or_else(|| invalid("inbound preflight directory"))?;
@@ -47,15 +44,14 @@ pub(in super::super) fn check(
 fn existing_target(
     root: &Path,
     target: &Target,
+    key: &str,
     row: &Value,
     options: Options<'_>,
 ) -> io::Result<()> {
     if options.track_only {
         return Ok(());
     }
-    let scope = row["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty());
+    let (scope, _) = crate::reset_lane::bitmap::row_identity(key, row);
     let Some(scope) = scope else { return Ok(()) };
     let hash =
         crate::validate::hexadecimal(&Sha1::digest(format!("{scope}/{}", target.name).as_bytes()));
@@ -73,7 +69,15 @@ fn existing_target(
     {
         return Err(invalid("inbound existing component has local versions"));
     }
-    let requested = row["version"].as_str().ok_or_else(|| invalid("inbound existing version"))?;
+    let requested = row["version"]
+        .as_str()
+        .filter(|ver| !ver.is_empty())
+        .or_else(|| {
+            key.rsplit_once('@')
+                .map(|(_, ver)| ver)
+                .filter(|ver| !ver.is_empty())
+        })
+        .ok_or_else(|| invalid("inbound existing version"))?;
     let (_, hash) = super::version(&model, requested)?;
     let Some(version) = super::super::details::local_object(root, &hash, "Version")? else {
         return Ok(());

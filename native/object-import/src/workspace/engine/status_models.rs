@@ -138,10 +138,9 @@ fn histories(
     let selected = relevant_models(request, models, lane);
     let (mut histories, pending) = history::read(reader, &selected, request, lane, pool)?;
     for model in models {
-        let identity = format!(
-            "{}/{}",
-            model["scope"].as_str().unwrap_or_default(),
-            model["name"].as_str().unwrap_or_default(),
+        let identity = comparison::resolved_model_id(
+            model,
+            request.targets.iter().map(|target| target.identity.as_str()),
         );
         if !histories
             .iter()
@@ -158,15 +157,14 @@ fn relevant_models(request: &Request, models: &[Value], lane: Option<&lane::Lane
     models
         .iter()
         .filter(|model| {
-            let identity = format!(
-                "{}/{}",
-                model["scope"].as_str().unwrap_or_default(),
-                model["name"].as_str().unwrap_or_default(),
+            let identity = comparison::resolved_model_id(
+                model,
+                request.targets.iter().map(|target| target.identity.as_str()),
             );
             (!request.history_targets_only && locally_changed(model))
                 || request.targets
                     .iter()
-                    .any(|target| target.identity == identity)
+                    .any(|target| comparison::model_matches_identity(model, &target.identity))
                 || (!request.history_targets_only
                     && lane.is_some_and(|lane| {
                         lane.heads.contains_key(&identity)

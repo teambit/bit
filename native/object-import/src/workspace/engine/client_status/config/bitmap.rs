@@ -61,8 +61,8 @@ fn insert_target(
 }
 fn target(key: &str, value: &Value, config: &Value) -> io::Result<Target> {
     validate_entry(value)?;
-    let scope = text(value, "scope")?;
-    let version = text(value, "version")?;
+    let scope = optional_text(value, "scope")?;
+    let version = optional_text(value, "version")?;
     let directory = text(value, "rootDir")?;
     let effective_scope = if scope.is_empty() {
         value["defaultScope"]
@@ -322,17 +322,9 @@ fn scope_supported(value: &str) -> bool {
             <= 1
 }
 fn version_supported(value: &str) -> bool {
-    crate::merge_history::hash(value).is_ok()
-        || (value.split('.').count() == 3
-            && value
-                .split('.')
-                .all(|part| {
-                    (part == "0" || !part.starts_with('0'))
-                        && part.bytes().all(|byte| byte.is_ascii_digit())
-                        && part
-                            .parse::<u64>()
-                            .is_ok_and(|number| number <= 9_007_199_254_740_991)
-                }))
+    value == "latest"
+        || crate::merge_history::hash(value).is_ok()
+        || node_semver::Version::parse(value).is_ok()
 }
 fn relative(value: &str, root: bool) -> io::Result<()> {
     if root && value == "." {
@@ -353,6 +345,13 @@ fn relative(value: &str, root: bool) -> io::Result<()> {
         return Err(invalid("status component path"));
     }
     Ok(())
+}
+fn optional_text<'a>(value: &'a Value, key: &str) -> io::Result<&'a str> {
+    match value.get(key) {
+        None | Some(Value::Null) => Ok(""),
+        Some(Value::String(text)) => Ok(text),
+        Some(_) => Err(invalid("status invalid component field")),
+    }
 }
 fn text<'a>(value: &'a Value, key: &str) -> io::Result<&'a str> {
     value[key].as_str().ok_or_else(|| invalid("status invalid component field"))

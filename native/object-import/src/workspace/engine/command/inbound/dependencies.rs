@@ -67,8 +67,10 @@ fn all(input: &Prepare, roots: &[Target], imported: &PreparedImport) -> io::Resu
         let deps = version["flattenedDependencies"]
             .as_array()
             .ok_or_else(|| invalid("inbound flattened dependencies"))?;
+        let dev_deps = version["flattenedDevDependencies"].as_array();
         result.extend(
             deps.iter()
+                .chain(dev_deps.into_iter().flatten())
                 .map(target)
                 .collect::<io::Result<Vec<_>>>()?,
         );
@@ -179,9 +181,12 @@ fn edges(input: &Prepare, imported: &PreparedImport, version: &Value) -> io::Res
         Vec::new()
     };
     if rows.is_empty()
-        && version["flattenedDependencies"]
+        && (version["flattenedDependencies"]
             .as_array()
             .is_some_and(|dependencies| !dependencies.is_empty())
+            || version["flattenedDevDependencies"]
+                .as_array()
+                .is_some_and(|dependencies| !dependencies.is_empty()))
     {
         return Err(invalid("inbound dependency graph missing"));
     }
@@ -192,17 +197,44 @@ fn edges(input: &Prepare, imported: &PreparedImport, version: &Value) -> io::Res
 }
 
 pub(super) fn target(value: &Value) -> io::Result<Target> {
-    let scope = value["scope"]
+    if let Some(text) = value.as_str() {
+        let (identity, version) = text
+            .rsplit_once('@')
+            .filter(|(_, version)| !version.is_empty())
+            .ok_or_else(|| invalid("inbound dependency version"))?;
+        let (scope, name) = identity
+            .split_once('/')
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid("inbound dependency scope"))?;
+        return Ok(Target {
+            scope: Some(scope.to_owned()),
+            name: name.to_owned(),
+            version: version.to_owned(),
+        });
+    }
+    let id_obj = value
+        .get("id")
+        .filter(|sub| sub.is_object())
+        .unwrap_or(value);
+    let scope = id_obj["scope"]
         .as_str()
+        .or_else(|| value["scope"].as_str())
         .filter(|scope| !scope.is_empty())
         .ok_or_else(|| invalid("inbound dependency scope"))?;
-    let name = value["name"]
+    let raw_name = id_obj["name"]
         .as_str()
+        .or_else(|| value["name"].as_str())
         .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("inbound dependency name"))?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
     let version = value["version"]
         .as_str()
+        .or_else(|| id_obj["version"].as_str())
+        .or_else(|| value["head"].as_str())
         .filter(|version| !version.is_empty())
+        .or(inline_ver)
         .ok_or_else(|| invalid("inbound dependency version"))?;
     Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: version.to_owned() })
 }

@@ -50,7 +50,8 @@ pub(super) fn finish_original(
     let mut bitmap = plan.controls.initial.clone();
     let (key, _) = super::identity::selected(&bitmap, &plan.identity.source)?;
     let key = key.to_owned();
-    let (final_key, _) = super::identity::selected(&plan.controls.bitmap, &plan.identity.source)?;
+    let (final_key, _) =
+        super::identity::selected_any(&plan.controls.bitmap, &plan.identity.source)?;
     bitmap[&key] = plan.controls.bitmap[final_key].clone();
     write(plan, &bitmap, file_id, &reason)?;
     if !plan.options.deprecate {

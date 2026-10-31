@@ -37,22 +37,44 @@ pub(super) fn model(batch: &mut Batch, bare: &str) -> io::Result<Option<Value>> 
     let rows: Vec<_> = rows
         .iter()
         .filter(|row| {
-            format!(
-                "{}/{}",
-                row["id"]["scope"].as_str().unwrap_or_default(),
-                row["id"]["name"].as_str().unwrap_or_default(),
-            ) == bare
-                || (local_name.is_some()
-                    && local_name == row["id"]["name"].as_str()
-                    && row["id"]["scope"].as_str().is_none_or(str::is_empty))
+            row["isSymlink"] != true
+                && (format!(
+                    "{}/{}",
+                    row["id"]["scope"].as_str().unwrap_or_default(),
+                    row["id"]["name"].as_str().unwrap_or_default(),
+                ) == bare
+                    || (local_name.is_some()
+                        && local_name == row["id"]["name"].as_str()
+                        && row["id"]["scope"].as_str().is_none_or(str::is_empty)))
         })
         .collect();
     if rows.len() > 1 {
         return Err(invalid("ambiguous recovery component index"));
     }
-    let Some(row) = rows.first() else { return Ok(None) };
-    let hash = row["hash"].as_str().ok_or_else(|| invalid("recovery Component hash"))?;
-    object(batch, hash, "Component")
+    if let Some(row) = rows.first() {
+        let hash = row["hash"].as_str().ok_or_else(|| invalid("recovery Component hash"))?;
+        return object(batch, hash, "Component");
+    }
+    fallback_model(batch, bare, local_name)
+}
+
+fn fallback_model(
+    batch: &mut Batch,
+    bare: &str,
+    local_name: Option<&str>,
+) -> io::Result<Option<Value>> {
+    use sha1::{Digest, Sha1};
+    let scoped = crate::validate::hexadecimal(&Sha1::digest(bare.as_bytes()));
+    if let Some(model) = object(batch, &scoped, "Component")? {
+        return Ok(Some(model));
+    }
+    if let Some(name) = local_name {
+        let unscoped = crate::validate::hexadecimal(&Sha1::digest(name.as_bytes()));
+        if let Some(model) = object(batch, &unscoped, "Component")? {
+            return Ok(Some(model));
+        }
+    }
+    Ok(None)
 }
 pub(super) fn lane(batch: &mut Batch) -> io::Result<Option<Value>> {
     let id = batch.bitmap["_bit_lane"]["id"].clone();
@@ -79,7 +101,10 @@ pub(super) fn head(batch: &mut Batch, bare: &str, model: &Value) -> io::Result<O
             .as_array()
             .and_then(|rows| {
                 rows.iter()
-                    .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+                    .find(|row| {
+                        let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+                        (row_scope == scope || row_scope.is_empty()) && row["id"]["name"] == name
+                    })
             })
         {
             return Ok(row["head"].as_str().map(str::to_owned));
@@ -92,10 +117,11 @@ pub(super) fn version(batch: &mut Batch, id: &str, model: &Value) -> io::Result<
         .rsplit_once('@')
         .map_or((id, None), |(id, version)| (id, Some(version)));
     let hash = version
-        .filter(|version| *version != "latest")
+        .filter(|version| !version.is_empty() && *version != "latest")
         .map(|version| {
             model["versions"][version]
                 .as_str()
+                .or_else(|| model["orphanedVersions"][version].as_str())
                 .unwrap_or(version)
                 .to_owned()
         })

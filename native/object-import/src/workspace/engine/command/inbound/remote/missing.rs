@@ -38,8 +38,10 @@ impl Objects<'_> {
             return false;
         }
         let Some(dependencies) = version["flattenedDependencies"].as_array() else { return true };
+        let dev_dependencies = version["flattenedDevDependencies"].as_array();
         dependencies
             .iter()
+            .chain(dev_dependencies.into_iter().flatten())
             .any(|dependency| !self.built(dependency))
     }
 
@@ -61,9 +63,12 @@ impl Objects<'_> {
         let model_hash = hexadecimal(&sha1::Sha1::digest(identity.as_bytes()));
         let model = self.object(&model_hash, "Component")?;
         let hash = match version {
-            None | Some("latest") => model["head"].as_str()?.to_owned(),
+            None | Some("" | "latest") => model["head"].as_str()?.to_owned(),
             Some(version) if merge_history::hash(version).is_ok() => version.to_owned(),
-            Some(version) => model["versions"][version].as_str()?.to_owned(),
+            Some(version) => model["versions"][version]
+                .as_str()
+                .or_else(|| model["orphanedVersions"][version].as_str())?
+                .to_owned(),
         };
         self.object(&hash, "Version")
     }
@@ -108,15 +113,35 @@ const LIMIT: usize = 32 * 1024 * 1024;
 
 /// `scope/name@version` of a flattened dependency.
 fn dependency_id(value: &Value) -> Option<String> {
-    if let Some(text) = value.as_str() {
+    if let Some(text) = value
+        .as_str()
+        .or_else(|| value["id"].as_str())
+    {
         return Some(text.to_owned());
     }
-    Some(format!(
-        "{}/{}@{}",
-        value["scope"].as_str()?,
-        value["name"].as_str()?,
-        value["version"].as_str()?,
-    ))
+    let inner = value
+        .get("id")
+        .filter(|val| val.is_object())
+        .unwrap_or(value);
+    let scope = inner["scope"]
+        .as_str()
+        .or_else(|| value["scope"].as_str())
+        .filter(|val| !val.is_empty())?;
+    let raw_name = inner["name"]
+        .as_str()
+        .or_else(|| value["name"].as_str())
+        .filter(|val| !val.is_empty())?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
+    let ver = inner["version"]
+        .as_str()
+        .or_else(|| value["version"].as_str())
+        .or_else(|| inner["head"].as_str())
+        .or_else(|| value["head"].as_str())
+        .filter(|val| !val.is_empty())
+        .or(inline_ver)?;
+    Some(format!("{scope}/{name}@{ver}"))
 }
 
 #[cfg(test)]

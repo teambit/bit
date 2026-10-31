@@ -76,7 +76,14 @@ fn stored<'a>(context: &'a Value, id: &str, version: &str) -> io::Result<&'a Val
             ) == id
         })
         .ok_or_else(|| io::Error::other("code predicate model"))?;
-    let hash = model["versions"][version].as_str().unwrap_or(version);
+    let hash = if version.is_empty() || version == "latest" {
+        model["head"].as_str().unwrap_or(version)
+    } else {
+        model["versions"][version]
+            .as_str()
+            .or_else(|| model["orphanedVersions"][version].as_str())
+            .unwrap_or(version)
+    };
     let stored = context["versions"]
         .as_array()
         .into_iter()

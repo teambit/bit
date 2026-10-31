@@ -70,8 +70,7 @@ fn compare_all(
             .par_iter()
             .zip(files.par_iter())
             .map(|(target, files)| {
-                let model = models
-                    .get(&target.identity)
+                let model = lookup_model(&models, &target.identity)
                     .ok_or_else(|| invalid("status comparison missing model"))?;
                 let reference = versions::reference(model, &target.version)?;
                 let version = versions
@@ -108,6 +107,44 @@ pub(super) fn model_id(model: &Value) -> String {
     let scope = model["scope"].as_str().unwrap_or_default();
     let name = model["name"].as_str().unwrap_or_default();
     if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }
+}
+
+pub(super) fn lookup_model<'a>(
+    models: &HashMap<String, &'a Value>,
+    identity: &str,
+) -> Option<&'a Value> {
+    models
+        .get(identity)
+        .or_else(|| {
+            identity
+                .split_once('/')
+                .and_then(|(_, name)| models.get(name))
+        })
+        .copied()
+}
+
+pub(in crate::workspace::engine) fn model_matches_identity(model: &Value, identity: &str) -> bool {
+    let current = model_id(model);
+    current == identity
+        || (model["scope"].as_str().is_none_or(str::is_empty)
+            && identity
+                .split_once('/')
+                .is_some_and(|(_, name)| name == current))
+}
+
+pub(in crate::workspace::engine) fn resolved_model_id<'a>(
+    model: &Value,
+    targets: impl IntoIterator<Item = &'a str>,
+) -> String {
+    let current = model_id(model);
+    if model["scope"].as_str().is_none_or(str::is_empty)
+        && let Some(matched) = targets
+            .into_iter()
+            .find(|id| id.split_once('/').map_or(*id, |(_, bare)| bare) == current)
+    {
+        return matched.to_owned();
+    }
+    current
 }
 
 /// `CompFiles.isModified`: empty model files are never code-modified.

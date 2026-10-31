@@ -76,11 +76,15 @@ impl Plan {
 
 impl Documents {
     fn read(root: &Path) -> io::Result<Self> {
-        let index = match serde_json::from_slice(&fs::read(
-            bit_workspace_config::scope_path(root).join("index.json"),
-        )?)? {
-            Value::Array(components) => json!({ "components": components, "lanes": [] }),
-            other => other,
+        let index = match fs::read(bit_workspace_config::scope_path(root).join("index.json")) {
+            Ok(bytes) => match serde_json::from_slice(&bytes)? {
+                Value::Array(components) => json!({ "components": components, "lanes": [] }),
+                other => other,
+            },
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {
+                json!({ "components": [], "lanes": [] })
+            }
+            Err(error) => return Err(error),
         };
         Ok(Self {
             index,
@@ -105,7 +109,9 @@ impl Documents {
             || !self.scope_json["lanes"]["new"]
                 .as_array()
                 .is_some_and(|names| names.contains(&json!(name)))
-            || self.scope_json["lanes"]["current"] != "main"
+            || self.scope_json["lanes"]["current"]
+                .as_str()
+                .is_some_and(|current| current != "main")
         {
             return Err(invalid());
         }

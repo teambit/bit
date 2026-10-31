@@ -1,7 +1,7 @@
+pub(in crate::commands) use super::comp_json::{update_in_bitmap_row, update_in_comp_json};
 use super::{
-    BitmapContext, CompJsonEdit, Prepared, find_bitmap_row_mut, find_bitmap_row_ref,
-    find_matching_aspect_key, render_updated, resolve_aspect_identity,
-    serialize_json_preserving_newline, write_bitmap_if_changed,
+    BitmapContext, CompJsonEdit, Prepared, find_bitmap_row_ref, find_matching_aspect_key,
+    render_updated, resolve_aspect_identity, write_bitmap_if_changed,
 };
 use crate::commands::{
     color::Chalk,
@@ -168,8 +168,11 @@ pub(in crate::commands) fn resolve_latest_aspect_version(
     bare_aspect: &str,
 ) -> Option<String> {
     let aspect_scope = bare_aspect.split('/').next()?;
-    let hash = bit_install::policy::scope::hex_sha1(bare_aspect.as_bytes());
+    let fallback_hash = bit_install::policy::scope::hex_sha1(bare_aspect.as_bytes());
     for scope_dir in candidate_scope_dirs(root, aspect_scope) {
+        let hash =
+            crate::commands::debug_cat::lookup::resolve_component_entry(&scope_dir, bare_aspect)
+                .map_or_else(|| fallback_hash.clone(), |(_, _, h)| h);
         if let Some(ver) = read_latest_model_version(&scope_dir, &hash) {
             return Some(ver);
         }
@@ -200,19 +203,27 @@ fn read_latest_model_version(scope_dir: &Path, hash: &str) -> Option<String> {
         return None;
     }
     let head = model["head"].as_str()?;
-    let Some(versions) = model["versions"].as_object() else {
-        return Some(head.to_owned());
-    };
-    if let Some((tag, _)) = versions
-        .iter()
-        .find(|(_, ver_hash)| ver_hash.as_str() == Some(head))
-    {
-        return Some(tag.clone());
+    if let Some(tag) = crate::commands::show_cmd::remote_show::find_tag_for_hash(&model, head) {
+        return Some(tag);
     }
-    versions
-        .iter()
-        .next_back()
-        .map(|(tag, _)| tag.clone())
+    model["versions"]
+        .as_object()
+        .and_then(|versions| {
+            versions
+                .iter()
+                .next_back()
+                .map(|(tag, _)| tag.clone())
+        })
+        .or_else(|| {
+            model["orphanedVersions"]
+                .as_object()
+                .and_then(|versions| {
+                    versions
+                        .iter()
+                        .next_back()
+                        .map(|(tag, _)| tag.clone())
+                })
+        })
         .or_else(|| Some(head.to_owned()))
 }
 
@@ -247,7 +258,7 @@ fn is_aspect_minus_in_comp_json(root: &Path, entry: &BitmapEntry, bare_aspect: &
     (!entry.root_dir.is_empty())
         .then(|| root.join(&entry.root_dir).join("component.json"))
         .and_then(|path| fs::read(path).ok())
-        .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
+        .and_then(|bytes| bit_object_import::parse_jsonc(&bytes).ok())
         .and_then(|parsed| {
             let map = parsed["extensions"].as_object()?;
             let key = find_matching_aspect_key(map, bare_aspect)?;
@@ -279,7 +290,7 @@ fn find_aspect_in_comp_json(
     }
     let comp_json = root.join(&entry.root_dir).join("component.json");
     let bytes = fs::read(comp_json).ok()?;
-    let parsed = serde_json::from_slice::<Value>(&bytes).ok()?;
+    let parsed = bit_object_import::parse_jsonc(&bytes).ok()?;
     let ext_obj = parsed["extensions"].as_object()?;
     extract_aspect_from_map(ext_obj, bare_aspect)
 }
@@ -293,7 +304,7 @@ fn extract_aspect_from_map(
     if val.as_str() == Some("-") {
         return None;
     }
-    let ver = found_key.split_once('@').map(|(_, ver_str)| ver_str.to_owned());
+    let ver = found_key.rsplit_once('@').map(|(_, ver_str)| ver_str.to_owned());
     Some((ver, val.clone()))
 }
 
@@ -320,17 +331,26 @@ fn find_aspect_in_scope_version(
 }
 
 fn extension_version(ext: &Value) -> Option<String> {
-    let ver = ext["extensionId"]["version"]
-        .as_str()
+    let id_obj = ext
+        .get("extensionId")
+        .filter(|val| val.is_object())
+        .or_else(|| ext.get("id").filter(|val| val.is_object()));
+    let ver = id_obj
+        .and_then(|obj| {
+            obj["version"]
+                .as_str()
+                .or_else(|| obj["head"].as_str())
+        })
         .or_else(|| {
             let raw = ext["extensionId"]
                 .as_str()
                 .or_else(|| ext["name"].as_str())
                 .or_else(|| ext["legacyId"].as_str())
-                .or_else(|| ext["extensionId"]["name"].as_str())?;
+                .or_else(|| ext["id"].as_str())
+                .or_else(|| id_obj.and_then(|obj| obj["name"].as_str()))?;
             raw.rsplit_once('@').map(|(_, ver)| ver)
         })?;
-    (!ver.is_empty()).then(|| ver.to_owned())
+    (!ver.is_empty() && ver != "latest").then(|| ver.to_owned())
 }
 
 fn extension_bare_id(ext: &Value) -> Option<String> {
@@ -338,53 +358,21 @@ fn extension_bare_id(ext: &Value) -> Option<String> {
         .as_str()
         .or_else(|| ext["legacyId"].as_str())
         .or_else(|| ext["extensionId"].as_str())
+        .or_else(|| ext["id"].as_str())
     {
         return Some(bit_install::config::aspect_id_without_version(name).to_owned());
     }
-    let scope_str = ext["extensionId"]["scope"].as_str()?;
-    let name_str = ext["extensionId"]["name"].as_str()?;
+    let id_obj = ext
+        .get("extensionId")
+        .filter(|val| val.is_object())
+        .or_else(|| ext.get("id").filter(|val| val.is_object()))?;
+    let name_str = id_obj["name"].as_str()?;
     let bare_name = bit_install::config::aspect_id_without_version(name_str);
-    Some(format!("{scope_str}/{bare_name}"))
-}
-
-pub(in crate::commands) fn update_in_comp_json(
-    path: PathBuf,
-    bare_aspect: &str,
-    target_aspect_id: &str,
-    cfg_val: &Value,
-) -> Result<CompJsonEdit, Failure> {
-    let content = fs::read_to_string(&path)?;
-    let mut parsed: Value =
-        serde_json::from_str(&content).map_err(|err| Failure::Declined(err.to_string()))?;
-    let ext_obj = parsed["extensions"]
-        .as_object_mut()
-        .ok_or_else(|| Failure::Declined("component.json extensions missing".into()))?;
-    if let Some(old_key) = find_matching_aspect_key(ext_obj, bare_aspect) {
-        ext_obj.remove(&old_key);
+    match id_obj["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty() && !bare_name.contains('/'))
+    {
+        Some(scope_str) => Some(format!("{scope_str}/{bare_name}")),
+        None => Some(bare_name.to_owned()),
     }
-    ext_obj.insert(target_aspect_id.to_owned(), cfg_val.clone());
-    let bytes = serialize_json_preserving_newline(&content, &parsed)?;
-    Ok(CompJsonEdit { path, bytes })
-}
-
-pub(in crate::commands) fn update_in_bitmap_row(
-    bitmap_val: &mut Value,
-    entry: &BitmapEntry,
-    bare_aspect: &str,
-    target_aspect_id: &str,
-    cfg_val: &Value,
-) -> Result<(), Failure> {
-    let row = find_bitmap_row_mut(bitmap_val, entry)?;
-    let row_obj =
-        row.as_object_mut().ok_or_else(|| Failure::Declined("bitmap row object".into()))?;
-    let cfg = row_obj
-        .entry("config")
-        .or_insert_with(|| json!({}));
-    let cfg_obj =
-        cfg.as_object_mut().ok_or_else(|| Failure::Declined("bitmap config object".into()))?;
-    if let Some(old_key) = find_matching_aspect_key(cfg_obj, bare_aspect) {
-        cfg_obj.remove(&old_key);
-    }
-    cfg_obj.insert(target_aspect_id.to_owned(), cfg_val.clone());
-    Ok(())
 }

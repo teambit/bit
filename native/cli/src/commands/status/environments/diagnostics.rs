@@ -24,9 +24,10 @@ pub(in crate::commands::status) fn issues(
         return Ok(());
     }
     let env = text(facts.get("envId"))?;
+    let bare_env = bit_install::policy::split_version(env).0;
     let workspace_env = array(context.get("targets"), "env diagnostic targets")?
         .iter()
-        .any(|target| target["identity"] == env);
+        .any(|target| target["identity"] == bare_env);
     let (kind, data) = if !env.contains('@') && !workspace_env {
         ("ExternalEnvWithoutVersion", json!({"envId":env,"componentId":full_identity(target)?}))
     } else {

@@ -22,7 +22,8 @@ impl Plan {
         if ids.is_empty() || ids.len() > 32 {
             return Err(invalid("lane removal selection"));
         }
-        let before = fs::read(root.join(".bit/index.json"))?;
+        let scope_dir = crate::scope_path(root);
+        let before = fs::read(scope_dir.join("index.json"))?;
         let mut index: Value = serde_json::from_slice(&before)?;
         let before_bitmap = fs::read(root.join(".bitmap"))?;
         let bitmap = recovery::jsonc::parse(&before_bitmap)?;
@@ -36,12 +37,13 @@ impl Plan {
             }
             hashes.push(select_one(root, rows, current, id)?);
         }
-        Store::new(root.join(".bit/objects"), None)?.validate_index_write()?;
+        Store::new(scope_dir.join("objects"), None)?.validate_index_write()?;
         Ok(Self { root: root.to_owned(), before, before_bitmap, index, hashes })
     }
 
     pub fn commit(&self) -> io::Result<()> {
-        if fs::read(self.root.join(".bit/index.json"))? != self.before
+        let scope_dir = crate::scope_path(&self.root);
+        if fs::read(scope_dir.join("index.json"))? != self.before
             || fs::read(self.root.join(".bitmap"))? != self.before_bitmap
         {
             return Err(invalid("lane workspace changed before removal"));
@@ -58,7 +60,7 @@ impl Plan {
         }
         let mut bytes = serde_json::to_vec_pretty(&self.index)?;
         bytes.push(b'\n');
-        Store::new(self.root.join(".bit/objects"), None)?.write_index(&bytes)
+        Store::new(scope_dir.join("objects"), None)?.write_index(&bytes)
     }
 }
 
@@ -87,7 +89,7 @@ fn select_one(root: &Path, rows: &mut Vec<Value>, current: &Value, id: &str) -> 
     if !valid_hash(hash) {
         return Err(invalid("lane hash"));
     }
-    let lane = outbound::read_object(&root.join(".bit/objects"), hash, "Lane")?;
+    let lane = outbound::read_object(&crate::scope_path(root).join("objects"), hash, "Lane")?;
     if lane["scope"] != scope || lane["name"] != name {
         return Err(invalid("lane object identity"));
     }
@@ -115,13 +117,15 @@ fn valid_hash(value: &str) -> bool {
 }
 
 fn object(root: &Path, hash: &str) -> PathBuf {
-    root.join(".bit/objects")
+    crate::scope_path(root)
+        .join("objects")
         .join(&hash[..2])
         .join(&hash[2..])
 }
 
 fn trash(root: &Path, hash: &str) -> PathBuf {
-    root.join(".bit/trash")
+    crate::scope_path(root)
+        .join("trash")
         .join(&hash[..2])
         .join(&hash[2..])
 }

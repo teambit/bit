@@ -203,7 +203,7 @@ fn index_change(
     let rows =
         if index.is_array() { index.as_array_mut() } else { index["components"].as_array_mut() }
             .ok_or_else(|| invalid("scope components"))?;
-    let position = unique_position(rows, scope, name)?;
+    let position = unique_index_position(rows, scope, name)?;
     if rows[position]["isSymlink"] != false {
         return Err(invalid("tagged scope model is a symlink"));
     }
@@ -218,12 +218,33 @@ fn index_change(
     Ok((Change { path, before, after: Some(after) }, hash))
 }
 
+fn unique_index_position(rows: &[Value], scope: &str, name: &str) -> io::Result<usize> {
+    let mut matching = rows
+        .iter()
+        .enumerate()
+        .filter_map(|(position, row)| {
+            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            (row["isSymlink"] != true
+                && (row_scope == scope || row_scope.is_empty())
+                && row["id"]["name"] == name)
+                .then_some(position)
+        });
+    let position = matching.next().ok_or_else(|| invalid("tagged scope model absent"))?;
+    if matching.next().is_some() {
+        return Err(invalid("tagged scope model is ambiguous"));
+    }
+    Ok(position)
+}
+
 fn unique_position(rows: &[Value], scope: &str, name: &str) -> io::Result<usize> {
     let mut matching = rows
         .iter()
         .enumerate()
         .filter_map(|(position, row)| {
-            (row["id"]["scope"] == scope && row["id"]["name"] == name).then_some(position)
+            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            ((row_scope == scope || row_scope.is_empty()) && row["id"]["name"] == name).then_some(
+                position,
+            )
         });
     let position = matching.next().ok_or_else(|| invalid("tagged scope model absent"))?;
     if matching.next().is_some() {
@@ -247,9 +268,14 @@ fn object_changes(root: &Path, selection: &ModelSelection<'_>) -> io::Result<Vec
 
 fn model_hashes(model: &Value, selection: &ModelSelection<'_>) -> io::Result<Vec<String>> {
     validate_model(model, selection)?;
-    let versions = model["versions"].as_object().ok_or_else(|| invalid("Component versions"))?;
+    let versions = model["versions"].as_object();
+    let orphaned = model["orphanedVersions"].as_object();
     let mut hashes = vec![selection.model_hash.to_owned()];
-    for value in versions.values() {
+    for value in versions
+        .into_iter()
+        .chain(orphaned)
+        .flat_map(serde_json::Map::values)
+    {
         let hash = value.as_str().ok_or_else(|| invalid("tagged version ref"))?;
         crate::merge_history::hash(hash)?;
         if !hashes
@@ -301,7 +327,10 @@ fn validate_no_staged(root: &Path, scope: &str, name: &str) -> io::Result<()> {
     let rows = value.as_array().ok_or_else(|| invalid("staged component config"))?;
     if rows
         .iter()
-        .any(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+        .any(|row| {
+            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            (row_scope == scope || row_scope.is_empty()) && row["id"]["name"] == name
+        })
     {
         return Err(invalid("imported component has staged config"));
     }
@@ -319,10 +348,17 @@ fn regular_file(root: &Path, path: &Path) -> io::Result<()> {
 }
 
 fn validate_model(model: &Value, selection: &ModelSelection<'_>) -> io::Result<()> {
-    let versions = model["versions"].as_object().ok_or_else(|| invalid("Component versions"))?;
-    if model["scope"] != selection.scope
+    if model
+        .get("versions")
+        .is_some_and(|val| !val.is_null() && !val.is_object())
+    {
+        return Err(invalid("Component versions"));
+    }
+    let version_count = model["versions"].as_object().map_or(0, serde_json::Map::len);
+    let model_scope = model["scope"].as_str().unwrap_or_default();
+    if (!model_scope.is_empty() && model_scope != selection.scope)
         || model["name"] != selection.name
-        || versions.len() > 65536
+        || version_count > 65536
     {
         return Err(invalid("unsupported tagged Component model"));
     }

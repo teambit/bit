@@ -12,7 +12,12 @@ pub(super) fn read(
 ) -> io::Result<Value> {
     let configured = component.config
         .keys()
-        .filter(|id| !core.contains(id) && !bit_install::policy::is_core_env(id))
+        .filter(|id| {
+            let bare = bit_install::policy::split_version(id).0;
+            !(core.contains(id)
+                || core.iter().any(|item| item == bare)
+                || bit_install::policy::is_core_env(id))
+        })
         .collect::<Vec<_>>();
     let registrations = if configured.is_empty() {
         json!([])

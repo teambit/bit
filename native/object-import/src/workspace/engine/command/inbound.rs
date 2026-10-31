@@ -3,6 +3,7 @@
 
 pub(in crate::workspace::engine) mod autosync;
 pub(in crate::workspace::engine) mod dependents;
+pub(crate) mod details;
 pub(in crate::workspace::engine) mod policy;
 pub(in crate::workspace::engine) mod remote;
 pub(in crate::workspace::engine) mod write_dependencies;
@@ -21,7 +22,6 @@ use std::{
     path::{Path, PathBuf},
 };
 mod dependencies;
-mod details;
 mod lane_workspace;
 mod lanes;
 mod owned_writes;

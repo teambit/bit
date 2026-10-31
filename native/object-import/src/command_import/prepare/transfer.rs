@@ -172,7 +172,7 @@ pub(super) fn retain_sources(
                 .to_owned(),
         );
     }
-    for key in ["flattenedEdgesRef", "dependenciesGraphRef"] {
+    for key in ["flattenedEdgesRef", "dependenciesGraphRef", "flattenedDependenciesRef"] {
         if let Some(hash) = version[key].as_str() {
             sources.push(hash.to_owned());
         }

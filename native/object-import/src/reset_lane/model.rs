@@ -52,22 +52,19 @@ fn set_head(model: &mut Value, head: Option<&str>) -> io::Result<()> {
 }
 
 fn remove_versions(model: &mut Value, selection: &Selection) -> io::Result<()> {
+    let keep = |hash: &Value| {
+        hash.as_str()
+            .is_none_or(|hash| {
+                !selection.removed
+                    .iter()
+                    .any(|removed| removed == hash)
+            })
+    };
     let versions =
         model["versions"].as_object_mut().ok_or_else(|| invalid("lane reset versions"))?;
-    let labels = versions
-        .iter()
-        .filter_map(|(label, hash)| {
-            hash.as_str()
-                .filter(|hash| {
-                    selection.removed
-                        .iter()
-                        .any(|removed| removed == hash)
-                })
-                .map(|_| label.clone())
-        })
-        .collect::<Vec<_>>();
-    for label in &labels {
-        versions.shift_remove(label);
+    versions.retain(|_, hash| keep(hash));
+    if let Some(orphaned) = model.get_mut("orphanedVersions").and_then(Value::as_object_mut) {
+        orphaned.retain(|_, hash| keep(hash));
     }
     remove_pending_state(model, &selection.labels)?;
     Ok(())

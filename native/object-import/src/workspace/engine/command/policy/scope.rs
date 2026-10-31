@@ -41,22 +41,38 @@ fn entry(value: &Value) -> io::Result<Value> {
 }
 
 pub(super) fn identity(value: &Value) -> io::Result<String> {
-    if let Some(name) = value["name"].as_str() {
+    if let Some(name) = value["name"]
+        .as_str()
+        .or_else(|| value["legacyId"].as_str())
+    {
         return Ok(name.to_owned());
     }
     let id = &value["extensionId"];
     if let Some(id) = id.as_str() {
-        return Ok(id.to_owned());
+        return Ok(id
+            .strip_suffix("@latest")
+            .unwrap_or(id)
+            .to_owned());
     }
-    let scope = id["scope"].as_str().ok_or_else(|| invalid("scope aspect scope"))?;
-    let name = id["name"].as_str().ok_or_else(|| invalid("scope aspect name"))?;
+    let raw_name = id["name"].as_str().ok_or_else(|| invalid("scope aspect name"))?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
+    let scope = id["scope"].as_str().unwrap_or_default();
+    let base = if scope.is_empty() {
+        if !name.contains('/') {
+            return Err(invalid("scope aspect scope"));
+        }
+        name.to_owned()
+    } else {
+        format!("{scope}/{name}")
+    };
     let version = id["version"]
         .as_str()
-        .filter(|version| !version.is_empty());
-    Ok(version.map_or_else(
-        || format!("{scope}/{name}"),
-        |version| format!("{scope}/{name}@{version}"),
-    ))
+        .filter(|version| !version.is_empty())
+        .or(inline_ver)
+        .filter(|version| *version != "latest");
+    Ok(version.map_or_else(|| base.clone(), |version| format!("{base}@{version}")))
 }
 
 pub(super) fn apply(

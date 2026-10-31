@@ -60,7 +60,9 @@ impl BitmapState {
             && self.document[&self.key]["version"] != head
             && self.document[&self.key]["version"]
                 .as_str()
-                .is_none_or(|version| model["versions"][version] != head)
+                .is_none_or(|version| {
+                    model["versions"][version] != head && model["orphanedVersions"][version] != head
+                })
         {
             return Err(invalid("lane reset bitmap head mismatch"));
         }
@@ -74,11 +76,10 @@ impl BitmapState {
         let version = next.map_or_else(String::new, |hash| {
             model["versions"]
                 .as_object()
-                .and_then(|versions| {
-                    versions
-                        .iter()
-                        .find_map(|(tag, value)| (value == &hash).then_some(tag.clone()))
-                })
+                .into_iter()
+                .chain(model["orphanedVersions"].as_object())
+                .flat_map(|versions| versions.iter())
+                .find_map(|(tag, value)| (value == &hash).then_some(tag.clone()))
                 .unwrap_or(hash)
         });
         let row = self.document[&self.key]
@@ -89,6 +90,7 @@ impl BitmapState {
         crate::reset_config::restore(row, self.staged_config.clone());
         if version.is_empty()
             && model["versions"].as_object().is_some_and(serde_json::Map::is_empty)
+            && model["orphanedVersions"].as_object().is_none_or(serde_json::Map::is_empty)
         {
             row.shift_remove("onLanesOnly");
             row.shift_remove("isAvailableOnCurrentLane");

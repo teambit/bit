@@ -71,7 +71,7 @@ fn load_pair(
     )?;
     let model = snapshot.models
         .iter()
-        .find(|model| super::comparison::model_id(model) == request.identity)
+        .find(|model| super::comparison::model_matches_identity(model, &request.identity))
         .ok_or_else(|| invalid("version diff model absent"))?;
     let reference = |version| versions::reference(model, version);
     let to_ref = reference(&request.to_version)?;

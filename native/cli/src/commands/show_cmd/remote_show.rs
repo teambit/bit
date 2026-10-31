@@ -282,11 +282,15 @@ pub(super) fn resolve_scope_version(
     Some((tag, head.to_owned()))
 }
 
-pub(super) fn find_tag_for_hash(comp_val: &Value, target_hash: &str) -> Option<String> {
-    comp_val["versions"]
-        .as_object()?
-        .iter()
-        .find_map(|(tag, val)| (val.as_str() == Some(target_hash)).then(|| tag.clone()))
+pub(crate) fn find_tag_for_hash(comp_val: &Value, target_hash: &str) -> Option<String> {
+    ["versions", "orphanedVersions"]
+        .into_iter()
+        .find_map(|field| {
+            comp_val[field]
+                .as_object()?
+                .iter()
+                .find_map(|(tag, val)| (val.as_str() == Some(target_hash)).then(|| tag.clone()))
+        })
 }
 
 fn extract_version_files(ver_val: &Value) -> Vec<String> {
@@ -338,12 +342,16 @@ fn check_is_removed(extensions: &[Value]) -> bool {
 pub(super) fn ext_id_str(ext: &Value) -> Option<String> {
     if let Some(name) = ext["name"]
         .as_str()
+        .or_else(|| ext["legacyId"].as_str())
         .or_else(|| ext["extensionId"].as_str())
     {
         return Some(name.to_owned());
     }
     let id = ext.get("extensionId")?.as_object()?;
-    let name = id.get("name")?.as_str()?;
+    let raw_name = id.get("name")?.as_str()?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
     let base = match id
         .get("scope")
         .and_then(Value::as_str)
@@ -352,16 +360,15 @@ pub(super) fn ext_id_str(ext: &Value) -> Option<String> {
         Some(scope) => format!("{scope}/{name}"),
         None => name.to_owned(),
     };
-    Some(
-        match id
-            .get("version")
-            .and_then(Value::as_str)
-            .filter(|ver| !ver.is_empty())
-        {
-            Some(ver) => format!("{base}@{ver}"),
-            None => base,
-        },
-    )
+    let version = id
+        .get("version")
+        .and_then(Value::as_str)
+        .filter(|ver| !ver.is_empty())
+        .or(inline_ver);
+    Some(match version {
+        Some(ver) => format!("{base}@{ver}"),
+        None => base,
+    })
 }
 
 pub(super) fn render_remote_outcome(

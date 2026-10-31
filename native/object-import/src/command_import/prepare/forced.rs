@@ -17,13 +17,29 @@ pub(super) fn finish(plan: &mut PreparedImport, roots: &[&Target]) -> io::Result
     }
     phase.ids.retain(|id| identities.contains(without_version(id)));
     let received = phase.components.clone();
+    let dependencies = collect_forced_dependencies(plan, roots, &received)?;
+    plan.prepare_versions_with_reason(
+        &dependencies,
+        Some("for getting all dependencies - missing dependencies"),
+    )
+}
+
+fn collect_forced_dependencies(
+    plan: &mut PreparedImport,
+    roots: &[&Target],
+    received: &HashSet<String>,
+) -> io::Result<Vec<Target>> {
     let mut dependencies = Vec::new();
     let mut seen = HashSet::new();
     for target in roots {
         let version = plan.policy_version(target)?;
-        for row in version["flattenedDependencies"]
+        let flattened = version["flattenedDependencies"]
             .as_array()
-            .ok_or_else(|| invalid("import forced dependencies"))?
+            .ok_or_else(|| invalid("import forced dependencies"))?;
+        let dev_flattened = version["flattenedDevDependencies"].as_array();
+        for row in flattened
+            .iter()
+            .chain(dev_flattened.into_iter().flatten())
         {
             let dependency = dependency_target(row)?;
             let id = identity(&dependency)?;
@@ -37,10 +53,7 @@ pub(super) fn finish(plan: &mut PreparedImport, roots: &[&Target]) -> io::Result
             dependencies.push(dependency);
         }
     }
-    plan.prepare_versions_with_reason(
-        &dependencies,
-        Some("for getting all dependencies - missing dependencies"),
-    )
+    Ok(dependencies)
 }
 
 fn without_version(id: &str) -> &str {

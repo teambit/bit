@@ -134,14 +134,27 @@ fn reference(receipt: &mut Value, artifact: &GeneratedFile, hash: &str) -> io::R
 }
 
 fn extension(entries: &mut Vec<Value>, update: &Value) -> io::Result<()> {
-    let name = update.get("name");
-    let id = update.get("extensionId");
+    let name = update
+        .get("name")
+        .or_else(|| update.get("legacyId"));
+    let id = update
+        .get("extensionId")
+        .or_else(|| update.get("id"));
     if name.is_none() && id.is_none() {
         return Err(invalid("snapshot builder extension identity"));
     }
     if let Some(entry) = entries
         .iter_mut()
-        .find(|entry| entry.get("name") == name && entry.get("extensionId") == id)
+        .find(|entry| {
+            entry
+                .get("name")
+                .or_else(|| entry.get("legacyId"))
+                == name
+                && entry
+                    .get("extensionId")
+                    .or_else(|| entry.get("id"))
+                    == id
+        })
     {
         if let Some(data) = update.get("data") {
             entry["data"] = data.clone();

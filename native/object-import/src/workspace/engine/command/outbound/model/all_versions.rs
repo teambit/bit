@@ -30,10 +30,12 @@ pub(super) fn select(model: &Value, dir: &Path) -> io::Result<Staged> {
         );
         hashes.push(hash);
     }
+    let orphaned = model["orphanedVersions"].as_object();
     let labels = hashes
         .iter()
         .map(|hash| {
             tags.iter()
+                .chain(orphaned.into_iter().flat_map(serde_json::Map::iter))
                 .find(|(_, ref_hash)| ref_hash.as_str() == Some(hash))
                 .map_or_else(|| hash.clone(), |(tag, _)| tag.clone())
         })

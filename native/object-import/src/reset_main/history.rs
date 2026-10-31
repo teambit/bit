@@ -16,7 +16,7 @@ pub(super) fn pending(
     let current = component["head"].as_str().ok_or_else(|| invalid("reset history head"))?;
     crate::merge_history::hash(current)?;
     let hash = format!("{:x}", Sha1::digest(format!("{identity}:VersionHistory").as_bytes()));
-    let objects = root.join(".bit/objects");
+    let objects = crate::scope_path(root).join("objects");
     let path = super::repository::object_path(root, &hash);
     let (mut history, before) = match fs::read(&path) {
         Ok(before) => (outbound::read_object(&objects, &hash, "VersionHistory")?, before),
@@ -25,7 +25,8 @@ pub(super) fn pending(
         }
         Err(error) => return Err(error),
     };
-    if history["scope"] != scope || history["name"] != name {
+    let hist_scope = history["scope"].as_str().unwrap_or_default();
+    if (!hist_scope.is_empty() && hist_scope != scope) || history["name"] != name {
         return Err(invalid("reset VersionHistory identity"));
     }
     if !append_removed(&objects, &mut history, selection)? {

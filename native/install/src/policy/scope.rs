@@ -115,12 +115,46 @@ impl Scope {
 
     /// The `ModelComponent` of `scope/name`.
     pub fn model(&self, id: &str) -> io::Result<Option<Value>> {
-        self.json(&hex_sha1(id.as_bytes()), "Component")
+        if let Some(hash) = self.index_hash(id)
+            && let Some(model) = self.json(&hash, "Component")?
+        {
+            return Ok(Some(model));
+        }
+        if let Some(model) = self.json(&hex_sha1(id.as_bytes()), "Component")? {
+            return Ok(Some(model));
+        }
+        match id.split_once('/') {
+            Some((_, name)) => self.json(&hex_sha1(name.as_bytes()), "Component"),
+            None => Ok(None),
+        }
+    }
+
+    fn index_hash(&self, id: &str) -> Option<String> {
+        let bytes = fs::read(self.path.join("index.json")).ok()?;
+        let index: Value = serde_json::from_slice(&bytes).ok()?;
+        let rows = index["components"].as_array().or_else(|| index.as_array())?;
+        let (target_scope, target_name) = id
+            .split_once('/')
+            .map_or((None, id), |(scope, name)| (Some(scope), name));
+        rows.iter()
+            .find(|row| {
+                row["isSymlink"] != true
+                    && row["id"]["name"].as_str() == Some(target_name)
+                    && match target_scope {
+                        Some(scope) => row["id"]["scope"]
+                            .as_str()
+                            .is_none_or(|row_scope| row_scope == scope),
+                        None => true,
+                    }
+            })
+            .and_then(|row| row["hash"].as_str())
+            .map(str::to_owned)
     }
 
     /// The `Version` object of `scope/name` at `version` (a tag or a snap hash),
     /// or at the head when `version` is `None`.
     pub fn version(&self, id: &str, version: Option<&str>) -> io::Result<Option<Value>> {
+        let version = version.filter(|ver| !ver.is_empty() && *ver != "latest");
         let Some(model) = self.model(id)? else {
             return match version.filter(|version| is_hash(version)) {
                 Some(hash) => self.json(hash, "Version"),
@@ -130,6 +164,7 @@ impl Scope {
         let reference = match version {
             Some(version) => model["versions"]
                 .get(version)
+                .or_else(|| model["orphanedVersions"].get(version))
                 .and_then(Value::as_str)
                 .or_else(|| is_hash(version).then_some(version)),
             None => model["head"].as_str(),

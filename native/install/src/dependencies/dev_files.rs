@@ -142,12 +142,7 @@ pub fn dev_patterns(
     env: &EnvDevPatterns,
 ) -> IndexMap<String, Vec<String>> {
     let mut patterns: IndexMap<String, Vec<String>> = IndexMap::new();
-    let configured = component.config
-        .get(DEV_FILES)
-        .and_then(|config| config.get("devFilePatterns"))
-        .map(strings)
-        .unwrap_or_default();
-    patterns.insert("config".to_owned(), configured);
+    patterns.insert("config".to_owned(), configured_dev_patterns(component));
     patterns.insert(TESTER.to_owned(), env.tests.clone().unwrap_or_else(|| config.tests.clone()));
     let mut docs = env.docs.clone().unwrap_or_default();
     docs.extend(config.docs.iter().cloned());
@@ -177,6 +172,19 @@ pub fn dev_patterns(
         None => {}
     }
     patterns
+}
+
+fn configured_dev_patterns(component: &WorkspaceComponent) -> Vec<String> {
+    component.config
+        .get(DEV_FILES)
+        .or_else(|| {
+            component.config
+                .iter()
+                .find_map(|(id, cfg)| (split_version(id).0 == DEV_FILES).then_some(cfg))
+        })
+        .and_then(|config| config.get("devFilePatterns"))
+        .map(strings)
+        .unwrap_or_default()
 }
 
 /// `computeDevFiles(...).list()`: the component files matching any aspect's patterns.

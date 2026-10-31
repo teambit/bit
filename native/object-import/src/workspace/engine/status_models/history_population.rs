@@ -16,15 +16,25 @@ pub(super) fn prepare(
         .join(&hash[..2])
         .join(&hash[2..]);
     let present = proof::read(&file, &mut proofs)?.is_some();
+    let (id_scope, _) = identity
+        .split_once('/')
+        .unwrap_or(("", identity));
+    let model_scope = model["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .unwrap_or(id_scope);
     let mut history = if present {
         reader.read(&hash, "VersionHistory")?
     } else {
         if !stage {
             return Err(invalid("status history requires canonical population"));
         }
-        json!({"name":model["name"],"scope":model["scope"],"versions":[],"graphCompleteRefs":[]})
+        json!({"name":model["name"],"scope":model_scope,"versions":[],"graphCompleteRefs":[]})
     };
-    if history["name"] != model["name"] || history["scope"] != model["scope"] {
+    let history_scope = history["scope"].as_str().unwrap_or_default();
+    if history["name"] != model["name"]
+        || (!history_scope.is_empty() && !model_scope.is_empty() && history_scope != model_scope)
+    {
         return Err(invalid("status history identity"));
     }
     let original = history.clone();
@@ -118,7 +128,19 @@ fn observe_model(
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<()> {
     use sha1::{Digest, Sha1};
-    let hash = crate::validate::hexadecimal(&Sha1::digest(identity.as_bytes()));
+    let stored_id = expected["scope"]
+        .as_str()
+        .filter(|scope| !scope.is_empty())
+        .map_or_else(
+            || {
+                expected["name"]
+                    .as_str()
+                    .unwrap_or(identity)
+                    .to_owned()
+            },
+            |_| identity.to_owned(),
+        );
+    let hash = crate::validate::hexadecimal(&Sha1::digest(stored_id.as_bytes()));
     proof::read(
         &reader.directory
             .join(&hash[..2])

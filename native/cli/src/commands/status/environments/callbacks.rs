@@ -49,8 +49,15 @@ fn callback_info(host: &Host, context: &Value, capture: &Capture) -> io::Result<
     let aspects = context["workspace"]
         .as_object()
         .into_iter()
-        .flat_map(|config| config.keys())
-        .filter(|id| id.contains('/') && !core.contains(id))
+        .flat_map(|config| config.iter())
+        .filter(|(id, val)| {
+            let bare = bit_install::policy::split_version(id).0;
+            id.contains('/')
+                && **val != Value::Bool(false)
+                && val.as_str() != Some("-")
+                && !(core.contains(id) || core.iter().any(|item| item == bare))
+        })
+        .map(|(id, _)| id)
         .collect::<Vec<_>>();
     let info = host.call("statusCallbackInfo", &json!({"coreIds":core,"aspectIds":aspects}))?;
     capture.cache.retain_callback_startup(&host.take_stdout());
@@ -174,16 +181,8 @@ pub(in crate::commands) fn component_rows(
 }
 
 fn scope_metadata(context: &Value, identity: &str) -> io::Result<Value> {
-    let model = array(context.get("models"), "callback models")?
-        .iter()
-        .find(|model| {
-            format!(
-                "{}/{}",
-                model["scope"].as_str().unwrap_or_default(),
-                model["name"].as_str().unwrap_or_default(),
-            ) == identity
-        });
-    let Some(model) = model else {
+    array(context.get("models"), "callback models")?;
+    let Some(model) = crate::commands::status::policy::model_of(context, identity) else {
         return Ok(Value::Null);
     };
     let head = context["laneHeads"]
@@ -205,10 +204,15 @@ fn current_version(context: &Value, model: &Value, identity: &str) -> io::Result
         })
         .and_then(|row| row["version"].as_str());
     let reference = selected.and_then(|selected| {
-        model["versions"]
-            .get(selected)
-            .and_then(Value::as_str)
-            .or(Some(selected))
+        if selected.is_empty() || selected == "latest" {
+            model["head"].as_str()
+        } else {
+            model["versions"]
+                .get(selected)
+                .or_else(|| model["orphanedVersions"].get(selected))
+                .and_then(Value::as_str)
+                .or(Some(selected))
+        }
     });
     let current = array(context.get("versions"), "callback versions")?
         .iter()

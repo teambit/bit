@@ -209,7 +209,15 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
         .rsplit_once('@')
         .map_or((id, None), |(identity, version)| (identity, Some(version)));
     let matching_version = |model: &Value| {
-        version.is_none_or(|version| model["versions"][version].as_str() == model["head"].as_str())
+        version.is_none_or(|version| {
+            version.is_empty()
+                || version == "latest"
+                || Some(version) == model["head"].as_str()
+                || model["versions"][version]
+                    .as_str()
+                    .or_else(|| model["orphanedVersions"][version].as_str())
+                    == model["head"].as_str()
+        })
     };
     // A slash can mean either a scope separator or part of a component
     // name. Prefer an exact scoped identity, then accept an unscoped name

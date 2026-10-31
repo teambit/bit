@@ -17,13 +17,19 @@ pub(super) fn prepare(batch: &mut Batch, item: &Item) -> io::Result<Option<Confi
     super::publication::existing_ancestors(batch, &path)?;
     let Some(before) = batch.proofs.read(&path)? else { return Ok(None) };
     let text = std::str::from_utf8(&before).map_err(io::Error::other)?;
-    let parsed: Value = serde_json::from_slice(&before).map_err(io::Error::other)?;
+    let parsed: Value = crate::parse_jsonc(&before)?;
     let value = projection(&parsed)?;
     let bytes = stringify_package(&value, &detect_indent(text), detect_newline(text))?.into_bytes();
     Ok(Some(Configuration { path, bytes }))
 }
 fn projection(parsed: &Value) -> io::Result<Value> {
-    if parsed["componentId"]["scope"].as_str().is_none_or(str::is_empty) {
+    let has_scope = parsed["componentId"]["scope"]
+        .as_str()
+        .is_some_and(|val| !val.is_empty())
+        || parsed["defaultScope"]
+            .as_str()
+            .is_some_and(|val| !val.is_empty());
+    if !has_scope {
         return Err(invalid("recovery component.json requires a scoped componentId"));
     }
     let mut extensions = parsed["extensions"]

@@ -19,7 +19,8 @@ pub(super) struct Repository {
 
 impl Repository {
     pub(super) fn load(root: &Path, scope: &str, name: &str) -> io::Result<Self> {
-        let index_before = fs::read(root.join(".bit/index.json"))?;
+        let scope_dir = crate::scope_path(root);
+        let index_before = fs::read(scope_dir.join("index.json"))?;
         let index: Value = serde_json::from_slice(&index_before)?;
         let rows = index["components"]
             .as_array()
@@ -33,7 +34,7 @@ impl Repository {
         crate::merge_history::hash(&model_hash)?;
         let model_before = fs::read(object_path(root, &model_hash))?;
         let component =
-            outbound::read_object(&root.join(".bit/objects"), &model_hash, "Component")?;
+            outbound::read_object(&scope_dir.join("objects"), &model_hash, "Component")?;
         validate_component(&component, scope, name)?;
         Ok(Self {
             root: root.to_owned(),
@@ -55,7 +56,7 @@ impl Repository {
     }
 
     pub(super) fn objects(&self) -> PathBuf {
-        self.root.join(".bit/objects")
+        crate::scope_path(&self.root).join("objects")
     }
 
     pub(super) fn project(
@@ -92,7 +93,11 @@ fn position(rows: &[Value], scope: &str, name: &str) -> io::Result<usize> {
         .iter()
         .enumerate()
         .filter_map(|(position, row)| {
-            (row["id"]["scope"] == scope && row["id"]["name"] == name).then_some(position)
+            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            (row["isSymlink"] != true
+                && (row_scope == scope || row_scope.is_empty())
+                && row["id"]["name"] == name)
+                .then_some(position)
         });
     let found = matches.next().ok_or_else(|| invalid("reset indexed Component absent"))?;
     if matches.next().is_some() {
@@ -102,17 +107,24 @@ fn position(rows: &[Value], scope: &str, name: &str) -> io::Result<usize> {
 }
 
 fn validate_component(component: &Value, scope: &str, name: &str) -> io::Result<()> {
-    if component["scope"] != scope || component["name"] != name {
+    let comp_scope = component["scope"].as_str().unwrap_or_default();
+    if (!comp_scope.is_empty() && comp_scope != scope) || component["name"] != name {
         return Err(invalid("reset Component identity"));
     }
-    if component.get("orphanedVersions").is_some() {
+    if component
+        .get("orphanedVersions")
+        .is_some_and(|val| {
+            !val.is_null() && !val.as_object().is_some_and(serde_json::Map::is_empty)
+        })
+    {
         return Err(invalid("reset orphaned history"));
     }
     Ok(())
 }
 
 pub(super) fn object_path(root: &Path, hash: &str) -> PathBuf {
-    root.join(".bit/objects")
+    crate::scope_path(root)
+        .join("objects")
         .join(&hash[..2])
         .join(&hash[2..])
 }

@@ -30,7 +30,7 @@ pub(in crate::workspace::engine) fn read(
     let models = indexed_models(&reader, &request.root, pool)?;
     let model = models
         .iter()
-        .find(|model| identity(model) == request.stored_identity)
+        .find(|model| super::comparison::model_matches_identity(model, &request.stored_identity))
         .ok_or_else(|| invalid("cat component model absent"))?;
     let reference = reference(model, &request.version)?;
     let mut versions = read_version::Reader::query(&directory)?;
@@ -40,15 +40,12 @@ pub(in crate::workspace::engine) fn read(
     Ok((count, json!({"version":request.version,"files":files})))
 }
 
-fn identity(model: &Value) -> String {
-    let name = model["name"].as_str().unwrap_or_default();
-    model["scope"]
-        .as_str()
-        .filter(|scope| !scope.is_empty())
-        .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"))
-}
-
 fn reference(model: &Value, version: &str) -> io::Result<String> {
+    if version.is_empty() || version == "latest" {
+        let head = model["head"].as_str().ok_or_else(|| invalid("cat version absent"))?;
+        merge_history::hash(head)?;
+        return Ok(head.to_owned());
+    }
     if merge_history::hash(version).is_ok() {
         return Ok(version.to_owned());
     }

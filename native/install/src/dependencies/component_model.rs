@@ -60,7 +60,10 @@ impl ComponentModel {
             .and_then(|extensions| {
                 extensions
                     .iter()
-                    .find(|extension| extension_name(extension) == Some(DEPENDENCY_RESOLVER))
+                    .find(|extension| {
+                        crate::workspace::extension_name(extension).as_deref()
+                            == Some(DEPENDENCY_RESOLVER)
+                    })
             })
             .and_then(|extension| extension["data"]["dependencies"].as_array())
             .cloned()
@@ -72,8 +75,4 @@ impl ComponentModel {
     pub const fn raw(&self) -> Option<&Value> {
         self.version.as_ref()
     }
-}
-
-fn extension_name(extension: &Value) -> Option<&str> {
-    extension["name"].as_str()
 }

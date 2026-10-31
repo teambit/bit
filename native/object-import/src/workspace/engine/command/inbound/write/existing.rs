@@ -69,22 +69,8 @@ pub(super) fn prepare(
 fn reorder_bitmap(bitmap: &mut Value) -> io::Result<()> {
     let old = bitmap.as_object().ok_or_else(|| invalid("inbound bitmap row"))?;
     let mut reordered = Map::new();
-    for key in [
-        "name",
-        "scope",
-        "version",
-        "files",
-        "defaultScope",
-        "mainFile",
-        "rootDir",
-        "wrapDir",
-        "exported",
-        "onLanesOnly",
-        "isAvailableOnCurrentLane",
-        "nextVersion",
-        "localOnly",
-        "config",
-    ] {
+    let keys = "name scope version files defaultScope mainFile rootDir wrapDir exported onLanesOnly isAvailableOnCurrentLane nextVersion localOnly config";
+    for key in keys.split_whitespace() {
         if let Some(value) = old.get(key) {
             reordered.insert(key.to_owned(), value.clone());
         }
@@ -101,7 +87,10 @@ fn imported_model<'a>(
     rows: &Map<String, Value>,
 ) -> io::Result<Cow<'a, Value>> {
     let scope = input.target.scope.as_deref().ok_or_else(|| invalid("inbound existing scope"))?;
-    if input.row["scope"] != scope
+    if input.row["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .is_some_and(|row_scope| row_scope != scope)
         || !rows
             .values()
             .any(|row| row == input.row)
@@ -172,8 +161,10 @@ fn version_parents(input: &Input<'_>, hash: &str) -> io::Result<Vec<String>> {
 }
 
 fn versions(input: &Input<'_>, model: &Value) -> io::Result<(Value, String, String)> {
-    let current =
-        input.row["version"].as_str().ok_or_else(|| invalid("inbound existing version"))?;
+    let current = input.row["version"]
+        .as_str()
+        .filter(|ver| !ver.is_empty())
+        .unwrap_or("latest");
     let (_, current_hash) = version(model, current)?;
     let old = if let Some(version) = details::local_object(input.root, &current_hash, "Version")? {
         version

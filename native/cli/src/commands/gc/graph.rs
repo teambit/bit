@@ -248,32 +248,44 @@ pub(super) fn resolve_comp_version_ref(comp: &Value, ver: &str) -> Option<String
 
 pub(super) fn parse_dep_value(val: &Value) -> Option<CompIdSpec> {
     if let Some(str_val) = val.as_str() {
-        let (id_part, version) = str_val
-            .rsplit_once('@')
-            .map_or((str_val, None), |(id, ver)| (id, Some(ver.to_owned())));
-        let (scope, name) = id_part
-            .split_once('/')
-            .map_or_else(
-                || (None, id_part.to_owned()),
-                |(sc, nm)| (Some(sc.to_owned()), nm.to_owned()),
-            );
-        return Some(CompIdSpec { scope, name, version });
+        return Some(parse_dep_str(str_val));
     }
-    let name = val
-        .get("name")
-        .and_then(Value::as_str)?
-        .to_owned();
-    let scope = val
+    let id_obj = val
+        .get("id")
+        .filter(|id| id.is_object())
+        .unwrap_or(val);
+    let raw_name = id_obj.get("name").and_then(Value::as_str)?;
+    let (name_str, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(nm, ver)| (nm, Some(ver)));
+    let scope = id_obj
         .get("scope")
         .and_then(Value::as_str)
         .filter(|sc| !sc.is_empty())
         .map(str::to_owned);
-    let version = val
+    let version = id_obj
         .get("version")
         .and_then(Value::as_str)
+        .or_else(|| val.get("version").and_then(Value::as_str))
+        .or_else(|| id_obj.get("head").and_then(Value::as_str))
+        .or_else(|| val.get("head").and_then(Value::as_str))
+        .or(inline_ver)
         .filter(|ver| !ver.is_empty())
         .map(str::to_owned);
-    Some(CompIdSpec { scope, name, version })
+    Some(CompIdSpec { scope, name: name_str.to_owned(), version })
+}
+
+fn parse_dep_str(str_val: &str) -> CompIdSpec {
+    let (id_part, version) = str_val
+        .rsplit_once('@')
+        .map_or((str_val, None), |(id, ver)| (id, Some(ver.to_owned())));
+    let (scope, name) = id_part
+        .split_once('/')
+        .map_or_else(
+            || (None, id_part.to_owned()),
+            |(sc, nm)| (Some(sc.to_owned()), nm.to_owned()),
+        );
+    CompIdSpec { scope, name, version }
 }
 
 fn version_parents(ver_val: &Value) -> Vec<String> {
@@ -366,12 +378,11 @@ fn collect_flattened_deps(scope_dir: &Path, ver_val: &Value) -> Vec<CompIdSpec> 
             .filter_map(parse_dep_value)
             .collect();
     }
-    ver_val["flattenedDependencies"]
-        .as_array()
-        .map(|arr| {
-            arr.iter()
-                .filter_map(parse_dep_value)
-                .collect()
-        })
-        .unwrap_or_default()
+    let mut specs = Vec::new();
+    for field in ["flattenedDependencies", "flattenedDevDependencies"] {
+        if let Some(arr) = ver_val[field].as_array() {
+            specs.extend(arr.iter().filter_map(parse_dep_value));
+        }
+    }
+    specs
 }

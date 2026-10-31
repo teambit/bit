@@ -41,17 +41,19 @@ pub(super) fn file(scope: &Path, id: &str, observed: &mut Observed) -> io::Resul
 }
 fn model_row<'a>(index: &'a Value, id: &str) -> io::Result<&'a Value> {
     let bare = id.split('@').next().unwrap_or(id);
+    let (target_scope, target_name) = bare
+        .split_once('/')
+        .unwrap_or(("", bare));
     index["components"]
         .as_array()
         .or_else(|| index.as_array())
         .and_then(|rows| {
             rows.iter()
                 .find(|row| {
-                    format!(
-                        "{}/{}",
-                        row["id"]["scope"].as_str().unwrap_or_default(),
-                        row["id"]["name"].as_str().unwrap_or_default(),
-                    ) == bare
+                    let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+                    row["isSymlink"] != true
+                        && row["id"]["name"].as_str() == Some(target_name)
+                        && (row_scope == target_scope || row_scope.is_empty())
                 })
         })
         .ok_or_else(|| missing(id))
@@ -126,45 +128,26 @@ fn retain(scope: &Path, hash: &str, observed: &mut Observed) -> io::Result<Vec<u
 }
 fn version_id(model: &Value, id: &str, hash: &str) -> String {
     if let Some((_, version)) = id.rsplit_once('@')
+        && !version.is_empty()
         && version != "latest"
     {
         return version.into();
     }
     model["versions"]
         .as_object()
-        .and_then(|versions| {
-            versions
-                .iter()
-                .find(|(_, value)| value.as_str() == Some(hash))
-                .map(|(tag, _)| tag.clone())
-        })
-        .unwrap_or_else(|| hash.into())
+        .into_iter()
+        .chain(model["orphanedVersions"].as_object())
+        .flat_map(|versions| versions.iter())
+        .find(|(_, value)| value.as_str() == Some(hash))
+        .map_or_else(|| hash.into(), |(tag, _)| tag.clone())
 }
 pub(super) fn configs(version: &Value) -> io::Result<Value> {
     let mut configs = json!({});
-    for entry in
-        version["extensions"].as_array().ok_or_else(|| unsupported("fork remote extensions"))?
-    {
-        let name = entry["name"]
-            .as_str()
-            .or_else(|| entry["extensionId"].as_str())
-            .map(str::to_owned)
-            .or_else(|| {
-                let id = &entry["extensionId"];
-                let name = id["name"].as_str()?;
-                let scope = id["scope"]
-                    .as_str()
-                    .filter(|scope| !scope.is_empty())?;
-                Some(
-                    id["version"]
-                        .as_str()
-                        .filter(|ver| !ver.is_empty())
-                        .map_or_else(
-                            || format!("{scope}/{name}"),
-                            |version| format!("{scope}/{name}@{version}"),
-                        ),
-                )
-            })
+    let Some(entries) = version["extensions"].as_array() else {
+        return Ok(configs);
+    };
+    for entry in entries {
+        let name = super::super::configuration::extension_key(entry)
             .ok_or_else(|| unsupported("fork remote extension identity"))?;
         if let Some(config) = entry.get("config") {
             configs[&name] = config.clone();

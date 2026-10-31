@@ -92,11 +92,18 @@ fn load(repository: &mut Repository, id: &Value) -> io::Result<Value> {
     } else {
         let model =
             repository.read(&crate::workspace::engine::hash(identity.as_bytes()), "Component")?;
-        model["versions"][version]
-            .as_str()
-            .or_else(|| model["orphanedVersions"][version].as_str())
-            .ok_or_else(|| invalid("command graph missing dependency reference"))?
-            .to_owned()
+        if version.is_empty() || version == "latest" {
+            model["head"]
+                .as_str()
+                .ok_or_else(|| invalid("command graph missing dependency reference"))?
+                .to_owned()
+        } else {
+            model["versions"][version]
+                .as_str()
+                .or_else(|| model["orphanedVersions"][version].as_str())
+                .ok_or_else(|| invalid("command graph missing dependency reference"))?
+                .to_owned()
+        }
     };
     let version = repository.read(&reference, "Version")?;
     crate::workspace::engine::status_models::harmony::project(&version)

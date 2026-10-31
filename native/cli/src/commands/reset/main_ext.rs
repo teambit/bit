@@ -2,13 +2,14 @@
 
 use crate::commands::list::bitmap;
 use bit_object_import::{
-    parse_jsonc, read_scope_object, render_workspace_bitmap, reset_main::Plan, scope_path,
+    parse_jsonc, read_scope_object, render_workspace_bitmap,
+    reset_main::{self, Plan},
+    scope_path,
 };
 use serde_json::{Map, Value, json};
 use sha1::{Digest, Sha1};
 use std::{
-    fs,
-    io::{self, Write},
+    fs, io,
     path::{Path, PathBuf},
 };
 
@@ -62,19 +63,46 @@ fn load_all_version_refs(scope: &Path) -> io::Result<Vec<(String, String)>> {
         .ok_or_else(|| invalid("reset index"))?;
     let mut refs = Vec::new();
     for row in rows {
+        if row["isSymlink"] == true {
+            continue;
+        }
         let hash = row["hash"].as_str().ok_or_else(|| invalid("reset model hash"))?;
         if let Some((_, model)) = read_scope_object(scope, hash)? {
-            append_model_version_refs(&model, &mut refs)?;
+            append_model_version_refs(&model, row, &mut refs)?;
         }
     }
     Ok(refs)
 }
 
 /// Append `(version_hash, "scope/name@version")` entries for one `Component` model.
-fn append_model_version_refs(model: &Value, refs: &mut Vec<(String, String)>) -> io::Result<()> {
-    let comp_scope = model["scope"].as_str().ok_or_else(|| invalid("reset scope"))?;
-    let comp_name = model["name"].as_str().ok_or_else(|| invalid("reset name"))?;
-    let identity = format!("{comp_scope}/{comp_name}");
+fn append_model_version_refs(
+    model: &Value,
+    row: &Value,
+    refs: &mut Vec<(String, String)>,
+) -> io::Result<()> {
+    let comp_scope = model["scope"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            row["id"]["scope"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })
+        .unwrap_or_default();
+    let comp_name = model["name"]
+        .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            row["id"]["name"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })
+        .ok_or_else(|| invalid("reset name"))?;
+    let identity = if comp_scope.is_empty() {
+        comp_name.to_owned()
+    } else {
+        format!("{comp_scope}/{comp_name}")
+    };
     for field in ["versions", "orphanedVersions"] {
         if let Some(versions) = model[field].as_object() {
             append_version_map(&identity, versions, refs)?;
@@ -114,24 +142,21 @@ fn immediate_dependents(
     Ok(found)
 }
 
-/// Check whether `version["flattenedDependencies"]` references `target`.
+/// Check whether `version["flattenedDependencies"]` or `version["flattenedDevDependencies"]` references `target`.
 fn version_depends_on(version: &Value, target: &str) -> bool {
-    version["flattenedDependencies"]
-        .as_array()
-        .is_some_and(|rows| rows.iter().any(|row| row_matches_target(row, target)))
-}
-
-/// Check whether a dependency entry matches `"<scope>/<name>@<version>"`.
-fn row_matches_target(row: &Value, target: &str) -> bool {
-    if let Some(raw) = row.as_str() {
-        return raw == target;
-    }
-    let (Some(dep_scope), Some(dep_name), Some(dep_ver)) =
-        (row["scope"].as_str(), row["name"].as_str(), row["version"].as_str())
-    else {
-        return false;
-    };
-    format!("{dep_scope}/{dep_name}@{dep_ver}") == target
+    ["flattenedDependencies", "flattenedDevDependencies"]
+        .into_iter()
+        .any(|field| {
+            version[field]
+                .as_array()
+                .is_some_and(|rows| {
+                    rows.iter()
+                        .any(|row| {
+                            crate::commands::graph_cmd::builder::format_dep_id(row).as_deref()
+                                == Some(target)
+                        })
+                })
+        })
 }
 
 /// Prepared reset batch for main-lane components whose local snaps are detached heads.
@@ -161,7 +186,9 @@ impl DetachedBatch {
             .ok_or_else(|| invalid("detached index"))?;
         let mut items = Vec::new();
         for row in rows {
-            if let Some(item) = prepare_item(&scope, row)? {
+            if row["isSymlink"] != true
+                && let Some(item) = prepare_item(&scope, row)?
+            {
                 items.push(item);
             }
         }
@@ -188,7 +215,7 @@ impl DetachedBatch {
                 write_object(&scope, hash, bytes)?;
             }
         }
-        backup_bitmap(&self.root, file_id)?;
+        reset_main::backup_bitmap(&self.root, file_id)?;
         fs::write(self.root.join(".bitmap"), &self.bitmap_after)
     }
 }
@@ -206,10 +233,22 @@ fn prepare_item(scope: &Path, row: &Value) -> io::Result<Option<DetachedItem>> {
     let (parents, bitmap_version) = detached_parent_info(scope, &model, &current)?;
     let comp_scope = model["scope"]
         .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            row["id"]["scope"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })
         .ok_or_else(|| invalid("detached scope"))?
         .to_owned();
     let comp_name = model["name"]
         .as_str()
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            row["id"]["name"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+        })
         .ok_or_else(|| invalid("detached name"))?
         .to_owned();
     update_detached_model(&mut model, &current)?;
@@ -247,7 +286,8 @@ fn detached_parent_info(scope: &Path, model: &Value, current: &str) -> io::Resul
         return Err(invalid("detached parent count"));
     };
     let parent_hash = parent.as_str().ok_or_else(|| invalid("detached parent hash"))?;
-    let label = tag_for_hash(model, parent_hash).unwrap_or_else(|| parent_hash.to_owned());
+    let label = crate::commands::show_cmd::remote_show::find_tag_for_hash(model, parent_hash)
+        .unwrap_or_else(|| parent_hash.to_owned());
     Ok((version["parents"].clone(), label))
 }
 
@@ -260,14 +300,6 @@ fn local_versions(model: &Value) -> Vec<String> {
         .filter(|(_, entry)| entry["local"] == true)
         .map(|(label, _)| label.clone())
         .collect()
-}
-
-/// Find the tag name for a version hash if one exists in `model["versions"]`.
-fn tag_for_hash(model: &Value, target_hash: &str) -> Option<String> {
-    model["versions"]
-        .as_object()?
-        .iter()
-        .find_map(|(tag, hash)| (hash.as_str() == Some(target_hash)).then(|| tag.clone()))
 }
 
 /// Remove the detached version from `versions`, `state.versions`, and `detachedHeads`.
@@ -290,7 +322,12 @@ fn update_detached_model(model: &mut Value, removed: &str) -> io::Result<()> {
 
 /// Prune `heads`, `current`, and empty `deleted` from `detachedHeads`.
 fn prune_detached_heads(detached: &mut Map<String, Value>, removed: &str) {
-    prune_head_list(detached, removed);
+    if let Some(heads) = detached.get_mut("heads").and_then(Value::as_array_mut) {
+        heads.retain(|hash| hash.as_str() != Some(removed));
+        if heads.is_empty() {
+            detached.shift_remove("heads");
+        }
+    }
     if detached.get("current").and_then(Value::as_str) == Some(removed) {
         detached.shift_remove("current");
     }
@@ -300,17 +337,6 @@ fn prune_detached_heads(detached: &mut Map<String, Value>, removed: &str) {
         .is_some_and(Vec::is_empty)
     {
         detached.shift_remove("deleted");
-    }
-}
-
-/// Remove `removed` from `detachedHeads.heads` and drop the array if empty.
-fn prune_head_list(detached: &mut Map<String, Value>, removed: &str) {
-    let Some(heads) = detached.get_mut("heads").and_then(Value::as_array_mut) else {
-        return;
-    };
-    heads.retain(|hash| hash.as_str() != Some(removed));
-    if heads.is_empty() {
-        detached.shift_remove("heads");
     }
 }
 
@@ -372,7 +398,7 @@ fn find_bitmap_key(fields: &Map<String, Value>, scope: &str, name: &str) -> io::
             }
             let (row_scope, row_name) =
                 crate::commands::update_cmd::bitmap_row_scope_and_name(key, row);
-            (row_scope == scope && row_name == name).then(|| key.clone())
+            ((row_scope == scope || row_scope.is_empty()) && row_name == name).then(|| key.clone())
         })
         .ok_or_else(|| invalid("detached bitmap key absent"))
 }
@@ -416,18 +442,6 @@ fn write_object(scope: &Path, hash: &str, bytes: &[u8]) -> io::Result<()> {
         fs::create_dir_all(parent)?;
     }
     fs::write(path, bytes)
-}
-
-/// Record `.bitmap` backup and metadata receipt for `reset`.
-fn backup_bitmap(root: &Path, file_id: &str) -> io::Result<()> {
-    let directory = root.join(".bit/bitmap-history");
-    fs::create_dir_all(&directory)?;
-    fs::copy(root.join(".bitmap"), directory.join(format!(".bitmap-{file_id}")))?;
-    let mut metadata = fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(root.join(".bit/bitmap-history-metadata.txt"))?;
-    writeln!(metadata, "{file_id} reset")
 }
 
 fn invalid(message: &str) -> io::Error {

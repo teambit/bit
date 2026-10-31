@@ -93,37 +93,41 @@ fn extension(row: &Value) -> io::Result<Value> {
         if let Some(name) = row.get("name") {
             value["name"] = name.clone();
         }
-        if let Some(id) = row.get("id") {
+        if let Some(id) = row
+            .get("id")
+            .or_else(|| row.get("legacyId"))
+        {
             value["legacyId"] = id.clone();
         }
     }
     Ok(value)
 }
+
 fn identity(value: &Value) -> io::Result<Value> {
     if let Some(text) = value.as_str() {
-        let (bare, ver) = text
-            .rsplit_once('@')
-            .map_or((text, None), |(bare, ver)| (bare, Some(ver)));
-        let (scope, name) = bare
-            .split_once('/')
-            .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
-            .ok_or_else(|| invalid("status Version dependency scope"))?;
-        let mut out = json!({"scope":scope,"name":name});
-        if let Some(ver) = ver.filter(|ver| !ver.is_empty() && *ver != "latest") {
-            out["version"] = json!(ver);
-        }
-        return Ok(out);
+        return identity_from_str(text);
     }
     let object = value.as_object().ok_or_else(|| invalid("status Version dependency identity"))?;
-    if !object.get("name").is_some_and(Value::is_string)
-        || object
-            .get("scope")
-            .and_then(Value::as_str)
-            .is_none_or(str::is_empty)
+    let Some(raw_name) = object.get("name").and_then(Value::as_str) else {
+        return Err(invalid("status Version dependency scope"));
+    };
+    if object
+        .get("scope")
+        .and_then(Value::as_str)
+        .is_none_or(str::is_empty)
     {
         return Err(invalid("status Version dependency scope"));
     }
     let mut object = object.clone();
+    let (bare_name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver)));
+    object.insert("name".into(), json!(bare_name));
+    if !object.contains_key("version")
+        && let Some(ver) = inline_ver.or_else(|| object.get("head").and_then(Value::as_str))
+    {
+        object.insert("version".into(), json!(ver));
+    }
     if object
         .get("version")
         .and_then(Value::as_str)
@@ -132,6 +136,21 @@ fn identity(value: &Value) -> io::Result<Value> {
         object.remove("version");
     }
     Ok(Value::Object(object))
+}
+
+fn identity_from_str(text: &str) -> io::Result<Value> {
+    let (bare, ver) = text
+        .rsplit_once('@')
+        .map_or((text, None), |(bare, ver)| (bare, Some(ver)));
+    let (scope, name) = bare
+        .split_once('/')
+        .filter(|(sc, nm)| !sc.is_empty() && !nm.is_empty())
+        .ok_or_else(|| invalid("status Version dependency scope"))?;
+    let mut out = json!({"scope":scope,"name":name});
+    if let Some(ver) = ver.filter(|ver| !ver.is_empty() && *ver != "latest") {
+        out["version"] = json!(ver);
+    }
+    Ok(out)
 }
 fn convert(value: &Value) -> io::Result<Js> {
     Ok(match value {

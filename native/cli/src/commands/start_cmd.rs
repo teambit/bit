@@ -50,6 +50,7 @@ pub(super) fn is_outside_workspace_and_scope(cwd: &Path) -> bool {
                 dir.join("scope.json").is_file()
                     || dir.join(".bit/scope.json").is_file()
                     || dir.join(".bit").is_dir()
+                    || dir.join(".git/bit").is_dir()
             })
 }
 

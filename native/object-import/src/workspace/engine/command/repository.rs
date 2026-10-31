@@ -360,11 +360,9 @@ pub(super) fn model(context: &Value, identity: &str) -> io::Result<Option<Value>
         .ok_or_else(|| super::super::invalid("command models"))?
         .iter()
         .find(|model| {
-            format!(
-                "{}/{}",
-                model["scope"].as_str().unwrap_or_default(),
-                model["name"].as_str().unwrap_or_default(),
-            ) == identity
+            crate::workspace::engine::status_models::comparison::model_matches_identity(
+                model, identity,
+            )
         })
         .cloned())
 }

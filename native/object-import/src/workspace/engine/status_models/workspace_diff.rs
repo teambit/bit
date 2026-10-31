@@ -109,7 +109,13 @@ fn selected<'a>(
     models: &HashMap<String, &Value>,
     versions: &HashMap<&str, &'a Value>,
 ) -> io::Result<Option<&'a Value>> {
-    let model = models.get(&target.identity);
+    let model = models
+        .get(&target.identity)
+        .or_else(|| {
+            target.identity
+                .split_once('/')
+                .and_then(|(_, name)| models.get(name))
+        });
     if target.version.is_empty() {
         return if model.is_none() {
             Ok(None)

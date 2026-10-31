@@ -51,7 +51,7 @@ pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
         }
         let dependencies = match graph.get(&identity) {
             Some(dependencies) => dependencies.clone(),
-            None => read_external(&identity, &mut graph, &mut repository)?,
+            None => read_external(&request.root, &identity, &mut graph, &mut repository)?,
         };
         queue.extend(dependencies.iter().cloned());
         external.push(json!({"identity":identity,"dependencies":dependencies,"model":null}));
@@ -75,7 +75,7 @@ fn metadata(request: &Request, repository: &mut Repository) -> io::Result<ModelM
     let mut models = Vec::new();
     let mut versions = Vec::new();
     for name in names {
-        let Some(model) = read_model(repository, name)? else {
+        let Some(model) = read_model(&request.root, repository, name)? else {
             continue;
         };
         if let Some(head) = model_head(repository, &model)? {
@@ -86,19 +86,56 @@ fn metadata(request: &Request, repository: &mut Repository) -> io::Result<ModelM
     Ok((models, versions))
 }
 
-fn read_model(repository: &mut Repository, name: &str) -> io::Result<Option<Value>> {
-    let Some(model) = optional(repository, &super::hash(name.as_bytes()), "Component")? else {
-        return Ok(None);
-    };
-    if format!(
-        "{}/{}",
-        model["scope"].as_str().unwrap_or_default(),
-        model["name"].as_str().unwrap_or_default(),
-    ) != name
-    {
-        return Err(invalid("status dependency model identity"));
+fn read_model(
+    root: &std::path::Path,
+    repository: &mut Repository,
+    name: &str,
+) -> io::Result<Option<Value>> {
+    let mut candidates = Vec::new();
+    if let Some(indexed) = indexed_model_hash(root, name) {
+        candidates.push(indexed);
     }
-    Ok(Some(model))
+    candidates.push(super::hash(name.as_bytes()));
+    if let Some((_, bare_name)) = name.split_once('/') {
+        candidates.push(super::hash(bare_name.as_bytes()));
+    }
+    for candidate in candidates {
+        let Some(model) = optional(repository, &candidate, "Component")? else {
+            continue;
+        };
+        if !model_matches_name(&model, name) {
+            return Err(invalid("status dependency model identity"));
+        }
+        return Ok(Some(model));
+    }
+    Ok(None)
+}
+
+fn model_matches_name(model: &Value, name: &str) -> bool {
+    let model_scope = model["scope"].as_str().unwrap_or_default();
+    let model_name = model["name"].as_str().unwrap_or_default();
+    let (expected_scope, expected_name) = name
+        .split_once('/')
+        .unwrap_or(("", name));
+    model_name == expected_name && (model_scope == expected_scope || model_scope.is_empty())
+}
+
+fn indexed_model_hash(root: &std::path::Path, name: &str) -> Option<String> {
+    let (expected_scope, expected_name) = name
+        .split_once('/')
+        .unwrap_or(("", name));
+    let bytes = std::fs::read(crate::scope_path(root).join("index.json")).ok()?;
+    let index: Value = serde_json::from_slice(&bytes).ok()?;
+    let rows = index["components"].as_array().or_else(|| index.as_array())?;
+    rows.iter()
+        .find(|row| {
+            let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+            row["isSymlink"] != true
+                && row["id"]["name"].as_str() == Some(expected_name)
+                && (row_scope == expected_scope || row_scope.is_empty())
+        })
+        .and_then(|row| row["hash"].as_str())
+        .map(str::to_owned)
 }
 
 fn model_head(repository: &mut Repository, model: &Value) -> io::Result<Option<(String, Value)>> {
@@ -154,14 +191,15 @@ fn append_version(
 }
 
 fn read_external(
+    root: &std::path::Path,
     id: &str,
     graph: &mut Graph,
     repository: &mut Repository,
 ) -> io::Result<Vec<String>> {
     let Some((name, tag)) = id.rsplit_once('@') else {
-        return read_unversioned(id, graph, repository);
+        return read_unversioned(root, id, graph, repository);
     };
-    let Some(model) = read_model(repository, name)? else { return Ok(Vec::new()) };
+    let Some(model) = read_model(root, repository, name)? else { return Ok(Vec::new()) };
     let reference = super::status_models::versions::reference(&model, tag)?;
     let Some(version) = optional(repository, &reference, "Version")? else { return Ok(Vec::new()) };
     append_version(graph, &version, repository)?;
@@ -174,6 +212,7 @@ fn read_external(
 }
 
 fn read_unversioned(
+    root: &std::path::Path,
     id: &str,
     graph: &mut Graph,
     repository: &mut Repository,
@@ -182,7 +221,7 @@ fn read_unversioned(
     if scope.is_empty() || name.is_empty() || id.chars().any(char::is_whitespace) {
         return Err(invalid("status external identity"));
     }
-    let Some(model) = read_model(repository, id)? else { return Ok(Vec::new()) };
+    let Some(model) = read_model(root, repository, id)? else { return Ok(Vec::new()) };
     let Some((_, version)) = model_head(repository, &model)? else { return Ok(Vec::new()) };
     append_version(graph, &version, repository)?;
     let dependencies = direct_dependencies(&version)?;
@@ -192,23 +231,35 @@ fn read_unversioned(
 
 fn direct_dependencies(version: &Value) -> io::Result<Vec<String>> {
     let mut dependencies = Vec::new();
-    let ordinary = ["dependencies", "devDependencies"]
+    let ordinary = ["dependencies", "devDependencies", "extensionDependencies"]
         .iter()
         .flat_map(|field| {
             version[field]
                 .as_array()
                 .into_iter()
                 .flatten()
-        })
-        .map(|row| &row["id"]);
-    let extensions = version["extensions"]
+        });
+    for id in ordinary {
+        let dependency = identity(id)?;
+        if !dependencies.contains(&dependency) {
+            dependencies.push(dependency);
+        }
+    }
+    for extension in version["extensions"]
         .as_array()
         .into_iter()
         .flatten()
-        .filter_map(|extension| extension.get("extensionId"));
-    for id in ordinary.chain(extensions) {
-        let dependency = identity(id)?;
-        if !dependencies.contains(&dependency) {
+    {
+        let Some(ext_id) = extension
+            .get("extensionId")
+            .or_else(|| extension.get("legacyId"))
+            .or_else(|| extension.get("id"))
+        else {
+            continue;
+        };
+        if let Ok(dependency) = identity(ext_id)
+            && !dependencies.contains(&dependency)
+        {
             dependencies.push(dependency);
         }
     }
@@ -216,12 +267,34 @@ fn direct_dependencies(version: &Value) -> io::Result<Vec<String>> {
 }
 
 fn identity(value: &Value) -> io::Result<String> {
-    if let Some(text) = value.as_str() {
+    if let Some(text) = value
+        .as_str()
+        .or_else(|| value["id"].as_str())
+    {
         return validate_identity(text);
     }
-    let scope = value["scope"].as_str().ok_or_else(|| invalid("status edge scope"))?;
-    let name = value["name"].as_str().ok_or_else(|| invalid("status edge name"))?;
-    let version = value["version"].as_str().ok_or_else(|| invalid("status edge version"))?;
+    let id_obj = value
+        .get("id")
+        .filter(|sub| sub.is_object())
+        .unwrap_or(value);
+    let scope = id_obj["scope"]
+        .as_str()
+        .or_else(|| value["scope"].as_str())
+        .ok_or_else(|| invalid("status edge scope"))?;
+    let raw_name = id_obj["name"]
+        .as_str()
+        .or_else(|| value["name"].as_str())
+        .ok_or_else(|| invalid("status edge name"))?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
+    let version = id_obj["version"]
+        .as_str()
+        .or_else(|| value["version"].as_str())
+        .or_else(|| value["head"].as_str())
+        .filter(|ver| !ver.is_empty())
+        .or(inline_ver)
+        .ok_or_else(|| invalid("status edge version"))?;
     validate_identity(&format!("{scope}/{name}@{version}"))
 }
 

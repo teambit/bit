@@ -7,8 +7,8 @@ pub(super) fn matches_target(key: &str, row: &Value, target: &Target) -> bool {
     if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
         return false;
     }
-    let (_, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
-    row_name == target.name && row["scope"].as_str() == target.scope.as_deref()
+    let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
+    row_name == target.name && row_scope == target.scope.as_deref()
 }
 
 pub(super) fn bitmap_key(
@@ -29,15 +29,13 @@ pub(super) fn bitmap_key(
     }
     let previous = std::mem::take(rows);
     for (key, row) in previous {
+        let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(&key, &row);
         let is_same_name = !key.starts_with('$')
             && !matches!(key.as_str(), "_bit_lane" | "version")
             && row.is_object()
-            && crate::reset_lane::bitmap::row_identity(&key, &row).1 == name;
+            && row_name == name;
         let key = if is_same_name {
-            format!(
-                "{}/{name}",
-                row["scope"].as_str().ok_or_else(|| invalid("inbound bitmap scope"))?,
-            )
+            format!("{}/{name}", row_scope.ok_or_else(|| invalid("inbound bitmap scope"))?)
         } else {
             key
         };

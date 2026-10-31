@@ -36,17 +36,8 @@ fn deprecated(context: &Value, full_id: &str) -> io::Result<bool> {
     {
         return Ok(value);
     }
-    let models = array(context.get("models"), "deprecation models")?;
-    let model = models
-        .iter()
-        .find(|model| {
-            format!(
-                "{}/{}",
-                model["scope"].as_str().unwrap_or_default(),
-                model["name"].as_str().unwrap_or_default(),
-            ) == identity
-        });
-    let Some(model) = model else {
+    array(context.get("models"), "deprecation models")?;
+    let Some(model) = crate::commands::status::policy::model_of(context, identity) else {
         return Ok(false);
     };
     if truthy(model.get("deprecated")) {
@@ -93,12 +84,18 @@ fn range_matches(model: &Value, full_id: &str, config: &Value) -> io::Result<boo
     let Some((_, version)) = full_id.rsplit_once('@') else {
         return Ok(false);
     };
-    let tags =
-        model["versions"].as_object().ok_or_else(|| super::decline("deprecation model tags"))?;
-    let tag = if tags.contains_key(version) {
+    let empty = serde_json::Map::new();
+    let tags = match model.get("versions") {
+        None | Some(Value::Null) => &empty,
+        Some(value) => value.as_object().ok_or_else(|| super::decline("deprecation model tags"))?,
+    };
+    let orphaned = model["orphanedVersions"].as_object();
+    let tag = if tags.contains_key(version) || orphaned.is_some_and(|map| map.contains_key(version))
+    {
         Some(version)
     } else {
         tags.iter()
+            .chain(orphaned.into_iter().flat_map(serde_json::Map::iter))
             .find(|(_, reference)| reference.as_str() == Some(version))
             .map(|(tag, _)| tag.as_str())
     };

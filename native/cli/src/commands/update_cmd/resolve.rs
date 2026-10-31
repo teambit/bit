@@ -83,14 +83,23 @@ fn resolve_scope_versions(
         cand.comp_bare_id.clone().or_else(|| derive_bare_id_from_pkg(&cand.name, remotes))?;
     let comp_scope = bare_id.split('/').next()?;
     let remote_dir = remotes.get(comp_scope)?;
-    let hash = hex_sha1(bare_id.as_bytes());
+    let hash = crate::commands::debug_cat::lookup::resolve_component_entry(remote_dir, &bare_id)
+        .map_or_else(|| hex_sha1(bare_id.as_bytes()), |(_, _, h)| h);
     let (kind, model) = bit_object_import::read_scope_object(remote_dir, &hash).ok()??;
     if kind != "Component" {
         return None;
     }
-    let versions_obj = model["versions"].as_object()?;
-    sync_remote_component_objects(root, remote_dir, &hash, versions_obj);
-    Some(versions_obj.keys().cloned().collect())
+    let mut merged = serde_json::Map::new();
+    for field in ["orphanedVersions", "versions"] {
+        if let Some(map) = model[field].as_object() {
+            merged.extend(map.clone());
+        }
+    }
+    if merged.is_empty() {
+        return None;
+    }
+    sync_remote_component_objects(root, remote_dir, &hash, &merged);
+    Some(merged.keys().cloned().collect())
 }
 
 fn derive_bare_id_from_pkg(pkg_name: &str, remotes: &HashMap<String, PathBuf>) -> Option<String> {

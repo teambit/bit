@@ -47,7 +47,9 @@ fn update(retained: &mut Retained, input: &Overrides) -> io::Result<HashMap<Stri
             .iter_mut()
             .find(|material| material.identity == *identity)
             .ok_or_else(|| invalid("tag registry component outside batch"))?;
-        if material.model["versions"].get(version).is_some() {
+        if material.model["versions"].get(version).is_some()
+            || material.model["orphanedVersions"].get(version).is_some()
+        {
             return Err(invalid("tag registry version already exists"));
         }
         let old = material.version_state.tagged_version

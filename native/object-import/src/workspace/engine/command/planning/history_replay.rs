@@ -46,7 +46,8 @@ pub(super) fn replay(
 }
 
 fn resolves_heads(to: &str, model: &Value, head: Option<&str>, remote: Option<&str>) -> bool {
-    let latest_without_tags =
-        to == "latest" && model["versions"].as_object().is_none_or(serde_json::Map::is_empty);
+    let latest_without_tags = to == "latest"
+        && model["versions"].as_object().is_none_or(serde_json::Map::is_empty)
+        && model["orphanedVersions"].as_object().is_none_or(serde_json::Map::is_empty);
     (to == "head" || latest_without_tags) && head.is_some() && remote.is_some() && head != remote
 }

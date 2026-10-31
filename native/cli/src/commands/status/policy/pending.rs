@@ -47,7 +47,7 @@ impl Inputs {
         let unmerged = optional(&paths[1])?
             .map_or_else(
                 || Ok(json!([])),
-                |text| serde_json::from_str(&text).map_err(io::Error::other),
+                |text| bit_object_import::parse_jsonc(text.as_bytes()),
             )?;
         Ok(Self { merge, unmerged, proofs })
     }

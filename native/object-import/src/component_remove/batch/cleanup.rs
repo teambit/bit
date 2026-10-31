@@ -140,14 +140,16 @@ fn staged(root: &Path, bitmap: &Value, identities: &[&str]) -> io::Result<Option
     let rows = value.as_array_mut().ok_or_else(|| invalid("stash staged configuration"))?;
     let length = rows.len();
     rows.retain(|row| {
-        !identities.contains(
-            &format!(
-                "{}/{}",
-                row["id"]["scope"].as_str().unwrap_or_default(),
-                row["id"]["name"].as_str().unwrap_or_default(),
-            )
-            .as_str(),
-        )
+        let row_scope = row["id"]["scope"].as_str().unwrap_or_default();
+        let row_name = row["id"]["name"].as_str().unwrap_or_default();
+        let scoped = format!("{row_scope}/{row_name}");
+        !identities
+            .iter()
+            .any(|identity| {
+                *identity == scoped
+                    || (row_scope.is_empty()
+                        && identity.split_once('/').map(|(_, nm)| nm) == Some(row_name))
+            })
     });
     if rows.len() == length {
         return Ok(None);

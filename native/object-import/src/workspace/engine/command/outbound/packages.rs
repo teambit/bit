@@ -135,7 +135,14 @@ fn component(
     )?;
     let model = model::read_object(&objects, hash, "Component")?;
     let version_id = target["version"].as_str().ok_or_else(|| invalid("export package version"))?;
-    let hash = model["versions"][version_id].as_str().unwrap_or(version_id);
+    let hash = if version_id.is_empty() || version_id == "latest" {
+        model["head"].as_str().unwrap_or(version_id)
+    } else {
+        model["versions"][version_id]
+            .as_str()
+            .or_else(|| model["orphanedVersions"][version_id].as_str())
+            .unwrap_or(version_id)
+    };
     let version = model::read_object(&objects, hash, "Version")?;
     projection(input, target, &version, proofs).map(Some)
 }

@@ -89,7 +89,11 @@ fn run_outside_workspace(cwd: &Path, args: &[OsString], json: bool) -> io::Resul
     if env::var_os("CI").is_some_and(|val| !val.is_empty())
         || cwd
             .ancestors()
-            .any(|dir| dir.join("scope.json").is_file() || dir.join(".bit").is_dir())
+            .any(|dir| {
+                dir.join("scope.json").is_file()
+                    || dir.join(".bit").is_dir()
+                    || dir.join(".git/bit").is_dir()
+            })
     {
         return Ok(Outcome::Declined("cat requires a supported workspace".into()));
     }

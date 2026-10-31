@@ -272,6 +272,7 @@ impl State<'_> {
             && !model["versions"]
                 .as_object()
                 .into_iter()
+                .chain(model["orphanedVersions"].as_object())
                 .flat_map(|versions| versions.values())
                 .any(|hash| hash == &model["head"])
     }

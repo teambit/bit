@@ -121,26 +121,63 @@ pub fn legacy_dependencies(value: &Value) -> Vec<LegacyDependency> {
 
 fn legacy_dependency(value: &Value) -> Option<LegacyDependency> {
     Some(LegacyDependency {
-        id: id_from_object(&value["id"])?,
+        id: id_from_object(value)?,
         package_name: value["packageName"].as_str().map(str::to_owned),
         version_range: value["versionRange"].as_str().map(str::to_owned),
     })
 }
 
-/// `ComponentID.fromObject({ scope, name, version })`.
+/// `ComponentID.fromObject({ scope, name, version })` or string id.
 #[must_use]
 pub fn id_from_object(value: &Value) -> Option<ComponentId> {
-    let non_empty = |key: &str| {
-        value[key]
-            .as_str()
-            .filter(|text| !text.is_empty())
-            .map(str::to_owned)
-    };
+    if let Some(raw) = value
+        .as_str()
+        .or_else(|| value["id"].as_str())
+    {
+        return id_from_str(raw);
+    }
+    let inner = value
+        .get("id")
+        .filter(|sub| sub.is_object())
+        .unwrap_or(value);
+    let raw_name = inner["name"]
+        .as_str()
+        .or_else(|| value["name"].as_str())
+        .filter(|text| !text.is_empty())?;
+    let (name, inline_ver) = crate::policy::split_version(raw_name);
+    let version = inner["version"]
+        .as_str()
+        .or_else(|| value["version"].as_str())
+        .or_else(|| inner["head"].as_str())
+        .or_else(|| value["head"].as_str())
+        .filter(|text| !text.is_empty())
+        .or(inline_ver)
+        .filter(|ver| *ver != "latest")
+        .map(str::to_owned);
     Some(ComponentId {
-        scope: non_empty("scope"),
+        scope: inner["scope"]
+            .as_str()
+            .or_else(|| value["scope"].as_str())
+            .filter(|text| !text.is_empty())
+            .map(str::to_owned),
         default_scope: None,
-        name: non_empty("name")?,
-        version: non_empty("version"),
+        name: name.to_owned(),
+        version,
+    })
+}
+
+fn id_from_str(raw: &str) -> Option<ComponentId> {
+    let (bare, version) = crate::policy::split_version(raw);
+    let (scope, name) = bare
+        .split_once('/')
+        .map_or((None, bare), |(sc, nm)| ((!sc.is_empty()).then_some(sc), nm));
+    (!name.is_empty()).then(|| ComponentId {
+        scope: scope.map(str::to_owned),
+        default_scope: None,
+        name: name.to_owned(),
+        version: version
+            .filter(|ver| !ver.is_empty() && *ver != "latest")
+            .map(str::to_owned),
     })
 }
 

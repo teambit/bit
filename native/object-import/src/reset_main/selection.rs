@@ -34,6 +34,7 @@ pub fn select(component: &Value, objects: &Path, head_only: bool) -> io::Result<
 fn local_refs(component: &Value) -> io::Result<HashMap<String, String>> {
     let versions =
         component["versions"].as_object().ok_or_else(|| invalid("reset versions map"))?;
+    let orphaned = component["orphanedVersions"].as_object();
     let state = component["state"]["versions"]
         .as_object()
         .ok_or_else(|| invalid("reset local versions map"))?;
@@ -44,6 +45,7 @@ fn local_refs(component: &Value) -> io::Result<HashMap<String, String>> {
         }
         let hash = versions
             .get(label)
+            .or_else(|| orphaned.and_then(|map| map.get(label)))
             .and_then(Value::as_str)
             .unwrap_or(label);
         crate::merge_history::hash(hash)?;
@@ -121,6 +123,7 @@ fn validate_other_local(
 fn labels(component: &Value, removed: &[String]) -> io::Result<Vec<String>> {
     let versions =
         component["versions"].as_object().ok_or_else(|| invalid("reset versions map"))?;
+    let orphaned = component["orphanedVersions"].as_object();
     let state = component["state"]["versions"]
         .as_object()
         .ok_or_else(|| invalid("reset local versions map"))?;
@@ -133,6 +136,7 @@ fn labels(component: &Value, removed: &[String]) -> io::Result<Vec<String>> {
         .filter_map(|(label, row)| {
             let hash = versions
                 .get(label)
+                .or_else(|| orphaned.and_then(|map| map.get(label)))
                 .and_then(Value::as_str)
                 .unwrap_or(label);
             (row["local"] == true && selected.contains(hash)).then_some(label.clone())
@@ -145,13 +149,10 @@ impl Selection {
         let Some(head) = self.next_head.as_deref() else { return String::new() };
         component["versions"]
             .as_object()
-            .and_then(|versions| {
-                versions
-                    .iter()
-                    .find_map(|(label, value)| {
-                        (value.as_str() == Some(head)).then_some(label.clone())
-                    })
-            })
+            .into_iter()
+            .chain(component["orphanedVersions"].as_object())
+            .flat_map(|versions| versions.iter())
+            .find_map(|(label, value)| (value.as_str() == Some(head)).then_some(label.clone()))
             .unwrap_or_else(|| head.to_owned())
     }
 

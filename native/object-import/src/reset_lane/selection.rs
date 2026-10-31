@@ -30,10 +30,12 @@ pub(super) fn select(repository: &Repository, head_only: bool) -> io::Result<Sel
 }
 
 fn tag_labels(selection: &mut Selection, model: &Value) {
-    let Some(versions) = model["versions"].as_object() else { return };
     for label in &mut selection.labels {
-        if let Some(tag) = versions
-            .iter()
+        if let Some(tag) = model["versions"]
+            .as_object()
+            .into_iter()
+            .chain(model["orphanedVersions"].as_object())
+            .flat_map(|versions| versions.iter())
             .find_map(|(tag, hash)| (hash.as_str() == Some(label.as_str())).then_some(tag))
         {
             label.clone_from(tag);

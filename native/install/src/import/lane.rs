@@ -51,8 +51,8 @@ impl RemoteLane {
         let hidden = self.object["updateDependents"]
             .as_array()
             .into_iter()
-            .flatten();
-        let hidden = hidden.filter_map(|id| Id::parse(id.as_str()?).ok());
+            .flatten()
+            .filter_map(super::fs_remote::dependency_id);
         self.components()
             .into_iter()
             .chain(hidden)
@@ -79,7 +79,7 @@ pub fn local_update_dependents(repo: &Repo, lane: &LaneId) -> io::Result<Vec<Id>
         .as_array()
         .into_iter()
         .flatten()
-        .filter_map(|id| Id::parse(id.as_str()?).ok())
+        .filter_map(super::fs_remote::dependency_id)
         .collect())
 }
 

@@ -87,7 +87,12 @@ pub fn from_model(extensions: &[Value]) -> Vec<AspectEntry> {
         .iter()
         .filter_map(|extension| {
             let (id, core) = match extension.get("extensionId") {
-                Some(Value::String(id)) => (id.clone(), false),
+                Some(Value::String(id)) => (
+                    id.strip_suffix("@latest")
+                        .unwrap_or(id)
+                        .to_owned(),
+                    false,
+                ),
                 Some(Value::Object(id)) => (serialized_id(id)?, false),
                 _ => (
                     extension
@@ -113,15 +118,21 @@ pub fn from_model(extensions: &[Value]) -> Vec<AspectEntry> {
 
 /// A serialized `ComponentID` (`{ scope, name, version }`) as `toString()` prints it.
 fn serialized_id(id: &Map<String, Value>) -> Option<String> {
-    let name = id.get("name")?.as_str()?;
+    let raw_name = id.get("name")?.as_str()?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| (bare, Some(ver).filter(|ver| !ver.is_empty())));
     let scoped = match id.get("scope").and_then(Value::as_str) {
         Some(scope) if !scope.is_empty() => format!("{scope}/{name}"),
         _ => name.to_owned(),
     };
-    Some(match id.get("version").and_then(Value::as_str) {
-        Some(version) if !version.is_empty() && version != "latest" => {
-            format!("{scoped}@{version}")
-        }
+    let version = id
+        .get("version")
+        .and_then(Value::as_str)
+        .filter(|ver| !ver.is_empty())
+        .or(inline_ver);
+    Some(match version {
+        Some(ver) if ver != "latest" => format!("{scoped}@{ver}"),
         _ => scoped,
     })
 }
