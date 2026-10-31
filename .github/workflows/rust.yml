@@ -1,0 +1,394 @@
+name: Rust
+
+# The Rust CLI (`native/`): formatting, Clippy, the perfectionist lints, rustdoc,
+# the workspace tests on every platform the CLI targets, and the ported e2e cases.
+on:
+  push:
+    branches: [master, rust-workspace-materialization]
+    paths:
+      - 'native/**'
+      - 'scripts/rust/**'
+      - 'scopes/harmony/testing/load-aspect/core-aspects-ids.json'
+      - '.github/workflows/rust.yml'
+  pull_request:
+    paths:
+      - 'native/**'
+      - 'scripts/rust/**'
+      - 'scopes/harmony/testing/load-aspect/core-aspects-ids.json'
+      - '.github/workflows/rust.yml'
+  workflow_dispatch:
+    inputs:
+      build-distribution:
+        description: Build native binaries and bvm archives
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-${{ github.event.pull_request.number || github.ref }}
+  # Superseded PR pushes are cancelled; every pushed commit keeps its result.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: pnpm Rust formatting and lints
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Cache Cargo and formatter artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin/cargo-dylint
+            ~/.cargo/bin/dylint-link
+            ~/.dylint_drivers
+            ~/.cache/pnpm/rustfmt
+            native/target/debug
+          key: rust-lint-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock', 'native/Cargo.toml', 'scripts/rust/rustfmt.json') }}-dylint-6.0.4
+          # Keeps the installed Dylint binaries and registry when only the lockfile changes.
+          restore-keys: rust-lint-${{ runner.os }}-
+      - name: Cache pinned perfectionist library
+        uses: actions/cache@v4
+        with:
+          path: native/target/dylint
+          key: rust-perfectionist-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/dylint.toml') }}-dylint-6.0.4
+      - name: Install pinned Rust and Clippy
+        run: |
+          rustup show
+          rustup component add clippy
+      - name: Check pnpm's pinned formatter
+        run: node ../scripts/rust/rustfmt.mjs --all -- --check
+      - name: Check Clippy
+        run: cargo clippy --locked --workspace --all-targets --features bit-cli/e2e -- -D warnings
+      - name: Install pnpm's Dylint version
+        run: |
+          if ! cargo dylint --version 2>/dev/null | grep -Fxq 'cargo-dylint 6.0.4' || ! command -v dylint-link >/dev/null; then
+            cargo install --locked --force --version 6.0.4 cargo-dylint dylint-link
+          fi
+      - name: Check perfectionist
+        env:
+          RUSTFLAGS: '-D warnings'
+        run: |
+          bash ../scripts/rust/test-dylint-git.sh
+          export DYLINT_REAL_GIT="$(command -v git)"
+          mkdir -p "$RUNNER_TEMP/dylint-git"
+          cp ../scripts/rust/dylint-git.sh "$RUNNER_TEMP/dylint-git/git"
+          chmod +x "$RUNNER_TEMP/dylint-git/git"
+          export PATH="$RUNNER_TEMP/dylint-git:$PATH"
+          cargo dylint --all -- --all-targets --workspace --features bit-cli/e2e
+      - name: Check Rust documentation
+        env:
+          RUSTDOCFLAGS: '-D warnings'
+        run: cargo doc --locked --workspace --no-deps
+      - name: Check that the e2e porting plan lists every e2e case
+        run: node ../scripts/rust/e2e-port-plan.mjs --check
+      - name: Check the native runtime boundary census
+        run: node ../scripts/rust/native-boundaries.mjs --check
+      - name: Check upstream onboarding assets
+        run: node ../scripts/rust/check-ci-scaffold.mjs
+      - name: Check benchmark JSON and bitmap history validators
+        run: |
+          python3 ../scripts/rust/lane-restoration-benchmark-tests.py
+          python3 ../scripts/rust/lane-graph-reset-benchmark-tests.py
+          python3 ../scripts/rust/bitmap-history-oracle-tests.py
+          python3 ../scripts/rust/package-bvm-tests.py
+
+  test:
+    name: Rust tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-15-intel, macos-15, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 90 || 60 }}
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Cache dependencies and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target/debug
+          key: rust-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+          restore-keys: rust-test-${{ runner.os }}-${{ runner.arch }}-
+      - name: Install pinned Rust
+        run: rustup show
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Test the workspace
+        run: cargo test --locked --workspace
+
+  e2e:
+    # The e2e cases ported to the native CLI (native/plans/TEST_PORTING.md), with the
+    # released Node.js CLI that cli/tests/e2e/bit-version names behind it.
+    name: Ported e2e cases (${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    # Shard 1 also runs the reduced-stack regressions before saving caches.
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Read the pinned Node.js CLI version
+        id: bit
+        run: echo "version=$(tr -d '[:space:]' < cli/tests/e2e/bit-version)" >> "$GITHUB_OUTPUT"
+      - name: Cache dependencies and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target/debug
+          key: rust-e2e-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+          restore-keys: rust-e2e-${{ runner.os }}-${{ runner.arch }}-
+      - name: Cache the Node.js CLI
+        id: bvm-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bvm/versions/${{ steps.bit.outputs.version }}
+          key: bvm-bit-${{ runner.os }}-${{ runner.arch }}-${{ steps.bit.outputs.version }}
+      - name: Install pinned Rust
+        run: rustup show
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Install the Node.js CLI
+        if: steps.bvm-cache.outputs.cache-hit != 'true'
+        # Outside native/, whose package.json pins pnpm as the package manager.
+        working-directory: ${{ runner.temp }}
+        env:
+          BIT_VERSION: ${{ steps.bit.outputs.version }}
+        run: |
+          npx -y @teambit/bvm@3.1.4 config set RELEASE_TYPE nightly
+          npx -y @teambit/bvm@3.1.4 install "$BIT_VERSION" --skip-update-path
+      - name: Install the released upstream pnpm reference engine
+        run: npm ci --prefix ../scripts/rust/pnpm-oracle --@pnpm:registry=https://registry.npmjs.org --ignore-scripts --no-audit --no-fund
+      - name: Run the ported e2e cases
+        env:
+          SHARD: ${{ matrix.shard }}
+          SHARDS: 4
+        run: |
+          mapfile -t shard_tests < <(
+            cargo test --locked -p bit-cli --features e2e --test e2e -- --list --format=terse \
+              | sed -n 's/: test$//p' \
+              | awk -v shard="$SHARD" -v shards="$SHARDS" '(NR - 1) % shards == (shard - 1)'
+          )
+          echo "Running ${#shard_tests[@]} e2e tests in shard $SHARD/$SHARDS"
+          cargo test --locked -p bit-cli --features e2e --test e2e -- --exact "${shard_tests[@]}"
+      - name: Check lane imports with the Windows main-stack budget
+        if: matrix.shard == 1
+        run: python3 ../scripts/rust/check-native-stack.py
+
+  status-diff-windows:
+    name: Workspace VCS parity (Windows, ${{ matrix.group }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: status
+            filters: commands::list commands::cat harmony::file_history diff_completion status_completion status_component_policy status_environments status_relative status_component_selectors status_graph_remote status_autosync
+          - group: snapshot
+            filters: commands::snap commands::tag snapshot_environments update_dependents_cascade::older
+          - group: checkout
+            filters: checkout_platform checkout_local checkout_callbacks checkout_policy checkout_selection reset_selection harmony::untag harmony::revert harmony::lane_adoption harmony::lane_restoration harmony::lane_graph_reset
+          - group: transfer
+            filters: commands::import commands::export commands::resume_export restoring_a_directory_link export_completion export_hub export_callbacks
+          - group: merge-history
+            filters: merge_history merge_lifecycle merge_callbacks merge_policy merge_recovery harmony::lanes::abort_merge_lane
+          - group: provisioning
+            filters: commands::init commands::lane commands::format commands::lint commands::compile commands::tester harmony::config harmony::doctor harmony::install_compat harmony::lane_import_callbacks harmony::ci_sync::onboarding::native
+          - group: stash
+            filters: harmony::stash
+          - group: tracking
+            filters: "commands::add:: harmony::add::"
+          - group: identity
+            filters: commands::move_paths harmony::rename harmony::deprecation
+          - group: mutation
+            filters: commands::remove commands::delete commands::recover harmony::scope_rename
+          - group: fork
+            filters: harmony::fork harmony::scope_fork
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: native
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set the BVM cache directory
+        run: echo "BVM_GLOBALS_DIR=$RUNNER_TEMP/bit-bvm" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Read the pinned Node.js CLI version
+        id: bit
+        run: echo "version=$(tr -d '[:space:]' < cli/tests/e2e/bit-version)" >> "$GITHUB_OUTPUT"
+      - name: Cache dependencies and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target/debug
+          key: rust-status-diff-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+          restore-keys: |
+            rust-status-diff-${{ runner.os }}-${{ runner.arch }}-
+            rust-test-${{ runner.os }}-${{ runner.arch }}-
+      - name: Cache the Node.js CLI
+        id: bvm-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BVM_GLOBALS_DIR }}/versions/${{ steps.bit.outputs.version }}
+          key: bvm-status-diff-${{ runner.os }}-${{ runner.arch }}-${{ steps.bit.outputs.version }}
+      - name: Install pinned Rust
+        run: rustup show
+      - name: Install the Node.js CLI
+        if: steps.bvm-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ runner.temp }}
+        env:
+          BIT_VERSION: ${{ steps.bit.outputs.version }}
+        run: |
+          npx -y @teambit/bvm@3.1.4 config set RELEASE_TYPE nightly
+          npx -y @teambit/bvm@3.1.4 install "$BIT_VERSION" --skip-update-path
+      - name: Install the released upstream pnpm reference engine
+        run: npm ci --prefix ../scripts/rust/pnpm-oracle --@pnpm:registry=https://registry.npmjs.org --ignore-scripts --no-audit --no-fund
+      - name: Compare native workspace VCS with the pinned Node.js CLI
+        env:
+          PARITY_FILTERS: ${{ matrix.filters }}
+        run: |
+          parity_failed=0
+          for parity_filter in $PARITY_FILTERS; do
+            if ! cargo test --locked -p bit-cli --features e2e --test e2e "$parity_filter" -- --nocapture; then
+              parity_failed=1
+            fi
+          done
+          exit "$parity_failed"
+
+  distribution:
+    name: Native distribution (${{ matrix.target }})
+    if: github.event_name == 'workflow_dispatch' && inputs.build-distribution
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            platform: linux
+            arch: x64
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            platform: linux
+            arch: arm64
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+            platform: darwin
+            arch: x64
+          - os: macos-15
+            target: aarch64-apple-darwin
+            platform: darwin
+            arch: arm64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            platform: win
+            arch: x64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            platform: linux
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: bash
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target
+          key: rust-dist-${{ matrix.target }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+      - name: Install pinned Rust target
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          rustup show
+          rustup target add "$TARGET"
+      - name: Install musl toolchain
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          echo "CMAKE_TOOLCHAIN_FILE=$PWD/cmake/linux-musl.cmake" >> "$GITHUB_ENV"
+          echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=musl-gcc" >> "$GITHUB_ENV"
+      - name: Build distribution binary
+        env:
+          TARGET: ${{ matrix.target }}
+        run: cargo build --locked --profile dist --target "$TARGET" -p bit-cli
+      - name: Package native executable
+        env:
+          TARGET: ${{ matrix.target }}
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          mkdir -p distribution
+          executable=bit
+          if [ "$PLATFORM" = win ]; then executable=bit.exe; fi
+          cp "target/$TARGET/dist/$executable" "distribution/$executable"
+      - name: Package bvm archive with released Node fallback
+        if: matrix.target != 'x86_64-unknown-linux-musl'
+        env:
+          TARGET: ${{ matrix.target }}
+          PLATFORM: ${{ matrix.platform }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          base=$(tr -d '\r\n' < cli/tests/e2e/bit-version)
+          version="$base-native.$GITHUB_RUN_NUMBER"
+          executable=bit
+          if [ "$PLATFORM" = win ]; then executable=bit.exe; fi
+          curl --fail --location --retry 3 "https://bvm.bit.dev/bit/versions/$base/bit-$base-$PLATFORM-$ARCH.tar.gz" -o base.tar.gz
+          python3 ../scripts/rust/package-bvm.py --base base.tar.gz --binary "distribution/$executable" --version "$version" --platform "$PLATFORM" --output "distribution/bit-$version-$PLATFORM-$ARCH.tar.gz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bit-native-${{ matrix.target }}-${{ github.sha }}
+          path: native/distribution/
+          if-no-files-found: error
+          retention-days: 30

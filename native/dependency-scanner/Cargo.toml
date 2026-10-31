@@ -1,0 +1,19 @@
+[package]
+name = "bit-dependency-scanner"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+oxc_allocator = "=0.153.0"
+oxc_ast = "=0.153.0"
+oxc_ast_visit = "=0.153.0"
+oxc_parser = "=0.153.0"
+oxc_span = "=0.153.0"
+rayon = "1.11"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+indexmap = { version = "2", features = ["serde"] }
+
+[lints]
+workspace = true

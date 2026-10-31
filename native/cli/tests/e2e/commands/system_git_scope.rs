@@ -1,0 +1,1143 @@
+//! Native e2e coverage for `details`, `globals`, `system`, `version`, `git`, and `scope trust`.
+
+mod remote_history;
+mod upstream_history;
+
+use crate::helper::{Helper, config, parse};
+use serde_json::json;
+use std::fs;
+
+#[test]
+fn version_history_rejects_no_color_before_changing_history() {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    let scope = &helper.scopes.remote_path;
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = scope
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(&path).unwrap();
+    }
+    let before = super::move_paths::support::tree(scope);
+    let command = "version-history build comp1 --no-color";
+    let node = Helper::cmd_in_with(scope, command, &[("BIT_NATIVE", std::ffi::OsStr::new("off"))]);
+    let result = Helper::cmd_in(scope, command);
+    assert!(!result.native && !result.status.success(), "{result:?}");
+    assert_eq!(result.stdout, node.stdout);
+    assert_eq!(result.stderr, node.stderr);
+    assert_eq!(result.status.code(), node.status.code());
+    assert!(!path.exists());
+    assert_eq!(super::move_paths::support::tree(scope), before);
+}
+
+#[test]
+fn version_history_rebuilds_missing_bare_history_without_runtime() {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let directory = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2]);
+    if fs::read_dir(&directory).is_ok_and(|mut entries| entries.next().is_none()) {
+        fs::remove_dir(directory).unwrap();
+    }
+    let result = super::scope_fixture::compare(&helper, "version-history build comp1", false);
+    assert!(result.stdout.contains("added 2 hashes"));
+}
+
+#[test]
+fn version_history_build_patterns_match_glob_comma_and_negation_in_workspaces_and_bare_scopes() {
+    use sha1::{Digest, Sha1};
+    let helper = super::move_paths::support::workspace(2, true);
+    super::move_paths::support::setup(&helper, "export");
+    let unavailable = helper.scopes.e2e_dir.join("unavailable-runtime");
+    for root in [&helper.scopes.local_path, &helper.scopes.remote_path] {
+        for pattern in [
+            r#""*/comp*""#,
+            r#""**, !*/comp2""#,
+            &format!(r#""{0}/comp1, {0}/comp2""#, helper.scopes.remote),
+        ] {
+            let command = format!("version-history build {pattern}");
+            let node =
+                Helper::cmd_in_with(root, &command, &[("BIT_NATIVE", std::ffi::OsStr::new("off"))]);
+            let native = Helper::cmd_in_with(
+                root,
+                &command,
+                &[
+                    ("BIT_NODE_BINARY", unavailable.as_os_str()),
+                    ("BIT_NODE_CLI", unavailable.as_os_str()),
+                ],
+            );
+            assert!(
+                native.native && !native.trace.contains("starting the JavaScript host"),
+                "{native:?}",
+            );
+            assert_eq!(native.status.code(), node.status.code());
+            assert_eq!(native.stdout, node.stdout, "{command}");
+            assert_eq!(native.stderr, node.stderr, "{command}");
+        }
+    }
+
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let rebuilt =
+        super::scope_fixture::compare(&helper, r#"version-history build "**, !*/comp2""#, false);
+    assert!(
+        rebuilt.stdout.contains(&format!("{}/comp1@0.0.1: added 1 hashes", helper.scopes.remote)),
+        "{rebuilt:?}",
+    );
+}
+
+#[test]
+fn bare_scope_graph_json_matches_node_without_a_host() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    super::move_paths::support::setup(&helper, "tag --skip-tests");
+    super::move_paths::support::setup(&helper, "export");
+    let scope = &helper.scopes.remote_path;
+    let unavailable = helper.scopes.e2e_dir.join("unavailable-runtime");
+    for command in [
+        "graph --json",
+        "graph --cycles --json",
+        "graph comp1 --json",
+        "graph comp1 --include-dependencies --json",
+        "graph comp2 --include-dependencies --json",
+        "artifacts comp1",
+        r#"artifacts "**""#,
+    ] {
+        let node =
+            Helper::cmd_in_with(scope, command, &[("BIT_NATIVE", std::ffi::OsStr::new("off"))]);
+        let native = Helper::cmd_in_with(
+            scope,
+            command,
+            &[
+                ("BIT_NODE_BINARY", unavailable.as_os_str()),
+                ("BIT_NODE_CLI", unavailable.as_os_str()),
+            ],
+        );
+        assert!(
+            native.native && !native.trace.contains("starting the JavaScript host"),
+            "{native:?}",
+        );
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+}
+
+#[test]
+fn version_history_rebuild_accepts_an_empty_scope_group_name() {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    let scope = &helper.scopes.remote_path;
+    let path = scope.join("scope.json");
+    let mut config: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    config["groupName"] = json!("");
+    fs::write(path, serde_json::to_vec_pretty(&config).unwrap()).unwrap();
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let history = scope
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if history.exists() {
+        fs::remove_file(history).unwrap();
+    }
+    let result = super::scope_fixture::compare(&helper, "version-history build comp1", false);
+    assert!(result.stdout.contains("added 2 hashes"));
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn version_history_rebuild_accepts_the_current_named_scope_group() {
+    use sha1::{Digest, Sha1};
+    use std::os::unix::fs::MetadataExt;
+    let helper = super::scope_fixture::fixture();
+    let scope = &helper.scopes.remote_path;
+    // SAFETY: the process identity query takes no arguments and has no side effects.
+    let gid = unsafe { libc::getegid() };
+    let groups = fs::read_to_string("/etc/group").unwrap();
+    let name = groups
+        .lines()
+        .find_map(|line| {
+            let mut fields = line.split(':');
+            let name = fields.next()?;
+            fields.next()?;
+            (fields.next()?.parse::<u32>().ok()? == gid).then_some(name)
+        })
+        .unwrap();
+    let path = scope.join("scope.json");
+    let mut config: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    config["groupName"] = json!(name);
+    fs::write(path, serde_json::to_vec_pretty(&config).unwrap()).unwrap();
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let history = scope
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if history.exists() {
+        fs::remove_file(&history).unwrap();
+    }
+    let result = super::scope_fixture::compare(&helper, "version-history build comp1", false);
+    assert!(result.stdout.contains("added 2 hashes"));
+    let metadata = fs::metadata(history).unwrap();
+    assert_eq!(metadata.gid(), gid);
+    // SAFETY: the process identity query takes no arguments and has no side effects.
+    assert_eq!(metadata.uid(), unsafe { libc::geteuid() });
+}
+
+#[cfg(unix)]
+#[test]
+fn version_history_deletes_existing_history_to_trash_before_rebuilding() {
+    for existing in 0..4 {
+        delete_history_case(existing);
+    }
+}
+
+#[cfg(unix)]
+fn delete_history_case(existing: usize) {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    let scope = &helper.scopes.remote_path;
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let history =
+        json!({"name":"comp1","scope":helper.scopes.remote,"versions":[],"graphCompleteRefs":[]});
+    write_scope_fixture_at(scope, "VersionHistory", &hash, &history);
+    if existing > 0 {
+        fs::create_dir_all(scope.join("trash")).unwrap();
+    }
+    if existing > 1 {
+        fs::create_dir_all(scope.join("trash").join(&hash[..2])).unwrap();
+    }
+    if existing > 2 {
+        fs::write(
+            scope
+                .join("trash")
+                .join(&hash[..2])
+                .join(&hash[2..]),
+            b"old trash",
+        )
+        .unwrap();
+    }
+    let result = super::scope_fixture::compare(
+        &helper,
+        "version-history build comp1 --delete-existing",
+        false,
+    );
+    assert!(result.stdout.contains("added 2 hashes"));
+    assert!(
+        scope
+            .join("trash")
+            .join(&hash[..2])
+            .join(&hash[2..])
+            .is_file(),
+    );
+}
+
+#[test]
+fn version_history_rebuilds_all_lanes_when_scope_has_no_lanes() {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = super::scope_fixture::compare(
+        &helper,
+        "version-history build comp1 --from-all-lanes",
+        false,
+    );
+    assert!(result.stdout.contains("added 2 hashes"));
+}
+
+#[test]
+fn version_history_rebuilds_when_other_components_have_lane_heads() {
+    use sha1::{Digest, Sha1};
+    let helper = super::move_paths::support::workspace(2, true);
+    super::move_paths::support::setup(&helper, "export");
+    super::move_paths::support::setup(&helper, "lane create feature");
+    helper.output_file("comp2/index.js", "module.exports=()=> 'lane';\n");
+    super::move_paths::support::setup(&helper, "snap comp2 --skip-tests");
+    super::move_paths::support::setup(&helper, "export");
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = super::scope_fixture::compare(
+        &helper,
+        "version-history build comp1 --from-all-lanes",
+        false,
+    );
+    assert!(result.stdout.contains("added 1 hashes"));
+}
+
+#[test]
+fn version_history_rebuilds_lane_head_after_main_history() {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    super::move_paths::support::setup(&helper, "lane create feature");
+    helper.output_file("comp1/index.js", "module.exports=()=> 'lane';\n");
+    super::move_paths::support::setup(&helper, "snap comp1 --skip-tests");
+    super::move_paths::support::setup(&helper, "export");
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = super::scope_fixture::compare(
+        &helper,
+        "version-history build comp1 --from-all-lanes",
+        false,
+    );
+    assert!(result.stdout.contains("added 5 hashes"));
+}
+
+#[test]
+fn version_history_rebuilds_divergent_lane_head_after_main_history() {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    super::move_paths::support::setup(&helper, "lane create feature");
+    helper.output_file("comp1/index.js", "module.exports=()=> 'lane';\n");
+    super::move_paths::support::setup(&helper, "snap comp1 --skip-tests");
+    super::move_paths::support::setup(&helper, "export");
+    super::move_paths::support::setup(&helper, "switch main");
+    helper.output_file("comp1/index.js", "module.exports=()=> 'main';\n");
+    super::move_paths::support::setup(&helper, "snap comp1 --skip-tests");
+    super::move_paths::support::setup(&helper, "export");
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = super::scope_fixture::compare(
+        &helper,
+        "version-history build comp1 --from-all-lanes",
+        false,
+    );
+    assert!(result.stdout.contains("added 6 hashes"));
+}
+
+#[test]
+fn version_history_rebuilds_multiple_lane_heads_in_index_order() {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    for lane in ["first", "second"] {
+        super::move_paths::support::setup(&helper, &format!("lane create {lane}"));
+        helper.output_file("comp1/index.js", &format!("module.exports=()=> '{lane}';\n"));
+        super::move_paths::support::setup(&helper, "snap comp1 --unmodified --skip-tests");
+        super::move_paths::support::setup(&helper, "export");
+        super::move_paths::support::setup(&helper, "switch main");
+    }
+    let index: serde_json::Value =
+        serde_json::from_slice(&fs::read(helper.scopes.remote_path.join("index.json")).unwrap())
+            .unwrap();
+    assert_eq!(index["lanes"].as_array().unwrap().len(), 2, "{index}");
+    let lanes: Vec<_> = index["lanes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|entry| {
+            bit_object_import::read_scope_object(
+                &helper.scopes.remote_path,
+                entry["hash"].as_str().unwrap(),
+            )
+            .unwrap()
+            .unwrap()
+            .1
+        })
+        .collect();
+    assert!(
+        lanes
+            .iter()
+            .all(|lane| !lane["components"]
+                .as_array()
+                .unwrap()
+                .is_empty()),
+        "{lanes:?}",
+    );
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = super::scope_fixture::compare(
+        &helper,
+        "version-history build comp1 --from-all-lanes",
+        false,
+    );
+    assert!(result.stdout.contains("added 8 hashes"), "{result:?}");
+}
+
+#[test]
+fn version_history_rebuilds_hidden_lane_head() {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    super::move_paths::support::setup(&helper, "lane create feature");
+    helper.output_file("comp1/index.js", "module.exports=()=> 'lane';\n");
+    super::move_paths::support::setup(&helper, "snap comp1 --skip-tests");
+    super::move_paths::support::setup(&helper, "export");
+    let scope = &helper.scopes.remote_path;
+    let index: serde_json::Value =
+        serde_json::from_slice(&fs::read(scope.join("index.json")).unwrap()).unwrap();
+    let lane_hash = index["lanes"][0]["hash"].as_str().unwrap();
+    let lane_path = scope
+        .join("objects")
+        .join(&lane_hash[..2])
+        .join(&lane_hash[2..]);
+    let visible = fs::read(&lane_path).unwrap();
+    let (_, mut lane) = bit_object_import::read_scope_object(scope, lane_hash).unwrap().unwrap();
+    let head = lane["components"][0]["head"].as_str().unwrap();
+    lane["updateDependents"] = json!([format!("{}/comp1@{head}", helper.scopes.remote)]);
+    lane["components"] = json!([]);
+    write_scope_fixture_at(scope, "Lane", lane_hash, &lane);
+    let history =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = scope
+        .join("objects")
+        .join(&history[..2])
+        .join(&history[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = upstream_history::compare_hidden_lane(&helper, &lane_path, &visible);
+    assert!(result.stdout.contains("added 5 hashes"));
+}
+
+#[test]
+fn version_history_rebuilds_bare_history_from_selected_snapshot() {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    let scope = &helper.scopes.remote_path;
+    let model_hash = format!("{:x}", Sha1::digest(format!("{}/comp1", helper.scopes.remote)));
+    let (_, model) = bit_object_import::read_scope_object(scope, &model_hash).unwrap().unwrap();
+    let (_, version) = bit_object_import::read_scope_object(scope, model["head"].as_str().unwrap())
+        .unwrap()
+        .unwrap();
+    let parent = version["parents"][0].as_str().unwrap();
+    let history =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = scope
+        .join("objects")
+        .join(&history[..2])
+        .join(&history[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = super::scope_fixture::compare(
+        &helper,
+        &format!("version-history build comp1 --from-snap {parent}"),
+        false,
+    );
+    assert!(result.stdout.contains("added 1 hashes"));
+}
+
+#[test]
+fn version_history_rebuild_preserves_unrelated_and_squashed_edges() {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    let scope = &helper.scopes.remote_path;
+    let model_hash = format!("{:x}", Sha1::digest(format!("{}/comp1", helper.scopes.remote)));
+    let (_, model) = bit_object_import::read_scope_object(scope, &model_hash).unwrap().unwrap();
+    let head = model["head"].as_str().unwrap();
+    let (_, mut version) = bit_object_import::read_scope_object(scope, head).unwrap().unwrap();
+    let parent = version["parents"][0]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let lane = json!({"name":"sample-lane","scope":helper.scopes.remote});
+    version["unrelated"] = json!({"head":parent,"laneId":lane});
+    version["squashed"] = json!({"previousParents":[parent],"laneId":lane});
+    write_scope_fixture_at(scope, "Version", head, &version);
+    let history =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = scope
+        .join("objects")
+        .join(&history[..2])
+        .join(&history[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = super::scope_fixture::compare(&helper, "version-history build comp1", false);
+    assert!(result.stdout.contains("added 2 hashes"));
+    let partial = json!({"name":"comp1","scope":helper.scopes.remote,"versions":[{"hash":head,"parents":[parent],"unrelated":parent,"squashed":[parent]}],"graphCompleteRefs":[]});
+    write_scope_fixture_at(scope, "VersionHistory", &history, &partial);
+    let result = super::scope_fixture::compare(&helper, "version-history build comp1", false);
+    assert!(result.stdout.contains("added 1 hashes"));
+}
+
+#[test]
+fn version_history_rebuilds_branched_bare_history_in_parent_order() {
+    for shared in [false, true] {
+        branched_history_case(shared);
+    }
+}
+
+fn branched_history_case(shared: bool) {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    let scope = &helper.scopes.remote_path;
+    let model_hash = format!("{:x}", Sha1::digest(format!("{}/comp1", helper.scopes.remote)));
+    let (_, model) = bit_object_import::read_scope_object(scope, &model_hash).unwrap().unwrap();
+    let head = model["head"].as_str().unwrap();
+    let (_, mut version) = bit_object_import::read_scope_object(scope, head).unwrap().unwrap();
+    let parent = version["parents"][0]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let (_, mut other) = bit_object_import::read_scope_object(scope, &parent).unwrap().unwrap();
+    let branch = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+    other["parents"] = if shared { json!([parent]) } else { json!([]) };
+    write_scope_fixture_at(scope, "Version", branch, &other);
+    version["parents"] = json!([parent, branch]);
+    write_scope_fixture_at(scope, "Version", head, &version);
+    let history =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = scope
+        .join("objects")
+        .join(&history[..2])
+        .join(&history[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    let result = if shared {
+        upstream_history::compare_deduplicated(&helper, 3)
+    } else {
+        super::scope_fixture::compare(&helper, "version-history build comp1", false)
+    };
+    assert!(result.stdout.contains("added 3 hashes"));
+    let partial = json!({"name":"comp1","scope":helper.scopes.remote,"versions":[{"hash":head,"parents":[parent, branch]}],"graphCompleteRefs":[]});
+    write_scope_fixture_at(scope, "VersionHistory", &history, &partial);
+    let result = if shared {
+        upstream_history::compare_deduplicated(&helper, 2)
+    } else {
+        super::scope_fixture::compare(&helper, "version-history build comp1", false)
+    };
+    assert!(result.stdout.contains("added 2 hashes"));
+}
+
+#[cfg(unix)]
+#[test]
+fn version_history_rebuilds_partial_bare_history_and_preserves_mode() {
+    use sha1::{Digest, Sha1};
+    use std::os::unix::fs::PermissionsExt;
+    for keep_head in [false, true] {
+        let helper = super::scope_fixture::fixture();
+        let scope = &helper.scopes.remote_path;
+        let model_hash = format!("{:x}", Sha1::digest(format!("{}/comp1", helper.scopes.remote)));
+        let (_, model) = bit_object_import::read_scope_object(scope, &model_hash).unwrap().unwrap();
+        let head = model["head"].as_str().unwrap();
+        let (_, version) = bit_object_import::read_scope_object(scope, head).unwrap().unwrap();
+        let parent = version["parents"][0].as_str().unwrap();
+        let row = if keep_head {
+            json!({"hash":head,"parents":[parent]})
+        } else {
+            json!({"hash":parent,"parents":[]})
+        };
+        let history = json!({"name":"comp1","scope":helper.scopes.remote,"versions":[row],"graphCompleteRefs":[]});
+        let hash =
+            format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+        write_scope_fixture_at(scope, "VersionHistory", &hash, &history);
+        let path = scope
+            .join("objects")
+            .join(&hash[..2])
+            .join(&hash[2..]);
+        let mode = if keep_head { 0o640 } else { 0o444 };
+        fs::set_permissions(&path, fs::Permissions::from_mode(mode)).unwrap();
+        let result = super::scope_fixture::compare(&helper, "version-history build comp1", false);
+        assert!(result.stdout.contains(if keep_head {
+            "added 1 hashes"
+        } else {
+            "added 2 hashes"
+        }));
+        assert_eq!(
+            fs::metadata(path)
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o777,
+            mode,
+        );
+    }
+}
+
+#[test]
+fn version_history_rebuild_preserves_unrelated_existing_entries() {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    let scope = &helper.scopes.remote_path;
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let extra = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+    for complete in [json!([]), json!([extra])] {
+        let history = json!({"name":"comp1","scope":helper.scopes.remote,"versions":[{"hash":extra,"parents":[]}],"graphCompleteRefs":complete});
+        write_scope_fixture_at(scope, "VersionHistory", &hash, &history);
+        let result = super::scope_fixture::compare(&helper, "version-history build comp1", false);
+        assert!(result.stdout.contains("added 2 hashes"));
+        let (_, stored) = bit_object_import::read_scope_object(scope, &hash).unwrap().unwrap();
+        assert_eq!(stored["versions"][0]["hash"], extra);
+        assert_eq!(stored["graphCompleteRefs"], complete);
+    }
+}
+
+#[test]
+fn version_history_rebuild_refreshes_stale_parents_but_preserves_existing_head() {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    let scope = &helper.scopes.remote_path;
+    let model_hash = format!("{:x}", Sha1::digest(format!("{}/comp1", helper.scopes.remote)));
+    let (_, model) = bit_object_import::read_scope_object(scope, &model_hash).unwrap().unwrap();
+    let head = model["head"].as_str().unwrap();
+    let (_, version) = bit_object_import::read_scope_object(scope, head).unwrap().unwrap();
+    let parent = version["parents"][0].as_str().unwrap();
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let stale = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+    for (entry, expected_count) in [(parent, 2), (head, 1)] {
+        let history = json!({"name":"comp1","scope":helper.scopes.remote,"versions":[{"hash":entry,"parents":[stale]}],"graphCompleteRefs":[]});
+        write_scope_fixture_at(scope, "VersionHistory", &hash, &history);
+        let result = super::scope_fixture::compare(&helper, "version-history build comp1", false);
+        assert!(result.stdout.contains(&format!("added {expected_count} hashes")));
+        let (_, stored) = bit_object_import::read_scope_object(scope, &hash).unwrap().unwrap();
+        assert_eq!(
+            stored["versions"][0]["parents"],
+            if entry == head { json!([stale]) } else { json!([]) },
+        );
+    }
+}
+
+#[test]
+fn version_history_bare_missing_version_delegates_before_writes() {
+    use sha1::{Digest, Sha1};
+    let helper = super::scope_fixture::fixture();
+    let scope = &helper.scopes.remote_path;
+    let history =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let history_path = scope
+        .join("objects")
+        .join(&history[..2])
+        .join(&history[2..]);
+    if history_path.exists() {
+        fs::remove_file(&history_path).unwrap();
+    }
+    let model_hash = format!("{:x}", Sha1::digest(format!("{}/comp1", helper.scopes.remote)));
+    let (_, model) = bit_object_import::read_scope_object(scope, &model_hash).unwrap().unwrap();
+    let head = model["head"].as_str().unwrap();
+    fs::remove_file(
+        scope
+            .join("objects")
+            .join(&head[..2])
+            .join(&head[2..]),
+    )
+    .unwrap();
+    let before = super::move_paths::support::tree(scope);
+    let result = Helper::cmd_in(scope, "version-history build comp1");
+    assert!(!result.native && result.trace.contains("delegating:"), "{result:?}");
+    assert_eq!(super::move_paths::support::tree(scope), before);
+    assert!(!history_path.exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn version_history_bare_write_failure_does_not_replay() {
+    use sha1::{Digest, Sha1};
+    use std::{ffi::OsStr, os::unix::fs::PermissionsExt};
+    let helper = super::scope_fixture::fixture();
+    let hash =
+        format!("{:x}", Sha1::digest(format!("{}/comp1:VersionHistory", helper.scopes.remote)));
+    let path = helper.scopes.remote_path
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(&path).unwrap();
+    }
+    let parent = path.parent().unwrap();
+    fs::create_dir_all(parent).unwrap();
+    let baseline = helper.clone_remote_scope();
+    fs::set_permissions(parent, fs::Permissions::from_mode(0o555)).unwrap();
+    let expected = Helper::cmd_in_with(
+        &helper.scopes.remote_path,
+        "version-history build comp1",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let expected_tree = super::move_paths::support::tree(&helper.scopes.remote_path);
+    fs::set_permissions(parent, fs::Permissions::from_mode(0o755)).unwrap();
+    helper.restore_remote_scope(&baseline);
+    fs::set_permissions(parent, fs::Permissions::from_mode(0o555)).unwrap();
+    let unavailable = helper.scopes.e2e_dir.join("unavailable-runtime");
+    let actual = Helper::cmd_in_with(
+        &helper.scopes.remote_path,
+        "version-history build comp1",
+        &[("BIT_NODE_BINARY", unavailable.as_os_str()), ("BIT_NODE_CLI", unavailable.as_os_str())],
+    );
+    let actual_tree = super::move_paths::support::tree(&helper.scopes.remote_path);
+    fs::set_permissions(parent, fs::Permissions::from_mode(0o755)).unwrap();
+    assert!(actual.native && !actual.status.success(), "{actual:?}");
+    assert_eq!(actual.status.code(), expected.status.code());
+    assert_eq!(actual.stdout, expected.stdout);
+    let suffix = regex::Regex::new(r"\.[0-9]+\.[0-9]+'").unwrap();
+    assert_eq!(suffix.find_iter(&expected.stderr).count(), 1, "{}", expected.stderr);
+    assert_eq!(suffix.find_iter(&actual.stderr).count(), 1, "{}", actual.stderr);
+    assert_eq!(
+        suffix.replace(&actual.stderr, ".<pid>.<count>'"),
+        suffix.replace(&expected.stderr, ".<pid>.<count>'"),
+    );
+    assert_eq!(actual_tree, expected_tree);
+}
+
+#[test]
+fn version_history_rebuild_complete_pattern_matches_node() {
+    let helper = super::move_paths::support::workspace(2, true);
+    super::move_paths::support::setup(&helper, "version-history build '**'");
+    super::move_paths::support::compare(&helper, "version-history build '**'");
+    super::move_paths::support::compare_ci(
+        &helper,
+        "version-history build '**' --from-all-lanes",
+        true,
+    );
+}
+
+#[test]
+fn version_history_rebuild_pattern_with_incomplete_history_delegates() {
+    let helper = super::move_paths::support::workspace(2, true);
+    super::move_paths::support::setup(&helper, "version-history build comp1");
+    super::add::support::compare_declined(&helper, "version-history build '**'", |text| {
+        text.to_owned()
+    });
+}
+
+#[test]
+fn version_history_branched_text_matches_node() {
+    let helper = super::move_paths::support::workspace(1, true);
+    let history = super::move_paths::support::json(&helper, "version-history show comp1 --json");
+    let head = helper.get_head("comp1");
+    let first = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    let second = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    let third = "cccccccccccccccccccccccccccccccccccccccc";
+    let graph = json!({"name":"comp1","scope":helper.scopes.remote,"graphCompleteRefs":[],"versions":[
+        {"hash":first,"parents":[]},
+        {"hash":second,"parents":[first]},
+        {"hash":third,"parents":[first]},
+        {"hash":head,"parents":[second,third],"squashed":[first],"unrelated":third}
+    ]});
+    write_history_fixture(&helper, history["hash"].as_str().unwrap(), &graph);
+    super::move_paths::support::compare(&helper, "version-history show comp1");
+    super::move_paths::support::compare(&helper, "vh show comp1 -s");
+    let incomplete = json!({"name":"comp1","scope":helper.scopes.remote,"graphCompleteRefs":[],"versions":[
+        {"hash":first,"parents":[second]},
+        {"hash":third,"parents":[]},
+        {"hash":head,"parents":[first]}
+    ]});
+    write_history_fixture(&helper, history["hash"].as_str().unwrap(), &incomplete);
+    super::move_paths::support::compare(&helper, "version-history show comp1");
+}
+
+fn write_history_fixture(helper: &Helper, hash: &str, history: &serde_json::Value) {
+    write_scope_fixture(helper, "VersionHistory", hash, history);
+}
+
+fn write_scope_fixture(helper: &Helper, kind: &str, hash: &str, value: &serde_json::Value) {
+    write_scope_fixture_at(&helper.scopes.local_path.join(".bit"), kind, hash, value);
+}
+
+fn write_scope_fixture_at(
+    scope: &std::path::Path,
+    kind: &str,
+    hash: &str,
+    value: &serde_json::Value,
+) {
+    use flate2::{Compression, write::ZlibEncoder};
+    use std::io::Write;
+    let body = serde_json::to_vec(value).unwrap();
+    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+    write!(encoder, "{kind} {hash} {}\0", body.len()).unwrap();
+    encoder.write_all(&body).unwrap();
+    let path = scope
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(path, encoder.finish().unwrap()).unwrap();
+}
+
+#[test]
+fn version_history_prefers_newest_normal_tag_over_orphans() {
+    let helper = super::move_paths::support::workspace(1, true);
+    super::move_paths::support::setup(&helper, "version-history build comp1");
+    let scope = helper.scopes.local_path.join(".bit");
+    let index: serde_json::Value =
+        serde_json::from_slice(&fs::read(scope.join("index.json")).unwrap()).unwrap();
+    let model_hash = index["components"][0]["hash"].as_str().unwrap();
+    let (_, mut model) = bit_object_import::read_scope_object(&scope, model_hash).unwrap().unwrap();
+    let head = model["head"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    model["versions"]["0.0.2"] = json!(head);
+    model["orphanedVersions"] = json!({"0.0.3":head,"0.0.4":head});
+    write_scope_fixture(&helper, "Component", model_hash, &model);
+    let result = super::move_paths::support::compare(&helper, "version-history show comp1");
+    assert!(result.stdout.contains("main, 0.0.2"));
+}
+
+#[test]
+fn version_history_linear_text_matches_node() {
+    let helper = super::move_paths::support::workspace(1, false);
+    super::move_paths::support::tag(&helper);
+    helper.output_file("comp1/index.js", "module.exports = () => 'second';\n");
+    super::move_paths::support::tag(&helper);
+    super::move_paths::support::setup(&helper, "version-history build comp1");
+    let result = super::move_paths::support::compare(&helper, "version-history build comp1");
+    assert!(result.stdout.contains("no changes"));
+    assert!(!result.trace.contains("starting the JavaScript host"));
+    super::move_paths::support::compare_ci(&helper, "version-history build comp1", true);
+    super::move_paths::support::compare(
+        &helper,
+        &format!("vh build {}/comp1", helper.scopes.remote),
+    );
+    let history = super::move_paths::support::json(&helper, "version-history show comp1 --json");
+    assert_eq!(
+        history["versions"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2,
+    );
+    let first = history["versions"][0]["hash"].as_str().unwrap();
+    super::move_paths::support::compare(
+        &helper,
+        &format!("version-history build comp1 --from-snap {first}"),
+    );
+    super::move_paths::support::compare(&helper, "version-history build comp1 --from-all-lanes");
+    let result = super::move_paths::support::compare(&helper, "version-history show comp1");
+    assert!(!result.trace.contains("starting the JavaScript host"));
+    super::move_paths::support::compare(&helper, "vh show comp1 --short-hash");
+    super::move_paths::support::compare_ci(&helper, "version-history show comp1", true);
+    let head = helper.get_head("comp1");
+    helper.output_file(
+        ".bit/refs/remotes/example/dev",
+        &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":head}]).to_string(),
+    );
+    let lane = super::move_paths::support::compare(&helper, "version-history show comp1");
+    assert!(lane.stdout.contains("example/dev, main, 0.0.2"));
+    super::move_paths::support::compare(&helper, "vh show comp1 -s");
+    helper.output_file(
+        ".bit/refs/remotes/example/other",
+        &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":first}]).to_string(),
+    );
+    let lanes = super::move_paths::support::compare(&helper, "version-history show comp1");
+    assert!(lanes.stdout.contains("example/other, 0.0.1"));
+    helper.output_file(
+        ".bit/refs/remotes/example/other",
+        &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":head}]).to_string(),
+    );
+    let shared = super::move_paths::support::compare(&helper, "version-history show comp1");
+    assert!(shared.stdout.contains("example/other, example/dev, main, 0.0.2"));
+    helper.output_file(
+        ".bit/refs/remotes/example/Alpha",
+        &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":head}]).to_string(),
+    );
+    let sorted = super::move_paths::support::compare(&helper, "version-history show comp1");
+    assert!(sorted.stdout.contains("example/other, example/dev, example/Alpha, main, 0.0.2"));
+    helper.output_file(
+        ".bit/refs/remotes/example/éclair",
+        &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":head}]).to_string(),
+    );
+    super::move_paths::support::compare(&helper, "version-history show comp1");
+    helper.output_file(
+        ".bit/refs/remotes/another/dev",
+        &json!([{"id":{"scope":helper.scopes.remote,"name":"comp1"},"head":head}]).to_string(),
+    );
+    super::add::support::compare_declined(
+        &helper,
+        "version-history show comp1",
+        normalize_lane_order,
+    );
+}
+
+fn normalize_lane_order(text: &str) -> String {
+    let (prefix, rest) = text.split_once(" (").unwrap();
+    let (pointers, suffix) = rest.split_once(") ").unwrap();
+    let mut parts = pointers.split(", ").collect::<Vec<_>>();
+    assert!(parts.ends_with(&["main", "0.0.2"]));
+    parts.truncate(parts.len() - 2);
+    parts.sort_unstable();
+    assert_eq!(
+        parts,
+        ["another/dev", "example/Alpha", "example/dev", "example/other", "example/éclair"],
+    );
+    format!("{prefix} ({}, main, 0.0.2) {suffix}", parts.join(", "))
+}
+
+#[test]
+fn version_history_text_empty_and_remote_refs_match_node() {
+    let helper = super::move_paths::support::workspace(1, true);
+    let history = super::move_paths::support::json(&helper, "version-history show comp1 --json");
+    let hash = history["hash"].as_str().unwrap();
+    let path = helper.scopes.local_path
+        .join(".bit/objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    if path.exists() {
+        fs::remove_file(path).unwrap();
+    }
+    super::move_paths::support::compare(&helper, "version-history show comp1");
+    helper.output_file(".bit/refs/remotes/example/main", "[]");
+    super::move_paths::support::compare(&helper, "version-history show comp1");
+    helper.output_file(".bit/refs/remotes/example/dev", "[]");
+    helper.output_file(".bit/refs/remotes/example/other", "[]");
+    super::move_paths::support::compare(&helper, "version-history show comp1");
+}
+
+#[test]
+fn version_and_globals_and_system_log_run_natively() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+
+    let version_text = helper.native("version");
+    assert!(!version_text.trim().is_empty(), "{version_text}");
+    let version_json = parse(&helper.native("version --json"));
+    assert_eq!(version_json["bit"].as_str(), Some(version_text.trim()), "{version_json}");
+
+    let globals_text = helper.native("globals");
+    assert!(globals_text.contains("Global Dir"), "{globals_text}");
+    assert!(globals_text.contains("Config Dir"), "{globals_text}");
+    let globals_json = parse(&helper.native("globals --json"));
+    assert!(globals_json["Global Dir"].is_string(), "{globals_json}");
+    assert!(globals_json["Log file"].is_string(), "{globals_json}");
+
+    let log_file = globals_json["Log file"].as_str().unwrap();
+    if let Some(parent) = std::path::Path::new(log_file).parent() {
+        fs::create_dir_all(parent).unwrap();
+    }
+    fs::write(log_file, "sample debug log line\n").unwrap();
+    let system_log = helper.native("system log");
+    assert!(system_log.contains("sample debug log line"), "{system_log}");
+
+    let bad_system = helper.native("system unknown-sub");
+    assert!(
+        bad_system.contains(r#""unknown-sub" is not a subcommand of "system""#),
+        "{bad_system}",
+    );
+}
+
+#[test]
+fn details_prints_empty_notice_or_saved_command_details_natively() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    let globals = helper.own_global_config("analytics_reporting", "false");
+
+    let empty = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "details",
+        &[("BIT_GLOBALS_DIR", globals.as_os_str())],
+    );
+    assert!(empty.native && empty.status.success(), "{empty:?}");
+    assert!(empty.stdout.contains("no details available."), "{}", empty.stdout);
+
+    let details_dir = globals.join("last-command-details");
+    fs::create_dir_all(&details_dir).unwrap();
+    fs::write(details_dir.join("content"), "detailed line 1\ndetailed line 2").unwrap();
+    fs::write(
+        details_dir.join("meta.json"),
+        json!({
+            "command": "switch main",
+            "timestamp": "2026-10-20T12:00:00.000Z"
+        })
+        .to_string(),
+    )
+    .unwrap();
+
+    let populated = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "details",
+        &[("BIT_GLOBALS_DIR", globals.as_os_str())],
+    );
+    assert!(populated.native && populated.status.success(), "{populated:?}");
+    assert!(populated.stdout.contains(r#"details from "bit switch main""#), "{}", populated.stdout);
+    assert!(populated.stdout.contains("detailed line 1"), "{}", populated.stdout);
+    assert!(
+        populated.stdout.contains("(these are details from the last command that provided them)"),
+        "{}",
+        populated.stdout,
+    );
+}
+
+#[test]
+fn git_subcommands_and_merge_bitmaps_run_natively() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+
+    let bad_git = helper.native("git unknown-sub");
+    assert!(bad_git.contains(r#""unknown-sub" is not a subcommand of "git""#), "{bad_git}");
+
+    let ancestor = helper.scopes.local_path.join("ancestor.bitmap");
+    let current = helper.scopes.local_path.join("current.bitmap");
+    let other = helper.scopes.local_path.join("other.bitmap");
+    fs::write(&ancestor, "{}\n").unwrap();
+    fs::write(
+        &current,
+        "{\n  \"comp1\": {\n    \"scope\": \"my.scope\",\n    \"version\": \"0.0.1\",\n    \"mainFile\": \"index.js\",\n    \"rootDir\": \"comp1\"\n  }\n}\n",
+    )
+    .unwrap();
+    fs::write(
+        &other,
+        "{\n  \"comp2\": {\n    \"scope\": \"my.scope\",\n    \"version\": \"0.0.1\",\n    \"mainFile\": \"index.js\",\n    \"rootDir\": \"comp2\"\n  }\n}\n",
+    )
+    .unwrap();
+
+    let merge_out = helper.native(&format!(
+        r#"git merge-bitmaps "{}" "{}" "{}""#,
+        ancestor.display(),
+        current.display(),
+        other.display(),
+    ));
+    assert!(merge_out.contains("bitmap files merged successfully"), "{merge_out}");
+    let merged = config::read_jsonc(&current);
+    assert_eq!(merged["comp1"]["version"], "0.0.1");
+    assert_eq!(merged["comp2"]["version"], "0.0.1");
+
+    let init_status = std::process::Command::new("git")
+        .arg("init")
+        .current_dir(&helper.scopes.local_path)
+        .output()
+        .unwrap();
+    assert!(init_status.status.success());
+    let driver_out = helper.native("git set-merge-driver");
+    assert!(driver_out.contains("git merge driver was set"), "{driver_out}");
+    let gitattributes =
+        fs::read_to_string(helper.scopes.local_path.join(".gitattributes")).unwrap();
+    assert!(gitattributes.contains(".bitmap merge=bitmap-driver"), "{gitattributes}");
+}
+
+#[test]
+fn scope_trust_and_unrecognized_scope_subcommand_run_natively() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+
+    let bad_scope = helper.native("scope unknown-sub");
+    assert!(bad_scope.contains(r#""unknown-sub" is not a subcommand of "scope""#), "{bad_scope}");
+
+    let off = helper.native("scope trust");
+    assert!(off.contains("scope-trust is off for this workspace."), "{off}");
+
+    let enabled = helper.native("scope trust enable");
+    assert!(enabled.contains("scope-trust enabled"), "{enabled}");
+
+    let list_on = helper.native("scope trust list");
+    assert!(list_on.contains("scope-trust is on."), "{list_on}");
+    assert!(list_on.contains("teambit.*"), "{list_on}");
+
+    let added = helper.native("scope trust add acme.frontend");
+    assert!(added.contains("added acme.frontend to trustedScopes"), "{added}");
+    let ws = config::read_jsonc(&helper.scopes.local_path.join("workspace.jsonc"));
+    assert_eq!(ws["teambit.workspace/workspace"]["trustedScopes"], json!(["acme.frontend"]));
+
+    let removed = helper.native("scope trust remove acme.frontend");
+    assert!(removed.contains("removed acme.frontend from trustedScopes"), "{removed}");
+    let ws_after_remove = config::read_jsonc(&helper.scopes.local_path.join("workspace.jsonc"));
+    assert_eq!(ws_after_remove["teambit.workspace/workspace"]["trustedScopes"], json!([]));
+
+    let disabled = helper.native("scope trust disable");
+    assert!(disabled.contains("scope-trust disabled"), "{disabled}");
+    let ws_after_disable = config::read_jsonc(&helper.scopes.local_path.join("workspace.jsonc"));
+    assert!(ws_after_disable["teambit.workspace/workspace"].get("trustedScopes").is_none());
+}
+
+#[test]
+fn cat_scope_version_history_and_snap_distance_run_natively() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(1, true, "");
+    helper.native("snap --skip-tests");
+    let first_head = helper.get_head("comp1");
+    helper.output_file("comp1/index.js", "module.exports = () => 'comp1 v2';");
+    helper.native("snap --skip-tests");
+    let second_head = helper.get_head("comp1");
+
+    let cat_scope_table = helper.native("cat-scope");
+    assert!(cat_scope_table.contains("Component"), "{cat_scope_table}");
+    assert!(cat_scope_table.contains("comp1"), "{cat_scope_table}");
+
+    let cat_scope_json = parse(&helper.native("cat-scope --json"));
+    assert!(
+        cat_scope_json
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|item| item["name"].as_str() == Some("comp1")),
+    );
+
+    let cat_scope_extra = parse(&helper.native("cat-scope --json --json-extra"));
+    assert!(
+        cat_scope_extra
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|item| item["hash"].is_string() && item["name"].as_str() == Some("comp1")),
+    );
+
+    let vh_json = parse(&helper.native("version-history show comp1 --json"));
+    assert_eq!(vh_json["name"].as_str(), Some("comp1"), "{vh_json}");
+    let vh_short = parse(&helper.native("vh show comp1 --short-hash --json"));
+    assert_eq!(vh_short["name"].as_str(), Some("comp1"), "{vh_short}");
+    assert!(vh_short["hash"].is_string(), "{vh_short}");
+
+    let vh_bad = helper.native("version-history unknown-sub");
+    assert!(
+        vh_bad.contains(r#""unknown-sub" is not a subcommand of "version-history""#),
+        "{vh_bad}",
+    );
+
+    let dist_out = helper.native(&format!("snap-distance comp1 {first_head} {second_head}"));
+    let dist_body = dist_out
+        .find('{')
+        .map_or(dist_out.as_str(), |idx| &dist_out[idx..]);
+    let dist_json = parse(dist_body);
+    assert_eq!(dist_json["commonSnapBeforeDiverge"]["hash"].as_str(), Some(first_head.as_str()));
+    assert_eq!(dist_json["snapsOnSourceOnly"], json!([]));
+    assert_eq!(dist_json["snapsOnTargetOnly"], json!([{ "hash": second_head }]));
+}

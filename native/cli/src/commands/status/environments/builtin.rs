@@ -1,0 +1,115 @@
+//! Fixed built-in React facts for qualified component service loading.
+use super::{
+    Environments, WorkspaceComponent, array, component, core_ids, needs_facts, root_aspects,
+};
+use serde_json::{Value, json};
+use std::{io, path::Path};
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum Services {
+    Disabled,
+    Tools,
+    Compiler,
+}
+
+pub(super) fn supported(
+    component: &WorkspaceComponent,
+    core: &[String],
+    aspects: &[String],
+) -> bool {
+    !component.is_env
+        && bit_install::policy::split_version(component.env_id.trim()).0 == "teambit.react/react"
+        && aspects.is_empty()
+        && component.config
+            .keys()
+            .all(|id| {
+                let trimmed = id.trim();
+                let bare = bit_install::policy::split_version(trimmed).0;
+                (core
+                    .iter()
+                    .any(|item| item == trimmed || item == bare))
+                    && (!bit_install::policy::is_core_env(trimmed) || bare == "teambit.react/react")
+            })
+}
+
+pub(super) fn facts(component: &WorkspaceComponent, issues: bool) -> Value {
+    let explicit = component.config
+        .get("teambit.envs/envs")
+        .or_else(|| {
+            component.config
+                .iter()
+                .find_map(|(key, val)| {
+                    (bit_install::policy::split_version(key).0 == "teambit.envs/envs").then_some(
+                        val,
+                    )
+                })
+        })
+        .and_then(|config| config["env"].as_str())
+        .is_some_and(|env| !env.trim().is_empty());
+    let multiple = if explicit {
+        Vec::new()
+    } else {
+        component.config
+            .keys()
+            .filter(|id| bit_install::policy::is_core_env(id))
+            .cloned()
+            .collect()
+    };
+    json!({"envId":"teambit.react/react","envPolicy":{
+        "dependencies":{"react":"-","react-dom":"-","core-js":"^3.0.0"},
+        "devDependencies":{"react":"-","react-dom":"-","@types/mocha":"-","@types/node":"12.20.4",
+            "@types/react":"^19.0.0","@types/react-dom":"^19.0.0","@types/jest":"^26.0.0",
+            "@babel/runtime":"7.20.0","@types/testing-library__jest-dom":"5.9.5"},
+        "peerDependencies":{"react":"^17.0.0 || ^18.0.0 || ^19.0.0","react-dom":"^17.0.0 || ^18.0.0 || ^19.0.0"}},
+        "compiler":if issues {json!({"hasCompiler":true,"distDir":"dist"})} else {Value::Null},
+        "nonLoaded":false,"devPatterns":{"devPatterns":null,"tests":null,"docs":null,"compositions":null},
+        "multiple":multiple,"manifestPatterns":null,"registeredEnvPolicy":[],"aspectIds":[],"envOwnPolicy":{},"loadFailures":[]})
+}
+
+impl Environments {
+    pub(in crate::commands) fn for_builtin_services() -> Self {
+        Self { builtin_services: Services::Tools, ..Self::new() }
+    }
+
+    pub(in crate::commands) fn for_compiler_services() -> Self {
+        Self { builtin_services: Services::Compiler, ..Self::new() }
+    }
+
+    pub(in crate::commands) fn require_service(
+        root: &Path,
+        context: &Value,
+        targets: &[Value],
+    ) -> io::Result<()> {
+        validate_service_root(root)?;
+        let core = core_ids()?;
+        let aspects = root_aspects(context, &core);
+        for target in targets {
+            let component = component(root, context, target)?;
+            if needs_facts(&component, &core, &aspects) && !supported(&component, &core, &aspects) {
+                return Err(io::Error::other(
+                    "component service requires custom environment lifecycle",
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    pub(in crate::commands::status) fn require_write(
+        &self,
+        root: &Path,
+        context: &Value,
+    ) -> io::Result<()> {
+        if self.builtin_services == Services::Disabled {
+            Self::require_native_write(root, context)
+        } else {
+            Self::require_service(root, context, array(context.get("targets"), "service targets")?)
+        }
+    }
+}
+
+fn validate_service_root(root: &Path) -> io::Result<()> {
+    if root.as_os_str().is_empty() {
+        return Err(io::Error::other("component service workspace root is empty"));
+    }
+    Ok(())
+}

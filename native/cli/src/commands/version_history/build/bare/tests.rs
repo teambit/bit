@@ -1,0 +1,167 @@
+use super::{Plan, fs};
+
+#[test]
+fn existing_temporary_file_is_not_deleted_after_failed_creation() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("object");
+    let temporary = directory
+        .path()
+        .join(format!(".object.{}.1", std::process::id()));
+    fs::write(&temporary, b"other operation").unwrap();
+    let plan = Plan {
+        path: path.clone(),
+        identity: "fixture/component".into(),
+        payload: b"data".to_vec(),
+        later_payloads: Vec::new(),
+        proofs: Vec::new(),
+        count: 1,
+        mode: None,
+    };
+    assert!(plan.publish().is_err());
+    assert_eq!(fs::read(temporary).unwrap(), b"other operation");
+    assert!(!path.exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn later_publication_failure_keeps_the_first_history() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("object");
+    let mut plan = Plan {
+        path: path.clone(),
+        identity: "fixture/component".into(),
+        payload: b"first".to_vec(),
+        later_payloads: Vec::new(),
+        proofs: Vec::new(),
+        count: 2,
+        mode: None,
+    };
+    plan.publish().unwrap();
+    plan.proofs.push((path.clone(), plan.payload));
+    plan.payload = b"second".to_vec();
+    plan.mode = super::existing_mode(&path);
+    let temporary = directory
+        .path()
+        .join(format!(".object.{}.1", std::process::id()));
+    fs::write(&temporary, b"collision").unwrap();
+    assert!(plan.publish().is_err());
+    assert_eq!(fs::read(path).unwrap(), b"first");
+    assert_eq!(fs::read(temporary).unwrap(), b"collision");
+}
+
+#[cfg(unix)]
+#[test]
+fn failed_rebuild_after_trash_move_keeps_the_original_in_trash() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path();
+    let bucket = "aa";
+    let leaf = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    let objects = root.join("objects").join(bucket);
+    let trash = root.join("trash").join(bucket);
+    fs::create_dir_all(&objects).unwrap();
+    fs::create_dir_all(&trash).unwrap();
+    let path = objects.join(leaf);
+    fs::write(&path, b"original").unwrap();
+    let mut plan = Plan {
+        path: path.clone(),
+        identity: "fixture/component".into(),
+        payload: b"rebuilt".to_vec(),
+        later_payloads: Vec::new(),
+        proofs: vec![(path.clone(), b"original".to_vec())],
+        count: 1,
+        mode: super::existing_mode(&path),
+    };
+    super::trash::move_history(&mut plan, root).unwrap();
+    let temporary = objects.join(format!(".{leaf}.{}.1", std::process::id()));
+    fs::write(&temporary, b"collision").unwrap();
+    assert!(plan.publish().is_err());
+    assert!(!path.exists());
+    assert_eq!(fs::read(trash.join(leaf)).unwrap(), b"original");
+    assert_eq!(fs::read(temporary).unwrap(), b"collision");
+}
+
+#[cfg(unix)]
+#[test]
+fn trash_move_declines_symlinked_directories_and_same_file_targets() {
+    use std::os::unix::fs::symlink;
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path();
+    let source = root.join("objects/aa/object");
+    fs::create_dir_all(source.parent().unwrap()).unwrap();
+    fs::write(&source, b"source").unwrap();
+    let outside = root.join("outside");
+    fs::create_dir(&outside).unwrap();
+    symlink(&outside, root.join("trash")).unwrap();
+    assert!(super::trash::target(root, &source).is_none());
+    fs::remove_file(root.join("trash")).unwrap();
+    fs::create_dir_all(root.join("trash/aa")).unwrap();
+    fs::hard_link(&source, root.join("trash/aa/object")).unwrap();
+    assert!(super::trash::target(root, &source).is_none());
+}
+
+#[test]
+fn cyclic_ancestry_declines_before_publishing() {
+    use flate2::{Compression, write::ZlibEncoder};
+    use std::io::Write;
+    let directory = tempfile::tempdir().unwrap();
+    let hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    let body = format!(r#"{{"parents":["{hash}"]}}"#);
+    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+    write!(encoder, "Version {hash} {}\0", body.len()).unwrap();
+    encoder.write_all(body.as_bytes()).unwrap();
+    let path = directory
+        .path()
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(&path, encoder.finish().unwrap()).unwrap();
+    let mut proofs = Vec::new();
+    assert!(super::ancestry(directory.path(), hash, &mut proofs).is_none());
+    assert_eq!(proofs.len(), 1);
+    assert!(path.exists());
+}
+
+#[test]
+fn all_lanes_requires_an_empty_index_and_records_its_bytes() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path();
+    fs::write(root.join("scope.json"), r#"{"name":"fixture"}"#).unwrap();
+    let index = root.join("index.json");
+    fs::write(&index, r#"{"lanes":[]}"#).unwrap();
+    let proofs = super::metadata_proofs(root, "fixture", true).unwrap();
+    assert_eq!(proofs[1].1, fs::read(&index).unwrap());
+    fs::write(&index, r#"{"lanes":[{"hash":"fixture"}]}"#).unwrap();
+    assert!(super::metadata_proofs(root, "fixture", true).is_none());
+    assert!(super::metadata_proofs(root, "fixture", false).is_some());
+}
+
+#[test]
+fn matching_visible_and_hidden_lane_heads_are_not_skipped() {
+    use serde_json::json;
+    let mut lane = json!({"name":"feature","scope":"fixture","components":[{"id":{"scope":"fixture","name":"other"},"head":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]});
+    assert_eq!(super::lanes::lane_head(&lane, "fixture", "component"), Some(None));
+    lane["updateDependents"] =
+        json!(["fixture/component@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]);
+    assert_eq!(
+        super::lanes::lane_head(&lane, "fixture", "component"),
+        Some(Some("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_owned())),
+    );
+    lane["updateDependents"] = json!([]);
+    lane["components"][0]["id"]["name"] = json!("component");
+    assert_eq!(
+        super::lanes::lane_head(&lane, "fixture", "component"),
+        Some(Some("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_owned())),
+    );
+}
+
+#[test]
+fn unrelated_history_entries_require_canonical_unique_rows() {
+    use serde_json::json;
+    let valid = json!({"hash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","parents":[]});
+    assert_eq!(super::existing::valid_rows(std::slice::from_ref(&valid)), Some(true));
+    assert_eq!(super::existing::valid_rows(&[valid.clone(), valid.clone()]), None);
+    let mut extra = valid;
+    extra["unknown"] = json!(true);
+    assert_eq!(super::existing::valid_rows(&[extra]), None);
+}

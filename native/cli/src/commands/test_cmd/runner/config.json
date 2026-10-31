@@ -1,0 +1,39 @@
+{
+  "transform": {
+    "^.+\\.css$": "$asset:css.cjs",
+    "^.+\\.svg$": "$asset:svg.cjs",
+    "^.+\\.(js|jsx|ts|tsx|cjs)$": "$asset:babel.cjs"
+  },
+  "transformIgnorePatterns": [
+    "^.+.module.(css|sass|scss)$",
+    "node_modules/(?!(@teambit|\\.pnpm[\\/](.*[+\\/])?@teambit.*|@[^/]+/([^/]+\\.)+[^/]+|\\.pnpm/(.+[+/])?@[^+]+\\+([^+]+\\.)+[^+]+|\\.pnpm/.+/node_modules/@[^/]+/([^/]+\\.)+[^/]+)/)"
+  ],
+  "modulePaths": [],
+  "moduleNameMapper": {
+    "\\.(jpg|jpeg|png|gif|eot|otf|webp|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "$asset:file.cjs",
+    "^.+\\.(css|sass|scss|less)$": "$identity",
+    "^.+\\.module\\.(css|sass|scss|less)$": "$identity",
+    "uuid": "$uuid"
+  },
+  "moduleFileExtensions": [
+    "web.js",
+    "js",
+    "web.ts",
+    "ts",
+    "web.tsx",
+    "tsx",
+    "json",
+    "web.jsx",
+    "jsx",
+    "node"
+  ],
+  "testEnvironment": "node",
+  "setupFiles": [],
+  "setupFilesAfterEnv": [
+    "$asset:setup.cjs"
+  ],
+  "snapshotResolver": "$asset:snapshot.cjs",
+  "testPathIgnorePatterns": [
+    "^.*__snapshots__.*.spec.*"
+  ]
+}

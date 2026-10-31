@@ -1,0 +1,396 @@
+//! Native lane inspection (`list`, `current`, `show`): the
+//! lanes of the local scope (`getLanes({ showDefaultLane: true })`), then
+//! main with the workspace's components.
+//!
+//! HTTP remotes and lanes Node would migrate to the schema that records
+//! deleted components run on the Node.js CLI.
+
+pub(super) mod remote;
+pub(super) use super::current::read_current;
+pub(super) use metadata::{Tracking, components_report};
+pub(super) use remote::project as project_http;
+#[cfg(test)]
+mod list_tests;
+mod merged;
+mod metadata;
+
+use super::current::{scope_for, with_alias};
+use crate::{
+    commands::{
+        color::Chalk,
+        engine::Engine,
+        list::bitmap,
+        status::js::{array, decline, text},
+        workspace_command::{self, format::Formatter, results::Report},
+    },
+    history::History,
+    native::Outcome,
+};
+use metadata::{lane, report, report_others};
+use serde_json::{Map, Value, json};
+use std::{
+    ffi::OsString,
+    io::{self, Write},
+    path::Path,
+    process::ExitCode,
+};
+
+/// The schema of lanes that record their deleted components.
+const DELETED_DATA_SCHEMA: &str = "1.0.0";
+
+/// A lane's data, as `serializeLaneData` writes it.
+#[derive(Clone)]
+pub(super) struct LaneData {
+    /// `{ name, scope }`.
+    pub(super) id: Value,
+    pub(super) alias: Option<String>,
+    pub(super) components: Vec<Value>,
+    pub(super) update_dependents: Option<Vec<Value>>,
+    pub(super) readme_component: Option<Value>,
+    pub(super) is_merged: Option<bool>,
+    /// The Lane's `log` and hash; absent for main.
+    pub(super) lane: Option<(Value, String)>,
+}
+
+impl LaneData {
+    pub(super) fn is_main(&self) -> bool {
+        self.lane.is_none()
+    }
+
+    /// `laneIdStr`: main's name, or `scope/name` with a differing alias.
+    pub(super) fn label(&self) -> String {
+        let name = self.id["name"].as_str().map_or("", str::trim);
+        if self.is_main() {
+            return name.to_string();
+        }
+        let id = format!("{}/{name}", self.id["scope"].as_str().map_or("", str::trim));
+        match self.alias
+            .as_deref()
+            .map(str::trim)
+            .filter(|alias| !alias.is_empty())
+        {
+            Some(alias) => format!("{id} ({alias})"),
+            None => id,
+        }
+    }
+
+    pub(super) fn json(&self) -> Value {
+        let mut data = Map::new();
+        data.insert("name".into(), self.id["name"].clone());
+        let remote = self.lane
+            .as_ref()
+            .map(|_| {
+                format!(
+                    "{}/{}",
+                    self.id["scope"].as_str().map_or("", str::trim),
+                    self.id["name"].as_str().map_or("", str::trim),
+                )
+            });
+        data.insert("remote".into(), json!(remote));
+        data.insert("id".into(), self.id.clone());
+        if !self.is_main() {
+            data.insert("alias".into(), json!(self.alias));
+        }
+        data.insert("components".into(), json!(self.components));
+        if let Some(updates) = &self.update_dependents {
+            data.insert("updateDependents".into(), json!(updates));
+        }
+        if let Some(readme) = &self.readme_component {
+            data.insert("readmeComponent".into(), readme.clone());
+        }
+        if let Some((log, _)) = &self.lane {
+            data.insert("log".into(), log.clone());
+        }
+        data.insert("isMerged".into(), json!(self.is_merged));
+        let hash = self.lane.as_ref().map_or("", |(_, hash)| hash.trim());
+        data.insert("hash".into(), json!(hash));
+        Value::Object(data)
+    }
+}
+
+/// `args` starts after `list`.
+pub(super) fn run(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> {
+    run_with_command(args, list_args, "list")
+}
+
+/// `bit lane` without a subcommand delegates `report()` to `LaneListCmd` (`LaneCmd` has no `json()`).
+pub(super) fn run_default(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> {
+    run_with_command(args, list_args, "lane")
+}
+
+fn run_with_command(
+    args: &[OsString],
+    list_args: &[&str],
+    command: &'static str,
+) -> io::Result<Outcome> {
+    let Some((json, details, merged, remote)) = parse(list_args) else {
+        return Ok(Outcome::Declined("lane list flags outside the native grammar".to_string()));
+    };
+    if command == "lane" && json && remote.is_some() {
+        return Ok(
+            Outcome::Declined("lane without subcommand does not implement json".to_string()),
+        );
+    }
+    let scope_root = match super::scope_root::discover() {
+        Ok(Some(scope_root)) => scope_root,
+        Ok(None) => return outside_scope_list(args, command, json, remote),
+        Err(error) => return Ok(Outcome::Declined(format!("lane list scope: {error}"))),
+    };
+    if let Some(scope) = remote {
+        return remote::run(&scope_root, args, command, scope, json, details, merged);
+    }
+    let selection = match read_for_scope(&scope_root.path, scope_root.bare, merged.is_some()) {
+        Ok(read) => read,
+        Err(error) => return Ok(Outcome::Declined(format!("lane list: {error}"))),
+    };
+    display_local(&scope_root, args, command, json, details, merged, selection)
+}
+
+fn outside_scope_list(
+    args: &[OsString],
+    command: &'static str,
+    json: bool,
+    remote: Option<&str>,
+) -> io::Result<Outcome> {
+    if remote.is_some() || std::env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("not inside a scope".to_string()));
+    }
+    workspace_command::execute_failure_scope(
+        &std::env::current_dir()?,
+        args,
+        command,
+        json,
+        "",
+        io::Error::other("error: please run the command from a workspace or a scope directory"),
+    )
+}
+
+fn display_local(
+    scope_root: &super::scope_root::ScopeRoot,
+    args: &[OsString],
+    command: &'static str,
+    json: bool,
+    details: bool,
+    merged: Option<bool>,
+    (lanes, current): (Vec<LaneData>, (Value, String)),
+) -> io::Result<Outcome> {
+    let root = &scope_root.path;
+    let bare = scope_root.bare;
+    if json && command != "lane" {
+        return emit_json(root, bare, args, &lanes, &current.1);
+    }
+    let report = Report {
+        data: match merged {
+            Some(only_merged) => merged::report(&lanes, only_merged, Chalk::detect(args)),
+            None => report(&lanes, &current.0, Chalk::detect(args), details, bare),
+        },
+        code: 0,
+        details: None,
+    };
+    match (bare, json) {
+        (true, true) => {
+            workspace_command::execute_without_loader_scope(root, args, command, |_| Ok(report))
+        }
+        (false, true) => {
+            workspace_command::execute_without_loader(root, args, command, |_| Ok(report))
+        }
+        (true, false) => workspace_command::execute_with_scope(root, args, command, &report),
+        (false, false) => workspace_command::execute_with(root, args, command, &report, |_| Ok(())),
+    }
+}
+
+fn emit_json(
+    root: &Path,
+    bare: bool,
+    args: &[OsString],
+    lanes: &[LaneData],
+    current: &str,
+) -> io::Result<Outcome> {
+    let history = (!bare).then(|| History::start(root, args));
+    let data = json!({
+        "lanes": lanes.iter().map(LaneData::json).collect::<Vec<_>>(),
+        "currentLane": if bare { Value::Null } else { json!(current) },
+    });
+    // `CommandRunner` writes `JSON.stringify(data, null, 2)` without a newline.
+    let mut stdout = io::stdout().lock();
+    stdout.write_all(serde_json::to_string_pretty(&data)?.as_bytes())?;
+    stdout.flush()?;
+    if let Some(history) = history {
+        history.end(true);
+    }
+    Ok(Outcome::Exit(ExitCode::SUCCESS))
+}
+
+#[derive(Default)]
+struct ListFlags<'a> {
+    json: bool,
+    details: bool,
+    merged: Option<bool>,
+    remote: Option<&'a str>,
+}
+
+fn parse<'a>(args: &[&'a str]) -> Option<(bool, bool, Option<bool>, Option<&'a str>)> {
+    let mut flags = ListFlags::default();
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        if arg == "--" {
+            return iter
+                .next()
+                .is_none()
+                .then_some((flags.json, flags.details, flags.merged, flags.remote));
+        }
+        apply_list_arg(&mut flags, arg, &mut iter)?;
+    }
+    Some((flags.json, flags.details, flags.merged, flags.remote))
+}
+
+fn apply_list_arg<'a>(
+    flags: &mut ListFlags<'a>,
+    arg: &'a str,
+    iter: &mut impl Iterator<Item = &'a str>,
+) -> Option<()> {
+    if let Some(val) = arg
+        .strip_prefix("--remote=")
+        .or_else(|| arg.strip_prefix("-r="))
+    {
+        if flags.remote.is_some() {
+            return None;
+        }
+        flags.remote = Some(remote_name(Some(val))?);
+        return Some(());
+    }
+    match arg {
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" => {}
+        "--json" | "-j" | "--json=true" => flags.json = true,
+        "--json=false" => flags.json = false,
+        "--details" | "-d" | "--details=true" => flags.details = true,
+        "--details=false" => flags.details = false,
+        "-jd" | "-dj" => {
+            flags.json = true;
+            flags.details = true;
+        }
+        "--merged" | "--merged=true" if flags.merged != Some(false) => flags.merged = Some(true),
+        "--merged=false" if flags.merged != Some(false) => flags.merged = None,
+        "--not-merged" | "--not-merged=true" if flags.merged != Some(true) => {
+            flags.merged = Some(false);
+        }
+        "--not-merged=false" if flags.merged != Some(true) => flags.merged = None,
+        "--remote" | "-r" if flags.remote.is_none() => {
+            flags.remote = Some(remote_name(iter.next())?);
+        }
+        _ => return None,
+    }
+    Some(())
+}
+
+fn remote_name(name: Option<&str>) -> Option<&str> {
+    name.map(str::trim)
+        .filter(|name| !name.is_empty() && !name.starts_with('-'))
+}
+
+/// The lanes then main, and the current lane's id with
+/// `getCurrentLaneNameOrAlias()`.
+pub(super) fn read(root: &Path) -> io::Result<(Vec<LaneData>, (Value, String))> {
+    read_with_merge(root, false)
+}
+
+pub(super) fn read_with_merge(
+    root: &Path,
+    merge_data: bool,
+) -> io::Result<(Vec<LaneData>, (Value, String))> {
+    read_for_scope(root, false, merge_data)
+}
+
+pub(super) fn read_for_scope(
+    root: &Path,
+    bare: bool,
+    merge_data: bool,
+) -> io::Result<(Vec<LaneData>, (Value, String))> {
+    let scope = scope_for(root, bare)?;
+    let tracking = Tracking::read(&scope);
+    let bitmap = if bare { None } else { Some(bitmap::read(root)?) };
+    let mut engine = Engine::new()?;
+    let listed: Value = engine.request(&json!({"kind": "laneList", "root": root,
+            "bareScope":bare, "mergeData": merge_data}))?;
+    let mut lanes = array(listed.get("lanes"), "lanes")?
+        .iter()
+        .map(|row| lane(row, &tracking))
+        .collect::<io::Result<Vec<_>>>()?;
+    let scope_name = text(scope.get("name"))?;
+    let main_id = json!({"name": "main", "scope": scope_name});
+    lanes.push(LaneData {
+        id: main_id.clone(),
+        alias: None,
+        components: if let Some(bitmap) = &bitmap {
+            main_components(&mut engine, root, &bitmap.entries)?
+        } else {
+            bare_main_components(&mut engine, root, scope_name)?
+        },
+        update_dependents: None,
+        readme_component: None,
+        is_merged: None,
+        lane: None,
+    });
+    let current = bitmap.and_then(|bitmap| bitmap.lane).unwrap_or(main_id);
+    Ok((lanes, with_alias(current, &tracking)?))
+}
+
+fn bare_main_components(
+    engine: &mut Engine,
+    root: &Path,
+    default_scope: &str,
+) -> io::Result<Vec<Value>> {
+    let listed: Value = engine.request(&json!({"kind":"scopeList", "root":root,
+        "bareScope":true}))?;
+    let models = array(listed.get("components"), "bare scope models")?;
+    Ok(models
+        .iter()
+        .filter_map(|model| {
+            let head = model["head"].as_str()?;
+            let scope = model["scope"]
+                .as_str()
+                .filter(|val| !val.is_empty())
+                .unwrap_or(default_scope);
+            let identity = format!("{scope}/{}", model["name"].as_str()?);
+            let label = crate::commands::show_cmd::remote_show::find_tag_for_hash(model, head)
+                .unwrap_or_else(|| head.to_owned());
+            Some(json!({"id":format!("{identity}@{label}"),"head":label}))
+        })
+        .collect())
+}
+
+/// `getIdsOfDefaultLane()`: the bitmap's ids, a versioned one at its model's
+/// head (as a tag when it has one), left out when the model has no head. A
+/// component not exported yet is found under its default scope.
+fn main_components(
+    engine: &mut Engine,
+    root: &Path,
+    entries: &[bitmap::Entry],
+) -> io::Result<Vec<Value>> {
+    let listed: Value = engine.request(&json!({"kind": "scopeList", "root": root}))?;
+    let models = array(listed.get("components"), "models")?;
+    let mut components = Vec::new();
+    for entry in entries {
+        if entry.version.is_none() {
+            components.push(json!({"id": entry.identity, "head": "latest"}));
+            continue;
+        }
+        let (entry_scope, entry_name) = entry.identity
+            .split_once('/')
+            .unwrap_or(("", entry.identity.as_str()));
+        let model = models
+            .iter()
+            .find(|model| {
+                let model_scope = model["scope"].as_str().unwrap_or_default();
+                model["name"].as_str() == Some(entry_name)
+                    && (model_scope.is_empty() || model_scope == entry_scope)
+            })
+            .ok_or_else(|| decline("a component without a model"))?;
+        let Some(head) = model["head"].as_str() else { continue };
+        let label = crate::commands::show_cmd::remote_show::find_tag_for_hash(model, head)
+            .unwrap_or_else(|| head.to_owned());
+        components.push(json!({"id": format!("{}@{label}", entry.identity), "head": label}));
+    }
+    Ok(components)
+}

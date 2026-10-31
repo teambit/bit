@@ -1,0 +1,134 @@
+//! Actual install subscriber objects remain mutable across the package-manager call.
+use super::callbacks::{assert_phases, assert_throttle_receipts, installation_fixture};
+use crate::{commands::add::support::history_oracle, helper::config};
+use serde_json::json;
+use std::fs;
+
+#[test]
+fn install_subscribers_mutate_original_inputs_and_retain_reassigned_argument_fields() {
+    install_subscribers(false);
+}
+
+#[test]
+fn ci_install_subscribers_mutate_original_inputs_and_retain_reassigned_argument_fields() {
+    install_subscribers(true);
+}
+
+#[test]
+fn package_install_failure_resumes_original_lifecycle_without_replay() {
+    let helper = installation_fixture();
+    helper.output_file("lane-adoption-record-phases", "active");
+    helper.output_file("lane-adoption-mutate-install", "active");
+    helper.output_file("lane-adoption-invalid-local-package", "active");
+    helper.output_file("subscriber-linked/package.json", "{ invalid package manifest");
+    let output = history_oracle::compare(
+        &helper,
+        "switch dev",
+        super::output::durations,
+        ["checkout", "lane-switch"],
+        false,
+    );
+    assert!(output.status.success(), "{} {}", output.stdout, output.stderr);
+    #[cfg(target_os = "linux")]
+    assert!(output.trace.contains("running stock pnpm installation natively"), "{}", output.trace);
+    assert!(output.stdout.contains("Installation Error"), "{}", output.stdout);
+    let phases =
+        fs::read_to_string(helper.scopes.local_path.join("lane-adoption-phases.jsonl")).unwrap();
+    assert_eq!(phases.matches(r#""phase":"preInstall""#).count(), 1, "{phases}");
+    assert!(!phases.contains(r#""phase":"postInstall""#), "{phases}");
+    assert!(phases.contains(r#""phase":"compile""#), "{phases}");
+    assert!(!helper.scopes.local_path.join("lane-adoption-subscriber-receipts.jsonl").exists());
+}
+
+fn install_subscribers(ci: bool) {
+    let helper = installation_fixture();
+    helper.output_file("lane-adoption-record-phases", "active");
+    helper.output_file("lane-adoption-mutate-install", "active");
+    helper.output_file("lane-adoption-wrap-package-manager", "active");
+    helper.output_file(
+        "subscriber-linked/package.json",
+        &json!({"name":"@fixture/subscriber-linked","version":"1.0.0","main":"index.js"})
+            .to_string(),
+    );
+    helper.output_file(
+        "subscriber-linked/index.js",
+        "module.exports='subscriber local package';\n",
+    );
+    let compare = if ci { history_oracle::compare_ci } else { history_oracle::compare };
+    let output =
+        compare(&helper, "switch dev", super::output::durations, ["checkout", "lane-switch"], true);
+    assert!(output.status.success(), "{} {}", output.stdout, output.stderr);
+    #[cfg(target_os = "linux")]
+    assert!(output.trace.contains("running stock pnpm installation natively"), "{}", output.trace);
+    assert_phases(&helper);
+    assert_throttle_receipts(&helper);
+    assert_receipt(&helper);
+    assert_linked_package(&helper);
+    assert_manager_receipt(&helper);
+}
+
+fn assert_manager_receipt(helper: &crate::helper::Helper) {
+    let text =
+        fs::read_to_string(helper.scopes.local_path.join("lane-adoption-manager-receipts.jsonl"))
+            .unwrap();
+    let rows = text
+        .lines()
+        .map(|line| serde_json::from_str::<serde_json::Value>(line).unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(rows.len(), 1, "{text}");
+    let row = &rows[0];
+    assert_eq!(row["sameReceiver"], true, "{text}");
+    assert_eq!(row["rebuildType"], "function", "{text}");
+    assert_eq!(row["rebuildName"], "rebuild", "{text}");
+    assert_eq!(row["rebuildConstructor"], "AsyncFunction", "{text}");
+}
+fn assert_linked_package(helper: &crate::helper::Helper) {
+    let package = helper.scopes.local_path.join("node_modules/@fixture/subscriber-linked");
+    assert_eq!(
+        fs::read(package.join("index.js")).unwrap(),
+        b"module.exports='subscriber local package';\n",
+    );
+    assert_eq!(config::read_jsonc(&package.join("package.json"))["version"], "1.0.0");
+    let lock = fs::read_to_string(helper.scopes.local_path.join("pnpm-lock.yaml")).unwrap();
+    assert!(lock.contains("excludeLinksFromLockfile: true"), "{lock}");
+    assert!(!lock.contains("@fixture/subscriber-linked"), "{lock}");
+    // The pinned engine writes this YAML-named file as JSON, as install_clocks verifies.
+    let modules: serde_json::Value = serde_json::from_slice(
+        &fs::read(helper.scopes.local_path.join("node_modules/.modules.yaml")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(modules["included"]["optionalDependencies"], false);
+    assert!(!helper.scopes.local_path.join("subscriber-ignored-root").exists());
+}
+
+fn assert_receipt(helper: &crate::helper::Helper) {
+    let text = fs::read_to_string(helper.scopes.local_path.join(
+        "lane-adoption-subscriber-receipts.jsonl",
+    ))
+    .unwrap();
+    let rows: Vec<serde_json::Value> = text
+        .lines()
+        .map(|line| serde_json::from_str(line).unwrap())
+        .collect();
+    assert_eq!(rows.len(), 1, "{text}");
+    let row = &rows[0];
+    for field in ["sameInstaller", "sameArgs", "sameOptions", "reassignedOptional"] {
+        assert_eq!(row[field], true, "{field}: {text}");
+    }
+    for field in ["samePackageOptions", "originalOptional"] {
+        assert_eq!(row[field], false, "{field}: {text}");
+    }
+    assert!(row.get("installerRoot").is_none(), "{text}");
+    assert_eq!(row["formalRoot"], helper.scopes.local_path.to_str().unwrap());
+    assert_eq!(
+        row["argsRoot"],
+        helper.scopes.local_path
+            .join("subscriber-ignored-root")
+            .to_str()
+            .unwrap(),
+    );
+    assert_eq!(
+        row["linked"],
+        format!("link:{}", helper.scopes.local_path.join("subscriber-linked").display()),
+    );
+}

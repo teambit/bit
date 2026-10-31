@@ -1,0 +1,64 @@
+//! `ObjectFetcher` streams cached dependency objects before their first consumer-side cache read.
+use super::{PreparedImport, Target, dependencies::dependency_target, identity, invalid};
+use std::{collections::HashSet, io};
+
+pub(super) fn finish(plan: &mut PreparedImport, roots: &[&Target]) -> io::Result<()> {
+    let identities = roots
+        .iter()
+        .map(|target| identity(target))
+        .collect::<io::Result<HashSet<_>>>()?;
+    let phase =
+        plan.progress.last_mut().ok_or_else(|| invalid("import forced dependency phase"))?;
+    if !has_matching_phase_id(&phase.ids, &identities) {
+        return Ok(());
+    }
+    phase.ids.retain(|id| identities.contains(without_version(id)));
+    let received = phase.components.clone();
+    let dependencies = collect_forced_dependencies(plan, roots, &received)?;
+    plan.prepare_versions_with_reason(
+        &dependencies,
+        Some("for getting all dependencies - missing dependencies"),
+    )
+}
+
+fn collect_forced_dependencies(
+    plan: &mut PreparedImport,
+    roots: &[&Target],
+    received: &HashSet<String>,
+) -> io::Result<Vec<Target>> {
+    let mut dependencies = Vec::new();
+    let mut seen = HashSet::new();
+    for target in roots {
+        let version = plan.policy_version(target)?;
+        let flattened = version["flattenedDependencies"]
+            .as_array()
+            .ok_or_else(|| invalid("import forced dependencies"))?;
+        let dev_flattened = version["flattenedDevDependencies"].as_array();
+        for row in flattened
+            .iter()
+            .chain(dev_flattened.into_iter().flatten())
+        {
+            let dependency = dependency_target(row)?;
+            let id = identity(&dependency)?;
+            let key = format!("{id}@{}", dependency.version.trim());
+            if !seen.insert(key.clone()) {
+                continue;
+            }
+            if received.contains(&id) {
+                plan.cache.unbuilt.remove(&key);
+            }
+            dependencies.push(dependency);
+        }
+    }
+    Ok(dependencies)
+}
+
+fn has_matching_phase_id(ids: &[String], identities: &HashSet<String>) -> bool {
+    ids.iter()
+        .any(|id| identities.contains(without_version(id)))
+}
+
+fn without_version(id: &str) -> &str {
+    let id = id.trim();
+    id.rsplit_once('@').map_or(id, |(identity, _)| identity.trim())
+}

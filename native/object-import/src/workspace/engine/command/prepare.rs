@@ -1,0 +1,382 @@
+mod checkout_import;
+mod checkout_lane;
+mod checkout_scope;
+mod roots;
+use super::input::{Operation, Prepare};
+use crate::{
+    command_import,
+    workspace::engine::{client_status::config, invalid, status_context, status_models},
+};
+use serde_json::{Value, json};
+use std::io;
+
+#[cfg(test)]
+mod tests;
+
+pub(super) fn context(
+    request: &Prepare,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(Value, Option<command_import::PreparedImport>)> {
+    validate(request)?;
+    if super::lane_history::phase(&request.options).is_some() {
+        return super::lane_history::context::prepare(request, pool);
+    }
+    if request.operation == Operation::Switch {
+        return super::switch::context(request, pool);
+    }
+    if request.options.lane.is_some() {
+        if request.operation != Operation::Merge {
+            return Err(invalid("lane checkout unsupported"));
+        }
+        let (mut context, imported) = super::lane_context::prepare(request, pool)?;
+        extend_models(request, pool, &mut context, imported.as_ref())?;
+        return Ok((context, imported));
+    }
+    ordinary_context(request, pool)
+}
+fn ordinary_context(
+    request: &Prepare,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(Value, Option<command_import::PreparedImport>)> {
+    let input = status_context::Request {
+        root: request.root.clone(),
+        home: request.home.clone(),
+        history: false,
+    };
+    let mut context = checkout_lane::metadata(request, &input, pool)?;
+    let mut imported = match request.operation {
+        Operation::Checkout => Some(prepare_checkout_import(request, &context)?),
+        Operation::Merge | Operation::Switch => {
+            Some(command_import::prepare_cached(&request.root, &request.global_remotes_file)?)
+        }
+    };
+    if request.operation == Operation::Checkout && request.options.to.as_deref() == Some("head") {
+        imported
+            .as_mut()
+            .ok_or_else(|| invalid("command import owner"))?
+            .sync_unexported(
+                &request.global_remotes_file,
+                &unexported_targets(request, &context)?,
+            )?;
+    }
+    checkout_lane::attach(request, &mut context, imported.as_mut(), pool)?;
+    checkout_scope::attach(request, &mut context, imported.as_mut())?;
+    extend_models(request, pool, &mut context, imported.as_ref())?;
+    super::checkout_stash::context(request, &mut context)?;
+    Ok((context, imported))
+}
+fn prepare_checkout_import(
+    request: &Prepare,
+    context: &Value,
+) -> io::Result<command_import::PreparedImport> {
+    if request.options.stash.is_some() {
+        return command_import::prepare_cached(&request.root, &request.global_remotes_file);
+    }
+    let targets = import_targets(request)?;
+    if let Some(imported) = checkout_import::lane(request, context, &targets)? {
+        return Ok(imported);
+    }
+    let local_target = request.options.to
+        .as_deref()
+        .map(str::trim)
+        .is_some_and(|to| {
+            !to.is_empty()
+                && (request.options.revert && to == "main"
+                    || !matches!(to, "head" | "latest" | "main") && !to.starts_with("head~"))
+        });
+    if local_target {
+        let cached = command_import::prepare_cached(&request.root, &request.global_remotes_file)?;
+        let default_scope = crate::component_tracking::identity::workspace_aspect(
+            &context["workspace"],
+        )["defaultScope"]
+            .as_str()
+            .ok_or_else(|| invalid("command default scope"))?;
+        if targets.iter().all(|target| target.scope.is_none())
+            || cached.all_external_targets_unmapped(&targets, default_scope)
+        {
+            return Ok(cached);
+        }
+    }
+    command_import::prepare(&request.root, &request.global_remotes_file, &targets)
+}
+fn unexported_targets(
+    request: &Prepare,
+    context: &Value,
+) -> io::Result<Vec<command_import::Target>> {
+    let bitmap = config::document(&request.root.join(".bitmap"))?;
+    let rows = bitmap.as_object().ok_or_else(|| invalid("command bitmap"))?;
+    Ok(selected(request, context)?
+        .iter()
+        .filter_map(|target| {
+            let (scope, name) = target["identity"].as_str()?.split_once('/')?;
+            rows.iter()
+                .any(|(key, row)| {
+                    let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
+                    !key.starts_with('$')
+                        && !matches!(key.as_str(), "_bit_lane" | "version")
+                        && row.is_object()
+                        && row_name == name
+                        && (row_scope.is_none()
+                            || (row_scope == Some(scope) && row["exported"] == false))
+                        && row["rootDir"] == target["directory"]
+                })
+                .then(|| command_import::Target {
+                    scope: Some(scope.to_owned()),
+                    name: name.to_owned(),
+                    version: "latest".into(),
+                })
+        })
+        .collect())
+}
+pub(super) fn extend_models(
+    request: &Prepare,
+    pool: &rayon::ThreadPool,
+    context: &mut Value,
+    imported: Option<&command_import::PreparedImport>,
+) -> io::Result<()> {
+    let targets = context["targets"].as_array().ok_or_else(|| invalid("command targets"))?;
+    let mut model_targets = targets
+        .iter()
+        .map(|target| {
+            json!({
+                "identity":target["identity"],"version":target["version"],
+            })
+        })
+        .collect::<Vec<_>>();
+    extend_lane_targets(context, &mut model_targets);
+    let models = serde_json::from_value(json!({
+        "root":request.root,"history":false,"includeHeads":request.operation != Operation::Switch,
+        "targets":model_targets,
+    }))
+    .map_err(io::Error::other)?;
+    let (_, models) = match imported {
+        Some(imported) => status_models::read_overlay(&models, pool, &imported.overlay)?,
+        None => status_models::read(&models, pool)?,
+    };
+    context
+        .as_object_mut()
+        .ok_or_else(|| invalid("command context"))?
+        .extend(
+            models
+                .as_object()
+                .ok_or_else(|| invalid("command models"))?
+                .clone(),
+        );
+    Ok(())
+}
+fn validate(request: &Prepare) -> io::Result<()> {
+    if request.operation == Operation::Switch {
+        super::switch::validation::options(request)?;
+    }
+    super::checkout_stash::validate(request)?;
+    validate_revert(request)?;
+    if request.defer_checkout_pattern
+        && (!matches!(request.operation, Operation::Checkout | Operation::Merge)
+            || request.options.pattern.is_none())
+    {
+        return Err(invalid("command deferred checkout selection"));
+    }
+    for path in [&request.root, &request.home, &request.global_remotes_file] {
+        super::super::path(path)?;
+    }
+    if invalid_lifecycle_options(request)? {
+        return Err(invalid("command requires canonical lifecycle"));
+    }
+    let unmerged = crate::scope_path(&request.root).join("unmerged.json");
+    if unmerged.try_exists()? && !config::document(&unmerged)?.as_array().is_some_and(Vec::is_empty)
+    {
+        return Err(invalid("command unresolved merge state"));
+    }
+    Ok(())
+}
+
+fn invalid_lifecycle_options(request: &Prepare) -> io::Result<bool> {
+    let options = &request.options;
+    let to = options.to.as_deref().map(str::trim);
+    let invalid_strategy = options.strategy
+        .as_deref()
+        .map(str::trim)
+        .is_some_and(|value| !matches!(value, "ours" | "theirs" | "manual"));
+    let invalid_workspace_only =
+        options.workspace_only && (request.operation != Operation::Checkout || to != Some("head"));
+    let conflicting_forces = options.force_ours && options.force_theirs;
+    let interrupted = request.root.join("merge-conflict").try_exists()?;
+    Ok(!options.skip_dependency_installation
+        || options.scope.include_new_from_scope
+            && (request.operation != Operation::Checkout || to != Some("head"))
+        || !options.scope.include_new_from_scope
+            && !options.scope.scope_candidates.is_empty()
+        || invalid_workspace_only
+        || conflicting_forces && request.operation != Operation::Switch
+        || invalid_strategy && request.operation != Operation::Switch
+        || interrupted)
+}
+
+fn validate_revert(request: &Prepare) -> io::Result<()> {
+    if request.options.revert
+        && super::lane_history::phase(&request.options).is_none()
+        && (request.operation != Operation::Checkout
+            || request.options.pattern.is_none()
+            || request.options.all
+            || !request.options.to
+                .as_deref()
+                .is_some_and(|to| {
+                    to == "main"
+                        || (!matches!(to, "head" | "latest" | "reset") && !to.starts_with("head~"))
+                }))
+    {
+        return Err(invalid("command revert requires a selected version"));
+    }
+    Ok(())
+}
+fn import_targets(request: &Prepare) -> io::Result<Vec<command_import::Target>> {
+    let bitmap = config::document(&request.root.join(".bitmap"))?;
+    bitmap
+        .as_object()
+        .ok_or_else(|| invalid("command bitmap"))?
+        .iter()
+        .filter(|(key, value)| {
+            !key.starts_with('$') && *key != "_bit_lane" && *key != "version" && value.is_object()
+        })
+        .map(|(key, value)| {
+            let (scope, name) = crate::reset_lane::bitmap::row_identity(key, value);
+            let name = name.trim();
+            if name.is_empty() {
+                return Err(invalid("command component name"));
+            }
+            let (_, key_ver) = key
+                .rsplit_once('@')
+                .map_or((key.as_str(), ""), |(base, ver)| (base, ver.trim()));
+            let version = value
+                .get("version")
+                .filter(|val| !val.is_null())
+                .map(|val| {
+                    val.as_str()
+                        .map(str::trim)
+                        .ok_or_else(|| invalid("command component version"))
+                })
+                .transpose()?
+                .unwrap_or(key_ver);
+            Ok(command_import::Target {
+                scope: scope
+                    .map(str::trim)
+                    .filter(|scope| !scope.is_empty())
+                    .map(str::to_owned),
+                name: name.to_owned(),
+                version: version.to_owned(),
+            })
+        })
+        .collect()
+}
+
+pub(super) fn selected(request: &Prepare, context: &Value) -> io::Result<Vec<Value>> {
+    let targets = context["targets"].as_array().ok_or_else(|| invalid("command targets"))?;
+    roots::validate(targets)?;
+    if super::lane_history::phase(&request.options).is_some() {
+        return Ok(targets.clone());
+    }
+    if let Some(selected) = super::checkout_stash::selected(&request.options, targets)? {
+        return Ok(selected);
+    }
+    if request.operation == Operation::Switch {
+        return Ok(targets.clone());
+    }
+    if request.options.lane.is_some() {
+        return lane_selected(context, targets);
+    }
+
+    if request.defer_checkout_pattern {
+        return Ok(targets.clone());
+    }
+    if let Some(pattern) = &request.options.pattern {
+        return selected_pattern(request, targets, pattern);
+    }
+    if request.operation == Operation::Checkout
+        && !request.options.all
+        && !matches!(request.options.to.as_deref(), Some("head" | "latest"))
+    {
+        return Err(invalid("command checkout requires selection"));
+    }
+    if request.operation == Operation::Checkout
+        && request.options.to.as_deref() == Some("head")
+        && !context["lane"]["current"].is_null()
+    {
+        return selected_checkout_lane_heads(context, targets);
+    }
+    Ok(targets.clone())
+}
+
+fn selected_pattern(request: &Prepare, targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
+    if request.options.all {
+        return Err(invalid("command ambiguous selection"));
+    }
+    // Canonical multimatch treats ** as all scoped IDs. An explicit pattern
+    // also selects fast-forward targets, unlike bare merge's divergent set.
+    if (request.operation == Operation::Merge || request.options.revert)
+        && pattern == "**"
+        && !targets.is_empty()
+    {
+        return Ok(targets.to_vec());
+    }
+    roots::select_pattern(targets, pattern)
+}
+
+fn selected_checkout_lane_heads(context: &Value, targets: &[Value]) -> io::Result<Vec<Value>> {
+    let entries = command_import::lane::entries(&context["lane"]["current"]["value"])?;
+    let heads = entries
+        .into_iter()
+        .filter(|entry| !entry.hidden)
+        .map(|entry| entry.identity)
+        .collect::<std::collections::HashSet<_>>();
+    Ok(targets
+        .iter()
+        .filter(|target| {
+            target["identity"]
+                .as_str()
+                .is_some_and(|id| heads.contains(id))
+        })
+        .cloned()
+        .collect())
+}
+
+fn lane_selected(context: &Value, targets: &[Value]) -> io::Result<Vec<Value>> {
+    let selected =
+        context["lane"]["targets"].as_array().ok_or_else(|| invalid("command lane selection"))?;
+    let mut pool = targets.to_vec();
+    if let Some(inactive) = context["lane"]["inactiveTargets"].as_array() {
+        pool.extend(inactive.iter().cloned());
+    }
+    roots::validate(&pool)?;
+    Ok(pool
+        .into_iter()
+        .filter(|target| {
+            selected
+                .iter()
+                .any(|row| row["identity"] == target["identity"])
+        })
+        .collect())
+}
+
+fn extend_lane_targets(context: &Value, model_targets: &mut Vec<Value>) {
+    checkout_scope::extend_model_targets(context, model_targets);
+    for field in ["inactiveTargets", "addedTargets"] {
+        if let Some(rows) = context["lane"][field].as_array() {
+            model_targets.extend(
+                rows.iter()
+                    .map(|row| json!({"identity":row["identity"],"version":row["version"]})),
+            );
+        }
+    }
+    let Some(rows) = context["lane"]["targets"].as_array() else { return };
+    for row in rows {
+        for version in ["head", "currentHead", "mainHead"]
+            .into_iter()
+            .filter_map(|field| row[field].as_str())
+        {
+            let target = json!({"identity":row["identity"],"version":version});
+            if !model_targets.contains(&target) {
+                model_targets.push(target);
+            }
+        }
+    }
+}

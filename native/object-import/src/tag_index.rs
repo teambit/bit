@@ -1,0 +1,35 @@
+//! Index snapshot hashes by their newest normal or orphaned tag.
+#[cfg(test)]
+mod tests;
+
+use std::collections::HashMap;
+
+#[derive(Default)]
+pub(crate) struct TagIndex(HashMap<String, (String, bool)>);
+impl TagIndex {
+    pub(crate) fn model(model: &serde_json::Value) -> Self {
+        let mut index = Self::default();
+        for field in ["orphanedVersions", "versions"] {
+            let Some(tags) = model[field].as_object() else {
+                continue;
+            };
+            for (label, hash) in tags {
+                if let Some(hash) = hash.as_str() {
+                    index.insert(hash, label, field == "versions");
+                }
+            }
+        }
+        index
+    }
+    pub(crate) fn insert(&mut self, hash: &str, label: &str, normal: bool) {
+        let (hash, label) = (hash.trim(), label.trim());
+        if !hash.is_empty() && !label.is_empty() {
+            self.0.insert(hash.to_owned(), (label.to_owned(), normal));
+        }
+    }
+    pub(crate) fn get(&self, hash: &str) -> Option<(&str, bool)> {
+        self.0
+            .get(hash.trim())
+            .map(|(label, normal)| (label.as_str(), *normal))
+    }
+}

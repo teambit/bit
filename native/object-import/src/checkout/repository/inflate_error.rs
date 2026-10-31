@@ -1,0 +1,26 @@
+//! Retain the decompressor cause without changing ordinary checkout decline diagnostics.
+use std::{fmt, io};
+#[derive(Debug)]
+struct Failure(flate2::DecompressError);
+impl fmt::Display for Failure {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("checkout invalid compressed object")
+    }
+}
+impl std::error::Error for Failure {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&self.0)
+    }
+}
+pub(super) fn retain(error: flate2::DecompressError) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidData, Failure(error))
+}
+pub(crate) fn message(error: &io::Error) -> Option<&str> {
+    error
+        .get_ref()?
+        .downcast_ref::<Failure>()?
+        .0
+        .message()
+        .map(|msg| msg.trim_matches(|ch: char| ch.is_whitespace() || ch.is_control()))
+        .filter(|message| !message.is_empty())
+}

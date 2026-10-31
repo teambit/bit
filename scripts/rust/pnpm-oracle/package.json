@@ -1,0 +1,8 @@
+{
+  "name": "bit-rust-pnpm-oracle",
+  "private": true,
+  "description": "Released pnpm engine used by the Node CLI parity reference after the upstream engine update.",
+  "dependencies": {
+    "@pnpm/napi": "12.16.0"
+  }
+}

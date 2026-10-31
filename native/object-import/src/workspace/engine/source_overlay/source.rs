@@ -1,0 +1,50 @@
+use super::invalid;
+use serde_json::Value;
+use std::{
+    fs,
+    io::{self, Read, Seek, SeekFrom},
+    path::PathBuf,
+};
+
+#[derive(Clone)]
+pub(super) struct Spool {
+    pub(super) path: PathBuf,
+    pub(super) offset: u64,
+    size: u64,
+    hash: String,
+}
+impl Spool {
+    pub(super) fn parse(value: &Value) -> io::Result<Self> {
+        let path = value["spoolPath"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| invalid("overlay spool path"))?;
+        let size = value["bytes"].as_u64().ok_or_else(|| invalid("overlay spool size"))?;
+        let raw_hash = value["spoolHash"].as_str().ok_or_else(|| invalid("overlay spool hash"))?;
+        let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash.trim())?);
+        crate::workspace::engine::path(std::path::Path::new(path))?;
+        if size > 1024 * 1024 {
+            return Err(invalid("overlay source size"));
+        }
+        let offset = value["spoolOffset"].as_u64().unwrap_or(0);
+        offset.checked_add(size).ok_or_else(|| invalid("overlay spool overflow"))?;
+        Ok(Self { path: PathBuf::from(path), offset, size, hash })
+    }
+    pub(super) fn read(&self) -> io::Result<Vec<u8>> {
+        if !fs::symlink_metadata(&self.path)?.is_file() {
+            return Err(invalid("overlay spool changed"));
+        }
+        let mut file = fs::File::open(&self.path)?;
+        file.seek(SeekFrom::Start(self.offset))?;
+        let mut bytes = Vec::with_capacity(self.size as usize);
+        file.take(self.size).read_to_end(&mut bytes)?;
+        if bytes.len() as u64 != self.size || crate::workspace::engine::hash(&bytes) != self.hash {
+            return Err(invalid("overlay spool changed"));
+        }
+        Ok(bytes)
+    }
+    pub(super) fn len(&self) -> u64 {
+        self.size
+    }
+}

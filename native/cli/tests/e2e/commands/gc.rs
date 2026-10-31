@@ -1,0 +1,271 @@
+//! Bare-scope collection is compared at the same path, including every object and backup byte.
+mod boundaries;
+#[cfg(target_os = "linux")]
+mod cross_device;
+mod objects;
+mod restore;
+mod verbose;
+mod workspace;
+mod workspace_aliases;
+use crate::{
+    commands::move_paths::support::{self, tree},
+    helper::Helper,
+};
+use flate2::{Compression, write::ZlibEncoder};
+use sha1::{Digest, Sha1};
+use std::{fs, io::Write, path::Path};
+
+use super::scope_fixture::{compare, compare_with_snapshot, fixture};
+
+fn orphan(scope: &Path) -> String {
+    let bytes = b"unreachable binary\0source\xff";
+    let hash = format!("{:x}", Sha1::digest(bytes));
+    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+    write!(encoder, "Source {hash} {}\0", bytes.len()).unwrap();
+    encoder.write_all(bytes).unwrap();
+    let path = scope
+        .join("objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(path, encoder.finish().unwrap()).unwrap();
+    hash
+}
+#[test]
+fn bare_collection_keeps_exported_ancestry_and_moves_unreachable_objects_without_node() {
+    let helper = fixture();
+    let scope = &helper.scopes.remote_path;
+    let hash = orphan(scope);
+    let baseline = helper.clone_remote_scope();
+    for command in
+        ["gc --dry-run", "gc --dry-run --json", "gc --backup", "gc --json", "gc --keep-versions 0"]
+    {
+        helper.restore_remote_scope(&baseline);
+        let run = compare(&helper, command, false);
+        assert!(run.status.success(), "{run:?}");
+        let directory = if command.contains("--dry-run") { "objects" } else { "deleted-objects" };
+        assert!(
+            scope
+                .join(directory)
+                .join(&hash[..2])
+                .join(&hash[2..])
+                .is_file(),
+        );
+    }
+    let restored = compare(&helper, "gc --restore", false);
+    assert!(restored.status.success(), "{restored:?}");
+    assert!(!scope.join("deleted-objects").exists());
+}
+#[test]
+fn bare_collection_preserves_live_lane_history_in_color() {
+    let helper = fixture();
+    support::setup(&helper, "lane create feature");
+    helper.output_file("comp1/index.js", "module.exports=()=> 'lane';\n");
+    support::setup(&helper, "snap --skip-tests");
+    support::setup(&helper, "export");
+    orphan(&helper.scopes.remote_path);
+    let run = compare(&helper, "gc", true);
+    assert!(run.status.success(), "{run:?}");
+}
+
+#[test]
+fn bare_collection_retains_foreign_hidden_lane_heads_and_trashed_lane_roots() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    let (origin, _) = helper.new_bare_scope_connected();
+    helper.populate_components(2, false, "");
+    support::setup(&helper, &format!("scope set {origin} comp2"));
+    support::setup(&helper, "link --rewire");
+    support::setup(&helper, "compile");
+    support::setup(&helper, "tag --skip-tests");
+    support::setup(&helper, "export");
+    support::setup(&helper, "lane create feature");
+    support::setup(&helper, "snap comp1 --skip-auto-snap --unmodified --skip-tests");
+    support::setup(&helper, "export");
+    helper.seed_hidden_update_dependent(
+        &format!("{origin}/comp2"),
+        &format!("{}/feature", helper.scopes.remote),
+    );
+    orphan(&helper.scopes.remote_path);
+    let baseline = helper.clone_remote_scope();
+    let run = compare(&helper, "gc", false);
+    assert!(run.status.success(), "{run:?}");
+    helper.restore_remote_scope(&baseline);
+    support::setup(
+        &helper,
+        &format!("lane remove {}/feature --remote --silent --force", helper.scopes.remote),
+    );
+    let run = compare(&helper, "gc", false);
+    assert!(run.status.success(), "{run:?}");
+}
+
+#[test]
+fn bare_collection_owns_backup_write_failures_without_replay() {
+    let helper = fixture();
+    orphan(&helper.scopes.remote_path);
+    fs::write(helper.scopes.remote_path.join("deleted-objects"), "not a directory\n").unwrap();
+    for (command, color) in [("gc", false), ("gc", true), ("gc --json", false), ("gc --json", true)]
+    {
+        let run = compare(&helper, command, color);
+        assert!(!run.status.success(), "{run:?}");
+    }
+}
+
+#[test]
+fn bare_collection_keeps_only_the_requested_flattened_dependency_version() {
+    let helper = fixture();
+    let (deleted, kept) = objects::dependency_graph(&helper);
+    let run = compare(&helper, "gc", false);
+    assert!(run.status.success(), "{run:?}");
+    for hash in kept {
+        assert!(objects::path(&helper.scopes.remote_path, "objects", &hash).is_file());
+    }
+    for hash in deleted {
+        assert!(!objects::path(&helper.scopes.remote_path, "objects", &hash).exists());
+        assert!(objects::path(&helper.scopes.remote_path, "deleted-objects", &hash).is_file());
+    }
+}
+
+#[test]
+fn bare_collection_does_not_replay_successful_moves_when_another_batch_member_fails() {
+    use std::os::unix::fs::PermissionsExt;
+    let helper = fixture();
+    let blocked = orphan(&helper.scopes.remote_path);
+    let movable = "f".repeat(40);
+    objects::write(&helper.scopes.remote_path, "Source", &movable, b"another unreachable object");
+    let bucket = helper.scopes.remote_path
+        .join("objects")
+        .join(&blocked[..2]);
+    assert!(bucket.is_dir());
+    let expected =
+        fs::read(objects::path(&helper.scopes.remote_path, "objects", &movable)).unwrap();
+    let run = compare_with_snapshot(
+        &helper,
+        "gc",
+        false,
+        |scope| {
+            fs::set_permissions(
+                scope
+                    .join("objects")
+                    .join(&blocked[..2]),
+                fs::Permissions::from_mode(0o555),
+            )
+            .unwrap();
+        },
+        |scope| {
+            fs::set_permissions(
+                scope
+                    .join("objects")
+                    .join(&blocked[..2]),
+                fs::Permissions::from_mode(0o755),
+            )
+            .unwrap();
+        },
+        |scope| parallel_move_snapshot(scope, &movable, &expected),
+    );
+    assert!(!run.status.success(), "{run:?}");
+    assert!(objects::path(&helper.scopes.remote_path, "objects", &blocked).exists());
+    assert!(!objects::path(&helper.scopes.remote_path, "objects", &movable).exists());
+    assert!(objects::path(&helper.scopes.remote_path, "deleted-objects", &movable).is_file());
+}
+
+#[cfg(unix)]
+fn parallel_move_snapshot(
+    scope: &Path,
+    hash: &str,
+    expected: &[u8],
+) -> std::collections::BTreeMap<String, Vec<u8>> {
+    let mut snapshot = tree(scope);
+    let original = format!("objects/{}/{}", &hash[..2], &hash[2..]);
+    let moved = format!("deleted-objects/{}/{}", &hash[..2], &hash[2..]);
+    let source = snapshot.remove(&original);
+    let destination = snapshot.remove(&moved);
+    assert_ne!(source.is_some(), destination.is_some());
+    let source_mode = snapshot.remove(&format!("{original}:mode"));
+    let destination_mode = snapshot.remove(&format!("{moved}:mode"));
+    assert_ne!(source_mode.is_some(), destination_mode.is_some());
+    assert_eq!(source.is_some(), source_mode.is_some());
+    let bytes = source.or(destination).unwrap();
+    assert_eq!(bytes, expected);
+    snapshot.insert("parallel-move:bytes".into(), bytes);
+    snapshot.insert("parallel-move:mode".into(), source_mode.or(destination_mode).unwrap());
+    snapshot
+}
+
+#[cfg(unix)]
+#[test]
+fn parallel_move_projection_rejects_duplicate_missing_and_changed_objects() {
+    let root = tempfile::tempdir().unwrap();
+    let hash = "f".repeat(40);
+    let original = objects::path(root.path(), "objects", &hash);
+    let moved = objects::path(root.path(), "deleted-objects", &hash);
+    fs::create_dir_all(original.parent().unwrap()).unwrap();
+    fs::create_dir_all(moved.parent().unwrap()).unwrap();
+    fs::write(&original, b"fixture bytes").unwrap();
+    let first = parallel_move_snapshot(root.path(), &hash, b"fixture bytes");
+    fs::rename(&original, &moved).unwrap();
+    assert_eq!(first, parallel_move_snapshot(root.path(), &hash, b"fixture bytes"));
+    fs::write(&original, b"fixture bytes").unwrap();
+    assert!(
+        std::panic::catch_unwind(|| parallel_move_snapshot(root.path(), &hash, b"fixture bytes"))
+            .is_err(),
+    );
+    fs::remove_file(&original).unwrap();
+    fs::write(&moved, b"changed").unwrap();
+    assert!(
+        std::panic::catch_unwind(|| parallel_move_snapshot(root.path(), &hash, b"fixture bytes"))
+            .is_err(),
+    );
+    fs::remove_file(&moved).unwrap();
+    assert!(
+        std::panic::catch_unwind(|| parallel_move_snapshot(root.path(), &hash, b"fixture bytes"))
+            .is_err(),
+    );
+}
+
+#[test]
+fn bare_collection_rebuilds_local_lane_index_without_inventing_a_scope_field() {
+    let helper = fixture();
+    let scope = &helper.scopes.remote_path;
+    let hash = "e".repeat(40);
+    let value = serde_json::json!({"name":"local-lane","components":[],"log":{"username":"CI","email":"ci@example.test"}});
+    objects::write(scope, "Lane", &hash, &serde_json::to_vec(&value).unwrap());
+    fs::remove_file(scope.join("index.json")).unwrap();
+    let run = compare(&helper, "gc --dry-run", false);
+    assert!(run.status.success(), "{run:?}");
+}
+
+#[test]
+fn bare_collection_uses_scope_metadata_identity_instead_of_its_storage_filename() {
+    let helper = fixture();
+    let scope = &helper.scopes.remote_path;
+    let hash = objects::digest(&helper.scopes.remote);
+    let misplaced = "3".repeat(40);
+    let body = serde_json::to_vec(
+        &serde_json::json!({"name":helper.scopes.remote,"license":"fixture-license"}),
+    )
+    .unwrap();
+    objects::write(scope, "ScopeMeta", &hash, &body);
+    objects::write(scope, "ScopeMeta", &misplaced, &body);
+    let run = compare(&helper, "gc", false);
+    assert!(run.status.success(), "{run:?}");
+    assert!(objects::path(scope, "objects", &hash).is_file());
+    assert!(objects::path(scope, "deleted-objects", &misplaced).is_file());
+}
+
+#[test]
+fn bare_collection_follows_legacy_component_aliases_for_flattened_dependencies() {
+    for boxed in [false, true] {
+        let helper = fixture();
+        let scope = &helper.scopes.remote_path;
+        let (deleted, kept) = objects::alias_graph(&helper, boxed);
+        let run = compare(&helper, "gc", false);
+        assert!(run.status.success(), "{run:?}");
+        for hash in kept {
+            assert!(objects::path(scope, "objects", &hash).is_file());
+        }
+        for hash in deleted {
+            assert!(objects::path(scope, "deleted-objects", &hash).is_file());
+        }
+    }
+}

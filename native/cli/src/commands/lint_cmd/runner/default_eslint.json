@@ -1,0 +1,137 @@
+{
+  "extends": [
+    "plugin:jest/recommended",
+    "plugin:react-hooks/recommended"
+  ],
+  "plugins": [
+    "jest",
+    "import"
+  ],
+  "settings": {
+    "mdx/code-blocks": false,
+    "jest": {
+      "version": 27
+    },
+    "react": {
+      "version": "17.0"
+    }
+  },
+  "env": {
+    "jest/globals": true,
+    "browser": true,
+    "mocha": true,
+    "node": true,
+    "es6": true
+  },
+  "overrides": [
+    {
+      "files": [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+        "*.mjs"
+      ],
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "$PRETTIER"
+      ],
+      "parser": "$PARSER",
+      "parserOptions": {
+        "warnOnUnsupportedTypeScriptVersion": false,
+        "ecmaVersion": 6,
+        "sourceType": "module",
+        "ecmaFeatures": {
+          "modules": true,
+          "jsx": true
+        }
+      },
+      "rules": {
+        "@typescript-eslint/no-unused-vars": "warn",
+        "no-nested-ternary": "warn",
+        "react/self-closing-comp": "warn",
+        "object-shorthand": "warn",
+        "react/jsx-boolean-value": "warn",
+        "react/button-has-type": "off",
+        "react/jsx-props-no-spreading": "off",
+        "react/no-array-index-key": "off",
+        "react/prop-types": "off",
+        "react/require-default-props": "off",
+        "react/react-in-jsx-scope": "off",
+        "@typescript-eslint/no-implied-eval": "error",
+        "no-shadow": "off",
+        "@typescript-eslint/no-shadow": "error",
+        "@typescript-eslint/return-await": "error",
+        "@typescript-eslint/ban-ts-comment": "off",
+        "@typescript-eslint/ban-types": "off",
+        "@typescript-eslint/no-var-requires": "off",
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    },
+    {
+      "files": [
+        "*.md",
+        "*.mdx"
+      ],
+      "extends": [
+        "plugin:mdx/recommended",
+        "plugin:react/recommended"
+      ],
+      "parser": "eslint-mdx",
+      "plugins": [
+        "mdx",
+        "react"
+      ],
+      "processor": "mdx/remark",
+      "globals": {
+        "React": false
+      },
+      "rules": {
+        "lines-between-class-members": 0,
+        "react/jsx-no-undef": [
+          2,
+          {
+            "allowGlobals": true
+          }
+        ],
+        "react/react-in-jsx-scope": 0,
+        "react/jsx-uses-vars": "error",
+        "react/jsx-uses-react": "error"
+      },
+      "parserOptions": {
+        "extraFileExtensions": [
+          ".md",
+          ".mdx"
+        ],
+        "ecmaVersion": 6,
+        "sourceType": "module",
+        "ecmaFeatures": {
+          "modules": true,
+          "jsx": true
+        },
+        "extensions": [
+          ".md",
+          ".mdx"
+        ]
+      }
+    },
+    {
+      "files": "**/*.{md,mdx}/**",
+      "parserOptions": {
+        "ecmaFeatures": {
+          "impliedStrict": true
+        }
+      },
+      "rules": {
+        "eol-last": "off",
+        "no-undef": "off",
+        "no-unused-expressions": "off",
+        "no-unused-vars": "off",
+        "padded-blocks": "off",
+        "strict": "off",
+        "unicode-bom": "off"
+      }
+    }
+  ]
+}
