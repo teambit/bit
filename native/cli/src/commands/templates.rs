@@ -134,7 +134,10 @@ pub(super) fn can_use_builtin_workspace_templates(
 }
 
 fn has_custom_generator_config(ws_val: &Value) -> bool {
-    let gen_cfg = &ws_val["teambit.generator/generator"];
+    let Some((_, gen_cfg)) = super::update_cmd::aspect_entry(ws_val, "teambit.generator/generator")
+    else {
+        return false;
+    };
     if gen_cfg["hideCoreTemplates"].as_bool() == Some(true) {
         return true;
     }

@@ -173,20 +173,27 @@ fn bitmap_has_exported_components(root: &Path) -> io::Result<bool> {
 fn invalid_directory_template_error(root: &Path) -> io::Result<Option<String>> {
     let bytes = fs::read(root.join("workspace.jsonc"))?;
     let ws = bit_object_import::parse_jsonc(&bytes)?;
-    let Some(default_dir) = ws["teambit.workspace/workspace"]["defaultDirectory"].as_str() else {
+    let Some((_, ws_entry)) =
+        crate::commands::update_cmd::aspect_entry(&ws, "teambit.workspace/workspace")
+    else {
+        return Ok(None);
+    };
+    let Some(default_dir) = ws_entry["defaultDirectory"].as_str() else {
         return Ok(None);
     };
     let valid = ["name", "scope", "scopeId", "owner"];
     for part in default_dir.split('/') {
-        if let Some(param) = part
-            .strip_prefix('{')
-            .and_then(|rest| rest.strip_suffix('}'))
-            && !valid.contains(&param)
-        {
-            return Ok(Some(format!(
-                r#"the "{param}" part of the component structure "{default_dir}" is invalid, it must be one of the following: {}"#,
-                valid.join(", "),
-            )));
+        if part.starts_with('{') && part.ends_with('}') {
+            let stripped: String = part
+                .chars()
+                .filter(|&ch| ch != '{' && ch != '}')
+                .collect();
+            if !valid.contains(&stripped.as_str()) {
+                return Ok(Some(format!(
+                    r#"the "{stripped}" part of the component structure "{default_dir}" is invalid, it must be one of the following: {}"#,
+                    valid.join(", "),
+                )));
+            }
         }
     }
     Ok(None)
@@ -325,8 +332,8 @@ fn check_target_directory(abs_dir: &Path, options: &Options) -> Option<String> {
 fn default_directory_template(root: &Path) -> io::Result<String> {
     let bytes = fs::read(root.join("workspace.jsonc"))?;
     let ws = bit_object_import::parse_jsonc(&bytes)?;
-    let template = ws["teambit.workspace/workspace"]["defaultDirectory"]
-        .as_str()
+    let template = crate::commands::update_cmd::aspect_entry(&ws, "teambit.workspace/workspace")
+        .and_then(|(_, entry)| entry["defaultDirectory"].as_str())
         .unwrap_or("components/{name}");
     Ok(if template.contains("{name}") {
         template.to_owned()

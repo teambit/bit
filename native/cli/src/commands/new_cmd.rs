@@ -25,6 +25,8 @@ pub(super) struct Options {
     pub current_dir: bool,
 }
 
+const BUILTIN_WORKSPACE_TEMPLATES: &[&str] = &["basic", "react", "platform", "harmony"];
+
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("new arguments are not UTF-8".into()));
@@ -32,8 +34,19 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native new grammar".into()));
     };
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI new error stack".into()));
+    }
     let cwd = env::current_dir()?;
     if let Err(err) = validate_options(&cwd, &options) {
+        if let Some(root) = workspace::root(&cwd) {
+            return workspace_command::execute_then(
+                &root,
+                args,
+                "new",
+                move |_| -> io::Result<Report> { Err(io::Error::other(err)) },
+            );
+        }
         return workspace_command::execute_without_loader_scope(
             &cwd,
             args,
@@ -58,6 +71,10 @@ pub(super) fn validate_options(cwd: &Path, options: &Options) -> Result<(), Stri
             options.workspace_name,
         ));
     }
+    validate_template_source(cwd, options)
+}
+
+fn validate_template_source(cwd: &Path, options: &Options) -> Result<(), String> {
     if let Some(load_from) = options.load_from.as_deref() {
         if options.aspect.is_none() {
             return Err(
@@ -66,12 +83,20 @@ pub(super) fn validate_options(cwd: &Path, options: &Options) -> Result<(), Stri
             );
         }
         let load_path = cwd.join(load_from);
-        let is_valid_workspace = workspace::root(&load_path).is_some_and(|root| root == load_path);
-        if !is_valid_workspace {
+        if workspace::root(&load_path).is_none_or(|root| root != load_path) {
             return Err(format!(
                 r#"fatal: "{load_from}" is not a valid Bit workspace, make sure the path is correct"#,
             ));
         }
+        return Ok(());
+    }
+    if options.aspect.is_none()
+        && !BUILTIN_WORKSPACE_TEMPLATES.contains(&options.template_name.as_str())
+    {
+        return Err(format!(
+            "template \"{}\" was not found, please use --aspect flag to load from an env i.e --aspect teambit.react/react-env\n Learn more about component templates here: https://bit.dev/reference/generator/create-generator",
+            options.template_name,
+        ));
     }
     Ok(())
 }

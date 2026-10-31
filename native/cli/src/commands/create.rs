@@ -23,6 +23,7 @@ pub(super) struct Options {
     pub template_name: String,
     pub component_names: Vec<String>,
     pub scope: Option<String>,
+    pub namespace: Option<String>,
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -32,6 +33,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse_options(&argv[1..]) else {
         return Ok(Outcome::Declined("outside native create grammar".into()));
     };
+    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+        return Ok(Outcome::Declined("CI create error stack".into()));
+    }
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
         return workspace_command::execute_without_loader_scope(&cwd, args, "create", |_| {
@@ -39,7 +43,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         });
     };
     if let Err(err) = validate_options(&root, &options) {
-        return workspace_command::execute_without_loader(
+        return workspace_command::execute_then(
             &root,
             args,
             "create",
@@ -47,6 +51,16 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         );
     }
     Ok(Outcome::Declined("create requires generator aspect runtime".into()))
+}
+
+fn parse_scope_from_component_id_str(raw: &str) -> (Option<&str>, &str) {
+    let Some((potential_scope, rest)) = raw.split_once('/') else {
+        return (None, raw);
+    };
+    if potential_scope.contains('.') && scope_set::selection::valid_scope_str(potential_scope) {
+        return (Some(potential_scope), rest);
+    }
+    (None, raw)
 }
 
 pub(super) fn validate_options(_root: &Path, options: &Options) -> Result<(), String> {
@@ -57,15 +71,22 @@ pub(super) fn validate_options(_root: &Path, options: &Options) -> Result<(), St
             r#"error: "{scope}" is invalid, component scope names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]"#,
         ));
     }
-    if options.component_names
-        .iter()
-        .any(|name| name == &options.template_name)
-    {
-        let pascal = pascal_case(&options.template_name);
-        return Err(format!(
-            "unable to create a component with the same name as the template \"{}\", please use a different name.\nthe reason is that after refactoring, the code will have this invalid class: \"class {pascal} extends {pascal} {{}}\"",
-            options.template_name,
-        ));
+    for raw_name in &options.component_names {
+        let (_parsed_scope, parsed_name) = parse_scope_from_component_id_str(raw_name);
+        let full_name = match options.namespace
+            .as_deref()
+            .filter(|ns| !ns.is_empty())
+        {
+            Some(ns) => format!("{ns}/{parsed_name}"),
+            None => parsed_name.to_owned(),
+        };
+        if full_name == options.template_name {
+            let pascal = pascal_case(&options.template_name);
+            return Err(format!(
+                "unable to create a component with the same name as the template \"{}\", please use a different name.\nthe reason is that after refactoring, the code will have this invalid class: \"class {pascal} extends {pascal} {{}}\"",
+                options.template_name,
+            ));
+        }
     }
     Ok(())
 }
@@ -91,6 +112,7 @@ fn pascal_case(input: &str) -> String {
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut positionals = Vec::new();
     let mut scope = None;
+    let mut namespace = None;
     let mut iter = args.iter().copied();
     while let Some(token) = iter.next() {
         if token == "--" {
@@ -99,26 +121,27 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             }
             break;
         }
-        apply_create_token(token, &mut iter, &mut scope, &mut positionals)?;
+        apply_create_token(token, &mut iter, &mut scope, &mut namespace, &mut positionals)?;
     }
     if positionals.len() < 2 {
         return None;
     }
     let template_name = positionals.remove(0);
-    Some(Options { template_name, component_names: positionals, scope })
+    Some(Options { template_name, component_names: positionals, scope, namespace })
 }
 
 fn apply_create_token<'a>(
     token: &'a str,
     iter: &mut impl Iterator<Item = &'a str>,
     scope: &mut Option<String>,
+    namespace: &mut Option<String>,
     positionals: &mut Vec<String>,
 ) -> Option<()> {
     match token {
         "--no-color" | "--force" | "--force=true" | "--force=false" | "-f" => {}
         "--scope" | "-s" => *scope = Some(take_value(iter.next()?)?),
-        "--namespace" | "-n" | "--aspect" | "-a" | "--template" | "-t" | "--path" | "-p"
-        | "--env" | "-e" => {
+        "--namespace" | "-n" => *namespace = Some(take_value(iter.next()?)?),
+        "--aspect" | "-a" | "--template" | "-t" | "--path" | "-p" | "--env" | "-e" => {
             take_value(iter.next()?)?;
         }
         _ if let Some(val) = token
@@ -126,6 +149,12 @@ fn apply_create_token<'a>(
             .or_else(|| token.strip_prefix("-s=")) =>
         {
             *scope = Some(take_value(val)?);
+        }
+        _ if let Some(val) = token
+            .strip_prefix("--namespace=")
+            .or_else(|| token.strip_prefix("-n=")) =>
+        {
+            *namespace = Some(take_value(val)?);
         }
         _ if has_inline_create_value(token) => {}
         _ => positionals.push(take_value(token)?),

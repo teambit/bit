@@ -27,6 +27,7 @@ fn parses_create_arguments_and_options() {
             template_name: "react".to_owned(),
             component_names: vec!["comp1".to_owned(), "comp2".to_owned()],
             scope: Some("my-scope".to_owned()),
+            namespace: Some("ui".to_owned()),
         }),
     );
     assert_eq!(parse_options(&["react"]), None);
@@ -47,6 +48,7 @@ fn rejects_invalid_scope_and_same_name_as_template() {
         template_name: "react-env".to_owned(),
         component_names: vec!["comp1".to_owned()],
         scope: None,
+        namespace: None,
     };
 
     let invalid_scope = Options { scope: Some("Invalid Scope!".to_owned()), ..options.clone() };

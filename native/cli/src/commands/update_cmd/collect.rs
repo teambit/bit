@@ -47,12 +47,10 @@ pub(super) fn collect_candidates(root: &Path, patterns: &[String]) -> Result<Col
     let bitmap_bytes = fs::read(root.join(".bitmap")).map_err(|err| err.to_string())?;
     let ws_val = parse_jsonc(&ws_bytes).map_err(|err| err.to_string())?;
     let bitmap_val = parse_jsonc(&bitmap_bytes).map_err(|err| err.to_string())?;
-    let default_scope = workspace_default_scope(&ws_val)
-        .ok()
-        .or_else(|| {
-            ws_val["teambit.workspace/workspace"]["defaultScope"].as_str().map(str::to_owned)
-        });
-    let save_prefix = ws_val[DEP_RESOLVER_ID]["savePrefix"].as_str().map(str::to_owned);
+    let default_scope = workspace_default_scope(&ws_val).ok();
+    let save_prefix = super::aspect_entry(&ws_val, DEP_RESOLVER_ID)
+        .and_then(|(_, resolver)| resolver["savePrefix"].as_str())
+        .map(str::to_owned);
     let bitmap = Bitmap::load(root, default_scope.as_deref()).map_err(|err| err.to_string())?;
     let local_pkgs = build_local_package_set(&bitmap, default_scope.as_deref());
     let mut candidates = Vec::new();
@@ -95,7 +93,10 @@ fn collect_root_policy(
     out: &mut Vec<Candidate>,
 ) -> HashSet<String> {
     let mut names = HashSet::new();
-    let policy = &ws_val[DEP_RESOLVER_ID]["policy"];
+    let Some((_, resolver)) = super::aspect_entry(ws_val, DEP_RESOLVER_ID) else {
+        return names;
+    };
+    let policy = &resolver["policy"];
     for field in POLICY_FIELDS {
         for (name, range) in policy_field_entries(&policy[field]) {
             if !local_pkgs.contains(&name) {
@@ -114,12 +115,20 @@ fn collect_root_policy(
 }
 
 fn collect_variants(ws_val: &Value, local_pkgs: &HashSet<String>, out: &mut Vec<Candidate>) {
-    let Some(variants) = ws_val["teambit.workspace/variants"].as_object() else {
+    let Some(variants) = super::aspect_entry(ws_val, "teambit.workspace/variants")
+        .and_then(|(_, val)| val.as_object())
+    else {
         return;
     };
     for (pattern, variant_cfg) in variants {
-        let policy = &variant_cfg[DEP_RESOLVER_ID]["policy"];
-        append_policy_candidates(policy, local_pkgs, &Target::Variant(pattern.clone()), out);
+        if let Some((_, resolver)) = super::aspect_entry(variant_cfg, DEP_RESOLVER_ID) {
+            append_policy_candidates(
+                &resolver["policy"],
+                local_pkgs,
+                &Target::Variant(pattern.clone()),
+                out,
+            );
+        }
     }
 }
 
@@ -158,8 +167,10 @@ fn collect_comp_json(
     let Ok(parsed) = serde_json::from_slice::<Value>(&bytes) else {
         return;
     };
-    let policy = &parsed["extensions"][DEP_RESOLVER_ID]["policy"];
-    append_policy_candidates(policy, local_pkgs, &Target::ComponentJson(path), out);
+    let Some((_, resolver)) = super::aspect_entry(&parsed["extensions"], DEP_RESOLVER_ID) else {
+        return;
+    };
+    append_policy_candidates(&resolver["policy"], local_pkgs, &Target::ComponentJson(path), out);
 }
 
 fn collect_bitmap_row(
@@ -171,8 +182,11 @@ fn collect_bitmap_row(
     let Ok(row) = find_bitmap_row_ref(bitmap_val, entry) else {
         return;
     };
-    let policy = &row["config"][DEP_RESOLVER_ID]["policy"];
-    append_policy_candidates(policy, local_pkgs, &Target::Bitmap(entry.id.name.clone()), out);
+    let Some((_, resolver)) = super::aspect_entry(&row["config"], DEP_RESOLVER_ID) else {
+        return;
+    };
+    let target = Target::Bitmap(entry.id.to_string_without_version());
+    append_policy_candidates(&resolver["policy"], local_pkgs, &target, out);
 }
 
 fn append_policy_candidates(
@@ -224,7 +238,7 @@ fn collect_model_deps(
     else {
         return;
     };
-    let ver_obj = scope
+    let Some(ver_val) = scope
         .version(&entry.id.to_string_without_version(), Some(ver))
         .ok()
         .flatten()
@@ -233,8 +247,8 @@ fn collect_model_deps(
                 .version(&entry.id.name, Some(ver))
                 .ok()
                 .flatten()
-        });
-    let Some(ver_val) = ver_obj else {
+        })
+    else {
         return;
     };
     collect_serialized_model_deps(&ver_val, entry, local_pkgs, root_names, out);
@@ -271,11 +285,11 @@ fn candidate_from_serialized(
     local_pkgs: &HashSet<String>,
     root_names: &HashSet<String>,
 ) -> Option<Candidate> {
-    if !is_updatable_serialized_dep(dep) {
+    if dep["isExtension"].as_bool() == Some(true) || dep["lifecycle"].as_str() == Some("peer") {
         return None;
     }
     let is_comp = dep["__type"].as_str() == Some("component");
-    let name = serialized_dep_name(dep, is_comp)?;
+    let name = if is_comp { dep["packageName"].as_str()? } else { dep["id"].as_str()? };
     if local_pkgs.contains(name) {
         return None;
     }
@@ -291,14 +305,6 @@ fn candidate_from_serialized(
     })
 }
 
-fn is_updatable_serialized_dep(dep: &Value) -> bool {
-    dep["isExtension"].as_bool() != Some(true) && dep["lifecycle"].as_str() != Some("peer")
-}
-
-fn serialized_dep_name(dep: &Value, is_comp: bool) -> Option<&str> {
-    if is_comp { dep["packageName"].as_str() } else { dep["id"].as_str() }
-}
-
 fn serialized_field_and_target(
     dep: &Value,
     entry: &BitmapEntry,
@@ -311,8 +317,11 @@ fn serialized_field_and_target(
     if is_auto && root_names.contains(name) {
         return None;
     }
-    let target =
-        if is_auto { Target::ModelRoot } else { Target::ModelBitmap(entry.id.name.clone()) };
+    let target = if is_auto {
+        Target::ModelRoot
+    } else {
+        Target::ModelBitmap(entry.id.to_string_without_version())
+    };
     Some((field, target))
 }
 

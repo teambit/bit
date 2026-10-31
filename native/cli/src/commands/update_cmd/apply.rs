@@ -148,7 +148,11 @@ fn apply_bitmap_entry_updates(
     for &(comp_name, upd) in bitmap_updates {
         let Some(entry) = bitmap.entries
             .iter()
-            .find(|ent| ent.owns_its_dir() && ent.id.name == comp_name)
+            .find(|ent| {
+                ent.owns_its_dir()
+                    && (ent.id.to_string_without_version() == comp_name
+                        || ent.id.name == comp_name)
+            })
         else {
             continue;
         };

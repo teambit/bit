@@ -164,7 +164,12 @@ fn imported_package_name(id: &str) -> Option<String> {
 fn root_policy_has_any(root: &Path, packages: &[String]) -> bool {
     let Ok(bytes) = std::fs::read(root.join("workspace.jsonc")) else { return false };
     let Ok(ws) = bit_object_import::parse_jsonc(&bytes) else { return false };
-    let policy = &ws["teambit.dependencies/dependency-resolver"]["policy"];
+    let Some((_, resolver)) =
+        crate::commands::update_cmd::aspect_entry(&ws, "teambit.dependencies/dependency-resolver")
+    else {
+        return false;
+    };
+    let policy = &resolver["policy"];
     packages
         .iter()
         .any(|pkg| {

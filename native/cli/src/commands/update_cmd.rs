@@ -138,16 +138,36 @@ fn has_env_jsonc_policy(root: &Path) -> bool {
         })
 }
 
+pub(in crate::commands) fn aspect_entry<'a>(
+    map_val: &'a Value,
+    bare_id: &str,
+) -> Option<(&'a str, &'a Value)> {
+    let obj = map_val.as_object()?;
+    if let Some((key, val)) = obj.get_key_value(bare_id) {
+        return Some((key.as_str(), val));
+    }
+    let prefix = format!("{bare_id}@");
+    obj.iter()
+        .find(|(key, _)| key.starts_with(&prefix))
+        .map(|(key, val)| (key.as_str(), val))
+}
+
 pub(super) fn has_no_workspace_dependencies(root: &Path) -> io::Result<bool> {
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
-    if ws_config["teambit.workspace/workspace"]["bitmapAutoSync"] == true {
+    if super::build_cmd::is_bitmap_auto_sync(&ws_config) {
         return Ok(false);
     }
-    let policy = &ws_config["teambit.dependencies/dependency-resolver"]["policy"];
-    if non_empty_object(&policy["dependencies"]) || non_empty_object(&policy["peerDependencies"]) {
-        return Ok(false);
+    if let Some((_, resolver)) = aspect_entry(&ws_config, super::set_peer::DEP_RESOLVER_ID) {
+        let policy = &resolver["policy"];
+        if non_empty_object(&policy["dependencies"])
+            || non_empty_object(&policy["peerDependencies"])
+        {
+            return Ok(false);
+        }
     }
-    if non_empty_object(&ws_config["teambit.workspace/variants"]) {
+    if aspect_entry(&ws_config, "teambit.workspace/variants")
+        .is_some_and(|(_, variants)| non_empty_object(variants))
+    {
         return Ok(false);
     }
     let bitmap = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
