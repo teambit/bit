@@ -60,6 +60,7 @@ import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { DependenciesGraph } from '@teambit/objects';
+import type { Version } from '@teambit/objects';
 
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
@@ -1058,6 +1059,25 @@ export class IsolatorMain {
     const dependencies = this.dependencyResolver
       .getDependencies(component, { includeHidden: true })
       .toTypeArray<ComponentDependency>('component');
+    await this.attachComponentDependencyGraphs(component.id.toString(), dependencies, graphs, legacyScope, new Set());
+  }
+
+  /**
+   * Attach the graph of each of `dependencies` the graphs do not record as
+   * resolved, then do the same for the extensions an attached extension
+   * depends on: its own graph leaves those out just as the component's graph
+   * leaves out the extension. A nested one is attached as a dependency of the
+   * extension that declares it (`dependentPkgId`). `expanded` holds the
+   * extensions whose dependencies were already walked, so a cycle ends.
+   */
+  private async attachComponentDependencyGraphs(
+    dependentId: string,
+    dependencies: ComponentDependency[],
+    graphs: DependenciesGraph[],
+    legacyScope: Scope,
+    expanded: Set<string>,
+    dependentPkgId?: string
+  ): Promise<void> {
     for (const dependency of dependencies) {
       if (!dependency.componentId.hasVersion()) continue;
       const pkgId = `${dependency.packageName}@${snapToSemver(dependency.componentId.version as string)}`;
@@ -1066,22 +1086,58 @@ export class IsolatorMain {
       // knows only as an unresolved record, or not at all, is an extension
       // (the env above all), which the workspace links rather than installs,
       // so its graph records nothing of what it depends on.
-      if (graphs.every((graph) => graph.recordsResolvedPackage(pkgId))) continue;
+      if (graphs.every((graph) => graph.recordsResolvedPackage(pkgId))) {
+        if (dependentPkgId) {
+          // Resolved already (attached at another level, say): only link it.
+          for (const graph of graphs) graph.addDependencyOf(dependentPkgId, pkgId);
+        }
+        continue;
+      }
       const extensionGraph = await legacyScope.getDependenciesGraphByComponentId(dependency.componentId);
       if (extensionGraph == null || extensionGraph.isEmpty()) {
         this.logger.debug(
-          `isolator: no dependencies graph for ${dependency.componentId.toString()}, a dependency of ${component.id.toString()} its graph lacks`
+          `isolator: no dependencies graph for ${dependency.componentId.toString()}, a dependency of ${dependentId} its graph lacks`
         );
         continue;
       }
-      this.logger.debug(`isolator: attaching the dependencies graph of ${pkgId} to ${component.id.toString()}`);
+      this.logger.debug(`isolator: attaching the dependencies graph of ${pkgId} to ${dependentId}`);
       const attributes = {
         component: { scope: dependency.componentId.scope, name: dependency.componentId.fullName },
       };
       for (const graph of graphs) {
-        graph.attachDependencyGraph(pkgId, extensionGraph, attributes);
+        graph.attachDependencyGraph(pkgId, extensionGraph, attributes, { dependentPkgId });
       }
+      if (expanded.has(pkgId)) continue;
+      expanded.add(pkgId);
+      const nestedDependencies = await this.getRuntimeComponentDependencies(dependency.componentId, legacyScope);
+      await this.attachComponentDependencyGraphs(
+        dependency.componentId.toString(),
+        nestedDependencies,
+        graphs,
+        legacyScope,
+        expanded,
+        pkgId
+      );
     }
+  }
+
+  /**
+   * The component dependencies an installed package of `id` declares, read
+   * from its stored Version: loading the component itself could import and
+   * load envs, which isolation avoids for an extension it only installs.
+   */
+  private async getRuntimeComponentDependencies(id: ComponentID, legacyScope: Scope): Promise<ComponentDependency[]> {
+    let version: Version;
+    try {
+      version = await legacyScope.getVersionInstance(id);
+    } catch {
+      return [];
+    }
+    const serialized = version.extensions.findCoreExtension(DependencyResolverAspect.id)?.data?.dependencies ?? [];
+    return this.dependencyResolver
+      .getDependenciesFromSerializedDependencies(serialized)
+      .toTypeArray<ComponentDependency>('component')
+      .filter((dependency) => dependency.lifecycle === 'runtime');
   }
 
   private async addDependenciesGraphToComponents(

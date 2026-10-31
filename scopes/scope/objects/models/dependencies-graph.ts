@@ -173,7 +173,9 @@ export class DependenciesGraph {
    * only that something reached the package, not what it depends on.
    */
   hasDependencyNode(pkgId: string): boolean {
-    return this.edges.some((edge) => edge.id !== DependenciesGraph.ROOT_EDGE_ID && (edge.attr?.pkgId ?? edge.id) === pkgId);
+    return this.edges.some(
+      (edge) => edge.id !== DependenciesGraph.ROOT_EDGE_ID && (edge.attr?.pkgId ?? edge.id) === pkgId
+    );
   }
 
   /**
@@ -197,9 +199,23 @@ export class DependenciesGraph {
    * A component's graph leaves out its extensions (its env above all), since
    * the workspace links them, but a capsule installs them, so their graphs are
    * attached when the capsule's lockfile is restored.
+   *
+   * With `dependentPkgId`, the node becomes a dependency of that node instead
+   * of the root's: an extension's graph leaves out the extensions it links in
+   * turn, and the installed extension has to find them among its own
+   * dependencies. The link is made even when this graph already records the
+   * package as resolved, as long as it records the dependent's own edge.
    */
-  attachDependencyGraph(pkgId: string, graph: DependenciesGraph, attributes: Partial<PackageAttributes> = {}): void {
-    if (this.recordsResolvedPackage(pkgId)) return;
+  attachDependencyGraph(
+    pkgId: string,
+    graph: DependenciesGraph,
+    attributes: Partial<PackageAttributes> = {},
+    { dependentPkgId }: { dependentPkgId?: string } = {}
+  ): void {
+    if (this.recordsResolvedPackage(pkgId)) {
+      if (dependentPkgId) this.addDependencyOf(dependentPkgId, pkgId);
+      return;
+    }
     const edgeIds = new Set(this.edges.map(({ id }) => id));
     // The attached resolutions join this graph's, so the resolution inputs
     // (hooks, settings, overrides) can only be claimed when both agree, as a
@@ -223,10 +239,25 @@ export class DependenciesGraph {
     // A record the graph already holds for the node, from a dependency that
     // reached it, stays.
     if (!this.packages.has(pkgId)) this.packages.set(pkgId, attributes as PackageAttributes);
+    if (dependentPkgId) {
+      this.addDependencyOf(dependentPkgId, pkgId);
+      return;
+    }
     const parsed = parsePkgId(pkgId);
     const rootEdge = this.findRootEdge();
     if (parsed && rootEdge && !rootEdge.neighbours.some((neighbour) => neighbour.id === pkgId)) {
       rootEdge.neighbours.push({ id: pkgId, name: parsed.name, specifier: parsed.version, lifecycle: 'dev' });
+    }
+  }
+
+  /**
+   * Record `pkgId` as a dependency of the node `dependentPkgId`, when this
+   * graph holds that node's edge.
+   */
+  addDependencyOf(dependentPkgId: string, pkgId: string): void {
+    const edge = this.edges.find(({ id }) => id === dependentPkgId);
+    if (edge && !edge.neighbours.some(({ id }) => id === pkgId)) {
+      edge.neighbours.push({ id: pkgId });
     }
   }
 

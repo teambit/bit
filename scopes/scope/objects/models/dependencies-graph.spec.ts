@@ -289,7 +289,11 @@ describe('DependenciesGraph.attachDependencyGraph', () => {
           { id: 'mocha@10.0.0', name: 'mocha', specifier: '10.0.0', lifecycle: 'dev' },
           { id: 'fsevents@2.3.3', name: 'fsevents', specifier: '*', lifecycle: 'runtime', optional: true },
         ]),
-        { id: 'webpack@5.0.0(esbuild@0.20.0)', attr: { pkgId: 'webpack@5.0.0' }, neighbours: [{ id: 'esbuild@0.20.0' }] },
+        {
+          id: 'webpack@5.0.0(esbuild@0.20.0)',
+          attr: { pkgId: 'webpack@5.0.0' },
+          neighbours: [{ id: 'esbuild@0.20.0' }],
+        },
       ],
       ['webpack@5.0.0', 'esbuild@0.20.0', 'mocha@10.0.0', 'fsevents@2.3.3', 'foo@1.0.0']
     );
@@ -301,7 +305,10 @@ describe('DependenciesGraph.attachDependencyGraph', () => {
     graph.attachDependencyGraph(envPkgId, envGraph(), { component: { scope: 'org', name: 'my-env' } });
 
     const envEdge = graph.edges.find(({ id }) => id === envPkgId);
-    expect(envEdge?.neighbours).to.eql([{ id: 'webpack@5.0.0(esbuild@0.20.0)' }, { id: 'fsevents@2.3.3', optional: true }]);
+    expect(envEdge?.neighbours).to.eql([
+      { id: 'webpack@5.0.0(esbuild@0.20.0)' },
+      { id: 'fsevents@2.3.3', optional: true },
+    ]);
     expect(graph.packages.get(envPkgId)).to.eql({ component: { scope: 'org', name: 'my-env' } });
     expect(graph.packages.has('esbuild@0.20.0')).to.equal(true);
     expect(graph.edges.some(({ id }) => id === 'webpack@5.0.0(esbuild@0.20.0)')).to.equal(true);
@@ -357,6 +364,44 @@ describe('DependenciesGraph.attachDependencyGraph', () => {
 
     expect(graph.hasDependencyNode(envPkgId)).to.equal(false);
     expect(graph.packages.has('webpack@5.0.0')).to.equal(false);
+  });
+
+  it('attaches a nested extension as a dependency of the extension that declares it', () => {
+    const graph = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
+    graph.attachDependencyGraph(envPkgId, envGraph(), { component: { scope: 'org', name: 'my-env' } });
+    const nestedPkgId = '@org/my-aspect@1.0.0';
+    const nestedGraph = createGraph(
+      [rootEdge([{ id: 'lodash@4.17.21', name: 'lodash', specifier: '4.17.21', lifecycle: 'runtime' }])],
+      ['lodash@4.17.21']
+    );
+
+    graph.attachDependencyGraph(
+      nestedPkgId,
+      nestedGraph,
+      { component: { scope: 'org', name: 'my-aspect' } },
+      { dependentPkgId: envPkgId }
+    );
+
+    expect(graph.edges.find(({ id }) => id === envPkgId)?.neighbours.map(({ id }) => id)).to.eql([
+      'webpack@5.0.0(esbuild@0.20.0)',
+      'fsevents@2.3.3',
+      nestedPkgId,
+    ]);
+    expect(graph.edges.find(({ id }) => id === nestedPkgId)?.neighbours).to.eql([{ id: 'lodash@4.17.21' }]);
+    expect(graph.packages.has('lodash@4.17.21')).to.equal(true);
+    // Not a direct dependency of the root: no manifest of the capsule declares it.
+    expect(graph.findRootEdge()?.neighbours.map(({ id }) => id)).to.eql(['foo@1.0.0', envPkgId]);
+  });
+
+  it('links a nested extension the graph already resolved to the extension that declares it', () => {
+    const nestedPkgId = '@org/my-aspect@1.0.0';
+    const graph = createGraph([rootEdge([]), edge(nestedPkgId, [{ id: 'foo@1.0.0' }])], ['foo@1.0.0', nestedPkgId]);
+    graph.attachDependencyGraph(envPkgId, envGraph());
+
+    graph.attachDependencyGraph(nestedPkgId, envGraph(), {}, { dependentPkgId: envPkgId });
+
+    expect(graph.edges.find(({ id }) => id === envPkgId)?.neighbours.map(({ id }) => id)).to.include(nestedPkgId);
+    expect(graph.edges.find(({ id }) => id === nestedPkgId)?.neighbours).to.eql([{ id: 'foo@1.0.0' }]);
   });
 
   it('leaves a graph that already holds the node alone', () => {
