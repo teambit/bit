@@ -193,9 +193,10 @@ fn camel(name: &str, pascal: bool) -> String {
 }
 pub(crate) fn filename(name: &str, source: &str, target: &str) -> io::Result<String> {
     let path = name.replacen(source, target, 1);
-    if std::path::Path::new(&path)
-        .components()
-        .any(|part| !matches!(part, std::path::Component::Normal(_)))
+    if path.is_empty()
+        || std::path::Path::new(&path)
+            .components()
+            .any(|part| !matches!(part, std::path::Component::Normal(_)))
         || path.contains('\\')
     {
         return Err(unsupported("rename file path"));

@@ -56,7 +56,7 @@ pub(super) fn index(input: Value) -> io::Result<Value> {
 fn output_budget(queries: &[String], incoming: &HashMap<&str, Vec<&str>>) -> io::Result<()> {
     let mut total = 256 + queries.len() * 8;
     for query in queries {
-        let Some(rows) = incoming.get(query.as_str()) else {
+        let Some(rows) = incoming.get(query.trim()) else {
             continue;
         };
         for row in rows {

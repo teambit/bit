@@ -55,12 +55,14 @@ fn explicit(
     bitmap: &Value,
     scope: Option<&str>,
 ) -> io::Result<(String, bool, Option<String>)> {
-    let (name, version) = id
+    let trimmed = id.trim();
+    let (name, version) = trimmed
         .rsplit_once('@')
-        .map_or((id, None), |(name, version)| (name, Some(version)));
+        .map_or((trimmed, None), |(name, version)| (name.trim(), Some(version.trim())));
     let existing = rows::find(bitmap, name, scope)?;
     if let Some(version) = version
-        && (existing.is_none_or(|row| row["version"] != version) || version.is_empty())
+        && (existing.is_none_or(|row| row["version"].as_str().map(str::trim) != Some(version))
+            || version.is_empty())
     {
         return Err(error(format!(
             "please remove the version part from the specified id {id} and try again",
@@ -70,6 +72,7 @@ fn explicit(
         .and_then(|row| {
             row["name"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())
         })
         .unwrap_or(name);

@@ -40,8 +40,8 @@ impl Drop for Directory {
     }
 }
 pub(super) fn plan(input: &Value) -> io::Result<(Value, Conflict)> {
-    let path = PathBuf::from(text(input, "path")?);
-    let fallback = PathBuf::from(text(input, "fallbackPath")?);
+    let path = PathBuf::from(text(input, "path")?.trim());
+    let fallback = PathBuf::from(text(input, "fallbackPath")?.trim());
     absolute(&path)?;
     absolute(&fallback)?;
     if path == fallback

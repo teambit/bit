@@ -36,8 +36,8 @@ pub(super) fn prune(input: Value) -> io::Result<Value> {
     let mut removed = HashSet::new();
     let mut remove = Vec::new();
     for key in &request.keys {
-        let key = key.trim();
         text(key)?;
+        let key = key.trim();
         if let Some(index) = entries
             .iter()
             .position(|(entry, _)| {

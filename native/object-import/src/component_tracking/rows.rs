@@ -55,12 +55,16 @@ pub(super) fn find<'a>(
     Ok(found)
 }
 fn matches(row: &Value, key: &str, name: &str, selected_scope: Option<&str>) -> bool {
+    let name = name.trim();
     let Some(actual_name) = row_name(key, row) else {
         return false;
     };
     let full = scope(row).map(|scope| format!("{scope}/{actual_name}"));
-    (name == actual_name || name == key || full.as_deref() == Some(name))
-        && selected_scope.is_none_or(|selected| scope(row) == Some(selected))
+    (name == actual_name || name == key.trim() || full.as_deref() == Some(name))
+        && selected_scope
+            .map(str::trim)
+            .filter(|selected| !selected.is_empty())
+            .is_none_or(|selected| scope(row) == Some(selected))
 }
 
 pub(super) fn publish(bitmap: &mut Value, row: Value) -> io::Result<()> {

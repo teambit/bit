@@ -21,10 +21,11 @@ pub(super) fn plan(input: Value) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     let left = request.left;
     let right = request.right;
-    if request.mode == "sourceCode" {
+    let mode = request.mode.trim();
+    if mode == "sourceCode" {
         return source_code(left, right);
     }
-    if request.mode != "modified" {
+    if mode != "modified" {
         return Err(invalid("unknown inspection compare mode"));
     }
     modified(left, right, request.workspace_root)

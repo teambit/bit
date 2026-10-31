@@ -37,11 +37,14 @@ pub(super) fn candidates(input: Value) -> io::Result<Value> {
     let request: Candidates = serde_json::from_value(input).map_err(io::Error::other)?;
     validate(&request.components)?;
     validate(&request.removed)?;
-    let existing: HashSet<_> = request.components.iter().collect();
+    let existing: HashSet<_> = request.components
+        .iter()
+        .map(|id| id.trim())
+        .collect();
     let missing: Vec<_> = request.removed
         .iter()
         .enumerate()
-        .filter_map(|(index, id)| (!existing.contains(id)).then_some(index))
+        .filter_map(|(index, id)| (!existing.contains(id.trim())).then_some(index))
         .collect();
     Ok(json!({"missing":missing}))
 }
@@ -49,11 +52,14 @@ pub(super) fn pattern(input: Value) -> io::Result<Value> {
     let request: Pattern = serde_json::from_value(input).map_err(io::Error::other)?;
     validate(&request.components)?;
     validate(&request.matches)?;
-    let matches: HashSet<_> = request.matches.iter().collect();
+    let matches: HashSet<_> = request.matches
+        .iter()
+        .map(|id| id.trim())
+        .collect();
     let selected: Vec<_> = request.components
         .iter()
         .enumerate()
-        .filter_map(|(index, id)| matches.contains(id).then_some(index))
+        .filter_map(|(index, id)| matches.contains(id.trim()).then_some(index))
         .collect();
     Ok(json!({"selected":selected}))
 }
@@ -79,7 +85,7 @@ pub(super) fn soft(input: Value) -> io::Result<Value> {
             .map_or(index, |aliases| aliases[index]);
         if let Some(version) = version
             .as_ref()
-            .filter(|version| !version.is_empty())
+            .filter(|version| !version.trim().is_empty())
             && !cleared.contains(&alias)
         {
             text(version)?;
@@ -94,7 +100,7 @@ pub(super) fn never(input: Value) -> io::Result<Value> {
     validate(&request.full_names)?;
     let hashes: Vec<_> = request.full_names
         .iter()
-        .map(|name| crate::validate::hexadecimal(&Sha1::digest(name.as_bytes())))
+        .map(|name| crate::validate::hexadecimal(&Sha1::digest(name.trim().as_bytes())))
         .collect();
     let mut seen = HashSet::new();
     let unique: Vec<_> = hashes

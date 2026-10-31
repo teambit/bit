@@ -112,7 +112,16 @@ fn align_files(left: &Js, right: &mut Js) -> io::Result<Vec<Value>> {
     Ok(metadata)
 }
 pub(super) fn filter_bitmap(value: &mut Js) -> io::Result<()> {
-    let files=array(get(value,"files"))?.iter().filter(|row| !matches!(get(row,"relativePath"),Js::String(path) if path==&".bitmap".encode_utf16().collect::<Vec<_>>())).cloned().collect();
+    let files = array(get(value, "files"))?
+        .iter()
+        .filter(|row| {
+            !matches!(
+                get(row, "relativePath"),
+                Js::String(path) if path.iter().copied().eq(".bitmap".encode_utf16()),
+            )
+        })
+        .cloned()
+        .collect();
     set(value, "files", Js::Array(files))
 }
 

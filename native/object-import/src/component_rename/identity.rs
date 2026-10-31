@@ -61,8 +61,9 @@ fn resolve_source_scope<'a>(
 fn extract_source_version(key: &str, source: &Value) -> Option<String> {
     source["version"]
         .as_str()
+        .map(str::trim)
         .filter(|version| !version.is_empty())
-        .or_else(|| key.rsplit_once('@').map(|(_, version)| version))
+        .or_else(|| key.rsplit_once('@').map(|(_, version)| version.trim()))
         .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
         .map(str::to_owned)
 }
@@ -77,7 +78,12 @@ fn select_row<'a>(
     id: &str,
     include_removed: bool,
 ) -> io::Result<(&'a str, &'a Value)> {
-    let id = id.split('@').next().unwrap_or(id);
+    let id = id
+        .trim()
+        .split('@')
+        .next()
+        .unwrap_or(id)
+        .trim();
     let mut rows = bitmap
         .as_object()
         .ok_or_else(|| unsupported("rename bitmap"))?

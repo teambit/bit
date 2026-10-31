@@ -46,6 +46,7 @@ fn identifier(left: &Value, right: &Value) -> io::Result<Ordering> {
     }
 }
 pub(super) fn satisfies(input: &Value, version: &str, range: &str) -> io::Result<bool> {
+    let (version, range) = (version.trim(), range.trim());
     let Some(candidate) = input[version].get("version") else {
         return Ok(false);
     };

@@ -14,6 +14,7 @@ pub(super) struct Request {
 }
 pub(super) fn lineage(request: Request, plan: &Value) -> io::Result<Value> {
     if request.logs.len() > 4096
+        || request.relative_path.trim().is_empty()
         || request.relative_path.len() > 32768
         || request.relative_path.contains('\0')
     {

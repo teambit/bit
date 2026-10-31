@@ -252,6 +252,7 @@ fn loaded(
             parent
                 .as_str()
                 .ok_or_else(|| invalid("history query parent"))?
+                .trim()
                 .to_owned(),
             hash.to_owned(),
         ));
@@ -292,7 +293,10 @@ fn parse(mut input: Value) -> io::Result<Request> {
     let labels: Labels = serde_json::from_value(Value::Object(labels)).map_err(io::Error::other)?;
     let fields: Fields = serde_json::from_value(input).map_err(io::Error::other)?;
     let overlays = super::overlay_indices(&fields.overlays);
-    let stops = fields.stop_at.iter().cloned().collect();
+    let stops = fields.stop_at
+        .iter()
+        .map(|hash| hash.trim().to_owned())
+        .collect();
     let mut index = crate::tag_index::TagIndex::default();
     for tag in &labels.orphaned {
         index.insert(tag.hash.trim(), tag.label.trim(), false);

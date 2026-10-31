@@ -1,12 +1,13 @@
 use super::{Options, Value};
 use std::io;
 pub(super) fn scope(scope: &str, options: &Options) -> Option<String> {
+    let (scope, old, new) = (scope.trim(), options.old.trim(), options.new.trim());
     if options.owner {
         scope
-            .strip_prefix(&format!("{}.", options.old))
-            .map(|suffix| format!("{}.{suffix}", options.new))
+            .strip_prefix(&format!("{old}."))
+            .map(|suffix| format!("{new}.{suffix}"))
     } else {
-        (scope == options.old).then(|| options.new.clone())
+        (scope == old).then(|| new.to_owned())
     }
 }
 pub(super) fn entries_with_default(

@@ -11,7 +11,11 @@ pub(super) fn validate(
         return Err(error("invalid component bitmap"));
     };
     for (owner, row) in rows {
-        let Some(parent) = row["rootDir"].as_str() else {
+        let Some(parent) = row["rootDir"]
+            .as_str()
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
+        else {
             continue;
         };
         let owner_name = super::rows::row_name(owner, row).unwrap_or(owner);

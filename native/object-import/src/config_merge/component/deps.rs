@@ -42,7 +42,7 @@ fn append(policy: &mut Value, field: &str, row: Value) {
     }
 }
 fn field(lifecycle: &str) -> io::Result<&'static str> {
-    match lifecycle {
+    match lifecycle.trim() {
         "runtime" => Ok("dependencies"),
         "dev" => Ok("devDependencies"),
         "peer" => Ok("peerDependencies"),

@@ -86,11 +86,14 @@ fn other(engine: &mut Engine<'_>) -> io::Result<()> {
 
 fn other_id(engine: &Engine<'_>, entry: &Value, id: &str) -> io::Result<Option<String>> {
     if entry["componentId"].get("version").is_some() {
-        let base =
-            entry["componentId"]["base"].as_str().ok_or_else(|| invalid("extension base"))?;
+        let base = entry["componentId"]["base"]
+            .as_str()
+            .map(str::trim)
+            .filter(|base| !base.is_empty())
+            .ok_or_else(|| invalid("extension base"))?;
         if let Some(workspace) = array(engine.input, "workspaceIds")?
             .iter()
-            .find(|workspace| workspace["base"] == base)
+            .find(|workspace| workspace["base"].as_str().map(str::trim) == Some(base))
         {
             if engine.find("current", base)?.is_some() {
                 return Ok(None);
@@ -98,6 +101,8 @@ fn other_id(engine: &Engine<'_>, entry: &Value, id: &str) -> io::Result<Option<S
             return Ok(Some(
                 workspace["legacy"]
                     .as_str()
+                    .map(str::trim)
+                    .filter(|legacy| !legacy.is_empty())
                     .ok_or_else(|| invalid("workspace legacy id"))?
                     .into(),
             ));

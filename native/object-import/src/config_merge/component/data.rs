@@ -14,13 +14,17 @@ pub(super) fn merge(engine: &mut Engine<'_>) -> io::Result<()> {
         return Ok(());
     }
     for (index, current) in array(engine.input, "current")?.iter().enumerate() {
-        let id = current["stringId"].as_str().ok_or_else(|| invalid("data id"))?;
-        let bare = id.split('@').next().unwrap_or(id);
+        let id = non_empty_str(&current["stringId"], "data id")?;
+        let bare = id
+            .split('@')
+            .next()
+            .unwrap_or(id)
+            .trim();
         if ["teambit.dependencies/dependency-resolver", "teambit.pipelines/builder"].contains(&bare)
         {
             continue;
         }
-        let query = current["idWithoutVersion"].as_str().ok_or_else(|| invalid("data query"))?;
+        let query = non_empty_str(&current["idWithoutVersion"], "data query")?;
         let base = engine.find("base", query)?;
         let other = engine.find("other", query)?;
         let reason = reason(engine, index, base, other)?;
@@ -29,12 +33,19 @@ pub(super) fn merge(engine: &mut Engine<'_>) -> io::Result<()> {
         }
     }
     for other in array(engine.input, "other")? {
-        let query = other["idWithoutVersion"].as_str().ok_or_else(|| invalid("data query"))?;
+        let query = non_empty_str(&other["idWithoutVersion"], "data query")?;
         if engine.find("current", query)?.is_none() {
             engine.conflicts.push(json!({"id":other["stringId"],"reason":"missing in current"}));
         }
     }
     Ok(())
+}
+fn non_empty_str<'a>(value: &'a serde_json::Value, message: &str) -> io::Result<&'a str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .ok_or_else(|| invalid(message))
 }
 fn reason(
     engine: &mut Engine<'_>,

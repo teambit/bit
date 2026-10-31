@@ -120,7 +120,7 @@ fn assign(
 }
 fn collect_removed<'a>(removed: &mut HashMap<usize, &'a str>, lines: Vec<&'a str>, start: usize) {
     for (index, text) in lines.into_iter().enumerate() {
-        removed.insert(start + index, text);
+        removed.insert(start.saturating_add(index), text);
     }
 }
 fn previous_lines(rows: &mut [Value], added: Vec<usize>, removed: &HashMap<usize, &str>) {

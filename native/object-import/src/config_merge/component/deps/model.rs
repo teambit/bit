@@ -176,11 +176,13 @@ impl<'a, 'b> State<'a, 'b> {
 pub(super) fn version(dep: &Value) -> &str {
     dep["policy"]
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())
-        .or_else(|| dep["version"].as_str())
+        .or_else(|| dep["version"].as_str().map(str::trim))
         .unwrap_or("")
 }
 fn hash(text: &str) -> bool {
+    let text = text.trim();
     (3..=40).contains(&text.len()) && text.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 fn dependencies(engine: &Engine<'_>, side: &str) -> io::Result<Vec<Value>> {

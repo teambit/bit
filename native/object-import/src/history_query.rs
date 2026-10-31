@@ -18,7 +18,7 @@ use serde_json::Value;
 use std::io;
 
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
-    match kind {
+    match kind.trim() {
         "historyQueryToposort" => show::toposort(input),
         "historyQueryShow" => show::show(input),
         "historyQueryPopulateBegin" => state.populate_begin(input),

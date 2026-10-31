@@ -100,7 +100,8 @@ fn patterns(plan: &mut Plan, settings: &Value, track_all: bool) -> io::Result<Ve
             ignored
                 .iter()
                 .filter_map(Value::as_str)
-                .filter(|pattern| !pattern.trim().is_empty())
+                .map(str::trim)
+                .filter(|pattern| !pattern.is_empty())
                 .map(str::to_owned),
         );
     }

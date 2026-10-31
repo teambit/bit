@@ -69,13 +69,17 @@ pub(super) fn merge(engine: &mut Engine<'_>) -> io::Result<()> {
     if current["id"] == other["id"] && current["version"] == other["version"] {
         return Ok(());
     }
-    let current_id = current["id"].as_str().ok_or_else(|| invalid("env id"))?;
+    let current_id = current["id"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid("env id"))?;
     let changed = current["id"] != base["id"]
         || (current["version"].is_string()
             && base["version"].is_string()
             && current["version"] != base["version"]);
     if (changed || current["id"] == other["id"])
-        && engine.local(current_id, current["version"].as_str())?
+        && engine.local(current_id, current["version"].as_str().map(str::trim))?
     {
         return Ok(());
     }

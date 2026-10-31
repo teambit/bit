@@ -21,7 +21,10 @@ pub(super) struct Request {
 }
 pub(super) fn diff(request: Request, cache: &mut Cache) -> io::Result<Value> {
     crate::merge_history::path(&request.objects_directory)?;
-    if request.relative_path.len() > 32768 || request.relative_path.contains('\0') {
+    if request.relative_path.trim().is_empty()
+        || request.relative_path.len() > 32768
+        || request.relative_path.contains('\0')
+    {
         return Err(invalid("history diff path"));
     }
     let mut sources =

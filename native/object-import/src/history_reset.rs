@@ -12,7 +12,7 @@ use serde_json::Value;
 use std::io;
 
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
-    match kind {
+    match kind.trim() {
         "historyResetBegin" => state.begin(input),
         "historyResetReceipt" => state.receipt(input),
         "historyResetFork" => state.fork(input),

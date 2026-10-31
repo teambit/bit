@@ -14,11 +14,13 @@ pub(super) fn select(
     patterns: &[String],
     observed: &mut Observed,
 ) -> io::Result<Vec<String>> {
+    let root = normalize(root);
+    let cwd = normalize(cwd);
     let mut selected = Vec::new();
     let mut seen = HashSet::new();
     for pattern in patterns {
-        for path in candidates(root, cwd, pattern, observed)? {
-            let relative = tracked_directory(root, cwd, &path)?;
+        for path in candidates(&root, &cwd, pattern, observed)? {
+            let relative = tracked_directory(&root, &cwd, &path)?;
             if seen.insert(relative.clone()) {
                 selected.push(relative);
             }

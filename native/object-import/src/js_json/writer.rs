@@ -26,7 +26,7 @@ impl Writer {
     }
 
     pub(super) fn bytes(&mut self, bytes: &[u8]) -> io::Result<()> {
-        if bytes.len() > MAX_BYTES - self.output.len() {
+        if bytes.len() > MAX_BYTES.saturating_sub(self.output.len()) {
             return Err(invalid("JSON output limit"));
         }
         self.output.extend_from_slice(bytes);
@@ -34,7 +34,7 @@ impl Writer {
     }
 
     pub(super) fn value(&mut self, value: &Value, depth: usize) -> io::Result<()> {
-        self.nodes += 1;
+        self.nodes = self.nodes.saturating_add(1);
         if depth > 64 || self.nodes > MAX_NODES {
             return Err(invalid("JSON nesting or node limit"));
         }

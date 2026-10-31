@@ -27,6 +27,7 @@ pub fn scope<Output>(sender: &SyncSender<Event>, work: impl FnOnce() -> Output) 
     with_sender(Some(sender.clone()), work)
 }
 
+#[must_use]
 pub(crate) fn current() -> Option<SyncSender<Event>> {
     CURRENT.with(|current| current.borrow().clone())
 }

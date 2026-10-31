@@ -84,7 +84,8 @@ impl Plan {
         let trimmed_id = file_id.trim();
         if trimmed_id.is_empty()
             || matches!(trimmed_id, "." | "..")
-            || trimmed_id.contains(['/', '\\', '\n', '\r', '\0'])
+            || trimmed_id.contains(['/', '\\'])
+            || trimmed_id.chars().any(char::is_control)
         {
             return Err(unsupported("tracking bitmap history identifier"));
         }

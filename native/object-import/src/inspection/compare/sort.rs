@@ -45,6 +45,9 @@ pub(super) fn all(value: &mut Js) -> io::Result<Value> {
 fn extension_id(row: &Js) -> io::Result<Vec<u16>> {
     let id = fields::get(row, "extensionId");
     if id.truthy()? {
+        if let Js::String(text) = id {
+            return Ok(text.clone());
+        }
         return fields::id(id, true);
     }
     for name in ["name", "legacyId"] {

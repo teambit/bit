@@ -39,21 +39,30 @@ fn fields(input: &[Value]) -> io::Result<()> {
     let mut names = Vec::new();
     for field in input {
         validate::fields(field, &["field", "entries"])?;
-        let name = text(field, "field")?;
-        if names.contains(&name) || ["__proto__", "constructor", "prototype"].contains(&name) {
+        let name = text(field, "field")?.trim();
+        if name.is_empty()
+            || names.contains(&name)
+            || ["__proto__", "constructor", "prototype"].contains(&name)
+        {
             return Err(invalid("scope policy field"));
         }
         names.push(name);
         for entry in array(field, "entries")? {
-            validate::fields(entry, &["name", "version", "force"])?;
-            text(entry, "name")?;
-            text(entry, "version")?;
-            if let Some(force) = entry.get("force")
-                && !force.is_boolean()
-            {
-                return Err(invalid("scope policy force"));
-            }
+            validate_entry(entry)?;
         }
+    }
+    Ok(())
+}
+fn validate_entry(entry: &Value) -> io::Result<()> {
+    validate::fields(entry, &["name", "version", "force"])?;
+    if text(entry, "name")?.trim().is_empty() || text(entry, "version")?.trim().is_empty() {
+        return Err(invalid("scope policy entry"));
+    }
+    if entry
+        .get("force")
+        .is_some_and(|force| !force.is_boolean())
+    {
+        return Err(invalid("scope policy force"));
     }
     Ok(())
 }

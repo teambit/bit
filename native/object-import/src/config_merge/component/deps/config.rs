@@ -26,6 +26,8 @@ pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
     {
         let name = dep["dependencyId"]
             .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
             .ok_or_else(|| super::super::super::invalid("policy name"))?;
         if !names
             .iter()

@@ -28,12 +28,19 @@ pub(super) fn overlaid(
     relative: &str,
     original: Vec<u8>,
 ) -> io::Result<Vec<u8>> {
-    let Some(path) = component["sourceOverlays"].get(relative).and_then(Value::as_str) else {
+    let Some(path) = component["sourceOverlays"]
+        .get(relative)
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+    else {
         return Ok(original);
     };
     let root = Path::new(
         component["sourceOverlayRoot"]
             .as_str()
+            .map(str::trim)
+            .filter(|root| !root.is_empty())
             .ok_or_else(|| unsupported("rename callback source root"))?,
     );
     let path = Path::new(path);

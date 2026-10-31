@@ -50,13 +50,18 @@ impl<'a> Engine<'a> {
         });
     }
     pub(super) fn strategy(&self) -> &str {
-        self.input["strategy"].as_str().unwrap_or("manual")
+        self.input["strategy"]
+            .as_str()
+            .map(str::trim)
+            .filter(|strategy| !strategy.is_empty())
+            .unwrap_or("manual")
     }
     pub(super) fn find(&self, side: &str, id: &str) -> io::Result<Option<usize>> {
+        let id = id.trim();
         let core = array(self.input, "coreNames")?
             .iter()
-            .any(|name| name == id);
-        let base_id = id.rsplit_once('@').map_or(id, |(base, _)| base);
+            .any(|name| name.as_str().map(str::trim) == Some(id));
+        let base_id = id.rsplit_once('@').map_or(id, |(base, _)| base.trim());
         Ok(array(self.input, side)?
             .iter()
             .position(|entry| {

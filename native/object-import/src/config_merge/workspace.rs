@@ -122,15 +122,7 @@ fn conflict_package(
         return Ok(());
     }
     let raw = &uses[0].1;
-    let parts: Vec<_> = raw.split("::").collect();
-    let current = parts.get(1).ok_or_else(|| invalid("config conflict version"))?;
-    let other = parts.get(2).ok_or_else(|| invalid("config conflict version"))?;
-    let other_valid =
-        if (3..=40).contains(&other.len()) && other.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-            format!("0.0.0-{other}")
-        } else {
-            (*other).into()
-        };
+    let (current, other_valid) = parse_conflict_versions(raw)?;
     for field in ["dependencies", "peerDependencies"] {
         let Some(workspace) = policy[field][name]
             .as_str()
@@ -155,6 +147,26 @@ fn conflict_package(
         plan.debug.push(format!("conflict workspace.jsonc: {name} current: {workspace}, other: {other_valid}. Triggered by: {}", components(uses)));
     }
     Ok(())
+}
+fn parse_conflict_versions(raw: &str) -> io::Result<(&str, String)> {
+    let mut parts = raw.split("::").skip(1);
+    let current = parts
+        .next()
+        .map(str::trim)
+        .filter(|part| !part.is_empty())
+        .ok_or_else(|| invalid("config conflict version"))?;
+    let other = parts
+        .next()
+        .map(str::trim)
+        .filter(|part| !part.is_empty())
+        .ok_or_else(|| invalid("config conflict version"))?;
+    let other_valid =
+        if (3..=40).contains(&other.len()) && other.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            format!("0.0.0-{other}")
+        } else {
+            other.into()
+        };
+    Ok((current, other_valid))
 }
 fn same(uses: &[(String, String)]) -> bool {
     uses.iter()

@@ -43,14 +43,16 @@ pub(crate) struct State {
     retained: Vec<Weak<[read::File]>>,
 }
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
-    match kind {
+    match kind.trim() {
         "inspectionBegin" => begin(&input, state, None),
         "inspectionDiff" => diff::plan(input, &state.plans),
         "inspectionCompare" => compare::plan(input),
         "inspectionFiles" => files::plan(input, &state.plans),
         "inspectionFinish" => {
             let request: wire::Token = serde_json::from_value(input).map_err(io::Error::other)?;
-            state.plans.remove(&request.token).ok_or_else(|| invalid("stale inspection token"))?;
+            state.plans
+                .remove(request.token.trim())
+                .ok_or_else(|| invalid("stale inspection token"))?;
             Ok(json!({"finished":true}))
         }
         _ => Err(invalid("unsupported inspection operation")),

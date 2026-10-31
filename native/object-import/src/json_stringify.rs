@@ -5,7 +5,8 @@ use std::io;
 
 /// Serialize JSON data with JavaScript property ordering and binary64 numbers.
 pub fn stringify_json(value: &serde_json::Value, pretty: bool) -> io::Result<String> {
-    let bytes = stringify(&convert(value)?, pretty)?.expect("JSON has no undefined root");
+    let bytes = stringify(&convert(value)?, pretty)?
+        .ok_or_else(|| io::Error::other("JSON root undefined"))?;
     String::from_utf8(bytes).map_err(io::Error::other)
 }
 

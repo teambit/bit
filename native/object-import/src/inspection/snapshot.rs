@@ -32,7 +32,14 @@ pub(super) fn validate_mode(request: &wire::Begin, state: &State) -> io::Result<
         && !request.owned_memory
         && request.files
             .iter()
-            .any(|file| file.raw_hash.is_none() || file.snapshot_hash.is_none())
+            .any(|file| {
+                file.raw_hash
+                    .as_deref()
+                    .is_none_or(|hash| hash.trim().is_empty())
+                    || file.snapshot_hash
+                        .as_deref()
+                        .is_none_or(|hash| hash.trim().is_empty())
+            })
     {
         return Err(invalid("inspection memory-only capture requires caller hashes"));
     }

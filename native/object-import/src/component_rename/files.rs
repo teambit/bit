@@ -37,6 +37,9 @@ pub(super) fn prepare(plan: &mut Plan, facts: &Value) -> io::Result<()> {
         let relative = file
             .as_str()
             .or_else(|| file["relativePath"].as_str())
+            .or_else(|| file["path"].as_str())
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
             .ok_or_else(|| unsupported("rename source file path"))?;
         let change = change(
             plan,

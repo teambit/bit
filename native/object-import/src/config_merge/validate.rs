@@ -108,8 +108,11 @@ fn extension(entry: &Value) -> io::Result<()> {
     {
         return Err(invalid("extension metadata"));
     }
-    text(entry, "stringId")?;
-    text(entry, "idWithoutVersion")?;
+    if text(entry, "stringId")?.trim().is_empty()
+        || text(entry, "idWithoutVersion")?.trim().is_empty()
+    {
+        return Err(invalid("extension metadata"));
+    }
     text(entry, "configJson")?;
     text(entry, "configPretty")?;
     undefined_keys(entry)?;

@@ -14,6 +14,7 @@ fn write(
     file_id: &str,
     reason: &str,
 ) -> io::Result<()> {
+    crate::component_remove::validate_file_id(file_id)?;
     if fs::read(plan.root.join(".bitmap"))? != plan.controls.expected {
         return Err(invalid("rename bitmap changed before publication"));
     }
@@ -35,8 +36,10 @@ pub(super) fn finish_original(
     file_id: &str,
     source_package: &str,
 ) -> io::Result<()> {
-    let package: std::path::PathBuf = Path::new(source_package).components().collect();
-    if !plan.identity.exported || !plan.options.deprecate {
+    let package: std::path::PathBuf = Path::new(source_package.trim()).components().collect();
+    if !package.as_os_str().is_empty()
+        && (!plan.identity.exported || !plan.options.deprecate)
+    {
         remove(&plan.root.join("node_modules").join(package))?;
     }
     if !plan.identity.exported {

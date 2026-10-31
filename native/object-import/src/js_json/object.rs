@@ -6,7 +6,10 @@ pub(super) fn entries(fields: &[(Vec<u16>, Value)]) -> io::Result<Vec<(&[u16], &
     if fields.is_empty() {
         return Ok(Vec::new());
     }
-    let mut seen = HashSet::new();
+    if fields.len() > 262_144 {
+        return Err(invalid("JavaScript object key limit"));
+    }
+    let mut seen = HashSet::with_capacity(fields.len());
     let mut indices = Vec::new();
     let mut names = Vec::new();
     for (key, value) in fields {

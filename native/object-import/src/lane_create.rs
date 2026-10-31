@@ -265,21 +265,31 @@ fn history_components(components: &[Value]) -> io::Result<Vec<String>> {
         .iter()
         .map(|entry| {
             let id = if let Some(raw_id) = entry["id"].as_str() {
+                let raw_id = raw_id.trim();
                 raw_id
                     .rsplit_once('@')
-                    .map_or(raw_id, |(bare, _)| bare)
+                    .map_or(raw_id, |(bare, _)| bare.trim())
                     .to_owned()
             } else {
-                let name = entry["id"]["name"].as_str().ok_or_else(invalid)?;
+                let name = entry["id"]["name"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|val| !val.is_empty())
+                    .ok_or_else(invalid)?;
                 match entry["id"]["scope"]
                     .as_str()
+                    .map(str::trim)
                     .filter(|val| !val.is_empty())
                 {
                     Some(scope) => format!("{scope}/{name}"),
                     None => name.to_owned(),
                 }
             };
-            let head = entry["head"].as_str().ok_or_else(invalid)?;
+            let head = entry["head"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .ok_or_else(invalid)?;
             Ok(format!("{id}@{head}"))
         })
         .collect()

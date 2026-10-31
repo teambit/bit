@@ -13,7 +13,8 @@ pub(super) struct Tree {
 pub(super) fn prepare(plan: &mut Plan) -> io::Result<()> {
     if plan.identity.exported
         || plan.identity.source_directory.trim().is_empty()
-        || plan.identity.source_directory == plan.identity.target_directory
+        || plan.identity.source_directory.trim()
+            == plan.identity.target_directory.trim()
     {
         return Ok(());
     }

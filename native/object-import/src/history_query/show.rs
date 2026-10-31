@@ -59,9 +59,10 @@ fn hashes(versions: &[Version]) -> io::Result<Vec<String>> {
             .chain(version.squashed.iter().flatten())
             .chain(&version.unrelated)
         {
+            let hash = hash.trim();
             crate::merge_history::hash(hash)?;
             if seen.insert(hash) {
-                hashes.push(hash.clone());
+                hashes.push(hash.to_owned());
             }
         }
     }
@@ -71,6 +72,7 @@ fn hashes(versions: &[Version]) -> io::Result<Vec<String>> {
     Ok(hashes)
 }
 fn identifier(hash: &str, short: bool) -> String {
+    let hash = hash.trim();
     if short { hash.get(..9).unwrap_or(hash).to_owned() } else { hash.to_owned() }
 }
 fn edges(request: &Request) -> io::Result<Vec<Edge>> {

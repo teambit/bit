@@ -19,14 +19,18 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
         if versions.len() != 1 {
             continue;
         }
-        let name = text(dependency, "name")?;
+        let name = text(dependency, "name")?.trim();
         let entry = entries
             .iter()
             .rev()
-            .find(|entry| entry["dependencyId"] == name)
+            .find(|entry| entry["dependencyId"].as_str().map(str::trim) == Some(name))
             .ok_or_else(|| invalid("missing workspace dep"))?;
-        let workspace = text(&entry["value"], "version")?;
-        let component = versions[0].as_str().ok_or_else(|| invalid("component version"))?;
+        let workspace = text(&entry["value"], "version")?.trim();
+        let component = versions[0]
+            .as_str()
+            .map(str::trim)
+            .filter(|version| !version.is_empty())
+            .ok_or_else(|| invalid("component version"))?;
         let lifecycle = entries
             .iter()
             .find(|entry| entry["dependencyId"] == name)

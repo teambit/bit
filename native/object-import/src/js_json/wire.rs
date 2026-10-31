@@ -47,7 +47,12 @@ impl<'de> Visitor<'de> for ValueVisitor {
         self,
         mut sequence: Sequence,
     ) -> Result<Value, Sequence::Error> {
-        let mut values = Vec::new();
+        let mut values = Vec::with_capacity(
+            sequence
+                .size_hint()
+                .unwrap_or(0)
+                .min(4096),
+        );
         while let Some(value) = sequence.next_element()? {
             values.push(value);
         }
@@ -77,7 +82,12 @@ impl<'de> Visitor<'de> for TextVisitor {
         self,
         mut sequence: Sequence,
     ) -> Result<Utf16, Sequence::Error> {
-        let mut units = Vec::new();
+        let mut units = Vec::with_capacity(
+            sequence
+                .size_hint()
+                .unwrap_or(0)
+                .min(4096),
+        );
         while let Some(unit) = sequence.next_element::<u16>()? {
             units.push(unit);
         }

@@ -14,7 +14,11 @@ pub(super) fn filter(
         .filter_map(|(key, row)| {
             Some((
                 rows::row_name(key, row)?.to_owned(),
-                row["rootDir"].as_str()?.to_owned(),
+                row["rootDir"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|dir| !dir.is_empty())?
+                    .to_owned(),
                 row.clone(),
             ))
         })

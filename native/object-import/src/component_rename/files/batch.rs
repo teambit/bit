@@ -46,24 +46,26 @@ fn row_identity(row: &Value) -> Option<String> {
     if let Some(identity) = row["identity"]
         .as_str()
         .or_else(|| row["id"].as_str())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
-        return Some(
-            identity
-                .split('@')
-                .next()
-                .unwrap_or(identity)
-                .to_owned(),
-        );
+        let bare = identity
+            .split('@')
+            .next()
+            .unwrap_or(identity)
+            .trim();
+        return (!bare.is_empty()).then(|| bare.to_owned());
     }
     let object = row["id"].as_object()?;
     let name = object
         .get("name")?
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())?;
     match object
         .get("scope")
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         Some(scope) => Some(format!("{scope}/{name}")),

@@ -88,7 +88,8 @@ fn exported_config(plan: &Plan, target: &mut Value, facts: &Value) -> io::Result
     let mut source = json!({"scope":scope,"name":name});
     if let Some(version) = facts["sourceVersion"]
         .as_str()
-        .filter(|version| !version.is_empty())
+        .map(str::trim)
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
     {
         source["version"] = json!(version);
     }

@@ -174,11 +174,19 @@ fn load_version(existing: Option<&Value>, options: &Options) -> Value {
         return json!(
             row["version"]
                 .as_str()
+                .map(str::trim)
                 .filter(|version| !version.is_empty())
                 .unwrap_or("latest")
         );
     }
-    if options.id.is_some() { json!("latest") } else { Value::Null }
+    if options.id
+        .as_deref()
+        .is_some_and(|id| !id.trim().is_empty())
+    {
+        json!("latest")
+    } else {
+        Value::Null
+    }
 }
 
 fn resolve_main(

@@ -42,3 +42,8 @@ pub(super) struct Model {
     #[serde(rename = "test")]
     pub(super) _test: Option<bool>,
 }
+impl Model {
+    pub(super) fn normalized_hash(&self) -> &str {
+        self.hash.trim()
+    }
+}

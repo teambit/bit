@@ -46,6 +46,6 @@ fn single(writer: &mut Writer, unit: u16) -> io::Result<()> {
 
 fn unicode(writer: &mut Writer, scalar: u32) -> io::Result<()> {
     let mut buffer = [0; 4];
-    let character = char::from_u32(scalar).expect("validated Unicode scalar");
+    let character = char::from_u32(scalar).ok_or_else(|| super::invalid("invalid Unicode scalar"))?;
     writer.bytes(character.encode_utf8(&mut buffer).as_bytes())
 }

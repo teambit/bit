@@ -272,8 +272,14 @@ struct Labels {
 }
 pub(crate) fn begin(input: Value) -> io::Result<Value> {
     let (request, labels) = parse(input)?;
-    crate::merge_history::hash(&request.head)?;
-    if request.head_data.get("hash").and_then(Value::as_str) != Some(&request.head) {
+    let head = request.head.trim();
+    crate::merge_history::hash(head)?;
+    if request.head_data
+        .get("hash")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        != Some(head)
+    {
         return Err(invalid("history population head identity"));
     }
     let plan = json!({"objectsDirectory":request.objects_directory,"headExists":request.head_exists,"exitWhenFind":request.exit_when_find,"head":request.head_data,"skip":request.exit_when_find && request.head_exists});

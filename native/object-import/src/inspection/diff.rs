@@ -19,7 +19,8 @@ struct Request {
 }
 pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
-    let current = plans.get(&request.token).ok_or_else(|| invalid("stale inspection token"))?;
+    let current =
+        plans.get(request.token.trim()).ok_or_else(|| invalid("stale inspection token"))?;
     if !request.objects_directory.is_absolute() || request.model_files.len() > super::MAX_FILES {
         return Err(invalid("inspection diff path/budget"));
     }
@@ -28,7 +29,7 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     let total = current
         .iter()
         .map(|file| file.contents.len())
-        .sum::<usize>();
+        .fold(0_usize, usize::saturating_add);
     for model in &request.model_files {
         super::read::relative(&model.relative_path)?;
         crate::merge_history::hash(&model.hash)?;

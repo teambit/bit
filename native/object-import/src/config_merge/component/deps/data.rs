@@ -141,18 +141,25 @@ fn compatible(state: &State<'_, '_>, current: &Value, other: &Value) -> io::Resu
     let (Some(current_policy), Some(other_policy)) = (
         current["policy"]
             .as_str()
+            .map(str::trim)
             .filter(|text| !text.is_empty()),
         other["policy"]
             .as_str()
+            .map(str::trim)
             .filter(|text| !text.is_empty()),
     ) else {
         return Ok(false);
     };
     let current_version = current["version"]
         .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
         .ok_or_else(|| super::super::super::invalid("current version"))?;
-    let other_version =
-        other["version"].as_str().ok_or_else(|| super::super::super::invalid("other version"))?;
+    let other_version = other["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .ok_or_else(|| super::super::super::invalid("other version"))?;
     Ok(super::super::super::semver::satisfies(
         &state.engine.input["semver"],
         current_version,

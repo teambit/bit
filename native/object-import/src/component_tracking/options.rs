@@ -29,7 +29,9 @@ impl Options {
             .is_some_and(|rows| {
                 rows.values()
                     .any(|row| {
-                        (row["rootDir"] == "." || row["directory"] == ".") && super::active(row)
+                        (row["rootDir"].as_str().map(str::trim) == Some(".")
+                            || row["directory"].as_str().map(str::trim) == Some("."))
+                            && super::active(row)
                     })
             });
         if tracks_root && !self.workspace_root && !existing_root {

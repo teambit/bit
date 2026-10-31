@@ -39,7 +39,11 @@ fn incoming<'a>(input: &'a Value, row: &Value) -> io::Result<Option<&'a Value>> 
 }
 
 fn is_envs_aspect_id(id: &str) -> bool {
-    id.split('@').next() == Some("teambit.envs/envs")
+    id.trim()
+        .split('@')
+        .next()
+        .map(str::trim)
+        == Some("teambit.envs/envs")
 }
 
 fn preserve(merged: &mut Value, entry: &Value) {

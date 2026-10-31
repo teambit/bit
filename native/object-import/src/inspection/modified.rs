@@ -10,7 +10,7 @@ pub(crate) fn modified(
     workspace_root: bool,
     load_models: impl FnOnce() -> io::Result<Value>,
 ) -> io::Result<bool> {
-    if paths.len() > MAX_FILES {
+    if !root.is_absolute() || paths.len() > MAX_FILES {
         return Err(invalid("status file count limit"));
     }
     let request = wire::Begin {

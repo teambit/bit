@@ -70,10 +70,10 @@ pub(super) fn select(input: Value) -> io::Result<Value> {
     let mut cached = request.last_found_tag.clone();
     let mut index = crate::tag_index::TagIndex::default();
     for tag in &request.orphaned {
-        index.insert(&tag.hash, &tag.label, false);
+        index.insert(tag.hash.trim(), tag.label.trim(), false);
     }
     for tag in &request.tags {
-        index.insert(&tag.hash, &tag.label, true);
+        index.insert(tag.hash.trim(), tag.label.trim(), true);
     }
     let labels = labels(&request, &selected, &index, &mut cached)?;
     let mut output = json!({"selected":selected.iter().map(|index|json!({"source":index})).collect::<Vec<_>>(),"labels":labels,"lastFoundTagPresent":cached.is_some()});

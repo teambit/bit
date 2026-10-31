@@ -14,6 +14,7 @@ use serde_json::Value;
 use std::io;
 
 pub(crate) fn apply(kind: &str, input: &Value) -> io::Result<Value> {
+    let kind = kind.trim();
     if kind == "configScopePolicy" {
         return scope::plan(input);
     }

@@ -26,7 +26,9 @@ impl Observed {
             Ok(_) => return Err(unsupported("tracking requires bounded regular files")),
             Err(error) => return Err(error),
         };
-        self.bytes += bytes.as_ref().map_or(0, Vec::len);
+        self.bytes = self.bytes
+            .checked_add(bytes.as_ref().map_or(0, Vec::len))
+            .ok_or_else(|| unsupported("tracking retained input limit"))?;
         if self.bytes > 128 * 1024 * 1024 || self.files.len() >= 65536 {
             return Err(unsupported("tracking retained input limit"));
         }

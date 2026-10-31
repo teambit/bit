@@ -131,7 +131,8 @@ impl State {
     }
     pub(super) fn fork(&mut self, input: Value) -> io::Result<Value> {
         let request: Fork = serde_json::from_value(input).map_err(io::Error::other)?;
-        let record = self.prepare_fork(&request)?;
+        let token = request.token.trim().to_owned();
+        let record = self.prepare_fork(&request, &token)?;
         let mut children = Vec::new();
         for index in 0..request.count {
             let child = Record {
@@ -149,7 +150,7 @@ impl State {
                 cursor: 0,
                 revision: 0,
                 count: 1,
-                parent: Some(request.token.clone()),
+                parent: Some(token.clone()),
                 forked: false,
                 remaining: 0,
             };
@@ -157,18 +158,18 @@ impl State {
             output["index"] = json!(index);
             children.push(output);
         }
-        let mut output = record.output(&request.token);
+        let mut output = record.output(&token);
         output["children"] = json!(children);
-        self.records.insert(request.token, record);
+        self.records.insert(token, record);
         Ok(output)
     }
-    fn prepare_fork(&self, request: &Fork) -> io::Result<Record> {
+    fn prepare_fork(&self, request: &Fork, token: &str) -> io::Result<Record> {
         bound(request.count)?;
         if self.records.len() + request.count > 4096 {
             return Err(invalid("reset child owner limit"));
         }
         let mut record = self.records
-            .get(&request.token)
+            .get(token)
             .cloned()
             .ok_or_else(|| invalid("stale reset parent"))?;
         if record.revision != request.revision
@@ -189,8 +190,9 @@ impl State {
     }
     pub(super) fn finish(&mut self, input: Value) -> io::Result<Value> {
         let request: Token = serde_json::from_value(input).map_err(io::Error::other)?;
-        self.records.remove(&request.token).ok_or_else(|| invalid("stale reset finish"))?;
-        self.records.retain(|_, record| record.parent.as_deref() != Some(request.token.as_str()));
+        let token = request.token.trim();
+        self.records.remove(token).ok_or_else(|| invalid("stale reset finish"))?;
+        self.records.retain(|_, record| record.parent.as_deref() != Some(token));
         Ok(json!({"finished":true}))
     }
 }

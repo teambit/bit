@@ -23,12 +23,11 @@ fn smaller(
     mut remaining: usize,
     snapshots: Option<&crate::workspace::snapshots::State>,
 ) -> io::Result<Vec<File>> {
-    files
-        .iter()
-        .map(|file| {
-            let captured = capture_file(file, request, remaining, snapshots)?;
-            remaining = remaining.saturating_sub(captured.1);
-            Ok(captured.0)
-        })
-        .collect()
+    let mut output = Vec::with_capacity(files.len());
+    for file in files {
+        let captured = capture_file(file, request, remaining, snapshots)?;
+        remaining = remaining.saturating_sub(captured.1);
+        output.push(captured.0);
+    }
+    Ok(output)
 }

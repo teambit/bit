@@ -73,7 +73,8 @@ impl Sources<'_> {
         crate::merge_history::path(&directory)?;
         if let Some(path) = &snapshot_directory {
             crate::merge_history::path(path)?;
-            if !fs::symlink_metadata(path)?.is_dir() {
+            let metadata = fs::symlink_metadata(path)?;
+            if metadata.file_type().is_symlink() || !metadata.is_dir() {
                 return Err(invalid("history Source snapshot directory"));
             }
         }

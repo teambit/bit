@@ -46,12 +46,13 @@ fn validate_file(file: &Value) -> io::Result<()> {
         .get("file")
         .and_then(Value::as_str)
         .ok_or_else(|| invalid("history query artifact Source ref"))?;
-    crate::merge_history::hash(reference)?;
+    crate::merge_history::hash(reference.trim())?;
     let path = file
         .get("relativePath")
         .and_then(Value::as_str)
         .ok_or_else(|| invalid("history query artifact path"))?;
-    if path.len() > 32768
+    if path.trim().is_empty()
+        || path.len() > 32768
         || path.contains('\0')
         || file
             .get("url")

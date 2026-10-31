@@ -42,7 +42,8 @@ fn removed(entry: &Map<String, Value>) -> bool {
                     })
             })
             .is_some_and(|remove| {
-                remove.as_str() != Some("-") && remove.get("removed").is_some_and(truthy)
+                remove.as_str().map(str::trim) != Some("-")
+                    && remove.get("removed").is_some_and(truthy)
             })
 }
 fn scope(entry: &mut Map<String, Value>) {
@@ -62,7 +63,9 @@ fn truthy(value: &Value) -> bool {
         Value::Null => false,
         Value::Bool(value) => *value,
         Value::String(value) => !value.trim().is_empty(),
-        Value::Number(value) => value.as_f64() != Some(0.0),
+        Value::Number(value) => value
+            .as_f64()
+            .is_some_and(|number| number != 0.0 && !number.is_nan()),
         _ => true,
     }
 }

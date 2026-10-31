@@ -56,12 +56,13 @@ pub(super) fn capture(
     if request.files.len() >= 8 && rayon::current_num_threads() > 1 {
         return parallel::capture(request, maximum, snapshots);
     }
-    let mut total = 0;
+    let mut total = 0_usize;
     request.files
         .iter()
         .map(|file| {
-            let (captured, bytes) = capture_file(file, request, maximum - total, snapshots)?;
-            total += bytes;
+            let (captured, bytes) =
+                capture_file(file, request, maximum.saturating_sub(total), snapshots)?;
+            total = total.saturating_add(bytes);
             Ok(captured)
         })
         .collect()

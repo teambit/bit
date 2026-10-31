@@ -18,7 +18,7 @@ impl Handler {
         Self(Arc::new(callback))
     }
     pub(crate) fn call(&self, path: &Path, name: &str, options: &Value) -> io::Result<Value> {
-        (self.0)(path, name, options)
+        (self.0)(path, name.trim(), options)
     }
 }
 thread_local! {

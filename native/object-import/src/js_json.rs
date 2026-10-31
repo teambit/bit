@@ -89,8 +89,9 @@ fn number(bits: &str) -> io::Result<f64> {
     if bits.len() != 16 || !bits.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return Err(invalid("invalid JavaScript number bits"));
     }
-    let bits = u64::from_str_radix(bits, 16).map_err(io::Error::other)?;
-    Ok(f64::from_bits(bits))
+    let parsed =
+        u64::from_str_radix(bits, 16).map_err(|_| invalid("invalid JavaScript number bits"))?;
+    Ok(f64::from_bits(parsed))
 }
 
 fn invalid(message: &str) -> io::Error {

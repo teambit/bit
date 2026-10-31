@@ -1,5 +1,5 @@
 //! The published component-rename flags, independent of CLI parsing.
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub source: String,
     pub target: String,

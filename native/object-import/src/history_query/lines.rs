@@ -63,7 +63,7 @@ fn step(
         return Ok(None);
     }
     let mut path = choose(remove, add, can_remove, can_add);
-    *work += path.runs.len() + 1;
+    *work = work.saturating_add(path.runs.len().saturating_add(1));
     if *work > 2_000_000 {
         return Err(invalid("history diff work limit"));
     }

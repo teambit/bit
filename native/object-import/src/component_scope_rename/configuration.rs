@@ -11,6 +11,7 @@ pub(super) fn publish(
     scope: &str,
     file_id: &str,
 ) -> io::Result<()> {
+    crate::component_remove::validate_file_id(file_id)?;
     let scope = scope.trim();
     let file_id = file_id.trim();
     let text = std::str::from_utf8(before).map_err(io::Error::other)?;

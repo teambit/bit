@@ -58,14 +58,14 @@ fn serial(
         .iter()
         .map(|model| {
             let record = one(directory, model, budget)?;
-            budget.0 -= record.body.len();
-            budget.1 -= record.compressed.len();
+            budget.0 = budget.0.saturating_sub(record.body.len());
+            budget.1 = budget.1.saturating_sub(record.compressed.len());
             Ok(record)
         })
         .collect()
 }
 fn one(directory: &Path, model: &wire::Model, budget: (usize, usize)) -> io::Result<SourceRecord> {
-    let mut compressed = super::super::MAX_BYTES - budget.1;
+    let mut compressed = super::super::MAX_BYTES.saturating_sub(budget.1);
     read_source_record(
         directory,
         crate::merge_history::hash(&model.hash)?,

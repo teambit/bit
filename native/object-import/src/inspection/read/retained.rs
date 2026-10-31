@@ -53,7 +53,11 @@ fn observed<'a>(
         .filter(|snapshot| {
             file.path.is_absolute()
                 && snapshot.raw_bytes.max(snapshot.contents.len()) <= maximum
-                && file.snapshot_hash.as_ref() == Some(&snapshot.snapshot_hash)
+                && file.snapshot_hash
+                    .as_deref()
+                    .is_some_and(|hash| {
+                        hash.trim().eq_ignore_ascii_case(snapshot.snapshot_hash.trim())
+                    })
         })
         .ok_or_else(|| invalid("inspection retained workspace observation"))
 }

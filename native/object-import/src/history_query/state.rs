@@ -67,6 +67,7 @@ impl State {
         blame::blame(request, self.sources(&token)?)
     }
     fn sources(&mut self, token: &str) -> io::Result<&mut Cache> {
+        let token = token.trim();
         let used: usize = self.plans
             .iter()
             .filter(|(key, _)| key.as_str() != token)
@@ -78,7 +79,7 @@ impl State {
         Ok(&mut plan.sources)
     }
     fn verify_directory(&self, token: &str, directory: &std::path::Path) -> io::Result<()> {
-        let plan = self.plans.get(token).ok_or_else(|| invalid("stale history query"))?;
+        let plan = self.plans.get(token.trim()).ok_or_else(|| invalid("stale history query"))?;
         if plan.directory != directory {
             return Err(invalid("history query directory mismatch"));
         }
@@ -86,13 +87,15 @@ impl State {
     }
     pub(super) fn files(&self, input: Value) -> io::Result<Value> {
         let request: files::Request = serde_json::from_value(input).map_err(io::Error::other)?;
-        let plan = self.plans.get(&request.token).ok_or_else(|| invalid("stale history query"))?;
+        let plan =
+            self.plans.get(request.token.trim()).ok_or_else(|| invalid("stale history query"))?;
         files::lineage(request, &plan.value)
     }
     pub(super) fn finish(&mut self, input: Value) -> io::Result<Value> {
         let request: Token = serde_json::from_value(input).map_err(io::Error::other)?;
-        let plan =
-            self.plans.remove(&request.token).ok_or_else(|| invalid("stale history query"))?;
+        let plan = self.plans
+            .remove(request.token.trim())
+            .ok_or_else(|| invalid("stale history query"))?;
         self.bytes = self.bytes.saturating_sub(plan.bytes);
         Ok(json!({"finished":true}))
     }

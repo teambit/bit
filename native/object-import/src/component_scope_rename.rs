@@ -33,7 +33,7 @@ impl Selection {
         let bitmap = fs::read(root.join(".bitmap"))?;
         let workspace = crate::parse_jsonc(&before)?;
         let key = workspace_aspect_key(&workspace);
-        let default = workspace[&key]["defaultScope"].as_str().unwrap_or_default();
+        let default = workspace[&key]["defaultScope"].as_str().map_or("", str::trim);
         let entries =
             selection::entries_with_default(&crate::parse_jsonc(&bitmap)?, default, options)?;
         let default_scope = selection::scope(default, options);
