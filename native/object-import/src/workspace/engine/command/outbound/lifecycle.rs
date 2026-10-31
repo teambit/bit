@@ -125,10 +125,11 @@ pub(in crate::workspace::engine) fn stage(
     input: &Finalize,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
+    let token = input.token.trim();
     let retained = state.outbound.as_mut().ok_or_else(|| invalid("outbound owner missing"))?;
     let ids = retained.transfer.ids
         .as_ref()
-        .filter(|_| retained.token == input.token.trim())
+        .filter(|_| !token.is_empty() && retained.token.trim() == token)
         .ok_or_else(|| invalid("outbound stage owner token"))?;
     let updated = match retained.publication.as_mut() {
         Some(Publication::Main(plan)) => plan.stage(ids)?,

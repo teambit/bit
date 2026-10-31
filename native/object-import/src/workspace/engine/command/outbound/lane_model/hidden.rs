@@ -92,7 +92,10 @@ fn identity(value: &str) -> io::Result<(&str, &str)> {
     let id = id.trim();
     let hash = hash.trim();
     crate::merge_history::hash(hash)?;
-    if !id.contains('/') {
+    if id
+        .split_once('/')
+        .is_none_or(|(scope, name)| scope.trim().is_empty() || name.trim().is_empty())
+    {
         return Err(invalid("outbound hidden scope"));
     }
     Ok((id, hash))
@@ -100,19 +103,19 @@ fn identity(value: &str) -> io::Result<(&str, &str)> {
 fn visible(lane: &Value, id: &str) -> bool {
     lane["components"]
         .as_array()
-        .is_some_and(|rows| {
-            rows.iter()
-                .any(|row| {
-                    row["id"]["scope"]
-                        .as_str()
-                        .zip(row["id"]["name"].as_str())
-                        .is_some_and(|(scope, name)| format!("{scope}/{name}") == id)
-                        || row["id"]
-                            .as_str()
-                            .map(|raw| raw.split('@').next().unwrap_or(raw))
-                            .is_some_and(|raw| raw == id)
-                })
-        })
+        .is_some_and(|rows| rows.iter().any(|row| row_matches_visible(row, id)))
+}
+
+fn row_matches_visible(row: &Value, id: &str) -> bool {
+    row["id"]["scope"]
+        .as_str()
+        .zip(row["id"]["name"].as_str())
+        .is_some_and(|(scope, name)| format!("{}/{}", scope.trim(), name.trim()) == id)
+        || row["id"]
+            .as_str()
+            .map(str::trim)
+            .map(|raw| raw.rsplit_once('@').map_or(raw, |(bare, _)| bare.trim()))
+            .is_some_and(|raw| raw == id)
 }
 fn merge(
     lane: &Value,

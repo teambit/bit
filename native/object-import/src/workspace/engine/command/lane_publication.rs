@@ -59,15 +59,18 @@ impl Prepared {
         if self.current.is_null() {
             return Ok(());
         }
+        let identity = identity.trim();
         let target = self.context["targets"]
             .as_array()
             .and_then(|rows| {
                 rows.iter()
-                    .find(|row| row["identity"] == identity)
+                    .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
             })
             .ok_or_else(|| invalid("command lane target"))?;
-        let source =
-            target["currentSource"].as_str().ok_or_else(|| invalid("command lane source"))?;
+        let source = target["currentSource"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("command lane source"))?;
         if (self.context["otherId"] == "main" || self.context["otherId"]["name"] == "main")
             && !matches!(source, "visible" | "hidden")
         {

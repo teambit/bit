@@ -4,7 +4,8 @@ use std::io;
 
 pub(super) fn run(input: &LaneFinalize, state: &mut State) -> io::Result<(usize, Value)> {
     let mut record = state.record.take().ok_or_else(|| invalid("command lane owner absent"))?;
-    if record.token != input.token.trim() {
+    let token = input.token.trim();
+    if token.is_empty() || record.token != token {
         return Err(invalid("command lane token"));
     }
     let mut prepared = record.planned.take().ok_or_else(|| invalid("command lane plan absent"))?;

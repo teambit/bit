@@ -16,7 +16,7 @@ pub(super) fn validate(version: &Value, repository: &mut Repository) -> io::Resu
         let source = key(&edge["source"])?;
         let target = key(&edge["target"])?;
         nodes
-            .entry(target)
+            .entry(target.clone())
             .or_insert_with(|| (edge["target"].clone(), Vec::new()));
         let outgoing = &mut nodes
             .entry(source)
@@ -24,7 +24,7 @@ pub(super) fn validate(version: &Value, repository: &mut Repository) -> io::Resu
             .1;
         if let Some(existing) = outgoing
             .iter_mut()
-            .find(|existing| existing["target"] == edge["target"])
+            .find(|existing| key(&existing["target"]).ok().as_deref() == Some(target.as_str()))
         {
             *existing = edge.clone();
         } else {

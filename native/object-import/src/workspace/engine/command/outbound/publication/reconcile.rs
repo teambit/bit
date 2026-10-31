@@ -106,9 +106,13 @@ impl Prepared {
         let mut promotions = exported_ids
             .iter()
             .map(|id| {
-                let identity = id.rsplit_once('@').map_or(id.as_str(), |(identity, _)| identity);
+                let trimmed = id.trim();
+                let identity =
+                    trimmed.rsplit_once('@').map_or(trimmed, |(identity, _)| identity.trim());
                 let (scope, name) = identity
                     .split_once('/')
+                    .map(|(scope, name)| (scope.trim(), name.trim()))
+                    .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
                     .ok_or_else(|| invalid("outbound acknowledged identity"))?;
                 Ok((scope.to_owned(), name.to_owned()))
             })

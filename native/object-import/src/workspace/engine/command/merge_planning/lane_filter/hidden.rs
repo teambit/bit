@@ -5,7 +5,7 @@ pub(in crate::workspace::engine::command::merge_planning) fn prepare_hidden_meta
     current: &Captured,
     output: &mut Value,
 ) -> io::Result<()> {
-    if !current.target.directory.is_empty() {
+    if !current.target.directory.trim().is_empty() {
         return Err(invalid("hidden bitmap component requires scope reload projection"));
     }
     let resolver = resolver_dependencies(output);
@@ -20,7 +20,11 @@ pub(in crate::workspace::engine::command::merge_planning) fn prepare_hidden_meta
 }
 
 fn package_name(dependency: &mut Value, resolver: &Value) {
-    if dependency.get("packageName").is_some() {
+    if dependency
+        .get("packageName")
+        .and_then(Value::as_str)
+        .is_some_and(|name| !name.trim().is_empty())
+    {
         return;
     }
     if let Some(name) = resolver

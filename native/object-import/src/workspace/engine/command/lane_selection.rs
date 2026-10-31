@@ -58,12 +58,13 @@ fn indices_for_ids(statuses: &[Value], ids: &[String]) -> io::Result<Vec<usize>>
     let mut seen = HashSet::new();
     ids.iter()
         .map(|id| {
-            if !seen.insert(id) {
+            let id = id.trim();
+            if id.is_empty() || !seen.insert(id) {
                 return Err(invalid("lane duplicate pattern identity"));
             }
             statuses
                 .iter()
-                .position(|row| row["identity"] == *id)
+                .position(|row| row["identity"].as_str().map(str::trim) == Some(id))
                 .ok_or_else(|| invalid("lane pattern unknown identity"))
         })
         .collect()
@@ -74,11 +75,12 @@ fn workspace_ids(context: &Value, statuses: &[Value]) -> io::Result<Vec<String>>
         .as_array()
         .ok_or_else(|| invalid("lane workspace identities"))?
         .iter()
-        .filter_map(|row| row["identity"].as_str())
+        .filter_map(|row| row["identity"].as_str().map(str::trim))
         .filter(|id| {
-            statuses
-                .iter()
-                .any(|row| row["identity"] == *id)
+            !id.is_empty()
+                && statuses
+                    .iter()
+                    .any(|row| row["identity"].as_str().map(str::trim) == Some(*id))
         })
         .map(str::to_owned)
         .collect())

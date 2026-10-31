@@ -16,8 +16,9 @@ pub(super) fn read(
     let targets = phase.versions
         .iter()
         .filter_map(|(id, _)| {
+            let id = id.trim();
             all.iter()
-                .find(|row| row["identity"].as_str().map(str::trim) == Some(id.trim()))
+                .find(|row| row_bare_identity(row) == Some(id))
                 .cloned()
         })
         .collect();
@@ -27,6 +28,14 @@ pub(super) fn read(
         history: false,
     };
     status_context::metadata_with_targets(&input, pool, settings, targets)
+}
+
+fn row_bare_identity(row: &Value) -> Option<&str> {
+    let raw = row["identity"]
+        .as_str()
+        .or_else(|| row["id"].as_str())?
+        .trim();
+    Some(raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()))
 }
 fn all_targets(bitmap: &Value, settings: &Value) -> io::Result<Vec<Value>> {
     let mut bitmap = bitmap

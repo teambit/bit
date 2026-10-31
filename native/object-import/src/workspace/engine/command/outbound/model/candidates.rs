@@ -49,7 +49,12 @@ fn candidate_scope_and_name(row: &Value) -> io::Result<(&str, &str)> {
     let (scope_opt, name) =
         crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
             .ok_or_else(|| invalid("outbound candidate name"))?;
+    let name = name.trim();
+    if name.is_empty() {
+        return Err(invalid("outbound candidate name"));
+    }
     let scope = scope_opt
+        .map(str::trim)
         .filter(|val| !val.is_empty())
         .ok_or_else(|| invalid("outbound candidate scope"))?;
     Ok((scope, name))

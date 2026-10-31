@@ -37,6 +37,9 @@ fn retain(
             .filter(|path| !path.is_empty())
             .ok_or_else(|| invalid("merge reload current path"))?;
         crate::checkout::plan::relative_path(path)?;
+        if path == ".bitmap" {
+            return Err(invalid("merge reload nested bitmap"));
+        }
         if files
             .iter()
             .any(|file| file["relativePath"].as_str().map(str::trim) == Some(path))

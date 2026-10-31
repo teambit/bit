@@ -153,6 +153,8 @@ fn aspect_exports(manifest: &mut Value) -> io::Result<()> {
     if default.as_ref().is_some_and(truthy) {
         exports.shift_remove("default");
     }
+    let trimmed = types.trim();
+    let types = trimmed.strip_prefix("./").unwrap_or(trimmed);
     let types = format!("./{types}");
     exports.insert("types".into(), value!(types));
     if let Some(default) = default {

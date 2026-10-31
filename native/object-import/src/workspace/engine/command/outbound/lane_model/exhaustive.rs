@@ -69,9 +69,19 @@ pub(super) fn workspace_entries(
             .iter()
             .find(|row| row["isSymlink"] != true && row["id"] == id)
             .ok_or_else(|| invalid("outbound non-staged component model missing"))?;
-        let hash = row["hash"].as_str().ok_or_else(|| invalid("outbound model hash"))?;
+        let hash = row["hash"]
+            .as_str()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
+            .ok_or_else(|| invalid("outbound model hash"))?;
         let component = model::read_object(&loaded.dir, hash, "Component")?;
-        let Some(head) = component["head"].as_str() else { continue };
+        let Some(head) = component["head"]
+            .as_str()
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
+        else {
+            continue;
+        };
         extra.push(json!({"id":id,"head":head}));
     }
     Ok(extra)

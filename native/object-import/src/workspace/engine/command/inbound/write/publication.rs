@@ -14,7 +14,9 @@ impl Prepared {
         self.check_bitmap("before publication")?;
         self.history.check(&self.root)?;
         for directory in &self.changes.empty_directories {
-            if !fs::symlink_metadata(directory)?.is_dir()
+            let metadata = fs::symlink_metadata(directory)?;
+            if !metadata.is_dir()
+                || metadata.file_type().is_symlink()
                 || fs::read_dir(directory)?.next().is_some()
             {
                 return Err(invalid("inbound workspace destination changed"));

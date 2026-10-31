@@ -83,7 +83,7 @@ fn remove_conflicts(prepared: &mut Prepared, removed: &Value) -> io::Result<()> 
 fn remove_rows(rows: &mut [Value], removed: &[Value]) {
     for entry in rows
         .iter_mut()
-        .filter(|entry| entry["id"] == projection::RESOLVER)
+        .filter(|entry| entry["id"].as_str().map(str::trim) == Some(projection::RESOLVER))
     {
         let Some(policy) = entry
             .get_mut("conflict")
@@ -93,7 +93,7 @@ fn remove_rows(rows: &mut [Value], removed: &[Value]) {
             continue;
         };
         for entries in policy.values_mut().filter_map(Value::as_array_mut) {
-            entries.retain(|entry| !removed.contains(&entry["name"]));
+            entries.retain(|entry| !is_removed_entry(entry, removed));
         }
         policy.retain(|_, entries| {
             entries
@@ -106,4 +106,16 @@ fn remove_rows(rows: &mut [Value], removed: &[Value]) {
             object.remove("conflict");
         }
     }
+}
+
+fn is_removed_entry(entry: &Value, removed: &[Value]) -> bool {
+    entry["name"]
+        .as_str()
+        .map(str::trim)
+        .is_some_and(|name| {
+            removed
+                .iter()
+                .filter_map(Value::as_str)
+                .any(|rem| rem.trim() == name)
+        })
 }

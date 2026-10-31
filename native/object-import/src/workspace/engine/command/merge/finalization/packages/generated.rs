@@ -15,9 +15,8 @@ pub(super) fn manifest(input: &Input<'_>, package_name: &str, snapshot: bool) ->
         validate_default_env(input.version)?;
         package_paths(input.version, main_file)?
     };
-    let version =
-        input.semantic_version.map_or_else(|| format!("0.0.0-{}", input.hash), str::to_owned);
-    let component_version = input.semantic_version.unwrap_or(input.hash);
+    let (version, component_version) = package_versions(input);
+    let package_name = package_name.trim();
     let mut fields = Map::new();
     fields.insert("name".into(), value!(package_name));
     fields.insert("version".into(), value!(version));
@@ -40,6 +39,15 @@ pub(super) fn manifest(input: &Input<'_>, package_name: &str, snapshot: bool) ->
     fields.insert("_bit_local".into(), value!(true));
     fields.insert("source".into(), value!(main_file));
     Ok(Value::Object(fields))
+}
+
+fn package_versions<'a>(input: &'a Input<'_>) -> (String, &'a str) {
+    let hash = input.hash.trim();
+    let semantic = input.semantic_version
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty());
+    let version = semantic.map_or_else(|| format!("0.0.0-{hash}"), str::to_owned);
+    (version, semantic.unwrap_or(hash))
 }
 
 fn parse_package_identity(identity: &str) -> io::Result<(&str, &str)> {

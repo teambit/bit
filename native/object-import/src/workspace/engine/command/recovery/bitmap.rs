@@ -63,9 +63,10 @@ fn project_with(
 fn validate(config: &Value) -> io::Result<()> {
     let rows = config.as_object().ok_or_else(|| invalid("recovery bitmap configuration"))?;
     for (name, value) in rows {
-        let bare = match name.split_once('@') {
-            Some((prefix, _)) if !prefix.is_empty() => prefix,
-            _ => name.as_str(),
+        let trimmed = name.trim();
+        let bare = match trimmed.split_once('@') {
+            Some((prefix, _)) if !prefix.trim().is_empty() => prefix.trim(),
+            _ => trimmed,
         };
         if !matches!(
             bare,

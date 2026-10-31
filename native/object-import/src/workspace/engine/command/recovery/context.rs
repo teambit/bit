@@ -275,6 +275,7 @@ fn validate_pending_configuration(
     Ok(())
 }
 fn matches_target(request: &Prepare, target: &Value, identity: &str, marked: bool) -> bool {
+    let identity = identity.trim();
     request.options.pattern
         .as_deref()
         .map(str::trim)
@@ -283,8 +284,8 @@ fn matches_target(request: &Prepare, target: &Value, identity: &str, marked: boo
             identity == pattern
                 || identity
                     .split_once('/')
-                    .is_some_and(|(_, name)| name == pattern)
-                || target["directory"] == pattern
+                    .is_some_and(|(_, name)| name.trim() == pattern)
+                || target["directory"].as_str().map(str::trim) == Some(pattern)
         })
 }
 fn pending_id(row: &Value) -> Option<String> {

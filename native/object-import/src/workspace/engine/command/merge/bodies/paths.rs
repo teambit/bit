@@ -27,11 +27,12 @@ pub(super) fn validate(root: &Path, path: &Path) -> io::Result<()> {
 
 fn canonical_relative(path: &Path) -> io::Result<()> {
     let raw = path.to_str().ok_or_else(|| invalid("merge nonUTF8 path"))?;
-    if raw.is_empty()
+    if raw.trim().is_empty()
         || raw.len() > 4096
+        || raw.chars().any(char::is_control)
         || raw
             .split(std::path::is_separator)
-            .any(|segment| segment == ".")
+            .any(|segment| segment.trim().is_empty() || segment == ".")
     {
         return Err(invalid("merge nonrelative destination"));
     }

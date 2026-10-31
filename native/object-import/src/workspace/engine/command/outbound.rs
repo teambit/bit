@@ -344,18 +344,18 @@ fn validate(input: &Prepare) -> io::Result<()> {
             return Err(invalid("outbound absolute paths"));
         }
     }
-    if input.operation != "export"
+    if input.operation.trim() != "export"
         || input.ids.len() > 4096
-        || input.transport.bit_version.is_empty()
-        || input.transport.client_id.is_empty()
-        || input.transport.export_date.is_empty()
+        || input.transport.bit_version.trim().is_empty()
+        || input.transport.client_id.trim().is_empty()
+        || input.transport.export_date.trim().is_empty()
         || input.transport.token.is_some()
     {
         return Err(invalid("outbound command requires canonical lifecycle"));
     }
     if input.options.resume
         .as_deref()
-        .is_some_and(|resume| resume != input.transport.client_id)
+        .is_some_and(|resume| resume.trim() != input.transport.client_id.trim())
     {
         return Err(invalid("outbound command requires canonical lifecycle"));
     }

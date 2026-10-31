@@ -192,14 +192,17 @@ pub(in crate::workspace::engine::command) fn preflight(
 }
 
 fn preflight_head<'a>(input: &'a Input<'_>) -> io::Result<&'a str> {
+    let identity = input.identity.trim();
     input.lane
         .and_then(|lane| lane["targets"].as_array())
         .and_then(|rows| {
             rows.iter()
-                .find(|row| row["identity"] == input.identity)
+                .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
         })
         .map_or(&input.model["head"], |target| &target["currentHead"])
         .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
         .ok_or_else(|| invalid("snap preflight head"))
 }
 

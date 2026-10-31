@@ -93,10 +93,10 @@ fn detect_row(
     pool: &rayon::ThreadPool,
     overlay: &SourceOverlay,
 ) -> io::Result<Value> {
-    if row.identity != receipt.identity {
+    if row.identity.trim() != receipt.identity.trim() {
         return Err(invalid("command dependency detect identity"));
     }
-    let component_root = record.request.root.join(&row.baseline.directory);
+    let component_root = record.request.root.join(row.baseline.directory.trim());
     let request = serde_json::from_value(json!({"root":record.request.root,"componentRoot":component_root,
             "identity":format!("{}@{}",row.identity,row.baseline.version),"files":row.files.iter().map(|file| component_root.join(file)).collect::<Vec<_>>(),
             "detection":receipt.detection})).map_err(io::Error::other)?;

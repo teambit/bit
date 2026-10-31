@@ -58,7 +58,8 @@ fn lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
     let (scope, name) = identity
         .trim()
         .split_once('/')
-        .map(|(scope, name)| (scope.trim(), name.trim()))?;
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())?;
     context["lane"]["current"]["value"]["components"]
         .as_array()?
         .iter()

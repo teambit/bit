@@ -99,7 +99,11 @@ fn promoted_identity(key: &str, row: &serde_json::Value) -> io::Result<String> {
             key_id
                 .strip_prefix(&format!("{scope}/"))
                 .unwrap_or(key_id)
+                .trim()
         });
+    if name.is_empty() {
+        return Err(invalid("outbound lane promoted name"));
+    }
     Ok(format!("{scope}/{name}"))
 }
 

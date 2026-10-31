@@ -128,8 +128,8 @@ fn acknowledge(retained: &mut Retained, data: &Value) -> io::Result<Vec<String>>
 }
 
 fn job_url(domain: &str, lane: Option<&str>, job: &str) -> String {
-    let domain = domain.trim();
-    let job = job.trim();
+    let domain = domain.trim().trim_end_matches('/');
+    let job = job.trim().trim_start_matches('/');
     match lane
         .map(str::trim)
         .filter(|lane| !lane.is_empty())

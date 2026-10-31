@@ -47,6 +47,9 @@ fn selected_update_ids(selected: &LaneSelected) -> io::Result<Vec<String>> {
             let (identity, _) =
                 id.rsplit_once('@').ok_or_else(|| invalid("outbound lane update-dependent id"))?;
             let identity = identity.trim();
+            if identity.is_empty() {
+                return Err(invalid("outbound lane update-dependent id"));
+            }
             Ok(selected_ids.contains(identity).then(|| identity.to_owned()))
         })
         .collect::<io::Result<Vec<_>>>()
@@ -61,7 +64,8 @@ pub(super) fn missing(report: &Reported, bitmap: &Value, exported_ids: &[String]
             let trimmed = id.trim();
             let identity =
                 trimmed.rsplit_once('@').map_or(trimmed, |(identity, _)| identity.trim());
-            if !seen.insert(identity)
+            if identity.is_empty()
+                || !seen.insert(identity)
                 || report.updates
                     .iter()
                     .chain(&report.removed)
@@ -69,9 +73,12 @@ pub(super) fn missing(report: &Reported, bitmap: &Value, exported_ids: &[String]
             {
                 return None;
             }
-            let (scope, name) = identity.split_once('/')?;
+            let (scope, name) = identity
+                .split_once('/')
+                .map(|(scope, name)| (scope.trim(), name.trim()))
+                .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())?;
             let present = super::super::publication::reconcile_present(bitmap, scope, name);
-            (!present).then(|| identity.to_owned())
+            (!present).then(|| format!("{scope}/{name}"))
         })
         .collect()
 }

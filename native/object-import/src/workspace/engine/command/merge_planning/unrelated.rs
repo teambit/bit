@@ -68,7 +68,7 @@ fn one(
         .ok_or_else(|| invalid("unrelated merge requires current lane"))?;
     let choice = &selected.distance["unrelated"];
     let relation = relation(selected, lane, choice)?;
-    let theirs = choice["strategy"] == "theirs";
+    let theirs = choice["strategy"].as_str().map(str::trim) == Some("theirs");
     let material = if theirs {
         target(record, planned, selected, index, snapshots, relation.clone())?
     } else {
@@ -97,11 +97,12 @@ fn one(
 
 fn relation(selected: &Selected, lane: &Value, choice: &Value) -> io::Result<Value> {
     let reference = |field: &str| -> io::Result<&str> {
-        match choice[field].as_str().map(str::trim) {
-            Some("current") => Ok(&selected.current_hash),
-            Some("other") => Ok(&selected.remote),
-            _ => Err(invalid("unrelated head selector")),
-        }
+        let head = match choice[field].as_str().map(str::trim) {
+            Some("current") => selected.current_hash.trim(),
+            Some("other") => selected.remote.trim(),
+            _ => return Err(invalid("unrelated head selector")),
+        };
+        (!head.is_empty()).then_some(head).ok_or_else(|| invalid("unrelated head selector"))
     };
     let lane_id = match choice["lane"].as_str().map(str::trim) {
         Some("current") => {

@@ -144,18 +144,20 @@ fn replace_message(
     message: &str,
     receipt: &Value,
 ) -> io::Result<()> {
+    let hash = hash.trim();
     let receipts = receipt["squashMessages"]
         .as_array()
         .ok_or_else(|| invalid("squash message date receipts"))?;
     let dates = receipts
         .iter()
-        .filter(|entry| entry["hash"] == hash)
+        .filter(|entry| entry["hash"].as_str().map(str::trim) == Some(hash))
         .collect::<Vec<_>>();
     if dates.len() != 1 {
         return Err(invalid("squash message date identity"));
     }
     let date = dates[0]["date"]
         .as_str()
+        .map(str::trim)
         .filter(|date| date.parse::<u64>().is_ok())
         .ok_or_else(|| invalid("squash message modification date"))?;
     let previous = version["log"]["message"]

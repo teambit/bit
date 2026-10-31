@@ -47,6 +47,9 @@ impl Prepared {
         Ok(())
     }
     fn capture_component(&mut self, objects: &Path, row: &Value) -> io::Result<()> {
+        if row["isSymlink"] == true {
+            return Ok(());
+        }
         let model = row["hash"]
             .as_str()
             .map(str::trim)

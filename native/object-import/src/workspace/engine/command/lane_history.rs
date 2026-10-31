@@ -108,6 +108,7 @@ pub(super) fn extend_proofs(
         let retained =
             state.histories.checkout.as_ref().ok_or_else(|| invalid("history owner absent"))?;
         proofs.extend(retained.proofs.iter().cloned());
+        *proofs = proof::unique(std::mem::take(proofs));
     }
     Ok(())
 }

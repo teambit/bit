@@ -331,6 +331,7 @@ fn windows_source_link(
 }
 
 fn exported(root: &Path, directory: &str, output: &mut Prepared) -> io::Result<bool> {
+    let directory = directory.trim();
     let bytes = proof::read(&root.join(".bitmap"), &mut output.proofs)?
         .ok_or_else(|| invalid("snapshot package bitmap missing"))?;
     let bitmap = crate::recovery::jsonc::parse(&bytes)?;
@@ -339,12 +340,12 @@ fn exported(root: &Path, directory: &str, output: &mut Prepared) -> io::Result<b
         .and_then(|entries| {
             entries
                 .values()
-                .find(|entry| entry["rootDir"] == directory)
+                .find(|entry| entry["rootDir"].as_str().map(str::trim) == Some(directory))
         })
         .ok_or_else(|| invalid("snapshot package bitmap entry"))?;
     Ok(entry["scope"]
         .as_str()
-        .is_some_and(|scope| !scope.is_empty()))
+        .is_some_and(|scope| !scope.trim().is_empty()))
 }
 
 fn update_manifest_versions(
@@ -385,6 +386,6 @@ pub(super) fn tracked_manifest(version: &Value) -> bool {
         .is_some_and(|files| {
             files
                 .iter()
-                .any(|file| file["relativePath"] == "package.json")
+                .any(|file| file["relativePath"].as_str().map(str::trim) == Some("package.json"))
         })
 }

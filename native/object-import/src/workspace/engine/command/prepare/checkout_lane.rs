@@ -63,7 +63,8 @@ pub(super) fn attach(
     }
     let current_id = super::super::lane_context::current_id(&bitmap, &context["scope"])?;
     let imported = imported.ok_or_else(|| invalid("checkout lane import owner"))?;
-    let current = if request.options.to.as_deref() == Some("head") {
+    let to_head = request.options.to.as_deref().map(str::trim) == Some("head");
+    let current = if to_head {
         imported.resolve_other_lane(&current_id, false)?
     } else {
         imported.load_lane(&current_id)?
@@ -75,7 +76,7 @@ pub(super) fn attach(
     context["lane"] = json!({"currentId":current_id,"current":current});
     let inactive = inactive_targets(request, context, &bitmap, &current, pool)?;
     context["lane"]["inactiveTargets"] = json!(inactive);
-    let additions = if request.options.to.as_deref() == Some("head") {
+    let additions = if to_head {
         additions(request, context, imported, &bitmap, &current)?
     } else {
         Additions::default()

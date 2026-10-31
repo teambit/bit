@@ -64,19 +64,22 @@ pub(super) fn select(
 }
 
 fn observation(input: &Input<'_>, observe: &str) -> io::Result<Value> {
+    let target_id = input.target["identity"].as_str().map(str::trim);
     match observe {
         "model" => Ok(json!({"present":input.model.is_some()})),
         "unmerged" => Ok(json!({"present":false})),
         "incoming" => Ok(
-            json!({"removed":removed(input.incoming)?,"onLane":input.lane.and_then(|lane| lane["targets"].as_array()).and_then(|rows| rows.iter().find(|row| row["identity"] == input.target["identity"])).is_some_and(|target| matches!(target["currentSource"].as_str(),Some("visible" | "hidden"))),"bitmapPresent":input.target["bitmapPresent"] != false,"currentLanePresent":input.lane.is_some_and(|lane| !lane["current"].is_null())}),
+            json!({"removed":removed(input.incoming)?,"onLane":input.lane.and_then(|lane| lane["targets"].as_array()).and_then(|rows| rows.iter().find(|row| row["identity"].as_str().map(str::trim) == target_id)).is_some_and(|target| matches!(target["currentSource"].as_str().map(str::trim),Some("visible" | "hidden"))),"bitmapPresent":input.target["bitmapPresent"] != false,"currentLanePresent":input.lane.is_some_and(|lane| !lane["current"].is_null())}),
         ),
         "currentId" => Ok(
-            json!({"present":input.lane.and_then(|lane| lane["targets"].as_array()).and_then(|rows| rows.iter().find(|row| row["identity"] == input.target["identity"])).is_none_or(|target| target["currentIdPresent"] == true)}),
+            json!({"present":input.lane.and_then(|lane| lane["targets"].as_array()).and_then(|rows| rows.iter().find(|row| row["identity"].as_str().map(str::trim) == target_id)).is_none_or(|target| target["currentIdPresent"] == true)}),
         ),
         "removeOnMain" => Ok(json!({"removeOnMain":remove_on_main(input.incoming)})),
-        "mainHead" => {
-            Ok(json!({"present":input.model.is_some_and(|model| model["head"].is_string())}))
-        }
+        "mainHead" => Ok(json!({
+            "present": input.model.is_some_and(|model| {
+                model["head"].as_str().is_some_and(|head| !head.trim().is_empty())
+            }),
+        })),
         "locallyRemoved" => Ok(json!({
             "removed": crate::workspace::engine::client_status::config::is_config_removed(
                 &input.target["bitmapConfig"],

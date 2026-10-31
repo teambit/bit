@@ -75,7 +75,10 @@ pub(in crate::workspace::engine::command) fn extensions(
 fn apply_slots(entries: &mut Vec<Value>, defaults: &Defaults) -> io::Result<()> {
     let mut seen = HashSet::new();
     for slot in &defaults.slot_data {
-        let name = slot["id"].as_str().ok_or_else(|| invalid("command default slot identity"))?;
+        let name = slot["id"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("command default slot identity"))?;
         if !CORES[3..].contains(&name) || !seen.insert(name) {
             return Err(invalid("command unsupported default slot"));
         }
@@ -85,9 +88,14 @@ fn apply_slots(entries: &mut Vec<Value>, defaults: &Defaults) -> io::Result<()> 
             .find(|row| row["name"] == name)
             .unwrap()["data"];
         for key in array(&slot["undefinedKeys"])? {
+            let key_name = key
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+                .ok_or_else(|| invalid("command undefined data key"))?;
             data.as_object_mut()
                 .unwrap()
-                .remove(key.as_str().ok_or_else(|| invalid("command undefined data key"))?);
+                .remove(key_name);
         }
     }
     if seen.len() != CORES.len() - 3 {

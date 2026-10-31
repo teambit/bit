@@ -28,6 +28,12 @@ impl State {
             json!({"mode":"status","count":count,"importMain":false}),
             &mut native,
         )?;
+        if journal["token"]
+            .as_str()
+            .is_none_or(|token| token.trim().is_empty())
+        {
+            return Err(invalid("command merge transaction token"));
+        }
         Ok(Self { native, journal })
     }
     pub(super) fn owner(&self) -> &Value {

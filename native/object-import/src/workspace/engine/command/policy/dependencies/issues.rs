@@ -15,7 +15,12 @@ pub(super) fn capture(
         .filter(|issue| {
             !issue["type"]
                 .as_str()
-                .is_some_and(|kind| ignored.iter().any(|name| name == kind))
+                .map(str::trim)
+                .is_some_and(|kind| {
+                    ignored
+                        .iter()
+                        .any(|name| name.trim() == kind)
+                })
         })
         .cloned()
         .collect();
@@ -23,7 +28,7 @@ pub(super) fn capture(
         return Ok(());
     }
     for issue in &issues {
-        if issue["type"] != "MissingManuallyConfiguredPackages" {
+        if issue["type"].as_str().map(str::trim) != Some("MissingManuallyConfiguredPackages") {
             return Err(invalid("command unsupported merged dependency issue"));
         }
         let data = parse_issue_packages(&issue["data"])?;
@@ -51,8 +56,14 @@ fn parse_issue_packages(data: &Value) -> io::Result<Vec<String>> {
             })
             .collect();
     }
-    serde_json::from_str(data.as_str().ok_or_else(|| invalid("command dependency issue data"))?)
-        .map_err(io::Error::other)
+    let parsed: Vec<String> = serde_json::from_str(
+        data.as_str().ok_or_else(|| invalid("command dependency issue data"))?,
+    )
+    .map_err(io::Error::other)?;
+    Ok(parsed
+        .into_iter()
+        .map(|item| item.trim().to_owned())
+        .collect())
 }
 
 pub(super) fn target(row: &Row, state: &Value, issues: &Value) -> io::Result<Value> {

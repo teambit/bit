@@ -67,18 +67,25 @@ fn reject_dependents(version: &Value, identities: &HashSet<&str>) -> io::Result<
         for dependency in
             version[field].as_array().ok_or_else(|| invalid("command merge dependencies"))?
         {
-            let id = &dependency["id"];
-            let identity = format!(
-                "{}/{}",
-                id["scope"].as_str().map_or("", str::trim),
-                id["name"].as_str().map_or("", str::trim),
-            );
+            let identity = dependency_identity(&dependency["id"]);
             if identities.contains(identity.as_str()) {
                 return Err(invalid("command merge dependent snap cascade"));
             }
         }
     }
     Ok(())
+}
+
+fn dependency_identity(id: &Value) -> String {
+    if let Some(raw) = id.as_str().map(str::trim) {
+        return raw
+            .rsplit_once('@')
+            .map_or(raw, |(bare, _)| bare.trim())
+            .to_owned();
+    }
+    let raw_name = id["name"].as_str().map_or("", str::trim);
+    let name = raw_name.rsplit_once('@').map_or(raw_name, |(bare, _)| bare.trim());
+    format!("{}/{name}", id["scope"].as_str().map_or("", str::trim))
 }
 
 fn validate_finalization(

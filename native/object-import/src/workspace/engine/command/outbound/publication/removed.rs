@@ -9,31 +9,40 @@ pub(super) fn read(bytes: &[u8]) -> io::Result<Vec<String>> {
     if rows.len() > 4096 {
         return Err(invalid("outbound removal configuration bounds"));
     }
-    rows.iter()
+    let mut ids = Vec::new();
+    for row in rows
+        .iter()
         .filter(|row| {
             crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
         })
-        .map(|row| {
-            if let Some(raw) = row["id"].as_str().map(str::trim) {
-                let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
-                let (scope, name) = bare
-                    .split_once('/')
-                    .map(|(scope, name)| (scope.trim(), name.trim()))
-                    .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
-                    .ok_or_else(|| invalid("outbound removal scope"))?;
-                return Ok(format!("{scope}/{name}"));
-            }
-            let scope = row["id"]["scope"]
-                .as_str()
-                .map(str::trim)
-                .filter(|scope| !scope.is_empty())
-                .ok_or_else(|| invalid("outbound removal scope"))?;
-            let name = row["id"]["name"]
-                .as_str()
-                .map(str::trim)
-                .filter(|name| !name.is_empty())
-                .ok_or_else(|| invalid("outbound removal name"))?;
-            Ok(format!("{scope}/{name}"))
-        })
-        .collect()
+    {
+        let id = parse_removed_id(row)?;
+        if !ids.contains(&id) {
+            ids.push(id);
+        }
+    }
+    Ok(ids)
+}
+
+fn parse_removed_id(row: &Value) -> io::Result<String> {
+    if let Some(raw) = row["id"].as_str().map(str::trim) {
+        let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
+        let (scope, name) = bare
+            .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid("outbound removal scope"))?;
+        return Ok(format!("{scope}/{name}"));
+    }
+    let scope = row["id"]["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty() && !scope.contains('/'))
+        .ok_or_else(|| invalid("outbound removal scope"))?;
+    let name = row["id"]["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("outbound removal name"))?;
+    Ok(format!("{scope}/{name}"))
 }

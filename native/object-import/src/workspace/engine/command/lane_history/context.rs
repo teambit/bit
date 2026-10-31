@@ -45,7 +45,7 @@ fn attach_versions(request: &super::super::input::Prepare, context: &mut Value) 
             .iter()
             .find(|(id, _)| row_id == Some(id.trim()))
             .ok_or_else(|| invalid("history target membership"))?;
-        row["historicalVersion"] = json!(version);
+        row["historicalVersion"] = json!(version.trim());
     }
     Ok(())
 }

@@ -16,6 +16,9 @@ pub(super) fn prepare(input: &Input<'_>, license: Option<&str>) -> io::Result<Op
     if directory.is_empty() {
         return Err(invalid("command license target directory"));
     }
+    if directory != "." {
+        crate::checkout::plan::relative_path(directory)?;
+    }
     let path = input.root.join(directory).join("LICENSE");
     validate_destination(&path, input.root)?;
     if contents.len() > 4 * 1024 * 1024 || contents.contains('\0') {

@@ -51,15 +51,15 @@ pub(super) fn prepare(
     {
         let current = &planned.captured[index];
         let directory = current.target.directory.trim();
-        if current.hidden || directory.is_empty() {
+        if current.hidden || directory.is_empty() || directory == "." {
             return Err(invalid("command removed component requires visible workspace files"));
         }
         prepared.publication.removed.push(Removed {
-            identity: current.target.identity.clone(),
+            identity: current.target.identity.trim().to_owned(),
             directory: directory.to_owned(),
         });
         if let Some(rows) = planned.result["removedComponents"].as_array_mut() {
-            rows.push(json!(current.target.identity));
+            rows.push(json!(current.target.identity.trim()));
         }
     }
     Ok(())

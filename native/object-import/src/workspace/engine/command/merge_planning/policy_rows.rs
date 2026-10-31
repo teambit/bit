@@ -101,6 +101,7 @@ pub(super) fn divergent(
 ) -> io::Result<()> {
     let prefix = current.target.current["bindingPrefix"]
         .as_str()
+        .map(str::trim)
         .ok_or_else(|| invalid("command binding prefix"))?;
     prepared.policy
         .as_mut()
@@ -136,8 +137,15 @@ pub(super) fn divergent(
 fn sorted_files(files: &[Value]) -> Vec<String> {
     let mut paths = files
         .iter()
-        .filter_map(|file| file["relativePath"].as_str().map(str::to_owned))
+        .filter_map(|file| {
+            file["relativePath"]
+                .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
+                .map(str::to_owned)
+        })
         .collect::<Vec<_>>();
     paths.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
+    paths.dedup();
     paths
 }

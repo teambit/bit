@@ -92,20 +92,25 @@ fn prepare_checkout_policy(
     let Some(receipt) = output.get("checkoutPolicyPreparation") else { return Ok(None) };
     let root = record.targets
         .iter()
-        .find(|target| target["directory"] == ".");
+        .find(|target| target["directory"].as_str().map(str::trim) == Some("."));
     if let Some(root) = root
         && planned.materials
             .iter()
             .any(|material| {
                 material.output["id"]
                     .as_str()
+                    .map(str::trim)
                     .is_some_and(|id| {
                         id.rsplit_once('@')
-                            .is_some_and(|(identity, _)| root["identity"] == identity)
+                            .is_some_and(|(identity, _)| {
+                                root["identity"].as_str().map(str::trim) == Some(identity.trim())
+                            })
                     })
                     && material.files
                         .iter()
-                        .any(|file| file["relativePath"] == "workspace.jsonc")
+                        .any(|file| {
+                            file["relativePath"].as_str().map(str::trim) == Some("workspace.jsonc")
+                        })
             })
     {
         return Err(invalid("command workspace config materialization overlaps policy"));

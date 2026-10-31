@@ -52,8 +52,18 @@ pub(in crate::workspace::engine::command) fn local<'a>(
         .as_array()?
         .iter()
         .find(|row| matches_row_identity(&row["id"], identity))
-        .and_then(|row| row["head"].as_str())
-        .or_else(|| model["head"].as_str())
+        .and_then(|row| {
+            row["head"]
+                .as_str()
+                .map(str::trim)
+                .filter(|head| !head.is_empty())
+        })
+        .or_else(|| {
+            model["head"]
+                .as_str()
+                .map(str::trim)
+                .filter(|head| !head.is_empty())
+        })
 }
 
 fn matches_row_identity(id_value: &Value, identity: &str) -> bool {
@@ -81,6 +91,9 @@ pub(in crate::workspace::engine::command) fn source<'a>(
     if super::phase(options).is_some() {
         local(context, identity, model)
     } else {
-        model["head"].as_str()
+        model["head"]
+            .as_str()
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
     }
 }

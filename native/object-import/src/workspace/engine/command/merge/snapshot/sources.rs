@@ -82,7 +82,12 @@ pub(super) fn dependencies_graph(
     version: &mut Value,
     objects: &mut Vec<Value>,
 ) -> io::Result<()> {
-    let Some(graph) = allocation.get("dependenciesGraph") else { return Ok(()) };
+    let Some(graph) = allocation
+        .get("dependenciesGraph")
+        .filter(|value| !value.is_null())
+    else {
+        return Ok(());
+    };
     let graph = graph.as_str().ok_or_else(|| invalid("command snap dependencies graph"))?;
     if graph.len() > 16 * 1024 * 1024 {
         return Err(invalid("command snap dependencies graph budget"));
@@ -124,7 +129,7 @@ fn source(version: &Value, file: &Value, budget: &Budget) -> io::Result<(Value, 
         .as_array()
         .and_then(|rows| {
             rows.iter()
-                .find(|row| row["relativePath"] == file["relativePath"])
+                .find(|row| row["relativePath"].as_str().map(str::trim) == Some(relative_path))
         })
         .and_then(|row| row.get("test"))
         .cloned()

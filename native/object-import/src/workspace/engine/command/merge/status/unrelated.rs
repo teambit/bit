@@ -52,24 +52,24 @@ fn target_identity(target: &Value) -> Option<String> {
     if let Some(identity) = target["identity"]
         .as_str()
         .or_else(|| target["id"].as_str())
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
-        return Some(
-            identity
-                .split('@')
-                .next()
-                .unwrap_or(identity)
-                .to_owned(),
-        );
+        let bare = identity.rsplit_once('@').map_or(identity, |(prefix, _)| prefix.trim());
+        if !bare.is_empty() {
+            return Some(bare.to_owned());
+        }
     }
     let object = target["id"].as_object()?;
     let name = object
         .get("name")?
         .as_str()
+        .map(str::trim)
         .filter(|value| !value.is_empty())?;
     match object
         .get("scope")
         .and_then(Value::as_str)
+        .map(str::trim)
         .filter(|value| !value.is_empty())
     {
         Some(scope) => Some(format!("{scope}/{name}")),

@@ -19,9 +19,11 @@ fn extension_identity(row: &Value) -> Option<&Value> {
         .into_iter()
         .flatten()
         .find(|value| {
-            !value.is_null()
-                && value
-                    .as_str()
-                    .is_none_or(|text| !text.trim().is_empty())
+            value
+                .as_str()
+                .is_some_and(|text| !text.trim().is_empty())
+                || value
+                    .as_object()
+                    .is_some_and(|map| !map.is_empty())
         })
 }

@@ -69,11 +69,12 @@ pub(super) fn configured_host(input: &Prepare, scope: &str) -> io::Result<String
 }
 
 fn check_file_remote(path: &Path, scope: &str) -> io::Result<()> {
-    if !path.is_absolute() || !fs::symlink_metadata(path)?.is_dir() {
+    let scope = scope.trim();
+    if scope.is_empty() || !path.is_absolute() || !fs::symlink_metadata(path)?.is_dir() {
         return Err(invalid("outbound file remote path"));
     }
     let config: Value = crate::parse_jsonc(&fs::read(path.join("scope.json"))?)?;
-    if config["name"] != scope {
+    if config["name"].as_str().map(str::trim) != Some(scope) {
         return Err(invalid("outbound file remote scope"));
     }
     group::id(&config)?;

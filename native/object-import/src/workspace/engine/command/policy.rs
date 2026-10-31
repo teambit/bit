@@ -281,12 +281,13 @@ fn activate_inactive(policy: &Prepared, context: &mut Value) -> io::Result<()> {
     let targets =
         context["targets"].as_array_mut().ok_or_else(|| invalid("command context targets"))?;
     for target in inactive {
+        let Some(id) = target["identity"].as_str().map(str::trim) else { continue };
         if policy.rows
             .iter()
-            .any(|row| row.identity == target["identity"] && !row.ours_conflict)
+            .any(|row| row.identity.trim() == id && !row.ours_conflict)
             && !targets
                 .iter()
-                .any(|current| current["identity"] == target["identity"])
+                .any(|current| current["identity"].as_str().map(str::trim) == Some(id))
         {
             targets.push(target);
         }
@@ -301,7 +302,9 @@ fn projected_targets(policy: &Prepared, context: &Value) -> io::Result<Vec<Value
         .map(|row| {
             let mut target = projection::array(&context["targets"])?
                 .iter()
-                .find(|target| target["identity"] == row.identity)
+                .find(|target| {
+                    target["identity"].as_str().map(str::trim) == Some(row.identity.trim())
+                })
                 .cloned()
                 .ok_or_else(|| invalid("command policy target"))?;
             target["files"] = json!(row.files);

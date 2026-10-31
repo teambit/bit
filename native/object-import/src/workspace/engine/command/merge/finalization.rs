@@ -307,7 +307,7 @@ impl Prepared {
 }
 fn has_license(value: &Value) -> bool {
     match value {
-        Value::String(text) => !text.is_empty(),
+        Value::String(text) => !text.trim().is_empty(),
         Value::Array(rows) => !rows.is_empty(),
         Value::Object(fields) => !fields.is_empty(),
         _ => false,

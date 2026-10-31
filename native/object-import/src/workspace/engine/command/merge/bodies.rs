@@ -122,7 +122,7 @@ impl State {
         if plan["hasConflicts"] == true && input.options.strategy.is_none() {
             return Err(invalid("command merge requires conflict prompt"));
         }
-        let target = if input.options.strategy.as_deref() == Some("theirs") {
+        let target = if input.options.strategy.as_deref().map(str::trim) == Some("theirs") {
             &input.sides[2]
         } else {
             &input.sides[1]
@@ -369,6 +369,8 @@ fn file_statuses(removals: &Value) -> io::Result<serde_json::Map<String, Value>>
             Ok((
                 row["relativePath"]
                     .as_str()
+                    .map(str::trim)
+                    .filter(|path| !path.is_empty())
                     .ok_or_else(|| invalid("command merge status path"))?
                     .to_owned(),
                 row["status"].clone(),

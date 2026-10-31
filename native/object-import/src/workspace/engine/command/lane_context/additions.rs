@@ -110,10 +110,11 @@ fn prepare_one(
     let existing = rows
         .iter()
         .find(|(key, row)| {
+            let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
             !key.starts_with('$')
                 && !matches!(key.as_str(), "_bit_lane" | "version")
                 && row.is_object()
-                && crate::reset_lane::bitmap::row_identity(key, row) == (Some(scope), name)
+                && (row_scope.map(str::trim), row_name.trim()) == (Some(scope), name)
         })
         .map(|(_, row)| row);
     let directory = match existing {

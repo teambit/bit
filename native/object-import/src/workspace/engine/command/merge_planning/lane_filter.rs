@@ -165,8 +165,16 @@ pub(super) fn capture_additions(
     for destination in &additions {
         let identity = format!(
             "{}/{}",
-            destination["scope"].as_str().ok_or_else(|| invalid("lane addition scope"))?,
-            destination["name"].as_str().ok_or_else(|| invalid("lane addition name"))?,
+            destination["scope"]
+                .as_str()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+                .ok_or_else(|| invalid("lane addition scope"))?,
+            destination["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|name| !name.is_empty())
+                .ok_or_else(|| invalid("lane addition name"))?,
         );
         if planned.captured
             .iter()
@@ -192,14 +200,17 @@ fn addition(
         .as_array()
         .and_then(|rows| {
             rows.iter()
-                .find(|row| row["identity"] == identity)
+                .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
         })
         .ok_or_else(|| invalid("lane addition target"))?;
     if target["currentIdPresent"] == false {
         super::capture::addition(identity, destination)
     } else {
-        let head =
-            target["currentHead"].as_str().ok_or_else(|| invalid("lane inactive current head"))?;
+        let head = target["currentHead"]
+            .as_str()
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
+            .ok_or_else(|| invalid("lane inactive current head"))?;
         let version = record.repository.read(head, "Version")?;
         let mut captured = super::capture::from_model(
             private,
@@ -212,6 +223,8 @@ fn addition(
         captured.hidden = false;
         destination["rootDir"]
             .as_str()
+            .map(str::trim)
+            .filter(|dir| !dir.is_empty())
             .ok_or_else(|| invalid("lane inactive destination"))?
             .clone_into(&mut captured.target.directory);
         Ok(captured)

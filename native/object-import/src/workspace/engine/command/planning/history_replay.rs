@@ -53,6 +53,12 @@ fn stage_heads<'a>(
 }
 
 fn resolves_heads(to: &str, model: &Value, head: Option<&str>, remote: Option<&str>) -> bool {
+    let head = head
+        .map(str::trim)
+        .filter(|val| !val.is_empty());
+    let remote = remote
+        .map(str::trim)
+        .filter(|val| !val.is_empty());
     let latest_without_tags = to == "latest"
         && model["versions"].as_object().is_none_or(serde_json::Map::is_empty)
         && model["orphanedVersions"].as_object().is_none_or(serde_json::Map::is_empty);

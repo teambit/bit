@@ -84,6 +84,7 @@ pub(in crate::workspace::engine::command) fn switch_targets(
         .clone();
     let default_scope = settings["defaultScope"]
         .as_str()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty());
     selected.remove("_bit_lane");
     selected.retain(|key, row| {
@@ -91,7 +92,10 @@ pub(in crate::workspace::engine::command) fn switch_targets(
             return true;
         }
         let (scope, name) = crate::reset_lane::bitmap::row_identity(key, row);
+        let name = name.trim();
         let identity = scope
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
             .or(default_scope)
             .filter(|_| !name.is_empty())
             .map(|sc| format!("{sc}/{name}"));

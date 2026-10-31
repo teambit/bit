@@ -28,6 +28,7 @@ fn files(value: &Value, model: bool) -> io::Result<BTreeMap<&str, &str>> {
             .map(str::trim)
             .filter(|path| !path.is_empty())
             .ok_or_else(|| invalid("reset Source comparison path"))?;
+        crate::checkout::plan::relative_path(path)?;
         // The canonical comparison ignores a stored bitmap outside workspace-root components.
         if model && path == ".bitmap" {
             continue;

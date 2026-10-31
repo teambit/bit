@@ -54,14 +54,14 @@ fn report_one(plan: &mut Planned, identity: &str, target: &Value) -> io::Result<
     let id = format!("{identity}@{version}");
     if !plan.materials
         .iter()
-        .any(|material| material.output["id"] == id)
+        .any(|material| material.output["id"].as_str().map(str::trim) == Some(id.as_str()))
     {
         return Err(invalid("reset missing materialization"));
     }
     let components = plan.result["components"]
         .as_array_mut()
         .ok_or_else(|| invalid("reset missing components"))?;
-    components.retain(|component| component["id"] != id);
+    components.retain(|component| component["id"].as_str().map(str::trim) != Some(id.as_str()));
     plan.result["failedComponents"]
         .as_array_mut()
         .ok_or_else(|| invalid("reset missing failures"))?

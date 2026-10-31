@@ -31,8 +31,10 @@ pub(super) fn nested_directories(root: &Path) -> io::Result<Vec<String>> {
     let rows = bitmap.as_object().ok_or_else(|| invalid("command root bitmap"))?;
     let mut nested = Vec::new();
     for (key, row) in rows {
-        if key.starts_with('$')
-            || matches!(key.as_str(), "_bit_lane" | "version")
+        let key = key.trim();
+        if key.is_empty()
+            || key.starts_with('$')
+            || matches!(key, "_bit_lane" | "version")
             || row["isAvailableOnCurrentLane"] == false
             || config::is_config_removed(&row["config"])
         {
@@ -48,6 +50,8 @@ pub(super) fn nested_directories(root: &Path) -> io::Result<Vec<String>> {
             nested.push(directory.to_owned());
         }
     }
+    nested.sort_unstable();
+    nested.dedup();
     Ok(nested)
 }
 

@@ -103,7 +103,7 @@ fn collect_known_ids(expected_ids: &HashSet<String>, selected: &[Selected]) -> H
             .flat_map(|item| {
                 item.history.hashes
                     .iter()
-                    .map(|hash| format!("{}/{}@{hash}", item.scope, item.name))
+                    .map(|hash| format!("{}/{}@{}", item.scope, item.name, hash.trim()))
             }),
     );
     known_ids
@@ -115,19 +115,13 @@ fn prepare_output(
     preimage: &Preimage,
     refs: BTreeMap<String, Vec<u8>>,
 ) -> io::Result<Output> {
-    let removed_ids = match preimage.staged_config.as_deref() {
-        Some(bytes) => removed::read(bytes)?,
-        None => Vec::new(),
-    };
+    let removed_ids = preimage.staged_config
+        .as_deref()
+        .map_or_else(|| Ok(Vec::new()), removed::read)?;
+    let strict = !(input.options.all || input.options.all_versions);
     let staged_config = preimage.staged_config
         .as_deref()
-        .map(|bytes| {
-            prepare_staged_config(
-                bytes,
-                selected,
-                !(input.options.all || input.options.all_versions),
-            )
-        })
+        .map(|bytes| prepare_staged_config(bytes, selected, strict))
         .transpose()?;
     Ok(Output {
         staged: false,
@@ -155,7 +149,11 @@ fn validate_selected(
     if scopes.len() != hosts.len()
         || scopes
             .iter()
-            .any(|scope| hosts.get(scope).is_none_or(String::is_empty))
+            .any(|scope| {
+                hosts
+                    .get(scope)
+                    .is_none_or(|host| host.trim().is_empty())
+            })
     {
         return Err(invalid("outbound remote hosts"));
     }
@@ -173,6 +171,8 @@ fn expected_ids(selected: &[Selected]) -> io::Result<HashSet<String>> {
         .flat_map(|item| {
             item.labels
                 .iter()
+                .map(|label| label.trim())
+                .filter(|label| !label.is_empty())
                 .map(|label| format!("{}/{}@{label}", item.scope, item.name))
         })
         .collect::<HashSet<_>>();

@@ -1,7 +1,6 @@
 //! Local-only eligibility before providers; authoritative preparation repeats these reads.
 use super::{Options, Target, directories, existing, invalid, new_directory, target_directories};
 use serde_json::Value;
-use sha1::{Digest, Sha1};
 use std::{io, path::Path};
 
 pub(in super::super) fn check(
@@ -58,10 +57,7 @@ fn existing_target(
     else {
         return Ok(());
     };
-    let hash = crate::validate::hexadecimal(&Sha1::digest(
-        format!("{scope}/{}", target.name.trim()).as_bytes(),
-    ));
-    let Some(model) = super::super::details::local_object(root, &hash, "Component")? else {
+    let Some(model) = find_existing_model(root, scope, target.name.trim())? else {
         return Ok(());
     };
     if options.merge_strategy.is_some() && has_local_versions(&model) {
@@ -76,6 +72,17 @@ fn existing_target(
         return Ok(());
     }
     check_sources(root, row, &version)
+}
+
+fn find_existing_model(root: &Path, scope: &str, name: &str) -> io::Result<Option<Value>> {
+    for hash in
+        super::super::details::candidate_component_hashes(&crate::scope_path(root), scope, name)
+    {
+        if let Some(found) = super::super::details::local_object(root, &hash, "Component")? {
+            return Ok(Some(found));
+        }
+    }
+    Ok(None)
 }
 
 fn has_local_versions(model: &Value) -> bool {

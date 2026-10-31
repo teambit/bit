@@ -72,19 +72,27 @@ pub(super) fn select_pattern(targets: &[Value], pattern: &str) -> io::Result<Vec
 }
 
 fn matches_identity(target: &Value, pattern: &str) -> bool {
+    let pattern = pattern.trim();
     let bare = pattern
         .split('@')
         .next()
         .unwrap_or(pattern)
+        .trim()
         .trim_end_matches('/');
     target["identity"]
         .as_str()
         .or_else(|| target["id"].as_str())
-        .map(|raw| raw.split('@').next().unwrap_or(raw))
+        .map(str::trim)
+        .map(|raw| {
+            raw.split('@')
+                .next()
+                .unwrap_or(raw)
+                .trim()
+        })
         .is_some_and(|identity| {
             identity == bare
                 || identity
                     .split_once('/')
-                    .is_some_and(|(_, name)| name == bare)
+                    .is_some_and(|(_, name)| name.trim() == bare)
         })
 }

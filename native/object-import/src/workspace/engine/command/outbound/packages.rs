@@ -147,15 +147,22 @@ fn component(
 }
 
 fn resolve_version_hash<'a>(target: &'a Value, model: &'a Value) -> io::Result<&'a str> {
-    let version_id = target["version"].as_str().ok_or_else(|| invalid("export package version"))?;
-    Ok(if matches!(version_id, "" | "latest" | "head") {
-        model["head"].as_str().unwrap_or(version_id)
+    let version_id = target["version"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("export package version"))?;
+    let resolved = if matches!(version_id, "" | "latest" | "head") {
+        model["head"].as_str().map_or(version_id, str::trim)
     } else {
         model["versions"][version_id]
             .as_str()
             .or_else(|| model["orphanedVersions"][version_id].as_str())
-            .unwrap_or(version_id)
-    })
+            .map_or(version_id, str::trim)
+    };
+    if resolved.is_empty() {
+        return Err(invalid("export package version"));
+    }
+    Ok(resolved)
 }
 
 fn projection(
@@ -164,15 +171,26 @@ fn projection(
     version: &Value,
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<Value> {
-    let identity = target["identity"].as_str().ok_or_else(|| invalid("export package identity"))?;
-    let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("export package scope"))?;
-    let directory =
-        target["directory"].as_str().ok_or_else(|| invalid("export package directory"))?;
+    let identity = target["identity"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("export package identity"))?;
+    let (scope, name) = identity
+        .split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("export package scope"))?;
+    let directory = target["directory"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("export package directory"))?;
     crate::checkout::plan::relative_path(directory)?;
     let resolver = data(version, "teambit.dependencies/dependency-resolver")
         .ok_or_else(|| invalid("export package resolver"))?;
-    let package_name =
-        resolver["packageName"].as_str().ok_or_else(|| invalid("export package name"))?;
+    let package_name = resolver["packageName"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("export package name"))?;
     crate::checkout::plan::relative_path(package_name)?;
     let mut target = target.clone();
     let component = input.root.join(directory).join("component.json");

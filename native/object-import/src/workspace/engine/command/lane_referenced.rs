@@ -54,10 +54,16 @@ impl Projection<'_> {
             return Ok(Some(value));
         }
         let model = repository.read_component(identity)?;
-        let Some(hash) = model["head"].as_str() else { return Ok(None) };
+        let Some(hash) = model["head"]
+            .as_str()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
+        else {
+            return Ok(None);
+        };
         let value = self.rebased
             .iter()
-            .find(|(id, reference, _)| id == identity && reference == hash)
+            .find(|(id, reference, _)| id.trim() == identity && reference.trim() == hash)
             .map_or_else(
                 || repository.read(hash, "Version"),
                 |(_, _, version)| Ok(version.clone()),
@@ -67,7 +73,7 @@ impl Projection<'_> {
     fn projected(&self, identity: &str) -> Option<Value> {
         if let Some(version) = self.snapshots
             .iter()
-            .find(|row| row["identity"] == identity)
+            .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
         {
             return Some(version["version"].clone());
         }
@@ -76,13 +82,13 @@ impl Projection<'_> {
             .find(|material| {
                 material.output["id"]
                     .as_str()
-                    .and_then(|id| id.rsplit_once('@'))
-                    .is_some_and(|(id, _)| id == identity)
+                    .and_then(|id| id.trim().rsplit_once('@'))
+                    .is_some_and(|(id, _)| id.trim() == identity)
             })
             .map(|material| {
                 self.rebased
                     .iter()
-                    .find(|(id, _, _)| id == identity)
+                    .find(|(id, _, _)| id.trim() == identity)
                     .map_or_else(|| material.version.clone(), |(_, _, version)| version.clone())
             })
     }

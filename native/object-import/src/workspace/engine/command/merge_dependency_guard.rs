@@ -146,14 +146,19 @@ fn reserve(bytes: usize, budget: &AtomicUsize) -> io::Result<()> {
     Ok(())
 }
 fn read_current(row: &Value, budget: &AtomicUsize) -> io::Result<Source> {
-    let path =
-        Path::new(row["path"].as_str().ok_or_else(|| invalid("merge dependency current path"))?);
+    let path = Path::new(
+        row["path"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| invalid("merge dependency current path"))?,
+    );
     let mut bytes = Vec::new();
     fs::File::open(path)?
         .take(MAX_FILE as u64 + 1)
         .read_to_end(&mut bytes)?;
     reserve(bytes.len(), budget)?;
-    if super::super::hash(&bytes) != row["rawHash"] {
+    if row["rawHash"].as_str().map(str::trim) != Some(super::super::hash(&bytes).as_str()) {
         return Err(invalid("merge dependency stale current"));
     }
     Ok(Source { proof: Some(proof::content(path, &bytes)), bytes })
@@ -161,7 +166,11 @@ fn read_current(row: &Value, budget: &AtomicUsize) -> io::Result<Source> {
 fn read_merged(row: &Value, budget: &AtomicUsize) -> io::Result<Source> {
     let source = &row["source"];
     let path = Path::new(
-        source["spoolPath"].as_str().ok_or_else(|| invalid("merge dependency spool path"))?,
+        source["spoolPath"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| invalid("merge dependency spool path"))?,
     );
     let size = source["bytes"].as_u64().ok_or_else(|| invalid("merge dependency spool size"))?;
     if size > MAX_FILE as u64 {
@@ -172,7 +181,9 @@ fn read_merged(row: &Value, budget: &AtomicUsize) -> io::Result<Source> {
     let mut bytes = Vec::new();
     file.take(size).read_to_end(&mut bytes)?;
     reserve(bytes.len(), budget)?;
-    if bytes.len() as u64 != size || super::super::hash(&bytes) != source["spoolHash"] {
+    if bytes.len() as u64 != size
+        || source["spoolHash"].as_str().map(str::trim) != Some(super::super::hash(&bytes).as_str())
+    {
         return Err(invalid("merge dependency stale spool"));
     }
     Ok(Source { proof: None, bytes })
@@ -183,6 +194,8 @@ fn spool_proofs(files: &[Value]) -> io::Result<Vec<proof::Proof>> {
     for row in files {
         let path = row["source"]["spoolPath"]
             .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
             .ok_or_else(|| invalid("merge dependency spool path"))?;
         if seen.insert(path) {
             proof::read(Path::new(path), &mut proofs)?

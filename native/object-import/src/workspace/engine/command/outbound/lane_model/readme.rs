@@ -11,6 +11,10 @@ pub(super) fn validate(lane: &Value, name: &str) -> io::Result<()> {
         return Ok(());
     };
     let readme_id = id_pair(&readme["id"]);
+    let readme_head = readme["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty());
     let present = lane["components"]
         .as_array()
         .is_some_and(|components| {
@@ -19,10 +23,8 @@ pub(super) fn validate(lane: &Value, name: &str) -> io::Result<()> {
                 .any(|component| {
                     (component["id"] == readme["id"]
                         || readme_id.is_some() && id_pair(&component["id"]) == readme_id)
-                        && readme["head"]
-                            .as_str()
-                            .is_some_and(|head| !head.is_empty())
-                        && component["head"] == readme["head"]
+                        && readme_head.is_some()
+                        && component["head"].as_str().map(str::trim) == readme_head
                 })
         });
     if present {
@@ -32,12 +34,13 @@ pub(super) fn validate(lane: &Value, name: &str) -> io::Result<()> {
 }
 
 fn id_pair(value: &Value) -> Option<(&str, &str)> {
-    if let Some(raw) = value.as_str().map(str::trim) {
-        return raw
-            .rsplit_once('@')
+    let (scope, name) = if let Some(raw) = value.as_str().map(str::trim) {
+        raw.rsplit_once('@')
             .map_or(raw, |(base, _)| base.trim())
             .split_once('/')
-            .map(|(scope, name)| (scope.trim(), name.trim()));
-    }
-    Some((value["scope"].as_str()?.trim(), value["name"].as_str()?.trim()))
+            .map(|(scope, name)| (scope.trim(), name.trim()))?
+    } else {
+        (value["scope"].as_str()?.trim(), value["name"].as_str()?.trim())
+    };
+    (!scope.is_empty() && !name.is_empty()).then_some((scope, name))
 }

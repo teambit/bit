@@ -294,6 +294,8 @@ fn load_base(
             .as_array()
             .and_then(|parents| parents.first())
             .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|parent| !parent.is_empty())
         {
             Some(parent) => parent.to_owned(),
             None => selection::versions::reference(model, &current.target.version)?,

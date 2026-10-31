@@ -48,6 +48,9 @@ impl Recovery {
         Ok(output)
     }
     pub(super) fn main_components(&mut self, models: &[Value]) -> io::Result<()> {
+        if models.len() > 4096 {
+            return Err(invalid("lane recovery component budget"));
+        }
         for (index, model) in models.iter().enumerate() {
             let (_, bytes) = encode_model(model)?;
             self.files.push((format!("main-components/{index}"), bytes));

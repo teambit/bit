@@ -139,14 +139,12 @@ fn select_distance(
     captured: &capture::Captured,
     selected: &Selected,
 ) -> io::Result<Value> {
+    let current_head = selected.current_head.trim();
     let mut distance = history.distance(
         &record.request.root,
         &captured.target.identity,
         &selected.model,
-        [
-            (!selected.current_head.is_empty()).then_some(selected.current_head.as_str()),
-            Some(&selected.remote),
-        ],
+        [(!current_head.is_empty()).then_some(current_head), Some(selected.remote.trim())],
         &mut record.repository,
     )?;
     unrelated::distance(record, history, selected, &captured.target.identity, &mut distance)?;

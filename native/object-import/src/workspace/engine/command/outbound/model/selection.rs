@@ -73,7 +73,10 @@ pub(super) struct Staged {
 pub(super) fn staged(model: &Value) -> io::Result<Staged> {
     let rows =
         model["state"]["versions"].as_object().ok_or_else(|| invalid("outbound local versions"))?;
-    let head = model["head"].as_str().ok_or_else(|| invalid("outbound non-head local Version"))?;
+    let head = model["head"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("outbound non-head local Version"))?;
     crate::merge_history::hash(head)?;
     let mut version = None;
     let mut hashes = Vec::new();
@@ -82,10 +85,13 @@ pub(super) fn staged(model: &Value) -> io::Result<Staged> {
         .iter()
         .filter(|(_, row)| row["local"] == true)
     {
+        let key = key.trim();
+        validate_label(key)?;
         // A tag names its Version through `versions`; a snap is its own hash.
         let hash = match model["versions"][key]
             .as_str()
             .or_else(|| model["orphanedVersions"][key].as_str())
+            .map(str::trim)
         {
             Some(hash) => hash,
             None if crate::merge_history::hash(key).is_ok() => key,
@@ -93,12 +99,12 @@ pub(super) fn staged(model: &Value) -> io::Result<Staged> {
         };
         crate::merge_history::hash(hash)?;
         if hash == head {
-            version = Some(key.clone());
+            version = Some(key.to_owned());
         }
         if !hashes.iter().any(|known| known == hash) {
             hashes.push(hash.to_owned());
         }
-        labels.push(key.clone());
+        labels.push(key.to_owned());
     }
     version.ok_or_else(|| invalid("outbound non-head local Version"))?;
     Ok(Staged { head: head.to_owned(), hashes, labels })

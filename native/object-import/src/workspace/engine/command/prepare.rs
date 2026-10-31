@@ -192,16 +192,18 @@ fn validate(request: &Prepare) -> io::Result<()> {
 
 fn invalid_lifecycle_options(request: &Prepare) -> io::Result<bool> {
     let options = &request.options;
+    let to = options.to.as_deref().map(str::trim);
     let invalid_strategy = options.strategy
         .as_deref()
+        .map(str::trim)
         .is_some_and(|value| !matches!(value, "ours" | "theirs" | "manual"));
-    let invalid_workspace_only = options.workspace_only
-        && (request.operation != Operation::Checkout || options.to.as_deref() != Some("head"));
+    let invalid_workspace_only =
+        options.workspace_only && (request.operation != Operation::Checkout || to != Some("head"));
     let conflicting_forces = options.force_ours && options.force_theirs;
     let interrupted = request.root.join("merge-conflict").try_exists()?;
     Ok(!options.skip_dependency_installation
         || options.scope.include_new_from_scope
-            && (request.operation != Operation::Checkout || options.to.as_deref() != Some("head"))
+            && (request.operation != Operation::Checkout || to != Some("head"))
         || !options.scope.include_new_from_scope
             && !options.scope.scope_candidates.is_empty()
         || invalid_workspace_only

@@ -91,15 +91,22 @@ pub(super) fn import_gap(record: &mut Record, selected: &mut [Selected]) -> io::
         .iter_mut()
         .filter(|selected| selected.action != Action::Unchanged)
     {
-        let identity = format!(
-            "{}/{}",
-            selected.model["scope"].as_str().map_or("", str::trim),
-            selected.model["name"].as_str().map_or("", str::trim),
-        );
+        let scope = selected.model["scope"]
+            .as_str()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| invalid("command merge gap scope"))?;
+        let name = selected.model["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("command merge gap name"))?;
+        let identity = format!("{scope}/{name}");
         let model = record.repository.read_component(&identity)?;
         refresh_model(selected, model)?;
-        if !selected.base.is_empty() {
-            selected.versions[0] = record.repository.read(&selected.base, "Version")?;
+        let base = selected.base.trim();
+        if !base.is_empty() {
+            selected.versions[0] = record.repository.read(base, "Version")?;
         }
     }
     Ok(())

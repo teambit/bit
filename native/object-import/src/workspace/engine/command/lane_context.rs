@@ -175,19 +175,21 @@ fn is_added_directory(context: &Value, scope: &[Value], stash: &[Value], relativ
         .is_some_and(|targets| {
             targets
                 .iter()
-                .any(|target| target["directory"] == relative)
+                .any(|target| target["directory"].as_str().map(str::trim) == Some(relative))
         })
         || scope
             .iter()
-            .any(|candidate| candidate["rootDir"] == relative)
+            .any(|candidate| candidate["rootDir"].as_str().map(str::trim) == Some(relative))
         || stash
             .iter()
-            .any(|candidate| candidate["rootDir"] == relative)
+            .any(|candidate| candidate["rootDir"].as_str().map(str::trim) == Some(relative))
 }
 
 fn directory_metadata(path: &std::path::Path) -> io::Result<Option<std::fs::Metadata>> {
     match std::fs::symlink_metadata(path) {
-        Ok(metadata) if metadata.is_dir() => Ok(Some(metadata)),
+        Ok(metadata) if metadata.is_dir() && !metadata.file_type().is_symlink() => {
+            Ok(Some(metadata))
+        }
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
         Err(error) => Err(error),
         _ => Err(invalid("lane addition nonordinary ancestor")),

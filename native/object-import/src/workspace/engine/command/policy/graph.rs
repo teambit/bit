@@ -53,11 +53,13 @@ fn direct(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
     let mut edges = Vec::<Value>::new();
     for (field, kind) in [("dependencies", "prod"), ("devDependencies", "dev")] {
         for dependency in projection::array(&version[field])? {
-            key(&dependency["id"])?;
+            let target_key = key(&dependency["id"])?;
             let edge = json!({"source":source,"target":dependency["id"],"type":kind});
             if let Some(previous) = edges
                 .iter_mut()
-                .find(|previous| previous["target"] == dependency["id"])
+                .find(|previous| {
+                    key(&previous["target"]).ok().as_deref() == Some(target_key.as_str())
+                })
             {
                 *previous = edge;
             } else {
@@ -76,11 +78,11 @@ fn extension_edges(source: &Value, version: &Value, edges: &mut Vec<Value>) -> i
             .or_else(|| extension.get("id"))
             .filter(|value| !value.is_null())
         {
-            key(id)?;
+            let target_key = key(id)?;
             let edge = json!({"source":source,"target":id,"type":"ext"});
             if let Some(existing) = edges
                 .iter_mut()
-                .find(|edge| edge["target"] == *id)
+                .find(|edge| key(&edge["target"]).ok().as_deref() == Some(target_key.as_str()))
             {
                 *existing = edge;
             } else {

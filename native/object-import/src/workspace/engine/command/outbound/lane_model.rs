@@ -296,27 +296,29 @@ struct ComponentId<'a> {
 
 impl<'a> ComponentId<'a> {
     fn parse(entry: &'a Value) -> io::Result<Self> {
-        let (scope, name) = if let Some(raw) = entry["id"].as_str() {
+        let (scope, name) = if let Some(raw) = entry["id"].as_str().map(str::trim) {
             raw.rsplit_once('@')
-                .map_or(raw, |(bare, _)| bare)
+                .map_or(raw, |(bare, _)| bare.trim())
                 .split_once('/')
+                .map(|(scope, name)| (scope.trim(), name.trim()))
                 .ok_or_else(|| invalid("outbound lane component scope"))?
         } else {
             let scope = entry["id"]["scope"]
                 .as_str()
                 .or_else(|| entry["scope"].as_str())
-                .filter(|val| !val.is_empty())
+                .map(str::trim)
                 .ok_or_else(|| invalid("outbound lane component scope"))?;
             let name = entry["id"]["name"]
                 .as_str()
                 .or_else(|| entry["name"].as_str())
-                .filter(|val| !val.is_empty())
+                .map(str::trim)
                 .ok_or_else(|| invalid("outbound lane component name"))?;
             (scope, name)
         };
         let head = entry["head"]
             .as_str()
             .or_else(|| entry["version"].as_str())
+            .map(str::trim)
             .ok_or_else(|| invalid("outbound lane head"))?;
         crate::merge_history::hash(head)?;
         if scope.is_empty() || name.is_empty() {
@@ -347,7 +349,10 @@ fn select_component(
     exhaustive: bool,
     selected: &mut Selection,
 ) -> io::Result<()> {
-    let hash = row["hash"].as_str().ok_or_else(|| invalid("outbound component model hash"))?;
+    let hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("outbound component model hash"))?;
     let dir = &context.loaded.dir;
     let mut component = model::read_object(dir, hash, "Component")?;
     if component["scope"] != id.scope || component["name"] != id.name {
@@ -371,13 +376,8 @@ fn select_component(
         }
     }
     selected.histories.push(history);
-    for object in model::collect(
-        dir,
-        hash,
-        &after,
-        &versions,
-        context.input.options.ignore_missing_artifacts,
-    )? {
+    let ignore_missing = context.input.options.ignore_missing_artifacts;
+    for object in model::collect(dir, hash, &after, &versions, ignore_missing)? {
         selected.append(object)?;
     }
     selected.models.push(model::ModelBytes { hash: hash.to_owned(), before, after });
@@ -386,14 +386,21 @@ fn select_component(
 }
 
 fn remote_heads(root: &Path, scope: &str, name: &str) -> io::Result<Vec<Value>> {
-    if scope.contains('/') || name.contains('/') || scope == ".." || name == ".." {
+    let (scope, name) = (scope.trim(), name.trim());
+    if scope.is_empty()
+        || name.is_empty()
+        || [scope, name]
+            .into_iter()
+            .any(|segment| matches!(segment, "." | "..") || segment.contains(['/', '\\', '\0']))
+    {
         return Err(invalid("outbound lane ref path"));
     }
-    let path = crate::scope_path(root)
-        .join("refs/remotes")
-        .join(scope)
-        .join(name);
-    match fs::read(path) {
+    match fs::read(
+        crate::scope_path(root)
+            .join("refs/remotes")
+            .join(scope)
+            .join(name),
+    ) {
         Ok(bytes) => crate::parse_jsonc(&bytes)
             .and_then(|val| serde_json::from_value(val).map_err(io::Error::other)),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Vec::new()),

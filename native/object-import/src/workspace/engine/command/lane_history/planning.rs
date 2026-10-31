@@ -15,11 +15,13 @@ pub(in crate::workspace::engine::command) fn attach(
         .collect::<Vec<_>>();
     let mut targets = Vec::new();
     for (identity, version) in &phase.versions {
+        let identity = identity.trim();
+        let version = version.trim();
         if let Some(index) = captured
             .iter()
             .position(|row| {
                 row.as_ref()
-                    .is_some_and(|row| row.target.identity == *identity)
+                    .is_some_and(|row| row.target.identity.trim() == identity)
             })
         {
             if let Some(entry) = captured[index].take() {
@@ -28,7 +30,7 @@ pub(in crate::workspace::engine::command) fn attach(
             targets.push(
                 record.targets
                     .iter()
-                    .find(|row| row["identity"] == *identity)
+                    .find(|row| row["identity"].as_str().map(str::trim) == Some(identity))
                     .ok_or_else(|| invalid("history current target"))?
                     .clone(),
             );

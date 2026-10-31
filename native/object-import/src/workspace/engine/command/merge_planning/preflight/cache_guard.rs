@@ -97,7 +97,9 @@ fn extensions(target: &Value) -> io::Result<Value> {
             );
             let non_node_env = row["data"]["id"]
                 .as_str()
+                .map(str::trim)
                 .and_then(|id| id.split('@').next())
+                .map(str::trim)
                 != Some("teambit.harmony/node");
             if row.get("extensionId").is_some()
                 || row.get("legacyId").is_some()

@@ -213,23 +213,21 @@ fn plan_target(
         return Err(invalid("inbound workspace destination occupied"));
     }
     if let Some(row) = existing {
-        existing::prepare(
-            &existing::Input {
-                root: context.root,
-                directory: &directory,
-                target,
-                imported: context.imported,
-                row: &row,
-                lane: context.lane,
-                resolution: existing::Resolution {
-                    override_existing: context.override_existing,
-                    merge_strategy: context.merge_strategy,
-                    track_only: context.track_only,
-                },
-            },
-            rows,
-            changes,
-        )
+        let resolution = existing::Resolution {
+            override_existing: context.override_existing,
+            merge_strategy: context.merge_strategy,
+            track_only: context.track_only,
+        };
+        let input = existing::Input {
+            root: context.root,
+            directory: &directory,
+            target,
+            imported: context.imported,
+            row: &row,
+            lane: context.lane,
+            resolution,
+        };
+        existing::prepare(&input, rows, changes)
     } else {
         plan_new_target(context, target, &directory, rows, changes)
     }
@@ -292,8 +290,7 @@ fn prepare_target(
     let key = bitmap_key(rows, &target.name, scope)?;
     rows.insert(
         key,
-        json!({"name":target.name,"scope":scope,
-        "version":version_name,"mainFile":main,"rootDir":directory}),
+        json!({"name":target.name,"scope":scope,"version":version_name,"mainFile":main,"rootDir":directory}),
     );
     Ok(files)
 }
@@ -353,19 +350,25 @@ fn target_files(
     let mut files = Vec::with_capacity(rows.len());
     let mut seen = HashSet::new();
     for file in rows {
-        let relative = file["relativePath"].as_str().ok_or_else(|| invalid("inbound file path"))?;
+        let relative = file["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("inbound file path"))?;
         crate::checkout::plan::relative_path(relative)?;
         if !seen.insert(relative) {
             return Err(invalid("inbound duplicate file"));
         }
-        let hash = file["file"].as_str().ok_or_else(|| invalid("inbound Source hash"))?;
+        let hash = file["file"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("inbound Source hash"))?;
         crate::merge_history::hash(hash)?;
         let source =
             import.overlay.source(hash).ok_or_else(|| invalid("inbound imported Source"))?;
         let path = root.join(directory).join(relative);
         files.push((path, crate::checkout::eol::auto(source.to_vec())));
     }
-    if !seen.contains(main) {
+    if !seen.contains(main.trim()) {
         return Err(invalid("inbound main file missing"));
     }
     Ok(files)
@@ -387,14 +390,16 @@ fn safe_destination(root: &Path, path: &Path) -> io::Result<()> {
 }
 
 pub(super) fn version(model: &Value, requested: &str) -> io::Result<(String, String)> {
+    let requested = requested.trim();
     let hash = if requested.is_empty() || matches!(requested, "latest" | "head") {
-        model["head"].as_str()
+        model["head"].as_str().map(str::trim)
     } else if crate::merge_history::hash(requested).is_ok() {
         Some(requested)
     } else {
         model["versions"][requested]
             .as_str()
             .or_else(|| model["orphanedVersions"][requested].as_str())
+            .map(str::trim)
     }
     .ok_or_else(|| invalid("inbound requested version"))?;
     crate::merge_history::hash(hash)?;
@@ -403,7 +408,7 @@ pub(super) fn version(model: &Value, requested: &str) -> io::Result<(String, Str
         .into_iter()
         .chain(model["orphanedVersions"].as_object())
         .flat_map(|versions| versions.iter().rev())
-        .find(|(_, value)| value.as_str() == Some(hash))
-        .map_or_else(|| hash.to_owned(), |(tag, _)| tag.clone());
+        .find(|(_, value)| value.as_str().map(str::trim) == Some(hash))
+        .map_or_else(|| hash.to_owned(), |(tag, _)| tag.trim().to_owned());
     Ok((name, hash.to_owned()))
 }

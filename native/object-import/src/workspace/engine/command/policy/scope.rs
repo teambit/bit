@@ -55,11 +55,15 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
         .map(str::trim)
         .filter(|id| !id.is_empty())
     {
-        return Ok(id
+        let normalized = id
             .strip_suffix("@latest")
             .or_else(|| id.strip_suffix("@head"))
             .unwrap_or(id)
-            .to_owned());
+            .trim();
+        if normalized.is_empty() {
+            return Err(invalid("scope aspect name"));
+        }
+        return Ok(normalized.to_owned());
     }
     object_extension_identity(id)
 }

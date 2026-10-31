@@ -28,20 +28,25 @@ impl Retained {
         else {
             return Ok(directory);
         };
-        let scope = target.scope.as_deref().ok_or_else(|| super::invalid("inbound scope"))?;
-        let Some((owner, _)) = scope.split_once('.') else { return Ok(directory) };
+        let scope = target.scope
+            .as_deref()
+            .map(str::trim)
+            .filter(|scope| !scope.is_empty())
+            .ok_or_else(|| super::invalid("inbound scope"))?;
+        let Some((owner, _)) = scope
+            .split_once('.')
+            .map(|(owner, rest)| (owner.trim(), rest.trim()))
+            .filter(|(owner, _)| !owner.is_empty())
+        else {
+            return Ok(directory);
+        };
         if directory.starts_with(&format!("{owner}/")) {
             return Ok(directory);
         }
         let candidate = format!("{owner}/{directory}");
-        let nested = rows
-            .values()
-            .filter_map(|row| trimmed_str(&row["rootDir"]))
-            .any(|tracked| {
-                tracked.starts_with(&format!("{candidate}/"))
-                    || candidate.starts_with(&format!("{tracked}/"))
-            });
-        if nested || unavailable(root, &candidate, rows, &mut self.observed)?.is_some() {
+        if has_nested_tracked(rows, &candidate)
+            || unavailable(root, &candidate, rows, &mut self.observed)?.is_some()
+        {
             return Ok(directory);
         }
         let used_scope = trimmed_str(&row["scope"])
@@ -55,6 +60,15 @@ impl Retained {
         ));
         Ok(candidate)
     }
+}
+
+fn has_nested_tracked(rows: &Map<String, Value>, candidate: &str) -> bool {
+    rows.values()
+        .filter_map(|row| trimmed_str(&row["rootDir"]))
+        .any(|tracked| {
+            tracked.starts_with(&format!("{candidate}/"))
+                || candidate.starts_with(&format!("{tracked}/"))
+        })
 }
 
 pub(super) fn prepare_into(

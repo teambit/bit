@@ -30,7 +30,10 @@ pub(super) fn replace(path: &Path, bytes: &[u8]) -> io::Result<()> {
 }
 
 fn allocate(path: &Path) -> io::Result<(Temporary, File)> {
-    let parent = path.parent().ok_or_else(|| io::Error::other("package parent absent"))?;
+    let parent = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .ok_or_else(|| io::Error::other("package parent absent"))?;
     for _ in 0..64 {
         let path = parent.join(format!(
             ".bit-package-{}-{}",

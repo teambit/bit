@@ -11,7 +11,8 @@ pub(in crate::workspace::engine) fn run(
     input: Prepare,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
-    if input.id.trim().is_empty() {
+    let history_id = input.id.trim();
+    if history_id.is_empty() || history_id.chars().any(char::is_control) {
         return Err(invalid("history id is empty"));
     }
     if state.record.is_some() || state.histories.checkout.is_some() {
@@ -25,25 +26,24 @@ pub(in crate::workspace::engine) fn run(
     let lane_id = super::super::lane_context::current_id(&bitmap, &imported.lane_scope()?)?;
     if lane_id.is_main() {
         return Err(response::canonical(format!(
-            r#"unable to checkout history "{}" while on main"#,
-            input.id,
+            r#"unable to checkout history "{history_id}" while on main"#,
         )));
     }
     let lane =
         imported.load_lane(&lane_id)?.ok_or_else(|| invalid("history current Lane absent"))?;
     let committed = refresh(&input, &mut imported, &lane_id, &lane)?;
-    let result = select(input, state, lane_id, lane.hash, &bitmap, committed);
+    let result = select(input, state, lane_id, &lane.hash, &bitmap, committed);
     if committed { result.map_err(owned) } else { result }
 }
 fn select(
     input: Prepare,
     state: &mut State,
     lane_id: command_import::lane::Id,
-    lane_hash: String,
+    lane_hash: &str,
     bitmap: &Value,
     committed: bool,
 ) -> io::Result<(usize, Value)> {
-    let history = read(&input.root, &lane_hash)?;
+    let history = read(&input.root, lane_hash)?;
     let item = history["history"]
         .get(input.id.trim())
         .ok_or_else(|| {

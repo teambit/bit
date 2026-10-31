@@ -66,7 +66,7 @@ pub(super) fn prepare(policy: &mut Prepared, root: &Path) -> io::Result<Vec<Valu
 
 fn aspect_text(input: &Value, row: &Value) -> io::Result<String> {
     let id = aspect_identity(row)?;
-    let body = if row["conflict"]["kind"] == "deps" {
+    let body = if row["conflict"]["kind"].as_str().map(str::trim) == Some("deps") {
         dependency(input, &id, &row["conflict"]["value"])?
     } else {
         basic(input, &id, &row["conflict"])?

@@ -171,7 +171,8 @@ pub(in crate::workspace::engine) fn apply(
 ) -> io::Result<(usize, Value)> {
     let mut retained =
         state.histories.inspection.take().ok_or_else(|| invalid("lane history owner absent"))?;
-    if retained.token != request.token.trim() {
+    let token = request.token.trim();
+    if token.is_empty() || retained.token != token {
         state.histories.inspection = Some(retained);
         return Err(invalid("lane history owner changed"));
     }

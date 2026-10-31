@@ -255,26 +255,18 @@ fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Sele
     let identity = identity(row, &model)?;
     let objects_dir = crate::scope_path(&input.root).join("objects");
     let staged = select_versions(input, &model, &objects_dir)?;
-    let model_before = transfer::object::repository(
-        &objects_dir,
-        crate::merge_history::hash(&identity.model_hash)?,
-        MAX_BYTES,
-    )?;
+    let parsed_hash = crate::merge_history::hash(&identity.model_hash)?;
+    let model_before = transfer::object::repository(&objects_dir, parsed_hash, MAX_BYTES)?;
     let history = prepare_history(&objects_dir, &identity.scope, &identity.name, &staged.head)?;
     let host = super::remote::configured_host(input, &identity.scope)?;
     let (model_after, objects) = if staged.hashes.is_empty() {
         (model_before.clone(), Vec::new())
     } else {
         clear_and_mark_exported(&mut model, &identity.scope, &host, &input.transport.export_date)?;
-        let model_after = encode(&identity.model_hash, "Component", &model)?;
-        let objects = collect(
-            &objects_dir,
-            &identity.model_hash,
-            &model_after,
-            &staged.hashes,
-            input.options.ignore_missing_artifacts,
-        )?;
-        (model_after, objects)
+        let after = encode(&identity.model_hash, "Component", &model)?;
+        let ignore = input.options.ignore_missing_artifacts;
+        let items = collect(&objects_dir, &identity.model_hash, &after, &staged.hashes, ignore)?;
+        (after, items)
     };
     Ok(Selected {
         scope: identity.scope,
@@ -289,19 +281,27 @@ fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Sele
 
 fn identity(row: &Value, model: &Value) -> io::Result<Identity> {
     let (scope, name) = row_scoped_id_parts(row).ok_or_else(|| invalid("outbound scope"))?;
-    let (scope, name) = (scope.to_owned(), name.to_owned());
-    if model["scope"] != scope || model["name"] != name {
+    if model["scope"].as_str().map(str::trim) != Some(scope)
+        || model["name"].as_str().map(str::trim) != Some(name)
+    {
         return Err(invalid("outbound model identity"));
     }
     let model_hash = row["hash"]
         .as_str()
-        .ok_or_else(|| invalid("outbound model hash"))?
-        .to_owned();
-    Ok(Identity { scope, name, model_hash })
+        .map(str::trim)
+        .ok_or_else(|| invalid("outbound model hash"))?;
+    Ok(Identity {
+        scope: scope.to_owned(),
+        name: name.to_owned(),
+        model_hash: model_hash.to_owned(),
+    })
 }
 
 fn load_model(root: &Path, row: &Value) -> io::Result<Value> {
-    let hash = row["hash"].as_str().ok_or_else(|| invalid("outbound index hash"))?;
+    let hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("outbound index hash"))?;
     read_object(&crate::scope_path(root).join("objects"), hash, "Component")
 }
 pub(crate) fn read_object(dir: &Path, hash: &str, kind: &str) -> io::Result<Value> {
@@ -326,6 +326,7 @@ pub(super) fn clear_and_mark_exported(
     host: &str,
     date: &str,
 ) -> io::Result<()> {
+    let host = host.trim();
     let rows = model.as_object_mut().ok_or_else(|| invalid("outbound model"))?;
     rows.shift_remove("state");
     rows.shift_remove("local");
@@ -338,9 +339,9 @@ pub(super) fn clear_and_mark_exported(
         .ok_or_else(|| invalid("outbound remotes"))?;
     if !remotes
         .iter()
-        .any(|row| row["url"] == host)
+        .any(|row| row["url"].as_str().map(str::trim) == Some(host))
     {
-        remotes.push(json!({"url":host,"name":scope,"date":date}));
+        remotes.push(json!({"url":host,"name":scope.trim(),"date":date.trim()}));
     }
     Ok(())
 }
@@ -361,20 +362,12 @@ pub(super) fn collect(
     let versions = hashes
         .iter()
         .map(|hash| {
-            Ok(collection::Version {
-                hash: crate::merge_history::hash(hash)?,
-                locally_changed: true,
-                expected: None,
-            })
+            let parsed = crate::merge_history::hash(hash)?;
+            Ok(collection::Version { hash: parsed, locally_changed: true, expected: None })
         })
         .collect::<io::Result<Vec<_>>>()?;
-    let descriptors = collection::select(
-        dir,
-        &versions,
-        None,
-        0,
-        &collection::Mode::Export { strict_local_artifacts: !ignore_missing_artifacts },
-    )?;
+    let mode = collection::Mode::Export { strict_local_artifacts: !ignore_missing_artifacts };
+    let descriptors = collection::select(dir, &versions, None, 0, &mode)?;
     let mut objects =
         vec![ObjectItem { hash: model_hash.to_owned(), compressed: model.to_vec(), scope: None }];
     let mut budget = model.len();
@@ -385,11 +378,8 @@ pub(super) fn collect(
         let (compressed, _, _) =
             transfer::object::read(dir, &descriptor, MAX_BYTES.saturating_sub(budget))?;
         budget += compressed.len();
-        objects.push(ObjectItem {
-            hash: crate::validate::hexadecimal(&descriptor.hash),
-            compressed,
-            scope: None,
-        });
+        let hash = crate::validate::hexadecimal(&descriptor.hash);
+        objects.push(ObjectItem { hash, compressed, scope: None });
     }
     if budget > MAX_BYTES || objects.len() > 4095 {
         return Err(invalid("outbound object budget"));

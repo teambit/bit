@@ -28,7 +28,11 @@ fn prepare_one(
             changes.additions.push((path, after));
             Ok(())
         }
-        Ok(_) if context.override_existing => {
+        Ok(metadata)
+            if context.override_existing
+                && metadata.is_file()
+                && !metadata.file_type().is_symlink() =>
+        {
             let before = existing::current_body(context.root, &path)?;
             if before != after {
                 changes.replacements.push(Replacement { path, before, after });

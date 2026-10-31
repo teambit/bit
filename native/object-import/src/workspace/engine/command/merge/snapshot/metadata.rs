@@ -286,10 +286,11 @@ fn row_identity(row: &Value) -> String {
     if let Some(raw) = row
         .as_str()
         .or_else(|| row["id"].as_str())
+        .map(str::trim)
     {
         return raw
             .rsplit_once('@')
-            .map_or(raw, |(bare, _)| bare)
+            .map_or(raw, |(bare, _)| bare.trim())
             .to_owned();
     }
     let id = row
@@ -299,12 +300,12 @@ fn row_identity(row: &Value) -> String {
     let scope = id["scope"]
         .as_str()
         .or_else(|| row["scope"].as_str())
-        .unwrap_or_default();
+        .map_or("", str::trim);
     let raw_name = id["name"]
         .as_str()
         .or_else(|| row["name"].as_str())
-        .unwrap_or_default();
-    let name = raw_name.rsplit_once('@').map_or(raw_name, |(bare, _)| bare);
+        .map_or("", str::trim);
+    let name = raw_name.rsplit_once('@').map_or(raw_name, |(bare, _)| bare.trim());
     format!("{scope}/{name}")
 }
 
@@ -312,12 +313,16 @@ fn receipt_scalars(value: &Value) -> io::Result<()> {
     for field in ["batchId", "bitVersion"] {
         if value[field]
             .as_str()
-            .is_none_or(|text| text.is_empty() || text.len() > 4096)
+            .is_none_or(|text| text.trim().is_empty() || text.len() > 4096)
         {
             return Err(invalid("command snap scalar"));
         }
     }
-    if !value["log"].is_object() || value["log"]["date"].as_str().is_none() {
+    if !value["log"].is_object()
+        || value["log"]["date"]
+            .as_str()
+            .is_none_or(|date| date.trim().is_empty())
+    {
         return Err(invalid("command snap log"));
     }
     Ok(())

@@ -10,6 +10,8 @@ pub(super) fn prepare_history(
     name: &str,
     head: &str,
 ) -> io::Result<HistoryBytes> {
+    let (scope, name, head) = (scope.trim(), name.trim(), head.trim());
+    crate::merge_history::hash(head)?;
     let hash = crate::validate::hexadecimal(&Sha1::digest(
         format!("{scope}/{name}:VersionHistory").as_bytes(),
     ));

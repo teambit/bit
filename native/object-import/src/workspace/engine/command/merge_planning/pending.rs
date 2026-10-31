@@ -37,9 +37,13 @@ fn other_lane(other: &Value) -> Option<Value> {
             || json!({"scope": scope, "name": name}),
         );
     }
-    other["name"]
+    let scope = other["scope"]
         .as_str()
         .map(str::trim)
-        .is_some_and(|name| !name.is_empty() && name != "main")
-        .then(|| other.clone())
+        .filter(|scope| !scope.is_empty())?;
+    let name = other["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty() && *name != "main")?;
+    Some(json!({"scope": scope, "name": name}))
 }

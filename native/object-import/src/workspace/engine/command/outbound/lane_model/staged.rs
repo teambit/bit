@@ -12,6 +12,10 @@ pub(super) fn lane_versions(
     scope: &str,
     name: &str,
 ) -> io::Result<Vec<String>> {
+    let head = head.trim();
+    let previous_head = previous_head
+        .map(str::trim)
+        .filter(|prev| !prev.is_empty());
     let mut output = Vec::new();
     let mut pending = vec![head.to_owned()];
     let mut seen = HashSet::new();

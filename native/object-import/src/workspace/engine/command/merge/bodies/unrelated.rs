@@ -36,6 +36,7 @@ fn version_name(current: &Captured, output: &Value) -> String {
     }
     output["id"]
         .as_str()
+        .map(str::trim)
         .and_then(|id| id.rsplit_once('@'))
         .map_or("", |(_, ver)| ver.trim())
         .to_owned()

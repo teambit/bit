@@ -195,12 +195,19 @@ pub(super) fn validate(plan: &Prepared, root: &Path) -> io::Result<()> {
 
 fn destinations(applied: &Value, directory: &Path) -> io::Result<Vec<Value>> {
     let rows = applied["files"].as_array().ok_or_else(|| invalid("command applied files"))?;
-    rows.iter().map(|row| {
-        let name = row["relativePath"].as_str().ok_or_else(|| invalid("command output file"))?;
-        crate::checkout::plan::relative_path(name)?;
-        if name == ".bitmap" { return Err(invalid("command tracked nested bitmap")); }
-        Ok(json!({"planIndex":row["planIndex"],"path":directory.join(name),"overwrite":true,"eol":"auto"}))
-    }).collect()
+    rows.iter()
+        .map(|row| {
+            let name = row["relativePath"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("command output file"))?;
+            crate::checkout::plan::relative_path(name)?;
+            if name == ".bitmap" {
+                return Err(invalid("command tracked nested bitmap"));
+            }
+            Ok(json!({"planIndex":row["planIndex"],"path":directory.join(name),"overwrite":true,"eol":"auto"}))
+        })
+        .collect()
 }
 
 fn statuses(applied: &Value) -> io::Result<serde_json::Map<String, Value>> {
@@ -212,6 +219,8 @@ fn statuses(applied: &Value) -> io::Result<serde_json::Map<String, Value>> {
             Ok((
                 row["relativePath"]
                     .as_str()
+                    .map(str::trim)
+                    .filter(|path| !path.is_empty())
                     .ok_or_else(|| invalid("command status path"))?
                     .to_owned(),
                 row["status"].clone(),

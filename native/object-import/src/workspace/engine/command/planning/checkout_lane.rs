@@ -75,8 +75,10 @@ fn filter_tracked_results(context: &Value, result: &mut Value) -> io::Result<()>
             row["identity"]
                 .as_str()
                 .or_else(|| row["id"].as_str())
+                .map(str::trim)
         })
-        .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base))
+        .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
+        .filter(|id| !id.is_empty())
         .collect::<std::collections::HashSet<_>>();
     result["components"]
         .as_array_mut()
@@ -85,7 +87,8 @@ fn filter_tracked_results(context: &Value, result: &mut Value) -> io::Result<()>
             row["id"]
                 .as_str()
                 .or_else(|| row["identity"].as_str())
-                .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base))
+                .map(str::trim)
+                .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
                 .is_none_or(|identity| !identities.contains(identity))
         });
     Ok(())

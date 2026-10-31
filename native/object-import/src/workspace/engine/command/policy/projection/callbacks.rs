@@ -25,14 +25,15 @@ pub(in crate::workspace::engine::command) fn extensions(value: &Value) -> io::Re
 
 fn identity(row: &Value) -> io::Result<String> {
     if let Some(name) = row["name"].as_str().map(str::trim) {
-        if row.get("extensionId").is_some()
-            || !name
-                .split_once('/')
-                .is_some_and(|(scope, part)| !scope.trim().is_empty() && !part.trim().is_empty())
-        {
+        if row.get("extensionId").is_some() {
             return Err(invalid("snapshot callback core identity"));
         }
-        return Ok(name.to_owned());
+        let (scope, part) = name
+            .split_once('/')
+            .map(|(scope, part)| (scope.trim(), part.trim()))
+            .filter(|(scope, part)| !scope.is_empty() && !part.is_empty())
+            .ok_or_else(|| invalid("snapshot callback core identity"))?;
+        return Ok(format!("{scope}/{part}"));
     }
     if let Some(raw) = row["extensionId"].as_str().map(str::trim) {
         let base = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());

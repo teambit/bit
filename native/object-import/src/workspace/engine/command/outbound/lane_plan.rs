@@ -8,6 +8,9 @@ use std::io;
 pub(super) fn prepare(input: &Prepare, lane: LaneSelected) -> io::Result<Plan> {
     let scope = lane.scope.trim();
     let lane_name = lane.name.trim();
+    if scope.is_empty() || lane_name.is_empty() {
+        return Err(invalid("outbound lane plan identity"));
+    }
     let host = remote::host(input, scope)?;
     let fork_history = (host.starts_with("file://") && !cfg!(windows))
         .then(|| lane.fork_history.clone())
@@ -25,7 +28,7 @@ pub(super) fn prepare(input: &Prepare, lane: LaneSelected) -> io::Result<Plan> {
                 .map(|selected| ResumeContext { selected })
         })
         .transpose()?;
-    let pending = vec![Pending { scope: lane.scope, host, objects: lane.components.objects }];
+    let pending = vec![Pending { scope: scope.to_owned(), host, objects: lane.components.objects }];
     Ok(Plan {
         count,
         resume,

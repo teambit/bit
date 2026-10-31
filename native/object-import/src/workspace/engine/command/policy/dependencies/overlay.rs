@@ -9,18 +9,18 @@ pub(super) fn prepare(record: &Record, planned: &planning::Planned) -> io::Resul
     let mut overlay = SourceOverlay::new(&record.request.root)?;
     for row in policy.rows.iter().filter(|row| !row.baseline.scope_only) {
         let files = overlay_files(row, planned)?;
-        let root = record.request.root.join(&row.baseline.directory);
+        let root = record.request.root.join(row.baseline.directory.trim());
         for file in files {
-            overlay.insert_source(
-                &root.join(
-                    file["relativePath"].as_str().ok_or_else(|| invalid("command overlay path"))?,
-                ),
-                &file["source"],
-            )?;
+            let relative = file["relativePath"]
+                .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
+                .ok_or_else(|| invalid("command overlay path"))?;
+            overlay.insert_source(&root.join(relative), &file["source"])?;
         }
         let current = planned.captured
             .iter()
-            .find(|current| current.target.identity == row.identity)
+            .find(|current| current.target.identity.trim() == row.identity.trim())
             .ok_or_else(|| invalid("command overlay capture"))?;
         for file in &current.target.files {
             if !row.files.contains(file) {

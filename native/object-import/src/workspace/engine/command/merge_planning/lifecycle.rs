@@ -93,13 +93,17 @@ impl Prepared {
             .map(|material| {
                 let (identity, _) = material.output["id"]
                     .as_str()
-                    .and_then(|id| id.rsplit_once('@'))
+                    .and_then(|id| id.trim().rsplit_once('@'))
+                    .map(|(identity, version)| (identity.trim(), version.trim()))
+                    .filter(|(identity, _)| !identity.is_empty())
                     .ok_or_else(|| invalid("command merge bitmap identity"))?;
                 Ok(bitmap::Update {
                     identity: identity.to_owned(),
-                    version: material.version_name.clone(),
+                    version: material.version_name.trim().to_owned(),
                     main_file: material.version["mainFile"]
                         .as_str()
+                        .map(str::trim)
+                        .filter(|file| !file.is_empty())
                         .ok_or_else(|| invalid("command merge main file"))?
                         .to_owned(),
                     keep_ours: false,
@@ -110,11 +114,12 @@ impl Prepared {
     fn is_removed(&self, output: &Value) -> bool {
         output["id"]
             .as_str()
-            .and_then(|id| id.rsplit_once('@'))
+            .and_then(|id| id.trim().rsplit_once('@'))
             .is_some_and(|(identity, _)| {
+                let identity = identity.trim();
                 self.publication.removed
                     .iter()
-                    .any(|row| row.identity == identity)
+                    .any(|row| row.identity.trim() == identity)
             })
     }
     pub(in crate::workspace::engine::command) fn removed_ids(&self) -> Vec<String> {

@@ -110,6 +110,9 @@ fn missing(
     bitmap: &Value,
     default_scope: Option<&str>,
 ) -> io::Result<Vec<Candidate>> {
+    let default_scope = default_scope
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty());
     let tracked = super::checkout_lane::bitmap_identities(bitmap)?;
     Ok(candidates(request)?
         .into_iter()

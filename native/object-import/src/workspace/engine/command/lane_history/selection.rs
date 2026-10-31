@@ -58,10 +58,12 @@ pub(super) fn accept_bitmap(proofs: &mut [proof::Proof], receipt: &Value) -> io:
         .iter_mut()
         .find(|proof| proof.path == Path::new(path))
         .ok_or_else(|| invalid("history bitmap proof absent"))?;
-    let before: Option<String> =
-        serde_json::from_value(receipt["beforeHash"].clone()).map_err(io::Error::other)?;
-    let after: Option<String> =
-        serde_json::from_value(receipt["afterHash"].clone()).map_err(io::Error::other)?;
+    let before = serde_json::from_value::<Option<String>>(receipt["beforeHash"].clone())
+        .map_err(io::Error::other)?
+        .map(|hash| hash.trim().to_owned());
+    let after = serde_json::from_value::<Option<String>>(receipt["afterHash"].clone())
+        .map_err(io::Error::other)?
+        .map(|hash| hash.trim().to_owned());
     if !retained.is_content() || retained.hash != before {
         return Err(invalid("history bitmap preimage changed"));
     }
@@ -101,5 +103,9 @@ fn target(row: &Value) -> io::Result<(String, String)> {
 }
 
 fn is_component_bitmap_row(key: &str, row: &Value) -> bool {
-    !key.starts_with('$') && !matches!(key, "_bit_lane" | "version") && row.is_object()
+    let key = key.trim();
+    !key.is_empty()
+        && !key.starts_with('$')
+        && !matches!(key, "_bit_lane" | "version")
+        && row.is_object()
 }

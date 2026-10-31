@@ -41,9 +41,7 @@ fn validate_target(
     selected: &Selected,
     index: usize,
 ) -> io::Result<()> {
-    if selected.remote.trim().is_empty() {
-        return Err(invalid("command fast-forward remote head"));
-    }
+    crate::merge_history::hash(selected.remote.trim())?;
     if planned.captured[index].hidden
         && !prepared.pending.is_empty()
         && !record.request.internal_snapshot_preview

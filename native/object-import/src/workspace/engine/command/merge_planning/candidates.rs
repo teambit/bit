@@ -49,13 +49,10 @@ fn target_identity(target: &Value) -> Option<String> {
         .map(str::trim)
         .filter(|value| !value.is_empty())
     {
-        return Some(
-            identity
-                .split('@')
-                .next()
-                .map_or(identity, str::trim)
-                .to_owned(),
-        );
+        let bare = identity.rsplit_once('@').map_or(identity, |(prefix, _)| prefix.trim());
+        if !bare.is_empty() {
+            return Some(bare.to_owned());
+        }
     }
     let object = target["id"].as_object()?;
     let name = object

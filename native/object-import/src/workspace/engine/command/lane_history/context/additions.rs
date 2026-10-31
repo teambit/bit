@@ -54,15 +54,18 @@ fn selected(
     let existing = context["targets"].as_array().ok_or_else(|| invalid("history targets"))?;
     let mut selected = Vec::new();
     for (id, version) in &phase.versions {
+        let id = id.trim();
         if existing
             .iter()
-            .any(|row| row["identity"].as_str().map(str::trim) == Some(id.trim()))
+            .any(|row| row["identity"].as_str().map(str::trim) == Some(id))
         {
             continue;
         }
         let model = imported.lane_model(id)?.ok_or_else(|| invalid("history missing model"))?;
-        let reference =
-            crate::workspace::engine::command::selection::versions::reference(&model, version)?;
+        let reference = crate::workspace::engine::command::selection::versions::reference(
+            &model,
+            version.trim(),
+        )?;
         selected.push(
             json!({"identity":id,"head":reference,"bitmapPresent":false,"currentIdPresent":false}),
         );

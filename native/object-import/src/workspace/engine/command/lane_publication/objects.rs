@@ -70,7 +70,7 @@ pub(super) fn history(
     let key = receipt["historyKey"]
         .as_str()
         .map(str::trim)
-        .filter(|key| !key.is_empty() && key.len() <= 128)
+        .filter(|key| !key.is_empty() && key.len() <= 128 && !key.chars().any(char::is_control))
         .ok_or_else(|| invalid("lane history allocation"))?;
     let log = history_log(receipt, message)?;
     if previous.is_null() {
@@ -127,6 +127,7 @@ fn component_id(entry: &Value) -> io::Result<String> {
         .map(str::trim)
         .filter(|head| !head.is_empty())
         .ok_or_else(|| invalid("lane history component head"))?;
+    crate::merge_history::hash(head)?;
     Ok(format!("{scope}/{name}@{head}"))
 }
 

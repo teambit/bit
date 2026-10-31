@@ -134,7 +134,7 @@ fn policy_fields(original: &serde_json::Map<String, Value>) -> io::Result<Vec<Va
 fn scope_fields(current: &Value) -> io::Result<Vec<Value>> {
     let scope = projection::array(current)?
         .iter()
-        .find(|row| row["name"] == projection::RESOLVER)
+        .find(|row| row["name"].as_str().map(str::trim) == Some(projection::RESOLVER))
         .and_then(|row| row["config"]["policy"].as_object());
     scope.into_iter().flatten().map(|(field, values)| {
         let values = values.as_object().ok_or_else(|| invalid("command scope policy map"))?;
@@ -161,10 +161,12 @@ fn selected_policy(value: &Value, forced: bool) -> io::Result<Value> {
             .map(str::trim)
             .filter(|name| !name.is_empty())
             .ok_or_else(|| invalid("command policy name"))?;
-        if !row["version"].is_string() {
-            return Err(invalid("command policy version"));
-        }
-        output.insert(name.to_owned(), row["version"].clone());
+        let version = row["version"]
+            .as_str()
+            .map(str::trim)
+            .filter(|version| !version.is_empty())
+            .ok_or_else(|| invalid("command policy version"))?;
+        output.insert(name.to_owned(), json!(version));
     }
     Ok(Value::Object(output))
 }

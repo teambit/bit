@@ -14,6 +14,7 @@ pub(super) fn receipt(
         .and_then(|ws| {
             ws.iter()
                 .find_map(|(key, val)| {
+                    let key = key.trim();
                     (key == "teambit.dependencies/dependency-resolver"
                         || key.starts_with("teambit.dependencies/dependency-resolver@"))
                     .then_some(&val["policy"])

@@ -46,8 +46,12 @@ fn addition_target(destination: &Value) -> io::Result<(String, &str)> {
         .filter(|id| !id.is_empty())
     {
         let base = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());
-        if !base.is_empty() {
-            return Ok((base.to_owned(), version));
+        if let Some((scope, name)) = base
+            .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        {
+            return Ok((format!("{scope}/{name}"), version));
         }
     }
     let scope = destination["scope"]

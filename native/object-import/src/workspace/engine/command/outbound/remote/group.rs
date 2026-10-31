@@ -47,9 +47,12 @@ pub(super) fn owner(scope: &Path, pending: &Path) -> io::Result<Option<(u32, u32
 
 #[cfg(unix)]
 fn parse(groups: &str, name: &str) -> io::Result<Option<u32>> {
+    let name = name.trim();
     let row = groups
         .lines()
-        .find(|row| row.split(':').next() == Some(name))
+        .map(str::trim)
+        .filter(|row| !row.is_empty() && !row.starts_with('#'))
+        .find(|row| row.split(':').next().map(str::trim) == Some(name))
         .ok_or_else(|| {
             io::Error::other(format!(
                 r#"unable to resolve group id of "{name}", the group does not exist"#,
