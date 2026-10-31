@@ -35,9 +35,7 @@ fn capture_one(
             return Err(invalid("overlay conflicting parent"));
         }
     }
-    if matches!(entry, Entry::Source(_))
-        && fs::metadata(destination).is_ok_and(|value| value.is_dir())
-    {
+    if fs::symlink_metadata(destination).is_ok_and(|value| !value.is_file()) {
         return Err(invalid("overlay file replaces directory"));
     }
     let mut proofs = Vec::new();

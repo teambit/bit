@@ -46,14 +46,14 @@ pub(in crate::workspace::engine) fn read(
         raw: Budget::new(32 * 1024 * 1024),
         packed: Budget::new(32 * 1024 * 1024),
     };
-    let current = lane::read(&request.root, &reader, &request.current_lane_id)?
+    let current = lane::read(&request.root, &reader, request.current_lane_id.trim())?
         .ok_or_else(|| invalid("status lane updates require a lane"))?;
     let mut models = indexed_models(&reader, &request.root, pool)?;
     replace_models(&mut models, Some(overlay));
     let models = model_index(&models)?;
     let excluded = request.during_merge
         .iter()
-        .map(String::as_str)
+        .map(|id| id.trim())
         .collect::<HashSet<_>>();
     if request.forked_lane_id.is_some() {
         return forked_updates(request, overlay, &reader, &models, &current, &excluded, pool);
@@ -81,8 +81,10 @@ fn forked_updates(
     excluded: &HashSet<&str>,
     pool: &ThreadPool,
 ) -> io::Result<(usize, Value)> {
-    let forked =
-        request.forked_lane_id.as_deref().ok_or_else(|| invalid("status forked lane id"))?;
+    let forked = request.forked_lane_id
+        .as_deref()
+        .map(str::trim)
+        .ok_or_else(|| invalid("status forked lane id"))?;
     if current.forked_from.as_deref() != Some(forked) {
         return Err(invalid("status forked lane identity"));
     }
@@ -96,7 +98,11 @@ fn forked_updates(
                     row,
                 )
                 .ok_or_else(|| invalid("status forked scope"))?;
-            let head = row["head"].as_str().ok_or_else(|| invalid("status forked head"))?;
+            let head = row["head"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("status forked head"))?;
+            crate::merge_history::hash(head)?;
             Ok((format!("{scope}/{name}"), head))
         })
         .collect::<io::Result<HashMap<_, _>>>()?;

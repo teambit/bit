@@ -9,7 +9,11 @@ pub(super) fn invalid(message: &str) -> io::Error {
 }
 pub(super) fn path(path: &Path) -> io::Result<()> {
     let name = path.to_str().ok_or_else(|| invalid("workspace non-UTF8 path"))?;
-    if name.trim().is_empty() || !path.is_absolute() || name.len() > 32768 || name.contains('\0') {
+    if name.trim().is_empty()
+        || !path.is_absolute()
+        || name.len() > 32768
+        || name.chars().any(char::is_control)
+    {
         return Err(invalid("workspace invalid absolute path"));
     }
     Ok(())

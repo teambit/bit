@@ -160,8 +160,10 @@ fn models(request: &Request) -> io::Result<()> {
         }
     }
     for history in &request.histories {
-        let identity =
-            history["identity"].as_str().ok_or_else(|| invalid("status history identity"))?;
+        let identity = history["identity"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("status history identity"))?;
         if !known.contains(identity) || !histories.insert(identity) {
             return Err(invalid("status duplicate or unknown history"));
         }
@@ -169,11 +171,13 @@ fn models(request: &Request) -> io::Result<()> {
     if request.targets
         .iter()
         .any(|target| {
-            !target.version.is_empty()
-                && !known.contains(&target.identity)
+            !target.version.trim().is_empty()
+                && !known.contains(target.identity.trim())
                 && target.invalid
                     .as_ref()
-                    .is_none_or(|error| error["name"] != "ComponentsPendingImport")
+                    .is_none_or(|error| {
+                        error["name"].as_str().map(str::trim) != Some("ComponentsPendingImport")
+                    })
         })
     {
         return Err(invalid("status missing imported model requires canonical errors"));

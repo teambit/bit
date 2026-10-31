@@ -16,6 +16,7 @@ pub(super) fn normalize(raw: &str) -> String {
         .unwrap_or_else(|| raw.into())
 }
 fn number(raw: &str) -> Option<f64> {
+    let raw = raw.trim();
     if let Some(hex) = raw
         .strip_prefix("0x")
         .or_else(|| raw.strip_prefix("0X"))

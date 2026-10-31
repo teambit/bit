@@ -104,9 +104,10 @@ fn match_components<'a>(
         .active()
         .filter(|(cand, _)| {
             let bare = cand.id.to_string_without_version();
+            let bare = bare.trim();
             entries
                 .iter()
-                .any(|entry| entry.id.to_string_without_version() == bare)
+                .any(|entry| entry.id.to_string_without_version().trim() == bare)
         })
         .collect())
 }
@@ -206,9 +207,10 @@ fn find_assign_eq(line: &str) -> Option<usize> {
 }
 
 fn is_string_literal(expr: &str) -> bool {
-    (expr.starts_with('\'') && expr.ends_with('\''))
-        || (expr.starts_with('"') && expr.ends_with('"'))
-        || (expr.starts_with('`') && expr.ends_with('`'))
+    expr.len() >= 2
+        && ((expr.starts_with('\'') && expr.ends_with('\''))
+            || (expr.starts_with('"') && expr.ends_with('"'))
+            || (expr.starts_with('`') && expr.ends_with('`')))
 }
 
 fn is_bool_literal(expr: &str) -> bool {

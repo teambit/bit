@@ -73,10 +73,11 @@ fn populate(
     stage: bool,
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<()> {
+    let head = head.trim();
     let rows = history["versions"].as_array().ok_or_else(|| invalid("status history rows"))?;
     if rows
         .iter()
-        .any(|row| row["hash"] == head)
+        .any(|row| row["hash"].as_str().map(str::trim) == Some(head))
     {
         return Ok(());
     }
@@ -115,7 +116,10 @@ fn populate(
 fn record(row: &Value) -> Value {
     let mut result = json!({"hash":row["hash"],"parents":row["parents"]});
     for key in ["unrelated", "squashed"] {
-        if let Some(value) = row.get(key) {
+        if let Some(value) = row
+            .get(key)
+            .filter(|value| !value.is_null())
+        {
             result[key] = value.clone();
         }
     }

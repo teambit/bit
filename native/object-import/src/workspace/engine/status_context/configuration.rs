@@ -14,7 +14,12 @@ pub fn effective(root: &Path, home: &Path) -> io::Result<Value> {
 
 fn aspect_value<'a>(doc: &'a Value, id: &str) -> Option<&'a Value> {
     let map = doc.as_object()?;
-    map.get(id).or_else(|| find_versioned_aspect(map, id))
+    map.get(id)
+        .or_else(|| {
+            map.iter()
+                .find_map(|(key, val)| (key.trim() == id).then_some(val))
+        })
+        .or_else(|| find_versioned_aspect(map, id))
 }
 
 fn find_versioned_aspect<'a>(
@@ -25,7 +30,8 @@ fn find_versioned_aspect<'a>(
     map.iter()
         .find_map(|(key, val)| {
             key.trim()
-                .starts_with(&prefix)
+                .strip_prefix(&prefix)
+                .is_some_and(|version| !version.trim().is_empty())
                 .then_some(val)
         })
 }

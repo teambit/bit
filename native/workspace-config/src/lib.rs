@@ -78,7 +78,13 @@ pub fn effective_with_environment(
     let keys = values
         .keys()
         .cloned()
-        .chain(known_keys.iter().map(|key| (*key).to_owned()))
+        .chain(
+            known_keys
+                .iter()
+                .map(|key| key.trim())
+                .filter(|key| !key.is_empty())
+                .map(str::to_owned),
+        )
         .collect::<std::collections::BTreeSet<_>>();
     for key in keys {
         if let Some(value) = environment(&environment_key(&key)).filter(|value| !value.is_empty()) {

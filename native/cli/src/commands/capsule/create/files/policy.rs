@@ -134,10 +134,9 @@ pub(super) fn parse_builtin_env(env: Option<&str>) -> Option<BuiltinEnv> {
         .map(str::trim)
         .filter(|raw| !raw.is_empty())
         .map(|raw| {
-            raw.split('@')
-                .next()
-                .unwrap_or(raw)
-                .trim()
+            raw.rsplit_once('@')
+                .map_or(raw, |(base, _)| base.trim())
+                .trim_end_matches('/')
         });
     match normalized {
         None | Some("teambit.harmony/node") => Some(BuiltinEnv::Node),

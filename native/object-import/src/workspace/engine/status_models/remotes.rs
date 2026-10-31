@@ -14,6 +14,7 @@ pub(super) fn read(root: &Path, models: &[Value]) -> io::Result<HashMap<String, 
         .filter_map(|model| {
             model["scope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|scope| !scope.is_empty())
         })
         .collect::<HashSet<_>>();

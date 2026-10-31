@@ -92,7 +92,12 @@ fn extract_env_id<'a>(facts: &'a Value, key: &str) -> Option<&'a str> {
     let value = facts.get(key)?;
     value
         .as_str()
-        .or_else(|| value.get("id").and_then(Value::as_str))
+        .or_else(|| {
+            value
+                .get("id")
+                .or_else(|| value.get("resolvedId"))
+                .and_then(Value::as_str)
+        })
         .map(str::trim)
         .filter(|value| !value.is_empty())
 }
@@ -115,7 +120,10 @@ fn load(
         plan.bitmap(),
         &projection.components,
     )?);
-    if projection.load_error.is_some() {
+    if projection.load_error
+        .as_deref()
+        .is_some_and(|err| !err.trim().is_empty())
+    {
         return Ok(None);
     }
     let selected = projection.loading_components();

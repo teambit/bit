@@ -151,8 +151,11 @@ pub(super) fn source_files(directory: &Path, names: &[String]) -> io::Result<Vec
 }
 
 pub(super) fn safe_relative(path: &str) -> bool {
+    let path = path.trim();
     path == "."
         || (!path.is_empty()
+            && !path.contains('\\')
+            && !path.chars().any(char::is_control)
             && Path::new(path)
                 .components()
                 .all(|component| matches!(component, Component::Normal(_))))

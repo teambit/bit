@@ -66,7 +66,8 @@ fn save_single_artifact_file(
 
 fn is_safe_artifact_path(relative_path: &str) -> bool {
     !relative_path.trim().is_empty()
-        && !relative_path.contains(['\\', '\0'])
+        && !relative_path.contains('\\')
+        && !relative_path.chars().any(char::is_control)
         && Path::new(relative_path)
             .components()
             .all(|part| matches!(part, std::path::Component::Normal(_)))
@@ -77,7 +78,8 @@ fn sanitize_component_dir(identity: &str) -> String {
         .trim()
         .chars()
         .map(|ch| {
-            if matches!(ch, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') {
+            if ch.is_control() || matches!(ch, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|')
+            {
                 '_'
             } else {
                 ch

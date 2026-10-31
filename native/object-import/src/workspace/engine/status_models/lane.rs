@@ -78,11 +78,20 @@ fn update_dependents(lane: &Value) -> io::Result<Vec<(String, String)>> {
     let mut seen = HashSet::new();
     rows.iter()
         .map(|row| {
-            let row = row.as_str().ok_or_else(|| invalid("status lane update-dependent"))?;
+            let row = row
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("status lane update-dependent"))?;
             let (identity, hash) =
                 row.rsplit_once('@').ok_or_else(|| invalid("status lane update-dependent id"))?;
+            let identity = identity.trim();
+            let hash = hash.trim();
             crate::merge_history::hash(hash)?;
-            if identity.split_once('/').is_none() || !seen.insert(identity) {
+            if !identity
+                .split_once('/')
+                .is_some_and(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
+                || !seen.insert(identity)
+            {
                 return Err(invalid("status lane update-dependent identity"));
             }
             Ok((identity.to_owned(), hash.to_owned()))

@@ -240,7 +240,11 @@ fn take_string_map(
     let entries = value.as_object()?;
     entries
         .iter()
-        .map(|(name, version)| Some((name.clone(), version.as_str()?.to_owned())))
+        .map(|(name, version)| {
+            let name = name.trim();
+            let ver = version.as_str()?.trim();
+            (!name.is_empty() && !ver.is_empty()).then(|| (name.to_owned(), ver.to_owned()))
+        })
         .collect::<Option<BTreeMap<_, _>>>()
         .map(Some)
 }
@@ -300,13 +304,19 @@ pub(super) fn component_dependency(entry: &BitmapEntry) -> (String, String) {
     let name = format!("@{scope}/{}", entry.id.name.replace('/', "."));
     let version = entry.id.version
         .as_deref()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
         .unwrap_or("latest")
         .to_owned();
     (name, version)
 }
 
 fn package_version(entry: &BitmapEntry) -> String {
-    let version = entry.id.version.as_deref().unwrap_or("latest");
+    let version = entry.id.version
+        .as_deref()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .unwrap_or("latest");
     if version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         format!("0.0.0-{version}")
     } else {

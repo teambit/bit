@@ -19,12 +19,13 @@ impl ProjectedLinker {
         before: &Value,
         bitmap: &Value,
     ) -> io::Result<()> {
+        if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() {
+            return Err(io::Error::other("fork bitmap workspace root is empty"));
+        }
         let path = bitmap_path(root);
         let bytes = bit_object_import::render_workspace_bitmap(bitmap)?;
         let after = bit_install::policy::scope::proof_from_bytes(&path, Some(&bytes));
-        // The acknowledged publisher must have written exactly its planned bytes.
-        let observed = controls::refresh(&path)?;
-        if observed != after {
+        if controls::refresh(&path)? != after {
             return Err(io::Error::other("fork bitmap publication changed"));
         }
         Engine::new()?

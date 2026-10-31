@@ -51,7 +51,12 @@ fn add_lifecycle_packages(
             .as_str()
             .or_else(|| spec["version"].as_str())
             .map(str::trim)
-            .filter(|ver| !ver.is_empty() && !name.is_empty())
+            .filter(|ver| {
+                !ver.is_empty()
+                    && !name.is_empty()
+                    && !name.chars().any(char::is_control)
+                    && !ver.chars().any(char::is_control)
+            })
             .ok_or_else(|| io::Error::other("tracking package version"))?;
         let optional = spec["optional"].as_bool().unwrap_or(false);
         result.packages.push(PackageDependency {

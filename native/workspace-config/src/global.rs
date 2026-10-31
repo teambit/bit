@@ -23,10 +23,11 @@ pub fn read_global_config_with(
         }
         Err(error) => return Err(error),
     };
+    let text = text.strip_prefix('\u{feff}').unwrap_or(&text);
     if text.trim().is_empty() {
         return Ok(Value::Object(Map::new()));
     }
-    serde_json::from_str(&text).map_err(|error| parse_error(&path, error))
+    serde_json::from_str(text).map_err(|error| parse_error(&path, error))
 }
 
 /// Install's supported scalar setting projection preserves empty strings and boolean/number text.

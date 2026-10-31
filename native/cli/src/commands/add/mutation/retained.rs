@@ -26,17 +26,18 @@ impl Retained {
         self.started = false;
     }
     pub(super) fn advance_bitmap(&mut self, before: &Value, after: &Value) -> io::Result<()> {
-        let matches_path = |proof: &&Value| proof["path"] == before["path"];
+        let target_path = trimmed_str(&before["path"])
+            .ok_or_else(|| io::Error::other("fork bitmap preimage path"))?;
         if self.read_set
             .iter()
             .chain(self.controls.values())
-            .filter(matches_path)
+            .filter(|proof| trimmed_str(&proof["path"]) == Some(target_path))
             .any(|proof| proof != before)
         {
             return Err(io::Error::other("fork bitmap preimage changed"));
         }
         for proof in self.read_set.iter_mut().chain(self.controls.values_mut()) {
-            if proof["path"] == before["path"] {
+            if trimmed_str(&proof["path"]) == Some(target_path) {
                 *proof = after.clone();
             }
         }
@@ -82,12 +83,13 @@ impl Retained {
     }
     pub(super) fn status(&mut self, compared: &Value, ids: &[String]) {
         for id in ids {
+            let id = id.trim();
             let Some(row) = self.rows.get_mut(id) else { continue };
             row["modified"] = compared["comparisons"]
                 .as_array()
                 .and_then(|rows| {
                     rows.iter()
-                        .find(|row| row_id(row) == Some(id.as_str()))
+                        .find(|row| row_id(row) == Some(id))
                 })
                 .map_or(Value::Bool(false), |row| row["modified"].clone());
         }

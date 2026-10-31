@@ -47,11 +47,15 @@ pub(in crate::commands) fn overlay(
 }
 
 fn matches_captured(row: &Value, expected: &str) -> bool {
-    row["identity"]
-        .as_str()
-        .map(str::trim)
-        .map(|id| id.rsplit_once('@').map_or(id, |(bare, _)| bare.trim()))
-        == Some(expected)
+    let expected = expected.trim();
+    !expected.is_empty()
+        && row["identity"]
+            .as_str()
+            .or_else(|| row["id"].as_str())
+            .map(str::trim)
+            .map(|id| id.rsplit_once('@').map_or(id, |(bare, _)| bare.trim()))
+            .filter(|id| !id.is_empty())
+            == Some(expected)
 }
 
 pub(super) fn error(root: &Path, components: &[WorkspaceComponent], error: io::Error) -> io::Error {

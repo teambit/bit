@@ -137,10 +137,10 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 break;
             }
             "--no-color" | "--no-color=true" | "--no-color=false" => {}
-            "--aspect" => aspect = Some(take_val(iter.next()?)?),
-            "--task" => task = Some(take_val(iter.next()?)?),
-            "--files" => files = Some(take_val(iter.next()?)?),
-            "--out-dir" => out_dir = Some(take_val(iter.next()?)?),
+            "--aspect" if aspect.is_none() => aspect = Some(take_val(iter.next()?)?),
+            "--task" if task.is_none() => task = Some(take_val(iter.next()?)?),
+            "--files" if files.is_none() => files = Some(take_val(iter.next()?)?),
+            "--out-dir" if out_dir.is_none() => out_dir = Some(take_val(iter.next()?)?),
             _ => apply_inline_or_pattern(
                 arg,
                 &mut pattern,
@@ -174,13 +174,13 @@ fn apply_inline_or_pattern(
     files_and_out: (&mut Option<String>, &mut Option<String>),
 ) -> Option<()> {
     let (files, out_dir) = files_and_out;
-    if let Some(val) = arg.strip_prefix("--aspect=") {
+    if let Some(val) = arg.strip_prefix("--aspect=").filter(|_| aspect.is_none()) {
         *aspect = Some(take_val(val)?);
-    } else if let Some(val) = arg.strip_prefix("--task=") {
+    } else if let Some(val) = arg.strip_prefix("--task=").filter(|_| task.is_none()) {
         *task = Some(take_val(val)?);
-    } else if let Some(val) = arg.strip_prefix("--files=") {
+    } else if let Some(val) = arg.strip_prefix("--files=").filter(|_| files.is_none()) {
         *files = Some(take_val(val)?);
-    } else if let Some(val) = arg.strip_prefix("--out-dir=") {
+    } else if let Some(val) = arg.strip_prefix("--out-dir=").filter(|_| out_dir.is_none()) {
         *out_dir = Some(take_val(val)?);
     } else if !arg.starts_with('-') && !arg.trim().is_empty() && pattern.is_none() {
         *pattern = Some(arg.trim().to_owned());

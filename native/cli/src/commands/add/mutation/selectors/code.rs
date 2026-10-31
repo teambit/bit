@@ -61,8 +61,8 @@ fn target(
         .as_object()
         .ok_or_else(|| io::Error::other("code predicate fields"))?
         .iter()
-        .filter(|(name, _)| FIELDS.contains(&name.as_str()))
-        .map(|(key, value)| (key.clone(), value.clone()))
+        .filter(|(name, _)| FIELDS.contains(&name.trim()))
+        .map(|(key, value)| (key.trim().to_owned(), value.clone()))
         .collect();
     Ok(Some(
         json!({"identity":id,"version":version,"directory":component.root_dir,"files":component.files,"current":current}),

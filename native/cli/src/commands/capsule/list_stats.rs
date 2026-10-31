@@ -70,7 +70,7 @@ pub(super) fn inspect(path: &Path, with_sizes: bool) -> RootEntry {
                 && value
                     .get("kind")
                     .and_then(Value::as_str)
-                    .is_some_and(|kind| VALID_KINDS.contains(&kind))
+                    .is_some_and(|kind| VALID_KINDS.contains(&kind.trim()))
         });
     let stamp = valid
         .and_then(|_| fs::metadata(&marker).ok())
@@ -79,12 +79,12 @@ pub(super) fn inspect(path: &Path, with_sizes: bool) -> RootEntry {
     RootEntry {
         path: path.to_string_lossy().into_owned(),
         kind: valid
-            .and_then(|value| value["kind"].as_str())
+            .and_then(|value| value["kind"].as_str().map(str::trim))
             .unwrap_or("unmarked")
             .into(),
         origin_path: valid
             .and_then(|value| value["originPath"].as_str())
-            .map(str::to_owned),
+            .map(|origin_path| origin_path.trim().to_owned()),
         last_used_ms: stamp.map_or(0, millis),
         size_bytes: if with_sizes { dir_size(path) } else { 0 },
     }

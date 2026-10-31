@@ -60,9 +60,9 @@ fn lane_head(request: &Request) -> io::Result<Option<String>> {
         raw: Budget::new(32 * 1024 * 1024),
         packed: Budget::new(32 * 1024 * 1024),
     };
-    let name = format!("{}/{}", id.scope, id.name);
+    let name = format!("{}/{}", id.scope.trim(), id.name.trim());
     Ok(lane::read(&request.root, &reader, &name)?
-        .and_then(|lane| lane.heads.get(&request.identity).cloned()))
+        .and_then(|lane| lane.heads.get(request.identity.trim()).cloned()))
 }
 
 fn model(request: &Request, pool: &ThreadPool) -> io::Result<Value> {
@@ -79,14 +79,15 @@ fn model(request: &Request, pool: &ThreadPool) -> io::Result<Value> {
         pool,
         false,
     )?;
+    let target = request.identity.trim();
     let model = snapshot.models
         .into_iter()
         .find(|model| {
-            let scope = model["scope"].as_str().unwrap_or_default();
-            let name = model["name"].as_str().unwrap_or_default();
+            let scope = model["scope"].as_str().map_or("", str::trim);
+            let name = model["name"].as_str().map_or("", str::trim);
             let identity =
                 if scope.is_empty() { name.to_string() } else { format!("{scope}/{name}") };
-            identity == request.identity
+            identity == target
         })
         .ok_or_else(|| invalid("component log model absent"))?;
     Ok(model)

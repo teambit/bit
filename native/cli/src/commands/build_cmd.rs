@@ -142,7 +142,10 @@ pub(in crate::commands) fn is_bitmap_auto_sync(ws_config: &serde_json::Value) ->
                 .or_else(|| {
                     obj.iter()
                         .find_map(|(key, val)| {
-                            key.starts_with("teambit.workspace/workspace@").then_some(val)
+                            let key = key.trim();
+                            (key == "teambit.workspace/workspace"
+                                || key.starts_with("teambit.workspace/workspace@"))
+                            .then_some(val)
                         })
                 })
         })
@@ -179,6 +182,7 @@ fn consume_trailing_build_pattern<'a>(
     pattern: &mut Option<String>,
 ) -> Option<()> {
     for val in iter {
+        let val = val.trim();
         if pattern.is_some() || val.is_empty() || val.starts_with('-') {
             return None;
         }

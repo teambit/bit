@@ -10,6 +10,7 @@ pub(super) struct File {
 }
 
 pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec<Vec<File>>> {
+    super::super::super::count(request.targets.len())?;
     let mut paths = Vec::new();
     let mut bitmaps = HashSet::new();
     let mut identities = HashSet::new();
@@ -39,7 +40,7 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
                 .filter_map(|file| {
                     let mut captured = captured.next()?;
                     captured.metadata["relativePath"] = json!(file);
-                    captured.metadata["name"] = json!(file.rsplit('/').next());
+                    captured.metadata["name"] = json!(file.rsplit('/').next().unwrap_or(file));
                     Some(captured)
                 })
                 .collect()

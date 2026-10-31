@@ -200,13 +200,8 @@ pub(in crate::commands) fn serialize_json_preserving_newline(
     parsed: &Value,
 ) -> Result<Vec<u8>, Failure> {
     let newline = if original.contains("\r\n") { "\r\n" } else { "\n" };
-    let rendered = format!(
-        "{}{newline}",
-        serde_json::to_string_pretty(parsed).map_err(|err| Failure::Declined(err.to_string()))?,
-    );
-    Ok(if newline == "\r\n" {
-        rendered.replace('\n', "\r\n").into_bytes()
-    } else {
-        rendered.into_bytes()
-    })
+    let pretty =
+        serde_json::to_string_pretty(parsed).map_err(|err| Failure::Declined(err.to_string()))?;
+    let body = if newline == "\r\n" { pretty.replace('\n', "\r\n") } else { pretty };
+    Ok(format!("{body}{newline}").into_bytes())
 }

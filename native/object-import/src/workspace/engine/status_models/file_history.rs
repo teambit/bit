@@ -127,11 +127,12 @@ fn version(
     cache: &mut HashMap<String, Value>,
     hash: &str,
 ) -> io::Result<Value> {
-    if let Some(version) = cache.get(hash) {
+    let key = crate::validate::hexadecimal(&merge_history::hash(hash.trim())?);
+    if let Some(version) = cache.get(&key) {
         return Ok(version.clone());
     }
-    let version = reader.read(hash)?;
-    cache.insert(hash.to_string(), version.clone());
+    let version = reader.read(&key)?;
+    cache.insert(key, version.clone());
     Ok(version)
 }
 
@@ -162,14 +163,15 @@ fn source(
     raw: &Budget,
     packed: &Budget,
 ) -> io::Result<String> {
-    if let Some(contents) = cache.get(hash) {
+    let reference = merge_history::hash(hash.trim())?;
+    let key = crate::validate::hexadecimal(&reference);
+    if let Some(contents) = cache.get(&key) {
         return Ok(contents.clone());
     }
-    let reference = merge_history::hash(hash)?;
     let record = repository::read_source_shared(directory, reference, raw, packed)?;
     merge_transaction::reads::source(reference, &record)?;
     let contents =
         String::from_utf8(record.body).map_err(|_| invalid("file history binary source"))?;
-    cache.insert(hash.to_string(), contents.clone());
+    cache.insert(key, contents.clone());
     Ok(contents)
 }

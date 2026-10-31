@@ -21,7 +21,11 @@ pub(super) fn validate(target: &Target) -> io::Result<()> {
         return Err(invalid("source overlay outside component inventory"));
     }
     if let Some(root) = &target.source_overlay_root
-        && (!root.is_absolute() || !fs::symlink_metadata(root)?.is_dir())
+        && (!root.is_absolute()
+            || root
+                .components()
+                .any(|part| matches!(part, Component::CurDir | Component::ParentDir))
+            || !fs::symlink_metadata(root)?.is_dir())
     {
         return Err(invalid("source overlay root must be an absolute regular directory"));
     }

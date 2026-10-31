@@ -76,7 +76,13 @@ pub(in crate::commands) fn workspace_default_scope(workspace: &Value) -> Result<
         workspace.as_object().ok_or_else(|| Failure::Declined("workspace.jsonc object".into()))?;
     let key = rows
         .keys()
-        .find(|key| key.split('@').next() == Some("teambit.workspace/workspace"))
+        .find(|key| {
+            key.trim()
+                .split('@')
+                .next()
+                .map(str::trim)
+                == Some("teambit.workspace/workspace")
+        })
         .cloned()
         .unwrap_or_else(|| "teambit.workspace/workspace".into());
     let ws = &workspace[&key];

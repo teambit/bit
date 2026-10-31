@@ -69,12 +69,14 @@ fn rejected_app_option(args: &[&str], list: bool) -> Option<&'static str> {
         return Some("Unknown arguments: no-color, noColor");
     }
     let flag = match args {
-        [flag] => *flag,
-        [flag @ ("--port" | "--args" | "-p" | "-a"), value] if !value.starts_with('-') => *flag,
+        [flag] => flag.trim(),
+        [flag @ ("--port" | "--args" | "-p" | "-a"), value] if !value.starts_with('-') => {
+            flag.trim()
+        }
         _ => return None,
     };
-    let flag = flag.split_once('=').map_or(flag, |(name, _)| name);
-    if list && flag == "--json" {
+    let flag = flag.split_once('=').map_or(flag, |(name, _)| name.trim());
+    if list && matches!(flag, "--json" | "-j") {
         return None;
     }
     match flag {

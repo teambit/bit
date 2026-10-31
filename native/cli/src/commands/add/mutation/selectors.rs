@@ -33,6 +33,7 @@ impl ProjectedLinker {
         pattern: &str,
         output: &Output,
     ) -> io::Result<Vec<String>> {
+        let pattern = pattern.trim();
         if !Self::state_pattern(pattern) {
             return preparation::ids(root, pattern);
         }

@@ -27,23 +27,48 @@ struct Component {
 type Graph = HashMap<String, Vec<String>>;
 
 pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
-    let workspace = request.components
-        .iter()
-        .map(|component| component.identity.as_str())
-        .collect::<HashSet<_>>();
+    super::path(&request.root)?;
+    if request.versions.len() > 4096 || request.components.len() > 4096 {
+        return Err(invalid("status issue graph node budget"));
+    }
     let mut repository = Repository::new(&request.root, None);
     let mut graph = Graph::new();
     for (_, version) in &request.versions {
         append_version(&mut graph, version, &mut repository)?;
     }
+    let external = collect_external_graph(request, &mut graph, &mut repository)?;
+    let (models, heads) = metadata(request, &mut repository)?;
+    repository.validate()?;
+    Ok((
+        external.len(),
+        json!({"external":external,"models":models,"versions":heads,"readSet":repository.read_set()}),
+    ))
+}
+
+fn collect_external_graph(
+    request: &Request,
+    graph: &mut Graph,
+    repository: &mut Repository,
+) -> io::Result<Vec<Value>> {
+    let workspace = request.components
+        .iter()
+        .map(|component| component.identity.trim())
+        .collect::<HashSet<_>>();
     let mut queue = request.components
         .iter()
-        .flat_map(|component| component.dependencies.iter().cloned())
+        .flat_map(|component| {
+            component.dependencies
+                .iter()
+                .map(|dependency| dependency.trim().to_owned())
+        })
         .collect::<VecDeque<_>>();
     let mut seen = HashSet::new();
     let mut external = Vec::new();
     while let Some(identity) = queue.pop_front() {
-        if workspace.contains(identity.as_str()) || !seen.insert(identity.clone()) {
+        if identity.is_empty()
+            || workspace.contains(identity.as_str())
+            || !seen.insert(identity.clone())
+        {
             continue;
         }
         if seen.len() > 4096 {
@@ -51,17 +76,12 @@ pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
         }
         let dependencies = match graph.get(&identity) {
             Some(dependencies) => dependencies.clone(),
-            None => read_external(&request.root, &identity, &mut graph, &mut repository)?,
+            None => read_external(&request.root, &identity, graph, repository)?,
         };
         queue.extend(dependencies.iter().cloned());
         external.push(json!({"identity":identity,"dependencies":dependencies,"model":null}));
     }
-    let (models, heads) = metadata(request, &mut repository)?;
-    repository.validate()?;
-    Ok((
-        external.len(),
-        json!({"external":external,"models":models,"versions":heads,"readSet":repository.read_set()}),
-    ))
+    Ok(external)
 }
 
 type ModelMetadata = (Vec<Value>, Vec<(String, Value)>);

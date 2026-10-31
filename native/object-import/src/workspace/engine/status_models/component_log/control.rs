@@ -92,7 +92,9 @@ pub(super) fn staged(rows: &mut [Value], config: &Value) {
 fn deprecation(range: &Value, tag: &str) -> Value {
     if range.is_null()
         || range.as_bool() == Some(false)
-        || range.as_str() == Some("")
+        || range
+            .as_str()
+            .is_some_and(|text| text.trim().is_empty())
         || range.as_f64() == Some(0.0)
     {
         return range.clone();
@@ -100,8 +102,8 @@ fn deprecation(range: &Value, tag: &str) -> Value {
     json!(
         range
             .as_str()
-            .and_then(|range| Range::parse(range).ok())
-            .zip(Version::parse(tag).ok())
+            .and_then(|range| Range::parse(range.trim()).ok())
+            .zip(Version::parse(tag.trim()).ok())
             .is_some_and(|(range, tag)| range.satisfies(&tag))
     )
 }

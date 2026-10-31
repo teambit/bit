@@ -60,7 +60,7 @@ fn updates(value: Option<&Value>, formatter: &Formatter) -> io::Result<String> {
 }
 
 fn update_pair(value: &Value) -> io::Result<(&str, &str)> {
-    if let Some(object) = value.as_object() {
+    let (before, after) = if let Some(object) = value.as_object() {
         let before = text(
             object
                 .get("from")
@@ -71,11 +71,16 @@ fn update_pair(value: &Value) -> io::Result<(&str, &str)> {
                 .get("to")
                 .or_else(|| object.get("newVersion")),
         )?;
-        return Ok((before, after));
-    }
-    let row = array(Some(value), "checkout workspace dependency update")?;
-    if row.len() != 2 {
+        (before.trim(), after.trim())
+    } else {
+        let row = array(Some(value), "checkout workspace dependency update")?;
+        if row.len() != 2 {
+            return Err(decline("checkout workspace dependency versions"));
+        }
+        (text(Some(&row[0]))?.trim(), text(Some(&row[1]))?.trim())
+    };
+    if before.is_empty() || after.is_empty() {
         return Err(decline("checkout workspace dependency versions"));
     }
-    Ok((text(Some(&row[0]))?, text(Some(&row[1]))?))
+    Ok((before, after))
 }

@@ -108,36 +108,55 @@ fn identity(value: &Value) -> io::Result<Value> {
         return identity_from_str(text);
     }
     let object = value.as_object().ok_or_else(|| invalid("status Version dependency identity"))?;
-    let Some(raw_name) = object.get("name").and_then(Value::as_str) else {
+    let Some(raw_name) = object
+        .get("name")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+    else {
         return Err(invalid("status Version dependency scope"));
     };
-    let raw_name = raw_name.trim();
-    if raw_name.is_empty()
-        || object
-            .get("scope")
-            .and_then(Value::as_str)
-            .is_none_or(|scope| scope.trim().is_empty())
-    {
+    let Some(scope) = object
+        .get("scope")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+    else {
         return Err(invalid("status Version dependency scope"));
-    }
+    };
     let mut object = object.clone();
+    object.insert("scope".into(), json!(scope));
     let (bare_name, inline_ver) = raw_name
         .rsplit_once('@')
         .map_or((raw_name, None), |(bare, ver)| (bare.trim(), Some(ver.trim())));
     object.insert("name".into(), json!(bare_name));
+    normalize_object_version(&mut object, inline_ver);
+    Ok(Value::Object(object))
+}
+
+fn normalize_object_version(object: &mut serde_json::Map<String, Value>, inline_ver: Option<&str>) {
     if !object.contains_key("version")
-        && let Some(ver) = inline_ver.or_else(|| object.get("head").and_then(Value::as_str))
+        && let Some(ver) = inline_ver.or_else(|| {
+            object
+                .get("head")
+                .and_then(Value::as_str)
+                .map(str::trim)
+        })
     {
         object.insert("version".into(), json!(ver));
     }
-    if object
+    if let Some(version) = object
         .get("version")
         .and_then(Value::as_str)
-        .is_some_and(|version| version.is_empty() || matches!(version, "latest" | "head"))
+        .map(str::trim)
+        .map(str::to_owned)
     {
-        object.remove("version");
+        if version.is_empty() || matches!(version.as_str(), "latest" | "head") {
+            object.remove("version");
+        } else {
+            object.insert("version".into(), json!(version));
+        }
     }
-    Ok(Value::Object(object))
 }
 
 fn identity_from_str(text: &str) -> io::Result<Value> {

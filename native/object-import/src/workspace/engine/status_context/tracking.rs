@@ -82,6 +82,13 @@ fn component(root: &Path, mut target: Value, budget: &Budget) -> io::Result<Valu
         .filter(|dir| !dir.is_empty())
         .ok_or_else(|| invalid("tracking directory"))?;
     let path = root.join(directory);
+    match fs::symlink_metadata(&path) {
+        Ok(metadata) if !metadata.is_dir() => {
+            return Err(invalid("tracking component directory"));
+        }
+        Err(error) if error.kind() != io::ErrorKind::NotFound => return Err(error),
+        _ => {}
+    }
     let component = optional_jsonc(&path.join("component.json"), budget)?;
     target["config"] =
         if component.is_null() { Value::Null } else { normalize(&component, &target)? };

@@ -185,13 +185,9 @@ fn finish_capture(
         if let Some(component) = loaded.capture.components
             .iter()
             .find(|component| {
-                row_id
-                    == Some(
-                        component.identity
-                            .split('@')
-                            .next()
-                            .unwrap_or(&component.identity),
-                    )
+                let comp_id = component.identity.trim();
+                let bare = comp_id.rsplit_once('@').map_or(comp_id, |(base, _)| base.trim());
+                row_id == Some(bare)
             })
         {
             row["packageName"] = json!(component.package_name);
@@ -271,12 +267,7 @@ fn row_identity(row: &Value) -> Option<&str> {
         .as_str()
         .or_else(|| row["id"].as_str())
         .map(str::trim)
-        .map(|id| {
-            id.split('@')
-                .next()
-                .unwrap_or(id)
-                .trim()
-        })
+        .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
         .filter(|id| !id.is_empty())
 }
 

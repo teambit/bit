@@ -114,7 +114,26 @@ fn history_identity<'a>(
 }
 
 fn record(row: &Value) -> Value {
-    let mut output = json!({"hash":row["hash"],"parents":row["parents"]});
+    let hash = row["hash"]
+        .as_str()
+        .map_or_else(|| row["hash"].clone(), |value| json!(value.trim()));
+    let parents = row["parents"]
+        .as_array()
+        .map_or_else(
+            || row["parents"].clone(),
+            |items| {
+                Value::Array(
+                    items
+                        .iter()
+                        .map(|item| {
+                            item.as_str()
+                                .map_or_else(|| item.clone(), |value| json!(value.trim()))
+                        })
+                        .collect(),
+                )
+            },
+        );
+    let mut output = json!({"hash":hash,"parents":parents});
     for key in ["unrelated", "squashed"] {
         if let Some(value) = row
             .get(key)

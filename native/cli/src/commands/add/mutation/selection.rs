@@ -28,7 +28,7 @@ pub(super) fn prepare(
                 "rootDir": component.root_dir,
                 "mainFile": component.main_file,
                 "files": component.files,
-                "loadVersion": component.id.version.as_deref().filter(|version| !version.is_empty()).unwrap_or("latest"),
+                "loadVersion": component.id.version.as_deref().map(str::trim).filter(|version| !version.is_empty()).unwrap_or("latest"),
             })
         })
         .collect::<Vec<_>>();
@@ -49,7 +49,7 @@ pub(super) fn components(
         .filter_map(|identity| {
             projection.workspace.components
                 .iter()
-                .find(|component| component.id.to_string_without_version() == identity)
+                .find(|component| component.id.to_string_without_version().trim() == identity)
                 .cloned()
         })
         .collect()
@@ -73,7 +73,9 @@ pub(super) fn seed_environments(
 }
 
 fn extract_registered_env(facts: &Value, env_id: &str) -> Option<String> {
-    let entry = facts.get(env_id)?;
+    let entry = facts
+        .get(env_id)
+        .or_else(|| facts.get(env_id.trim()))?;
     entry
         .as_str()
         .or_else(|| {

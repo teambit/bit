@@ -59,8 +59,10 @@ impl Document {
         let mut node = &self.root;
         for key in path {
             node = match node {
-                Node::Object(object) => object.entries.get(*key)?,
-                Node::Array(items, _) => items.get(key.parse::<usize>().ok()?)?,
+                Node::Object(object) => object.entries
+                    .get(*key)
+                    .or_else(|| object.entries.get(key.trim()))?,
+                Node::Array(items, _) => items.get(key.trim().parse::<usize>().ok()?)?,
                 _ => return None,
             };
         }

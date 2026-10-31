@@ -75,7 +75,7 @@ fn source_budgets(captured: &[Vec<capture::File>]) -> io::Result<Budgets> {
 fn index_versions(versions: &[(String, Value)]) -> HashMap<&str, &Value> {
     versions
         .iter()
-        .map(|(reference, value)| (reference.as_str(), value))
+        .map(|(reference, value)| (reference.trim(), value))
         .collect()
 }
 
@@ -160,6 +160,6 @@ fn one(
         files::read(request, sources, model, budgets, overlay)?
     };
     Ok(
-        json!({"identity":target.identity,"modified":modified,"model":model,"current":current,"files":files}),
+        json!({"identity":target.identity.trim(),"modified":modified,"model":model,"current":current,"files":files}),
     )
 }

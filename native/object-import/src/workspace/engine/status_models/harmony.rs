@@ -97,7 +97,10 @@ fn identity(value: &Value) -> io::Result<Value> {
     }
     let mut output = json!({"scope":scope,"name":name});
     if let Some(version) = value.get("version") {
-        let version = version.as_str().ok_or_else(|| invalid("Harmony dependency version"))?;
+        let version = version
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("Harmony dependency version"))?;
         if !version.is_empty() && !matches!(version, "latest" | "head") {
             output["version"] = json!(version);
         }
@@ -106,12 +109,12 @@ fn identity(value: &Value) -> io::Result<Value> {
 }
 
 fn flattened_identity(value: &Value) -> io::Result<Value> {
-    let Some(text) = value.as_str() else {
+    let Some(text) = value.as_str().map(str::trim) else {
         return identity(value);
     };
     let (name, version) = text
         .rsplit_once('@')
-        .map_or((text, None), |(name, version)| (name, Some(version)));
+        .map_or((text, None), |(name, version)| (name.trim(), Some(version.trim())));
     let (scope, name) =
         name.split_once('/').ok_or_else(|| invalid("Harmony unscoped flattened dependency"))?;
     let mut value = json!({"scope":scope,"name":name});

@@ -172,18 +172,20 @@ fn sources(
                 .map(str::trim)
                 .filter(|reference| !reference.is_empty())
                 .ok_or_else(|| invalid("version diff source ref"))?;
-            if let Some(source) = overlay.and_then(|overlay| overlay.source(reference)) {
+            let digest = crate::merge_history::hash(reference)?;
+            let canonical = crate::validate::hexadecimal(&digest);
+            if let Some(source) = overlay.and_then(|overlay| overlay.source(&canonical)) {
                 raw.reserve(source.len())?;
-                overlay.expect("source belongs to overlay").trace_source(reference)?;
+                overlay.expect("source belongs to overlay").trace_source(&canonical)?;
                 return Ok((path.to_string(), source.to_vec()));
             }
-            let reference = crate::merge_history::hash(reference)?;
             let source = repository::read_source_shared(
                 &crate::scope_path(root).join("objects"),
-                reference,
+                digest,
                 raw,
                 packed,
             )?;
+            let reference = digest;
             crate::merge_transaction::reads::source(reference, &source)?;
             Ok((path.to_string(), source.body))
         })

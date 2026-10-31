@@ -32,9 +32,12 @@ impl Spool {
         Ok(Self { path: PathBuf::from(path), offset, size, hash })
     }
     pub(super) fn read(&self) -> io::Result<Vec<u8>> {
+        if !fs::symlink_metadata(&self.path)?.is_file() {
+            return Err(invalid("overlay spool changed"));
+        }
         let mut file = fs::File::open(&self.path)?;
         file.seek(SeekFrom::Start(self.offset))?;
-        let mut bytes = Vec::new();
+        let mut bytes = Vec::with_capacity(self.size as usize);
         file.take(self.size).read_to_end(&mut bytes)?;
         if bytes.len() as u64 != self.size || crate::workspace::engine::hash(&bytes) != self.hash {
             return Err(invalid("overlay spool changed"));

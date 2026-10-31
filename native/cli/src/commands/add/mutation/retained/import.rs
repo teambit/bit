@@ -39,10 +39,10 @@ impl Retained {
     ) -> io::Result<()> {
         let replacements = self.import_replacements(writes)?;
         for (before, after) in replacements {
+            let expected_path = content_path(&before)?;
             for proof in self.read_set.iter_mut().chain(self.controls.values_mut()) {
                 if content(proof)
-                    && proof["path"].as_str().map(Path::new)
-                        == before["path"].as_str().map(Path::new)
+                    && content_path(proof).ok() == Some(expected_path)
                     && proof["hash"] == before["hash"]
                 {
                     proof["hash"] = after["hash"].clone();

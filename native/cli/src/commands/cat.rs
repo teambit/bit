@@ -181,17 +181,18 @@ struct Read {
 }
 
 fn prepare(root: &Path, options: &Options<'_>) -> Result<Prepared, Failure> {
-    let raw = options.id.ok_or_else(|| decline("cat identity"))?;
+    let raw = options.id.ok_or_else(|| decline("cat identity"))?.trim();
     let (requested, explicit) = raw
         .rsplit_once('@')
-        .map_or((raw, None), |(id, version)| (id, Some(version)));
-    if requested.trim().is_empty() || explicit.is_some_and(|ver| ver.trim().is_empty()) {
+        .map_or((raw, None), |(id, version)| (id.trim(), Some(version.trim())));
+    if requested.is_empty() || explicit.is_some_and(str::is_empty) {
         return Err(decline("cat identity or version").into());
     }
     let entry = selected_entry(root, requested)?;
     let mut engine = Engine::new()?;
     require_component(root, &entry, &mut engine)?;
-    let current_version = explicit.is_none_or(|version| entry.version.as_deref() == Some(version));
+    let current_version =
+        explicit.is_none_or(|version| entry.version.as_deref().map(str::trim) == Some(version));
     let mut source = if current_version {
         read_current(root, &entry, options)?
     } else {
@@ -308,12 +309,13 @@ fn require_component(root: &Path, entry: &bitmap::Entry, engine: &mut Engine) ->
     let context: Value = engine.request(&json!({
         "kind":"statusContext", "root":root, "home":workspace_command::home(), "history":false,
     }))?;
+    let entry_id = entry.identity.trim();
     let target = context["targets"]
         .as_array()
         .and_then(|targets| {
             targets
                 .iter()
-                .find(|target| target["identity"] == entry.identity)
+                .find(|target| target["identity"].as_str().map(str::trim) == Some(entry_id))
         })
         .ok_or_else(|| decline("cat current component context"))?;
     Environments::require_native_write_for(root, &context, std::slice::from_ref(target))

@@ -129,16 +129,18 @@ impl Checkout<'_> {
             return self.format.success_summary(&title);
         }
         let version = if self.to("head") || self.to("latest") {
-            id.version.clone()
+            id.version.as_deref()
         } else {
-            self.results.version.clone()
-        };
-        let version = version.unwrap_or_else(|| "undefined".to_string());
+            self.results.version.as_deref()
+        }
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .unwrap_or("undefined");
         let title = format!(
             "successfully {} {} to version {}",
             if self.options.revert { "reverted" } else { "switched" },
             chalk.bold(&id.without_version()),
-            chalk.bold(&version),
+            chalk.bold(version),
         );
         join_lines(&[
             self.format.success_summary(self.title.unwrap_or(&title)),
@@ -161,7 +163,11 @@ impl Checkout<'_> {
         } else if self.to("main") {
             "their main version".to_string()
         } else {
-            let version = self.results.version.as_deref().unwrap_or("undefined");
+            let version = self.results.version
+                .as_deref()
+                .map(str::trim)
+                .filter(|ver| !ver.is_empty())
+                .unwrap_or("undefined");
             format!("version {}", self.chalk().bold(version))
         };
         let title = format!(

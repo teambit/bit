@@ -161,9 +161,11 @@ impl Lexer<'_> {
             let first = raw.chars().next().unwrap_or_default();
             return Err(invalid(format!("Unexpected token {first}")));
         }
-        raw.parse()
+        raw.parse::<f64>()
+            .ok()
+            .filter(|value| value.is_finite())
             .map(Kind::Number)
-            .map_err(|_| invalid("Unexpected number"))
+            .ok_or_else(|| invalid("Unexpected number"))
     }
 
     fn word(&mut self, start: usize) -> io::Result<Kind> {

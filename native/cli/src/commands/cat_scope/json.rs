@@ -20,7 +20,7 @@ pub(super) fn build_component_json_obj(
     map.insert("lang".into(), Value::String(lang.to_owned()));
     map.insert("deprecated".into(), Value::Bool(raw["deprecated"].as_bool().unwrap_or(false)));
     let binding_prefix = non_empty_str(&raw["bindingPrefix"])
-        .map_or_else(|| format!("@{}", scope.split('.').next().unwrap_or(scope)), str::to_owned);
+        .map_or_else(|| default_binding_prefix(scope), str::to_owned);
     map.insert("bindingPrefix".into(), Value::String(binding_prefix));
     map.insert(
         "state".into(),
@@ -49,6 +49,16 @@ pub(super) fn build_component_json_obj(
     Some(Value::Object(map))
 }
 
+fn default_binding_prefix(scope: &str) -> String {
+    let owner = scope
+        .split('.')
+        .next()
+        .map(str::trim)
+        .filter(|part| !part.is_empty())
+        .unwrap_or(scope);
+    format!("@{owner}")
+}
+
 fn non_empty_str(val: &Value) -> Option<&str> {
     val.as_str()
         .map(str::trim)
@@ -56,13 +66,18 @@ fn non_empty_str(val: &Value) -> Option<&str> {
 }
 
 fn split_scope_name(val: &Value) -> Option<(&str, &str)> {
-    let (scope, name) = if let Some(raw) = non_empty_str(val) {
-        raw.rsplit_once('@')
-            .map_or(raw, |(bare, _)| bare)
-            .split_once('/')?
-    } else {
-        (non_empty_str(&val["scope"])?, non_empty_str(&val["name"])?)
-    };
+    let target = val
+        .get("id")
+        .filter(|id| id.is_object())
+        .unwrap_or(val);
+    let (scope, name) =
+        if let Some(raw) = non_empty_str(target).or_else(|| non_empty_str(&val["id"])) {
+            raw.rsplit_once('@')
+                .map_or(raw, |(bare, _)| bare)
+                .split_once('/')?
+        } else {
+            (non_empty_str(&target["scope"])?, non_empty_str(&target["name"])?)
+        };
     let (scope, name) = (scope.trim(), name.trim());
     (!scope.is_empty() && !name.is_empty()).then_some((scope, name))
 }

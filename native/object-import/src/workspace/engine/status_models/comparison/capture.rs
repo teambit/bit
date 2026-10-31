@@ -69,7 +69,7 @@ fn build_target_files(
             .iter()
             .filter_map(|file| {
                 let metadata = captured.next()?;
-                Some(json!({"relativePath":file,"name":file.rsplit('/').next(),"test":false,"file":metadata.linux_hash}))
+                Some(json!({"relativePath":file,"name":file.rsplit('/').next().unwrap_or(file),"test":false,"file":metadata.linux_hash}))
             })
             .collect(),
     )
@@ -125,8 +125,11 @@ pub(in crate::workspace::engine) fn validate(target: &Target) -> io::Result<()> 
 }
 fn relative(value: &str) -> io::Result<()> {
     if value.is_empty()
+        || value.trim() != value
         || value.len() > 32768
-        || value.contains(['\\', ':', '\0'])
+        || value
+            .chars()
+            .any(|ch| matches!(ch, '\\' | ':') || ch.is_control())
         || value
             .split('/')
             .any(|part| matches!(part, "" | "." | ".."))

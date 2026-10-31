@@ -36,7 +36,8 @@ fn downcast_callback(error: &io::Error) -> Option<&crate::host::callback_error::
     let mut current: Option<&(dyn std::error::Error + 'static)> = error
         .get_ref()
         .map(|inner| inner as &(dyn std::error::Error + 'static));
-    while let Some(inner) = current {
+    for _ in 0..32 {
+        let inner = current?;
         if let Some(callback) = inner.downcast_ref::<crate::host::callback_error::CallbackError>() {
             return Some(callback);
         }

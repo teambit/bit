@@ -89,6 +89,7 @@ fn parse_bool_flag(arg: &str) -> Option<(&str, bool)> {
 
 fn apply_create_inline_or_id(arg: &str, create: &mut CreateArgs) -> Option<()> {
     if let Some((key, val)) = arg.split_once('=') {
+        let val = val.trim();
         if val.is_empty() || val.starts_with('-') {
             return None;
         }
@@ -99,8 +100,8 @@ fn apply_create_inline_or_id(arg: &str, create: &mut CreateArgs) -> Option<()> {
             "--package-manager" | "-p" => {}
             _ => return None,
         }
-    } else if !arg.starts_with('-') && !arg.is_empty() {
-        create.ids.push(arg.to_owned());
+    } else if !arg.starts_with('-') && !arg.trim().is_empty() {
+        create.ids.push(arg.trim().to_owned());
     } else {
         return None;
     }
@@ -128,7 +129,7 @@ fn apply_create_combined_short(arg: &str, create: &mut CreateArgs) -> bool {
 }
 
 fn next_option_value<'a>(args: &mut impl Iterator<Item = &'a str>) -> Option<&'a str> {
-    let value = args.next()?;
+    let value = args.next()?.trim();
     (!value.is_empty() && !value.starts_with('-')).then_some(value)
 }
 

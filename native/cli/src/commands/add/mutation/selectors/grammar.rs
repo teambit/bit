@@ -21,6 +21,7 @@ const STATES: [&str; 9] = [
 pub(super) fn validate(criterion: &str) -> io::Result<()> {
     let Some(state) = criterion.trim().strip_prefix('$') else { return Ok(()) };
     if let Some((name, _)) = state.split_once(':') {
+        let name = name.trim();
         if name == "env" {
             return Ok(());
         }
@@ -37,6 +38,7 @@ pub(super) fn validate(criterion: &str) -> io::Result<()> {
     )))
 }
 pub(super) fn loads(criterion: &str) -> bool {
+    let criterion = criterion.trim();
     matches!(criterion, "$modified" | "$deprecated" | "$deleted") || criterion.starts_with("$env:")
 }
 pub(super) fn identities(targets: &[Value]) -> Vec<String> {
@@ -94,12 +96,14 @@ pub(super) fn no_matches(pattern: &str) -> io::Error {
 }
 
 pub(super) fn applied(entered: &str) -> String {
+    let entered = entered.trim();
     if let Some(env) = entered.strip_prefix("$env:") {
         format!(
             "$env:{}",
             env.split(':')
                 .next()
-                .unwrap_or_default(),
+                .unwrap_or_default()
+                .trim(),
         )
     } else {
         entered.into()

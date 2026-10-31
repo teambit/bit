@@ -71,20 +71,24 @@ fn remote_id_str(value: &Value) -> Option<String> {
 }
 
 fn candidates(added: &[Value], projection: &Projection) -> Vec<Value> {
+    let mut seen = std::collections::HashSet::new();
     added
         .iter()
         .filter_map(|row| {
             let identity = row["identity"]
                 .as_str()
                 .or_else(|| row["id"].as_str())
-                .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base))?;
-            projection.workspace.components
+                .map(str::trim)
+                .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
+                .filter(|id| !id.is_empty())?;
+            (projection.workspace.components
                 .iter()
                 .any(|component| {
                     component.id.scope.is_none()
-                        && identity == component.id.to_string_without_version()
+                        && identity == component.id.to_string_without_version().trim()
                 })
-                .then(|| Value::String(identity.to_owned()))
+                && seen.insert(identity.to_owned()))
+            .then(|| Value::String(identity.to_owned()))
         })
         .collect()
 }

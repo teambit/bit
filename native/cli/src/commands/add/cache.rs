@@ -11,16 +11,18 @@ pub(in crate::commands) fn restrict(root: &Path, capture: &mut Capture) {
     let identities = capture.components
         .iter()
         .filter(|component| {
+            let package_name = component.package_name.trim();
             capture.captured
                 .iter()
                 .any(|row| {
                     row["identity"].as_str().map(identity) == Some(identity(&component.identity))
                         && row["directory"].as_str().map(str::trim) != Some(".")
                 })
-                && !root
-                    .join("node_modules")
-                    .join(&component.package_name)
-                    .exists()
+                && (package_name.is_empty()
+                    || !root
+                        .join("node_modules")
+                        .join(package_name)
+                        .exists())
         })
         .map(|component| identity(&component.identity).to_owned())
         .collect::<HashSet<_>>();

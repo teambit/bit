@@ -22,7 +22,10 @@ pub(super) fn read(
     let bodies = model_sources(request, models, (&budgets.raw, &budgets.packed), overlay)?;
     let mut files = Vec::new();
     for (file, body) in models.iter().zip(bodies) {
-        let path = file["relativePath"].as_str().expect("validated model path");
+        let path = file["relativePath"]
+            .as_str()
+            .expect("validated model path")
+            .trim();
         files.push((path.to_owned(), Some(body), current.remove(path)));
     }
     for path in order {
@@ -80,14 +83,18 @@ fn model_sources(
     files
         .par_iter()
         .map(|file| {
-            let reference =
-                file["file"].as_str().ok_or_else(|| invalid("workspace diff source reference"))?;
-            if let Some(source) = overlay.and_then(|overlay| overlay.source(reference)) {
+            let reference = file["file"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("workspace diff source reference"))?;
+            let digest = crate::merge_history::hash(reference)?;
+            let canonical = crate::validate::hexadecimal(&digest);
+            if let Some(source) = overlay.and_then(|overlay| overlay.source(&canonical)) {
                 budgets.0.reserve(source.len())?;
-                overlay.expect("source belongs to overlay").trace_source(reference)?;
+                overlay.expect("source belongs to overlay").trace_source(&canonical)?;
                 return Ok(source.to_vec());
             }
-            let reference = crate::merge_history::hash(reference)?;
+            let reference = digest;
             let source = repository::read_source_shared(
                 &crate::scope_path(&request.root).join("objects"),
                 reference,

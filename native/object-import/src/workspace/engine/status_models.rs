@@ -104,6 +104,8 @@ fn load_overlay(
     };
     let lane = request.current_lane_id
         .as_deref()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
         .map(|id| lane::read(&request.root, &reader, id))
         .transpose()?
         .flatten();
@@ -140,11 +142,11 @@ fn histories(
     for model in models {
         let identity = comparison::resolved_model_id(
             model,
-            request.targets.iter().map(|target| target.identity.as_str()),
+            request.targets.iter().map(|target| target.identity.trim()),
         );
         if !histories
             .iter()
-            .any(|row| row["identity"] == identity)
+            .any(|row| row["identity"].as_str().map(str::trim) == Some(identity.as_str()))
         {
             let empty = json!({"sourceOnly":[],"targetOnly":[],"noCommon":false});
             histories.push(json!({"identity":identity,"remoteHead":model["head"],"status":empty,"merge":empty}));

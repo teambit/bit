@@ -47,8 +47,8 @@ fn apply_cat_arg<'a>(
     }
     match arg {
         "--file" | "-f" => set_cat_file(options, next?, 2),
-        id if !id.starts_with('-') && !id.is_empty() && options.id.is_none() => {
-            options.id = Some(id);
+        id if !id.starts_with('-') && !id.trim().is_empty() && options.id.is_none() => {
+            options.id = Some(id.trim());
             Some(1)
         }
         _ => None,
@@ -57,9 +57,9 @@ fn apply_cat_arg<'a>(
 
 fn apply_cat_bool(options: &mut Options<'_>, arg: &str) -> bool {
     let (flag, val) = match arg.split_once('=') {
-        Some((flag, "true")) => (flag, true),
-        Some((flag, "false")) => (flag, false),
-        None => (arg, true),
+        Some((flag, val)) if val.trim() == "true" => (flag.trim(), true),
+        Some((flag, val)) if val.trim() == "false" => (flag.trim(), false),
+        None => (arg.trim(), true),
         _ => return false,
     };
     match flag {

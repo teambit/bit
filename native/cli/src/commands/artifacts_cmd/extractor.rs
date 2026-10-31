@@ -321,15 +321,22 @@ pub(super) fn parse_builder_artifacts(ver_val: &Value) -> Vec<ArtifactItem> {
 fn parse_single_artifact(art: &Value, fallback_artifacts: Option<&Vec<Value>>) -> ArtifactItem {
     let artifact_name = art["name"]
         .as_str()
+        .map(str::trim)
         .unwrap_or_default()
         .to_owned();
-    let generated_by = art["generatedBy"].as_str().unwrap_or_default();
+    let generated_by = art["generatedBy"]
+        .as_str()
+        .map(str::trim)
+        .unwrap_or_default();
     let aspect_id = art["task"]["id"]
         .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
         .unwrap_or(generated_by)
         .to_owned();
     let task_name = art["task"]["name"]
         .as_str()
+        .map(str::trim)
         .filter(|name| !name.is_empty())
         .unwrap_or(generated_by)
         .to_owned();
@@ -338,7 +345,7 @@ fn parse_single_artifact(art: &Value, fallback_artifacts: Option<&Vec<Value>>) -
         && let Some(fallbacks) = fallback_artifacts
         && let Some(matching) = fallbacks
             .iter()
-            .find(|other| other["name"].as_str() == Some(artifact_name.as_str()))
+            .find(|other| other["name"].as_str().map(str::trim) == Some(artifact_name.as_str()))
     {
         files = extract_artifact_files(&matching["files"]);
     }
@@ -354,12 +361,15 @@ fn extract_artifact_files(files_val: &Value) -> Vec<ArtifactFile> {
         .filter_map(|item| {
             let relative_path = item["relativePath"]
                 .as_str()
-                .or_else(|| item["relative"].as_str())?
+                .or_else(|| item["relative"].as_str())
+                .map(str::trim)
+                .filter(|path| !path.is_empty())?
                 .to_owned();
             let hash = item["ref"]
                 .as_str()
                 .or_else(|| item["ref"]["hash"].as_str())
                 .or_else(|| item["file"].as_str())
+                .map(str::trim)
                 .unwrap_or_default()
                 .to_owned();
             Some(ArtifactFile { relative_path, hash })

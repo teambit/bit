@@ -119,9 +119,14 @@ fn read_checkout<'a>(
 }
 
 fn extend_non_flag_positionals<'a>(positionals: &mut Vec<&'a str>, tail: &[&'a str]) -> Option<()> {
-    tail.iter()
-        .all(|item| !item.is_empty() && !item.starts_with('-'))
-        .then(|| positionals.extend_from_slice(tail))
+    for &item in tail {
+        let item = item.trim();
+        if item.is_empty() || item.starts_with('-') {
+            return None;
+        }
+        positionals.push(item);
+    }
+    Some(())
 }
 
 fn apply_checkout_flag(
@@ -145,7 +150,9 @@ fn apply_checkout_flag(
         return Some(0);
     }
     if arg == "--auto-merge-resolve" {
-        let value = next.filter(|value| !value.is_empty() && !value.starts_with('-'))?;
+        let value = next
+            .map(str::trim)
+            .filter(|value| !value.is_empty() && !value.starts_with('-'))?;
         flags.insert(arg.to_string(), json!(value));
         return Some(1);
     }
@@ -183,6 +190,7 @@ fn apply_checkout_inline(
     if flags.contains_key(flag) {
         return None;
     }
+    let val = val.trim();
     if BOOLEAN.contains(&flag) || (allow_interactive && flag == "--interactive-merge") {
         let bool_val = match val {
             "true" => true,

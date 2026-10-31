@@ -276,18 +276,21 @@ fn select_dated_children(path: &Path, with_sizes: bool, removed: &mut Vec<Remove
     let now = Local::now();
     let today = format!("{}-{}-{}", now.year(), now.month(), now.day());
     let Ok(entries) = fs::read_dir(path) else { return };
-    for entry in entries.filter_map(Result::ok) {
-        if !entry.file_type().is_ok_and(|kind| kind.is_dir())
-            || entry.file_name() == "node_modules"
-            || entry
-                .file_name()
-                .to_string_lossy()
-                .starts_with('.')
-            || entry.file_name() == today.as_str()
-        {
-            continue;
-        }
-        let child = entry.path();
+    let mut children = entries
+        .filter_map(Result::ok)
+        .filter(|entry| {
+            entry.file_type().is_ok_and(|kind| kind.is_dir())
+                && entry.file_name() != "node_modules"
+                && !entry
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with('.')
+                && entry.file_name() != today.as_str()
+        })
+        .map(|entry| entry.path())
+        .collect::<Vec<_>>();
+    children.sort();
+    for child in children {
         removed.push(Removed {
             path: child.to_string_lossy().into_owned(),
             kind: "unmarked".into(),

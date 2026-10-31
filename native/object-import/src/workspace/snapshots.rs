@@ -34,7 +34,11 @@ pub(crate) struct Observation {
 
 impl State {
     pub(crate) fn retain(&mut self, snapshot: Observation) -> Option<u64> {
-        if snapshot.contents.len() > MAX_BYTES || self.next >= MAX_TOKEN {
+        if snapshot.contents.len() > MAX_BYTES
+            || self.next >= MAX_TOKEN
+            || snapshot.path.as_os_str().is_empty()
+            || snapshot.raw_hash.trim().is_empty()
+        {
             return None;
         }
         while self.bytes.saturating_add(snapshot.contents.len()) > MAX_BYTES
@@ -53,6 +57,9 @@ impl State {
 
     pub(crate) fn get(&self, token: u64, path: &Path, raw_hash: &str) -> Option<&Observation> {
         let raw_hash = raw_hash.trim();
+        if token == 0 || path.as_os_str().is_empty() || raw_hash.is_empty() {
+            return None;
+        }
         self.records
             .get(&token)
             .filter(|snapshot| {

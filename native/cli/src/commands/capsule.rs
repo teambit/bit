@@ -179,8 +179,8 @@ fn parse_list_flags(rest: &[&str]) -> Option<Subcommand> {
                     .is_none()
                     .then_some(Subcommand::List { json, with_stats });
             }
-            "-j" | "--json" | "--json=true" => json = true,
-            "--json=false" => json = false,
+            "-j" | "-j=true" | "--json" | "--json=true" => json = true,
+            "-j=false" | "--json=false" => json = false,
             "--with-stats" | "--with-stats=true" => with_stats = true,
             "--with-stats=false" => with_stats = false,
             _ => return None,
@@ -201,8 +201,8 @@ fn parse_delete_flags(rest: &[&str]) -> Option<Subcommand> {
                     .is_none()
                     .then_some(Subcommand::Delete { all, scope_aspects });
             }
-            "-a" | "--all" | "--all=true" => all = true,
-            "--all=false" => all = false,
+            "-a" | "-a=true" | "--all" | "--all=true" => all = true,
+            "-a=false" | "--all=false" => all = false,
             "--scope-aspects" | "--scope-aspects=true" => scope_aspects = true,
             "--scope-aspects=false" => scope_aspects = false,
             _ => return None,

@@ -6,40 +6,31 @@ pub(super) fn append(output: &mut Value, model: &Value, request: &Request) -> io
     let identity = identity(model, request)?;
     let history = request.histories
         .iter()
-        .find(|row| row["identity"] == identity)
+        .find(|row| row["identity"].as_str().map(str::trim) == Some(identity.as_str()))
         .ok_or_else(|| invalid("status result history"))?;
     let source = refs(&history["status"], "sourceOnly")?;
-    let merge = &history["merge"];
-    if history["status"]["noCommon"] != false || merge["noCommon"] != false {
+    if history["status"]["noCommon"] != false || history["merge"]["noCommon"] != false {
         return Err(invalid("status unrelated history requires canonical errors"));
     }
-    let versions = tags(model, "versions")?;
-    unique_refs(versions)?;
+    unique_refs(tags(model, "versions")?)?;
     let target = request.targets
         .iter()
-        .find(|target| target.identity == identity);
-    if target.is_some_and(|target| target.version.is_empty()) {
+        .find(|target| target.identity.trim() == identity);
+    if target.is_some_and(|target| target.version.trim().is_empty()) {
         return Err(invalid("status out of sync bitmap requires canonical persistence"));
     }
-    let staged = is_staged(
-        model,
-        target.is_some() || history["laneHead"].is_string(),
-        request.update_dependents.contains(&identity),
-        source,
-    );
-    if staged {
+    let pending = request.update_dependents
+        .iter()
+        .any(|item| item.trim() == identity);
+    if is_staged(model, target.is_some() || history["laneHead"].is_string(), pending, source) {
         append_staged(output, model, history, request, &identity)?;
     }
     if let Some(target) = target {
-        tracked(
-            output,
-            model,
-            history,
-            target,
-            &request.semver,
-            request.during_merge.contains(&identity),
-            request.current_lane_id.ends_with("/main"),
-        )?;
+        let merging = request.during_merge
+            .iter()
+            .any(|item| item.trim() == identity);
+        let on_main = request.current_lane_id.trim().ends_with("/main");
+        tracked(output, model, history, target, &request.semver, merging, on_main)?;
     }
     Ok(())
 }

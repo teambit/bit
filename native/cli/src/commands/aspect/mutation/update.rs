@@ -252,7 +252,7 @@ fn is_aspect_minus_in_bitmap(bitmap_val: &Value, entry: &BitmapEntry, bare_aspec
         .and_then(|row| row["config"].as_object())
         .and_then(|map| {
             let key = find_matching_aspect_key(map, bare_aspect)?;
-            map.get(&key)?.as_str()
+            map.get(&key)?.as_str().map(str::trim)
         })
         == Some("-")
 }
@@ -267,7 +267,7 @@ fn is_aspect_minus_in_comp_json(root: &Path, entry: &BitmapEntry, bare_aspect: &
             let key = find_matching_aspect_key(map, bare_aspect)?;
             map.get(&key)?
                 .as_str()
-                .map(str::to_owned)
+                .map(|val| val.trim().to_owned())
         })
         .as_deref()
         == Some("-")
@@ -304,10 +304,14 @@ fn extract_aspect_from_map(
 ) -> Option<(Option<String>, Value)> {
     let found_key = find_matching_aspect_key(map, bare_aspect)?;
     let val = map.get(&found_key)?;
-    if val.as_str() == Some("-") {
+    if val.as_str().map(str::trim) == Some("-") {
         return None;
     }
-    let ver = found_key.rsplit_once('@').map(|(_, ver_str)| ver_str.to_owned());
+    let ver = found_key
+        .rsplit_once('@')
+        .map(|(_, ver_str)| ver_str.trim())
+        .filter(|ver_str| !ver_str.is_empty())
+        .map(str::to_owned);
     Some((ver, val.clone()))
 }
 

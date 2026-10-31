@@ -112,7 +112,8 @@ fn has_component_peers(root: &Path, entries: &[&BitmapEntry]) -> io::Result<bool
             .filter_map(|extension| extension["data"]["dependencies"].as_array())
             .flatten()
             .any(|dependency| {
-                dependency["__type"] == "component" && dependency["lifecycle"] == "peer"
+                dependency["__type"].as_str().map(str::trim) == Some("component")
+                    && dependency["lifecycle"].as_str().map(str::trim) == Some("peer")
             });
         if has_peers {
             return Ok(true);

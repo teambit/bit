@@ -84,12 +84,8 @@ pub(in crate::commands::aspect) fn resolve_component_for_get<'a>(
             .next()
             .ok_or_else(|| Failure::User(format!("component {component} was not found"))),
         Err(Failure::User(msg)) => {
-            let bare = component
-                .trim()
-                .split('@')
-                .next()
-                .unwrap_or(component)
-                .trim();
+            let trimmed = component.trim();
+            let bare = trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim());
             if !bare.contains('/') && scope_index_lookup(root, bare).is_none() {
                 return Err(Failure::User(missing_scope_error(component)));
             }
@@ -168,7 +164,10 @@ pub(super) fn ensure_default_env_aspects(
     merged: &mut Vec<AspectEntry>,
     comp: Option<&WorkspaceComponent>,
 ) {
-    let env_id = comp.map_or("teambit.harmony/node", |item| item.env_id.as_str());
+    let env_id = comp
+        .map(|item| item.env_id.trim())
+        .filter(|id| !id.is_empty())
+        .unwrap_or("teambit.harmony/node");
     let env_bare = aspect_id_without_version(env_id);
     if !merged
         .iter()

@@ -78,12 +78,13 @@ pub(in crate::workspace::engine) fn read(
 }
 
 fn lookup_lane_head<'a>(lane_heads: &'a HashMap<String, String>, model: &Value) -> Option<&'a str> {
-    let scope = model["scope"].as_str().unwrap_or_default();
-    let name = model["name"].as_str().unwrap_or_default();
+    let scope = model["scope"].as_str().map_or("", str::trim);
+    let name = model["name"].as_str().map_or("", str::trim);
     if !scope.is_empty() {
         return lane_heads
             .get(&format!("{scope}/{name}"))
-            .map(String::as_str);
+            .map(String::as_str)
+            .map(str::trim);
     }
     lane_heads
         .get(name)
@@ -94,6 +95,7 @@ fn lookup_lane_head<'a>(lane_heads: &'a HashMap<String, String>, model: &Value) 
                 .find_map(|(key, val)| key.ends_with(&suffix).then_some(val))
         })
         .map(String::as_str)
+        .map(str::trim)
 }
 
 #[derive(Deserialize)]

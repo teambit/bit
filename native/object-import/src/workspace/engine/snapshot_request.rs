@@ -16,7 +16,9 @@ pub(super) fn dispatch(
         Request::CommandStashStageHistory(input) => {
             command::stash::stage_history(&input, state, pool)
         }
-        Request::CommandStashFinalize(input) => command::stash::finalize(&input, snapshots),
+        Request::CommandStashFinalize(input) => {
+            pool.install(|| command::stash::finalize(&input, snapshots))
+        }
         Request::CommandStashStageGraph(input) => command::stash::stage_graph(&input, state),
         Request::CommandStashPersist(input) => command::stash::persist(&input, state),
         request => dispatch_resolve(request, snapshots, pool),
@@ -34,7 +36,7 @@ fn dispatch_resolve(
             command::resolve::stage_packages(&input, state)
         }
         Request::CommandSnapshotPackageFinalize(input) => {
-            command::resolve::package_finalize(input, state)
+            pool.install(|| command::resolve::package_finalize(input, state))
         }
         Request::CommandSnapshotStageBuild(input) => command::resolve::stage_build(&input, state),
         Request::CommandSnapshotBuildFinalize(input) => {

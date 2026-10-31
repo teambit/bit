@@ -75,7 +75,7 @@ fn consume_inline_value(options: &mut Options, arg: &str) -> Option<Option<bool>
         .strip_prefix("--override=")
         .or_else(|| arg.strip_prefix("-o="))
     {
-        if options.tracking.override_files || val.is_empty() || val.starts_with('-') {
+        if options.tracking.override_files || val.trim().is_empty() || val.starts_with('-') {
             return Some(None);
         }
         options.tracking.override_files = true;
@@ -102,6 +102,6 @@ fn string_option<'a>(options: &'a mut Options, arg: &str) -> Option<&'a mut Opti
 fn value(args: &mut std::slice::Iter<'_, &str>) -> Option<String> {
     args.next()
         .copied()
-        .filter(|arg| !arg.is_empty() && !arg.starts_with('-'))
+        .filter(|arg| !arg.trim().is_empty() && !arg.starts_with('-'))
         .map(str::to_owned)
 }

@@ -81,14 +81,10 @@ fn components(plan: &Plan, projection: &Projection) -> Vec<WorkspaceComponent> {
         })
         .filter_map(|row| {
             let identity = non_empty_str(&row["identity"]).or_else(|| non_empty_str(&row["id"]))?;
-            let bare = identity
-                .split('@')
-                .next()
-                .unwrap_or(identity)
-                .trim();
+            let bare = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());
             projection.workspace.components
                 .iter()
-                .find(|component| component.id.to_string_without_version() == bare)
+                .find(|component| component.id.to_string_without_version().trim() == bare)
                 .cloned()
         })
         .collect()

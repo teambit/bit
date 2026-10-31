@@ -57,6 +57,7 @@ fn reference(model: &Value, version: &str) -> io::Result<String> {
         .get(version)
         .or_else(|| model["versions"].get(version))
         .and_then(Value::as_str)
+        .map(str::trim)
         .ok_or_else(|| invalid("cat version absent"))?;
     merge_history::hash(reference)?;
     Ok(reference.to_owned())
@@ -71,8 +72,15 @@ fn files(directory: &std::path::Path, version: &Value) -> io::Result<Vec<Value>>
     let packed = Budget::new(8 * 1024 * 1024);
     rows.iter()
         .map(|row| {
-            let path = row["relativePath"].as_str().ok_or_else(|| invalid("cat file path"))?;
-            let hash = row["file"].as_str().ok_or_else(|| invalid("cat file Source"))?;
+            let path = row["relativePath"]
+                .as_str()
+                .map(str::trim)
+                .filter(|path| !path.is_empty())
+                .ok_or_else(|| invalid("cat file path"))?;
+            let hash = row["file"]
+                .as_str()
+                .map(str::trim)
+                .ok_or_else(|| invalid("cat file Source"))?;
             let source = repository::read_source_shared(
                 directory,
                 merge_history::hash(hash)?,

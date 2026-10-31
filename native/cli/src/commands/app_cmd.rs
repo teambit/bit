@@ -232,7 +232,12 @@ fn has_custom_root_aspects(ws_config: &serde_json::Value) -> bool {
         .as_object()
         .is_some_and(|obj| {
             obj.keys()
-                .any(|key| !key.starts_with('$') && !key.starts_with("teambit."))
+                .any(|key| {
+                    let trimmed = key.trim();
+                    !trimmed.is_empty()
+                        && !trimmed.starts_with('$')
+                        && !trimmed.starts_with("teambit.")
+                })
         })
 }
 
@@ -367,8 +372,7 @@ fn consume_trailing_app_list<'a>(
 
 fn inline_json_value(flag: &str) -> Option<&str> {
     flag.strip_prefix("--json=")
-        .or_else(|| {
-            flag.strip_prefix("-j=")
-                .filter(|value| !value.is_empty())
-        })
+        .or_else(|| flag.strip_prefix("-j="))
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
 }

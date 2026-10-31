@@ -163,8 +163,11 @@ fn object(object: &Object, gap: &str) -> String {
         .into_iter()
         .enumerate()
     {
+        let Some(entry_node) = object.entries.get(key) else {
+            continue;
+        };
         members.open(index == 0, key);
-        let value = node(&object.entries[key], &members.deeper_gap);
+        let value = node(entry_node, &members.deeper_gap);
         let entry = format!(
             "{}{}:{} {value}{}",
             quote(key),

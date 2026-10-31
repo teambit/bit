@@ -6,7 +6,9 @@ pub(super) fn pending(request: &Request) -> io::Result<Value> {
     let changed: Vec<_> = request.targets
         .iter()
         .filter(|target| {
-            target.modified && !target.version.is_empty() && target.invalid.is_none()
+            target.modified
+                && !target.version.trim().is_empty()
+                && target.invalid.is_none()
         })
         .collect();
     if changed.is_empty() {
@@ -19,7 +21,7 @@ pub(super) fn pending(request: &Request) -> io::Result<Value> {
             target.invalid.is_none()
                 && !changed
                     .iter()
-                    .any(|other| other.identity == target.identity)
+                    .any(|other| other.identity.trim() == target.identity.trim())
         })
         .chain(changed.iter().copied())
         .collect();
@@ -44,8 +46,8 @@ fn selected(reply: &Value, ordered: &[&Target]) -> io::Result<Value> {
         let index =
             entry["component"].as_u64().ok_or_else(|| invalid("status autotag index"))? as usize;
         let target = ordered.get(index).ok_or_else(|| invalid("status autotag target"))?;
-        if !target.version.is_empty() {
-            result.push(json!(target.identity));
+        if !target.version.trim().is_empty() {
+            result.push(json!(target.identity.trim()));
         }
     }
     Ok(Value::Array(result))

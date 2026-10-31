@@ -11,12 +11,14 @@ pub(super) fn links(root: &Path, projection: &Projection) -> io::Result<()> {
     }
     for component in &projection.workspace.components {
         let comp_identity = component.id.to_string_without_version();
+        let package_name = component.package_name.trim();
         if component.root_dir.trim() == "."
+            || package_name.is_empty()
             || !projection.selected.iter().any(|target| matches_target(target, &comp_identity))
         {
             continue;
         }
-        let package = root.join("node_modules").join(&component.package_name);
+        let package = root.join("node_modules").join(package_name);
         if blocked_package(&package)?
             || (!component.has_package_json && blocked_manifest(&package.join("package.json"))?)
         {

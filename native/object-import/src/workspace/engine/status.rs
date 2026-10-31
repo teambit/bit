@@ -17,7 +17,7 @@ pub(super) fn compare(target: &[File], current: &[File]) -> io::Result<(usize, V
     for file in target.iter().chain(current) {
         if file.relative_path.trim().is_empty()
             || file.relative_path.len() > 32768
-            || file.relative_path.contains('\0')
+            || file.relative_path.chars().any(char::is_control)
         {
             return Err(super::invalid("workspace status path limit"));
         }

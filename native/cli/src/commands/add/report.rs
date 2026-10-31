@@ -43,6 +43,8 @@ fn component_text(component: &Value, formatter: &Formatter) -> io::Result<String
             .as_str()
             .or_else(|| file["relativePath"].as_str())
             .or_else(|| file["path"].as_str())
+            .map(str::trim)
+            .filter(|file| !file.is_empty())
             .ok_or_else(|| io::Error::other("tracking file path"))?;
         lines.push(formatter.item(&format!("added {file}")));
     }
@@ -80,8 +82,11 @@ fn warning(value: &Value, format: &Formatter) -> io::Result<String> {
             format.warn_symbol(),
         )));
         for directory in empty {
-            let directory =
-                directory.as_str().ok_or_else(|| io::Error::other("tracking empty directory"))?;
+            let directory = directory
+                .as_str()
+                .map(str::trim)
+                .filter(|dir| !dir.is_empty())
+                .ok_or_else(|| io::Error::other("tracking empty directory"))?;
             warning.push('\n');
             warning.push_str(&Formatter::item_with(
                 &format.chalk.bold(directory),

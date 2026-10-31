@@ -13,7 +13,9 @@ impl Facts {
         for row in &capture.comparisons {
             let Some(id) = row["identity"]
                 .as_str()
+                .or_else(|| row["id"].as_str())
                 .map(str::trim)
+                .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
                 .filter(|id| !id.is_empty())
             else {
                 continue;
@@ -61,7 +63,11 @@ pub(super) fn history(
         .filter(|row| {
             row["identity"]
                 .as_str()
-                .is_some_and(|id| ids.iter().any(|known| known == id))
+                .map(str::trim)
+                .is_some_and(|id| {
+                    ids.iter()
+                        .any(|known| known.trim() == id)
+                })
         })
         .map(|row| json!({"identity":row["identity"],"version":row["version"]}))
         .collect::<Vec<_>>();

@@ -60,7 +60,9 @@ fn run_options(
 ) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;
     let Some(root) = workspace::root(&cwd) else {
-        if options.revert && env::var_os("CI").is_none_or(|val| val.is_empty()) {
+        if options.revert
+            && env::var_os("CI").is_none_or(|val| val.to_string_lossy().trim().is_empty())
+        {
             return workspace_command::execute_then_scope(&cwd, args, "revert", |output| {
                 output.status("reverting components...");
                 Err(io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR))
@@ -121,13 +123,14 @@ fn prepare(
     startup: &mut super::status::autosync::Startup,
     environment: Option<Environments>,
 ) -> io::Result<PreparedCheckout> {
-    if options.to.trim().is_empty() {
+    let target = options.to.trim();
+    if target.is_empty() {
         return Err(io::Error::other("checkout target version is empty"));
     }
     let request = Request {
         operation: "checkout",
         options: options.request(),
-        to: Some(&options.to),
+        to: Some(target),
         verify_fresh: false,
     };
     let planned = match environment {
@@ -136,7 +139,6 @@ fn prepare(
         }
         None => workspace_command::plan_with_startup(root, &request, startup)?,
     };
-    let target = options.to.trim();
     let report = report::format(&planned.plan["result"], options, Chalk::detect(args))?;
     let progress = Progress::parse(planned.plan.get("progress"))?;
     let ids = if target == "reset" {

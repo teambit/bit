@@ -27,14 +27,17 @@ pub(in crate::workspace::engine) struct Request {
 
 pub(in crate::workspace::engine) fn read(request: &Request) -> io::Result<(usize, Value)> {
     super::super::super::path(&request.root)?;
+    super::super::super::path(&request.global_remotes_file)?;
+    super::super::super::path(&request.global_config_dir)?;
     validate_bit_version(&request.bit_version)?;
     if request.bare_scope {
         validate_bare_scope(&request.root)?;
     }
+    let remote_scope = request.remote_scope.trim();
     let Remote::Http(url) = remote_for_lane(
         &request.root,
         request.bare_scope,
-        &request.remote_scope,
+        remote_scope,
         Some(&request.global_remotes_file),
         request.remote_host.as_deref(),
     )?
@@ -43,7 +46,23 @@ pub(in crate::workspace::engine) fn read(request: &Request) -> io::Result<(usize
     };
     let scope =
         read_json_file(&scope_directory(&request.root, request.bare_scope).join("scope.json"))?;
-    let local = scope["name"].as_str().ok_or_else(|| invalid("remote lane local scope"))?;
+    let local = scope["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("remote lane local scope"))?;
+    let network = lane_network(request, local, &scope["config"])?;
+    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
+    let id = request.name
+        .as_deref()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .map(|name| format!("{remote_scope}/{name}"));
+    let lanes = runtime.block_on(network.list_lanes(&url, id.as_deref()))?;
+    Ok((lanes.len(), json!({"lanes":lanes})))
+}
+
+fn lane_network(request: &Request, local: &str, scope_config: &Value) -> io::Result<Network> {
     let global: GlobalConfig = serde_json::from_value(bit_workspace_config::read_global_config(
         &request.global_config_dir,
     )?)
@@ -51,19 +70,13 @@ pub(in crate::workspace::engine) fn read(request: &Request) -> io::Result<(usize
     let global = if request.bare_scope {
         bit_client_transfer::config::effective(
             global,
-            &scope["config"],
+            scope_config,
             &Value::Object(serde_json::Map::new()),
         )
     } else {
         global
     };
-    let network = Network::new(&global, &request.bit_version, Some(local), None)?;
-    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
-    let id = request.name
-        .as_ref()
-        .map(|name| format!("{}/{name}", request.remote_scope));
-    let lanes = runtime.block_on(network.list_lanes(&url, id.as_deref()))?;
-    Ok((lanes.len(), json!({"lanes":lanes})))
+    Network::new(&global, request.bit_version.trim(), Some(local), None)
 }
 
 pub(super) fn configured_remote(

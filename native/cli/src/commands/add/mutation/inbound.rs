@@ -88,7 +88,8 @@ impl ProjectedLinker {
 
     pub(in crate::commands) fn import_project_workspace(&mut self, root: &Path) -> io::Result<()> {
         let bitmap = bit_object_import::parse_jsonc(&std::fs::read(root.join(".bitmap"))?)?;
-        let (_, projection) = super::load::projected(root, &bitmap, &[])?;
+        let (mut engine, projection) = super::load::projected(root, &bitmap, &[])?;
+        super::controls::validate(&mut engine, &projection.context)?;
         let environment =
             self.environment.as_mut().ok_or_else(|| io::Error::other("import bitmap session"))?;
         self.stdout.push_str(&environment.project_tracking_retained(

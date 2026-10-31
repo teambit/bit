@@ -4,6 +4,8 @@
 /// Whether `name` matches the minimatch `pattern`.
 #[must_use]
 pub fn matches(pattern: &str, name: &str) -> bool {
+    let pattern = pattern.trim();
+    let name = name.trim();
     expand_braces(pattern)
         .iter()
         .any(|pattern| {

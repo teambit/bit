@@ -168,7 +168,11 @@ fn dir_match(root_dir: &str, item: &str) -> ItemMatch {
     if !inside {
         return NO_MATCH;
     }
-    ItemMatch { matched: true, specificity: pattern.split('/').count() as f64, excluded: false }
+    let specificity = pattern
+        .split('/')
+        .filter(|segment| !segment.is_empty())
+        .count() as f64;
+    ItemMatch { matched: true, specificity, excluded: false }
 }
 
 /// `isMatchNamespacePatternItem`: `{ui/*}` against the component name.

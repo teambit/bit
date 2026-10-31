@@ -55,18 +55,21 @@ fn parse_items(rows: &[Value]) -> io::Result<Vec<Item>> {
     Ok(items)
 }
 pub(super) fn model(reader: &Reader<'_>, item: &Item) -> io::Result<Value> {
-    let value = reader.read(&item.hash, "Component")?;
+    let hash = item.hash.trim();
+    let name = item.id.name.trim();
+    let value = reader.read(hash, "Component")?;
     let scope = item.id.scope
         .as_deref()
+        .map(str::trim)
         .filter(|scope| !scope.is_empty());
-    let identity =
-        scope.map_or_else(|| item.id.name.clone(), |scope| format!("{scope}/{}", item.id.name));
+    let identity = scope.map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
     let expected = crate::validate::hexadecimal(&Sha1::digest(identity.as_bytes()));
-    if expected != item.hash
-        || value["name"] != item.id.name
+    if !expected.eq_ignore_ascii_case(hash)
+        || value["name"].as_str().map(str::trim) != Some(name)
         || value
             .get("scope")
             .and_then(Value::as_str)
+            .map(str::trim)
             .filter(|scope| !scope.is_empty())
             != scope
     {

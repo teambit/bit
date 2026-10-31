@@ -45,7 +45,9 @@ fn proof_path(proof: &Value) -> Option<&str> {
         .or_else(|| proof["path"].as_str())
         .or_else(|| proof["filePath"].as_str())
         .map(str::trim)
-        .filter(|path| !path.is_empty() && Path::new(path).is_absolute())
+        .filter(|path| {
+            !path.is_empty() && Path::new(path).is_absolute() && !path.chars().any(char::is_control)
+        })
 }
 
 pub(super) fn reads(facts: &Value) -> &[Value] {

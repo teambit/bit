@@ -319,17 +319,12 @@ fn read_comp_json_origins(
     entry: &BitmapEntry,
     core_ids: &[String],
 ) -> Result<(Option<Vec<AspectEntry>>, bool), Failure> {
-    if entry.root_dir.is_empty() {
+    let root_dir = entry.root_dir.trim();
+    if root_dir.is_empty() {
         return Ok((None, true));
     }
-    let dir = if entry.root_dir == WORKSPACE_ROOT_DIR {
-        root.to_path_buf()
-    } else {
-        root.join(&entry.root_dir)
-    };
-    let Ok(bytes) = fs::read(dir.join("component.json")) else {
-        return Ok((None, true));
-    };
+    let dir = if root_dir == WORKSPACE_ROOT_DIR { root.to_path_buf() } else { root.join(root_dir) };
+    let Ok(bytes) = fs::read(dir.join("component.json")) else { return Ok((None, true)) };
     let parsed = bit_object_import::parse_jsonc(&bytes)?;
     let propagate = parsed
         .get("propagate")
@@ -355,9 +350,13 @@ pub(super) fn resolve_aspect_id(aspect: &mut AspectEntry, ws_ids: &[ComponentId]
     };
     let given = aspect.id
         .strip_prefix(&without)
-        .and_then(|rest| rest.strip_prefix('@'));
+        .and_then(|rest| rest.strip_prefix('@'))
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty());
     let version =
-        if prefer_ws { found.version.as_deref() } else { given.or(found.version.as_deref()) };
+        if prefer_ws { found.version.as_deref() } else { given.or(found.version.as_deref()) }
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty());
     let base = found.to_string_without_version();
     aspect.id = version.map_or_else(|| base.clone(), |ver| format!("{base}@{ver}"));
 }

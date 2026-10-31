@@ -42,6 +42,7 @@ pub fn detect_newline(text: &str) -> Option<&'static str> {
 /// nothing is indented.
 #[must_use]
 pub fn detect_indent(text: &str) -> String {
+    let text = text.strip_prefix('\u{feff}').unwrap_or(text);
     let mut steps = IndentSteps::default();
     let (mut tabs, mut spaces) = (0_usize, 0_usize);
     for line in text

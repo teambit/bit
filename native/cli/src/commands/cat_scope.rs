@@ -263,6 +263,7 @@ fn build_component_entry(raw: &Value, opts: &Options) -> Option<ScopeEntry> {
     let name = extract_boxed_name(raw)?;
     let scope = raw["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|text| !text.is_empty())?;
     let id = format!("{scope}/{name}");
     let hash = sha1_hex(&id);
@@ -277,10 +278,12 @@ fn build_component_entry(raw: &Value, opts: &Options) -> Option<ScopeEntry> {
 fn extract_boxed_name(raw: &Value) -> Option<String> {
     let base_name = raw["name"]
         .as_str()
+        .map(str::trim)
         .filter(|text| !text.is_empty())?;
     Some(
         match raw["box"]
             .as_str()
+            .map(str::trim)
             .filter(|text| !text.is_empty())
         {
             Some(bx) => format!("{bx}/{base_name}"),
@@ -314,13 +317,17 @@ fn build_symlink_entry(raw: &Value, opts: &Options) -> Option<ScopeEntry> {
 fn build_lane_entry(raw: &Value, fallback_hash: &str, opts: &Options) -> Option<ScopeEntry> {
     let name = raw["name"]
         .as_str()
+        .map(str::trim)
         .filter(|text| !text.is_empty())?;
     let scope = raw["scope"]
         .as_str()
+        .map(str::trim)
         .filter(|text| !text.is_empty())?;
     let id = format!("{scope}/{name}");
     let hash = raw["hash"]
         .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
         .unwrap_or(fallback_hash)
         .to_owned();
     let json_obj = if opts.json {

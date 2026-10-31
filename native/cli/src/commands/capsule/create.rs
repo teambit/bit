@@ -163,7 +163,8 @@ fn validate_custom_name(
     always_new: bool,
 ) -> io::Result<()> {
     let Some(name) = name else { return Ok(()) };
-    if name.trim().is_empty() {
+    let name = name.trim();
+    if name.is_empty() || name.chars().any(char::is_control) {
         return Err(io::Error::other("unsupported capsule id"));
     }
     if selected_len != 1 && !always_new {

@@ -163,7 +163,7 @@ fn prepare_origin_entries(
 fn filter_origin_envs(entries: Vec<AspectEntry>, env_found: &mut bool) -> Vec<AspectEntry> {
     let envs_entry = entries
         .iter()
-        .find(|entry| entry.id == ENVS_ASPECT);
+        .find(|entry| aspect_id_without_version(&entry.id) == ENVS_ASPECT);
     let env = envs_entry.and_then(|entry| {
         entry.config
             .get("env")
@@ -176,7 +176,7 @@ fn filter_origin_envs(entries: Vec<AspectEntry>, env_found: &mut bool) -> Vec<As
     let has_envs = envs_entry.is_some()
         || entries
             .iter()
-            .any(|entry| CORE_ENVS.contains(&entry.id.as_str()));
+            .any(|entry| CORE_ENVS.contains(&aspect_id_without_version(&entry.id)));
     if *env_found && has_envs {
         return drop_origin_envs(entries, env.as_deref());
     }
@@ -186,12 +186,13 @@ fn filter_origin_envs(entries: Vec<AspectEntry>, env_found: &mut bool) -> Vec<As
 
 fn drop_origin_envs(mut entries: Vec<AspectEntry>, env: Option<&str>) -> Vec<AspectEntry> {
     entries.retain(|entry| {
+        let bare = aspect_id_without_version(&entry.id);
         let is_env =
-            env.is_some_and(|env| entry.id == env || aspect_id_without_version(&entry.id) == env);
-        !is_env && !CORE_ENVS.contains(&entry.id.as_str())
+            env.is_some_and(|env| entry.id == env || bare == aspect_id_without_version(env));
+        !is_env && !CORE_ENVS.contains(&bare)
     });
     for entry in &mut entries {
-        if entry.id == ENVS_ASPECT
+        if aspect_id_without_version(&entry.id) == ENVS_ASPECT
             && let Value::Object(config) = &mut entry.config
         {
             config.remove("env");

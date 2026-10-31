@@ -15,7 +15,7 @@ pub(super) fn read(
     let remotes = remotes::read(&request.root, models)?;
     let targets: HashMap<_, _> = request.targets
         .iter()
-        .map(|target| (target.identity.as_str(), target.version.as_str()))
+        .map(|target| (target.identity.trim(), target.version.trim()))
         .collect();
     let results = pool.install(|| {
         models
@@ -49,7 +49,13 @@ fn compare(
     let head = model
         .get("head")
         .filter(|value| !value.is_null())
-        .map(|value| value.as_str().ok_or_else(|| invalid("status model head")))
+        .map(|value| {
+            value
+                .as_str()
+                .map(str::trim)
+                .filter(|head| !head.is_empty())
+                .ok_or_else(|| invalid("status model head"))
+        })
         .transpose()?;
     if let Some(lane) = lane.filter(|lane| lane.heads.contains_key(&identity)) {
         return compare_lane(reader, model, targets, lane, stage, &identity, [head, remote]);

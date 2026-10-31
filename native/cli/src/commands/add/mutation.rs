@@ -94,7 +94,10 @@ impl ProjectedLinker {
         params: &Value,
     ) -> io::Result<Value> {
         let method = method.trim();
-        if method.is_empty() {
+        if root.as_os_str().is_empty()
+            || root.to_string_lossy().trim().is_empty()
+            || method.is_empty()
+        {
             return Err(io::Error::other("identity provider method is empty"));
         }
         let result = self.environment

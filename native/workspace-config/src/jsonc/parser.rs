@@ -240,7 +240,7 @@ impl Parser {
                 match self.current().map(|token| token.kind.clone()) {
                     Some(Kind::Number(value)) => {
                         self.next();
-                        Ok(Node::Number(-value))
+                        Ok(Node::Number(if value == 0.0 { 0.0 } else { -value }))
                     }
                     _ => Err(self.unexpected()),
                 }

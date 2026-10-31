@@ -45,6 +45,7 @@ impl ProjectedLinker {
 }
 
 fn normalize_ids(ids: &[String]) -> Vec<String> {
+    let mut seen = std::collections::HashSet::new();
     ids.iter()
         .map(|id| {
             let trimmed = id.trim();
@@ -53,7 +54,7 @@ fn normalize_ids(ids: &[String]) -> Vec<String> {
                 .map_or(trimmed, |(base, _)| base.trim())
                 .to_owned()
         })
-        .filter(|id| !id.is_empty())
+        .filter(|id| !id.is_empty() && seen.insert(id.clone()))
         .collect()
 }
 

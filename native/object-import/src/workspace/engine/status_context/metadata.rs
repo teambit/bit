@@ -158,7 +158,7 @@ fn issue_configuration(value: &Value) -> io::Result<()> {
         .is_none_or(|value| {
             value
                 .as_array()
-                .is_some_and(|names| names.iter().all(Value::is_string))
+                .is_some_and(|names| names.len() <= 256 && names.iter().all(valid_issue_name))
         });
     if fields
         .keys()
@@ -169,6 +169,13 @@ fn issue_configuration(value: &Value) -> io::Result<()> {
     } else {
         Err(invalid("status issue configuration"))
     }
+}
+
+fn valid_issue_name(entry: &Value) -> bool {
+    entry
+        .as_str()
+        .map(str::trim)
+        .is_some_and(|name| !name.is_empty() && !name.chars().any(char::is_control))
 }
 
 fn empty_core(name: &str, value: &Value) -> bool {

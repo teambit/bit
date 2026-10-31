@@ -21,11 +21,16 @@ pub fn match_patterns(file: &str, patterns: &[String]) -> bool {
 /// Whether `path` (`/`-separated, relative) matches `pattern`.
 #[must_use]
 pub fn matches(pattern: &str, path: &str) -> bool {
+    let path = path.trim().trim_start_matches("./");
+    let pattern = pattern.trim().trim_start_matches("./");
     let segments: Vec<&str> = path.split('/').collect();
     expand_braces(pattern)
         .iter()
         .any(|pattern| {
-            let parts: Vec<&str> = pattern.split('/').collect();
+            let parts: Vec<&str> = pattern
+                .trim_start_matches("./")
+                .split('/')
+                .collect();
             match_parts(&parts, &segments)
         })
 }

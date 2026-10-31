@@ -160,8 +160,8 @@ fn same_files(left: &Value, right: &Value) -> io::Result<bool> {
                     .as_str()
                     .map(str::trim)
                     .ok_or_else(|| invalid("version parent file ref"))?;
-                merge_history::hash(hash)?;
-                Ok(format!("{path}:{hash}"))
+                let canonical = crate::validate::hexadecimal(&merge_history::hash(hash)?);
+                Ok(format!("{path}:{canonical}"))
             })
             .collect::<io::Result<Vec<_>>>()?;
         entries.sort();

@@ -86,8 +86,10 @@ fn supports_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
         return true;
     }
     match argv {
-        ["capsule", "create"] => true,
-        ["capsule", "create", "--json" | "-j" | "--seeders-only" | "-s" | "--use-hash"] => true,
+        ["capsule", "create"] => args.ids.is_empty(),
+        ["capsule", "create", "--json" | "-j" | "--seeders-only" | "-s" | "--use-hash"] => {
+            args.ids.is_empty()
+        }
         ["capsule", "create", "--base-dir" | "-b" | "--root-base-dir" | "-r", _] => {
             args.ids.is_empty()
         }

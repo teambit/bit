@@ -244,9 +244,10 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
 fn parse_unset(rest: &[&str]) -> Option<Subcommand> {
     let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
     let [pattern, aspect_id] = tokens.as_slice() else { return None };
+    let aspect_id = aspect_id.trim();
     (is_supported_pattern(pattern) && !aspect_id.is_empty()).then(|| Subcommand::Unset {
-        pattern: (*pattern).to_owned(),
-        aspect_id: (*aspect_id).to_owned(),
+        pattern: pattern.trim().to_owned(),
+        aspect_id: aspect_id.to_owned(),
     })
 }
 
@@ -325,13 +326,13 @@ fn parse_list_core(rest: &[&str]) -> Option<Subcommand> {
 fn parse_update(rest: &[&str]) -> Option<Subcommand> {
     let tokens = super::scope_set::collect_non_flag_tokens(rest)?;
     match tokens.as_slice() {
-        [aspect_id] if !aspect_id.is_empty() => {
-            Some(Subcommand::Update { aspect_id: (*aspect_id).to_owned(), pattern: None })
+        [aspect_id] if !aspect_id.trim().is_empty() => {
+            Some(Subcommand::Update { aspect_id: aspect_id.trim().to_owned(), pattern: None })
         }
-        [aspect_id, pattern] if !aspect_id.is_empty() && is_supported_pattern(pattern) => {
+        [aspect_id, pattern] if !aspect_id.trim().is_empty() && is_supported_pattern(pattern) => {
             Some(Subcommand::Update {
-                aspect_id: (*aspect_id).to_owned(),
-                pattern: Some((*pattern).to_owned()),
+                aspect_id: aspect_id.trim().to_owned(),
+                pattern: Some(pattern.trim().to_owned()),
             })
         }
         _ => None,

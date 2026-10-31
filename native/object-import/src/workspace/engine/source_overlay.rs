@@ -65,10 +65,14 @@ impl SourceOverlay {
         if normalize(root) != root {
             return Err(invalid("overlay root"));
         }
+        let physical_root = fs::canonicalize(root)?;
+        if !physical_root.is_dir() {
+            return Err(invalid("overlay root"));
+        }
         Ok(Self {
             data: Arc::new(Data {
                 root: root.to_path_buf(),
-                physical_root: fs::canonicalize(root)?,
+                physical_root,
                 entries: BTreeMap::new(),
                 proofs: Vec::new(),
                 sealed: false,

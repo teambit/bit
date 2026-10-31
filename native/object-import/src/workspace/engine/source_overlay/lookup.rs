@@ -60,7 +60,7 @@ impl SourceOverlay {
             let suffix = path.strip_prefix(ancestor).map_err(io::Error::other)?;
             let mapped = physical.join(suffix);
             let mapped = match mapped.strip_prefix(&self.data.physical_root) {
-                Ok(relative) => self.data.root.join(relative),
+                Ok(relative) => super::normalize(&self.data.root.join(relative)),
                 Err(_) => return Ok(None),
             };
             return Ok((mapped != path).then_some(mapped));

@@ -22,7 +22,14 @@ struct OriginMarker<'a> {
 
 pub(super) fn write_root_metadata(capsules_root: &Path, base_dir: &str) -> io::Result<()> {
     let base_dir = base_dir.trim();
-    if capsules_root.as_os_str().is_empty() || base_dir.is_empty() {
+    if capsules_root.as_os_str().is_empty()
+        || capsules_root
+            .to_string_lossy()
+            .trim()
+            .is_empty()
+        || base_dir.is_empty()
+        || base_dir.chars().any(char::is_control)
+    {
         return Err(io::Error::other("capsule root metadata path is empty"));
     }
     fs::create_dir_all(capsules_root)?;

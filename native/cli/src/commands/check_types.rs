@@ -95,7 +95,7 @@ fn emit_empty_check_types(
 }
 
 pub(super) fn is_empty_workspace(root: &Path) -> io::Result<bool> {
-    if root.as_os_str().is_empty() {
+    if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() {
         return Ok(false);
     }
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
@@ -116,14 +116,14 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
                 break;
             }
             "--no-color" | "--no-color=true" | "--no-color=false" => {}
-            "-a" | "--all" | "--all=true" => options.all = true,
-            "--all=false" => options.all = false,
-            "-u" | "--unmodified" | "--unmodified=true" => options.unmodified = true,
-            "--unmodified=false" => options.unmodified = false,
+            "-a" | "-a=true" | "--all" | "--all=true" => options.all = true,
+            "-a=false" | "--all=false" => options.all = false,
+            "-u" | "-u=true" | "--unmodified" | "--unmodified=true" => options.unmodified = true,
+            "-u=false" | "--unmodified=false" => options.unmodified = false,
             "--strict" | "--strict=true" => options.strict = true,
             "--strict=false" => options.strict = false,
-            "-j" | "--json" | "--json=true" => options.json = true,
-            "--json=false" => options.json = false,
+            "-j" | "-j=true" | "--json" | "--json=true" => options.json = true,
+            "-j=false" | "--json=false" => options.json = false,
             val if !val.starts_with('-')
                 && !val.trim().is_empty()
                 && options.pattern.is_none() =>

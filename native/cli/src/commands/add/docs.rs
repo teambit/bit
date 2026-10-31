@@ -109,7 +109,10 @@ fn validate(
             .map(str::trim)
             .filter(|path| !path.is_empty())
             .ok_or_else(|| io::Error::other("tracking docs path"))?;
-        if !observed.contains_key(Path::new(path)) || !seen.insert(PathBuf::from(path)) {
+        if !observed.contains_key(Path::new(path))
+            || !seen.insert(PathBuf::from(path))
+            || row.get("docs").is_none_or(Value::is_null)
+        {
             return Err(io::Error::other("tracking docs unknown source"));
         }
         let bytes = bit_object_import::stringify_json(&row["docs"], false)?;

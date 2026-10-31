@@ -61,7 +61,7 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
 fn exclude_inactive(output: &mut Value, inactive: &[(String, bool)]) -> io::Result<()> {
     let inactive_ids = inactive
         .iter()
-        .map(|(id, _)| id.as_str())
+        .map(|(id, _)| id.trim())
         .collect::<HashSet<_>>();
     output["targets"]
         .as_array_mut()
@@ -69,6 +69,7 @@ fn exclude_inactive(output: &mut Value, inactive: &[(String, bool)]) -> io::Resu
         .retain(|target| {
             !target["identity"]
                 .as_str()
+                .map(str::trim)
                 .is_some_and(|id| inactive_ids.contains(id))
         });
     Ok(())
@@ -81,6 +82,7 @@ fn unavailable_on_main(
 ) -> io::Result<Vec<String>> {
     if !context["currentLaneId"]
         .as_str()
+        .map(str::trim)
         .is_some_and(|id| id.ends_with("/main"))
     {
         return Ok(Vec::new());
@@ -89,21 +91,27 @@ fn unavailable_on_main(
         .as_array()
         .ok_or_else(|| invalid("status models"))?
         .iter()
-        .filter(|model| model["head"].is_string())
+        .filter(|model| {
+            model["head"]
+                .as_str()
+                .is_some_and(|head| !head.trim().is_empty())
+        })
         .filter_map(|model| {
             let scope = model["scope"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())?;
             let name = model["name"]
                 .as_str()
+                .map(str::trim)
                 .filter(|val| !val.is_empty())?;
             Some(format!("{scope}/{name}"))
         })
         .collect::<HashSet<_>>();
     Ok(inactive
         .iter()
-        .filter(|(identity, removed)| !removed && heads.contains(identity))
-        .map(|(identity, _)| identity.clone())
+        .filter(|(identity, removed)| !removed && heads.contains(identity.trim()))
+        .map(|(identity, _)| identity.trim().to_owned())
         .collect())
 }
 

@@ -90,7 +90,9 @@ fn target(
         .and_then(|entries| {
             entries
                 .values()
-                .find(|entry| entry["rootDir"] == component.root_dir)
+                .find(|entry| {
+                    entry["rootDir"].as_str().map(str::trim) == Some(component.root_dir.trim())
+                })
         })
         .and_then(|entry| entry.get("config"))
         .cloned()
@@ -166,12 +168,7 @@ fn row_identity(row: &Value) -> Option<&str> {
         .as_str()
         .or_else(|| row["id"].as_str())
         .map(str::trim)
-        .map(|id| {
-            id.split('@')
-                .next()
-                .unwrap_or(id)
-                .trim()
-        })
+        .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
         .filter(|id| !id.is_empty())
 }
 fn optional_json(path: &Path) -> io::Result<Value> {

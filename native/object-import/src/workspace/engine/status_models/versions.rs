@@ -21,20 +21,22 @@ pub(super) fn references(models: &[Value], targets: &[Target]) -> io::Result<Vec
     let mut seen = HashSet::new();
     let mut references = Vec::new();
     for target in targets {
-        if target.version.is_empty() {
+        let version = target.version.trim();
+        let identity = target.identity.trim();
+        if version.is_empty() || identity.is_empty() {
             continue;
         }
         let Some(model) = index
-            .get(&target.identity)
+            .get(identity)
             .or_else(|| {
-                target.identity
+                identity
                     .split_once('/')
-                    .and_then(|(_, name)| index.get(name))
+                    .and_then(|(_, name)| index.get(name.trim()))
             })
         else {
             continue;
         };
-        let reference = reference(model, &target.version)?;
+        let reference = reference(model, version)?;
         if seen.insert(reference.clone()) {
             references.push(reference);
         }

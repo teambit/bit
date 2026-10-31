@@ -171,10 +171,23 @@ fn code_modified(current: &Value, model: &Value) -> io::Result<bool> {
         || current
             .iter()
             .any(|file| {
-                let path = file["relativePath"].as_str().map(str::trim);
+                let Some(path) = file["relativePath"]
+                    .as_str()
+                    .map(str::trim)
+                    .filter(|path| !path.is_empty())
+                else {
+                    return true;
+                };
+                let current_hash = file["file"].as_str().map(str::trim);
                 model
                     .iter()
-                    .find(|stored| stored["relativePath"].as_str().map(str::trim) == path)
-                    .is_none_or(|stored| stored["file"] != file["file"])
+                    .find(|stored| stored["relativePath"].as_str().map(str::trim) == Some(path))
+                    .and_then(|stored| {
+                        stored["file"]
+                            .as_str()
+                            .map(str::trim)
+                            .zip(current_hash)
+                    })
+                    .is_none_or(|(left, right)| !left.eq_ignore_ascii_case(right))
             }))
 }
